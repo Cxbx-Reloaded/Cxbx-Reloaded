@@ -158,8 +158,14 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI KeInitializeInterrupt
     IN BOOLEAN ShareVector
 );
 
-
-XBSYSAPI VOID *KeInitializeMutant;
+// ******************************************************************
+// * 0x006E - KeInitializeMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(110) VOID NTAPI KeInitializeMutant
+(
+	IN PRKMUTANT Mutant,
+	IN BOOLEAN InitialOwner
+);
 
 // ******************************************************************
 // * 0x006F - KeInitializeQueue()

@@ -177,7 +177,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInitializeDpc),                     // 0x006B (107)
 	(uint32)FUNC(&xboxkrnl::KeInitializeEvent),                   // 0x006C (108)
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),               // 0x006D (109)
-	(uint32)PANIC(0x006E),                                        // 0x006E (110) KeInitializeMutant
+	(uint32)FUNC(&xboxkrnl::KeInitializeMutant),                  // 0x006E (110)
 	(uint32)FUNC(&xboxkrnl::KeInitializeQueue),                   // 0x006F (111)
 	(uint32)FUNC(&xboxkrnl::KeInitializeSemaphore),               // 0x0070 (112)
 	(uint32)FUNC(&xboxkrnl::KeInitializeTimerEx),                 // 0x0071 (113)

@@ -647,6 +647,35 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 }
 
 // ******************************************************************
+// * 0x006E - KeInitializeMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(110) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeMutant
+(
+	IN PRKMUTANT Mutant,
+	IN BOOLEAN InitialOwner
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Mutant)
+		LOG_FUNC_ARG(InitialOwner)
+		LOG_FUNC_END;
+
+	// Initialize header :
+	Mutant->Header.Type = MutantObject;
+	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(LONG);
+	Mutant->Header.SignalState = 0;
+	InitializeListHead(&Mutant->Header.WaitListHead);
+	// Initiliaze specific fields :
+	InitializeListHead(&Mutant->MutantListEntry);
+	Mutant->OwnerThread = NULL;
+	Mutant->Abandoned = FALSE;
+	if (InitialOwner == TRUE)
+		LOG_INCOMPLETE(); // TODO : Set OwnerThread, link into mutant list in thread somehow
+	else
+		Mutant->Header.SignalState = 1;
+}
+
+// ******************************************************************
 // * 0x006F - KeInitializeQueue()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(111) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeQueue
@@ -660,10 +689,12 @@ XBSYSAPI EXPORTNUM(111) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeQueue
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
+	// Initialize header :
 	Queue->Header.Type = QueueObject;
 	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
 	Queue->Header.SignalState = 0;
 	InitializeListHead(&Queue->Header.WaitListHead);
+	// Initiliaze specific fields :
 	InitializeListHead(&Queue->EntryListHead);
 	InitializeListHead(&Queue->ThreadListHead);
 	Queue->CurrentCount = 0;
@@ -686,10 +717,12 @@ XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
 		LOG_FUNC_ARG(Limit)
 		LOG_FUNC_END;
 
+	// Initialize header :
 	Semaphore->Header.Type = SemaphoreObject;
 	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
 	Semaphore->Header.SignalState = Count;
 	InitializeListHead(&Semaphore->Header.WaitListHead);
+	// Initiliaze specific fields :
 	Semaphore->Limit = Limit;
 }
 
@@ -707,15 +740,15 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 		LOG_FUNC_ARG(Type)
 		LOG_FUNC_END;
 
+	// Initialize header :
 	Timer->Header.Type = Type + TimerNotificationObject;
 	Timer->Header.Inserted = FALSE;
 	Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
 	Timer->Header.SignalState = 0;
-
+	InitializeListHead(&(Timer->Header.WaitListHead));
+	// Initiliaze specific fields :
 	Timer->TimerListEntry.Blink = NULL;
 	Timer->TimerListEntry.Flink = NULL;
-	InitializeListHead(&(Timer->Header.WaitListHead));
-
 	Timer->DueTime.QuadPart = 0;
 	Timer->Period = 0;
 }
@@ -739,7 +772,6 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 	// For thread safety, enter the Dpc lock:
 	EnterCriticalSection(&(g_DpcData.Lock));
 	// TODO : Instead, disable interrupts - use KeRaiseIrql(HIGH_LEVEL, &(KIRQL)OldIrql) ?
-
 
 	BOOLEAN NeedsInsertion = (Dpc->Inserted == FALSE);
 
