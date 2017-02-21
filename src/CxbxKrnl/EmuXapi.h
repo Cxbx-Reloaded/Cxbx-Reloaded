@@ -253,6 +253,27 @@ typedef struct _XINPUT_FEEDBACK
 XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 
 // ******************************************************************
+// * XBGAMEPAD
+// ******************************************************************
+struct XBGAMEPAD : public XINPUT_GAMEPAD
+{
+	FLOAT      fX1;
+	FLOAT      fY1;
+	FLOAT      fX2;
+	FLOAT      fY2;
+	WORD       wLastButtons;
+	BOOL       bLastAnalogButtons[8];
+	WORD       wPressedButtons;
+	BOOL       bPressedAnalogButtons[8];
+	XINPUT_RUMBLE	Rumble;
+	XINPUT_FEEDBACK	Feedback;
+	XINPUT_CAPABILITIES caps;
+	HANDLE     hDevice;
+	BOOL       bInserted;
+	BOOL       bRemoved;
+};
+
+// ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************
 typedef struct _RTL_HEAP_PARAMETERS
