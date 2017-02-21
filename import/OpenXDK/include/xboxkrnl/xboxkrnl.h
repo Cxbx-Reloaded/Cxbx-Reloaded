@@ -1550,13 +1550,45 @@ KFLOATING_SAVE, *PKFLOATING_SAVE;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
-    DpcObject = 0x13,
+	ApcObject = 0x12,
+	DpcObject = 0x13,
 }
 KOBJECTS, *PKOBJECTS;
+
+// ******************************************************************
+// * PKNORMAL_ROUTINE
+// ******************************************************************
+typedef VOID (*PKNORMAL_ROUTINE)
+(
+	IN PVOID NormalContext,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2
+);
+
+// ******************************************************************
+// * PKKERNEL_ROUTINE
+// ******************************************************************
+typedef VOID (*PKKERNEL_ROUTINE)
+(
+	IN struct _KAPC *Apc,
+	IN OUT PKNORMAL_ROUTINE *NormalRoutine,
+	IN OUT PVOID *NormalContext,
+	IN OUT PVOID *SystemArgument1,
+	IN OUT PVOID *SystemArgument2
+);
+
+// ******************************************************************
+// * PKRUNDOWN_ROUTINE
+// ******************************************************************
+typedef VOID (*PKRUNDOWN_ROUTINE)
+(
+	IN struct _KAPC *Apc
+);
 
 // ******************************************************************
 // * PKSERVICE_ROUTINE
@@ -1834,13 +1866,13 @@ KWAIT_BLOCK, *PKWAIT_BLOCK;
 typedef struct _KAPC
 {
 	/* 0x0/0 */ USHORT Type;
-	/* 0x2/2 */ UCHAR ApcMode;
-	/* 0x3/3 */ UCHAR Inserted;
+	/* 0x2/2 */ KPROCESSOR_MODE ApcMode;
+	/* 0x3/3 */ BOOLEAN Inserted;
 	/* 0x4/4 */ PKTHREAD Thread;
 	/* 0x8/8 */ LIST_ENTRY ApcListEntry;
-	/* 0x10/16 */ PVOID KernelRoutine;
-	/* 0x14/20 */ PVOID RundownRoutine;
-	/* 0x18/24 */ PVOID NormalRoutine;
+	/* 0x10/16 */ PKKERNEL_ROUTINE KernelRoutine;
+	/* 0x14/20 */ PKRUNDOWN_ROUTINE RundownRoutine;
+	/* 0x18/24 */ PKNORMAL_ROUTINE NormalRoutine;
 	/* 0x1C/28 */ PVOID NormalContext;
 	/* 0x20/32 */ PVOID SystemArgument1;
 	/* 0x24/36 */ PVOID SystemArgument2;
