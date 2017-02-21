@@ -64,6 +64,50 @@ namespace NtDll
 #define OB_FLAG_NAMED_OBJECT 1
 #define OB_FLAG_PERMANENT_OBJECT 2
 
+xboxkrnl::HANDLE EmuObCreateObjectHandle
+(
+	IN xboxkrnl::PVOID Object
+)
+{
+	HANDLE Handle = (HANDLE)Object; // Fake it for now
+
+	LOG_INCOMPLETE(); // TODO : Create an actual handle
+
+	return Handle;
+}
+
+xboxkrnl::NTSTATUS EmuObFindObjectByHandle
+(
+	IN xboxkrnl::HANDLE Handle,
+	OUT PVOID *Object
+)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	*Object = (PVOID)Handle; // Fake it for now
+	
+	LOG_INCOMPLETE(); // TODO : Lookup an actual handle
+
+	if (*Object == NULL)
+		Status = STATUS_INVALID_HANDLE;
+
+	return Status;
+}
+
+xboxkrnl::NTSTATUS EmuObFindObjectByName
+(
+	IN xboxkrnl::POBJECT_STRING ObjectName,
+	OUT PVOID *Object
+)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+	// TODO : Implement a mechanism by which all named objects can be queried. See comments in ObCreateObject
+
+	return Status;
+}
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -82,13 +126,13 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		LOG_FUNC_ARG_OUT(Object)
 		LOG_FUNC_END;
 
-	NTSTATUS result = STATUS_SUCCESS;
+	NTSTATUS Status = STATUS_SUCCESS;
 	OBJECT_STRING TmpName = { 0 };
 	int NameSize = 0;
 
 	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
 		if (ObjectAttributes->ObjectName->Length == 0) {
-			result = STATUS_OBJECT_NAME_INVALID;
+			Status = STATUS_OBJECT_NAME_INVALID;
 		}
 		else {
 			// TODO : Split name in parts?
@@ -99,7 +143,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		}
 	}
 
-	if (result == STATUS_SUCCESS) {
+	if (Status == STATUS_SUCCESS) {
 		// Allocate the object
 		int ObjectSize = offsetof(OBJECT_HEADER, Body) + ObjectBodySize;
 		// TODO : Is this ever something else than ExAllocatePoolWithTag ?
@@ -107,7 +151,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		if (ObjectHeader == NULL) {
 			// Detected out of memory
 			*Object = NULL;
-			result = STATUS_INSUFFICIENT_RESOURCES;
+			Status = STATUS_INSUFFICIENT_RESOURCES;
 		}
 		else {
 			// Initialize default values of object (header) :
@@ -117,6 +161,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 			if (NameSize == 0)
 				ObjectHeader->Flags = 0;
 			else {
+				LOG_INCOMPLETE();
 				// TODO : For other Ob* API's it must become possible to get from
 				// and Object(Header) address to the Name. Right now, this requires
 				// adding ObjectSize to ObjectHeader. This won't be available outside
@@ -143,11 +188,11 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 			}
 
 			*Object = &ObjectHeader->Body;
-			result = STATUS_SUCCESS;
+			Status = STATUS_SUCCESS;
 		}
 	}
 
-	RETURN(result);
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -232,34 +277,41 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
+	NTSTATUS Status = STATUS_SUCCESS;
+	HANDLE new_handle = NULL;
 
 	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
 
+	// TODO : Removed this once the EmuHandle stuff is replaced by actual object-related kernel functions 
 	if (ObjectType == &xboxkrnl::ObSymbolicLinkObjectType)
 	{
 		EmuNtSymbolicLinkObject* symbolicLinkObject =
 			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
 
 		if (symbolicLinkObject != NULL)
-		{
 			// Return a new handle (which is an EmuHandle, actually) :
-			*Handle = symbolicLinkObject->NewHandle();
-			ret = STATUS_SUCCESS;
-		}
+			new_handle = symbolicLinkObject->NewHandle();
+		else
+			Status = STATUS_OBJECT_PATH_NOT_FOUND;
 	}
 	else
-	if (ObjectType == &xboxkrnl::ObDirectoryObjectType)
-		LOG_UNIMPLEMENTED();
-	else
-		LOG_UNIMPLEMENTED();
+	{
+		PVOID Object;
+		Status = ObReferenceObjectByName(ObjectAttributes->ObjectName, ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 
-	if (ret == STATUS_SUCCESS)
-		DbgPrintf("EmuKrnl : ObOpenObjectByName Handle^ = 0x%.08X", *Handle);
-	else
-		EmuWarning("ObOpenObjectByName failed! (%s)", NtStatusToString(ret));
+		if (NT_SUCCESS(Status)) {
+			new_handle = EmuObCreateObjectHandle(Object);
+			if (new_handle == NULL)
+			{
+				// Detected out of memory
+				ObfDereferenceObject(Object);
+				Status = STATUS_INSUFFICIENT_RESOURCES;
+			}
+		}
+	}
 
-	RETURN(ret);
+	*Handle = new_handle;
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -278,26 +330,21 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	HANDLE new_handle;
-	NTSTATUS result = ObReferenceObjectByPointer(Object, ObjectType);
+	NTSTATUS Status = ObReferenceObjectByPointer(Object, ObjectType);
+	HANDLE new_handle = NULL;
 
-	if (!NT_SUCCESS(result))
-		new_handle = (HANDLE)0;
-	else {
-		LOG_UNIMPLEMENTED();
-
-		// TODO : Create a new_handle for this object
-		// if that fails, do something like :
-		// {
-		//   // Detected out of memory
-		//	 ObDereferenceObject(Object);
-		//	 result = STATUS_INSUFFICIENT_RESOURCES;
-		// }
+	if (NT_SUCCESS(Status)) {
+		new_handle = EmuObCreateObjectHandle(Object);
+		if(new_handle == NULL)
+		{
+			// Detected out of memory
+			ObfDereferenceObject(Object);
+			Status = STATUS_INSUFFICIENT_RESOURCES;
+		}
 	}
 
-	// Set the new handle and return the correct status
 	*Handle = new_handle;
-	RETURN(result);
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -324,17 +371,16 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG_OUT(ObjectType)
+		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_ARG_OUT(ReturnedObject)
 		LOG_FUNC_END;
 
-	// This is most certainly incorrect
-	*ReturnedObject = Handle;
+	NTSTATUS Status = EmuObFindObjectByHandle(Handle, ReturnedObject);
 
-	LOG_UNIMPLEMENTED();
-	// TODO : Implement and use a handle registration data structure
+	if (NT_SUCCESS(Status))
+		Status = ObReferenceObjectByPointer(ReturnedObject, ObjectType);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -351,16 +397,18 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectName)
-		LOG_FUNC_ARG(Attributes)
+		LOG_FUNC_ARG(Attributes) // TODO : Use, how?
 		LOG_FUNC_ARG(ObjectType)
-		LOG_FUNC_ARG_OUT(ParseContext)
+		LOG_FUNC_ARG_OUT(ParseContext) // TODO : Use and populate, how?
 		LOG_FUNC_ARG_OUT(Object)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-	// TODO : Implement a mechanism by which all named objects can be queried. See comments in ObCreateObject
+	NTSTATUS Status = EmuObFindObjectByName(ObjectName, Object); 
 
-	RETURN(S_OK);
+	if (NT_SUCCESS(Status))
+		Status = ObReferenceObjectByPointer(Object, ObjectType);
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -377,14 +425,15 @@ XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPo
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_END;
 
+	NTSTATUS Status = STATUS_SUCCESS;
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-	NTSTATUS result = STATUS_SUCCESS;
-	if (ObjectType == ObjectHeader->Type)
-		InterlockedIncrement(&ObjectHeader->PointerCount); // Same as ObfReferenceObject
-	else
-		result = STATUS_OBJECT_TYPE_MISMATCH;
 
-	RETURN(result);
+	if ((ObjectType == NULL) || (ObjectType == ObjectHeader->Type))
+		InterlockedIncrement(&ObjectHeader->PointerCount);
+	else
+		Status = STATUS_OBJECT_TYPE_MISMATCH;
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -415,11 +464,14 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 	
 	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0)
 	{
-		if (ObjectHeader->Type->DeleteProcedure != NULL)
-			ObjectHeader->Type->DeleteProcedure(Object);
+		POBJECT_TYPE ObjectType = ObjectHeader->Type;
+
+		if (ObjectType->DeleteProcedure != NULL)
+			ObjectType->DeleteProcedure(Object);
 		
-		// TODO : How to handle named objects? See comments in ObCreateObject
-		ObjectHeader->Type->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
+		LOG_INCOMPLETE(); // TODO : How to handle named objects? See comments in ObCreateObject
+
+		ObjectType->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
 	}
 }
 
@@ -433,7 +485,5 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
 
-	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-
-	InterlockedIncrement(&ObjectHeader->PointerCount);
+	/*ignore result*/ObReferenceObjectByPointer(Object, /*ObjectType=*/NULL);
 }
