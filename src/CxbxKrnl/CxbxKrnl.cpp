@@ -113,6 +113,54 @@ XbeType GetXbeType(Xbe::Header *pXbeHeader)
 	return xtRetail;
 }
 
+void ApplyMediaPatches()
+{
+	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
+
+	// Patch the XBE Header to allow running from all media types
+	pCertificate->dwAllowedMedia = XBEIMAGE_MEDIA_TYPE_HARD_DISK | XBEIMAGE_MEDIA_TYPE_DVD_CD | XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD;
+
+	// Patch the XBE Header to allow running on all regions
+	pCertificate->dwGameRegion = XBEIMAGE_GAME_REGION_MANUFACTURING | XBEIMAGE_GAME_REGION_NA | XBEIMAGE_GAME_REGION_JAPAN | XBEIMAGE_GAME_REGION_RESTOFWORLD;
+
+	// Generic Media Check Patches (From DVD2XBOX)
+	typedef struct
+	{
+		std::string name;
+		std::vector<uint8_t> data;
+		std::vector<uint8_t> patch;
+	} hexpatch_t;
+	
+	std::vector<hexpatch_t> mediaPatches;
+	mediaPatches.push_back({ "Media Patch 1", 
+		{ 0x74, 0x4B, 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0x7D, 0x06, 0x33, 0xC0, 0x50, 0x50, 0xEB, 0x44, 0xF6, 0x05},
+		{ 0x74, 0x4B, 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0xEB, 0x06, 0x33, 0xC0, 0x50, 0x50, 0xEB, 0x44, 0xF6, 0x05 }
+	});
+
+	mediaPatches.push_back({ "Media Patch 2", 
+		{ 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0x7D }, 
+		{ 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0xEB } 
+	});
+
+	mediaPatches.push_back({ "FATX Patch",
+		{ 0x46, 0x41, 0x54, 0x58, 0x00, 0x00, 0x00, 0x00, 0x44, 0x3A, 0x5C },
+		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } 
+	});
+
+	for (auto it = mediaPatches.begin(); it < mediaPatches.end(); ++it)	{
+		hexpatch_t patch = *it;
+		
+		// Iterate through the XBE until we find the patch
+		for (xbaddr addr = CxbxKrnl_XbeHeader->dwBaseAddr; addr < CxbxKrnl_XbeHeader->dwSizeofImage + CxbxKrnl_XbeHeader->dwBaseAddr; addr++) {
+			if (memcmp((void*)addr, &patch.data[0], patch.data.size()) == 0) {
+				printf("Applying %s\n", patch.name.c_str());
+				memcpy((void*)addr, &patch.patch[0], patch.patch.size());
+				addr += patch.data.size() - 1;
+			}
+		}
+	}
+
+}
 
 void CxbxLaunchXbe(void(*Entry)())
 {
@@ -364,7 +412,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 #ifdef _DEBUG_TRACE
 	// VerifyHLEDataBase();
 #endif
-
 	// TODO : The following seems to cause a crash when booting the game "Forza Motorsport",
 	// according to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/101#issuecomment-277230140
 	{
@@ -544,6 +591,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	EmuHLEIntercept(pXbeHeader);
+
+	// Apply Media Patches to bypass Anti-Piracy checks
+	// Required until we perfect emulation of X2 DVD Authentication
+	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
+	ApplyMediaPatches();
 
 	//
 	// initialize FS segment selector
