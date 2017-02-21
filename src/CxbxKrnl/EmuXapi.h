@@ -343,6 +343,7 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 // ******************************************************************
 BOOL WINAPI EMUPATCH(XFormatUtilityDrive)();
 
+#if 0 // Handled by ExQueryNonVolatileSetting(XC_MAX_OS) returning XBOX_USER_SETTINGS
 // ******************************************************************
 // * patch: GetTimeZoneInformation
 // ******************************************************************
@@ -350,6 +351,7 @@ DWORD WINAPI EMUPATCH(GetTimeZoneInformation)
 (
     OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 );
+#endif
 
 // ******************************************************************
 // * patch: XMountUtilityDrive

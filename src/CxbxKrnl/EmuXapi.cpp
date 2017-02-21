@@ -106,21 +106,6 @@ BOOL WINAPI XTL::EMUPATCH(XFormatUtilityDrive)()
 }
 
 // ******************************************************************
-// * patch: GetTimeZoneInformation
-// ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(GetTimeZoneInformation)
-(
-    OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(lpTimeZoneInformation);
-
-    DWORD dwRet = GetTimeZoneInformation(lpTimeZoneInformation);
-
-	RETURN(dwRet);
-}
-
-// ******************************************************************
 // * patch: XMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(XMountUtilityDrive)
