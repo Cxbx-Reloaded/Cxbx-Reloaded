@@ -1223,7 +1223,7 @@ const char *XBController::m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] =
     // ******************************************************************
     // * Analog Buttons
     // ******************************************************************
-    "X", "Y", "A", "B", "White", "Black", "LTrigger", "RTrigger",
+    "A", "B", "X", "Y", "Black", "White", "LTrigger", "RTrigger",
 
     // ******************************************************************
     // * Digital Buttons
