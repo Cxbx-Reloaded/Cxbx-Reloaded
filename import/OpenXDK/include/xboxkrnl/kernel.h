@@ -108,7 +108,20 @@ XBSYSAPI EXPORTNUM(103) KIRQL NTAPI KeGetCurrentIrql(void);
 // ******************************************************************
 XBSYSAPI EXPORTNUM(104) PKTHREAD NTAPI KeGetCurrentThread(void);
 
-XBSYSAPI VOID *KeInitializeApc;
+// ******************************************************************
+// * 0x0069 - KeInitializeApc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(105) VOID NTAPI KeInitializeApc
+(
+	IN PKAPC Apc,
+	IN PKTHREAD Thread,
+	IN PKKERNEL_ROUTINE KernelRoutine,
+	IN PKRUNDOWN_ROUTINE RundownRoutine OPTIONAL,
+	IN PKNORMAL_ROUTINE NormalRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode OPTIONAL,
+	IN PVOID NormalContext OPTIONAL
+);
+
 XBSYSAPI VOID *KeInitializeDeviceQueue;
 
 // ******************************************************************

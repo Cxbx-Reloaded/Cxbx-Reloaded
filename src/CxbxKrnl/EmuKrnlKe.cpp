@@ -525,6 +525,45 @@ XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(vo
 }
 
 // ******************************************************************
+// * 0x0069 - KeInitializeApc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(105) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeApc
+(
+	IN PKAPC Apc,
+	IN PKTHREAD Thread,
+	IN PKKERNEL_ROUTINE KernelRoutine,
+	IN PKRUNDOWN_ROUTINE RundownRoutine OPTIONAL,
+	IN PKNORMAL_ROUTINE NormalRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode OPTIONAL,
+	IN PVOID NormalContext OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Apc)
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_ARG(KernelRoutine)
+		LOG_FUNC_ARG(RundownRoutine)
+		LOG_FUNC_ARG(NormalRoutine)
+		LOG_FUNC_ARG(ApcMode)
+		LOG_FUNC_ARG(NormalContext)
+		LOG_FUNC_END;
+
+	// inialize Apc field values
+	Apc->Type = ApcObject;
+	Apc->ApcMode = ApcMode;
+	Apc->Inserted = FALSE;
+	Apc->Thread = Thread;
+	Apc->KernelRoutine = KernelRoutine;
+	Apc->RundownRoutine = RundownRoutine;
+	Apc->NormalRoutine = NormalRoutine;
+	Apc->NormalContext = NormalContext;
+	if (NormalRoutine == NULL) {
+		Apc->ApcMode = KernelMode;
+		Apc->NormalContext = NULL;
+	}
+}
+
+// ******************************************************************
 // * 0x006B - KeInitializeDpc()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
