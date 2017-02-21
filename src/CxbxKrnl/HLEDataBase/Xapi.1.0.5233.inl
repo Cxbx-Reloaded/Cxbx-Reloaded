@@ -98,7 +98,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_5233[] = {
 
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 4627, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 4627, PATCH),

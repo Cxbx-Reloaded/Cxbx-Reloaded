@@ -163,7 +163,7 @@ OOVPATable XAPI_5788[] = {
 	REGISTER_OOVPA(SetThreadPriorityBoost, 5788, PATCH),
 	// REGISTER_OOVPA(GetThreadPriorityBoost, 5788, PATCH),
 	REGISTER_OOVPA(XMountMUA, 5558, PATCH),
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(RaiseException, 5788, PATCH),
 	REGISTER_OOVPA(XLaunchNewImage, 5558, ALIAS, XLaunchNewImageA),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),

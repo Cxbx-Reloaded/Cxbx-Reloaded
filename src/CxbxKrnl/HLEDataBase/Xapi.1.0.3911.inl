@@ -980,7 +980,7 @@ OOVPATable XAPI_3911[] = {
     // REGISTER_OOVPA(CreateMutex, 3911, PATCH), // Too High Level
     // REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH), //*/
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
     // REGISTER_OOVPA(XCalculateSignatureBegin, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
