@@ -234,30 +234,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5233, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetRenderState_Dxt1NoiseEnable
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, 10)
-
-        // D3DDevice_SetRenderState_Dxt1NoiseEnable+0D : mov eax, [edi+XXXXh]
-        { 0x0D, 0x8B },
-        { 0x0E, 0x87 },
-
-        // D3DDevice_SetRenderState_Dxt1NoiseEnable+1D : and dl, 3Ch
-        { 0x1D, 0x80 },
-        { 0x1E, 0xE2 },
-        { 0x1F, 0x3C },
-
-        // D3DDevice_SetRenderState_Dxt1NoiseEnable+20 : xor esi, esi
-        { 0x20, 0x33 },
-        { 0x21, 0xF6 },
-
-        // D3DDevice_SetRenderState_Dxt1NoiseEnable+22 : cmp dl, 20h
-        { 0x22, 0x80 },
-        { 0x23, 0xFA },
-        { 0x24, 0x20 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetRenderState_TextureFactor
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_TextureFactor, 5233, 9)
@@ -1595,7 +1571,7 @@ OOVPATable D3D8_5233[] = {
     // Duplicated functions generally dangerous, but until such time as XDK 5344
     // has it's own OOVP's, fine here
     // *******
-	REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Simple, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilEnable, 4361, PATCH),

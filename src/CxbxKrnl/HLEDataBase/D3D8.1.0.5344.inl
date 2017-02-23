@@ -33,6 +33,30 @@
 // ******************************************************************
 
 // ******************************************************************
+// * D3DDevice_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, 10)
+
+        // D3DDevice_SetRenderState_Dxt1NoiseEnable+0D : mov eax, [edi+XXXXh]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x87 },
+
+        // D3DDevice_SetRenderState_Dxt1NoiseEnable+1D : and dl, 3Ch
+        { 0x1D, 0x80 },
+        { 0x1E, 0xE2 },
+        { 0x1F, 0x3C },
+
+        // D3DDevice_SetRenderState_Dxt1NoiseEnable+20 : xor esi, esi
+        { 0x20, 0x33 },
+        { 0x21, 0xF6 },
+
+        // D3DDevice_SetRenderState_Dxt1NoiseEnable+22 : cmp dl, 20h
+        { 0x22, 0x80 },
+        { 0x23, 0xFA },
+        { 0x24, 0x20 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
