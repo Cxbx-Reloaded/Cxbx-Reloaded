@@ -66,7 +66,7 @@ OOVPA_END;
 // ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
-OOVPA_XREF(CXo_XOnlineLogon, 5344, 8,
+OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
 
     XREF_CXo_XOnlineLogon,
     XRefZero)

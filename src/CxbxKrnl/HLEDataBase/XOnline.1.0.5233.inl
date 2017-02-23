@@ -55,7 +55,7 @@ OOVPA_END;
 // ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
-OOVPA_XREF(CXo_XOnlineLogon, 5344, 8,
+OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
 
     XREF_CXo_XOnlineLogon,
     XRefZero)
@@ -102,7 +102,7 @@ OOVPATable XOnline_5233[] = {
 	// REGISTER_OOVPA(listen, 4361, EMUTHIS),
 	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5233, PATCH),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 5344, XREF),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 5233, XREF),
 	REGISTER_OOVPA(XOnlineLogon, 5344, PATCH),
 };
 
