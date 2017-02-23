@@ -76,6 +76,7 @@ xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
 // TODO : Should the kernel point to xLaunchDataPage directly??
+// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
 XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
 
 // ******************************************************************

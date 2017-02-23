@@ -909,8 +909,13 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 )
 {
 	// Note : This can be tested using "Innocent tears",
-	// which relaunches different xbes between scenes
-	// One for menus, one for fmvs, etc
+	// which relaunches different xbes between scenes;
+	// One for menus, one for fmvs, etc.
+	//
+	// Other titles do this too (like "DOA2 Ultimate",
+	// and probably "Panzer Dragoon Orta"), but these
+	// titles don't come this far as-of yet.
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(lpTitlePath)
 		LOG_FUNC_ARG(pLaunchData)
@@ -918,6 +923,12 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 
 	// Update the kernel's LaunchDataPage :
 	{
+		// TODO : This is probably not the right time to do this :
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+
+		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
+
 		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
 		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
@@ -940,7 +951,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 				MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
 				lpTitlePath = "C:\\xboxdash.xbe";
 				xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_FROM_DASHBOARD;
-				// Other options are LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
+				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
 			}
 			else
 				CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
@@ -962,7 +973,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 		PathRemoveFileSpec(szWorkingDirectoy);
 	}
 
-	// Save the launch data parameters to disk for later.
+	// Save the launch data page to disk for later.
 	{
 		char szLaunchDataPagePath[MAX_PATH];
 		snprintf(szLaunchDataPagePath, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szWorkingDirectoy);
@@ -1015,9 +1026,13 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 	// Has XGetLaunchInfo already been called since we've started this round?
 	if (g_XGetLaunchInfo_Status = -1)
 	{
-		// TODO : Move this loading of the LaunchDataPage->LaunchData towards an earlier boot/init function
+		// TODO : This is probably not the right time to do this :
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 
-		// Does CxbxLaunchData.bin exist?
+		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
+
+		// Does CxbxLaunchDataPage.bin exist?
 		// Note : This assumes "CxbxLaunchData.bin" is present in the WorkingDirectory.
 		FILE* fp = fopen("CxbxLaunchDataPage.bin", "rb");
 		// If it does exist, load it.
@@ -1035,13 +1050,22 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
-	if (NT_SUCCESS(g_XGetLaunchInfo_Status))
+	if (NT_SUCCESS(g_XGetLaunchInfo_Status)) // Implies xboxkrnl::LaunchDataPage is allocated
 	{
-		// The title was launched by a call to XLaunchNewImage
-		// A title can pass data only to itself, not another title
-		// Other options include LDT_FROM_DASHBOARD, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
-		*pdwLaunchDataType = xboxkrnl::LaunchDataPage->Header.dwLaunchDataType;
-		memcpy(pLaunchData, &(xboxkrnl::LaunchDataPage->LaunchData[0]), sizeof(LAUNCH_DATA));
+		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
+
+		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
+		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == pCertificate->dwTitleId)
+			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
+			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DEBUGGER_CMDLINE))
+		{
+			*pdwLaunchDataType = xboxkrnl::LaunchDataPage->Header.dwLaunchDataType;
+			memcpy(pLaunchData, &(xboxkrnl::LaunchDataPage->LaunchData[0]), sizeof(LAUNCH_DATA));
+
+			// TODO : Originally, the kernel now calls MmFreeContiguousMemory on xboxkrnl::LaunchDataPage
+		}
+		else
+			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
 	RETURN(g_XGetLaunchInfo_Status);
