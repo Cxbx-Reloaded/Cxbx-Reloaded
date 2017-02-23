@@ -274,6 +274,21 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\CxbxDll.rc" />
@@ -413,6 +428,21 @@
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
   </ItemGroup>
