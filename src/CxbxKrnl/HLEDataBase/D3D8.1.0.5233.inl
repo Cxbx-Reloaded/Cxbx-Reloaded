@@ -1325,21 +1325,6 @@ OOVPA_NO_XREF(D3DDevice_SetTransform, 5344, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetBackBuffer2
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 5344, 7)
-
-        { 0x07, 0x8B },
-        { 0x10, 0x01 },
-        { 0x19, 0x15 },
-        { 0x22, 0x8B },
-        { 0x2B, 0xC0 },
-        { 0x34, 0x15 },
-        { 0x3D, 0x8B },
-OOVPA_END;
-
-
-// ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 5344, 7)
@@ -1368,20 +1353,6 @@ OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 5344, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetViewport
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetViewport, 5344, 7)
-
-        { 0x05, 0x56 },
-        { 0x06, 0x57 },
-        { 0x0A, 0x0C },
-        { 0x0E, 0x0A },
-        { 0x12, 0x06 },
-        { 0x16, 0xF3 },
-        { 0x1A, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetRenderTargetFast
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
@@ -1394,20 +1365,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
         { 0xB8, 0x02 },
         { 0xD7, 0x0C },
         { 0xF6, 0xC5 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetScreenSpaceOffset
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5344, 7)
-
-        { 0x08, 0x44 },
-        { 0x12, 0xCE },
-        { 0x1F, 0xD8 },
-        { 0x26, 0x0A },
-        { 0x30, 0x3B },
-        { 0x3A, 0x8B },
-        { 0x44, 0x06 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1606,12 +1563,12 @@ OOVPATable D3D8_5233[] = {
 	 * in order to support Futurama, this second verison (added for Whacked support)
 	 * has been disabled.
 	// REGISTER_OOVPA(D3DDevice_SetTransform, 5344, PATCH),**/
-	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetViewport, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_GetViewport, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5344, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
