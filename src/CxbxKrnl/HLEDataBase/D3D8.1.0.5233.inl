@@ -627,21 +627,6 @@ OOVPA_NO_XREF(D3DDevice_SetLight, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetLight
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetLight, 5344, 8)
-
-        { 0x1E, 0x00 },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x00 },
-        { 0x7E, 0x03 },
-        { 0x9E, 0xC8 },
-        { 0xBE, 0xC9 },
-        { 0xDE, 0x03 },
-        { 0xFE, 0xC1 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_LightEnable, 5233, 13)
@@ -917,25 +902,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
-// ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 8,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ),
-
-        { 0x03, 0x04 },
-        { 0x0F, 0x8B },
-        { 0x15, 0x3B },
-        { 0x1C, 0x07 }, // **
-        { 0x1D, 0x33 }, // **
-        { 0x1F, 0xE8 }, // **
-        { 0x25, 0x04 }, // **
-OOVPA_END;
-
-// ******************************************************************
 // * D3D::CommonSetRenderTarget
 // ******************************************************************
 OOVPA_XREF(D3D_CommonSetRenderTarget, 5233, 8,
@@ -1154,34 +1120,6 @@ OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5344, 12)
         // D3DDevice_SetSoftDisplayFilter+0x4E : retn 0x04
         { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x4F, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetRenderState_TwoSidedLighting
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 5344, 13)
-
-        // D3DDevice_SetRenderState_TwoSidedLighting+0x07 : mov eax, [esi]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x06 }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_SetRenderState_TwoSidedLighting+0x09 : cmp eax, [esi+4]
-        { 0x09, 0x3B }, // (Offset,Value)-Pair #3
-        { 0x0A, 0x46 }, // (Offset,Value)-Pair #4
-        { 0x0B, 0x04 }, // (Offset,Value)-Pair #5
-
-        // ***
-        // D3DDevice_SetRenderState_TwoSidedLighting+0x18 : mov dword ptr [eax], 417C4h
-        { 0x18, 0xC7 }, // (Offset,Value)-Pair #6
-        { 0x19, 0x00 }, // (Offset,Value)-Pair #7
-        { 0x1A, 0xC4 }, // (Offset,Value)-Pair #8
-        { 0x1B, 0x17 }, // (Offset,Value)-Pair #9
-        { 0x1C, 0x04 }, // (Offset,Value)-Pair #10
-        { 0x1D, 0x00 }, // (Offset,Value)-Pair #11
-
-        // D3DDevice_SetRenderState_TwoSidedLighting+0x7D : retn 0x04
-        { 0x7D, 0xC2 }, // (Offset,Value)-Pair #12
-        { 0x7E, 0x04 }, // (Offset,Value)-Pair #13
 OOVPA_END;
 
 // ******************************************************************
@@ -1589,7 +1527,7 @@ OOVPATable D3D8_5233[] = {
     // Duplicated functions generally dangerous, but until such time as XDK 5344
     // has it's own OOVP's, fine here
     // *******
-	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ShadowFunc, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4134, PATCH),
@@ -1597,7 +1535,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 4361, PATCH),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetLight, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetLight, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 5233, PATCH),
@@ -1650,7 +1588,7 @@ OOVPATable D3D8_5233[] = {
     // Duplicate references are normally bad, but this XDK is aliased to XDK 5344
     // until such time as a separate XDK file is generated for 5344, this will have to do
     // ******
-	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPush, 5344, PATCH),

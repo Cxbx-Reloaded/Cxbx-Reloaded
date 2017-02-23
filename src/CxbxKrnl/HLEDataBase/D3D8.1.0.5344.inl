@@ -57,6 +57,68 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetLight
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetLight, 5344, 8)
+
+        { 0x1E, 0x00 },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x03 },
+        { 0x9E, 0xC8 },
+        { 0xBE, 0xC9 },
+        { 0xDE, 0x03 },
+        { 0xFE, 0xC1 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ),
+
+        { 0x03, 0x04 },
+        { 0x0F, 0x8B },
+        { 0x15, 0x3B },
+        { 0x1C, 0x07 }, // **
+        { 0x1D, 0x33 }, // **
+        { 0x1F, 0xE8 }, // **
+        { 0x25, 0x04 }, // **
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_TwoSidedLighting
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 5344, 13)
+
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x07 : mov eax, [esi]
+        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x08, 0x06 }, // (Offset,Value)-Pair #2
+
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x09 : cmp eax, [esi+4]
+        { 0x09, 0x3B }, // (Offset,Value)-Pair #3
+        { 0x0A, 0x46 }, // (Offset,Value)-Pair #4
+        { 0x0B, 0x04 }, // (Offset,Value)-Pair #5
+
+        // ***
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x18 : mov dword ptr [eax], 417C4h
+        { 0x18, 0xC7 }, // (Offset,Value)-Pair #6
+        { 0x19, 0x00 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0xC4 }, // (Offset,Value)-Pair #8
+        { 0x1B, 0x17 }, // (Offset,Value)-Pair #9
+        { 0x1C, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x1D, 0x00 }, // (Offset,Value)-Pair #11
+
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x7D : retn 0x04
+        { 0x7D, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x7E, 0x04 }, // (Offset,Value)-Pair #13
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
