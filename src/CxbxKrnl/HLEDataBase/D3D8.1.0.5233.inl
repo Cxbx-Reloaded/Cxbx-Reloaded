@@ -1210,21 +1210,6 @@ OOVPA_NO_XREF(D3DDevice_End, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTransform
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTransform, 5344, 8)
-
-        { 0x1E, 0x8B },
-        { 0x3E, 0x00 },
-        { 0x5E, 0xC4 },
-        { 0x7E, 0x62 },
-        { 0x9E, 0x00 },
-        { 0xBE, 0x42 },
-        { 0xDE, 0x42 },
-        { 0xFE, 0xCB },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 5344, 7)
@@ -1265,21 +1250,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
         { 0xB8, 0x02 },
         { 0xD7, 0x0C },
         { 0xF6, 0xC5 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetScissors
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetScissors, 5344, 8)
-
-        { 0x1D, 0x44 },
-        { 0x3C, 0x8B },
-        { 0x5D, 0xD9 },
-        { 0x7D, 0xD8 },
-        { 0x99, 0x0A },
-        { 0xB8, 0xE8 },
-        { 0xD7, 0x24 },
-        { 0xF6, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
@@ -1453,7 +1423,7 @@ OOVPATable D3D8_5233[] = {
 	//REGISTER_OOVPA(D3DDevice_GetViewport, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	//REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5344, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetScissors, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetScissors, 5344, DISABLED),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
