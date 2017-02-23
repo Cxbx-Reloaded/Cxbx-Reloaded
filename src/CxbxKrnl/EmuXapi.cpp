@@ -1264,19 +1264,6 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 }
 
 // ******************************************************************
-// * patch: XAutoPowerDownResetTimer
-// ******************************************************************
-int WINAPI XTL::EMUPATCH(XAutoPowerDownResetTimer)()
-{
-	LOG_FUNC();
-
-	// Meh, that's what the 'X' is for! =]
-	LOG_UNIMPLEMENTED();
-
-	RETURN(TRUE);
-}
-
-// ******************************************************************
 // * patch: XMountMURootA
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
