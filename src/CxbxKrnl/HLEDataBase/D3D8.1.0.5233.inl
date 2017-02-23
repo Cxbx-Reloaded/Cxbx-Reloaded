@@ -409,28 +409,6 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 5233, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * Get2DSurfaceDesc
-// ******************************************************************
-OOVPA_NO_XREF(Get2DSurfaceDesc, 5344, 10)
-
-        // Get2DSurfaceDesc+0x2B : movzx edx, byte ptr [edi+0x0D]
-        { 0x2B, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x2C, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
-        { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
-
-        // Get2DSurfaceDesc+0x52 : mov edx, [eax+0x15F4]
-        { 0x52, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x53, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x54, 0xF4 }, // (Offset,Value)-Pair #7
-        { 0x55, 0x15 }, // (Offset,Value)-Pair #8
-
-        // Get2DSurfaceDesc+0xAE : retn 0x0C
-        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_GetBackBuffer2
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 5233, 12)
@@ -1038,30 +1016,6 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 5344, 12)
-
-        // D3DDevice_SetFlickerFilter+0x1C : mov eax, [eax+0x17C8]
-        { 0x1C, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x1D, 0x80 }, // (Offset,Value)-Pair #2
-        { 0x1E, 0xF8 }, // (Offset,Value)-Pair #3
-        { 0x1F, 0x17 }, // (Offset,Value)-Pair #4
-
-        // D3DDevice_SetFlickerFilter+0x22 : push 0; push esi; push 0x0B; push eax
-        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
-        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
-        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
-        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x26, 0x0B }, // (Offset,Value)-Pair #9
-        { 0x27, 0x50 }, // (Offset,Value)-Pair #10
-
-        // D3DDevice_SetFlickerFilter+0x3F : retn 0x04
-        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetFlickerFilter
-// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5233, 12)
 
         // D3DDevice_SetSoftDisplayFilter+0x25 : mov edx, [eax+0x17C8]
@@ -1256,21 +1210,6 @@ OOVPA_NO_XREF(D3DDevice_End, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetViewport
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetViewport, 5344, 8)
-
-        { 0x1E, 0x87 },
-        { 0x3E, 0xC0 },
-        { 0x5E, 0x49 },
-        { 0x7E, 0xD6 },
-        { 0x9E, 0xE2 },
-        { 0xBE, 0xC1 },
-        { 0xDE, 0xC9 },
-        { 0xFE, 0x14 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetTransform
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetTransform, 5344, 8)
@@ -1459,7 +1398,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DTexture_LockRect, 5233, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5233, PATCH),
-	REGISTER_OOVPA(Get2DSurfaceDesc, 5344, PATCH),
+	//REGISTER_OOVPA(Get2DSurfaceDesc, 5344, DISABLED),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 4361, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
@@ -1481,7 +1420,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetPalette, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5233, PATCH),
 	//REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5344, DISABLED),
 	// REGISTER_OOVPA(D3DDevice_Unknown1, 5233, PATCH)
@@ -1502,7 +1441,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4ub, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetViewport, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetViewport, 5344, DISABLED),
 	/**
 	 * Having two versions of D3Device::SetTransform in this file creates problems,
 	 * in order to support Futurama, this second verison (added for Whacked support)
