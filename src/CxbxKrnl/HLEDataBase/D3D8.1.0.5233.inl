@@ -656,21 +656,6 @@ OOVPA_NO_XREF(D3DDevice_LightEnable, 5233, 13)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_LightEnable
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_LightEnable, 5344, 8)
-
-        { 0x1E, 0x8D },
-        { 0x3E, 0xC7 },
-        { 0x5E, 0xC7 },
-        { 0x7E, 0x00 },
-        { 0x9E, 0x85 },
-        { 0xBE, 0x01 },
-        { 0xDE, 0x00 },
-        { 0xFE, 0x83 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DVertexBuffer_GetDesc
 // ******************************************************************
 OOVPA_NO_XREF(D3DVertexBuffer_GetDesc, 5233, 7)
@@ -1099,30 +1084,6 @@ OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetFlickerFilter
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5344, 12)
-
-        // D3DDevice_SetSoftDisplayFilter+0x25 : mov edx, [eax+0x17F8]
-        { 0x25, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x26, 0x90 }, // (Offset,Value)-Pair #2
-        { 0x27, 0xF8 }, // (Offset,Value)-Pair #3
-        { 0x28, 0x17 }, // (Offset,Value)-Pair #4
-
-        // D3DDevice_SetSoftDisplayFilter+0x2B : push 0; push esi; push 0x0E; push edx
-        { 0x2B, 0x6A }, // (Offset,Value)-Pair #5
-        { 0x2C, 0x00 }, // (Offset,Value)-Pair #6
-        { 0x2D, 0x56 }, // (Offset,Value)-Pair #7
-        { 0x2E, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x2F, 0x0E }, // (Offset,Value)-Pair #9
-        { 0x30, 0x52 }, // (Offset,Value)-Pair #10
-
-        // D3DDevice_SetSoftDisplayFilter+0x4E : retn 0x04
-        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x4F, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_Unknown1
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_Unknown1, 5233, 9)
@@ -1383,22 +1344,6 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 5344, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetMaterial
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetMaterial, 5344, 9)
-
-        { 0x04, 0x08 },
-        { 0x0C, 0x81 },
-        { 0x0E, 0xE0 },
-        { 0x10, 0x00 },
-        { 0x16, 0x00 },
-        { 0x1F, 0x81 },
-        { 0x22, 0x90 },
-        { 0x2C, 0x5E },
-        { 0x2E, 0x04 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3D8_5233
 // ******************************************************************
 OOVPATable D3D8_5233[] = {
@@ -1494,10 +1439,10 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetLight, 5233, PATCH),
 	//REGISTER_OOVPA(D3DDevice_SetLight, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_LightEnable, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_LightEnable, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetMaterial, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetMaterial, 5344, DISABLED),
 	REGISTER_OOVPA(D3DVertexBuffer_GetDesc, 5233, PATCH),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock2, 4627, PATCH),
 	REGISTER_OOVPA(D3DResource_Register, 3925, PATCH),
@@ -1538,7 +1483,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5344, DISABLED),
 	// REGISTER_OOVPA(D3DDevice_Unknown1, 5233, PATCH)
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
     // ******
