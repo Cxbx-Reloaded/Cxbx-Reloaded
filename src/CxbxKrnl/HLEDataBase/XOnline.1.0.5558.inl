@@ -51,7 +51,7 @@ OOVPA_END;
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 5344, 8)
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 5233, 8)
 
         { 0x08, 0x33 },
         { 0x10, 0x8A },
@@ -129,7 +129,7 @@ OOVPATable XOnline_5558[] = {
 	REGISTER_OOVPA(bind, 4361, EMUTHIS),
 	// REGISTER_OOVPA(listen, 4361, EMUTHIS),
 	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5344, PATCH),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5233, PATCH),
 };
 
 // ******************************************************************
