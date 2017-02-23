@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_NO_XREF(XNetStartup, 5344, 8)
+OOVPA_NO_XREF(XNetStartup, 5233, 8)
 
         { 0x01, 0xC0 },
         { 0x04, 0x50 },
@@ -94,7 +94,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5233[] = {
 
-	REGISTER_OOVPA(XNetStartup, 5344, PATCH),
+	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(XnInit, 4627, XREF),
 	// REGISTER_OOVPA(socket, 4361, EMUTHIS),
