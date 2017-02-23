@@ -1,6 +1,6 @@
 # Cxbx-Reloaded - An Xbox Emulator
 
-Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
+Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows. This fork is just for me to mess around with. 
 
 The project began life as a fork of Cxbx with added 64-bit support. Work is currently underway to backport some of the improvements from Dxbx.
 
