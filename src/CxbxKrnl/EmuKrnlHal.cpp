@@ -563,7 +563,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
-XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()
