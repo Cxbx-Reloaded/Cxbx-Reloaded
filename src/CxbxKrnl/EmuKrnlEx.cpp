@@ -387,7 +387,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		if (ResultLength != nullptr)
 			*ResultLength = result_length;
 
-		if (ValueLength >= result_length)
+		if ((int)ValueLength >= result_length)
 		{
 			// TODO : Make EEPROM-access thread-safe
 
