@@ -1050,7 +1050,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
-	if (NT_SUCCESS(g_XGetLaunchInfo_Status)) // Implies xboxkrnl::LaunchDataPage is allocated
+	if (g_XGetLaunchInfo_Status == ERROR_SUCCESS) // Implies xboxkrnl::LaunchDataPage is allocated
 	{
 		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 
