@@ -286,6 +286,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\State.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\xxhash32.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Cxbx.ico" />

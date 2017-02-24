@@ -1165,7 +1165,7 @@ static void EmuUnswizzleTextureStages()
 		pPixelContainer->EmuTexture8->UnlockRect(0);
 		pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
 
-		// TODO: potentially CRC to see if this surface was actually modified..
+		// TODO: potentially XXHash32::hash() to see if this surface was actually modified..
 
 		//
 		// unswizzle texture

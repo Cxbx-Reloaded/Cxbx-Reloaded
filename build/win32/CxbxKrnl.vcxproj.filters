@@ -274,6 +274,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\xxhash32.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\CxbxDll.rc" />
