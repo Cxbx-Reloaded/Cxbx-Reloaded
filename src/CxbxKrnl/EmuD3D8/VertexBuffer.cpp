@@ -1244,7 +1244,7 @@ VOID XTL::EmuFlushIVB()
     }
 
     g_pD3DDevice8->DrawPrimitiveUP(
-        EmuPrimitiveType(VPDesc.PrimitiveType),
+		EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
         VPDesc.dwPrimitiveCount,
         VPDesc.pVertexStreamZeroData,
         VPDesc.uiVertexStreamZeroStride);

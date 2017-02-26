@@ -241,7 +241,7 @@ extern void XTL::EmuExecutePushBufferRaw
                 #endif
 
                 XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
+                PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
             }
         }
         else if(dwMethod == 0x1818) // NVPB_InlineVertexArray

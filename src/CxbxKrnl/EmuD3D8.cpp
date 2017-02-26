@@ -7699,7 +7699,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 
         g_pD3DDevice8->DrawPrimitiveUP
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType),
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
             VPDesc.dwPrimitiveCount,
             VPDesc.pVertexStreamZeroData,
             VPDesc.uiVertexStreamZeroStride
@@ -7877,7 +7877,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     {
         g_pD3DDevice8->DrawIndexedPrimitive
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
         );
 
 		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
@@ -7886,14 +7886,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		{ 
 			g_pD3DDevice8->DrawPrimitive 
 			( 
-				EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount 
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount 
 			); 
 		} 
 		else 
 		{ 
 			g_pD3DDevice8->DrawIndexedPrimitive 
 			( 
-				EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount 
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount 
 			); 
 		} */
     }
@@ -7982,7 +7982,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     {
         g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
         );
 
 		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
