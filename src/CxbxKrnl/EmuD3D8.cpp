@@ -7561,6 +7561,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     return hRet;
 }
 
+void CxbxUpdateNativeD3DResources()
+{
+	XTL::EmuUpdateDeferredStates();
+	EmuUnswizzleTextureStages();
+/* TODO : Port these :
+	DxbxUpdateActiveVertexShader();
+	DxbxUpdateActiveTextures();
+	DxbxUpdateActivePixelShader();
+	DxbxUpdateDeferredStates(); // BeginPush sample shows us that this must come *after* texture update!
+	DxbxUpdateActiveVertexBufferStreams();
+	DxbxUpdateActiveRenderTarget();
+*/
+}
+
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
 // ******************************************************************
@@ -7581,10 +7595,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
            ");\n",
            PrimitiveType, StartVertex, VertexCount);
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
-    VertexPatchDesc VPDesc;
+	CxbxUpdateNativeD3DResources();
+
+	VertexPatchDesc VPDesc;
 
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
@@ -7606,7 +7621,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
         g_pD3DDevice8->DrawPrimitive
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType),
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
             StartVertex,
             VPDesc.dwPrimitiveCount
         );
@@ -7661,8 +7676,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
            PrimitiveType, VertexCount, pVertexStreamZeroData,
            VertexStreamZeroStride);
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	CxbxUpdateNativeD3DResources();
 
 /*#if 0
 	// HACK: Phantom Crash...
@@ -7785,8 +7799,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
             CxbxKrnlCleanup("SetIndices Failed!");
     }
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	CxbxUpdateNativeD3DResources();
 
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
@@ -7954,9 +7967,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
         CxbxKrnlCleanup("g_pIndexBuffer != 0");
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
-
+	CxbxUpdateNativeD3DResources();
+	
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
