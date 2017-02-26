@@ -7708,22 +7708,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
     {
         #ifdef _DEBUG_TRACK_VB
         if(!g_bVBSkipStream)
+        #endif
         {
-        #endif
+			g_pD3DDevice8->DrawPrimitiveUP
+			(
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+				VPDesc.dwPrimitiveCount,
+				VPDesc.pVertexStreamZeroData,
+				VPDesc.uiVertexStreamZeroStride
+			);
 
-        g_pD3DDevice8->DrawPrimitiveUP
-        (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
-            VPDesc.dwPrimitiveCount,
-            VPDesc.pVertexStreamZeroData,
-            VPDesc.uiVertexStreamZeroStride
-        );
-
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
-
-        #ifdef _DEBUG_TRACK_VB
+			g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
         }
-        #endif
     }
 
     VertPatch.Restore();
