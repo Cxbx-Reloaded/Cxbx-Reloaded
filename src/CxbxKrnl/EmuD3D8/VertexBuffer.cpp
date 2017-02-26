@@ -403,7 +403,8 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
     IDirect3DVertexBuffer8    *pNewVertexBuffer;
     uint08                    *pOrigData;
     uint08                    *pNewData;
-    UINT                       uiStride;
+	UINT                       uiStride;
+	UINT                       uiVertexCount;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     PATCHEDSTREAM             *pStream = &m_pStreams[uiStream];
     STREAM_DYNAMIC_PATCH      *pStreamPatch = &m_pDynamicPatch->pStreamPatches[uiStream];
@@ -417,8 +418,12 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             CxbxKrnlCleanup("Could not retrieve original buffer size");
         }
         // Set a new (exact) vertex count
-        pPatchDesc->dwVertexCount = Desc.Size / uiStride;
-        dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
+		uiVertexCount = Desc.Size / uiStride;
+		// Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
+		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
+		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
+		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+        dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
 
         if(FAILED(pOrigVertexBuffer->Lock(0, 0, &pOrigData, 0)))
         {
@@ -443,9 +448,11 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
         }
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
-        pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
+		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+		pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         // TODO: This is sometimes the number of indices, which isn't too good
-        dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
+		uiVertexCount = pPatchDesc->dwVertexCount;
+		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
         pNewData = (uint08*)CxbxMalloc(dwNewSize);
         if(!pNewData)
