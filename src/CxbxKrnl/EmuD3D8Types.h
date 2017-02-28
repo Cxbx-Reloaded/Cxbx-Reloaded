@@ -137,10 +137,10 @@ typedef enum _X_D3DFORMAT
 	// Compressed Formats
 
 	X_D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
-	X_D3DFMT_DXT2 = 0x0E, // linear alpha
-	X_D3DFMT_DXT3 = 0x0E, // Alias
-	X_D3DFMT_DXT4 = 0x0F, // interpolated alpha
-	X_D3DFMT_DXT5 = 0x0F, // Alias
+	X_D3DFMT_DXT2 = 0x0E, // Alias for X_D3DFMT_DXT3
+	X_D3DFMT_DXT3 = 0x0E, // linear alpha
+	X_D3DFMT_DXT4 = 0x0F, // Alias for X_D3DFMT_DXT5
+	X_D3DFMT_DXT5 = 0x0F, // interpolated alpha
 
 	// Linear Formats
 
