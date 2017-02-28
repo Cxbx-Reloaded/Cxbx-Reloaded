@@ -405,6 +405,24 @@ OOVPA_XREF(IDirectSound_SetRolloffFactor, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
+// DirectSound_CDirectSoundVoice::SetMode
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetMode, 5344, 8,
+
+    XREF_DSBUFFERSETMODEB,
+    XRefZero)
+
+        { 0x09, 0xB4 }, // (Offset,Value)-Pair #1
+        { 0x10, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x13, 0x40 }, // (Offset,Value)-Pair #3
+        { 0x15, 0x41 }, // (Offset,Value)-Pair #4
+        { 0x18, 0x80 }, // (Offset,Value)-Pair #5
+        { 0x19, 0xB4 }, // (Offset,Value)-Pair #6
+        { 0x2E, 0x33 }, // (Offset,Value)-Pair #7
+        { 0x31, 0x0C }, // (Offset,Value)-Pair #8
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
