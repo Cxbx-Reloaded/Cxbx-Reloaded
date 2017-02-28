@@ -117,7 +117,7 @@ static XTL::X_D3DIndexBuffer       *g_pIndexBuffer  = NULL; // current active in
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
 
 // current active vertex stream
-extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active vertex buffer
+static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active vertex buffer
 static XTL::IDirect3DVertexBuffer8 *g_pDummyBuffer = NULL;  // Dummy buffer, used to set unused stream sources with
 static DWORD						g_dwLastSetStream = 0;	// The last stream set by D3DDevice::SetStreamSource
 

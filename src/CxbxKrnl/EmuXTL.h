@@ -57,6 +57,5 @@ extern DWORD                    g_CurrentVertexShader;
 extern XTL::PIXEL_SHADER *		g_CurrentPixelShader;
 extern BOOL                     g_bFakePixelShaderLoaded;
 extern BOOL                     g_bIsFauxFullscreen;
-extern XTL::X_D3DVertexBuffer  *g_pVertexBuffer;
 
 #endif
