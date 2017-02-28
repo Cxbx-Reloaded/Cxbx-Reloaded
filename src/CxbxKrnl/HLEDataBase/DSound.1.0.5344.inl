@@ -256,6 +256,44 @@ OOVPA_XREF(IDirectSound_SetDistanceFactor, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetDopplerFactor
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSound_SetDopplerFactor, 5344, 9,
+
+    XREF_SETDOPPLERFACTOR,
+    XRefZero)
+
+        { 0x0C, 0x00 },
+        { 0x16, 0x68 },
+        { 0x22, 0x05 },
+        { 0x2E, 0x08 },
+        { 0x35, 0x74 },
+        { 0x3A, 0x48 },
+        { 0x4A, 0x85 },
+        { 0x53, 0xFF },
+        { 0x5E, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_SetDopplerFactor
+// ******************************************************************
+OOVPA_XREF(IDirectSound_SetDopplerFactor, 5344, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x1D, XREF_SETDOPPLERFACTOR ),
+
+        { 0x03, 0x0C },
+        { 0x08, 0x8B },
+        { 0x0D, 0x8B },
+        { 0x12, 0x83 },
+        { 0x17, 0x1B },
+        { 0x1C, 0xE8 },
+        { 0x21, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
