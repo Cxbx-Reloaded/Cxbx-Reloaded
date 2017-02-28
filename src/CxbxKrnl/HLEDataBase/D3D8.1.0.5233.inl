@@ -1072,7 +1072,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndPush
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_EndPush, 5344, 8)
+OOVPA_NO_XREF(D3DDevice_EndPush, 5233, 8)
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },
@@ -1404,8 +1404,8 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPush, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndPush, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndPush, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndPush, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndPush, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_SampleAlpha, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5233, PATCH),
