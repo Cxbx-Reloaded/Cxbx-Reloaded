@@ -405,22 +405,17 @@ DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
     DWORD NewFlags = 0;
 
     // Need to convert the flags, TODO: fix the xbox extensions
-    if(Flags & X_D3DLOCK_NOFLUSH)
-    {
-        NewFlags ^= 0;
-    }
-    if(Flags & X_D3DLOCK_NOOVERWRITE)
-    {
-        NewFlags ^= D3DLOCK_NOOVERWRITE;
-    }
-    if(Flags & X_D3DLOCK_TILED)
-    {
-        NewFlags ^= 0;
-    }
-    if(Flags & X_D3DLOCK_READONLY)
-    {
-        NewFlags ^= D3DLOCK_READONLY;
-    }
+//    if(Flags & X_D3DLOCK_NOFLUSH)
+//        NewFlags ^= 0;
+
+	if(Flags & X_D3DLOCK_NOOVERWRITE)
+        NewFlags |= D3DLOCK_NOOVERWRITE;
+
+//	if(Flags & X_D3DLOCK_TILED)
+//        NewFlags ^= 0;
+
+	if(Flags & X_D3DLOCK_READONLY)
+        NewFlags |= D3DLOCK_READONLY;
 
     return NewFlags;
 }
