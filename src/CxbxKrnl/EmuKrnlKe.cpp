@@ -277,7 +277,7 @@ double NativeToXbox_FactorForPerformanceFrequency;
 
 void ConnectKeInterruptTimeToThunkTable(); // forward
 
-CXBXKRNL_API void CxbxInitPerformanceCounters()
+void CxbxInitPerformanceCounters()
 {
 	BootTickCount = GetTickCount();
 

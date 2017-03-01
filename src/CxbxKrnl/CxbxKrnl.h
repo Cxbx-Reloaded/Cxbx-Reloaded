@@ -74,8 +74,10 @@ typedef uint32 xbaddr;
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
+#define XBE_IMAGE_BASE XBOX_BASE_ADDR
+
 /*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
-#define CXBX_BASE_ADDR XBOX_BASE_ADDR
+#define CXBX_BASE_ADDR XBE_IMAGE_BASE
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
 // MAX_BUS_INTERRUPT_LEVEL = PROFILE_LEVEL = 27
@@ -90,57 +92,57 @@ typedef uint32 xbaddr;
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
 /*! validate version string match */
-CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
+bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 /*! Cxbx Kernel Entry Point */
-CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[]);
+void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
-CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...);
+void CxbxKrnlCleanup(const char *szErrorMessage, ...);
 
 /*! register a thread handle */
-CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread);
+void CxbxKrnlRegisterThread(HANDLE hThread);
 
 /*! suspend emulation */
-CXBXKRNL_API void CxbxKrnlSuspend();
+void CxbxKrnlSuspend();
 
 /*! resume emulation */
-CXBXKRNL_API void CxbxKrnlResume();
+void CxbxKrnlResume();
 
 /*! terminate the calling thread */
-CXBXKRNL_API void CxbxKrnlTerminateThread();
+void CxbxKrnlTerminateThread();
 
 /*! kernel panic (trap for unimplemented kernel functions) */
-CXBXKRNL_API void CxbxKrnlPanic();
+void CxbxKrnlPanic();
 
 /*! empty function */
-CXBXKRNL_API void CxbxKrnlNoFunc();
+void CxbxKrnlNoFunc();
 
-CXBXKRNL_API void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
+void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 /*! kernel thunk table */
-extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];
+extern uint32 CxbxKrnl_KernelThunkTable[379];
 
 /*! thread local storage structure */
-extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS;
+extern Xbe::TLS *CxbxKrnl_TLS;
 
 /*! thread local storage data */
-extern CXBXKRNL_API void *CxbxKrnl_TLSData;
+extern void *CxbxKrnl_TLSData;
 
 /*! xbe header structure */
-extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader;
+extern Xbe::Header *CxbxKrnl_XbeHeader;
 
 extern Xbe *CxbxKrnl_Xbe;
 
 /*! parent window handle */
-extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
-extern CXBXKRNL_API DebugMode CxbxKrnl_DebugMode;
-extern CXBXKRNL_API char* CxbxKrnl_DebugFileName;
+extern HWND CxbxKrnl_hEmuParent;
+extern DebugMode CxbxKrnl_DebugMode;
+extern char* CxbxKrnl_DebugFileName;
 
-extern void ConnectWindowsTimersToThunkTable();
+void ConnectWindowsTimersToThunkTable();
 
 #ifdef __cplusplus
 }

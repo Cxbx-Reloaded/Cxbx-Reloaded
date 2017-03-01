@@ -42,7 +42,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -67,7 +67,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;..\..\import\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;..\..\import\stb;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -83,9 +83,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -119,7 +119,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;..\..\import\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;..\..\import\stb;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -135,9 +135,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -158,15 +158,98 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\import\stb\stb_image.h" />
+    <ClInclude Include="..\..\src\Common\Logging.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\device.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuAlloc.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\State.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXapi.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXInput.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\Common\Error.h" />
-    <ClInclude Include="..\..\src\Common\Exe.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
@@ -181,6 +264,51 @@
     <None Include="..\..\resource\Cxbx.ico" />
     <None Include="..\..\resource\Logo.bmp" />
     <None Include="..\..\resource\Splash.jpg" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
@@ -191,6 +319,176 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Common\Logging.cpp" />
+    <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\DbgConsole.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\device.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuAlloc.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\State.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuDInput.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuDSound.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuFS.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnl.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlAv.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlDbg.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlEx.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlFs.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlHal.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlIo.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKd.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKe.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlLogging.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlMm.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlNt.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlOb.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlPs.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlRtl.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXbox.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXc.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXe.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuXInput.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\HLEDataBase.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\HLEIntercept.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -204,12 +502,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Error.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Common\Exe.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

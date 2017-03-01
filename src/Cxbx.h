@@ -34,13 +34,6 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-/*! CxbxKrnl exports, others import */
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API __declspec(dllimport)
-#else
-#define CXBXKRNL_API __declspec(dllexport)
-#endif
-
 /*! \name primitive typedefs */
 /*! \{ */
 typedef signed int     sint;
