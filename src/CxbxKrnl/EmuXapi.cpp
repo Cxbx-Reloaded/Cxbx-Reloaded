@@ -51,7 +51,6 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
-#include "Exe.h"
 
 // XInputSetState status waiters
 extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0};
@@ -59,7 +58,6 @@ extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0}
 // XInputOpen handles
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
-bool g_bXLaunchNewImageCalled = false;
 bool g_bXInputOpenCalled = false;
 
 bool CxbxMountUtilityDrive(bool formatClean);
@@ -77,9 +75,6 @@ namespace NtDll
 
 XTL::POLLING_PARAMETERS_HANDLE g_pph;
 XTL::XINPUT_POLLING_PARAMETERS g_pp;
-
-// Saved launch data
-XTL::LAUNCH_DATA g_SavedLaunchData;
 
 // Fiber function list
 typedef struct _XFIBER
@@ -912,76 +907,105 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 	PLAUNCH_DATA	pLaunchData
 )
 {
+	// Note : This can be tested using "Innocent tears",
+	// which relaunches different xbes between scenes;
+	// One for menus, one for fmvs, etc.
+	//
+	// Other titles do this too (like "DOA2 Ultimate",
+	// and probably "Panzer Dragoon Orta"), but these
+	// titles don't come this far as-of yet.
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(lpTitlePath)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
 
-	// If this function succeeds, it doesn't get a chance to return anything.
-	DWORD dwRet = ERROR_GEN_FAILURE;
+	// Update the kernel's LaunchDataPage :
+	{
+		// TODO : This is probably not the right time to do this :
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 
-	// If no path is specified, then the xbe is rebooting to dashboard
-	if (!lpTitlePath) {
-		char szDashboardPath[MAX_PATH] = { 0 };
-		XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
-		if(rootDevice != nullptr)
-			sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice->HostDevicePath.c_str());
-		
-		if (PathFileExists(szDashboardPath))
+		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
+
+		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
+		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
+		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
+		if (pLaunchData != NULL)
+			// Save the launch data
+			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
+
+		if (lpTitlePath != NULL)
+			xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
+		else
 		{
-			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
-			EMUPATCH(XLaunchNewImage)("C:\\xboxdash.xbe", pLaunchData);
+			// If no path is specified, then the xbe is rebooting to dashboard
+			char szDashboardPath[MAX_PATH] = { 0 };
+			XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
+			if (rootDevice != nullptr)
+				sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice->HostDevicePath.c_str());
+
+			if (PathFileExists(szDashboardPath))
+			{
+				MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
+				lpTitlePath = "C:\\xboxdash.xbe";
+				xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_FROM_DASHBOARD;
+				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
+			}
+			else
+				CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
 		}
-			
-		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
+
+		strncpy(&(xboxkrnl::LaunchDataPage->Header.szLaunchPath[0]), lpTitlePath, 520);
 	}
-		
-	char szExeFileName[MAX_PATH];
-	GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+
+	char szXbePath[MAX_PATH];
+	char szWorkingDirectoy[MAX_PATH];
 
 	// Convert Xbox XBE Path to Windows Path
-	char szXbePath[MAX_PATH];
-
-	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
-	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
-
-	// Determine Working Directory
-	char szWorkingDirectoy[MAX_PATH];
-	strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
-	PathRemoveFileSpec(szWorkingDirectoy);
-
-	// Save the launch data
-	if (pLaunchData != NULL)
 	{
-		CopyMemory(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+		EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+		snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
 
-		// Save the launch data parameters to disk for later.
-		char szLaunchDataPath[MAX_PATH];
-		snprintf(szLaunchDataPath, MAX_PATH, "%s\\CxbxLaunchData.bin", szWorkingDirectoy);
+		// Determine Working Directory
+		strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+		PathRemoveFileSpec(szWorkingDirectoy);
+	}
 
-		DbgPrintf("Saving launch data to %s\n", szLaunchDataPath);
+	// Save the launch data page to disk for later.
+	{
+		char szLaunchDataPagePath[MAX_PATH];
+		snprintf(szLaunchDataPagePath, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szWorkingDirectoy);
 
-		FILE* fp = fopen(szLaunchDataPath, "wb");
+		DbgPrintf("Saving launch data to %s\n", szLaunchDataPagePath);
+		// TODO : When reading Xbe files from read-only storage, we must use another location for "CxbxLaunchDataPage.bin" !
+		FILE* fp = fopen(szLaunchDataPagePath, "wb");
 		fseek(fp, 0, SEEK_SET);
-		fwrite(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+		fwrite(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
 		fclose(fp);
 	}
 
-	g_bXLaunchNewImageCalled = true;
-
 	// Launch the new Xbe	
-	char szArgsBuffer[4096];
-	snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
-
-	if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
 	{
-		CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+		char szExeFileName[MAX_PATH];
+		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+
+		char szArgsBuffer[4096];
+		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+
+		if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+		{
+			CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+		}
+
+		ExitProcess(EXIT_SUCCESS);
 	}
 
-	ExitProcess(EXIT_SUCCESS);
-
-	RETURN(dwRet);
+	// If this function succeeds, it doesn't get a chance to return anything.
+	RETURN(ERROR_GEN_FAILURE);
 }
+
+DWORD g_XGetLaunchInfo_Status = -1;
 
 // ******************************************************************
 // * patch: XGetLaunchInfo
@@ -998,53 +1022,52 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 		LOG_FUNC_END;
 
 	// The title was launched by turning on the Xbox console with the title disc already in the DVD drive
-	DWORD dwRet = ERROR_NOT_FOUND;
-
-	// Has XLaunchNewImage been called since we've started this round?
-	if(g_bXLaunchNewImageCalled)
+	// Has XGetLaunchInfo already been called since we've started this round?
+	if (g_XGetLaunchInfo_Status = -1)
 	{
-		// The title was launched by a call to XLaunchNewImage
-		// A title can pass data only to itself, not another title
-		//
-		// Other options include LDT_FROM_DASHBOARD, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
-		//
-		*pdwLaunchDataType = LDT_TITLE; 
+		// TODO : This is probably not the right time to do this :
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 
-		// Copy saved launch data
-		CopyMemory(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
+		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
 
-		dwRet = ERROR_SUCCESS;
+		// Does CxbxLaunchDataPage.bin exist?
+		// Note : This assumes "CxbxLaunchData.bin" is present in the WorkingDirectory.
+		FILE* fp = fopen("CxbxLaunchDataPage.bin", "rb");
+		// If it does exist, load it.
+		if (fp)
+		{
+			// Read in the contents.
+			fseek(fp, 0, SEEK_SET);
+			fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
+			fclose(fp);
+			// Delete the file once we're done.
+			remove("CxbxLaunchDataPage.bin");
+			g_XGetLaunchInfo_Status = ERROR_SUCCESS;
+		}
+		else
+			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
-	FILE* fp = NULL;
-
-	// Does CxbxLaunchData.bin exist?
-	if(!g_bXLaunchNewImageCalled)
-		fp = fopen("CxbxLaunchData.bin", "rb");
-
-	// If it does exist, load it.
-	if(fp)
+	if (g_XGetLaunchInfo_Status == ERROR_SUCCESS) // Implies xboxkrnl::LaunchDataPage is allocated
 	{
-		// The title was launched by a call to XLaunchNewImage
-		// A title can pass data only to itself, not another title
-		//
-		// Other options include LDT_FROM_DASHBOARD, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
-		//
-		*pdwLaunchDataType = LDT_TITLE; 
+		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 
-		// Read in the contents.
-		fseek(fp, 0, SEEK_SET);
-		fread(&g_SavedLaunchData, sizeof(LAUNCH_DATA), 1, fp);
-		memcpy(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
-		fclose(fp);
+		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
+		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == pCertificate->dwTitleId)
+			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
+			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DEBUGGER_CMDLINE))
+		{
+			*pdwLaunchDataType = xboxkrnl::LaunchDataPage->Header.dwLaunchDataType;
+			memcpy(pLaunchData, &(xboxkrnl::LaunchDataPage->LaunchData[0]), sizeof(LAUNCH_DATA));
 
-		// Delete the file once we're done.
-		DeleteFile("CxbxLaunchData.bin");
-
-		dwRet = ERROR_SUCCESS;
+			// TODO : Originally, the kernel now calls MmFreeContiguousMemory on xboxkrnl::LaunchDataPage
+		}
+		else
+			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
-	RETURN(dwRet);
+	RETURN(g_XGetLaunchInfo_Status);
 }
 
 // ******************************************************************

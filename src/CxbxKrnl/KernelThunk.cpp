@@ -42,7 +42,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "Cxbx.h" // For CXBXKRNL_API, CxbxKrnl_KernelThunkTable
+#include "Cxbx.h" // For CxbxKrnl_KernelThunkTable
 #include "CxbxKrnl.h" // For UINT
 
 //
@@ -65,7 +65,7 @@ namespace xboxkrnl
 
 // kernel thunk table
 // Note : Names that collide with other symbols, use the KRNL() macro.
-extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
+uint32 CxbxKrnl_KernelThunkTable[379] =
 {
 	(uint32)PANIC(0x0000),                                        // 0x0000 (0)   NULL
 	(uint32)FUNC(&xboxkrnl::AvGetSavedDataAddress),               // 0x0001 (1)

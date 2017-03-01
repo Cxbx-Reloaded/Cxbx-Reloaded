@@ -76,6 +76,7 @@ xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
 // TODO : Should the kernel point to xLaunchDataPage directly??
+// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
 XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
 
 // ******************************************************************
@@ -514,7 +515,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
 
-	if (MemoryStatistics->Length == 0x24)
+	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
 		GlobalMemoryStatus(&MemoryStatus);
 		GetSystemInfo(&SysInfo);

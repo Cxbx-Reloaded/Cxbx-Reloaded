@@ -114,7 +114,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 // print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
-extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
+void NTAPI EmuWarning(const char *szWarningMessage, ...)
 {
     if(szWarningMessage == NULL)
         return;

@@ -50,6 +50,13 @@ typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 typedef PVOID X_D3DCALLBACK;
 
+typedef enum _X_D3DCULL {
+	X_D3DCULL_NONE = 0,
+	X_D3DCULL_CW = 0x900,
+	X_D3DCULL_CCW = 0x901,
+	X_D3DCULL_FORCE_DWORD = 0x7fffffff
+} X_D3DCULL;
+
 typedef enum _X_D3DFORMAT
 {
 /*
@@ -130,10 +137,10 @@ typedef enum _X_D3DFORMAT
 	// Compressed Formats
 
 	X_D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
-	X_D3DFMT_DXT2 = 0x0E, // linear alpha
-	X_D3DFMT_DXT3 = 0x0E, // Alias
-	X_D3DFMT_DXT4 = 0x0F, // interpolated alpha
-	X_D3DFMT_DXT5 = 0x0F, // Alias
+	X_D3DFMT_DXT2 = 0x0E, // Alias for X_D3DFMT_DXT3
+	X_D3DFMT_DXT3 = 0x0E, // linear alpha
+	X_D3DFMT_DXT4 = 0x0F, // Alias for X_D3DFMT_DXT5
+	X_D3DFMT_DXT5 = 0x0F, // interpolated alpha
 
 	// Linear Formats
 

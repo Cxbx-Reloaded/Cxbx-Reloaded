@@ -52,47 +52,52 @@ enum {
 class EmuShared : public Mutex
 {
     public:
-        // ******************************************************************
-        // * Constructor / Deconstructor
-        // ******************************************************************
-        CXBXKRNL_API  EmuShared();
-        CXBXKRNL_API ~EmuShared();
+		int m_RefCount;
 
         // ******************************************************************
         // * Each process needs to call this to initialize shared memory
         // ******************************************************************
-        CXBXKRNL_API static void Init();
+        static void Init();
 
-        // ******************************************************************
+		void EmuShared::Load();
+		void EmuShared::Save();
+
+		// ******************************************************************
         // * Each process needs to call this to cleanup shared memory
         // ******************************************************************
-        CXBXKRNL_API static void Cleanup();
+        static void Cleanup();
 
         // ******************************************************************
         // * Xbox Video Accessors
         // ******************************************************************
-        CXBXKRNL_API void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-        CXBXKRNL_API void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+        void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
+        void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
 
         // ******************************************************************
         // * Xbox Controller Accessors
         // ******************************************************************
-        CXBXKRNL_API void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-        CXBXKRNL_API void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+        void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+        void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
 
         // ******************************************************************
         // * Xbe Path Accessors
         // ******************************************************************
-        CXBXKRNL_API void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
-        CXBXKRNL_API void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
+        void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
+        void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
-		CXBXKRNL_API void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
-		CXBXKRNL_API void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
+		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
 
     private:
+        // ******************************************************************
+        // * Constructor / Deconstructor
+        // ******************************************************************
+         EmuShared();
+        ~EmuShared();
+
         // ******************************************************************
         // * Shared configuration
         // ******************************************************************
@@ -105,7 +110,6 @@ class EmuShared : public Mutex
 // ******************************************************************
 // * Exported Global Shared Memory Pointer
 // ******************************************************************
-extern CXBXKRNL_API EmuShared *g_EmuShared;
-extern CXBXKRNL_API int        g_EmuSharedRefCount;
+extern EmuShared *g_EmuShared;
 
 #endif

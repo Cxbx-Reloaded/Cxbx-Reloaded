@@ -51,6 +51,10 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h"
 
+xboxkrnl::XBOX_EEPROM EEPROM = { 0 }; // See EmuInitializeDefaultEEPROM()
+
+xboxkrnl::ULONG XboxFactoryGameRegion = 1; // = North America
+
 // prevent name collisions
 namespace NtDll
 {

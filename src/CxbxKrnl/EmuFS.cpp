@@ -46,7 +46,6 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
-#include "Exe.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>

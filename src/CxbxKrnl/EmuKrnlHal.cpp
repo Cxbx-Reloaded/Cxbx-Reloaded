@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
+#include "EmuKrnl.h" // For EEPROM
 
 // prevent name collisions
 namespace NtDll
@@ -222,6 +223,9 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 	RETURN(dwVector);
 }
 
+#define EEPROM_SMBUS_WRITE  0xA8
+#define EEPROM_SMBUS_READ   0xA9
+
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
 // ******************************************************************
@@ -240,16 +244,26 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
-	if (ReadWord) {
-		LOG_INCOMPLETE(); // TODO : Read UCHAR, possibly as simple as: *((PWORD)DataValue) = value
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	switch (Address) {
+	case EEPROM_SMBUS_READ: {
+		if (ReadWord)
+			*DataValue = *((PWORD)(((PBYTE)&EEPROM) + Command));
+		else
+			*DataValue = *(((PBYTE)&EEPROM) + Command);
+
+		break;
 	}
-	else {
-		// Read BYTE
-		if (DataValue)
-			*DataValue = 1; // TODO : What value?
+	default:
+		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
+		// Resources : http://pablot.com/misc/fancontroller.cpp
+		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
+		LOG_INCOMPLETE();
+		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(Status );
 }
 
 // ******************************************************************
@@ -403,10 +417,26 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		LOG_FUNC_ARG(DataValue)
 		LOG_FUNC_END;
 
-	// TODO: Later.
-	LOG_UNIMPLEMENTED();
+	NTSTATUS Status = STATUS_SUCCESS;
 
-	RETURN(STATUS_SUCCESS);
+	switch (Address) {
+	case EEPROM_SMBUS_WRITE: {
+		if (WriteWord)
+			*((PWORD)(((PBYTE)&EEPROM) + Command)) = (WORD)DataValue;
+		else
+			*(((PBYTE)&EEPROM) + Command) = (BYTE)DataValue;
+
+		break;
+	}
+	default:
+		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
+		// Resources : http://pablot.com/misc/fancontroller.cpp
+		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
+		LOG_INCOMPLETE();
+		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
+	}
+
+	RETURN(Status);
 }
 
 // ******************************************************************
