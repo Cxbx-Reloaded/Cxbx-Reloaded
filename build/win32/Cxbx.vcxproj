@@ -55,6 +55,14 @@
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\import\DirectX8\include;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\import\DirectX8\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets />
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -105,6 +113,13 @@
     <PostBuildEvent>
       <Command>$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
+      <Message>Generate version header</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -155,6 +170,13 @@
     <PostBuildEvent>
       <Command>$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
+      <Message>Generate version header</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\import\stb\stb_image.h" />
