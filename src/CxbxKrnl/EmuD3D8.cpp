@@ -1899,17 +1899,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
-	if(FAILED(hRet) && Format == 0x2E)
-	{
-		EmuWarning("CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8");
-
-		hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &((*ppBackBuffer)->EmuSurface8));
-	}
+	if(FAILED(hRet))
+		if(Format == X_D3DFMT_LIN_D24S8)
+		{
+			EmuWarning("CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8");
+			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &((*ppBackBuffer)->EmuSurface8));
+		}
 	
 	if(FAILED(hRet))
 		/*EmuWarning*/CxbxKrnlCleanup("CreateImageSurface failed!\nFormat = 0x%8.8X", Format);
-
-    
+  
 
     return hRet;
 }
@@ -3797,7 +3796,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
     {
         // TODO: Blend weight.
 
-        case 0: // D3DVSDE_POSITION
+        case X_D3DVSDE_POSITION:
         {
             int o = g_IVBTblOffs;
 
@@ -3812,7 +3811,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-		case 1: // D3DVSDE_BLENDWEIGHT
+		case X_D3DVSDE_BLENDWEIGHT:
 		{
             int o = g_IVBTblOffs;
 
@@ -3827,7 +3826,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 2: // D3DVSDE_NORMAL
+		case X_D3DVSDE_NORMAL:
         {
             int o = g_IVBTblOffs;
 
@@ -3841,7 +3840,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 3: // D3DVSDE_DIFFUSE
+        case X_D3DVSDE_DIFFUSE:
         {
             int o = g_IVBTblOffs;
 
@@ -3856,7 +3855,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 4: // D3DVSDE_SPECULAR
+		case X_D3DVSDE_SPECULAR:
         {
             int o = g_IVBTblOffs;
 
@@ -3871,7 +3870,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 9: // D3DVSDE_TEXCOORD0
+		case X_D3DVSDE_TEXCOORD0:
         {
             int o = g_IVBTblOffs;
 
@@ -3885,7 +3884,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 10: // D3DVSDE_TEXCOORD1
+		case X_D3DVSDE_TEXCOORD1:
         {
             int o = g_IVBTblOffs;
 
@@ -3899,7 +3898,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 11: // D3DVSDE_TEXCOORD2
+		case X_D3DVSDE_TEXCOORD2:
         {
             int o = g_IVBTblOffs;
 
@@ -3913,7 +3912,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 12: // D3DVSDE_TEXCOORD3
+		case X_D3DVSDE_TEXCOORD3:
         {
             int o = g_IVBTblOffs;
 
@@ -3927,7 +3926,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
         break;
 
-        case 0xFFFFFFFF:
+        case X_D3DVSDE_VERTEX:
         {
             int o = g_IVBTblOffs;
 
@@ -4556,7 +4555,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
             }
-            else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT2 || X_Format == X_D3DFMT_DXT3 || X_Format == X_D3DFMT_DXT5)
+            else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT3 || X_Format == X_D3DFMT_DXT5)
             {
                 bCompressed = TRUE;
 
@@ -4569,7 +4568,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
                 dwCompressedSize = dwWidth*dwHeight;
 
-                if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
+                if(X_Format == X_D3DFMT_DXT1) // D3DFMT_DXT1 : 64bits per block/per 16 texels
                     dwCompressedSize /= 2;
             }
             else if(X_Format == X_D3DFMT_YUY2)
@@ -4701,7 +4700,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                      //       dwMipMapLevels, PCFormat, X_Format, &pResource->EmuTexture8);
 
 						// HACK: Quantum Redshift
-						/*if( dwMipMapLevels == 8 && X_Format == 0x0C )
+						/*if( dwMipMapLevels == 8 && X_Format == X_D3DFMT_DXT1 )
 						{
 							printf( "Dirty Quantum Redshift hack applied!\n" );
 							dwMipMapLevels = 1;
@@ -5513,13 +5512,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
         DWORD NewFlags = 0;
 
-        if(Flags & 0x80)
+        if(Flags & X_D3DLOCK_READONLY)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & 0x40)
+        if(Flags & X_D3DLOCK_TILED)
             EmuWarning("D3DLOCK_TILED ignored!");
 
-        if(!(Flags & 0x80) && !(Flags & 0x40) && Flags != 0)
+        if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
 		try
@@ -5649,19 +5648,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
 
         DWORD NewFlags = 0;
 
-        if(Flags & 0x80)
+        if(Flags & X_D3DLOCK_READONLY)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & 0x40)
+        if(Flags & X_D3DLOCK_TILED)
             EmuWarning("D3DLOCK_TILED ignored!"); 
 
-        if(Flags & 0x20)
+        if(Flags & X_D3DLOCK_NOOVERWRITE)
             NewFlags |= D3DLOCK_NOOVERWRITE;
 
-        if(Flags & 0x10)
+        if(Flags & X_D3DLOCK_NOFLUSH)
             EmuWarning("D3DLOCK_NOFLUSH ignored!");
 
-        if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
+        if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && !(Flags & X_D3DLOCK_NOOVERWRITE) && !(Flags & X_D3DLOCK_NOFLUSH) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
 		if (pTexture8 != nullptr) {
@@ -6861,13 +6860,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_CullMode)
     // TODO: XDK-Specific Tables? So far they are the same
     switch(Value)
     {
-        case 0:
+        case X_D3DCULL_NONE:
             Value = D3DCULL_NONE;
             break;
-        case 0x900:
+        case X_D3DCULL_CW:
             Value = D3DCULL_CW;
             break;
-        case 0x901:
+        case X_D3DCULL_CCW:
             Value = D3DCULL_CCW;
             break;
         default:
@@ -8187,7 +8186,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
         32*sizeof(D3DCOLOR)      // D3DPALETTE_32
     };
 
-    pPalette->Common = (Size << 30) | 0x1030001;
+    pPalette->Common = (Size << 30) | X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1 
     pPalette->Data = (DWORD)new uint08[lk[Size]];
 
     pPalette->Lock = 0x8000BEEF; // emulated reference count for palettes
