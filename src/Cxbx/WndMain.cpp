@@ -1526,10 +1526,10 @@ void WndMain::StartEmulation(HWND hwndParent)
 {
     char szBuffer[MAX_PATH];
 
-    // register xbe path with CxbxKrnl.dll
+    // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
-	// register LLE flags with CxbxKrnl.dll
+	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 
 	// shell exe
