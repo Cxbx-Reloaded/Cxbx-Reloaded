@@ -1210,49 +1210,6 @@ OOVPA_NO_XREF(D3DDevice_End, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetVerticalBlankCallback
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 5344, 7)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x0A, 0x89 },
-        { 0x0B, 0x81 },
-        { 0x0C, 0x88 },
-        { 0x0D, 0x19 },
-        { 0x10, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetSwapCallback
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 5344, 7)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x0A, 0x89 },
-        { 0x0B, 0x81 },
-        { 0x0C, 0x84 },
-        { 0x0D, 0x19 },
-        { 0x10, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetRenderTargetFast
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
-
-        { 0x1D, 0xC9 },
-        { 0x3C, 0x89 },
-        { 0x5F, 0x8B },
-        { 0x7A, 0x04 },
-        { 0x99, 0x04 },
-        { 0xB8, 0x02 },
-        { 0xD7, 0x0C },
-        { 0xF6, 0xC5 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3D8_5233
 // ******************************************************************
 OOVPATable D3D8_5233[] = {
@@ -1418,10 +1375,10 @@ OOVPATable D3D8_5233[] = {
 	 * has been disabled.
 	// REGISTER_OOVPA(D3DDevice_SetTransform, 5344, PATCH),**/
 	//REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5344, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5344, DISABLED),
+	//REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_GetViewport, 5344, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
+	//REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_SetScissors, 5344, DISABLED),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
