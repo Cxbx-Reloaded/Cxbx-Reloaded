@@ -71,8 +71,6 @@ bool Wnd::ProcessMessages()
     // initialize window
     if(!m_initialized)
     {
-        HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
-
         m_initialized = true;
 
         WNDCLASS wnd_class;
@@ -81,7 +79,7 @@ bool Wnd::ProcessMessages()
         wnd_class.lpszClassName = m_classname;
         wnd_class.lpfnWndProc   = WndProcForward;
         wnd_class.style         = m_clsstyle;
-        wnd_class.hIcon         = LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX));
+        wnd_class.hIcon         = 0; // TODO : LoadIcon(hmodule, ?)
         wnd_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
         wnd_class.lpszMenuName  = NULL;
         wnd_class.cbClsExtra    = 0;

@@ -2056,6 +2056,90 @@ const int XBOX_KEY_LENGTH = 16;
 typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
+// * XBOX_ENCRYPTED_SETTINGS
+// ******************************************************************
+typedef struct _XBOX_ENCRYPTED_SETTINGS
+{
+	UCHAR Checksum[20];
+	UCHAR Confounder[8];
+	UCHAR HDKey[XBOX_KEY_LENGTH];
+	ULONG GameRegion;
+}
+XBOX_ENCRYPTED_SETTINGS;
+
+// ******************************************************************
+// * XBOX_FACTORY_SETTINGS
+// ******************************************************************
+typedef struct _XBOX_FACTORY_SETTINGS
+{
+	ULONG Checksum;
+	UCHAR SerialNumber[12];
+	UCHAR EthernetAddr[6];
+	UCHAR Reserved1[2];
+	UCHAR OnlineKey[16];
+	ULONG AVRegion;
+	ULONG Reserved2;
+}
+XBOX_FACTORY_SETTINGS;
+
+// ******************************************************************
+// * XBOX_TIMEZONE_DATE
+// ******************************************************************
+typedef struct _XBOX_TIMEZONE_DATE
+{
+	UCHAR Month;
+	UCHAR Day;
+	UCHAR DayOfWeek;
+	UCHAR Hour;
+}
+XBOX_TIMEZONE_DATE;
+
+// ******************************************************************
+// * XBOX_USER_SETTINGS
+// ******************************************************************
+#define TIME_ZONE_NAME_LENGTH 4
+typedef struct _XBOX_USER_SETTINGS
+{
+	ULONG Checksum;
+	LONG TimeZoneBias;
+	CHAR TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
+	CHAR TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
+	ULONG Reserved1[2];
+	XBOX_TIMEZONE_DATE TimeZoneStdDate;
+	XBOX_TIMEZONE_DATE TimeZoneDltDate;
+	ULONG Reserved2[2];
+	LONG TimeZoneStdBias;
+	LONG TimeZoneDltBias;
+	ULONG Language;
+	ULONG VideoFlags;
+	ULONG AudioFlags;
+	ULONG ParentalControlGames;
+	ULONG ParentalControlPassword;
+	ULONG ParentalControlMovies;
+	ULONG OnlineIpAddress;
+	ULONG OnlineDnsAddress;
+	ULONG OnlineDefaultGatewayAddress;
+	ULONG OnlineSubnetMask;
+	ULONG MiscFlags;
+	ULONG DvdRegion;
+}
+XBOX_USER_SETTINGS;
+
+// ******************************************************************
+// * XBOX_EEPROM
+// ******************************************************************
+typedef struct _XBOX_EEPROM
+{
+	XBOX_ENCRYPTED_SETTINGS EncryptedSettings;
+	XBOX_FACTORY_SETTINGS FactorySettings;
+	XBOX_USER_SETTINGS UserSettings;
+	UCHAR Unused[58];
+	UCHAR UEMInfo[4];
+	UCHAR Reserved1[2];
+}
+XBOX_EEPROM;
+
+// ******************************************************************
 // * TIME_FIELDS
 // ******************************************************************
 typedef struct _TIME_FIELDS

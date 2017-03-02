@@ -76,8 +76,8 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 		*pBPP = 4;
 		return true;
 	case X_D3DFMT_DXT1:
-	case X_D3DFMT_DXT2: // Alias : X_D3DFMT_DXT3
-	case X_D3DFMT_DXT4: // Alias : X_D3DFMT_DXT5
+	case X_D3DFMT_DXT3: // Alias : X_D3DFMT_DXT2
+	case X_D3DFMT_DXT5: // Alias : X_D3DFMT_DXT4
 	case X_D3DFMT_LIN_L8:
 	case X_D3DFMT_LIN_AL8:
 	case X_D3DFMT_LIN_A8:
@@ -239,14 +239,12 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 		result = D3DFMT_DXT1;
 		break;
 
-		//X_D3DFMT_DXT2,
-
+	// case X_D3DFMT_DXT2:
 	case X_D3DFMT_DXT3: // Compressed
 		result = D3DFMT_DXT3;
 		break;
 
-		//X_D3DFMT_DXT4,
-
+	// case X_D3DFMT_DXT4:
 	case X_D3DFMT_DXT5: // Compressed
 		result = D3DFMT_DXT5;
 		break;
@@ -326,15 +324,17 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 		break; // Compressed
 
 	case D3DFMT_DXT4:
-		result = X_D3DFMT_DXT4;
-		break;
+		result = X_D3DFMT_DXT4; // Same as X_D3DFMT_DXT5
+		break; // Compressed
+
 	case D3DFMT_DXT3:
 		result = X_D3DFMT_DXT3;
 		break; // Compressed
 
 	case D3DFMT_DXT2:
-		result = X_D3DFMT_DXT2;
-		break;
+		result = X_D3DFMT_DXT2; // Same as X_D3DFMT_DXT3
+		break; // Compressed
+
 	case D3DFMT_DXT1:
 		result = X_D3DFMT_DXT1;
 		break; // Compressed
@@ -405,22 +405,17 @@ DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
     DWORD NewFlags = 0;
 
     // Need to convert the flags, TODO: fix the xbox extensions
-    if(Flags & X_D3DLOCK_NOFLUSH)
-    {
-        NewFlags ^= 0;
-    }
-    if(Flags & X_D3DLOCK_NOOVERWRITE)
-    {
-        NewFlags ^= D3DLOCK_NOOVERWRITE;
-    }
-    if(Flags & X_D3DLOCK_TILED)
-    {
-        NewFlags ^= 0;
-    }
-    if(Flags & X_D3DLOCK_READONLY)
-    {
-        NewFlags ^= D3DLOCK_READONLY;
-    }
+//    if(Flags & X_D3DLOCK_NOFLUSH)
+//        NewFlags ^= 0;
+
+	if(Flags & X_D3DLOCK_NOOVERWRITE)
+        NewFlags |= D3DLOCK_NOOVERWRITE;
+
+//	if(Flags & X_D3DLOCK_TILED)
+//        NewFlags ^= 0;
+
+	if(Flags & X_D3DLOCK_READONLY)
+        NewFlags |= D3DLOCK_READONLY;
 
     return NewFlags;
 }

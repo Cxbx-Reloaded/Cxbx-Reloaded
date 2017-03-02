@@ -146,7 +146,7 @@ XBSYSAPI EXPORTNUM(28) NTSTATUS NTAPI ExReleaseReadWriteLock
 XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 (
 	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
+	IN  DWORD               Type,
 	IN  PVOID               Value,
 	IN  SIZE_T              ValueLength
 );
