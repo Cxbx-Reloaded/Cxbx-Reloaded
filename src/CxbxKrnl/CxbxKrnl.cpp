@@ -51,7 +51,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
-#include "Exe.h"
+#include "ReservedMemory.h" // For emulated_memory_placeholder
 
 #include <shlobj.h>
 #include <clocale>
@@ -64,16 +64,16 @@ namespace NtDll
 };
 
 /*! thread local storage */
-extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS = NULL;
+Xbe::TLS *CxbxKrnl_TLS = NULL;
 /*! thread local storage data */
-extern CXBXKRNL_API void *CxbxKrnl_TLSData = NULL;
+void *CxbxKrnl_TLSData = NULL;
 /*! xbe header structure */
-extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader = NULL;
+Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 /*! parent window handle */
 
-CXBXKRNL_API HWND CxbxKrnl_hEmuParent = NULL;
-CXBXKRNL_API DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
-CXBXKRNL_API char* CxbxKrnl_DebugFileName = NULL;
+HWND CxbxKrnl_hEmuParent = NULL;
+DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
+char* CxbxKrnl_DebugFileName = NULL;
 
 /*! thread handles */
 static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
@@ -87,14 +87,6 @@ DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
-
-extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
-{
-    if(strcmp(szVersion, _CXBX_VERSION) != 0)
-        return false;
-
-    return true;
-}
 
 // ported from Dxbx's XbeExplorer
 XbeType GetXbeType(Xbe::Header *pXbeHeader)
@@ -181,133 +173,198 @@ const DWORD XOR_EP_KEY[3] = { XOR_EP_RETAIL, XOR_EP_DEBUG, XOR_EP_CHIHIRO };
 // Kernel thunk address XOR keys per Xbe type (Retail, Debug or Chihiro) :
 const DWORD XOR_KT_KEY[3] = { XOR_KT_RETAIL, XOR_KT_DEBUG, XOR_KT_CHIHIRO };
 
-extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
+// Executable image header pointers (it's contents can be switched between
+// Exe-compatibility and Xbe-identical mode, using RestoreExeImageHeader
+// vs RestoreXbeImageHeader) :
+const PIMAGE_DOS_HEADER ExeDosHeader = (PIMAGE_DOS_HEADER)XBE_IMAGE_BASE;
+PIMAGE_NT_HEADERS ExeNtHeader = nullptr;
+PIMAGE_OPTIONAL_HEADER ExeOptionalHeader = nullptr;
+
+// Copy of original executable image headers, used both as backup and valid replacement structure :
+PIMAGE_DOS_HEADER NewDosHeader = nullptr;
+PIMAGE_NT_HEADERS NewNtHeader = nullptr;
+PIMAGE_OPTIONAL_HEADER NewOptionalHeader = nullptr;
+
+// Xbe backup values. RestoreXbeImageHeader place these into ExeHeader to restore loaded Xbe contents.
+WORD Xbe_magic = 0;
+LONG Xbe_lfanew = 0;
+IMAGE_DATA_DIRECTORY Xbe_TLS = { };
+
+// Remember the current XBE contents of the executable image
+// header fields that RestoreExeImageHeader needs to restore.
+void StoreXbeImageHeader()
 {
+	Xbe_magic = ExeDosHeader->e_magic; // Normally 0x4258 = 'XB'; (...'EH')
+	Xbe_lfanew = ExeDosHeader->e_lfanew;
+	Xbe_TLS = ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
+}
+
+// Restore memory to the exact contents as loaded from the current XBE.
+// Avoid threadswitches and calling Windows API's while this in effect
+// because those can fail. Hence, RestoreExeImageHeader quickly again!
+void RestoreXbeImageHeader()
+{
+	ExeDosHeader->e_magic = Xbe_magic; // Sets XbeHeader.dwMagic
+	ExeDosHeader->e_lfanew = Xbe_lfanew; // Sets part of XbeHeader.pbDigitalSignature
+	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = Xbe_TLS;
+}
+
+// Restore memory to the exact contents loaded from the running EXE.
+// This is required to keep thread-switching and Windows API's working.
+void RestoreExeImageHeader()
+{
+	ExeDosHeader->e_magic = NewDosHeader->e_magic; // = 0x5A4D = 'MZ'; Overwrites XbeHeader.dwMagic
+	ExeDosHeader->e_lfanew = NewDosHeader->e_lfanew; // Overwrites part of XbeHeader.pbDigitalSignature
+	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
+}
+
+void CxbxKrnlMain(int argc, char* argv[])
+{
+	// Skip '/load' switch
+	// Get XBE Name :
 	std::string xbePath = argv[2];
 
+	// Get DCHandle :
 	HWND hWnd = 0;
 	if (argc > 2) {
 		hWnd = (HWND)StrToInt(argv[3]);
 	}
-	
+
+	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
 	if (argc > 3) {
 		DbgMode = (DebugMode)StrToInt(argv[4]);
 	}
 
+	// Get KernelDebugFileName :
 	std::string DebugFileName;
 	if (argc > 4) {
 		DebugFileName = argv[5];
 	}
-	
 
-	// Read host EXE Header Data
-	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)CXBX_BASE_ADDR;
-	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
-	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
-	DWORD ExeHeaderSize = ExeOptionalHeader->m_sizeof_headers;
-
-	// Create a safe copy of the complete EXE header:
-	Exe::DOSHeader* NewDosHeader = (Exe::DOSHeader*)malloc(ExeHeaderSize);
-	Exe::Header* NewNtHeader = (Exe::Header*)((uint32)NewDosHeader + ExeDosHeader->m_lfanew);
-	Exe::OptionalHeader* NewOptionalHeader = (Exe::OptionalHeader*)((uint32)NewNtHeader + sizeof(Exe::Header));
-	memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
-
-	// Make sure the new DOS header points to the new relative NtHeader location:
-	NewDosHeader->m_lfanew = (uint32)NewNtHeader - CXBX_BASE_ADDR;
-
-	// Create safe copies of all EXE sections that could get overwritten:
-	Exe::SectionHeader* ExeSectionHeaders = (Exe::SectionHeader*)((uint32)ExeOptionalHeader + ExeNtHeader->m_sizeof_optional_header);
-	Exe::SectionHeader* NewSectionHeaders = (Exe::SectionHeader*)((uint32)NewOptionalHeader + NewNtHeader->m_sizeof_optional_header);
-
-	for (int i = 0; i < ExeNtHeader->m_sections; i++)
+	// Now we got the arguments, start by initializing the Xbox memory map :
+	// PrepareXBoxMemoryMap()
 	{
-		// Check if this section will be overwritten:
-		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < EMU_MAX_MEMORY_SIZE) {
-			char* NewSection = (char*)malloc(ExeSectionHeaders[i].m_virtual_size);
-			memcpy(NewSection, (void*)(ExeSectionHeaders[i].m_virtual_addr + (uint32)ExeDosHeader), ExeSectionHeaders[i].m_virtual_size);
-			NewSectionHeaders[i].m_virtual_addr = (uint32)NewSection - (uint32)ExeDosHeader;
-			
+		// Determine EXE's header locations & size :
+		ExeNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)ExeDosHeader + ExeDosHeader->e_lfanew); // = + 0x138
+		ExeOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(ExeNtHeader->OptionalHeader);
 
-			if (NewOptionalHeader->m_data_base == ExeSectionHeaders[i].m_virtual_addr) {
-				NewOptionalHeader->m_data_base = NewSectionHeaders[i].m_virtual_addr;
-			}
+		// verify emulated_memory_placeholder is located at 0x00011000
+		if ((UINT_PTR)(&(emulated_memory_placeholder[0])) != (XBE_IMAGE_BASE + ExeNtHeader->OptionalHeader.BaseOfCode))
+		{
+			MessageBox(NULL, "emulated_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+			return; // TODO : Halt(0); 
 		}
+
+		// Create a safe copy of the complete EXE header:
+		DWORD ExeHeaderSize = ExeOptionalHeader->SizeOfHeaders; // Should end up as 0x400
+		NewDosHeader = (PIMAGE_DOS_HEADER)VirtualAlloc(nullptr, ExeHeaderSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+		memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
+
+		// Determine NewNtHeader and NewOptionalHeader, both required by RestoreExeImageHeader
+		NewNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)NewDosHeader + ExeDosHeader->e_lfanew);
+		NewOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(NewNtHeader->OptionalHeader);
+
+		// Make sure the new DOS header points to the new relative NtHeader location:
+		NewDosHeader->e_lfanew = (ULONG_PTR)NewNtHeader - XBE_IMAGE_BASE;
+
+		// Note : NewOptionalHeader->ImageBase can stay at ExeOptionalHeader->ImageBase = 0x00010000
+
+		// Note : Since emulated_memory_placeholder prevents overlap between reserved xbox memory
+		// and Cxbx.exe sections, the new section headers don't have to be patched up.
+
+		// Mark the entire emulated memory range accessible
+		DWORD OldProtection;
+		VirtualProtect((void*)XBE_IMAGE_BASE, EMU_MAX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
+
+		// Clear out the entire memory range
+		memset((void*)ExeDosHeader, 0, EMU_MAX_MEMORY_SIZE);
+
+		// Restore enough of the executable image headers to keep WinAPI's working :
+		RestoreExeImageHeader();
 	}
 
-	// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
-	g_EmuShared->SetXbePath(xbePath.c_str());
-	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
-	
-	// Detect XBE type :
-	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+	// TODO : Setup LaunchData and Initialize kernel
+	// (which will launch the Xbe on itself), instead here.
 
-	// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
-	g_bIsChihiro = (g_XbeType == xtChihiro);
+	// Now we can load and run the XBE :
+	// MapAndRunXBE(XbePath, DCHandle);
+	{
+		// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
+		g_EmuShared->SetXbePath(xbePath.c_str());
+		CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
-	// Determine memory size accordingly :
-	SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+		// Detect XBE type :
+		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-	// Mark the entire emulated memory range accessable
-	DWORD OldProtection;
-	VirtualProtect((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR, PAGE_EXECUTE_READWRITE, &OldProtection);
+		// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+		g_bIsChihiro = (g_XbeType == xtChihiro);
 
-	// Clear out entire memory range
-	ZeroMemory((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR);
+		// Determine memory size accordingly :
+		SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
 
-	// Copy over loaded Xbe Header to specified base address
-	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
-	// Copy over the certificate
-	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
-	// Copy over the library versions
-	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
-	// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does.
+		// Copy over loaded Xbe Header to specified base address
+		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
+		// Copy over the certificate
+		memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
+		// Copy over the library versions
+		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
+		// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does - see _ReadXbeBlock()
 
-	// Load Sections
-	for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
-		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
+		// Load all sections to their requested Virtual Address :
+		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+			memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
+		}
+
+		// We need to remember a few XbeHeader fields, so we can switch between a valid ExeHeader and XbeHeader :
+		StoreXbeImageHeader();
+
+		// Restore enough of the executable image headers to keep WinAPI's working :
+		RestoreExeImageHeader();
 	}
-
+		
+	// Before readout, make sure our kernel thunk table references the Windows host timer addresses :
 	ConnectWindowsTimersToThunkTable();
 
-	// Fixup Kernel Imports
-
+	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
-	uint32_t* kt_tbl = (uint32_t*)kt;
-
-	int i = 0;
-	while (kt_tbl[i] != 0) {
-		int t = kt_tbl[i] & 0x7FFFFFFF;
-		kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
-		i++;
+	// Process the Kernel thunk table to map Kernel function calls to their actual address :
+	{
+		uint32_t* kt_tbl = (uint32_t*)kt;
+		int i = 0;
+		while (kt_tbl[i] != 0) {
+			int t = kt_tbl[i] & 0x7FFFFFFF;
+			kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+			i++;
+		}
 	}
 
-	// Load TLS
-	Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
-	void* XbeTlsData = nullptr;
-
-	if (XbeTls != nullptr) {
-		XbeTlsData = (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr;
+	// Launch the XBE :
+	{
+		// Load TLS
+		Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
+		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
+		// Decode Entry Point
+		xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
+		EntryPoint ^= XOR_EP_KEY[g_XbeType];
+		// Launch XBE
+		CxbxKrnlInit(
+			hWnd, 
+			XbeTlsData, 
+			XbeTls, 
+			CxbxKrnl_Xbe->m_LibraryVersion, 
+			DbgMode,
+			DebugFileName.c_str(),
+			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
+			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
+			(void(*)())EntryPoint
+		);
 	}
-
-	// Decode Entry Point
-	xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-	EntryPoint ^= XOR_EP_KEY[g_XbeType];
-
-	// Restore the area of the EXE required for WinAPI
-	ExeDosHeader->m_magic = NewDosHeader->m_magic;
-	ExeDosHeader->m_lfanew = NewDosHeader->m_lfanew;
-
-	// Launch XBE
-	CxbxKrnlInit(
-		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
-		DebugFileName.c_str(), (Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
-	);
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlInit
+void CxbxKrnlInit
 (
 	HWND                    hwndParent,
 	void                   *pTLSData,
@@ -326,12 +383,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 	CxbxKrnl_DebugMode = DbgMode;
 	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
-
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
-
 	g_CurrentProcessHandle = GetCurrentProcess();
-
 	CxbxInitPerformanceCounters();
 
 #ifdef _DEBUG
@@ -345,20 +399,15 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		if (AllocConsole())
 		{
 			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-
 			// Maximise the console scroll buffer height :
 			CONSOLE_SCREEN_BUFFER_INFO coninfo;
 			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
 			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
 			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
-
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
-
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-
 			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
@@ -366,30 +415,22 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	else if (DbgMode == DM_FILE)
 	{
 		FreeConsole();
-
 		freopen(szDebugFilename, "wt", stdout);
-
 		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
-		FreeConsole();
-
 		char buffer[16];
-
+		FreeConsole();
 		if (GetConsoleTitle(buffer, 16) != NULL)
 			freopen("nul", "w", stdout);
 	}
 
-	//
 	// debug trace
-	//
-
 	{
 #ifdef _DEBUG_TRACE
 		printf("[0x%X] EmuMain: Debug Trace Enabled.\n", GetCurrentThreadId());
-
 		printf("[0x%X] EmuMain: CxbxKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08X\n"
@@ -403,7 +444,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			"   Entry               : 0x%.08X\n"
 			");\n",
 			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
-
 #else
 		printf("[0x%X] EmuMain: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
@@ -443,47 +483,41 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	// Read which components need to be LLE'ed :
-	int CxbxLLE_Flags;
-	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+	{
+		int CxbxLLE_Flags;
+		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 
-	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
-	if (bLLE_APU)
-		DbgPrintf("EmuMain : LLE enabled for APU.\n");
+		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+		if (bLLE_APU)
+			DbgPrintf("EmuMain : LLE enabled for APU.\n");
 
-	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-	if (bLLE_GPU)
-		DbgPrintf("EmuMain : LLE enabled for GPU.\n");
+		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+		if (bLLE_GPU)
+			DbgPrintf("EmuMain : LLE enabled for GPU.\n");
 
-	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
-	if (bLLE_JIT)
-		DbgPrintf("EmuMain : LLE enabled for JIT.\n");
+		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
+		if (bLLE_JIT)
+			DbgPrintf("EmuMain : LLE enabled for JIT.\n");
+	}
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
-
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "EmuDisk\\";
-
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
 	g_EmuShared->GetXbePath(szBuffer);
 	std::string xbePath(szBuffer);
-
 	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
-
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
 	memset(szBuffer, 0, MAX_PATH);
 	sprintf(szBuffer, "%08X", ((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwTitleId);
-
 	std::string titleId(szBuffer);
-
 	// Games may assume they are running from CdRom :
 	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
-
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
@@ -496,24 +530,19 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 
-
-	DbgPrintf("EmuMain : Creating default symbolic links.\n");
-
 	// Create default symbolic links :
+	DbgPrintf("EmuMain : Creating default symbolic links.\n");
 	{
 		// TODO: DriveD should always point to the Xbe Path
 		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
 		// If the Xbe is located outside of the emulated HDD, mounting it as DeviceCdrom0 is correct
 		// If the Xbe is located inside the emulated HDD, the full path should be used, eg: "\\Harddisk0\\partition2\\xboxdash.xbe"
 		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0);
-
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
 		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
-
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
-
 		// Strip out the path, leaving only the XBE file name
 		// NOTE: we assume that the XBE is always on the root of the D: drive
 		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
@@ -523,38 +552,29 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		if (xboxkrnl::XeImageFileName.Buffer != NULL)
 			free(xboxkrnl::XeImageFileName.Buffer);
 
+		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
-
 	}
 
-	//
 	// duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
-	//
-
 	{
 		HANDLE hDupHandle = NULL;
 
 		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
 		CxbxKrnlRegisterThread(hDupHandle);
 	}
 
-	//
 	// Clear critical section list
-	//
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-
-	DbgPrintf("EmuMain : Determining CPU affinity.\n");
-
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 	{
 		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
 		// For the other threads, remove one bit from the processor mask:
@@ -573,12 +593,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
 	}
 
-	//
 	// initialize grapchics
-	//
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
-
 	if (bLLE_GPU)
 	{
 		DbgPrintf("EmuMain: Initializing OpenGL.\n");
@@ -591,38 +608,27 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	EmuHLEIntercept(pXbeHeader);
-
 	// Apply Media Patches to bypass Anti-Piracy checks
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
-	//
 	// initialize FS segment selector
-	//
-
 	{
 		EmuInitFS();
-
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
 	EmuX86_Init();
-
     DbgPrintf("EmuMain: Initial thread starting.\n");
-
 	CxbxLaunchXbe(Entry);
-
     DbgPrintf("EmuMain: Initial thread ended.\n");
-
     fflush(stdout);
-
     CxbxKrnlTerminateThread();
-
     return;
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
+void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
 
@@ -673,7 +679,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     return;
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread)
+void CxbxKrnlRegisterThread(HANDLE hThread)
 {
     int v=0;
 
@@ -692,7 +698,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread)
     }
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlSuspend()
+void CxbxKrnlSuspend()
 {
     if(g_bEmuSuspended || g_bEmuException)
         return;
@@ -731,7 +737,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlSuspend()
     g_bEmuSuspended = true;
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlResume()
+void CxbxKrnlResume()
 {
     if(!g_bEmuSuspended)
         return;
@@ -771,12 +777,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlResume()
     g_bEmuSuspended = false;
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
+void CxbxKrnlTerminateThread()
 {
     TerminateThread(GetCurrentThread(), 0);
 }
 
-extern "C" CXBXKRNL_API void CxbxKrnlPanic()
+void CxbxKrnlPanic()
 {
     DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 

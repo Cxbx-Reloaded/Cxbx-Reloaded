@@ -51,7 +51,6 @@ namespace xboxkrnl
 #include "ResourceTracker.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
-#include "ResCxbxDll.h"
 
 #include <process.h>
 #include <clocale>
@@ -325,8 +324,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // register window class
     {
-        HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
-
         LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
 
         g_hBgBrush = CreateBrushIndirect(&logBrush);
@@ -337,7 +334,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             CS_CLASSDC,
             EmuMsgProc,
             0, 0, GetModuleHandle(NULL),
-            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)),
+			0, // TODO : LoadIcon(hmodule, ?)
             LoadCursor(NULL, IDC_ARROW),
             (HBRUSH)(g_hBgBrush), NULL,
             "CxbxRender",
