@@ -187,6 +187,12 @@
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\XDVDFS Tools\xdvdfs.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\XDVDFS Tools\buffered_io.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -490,6 +496,12 @@
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\XDVDFS Tools\buffered_io.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h">
       <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
