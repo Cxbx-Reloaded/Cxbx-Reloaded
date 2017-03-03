@@ -111,10 +111,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
+$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
@@ -168,10 +170,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
+$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
