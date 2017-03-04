@@ -81,9 +81,9 @@ inline Hex1Struct hex1(uint8_t _v)
 	return Hex1Struct(_v);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Hex1Struct& hs)
+inline std::ostream& operator<<(std::ostream& os, const Hex1Struct& container)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)hs.v;
+	return os << "0x" << std::hex << std::uppercase << (int)container.v;
 }
 
 struct Hex2Struct
@@ -97,9 +97,9 @@ inline Hex2Struct hex2(uint16_t _v)
 	return Hex2Struct(_v);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Hex2Struct& hs)
+inline std::ostream& operator<<(std::ostream& os, const Hex2Struct& container)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)hs.v;
+	return os << "0x" << std::hex << std::uppercase << (int)container.v;
 }
 
 struct Hex4Struct
@@ -113,9 +113,134 @@ inline Hex4Struct hex4(uint32_t _v)
 	return Hex4Struct(_v);
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Hex4Struct& hs)
+inline std::ostream& operator<<(std::ostream& os, const Hex4Struct& container)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)hs.v;
+	return os << "0x" << std::hex << std::uppercase << (int)container.v;
+}
+
+struct SanitizedCharStruct
+{
+	char v;
+	SanitizedCharStruct(char _v) : v(_v) { }
+};
+
+inline SanitizedCharStruct sanitized_char(char _v)
+{
+	return SanitizedCharStruct(_v);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SanitizedCharStruct& container)
+{
+	char v = container.v;
+
+	if (isprint(v))
+		os << "'" << v << "'";
+	else
+		os << "\\x" << std::hex << std::uppercase << (int)v;
+
+	return os;
+}
+
+struct SanitizedCharPointerStruct
+{
+	char *v;
+	SanitizedCharPointerStruct(char *_v) : v(_v) { }
+};
+
+inline SanitizedCharPointerStruct sanitized_char_pointer(char *_v)
+{
+	return SanitizedCharPointerStruct(_v);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SanitizedCharPointerStruct& container)
+{
+	char *v = container.v;
+
+	os << "(char *)";
+	if (v == nullptr)
+		return os << "nullptr";
+
+	bool needsConversion = false;
+
+	while (*v)
+		if (!isprint(*v++))
+		{
+			needsConversion = true;
+			break;
+		}
+
+	v = container.v;
+	os << "0x" << (void *)v << " = \"";
+	if (needsConversion)
+	{
+		while (*v)
+		{
+			if (*v == '"')
+				os << "\\";
+
+			if (isprint(*v))
+				os << *v;
+			else
+				os << "\\x" << std::hex << std::uppercase << (int)(*v);
+
+			v++;
+		}
+	}
+	else
+		os << v;
+
+	return os << "\"";
+}
+
+struct SanitizedWideCharPointerStruct
+{
+	wchar_t *v;
+	SanitizedWideCharPointerStruct(wchar_t *_v) : v(_v) { }
+};
+
+inline SanitizedWideCharPointerStruct sanitized_wchar_pointer(wchar_t *_v)
+{
+	return SanitizedWideCharPointerStruct(_v);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SanitizedWideCharPointerStruct& container)
+{
+	wchar_t *v = container.v;
+
+	os << "(wchar *)";
+	if (v == nullptr)
+		return os << "nullptr";
+
+	bool needsConversion = false;
+
+	while (*v)
+		if (!isprint(*v++))
+		{
+			needsConversion = true;
+			break;
+		}
+
+	v = container.v;
+	os << "0x" << (void *)v << " = \"";
+	if (needsConversion)
+	{
+		while (*v)
+		{
+			if (*v == '"')
+				os << "\\";
+
+			if (isprint(*v))
+				os << *v;
+			else
+				os << "\\x" << std::hex << std::uppercase << (int)(*v);
+
+			v++;
+		}
+	}
+	else
+		os << v;
+
+	return os << "\"";
 }
 
 //
@@ -127,8 +252,10 @@ template<class T>
 inline T _log_sanitize(T arg) { return arg; }
 
 // Sanitize C-style strings by converting NULL to "<nullptr>" to prevent null dereference
-inline const char * _log_sanitize(char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
-inline const wchar_t * _log_sanitize(wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
+inline SanitizedCharStruct _log_sanitize(char arg) { return sanitized_char(arg); }
+
+inline SanitizedCharPointerStruct _log_sanitize(char *arg) { return sanitized_char_pointer(arg); }
+inline SanitizedWideCharPointerStruct _log_sanitize(wchar_t *arg) { return sanitized_wchar_pointer(arg); }
 
 // Convert booleans to strings properly
 inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
