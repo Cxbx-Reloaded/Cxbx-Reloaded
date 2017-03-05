@@ -1273,10 +1273,6 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FogColor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5233, PATCH),
-    // *******
-    // Duplicated functions generally dangerous, but until such time as XDK 5344
-    // has it's own OOVP's, fine here
-    // *******
 	//REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Simple, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 5233, PATCH),
@@ -1291,10 +1287,6 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleAntiAlias, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, PATCH),
-    // *******
-    // Duplicated functions generally dangerous, but until such time as XDK 5344
-    // has it's own OOVP's, fine here
-    // *******
 	//REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ShadowFunc, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
@@ -1352,10 +1344,6 @@ OOVPATable D3D8_5233[] = {
 	//REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5344, DISABLED),
 	// REGISTER_OOVPA(D3DDevice_Unknown1, 5233, PATCH)
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
-    // ******
-    // Duplicate references are normally bad, but this XDK is aliased to XDK 5344
-    // until such time as a separate XDK file is generated for 5344, this will have to do
-    // ******
 	//REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),
@@ -1369,11 +1357,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData4ub, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4361, PATCH),
 	//REGISTER_OOVPA(D3DDevice_SetViewport, 5344, DISABLED),
-	/**
-	 * Having two versions of D3Device::SetTransform in this file creates problems,
-	 * in order to support Futurama, this second verison (added for Whacked support)
-	 * has been disabled.
-	// REGISTER_OOVPA(D3DDevice_SetTransform, 5344, PATCH),**/
+	// REGISTER_OOVPA(D3DDevice_SetTransform, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5344, DISABLED),
 	//REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5344, DISABLED),
