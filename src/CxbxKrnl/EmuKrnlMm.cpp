@@ -515,7 +515,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
 
-	if (MemoryStatistics->Length == 0x24)
+	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
 		GlobalMemoryStatus(&MemoryStatus);
 		GetSystemInfo(&SysInfo);

@@ -7,12 +7,12 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->ReservedMemory.h
 // *
 // *  This file is part of the Cxbx project.
 // *
-// *  Cxbx and Cxbe are free software; you can redistribute them
-// *  and/or modify them under the terms of the GNU General Public
+// *  Cxbx is free software; you can redistribute it
+// *  and/or modify it under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
 // *
@@ -26,36 +26,35 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXTL_H
-#define EMUXTL_H
+#ifndef RESERVEDMEMORY_H
+#define RESERVEDMEMORY_H
 
-namespace XTL
+#if defined(__cplusplus)
+#pragma once
+extern "C"
 {
-    #include "EmuXapi.h"
-    #include "EmuD3D8.h"
-    #include "EmuD3D8\Convert.h"
-    #include "EmuD3D8\VertexBuffer.h"
-    #include "EmuD3D8\PushBuffer.h"
-    #include "EmuD3D8\VertexShader.h"
-	#include "EmuD3D8\PixelShader.h"
-    #include "EmuD3D8\State.h"
-    #include "EmuDInput.h"
-    #include "EmuDSound.h"
-    #include "EmuXOnline.h"
-    #include "EmuXG.h"
-	#include "EmuXactEng.h"
-	#include "EmuXInput.h"
-}
-
-extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
-extern DWORD                    g_CurrentVertexShader;
-extern XTL::PIXEL_SHADER *		g_CurrentPixelShader;
-extern BOOL                     g_bFakePixelShaderLoaded;
-extern BOOL                     g_bIsFauxFullscreen;
-
 #endif
+
+#include "CxbxKrnl/EmuShared.h" // For EMU_MAX_MEMORY_SIZE and OPCODE_NOP_90
+
+// The following code claims 0x0001000 + 128 MB;
+// First, declare the '.text' section again :
+#pragma section(".text") // Note : 'read,write,execute' would cause a warning
+// Then place the following variable into the '.text' section :
+__declspec(allocate(".text"))
+// This variable *MUST* be this large, for it to take up address space
+// so that all other code and data in this module are placed outside of the
+// maximum emulated memory range.
+unsigned char emulated_memory_placeholder[EMU_MAX_MEMORY_SIZE]; // = { OPCODE_NOP_90 };
+// TODO : Try to get the same result without enlarging the executable by 128 MB!
+
+#if defined(__cplusplus)
+}
+#endif
+
+#endif // RESERVEDMEMORY_H

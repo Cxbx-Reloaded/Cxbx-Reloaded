@@ -721,12 +721,10 @@ DWORD WINAPI EMUPATCH(XInputGetDeviceDescription)
     PVOID	pDescription
 );
 
-#if 0 // Disabled, since it just calls KeSetTimer, which we support
 // ******************************************************************
 // * patch: XAutoPowerDownResetTimer
 // ******************************************************************
-VOID WINAPI EMUPATCH(XAutoPowerDownResetTimer)();
-#endif
+int WINAPI EMUPATCH(XAutoPowerDownResetTimer)();
 
 // ******************************************************************
 // * patch: ReadFileEx

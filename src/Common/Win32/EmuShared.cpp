@@ -47,8 +47,7 @@
 // ******************************************************************
 // * exported globals
 // ******************************************************************
-CXBXKRNL_API EmuShared *g_EmuShared = NULL;
-CXBXKRNL_API int        g_EmuSharedRefCount = 0;
+EmuShared *g_EmuShared = nullptr;
 
 // ******************************************************************
 // * static/global
@@ -58,12 +57,12 @@ HANDLE hMapObject = NULL;
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-CXBXKRNL_API void EmuShared::Init()
+void EmuShared::Init()
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
     // ******************************************************************
-    bool init = true;
+    bool bRequireConstruction = true;
 
     // ******************************************************************
     // * Prevent multiple initializations
@@ -89,7 +88,7 @@ CXBXKRNL_API void EmuShared::Init()
             CxbxKrnlCleanup("Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
-            init = false;
+            bRequireConstruction = false;
     }
 
     // ******************************************************************
@@ -105,48 +104,55 @@ CXBXKRNL_API void EmuShared::Init()
             0               // default: map entire file
         );
 
-        if(g_EmuShared == NULL)
+        if(g_EmuShared == nullptr)
             CxbxKrnlCleanup("Could not map view of shared memory!");
     }
 
     // ******************************************************************
     // * Executed only on first initialization of shared memory
     // ******************************************************************
-    if(init)
+    if(bRequireConstruction)
         g_EmuShared->EmuShared::EmuShared();
 
-    g_EmuSharedRefCount++;
+    g_EmuShared->m_RefCount++;
 }
 
 // ******************************************************************
 // * func: EmuSharedCleanup
 // ******************************************************************
-CXBXKRNL_API void EmuShared::Cleanup()
+void EmuShared::Cleanup()
 {
-    g_EmuSharedRefCount--;
-
-    if(g_EmuSharedRefCount == 0)
-    {
+    if(--(g_EmuShared->m_RefCount) <= 0)
         g_EmuShared->EmuShared::~EmuShared();
 
-        UnmapViewOfFile(g_EmuShared);
-    }
+    UnmapViewOfFile(g_EmuShared);
+	g_EmuShared = nullptr;
 }
 
 // ******************************************************************
 // * Constructor
 // ******************************************************************
-CXBXKRNL_API EmuShared::EmuShared()
+EmuShared::EmuShared()
 {
-    m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
-    m_XBVideo.Load("Software\\Cxbx-Reloaded\\XBVideo");
+	Load();
 }
 
 // ******************************************************************
 // * Deconstructor
 // ******************************************************************
-CXBXKRNL_API EmuShared::~EmuShared()
+EmuShared::~EmuShared()
 {
-    m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
+	Save();
+}
+
+void EmuShared::Load()
+{
+	m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
+    m_XBVideo.Load("Software\\Cxbx-Reloaded\\XBVideo");
+}
+
+void EmuShared::Save()
+{
+	m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
     m_XBVideo.Save("Software\\Cxbx-Reloaded\\XBVideo");
 }
