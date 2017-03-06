@@ -111,10 +111,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
+$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
@@ -168,10 +170,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
+$(SOLUTIONDIR)Export.bat</Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
@@ -183,6 +187,8 @@
     <ClInclude Include="..\..\src\Common\Logging.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
+    <ClInclude Include="..\..\src\Common\XDVDFS Tools\buffered_io.h" />
+    <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
@@ -358,6 +364,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\XDVDFS Tools\buffered_io.cpp" />
+    <ClCompile Include="..\..\src\Common\XDVDFS Tools\xdvdfs.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
