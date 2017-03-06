@@ -225,6 +225,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h" />
@@ -235,6 +236,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h" />
@@ -247,6 +249,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h" />
@@ -256,6 +259,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.h" />
@@ -264,6 +268,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h" />
@@ -299,6 +304,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
@@ -309,6 +315,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
@@ -320,6 +327,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
@@ -328,6 +336,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl" />
@@ -335,6 +344,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
   </ItemGroup>
