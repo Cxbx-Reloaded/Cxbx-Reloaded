@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.4627.inl
+// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5344.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,66 +33,9 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XNetStartup
+// * XOnline_5344
 // ******************************************************************
-OOVPA_NO_XREF(XNetStartup, 5233, 8)
-
-        { 0x01, 0xC0 },
-        { 0x04, 0x50 },
-        { 0x07, 0x24 },
-        { 0x0A, 0x68 },
-        { 0x0F, 0xE8 },
-        { 0x14, 0xC2 },
-        { 0x15, 0x04 },
-        { 0x16, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * XNetGetEthernetLinkStatus
-// ******************************************************************
-#define XNetGetEthernetLinkStatus_5233 XNetGetEthernetLinkStatus_4627
-
-// ******************************************************************
-// * CXo::XOnlineLogon
-// ******************************************************************
-OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
-
-    XREF_CXo_XOnlineLogon,
-    XRefZero)
-
-        { 0x21, 0xA8 },
-        { 0x3E, 0x80 },
-        { 0x5E, 0x00 },
-        { 0x7E, 0x04 },
-        { 0xA2, 0x85 },
-        { 0xBE, 0xEC },
-        { 0xDE, 0xF9 },
-        { 0xFE, 0x33 },
-OOVPA_END;
-
-// ******************************************************************
-// * XOnlineLogon
-// ******************************************************************
-OOVPA_XREF(XOnlineLogon, 5233, 8,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x0B, XREF_CXo_XOnlineLogon ),
-
-        { 0x00, 0x55 },
-        { 0x01, 0x8B },
-        { 0x02, 0xEC },
-        { 0x03, 0x5D },
-        { 0x04, 0x8B },
-        { 0x05, 0x0D },
-        { 0x0A, 0xE9 },
-OOVPA_END;
-
-// ******************************************************************
-// * XOnline_4627
-// ******************************************************************
-OOVPATable XOnline_5233[] = {
+OOVPATable XOnline_5344[] = {
 
 	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
@@ -107,6 +50,6 @@ OOVPATable XOnline_5233[] = {
 };
 
 // ******************************************************************
-// * XOnline_5233_SIZE
+// * XOnline_5344_SIZE
 // ******************************************************************
-uint32 XOnline_5233_SIZE = sizeof(XOnline_5233);
+uint32 XOnline_5344_SIZE = sizeof(XOnline_5344);
