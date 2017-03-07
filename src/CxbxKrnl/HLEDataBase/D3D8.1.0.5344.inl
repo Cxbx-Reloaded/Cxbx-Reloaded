@@ -380,6 +380,59 @@ OOVPA_NO_XREF(D3DDevice_SelectVertexShader, 5344, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetRenderTarget
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5344, 8)
+
+        { 0x08, 0x56 },
+        { 0x09, 0x33 },
+        { 0x0A, 0xF6 },
+        { 0x0B, 0x3B },
+        { 0x0C, 0xEE },
+        { 0x2A, 0xE4 },
+        { 0x30, 0x74 },
+        { 0x34, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetPalette
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetPalette, 5344, 12)
+
+        // D3DDevice_SetPalette+0x0D : mov eax, [esi+edi*4+0B78h]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x84 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0xBE }, // (Offset,Value)-Pair #3
+        { 0x10, 0x78 }, // (Offset,Value)-Pair #4
+        { 0x11, 0x0B }, // (Offset,Value)-Pair #5
+
+        // D3DDevice_SetPalette+0x51 : add ebp, 0x80000
+        { 0x51, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x52, 0xC5 }, // (Offset,Value)-Pair #7
+        { 0x53, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x54, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x55, 0x08 }, // (Offset,Value)-Pair #10
+
+        // D3DDevice_SetPalette+0x8A : retn 0x08
+        { 0x8A, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x8B, 0x08 }, // (Offset,Value)-Pair #12
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_IsBusy
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_IsBusy, 5344, 7)
+
+        { 0x05, 0x8B },
+        { 0x08, 0x05 },
+        { 0x0C, 0x88 },
+        { 0x10, 0x00 },
+        { 0x14, 0x32 },
+        { 0x18, 0x06 },
+        { 0x1C, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
@@ -398,7 +451,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5233, PATCH),
 	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5233, XREF),
-	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5233, PATCH),
@@ -512,7 +565,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3D_BlockOnTime, 5233, XREF),
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetPalette, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPalette, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5344, PATCH),
@@ -540,6 +593,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_IsBusy, 5344, PATCH),
 };
 
 // ******************************************************************
