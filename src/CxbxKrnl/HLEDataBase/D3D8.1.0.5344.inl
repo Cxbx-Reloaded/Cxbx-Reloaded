@@ -350,6 +350,36 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_CreateTexture2
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_CreateTexture2, 5344, 8)
+
+        { 0x10, 0x0F },
+        { 0x14, 0x4C },
+        { 0x18, 0x33 },
+        { 0x1C, 0x05 },
+        { 0x1F, 0x24 },
+        { 0x43, 0xF8 },
+        { 0x4A, 0x01 },
+        { 0x4F, 0x64 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SelectVertexShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SelectVertexShader, 5344, 8)
+
+        { 0x0E, 0x49 },
+        { 0x10, 0x8D },
+        { 0x14, 0x86 },
+        { 0x18, 0x00 },
+        { 0x1C, 0x03 },
+        { 0x36, 0x4F },
+        { 0x38, 0x83 },
+        { 0x3C, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
@@ -384,7 +414,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetIndices, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
@@ -508,6 +538,8 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 5344, PATCH),
 };
 
 // ******************************************************************
