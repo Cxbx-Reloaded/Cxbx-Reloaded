@@ -486,6 +486,62 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5344, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetVertexDataColor
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexDataColor, 5344, 8)
+
+        { 0x08, 0x06 },
+        { 0x0C, 0x57 },
+        { 0x0F, 0xE8 },
+        { 0x15, 0x4C },
+        { 0x19, 0x14 },
+        { 0x1A, 0x8D },
+        { 0x1B, 0x40 },
+        { 0x1C, 0x19 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_End
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_End, 5344, 9)
+
+        { 0x08, 0x06 },
+        { 0x0A, 0x46 },
+        { 0x0E, 0xE8 },
+        { 0x15, 0xFC },
+        { 0x17, 0x04 },
+        { 0x19, 0xC7 },
+        { 0x1A, 0x40 },
+        { 0x1B, 0x04 },
+        { 0x40, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_CreatePixelShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5344, 11)
+
+        // D3DDevice_CreatePixelShader+0x05 : push 0xFC
+        { 0x05, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xFC }, // (Offset,Value)-Pair #2
+
+        // D3DDevice_CreatePixelShader+0x10 : mov eax, 0x8007000E
+        { 0x13, 0xB8 }, // (Offset,Value)-Pair #3
+        { 0x14, 0x0E }, // (Offset,Value)-Pair #4
+        { 0x15, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x16, 0x07 }, // (Offset,Value)-Pair #6
+        { 0x17, 0x80 }, // (Offset,Value)-Pair #7
+
+        // D3DDevice_CreatePixelShader+0x31 : mov ecx, 0x3C
+        { 0x34, 0xB9 }, // (Offset,Value)-Pair #8
+        { 0x35, 0x3C }, // (Offset,Value)-Pair #9
+
+        // D3DDevice_CreatePixelShader+0x42 : retn 0x08
+        { 0x45, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x46, 0x08 }, // (Offset,Value)-Pair #11
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
@@ -518,7 +574,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant4, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 4627, DISABLED),
@@ -530,7 +586,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Begin, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_End, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_End, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
@@ -649,6 +705,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_IsBusy, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePalette2, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 5344, PATCH),
 };
 
 // ******************************************************************
