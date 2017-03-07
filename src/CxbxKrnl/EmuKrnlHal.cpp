@@ -43,12 +43,14 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
 };
 
+#include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuKrnl.h" // For EEPROM
+#include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
 namespace NtDll
@@ -396,7 +398,49 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+
+	char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+	char szXbePath[MAX_PATH];
+	char szWorkingDirectoy[MAX_PATH];
+
+	// Convert Xbox XBE Path to Windows Path
+	{
+		EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+		snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+
+		// Determine Working Directory
+		strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+		PathRemoveFileSpec(szWorkingDirectoy);
+	}
+
+	// Save the launch data page to disk for later.
+	{
+		char szLaunchDataPagePath[MAX_PATH];
+		snprintf(szLaunchDataPagePath, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szWorkingDirectoy);
+
+		DbgPrintf("Saving launch data to %s\n", szLaunchDataPagePath);
+		// TODO : When reading Xbe files from read-only storage, we must use another location for "CxbxLaunchDataPage.bin" !
+		FILE* fp = fopen(szLaunchDataPagePath, "wb");
+		fseek(fp, 0, SEEK_SET);
+		fwrite(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
+		fclose(fp);
+	}
+
+	// Launch the new Xbe	
+	{
+		char szExeFileName[MAX_PATH];
+		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+
+		char szArgsBuffer[4096];
+		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+
+		if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+		{
+			CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+		}
+
+		ExitProcess(EXIT_SUCCESS);
+	}
 }
 
 // ******************************************************************

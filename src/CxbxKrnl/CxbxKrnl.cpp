@@ -261,7 +261,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		NewDosHeader = (PIMAGE_DOS_HEADER)VirtualAlloc(nullptr, ExeHeaderSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 		memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
 
-		// Determine NewNtHeader and NewOptionalHeader, both required by RestoreExeImageHeader
+		// Determine NewOptionalHeader, required by RestoreExeImageHeader
 		NewNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)NewDosHeader + ExeDosHeader->e_lfanew);
 		NewOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(NewNtHeader->OptionalHeader);
 
@@ -576,7 +576,9 @@ void CxbxKrnlInit
 	// this will better aproximate the environment with regard to multi-threading) :
 	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 	{
-		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
+		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
+			CxbxKrnlCleanup("EmuMain: GetProcessAffinityMask failed.");
+
 		// For the other threads, remove one bit from the processor mask:
 		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
 
