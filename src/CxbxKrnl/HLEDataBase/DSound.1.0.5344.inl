@@ -519,6 +519,47 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetPosition, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound_CDirectSoundVoice::SetVelocity
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetVelocity, 5344, 8,
+
+    XREF_DSVOICESETVELOCITY,
+    XRefZero)
+
+        // DirectSound_CDirectSoundVoice_SetVelocity+0x0F : mov edx, [ebp+arg_4]
+        { 0x0F, 0x8B },
+        { 0x10, 0x55 },
+        { 0x11, 0x0C },
+
+        // DirectSound_CDirectSoundVoice_SetVelocity+0x12 : mov [ecx+14h], edx
+        { 0x12, 0x89 },
+        { 0x13, 0x51 },
+        { 0x14, 0x14 },
+
+        // DirectSound_CDirectSoundVoice_SetVelocity+0x50 : retn 14h
+        { 0x50, 0x14 },
+        { 0x51, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound_CDirectSound::SynchPlayback
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSound_SynchPlayback, 5344, 8,
+
+    XREF_DSSYNCHPLAYBACKA,
+    XRefZero)
+
+        { 0x07, 0x3D },
+        { 0x0C, 0x00 },
+        { 0x16, 0x68 },
+        { 0x2D, 0x48 },
+        { 0x2E, 0x0C },
+        { 0x2F, 0x57 },
+        { 0x36, 0xF6 },
+        { 0x3B, 0x68 },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
@@ -527,7 +568,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSoundDoWork, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundBuffer, 4627, XREF),
 	REGISTER_OOVPA(CMcpxAPU_SynchPlayback, 5233, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SynchPlayback, 5233, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SynchPlayback, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SynchPlayback, 5233, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
@@ -603,7 +644,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetPosition, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetPosition, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPosition, 3936, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetVelocity, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetVelocity, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetVelocity, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVelocity, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetI3DL2Source, 4627, XREF),
