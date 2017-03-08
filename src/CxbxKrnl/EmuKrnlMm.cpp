@@ -61,8 +61,7 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-// xLaunchDataPage, pointed to by LaunchDataPage
-xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
+xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage = // pointed to by LaunchDataPage
 {
 	{   // header
 		2,  // 2: dashboard, 0: title
@@ -75,9 +74,8 @@ xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
-// TODO : Should the kernel point to xLaunchDataPage directly??
-// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
+// TODO : Do initialization of the LaunchDataPage towards an earlier boot/init function
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -296,14 +294,17 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 		g_AlignCache.remove(BaseAddress);
 	}
 
-	if (OrigBaseAddress != &xLaunchDataPage)
+	if (OrigBaseAddress != &DefaultLaunchDataPage)
 	{
-		// TODO : Free PAGE_WRITECOMBINE differently
-		CxbxFree(OrigBaseAddress);
+		if (OrigBaseAddress == LaunchDataPage)
+			CxbxFree(OrigBaseAddress); // place breakpoint here to test
+		else
+			CxbxFree(OrigBaseAddress);
+			// TODO : Free PAGE_WRITECOMBINE differently
 	}
 	else
 	{
-		DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
+		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
 	}
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -448,8 +449,17 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(Persist)
 		LOG_FUNC_END;
 
-	// TODO: Actually set this up to be remember across a "reboot"
-	LOG_IGNORED();
+	if (BaseAddress == LaunchDataPage)
+	{
+		DbgPrintf("Saving launch data to %s\n", szFilePath_LaunchDataPage_bin);
+		FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
+		fseek(fp, 0, SEEK_SET);
+		fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
+		fclose(fp);
+	}
+	else
+		// TODO: Actually set this up to be remember across a "reboot"
+		LOG_IGNORED();
 
   // [PatrickvL] Shared memory would be a perfect fit for this,
   // but the supplied pointer is already allocated. In order to

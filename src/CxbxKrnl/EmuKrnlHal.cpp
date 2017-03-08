@@ -399,48 +399,67 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 {
 	LOG_FUNC_ONE_ARG(Routine);
 
-	char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
-	char szXbePath[MAX_PATH];
-	char szWorkingDirectoy[MAX_PATH];
+	switch (Routine) {
+	case ReturnFirmwareHalt:
+		CxbxKrnlCleanup("Emulated Xbox is halted");
+		break;
 
-	// Convert Xbox XBE Path to Windows Path
+	case ReturnFirmwareReboot:
+		LOG_UNIMPLEMENTED(); // fall through
+	case ReturnFirmwareQuickReboot:
 	{
-		EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
-		snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
-
-		// Determine Working Directory
-		strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
-		PathRemoveFileSpec(szWorkingDirectoy);
-	}
-
-	// Save the launch data page to disk for later.
-	{
-		char szLaunchDataPagePath[MAX_PATH];
-		snprintf(szLaunchDataPagePath, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szWorkingDirectoy);
-
-		DbgPrintf("Saving launch data to %s\n", szLaunchDataPagePath);
-		// TODO : When reading Xbe files from read-only storage, we must use another location for "CxbxLaunchDataPage.bin" !
-		FILE* fp = fopen(szLaunchDataPagePath, "wb");
-		fseek(fp, 0, SEEK_SET);
-		fwrite(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
-		fclose(fp);
-	}
-
-	// Launch the new Xbe	
-	{
-		char szExeFileName[MAX_PATH];
-		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
-
-		char szArgsBuffer[4096];
-		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
-
-		if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+		if (xboxkrnl::LaunchDataPage == NULL)
+			LOG_UNIMPLEMENTED();
+		else
 		{
-			CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
-		}
+			// Save the launch data page to disk for later.
+			// (Note : XWriteTitleInfoNoReboot does this too)
+			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
 
-		ExitProcess(EXIT_SUCCESS);
+			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+			char szXbePath[MAX_PATH];
+			char szWorkingDirectoy[MAX_PATH];
+
+			// Convert Xbox XBE Path to Windows Path
+			{
+				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+			}
+
+			// Determine Working Directory
+			{
+				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				PathRemoveFileSpec(szWorkingDirectoy);
+			}
+
+			// Relaunch Cxbx, to load another Xbe
+			{
+				char szArgsBuffer[4096];
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+			}
+		}
+	};
+
+	case ReturnFirmwareHard:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	case ReturnFirmwareFatal:
+		MessageBox(NULL, "Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)", "Cxbx-Reloaded", MB_OK);
+		break;
+
+	case ReturnFirmwareAll:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	default:
+		LOG_UNIMPLEMENTED();
 	}
+
+	ExitProcess(EXIT_SUCCESS);
 }
 
 // ******************************************************************

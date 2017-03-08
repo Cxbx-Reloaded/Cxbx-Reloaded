@@ -387,7 +387,7 @@ void CxbxKrnlInit
 	setlocale(LC_ALL, "English");
 	g_CurrentProcessHandle = GetCurrentProcess();
 	CxbxInitPerformanceCounters();
-
+	CxbxInitFilePaths();
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -628,6 +628,30 @@ void CxbxKrnlInit
     fflush(stdout);
     CxbxKrnlTerminateThread();
     return;
+}
+
+char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
+char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
+char szFilePath_LaunchDataPage_bin[MAX_PATH] = { 0 };
+char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
+
+void CxbxInitFilePaths()
+{
+	// Determine (local)appdata folder :
+	char *szLocalAppDataFolder = getenv("LOCALAPPDATA");
+	if (!szLocalAppDataFolder)
+	{
+		szLocalAppDataFolder = getenv("APPDATA");
+		if (!szLocalAppDataFolder)
+			CxbxKrnlCleanup("Could not determine %(LOCAL)APPDATA% folder");
+	}
+
+	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\CxbxReloaded", szLocalAppDataFolder);
+	
+	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
+	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData); // TODO : Start using this
+
+	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
 
 void CxbxKrnlCleanup(const char *szErrorMessage, ...)
