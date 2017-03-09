@@ -44,6 +44,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
@@ -61,20 +62,13 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage = // pointed to by LaunchDataPage
-{
-	{   // header
-		2,  // 2: dashboard, 0: title
-		0,
-		"D:\\default.xbe",
-		0
-	}
-};
-
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
-// TODO : Do initialization of the LaunchDataPage towards an earlier boot/init function
+// Note : Originally, LaunchDataPage resides in a "STICKY" segment in
+// the xbox kernel. Kernel code accessses this as a normal variable.
+// XAPI code however, reference to the address of this kernel variable,
+// thus use indirection (*LaunchDataPage) to get to the same contents.
 XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
 
 // ******************************************************************
@@ -301,10 +295,10 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	else
 	{
 		// TODO : Free PAGE_WRITECOMBINE differently
-		if (OrigBaseAddress == LaunchDataPage)
-			CxbxFree(OrigBaseAddress); // place breakpoint here to test
-		else
-			CxbxFree(OrigBaseAddress);
+		if (OrigBaseAddress == LaunchDataPage) 
+			DbgPrintf("MmFreeContiguousMemory detected a free of LaunchDataPage\n");
+
+		CxbxFree(OrigBaseAddress);
 	}
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -453,14 +447,27 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 
 	if (BaseAddress == LaunchDataPage)
 	{
-		DbgPrintf("Saving launch data to %s\n", szFilePath_LaunchDataPage_bin);
-		FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
-		fseek(fp, 0, SEEK_SET);
-		fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
-		fclose(fp);
+		if (Persist)
+		{
+			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
+			if (fp)
+			{
+				DbgPrintf("Persisting LaunchDataPage\n");
+				fseek(fp, 0, SEEK_SET);
+				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
+				fclose(fp);
+			}
+			else
+				DbgPrintf("Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+		}
+		else
+		{
+			DbgPrintf("Forgetting LaunchDataPage\n");
+			remove(szFilePath_LaunchDataPage_bin);
+		}
 	}
 	else
-		// TODO: Actually set this up to be remember across a "reboot"
+		// TODO : Store/forget other pages to be remembered across a "reboot"
 		LOG_IGNORED();
 
   // [PatrickvL] Shared memory would be a perfect fit for this,

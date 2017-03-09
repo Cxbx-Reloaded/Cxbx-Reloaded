@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
+#include "EmuKrnl.h" // For EEPROM, XboxFactoryGameRegion
 #include "EmuShared.h"
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
@@ -284,8 +285,11 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	// TODO : Setup LaunchData and Initialize kernel
-	// (which will launch the Xbe on itself), instead here.
+	CxbxRestoreEEPROM();
+
+	CxbxRestorePersistentMemoryRegions();
+
+	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
@@ -652,6 +656,82 @@ void CxbxInitFilePaths()
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData); // TODO : Start using this
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
+}
+
+void EmuInitializeDefaultEEPROM()
+{
+	memset(&EEPROM, 0, sizeof(xboxkrnl::XBOX_EEPROM));
+
+	// TODO: Make these configurable or autodetect of some sort :
+	EEPROM.UserSettings.Language = 0x01;  // = English
+	EEPROM.UserSettings.VideoFlags = 0x10;  // = Letterbox
+	EEPROM.UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
+	EEPROM.UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
+	EEPROM.UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+	EEPROM.UserSettings.MiscFlags = 0;  // No automatic power down
+	EEPROM.FactorySettings.AVRegion = 0x01; // = NTSC_M
+
+	XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
+
+	DbgPrintf("EmuMain: Initialized default EEPROM\n");
+}
+
+void CxbxRestoreEEPROM()
+{
+	// If EEPROM.bin exists, load it into our buffer
+	FILE *fp = fopen(szFilePath_EEPROM_bin, "rb");
+	if (fp)
+	{
+		// Read in the contents.
+		fseek(fp, 0, SEEK_SET);
+		fread(&EEPROM, sizeof(xboxkrnl::XBOX_EEPROM), 1, fp);
+		fclose(fp);
+
+		DbgPrintf("EmuMain: Loaded EEPROM.bin\n");
+	}
+	else
+		EmuInitializeDefaultEEPROM();
+}
+
+// TODO : Is DefaultLaunchDataPage really necessary? (No-one assigns it yet to LaunchDataPage)
+xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
+{
+	{   // header
+		2,  // 2: dashboard, 0: title
+		0,
+		"D:\\default.xbe",
+		0
+	}
+};
+
+void CxbxRestoreLaunchDataPage()
+{
+	// If CxbxLaunchDataPage.bin exist, load it into "persistent" memory
+	FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "rb");
+	if (fp)
+	{
+		// Make sure LaunchDataPage is writeable  :
+		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
+			xboxkrnl::LaunchDataPage = NULL;
+
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+
+		// Read in the contents.
+		fseek(fp, 0, SEEK_SET);
+		fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
+		fclose(fp);
+		// Delete the file once we're done.
+		remove(szFilePath_LaunchDataPage_bin);
+
+		DbgPrintf("EmuMain: Restored LaunchDataPage\n");
+	}
+}
+
+void CxbxRestorePersistentMemoryRegions()
+{
+	CxbxRestoreLaunchDataPage();
+	// TODO : Restore all other persistent memory regions here too.
 }
 
 void CxbxKrnlCleanup(const char *szErrorMessage, ...)
