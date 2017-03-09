@@ -290,21 +290,21 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	if (g_AlignCache.exists(BaseAddress))
 	{
 		OrigBaseAddress = g_AlignCache.get(BaseAddress);
-
 		g_AlignCache.remove(BaseAddress);
 	}
 
-	if (OrigBaseAddress != &DefaultLaunchDataPage)
+	if (OrigBaseAddress == &DefaultLaunchDataPage)
 	{
+		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
+		LOG_IGNORED();
+	}
+	else
+	{
+		// TODO : Free PAGE_WRITECOMBINE differently
 		if (OrigBaseAddress == LaunchDataPage)
 			CxbxFree(OrigBaseAddress); // place breakpoint here to test
 		else
 			CxbxFree(OrigBaseAddress);
-			// TODO : Free PAGE_WRITECOMBINE differently
-	}
-	else
-	{
-		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
 	}
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -347,6 +347,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
+	LOG_INCOMPLETE();
 
 	// We emulate Virtual/Physical memory 1:1	
 	return (PHYSICAL_ADDRESS)BaseAddress;
@@ -429,6 +430,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 
 	// TODO: should this be aligned?
 	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	LOG_INCOMPLETE();
 
 	RETURN(pRet);
 }
@@ -609,6 +611,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_END;
 
 	CxbxFree(BaseAddress);
+	LOG_INCOMPLETE();
 
 	RETURN(STATUS_SUCCESS);
 }
