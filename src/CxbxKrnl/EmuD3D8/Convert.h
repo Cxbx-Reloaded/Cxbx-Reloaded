@@ -197,7 +197,7 @@ inline int EmuD3DPrimitive2VertexCount(int PrimitiveType, int PrimitiveCount)
 extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
 
 // convert xbox->pc primitive type
-inline D3DPRIMITIVETYPE EmuPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveType)
+inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveType)
 {
     if((DWORD)PrimitiveType == 0x7FFFFFFF)
         return D3DPT_FORCE_DWORD;

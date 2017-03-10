@@ -1591,6 +1591,14 @@ typedef VOID (*PKRUNDOWN_ROUTINE)
 );
 
 // ******************************************************************
+// * PKSYNCHRONIZE_ROUTINE
+// ******************************************************************
+typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)
+(
+	IN PVOID SynchronizeContext
+);
+
+// ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
 typedef BOOLEAN (*PKSERVICE_ROUTINE)

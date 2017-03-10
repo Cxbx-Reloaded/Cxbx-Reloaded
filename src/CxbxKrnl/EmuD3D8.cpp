@@ -1162,7 +1162,7 @@ static void EmuUnswizzleTextureStages()
 		pPixelContainer->EmuTexture8->UnlockRect(0);
 		pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
 
-		// TODO: potentially CRC to see if this surface was actually modified..
+		// TODO: potentially XXHash32::hash() to see if this surface was actually modified..
 
 		//
 		// unswizzle texture
@@ -7557,6 +7557,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     return hRet;
 }
 
+void CxbxUpdateNativeD3DResources()
+{
+	XTL::EmuUpdateDeferredStates();
+	EmuUnswizzleTextureStages();
+/* TODO : Port these :
+	DxbxUpdateActiveVertexShader();
+	DxbxUpdateActiveTextures();
+	DxbxUpdateActivePixelShader();
+	DxbxUpdateDeferredStates(); // BeginPush sample shows us that this must come *after* texture update!
+	DxbxUpdateActiveVertexBufferStreams();
+	DxbxUpdateActiveRenderTarget();
+*/
+}
+
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
 // ******************************************************************
@@ -7577,10 +7591,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
            ");\n",
            PrimitiveType, StartVertex, VertexCount);
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
-    VertexPatchDesc VPDesc;
+	CxbxUpdateNativeD3DResources();
+
+	VertexPatchDesc VPDesc;
 
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
@@ -7602,7 +7617,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
         g_pD3DDevice8->DrawPrimitive
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType),
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
             StartVertex,
             VPDesc.dwPrimitiveCount
         );
@@ -7657,8 +7672,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
            PrimitiveType, VertexCount, pVertexStreamZeroData,
            VertexStreamZeroStride);
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	CxbxUpdateNativeD3DResources();
 
 /*#if 0
 	// HACK: Phantom Crash...
@@ -7690,22 +7704,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
     {
         #ifdef _DEBUG_TRACK_VB
         if(!g_bVBSkipStream)
+        #endif
         {
-        #endif
+			g_pD3DDevice8->DrawPrimitiveUP
+			(
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+				VPDesc.dwPrimitiveCount,
+				VPDesc.pVertexStreamZeroData,
+				VPDesc.uiVertexStreamZeroStride
+			);
 
-        g_pD3DDevice8->DrawPrimitiveUP
-        (
-            EmuPrimitiveType(VPDesc.PrimitiveType),
-            VPDesc.dwPrimitiveCount,
-            VPDesc.pVertexStreamZeroData,
-            VPDesc.uiVertexStreamZeroStride
-        );
-
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
-
-        #ifdef _DEBUG_TRACK_VB
+			g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
         }
-        #endif
     }
 
     VertPatch.Restore();
@@ -7731,7 +7741,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -7781,8 +7791,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
             CxbxKrnlCleanup("SetIndices Failed!");
     }
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
+	CxbxUpdateNativeD3DResources();
 
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
@@ -7873,7 +7882,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     {
         g_pD3DDevice8->DrawIndexedPrimitive
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
         );
 
 		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
@@ -7882,14 +7891,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		{ 
 			g_pD3DDevice8->DrawPrimitive 
 			( 
-				EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount 
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount 
 			); 
 		} 
 		else 
 		{ 
 			g_pD3DDevice8->DrawIndexedPrimitive 
 			( 
-				EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount 
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount 
 			); 
 		} */
     }
@@ -7920,9 +7929,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 	}
 
 //#endif
-    
-
-    return D3D_OK;
 }
 
 // ******************************************************************
@@ -7953,9 +7959,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
         CxbxKrnlCleanup("g_pIndexBuffer != 0");
 
-    EmuUpdateDeferredStates();
-	EmuUnswizzleTextureStages();
-
+	CxbxUpdateNativeD3DResources();
+	
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
@@ -7981,7 +7986,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     {
         g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
         );
 
 		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;

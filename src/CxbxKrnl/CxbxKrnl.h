@@ -123,6 +123,14 @@ void CxbxKrnlNoFunc();
 
 void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
+void CxbxInitFilePaths();
+
+void CxbxRestoreEEPROM();
+
+void CxbxRestorePersistentMemoryRegions();
+
+void ConnectWindowsTimersToThunkTable();
+
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
@@ -142,7 +150,11 @@ extern HWND CxbxKrnl_hEmuParent;
 extern DebugMode CxbxKrnl_DebugMode;
 extern char* CxbxKrnl_DebugFileName;
 
-void ConnectWindowsTimersToThunkTable();
+/*! file paths */
+extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
+extern char szFolder_CxbxReloadedData[MAX_PATH];
+extern char szFilePath_LaunchDataPage_bin[MAX_PATH];
+extern char szFilePath_EEPROM_bin[MAX_PATH];
 
 #ifdef __cplusplus
 }

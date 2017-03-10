@@ -37,12 +37,15 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 
 #include <ctime>
+
+#define HASH_SEED 0
 
 #define VERTEX_BUFFER_CACHE_SIZE 64
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
@@ -56,55 +59,6 @@ extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
 extern DWORD				XTL::g_dwPrimPerFrame = 0;
-static unsigned int crctab[256];
-
-static void CRC32Init(void)
-{
-    static boolean bFirstTime = true;
-    int i, j;
-
-    unsigned int crc;
-
-    if(!bFirstTime)
-    {
-        return;
-    }
-    for(i = 0; i < 256; i++)
-    {
-        crc = i << 24;
-        for(j = 0; j < 8; j++)
-        {
-            if(crc & 0x80000000)
-                crc = (crc << 1) ^ 0x04c11db7;
-            else
-                crc = crc << 1;
-        }
-        crctab[i] = crc;
-    }
-    bFirstTime = false;
-}
-
-static unsigned int CRC32(unsigned char *data, int len)
-{
-    unsigned int        result;
-    int                 i;;
-
-    if(len < 4) abort();
-
-    result = *data++ << 24;
-    result |= *data++ << 16;
-    result |= *data++ << 8;
-    result |= *data++;
-    result = ~ result;
-    len -=4;
-
-    for(i=0; i<len; i++)
-    {
-        result = (result << 8 | *data++) ^ crctab[result >> 24];
-    }
-
-    return ~result;
-}
 
 XTL::VertexPatcher::VertexPatcher()
 {
@@ -114,7 +68,6 @@ XTL::VertexPatcher::VertexPatcher()
     this->m_bAllocatedStreamZeroData = false;
     this->m_pNewVertexStreamZeroData = NULL;
     this->m_pDynamicPatch = NULL;
-    CRC32Init();
 }
 
 XTL::VertexPatcher::~VertexPatcher()
@@ -131,11 +84,11 @@ void XTL::VertexPatcher::DumpCache(void)
         if(pCachedStream)
         {
             // TODO: Write nicer dump presentation
-            printf("Key: 0x%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d CRCCount: %d CRCFreq: %d Lengh: %d CRC32: 0x%.08X\n",
+            printf("Key: 0x%.08X Cache Hits: %d IsUP: %s OrigStride: %d NewStride: %d HashCount: %d HashFreq: %d Length: %d Hash: 0x%.08X\n",
                    pNode->uiKey, pCachedStream->uiCacheHit, pCachedStream->bIsUP ? "YES" : "NO",
                    pCachedStream->Stream.uiOrigStride, pCachedStream->Stream.uiNewStride,
                    pCachedStream->uiCount, pCachedStream->uiCheckFrequency,
-                   pCachedStream->uiLength, pCachedStream->uiCRC32);
+                   pCachedStream->uiLength, pCachedStream->uiHash);
         }
 
         pNode = pNode->pNext;
@@ -222,13 +175,13 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
         uiKey = (uint32)pCalculateData;
     }
 
-    UINT uiChecksum = CRC32((unsigned char *)pCalculateData, uiLength);
+    uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
     if(!pPatchDesc->pVertexStreamZeroData)
     {
         pOrigVertexBuffer->Unlock();
     }
 
-    pCachedStream->uiCRC32 = uiChecksum;
+    pCachedStream->uiHash = uiHash;
     pCachedStream->Stream = m_pStreams[uiStream];
     pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
     pCachedStream->uiCount = 0;
@@ -333,8 +286,8 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 }
             }
             // Use the cached stream length (which is a must for the UP stream)
-            uint32 Checksum = CRC32((uint08*)pCalculateData, pCachedStream->uiLength);
-            if(Checksum == pCachedStream->uiCRC32)
+            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
+            if(uiHash == pCachedStream->uiHash)
             {
                 // Take a while longer to check
                 if(pCachedStream->uiCheckFrequency < 32*1024)
@@ -1292,7 +1245,7 @@ VOID XTL::EmuFlushIVB()
     }
 
     g_pD3DDevice8->DrawPrimitiveUP(
-        EmuPrimitiveType(VPDesc.PrimitiveType),
+		EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
         VPDesc.dwPrimitiveCount,
         VPDesc.pVertexStreamZeroData,
         VPDesc.uiVertexStreamZeroStride);

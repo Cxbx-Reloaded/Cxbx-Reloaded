@@ -65,201 +65,143 @@ constexpr const char* file_name(const char* str) {
 #define __FILENAME__ file_name(__FILE__)
 
 //
-// Hex output (type safe)
-//
-// http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
+// Character escaping functions
 //
 
-struct Hex1Struct
-{
-	uint8_t v;
-	Hex1Struct(uint8_t _v) : v(_v) { }
-};
-
-inline Hex1Struct hex1(uint8_t _v)
-{
-	return Hex1Struct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Hex1Struct& container)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.v;
-}
-
-struct Hex2Struct
-{
-	uint16_t v;
-	Hex2Struct(uint16_t _v) : v(_v) { }
-};
-
-inline Hex2Struct hex2(uint16_t _v)
-{
-	return Hex2Struct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Hex2Struct& container)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.v;
-}
-
-struct Hex4Struct
-{
-	uint32_t v;
-	Hex4Struct(uint32_t _v) : v(_v) { }
-};
-
-inline Hex4Struct hex4(uint32_t _v)
-{
-	return Hex4Struct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Hex4Struct& container)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.v;
-}
-
-struct SanitizedCharStruct
-{
-	char v;
-	SanitizedCharStruct(char _v) : v(_v) { }
-};
-
-inline SanitizedCharStruct sanitized_char(char _v)
-{
-	return SanitizedCharStruct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const SanitizedCharStruct& container)
-{
-	char v = container.v;
-
-	if (isprint(v))
-		os << "'" << v << "'";
-	else
-		os << "\\x" << std::hex << std::uppercase << (int)v;
-
-	return os;
-}
-
-struct SanitizedCharPointerStruct
-{
-	char *v;
-	SanitizedCharPointerStruct(char *_v) : v(_v) { }
-};
-
-inline SanitizedCharPointerStruct sanitized_char_pointer(char *_v)
-{
-	return SanitizedCharPointerStruct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const SanitizedCharPointerStruct& container)
-{
-	char *v = container.v;
-
-	os << "(char *)";
-	if (v == nullptr)
-		return os << "nullptr";
-
-	bool needsConversion = false;
-
-	while (*v)
-		if (!isprint(*v++))
-		{
-			needsConversion = true;
-			break;
-		}
-
-	v = container.v;
-	os << "0x" << (void *)v << " = \"";
-	if (needsConversion)
-	{
-		while (*v)
-		{
-			if (*v == '"')
-				os << "\\";
-
-			if (isprint(*v))
-				os << *v;
-			else
-				os << "\\x" << std::hex << std::uppercase << (int)(*v);
-
-			v++;
-		}
-	}
-	else
-		os << v;
-
-	return os << "\"";
-}
-
-struct SanitizedWideCharPointerStruct
-{
-	wchar_t *v;
-	SanitizedWideCharPointerStruct(wchar_t *_v) : v(_v) { }
-};
-
-inline SanitizedWideCharPointerStruct sanitized_wchar_pointer(wchar_t *_v)
-{
-	return SanitizedWideCharPointerStruct(_v);
-}
-
-inline std::ostream& operator<<(std::ostream& os, const SanitizedWideCharPointerStruct& container)
-{
-	wchar_t *v = container.v;
-
-	os << "(wchar *)";
-	if (v == nullptr)
-		return os << "nullptr";
-
-	bool needsConversion = false;
-
-	while (*v)
-		if (!isprint(*v++))
-		{
-			needsConversion = true;
-			break;
-		}
-
-	v = container.v;
-	os << "0x" << (void *)v << " = \"";
-	if (needsConversion)
-	{
-		while (*v)
-		{
-			if (*v == '"')
-				os << "\\";
-
-			if (isprint(*v))
-				os << *v;
-			else
-				os << "\\x" << std::hex << std::uppercase << (int)(*v);
-
-			v++;
-		}
-	}
-	else
-		os << v;
-
-	return os << "\"";
-}
+extern const bool needs_escape(const wint_t _char);
+extern inline void output_char(std::ostream& os, char c);
+extern inline void output_wchar(std::ostream& os, wchar_t c);
 
 //
 // Data sanitization functions
 //
 
-// Default sanitization functions simply returns the given argument
+// By default, sanitization functions simply return the given argument
+// (type and value) which results in calls to standard output writers.
 template<class T>
-inline T _log_sanitize(T arg) { return arg; }
-
-// Sanitize C-style strings by converting NULL to "<nullptr>" to prevent null dereference
-inline SanitizedCharStruct _log_sanitize(char arg) { return sanitized_char(arg); }
-
-inline SanitizedCharPointerStruct _log_sanitize(char *arg) { return sanitized_char_pointer(arg); }
-inline SanitizedWideCharPointerStruct _log_sanitize(wchar_t *arg) { return sanitized_wchar_pointer(arg); }
+inline T _log_sanitize(T value)
+{
+	return value;
+}
 
 // Convert booleans to strings properly
-inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
-inline const char * _log_sanitize(BOOLEAN value) { return value ? "TRUE" : "FALSE"; }
+inline const char * _log_sanitize(BOOL value)
+{
+	return value ? "TRUE" : "FALSE";
+}
+
+// Macro to ease declaring a _log_sanitize overload (invokeable via C) for type T
+#define LOG_SANITIZE_OVERLOAD(C, T)     \
+struct Sane##C                          \
+{                                       \
+  T value;                              \
+  Sane##C(T _value) : value(_value) { } \
+};                                      \
+                                        \
+inline Sane##C C(T value)               \
+{                                       \
+    return Sane##C(value);              \
+}                                       \
+                                        \
+inline Sane##C _log_sanitize(T value)   \
+{                                       \
+    return C(value);                    \
+}                                       \
+                                        \
+inline std::ostream& operator<<(        \
+    std::ostream& os,                   \
+	const Sane##C& container)
+
+// Hex output (type safe)
+// http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
+LOG_SANITIZE_OVERLOAD(hex1, uint8_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+LOG_SANITIZE_OVERLOAD(hex2, uint16_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+LOG_SANITIZE_OVERLOAD(hex4, uint32_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+// Character output (escaped into a C-string representation)
+// https://en.wikipedia.org/wiki/Escape_sequences_in_C
+LOG_SANITIZE_OVERLOAD(sanitized_char, char)
+{
+	output_char(os, container.value);
+	return os;
+}
+
+LOG_SANITIZE_OVERLOAD(sanitized_wchar, wchar_t)
+{
+	output_wchar(os, container.value);
+	return os;
+}
+
+LOG_SANITIZE_OVERLOAD(sanitized_char_pointer, char *)
+{
+	char *v = container.value;
+
+	os << "(char *)";
+	if (v == nullptr)
+		return os << "NULL";
+
+	bool needsEscaping = false;
+
+	while (*v)
+		if (needs_escape(*v++))
+		{
+			needsEscaping = true;
+			break;
+		}
+
+	v = container.value;
+	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	if (needsEscaping)
+	{
+		while (*v)
+			output_char(os, *v++);
+	}
+	else
+		os << v;
+
+	return os << "\"";
+}
+
+LOG_SANITIZE_OVERLOAD(sanitized_wchar_pointer, wchar_t *)
+{
+	wchar_t *v = container.value;
+
+	os << "(wchar *)";
+	if (v == nullptr)
+		return os << "NULL";
+
+	bool needsEscaping = false;
+
+	while (*v)
+		if (needs_escape(*v++))
+		{
+			needsEscaping = true;
+			break;
+		}
+
+	v = container.value;
+	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	if (needsEscaping)
+	{
+		while (*v)
+			output_wchar(os, *v++);
+	}
+	else
+		os << v;
+
+	return os << "\"";
+}
 
 //
 // Logging defines
@@ -279,7 +221,7 @@ extern thread_local std::string _logPrefix;
 			std::stringstream msg; \
 			msg << _logPrefix << __func__ << "(";
 
-	// LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
+	// LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 	#define LOG_FUNC_ARG(arg) \
 			_had_arg = true; \
 			msg << "\n   " << std::setw(25) << std::left << std::setfill(' ') << #arg << " : " << _log_sanitize(arg);

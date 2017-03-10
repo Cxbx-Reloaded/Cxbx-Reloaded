@@ -88,7 +88,7 @@ static void EmuUnswizzleActiveTexture()
     pPixelContainer->EmuTexture8->UnlockRect(0);
     pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
 
-    // TODO: potentially CRC to see if this surface was actually modified..
+    // TODO: potentially XXHash32::hash() to see if this surface was actually modified..
 
     //
     // unswizzle texture
@@ -241,7 +241,7 @@ extern void XTL::EmuExecutePushBufferRaw
                 #endif
 
                 XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
+                PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
             }
         }
         else if(dwMethod == 0x1818) // NVPB_InlineVertexArray
@@ -841,7 +841,7 @@ void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
 	DWORD dwBytesWritten;
 
 	// Write pushbuffer data to the file.
-	// TODO: Cache the 32-bit CRC of each pushbuffer to ensure that the same
+	// TODO: Cache the 32-bit XXHash32::hash() of each pushbuffer to ensure that the same
 	// pushbuffer is not written twice within a given emulation session.
 	WriteFile( hFile, &g_CurrentVertexShader, sizeof( DWORD ), &dwBytesWritten, NULL );
 	WriteFile( hFile, PBData, dwSize, &dwBytesWritten, NULL );

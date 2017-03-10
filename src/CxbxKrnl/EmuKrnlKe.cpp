@@ -1251,11 +1251,51 @@ XBSYSAPI EXPORTNUM(152) xboxkrnl::ULONG NTAPI xboxkrnl::KeSuspendThread
 }
 
 // ******************************************************************
+// * 0x0099 - KeSynchronizeExecution()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(153) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSynchronizeExecution
+(
+	IN PKINTERRUPT Interrupt,
+	IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+	IN PVOID SynchronizeContext
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Interrupt)
+		LOG_FUNC_ARG(SynchronizeRoutine)
+		LOG_FUNC_ARG(SynchronizeContext)
+		LOG_FUNC_END;
+
+	BOOLEAN ret = TRUE;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x009A - KeSystemTime
 // ******************************************************************
 // Dxbx note : This was once a value, but instead we now point to
 // the native Windows versions (see ConnectWindowsTimersToThunkTable) :
 // XBSYSAPI EXPORTNUM(154) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeSystemTime; // Used for KernelThunk[154]
+
+// ******************************************************************
+// * 0x009B - KeTestAlertThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(155) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeTestAlertThread
+(
+	IN KPROCESSOR_MODE AlertMode
+)
+{
+	LOG_FUNC_ONE_ARG(AlertMode);
+
+	BOOLEAN ret = TRUE;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
 
 // ******************************************************************
 // * 0x009C - KeTickCount

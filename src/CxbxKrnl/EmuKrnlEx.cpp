@@ -331,22 +331,6 @@ static const EEPROMInfo EEPROMInfos[] = {
 	{ XC_END_MARKER }
 };
 
-void EmuInitializeDefaultEEPROM()
-{
-	memset(&EEPROM, 0, sizeof(xboxkrnl::XBOX_EEPROM));
-
-	// TODO: Make these configurable or autodetect of some sort :
-	EEPROM.UserSettings.Language = 0x01;  // = English
-	EEPROM.UserSettings.VideoFlags = 0x10;  // = Letterbox
-	EEPROM.UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
-	EEPROM.UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-	EEPROM.UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
-	EEPROM.UserSettings.MiscFlags = 0;  // No automatic power down
-	EEPROM.FactorySettings.AVRegion = 0x01; // = NTSC_M
-
-	XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
-}
-
 const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 {
 	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)

@@ -58,6 +58,21 @@ namespace NtDll
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;
 
+ULONG AvQueryAvCapabilities()
+{
+	// This is the only AV mode we currently emulate, so we can hardcode the return value
+	// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
+	// This function should first query the AV Pack type, read the user's EEPROM settings and
+	// return the correct flags based on this.
+	//
+	// For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
+	//
+	// To read the EEPROM, call ExQueryNonVolatileSetting() with these config flags :
+	// XC_FACTORY_AV_REGION; if that fails, fallback on AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
+	// XC_VIDEO_FLAGS; if that fails, fallback on 0
+	return AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+}
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
@@ -126,16 +141,64 @@ XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 		LOG_FUNC_ARG_OUT(Result)
 		LOG_FUNC_END;
 
+	//if (RegisterBase == NULL)
+	//	RegisterBase = (void *)NV20_REG_BASE_KERNEL;
+
 	switch (Option) {
-		case AV_QUERY_AV_CAPABILITIES:
-			// This is the only AV mode we currently emulate, so we can hardcode the return value
-			// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
-			// This function should first query the AV Pack type, read the user's EEPROM settings and
-			// return the correct flags based on this.
-			*Result = AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
-			break;
-		default:
-			LOG_UNIMPLEMENTED();
+	case AV_OPTION_MACROVISION_MODE:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_ENABLE_CC:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_DISABLE_CC:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_SEND_CC_DATA:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_QUERY_CC_STATUS:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_QUERY_AV_CAPABILITIES:
+		*Result = AvQueryAvCapabilities();
+		break;
+	case AV_OPTION_BLANK_SCREEN:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_MACROVISION_COMMIT:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_FLICKER_FILTER:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_ZERO_MODE:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_QUERY_MODE:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_ENABLE_LUMA_FILTER:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_GUESS_FIELD:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_QUERY_ENCODER_TYPE:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_QUERY_MODE_TABLE_VERSION:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_CGMS:
+		LOG_UNIMPLEMENTED();
+		break;
+	case AV_OPTION_WIDESCREEN:
+		LOG_UNIMPLEMENTED();
+		break;
+	default:
+		// do nothing
+		break;
 	}
 }
 

@@ -43,12 +43,14 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
 };
 
+#include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuKrnl.h" // For EEPROM
+#include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
 namespace NtDll
@@ -396,7 +398,68 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+
+	switch (Routine) {
+	case ReturnFirmwareHalt:
+		CxbxKrnlCleanup("Emulated Xbox is halted");
+		break;
+
+	case ReturnFirmwareReboot:
+		LOG_UNIMPLEMENTED(); // fall through
+	case ReturnFirmwareQuickReboot:
+	{
+		if (xboxkrnl::LaunchDataPage == NULL)
+			LOG_UNIMPLEMENTED();
+		else
+		{
+			// Save the launch data page to disk for later.
+			// (Note : XWriteTitleInfoNoReboot does this too)
+			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+
+			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+			char szXbePath[MAX_PATH];
+			char szWorkingDirectoy[MAX_PATH];
+
+			// Convert Xbox XBE Path to Windows Path
+			{
+				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+			}
+
+			// Determine Working Directory
+			{
+				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				PathRemoveFileSpec(szWorkingDirectoy);
+			}
+
+			// Relaunch Cxbx, to load another Xbe
+			{
+				char szArgsBuffer[4096];
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+			}
+		}
+	};
+
+	case ReturnFirmwareHard:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	case ReturnFirmwareFatal:
+		MessageBox(NULL, "Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)", "Cxbx-Reloaded", MB_OK);
+		break;
+
+	case ReturnFirmwareAll:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	default:
+		LOG_UNIMPLEMENTED();
+	}
+
+	ExitProcess(EXIT_SUCCESS);
 }
 
 // ******************************************************************
@@ -563,7 +626,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
-XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()
