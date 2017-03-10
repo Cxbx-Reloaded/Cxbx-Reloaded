@@ -81,6 +81,7 @@ LOGRENDER_HEADER(XC_VALUE_INDEX);
 
 // Headers for rendering Xbox types without pointer-to-type :
 LOGRENDER_HEADER(BOOLEAN);
+LOGRENDER_HEADER(PBYTE);
 
 // Macro to ease declaration of two render functions, for Xbox type and pointer-to-type :
 #define LOGRENDER_HEADERS(Type) LOGRENDER_HEADER(Type); LOGRENDER_HEADER(P##Type)

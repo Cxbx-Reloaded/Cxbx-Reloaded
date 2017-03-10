@@ -395,6 +395,15 @@ LOGRENDER_HEADER(BOOLEAN)
 	return os << (BOOL)value;
 }
 
+LOGRENDER_HEADER(PBYTE)
+{
+	os << "(PBYTE)";
+	if (value == nullptr)
+		return os << "NULL";
+
+	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
+}
+
 // Macro combining pointer-to-type implementation and type rendering header :
 #define LOGRENDER_TYPE(Type)                         \
 LOGRENDER_HEADER(P##Type)                            \

@@ -219,22 +219,22 @@ extern thread_local std::string _logPrefix;
 			tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] " << __FILENAME__ << ": "; \
 			_logPrefix = tmp.str(); \
 			std::stringstream msg; \
-			msg << _logPrefix << __func__ << "(";
+			msg << _logPrefix << __func__ << std::left << "(";
 
 	// LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 	#define LOG_FUNC_ARG(arg) \
 			_had_arg = true; \
-			msg << "\n   " << std::setw(25) << std::left << std::setfill(' ') << #arg << " : " << _log_sanitize(arg);
+			msg << "\n   " << std::setw(25) << #arg << " : " << _log_sanitize(arg);
 
 	// LOG_FUNC_ARG_TYPE writes output using the overloaded << operator of the given type
 	#define LOG_FUNC_ARG_TYPE(type, arg) \
 			_had_arg = true; \
-			msg << "\n   " << std::setw(25) << std::left << std::setfill(' ') << #arg << " : " << (type)arg;
+			msg << "\n   " << std::setw(25) << #arg << " : " << (type)arg;
 
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
 			_had_arg = true; \
-			msg << "\n OUT " << std::setw(23) << std::left << std::setfill(' ') << #arg << " : " << hex4((uint32_t)arg);
+			msg << "\n OUT " << std::setw(23) << #arg << " : " << hex4((uint32_t)arg);
 
 	// LOG_FUNC_END closes off function and optional argument logging
 	#define LOG_FUNC_END \
