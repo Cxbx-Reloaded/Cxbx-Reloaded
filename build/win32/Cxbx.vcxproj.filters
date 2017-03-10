@@ -193,6 +193,9 @@
     <ClCompile Include="..\..\src\Common\XDVDFS Tools\buffered_io.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -504,6 +507,24 @@
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\EmuEEPROM.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\About.jpg">
@@ -652,6 +673,21 @@
     </None>
     <None Include="..\..\resource\Logo.bmp">
       <Filter>Shared</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
-#include "EmuKrnl.h" // For EEPROM
+#include "EmuEEPROM.h" // For EEPROM
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
@@ -225,8 +225,21 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 	RETURN(dwVector);
 }
 
-#define EEPROM_SMBUS_WRITE  0xA8
-#define EEPROM_SMBUS_READ   0xA9
+#define SMC_SLAVE_ADDRESS 0x20
+#define SMBUS_SMC_WRITE SMC_SLAVE_ADDRESS // = 0x20
+#define SMBUS_SMC_READ (SMC_SLAVE_ADDRESS || 1) // = 0x21
+
+#define EEPROM_ADDRESS 0xA8
+#define SMBUS_EEPROM_WRITE EEPROM_ADDRESS // = 0xA8
+#define SMBUS_EEPROM_READ (EEPROM_ADDRESS || 1) // = 0xA9
+
+#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_WRITE SMBUS_TV_ENCODER_ID_CONEXANT // = 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_READ (SMBUS_TV_ENCODER_ID_CONEXANT_WRITE || 1) // = 0x8B
+
+#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_WRITE SMBUS_TV_ENCODER_ID_FOCUS // = 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_READ (SMBUS_TV_ENCODER_ID_FOCUS_WRITE || 1) // = 0xD5
 
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
@@ -249,11 +262,11 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	switch (Address) {
-	case EEPROM_SMBUS_READ: {
+	case SMBUS_EEPROM_READ: {
 		if (ReadWord)
-			*DataValue = *((PWORD)(((PBYTE)&EEPROM) + Command));
+			*DataValue = *((PWORD)(((PBYTE)EEPROM) + Command));
 		else
-			*DataValue = *(((PBYTE)&EEPROM) + Command);
+			*DataValue = *(((PBYTE)EEPROM) + Command);
 
 		break;
 	}
@@ -483,11 +496,11 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	switch (Address) {
-	case EEPROM_SMBUS_WRITE: {
+	case SMBUS_EEPROM_WRITE: {
 		if (WriteWord)
-			*((PWORD)(((PBYTE)&EEPROM) + Command)) = (WORD)DataValue;
+			*((PWORD)(((PBYTE)EEPROM) + Command)) = (WORD)DataValue;
 		else
-			*(((PBYTE)&EEPROM) + Command) = (BYTE)DataValue;
+			*(((PBYTE)EEPROM) + Command) = (BYTE)DataValue;
 
 		break;
 	}
