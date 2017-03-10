@@ -454,6 +454,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
 			}
 		}
+		break;
 	};
 
 	case ReturnFirmwareHard:
