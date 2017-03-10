@@ -934,18 +934,17 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 		if (xboxkrnl::LaunchDataPage == NULL)
 			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 
-		if (lpTitlePath != NULL)
-			// Without a title, return to dashboard :
-			xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
-		else
-		{
-			Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-			xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
-			xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
-			if (pLaunchData != NULL)
-				// Save the launch data
-				memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
+		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
+		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
+		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
+		xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
 
+		if (pLaunchData != NULL)
+			// Save the launch data
+			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
+
+		if (lpTitlePath == NULL)
+		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };
 			XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
