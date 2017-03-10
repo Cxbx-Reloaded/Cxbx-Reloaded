@@ -211,6 +211,9 @@ LOG_SANITIZE_OVERLOAD(sanitized_wchar_pointer, wchar_t *)
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
 
+#define LOG_ARG_START "\n   " << std::setw(20)
+#define LOG_ARG_OUT_START "\n OUT " << std::setw(18)
+
 #ifdef _DEBUG_TRACE
 	#define LOG_FUNC_BEGIN \
 		do { if(g_bPrintfOn) { \
@@ -224,17 +227,17 @@ extern thread_local std::string _logPrefix;
 	// LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 	#define LOG_FUNC_ARG(arg) \
 			_had_arg = true; \
-			msg << "\n   " << std::setw(25) << #arg << " : " << _log_sanitize(arg);
+			msg << LOG_ARG_START << #arg << " : " << _log_sanitize(arg);
 
 	// LOG_FUNC_ARG_TYPE writes output using the overloaded << operator of the given type
 	#define LOG_FUNC_ARG_TYPE(type, arg) \
 			_had_arg = true; \
-			msg << "\n   " << std::setw(25) << #arg << " : " << (type)arg;
+			msg << LOG_ARG_START << #arg << " : " << (type)arg;
 
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
 			_had_arg = true; \
-			msg << "\n OUT " << std::setw(23) << #arg << " : " << hex4((uint32_t)arg);
+			msg << LOG_ARG_OUT_START << #arg << " : " << hex4((uint32_t)arg);
 
 	// LOG_FUNC_END closes off function and optional argument logging
 	#define LOG_FUNC_END \
