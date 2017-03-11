@@ -679,7 +679,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(GetOverlappedResult, 4627, PATCH),
 	REGISTER_OOVPA(XLaunchNewImage, 4627, ALIAS, XLaunchNewImageA),
 	REGISTER_OOVPA(XLaunchNewImage, 4928, ALIAS, XLaunchNewImageA),
-	REGISTER_OOVPA(XGetLaunchInfo, 4627, PATCH),
+	REGISTER_OOVPA(XGetLaunchInfo, 4627, DISABLED),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4627, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(timeSetEvent, 4627, PATCH),
