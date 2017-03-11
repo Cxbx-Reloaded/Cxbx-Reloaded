@@ -1654,59 +1654,19 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 		LOG_FUNC_ARG(Reserved)
 		LOG_FUNC_END;
 
-	uint32 dwEsi, dwEax, dwEcx;
+	ULONG dwErrorCode = 0;
+	ULONG dwTransferred = 0;
 
-	dwEsi = (uint32)IoStatusBlock;
-
-	if ((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
-	{
-		dwEcx = 0;
-		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
-	}
-	else
-	{
-		dwEcx = (DWORD)IoStatusBlock->Information;
-		dwEax = 0;
+	if (NT_SUCCESS(IoStatusBlock->Status)) {
+		dwTransferred = (ULONG)IoStatusBlock->Information;
+	} else {
+		dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
 	}
 
-	/*
-	// ~XDK 3911??
-	if(true)
-	{
-	dwEsi = dw2;
-	dwEcx = dw1;
-	dwEax = dw3;
+	LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
+	LPOVERLAPPED lpOverlapped = (LPOVERLAPPED)CONTAINING_RECORD(IoStatusBlock, OVERLAPPED, Internal);
 
-	}
-	else
-	{
-	dwEsi = dw1;
-	dwEcx = dw2;
-	dwEax = dw3;
-	}//*/
-
-	__asm
-	{
-		pushad
-		/*
-		mov esi, IoStatusBlock
-		mov ecx, dwEcx
-		mov eax, dwEax
-		*/
-		// TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
-		// Seems to be XDK/version dependand??
-		mov esi, dwEsi
-		mov ecx, dwEcx
-		mov eax, dwEax
-
-		push esi
-		push ecx
-		push eax
-
-		call ApcContext
-
-		popad
-	}
+	(CompletionRoutine)(dwErrorCode, dwTransferred, lpOverlapped);
 
 	DbgPrintf("EmuKrnl: NtUserIoApcDispatcher Completed\n");
 }
