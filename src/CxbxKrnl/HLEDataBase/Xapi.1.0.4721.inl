@@ -55,10 +55,10 @@ OOVPATable XAPI_4721[] = {
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete 
 	// REGISTER_OOVPA(XapiInitProcess, 4361, PATCH), // obsolete, Too High Level
     // REGISTER_OOVPA(XapiBootDash, 3911, PATCH), // obsolete 
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
-	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
-	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 };
 
 // ******************************************************************
