@@ -198,10 +198,10 @@ OOVPATable XAPI_5849[] = {
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 5849, PATCH),
 	// REGISTER_OOVPA(SwitchToThread, 5849, PATCH),
 	REGISTER_OOVPA(XFormatUtilityDrive, 4627, PATCH),
-	REGISTER_OOVPA(CreateFiber, 5558, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 5558, PATCH),
-	REGISTER_OOVPA(SwitchToFiber, 5558, PATCH),
-	REGISTER_OOVPA(ConvertThreadToFiber, 5558, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
 };
 
 // ******************************************************************

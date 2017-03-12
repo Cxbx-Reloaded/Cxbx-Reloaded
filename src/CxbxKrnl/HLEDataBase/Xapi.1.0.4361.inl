@@ -352,6 +352,8 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(XMountUtilityDrive, 4134, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
 	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),

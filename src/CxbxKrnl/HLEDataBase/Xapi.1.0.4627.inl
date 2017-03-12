@@ -674,6 +674,8 @@ OOVPATable XAPI_4627[] = {
 	// REGISTER_OOVPA(XCalculateSignatureEnd, 4627, PATCH), // s+
 	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
 	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 4627, PATCH),

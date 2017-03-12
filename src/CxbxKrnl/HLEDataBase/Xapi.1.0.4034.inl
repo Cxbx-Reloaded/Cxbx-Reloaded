@@ -174,6 +174,8 @@ OOVPATable XAPI_4034[] = {
 	// REGISTER_OOVPA(CloseHandle, (???, PATCH)),
 	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
 	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
