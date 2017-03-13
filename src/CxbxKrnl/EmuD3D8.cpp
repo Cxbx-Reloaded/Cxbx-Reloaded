@@ -131,7 +131,7 @@ static DWORD						g_SwapLast = 0;
 // cached Direct3D state variable(s)
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
-static XTL::X_D3DSurface           *g_YuvSurface = NULL;
+static XTL::X_D3DSurface           *g_pCachedYuvSurface = NULL;
 static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
@@ -3054,7 +3054,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         Texture_Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
         pTexture->Lock = dwPtr;
 
-        g_YuvSurface = (X_D3DSurface*)pTexture;
+        g_pCachedYuvSurface = (X_D3DSurface*)pTexture;
 
         hRet = D3D_OK;
     }
@@ -5069,8 +5069,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         if(--(*pRefCount) == 0)
         {
-            if(g_YuvSurface == pThis)
-                g_YuvSurface = NULL;
+            if(g_pCachedYuvSurface == pThis)
+                g_pCachedYuvSurface = NULL;
 
             // free memory associated with this special resource handle
             CxbxFree((PVOID)dwPtr);
@@ -7239,7 +7239,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
     if(g_fYuvEnabled)
     {
         
-		EMUPATCH(D3DDevice_UpdateOverlay)(g_YuvSurface, 0, 0, FALSE, 0);
+		EMUPATCH(D3DDevice_UpdateOverlay)(g_pCachedYuvSurface, 0, 0, FALSE, 0);
         
     }
 
