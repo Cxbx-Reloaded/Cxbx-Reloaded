@@ -2024,7 +2024,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
     X_D3DSurface      **ppBackBuffer
 )
 {
-        DbgPrintf("EmuD3D8: EmuD3DDevice_GetBackBuffer\n"
+        DbgPrintf("EmuD3D8: EmuD3DDevice_GetBackBuffer >>\n"
                "(\n"
                "   BackBuffer          : 0x%.08X\n"
                "   Type                : 0x%.08X\n"
@@ -3964,7 +3964,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4ub)
 {
 	
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexData4ub\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexData4ub >>\n"
            "(\n"
            "   Register            : 0x%.08X\n"
            "   a                   : 0x%.02X\n"
@@ -3995,7 +3995,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 {
 	
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexData4s\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexData4s >>\n"
            "(\n"
            "   Register            : 0x%.08X\n"
            "   a                   : 0x%.04X\n"
@@ -10228,7 +10228,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTargetFast)
 {
 	
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetRenderTarget\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetRenderTarget >>\n"
            "(\n"
            "   pRenderTarget       : 0x%.08X (0x%.08X)\n"
            "   pNewZStencil        : 0x%.08X (0x%.08X)\n"
