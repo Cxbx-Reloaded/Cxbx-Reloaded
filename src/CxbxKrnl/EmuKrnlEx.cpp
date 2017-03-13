@@ -44,6 +44,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
 
 // prevent name collisions
@@ -286,60 +287,6 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	RETURN(ret);
 }
 
-typedef struct EEPROMInfo {
-	xboxkrnl::XC_VALUE_INDEX index;
-	void *value_addr;
-	DWORD value_type;
-	int value_length;
-} EEPROMInfo;
-
-#define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
-
-static const EEPROMInfo EEPROMInfos[] = {
-	{ xboxkrnl::XC_TIMEZONE_BIAS,         &EEPROM.UserSettings.TimeZoneBias,                REG_DWORD, sizeof(LONG) },
-	{ xboxkrnl::XC_TZ_STD_NAME,           &EEPROM.UserSettings.TimeZoneStdName[0],          REG_BINARY, TIME_ZONE_NAME_LENGTH },
-	{ xboxkrnl::XC_TZ_STD_DATE,           &EEPROM.UserSettings.TimeZoneStdDate,             REG_DWORD, sizeof(xboxkrnl::XBOX_TIMEZONE_DATE) },
-	{ xboxkrnl::XC_TZ_STD_BIAS,           &EEPROM.UserSettings.TimeZoneStdBias,             REG_DWORD, sizeof(LONG) },
-	{ xboxkrnl::XC_TZ_DLT_NAME,           &EEPROM.UserSettings.TimeZoneDltName[0],          REG_BINARY, TIME_ZONE_NAME_LENGTH },
-	{ xboxkrnl::XC_TZ_DLT_DATE,           &EEPROM.UserSettings.TimeZoneDltDate,             REG_DWORD, sizeof(xboxkrnl::XBOX_TIMEZONE_DATE) },
-	{ xboxkrnl::XC_TZ_DLT_BIAS,           &EEPROM.UserSettings.TimeZoneDltBias,             REG_DWORD, sizeof(LONG) },
-	{ xboxkrnl::XC_LANGUAGE,              &EEPROM.UserSettings.Language,                    REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_VIDEO,                 &EEPROM.UserSettings.VideoFlags,                  REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_AUDIO,                 &EEPROM.UserSettings.AudioFlags,                  REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_P_CONTROL_GAMES,       &EEPROM.UserSettings.ParentalControlGames,        REG_DWORD, sizeof(ULONG) }, // Zapper queries this. TODO : Should this be REG_NONE?
-	{ xboxkrnl::XC_P_CONTROL_PASSWORD,    &EEPROM.UserSettings.ParentalControlPassword,     REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_P_CONTROL_MOVIES,      &EEPROM.UserSettings.ParentalControlMovies,       REG_DWORD, sizeof(ULONG) }, // Xbox Dashboard queries this.
-	{ xboxkrnl::XC_ONLINE_IP_ADDRESS,     &EEPROM.UserSettings.OnlineIpAddress,             REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_ONLINE_DNS_ADDRESS,    &EEPROM.UserSettings.OnlineDnsAddress,            REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_ONLINE_DEFAULT_GATEWAY_ADDRESS, &EEPROM.UserSettings.OnlineDefaultGatewayAddress, REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_ONLINE_SUBNET_ADDRESS, &EEPROM.UserSettings.OnlineSubnetMask,            REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_MISC,                  &EEPROM.UserSettings.MiscFlags,                   REG_DWORD, sizeof(DWORD) },
-	{ xboxkrnl::XC_DVD_REGION,            &EEPROM.UserSettings.DvdRegion,                   REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_MAX_OS,                &EEPROM.UserSettings,                             REG_BINARY, sizeof(xboxkrnl::XBOX_USER_SETTINGS)
-	// This is called to return a complete XBOX_USER_SETTINGS structure
-	//
-	// One example is from XapipQueryTimeZoneInformation(, REG_DWORD, sizeof(DWORD), where it is used to
-	// detect the local timezone information.
-	},
-	{ xboxkrnl::XC_FACTORY_SERIAL_NUMBER, &EEPROM.FactorySettings.SerialNumber[0],          REG_BINARY, 12 },
-	{ xboxkrnl::XC_FACTORY_ETHERNET_ADDR, &EEPROM.FactorySettings.EthernetAddr[0],          REG_BINARY, 6 },
-	{ xboxkrnl::XC_FACTORY_ONLINE_KEY,    &EEPROM.FactorySettings.OnlineKey,                REG_BINARY, 16 },
-	{ xboxkrnl::XC_FACTORY_AV_REGION,     &EEPROM.FactorySettings.AVRegion,                 REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_FACTORY_GAME_REGION,   &XboxFactoryGameRegion,                           REG_DWORD, sizeof(ULONG) },
-	{ xboxkrnl::XC_ENCRYPTED_SECTION,     &EEPROM.EncryptedSettings,                        REG_BINARY, sizeof(xboxkrnl::XBOX_ENCRYPTED_SETTINGS) },
-	{ xboxkrnl::XC_MAX_ALL,               &EEPROM,                                          REG_BINARY, sizeof(xboxkrnl::XBOX_EEPROM) },
-	{ XC_END_MARKER }
-};
-
-const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
-{
-	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)
-		if (EEPROMInfos[i].index == index)
-			return &EEPROMInfos[i];
-
-	return nullptr;
-}
-
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
@@ -361,13 +308,30 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
+	void * value_addr = nullptr;
+	int value_type;
+	int result_length;
 
 	// handle eeprom read
-	const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
-	if (info != nullptr)
+	if (ValueIndex == XC_FACTORY_GAME_REGION)
 	{
-		int result_length = info->value_length;
+		value_addr = &XboxFactoryGameRegion;
+		value_type = REG_DWORD;
+		result_length = sizeof(ULONG);
+	}
+	else
+	{
+		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+		if (info != nullptr)
+		{
+			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
+			value_type = info->value_type;
+			result_length = info->value_length;
+		};
+	}
 
+	if (value_addr != nullptr)
+	{
 		if (ResultLength != nullptr)
 			*ResultLength = result_length;
 
@@ -381,11 +345,11 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 			// 32-bit 1's complement sum, that must equal 0xFFFFFFFF)
 
 			// Set the output value type :
-			*Type = info->value_type;
+			*Type = value_type;
 			// Clear the output value buffer :
 			memset(Value, 0, ValueLength);
 			// Copy the emulated EEPROM value into the output value buffer :
-			memcpy(Value, info->value_addr, result_length);
+			memcpy(Value, value_addr, result_length);
 		}
 		else
 			Status = STATUS_BUFFER_TOO_SMALL;
@@ -539,25 +503,39 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
+	void * value_addr = nullptr;
+	DWORD result_length;
 
 	// handle eeprom write
-	const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+	if (ValueIndex == XC_FACTORY_GAME_REGION)
+	{
+		value_addr = &XboxFactoryGameRegion;
+		result_length = sizeof(ULONG);
+	}
+	else
+	{
+		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+		if (info != nullptr)
+		{
+			value_addr = (void *)(EEPROM + info->value_offset);
+			result_length = info->value_length;
+		};
+	}
 
 	// TODO : Only allow writing to factory section contents when running
 	// in DEVKIT mode, otherwise, nil the info pointer.
-	if (info != nullptr)
+	if (value_addr != nullptr)
 	{
 		// Note : Type could be verified against info->value_type here, but the orginal kernel doesn't even bother
 
-		DWORD result_length = info->value_length;
 		if (ValueLength <= result_length)
 		{
 			// TODO : Make EEPROM-access thread-safe
 
 			// Clear the emulated EEMPROM value :
-			memset(info->value_addr, 0, result_length);
+			memset(value_addr, 0, result_length);
 			// Copy the input value buffer into the emulated EEPROM value :
-			memcpy(info->value_addr, Value, ValueLength);
+			memcpy(value_addr, Value, ValueLength);
 
 			// TODO : When writing to the factory settings section (thus in DEVKIT
 			// mode), set XboxFactoryGameRegion to FactorySettings.GameRegion,
