@@ -1489,6 +1489,8 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
 	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreatePalette2, 5558, PATCH),
 };
 
 // ******************************************************************
