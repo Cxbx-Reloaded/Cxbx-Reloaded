@@ -120,6 +120,14 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
     return FALSE;
 }
 
+DWORD XTL::EmuXBFormatBPP(X_D3DFORMAT Format)
+{
+	DWORD dwBPP = 2; // Default, in case nothing is set
+
+	EmuXBFormatIsSwizzled(Format, &dwBPP);
+	return dwBPP;
+}
+
 BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
 {
     switch(Format)

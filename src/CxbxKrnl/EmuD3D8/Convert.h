@@ -43,6 +43,9 @@ extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 // is this format swizzled, and if so - how many BPP?
 extern BOOL EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP);
 
+// how many BPP does this format use?
+extern DWORD EmuXBFormatBPP(X_D3DFORMAT Format);
+
 // is this format linear?
 extern BOOL EmuXBFormatIsLinear(X_D3DFORMAT Format);
 
