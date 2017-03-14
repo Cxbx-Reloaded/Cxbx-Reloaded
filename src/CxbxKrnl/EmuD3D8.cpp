@@ -928,11 +928,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     DWORD *lpCodes = 0;
 
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-
                     lpCodes = (DWORD*)CxbxMalloc(dwCodes*sizeof(DWORD));
-
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-
                     g_bSupportsYUY2 = false;
                     for(DWORD v=0;v<dwCodes;v++)
                     {
@@ -943,19 +940,19 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         }
                     }
 
-                    CxbxFree(lpCodes);
-						
+                    CxbxFree(lpCodes);						
                     if(!g_bSupportsYUY2)
                         EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-					
-					// Does the user want to use Hardware accelerated YUV surfaces?
-					if(g_bSupportsYUY2 && g_XBVideo.GetHardwareYUV())
-						DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Enabled...\n");
-					
-					if(!g_XBVideo.GetHardwareYUV())
+					else
 					{
-						g_bSupportsYUY2 = false;
-						DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Disabled...\n");
+						// Does the user want to use Hardware accelerated YUV surfaces?
+						if (g_XBVideo.GetHardwareYUV())
+							DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Enabled...\n");
+						else
+						{
+							g_bSupportsYUY2 = false;
+							DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Disabled...\n");
+						}
 					}
                 }
 
@@ -965,15 +962,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     XTL::DDSURFACEDESC2 ddsd2;
 
                     ZeroMemory(&ddsd2, sizeof(ddsd2));
-
                     ddsd2.dwSize = sizeof(ddsd2);
                     ddsd2.dwFlags = DDSD_CAPS;
                     ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-
                     HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
-
-                    if(FAILED(hRet))
-                        CxbxKrnlCleanup("Could not create primary surface (0x%.08X)", hRet);
+					if (FAILED(hRet))
+					{
+						CxbxKrnlCleanup("Could not create primary surface (0x%.08X)", hRet);
+						g_bSupportsYUY2 = false;
+					}
                 }
 
                 // update render target cache
@@ -1036,14 +1033,25 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         g_pD3DDevice8 = 0;
                 }
 
-                if(g_bSupportsYUY2)
+				// cleanup overlay clipper
+				if (g_pDDClipper != 0)
+				{
+					g_pDDClipper->Release();
+					g_pDDClipper = 0;
+				}
+
+				// cleanup overlay surface
+				if (g_pDDSOverlay7 != 0)
+				{
+					g_pDDSOverlay7->Release();
+					g_pDDSOverlay7 = 0;
+				}
+
+				// cleanup directdraw surface
+                if(g_pDDSPrimary != 0)
                 {
-                    // cleanup directdraw surface
-                    if(g_pDDSPrimary != 0)
-                    {
-                        g_pDDSPrimary->Release();
-                        g_pDDSPrimary = 0;
-                    }
+                    g_pDDSPrimary->Release();
+                    g_pDDSPrimary = 0;
                 }
 
                 // cleanup directdraw
