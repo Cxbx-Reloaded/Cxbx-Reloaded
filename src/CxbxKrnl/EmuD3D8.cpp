@@ -94,7 +94,7 @@ static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback r
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
-static BOOL                         g_bHasZBuffer = FALSE;  // Does device have Z Buffer?
+static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // D3D based variables
@@ -130,7 +130,7 @@ static DWORD						g_SwapLast = 0;
 
 // cached Direct3D state variable(s)
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
-static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
+static XTL::X_D3DSurface           *g_pCachedDepthStencil = NULL;
 static XTL::X_D3DSurface           *g_pCachedYuvSurface = NULL;
 static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
@@ -983,10 +983,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
                 // update z-stencil surface cache
-                g_pCachedZStencilSurface = new XTL::X_D3DSurface();
-                g_pCachedZStencilSurface->Common = 0;
-                g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_DEPTH_STENCIL;
-				g_bHasZBuffer = SUCCEEDED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8));
+                g_pCachedDepthStencil = new XTL::X_D3DSurface();
+                g_pCachedDepthStencil->Common = 0;
+                g_pCachedDepthStencil->Data = X_D3DRESOURCE_DATA_DEPTH_STENCIL;
+				g_bHasDepthStencil = SUCCEEDED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedDepthStencil->EmuSurface8));
                 (void)g_pD3DDevice8->CreateVertexBuffer
                 (
                     1, 0, 0, XTL::D3DPOOL_MANAGED,
@@ -1007,9 +1007,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pD3DDevice8->Clear(
 					/*Count=*/0, 
 					/*pRects=*/nullptr, 
-					D3DCLEAR_TARGET | (g_bHasZBuffer ? D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL : 0),
+					D3DCLEAR_TARGET | (g_bHasDepthStencil ? D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL : 0),
 					/*Color=*/0xFF000000, // TODO : Use constant for this
-					/*Z=*/0.0f,
+					/*Z=*/g_bHasDepthStencil ? 1.0f : 0.0f,
 					/*Stencil=*/0);
 				g_pD3DDevice8->BeginScene();
 				g_pD3DDevice8->EndScene();
@@ -2289,12 +2289,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface)
            ");\n",
            ppZStencilSurface);
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedZStencilSurface->EmuSurface8;
+    IDirect3DSurface8 *pSurface8 = g_pCachedDepthStencil->EmuSurface8;
 
     if(pSurface8 != 0)
         pSurface8->AddRef();
 
-    *ppZStencilSurface = g_pCachedZStencilSurface;
+    *ppZStencilSurface = g_pCachedDepthStencil;
 
     DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", pSurface8);
 
@@ -2312,7 +2312,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
     DbgPrintf("EmuD3D8: EmuD3DDevice_GetDepthStencilSurface2()\n");
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedZStencilSurface->EmuSurface8;
+    IDirect3DSurface8 *pSurface8 = g_pCachedDepthStencil->EmuSurface8;
 
     if(pSurface8 != 0)
         pSurface8->AddRef();
@@ -2321,7 +2321,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
     
 
-    return g_pCachedZStencilSurface;
+    return g_pCachedDepthStencil;
 }
 
 // ******************************************************************
@@ -4121,7 +4121,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 
         // Do not needlessly clear Z Buffer
 		if (Flags & X_D3DCLEAR_ZBUFFER) {
-			if (g_bHasZBuffer)
+			if (g_bHasDepthStencil)
 				newFlags |= D3DCLEAR_ZBUFFER;
 			else
 				EmuWarning("Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
@@ -4132,7 +4132,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 		// Avoids following DirectX Debug Runtime error report
 		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
 		if (Flags & X_D3DCLEAR_STENCIL) {
-			if (g_bHasZBuffer) // TODO : Introduce/use g_bHasStencil
+			if (g_bHasDepthStencil) // TODO : Introduce/use g_bHasStencil
 				newFlags |= D3DCLEAR_STENCIL;
 			else
 				EmuWarning("Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
@@ -5020,7 +5020,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
         {
             IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-            if(pThis->Lock == 0x8000BEEF)
+            if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
                 uRet = ++pThis->Lock;
             else if(pResource8 != 0)
                 uRet = pResource8->AddRef();
@@ -5082,7 +5082,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
     {
         IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-        if(pThis->Lock == 0x8000BEEF)
+        if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
             delete[] (PVOID)pThis->Data;
             uRet = --pThis->Lock;
@@ -8125,7 +8125,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
         }
         else
         {
-            pPCNewZStencil = g_pCachedZStencilSurface->EmuSurface8;
+            pPCNewZStencil = g_pCachedDepthStencil->EmuSurface8;
         }
     }
 
@@ -8183,7 +8183,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
     pPalette->Common = (Size << 30) | X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1 
     pPalette->Data = (DWORD)new uint08[lk[Size]];
 
-    pPalette->Lock = 0x8000BEEF; // emulated reference count for palettes
+    pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
 	// EmuIDirect3DResource8_Register? So far, it doesn't look
