@@ -296,9 +296,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
 
-                    char AsciiTitle[255];
+                    char AsciiTitle[MAX_PATH];
 
-                    sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s...", m_Xbe->m_szAsciiTitle);
+					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
 
                     SetWindowText(m_hwnd, AsciiTitle);
 
