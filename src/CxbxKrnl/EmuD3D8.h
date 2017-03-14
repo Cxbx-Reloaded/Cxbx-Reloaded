@@ -45,6 +45,18 @@
 // initialize render window
 extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
+extern VOID CxbxSetPixelContainerHeader
+(
+	XTL::X_D3DPixelContainer* pPixelContainer,
+	DWORD           	Common,
+	UINT				Width,
+	UINT				Height,
+	XTL::X_D3DFORMAT	Format,
+	UINT				Levels,
+	UINT				Dimensions,
+	UINT				Pitch
+);
+
 // initialize direct3d
 extern VOID EmuD3DInit();
 
