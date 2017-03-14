@@ -251,6 +251,55 @@ int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 	return 0;
 }
 
+XTL::X_D3DSurface *EmuNewD3DSurface()
+{
+	XTL::X_D3DSurface *result = new XTL::X_D3DSurface;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_SURFACE | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DTexture *EmuNewD3DTexture()
+{
+	XTL::X_D3DTexture *result = new XTL::X_D3DTexture;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DVolumeTexture *EmuNewD3DVolumeTexture()
+{
+	XTL::X_D3DVolumeTexture *result = new XTL::X_D3DVolumeTexture;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DCubeTexture *EmuNewD3DCubeTexture()
+{
+	XTL::X_D3DCubeTexture *result = new XTL::X_D3DCubeTexture;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DIndexBuffer *EmuNewD3DIndexBuffer()
+{
+	XTL::X_D3DIndexBuffer *result = new XTL::X_D3DIndexBuffer;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_INDEXBUFFER | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DVertexBuffer *EmuNewD3DVertexBuffer()
+{
+	XTL::X_D3DVertexBuffer *result = new XTL::X_D3DVertexBuffer;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_VERTEXBUFFER | 1; // Set refcount to 1
+	return result;
+}
+
+XTL::X_D3DPalette *EmuNewD3DPalette()
+{
+	XTL::X_D3DPalette *result = new XTL::X_D3DPalette;
+	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1
+	return result;
+}
+
 VOID CxbxSetPixelContainerHeader
 (
 	XTL::X_D3DPixelContainer* pPixelContainer,
@@ -1034,14 +1083,12 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 }
 
                 // update render target cache
-                g_pCachedRenderTarget = new XTL::X_D3DSurface();
-                g_pCachedRenderTarget->Common = 0;
+                g_pCachedRenderTarget = EmuNewD3DSurface();
                 g_pCachedRenderTarget->Data = X_D3DRESOURCE_DATA_RENDER_TARGET;
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
                 // update z-stencil surface cache
-                g_pCachedDepthStencil = new XTL::X_D3DSurface();
-                g_pCachedDepthStencil->Common = 0;
+                g_pCachedDepthStencil = EmuNewD3DSurface();
                 g_pCachedDepthStencil->Data = X_D3DRESOURCE_DATA_DEPTH_STENCIL;
 				g_bHasDepthStencil = SUCCEEDED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedDepthStencil->EmuSurface8));
                 (void)g_pD3DDevice8->CreateVertexBuffer
@@ -1958,7 +2005,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
            ");\n",
            Width, Height, Format, ppBackBuffer);
 
-    *ppBackBuffer = new X_D3DSurface();
+    *ppBackBuffer = EmuNewD3DSurface();
 
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
@@ -2030,7 +2077,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
     /** unsafe, somehow
     HRESULT hRet = S_OK;
 
-    X_D3DSurface *pBackBuffer = new X_D3DSurface();
+    X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 
     if(BackBuffer == -1)
     {
@@ -2064,7 +2111,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
         hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
     //*/
 
-    static X_D3DSurface *pBackBuffer = new X_D3DSurface();
+    static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 
     if(BackBuffer == -1)
         BackBuffer = 0;
@@ -3106,7 +3153,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
     HRESULT hRet;
 
-	X_D3DTexture *pTexture = new X_D3DTexture();
+	X_D3DTexture *pTexture = EmuNewD3DTexture();
 	DWORD Texture_Data;
 
     if(PCFormat == D3DFMT_YUY2)
@@ -3275,7 +3322,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     {
         EmuAdjustPower2(&Width, &Height);
 
-        *ppVolumeTexture = new X_D3DVolumeTexture();
+        *ppVolumeTexture = EmuNewD3DVolumeTexture();
 
         hRet = g_pD3DDevice8->CreateVolumeTexture
         (
@@ -3341,7 +3388,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         CxbxKrnlCleanup("YUV not supported for cube textures");
     }
 
-    *ppCubeTexture = new X_D3DCubeTexture();
+    *ppCubeTexture = EmuNewD3DCubeTexture();
 
     HRESULT hRet = g_pD3DDevice8->CreateCubeTexture
     (
@@ -3384,7 +3431,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
            ");\n",
            Length, Usage, Format, Pool, ppIndexBuffer);
 
-    *ppIndexBuffer = new X_D3DIndexBuffer();
+    *ppIndexBuffer = EmuNewD3DIndexBuffer();
 
     HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
@@ -5775,10 +5822,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel)
 		{
 			IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
 
-			*ppSurfaceLevel = new X_D3DSurface();
+			*ppSurfaceLevel = EmuNewD3DSurface();
 
 			(*ppSurfaceLevel)->Data = X_D3DRESOURCE_DATA_SURFACE_LEVEL;
-			(*ppSurfaceLevel)->Common = 0;
 			(*ppSurfaceLevel)->Format = 0;
 			(*ppSurfaceLevel)->Size = 0;
 
@@ -5939,7 +5985,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
            ");\n",
            Length);
 
-    X_D3DVertexBuffer *pD3DVertexBuffer = new X_D3DVertexBuffer();
+    X_D3DVertexBuffer *pD3DVertexBuffer = EmuNewD3DVertexBuffer();
 
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
@@ -7487,7 +7533,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
                StreamNumber, pStride);
 
     EmuWarning("Not correctly implemented yet!");
-    X_D3DVertexBuffer* pVertexBuffer = new X_D3DVertexBuffer();
+    X_D3DVertexBuffer* pVertexBuffer = EmuNewD3DVertexBuffer();
     g_pD3DDevice8->GetStreamSource(StreamNumber, &pVertexBuffer->EmuVertexBuffer8, pStride);
 
     
@@ -8238,7 +8284,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
            ");\n",
            Size);
 
-    X_D3DPalette *pPalette = new X_D3DPalette();
+    X_D3DPalette *pPalette = EmuNewD3DPalette();
 
     static int lk[4] =
     {
@@ -8248,9 +8294,8 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
         32*sizeof(D3DCOLOR)      // D3DPALETTE_32
     };
 
-    pPalette->Common = (Size << 30) | X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1 
+	pPalette->Common |= (Size << 30);
     pPalette->Data = (DWORD)new uint08[lk[Size]];
-
     pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
@@ -10142,7 +10187,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	HRESULT hRet;
 
 	// Create a new surface
-	*ppCubeMapSurface = new X_D3DSurface;
+	*ppCubeMapSurface = EmuNewD3DSurface();
 
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &(*ppCubeMapSurface)->EmuSurface8 );
 
@@ -10173,7 +10218,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 	HRESULT hRet;
 
 	// Create a new surface
-	X_D3DSurface* pCubeMapSurface = new X_D3DSurface;
+	X_D3DSurface* pCubeMapSurface = EmuNewD3DSurface();
 
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &pCubeMapSurface->EmuSurface8 );
 
@@ -10221,7 +10266,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSur
 
 	// Attempt to load the persisted surface from persisted_surface.bmp
 
-	*ppSurface = new X_D3DSurface;
+	*ppSurface = EmuNewD3DSurface();
 
 	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &(*ppSurface)->EmuSurface8 );
 	if( SUCCEEDED( hr ) )
@@ -10258,7 +10303,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface2)()
 
 	// Attempt to load the persisted surface from persisted_surface.bmp
 
-	X_D3DSurface* pSurface = new X_D3DSurface;
+	X_D3DSurface* pSurface = EmuNewD3DSurface();
 
 	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &pSurface->EmuSurface8 );
 	if( SUCCEEDED( hr ) )
