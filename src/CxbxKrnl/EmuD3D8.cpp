@@ -380,7 +380,7 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 // window message processing thread
 static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 {
-    char AsciiTitle[50];
+    char AsciiTitle[MAX_PATH];
 
     // register window class
     {
@@ -422,7 +422,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             wcstombs(tAsciiTitle, XbeCert->wszTitleName, CertTitleNameLength);
         }
 
-        sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s", tAsciiTitle);
+		sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, tAsciiTitle);
     }
 
     // create the window
