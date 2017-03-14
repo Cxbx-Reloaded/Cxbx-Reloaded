@@ -384,7 +384,7 @@ ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 
 #undef LOGRENDER_TYPE
 
-#define LOGRENDER_MEMBER_NAME(Member) << "\n   ."#Member": "
+#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << ": "
 #define LOGRENDER_MEMBER_VALUE(Member) << value.Member
 #define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
 #define LOGRENDER_MEMBER_SANITIZED(Member, Type) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((Type)value.Member)
@@ -393,6 +393,15 @@ ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 LOGRENDER_HEADER(BOOLEAN)
 {
 	return os << (BOOL)value;
+}
+
+LOGRENDER_HEADER(PBYTE)
+{
+	os << "(PBYTE)";
+	if (value == nullptr)
+		return os << "NULL";
+
+	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
 }
 
 // Macro combining pointer-to-type implementation and type rendering header :

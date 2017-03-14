@@ -384,9 +384,28 @@ XBSYSAPI EXPORTNUM(152) ULONG NTAPI KeSuspendThread
 	IN PKTHREAD Thread
 );
 
-XBSYSAPI VOID *KeSynchronizeExecution;
-XBSYSAPI VOID *KeSystemTime;
-XBSYSAPI VOID *KeTestAlertThread;
+// ******************************************************************
+// * 0x0099 - KeSynchronizeExecution()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(153) BOOLEAN NTAPI KeSynchronizeExecution
+(
+	IN PKINTERRUPT Interrupt,
+	IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+	IN PVOID SynchronizeContext
+);
+
+// ******************************************************************
+// * 0x009A - KeSystemTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(154) PKSYSTEM_TIME KeSystemTime;
+
+// ******************************************************************
+// * 0x009B - KeTestAlertThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(155) BOOLEAN NTAPI KeTestAlertThread
+(
+	IN KPROCESSOR_MODE AlertMode
+);
 
 // ******************************************************************
 // * 0x009C - KeTickCount

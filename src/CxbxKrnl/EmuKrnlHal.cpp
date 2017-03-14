@@ -43,12 +43,14 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
 };
 
+#include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
-#include "EmuKrnl.h" // For EEPROM
+#include "EmuEEPROM.h" // For EEPROM
+#include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
 namespace NtDll
@@ -223,8 +225,21 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 	RETURN(dwVector);
 }
 
-#define EEPROM_SMBUS_WRITE  0xA8
-#define EEPROM_SMBUS_READ   0xA9
+#define SMC_SLAVE_ADDRESS 0x20
+#define SMBUS_SMC_WRITE SMC_SLAVE_ADDRESS // = 0x20
+#define SMBUS_SMC_READ (SMC_SLAVE_ADDRESS || 1) // = 0x21
+
+#define EEPROM_ADDRESS 0xA8
+#define SMBUS_EEPROM_WRITE EEPROM_ADDRESS // = 0xA8
+#define SMBUS_EEPROM_READ (EEPROM_ADDRESS || 1) // = 0xA9
+
+#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_WRITE SMBUS_TV_ENCODER_ID_CONEXANT // = 0x8A
+#define SMBUS_TV_ENCODER_ID_CONEXANT_READ (SMBUS_TV_ENCODER_ID_CONEXANT_WRITE || 1) // = 0x8B
+
+#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_WRITE SMBUS_TV_ENCODER_ID_FOCUS // = 0xD4
+#define SMBUS_TV_ENCODER_ID_FOCUS_READ (SMBUS_TV_ENCODER_ID_FOCUS_WRITE || 1) // = 0xD5
 
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
@@ -247,11 +262,11 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	switch (Address) {
-	case EEPROM_SMBUS_READ: {
+	case SMBUS_EEPROM_READ: {
 		if (ReadWord)
-			*DataValue = *((PWORD)(((PBYTE)&EEPROM) + Command));
+			*DataValue = *((PWORD)(((PBYTE)EEPROM) + Command));
 		else
-			*DataValue = *(((PBYTE)&EEPROM) + Command);
+			*DataValue = *(((PBYTE)EEPROM) + Command);
 
 		break;
 	}
@@ -396,7 +411,69 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+
+	switch (Routine) {
+	case ReturnFirmwareHalt:
+		CxbxKrnlCleanup("Emulated Xbox is halted");
+		break;
+
+	case ReturnFirmwareReboot:
+		LOG_UNIMPLEMENTED(); // fall through
+	case ReturnFirmwareQuickReboot:
+	{
+		if (xboxkrnl::LaunchDataPage == NULL)
+			LOG_UNIMPLEMENTED();
+		else
+		{
+			// Save the launch data page to disk for later.
+			// (Note : XWriteTitleInfoNoReboot does this too)
+			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+
+			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+			char szXbePath[MAX_PATH];
+			char szWorkingDirectoy[MAX_PATH];
+
+			// Convert Xbox XBE Path to Windows Path
+			{
+				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+			}
+
+			// Determine Working Directory
+			{
+				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				PathRemoveFileSpec(szWorkingDirectoy);
+			}
+
+			// Relaunch Cxbx, to load another Xbe
+			{
+				char szArgsBuffer[4096];
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+			}
+		}
+		break;
+	};
+
+	case ReturnFirmwareHard:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	case ReturnFirmwareFatal:
+		MessageBox(NULL, "Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)", "Cxbx-Reloaded", MB_OK);
+		break;
+
+	case ReturnFirmwareAll:
+		LOG_UNIMPLEMENTED();
+		break;
+
+	default:
+		LOG_UNIMPLEMENTED();
+	}
+
+	ExitProcess(EXIT_SUCCESS);
 }
 
 // ******************************************************************
@@ -420,11 +497,11 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	switch (Address) {
-	case EEPROM_SMBUS_WRITE: {
+	case SMBUS_EEPROM_WRITE: {
 		if (WriteWord)
-			*((PWORD)(((PBYTE)&EEPROM) + Command)) = (WORD)DataValue;
+			*((PWORD)(((PBYTE)EEPROM) + Command)) = (WORD)DataValue;
 		else
-			*(((PBYTE)&EEPROM) + Command) = (BYTE)DataValue;
+			*(((PBYTE)EEPROM) + Command) = (BYTE)DataValue;
 
 		break;
 	}
@@ -563,7 +640,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
-XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()

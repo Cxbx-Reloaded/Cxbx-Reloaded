@@ -44,6 +44,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
@@ -61,23 +62,14 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
-// xLaunchDataPage, pointed to by LaunchDataPage
-xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage = // pointed to by LaunchDataPage
-{
-	{   // header
-		2,  // 2: dashboard, 0: title
-		0,
-		"D:\\default.xbe",
-		0
-	}
-};
-
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage
 // ******************************************************************
-// TODO : Should the kernel point to xLaunchDataPage directly??
-// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
+// Note : Originally, LaunchDataPage resides in a "STICKY" segment in
+// the xbox kernel. Kernel code accessses this as a normal variable.
+// XAPI code however, reference to the address of this kernel variable,
+// thus use indirection (*LaunchDataPage) to get to the same contents.
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -292,18 +284,21 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	if (g_AlignCache.exists(BaseAddress))
 	{
 		OrigBaseAddress = g_AlignCache.get(BaseAddress);
-
 		g_AlignCache.remove(BaseAddress);
 	}
 
-	if (OrigBaseAddress != &xLaunchDataPage)
+	if (OrigBaseAddress == &DefaultLaunchDataPage)
 	{
-		// TODO : Free PAGE_WRITECOMBINE differently
-		CxbxFree(OrigBaseAddress);
+		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
+		LOG_IGNORED();
 	}
 	else
 	{
-		DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
+		// TODO : Free PAGE_WRITECOMBINE differently
+		if (OrigBaseAddress == LaunchDataPage) 
+			DbgPrintf("MmFreeContiguousMemory detected a free of LaunchDataPage\n");
+
+		CxbxFree(OrigBaseAddress);
 	}
 
   // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -346,6 +341,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
+	LOG_INCOMPLETE();
 
 	// We emulate Virtual/Physical memory 1:1	
 	return (PHYSICAL_ADDRESS)BaseAddress;
@@ -428,6 +424,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 
 	// TODO: should this be aligned?
 	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	LOG_INCOMPLETE();
 
 	RETURN(pRet);
 }
@@ -448,8 +445,30 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(Persist)
 		LOG_FUNC_END;
 
-	// TODO: Actually set this up to be remember across a "reboot"
-	LOG_IGNORED();
+	if (BaseAddress == LaunchDataPage)
+	{
+		if (Persist)
+		{
+			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
+			if (fp)
+			{
+				DbgPrintf("Persisting LaunchDataPage\n");
+				fseek(fp, 0, SEEK_SET);
+				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
+				fclose(fp);
+			}
+			else
+				DbgPrintf("Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+		}
+		else
+		{
+			DbgPrintf("Forgetting LaunchDataPage\n");
+			remove(szFilePath_LaunchDataPage_bin);
+		}
+	}
+	else
+		// TODO : Store/forget other pages to be remembered across a "reboot"
+		LOG_IGNORED();
 
   // [PatrickvL] Shared memory would be a perfect fit for this,
   // but the supplied pointer is already allocated. In order to
@@ -599,6 +618,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_END;
 
 	CxbxFree(BaseAddress);
+	LOG_INCOMPLETE();
 
 	RETURN(STATUS_SUCCESS);
 }

@@ -64,14 +64,14 @@ typedef struct _PATCHEDSTREAM
 
 typedef struct _CACHEDSTREAM
 {
-    uint32         uiCRC32;
+    uint32_t       uiHash;
     uint32         uiCheckFrequency;
     uint32         uiCacheHit;
     bool           bIsUP;
     PATCHEDSTREAM  Stream;
     void          *pStreamUP;           // Draw..UP (instead of pOriginalStream)
     uint32         uiLength;            // The length of the stream
-    uint32         uiCount;             // CRC32 check count
+    uint32         uiCount;             // XXHash32::hash() check count
     uint32         dwPrimitiveCount;
     long           lLastUsed;           // For cache removal purposes
 } CACHEDSTREAM;

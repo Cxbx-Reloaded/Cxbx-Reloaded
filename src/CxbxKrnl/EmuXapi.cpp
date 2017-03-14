@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h"
 #include "Logging.h"
 #include "Emu.h"
+#include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
@@ -920,24 +921,29 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
 
+	// TODO : This patch can be removed once NtOpenSymbolicLinkObject()
+	// and NtQuerySymbolicLinkObject() work together correctly.
+	// Also, XLaunchNewImage() depends on XeImageHeader() and uses
+	// XWriteTitleInfoAndReboot() and indirectly XWriteTitleInfoNoReboot()
+
 	// Update the kernel's LaunchDataPage :
 	{
-		// TODO : This is probably not the right time to do this :
+		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
+			xboxkrnl::LaunchDataPage = NULL;
+
 		if (xboxkrnl::LaunchDataPage == NULL)
 			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
-
-		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
 
 		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
 		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
+		xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
+
 		if (pLaunchData != NULL)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath != NULL)
-			xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
-		else
+		if (lpTitlePath == NULL)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };
@@ -959,47 +965,12 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 		strncpy(&(xboxkrnl::LaunchDataPage->Header.szLaunchPath[0]), lpTitlePath, 520);
 	}
 
-	char szXbePath[MAX_PATH];
-	char szWorkingDirectoy[MAX_PATH];
+	// Note : While this patch exists, HalReturnToFirmware() calls
+	// MmPersistContiguousMemory on LaunchDataPage. When this
+	// patch on XLaunchNewImage is removed, remove the call to
+	// MmPersistContiguousMemory from HalReturnToFirmware() too!!
 
-	// Convert Xbox XBE Path to Windows Path
-	{
-		EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
-		snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
-
-		// Determine Working Directory
-		strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
-		PathRemoveFileSpec(szWorkingDirectoy);
-	}
-
-	// Save the launch data page to disk for later.
-	{
-		char szLaunchDataPagePath[MAX_PATH];
-		snprintf(szLaunchDataPagePath, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szWorkingDirectoy);
-
-		DbgPrintf("Saving launch data to %s\n", szLaunchDataPagePath);
-		// TODO : When reading Xbe files from read-only storage, we must use another location for "CxbxLaunchDataPage.bin" !
-		FILE* fp = fopen(szLaunchDataPagePath, "wb");
-		fseek(fp, 0, SEEK_SET);
-		fwrite(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
-		fclose(fp);
-	}
-
-	// Launch the new Xbe	
-	{
-		char szExeFileName[MAX_PATH];
-		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
-
-		char szArgsBuffer[4096];
-		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
-
-		if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
-		{
-			CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
-		}
-
-		ExitProcess(EXIT_SUCCESS);
-	}
+	xboxkrnl::HalReturnToFirmware(xboxkrnl::ReturnFirmwareQuickReboot);
 
 	// If this function succeeds, it doesn't get a chance to return anything.
 	RETURN(ERROR_GEN_FAILURE);
@@ -1016,41 +987,24 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 	PLAUNCH_DATA	pLaunchData
 )
 {
+	// TODO : This patch can be removed once we're sure all XAPI library
+	// functions indirectly reference our xboxkrnl::LaunchDataPage variable.
+	// For this, we need a test-case that hits this function, and run that
+	// with and without this patch enabled. Behavior should be identical.
+	// When this is verified, this patch can be removed.
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdwLaunchDataType)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
 
-	// The title was launched by turning on the Xbox console with the title disc already in the DVD drive
-	// Has XGetLaunchInfo already been called since we've started this round?
-	if (g_XGetLaunchInfo_Status = -1)
+	DWORD ret = ERROR_NOT_FOUND;
+
+	if (xboxkrnl::LaunchDataPage != NULL)
 	{
-		// TODO : This is probably not the right time to do this :
-		if (xboxkrnl::LaunchDataPage == NULL)
-			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+		// Note : Here, CxbxRestoreLaunchDataPage() was already called,
+		// which has loaded LaunchDataPage from a binary file (if present).
 
-		// TODO : Move this initialization of the LaunchDataPage towards an earlier boot/init function
-
-		// Does CxbxLaunchDataPage.bin exist?
-		// Note : This assumes "CxbxLaunchData.bin" is present in the WorkingDirectory.
-		FILE* fp = fopen("CxbxLaunchDataPage.bin", "rb");
-		// If it does exist, load it.
-		if (fp)
-		{
-			// Read in the contents.
-			fseek(fp, 0, SEEK_SET);
-			fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
-			fclose(fp);
-			// Delete the file once we're done.
-			remove("CxbxLaunchDataPage.bin");
-			g_XGetLaunchInfo_Status = ERROR_SUCCESS;
-		}
-		else
-			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
-	}
-
-	if (g_XGetLaunchInfo_Status == ERROR_SUCCESS) // Implies xboxkrnl::LaunchDataPage is allocated
-	{
 		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 
 		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
@@ -1061,13 +1015,15 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 			*pdwLaunchDataType = xboxkrnl::LaunchDataPage->Header.dwLaunchDataType;
 			memcpy(pLaunchData, &(xboxkrnl::LaunchDataPage->LaunchData[0]), sizeof(LAUNCH_DATA));
 
-			// TODO : Originally, the kernel now calls MmFreeContiguousMemory on xboxkrnl::LaunchDataPage
+			// Now that LaunchDataPage is retrieved by the emulated software, free it :
+			MmFreeContiguousMemory(xboxkrnl::LaunchDataPage);
+			xboxkrnl::LaunchDataPage = NULL;
+
+			ret = ERROR_SUCCESS;
 		}
-		else
-			g_XGetLaunchInfo_Status = ERROR_NOT_FOUND;
 	}
 
-	RETURN(g_XGetLaunchInfo_Status);
+	RETURN(ret);
 }
 
 // ******************************************************************

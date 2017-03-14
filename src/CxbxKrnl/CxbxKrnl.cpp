@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
+#include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "EmuShared.h"
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
@@ -77,6 +78,11 @@ char* CxbxKrnl_DebugFileName = NULL;
 
 /*! thread handles */
 static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
+
+char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
+char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
+char szFilePath_LaunchDataPage_bin[MAX_PATH] = { 0 };
+char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -261,7 +267,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		NewDosHeader = (PIMAGE_DOS_HEADER)VirtualAlloc(nullptr, ExeHeaderSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 		memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
 
-		// Determine NewNtHeader and NewOptionalHeader, both required by RestoreExeImageHeader
+		// Determine NewOptionalHeader, required by RestoreExeImageHeader
 		NewNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)NewDosHeader + ExeDosHeader->e_lfanew);
 		NewOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(NewNtHeader->OptionalHeader);
 
@@ -284,8 +290,15 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	// TODO : Setup LaunchData and Initialize kernel
-	// (which will launch the Xbe on itself), instead here.
+	CxbxInitFilePaths();
+
+	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
+	if (EEPROM == nullptr)
+		CxbxKrnlCleanup("EmuMain : Couldn't init EEPROM!");
+
+	CxbxRestorePersistentMemoryRegions();
+
+	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
@@ -387,7 +400,6 @@ void CxbxKrnlInit
 	setlocale(LC_ALL, "English");
 	g_CurrentProcessHandle = GetCurrentProcess();
 	CxbxInitPerformanceCounters();
-
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -576,7 +588,9 @@ void CxbxKrnlInit
 	// this will better aproximate the environment with regard to multi-threading) :
 	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 	{
-		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
+		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
+			CxbxKrnlCleanup("EmuMain: GetProcessAffinityMask failed.");
+
 		// For the other threads, remove one bit from the processor mask:
 		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
 
@@ -626,6 +640,71 @@ void CxbxKrnlInit
     fflush(stdout);
     CxbxKrnlTerminateThread();
     return;
+}
+
+void CxbxInitFilePaths()
+{
+	// Determine (local)appdata folder :
+	char *szLocalAppDataFolder = getenv("LOCALAPPDATA");
+	if (!szLocalAppDataFolder)
+	{
+		szLocalAppDataFolder = getenv("APPDATA");
+		if (!szLocalAppDataFolder)
+			CxbxKrnlCleanup("Could not determine %(LOCAL)APPDATA% folder");
+	}
+
+	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\CxbxReloaded", szLocalAppDataFolder);
+
+	// Make sure our data folder exists :
+	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
+	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS))
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create CxbxReloaded AppData folder!");
+
+	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
+	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData); // TODO : Start using this
+
+	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
+}
+
+// TODO : Is DefaultLaunchDataPage really necessary? (No-one assigns it yet to LaunchDataPage)
+xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
+{
+	{   // header
+		2,  // 2: dashboard, 0: title
+		0,
+		"D:\\default.xbe",
+		0
+	}
+};
+
+void CxbxRestoreLaunchDataPage()
+{
+	// If CxbxLaunchDataPage.bin exist, load it into "persistent" memory
+	FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "rb");
+	if (fp)
+	{
+		// Make sure LaunchDataPage is writeable  :
+		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
+			xboxkrnl::LaunchDataPage = NULL;
+
+		if (xboxkrnl::LaunchDataPage == NULL)
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+
+		// Read in the contents.
+		fseek(fp, 0, SEEK_SET);
+		fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
+		fclose(fp);
+		// Delete the file once we're done.
+		remove(szFilePath_LaunchDataPage_bin);
+
+		DbgPrintf("EmuMain: Restored LaunchDataPage\n");
+	}
+}
+
+void CxbxRestorePersistentMemoryRegions()
+{
+	CxbxRestoreLaunchDataPage();
+	// TODO : Restore all other persistent memory regions here too.
 }
 
 void CxbxKrnlCleanup(const char *szErrorMessage, ...)

@@ -184,6 +184,7 @@ $(SOLUTIONDIR)Export.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\import\stb\stb_image.h" />
+    <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
@@ -357,6 +358,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
