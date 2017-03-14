@@ -282,7 +282,7 @@ __declspec(naked) void EmuFS_PushDwordPtrFs00()
 		pop returnAddr
 		mov temp, eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		push [eax]
+		push dword ptr [eax]
 		mov eax, temp
 		push returnAddr
 		ret
@@ -299,7 +299,7 @@ __declspec(naked) void EmuFS_PopDwordPtrFs00()
 		pop returnAddr
 		mov temp, eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		pop [eax]
+		pop dword ptr [eax]
 		mov eax, temp
 		push returnAddr
 		ret

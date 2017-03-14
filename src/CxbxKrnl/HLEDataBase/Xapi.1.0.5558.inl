@@ -135,62 +135,6 @@ OOVPA_NO_XREF(XMountMUA, 5558, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * CreateFiber
-// ******************************************************************
-OOVPA_NO_XREF(CreateFiber, 5558, 7)
-
-        { 0x10, 0x00 },
-        { 0x22, 0x57 },
-        { 0x34, 0x75 },
-        { 0x46, 0x41 },
-        { 0x58, 0xFC },
-        { 0x6A, 0x39 },
-        { 0x7C, 0xCE },
-OOVPA_END;
-
-// ******************************************************************
-// * DeleteFiber
-// ******************************************************************
-OOVPA_NO_XREF(DeleteFiber, 5558, 6)
-
-        { 0x01, 0x44 },
-        { 0x04, 0xFF },
-        { 0x07, 0xFF },
-        { 0x0A, 0xFF },
-        { 0x10, 0xC2 },
-        { 0x11, 0x04 },
-OOVPA_END;
-
-// ******************************************************************
-// * SwitchToFiber
-// ******************************************************************
-OOVPA_NO_XREF(SwitchToFiber, 5558, 8)
-
-        { 0x06, 0x64 },
-        { 0x0E, 0x44 },
-        { 0x16, 0xFF },
-        { 0x1E, 0x91 },
-        { 0x26, 0x61 },
-        { 0x31, 0x64 },
-        { 0x36, 0x00 },
-        { 0x3E, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * ConvertThreadToFiber
-// ******************************************************************
-OOVPA_NO_XREF(ConvertThreadToFiber, 5558, 7)
-
-        { 0x05, 0x64 },
-        { 0x0C, 0x8B },
-        { 0x13, 0x8D },
-        { 0x1A, 0x01 },
-        { 0x21, 0x8B },
-        { 0x28, 0x89 },
-        { 0x31, 0x8B },
-OOVPA_END;
-
-// ******************************************************************
 // * XapiFiberStartup
 // ******************************************************************
 OOVPA_NO_XREF(XapiFiberStartup, 5558, 7)
@@ -264,10 +208,10 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(GetThreadPriority, 4627, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(XMountMUA, 5558, PATCH),
-	REGISTER_OOVPA(CreateFiber, 5558, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 5558, PATCH),
-	REGISTER_OOVPA(SwitchToFiber, 5558, PATCH),
-	REGISTER_OOVPA(ConvertThreadToFiber, 5558, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	// REGISTER_OOVPA(XapiFiberStartup, 5558, PATCH),
 	REGISTER_OOVPA(XID_fCloseDevice, 5558, XREF),
 	REGISTER_OOVPA(XInputClose, 5558, PATCH),

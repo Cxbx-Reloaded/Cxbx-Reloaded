@@ -85,6 +85,7 @@ typedef struct _XFIBER
 }XFIBER;
 
 XFIBER g_Fibers[256];
+
 // Number of fiber routines queued
 int	   g_FiberCount = 0;
 
