@@ -78,11 +78,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
     char szCacheFileName[MAX_PATH];
 
-    DbgPrintf("\n");
-    DbgPrintf("*******************************************************************************\n");
-    DbgPrintf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
-    DbgPrintf("*******************************************************************************\n");
-    DbgPrintf("\n");
+    printf("\n");
+	printf("*******************************************************************************\n");
+	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
+	printf("*******************************************************************************\n");
+	printf("\n");
 
     //
     // initialize HLE cache file
@@ -152,7 +152,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                 vCacheInpIter = vCacheInp.begin();
 
-                DbgPrintf("HLE: Loaded HLE Cache for 0x%.08X\n", pCertificate->dwTitleId);
+				printf("HLE: Loaded HLE Cache for 0x%.08X\n", pCertificate->dwTitleId);
             }
 
             fclose(pCacheFile);
@@ -165,7 +165,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
     if(pLibraryVersion != 0)
     {
-        DbgPrintf("HLE: Detected Microsoft XDK application...\n");
+		printf("HLE: Detected Microsoft XDK application...\n");
 
 		UnResolvedXRefs = XREF_COUNT; // = sizeof(XRefDataBase) / sizeof(xbaddr)
 
@@ -182,7 +182,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
-            DbgPrintf("HLE: Starting pass #%d...\n", p+1);
+			printf("HLE: Starting pass #%d...\n", p+1);
 
             LastUnResolvedXRefs = UnResolvedXRefs;
 
@@ -396,7 +396,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
                             }
 
-                            DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
+							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
                         else
@@ -434,7 +434,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                         XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
                                 }
 
-                                DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
+								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             }
                             else
                             {
@@ -524,7 +524,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
+				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
 
                 const HLEData *FoundHLEData = nullptr;
                 for(uint32 d = 0; d < HLEDataBaseCount; d++) {
@@ -546,7 +546,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         }
 
         // display Xref summary
-        DbgPrintf("HLE: Resolved %d cross reference(s)\n", OrigUnResolvedXRefs - UnResolvedXRefs);
+		printf("HLE: Resolved %d cross reference(s)\n", OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
     vCacheInp.clear();
@@ -592,7 +592,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 */
     vCacheOut.clear();
 
-    DbgPrintf("\n");
+	printf("\n");
 
     return;
 }
@@ -746,9 +746,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 
         if(pFunc != (xbaddr)nullptr)
         {
-            #ifdef _DEBUG_TRACE
-            DbgPrintf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
-            #endif
+            printf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
 
             if(OovpaTable[a].emuPatch == nullptr)
             {
