@@ -3128,7 +3128,7 @@ OOVPATable D3D8_4627[] = {
 
 	REGISTER_OOVPA(D3D_CreateDevice, 4627, PATCH),
 	REGISTER_OOVPA(D3D_CreateDevice, 4627, ALIAS, D3D_CreateDeviceX),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
@@ -3284,7 +3284,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_DrawRectPatch, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetProjectionViewportMatrix, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4531, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),
 	REGISTER_OOVPA(D3D_SetFence, 4134, XREF),

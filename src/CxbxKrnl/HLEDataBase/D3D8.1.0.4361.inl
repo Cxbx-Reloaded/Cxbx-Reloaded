@@ -1875,7 +1875,7 @@ OOVPA_END;
 OOVPATable D3D8_4361[] = {
 
 	REGISTER_OOVPA(D3D_CreateDevice, 4361, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4134, PATCH),
@@ -1946,7 +1946,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilFail, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_NormalizeNormals, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreatePalette, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),

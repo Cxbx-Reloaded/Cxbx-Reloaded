@@ -150,9 +150,7 @@ struct OOVPATable
 {
 	OOVPA *Oovpa;
 	void  *emuPatch;
-#ifdef _DEBUG_TRACE
 	char  *szFuncName;
-#endif
 	uint16_t Version : 13; // 2^13 = 8192, enough to store lowest and higest possible Library Version number in
 	uint16_t Flags : 3;
 };
@@ -161,13 +159,8 @@ const uint16_t Flag_IsLTCG = 1; // Indicates an entry that registers an LTCG OOV
 const uint16_t Flag_DontScan = 2; // Indicates an entry that's currently disabled and thus shouldn't be searched for
 const uint16_t Flag_Reserved = 4;
 
-#if _DEBUG_TRACE
 #define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
 	{ & Oovpa ## _ ## Version.Header, Patch, DebugName, Version, Flags }
-#else                                              
-#define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
-	{ & Oovpa ## _ ## Version.Header, Patch, /* skip */ Version, Flags }
-#endif
 
 // REGISTER_OOVPA is the ONLY allowed macro for registrations.
 // Registrations MUST stay sorted to prevent duplicates and maintain overview.
