@@ -1015,8 +1015,7 @@ typedef struct _IO_STATUS_BLOCK
     {
         NTSTATUS Status;
         PVOID    Pointer;
-    }
-    u1;
+	};
 
     ULONG_PTR Information;
 }
