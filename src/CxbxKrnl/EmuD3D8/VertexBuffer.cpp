@@ -1399,7 +1399,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
 
                 BYTE *pSrc = (BYTE*)pTexture->Data;
 
-                if( IsSpecialResource(pResource->Data) && (pResource->Data & X_D3DRESOURCE_DATA_FLAG_SURFACE))
+                if( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                 {
 
                 }
