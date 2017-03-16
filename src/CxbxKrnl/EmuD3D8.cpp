@@ -5663,30 +5663,53 @@ DWORD WINAPI XTL::EMUPATCH(D3DBaseTexture_GetLevelCount)
 // ******************************************************************
 // * patch: IDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
-XTL::X_D3DResource * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
+XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
     X_D3DTexture   *pThis,
     UINT            Level
 )
 {
-    X_D3DSurface *pSurfaceLevel;
+	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel2\n"
+		"(\n"
+		"   pThis               : 0x%.08X\n"
+		"   Level               : 0x%.08X\n"
+		");\n",
+		pThis, Level);
 
-    // In a special situation, we are actually returning a memory ptr with high bit set
-    if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-    {
-        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
+    X_D3DSurface *result = NULL;
 
-        DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
+	if (!pThis)
+		EmuWarning("pThis not assigned!");
+	else
+	{
+		EmuVerifyResourceIsRegistered(pThis);
+		if (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+		{
+			DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
+			DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
+			(*pRefCount)++;
+			result = (X_D3DSurface*)pThis;
+		}
+		else
+		{
+			result = EmuNewD3DSurface();
+			result->Data = X_D3DRESOURCE_DATA_SURFACE_LEVEL;
+			result->Format = 0; // TODO : Set this
+			result->Size = 0; // TODO : Set this
 
-        // initialize ref count
-        (*pRefCount)++;
+			IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
+			HRESULT hRet = pTexture8->GetSurfaceLevel(Level, &(result->EmuSurface8));
+			if (FAILED(hRet))
+				EmuWarning("EmuIDirect3DTexture8_GetSurfaceLevel Failed!");
 
-        return pThis;
-    }
+			result->Parent = pThis;
+			pThis->Common++; // AddRef
+		}
+	}
+	
+	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", result);
 
-	EMUPATCH(D3DTexture_GetSurfaceLevel)(pThis, Level, &pSurfaceLevel);
-
-    return pSurfaceLevel;
+    return result;
 }
 
 // ******************************************************************
@@ -5769,9 +5792,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel)
     X_D3DSurface      **ppSurfaceLevel
 )
 {
-    
-
-    DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel\n"
+    DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel >>\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
            "   Level               : 0x%.08X\n"
@@ -5779,52 +5800,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel)
            ");\n",
            pThis, Level, ppSurfaceLevel);
 
-    HRESULT hRet;
+	*ppSurfaceLevel = EMUPATCH(D3DTexture_GetSurfaceLevel2)(pThis, Level);
 
-    EmuVerifyResourceIsRegistered(pThis);
-
-	if(pThis)
-	{
-		// if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
-		if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-		{
-			DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
-
-			DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
-
-			// initialize ref count
-			(*pRefCount)++;
-
-			*ppSurfaceLevel = (X_D3DSurface*)pThis;
-
-			hRet = D3D_OK;
-		}
-		else
-		{
-			IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
-
-			*ppSurfaceLevel = EmuNewD3DSurface();
-
-			(*ppSurfaceLevel)->Data = X_D3DRESOURCE_DATA_SURFACE_LEVEL;
-			(*ppSurfaceLevel)->Format = 0;
-			(*ppSurfaceLevel)->Size = 0;
-
-			hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
-
-			if(FAILED(hRet))
-			{
-				EmuWarning("EmuIDirect3DTexture8_GetSurfaceLevel Failed!");
-			}
-			else
-			{
-				DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", (*ppSurfaceLevel)->EmuSurface8);
-			}
-		}
-	}
-
-    
-
-    return hRet;
+    return D3D_OK;
 }
 
 // ******************************************************************

@@ -778,9 +778,9 @@ DWORD WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
 );
 
 // ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel
+// * patch: IDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
-X_D3DResource * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
+X_D3DSurface * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
     X_D3DTexture   *pThis,
     UINT            Level
