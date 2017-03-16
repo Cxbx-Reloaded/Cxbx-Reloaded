@@ -172,8 +172,10 @@ OOVPATable XAPI_4034[] = {
 */
 	// REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
 	// REGISTER_OOVPA(CloseHandle, (???, PATCH)),
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
@@ -187,6 +189,7 @@ OOVPATable XAPI_4034[] = {
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

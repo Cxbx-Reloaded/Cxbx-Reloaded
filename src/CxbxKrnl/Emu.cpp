@@ -323,7 +323,8 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     static int const STACK_MAX     = 16;
     static int const SYMBOL_MAXLEN = 64;
 
-    EnterCriticalSection(&dbgCritical);
+	// TODO: Figure out why this causes a loop of Exceptions until the process dies
+    //EnterCriticalSection(&dbgCritical);
 
     IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
 
@@ -385,6 +386,6 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     if(fSymInitialized)
         SymCleanup(g_CurrentProcessHandle);
 
-    LeaveCriticalSection(&dbgCritical);
+    // LeaveCriticalSection(&dbgCritical);
 }
 #endif

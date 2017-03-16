@@ -672,8 +672,10 @@ OOVPATable XAPI_4627[] = {
 	// REGISTER_OOVPA(XCalculateSignatureBegin, 4627, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureUpdate, 4627, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureEnd, 4627, PATCH), // s+
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 4627, PATCH),
@@ -690,6 +692,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(XMountAlternateTitle, 4928, ALIAS, XMountAlternateTitleA),
 	REGISTER_OOVPA(XUnmountAlternateTitle, 4627, ALIAS, XUnmountAlternateTitleA),
 	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),
 };
 

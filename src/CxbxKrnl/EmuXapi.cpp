@@ -85,6 +85,7 @@ typedef struct _XFIBER
 }XFIBER;
 
 XFIBER g_Fibers[256];
+
 // Number of fiber routines queued
 int	   g_FiberCount = 0;
 
@@ -1251,4 +1252,16 @@ DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 	LOG_UNIMPLEMENTED();
 
 	RETURN(ERROR_SUCCESS);
+}
+
+// ******************************************************************
+// * patch: OutputDebugStringA
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(OutputDebugStringA)
+(
+	IN LPCSTR lpOutputString
+)
+{
+	LOG_FUNC_ONE_ARG(lpOutputString);
+	printf("OutputDebugStringA: %s\n", lpOutputString);
 }

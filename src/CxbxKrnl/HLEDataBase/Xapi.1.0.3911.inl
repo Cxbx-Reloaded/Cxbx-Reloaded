@@ -156,6 +156,44 @@ OOVPA_NO_XREF(SetThreadPriority, 3911, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * OutputDebugStringA
+// ******************************************************************
+OOVPA_NO_XREF(OutputDebugStringA, 3911, 32)
+		{ 0x00, 0x55 },
+		{ 0x01, 0x8B },
+		{ 0x02, 0xEC },
+		{ 0x03, 0x51 },
+		{ 0x04, 0x51 },
+		{ 0x05, 0x8B },
+		{ 0x06, 0x45 },
+		{ 0x07, 0x08 },
+		{ 0x08, 0x89 },
+		{ 0x09, 0x45 },
+		{ 0x0A, 0xFC },
+		{ 0x0B, 0x8D },
+		{ 0x0C, 0x48 },
+		{ 0x0D, 0x01 },
+		{ 0x0E, 0x8A },
+		{ 0x0F, 0x10 },
+		{ 0x10, 0x40 },
+		{ 0x11, 0x84 },
+		{ 0x12, 0xD2 },
+		{ 0x13, 0x75 },
+		{ 0x14, 0xF9 },
+		{ 0x15, 0x2B },
+		{ 0x16, 0xC1 },
+		{ 0x17, 0x66 },
+		{ 0x18, 0x89 },
+		{ 0x19, 0x45 },
+		{ 0x1A, 0xF8 },
+		{ 0x1B, 0x8B },
+		{ 0x1C, 0x45 },
+		{ 0x1D, 0xF8 },
+		{ 0x1E, 0x40 },
+		{ 0x1F, 0x66 },
+OOVPA_END;
+
+// ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
 OOVPA_NO_XREF(XapiInitProcess, 3911, 7)
@@ -586,70 +624,125 @@ OOVPA_END;
 // ******************************************************************
 // * CreateFiber
 // ******************************************************************
-OOVPA_NO_XREF(CreateFiber, 3911, 11)
-
-		// CreateFiber+0x11 : mov ecx, 0x3000
+OOVPA_NO_XREF(CreateFiber, 3911, 32)
+		{ 0x00, 0x8B },
+		{ 0x01, 0x44 },
+		{ 0x02, 0x24 },
+		{ 0x03, 0x04 },
+		{ 0x04, 0x56 },
+		{ 0x05, 0x57 },
+		{ 0x06, 0x33 },
+		{ 0x07, 0xFF },
+		{ 0x08, 0x3B },
+		{ 0x09, 0xC7 },
+		{ 0x0A, 0x75 },
+		{ 0x0B, 0x05 },
+		{ 0x0C, 0xA1 },
+		{ 0x0D, 0x30 },
+		{ 0x0E, 0x01 },
+		{ 0x0F, 0x01 },
+		{ 0x10, 0x00 },
 		{ 0x11, 0xB9 },
 		{ 0x12, 0x00 },
 		{ 0x13, 0x30 },
 		{ 0x14, 0x00 },
 		{ 0x15, 0x00 },
-
-		// CreateFiber+0x2A : call ds:MmCreateKernelStack
-		{ 0x2A, 0xFF },
-		{ 0x2B, 0x15 },
-		{ 0x2C, 0xF8 },
-		{ 0x2D, 0xD1 },
-		{ 0x2E, 0x1E },
-		{ 0x2F, 0x00 }
+		{ 0x16, 0x3B },
+		{ 0x17, 0xC1 },
+		{ 0x18, 0x73 },
+		{ 0x19, 0x02 },
+		{ 0x1A, 0x8B },
+		{ 0x1B, 0xC1 },
+		{ 0x1C, 0x8D },
+		{ 0x1D, 0xB0 },
+		{ 0x1E, 0xFF },
+		{ 0x1F, 0x0F },
 OOVPA_END;
 
 // ******************************************************************
 // * DeleteFiber
 // ******************************************************************
-OOVPA_NO_XREF(DeleteFiber, 3911, 9)
+OOVPA_NO_XREF(DeleteFiber, 3911, 15) 
+	{ 0x00, 0x8B },
+	{ 0x01, 0x44 },
+	{ 0x02, 0x24 },
+	{ 0x03, 0x04 },
+	{ 0x04, 0xFF },
+	{ 0x05, 0x70 },
+	{ 0x06, 0x08 },
+	{ 0x07, 0xFF },
+	{ 0x08, 0x70 },
+	{ 0x09, 0x04 },
+	{ 0x0A, 0xFF },
+	{ 0x0B, 0x15 },
 
-		// DeleteFiber+0x0A : call ds:MmDeleteKernelStack
-		{ 0x0A, 0xFF },
-		{ 0x0B, 0x15 },
-		{ 0x0C, 0xFC },
-		{ 0x0D, 0xD1 },
-		{ 0x0E, 0x1E },
-		{ 0x0F, 0x00 },
-
-		// DeleteFiber+0x10 : retn 4
-		{ 0x10, 0xC2 },
-		{ 0x11, 0x04 },
-		{ 0x12, 0x00 },
+	{ 0x10, 0xC2 },
+	{ 0x11, 0x04 },
+	{ 0x12, 0x00 },
 OOVPA_END;
 
 // ******************************************************************
 // * SwitchToFiber
 // ******************************************************************
-OOVPA_NO_XREF(SwitchToFiber, 3911, 8)
+OOVPA_NO_XREF(SwitchToFiber, 3911, 28)
+	{ 0x00, 0x8B },
+	{ 0x01, 0x15 },
 
-        { 0x06, 0x64 },
-        { 0x0E, 0x44 },
-        { 0x16, 0xFF },
-        { 0x1E, 0x91 },
-        { 0x26, 0x61 },
-        { 0x31, 0x64 },
-        { 0x36, 0x00 },
-        { 0x3E, 0x00 },
+    { 0x06, 0x64 },
+	{ 0x07, 0x8B },
+	{ 0x08, 0x0D },
+	{ 0x09, 0x04 },
+	{ 0x0A, 0x00 },
+	{ 0x0B, 0x00 },
+	{ 0x0C, 0x00 },
+	{ 0x0D, 0x8B },
+	{ 0x0E, 0x44 },
+	{ 0x0F, 0x24 },
+	{ 0x10, 0x04 },
+	{ 0x11, 0x55 },
+	{ 0x12, 0x56 },
+	{ 0x13, 0x57 },
+	{ 0x14, 0x53 },
+	{ 0x15, 0x64 },
+	{ 0x16, 0xFF },
+	{ 0x17, 0x35 },
+	{ 0x18, 0x00 },
+	{ 0x19, 0x00 },
+	{ 0x1A, 0x00 },
+	{ 0x1B, 0x00 },
+	{ 0x1C, 0x8B },
+	{ 0x1D, 0x14 },
+	{ 0x1E, 0x91 },
+	{ 0x1F, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
 // * ConvertThreadToFiber
 // ******************************************************************
-OOVPA_NO_XREF(ConvertThreadToFiber, 3911, 7)
+OOVPA_NO_XREF(ConvertThreadToFiber, 3911, 20)
+	{ 0x00, 0xA1 },
+    
+	{ 0x05, 0x64 },
+	{ 0x06, 0x8B },
+	{ 0x07, 0x0D },
 
-        { 0x05, 0x64 },
-        { 0x0C, 0x8B },
-        { 0x13, 0x8D },
-        { 0x1A, 0x01 },
-        { 0x21, 0x8B },
-        { 0x28, 0x89 },
-        { 0x31, 0x8B },
+    { 0x0C, 0x8B },
+	{ 0x0D, 0x14 },
+	{ 0x0E, 0x81 },
+	{ 0x0F, 0x8B },
+	{ 0x10, 0x44 },
+	{ 0x11, 0x24 },
+	{ 0x12, 0x04 },
+	{ 0x13, 0x8D },
+	{ 0x14, 0x8A },
+
+	{ 0x19, 0x89 },
+    { 0x1A, 0x01 },
+	{ 0x1B, 0x64 },
+	{ 0x1C, 0xA1 },
+	{ 0x1D, 0x28 },
+	{ 0x1E, 0x00 },
+	{ 0x1F, 0x00 },
 OOVPA_END;
 
 //// ******************************************************************
@@ -976,13 +1069,13 @@ OOVPA_END;
 OOVPATable XAPI_3911[] = {
 
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
-	REGISTER_OOVPA(XInitDevices, 3911, PATCH), 
-    // REGISTER_OOVPA(CreateMutex, 3911, PATCH), // Too High Level
-    // REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
+	// REGISTER_OOVPA(CreateMutex, 3911, PATCH), // Too High Level
+	// REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH), //*/
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
-    // REGISTER_OOVPA(XCalculateSignatureBegin, 3911, PATCH),
+	// REGISTER_OOVPA(XCalculateSignatureBegin, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
@@ -993,10 +1086,10 @@ OOVPATable XAPI_3911[] = {
 	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
-	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
-	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
-	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
-	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
+	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
+	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	// REGISTER_OOVPA(lstrcmpiW, 3911, PATCH),
@@ -1008,6 +1101,7 @@ OOVPATable XAPI_3911[] = {
 	REGISTER_OOVPA(XAutoPowerDownResetTimer, 3911, PATCH),
 	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 3911, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 	// REGISTER_OOVPA(ReadFileEx, 3911, PATCH),
 	// REGISTER_OOVPA(WriteFileEx, 3911, PATCH),
 	// REGISTER_OOVPA(CloseHandle, 3911, PATCH),
