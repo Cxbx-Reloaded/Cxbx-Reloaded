@@ -2388,25 +2388,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface)
     X_D3DSurface  **ppZStencilSurface
 )
 {
-    
-
-    DbgPrintf("EmuD3D8: EmuD3DDevice_GetDepthStencilSurface\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_GetDepthStencilSurface >>\n"
            "(\n"
            "   ppZStencilSurface   : 0x%.08X\n"
            ");\n",
            ppZStencilSurface);
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedDepthStencil->EmuSurface8;
-
-    if(pSurface8 != 0)
-        pSurface8->AddRef();
-
-    *ppZStencilSurface = g_pCachedDepthStencil;
-
-    DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", pSurface8);
-
-    
-
+    *ppZStencilSurface = EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
     return D3D_OK;
 }
 
@@ -2415,20 +2403,22 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface)
 // ******************************************************************
 XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_GetDepthStencilSurface2()\n");
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedDepthStencil->EmuSurface8;
+	X_D3DSurface *result = g_pCachedDepthStencil;
 
-    if(pSurface8 != 0)
-        pSurface8->AddRef();
+	if (result != NULL)
+	{
+		IDirect3DSurface8 *pSurface8 = result->EmuSurface8;
+		if (pSurface8 != nullptr)
+			pSurface8->AddRef();
 
-    DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", pSurface8);
+		result->Common++; // AddRef
+	}
+		
+	DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", result);
 
-    
-
-    return g_pCachedDepthStencil;
+    return result;
 }
 
 // ******************************************************************
