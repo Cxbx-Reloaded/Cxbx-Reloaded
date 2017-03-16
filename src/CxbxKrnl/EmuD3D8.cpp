@@ -1991,7 +1991,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
     UINT                Width,
     UINT                Height,
     X_D3DFORMAT         Format,
-    X_D3DSurface      **ppBackBuffer
+    X_D3DSurface      **ppSurface
 )
 {
     
@@ -2001,20 +2001,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
            "   Width               : 0x%.08X\n"
            "   Height              : 0x%.08X\n"
            "   Format              : 0x%.08X\n"
-           "   ppBackBuffer        : 0x%.08X\n"
+           "   ppSurface        : 0x%.08X\n"
            ");\n",
-           Width, Height, Format, ppBackBuffer);
+           Width, Height, Format, ppSurface);
 
-    *ppBackBuffer = EmuNewD3DSurface();
+    *ppSurface = EmuNewD3DSurface();
 
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
-    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
+    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppSurface)->EmuSurface8));
 	if(FAILED(hRet))
 		if(Format == X_D3DFMT_LIN_D24S8)
 		{
 			EmuWarning("CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8");
-			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &((*ppBackBuffer)->EmuSurface8));
+			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &((*ppSurface)->EmuSurface8));
 		}
 	
 	if(FAILED(hRet))
