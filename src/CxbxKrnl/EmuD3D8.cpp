@@ -2347,24 +2347,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget)
     X_D3DSurface  **ppRenderTarget
 )
 {
-    
-
-    DbgPrintf("EmuD3D8: EmuD3DDevice_GetRenderTarget\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_GetRenderTarget >>\n"
            "(\n"
            "   ppRenderTarget      : 0x%.08X\n"
            ");\n",
            ppRenderTarget);
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedRenderTarget->EmuSurface8;
-
-    pSurface8->AddRef();
-
-    *ppRenderTarget = g_pCachedRenderTarget;
-
-    DbgPrintf("EmuD3D8: RenderTarget := 0x%.08X\n", pSurface8);
-
-    
-
+	*ppRenderTarget = EMUPATCH(D3DDevice_GetRenderTarget2)();
     return D3D_OK;
 }
 
@@ -2373,19 +2362,22 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget)
 // ******************************************************************
 XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_GetRenderTarget2()\n");
 
-    IDirect3DSurface8 *pSurface8 = g_pCachedRenderTarget->EmuSurface8;
+	X_D3DSurface *result = g_pCachedRenderTarget;
 
-    pSurface8->AddRef();
+	if (result != NULL)
+	{
+		IDirect3DSurface8 *pSurface8 = result->EmuSurface8;
+		if (pSurface8 != nullptr)
+			pSurface8->AddRef();
 
-    DbgPrintf("EmuD3D8: RenderTarget := 0x%.08X\n", pSurface8);
+		result->Common++; // AddRef
+	}
 
-    
+    DbgPrintf("EmuD3D8: RenderTarget := 0x%.08X\n", result);
 
-    return g_pCachedRenderTarget;
+    return result;
 }
 
 // ******************************************************************
