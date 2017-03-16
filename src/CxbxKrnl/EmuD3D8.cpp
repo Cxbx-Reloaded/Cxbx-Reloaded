@@ -389,7 +389,7 @@ VOID XTL::EmuD3DInit()
         PresParam.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
 
             
-        XTL::EMUPATCH(D3D_CreateDevice)(0, XTL::D3DDEVTYPE_HAL, 0, D3DCREATE_HARDWARE_VERTEXPROCESSING, &PresParam, &g_pD3DDevice8);
+        XTL::EMUPATCH(Direct3D_CreateDevice)(0, XTL::D3DDEVTYPE_HAL, 0, D3DCREATE_HARDWARE_VERTEXPROCESSING, &PresParam, &g_pD3DDevice8);
             
     }
 }
@@ -1341,9 +1341,9 @@ static void EmuUnswizzleTextureStages()
 }
 
 // ******************************************************************
-// * patch: D3D_CreateDevice
+// * patch: Direct3D_CreateDevice
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3D_CreateDevice)
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,

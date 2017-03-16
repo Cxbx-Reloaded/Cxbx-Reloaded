@@ -1790,7 +1790,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 3925, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 3925, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),

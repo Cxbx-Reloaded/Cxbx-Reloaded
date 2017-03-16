@@ -70,9 +70,9 @@ extern X_D3DTILE EmuD3DTileCache[0x08];
 extern X_D3DResource *EmuD3DActiveTexture[4];
 
 // ******************************************************************
-// * patch: D3D_CreateDevice
+// * patch: Direct3D_CreateDevice
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_CreateDevice)
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
