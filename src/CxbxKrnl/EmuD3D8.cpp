@@ -237,6 +237,23 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 	SetFocus(g_hEmuWindow);
 }
 
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
+{
+	if (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+		return nullptr;
+
+	if (pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
+		return nullptr;
+
+	if (pThis->EmuResource8 == nullptr)
+	{
+		__asm int 3;
+		//EmuWarning("EmuResource is not a valid pointer!");
+	}
+
+	return pThis->EmuResource8;
+}
+
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 {
 	if (EmuResource != nullptr)
@@ -2366,14 +2383,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 
 	X_D3DSurface *result = g_pCachedRenderTarget;
 
-	if (result != NULL)
-	{
-		IDirect3DSurface8 *pSurface8 = result->EmuSurface8;
-		if (pSurface8 != nullptr)
-			pSurface8->AddRef();
-
-		result->Common++; // AddRef
-	}
+	EMUPATCH(D3DResource_AddRef)(result);
 
     DbgPrintf("EmuD3D8: RenderTarget := 0x%.08X\n", result);
 
@@ -2407,14 +2417,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
 	X_D3DSurface *result = g_pCachedDepthStencil;
 
-	if (result != NULL)
-	{
-		IDirect3DSurface8 *pSurface8 = result->EmuSurface8;
-		if (pSurface8 != nullptr)
-			pSurface8->AddRef();
-
-		result->Common++; // AddRef
-	}
+	EMUPATCH(D3DResource_AddRef)(result);
 		
 	DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", result);
 
@@ -5077,29 +5080,27 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
            ");\n",
            pThis);
 
-    ULONG uRet = 0;
-
-    if (!pThis) {
+    if (!pThis)
+	{
         EmuWarning("IDirect3DResource8::AddRef() was not passed a valid pointer!");
+		return 0;
     }
-    else 
-    {
-		pThis->Common++; // AddRef
-		if (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-			uRet = pThis->Common;
-		else
-		{
-			IDirect3DResource8 *pResource8 = pThis->EmuResource8;
-            if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
-                uRet = ++pThis->Lock;
-            else if(pResource8 != 0)
-                uRet = pResource8->AddRef();
 
-		    if(!pResource8)
-			    __asm int 3;
-			    //EmuWarning("EmuResource is not a valid pointer!");
-        }   
-    }
+	// Initially, increment the Xbox refcount and return that
+	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
+
+	// If this is the first reference on a surface
+	if (uRet == 1)
+		if (pThis->Common & X_D3DCOMMON_TYPE_SURFACE)
+			// Try to AddRef the parent too
+			if (((X_D3DSurface *)pThis)->Parent != NULL)
+				((X_D3DSurface *)pThis)->Parent->Common++;
+
+	// Try to retrieve the host resource behind this resource
+	IDirect3DResource8 *pResource8 = GetHostResource(pThis);
+	if (pResource8 != 0)
+		// if there's a host resource, AddRef it too and return that
+		uRet = pResource8->AddRef();
 
     return uRet;
 }
@@ -5668,9 +5669,10 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 				EmuWarning("EmuIDirect3DTexture8_GetSurfaceLevel Failed!");
 
 			result->Parent = pThis;
+			pThis->Common++; // AddRef Parent too
 		}
 		
-		pThis->Common++; // AddRef
+		result->Common++; // Don't EMUPATCH(D3DResource_AddRef)(result) - that would AddRef Parent one too many
 	}
 	
 	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", result);
@@ -5855,6 +5857,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DDevice_Release)()
 
     DbgPrintf("EmuD3D8: EmuD3DDevice_Release();\n");
 
+	// See GetD3DResourceRefCount()
     g_pD3DDevice8->AddRef();
     DWORD RefCount = g_pD3DDevice8->Release();
     if (RefCount == 1)
