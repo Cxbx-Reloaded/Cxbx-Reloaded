@@ -1253,3 +1253,15 @@ DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 
 	RETURN(ERROR_SUCCESS);
 }
+
+// ******************************************************************
+// * patch: OutputDebugStringA
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(OutputDebugStringA)
+(
+	IN LPCSTR lpOutputString
+)
+{
+	LOG_FUNC_ONE_ARG(lpOutputString);
+	printf("OutputDebugStringA: %s\n", lpOutputString);
+}
