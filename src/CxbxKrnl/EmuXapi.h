@@ -750,6 +750,14 @@ BOOL WINAPI EMUPATCH(WriteFileEx)
 	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
 );
 
+// ******************************************************************
+// * patch: OutputDebugStringA
+// ******************************************************************
+VOID WINAPI EMUPATCH(OutputDebugStringA)
+(
+	IN LPCSTR lpOutputString
+);
+
 // s+
 /* not necessary?
 // ******************************************************************

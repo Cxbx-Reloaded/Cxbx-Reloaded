@@ -189,6 +189,7 @@ OOVPATable XAPI_4034[] = {
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

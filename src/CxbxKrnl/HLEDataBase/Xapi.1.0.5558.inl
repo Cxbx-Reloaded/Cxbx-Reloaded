@@ -215,6 +215,7 @@ OOVPATable XAPI_5558[] = {
 	// REGISTER_OOVPA(XapiFiberStartup, 5558, PATCH),
 	REGISTER_OOVPA(XID_fCloseDevice, 5558, XREF),
 	REGISTER_OOVPA(XInputClose, 5558, PATCH),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

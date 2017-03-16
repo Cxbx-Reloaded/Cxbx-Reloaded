@@ -202,6 +202,7 @@ OOVPATable XAPI_5849[] = {
 	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************
