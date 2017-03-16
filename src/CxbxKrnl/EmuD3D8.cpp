@@ -253,49 +253,49 @@ int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 
 XTL::X_D3DSurface *EmuNewD3DSurface()
 {
-	XTL::X_D3DSurface *result = new XTL::X_D3DSurface;
+	XTL::X_D3DSurface *result = (XTL::X_D3DSurface *)calloc(1, sizeof(XTL::X_D3DSurface));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_SURFACE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DTexture *EmuNewD3DTexture()
 {
-	XTL::X_D3DTexture *result = new XTL::X_D3DTexture;
+	XTL::X_D3DTexture *result = (XTL::X_D3DTexture *)calloc(1, sizeof(XTL::X_D3DTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DVolumeTexture *EmuNewD3DVolumeTexture()
 {
-	XTL::X_D3DVolumeTexture *result = new XTL::X_D3DVolumeTexture;
+	XTL::X_D3DVolumeTexture *result = (XTL::X_D3DVolumeTexture *)calloc(1, sizeof(XTL::X_D3DVolumeTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DCubeTexture *EmuNewD3DCubeTexture()
 {
-	XTL::X_D3DCubeTexture *result = new XTL::X_D3DCubeTexture;
+	XTL::X_D3DCubeTexture *result = (XTL::X_D3DCubeTexture *)calloc(1, sizeof(XTL::X_D3DCubeTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DIndexBuffer *EmuNewD3DIndexBuffer()
 {
-	XTL::X_D3DIndexBuffer *result = new XTL::X_D3DIndexBuffer;
+	XTL::X_D3DIndexBuffer *result = (XTL::X_D3DIndexBuffer *)calloc(1, sizeof(XTL::X_D3DIndexBuffer));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_INDEXBUFFER | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DVertexBuffer *EmuNewD3DVertexBuffer()
 {
-	XTL::X_D3DVertexBuffer *result = new XTL::X_D3DVertexBuffer;
+	XTL::X_D3DVertexBuffer *result = (XTL::X_D3DVertexBuffer *)calloc(1, sizeof(XTL::X_D3DVertexBuffer));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_VERTEXBUFFER | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DPalette *EmuNewD3DPalette()
 {
-	XTL::X_D3DPalette *result = new XTL::X_D3DPalette;
+	XTL::X_D3DPalette *result = (XTL::X_D3DPalette *)calloc(1, sizeof(XTL::X_D3DPalette));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1
 	return result;
 }
