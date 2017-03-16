@@ -3115,8 +3115,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
            Width, Height, Levels, Usage, Format, Pool, ppTexture);
 
 	// Get Bytes Per Pixel, for correct Pitch calculation :
-	DWORD dwBPP = 2; // Default, in case nothing is set
-	/*ignore result*/EmuXBFormatIsSwizzled(Format, &dwBPP);
+	DWORD dwBPP = EmuXBFormatBPP(Format);
 
 	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for (X_)D3DFMT_YUY2?
 
