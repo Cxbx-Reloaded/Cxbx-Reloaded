@@ -1790,8 +1790,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 3925, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 3925, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTransform, 4134, PATCH),
@@ -1800,7 +1800,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_Clear, 4134, PATCH),
 
     // ********************** BEG WARNING UNTESTED!!! *******************
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 3925, PATCH),

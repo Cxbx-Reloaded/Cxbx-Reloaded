@@ -1330,7 +1330,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_5849[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 4627, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5849, PATCH),

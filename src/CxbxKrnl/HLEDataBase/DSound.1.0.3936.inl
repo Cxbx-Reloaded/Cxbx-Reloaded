@@ -2510,33 +2510,23 @@ OOVPA_XREF(IDirectSoundStream_Unknown1, 3936, 9,
 OOVPA_END;
 //*/
 // ******************************************************************
-// * IDirectSoundStream_SetHeadroomA
+// * DirectSound_CDirectSoundVoice_SetHeadroom
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetHeadroomA, 3936, 11,
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetHeadroom, 3936, 10,
 
     XREF_DSSETHEADROOMA,
     XRefZero)
 
-        // IDirectSoundStream_SetHeadroomA+0x09 : call [addr]
-        { 0x09, 0xE8 }, // (Offset,Value)-Pair #1
-
-        // IDirectSoundStream_SetHeadroomA+0x17 : cmp edi, [ecx+0x20]
-        { 0x17, 0x3B }, // (Offset,Value)-Pair #2
-        { 0x18, 0x79 }, // (Offset,Value)-Pair #3
-        { 0x19, 0x20 }, // (Offset,Value)-Pair #4
-
-        // IDirectSoundStream_SetHeadroomA+0x1D : jz +0x1F
-        { 0x1D, 0x74 }, // (Offset,Value)-Pair #5
-        { 0x1E, 0x1F }, // (Offset,Value)-Pair #6
-
-        // IDirectSoundStream_SetHeadroomA+0x3E : cmp [ebp-0x04], 0
-        { 0x3E, 0x83 }, // (Offset,Value)-Pair #7
-        { 0x3F, 0x7D }, // (Offset,Value)-Pair #8
-        { 0x40, 0xFC }, // (Offset,Value)-Pair #9
-
-        // IDirectSoundStream_SetHeadroomA+0x55 : retn 0x08
-        { 0x55, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x56, 0x08 }, // (Offset,Value)-Pair #11
+        { 0x08, 0x54 },
+        { 0x0C, 0x74 },
+        { 0x10, 0xF8 },
+        { 0x16, 0x1C },
+        { 0x17, 0x2B },
+        { 0x18, 0xCE },
+        { 0x19, 0x01 },
+        { 0x1A, 0x48 },
+        { 0x3C, 0xC2 },
+        { 0x3D, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -2547,23 +2537,21 @@ OOVPA_XREF(IDirectSoundStream_SetHeadroom, 3936, 10,
     XRefNoSaveIndex,
     XRefOne)
 
-    // TODO: Tentative! (most likely incorrect, actually!)
-
-        // IDirectSoundStream_SetHeadroomB+0x0D : call [IDirectSoundStream_SetHeadroomA]
+        // IDirectSoundStream_SetHeadroom+0x0D : call [DirectSound_CDirectSoundVoice_SetHeadroom]
         XREF_ENTRY( 0x0D, XREF_DSSETHEADROOMA ), // (Offset,Value)-Pair #1
 
-        // IDirectSoundStream_SetHeadroomB+0x04 : mov eax, [esp+0x08]
+        // IDirectSoundStream_SetHeadroom+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B }, // (Offset,Value)-Pair #2
         { 0x05, 0x44 }, // (Offset,Value)-Pair #3
         { 0x06, 0x24 }, // (Offset,Value)-Pair #4
         { 0x07, 0x08 }, // (Offset,Value)-Pair #5
 
-        // IDirectSoundStream_SetHeadroomB+0x08 : add eax, 0x04
+        // IDirectSoundStream_SetHeadroom+0x08 : add eax, 0x04
         { 0x08, 0x83 }, // (Offset,Value)-Pair #6
         { 0x09, 0xC0 }, // (Offset,Value)-Pair #7
         { 0x0A, 0x04 }, // (Offset,Value)-Pair #8
 
-        // IDirectSoundStream_SetHeadroomB+0x11 : retn 0x08
+        // IDirectSoundStream_SetHeadroom+0x11 : retn 0x08
         { 0x11, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x12, 0x08 }, // (Offset,Value)-Pair #10
 OOVPA_END;
@@ -4131,7 +4119,7 @@ OOVPATable DSound_3936[] = {
     // REGISTER_OOVPA(IDirectSoundStream_SetI3DL2SourceA, 3936, XREF),
 	// REGISTER_OOVPA(IDirectSoundStream_SetI3DL2Source, 3936, PATCH),
     // REGISTER_OOVPA(IDirectSoundStream_Unknown1, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSoundStream_SetHeadroomA, 3936, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundStream_SetHeadroom, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CommitDeferredSettingsB, 3936, XREF),
@@ -4181,6 +4169,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 3936, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_Commit3dSettings, 3936, XREF),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetI3DL2Source, 3936, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetI3DL2Source, 3936, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetI3DL2Source, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBinVolumes, 3936, XREF),
@@ -4190,7 +4179,6 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes, 3936, PATCH),
-    // REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetI3DL2Source, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetNotificationPositions, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 3936, PATCH),

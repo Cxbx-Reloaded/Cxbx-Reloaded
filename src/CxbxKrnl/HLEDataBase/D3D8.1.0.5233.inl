@@ -33,23 +33,23 @@
 // ******************************************************************
 
 // ******************************************************************
-// * D3D_CreateDevice
+// * Direct3D_CreateDevice
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDevice, 5233, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice, 5233, 8)
 
-        // D3D_CreateDevice+0x0A : jnz +0x0A
+        // Direct3D_CreateDevice+0x0A : jnz +0x0A
         { 0x0A, 0x75 }, // (Offset,Value)-Pair #1
         { 0x0B, 0x0A }, // (Offset,Value)-Pair #2
 
-        // D3D_CreateDevice+0x80 : repe stosd
+        // Direct3D_CreateDevice+0x80 : repe stosd
         { 0x80, 0xF3 }, // (Offset,Value)-Pair #3
         { 0x81, 0xAB }, // (Offset,Value)-Pair #4
 
-        // D3D_CreateDevice+0x83 : mov eax, esi
+        // Direct3D_CreateDevice+0x83 : mov eax, esi
         { 0x83, 0x8B }, // (Offset,Value)-Pair #5
         { 0x84, 0xC6 }, // (Offset,Value)-Pair #6
 
-        // D3D_CreateDevice+0x91 : retn 0x18
+        // Direct3D_CreateDevice+0x91 : retn 0x18
         { 0x91, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x92, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -1214,15 +1214,15 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_5233[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 5233, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 5233, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4928, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5233, PATCH),
@@ -1291,7 +1291,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTransform, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 4361, PATCH),
-	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
+	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetLight, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 5233, PATCH),

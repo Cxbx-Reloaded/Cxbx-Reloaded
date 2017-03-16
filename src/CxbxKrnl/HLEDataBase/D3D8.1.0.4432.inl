@@ -33,23 +33,23 @@
 // ******************************************************************
 
 // ******************************************************************
-// * D3D_CreateDevice
+// * Direct3D_CreateDevice
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDevice, 4432, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice, 4432, 8)
 
-        // D3D_CreateDevice+0x07 : jnz +0x0A
+        // Direct3D_CreateDevice+0x07 : jnz +0x0A
         { 0x07, 0x75 }, // (Offset,Value)-Pair #1
         { 0x08, 0x0A }, // (Offset,Value)-Pair #2
 
-        // D3D_CreateDevice+0x86 : repe stosd
+        // Direct3D_CreateDevice+0x86 : repe stosd
         { 0x86, 0xF3 }, // (Offset,Value)-Pair #3
         { 0x87, 0xAB }, // (Offset,Value)-Pair #4
 
-        // D3D_CreateDevice+0x89 : mov eax, esi
+        // Direct3D_CreateDevice+0x89 : mov eax, esi
         { 0x89, 0x8B }, // (Offset,Value)-Pair #5
         { 0x8A, 0xC6 }, // (Offset,Value)-Pair #6
 
-        // D3D_CreateDevice+0xA0 : retn 0x18
+        // Direct3D_CreateDevice+0xA0 : retn 0x18
         { 0xA0, 0xC2 }, // (Offset,Value)-Pair #7
         { 0xA1, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -685,8 +685,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_4432[]  {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 4432, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 4432, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer, 4134, PATCH),
@@ -761,7 +761,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Release, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4531, PATCH),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 4361, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4361, PATCH),

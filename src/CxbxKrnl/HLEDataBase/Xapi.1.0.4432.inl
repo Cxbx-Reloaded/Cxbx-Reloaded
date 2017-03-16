@@ -80,6 +80,7 @@ OOVPATable XAPI_4432[] = {
 	REGISTER_OOVPA(timeSetEvent, 4134, PATCH),
 	REGISTER_OOVPA(timeKillEvent, 4134, PATCH),
 	REGISTER_OOVPA(XLaunchNewImage, 3911, ALIAS, XLaunchNewImageA),
+	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 };
 
 // ******************************************************************

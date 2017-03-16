@@ -1508,7 +1508,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_5558[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 4627, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_LazySetStateVB, 5558, XREF),
 	REGISTER_OOVPA(D3DDevice_BeginPush, 5558, PATCH),
@@ -1584,7 +1584,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5233, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceMultiSampleType, 5558, PATCH),
-	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
+	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5233, PATCH),
 	REGISTER_OOVPA(D3D_SetFence, 5558, XREF),
@@ -1622,7 +1622,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginStateBlock, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndStateBlock, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5558, PATCH),
 	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5558, PATCH),

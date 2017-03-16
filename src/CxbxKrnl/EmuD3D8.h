@@ -45,6 +45,18 @@
 // initialize render window
 extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
+extern VOID CxbxSetPixelContainerHeader
+(
+	XTL::X_D3DPixelContainer* pPixelContainer,
+	DWORD           	Common,
+	UINT				Width,
+	UINT				Height,
+	XTL::X_D3DFORMAT	Format,
+	UINT				Levels,
+	UINT				Dimensions,
+	UINT				Pitch
+);
+
 // initialize direct3d
 extern VOID EmuD3DInit();
 
@@ -58,9 +70,9 @@ extern X_D3DTILE EmuD3DTileCache[0x08];
 extern X_D3DResource *EmuD3DActiveTexture[4];
 
 // ******************************************************************
-// * patch: D3D_CreateDevice
+// * patch: Direct3D_CreateDevice
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_CreateDevice)
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -766,9 +778,9 @@ DWORD WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
 );
 
 // ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel
+// * patch: IDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
-X_D3DResource * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
+X_D3DSurface * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
     X_D3DTexture   *pThis,
     UINT            Level

@@ -1114,7 +1114,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_4034[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 3925, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 4034, PATCH),
 	REGISTER_OOVPA(D3DResource_Register, 3925, PATCH),
 
@@ -1176,7 +1176,7 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderSize, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateCubeTexture, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreatePalette, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVolumeTexture, 3925, PATCH),
@@ -1224,7 +1224,7 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4034, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4034, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4034, DISABLED),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 4034, PATCH),

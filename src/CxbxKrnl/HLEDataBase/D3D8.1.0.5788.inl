@@ -1277,7 +1277,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_5788[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 4627, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5788, PATCH),
@@ -1358,7 +1358,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5558, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceMultiSampleType, 5558, PATCH),
-	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
+	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5788, PATCH),
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5788, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5788, PATCH),
@@ -1371,7 +1371,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5788, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetModelView, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 5788, PATCH),

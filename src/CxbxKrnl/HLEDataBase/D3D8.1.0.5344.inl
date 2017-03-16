@@ -605,16 +605,16 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 5233, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 5233, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, PATCH),
+	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4928, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5233, PATCH),
@@ -686,7 +686,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetTransform, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTransform, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 4361, PATCH),
-	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
+	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetLight, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetLight, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5233, DISABLED),

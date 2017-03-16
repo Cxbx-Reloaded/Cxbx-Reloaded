@@ -33,22 +33,22 @@
 // ******************************************************************
 
 // ******************************************************************
-// * D3D_CreateDevice
+// * Direct3D_CreateDevice
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDevice, 3925, 8)
-	// D3D_CreateDevice+0x07 : jnz +0x0A
+OOVPA_NO_XREF(Direct3D_CreateDevice, 3925, 8)
+	// Direct3D_CreateDevice+0x07 : jnz +0x0A
 	{ 0x07, 0x75 }, // (Offset,Value)-Pair #1
 	{ 0x08, 0x0A }, // (Offset,Value)-Pair #2
 
-	// D3D_CreateDevice+0x79 : mov eax, esi
+	// Direct3D_CreateDevice+0x79 : mov eax, esi
 	{ 0x79, 0x8B }, // (Offset,Value)-Pair #3
 	{ 0x7A, 0xC6 }, // (Offset,Value)-Pair #4
 
-	// D3D_CreateDevice+0x7C : retn 0x18
+	// Direct3D_CreateDevice+0x7C : retn 0x18
 	{ 0x7C, 0xC2 }, // (Offset,Value)-Pair #5
 	{ 0x7D, 0x18 }, // (Offset,Value)-Pair #6
 
-	// D3D_CreateDevice+0x90 : retn 0x18
+	// Direct3D_CreateDevice+0x90 : retn 0x18
 	{ 0x90, 0xC2 }, // (Offset,Value)-Pair #7
 	{ 0x91, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -3364,9 +3364,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8_3925[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 3925, PATCH),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
@@ -3508,7 +3508,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 3925, PATCH),
 	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, PATCH),
-	REGISTER_OOVPA(D3D_GetDeviceCaps, 3925, PATCH),
+	REGISTER_OOVPA(D3D_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3D_SetCommonDebugRegisters, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateImageSurface, 3925, PATCH),
 	REGISTER_OOVPA(D3D_BlockOnTime, 3925, PATCH),

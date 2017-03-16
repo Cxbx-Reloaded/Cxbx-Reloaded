@@ -36,23 +36,23 @@
 // For Burnout 3 Takedown
 
 // ******************************************************************
-// * D3D_CreateDevice
+// * Direct3D_CreateDevice
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDevice_LTCG, 5849, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice_LTCG, 5849, 8)
 
-        // D3D_CreateDevice+0x07 : jnz +0x0A
+        // Direct3D_CreateDevice+0x07 : jnz +0x0A
         { 0x07, 0x75 }, // (Offset,Value)-Pair #1
         { 0x08, 0x0A }, // (Offset,Value)-Pair #2
 
-        // D3D_CreateDevice+0x7F : rep stos
+        // Direct3D_CreateDevice+0x7F : rep stos
         { 0x7F, 0xF3 }, // (Offset,Value)-Pair #3
         { 0x80, 0xAB }, // (Offset,Value)-Pair #4
 
-        // D3D_CreateDevice+0x82 : mov eax, esi
+        // Direct3D_CreateDevice+0x82 : mov eax, esi
         { 0x82, 0x8B }, // (Offset,Value)-Pair #5
         { 0x83, 0xC6 }, // (Offset,Value)-Pair #6
 
-        // D3D_CreateDevice+0x8F : retn 0x18
+        // Direct3D_CreateDevice+0x8F : retn 0x18
         { 0x8F, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x90, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -952,7 +952,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable D3D8LTCG_5849[] = {
 
-	REGISTER_OOVPA(D3D_CreateDevice, 5849, LTCG),
+	REGISTER_OOVPA(Direct3D_CreateDevice, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 5849, LTCG),
