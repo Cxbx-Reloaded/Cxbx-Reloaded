@@ -411,6 +411,8 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
 };
 
 // ******************************************************************
