@@ -3468,8 +3468,8 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 3925, PATCH),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, PATCH),
-	REGISTER_OOVPA(D3DResource_GetType, 3925, PATCH), // Probably not even necessary...
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, DISABLED),
+	REGISTER_OOVPA(D3DResource_GetType, 3925, DISABLED), // Probably not even necessary...
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	// REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 3925, PATCH),
@@ -3507,7 +3507,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 3925, PATCH),
-	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, PATCH),
+	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, DISABLED),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3D_SetCommonDebugRegisters, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateImageSurface, 3925, PATCH),

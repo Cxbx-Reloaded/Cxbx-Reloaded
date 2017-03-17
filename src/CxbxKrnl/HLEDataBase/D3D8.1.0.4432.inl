@@ -802,7 +802,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_BeginPush, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndPush, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 4432, PATCH),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
 };
 
 // ******************************************************************

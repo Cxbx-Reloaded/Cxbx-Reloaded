@@ -1786,6 +1786,20 @@ OOVPA_NO_XREF(D3DDevice_SetShaderConstantMode, 4134, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3D::LazySetPointParams
+// ******************************************************************
+OOVPA_NO_XREF(D3D_LazySetPointParams, 4134, 7)
+	{ 0x00, 0x83 },
+	{ 0x01, 0xEC },
+	{ 0x02, 0x14 },
+	{ 0x4E, 0xE0 },
+	{ 0x73, 0xF6 },
+	{ 0x74, 0xC4 },
+	{ 0x75, 0x41 },
+OOVPA_END;
+
+
+// ******************************************************************
 // * D3D8_4134
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
@@ -1937,11 +1951,12 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_Release, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4134, PATCH),
-	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, PATCH),
+	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
+	REGISTER_OOVPA(D3D_LazySetPointParams, 4134, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
 };
 
 // ******************************************************************
