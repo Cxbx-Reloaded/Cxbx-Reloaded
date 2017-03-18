@@ -281,10 +281,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         BuildVersion = 3936;
                     }
 
-					// Temporary!
-					if (BuildVersion == 4134)
-						BuildVersion = 4361;
-
 					// Redirect other highly similar DSOUND library versions
 					if(BuildVersion == 4361 || BuildVersion == 4400 || BuildVersion == 4432 || 
 						BuildVersion == 4531 )

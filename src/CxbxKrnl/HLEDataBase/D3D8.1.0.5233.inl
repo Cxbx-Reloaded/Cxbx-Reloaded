@@ -1346,7 +1346,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_SampleAlpha, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4ub, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4134, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
