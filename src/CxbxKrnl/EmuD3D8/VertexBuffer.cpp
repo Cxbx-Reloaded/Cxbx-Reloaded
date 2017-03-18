@@ -47,7 +47,7 @@
 
 #define HASH_SEED 0
 
-#define VERTEX_BUFFER_CACHE_SIZE 64
+#define VERTEX_BUFFER_CACHE_SIZE 256
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // inline vertex buffer emulation

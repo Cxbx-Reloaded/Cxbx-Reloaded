@@ -308,12 +308,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion = 3911;
 					if (OrigBuildVersion == 4531)
 						BuildVersion = 4361;
-					// Quick test (JSRF)
-					if (OrigBuildVersion == 4134)
-						BuildVersion = 4361;
-					// Quick test (Simpsons: RoadRage)
-					//	if(BuildVersion == 4034)
-					//		BuildVersion = 3911;
 				}
 
 				if(bXRefFirstPass)
