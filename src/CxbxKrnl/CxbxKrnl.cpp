@@ -83,6 +83,7 @@ char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_LaunchDataPage_bin[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
+char szFilePath_memory_bin[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -224,6 +225,77 @@ void RestoreExeImageHeader()
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
 
+#define CONTIGUOUS_MEMORY_SIZE (64 * 1024 * 1024)
+
+void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
+{
+	// First, try to open an existing memory.bin file :
+	HANDLE hFile = CreateFile(szFilePath_memory_bin,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
+
+	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
+	if (NeedsInitialization)
+	{
+		// If the memory.bin file doesn't exist yet, create it :
+		hFile = CreateFile(szFilePath_memory_bin,
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			/* lpSecurityAttributes */nullptr,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+			/* hTemplateFile */nullptr);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			CxbxKrnlCleanup("CxbxRestoreContiguousMemory : Couldn't create memory.bin file!\n");
+			return nullptr;
+		}
+	}
+
+	// TODO : Make sure memory.bin is at least 64 MB in size - FileSeek(hFile, CONTIGUOUS_MEMORY_SIZE, soFromBeginning);
+
+	HANDLE hFileMapping = CreateFileMapping(
+		hFile,
+		/* lpFileMappingAttributes */nullptr,
+		PAGE_READWRITE,
+		/* dwMaximumSizeHigh */0,
+		/* dwMaximumSizeLow */CONTIGUOUS_MEMORY_SIZE,
+		/**/nullptr);
+	if (hFileMapping == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestoreContiguousMemory : Couldn't create contiguous memory.bin file mapping!\n");
+		return nullptr;
+	}
+
+	// Map memory.bin contents into memory :
+	void *memory = (void *)MapViewOfFileEx(
+		hFileMapping,
+		FILE_MAP_READ | FILE_MAP_WRITE,
+		/* dwFileOffsetHigh */0,
+		/* dwFileOffsetLow */0,
+		CONTIGUOUS_MEMORY_SIZE,
+		(void *)MM_SYSTEM_PHYSICAL_MAP);
+	if (memory == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into memory!");
+		return nullptr;
+	}
+
+	if (NeedsInitialization)
+	{
+		memset(memory, 0, CONTIGUOUS_MEMORY_SIZE);
+		DbgPrintf("EmuMain: Initialized contiguous memory\n");
+	}
+	else
+		DbgPrintf("EmuMain: Loaded contiguous memory.bin\n");
+
+	return memory;
+}
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -286,17 +358,20 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Clear out the entire memory range
 		memset((void*)ExeDosHeader, 0, EMU_MAX_MEMORY_SIZE);
 
+
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
 	}
 
 	CxbxInitFilePaths();
 
+	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+
+	CxbxRestorePersistentMemoryRegions();
+
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 		CxbxKrnlCleanup("EmuMain : Couldn't init EEPROM!");
-
-	CxbxRestorePersistentMemoryRegions();
 
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
 
@@ -477,13 +552,7 @@ void CxbxKrnlInit
 			IMAGE_SECTION_HEADER SectionHeader;
 		} *PDUMMY_KERNEL;
 
-		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
-			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
-			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
-		);
-
-		if (DummyKernel == NULL)
-			CxbxKrnlCleanup("InitializeDummyKernel: Could not allocate dummy kernel.");
+		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)XBOX_KERNEL_BASE;
 		memset(DummyKernel, 0, sizeof(DUMMY_KERNEL));
 
 		// XapiRestrictCodeSelectorLimit only checks these fields.
@@ -661,7 +730,8 @@ void CxbxInitFilePaths()
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create CxbxReloaded AppData folder!");
 
 	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
-	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData); // TODO : Start using this
+	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
+	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
