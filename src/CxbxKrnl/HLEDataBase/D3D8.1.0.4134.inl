@@ -1830,6 +1830,77 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4f, 4134, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetFlickerFilter
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 4134, 11)
+
+        // D3DDevice_SetFlickerFilter+0x1C : mov eax, [eax+0x2268]
+        { 0x1D, 0x80 }, // (Offset,Value)-Pair #2
+        { 0x1E, 0x68 }, // (Offset,Value)-Pair #3
+        { 0x1F, 0x22 }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_SetFlickerFilter+0x22 : push 0; push esi; push 0x0B; push eax
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x26, 0x0B }, // (Offset,Value)-Pair #9
+        { 0x27, 0x50 }, // (Offset,Value)-Pair #10
+
+        // D3DDevice_SetFlickerFilter+0x3F : retn 0x04
+        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetSoftDisplayFilter
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 4134, 12)
+
+        // D3DDevice_SetSoftDisplayFilter+0x25 : mov edx, [eax+0x2268]
+        { 0x25, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x26, 0x90 }, // (Offset,Value)-Pair #2
+        { 0x27, 0x68 }, // (Offset,Value)-Pair #3
+        { 0x28, 0x22 }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_SetSoftDisplayFilter+0x2B : push 0; push esi; push 0x0E; push edx
+        { 0x2B, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x2C, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x2D, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x2E, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x2F, 0x0E }, // (Offset,Value)-Pair #9
+        { 0x30, 0x52 }, // (Offset,Value)-Pair #10
+
+        // D3DDevice_SetSoftDisplayFilter+0x4E : retn 0x04
+        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x4F, 0x04 }, // (Offset,Value)-Pair #12
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetPalette
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetPalette, 4134, 12)
+
+        // D3DDevice_SetPalette+0x0D : mov eax, [edi+esi*4+0x0A88]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x84 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0xBE }, // (Offset,Value)-Pair #3
+        { 0x10, 0x88 }, // (Offset,Value)-Pair #4
+        { 0x11, 0x0A }, // (Offset,Value)-Pair #5
+
+        // D3DDevice_SetPalette+0x76 : add edi, 0x41B20
+        { 0x76, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x77, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x78, 0x20 }, // (Offset,Value)-Pair #8
+        { 0x79, 0x1B }, // (Offset,Value)-Pair #9
+        { 0x7A, 0x04 }, // (Offset,Value)-Pair #10
+
+        // D3DDevice_SetPalette+0x8A : retn 0x08
+        { 0x8A, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x8B, 0x08 }, // (Offset,Value)-Pair #12
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4134
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
@@ -1863,15 +1934,15 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_End, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePalette, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetPalette, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPalette, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVolumeTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateCubeTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 3925, PATCH),
     // REGISTER_OOVPA(D3DDevice_SetRenderState_StencilFail, 3925, PATCH),
