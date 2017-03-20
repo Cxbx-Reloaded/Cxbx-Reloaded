@@ -61,6 +61,13 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
+#define MEM_NOZERO 0x800000
+#define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
+
+#define MM_HIGHEST_USER_ADDRESS     (PVOID)0x7FFEFFFF
+#define X64K                        ((ULONG)64*1024)
+#define MM_HIGHEST_VAD_ADDRESS      ((PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - X64K))
+
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
 // ******************************************************************
@@ -81,27 +88,65 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
-	// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
-	// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
-	// this flag fixes Azurik for XP.
-	DWORD MEM_NOZERO = 0x800000;
+	NTSTATUS ret = 0;
 
-	if (AllocationType & MEM_NOZERO)
+	PVOID RequestedBaseAddress = *BaseAddress;
+	ULONG RequestedAllocationSize = *AllocationSize;
+
+	// Don't allow base address to exceed highest virtual address
+	if (RequestedBaseAddress > MM_HIGHEST_VAD_ADDRESS)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Limit number of zero bits upto 20
+	if (ZeroBits > 21)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// No empty allocation allowed
+	if (RequestedAllocationSize == 0)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Allocation should fit in remaining address range
+	if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)RequestedBaseAddress + 1) < RequestedAllocationSize)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// Only known flags are allowed
+	if ((AllocationType & ~MEM_KNOWN_FLAGS) != 0)
+		ret = STATUS_INVALID_PARAMETER;
+
+	// No other flags allowed in combination with MEM_RESET
+	if (AllocationType & MEM_RESET)
 	{
-		EmuWarning("MEM_NOZERO flag is not supported!");
-		AllocationType &= ~MEM_NOZERO;
+		if (AllocationType != MEM_RESET)
+			ret = STATUS_INVALID_PARAMETER;
 	}
+	else
+		// At least MEM_RESET, MEM_COMMIT or MEM_RESERVE must be set
+		if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
+			ret = STATUS_INVALID_PARAMETER;
 
-	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		BaseAddress,
-		ZeroBits,
-		/*RegionSize=*/AllocationSize,
-		AllocationType,
-		Protect);
+	if (ret == 0)
+	{
+		// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
+		// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
+		// this flag fixes Azurik for XP.
 
-	if (ret == 0xC00000F3)
-		EmuWarning("Invalid Param!");
+		if (AllocationType & MEM_NOZERO)
+		{
+			EmuWarning("MEM_NOZERO flag is not supported!");
+			AllocationType &= ~MEM_NOZERO;
+		}
+
+		ret = NtDll::NtAllocateVirtualMemory(
+			/*ProcessHandle=*/g_CurrentProcessHandle,
+			BaseAddress,
+			ZeroBits,
+			/*RegionSize=*/AllocationSize,
+			AllocationType,
+			Protect);
+
+		if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
+			EmuWarning("Invalid Param!");
+	}
 
 	RETURN(ret);
 }
