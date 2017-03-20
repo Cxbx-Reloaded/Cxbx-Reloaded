@@ -1901,6 +1901,54 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 4134, 12)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_EnableOverlay
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_EnableOverlay, 4134, 11)
+
+        // D3DDevice_EnableOverlay+0x0B : mov ecx, [eax+0x8700]
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x88 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x87 }, // (Offset,Value)-Pair #3
+
+        // D3DDevice_EnableOverlay+0x15 : jz +0x0A
+        { 0x15, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x16, 0x0A }, // (Offset,Value)-Pair #5
+
+        // D3DDevice_EnableOverlay+0x5A : mov [eax+0x8918], ecx
+        { 0x5A, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x5B, 0x88 }, // (Offset,Value)-Pair #7
+        { 0x5C, 0x18 }, // (Offset,Value)-Pair #8
+        { 0x5D, 0x89 }, // (Offset,Value)-Pair #9
+
+        // D3DDevice_EnableOverlay+0x60 : retn 0x04
+        { 0x60, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x61, 0x04 }, // (Offset,Value)-Pair #11
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_UpdateOverlay
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 4134, 11)
+
+        // D3DDevice_UpdateOverlay+0x0F : mov [eax+0x2A88], ecx
+        { 0x0F, 0x89 }, // (Offset,Value)-Pair #1
+        { 0x10, 0x88 }, // (Offset,Value)-Pair #2
+        { 0x11, 0x88 }, // (Offset,Value)-Pair #3
+        { 0x12, 0x2A }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_UpdateOverlay+0x86 : and ecx, 0xFFFFFFFE
+        { 0x86, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x87, 0xE1 }, // (Offset,Value)-Pair #6
+        { 0x88, 0xFE }, // (Offset,Value)-Pair #7
+
+        // D3DDevice_UpdateOverlay+0xA2 : mov [esi+0x8920], ecx
+        { 0xA2, 0x89 }, // (Offset,Value)-Pair #8
+        { 0xA3, 0x8E }, // (Offset,Value)-Pair #9
+        { 0xA4, 0x20 }, // (Offset,Value)-Pair #10
+        { 0xA5, 0x89 }, // (Offset,Value)-Pair #11
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4134
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
@@ -2053,6 +2101,8 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
 	REGISTER_OOVPA(D3D_LazySetPointParams, 4134, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
+	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 4134, PATCH),
 };
 
 // ******************************************************************
