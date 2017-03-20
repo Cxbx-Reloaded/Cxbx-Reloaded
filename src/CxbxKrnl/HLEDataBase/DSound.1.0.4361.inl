@@ -76,64 +76,12 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound_CDirectSound::CreateSoundStream
 // ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSound_CreateSoundStream, 4361, 14,
-
-    XREF_DSCREATESOUNDSTREAM,
-    XRefZero)
-
-        // DirectSound_CDirectSound_CreateSoundStream+0x23 : mov eax, 0x80004005
-        { 0x23, 0xB8 }, // (Offset,Value)-Pair #1
-        { 0x24, 0x05 }, // (Offset,Value)-Pair #2
-        { 0x25, 0x40 }, // (Offset,Value)-Pair #3
-        { 0x27, 0x80 }, // (Offset,Value)-Pair #4
-
-        // DirectSound_CDirectSound_CreateSoundStream+0x2A : push 0x28
-        { 0x2A, 0x6A }, // (Offset,Value)-Pair #5
-        { 0x2B, 0x28 }, // (Offset,Value)-Pair #6
-
-        // DirectSound_CDirectSound_CreateSoundStream+0x4A : add esi, 0x7FF8FFF2
-        { 0x4A, 0x81 }, // (Offset,Value)-Pair #7
-        { 0x4B, 0xE6 }, // (Offset,Value)-Pair #8
-        { 0x4C, 0xF2 }, // (Offset,Value)-Pair #9
-        { 0x4D, 0xFF }, // (Offset,Value)-Pair #10
-        { 0x4E, 0xF8 }, // (Offset,Value)-Pair #11
-        { 0x4F, 0x7F }, // (Offset,Value)-Pair #12
-
-        // DirectSound_CDirectSound_CreateSoundStream+0x8E : retn 0x10
-        { 0x8E, 0xC2 }, // (Offset,Value)-Pair #13
-        { 0x8F, 0x10 }, // (Offset,Value)-Pair #14
-OOVPA_END;
+#define DirectSound_CDirectSound_CreateSoundStream_4361 DirectSound_CDirectSound_CreateSoundStream_4134
 
 // ******************************************************************
 // * DirectSoundCreateStream
 // ******************************************************************
-OOVPA_XREF(DirectSoundCreateStream, 4361, 12,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        // DirectSoundCreateStream+0x2F : call [CDirectSound::CreateSoundStream]
-        XREF_ENTRY( 0x2F, XREF_DSCREATESOUNDSTREAM ), // (Offset,Value)-Pair #1
-
-        // DirectSoundCreateStream+0x04 : and [ebp-0x04], 0
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x05, 0x65 }, // (Offset,Value)-Pair #3
-        { 0x06, 0xFC }, // (Offset,Value)-Pair #4
-
-        // DirectSoundCreateStream+0x08 : push ebx; push esi; push edi
-        { 0x08, 0x53 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x56 }, // (Offset,Value)-Pair #6
-        { 0x0A, 0x57 }, // (Offset,Value)-Pair #7
-
-        // DirectSoundCreateStream+0x3C : call dword ptr [eax+8]
-        { 0x3C, 0xFF }, // (Offset,Value)-Pair #8
-        { 0x3D, 0x50 }, // (Offset,Value)-Pair #9
-        { 0x3E, 0x08 }, // (Offset,Value)-Pair #10
-
-        // DirectSoundCreateStream+0x54 : retn 0x08
-        { 0x54, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x55, 0x08 }, // (Offset,Value)-Pair #12
-OOVPA_END;
+#define DirectSoundCreateStream_4361 DirectSoundCreateStream_4134
 
 // ******************************************************************
 // * CMcpxStream_Pause
