@@ -8896,13 +8896,13 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
     // so that we can return a valid page aligned pointer
     //
 
-    PVOID pRet = CxbxMalloc(dwSize + 0x1000);
+    PVOID pRet = CxbxMalloc(dwSize + PAGE_SIZE);
 
     // align to page boundary
     {
         DWORD dwRet = (DWORD)pRet;
 
-        dwRet += 0x1000 - dwRet%0x1000;
+        dwRet += PAGE_SIZE - dwRet % PAGE_SIZE;
 
         g_AlignCache.insert(dwRet, pRet);
 

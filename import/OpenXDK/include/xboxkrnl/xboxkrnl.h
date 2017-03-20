@@ -219,6 +219,10 @@ typedef long                            NTSTATUS;
 
 #define PAGE_SHIFT                  12
 
+// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
+#define PAGE_SIZE                   (1 << PAGE_SHIFT)
+#define PAGE_MASK                   (PAGE_SIZE - 1)
+
 // Convert a physical frame number to its corresponding physical address.
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
 	((PCHAR)MM_SYSTEM_PHYSICAL_MAP + ((ULONG)(Pfn) << PAGE_SHIFT))

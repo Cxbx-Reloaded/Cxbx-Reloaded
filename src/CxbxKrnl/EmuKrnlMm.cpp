@@ -110,7 +110,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_END;
 
 	if(Alignment == 0)
-		Alignment = 0x1000; // page boundary at least
+		Alignment = PAGE_SIZE; // page boundary at least
 	//
 	// NOTE: Kludgey (but necessary) solution:
 	//
