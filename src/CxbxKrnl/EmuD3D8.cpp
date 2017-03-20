@@ -4239,7 +4239,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     else
         dwFillMode = D3DFILL_POINT;
 
-    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
+    //g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
     HRESULT ret = g_pD3DDevice8->Clear(Count, pRects, Flags, Color, Z, Stencil);
 
