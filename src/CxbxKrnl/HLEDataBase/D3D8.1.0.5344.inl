@@ -601,6 +601,49 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 5344, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * IDirectD3DDevice8_Release
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_Release, 5344, 8)
+
+        { 0x07, 0x8B },
+        { 0x0C, 0x00 },
+        { 0x13, 0xCF },
+        { 0x1A, 0x1C },
+        { 0x21, 0x05 },
+        { 0x28, 0x00 },
+        { 0x2F, 0x89 },
+        { 0x36, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_GetVisibilityTestResult
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetVisibilityTestResult, 5344, 7)
+
+        { 0x0E, 0x08 },
+        { 0x10, 0xFF },
+        { 0x2A, 0x16 },
+        { 0x3C, 0x76 },
+        { 0x3F, 0x0C },
+        { 0x51, 0x0A },
+        { 0x5F, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_BlockUntilVerticalBlank
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5344, 7)
+
+        { 0x05, 0x6A },
+        { 0x12, 0x00 },
+        { 0x15, 0x6A },
+        { 0x16, 0x06 },
+        { 0x17, 0x05 },
+        { 0x1C, 0x50 },
+        { 0x23, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
@@ -701,7 +744,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetOverlayUpdateStatus, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5233, DISABLED),
@@ -724,7 +767,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShaderDirect, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_Release, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_Release, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5344, PATCH),
 	REGISTER_OOVPA(D3D_SetFence, 5233, XREF),
@@ -766,6 +809,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5344, PATCH),
 };
 
 // ******************************************************************
