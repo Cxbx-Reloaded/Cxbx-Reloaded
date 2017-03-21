@@ -1516,16 +1516,7 @@ OOVPA_END;
 // ******************************************************************
 // * No XRefs! Woohoo!
 // ******************************************************************
-OOVPA_NO_XREF(IDirectSound_SetEffectData, 5788, 7)
-
-        { 0x04, 0x75 },
-        { 0x0A, 0x75 },
-        { 0x10, 0x14 },
-        { 0x16, 0x10 },
-        { 0x1C, 0x1B },
-        { 0x26, 0x5D },
-        { 0x28, 0x18 },
-OOVPA_END;
+#define IDirectSound_SetEffectData_5788 IDirectSound_SetEffectData_5344
 
 // ******************************************************************
 // * DirectSound::CMemoryManager::PoolAlloc
