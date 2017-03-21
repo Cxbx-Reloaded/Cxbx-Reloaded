@@ -766,8 +766,8 @@ bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
-	// Only decode instructions within Xbox memory space
-	if (e->ContextRecord->Eip > EMU_MAX_MEMORY_SIZE || e->ContextRecord->Eip < XBOX_BASE_ADDR) {
+	// Only decode instructions which reside in the loaded Xbe
+	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
 		return false;
 	}
 

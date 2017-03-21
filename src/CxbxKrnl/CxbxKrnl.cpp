@@ -52,7 +52,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
-#include "ReservedMemory.h" // For emulated_memory_placeholder
+#include "ReservedMemory.h" // For virtual_memory_placeholder
 
 #include <shlobj.h>
 #include <clocale>
@@ -225,7 +225,7 @@ void RestoreExeImageHeader()
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
 
-#define CONTIGUOUS_MEMORY_SIZE (64 * 1024 * 1024)
+#define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
 
 void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 {
@@ -323,14 +323,24 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Now we got the arguments, start by initializing the Xbox memory map :
 	// PrepareXBoxMemoryMap()
 	{
+		// Our executable DOS image header must be loaded at 0x00010000
+		// Assert(ExeDosHeader == XBE_IMAGE_BASE);
+
 		// Determine EXE's header locations & size :
 		ExeNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)ExeDosHeader + ExeDosHeader->e_lfanew); // = + 0x138
 		ExeOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(ExeNtHeader->OptionalHeader);
 
-		// verify emulated_memory_placeholder is located at 0x00011000
-		if ((UINT_PTR)(&(emulated_memory_placeholder[0])) != (XBE_IMAGE_BASE + ExeNtHeader->OptionalHeader.BaseOfCode))
+		// verify base of code of our executable is 0x00001000
+		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			MessageBox(NULL, "emulated_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+			MessageBox(NULL, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000", "Cxbx-Reloaded", MB_OK);
+			return; // TODO : Halt(0); 
+		}
+
+		// verify virtual_memory_placeholder is located at 0x00011000
+		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
+		{
+			MessageBox(NULL, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
 			return; // TODO : Halt(0); 
 		}
 
@@ -348,16 +358,15 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Note : NewOptionalHeader->ImageBase can stay at ExeOptionalHeader->ImageBase = 0x00010000
 
-		// Note : Since emulated_memory_placeholder prevents overlap between reserved xbox memory
-		// and Cxbx.exe sections, the new section headers don't have to be patched up.
+		// Note : Since virtual_memory_placeholder prevents overlap between reserved xbox memory
+		// and Cxbx.exe sections, section headers don't have to be patched up.
 
-		// Mark the entire emulated memory range accessible
+		// Mark the virtual memory range completely accessible
 		DWORD OldProtection;
-		VirtualProtect((void*)XBE_IMAGE_BASE, EMU_MAX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
+		VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection);
 
-		// Clear out the entire memory range
-		memset((void*)ExeDosHeader, 0, EMU_MAX_MEMORY_SIZE);
-
+		// Clear out the virtual memory range
+		memset((void*)XBE_IMAGE_BASE, 0, XBE_MAX_VA - XBE_IMAGE_BASE);
 
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
@@ -371,14 +380,17 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
-		CxbxKrnlCleanup("EmuMain : Couldn't init EEPROM!");
+	{
+		MessageBox(NULL, "Couldn't init EEPROM!", "Cxbx-Reloaded", MB_OK);
+		return; // TODO : Halt(0); 
+	}
 
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
 	{
-		// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
+		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder) 
 		g_EmuShared->SetXbePath(xbePath.c_str());
 		CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
@@ -398,6 +410,16 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Copy over the library versions
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
 		// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does - see _ReadXbeBlock()
+
+		// Verify no section would load outside virtual_memory_placeholder (which would overwrite Cxbx code)
+		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+			xbaddr section_end = CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr + CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw;
+			if (section_end >= XBE_MAX_VA)
+			{
+				MessageBox(NULL, "Couldn't load XBE section - please report this!", "Cxbx-Reloaded", MB_OK);
+				return; // TODO : Halt(0); 
+			}
+		}
 
 		// Load all sections to their requested Virtual Address :
 		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
