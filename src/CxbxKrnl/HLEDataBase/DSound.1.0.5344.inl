@@ -612,6 +612,24 @@ OOVPA_NO_XREF(DirectSound_CDirectSound_CommitDeferredSettings, 5344, 11)
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetFilter
+// ******************************************************************
+OOVPA_XREF(DirectSound_CMcpxVoiceClient_SetFilter, 5344, 8,
+
+    XREF_DirectSound_CMcpxVoiceClient_SetFilter,
+    XRefZero)
+
+        { 0x1B, 0xF6 },
+        { 0x1C, 0xBA },
+        { 0x1D, 0xFF },
+        { 0x1E, 0xFF },
+        { 0x1F, 0x00 },
+        { 0x3E, 0x73 },
+        { 0x5E, 0x3E },
+        { 0x7E, 0x0B },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
@@ -733,6 +751,20 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 4134, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetHeadroom, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 4134, PATCH),
+	REGISTER_OOVPA(CMcpxVoiceClient_SetLFO, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetLFO, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLFO, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetLFO, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetEG, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetEG, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetEG, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetEG, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetFilter, 5344, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetFilter, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetFilter, 4627, PATCH),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetDistanceFactor, 5558, XREF), // Add when needed...
 	// REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetDistanceFactor, 5558, XREF), // Add when needed...
 	// REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 5558, PATCH), // Add when needed...
