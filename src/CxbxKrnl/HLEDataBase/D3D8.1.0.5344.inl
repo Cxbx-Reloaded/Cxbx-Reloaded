@@ -644,6 +644,51 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5344, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_PersistDisplay
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_PersistDisplay, 5344, 7)
+
+        { 0x1E, 0x15 },
+        { 0x3A, 0xAB },
+        { 0x3B, 0xF8 },
+        { 0x3C, 0x17 },
+        { 0x3D, 0x00 },
+        { 0x4E, 0xF5 },
+        { 0x6E, 0x01 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderConstantNotInline
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstantNotInline, 5344, 9)
+
+        { 0x0B, 0x10 },
+        { 0x10, 0x75 },
+        { 0x11, 0x15 },
+        { 0x12, 0x56 },
+        { 0x13, 0x57 },
+        { 0x14, 0x8B },
+        { 0x1A, 0xC7 },
+        { 0x31, 0xC2 },
+        { 0x32, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_DeleteVertexShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_DeleteVertexShader, 5344, 6)
+
+        { 0x02, 0x24 },
+        { 0x06, 0xFF },
+        { 0x0A, 0x08 },
+        { 0x0E, 0x00 },
+
+        // D3DDevice_DeleteVertexShader+0x16 : retn 4
+        { 0x18, 0xC2 },
+        { 0x19, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5344
 // ******************************************************************
 OOVPATable D3D8_5344[] = {
@@ -674,7 +719,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderSize, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant4, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
@@ -764,7 +809,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShaderDirect, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Release, 5344, PATCH),
@@ -810,6 +855,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5344, PATCH),
 };
 
 // ******************************************************************
