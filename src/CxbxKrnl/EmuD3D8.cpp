@@ -221,6 +221,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 			char szBuffer[1024] = { 0 };
 			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
 			MessageBoxA(NULL, szBuffer, "CreateThread Failed", 0);
+			EmuShared::Cleanup();
 			ExitProcess(0);
 		}
 

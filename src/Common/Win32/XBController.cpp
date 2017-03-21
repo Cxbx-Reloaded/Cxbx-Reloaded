@@ -35,6 +35,7 @@
 // ******************************************************************
 #include "XBController.h"
 
+#include "CxbxKrnl/EmuShared.h"
 #include "CxbxKrnl/EmuXTL.h"
 
 // This is ridiculous
@@ -1069,6 +1070,7 @@ int XBController::Insert(const char *szDeviceName)
 
     MessageBox(NULL, "Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
 
+	EmuShared::Cleanup();
     ExitProcess(1);
 
     return 0;
