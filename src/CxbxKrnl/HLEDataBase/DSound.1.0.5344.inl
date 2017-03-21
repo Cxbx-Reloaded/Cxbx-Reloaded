@@ -682,6 +682,50 @@ OOVPA_XREF(DirectSound_CDirectSound_EnableHeadphones, 5344, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetAllParameters
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetAllParameters, 5344, 10,
+
+    XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
+    XRefZero)
+
+        { 0x0C, 0x50 },
+        { 0x10, 0xB4 },
+        { 0x14, 0xD9 },
+        { 0x1E, 0x92 },
+        { 0x13, 0x00 },
+        { 0x14, 0xD9 },
+        { 0x15, 0x5A },
+        { 0x16, 0x08 },
+        { 0x17, 0xD9 },
+        { 0x21, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound_CDirectSoundVoice::SetConeOutsideVolume
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetConeOutsideVolume, 5344, 9,
+
+    XREF_DSVOICESETCONEOUTSIDEVOLUME,
+    XRefZero)
+
+        // DirectSound_CDirectSoundVoice_SetConeOutsideVolume+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // DirectSound_CDirectSoundVoice_SetConeOutsideVolume+0x11 : mov [eax+34h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x50 },
+        { 0x13, 0x34 },
+
+        // DirectSound_CDirectSoundVoice_SetConeOutsideVolume+0x30 : retn 0Ch
+        { 0x31, 0x0C },
+        { 0x32, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
@@ -828,6 +872,16 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSound_GetEffectData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_GetEffectData, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetEffectData, 5344, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetOutputBuffer, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetOutputBuffer, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetOutputBuffer, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetOutputBuffer, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetAllParameters, 5344, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetAllParameters, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetConeOutsideVolume, 5344, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetConeOutsideVolume, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 4627, PATCH),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetDistanceFactor, 5558, XREF), // Add when needed...
 	// REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetDistanceFactor, 5558, XREF), // Add when needed...
 	// REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 5558, PATCH), // Add when needed...
