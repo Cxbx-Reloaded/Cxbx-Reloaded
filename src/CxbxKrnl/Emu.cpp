@@ -78,34 +78,6 @@ LARGE_INTEGER	HostSystemTimeDelta = {};
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
-// Dll entry point, exit point, ...
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    static HINSTANCE hInitInstance = NULL;
-
-    if(fdwReason == DLL_PROCESS_ATTACH)
-    {
-#ifdef _DEBUG
-        InitializeCriticalSection(&dbgCritical);
-#endif
-
-        EmuShared::Init();
-        hInitInstance = hinstDLL;
-    }
-
-    if(fdwReason == DLL_PROCESS_DETACH)
-    {
-        if(hInitInstance == hinstDLL)
-            EmuShared::Cleanup();
-
-#ifdef _DEBUG
-        DeleteCriticalSection(&dbgCritical);
-#endif
-    }
-
-    return TRUE;
-}
-
 // print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
 void NTAPI EmuWarning(const char *szWarningMessage, ...)
@@ -176,6 +148,7 @@ void EmuExceptionExitProcess()
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
+	EmuShared::Cleanup();
 	ExitProcess(1);
 }
 

@@ -50,6 +50,7 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuEEPROM.h" // For EEPROM
+#include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
 // prevent name collisions
@@ -473,6 +474,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 		LOG_UNIMPLEMENTED();
 	}
 
+	EmuShared::Cleanup();
 	ExitProcess(EXIT_SUCCESS);
 }
 
