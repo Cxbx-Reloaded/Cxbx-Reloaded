@@ -638,6 +638,7 @@ void CxbxKrnlInit
 	CxbxLaunchXbe(Entry);
     DbgPrintf("EmuMain: Initial thread ended.\n");
     fflush(stdout);
+	EmuShared::Cleanup();
     CxbxKrnlTerminateThread();
     return;
 }
@@ -753,6 +754,7 @@ void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     if(CxbxKrnl_hEmuParent != NULL)
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
+	EmuShared::Cleanup();
     TerminateProcess(g_CurrentProcessHandle, 0);
 
     return;
