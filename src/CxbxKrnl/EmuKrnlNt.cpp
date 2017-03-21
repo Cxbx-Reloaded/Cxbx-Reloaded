@@ -61,7 +61,6 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
-#define MEM_NOZERO 0x800000
 #define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
 
 #define MM_HIGHEST_USER_ADDRESS     (PVOID)0x7FFEFFFF

@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(LowestAcceptableAddress)
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
-		LOG_FUNC_ARG(ProtectionType)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 		LOG_FUNC_END;
 
 	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
