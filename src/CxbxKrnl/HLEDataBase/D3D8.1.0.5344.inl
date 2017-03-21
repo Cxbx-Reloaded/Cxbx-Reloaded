@@ -683,9 +683,39 @@ OOVPA_NO_XREF(D3DDevice_DeleteVertexShader, 5344, 6)
         { 0x0A, 0x08 },
         { 0x0E, 0x00 },
 
-        // D3DDevice_DeleteVertexShader+0x16 : retn 4
+        // D3DDevice_DeleteVertexShader+0x18 : retn 4
         { 0x18, 0xC2 },
         { 0x19, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_DrawIndexedVerticesUP
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 5344, 9)
+
+        { 0x05, 0x14 },
+        { 0x06, 0x53 },
+        { 0x07, 0x56 },
+        { 0x08, 0x8B },
+        { 0x09, 0x35 },
+        { 0x2A, 0xFC },
+        { 0x3A, 0x89 },
+        { 0x4A, 0x81 },
+        { 0x5A, 0x56 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_DeletePixelShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_DeletePixelShader, 5344, 7)
+
+        { 0x02, 0x24 },
+        { 0x06, 0x75 },
+        { 0x0A, 0x04 },
+        { 0x0E, 0x0B },
+        { 0x12, 0x80 },
+        { 0x1A, 0xC2 },
+        { 0x1B, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -720,7 +750,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant4, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5344, PATCH),
@@ -856,6 +886,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_DrawIndexedVerticesUP, 5344, PATCH),
 };
 
 // ******************************************************************
