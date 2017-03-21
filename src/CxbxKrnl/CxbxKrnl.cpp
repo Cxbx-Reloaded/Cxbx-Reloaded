@@ -296,6 +296,8 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	return memory;
 }
 
+#pragma optimize("", off)
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -473,6 +475,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		);
 	}
 }
+#pragma optimize("", on)
 
 void CxbxKrnlInit
 (
