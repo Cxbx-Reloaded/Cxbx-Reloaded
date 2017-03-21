@@ -89,6 +89,8 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, PAGE_READWRITE);
 }
 
+#define PAGE_KNOWN_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_NOCACHE | PAGE_WRITECOMBINE)
+
 // ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx()
 // ******************************************************************
@@ -106,29 +108,44 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(LowestAcceptableAddress)
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
-		LOG_FUNC_ARG(ProtectionType)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 		LOG_FUNC_END;
 
-	if(Alignment == 0)
-		Alignment = 0x1000; // page boundary at least
-	//
-	// NOTE: Kludgey (but necessary) solution:
-	//
-	// Since this memory must be aligned on a page boundary, we must allocate an extra page
-	// so that we can return a valid page aligned pointer
-	//
+	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
 
-	// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-	PVOID pRet = CxbxMalloc(NumberOfBytes + Alignment);
+	if (Alignment < PAGE_SIZE)
+		Alignment = PAGE_SIZE; // page boundary at least
 
-	// align to page boundary
+	// Only known flags are allowed
+	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
+		pRet = NULL;
+
+	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
+	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
+		pRet = NULL;
+
+	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
+	if ((ProtectionType & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) == (PAGE_NOCACHE | PAGE_WRITECOMBINE))
+		pRet = NULL;
+
+	// Allocate when input arguments are valid
+	if (pRet != NULL)
 	{
+		//
+		// NOTE: Kludgey (but necessary) solution:
+		//
+		// Since this memory must be aligned on a page boundary, we must allocate an extra page
+		// so that we can return a valid page aligned pointer
+		//
+
+		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
+		pRet = CxbxMalloc(NumberOfBytes + Alignment);
+
+		// align to page boundary
 		DWORD dwRet = (DWORD)pRet;
 
 		dwRet += Alignment - dwRet % Alignment;
-
 		g_AlignCache.insert(dwRet, pRet);
-
 		pRet = (PVOID)dwRet;
 	}
 

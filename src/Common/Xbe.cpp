@@ -42,6 +42,8 @@
 #include <cstring>
 #include <ctime>
 
+#define PAGE_SIZE 0x1000
+
 // construct via Xbe file
 Xbe::Xbe(const char *x_szFilename)
 {
@@ -99,7 +101,7 @@ Xbe::Xbe(const char *x_szFilename)
     {
         printf("Xbe::Xbe: Reading Image Header Extra Bytes...");
 
-        m_ExSize = RoundUp(m_Header.dwSizeofHeaders, 0x1000) - sizeof(m_Header);
+        m_ExSize = RoundUp(m_Header.dwSizeofHeaders, PAGE_SIZE) - sizeof(m_Header);
 
         m_HeaderEx = new char[m_ExSize];
 
@@ -463,7 +465,7 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         fgetpos(XbeFile, &pos);
 
-        remaining = (uint32)(0x1000 - ftell(XbeFile)%0x1000);
+        remaining = (uint32)(PAGE_SIZE - ftell(XbeFile) % PAGE_SIZE);
 
         // write remaining bytes
         {
