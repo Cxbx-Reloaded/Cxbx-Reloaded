@@ -724,11 +724,6 @@ DWORD WINAPI EMUPATCH(XInputGetDeviceDescription)
 );
 
 // ******************************************************************
-// * patch: XAutoPowerDownResetTimer
-// ******************************************************************
-int WINAPI EMUPATCH(XAutoPowerDownResetTimer)();
-
-// ******************************************************************
 // * patch: ReadFileEx
 // ******************************************************************
 BOOL WINAPI EMUPATCH(ReadFileEx)
