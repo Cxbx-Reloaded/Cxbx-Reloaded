@@ -202,6 +202,25 @@ typedef long                            NTSTATUS;
 #define PAGE_WRITECOMBINE      0x400
 
 // ******************************************************************
+// * MEM Masks
+// ******************************************************************
+#define MEM_COMMIT                  0x1000      
+#define MEM_RESERVE                 0x2000      
+#define MEM_DECOMMIT                0x4000      
+#define MEM_RELEASE                 0x8000      
+#define MEM_FREE                    0x10000     
+#define MEM_PRIVATE                 0x20000     
+#define MEM_MAPPED                  0x40000     
+//#define MEM_RESET                 0x80000     
+#define MEM_TOP_DOWN                0x100000     
+#define MEM_WRITE_WATCH             0x200000    
+#define MEM_PHYSICAL                0x400000    
+#define MEM_NOZERO                  0x800000 // Replaces MEM_ROTATE on WinXP+
+//#define MEM_IMAGE                 0x1000000 // Declare like below, to prevent warning C4005: 'MEM_IMAGE': macro redefinition
+#define SEC_IMAGE                   0x1000000     
+#define MEM_IMAGE                   SEC_IMAGE    
+
+// ******************************************************************
 // * memory
 // ******************************************************************
 
@@ -218,6 +237,10 @@ typedef long                            NTSTATUS;
 #define MM_INSTANCE_PAGE_COUNT      16
 
 #define PAGE_SHIFT                  12
+
+// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
+#define PAGE_SIZE                   (1 << PAGE_SHIFT)
+#define PAGE_MASK                   (PAGE_SIZE - 1)
 
 // Convert a physical frame number to its corresponding physical address.
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
