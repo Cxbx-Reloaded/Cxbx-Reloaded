@@ -774,7 +774,6 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_NormalizeNormals, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),
