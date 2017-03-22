@@ -822,6 +822,30 @@ OOVPA_XREF(XAudioCreateAdpcmFormat, 5344, 2,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound_CDirectSoundVoice::SetConeAngles
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetConeAngles, 5344, 9,
+
+    XREF_DSVOICESETCONEANGLES,
+    XRefZero)
+
+        // DirectSound_CDirectSoundVoice_SetConeAngles+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // DirectSound_CDirectSoundVoice_SetConeAngles+0x11 : mov [ecx+20h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x51 },
+        { 0x13, 0x20 },
+
+        // DirectSound_CDirectSoundVoice_SetConeAngles+0x40 : retn 10h
+        { 0x41, 0x10 },
+        { 0x42, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
@@ -977,6 +1001,11 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
 	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),
 	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetConeAngles, 5344, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetConeAngles, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 };
 
 // ******************************************************************
