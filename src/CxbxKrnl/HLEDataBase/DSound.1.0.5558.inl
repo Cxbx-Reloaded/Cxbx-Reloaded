@@ -744,32 +744,12 @@ OOVPA_END;
 // ******************************************************************
 // * WaveFormat::CreateXboxAdpcmFormat
 // ******************************************************************
-OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 5558, 7,
-
-    XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,
-    XRefZero)
-
-        { 0x07, 0x08 },
-        { 0x10, 0xE9 },
-        { 0x19, 0x8D },
-        { 0x22, 0x66 },
-        { 0x2B, 0x04 },
-        { 0x34, 0x66 },
-        { 0x3D, 0x12 },
-OOVPA_END;
+#define WaveFormat_CreateXboxAdpcmFormat_5558 WaveFormat_CreateXboxAdpcmFormat_5344
 
 // ******************************************************************
 // * XAudioCreateAdpcmFormat
 // ******************************************************************
-OOVPA_XREF(XAudioCreateAdpcmFormat, 5558, 2,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat ),
-
-        { 0x00, 0xE9 },
-OOVPA_END;
+#define XAudioCreateAdpcmFormat_5558 XAudioCreateAdpcmFormat_5344
 
 // ******************************************************************
 // * DirectSound_CDirectSoundVoice::SetFormat

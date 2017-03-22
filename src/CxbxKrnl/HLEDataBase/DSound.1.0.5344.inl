@@ -774,6 +774,54 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetRolloffFactor, 5344, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetRolloffCurve
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetRolloffCurve, 5344, 8,
+
+    XREF_DSVOICESETROLLOFFCURVE,
+    XRefZero)
+
+        { 0x07, 0x8B },
+        { 0x10, 0x08 },
+        { 0x11, 0x89 },
+        { 0x12, 0x51 },
+        { 0x13, 0x50 },
+        { 0x14, 0x8B },
+        { 0x3E, 0x33 },
+        { 0x40, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
+// * WaveFormat::CreateXboxAdpcmFormat
+// ******************************************************************
+OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 5344, 7,
+
+    XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,
+    XRefZero)
+
+        { 0x07, 0x08 },
+        { 0x10, 0xE9 },
+        { 0x19, 0x8D },
+        { 0x22, 0x66 },
+        { 0x2B, 0x04 },
+        { 0x34, 0x66 },
+        { 0x3D, 0x12 },
+OOVPA_END;
+
+// ******************************************************************
+// * XAudioCreateAdpcmFormat
+// ******************************************************************
+OOVPA_XREF(XAudioCreateAdpcmFormat, 5344, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x01, XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat ),
+
+        { 0x00, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
@@ -867,7 +915,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMode, 5344, XREF), // Add when needed...
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMode, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 5233, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetRolloffCurve, 5233, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetRolloffCurve, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetRolloffCurve, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 5233, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
@@ -926,6 +974,9 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetConeOutsideVolume, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetConeOutsideVolume, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 4627, PATCH),
+	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
+	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
 };
 
 // ******************************************************************
