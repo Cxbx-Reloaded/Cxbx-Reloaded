@@ -122,11 +122,13 @@ void EmuShared::Init()
 // ******************************************************************
 void EmuShared::Cleanup()
 {
-    if(--(g_EmuShared->m_RefCount) <= 0)
-        g_EmuShared->EmuShared::~EmuShared();
+	if (g_EmuShared != nullptr) {
+		if (--(g_EmuShared->m_RefCount) <= 0)
+			g_EmuShared->EmuShared::~EmuShared();
 
-    UnmapViewOfFile(g_EmuShared);
-	g_EmuShared = nullptr;
+		UnmapViewOfFile(g_EmuShared);
+		g_EmuShared = nullptr;
+	}
 }
 
 // ******************************************************************

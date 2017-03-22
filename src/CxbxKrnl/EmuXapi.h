@@ -142,7 +142,9 @@ POLLING_PARAMETERS_HANDLE, *PPOLLING_PARAMETERS_HANDLE;
 // ******************************************************************
 typedef struct _XPP_DEVICE_TYPE
 {
-    ULONG Reserved[3];
+	ULONG CurrentConnected;
+	ULONG ChangeConnected;
+	ULONG PreviousConnected;
 }
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
@@ -720,11 +722,6 @@ DWORD WINAPI EMUPATCH(XInputGetDeviceDescription)
     HANDLE	hDevice,
     PVOID	pDescription
 );
-
-// ******************************************************************
-// * patch: XAutoPowerDownResetTimer
-// ******************************************************************
-int WINAPI EMUPATCH(XAutoPowerDownResetTimer)();
 
 // ******************************************************************
 // * patch: ReadFileEx

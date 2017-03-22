@@ -164,12 +164,12 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 {
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-    DWORD ret = 0;
+	// Report DeviceConnected in Port 0
+	DeviceType->CurrentConnected = 1;
 
-    if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
-        ret = (1 << 0);    // Return 1 Controller
-    else
-        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+    DWORD ret = DeviceType->CurrentConnected;
+	DeviceType->ChangeConnected = 0;
+	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
 
 	RETURN(ret);
 }
@@ -196,7 +196,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     // Return 1 Controller Inserted initially, then no changes forever
     if(bFirst)
     {
-        if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
+        if(DeviceType->CurrentConnected == 0 && DeviceType->ChangeConnected == 0 && DeviceType->PreviousConnected == 0)
 		{
 			*pdwInsertions = (1<<0);
 			*pdwRemovals   = 0;
@@ -206,7 +206,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		else
 		{
 			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->CurrentConnected, DeviceType->ChangeConnected, DeviceType->PreviousConnected);
 		}
     }
     else
@@ -393,7 +393,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 		LOG_FUNC_ARG_OUT(pCapabilities)
 		LOG_FUNC_END;
 
-    DWORD ret = ERROR_INVALID_HANDLE;
+    DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -401,12 +401,10 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     {
         DWORD dwPort = pph->dwPort;
 
-        if((dwPort >= 0) && (dwPort <= 3))
+        if(dwPort == 0)
         {
             pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
-
-            ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
-
+			ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
             ret = ERROR_SUCCESS;
         }
     }
@@ -1217,19 +1215,6 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 	LOG_UNIMPLEMENTED();
 
 	RETURN(ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
-}
-
-// ******************************************************************
-// * patch: XAutoPowerDownResetTimer
-// ******************************************************************
-int WINAPI XTL::EMUPATCH(XAutoPowerDownResetTimer)()
-{
-	LOG_FUNC();
-
-	// Meh, that's what the 'X' is for! =]
-	LOG_UNIMPLEMENTED();
-
-	RETURN(TRUE);
 }
 
 // ******************************************************************

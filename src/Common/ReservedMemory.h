@@ -40,18 +40,21 @@ extern "C"
 {
 #endif
 
-#include "CxbxKrnl/EmuShared.h" // For EMU_MAX_MEMORY_SIZE and OPCODE_NOP_90
+#include "CxbxKrnl/EmuShared.h" // For XBE_MAX_VA, XBE_IMAGE_BASE and CXBX_BASE_OF_CODE
 
-// The following code claims 0x0001000 + 128 MB;
+// The following code reserves virtual addresses from 0x00011000 upwards;
+#define VM_PLACEHOLDER_SIZE (XBE_MAX_VA - XBE_IMAGE_BASE - CXBX_BASE_OF_CODE)
+
 // First, declare the '.text' section again :
 #pragma section(".text") // Note : 'read,write,execute' would cause a warning
 // Then place the following variable into the '.text' section :
 __declspec(allocate(".text"))
 // This variable *MUST* be this large, for it to take up address space
 // so that all other code and data in this module are placed outside of the
-// maximum emulated memory range.
-unsigned char emulated_memory_placeholder[EMU_MAX_MEMORY_SIZE]; // = { OPCODE_NOP_90 };
-// TODO : Try to get the same result without enlarging the executable by 128 MB!
+// maximum virtual memory range.
+unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE]; // = { OPCODE_NOP_90 };
+// TODO : Try to get the same result without enlarging our executable by 128 MB!
+
 
 #if defined(__cplusplus)
 }

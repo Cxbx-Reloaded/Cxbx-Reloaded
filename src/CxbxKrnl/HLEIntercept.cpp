@@ -308,12 +308,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion = 3911;
 					if (OrigBuildVersion == 4531)
 						BuildVersion = 4361;
-					// Quick test (JSRF)
-					if (OrigBuildVersion == 4134)
-						BuildVersion = 4361;
-					// Quick test (Simpsons: RoadRage)
-					//	if(BuildVersion == 4034)
-					//		BuildVersion = 3911;
 				}
 
 				if(bXRefFirstPass)
@@ -360,12 +354,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								//XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x25) - 0x19F + 72*4);  // TODO: Clean up (?)
 								//patchOffset = 142*4 - 72*4; // TODO: Verify
                             }
-                            else if(BuildVersion == 4034 || BuildVersion == 4134)
+                            else if(BuildVersion == 4034)
                             {
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
                                 patchOffset = 142*4 - 82*4;
                             }
-                            else if(BuildVersion == 4361)
+                            else if(BuildVersion == 4134 || BuildVersion == 4361)
                             {
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x2B) - 0x200 + 82*4);
                                 patchOffset = 142*4 - 82*4;
