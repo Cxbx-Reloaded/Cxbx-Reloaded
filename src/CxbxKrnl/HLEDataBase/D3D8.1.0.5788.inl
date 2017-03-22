@@ -49,16 +49,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVisibilityTestResult
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVisibilityTestResult, 5788, 7)
-
-        { 0x0E, 0x08 },
-        { 0x10, 0xFF },
-        { 0x2A, 0x16 },
-        { 0x3C, 0x76 },
-        { 0x3F, 0x0C },
-        { 0x51, 0x0A },
-        { 0x5F, 0x0C },
-OOVPA_END;
+#define D3DDevice_GetVisibilityTestResult_5788 D3DDevice_GetVisibilityTestResult_5344
 
 // ******************************************************************
 // * D3DDevice_GetViewport

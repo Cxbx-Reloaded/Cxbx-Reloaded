@@ -663,27 +663,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreatePixelShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5558, 11)
-
-        // D3DDevice_CreatePixelShader+0x05 : push 0xFC
-        { 0x05, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x06, 0xFC }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_CreatePixelShader+0x10 : mov eax, 0x8007000E
-        { 0x13, 0xB8 }, // (Offset,Value)-Pair #3
-        { 0x14, 0x0E }, // (Offset,Value)-Pair #4
-        { 0x15, 0x00 }, // (Offset,Value)-Pair #5
-        { 0x16, 0x07 }, // (Offset,Value)-Pair #6
-        { 0x17, 0x80 }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_CreatePixelShader+0x31 : mov ecx, 0x3C
-        { 0x34, 0xB9 }, // (Offset,Value)-Pair #8
-        { 0x35, 0x3C }, // (Offset,Value)-Pair #9
-
-        // D3DDevice_CreatePixelShader+0x42 : retn 0x08
-        { 0x45, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x46, 0x08 }, // (Offset,Value)-Pair #11
-OOVPA_END;
+#define D3DDevice_CreatePixelShader_5558 D3DDevice_CreatePixelShader_5344
 
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
