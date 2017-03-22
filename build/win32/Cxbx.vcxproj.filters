@@ -525,6 +525,21 @@
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\About.jpg">
@@ -687,6 +702,21 @@
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.inl">
       <Filter>HLEDatabase</Filter>
     </None>
   </ItemGroup>
