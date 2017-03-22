@@ -10,8 +10,11 @@ The project began life as a fork of Cxbx with added 64-bit support. Work is curr
 Cxbx-Reloaded is still pretty unstable, don't expect it to run much at this point.
 
 ## System Requirements
-  * Windows 10 64-bit (May work on other versions, but this has not been tested. 32-Bit Windows is NOT supported).
+  * 64-bit Windows (7, 8 and 10 are known to work, 32-bit installations are not supported)
   * A graphics card that supports Direct3D 8.
+
+## Automated Builds
+Cxbx-Reloaded is not yet ready for general release, however the latest build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) by navigating to Configuration: Release => Artifacts => export\Release.zip
 
 ## Bug Reports
 Cxbx-Reloaded is in the early stages right now and most games will either crash or do nothing, please do not submit issues for these games. 
