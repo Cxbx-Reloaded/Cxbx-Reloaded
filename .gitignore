@@ -19,6 +19,9 @@
 #Documentation output
 doc/doxygen/html
 
+#Export
+export
+
 #Visual Studio files
 *.[Oo]bj
 *.user

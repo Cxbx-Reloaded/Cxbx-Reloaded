@@ -525,6 +525,9 @@
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxVersion.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\About.jpg">

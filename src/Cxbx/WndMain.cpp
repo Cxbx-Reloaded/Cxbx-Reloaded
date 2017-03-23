@@ -39,6 +39,7 @@
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
+#include "CxbxVersion.h"
 
 #include <io.h>
 
