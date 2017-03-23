@@ -846,16 +846,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetModelView
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetModelView, 5558, 7)
-
-        { 0x05, 0x57 },
-        { 0x0A, 0x85 },
-        { 0x10, 0xB0 },
-        { 0x16, 0x10 },
-        { 0x1C, 0x5E },
-        { 0x22, 0xC1 },
-        { 0x28, 0xE0 },
-OOVPA_END;
+#define D3DDevice_GetModelView_5558 D3DDevice_GetModelView_4134
 
 // ******************************************************************
 // * D3DDevice_SetBackMaterial
@@ -1113,16 +1104,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_InsertCallback
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_InsertCallback, 5558, 7)
-
-        { 0x0C, 0x72 },
-        { 0x1A, 0x10 },
-        { 0x28, 0x85 },
-        { 0x36, 0xC7 },
-        { 0x44, 0x0C },
-        { 0x52, 0x00 },
-        { 0x60, 0x00 },
-OOVPA_END;
+#define D3DDevice_InsertCallback_5558 D3DDevice_InsertCallback_5028
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_LineWidth
@@ -1157,19 +1139,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_FlushVertexCache
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_FlushVertexCache, 5558, 10)
-
-        { 0x00, 0x56 },
-        { 0x07, 0x8B },
-        { 0x08, 0x06 },
-        { 0x0D, 0x05 },
-        { 0x13, 0xC7 },
-        { 0x15, 0x10 },
-        { 0x17, 0x04 },
-        { 0x1C, 0x00 },
-        { 0x21, 0xC0 },
-        { 0x26, 0xC3 },
-OOVPA_END;
+#define D3DDevice_FlushVertexCache_5558 D3DDevice_FlushVertexCache_4134
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_LogicOp

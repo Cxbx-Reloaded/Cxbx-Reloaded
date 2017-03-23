@@ -632,16 +632,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5344, 7)
-
-        { 0x05, 0x6A },
-        { 0x12, 0x00 },
-        { 0x15, 0x6A },
-        { 0x16, 0x06 },
-        { 0x17, 0x05 },
-        { 0x1C, 0x50 },
-        { 0x23, 0xC3 },
-OOVPA_END;
+#define D3DDevice_BlockUntilVerticalBlank_5344 D3DDevice_BlockUntilVerticalBlank_5028
 
 // ******************************************************************
 // * D3DDevice_PersistDisplay
@@ -660,18 +651,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstantNotInline
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstantNotInline, 5344, 9)
-
-        { 0x0B, 0x10 },
-        { 0x10, 0x75 },
-        { 0x11, 0x15 },
-        { 0x12, 0x56 },
-        { 0x13, 0x57 },
-        { 0x14, 0x8B },
-        { 0x1A, 0xC7 },
-        { 0x31, 0xC2 },
-        { 0x32, 0x04 },
-OOVPA_END;
+#define D3DDevice_SetVertexShaderConstantNotInline_5344 D3DDevice_SetVertexShaderConstantNotInline_5028
 
 // ******************************************************************
 // * D3DDevice_DeleteVertexShader

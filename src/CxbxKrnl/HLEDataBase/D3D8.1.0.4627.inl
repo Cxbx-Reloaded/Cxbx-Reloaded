@@ -100,28 +100,6 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4627, 11)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_CreateDevice
-// ******************************************************************
-OOVPA_NO_XREF(Direct3D_CreateDevice, 5028, 8)
-
-        // Direct3D_CreateDevice+0x0A : jnz +0x0A
-        { 0x0A, 0x75 }, // (Offset,Value)-Pair #1
-        { 0x0B, 0x0A }, // (Offset,Value)-Pair #2
-
-        // Direct3D_CreateDevice+0x80 : repe stosd
-        { 0x80, 0xF3 }, // (Offset,Value)-Pair #3
-        { 0x81, 0xAB }, // (Offset,Value)-Pair #4
-
-        // Direct3D_CreateDevice+0x83 : mov eax, esi
-        { 0x83, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x84, 0xC6 }, // (Offset,Value)-Pair #6
-
-        // Direct3D_CreateDevice+0x91 : retn 0x18
-        { 0x91, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x92, 0x18 }, // (Offset,Value)-Pair #8
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4627, 11)
