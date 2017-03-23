@@ -517,7 +517,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
 		if (info != nullptr)
 		{
-			value_addr = (void *)(EEPROM + info->value_offset);
+			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
 			result_length = info->value_length;
 		};
 	}

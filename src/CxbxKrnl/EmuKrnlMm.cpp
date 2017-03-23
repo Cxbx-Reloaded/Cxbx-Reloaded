@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(LowestAcceptableAddress)
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
-		LOG_FUNC_ARG(ProtectionType)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 		LOG_FUNC_END;
 
 	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
@@ -121,7 +121,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		pRet = NULL;
 
 	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (((ProtectionType & PAGE_READONLY) > 0) != ((ProtectionType & PAGE_READWRITE) > 0))
+	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
 		pRet = NULL;
 
 	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed

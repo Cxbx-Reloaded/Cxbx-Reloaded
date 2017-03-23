@@ -386,8 +386,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Be aware that TLS might be absent (for example in homebrew "Wolf3d-xbox")
 	if (pTLS != nullptr) {
-		// Make sure the TLS Start and End addresses are within Xbox Memory
-		if (pTLS->dwDataStartAddr >= EMU_MAX_MEMORY_SIZE || pTLS->dwDataEndAddr >= EMU_MAX_MEMORY_SIZE) {
+		// Make sure the TLS Start and End addresses are within Xbox virtual memory
+		if (pTLS->dwDataStartAddr >= XBE_MAX_VA || pTLS->dwDataEndAddr >= XBE_MAX_VA) {
 			return;
 		}
 
