@@ -188,6 +188,7 @@ void MemoryManager::Free(void* block)
 		return;
 	}
 
+	__debugbreak();
 	CxbxKrnlCleanup("Fatal: Attempted to free memory that was not allocated via MemoryManager");	
 }
 
@@ -200,8 +201,6 @@ size_t MemoryManager::QueryAllocationSize(void* block)
 		RETURN(info.size);
 	}
 
-	CxbxKrnlCleanup("Fatal: Attempted to query memory that was not allocated via MemoryManager");
-
-	// Never reached
+	EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
 	return 0;
 }
