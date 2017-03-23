@@ -528,6 +528,9 @@
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxVersion.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\MemoryManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
