@@ -47,6 +47,7 @@
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
 #include "EmuAlloc.h"
+#include "MemoryManager.h"
 //#include "Logging.h" // For hex4()
 
 
@@ -570,7 +571,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 void _CxbxPVOIDDeleter(PVOID *ptr)
 {
 	if (*ptr)
-		CxbxFree(*ptr);
+		g_MemoryManager.Free(*ptr);
 }
 
 // ----------------------------------------------------------------------------
@@ -588,7 +589,7 @@ NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xboxkrnl::FILE_LINK_INFORMATION
 
 	// Build the native FILE_LINK_INFORMATION struct
 	*Length = sizeof(NtDll::FILE_LINK_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_LINK_INFORMATION *ntLinkInfo = (NtDll::FILE_LINK_INFORMATION *) CxbxCalloc(1, *Length);
+	NtDll::FILE_LINK_INFORMATION *ntLinkInfo = (NtDll::FILE_LINK_INFORMATION *) g_MemoryManager.AllocateZeroed(1, *Length);
 	ntLinkInfo->ReplaceIfExists = xboxLinkInfo->ReplaceIfExists;
 	ntLinkInfo->RootDirectory = RootDirectory;
 	ntLinkInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
@@ -608,7 +609,7 @@ NtDll::FILE_RENAME_INFORMATION * _XboxToNTRenameInfo(xboxkrnl::FILE_RENAME_INFOR
 
 	// Build the native FILE_RENAME_INFORMATION struct
 	*Length = sizeof(NtDll::FILE_RENAME_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_RENAME_INFORMATION *ntRenameInfo = (NtDll::FILE_RENAME_INFORMATION *) CxbxCalloc(1, *Length);
+	NtDll::FILE_RENAME_INFORMATION *ntRenameInfo = (NtDll::FILE_RENAME_INFORMATION *) g_MemoryManager.AllocateZeroed(1, *Length);
 	ntRenameInfo->ReplaceIfExists = xboxRenameInfo->ReplaceIfExists;
 	ntRenameInfo->RootDirectory = RootDirectory;
 	ntRenameInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);

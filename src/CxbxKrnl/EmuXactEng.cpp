@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
+#include "MemoryManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -78,7 +79,7 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 
 	// TODO: Any other form of initialization?
 
-	*ppEngine = (X_XACTEngine*) CxbxCalloc(1, sizeof( X_XACTEngine ) );
+	*ppEngine = (X_XACTEngine*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTEngine ) );
 
 		
 	
@@ -122,7 +123,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*) CxbxCalloc(1, sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTWaveBank ) );
 
 	RETURN(S_OK);
 }
@@ -145,7 +146,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*) CxbxCalloc(1, sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTWaveBank ) );
 
 	RETURN(S_OK);
 }
@@ -170,7 +171,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 
 	// TODO: Implement
 
-	*ppSoundBank = (X_XACTSoundBank*) CxbxCalloc(1, sizeof( X_XACTSoundBank ) );
+	*ppSoundBank = (X_XACTSoundBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTSoundBank ) );
 
 	RETURN(S_OK);
 }
@@ -216,7 +217,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 		LOG_FUNC_ARG(ppSoundSource)
 		LOG_FUNC_END;
 
-	*ppSoundSource = (X_XACTSoundSource*) CxbxCalloc(1, sizeof( X_XACTSoundSource ) );
+	*ppSoundSource = (X_XACTSoundSource*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTSoundSource ) );
 
 	RETURN(S_OK);
 }
@@ -513,7 +514,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 	// to IXACTWaveBank is released.
 
 //	if(pWaveBank)
-//		free(pWaveBank);
+//		g_MemoryManager.Free(pWaveBank);
 
 	RETURN(S_OK);
 }

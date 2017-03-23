@@ -50,9 +50,6 @@ inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
-// check the allocation size of a given virtual address
-extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
-
 // print call stack trace
 #ifdef _DEBUG
 void EmuPrintStackTrace(PCONTEXT ContextRecord);

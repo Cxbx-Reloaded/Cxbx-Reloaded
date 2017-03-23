@@ -53,6 +53,7 @@ namespace xboxkrnl
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
+#include "MemoryManager.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -224,8 +225,6 @@ void RestoreExeImageHeader()
 	ExeDosHeader->e_lfanew = NewDosHeader->e_lfanew; // Overwrites part of XbeHeader.pbDigitalSignature
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
-
-#define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
 
 void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 {
@@ -660,7 +659,7 @@ void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_MemoryManager.Allocate(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
