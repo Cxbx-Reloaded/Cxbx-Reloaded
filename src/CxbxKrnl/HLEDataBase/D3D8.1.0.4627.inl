@@ -3100,6 +3100,21 @@ OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 4627, 9)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_PrimeVertexCache
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_PrimeVertexCache, 4627, 8)
+
+        { 0x1A, 0x8B },
+        { 0x1B, 0x4D },
+        { 0x1C, 0x04 },
+        { 0x1D, 0xD1 },
+        { 0x1E, 0xEE },
+        { 0x2E, 0xC7 },
+        { 0x3E, 0x00 },
+        { 0x4E, 0x89 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4627
 // ******************************************************************
 OOVPATable D3D8_4627[] = {
@@ -3314,6 +3329,7 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
+	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
 };
 
 // ******************************************************************
