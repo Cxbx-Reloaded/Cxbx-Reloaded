@@ -330,7 +330,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DTexture_LockRect
 // ******************************************************************
-#define D3DTexture_LockRect_5233 D3DTexture_LockRect_5028
+#define D3DTexture_LockRect_5233 D3DTexture_LockRect_3925
 
 // ******************************************************************
 // * Get2DSurfaceDesc

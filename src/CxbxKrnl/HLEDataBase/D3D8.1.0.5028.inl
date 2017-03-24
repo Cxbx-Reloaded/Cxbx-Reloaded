@@ -151,20 +151,6 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 5028, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DTexture_LockRect
-// ******************************************************************
-OOVPA_NO_XREF(D3DTexture_LockRect, 5028, 7)
-
-        { 0x03, 0x14 },
-        { 0x08, 0x8B },
-        { 0x0D, 0x8B },
-        { 0x12, 0x8B },
-        { 0x17, 0x50 },
-        { 0x20, 0xC2 },
-        { 0x21, 0x14 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5028, 7)
@@ -816,7 +802,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
-	REGISTER_OOVPA(D3DTexture_LockRect, 5028, PATCH),
+	REGISTER_OOVPA(D3DTexture_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3925, PATCH),
