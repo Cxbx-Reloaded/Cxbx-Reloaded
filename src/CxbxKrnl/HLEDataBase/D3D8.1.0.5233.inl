@@ -498,16 +498,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DVertexBuffer_GetDesc
 // ******************************************************************
-OOVPA_NO_XREF(D3DVertexBuffer_GetDesc, 5233, 7)
-
-        { 0x02, 0x24 },
-        { 0x06, 0x74 },
-        { 0x0A, 0xC7 },
-        { 0x0E, 0x00 },
-        { 0x15, 0x89 },
-        { 0x16, 0x46 },
-        { 0x1A, 0x08 },
-OOVPA_END;
+#define D3DVertexBuffer_GetDesc_5233 D3DVertexBuffer_GetDesc_5028
 
 // ******************************************************************
 // * D3DDevice_SetVertexShader
@@ -731,19 +722,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_IsFencePending
 // ******************************************************************
-OOVPA_XREF(D3DDevice_IsFencePending, 5233, 6,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_D3DDEVICE ),
-
-        { 0x07, 0x30 },
-        { 0x0A, 0x2C },
-        { 0x10, 0xD1 },
-        { 0x17, 0x1B },
-        { 0x1C, 0x04 },
-OOVPA_END;
+#define D3DDevice_IsFencePending_5233 D3DDevice_IsFencePending_5028
 
 // ******************************************************************
 // * D3D::BlockOnTime
@@ -872,15 +851,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BeginPush, 5233, 6)
-
-        { 0x06, 0x6A },
-        { 0x07, 0x00 },
-        { 0x0D, 0x8B },
-        { 0x0E, 0x44 },
-        { 0x12, 0x89 },
-        { 0x16, 0xE9 },
-OOVPA_END;
+#define D3DDevice_BeginPush_5233 D3DDevice_BeginPush_5028
 
 // ******************************************************************
 // * D3DDevice_EndPush
@@ -999,28 +970,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_End, 5233, 12)
-
-        // D3DDevice_End+0x13 : mov dword ptr [eax], 0x417FC
-        { 0x13, 0xC7 }, // (Offset,Value)-Pair #1
-        { 0x14, 0x00 }, // (Offset,Value)-Pair #2
-        { 0x15, 0xFC }, // (Offset,Value)-Pair #3
-        { 0x16, 0x17 }, // (Offset,Value)-Pair #4
-        { 0x17, 0x04 }, // (Offset,Value)-Pair #5
-        { 0x18, 0x00 }, // (Offset,Value)-Pair #6
-
-        // D3DDevice_End+0x28 : test ah, 0x10
-        { 0x28, 0xF6 }, // (Offset,Value)-Pair #7
-        { 0x29, 0xC4 }, // (Offset,Value)-Pair #8
-        { 0x2A, 0x10 }, // (Offset,Value)-Pair #9
-
-        // D3DDevice_End+0x2B : jz +0x07
-        { 0x2B, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x2C, 0x07 }, // (Offset,Value)-Pair #11
-
-        // D3DDevice_End+0x3C : retn
-        { 0x3C, 0xC3 }, // (Offset,Value)-Pair #12
-OOVPA_END;
+#define D3DDevice_End_5233 D3DDevice_End_5028
 
 // ******************************************************************
 // * D3D8_5233
