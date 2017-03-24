@@ -58,12 +58,15 @@ void* MemoryManager::Allocate(size_t size)
 	EnterCriticalSection(&m_CriticalSection);
 
 	void* ptr = malloc(size);
-	MemoryBlockInfo info;
-	info.offset = (uint32_t)ptr;
-	info.size = size;
-	info.type = MemoryType::STANDARD;
 
-	m_MemoryBlockInfo[info.offset] = info;
+	if (ptr != nullptr) {
+		MemoryBlockInfo info;
+		info.offset = (uint32_t)ptr;
+		info.size = size;
+		info.type = MemoryType::STANDARD;
+
+		m_MemoryBlockInfo[info.offset] = info;
+	}
 
 	LeaveCriticalSection(&m_CriticalSection);
 
@@ -73,22 +76,24 @@ void* MemoryManager::Allocate(size_t size)
 void* MemoryManager::AllocateAligned(size_t size, size_t alignment)
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(size);
+		LOG_FUNC_ARG(size) ;
 		LOG_FUNC_ARG(alignment);
 	LOG_FUNC_END;
 
 	EnterCriticalSection(&m_CriticalSection);
 
 	void* ptr = _aligned_malloc(size, alignment);
-	MemoryBlockInfo info;
-	info.offset = (uint32_t)ptr;
-	info.size = size;
-	info.type = MemoryType::ALIGNED;
 
-	m_MemoryBlockInfo[info.offset] = info;
+	if (ptr != nullptr) {
+		MemoryBlockInfo info;
+		info.offset = (uint32_t)ptr;
+		info.size = size;
+		info.type = MemoryType::ALIGNED;
+
+		m_MemoryBlockInfo[info.offset] = info;
+	}
 
 	LeaveCriticalSection(&m_CriticalSection);
-
 
 	RETURN(ptr);
 }
@@ -100,16 +105,22 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 		LOG_FUNC_ARG(alignment);
 	LOG_FUNC_END;
 
-
 	EnterCriticalSection(&m_CriticalSection);
 
-	size = (size + alignment) + (size % alignment);
+	// If the end address of the block won't meet the alignment, adjust the size
+	if (size % alignment > 0) {
+		size = (size + alignment) + (size % alignment);
+	}
+	
 	uint32_t addr = NULL;
 
 	// If the allocation table is empty, we can allocate wherever we please
 	if (m_ContiguousMemoryRegions.size() == 0) {
 		addr = MM_SYSTEM_PHYSICAL_MAP;
 	} else {
+		// Locate the first available Memory Region with enough space for the requested buffer
+		// This could be improved later on by always locating the smallest block with enough space
+		// in order to reduce memory fragmentation.
 		for (auto it = m_ContiguousMemoryRegions.begin(); it != m_ContiguousMemoryRegions.end(); ++it) {
 			ContiguousMemoryRegion current = it->second;
 
@@ -127,7 +138,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 	}
 	
 	if (addr + size > MM_SYSTEM_PHYSICAL_MAP + CONTIGUOUS_MEMORY_SIZE)  {
-		EmuWarning("MemoryManager::AllocateContiguous exausted it's allowed memory buffer");
+		EmuWarning("MemoryManager::AllocateContiguous exhausted it's allowed memory buffer");
 		addr = NULL;	
 	}
 	 
@@ -157,21 +168,28 @@ void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 
 bool MemoryManager::IsAllocated(void* block)
 {
-	return m_MemoryBlockInfo.find((uint32_t)block) != m_MemoryBlockInfo.end();
+	LOG_FUNC_ONE_ARG(block);
+
+	EnterCriticalSection(&m_CriticalSection);
+	bool result = m_MemoryBlockInfo.find((uint32_t)block) != m_MemoryBlockInfo.end();
+	LeaveCriticalSection(&m_CriticalSection);
+	
+	RETURN(result);
 }
 
 void MemoryManager::Free(void* block)
 {
 	LOG_FUNC_ONE_ARG(block);
 
+	EnterCriticalSection(&m_CriticalSection);
+
 	if (IsAllocated(block)) {
-		EnterCriticalSection(&m_CriticalSection);
 		MemoryBlockInfo info = m_MemoryBlockInfo[info.offset];
 		switch (info.type) {
 			case MemoryType::ALIGNED:
 				_aligned_free((void*)info.offset);
 				m_MemoryBlockInfo.erase(info.offset);
-			break;
+				break;
 			case MemoryType::STANDARD:
 				free((void*)info.offset);
 				m_MemoryBlockInfo.erase(info.offset);
@@ -184,23 +202,30 @@ void MemoryManager::Free(void* block)
 				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free memory of an unknown type");
 				break;
 		}
-		LeaveCriticalSection(&m_CriticalSection);
-		return;
+	} else {
+		__debugbreak();
+		CxbxKrnlCleanup("Fatal: Attempted to free memory that was not allocated via MemoryManager");
 	}
 
-	__debugbreak();
-	CxbxKrnlCleanup("Fatal: Attempted to free memory that was not allocated via MemoryManager");	
+	LeaveCriticalSection(&m_CriticalSection);
 }
 
 size_t MemoryManager::QueryAllocationSize(void* block)
 {
 	LOG_FUNC_ONE_ARG(block);
 
+	EnterCriticalSection(&m_CriticalSection);
+
+	size_t ret = 0;
+
 	if (IsAllocated(block)) {
 		MemoryBlockInfo info = m_MemoryBlockInfo[info.offset];
-		RETURN(info.size);
+		ret = info.size;
+	}
+	else {
+		EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
 	}
 
-	EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
-	return 0;
+	LeaveCriticalSection(&m_CriticalSection);
+	RETURN(ret);
 }
