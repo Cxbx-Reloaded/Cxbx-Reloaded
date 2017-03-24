@@ -116,7 +116,8 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 	// If the allocation table is empty, we can allocate wherever we please
 	if (m_ContiguousMemoryRegions.size() == 0) {
-		addr = MM_SYSTEM_PHYSICAL_MAP;
+		// Start allocating Contiguous Memory after the Kernel image header to prevent overwriting our dummy Kernel
+		addr = XBOX_KERNEL_BASE + sizeof(DUMMY_KERNEL);
 	} else {
 		// Locate the first available Memory Region with enough space for the requested buffer
 		// This could be improved later on by always locating the smallest block with enough space
@@ -219,7 +220,7 @@ size_t MemoryManager::QueryAllocationSize(void* block)
 	size_t ret = 0;
 
 	if (IsAllocated(block)) {
-		MemoryBlockInfo info = m_MemoryBlockInfo[info.offset];
+		MemoryBlockInfo info = m_MemoryBlockInfo[(uint32_t)block];
 		ret = info.size;
 	}
 	else {

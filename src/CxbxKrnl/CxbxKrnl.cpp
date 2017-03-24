@@ -569,14 +569,6 @@ void CxbxKrnlInit
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
 		// Thanks advancingdragon / DirtBox
-		typedef struct DUMMY_KERNEL
-		{
-			IMAGE_DOS_HEADER DosHeader;
-			DWORD Signature;
-			IMAGE_FILE_HEADER FileHeader;
-			IMAGE_SECTION_HEADER SectionHeader;
-		} *PDUMMY_KERNEL;
-
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)XBOX_KERNEL_BASE;
 		memset(DummyKernel, 0, sizeof(DUMMY_KERNEL));
 

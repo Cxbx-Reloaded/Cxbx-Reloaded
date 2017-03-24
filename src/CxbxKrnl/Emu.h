@@ -99,4 +99,12 @@ extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 extern void InitializeSectionStructures(void);
 
+typedef struct DUMMY_KERNEL
+{
+	IMAGE_DOS_HEADER DosHeader;
+	DWORD Signature;
+	IMAGE_FILE_HEADER FileHeader;
+	IMAGE_SECTION_HEADER SectionHeader;
+} *PDUMMY_KERNEL;
+
 #endif
