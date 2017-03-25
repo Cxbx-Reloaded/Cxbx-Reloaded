@@ -237,16 +237,10 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h">
       <Filter>EmuD3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h">
@@ -267,7 +261,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h">
@@ -297,7 +297,16 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h">
@@ -327,7 +336,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h">
@@ -354,7 +369,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.h">
@@ -375,7 +396,16 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h">
@@ -510,21 +540,6 @@
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h">
       <Filter>Shared</Filter>
     </ClInclude>
@@ -560,7 +575,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl">
       <Filter>HLEDatabase</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl">
@@ -590,7 +611,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl">
       <Filter>HLEDatabase</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl">
@@ -623,7 +650,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl">
       <Filter>HLEDatabase</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl">
@@ -647,7 +680,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl">
       <Filter>HLEDatabase</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl">
@@ -668,7 +707,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl">
       <Filter>HLEDatabase</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl">
@@ -682,21 +727,6 @@
     </None>
     <None Include="..\..\resource\Logo.bmp">
       <Filter>Shared</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
-      <Filter>HLEDatabase</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
