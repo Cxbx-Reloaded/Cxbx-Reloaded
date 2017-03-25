@@ -1521,6 +1521,9 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFrequency, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFrequency, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetVolume, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetVolume, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetVolume, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetVolume, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_LockA, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
@@ -1666,8 +1669,6 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetLFO, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetLFO, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetPitch, 4627, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetVolume, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4134, PATCH),
 };
 
 // ******************************************************************
