@@ -50,9 +50,6 @@ inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
-// check the allocation size of a given virtual address
-extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
-
 // print call stack trace
 #ifdef _DEBUG
 void EmuPrintStackTrace(PCONTEXT ContextRecord);
@@ -101,5 +98,13 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 extern void InitializeSectionStructures(void);
+
+typedef struct DUMMY_KERNEL
+{
+	IMAGE_DOS_HEADER DosHeader;
+	DWORD Signature;
+	IMAGE_FILE_HEADER FileHeader;
+	IMAGE_SECTION_HEADER SectionHeader;
+} *PDUMMY_KERNEL;
 
 #endif
