@@ -283,12 +283,18 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
+	if (BaseAddress == &DefaultLaunchDataPage) {
+		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
+		LOG_IGNORED();
+		return;
+	}
+
 	g_MemoryManager.Free(BaseAddress);
 
-  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
-  // Tracing in assembly shows the crash takes place quite a while further, so it's probably
-  // not related to this call per-se. The strangest thing is, that if we let the debugger step
-  // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
+	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
+	// not related to this call per-se. The strangest thing is, that if we let the debugger step
+	// all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
 }
 
 // ******************************************************************
