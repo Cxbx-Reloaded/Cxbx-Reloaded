@@ -745,16 +745,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DVertexBuffer_GetDesc
 // ******************************************************************
-OOVPA_NO_XREF(D3DVertexBuffer_GetDesc, 5028, 7)
-
-        { 0x02, 0x24 },
-        { 0x06, 0x74 },
-        { 0x0A, 0xC7 },
-        { 0x0E, 0x00 },
-        { 0x15, 0x89 },
-        { 0x16, 0x46 },
-        { 0x1A, 0x08 },
-OOVPA_END;
+#define D3DVertexBuffer_GetDesc_5028 D3DVertexBuffer_GetDesc_3925
 
 // ******************************************************************
 // * D3DDevice_IsFencePending
