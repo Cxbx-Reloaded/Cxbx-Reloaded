@@ -54,6 +54,7 @@
 
 // Options to AvSendTVEncoderOption() :
 #define AV_OPTION_MACROVISION_MODE        1
+
 #define AV_OPTION_ENABLE_CC               2
 #define AV_OPTION_DISABLE_CC              3
 #define AV_OPTION_SEND_CC_DATA            4
@@ -416,6 +417,9 @@ XBSYSAPI EXPORTNUM(351) VOID NTAPI XcUpdateCrypto
 	OUT PCRYPTO_VECTOR pROMVector OPTIONAL
 );
 
+// Not exported by the kernel, but required to generate other keys
+XBSYSAPI XBOX_KEY_DATA XboxCertificateKey;
+
 // ******************************************************************
 // * 0x0161 - XboxLANKey
 // ******************************************************************
@@ -424,11 +428,11 @@ XBSYSAPI EXPORTNUM(353) XBOX_KEY_DATA XboxLANKey;
 // ******************************************************************
 // * 0x0162 - XboxAlternateSignatureKeys
 // ******************************************************************
-XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys;
+XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[16];
 
 // ******************************************************************
 // * 0x0163 - XePublicKeyData
-// ******************************************************************
+// ****************1**************************************************
 XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
 
 // ******************************************************************
