@@ -348,7 +348,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             if(BuildVersion == 3925)
 							{
 								XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x25) - 0x1FC + 82*4);  // TODO: Clean up (?)
-								patchOffset = 142*4 - 82*4; // TODO: Verify
+								patchOffset = 142*4 - 84*4; // TODO: Verify
 								
 								//XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x25) - 0x19F + 72*4);  // TODO: Clean up (?)
 								//patchOffset = 142*4 - 72*4; // TODO: Verify

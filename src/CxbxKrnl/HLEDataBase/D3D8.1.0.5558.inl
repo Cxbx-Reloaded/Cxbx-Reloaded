@@ -596,15 +596,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DResource_BlockUntilNotBusy
 // ******************************************************************
-OOVPA_XREF(D3DResource_BlockUntilNotBusy, 5558, 2,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_D3D_BlockOnResource ),
-
-        { 0x00, 0xE9 },
-OOVPA_END;
+#define D3DResource_BlockUntilNotBusy_5558 D3DResource_BlockUntilNotBusy_3925
 
 // ******************************************************************
 // * D3DDevice_SetScissors

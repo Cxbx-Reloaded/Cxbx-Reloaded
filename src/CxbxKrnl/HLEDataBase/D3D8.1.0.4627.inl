@@ -2137,17 +2137,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderType@8
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShaderType, 4627, 7)
-
-        { 0x04, 0x8B },
-        { 0x0A, 0x07 },
-        { 0x10, 0xEB },
-        { 0x16, 0x00 },
-        { 0x1C, 0x40 },
-        { 0x22, 0xC9 },
-        { 0x28, 0x08 },
-OOVPA_END;
-
+#define D3DDevice_GetVertexShaderType_4627 D3DDevice_GetVertexShaderType_3925
 
 // ******************************************************************
 // * D3DDevice_GetVertexShaderDeclaration
@@ -2167,16 +2157,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderFunction
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShaderFunction, 4627, 7)
-
-        { 0x16, 0xC0 },
-        { 0x2E, 0x01 },
-        { 0x46, 0x10 },
-        { 0x5E, 0x07 },
-        { 0x76, 0xC7 },
-        { 0x8E, 0x00 },
-        { 0xA6, 0xF8 },
-OOVPA_END;
+#define D3DDevice_GetVertexShaderFunction_4627 D3DDevice_GetVertexShaderFunction_3925
 
 // ******************************************************************
 // * D3DDevice_SetVertexShaderInput
