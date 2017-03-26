@@ -3607,21 +3607,6 @@ OOVPA_NO_XREF(D3DDevice_GetPixelShader, 3925, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetTexture
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture, 3925, 8)
-
-        { 0x0A, 0x56 },
-        { 0x0B, 0x8D },
-        { 0x0C, 0xB4 },
-        { 0x0D, 0x81 },
-        { 0x0E, 0xA0 },
-        { 0x0F, 0x0B },
-        { 0x19, 0xE8 },
-        { 0x1F, 0x16 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_IsFencePending
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_IsFencePending, 3925, 11)
@@ -3811,7 +3796,6 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderDeclaration, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderFunction, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetPixelShader, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetTexture, 3925, XREF), // 
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 3925, PATCH),
 };
 
