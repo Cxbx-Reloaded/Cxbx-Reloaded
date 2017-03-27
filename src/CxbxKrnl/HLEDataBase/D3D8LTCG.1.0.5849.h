@@ -36,7 +36,7 @@
 
 #include "OOVPA.h"
 
-extern LOOVPA<13> D3DDevice_SetRenderState_CullMode_LTCG_5849;
+extern LOOVPA<1+13> D3DDevice_SetRenderState_CullMode_LTCG_5849;
 extern LOOVPA<10> D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849;
 
 extern OOVPATable D3D8LTCG_5849[];

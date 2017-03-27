@@ -177,8 +177,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		bXRefFirstPass = true; // Set to false for search speed optimization
 
+		// Mark all Xrefs as undetermined, but request a few to be derived instead of checked:
 		memset((void*)XRefDataBase, XREF_ADDR_UNDETERMINED, sizeof(XRefDataBase));
-
+		XRefDataBase[XREF_D3DDEVICE] = XREF_ADDR_DERIVE;
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
@@ -377,7 +378,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 patchOffset = 162*4 - 92*4;
                             }
 
-                            XRefDataBase[XREF_D3DDEVICE]                   = *(DWORD*)((DWORD)pFunc + 0x03);
+							xbaddr DerivedD3DDevice = *(DWORD*)((DWORD)pFunc + 0x03);
+							if (XRefDataBase[XREF_D3DDEVICE] != DerivedD3DDevice)
+							{
+								if (XRefDataBase[XREF_D3DDEVICE] != XREF_ADDR_DERIVE)
+									EmuWarning("Second derived D3DDevice differs from first!");
+
+								XRefDataBase[XREF_D3DDEVICE] = DerivedD3DDevice;
+							}
                             XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
                             XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
                             XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
@@ -631,6 +639,10 @@ static boolean CompareOOVPAToAddress(OOVPA *Oovpa, xbaddr cur)
 		if (XRefAddr == XREF_ADDR_UNDETERMINED)
 			return false;
 
+		// Don't verify an xref that has to be (but isn't yet) derived
+		if (XRefAddr == XREF_ADDR_DERIVE)
+			continue;
+
 		xbaddr ActualAddr = *(xbaddr*)(cur + Offset);
 		// check if PC-relative or direct reference matches XRef
 		if ((ActualAddr + cur + Offset + 4 != XRefAddr) && (ActualAddr != XRefAddr))
@@ -661,6 +673,7 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 	if (!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
 		return (xbaddr)nullptr;
 
+	int derive_index = -1;
 	// Check all XRefs are known (if not, don't do a useless scan) :
 	for (uint32 v = 0; v < Oovpa->XRefCount; v++)
 	{
@@ -674,6 +687,13 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 		if (XRefAddr == XREF_ADDR_UNDETERMINED)
 			// Skip this scan over the address range
 			return (xbaddr)nullptr;
+
+		// Don't verify an xref that has to be (but isn't yet) derived
+		if (XRefAddr == XREF_ADDR_DERIVE)
+		{
+			derive_index = v;
+			continue;
+		}
 	}
 
 	// correct upper bound with highest Oovpa offset
@@ -694,16 +714,59 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 			if (Oovpa->XRefSaveIndex != XRefNoSaveIndex)
 			{
 				// is the XRef not saved yet?
-				if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_ADDR_UNDETERMINED)
+				switch (XRefDataBase[Oovpa->XRefSaveIndex]) {
+				case XREF_ADDR_NOT_FOUND:
+				{
+					EmuWarning("Found OOVPA after first finding nothing?");
+					// fallthrough to XREF_ADDR_UNDETERMINED
+				}
+				case XREF_ADDR_UNDETERMINED:
 				{
 					// save and count the found address
 					UnResolvedXRefs--;
 					XRefDataBase[Oovpa->XRefSaveIndex] = cur;
+					break;
 				}
-				else
+				case XREF_ADDR_DERIVE:
+				{
+					EmuWarning("Cannot derive a save index!");
+					break;
+				}
+				default:
 				{
 					if (XRefDataBase[Oovpa->XRefSaveIndex] != cur)
 						EmuWarning("Found OOVPA on other address than in XRefDataBase!");
+					break;
+				}
+				}
+			}
+
+			if (derive_index >= 0)
+			{
+				uint32 XRef;
+				uint08 Offset;
+
+				// get currently registered (un)known address
+				GetXRefEntry(Oovpa, derive_index, XRef, Offset);
+
+				// Calculate the address where the XRef resides
+				xbaddr XRefAddr = cur + Offset;
+				// Read the address it points to
+				XRefAddr = *((xbaddr*)XRefAddr);
+
+				/* For now assume it's a direct reference;
+				// TODO : Check if it's PC-relative reference?
+				if (XRefAddr + cur + Offset + 4 < XBE_MAX_VA)
+					XRefAddr = XRefAddr + cur + Offset + 4;
+				*/
+
+				// Does the address seem valid?
+				if (XRefAddr < XBE_MAX_VA)
+				{
+					// save and count the derived address
+					UnResolvedXRefs--;
+					XRefDataBase[XRef] = XRefAddr;
+					printf("Derived OOVPA!\n");
 				}
 			}
 

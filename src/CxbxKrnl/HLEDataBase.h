@@ -344,8 +344,9 @@ enum XRefDataBaseOffset
 	// Also, if XREF_COUNT > sizeof(uint16), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
-#define XREF_ADDR_UNDETERMINED -1
 #define XREF_ADDR_NOT_FOUND ((xbaddr)nullptr)
+#define XREF_ADDR_UNDETERMINED 1
+#define XREF_ADDR_DERIVE 2
 
 // ******************************************************************
 // * XRefDataBase

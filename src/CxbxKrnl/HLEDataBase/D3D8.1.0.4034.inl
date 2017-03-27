@@ -135,10 +135,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 14,
+OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 1+14,
 
     XREF_DXSRSCULLMODE,
-    XRefZero)
+	XRefOne)
+
+		XREF_ENTRY(0x03, XREF_D3DDEVICE),
 
         // D3DDevice_SetRenderState_CullMode+0x00 : push esi
         { 0x00, 0x56 }, // (Offset,Value)-Pair #1
