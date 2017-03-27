@@ -2071,6 +2071,7 @@ typedef struct _XBOX_HARDWARE_INFO
 XBOX_HARDWARE_INFO;
 
 const int XBOX_KEY_LENGTH = 16;
+const int ALTERNATE_SIGNATURE_COUNT = 16;
 typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
