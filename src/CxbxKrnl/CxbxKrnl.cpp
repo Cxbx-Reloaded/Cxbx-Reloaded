@@ -178,7 +178,7 @@ void SetupPerTitleKeys()
 	memcpy(xboxkrnl::XboxSignatureKey, Digest, xboxkrnl::XBOX_KEY_LENGTH);
 
 	// Alternate Signature Keys
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < xboxkrnl::ALTERNATE_SIGNATURE_COUNT; i++) {
 		xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, pCertificate->bzTitleAlternateSignatureKey[i], xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
 		memcpy(xboxkrnl::XboxAlternateSignatureKeys[i], Digest, xboxkrnl::XBOX_KEY_LENGTH);
 	}
@@ -521,13 +521,15 @@ void LoadXboxKeys(std::string path)
 
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
+		} else {
+			EmuWarning("Keys.bin has an incorrent filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
 		return;
 	}
 
-	// If we didn't already exist the function, keys.bin could not be loaded
+	// If we didn't already exit the function, keys.bin could not be loaded
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 

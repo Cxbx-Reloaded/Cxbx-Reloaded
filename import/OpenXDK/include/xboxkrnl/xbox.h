@@ -428,7 +428,7 @@ XBSYSAPI EXPORTNUM(353) XBOX_KEY_DATA XboxLANKey;
 // ******************************************************************
 // * 0x0162 - XboxAlternateSignatureKeys
 // ******************************************************************
-XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[16];
+XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[ALTERNATE_SIGNATURE_COUNT];
 
 // ******************************************************************
 // * 0x0163 - XePublicKeyData

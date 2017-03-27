@@ -79,23 +79,23 @@ XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
 
 // ******************************************************************
 // * 0x0145 - XboxSignatureKey
-// Generated programatically using the Certificate Key and the XBE's 
-// Signature Key
+// Generated in SetupPerTitleKeys() using the Certificate Key and the 
+// XBE's Signature Key
 // ******************************************************************
 XBSYSAPI EXPORTNUM(325) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxSignatureKey = { 0 };
 
 // ******************************************************************
 // * 0x0161 - XboxLANKey
-// Generated programatically using the Certificate Key and the XBE's 
-// LAN Key
+// Generated in SetupPerTitleKeys() using the Certificate Key and the 
+// XBE's LAN Key
 // ******************************************************************
 XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = { 0 };
 
 // ******************************************************************
 // * 0x0162 - XboxAlternateSignatureKeys
-// Generated programatically using the Certificate Key and the XBE's 
-// Signature Keys
+// Generated in SetupPerTitleKeys() using the Certificate Key and the 
+// XBE's Alternate Signature Keys Key
 // ******************************************************************
-XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys[16] = { 0 };
+XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys[ALTERNATE_SIGNATURE_COUNT] = { 0 };
 
 	
