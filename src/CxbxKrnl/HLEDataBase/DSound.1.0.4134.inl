@@ -899,7 +899,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound_CDirectSoundBuffer::Play
 // ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundBuffer_Play, 4134, 7,
+OOVPA_XREF(DirectSound_CDirectSoundBuffer_Play, 4134, 11,
 
 	XREF_DSOUNDPLAY,
 	XRefZero)
@@ -911,7 +911,10 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_Play, 4134, 7,
 	{ 0x26, 0xEB },
 	{ 0x2C, 0x8B },
 	{ 0x2F, 0x57 },
-
+	{ 0x30, 0xFF },
+	{ 0x31, 0x74 },
+	{ 0x32, 0x24 },
+	{ 0x33, 0x18 },
 OOVPA_END;
 
 // ******************************************************************
