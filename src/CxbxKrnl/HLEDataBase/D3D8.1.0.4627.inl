@@ -1332,7 +1332,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4627, 10)
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4627, 1+10,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x14 : shl eax, 0x07
         { 0x14, 0xC1 }, // (Offset,Value)-Pair #1
@@ -2098,7 +2103,7 @@ OOVPA_XREF(D3DDevice_EndPush, 4627, 12,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // 1
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // 1 
 
         { 0x00, 0x8B }, // 2
         { 0x01, 0x44 }, // 3

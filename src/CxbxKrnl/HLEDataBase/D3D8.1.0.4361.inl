@@ -760,7 +760,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4361, 10)
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4361, 1+10,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
         { 0x0D, 0xC1 }, // (Offset,Value)-Pair #1

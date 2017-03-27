@@ -192,12 +192,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 1+13,
+OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
 
-    XREF_DXSRSCULLMODE,
-	XRefOne)
+    XREF_SETRENDERSTATE_CULLMODE,
+	XRefTwo)
 
-		XREF_ENTRY(0x03, XREF_D3DDEVICE),
+		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308
         { 0x19, 0xC7 }, // (Offset,Value)-Pair #1

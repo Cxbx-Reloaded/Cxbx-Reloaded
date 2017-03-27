@@ -269,7 +269,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TexCoordIndex_LTCG, 5849, 10)
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex_LTCG, 5849, 1+10,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x14 : shl eax, 0x07
         { 0x14, 0xC1 }, // (Offset,Value)-Pair #1
@@ -346,12 +351,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_CullMode_LTCG, 5849, 1+13,
+OOVPA_XREF(D3DDevice_SetRenderState_CullMode_LTCG, 5849, 2+13,
 
-    XREF_DXSRSCULLMODE,
-	XRefOne)
+    XREF_SETRENDERSTATE_CULLMODE,
+	XRefTwo)
 
-		XREF_ENTRY (0x03, XREF_D3DDEVICE),
+		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x23 : mov dword ptr [eax], 0x40308
         { 0x23, 0xC7 }, // (Offset,Value)-Pair #1
