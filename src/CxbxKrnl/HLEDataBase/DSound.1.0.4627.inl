@@ -325,9 +325,9 @@ OOVPA_END;
 //OOVPA_END;
 
 // ******************************************************************
-// * CMcpxBuffer_GetStatusB
+// * CMcpxBuffer_GetStatus
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_GetStatusB, 4627, 13,
+OOVPA_XREF(CMcpxBuffer_GetStatus, 4831, 13,
 
     XREF_DSBUFFERGETSTATUSA,
     XRefZero)
@@ -1541,7 +1541,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4134, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4721, XREF),
     // REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4928, XREF)
-	REGISTER_OOVPA(CMcpxBuffer_GetStatusB, 4627, XREF),
+	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4831, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_GetStatus, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
