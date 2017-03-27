@@ -325,28 +325,30 @@ OOVPA_END;
 //OOVPA_END;
 
 // ******************************************************************
-// * CMcpxBuffer_GetStatusB
+// * CMcpxBuffer_GetStatus
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_GetStatusB, 4627, 12,
+OOVPA_XREF(CMcpxBuffer_GetStatus, 4831, 13,
 
     XREF_DSBUFFERGETSTATUSA,
     XRefZero)
 
-        { 0x16, 0x6A }, // (Offset,Value)-Pair #1
-        { 0x17, 0x00 }, // (Offset,Value)-Pair #2
-        { 0x18, 0x5A }, // (Offset,Value)-Pair #3
+        { 0x00, 0x0F }, // (Offset,Value)-Pair #1
 
-        { 0x1C, 0x42 }, // (Offset,Value)-Pair #4
-        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #5
-        { 0x1E, 0xC4 }, // (Offset,Value)-Pair #6
-        { 0x1F, 0x02 }, // (Offset,Value)-Pair #7
+        { 0x16, 0x6A }, // (Offset,Value)-Pair #2
+        { 0x17, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x18, 0x5A }, // (Offset,Value)-Pair #4
 
-        { 0x29, 0xB9 }, // (Offset,Value)-Pair #8
-        { 0x2A, 0x01 }, // (Offset,Value)-Pair #9
-        { 0x2B, 0x80 }, // (Offset,Value)-Pair #10
+        { 0x1C, 0x42 }, // (Offset,Value)-Pair #5
+        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #6
+        { 0x1E, 0xC4 }, // (Offset,Value)-Pair #7
+        { 0x1F, 0x02 }, // (Offset,Value)-Pair #8
 
-        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x29, 0xB9 }, // (Offset,Value)-Pair #9
+        { 0x2A, 0x01 }, // (Offset,Value)-Pair #10
+        { 0x2B, 0x80 }, // (Offset,Value)-Pair #11
+
+        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #13
 OOVPA_END;
 
 // ******************************************************************
@@ -1539,7 +1541,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4134, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4721, XREF),
     // REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4928, XREF)
-	REGISTER_OOVPA(CMcpxBuffer_GetStatusB, 4627, XREF),
+	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4831, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_GetStatus, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
