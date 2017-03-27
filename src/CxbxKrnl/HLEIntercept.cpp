@@ -378,6 +378,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 patchOffset = 162*4 - 92*4;
                             }
 
+							// Temporary verification - is XREF_D3DDEVICE derived correctly?
 							xbaddr DerivedD3DDevice = *(DWORD*)((DWORD)pFunc + 0x03);
 							if (XRefDataBase[XREF_D3DDEVICE] != DerivedD3DDevice)
 							{
@@ -386,6 +387,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 								XRefDataBase[XREF_D3DDEVICE] = DerivedD3DDevice;
 							}
+
                             XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
                             XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
                             XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
@@ -673,7 +675,7 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 	if (!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
 		return (xbaddr)nullptr;
 
-	int derive_index = -1;
+	uint32_t derive_indices = 0;
 	// Check all XRefs are known (if not, don't do a useless scan) :
 	for (uint32 v = 0; v < Oovpa->XRefCount; v++)
 	{
@@ -691,7 +693,8 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 		// Don't verify an xref that has to be (but isn't yet) derived
 		if (XRefAddr == XREF_ADDR_DERIVE)
 		{
-			derive_index = v;
+			// Mark (up to index 32) which xref needs to be derived
+			derive_indices |= (1 << v);
 			continue;
 		}
 	}
@@ -741,10 +744,15 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 				}
 			}
 
-			if (derive_index >= 0)
+			while (derive_indices > 0)
 			{
 				uint32 XRef;
 				uint08 Offset;
+				DWORD derive_index;
+
+				// Extract an index from the indices mask :
+				_BitScanReverse(&derive_index, derive_indices); // MSVC intrinsic; GCC has __builtin_clz
+				derive_indices &= (derive_indices - 1);
 
 				// get currently registered (un)known address
 				GetXRefEntry(Oovpa, derive_index, XRef, Offset);
