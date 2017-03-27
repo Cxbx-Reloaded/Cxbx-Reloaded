@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
+#include "MemoryManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -803,7 +804,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     DWORD dwEmuFlags = 0;
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
 	DSBUFFERDESC *pDSBufferDescSpecial = NULL;
 	bool bIsSpecial = false;
 
@@ -828,7 +829,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         if(pdsbd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
 
             if(pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM)
@@ -868,8 +869,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
 			// TODO: A better response to this scenario if possible.
 
-			pDSBufferDescSpecial = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
-			pDSBufferDescSpecial->lpwfxFormat =  (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+			pDSBufferDescSpecial = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
+			pDSBufferDescSpecial->lpwfxFormat =  (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX));
 
 			//memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
 		    //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
@@ -886,7 +887,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 		    pDSBufferDescSpecial->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY; 
 		    pDSBufferDescSpecial->dwBufferBytes = 3 * pDSBufferDescSpecial->lpwfxFormat->nAvgBytesPerSec;
 
-	//		pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
+	//		pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
 
 	////	pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
 	//		pDSBufferDesc->lpwfxFormat->nChannels = 1;
@@ -1216,9 +1217,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
 				}
 
 				if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-					CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
+					g_MemoryManager.Free(pThis->EmuBufferDesc->lpwfxFormat);
 
-				CxbxFree(pThis->EmuBufferDesc);
+				g_MemoryManager.Free(pThis->EmuBufferDesc);
 
 				delete pThis;
 			}
@@ -1562,7 +1563,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)g_MemoryManager.Allocate(sizeof(DSBUFFERDESC));
 
     // convert from Xbox to PC DSound
     {
@@ -1580,7 +1581,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         if(pdssd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX));
             memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
         }
 
@@ -1830,9 +1831,9 @@ ULONG WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Release)
             }
 
             if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-                CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
+                g_MemoryManager.Free(pThis->EmuBufferDesc->lpwfxFormat);
 
-            CxbxFree(pThis->EmuBufferDesc);
+            g_MemoryManager.Free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -3652,7 +3653,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 
 	// TODO: Implement
 	if( !pvData )
-		pvData = CxbxMalloc( dwDataSize );
+		pvData = g_MemoryManager.Allocate( dwDataSize );
 
 		
 
@@ -3692,7 +3693,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 	{
 		if( pThis->EmuDirectSoundBuffer8 )
 		{
-			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) pNotify );
+			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) &pNotify );
 			if( SUCCEEDED( hr ) && pNotify != nullptr )
 			{
 				hr = pNotify->SetNotificationPositions( dwNotifyCount, paNotifies );

@@ -48,8 +48,9 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 #include "ResourceTracker.h" // For g_AlignCache
+#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -131,22 +132,8 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	// Allocate when input arguments are valid
 	if (pRet != NULL)
 	{
-		//
-		// NOTE: Kludgey (but necessary) solution:
-		//
-		// Since this memory must be aligned on a page boundary, we must allocate an extra page
-		// so that we can return a valid page aligned pointer
-		//
-
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = CxbxMalloc(NumberOfBytes + Alignment);
-
-		// align to page boundary
-		DWORD dwRet = (DWORD)pRet;
-
-		dwRet += Alignment - dwRet % Alignment;
-		g_AlignCache.insert(dwRet, pRet);
-		pRet = (PVOID)dwRet;
+		pRet = g_MemoryManager.AllocateContiguous(NumberOfBytes, Alignment);
 	}
 
 	RETURN(pRet);
@@ -167,7 +154,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 		LOG_FUNC_END;
 
 	// TODO: should this be aligned?
-	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
 
 	RETURN(pRet);
 }
@@ -296,32 +283,18 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	PVOID OrigBaseAddress = BaseAddress;
-
-	if (g_AlignCache.exists(BaseAddress))
-	{
-		OrigBaseAddress = g_AlignCache.get(BaseAddress);
-		g_AlignCache.remove(BaseAddress);
-	}
-
-	if (OrigBaseAddress == &DefaultLaunchDataPage)
-	{
+	if (BaseAddress == &DefaultLaunchDataPage) {
 		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
 		LOG_IGNORED();
-	}
-	else
-	{
-		// TODO : Free PAGE_WRITECOMBINE differently
-		if (OrigBaseAddress == LaunchDataPage) 
-			DbgPrintf("MmFreeContiguousMemory detected a free of LaunchDataPage\n");
-
-		CxbxFree(OrigBaseAddress);
+		return;
 	}
 
-  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
-  // Tracing in assembly shows the crash takes place quite a while further, so it's probably
-  // not related to this call per-se. The strangest thing is, that if we let the debugger step
-  // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
+	g_MemoryManager.Free(BaseAddress);
+
+	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
+	// not related to this call per-se. The strangest thing is, that if we let the debugger step
+	// all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
 }
 
 // ******************************************************************
@@ -338,7 +311,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_END;
 
-	CxbxFree(BaseAddress);
+	g_MemoryManager.Free(BaseAddress);
 
 	RETURN(STATUS_SUCCESS);
 }
@@ -440,7 +413,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_END;
 
 	// TODO: should this be aligned?
-	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
 	LOG_INCOMPLETE();
 
 	RETURN(pRet);
@@ -512,8 +485,10 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 
 	// Assume read/write when page is allocated :
 	ULONG Result = PAGE_NOACCESS;
-	if (EmuCheckAllocationSize(VirtualAddress, false))
+
+	if (g_MemoryManager.IsAllocated(VirtualAddress)) {
 		Result = PAGE_READWRITE;
+	}
 
 	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
 	
@@ -532,7 +507,7 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 
 	LOG_INCOMPLETE(); // TODO : Free PAGE_WRITECOMBINE differently
 
-	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
+	ULONG uiSize = g_MemoryManager.QueryAllocationSize(BaseAddress);
 
 	RETURN(uiSize);
 }
@@ -634,7 +609,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_END;
 
-	CxbxFree(BaseAddress);
+	g_MemoryManager.Free(BaseAddress);
 	LOG_INCOMPLETE();
 
 	RETURN(STATUS_SUCCESS);

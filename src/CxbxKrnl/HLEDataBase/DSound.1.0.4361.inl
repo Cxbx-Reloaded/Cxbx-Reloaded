@@ -215,13 +215,14 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxBuffer_PlayA
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_PlayA, 4361, 10,
+OOVPA_XREF(CMcpxBuffer_PlayA, 4361, 11,
 
     XREF_CMcpxBuffer_PlayA,
     XRefZero)
 
         { 0x03, 0x8B },
         { 0x0E, 0xF1 },
+        { 0x1B, 0x08 },
         { 0x1C, 0x6A },
         { 0x1D, 0x03 },
         { 0x1E, 0xFF },
@@ -297,16 +298,16 @@ OOVPA_XREF(CMcpxBuffer_Stop, 4361, 9,
         { 0x0E, 0x3C }, // (Offset,Value)-Pair #1
         { 0x0F, 0x03 }, // (Offset,Value)-Pair #2
 
-        // CMcpxBuffer_Stop+0x1C : cmp ax, 0x0203
-        { 0x28, 0x66 }, // (Offset,Value)-Pair #3
-        { 0x29, 0x3D }, // (Offset,Value)-Pair #4
-        { 0x2A, 0x03 }, // (Offset,Value)-Pair #5
-        { 0x2B, 0x02 }, // (Offset,Value)-Pair #6
+        // CMcpxBuffer_Stop+0x17 : jz +0x2A
+        { 0x17, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x18, 0x2A }, // (Offset,Value)-Pair #4
 
-        // CMcpxBuffer_Stop+0x70 : mov eax, [esi+0x90]
-        { 0x70, 0x8B }, // (Offset,Value)-Pair #7
-        { 0x71, 0x86 }, // (Offset,Value)-Pair #8
-        { 0x72, 0x90 }, // (Offset,Value)-Pair #9
+        // CMcpxBuffer_Stop+0x19 : test [esp+0Ch+arg_0], 2
+        { 0x19, 0xF6 }, // (Offset,Value)-Pair #5
+        { 0x1A, 0x44 }, // (Offset,Value)-Pair #6
+        { 0x1B, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x1C, 0x10 }, // (Offset,Value)-Pair #8
+        { 0x1D, 0x02 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
 // ******************************************************************
@@ -460,22 +461,23 @@ OOVPA_END;
 OOVPA_XREF(CMcpxBuffer_Stop2, 4361, 10,
 
     XREF_CMcpxBuffer_Stop2,
-    XRefZero)
+    XRefOne)
 
-	// CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
-	{ 0x03, 0x8B },
-	{ 0x04, 0x45 },
-	{ 0x05, 0x08 },
-	// CMcpxBuffer_Stop2+0x14 : mov eax, [esi]
-	{ 0x14, 0x8B },
-	{ 0x15, 0x06 },
-	// CMcpxBuffer_Stop2+0x25 : push [ebp+arg_8]
-	{ 0x25, 0xFF },
-	{ 0x26, 0x75 },
-	{ 0x27, 0x10 },
-	// CMcpxBuffer_Stop2+0x36 : retn 0xC
-	{ 0x36, 0xC2 },
-	{ 0x37, 0x0C },
+        XREF_ENTRY( 0x2B, XREF_DSOUNDSTOP ),
+
+        // CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
+        { 0x03, 0x8B },
+        { 0x04, 0x45 },
+        { 0x05, 0x08 },
+        // CMcpxBuffer_Stop2+0x14 : mov eax, [esi]
+        { 0x14, 0x8B },
+        { 0x15, 0x06 },
+        // CMcpxBuffer_Stop2+0x25 : mov edi, eax
+        { 0x2F, 0x8B },
+        { 0x30, 0xF8 },
+        // CMcpxBuffer_Stop2+0x36 : retn 0xC
+        { 0x36, 0xC2 },
+        { 0x37, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -660,6 +662,7 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBinVolumes, 4361, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBinVolumes, 4361, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBinVolumes, 4361, XREF),
+	REGISTER_OOVPA(CMcpxBuffer_PlayA, 4361, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_PlayEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 4361, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_StopEx, 4361, XREF),

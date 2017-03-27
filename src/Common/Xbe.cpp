@@ -34,6 +34,7 @@
 // *
 // ******************************************************************
 #include "Xbe.h"
+#include "CxbxVersion.h"
 #include "CxbxUtil.h"
 
 #include <memory.h>

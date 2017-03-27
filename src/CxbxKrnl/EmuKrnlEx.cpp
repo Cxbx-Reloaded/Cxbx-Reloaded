@@ -46,6 +46,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
+#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -126,7 +127,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 		LOG_FUNC_END;
 
-	PVOID pRet = CxbxCalloc(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
+	PVOID pRet = g_MemoryManager.AllocateZeroed(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
 	
 	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
 
@@ -157,7 +158,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 {
 	LOG_FUNC_ONE_ARG(P);
 
-	CxbxFree(P);
+	g_MemoryManager.Free(P);
 }
 
 // ******************************************************************
