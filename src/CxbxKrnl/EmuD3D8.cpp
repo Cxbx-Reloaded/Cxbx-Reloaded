@@ -6010,6 +6010,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     return;
 }
 
+// Based on http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
+inline uint08 ClampIntToByte(int x)
+{
+	int r = x > 255 ? 255 : x;
+	return r < 0 ? 0 : r;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -6153,42 +6160,44 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				// full color conversion (YUY2->XRGB)
 				else
 				{
+					// Based on https://pastebin.com/mDcwqJV3
 					for(uint32 v=0;v<dwImageSize;v+=4)
 					{
-						float Y[2], U, V;
+						const int K1 = int(1.402f * (1 << 16));
+						const int K2 = int(0.714f * (1 << 16));
+						const int K3 = int(0.334f * (1 << 16));
+						const int K4 = int(1.772f * (1 << 16));
 
-						Y[0] = *pCurByte++;
-						U    = *pCurByte++;
-						Y[1] = *pCurByte++;
-						V    = *pCurByte++;
+						uint8_t Y1 = *pCurByte++;
+						uint8_t U  = *pCurByte++;
+						uint8_t Y2 = *pCurByte++;
+						uint8_t V  = *pCurByte++;
 
-						int a=0;
-						for(int x=0;x<2;x++)
-						{
-							float R = Y[a] + 1.402f*(V-128);
-							float G = Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
-							float B = Y[a] + 1.772f*(U-128);
+						int8_t uf = U - 128;
+						int8_t vf = V - 128;
 
-							R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
-							G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
-							B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
+						int R = (K1*vf >> 16);
+						int G = (K2*vf >> 16) + (K3*uf >> 16);
+						int B = (K4*uf >> 16);
 
-							uint32 i = (dy*LockedRectDest.Pitch+(dx+x)*4);
+						uint32 i = (dy * LockedRectDest.Pitch) + (dx * 4);
 
-							pDest[i+0] = (uint08)B;
-							pDest[i+1] = (uint08)G;
-							pDest[i+2] = (uint08)R;
-							pDest[i+3] = 0xFF;
+						pDest[i + 0] = ClampIntToByte((int)Y1 + B);
+						pDest[i + 1] = ClampIntToByte((int)Y1 - G);
+						pDest[i + 2] = ClampIntToByte((int)Y1 + R);
+						pDest[i + 3] = 0xFF;
 
-							a++;
-						}
+						pDest[i + 4] = ClampIntToByte((int)Y2 + B);
+						pDest[i + 5] = ClampIntToByte((int)Y2 - G);
+						pDest[i + 6] = ClampIntToByte((int)Y2 + R);
+						pDest[i + 7] = 0xFF;
 
-						dx+=2;
+						dx += 2;
 
-						if((dx % g_dwOverlayW) == 0)
+						if ((dx % g_dwOverlayW) == 0)
 						{
 							dy++;
-							dx=0;
+							dx = 0;
 						}
 
 					}
