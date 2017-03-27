@@ -596,15 +596,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DResource_BlockUntilNotBusy
 // ******************************************************************
-OOVPA_XREF(D3DResource_BlockUntilNotBusy, 5558, 2,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_D3D_BlockOnResource ),
-
-        { 0x00, 0xE9 },
-OOVPA_END;
+#define D3DResource_BlockUntilNotBusy_5558 D3DResource_BlockUntilNotBusy_3925
 
 // ******************************************************************
 // * D3DDevice_SetScissors
@@ -663,27 +655,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreatePixelShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5558, 11)
-
-        // D3DDevice_CreatePixelShader+0x05 : push 0xFC
-        { 0x05, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x06, 0xFC }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_CreatePixelShader+0x10 : mov eax, 0x8007000E
-        { 0x13, 0xB8 }, // (Offset,Value)-Pair #3
-        { 0x14, 0x0E }, // (Offset,Value)-Pair #4
-        { 0x15, 0x00 }, // (Offset,Value)-Pair #5
-        { 0x16, 0x07 }, // (Offset,Value)-Pair #6
-        { 0x17, 0x80 }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_CreatePixelShader+0x31 : mov ecx, 0x3C
-        { 0x34, 0xB9 }, // (Offset,Value)-Pair #8
-        { 0x35, 0x3C }, // (Offset,Value)-Pair #9
-
-        // D3DDevice_CreatePixelShader+0x42 : retn 0x08
-        { 0x45, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x46, 0x08 }, // (Offset,Value)-Pair #11
-OOVPA_END;
+#define D3DDevice_CreatePixelShader_5558 D3DDevice_CreatePixelShader_5344
 
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
@@ -866,16 +838,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetModelView
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetModelView, 5558, 7)
-
-        { 0x05, 0x57 },
-        { 0x0A, 0x85 },
-        { 0x10, 0xB0 },
-        { 0x16, 0x10 },
-        { 0x1C, 0x5E },
-        { 0x22, 0xC1 },
-        { 0x28, 0xE0 },
-OOVPA_END;
+#define D3DDevice_GetModelView_5558 D3DDevice_GetModelView_4134
 
 // ******************************************************************
 // * D3DDevice_SetBackMaterial
@@ -1133,16 +1096,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_InsertCallback
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_InsertCallback, 5558, 7)
-
-        { 0x0C, 0x72 },
-        { 0x1A, 0x10 },
-        { 0x28, 0x85 },
-        { 0x36, 0xC7 },
-        { 0x44, 0x0C },
-        { 0x52, 0x00 },
-        { 0x60, 0x00 },
-OOVPA_END;
+#define D3DDevice_InsertCallback_5558 D3DDevice_InsertCallback_5028
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_LineWidth
@@ -1177,19 +1131,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_FlushVertexCache
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_FlushVertexCache, 5558, 10)
-
-        { 0x00, 0x56 },
-        { 0x07, 0x8B },
-        { 0x08, 0x06 },
-        { 0x0D, 0x05 },
-        { 0x13, 0xC7 },
-        { 0x15, 0x10 },
-        { 0x17, 0x04 },
-        { 0x1C, 0x00 },
-        { 0x21, 0xC0 },
-        { 0x26, 0xC3 },
-OOVPA_END;
+#define D3DDevice_FlushVertexCache_5558 D3DDevice_FlushVertexCache_4134
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_LogicOp

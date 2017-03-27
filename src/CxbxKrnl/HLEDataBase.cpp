@@ -64,6 +64,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/Xapi.1.0.4432.inl"
 #include "HLEDataBase/Xapi.1.0.4627.inl"
 #include "HLEDataBase/Xapi.1.0.4721.inl"
+#include "HLEDataBase/Xapi.1.0.5028.inl"
 #include "HLEDataBase/Xapi.1.0.5233.inl"
 #include "HLEDataBase/Xapi.1.0.5344.inl"
 #include "HLEDataBase/Xapi.1.0.5558.inl"
@@ -75,6 +76,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/D3D8.1.0.4361.inl"
 #include "HLEDataBase/D3D8.1.0.4432.inl"
 #include "HLEDataBase/D3D8.1.0.4627.inl"
+#include "HLEDataBase/D3D8.1.0.5028.inl"
 #include "HLEDataBase/D3D8.1.0.5233.inl"
 #include "HLEDataBase/D3D8.1.0.5344.inl"
 #include "HLEDataBase/D3D8.1.0.5558.inl"
@@ -86,6 +88,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/DSound.1.0.4361.inl"
 #include "HLEDataBase/DSound.1.0.4432.inl"
 #include "HLEDataBase/DSound.1.0.4627.inl"
+#include "HLEDataBase/DSound.1.0.5028.inl"
 #include "HLEDataBase/DSound.1.0.5233.inl"
 #include "HLEDataBase/DSound.1.0.5344.inl"
 #include "HLEDataBase/DSound.1.0.5558.inl"
@@ -96,6 +99,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4432.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
+#include "HLEDataBase/XG.1.0.5028.inl"
 #include "HLEDataBase/XG.1.0.5233.inl"
 #include "HLEDataBase/XG.1.0.5344.inl"
 #include "HLEDataBase/XG.1.0.5558.inl"
@@ -105,6 +109,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XNet.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
+#include "HLEDataBase/XOnline.1.0.5028.inl"
 #include "HLEDataBase/XOnline.1.0.5233.inl"
 #include "HLEDataBase/XOnline.1.0.5344.inl"
 #include "HLEDataBase/XOnline.1.0.5558.inl"
@@ -130,6 +135,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4432),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4627),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4721),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 5028),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5233),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5344),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5558),
@@ -142,6 +148,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_D3D8, D3D8, 4361),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4432),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4627),
+	HLE_ENTRY(Lib_D3D8, D3D8, 5028),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5233),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5344),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
@@ -155,6 +162,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_DSOUND, DSound, 4361),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4432),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4627),
+	HLE_ENTRY(Lib_DSOUND, DSound, 5028),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5233),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5344),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5558),
@@ -166,6 +174,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4361),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4432),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4627),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 5028),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5233),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5344),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5558),
@@ -179,6 +188,7 @@ const HLEData HLEDataBase[] =
 
 	// TODO: Verify differences between XONLINE and XONLINES (if any)
 	HLE_ENTRY(Lib_XONLINES, XOnline, 4627),
+	HLE_ENTRY(Lib_XONLINES, XOnline, 5028),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5233),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5344),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),

@@ -1773,6 +1773,37 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 4361, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetVertexData2s
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexData2s, 4361, 8)
+
+        { 0x08, 0x06 },
+        { 0x0E, 0xE8 },
+        { 0x16, 0x08 },
+        { 0x17, 0x8D },
+        { 0x18, 0x14 },
+        { 0x19, 0x8D },
+        { 0x1A, 0x00 },
+        { 0x1F, 0xBF },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetVertexData4s
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexData4s, 4361, 9)
+
+        { 0x08, 0x06 },
+        { 0x0E, 0xE8 },
+        { 0x16, 0x08 },
+        { 0x17, 0x8D },
+        { 0x18, 0x14 },
+        { 0x19, 0xCD },
+        { 0x1A, 0x80 },
+        { 0x1B, 0x19 },
+        { 0x1F, 0xBF },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1921,6 +1952,8 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShader, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData2s, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 4361, PATCH),
 };
 
 // ******************************************************************

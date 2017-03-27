@@ -100,28 +100,6 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4627, 11)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_CreateDevice
-// ******************************************************************
-OOVPA_NO_XREF(Direct3D_CreateDevice, 5028, 8)
-
-        // Direct3D_CreateDevice+0x0A : jnz +0x0A
-        { 0x0A, 0x75 }, // (Offset,Value)-Pair #1
-        { 0x0B, 0x0A }, // (Offset,Value)-Pair #2
-
-        // Direct3D_CreateDevice+0x80 : repe stosd
-        { 0x80, 0xF3 }, // (Offset,Value)-Pair #3
-        { 0x81, 0xAB }, // (Offset,Value)-Pair #4
-
-        // Direct3D_CreateDevice+0x83 : mov eax, esi
-        { 0x83, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x84, 0xC6 }, // (Offset,Value)-Pair #6
-
-        // Direct3D_CreateDevice+0x91 : retn 0x18
-        { 0x91, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x92, 0x18 }, // (Offset,Value)-Pair #8
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4627, 11)
@@ -2164,17 +2142,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderType@8
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShaderType, 4627, 7)
-
-        { 0x04, 0x8B },
-        { 0x0A, 0x07 },
-        { 0x10, 0xEB },
-        { 0x16, 0x00 },
-        { 0x1C, 0x40 },
-        { 0x22, 0xC9 },
-        { 0x28, 0x08 },
-OOVPA_END;
-
+#define D3DDevice_GetVertexShaderType_4627 D3DDevice_GetVertexShaderType_3925
 
 // ******************************************************************
 // * D3DDevice_GetVertexShaderDeclaration
@@ -2194,16 +2162,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderFunction
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShaderFunction, 4627, 7)
-
-        { 0x16, 0xC0 },
-        { 0x2E, 0x01 },
-        { 0x46, 0x10 },
-        { 0x5E, 0x07 },
-        { 0x76, 0xC7 },
-        { 0x8E, 0x00 },
-        { 0xA6, 0xF8 },
-OOVPA_END;
+#define D3DDevice_GetVertexShaderFunction_4627 D3DDevice_GetVertexShaderFunction_3925
 
 // ******************************************************************
 // * D3DDevice_SetVertexShaderInput
@@ -3127,6 +3086,21 @@ OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 4627, 9)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_PrimeVertexCache
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_PrimeVertexCache, 4627, 8)
+
+        { 0x1A, 0x8B },
+        { 0x1B, 0x4D },
+        { 0x1C, 0x04 },
+        { 0x1D, 0xD1 },
+        { 0x1E, 0xEE },
+        { 0x2E, 0xC7 },
+        { 0x3E, 0x00 },
+        { 0x4E, 0x89 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4627
 // ******************************************************************
 OOVPATable D3D8_4627[] = {
@@ -3341,6 +3315,7 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
+	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
 };
 
 // ******************************************************************

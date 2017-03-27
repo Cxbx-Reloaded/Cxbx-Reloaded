@@ -234,31 +234,6 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-// check how many bytes were allocated for a structure
-extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound)
-{
-    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
-
-    DWORD dwRet;
-#ifdef _DEBUG_ALLOC
-    dwRet = CxbxVirtualQueryDebug(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
-    if (dwRet == -1)
-#endif
-    dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
-
-    if(dwRet == 0)
-        return 0;
-
-    if(MemoryBasicInfo.State != MEM_COMMIT)
-        return 0;
-
-    // this is a hack in order to determine when pointers come from a large write-combined database
-    if(largeBound && MemoryBasicInfo.RegionSize > 5*1024*1024)
-        return -1;
-
-    return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
-}
-
 // exception handle for that tough final exit :)
 int ExitException(LPEXCEPTION_POINTERS e)
 {

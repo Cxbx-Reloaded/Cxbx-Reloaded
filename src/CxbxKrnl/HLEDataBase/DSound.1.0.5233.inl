@@ -220,20 +220,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundVoice_SetFormat, 5233, 8,
-
-    XREF_DirectSound_CDirectSoundVoice_SetFormat,
-    XRefZero)
-
-        { 0x06, 0x4E },
-        { 0x0E, 0xE8 },
-        { 0x18, 0x4E },
-        { 0x25, 0xFF },
-        { 0x2E, 0x0C },
-        { 0x34, 0x85 },
-        { 0x38, 0x8B },
-        { 0x43, 0x00 },
-OOVPA_END;
+#define DirectSound_CDirectSoundVoice_SetFormat_5233 DirectSound_CDirectSoundVoice_SetFormat_5028
 
 // ******************************************************************
 // DirectSound_CDirectSoundVoice::SetMode
@@ -510,7 +497,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(CMcpxBuffer_SetBufferData, 4134, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetBufferData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 4134, PATCH),
-	REGISTER_OOVPA(CMcpxBuffer_GetStatusB, 4627, XREF),
+	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4831, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_GetStatus, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetCurrentPosition, 4134, XREF),

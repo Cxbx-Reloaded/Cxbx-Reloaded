@@ -1954,6 +1954,37 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 4134, 11)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_GetModelView
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetModelView, 4134, 7)
+
+        { 0x05, 0x57 },
+        { 0x0A, 0x85 },
+        { 0x10, 0xB0 },
+        { 0x16, 0x10 },
+        { 0x1C, 0x5E },
+        { 0x22, 0xC1 },
+        { 0x28, 0xE0 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_FlushVertexCache
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_FlushVertexCache, 4134, 10)
+
+        { 0x00, 0x56 },
+        { 0x07, 0x8B },
+        { 0x08, 0x06 },
+        { 0x0D, 0x05 },
+        { 0x13, 0xC7 },
+        { 0x15, 0x10 },
+        { 0x17, 0x04 },
+        { 0x1C, 0x00 },
+        { 0x21, 0xC0 },
+        { 0x26, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4134
 // ******************************************************************
 OOVPATable D3D8_4134[] = {
@@ -2108,6 +2139,8 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetModelView, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_FlushVertexCache, 4134, PATCH),
 };
 
 // ******************************************************************

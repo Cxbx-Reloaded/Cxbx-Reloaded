@@ -40,6 +40,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
+#include "CxbxKrnl/MemoryManager.h"
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
@@ -131,7 +132,7 @@ static void EmuUnswizzleActiveTexture()
                 RECT  iRect = {0,0,0,0};
                 POINT iPoint = {0,0};
 
-                void *pTemp = malloc(dwHeight*dwPitch);
+                void *pTemp = g_MemoryManager.Allocate(dwHeight*dwPitch);
 
                 XTL::EmuUnswizzleRect
                 (
@@ -143,7 +144,7 @@ static void EmuUnswizzleActiveTexture()
 
                 pTexture->UnlockRect(0);
 
-                free(pTemp);
+				g_MemoryManager.Free(pTemp);
             }
         }
 

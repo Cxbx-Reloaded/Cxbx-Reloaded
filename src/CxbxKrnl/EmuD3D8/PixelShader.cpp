@@ -73,6 +73,7 @@
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
+#include <CxbxKrnl/MemoryManager.h>
 
 #include <process.h>
 #include <locale.h>
@@ -734,13 +735,13 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 	// The Xbox sets r0 to the alpha channel of texture 0, so it can be read before written!
 	if(bR0WAccess)
 	{
-		char *szNewCodeBuffer = (char *)CxbxMalloc((strlen(szCode)+20)*sizeof(char));
+		char *szNewCodeBuffer = (char *)g_MemoryManager.Allocate((strlen(szCode)+20)*sizeof(char));
 		strncpy(szNewCodeBuffer, szCode, iPreRunLen);
 		strcat(szNewCodeBuffer, "mov r0, t0.a\n");
 		strcat(szNewCodeBuffer, &szCode[iPreRunLen]);
 		strcpy(szCode, szNewCodeBuffer);
 
-		CxbxFree(szNewCodeBuffer);
+		g_MemoryManager.Free(szNewCodeBuffer);
 	}
 	/*DbgPrintf("r1 case! ... ");
 	if(bR1WAccess || bR1AWAccess || bR1RGBWAccess)
@@ -753,12 +754,12 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 
 		sprintf(szCat, "mov r1%s, t1%s\n", szChannel, szChannel);
 
-		char *szNewCodeBuffer = (char *)malloc((strlen(szCode)+50)*sizeof(char));
+		char *szNewCodeBuffer = (char *)g_MemoryManager.Allocate((strlen(szCode)+50)*sizeof(char));
 		strncpy(szNewCodeBuffer, szCode, iPreRunLen);
 		strcat(szNewCodeBuffer, szCat);
 		strcat(szNewCodeBuffer, &szCode[iPreRunLen]);
 		strcpy(szCode, szNewCodeBuffer);
-		free(szNewCodeBuffer);
+		g_MemoryManager.Free(szNewCodeBuffer);
 	}
 	DbgPrintf("end\n");*/
 
@@ -2616,7 +2617,7 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 
 			// Add this const to the beginning of the psh
 			char str[100];
-			char *szNewCodeBuffer = (char *)malloc((strlen(pCodeBuffer)+70)*sizeof(char));
+			char *szNewCodeBuffer = (char *)g_MemoryManager.Allocate((strlen(pCodeBuffer)+70)*sizeof(char));
 			strncpy(szNewCodeBuffer, pCodeBuffer, 7);
 			szNewCodeBuffer[7]=0x00;
 			sprintf(str, "def c%d, %ff, %ff, %ff, %ff\n", i, 
@@ -2626,7 +2627,7 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 			strcat(szNewCodeBuffer, &pCodeBuffer[7]);
 			strcpy(pCodeBuffer, szNewCodeBuffer);
 
-			free(szNewCodeBuffer);
+			g_MemoryManager.Free(szNewCodeBuffer);
 
 			iConstCount++;
 
