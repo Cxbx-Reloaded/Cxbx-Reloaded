@@ -366,6 +366,20 @@ VOID CxbxSetPixelContainerHeader
 		;
 }
 
+VOID CxbxReleaseBackBufferLock()
+{
+	XTL::IDirect3DSurface8 *pBackBuffer = nullptr;
+
+	if (D3D_OK == g_pD3DDevice8->GetBackBuffer(0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
+	{
+		// TODO : assert(pBackBuffer != nullptr);
+
+		pBackBuffer->UnlockRect();
+		pBackBuffer->Release();
+	}
+}
+
+
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit()
 {
@@ -4273,14 +4287,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
 
 	HRESULT hRet = S_OK;
 	
-	// release back buffer lock
-	{
-		IDirect3DSurface8 *pBackBuffer;
-
-		g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-
-		pBackBuffer->UnlockRect();
-	}
+	CxbxReleaseBackBufferLock();
 
 	// TODO: Make a video option to wait for VBlank before calling Present.
 	// Makes syncing to 30fps easier (which is the native frame rate for Azurik
@@ -4351,14 +4358,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
     if(Flags != 0)
         EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
-    // release back buffer lock
-    {
-        IDirect3DSurface8 *pBackBuffer;
-
-        g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-
-        if(pBackBuffer) pBackBuffer->UnlockRect();
-    }
+	CxbxReleaseBackBufferLock();	
 
 	// TODO: Make a video option to wait for VBlank before calling Present.
 	// Makes syncing to 30fps easier (which is the native frame rate for Azurik
@@ -6204,6 +6204,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				}
 
 				pBackBuffer->UnlockRect();
+				pBackBuffer->Release();
 			}
 
 			// Update overlay if present was not called since the last call to
