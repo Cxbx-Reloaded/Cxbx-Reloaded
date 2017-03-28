@@ -6014,7 +6014,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
 inline uint08 ClampIntToByte(int x)
 {
 	int r = x > 255 ? 255 : x;
-	return r < 0 ? 0 : r;
+	return r < 0 ? 0 : (uint08)r;
 }
 
 // ******************************************************************
@@ -6049,12 +6049,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			DDSURFACEDESC2  ddsd2;
 
 			ZeroMemory(&ddsd2, sizeof(ddsd2));
-
 			ddsd2.dwSize = sizeof(ddsd2);
-
 			if(FAILED(g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL)))
 				EmuWarning("Unable to lock overlay surface!");
-
+			else
 			// copy data
 			{
 				char *pDest = (char*)ddsd2.lpSurface;
@@ -6076,9 +6074,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 						pSour += g_dwOverlayP;
 					}
 				}
-			}
 
-			g_pDDSOverlay7->Unlock(NULL);
+				g_pDDSOverlay7->Unlock(NULL);
+			}
 		}
 
 		// update overlay!
@@ -6109,7 +6107,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			DDOVERLAYFX ddofx;
 
 			ZeroMemory(&ddofx, sizeof(ddofx));
-
 			ddofx.dwSize = sizeof(DDOVERLAYFX);
 			ddofx.dckDestColorkey.dwColorSpaceLowValue = 0;
 			ddofx.dckDestColorkey.dwColorSpaceHighValue = 0;
@@ -6121,82 +6118,101 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			// TODO: dont assume X8R8G8B8 ?
 			D3DLOCKED_RECT LockedRectDest;
 
-			IDirect3DSurface8 *pBackBuffer=0;
-
+			IDirect3DSurface8 *pBackBuffer = 0;
 			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-
 			// if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-			if(hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
+			if (hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
 			{
-				uint08 *pCurByte = (uint08*)pSurface->Lock;
-
-				uint08 *pDest = (uint08*)LockedRectDest.pBits;
-
-				uint32 dx=0, dy=0;
-
+				uint08 *pbSource = (uint08*)pSurface->Lock;
+				uint08 *pbDest = (uint08*)LockedRectDest.pBits;
+				uint32 dx = 0, dy = 0;
 				uint32 dwImageSize = g_dwOverlayP*g_dwOverlayH;
 
-				// grayscale
+				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
+				D3DSURFACE_DESC BackBufferDesc;
+				pBackBuffer->GetDesc(&BackBufferDesc);
+
+				// Limit the width and height of the output to the backbuffer dimensions.
+				// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
+				// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
+				uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
+				uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
+
+				// grayscale - TODO : Either remove or make configurable
 				if(false)
 				{
-					for(uint32 y=0;y<g_dwOverlayH;y++)
+					// Clip to backbuffer height :
+					for(uint32 y=0;y<H;y++)
 					{
-						uint32 stop = g_dwOverlayW*4;
+						uint32 stop = g_dwOverlayW *4;
 						for(uint32 x=0;x<stop;x+=4)
 						{
-							uint08 Y = *pCurByte;
+							uint08 Y = *pbSource;
 
-							pDest[x+0] = Y;
-							pDest[x+1] = Y;
-							pDest[x+2] = Y;
-							pDest[x+3] = 0xFF;
+							// Clip to backbuffer width :
+							if (x / 4 < W)
+							{
+								pbDest[x + 0] = Y;
+								pbDest[x + 1] = Y;
+								pbDest[x + 2] = Y;
+								pbDest[x + 3] = 0xFF;
+							}
 
-							pCurByte+=2;
+							pbSource += 2;
 						}
 
-						pDest += LockedRectDest.Pitch;
+						pbDest += LockedRectDest.Pitch;
 					}
 				}
 				// full color conversion (YUY2->XRGB)
 				else
 				{
-					// Based on https://pastebin.com/mDcwqJV3
+					// The following is a combination of https://pastebin.com/mDcwqJV3 and
+					// https://en.wikipedia.org/wiki/YUV#Y.E2.80.B2UV422_to_RGB888_conversion
+					const int K1 = int(1.402f * (1 << 16));
+					const int K2 = int(0.334f * (1 << 16));
+					const int K3 = int(0.714f * (1 << 16));
+					const int K4 = int(1.772f * (1 << 16));
+
 					for(uint32 v=0;v<dwImageSize;v+=4)
 					{
-						const int K1 = int(1.402f * (1 << 16));
-						const int K2 = int(0.714f * (1 << 16));
-						const int K3 = int(0.334f * (1 << 16));
-						const int K4 = int(1.772f * (1 << 16));
+						// Clip to backbuffer width :
+						if (dx < W)
+						{
+							uint8_t Y0 = pbSource[0];
+							uint8_t Cb = pbSource[1];
+							uint8_t Y1 = pbSource[2];
+							uint8_t Cr = pbSource[3];
 
-						uint8_t Y1 = *pCurByte++;
-						uint8_t U  = *pCurByte++;
-						uint8_t Y2 = *pCurByte++;
-						uint8_t V  = *pCurByte++;
+							int nCb = Cb - 128;
+							int nCr = Cr - 128;
 
-						int8_t uf = U - 128;
-						int8_t vf = V - 128;
+							int Rd =  (K1 * nCr) >> 16;
+							int Gd = ((K2 * nCb) + (K3 * nCr)) >> 16;
+							int Bd =  (K4 * nCb) >> 16;
 
-						int R = (K1*vf >> 16);
-						int G = (K2*vf >> 16) + (K3*uf >> 16);
-						int B = (K4*uf >> 16);
+							uint32 i = (dy * LockedRectDest.Pitch) + (dx * 4);
 
-						uint32 i = (dy * LockedRectDest.Pitch) + (dx * 4);
+							pbDest[i + 0] = ClampIntToByte((int)Y0 + Bd);
+							pbDest[i + 1] = ClampIntToByte((int)Y0 - Gd);
+							pbDest[i + 2] = ClampIntToByte((int)Y0 + Rd);
+							pbDest[i + 3] = 0xFF;
 
-						pDest[i + 0] = ClampIntToByte((int)Y1 + B);
-						pDest[i + 1] = ClampIntToByte((int)Y1 - G);
-						pDest[i + 2] = ClampIntToByte((int)Y1 + R);
-						pDest[i + 3] = 0xFF;
+							pbDest[i + 4] = ClampIntToByte((int)Y1 + Bd);
+							pbDest[i + 5] = ClampIntToByte((int)Y1 - Gd);
+							pbDest[i + 6] = ClampIntToByte((int)Y1 + Rd);
+							pbDest[i + 7] = 0xFF;
+						}
 
-						pDest[i + 4] = ClampIntToByte((int)Y2 + B);
-						pDest[i + 5] = ClampIntToByte((int)Y2 - G);
-						pDest[i + 6] = ClampIntToByte((int)Y2 + R);
-						pDest[i + 7] = 0xFF;
-
+						pbSource += 4;
 						dx += 2;
-
 						if ((dx % g_dwOverlayW) == 0)
 						{
 							dy++;
+							// Clip to backbuffer height :
+							if (dy >= H)
+								break;
+
 							dx = 0;
 						}
 
