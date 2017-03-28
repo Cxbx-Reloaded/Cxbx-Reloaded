@@ -866,6 +866,21 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVerticesUP, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetPixelShader, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData2s, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_InsertCallback, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetStreamSource2, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShader, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShaderConstant, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInputDirect, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShaderInput, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShaderType, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShaderDeclaration, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShaderFunction, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 4627, PATCH),
 };
 
 // ******************************************************************
