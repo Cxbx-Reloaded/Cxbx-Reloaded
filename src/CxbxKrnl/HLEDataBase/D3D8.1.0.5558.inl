@@ -660,23 +660,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5558, 10)
+OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5558, 9)
 
         // D3DDevice_DrawVerticesUP+0x03 : sub esp, 0x14
         { 0x03, 0x83 }, // (Offset,Value)-Pair #1
         { 0x04, 0xEC }, // (Offset,Value)-Pair #2
         { 0x05, 0x14 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_DrawVerticesUP+0x37 : mov edx, [edi+0xC44]
-        { 0x37, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x38, 0x97 }, // (Offset,Value)-Pair #5
-        { 0x39, 0x44 }, // (Offset,Value)-Pair #6
-        { 0x3A, 0x0C }, // (Offset,Value)-Pair #7
+        // D3DDevice_DrawVerticesUP+0x40 : mov [edi], eax
+        { 0x40, 0x89 }, // (Offset,Value)-Pair #4
+        { 0x41, 0x07 }, // (Offset,Value)-Pair #5
+
+        // D3DDevice_DrawVerticesUP+0x42 : or dword ptr [edi+8], 800h
+        { 0x42, 0x81 }, // (Offset,Value)-Pair #6
 
         // D3DDevice_DrawVerticesUP+0xC4 : cmp esi, 0x80
-        { 0xC4, 0x81 }, // (Offset,Value)-Pair #8
-        { 0xC5, 0xFE }, // (Offset,Value)-Pair #9
-        { 0xC6, 0x80 }, // (Offset,Value)-Pair #10
+        { 0xC4, 0x81 }, // (Offset,Value)-Pair #7
+        { 0xC5, 0xFE }, // (Offset,Value)-Pair #8
+        { 0xC6, 0x80 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
 // ******************************************************************
@@ -699,16 +700,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer2, 5558, 7)
-
-        { 0x05, 0x00 },
-        { 0x0C, 0x50 },
-        { 0x13, 0xC0 },
-        { 0x1A, 0xC9 },
-        { 0x21, 0x04 },
-        { 0x28, 0xC7 },
-        { 0x2F, 0x48 },
-OOVPA_END;
+#define D3DDevice_CreateIndexBuffer2_5558 D3DDevice_CreateIndexBuffer2_5344
 
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
