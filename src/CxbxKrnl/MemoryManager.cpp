@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+#include <assert.h> // For assert()
+#include <malloc.h> // For _aligned_malloc()
+
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "Logging.h"
@@ -55,22 +58,23 @@ void* MemoryManager::Allocate(size_t size)
 {
 	LOG_FUNC_ONE_ARG(size);
 
-	EnterCriticalSection(&m_CriticalSection);
+	assert(size > 0);
 
-	void* ptr = malloc(size);
+	void * addr = malloc(size);
 
-	if (ptr != nullptr) {
-		MemoryBlockInfo info;
-		info.offset = (uint32_t)ptr;
-		info.size = size;
+	if (addr != NULL) {
+		TypedMemoryBlock info;
+
 		info.type = MemoryType::STANDARD;
+		info.block.addr = addr;
+		info.block.size = size;
 
-		m_MemoryBlockInfo[info.offset] = info;
+		EnterCriticalSection(&m_CriticalSection);
+		m_MemoryBlockInfo[addr] = info;
+		LeaveCriticalSection(&m_CriticalSection);
 	}
 
-	LeaveCriticalSection(&m_CriticalSection);
-
-	RETURN(ptr);
+	RETURN((void*)addr);
 }
 
 void* MemoryManager::AllocateAligned(size_t size, size_t alignment)
@@ -80,22 +84,23 @@ void* MemoryManager::AllocateAligned(size_t size, size_t alignment)
 		LOG_FUNC_ARG(alignment);
 	LOG_FUNC_END;
 
-	EnterCriticalSection(&m_CriticalSection);
+	assert(size > 0);
 
-	void* ptr = _aligned_malloc(size, alignment);
+	void * addr = _aligned_malloc(size, alignment);
 
-	if (ptr != nullptr) {
-		MemoryBlockInfo info;
-		info.offset = (uint32_t)ptr;
-		info.size = size;
+	if (addr != NULL) {
+		TypedMemoryBlock info;
+
 		info.type = MemoryType::ALIGNED;
+		info.block.addr = addr;
+		info.block.size = size;
 
-		m_MemoryBlockInfo[info.offset] = info;
+		EnterCriticalSection(&m_CriticalSection);
+		m_MemoryBlockInfo[addr] = info;
+		LeaveCriticalSection(&m_CriticalSection);
 	}
 
-	LeaveCriticalSection(&m_CriticalSection);
-
-	RETURN(ptr);
+	RETURN((void*)addr);
 }
 
 void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
@@ -105,35 +110,44 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 		LOG_FUNC_ARG(alignment);
 	LOG_FUNC_END;
 
+	assert(size > 0);
+	assert(alignment >= 4096); // TODO : Pull PAGE_SIZE in scope for this?
+	assert((alignment & (alignment - 1)) == 0);
+
+	xbaddr alignMask = (xbaddr)(alignment - 1);
+
+	xbaddr addr = NULL;
+
 	EnterCriticalSection(&m_CriticalSection);
-
-	// If the end address of the block won't meet the alignment, adjust the size
-	if (size % alignment > 0) {
-		size = (size + alignment) + (size % alignment);
-	}
-	
-	uint32_t addr = NULL;
-
-	// If the allocation table is empty, we can allocate wherever we please
-	if (m_ContiguousMemoryRegions.size() == 0) {
+	// Is the contiguous allocation table empty?
+	if (m_ContiguousMemoryBlocks.size() == 0) {
 		// Start allocating Contiguous Memory after the Kernel image header to prevent overwriting our dummy Kernel
 		addr = XBOX_KERNEL_BASE + sizeof(DUMMY_KERNEL);
+		addr = (addr + alignMask) & ~alignMask;
 	} else {
 		// Locate the first available Memory Region with enough space for the requested buffer
-		// This could be improved later on by always locating the smallest block with enough space
+		// TODO : This could be improved later on by always locating the smallest block with enough space
 		// in order to reduce memory fragmentation.
-		for (auto it = m_ContiguousMemoryRegions.begin(); it != m_ContiguousMemoryRegions.end(); ++it) {
-			ContiguousMemoryRegion current = it->second;
+		for (auto it = m_ContiguousMemoryBlocks.begin(); it != m_ContiguousMemoryBlocks.end(); ++it) {
+			MemoryBlock current = it->second;
+			xbaddr after_current = (xbaddr)current.addr + current.size;
+			after_current = (after_current + alignMask) & ~alignMask;
 
-			if (std::next(it) == m_ContiguousMemoryRegions.end()) {
-				addr = current.offset + current.size;
+			// Is this the last entry?
+			if (std::next(it) == m_ContiguousMemoryBlocks.end()) {
+				// Continue allocating after the last block :
+				addr = after_current;
 				break;
 			}
 
-			ContiguousMemoryRegion next = std::next(it)->second;
-			if (((current.offset + current.size + size) < next.offset)) {
-				addr = current.offset + current.size;
-				break;
+			// Is there an empty gap after the current entry?
+			MemoryBlock next = std::next(it)->second;
+			if (after_current < (xbaddr)next.addr) {
+				// does this allocation fit inside the gap?
+				if (after_current + size < (xbaddr)next.addr) {
+					addr = after_current;
+					break;
+				}
 			}
 		}
 	}
@@ -144,16 +158,18 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 	}
 	 
 	if (addr != NULL) {
-		ContiguousMemoryRegion region;
-		region.offset = addr;
-		region.size = size;
-		m_ContiguousMemoryRegions[addr] = region;
+		MemoryBlock block;
 
-		MemoryBlockInfo info;
+		block.addr = (void *)addr;
+		block.size = size;
+		m_ContiguousMemoryBlocks[(void *)addr] = block;
+
+		TypedMemoryBlock info;
+
 		info.type = MemoryType::CONTIGUOUS;
-		info.offset = region.offset;
-		info.size = region.size;
-		m_MemoryBlockInfo[addr] = info;
+		info.block = block;
+
+		m_MemoryBlockInfo[(void *)addr] = info;
 	}
 	
 	LeaveCriticalSection(&m_CriticalSection);
@@ -162,42 +178,42 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 {
-	void* buffer = Allocate(num * size);
-	memset(buffer, 0, num * size);
-	return buffer;
+	void* addr = Allocate(num * size);
+	memset(addr, 0, num * size);
+	return addr;
 }
 
-bool MemoryManager::IsAllocated(void* block)
+bool MemoryManager::IsAllocated(void* addr)
 {
-	LOG_FUNC_ONE_ARG(block);
+	LOG_FUNC_ONE_ARG(addr);
 
 	EnterCriticalSection(&m_CriticalSection);
-	bool result = m_MemoryBlockInfo.find((uint32_t)block) != m_MemoryBlockInfo.end();
+	bool result = m_MemoryBlockInfo.find(addr) != m_MemoryBlockInfo.end();
 	LeaveCriticalSection(&m_CriticalSection);
 	
 	RETURN(result);
 }
 
-void MemoryManager::Free(void* block)
+void MemoryManager::Free(void* addr)
 {
-	LOG_FUNC_ONE_ARG(block);
+	LOG_FUNC_ONE_ARG(addr);
 
 	EnterCriticalSection(&m_CriticalSection);
 
-	if (IsAllocated(block)) {
-		MemoryBlockInfo info = m_MemoryBlockInfo[info.offset];
+	if (IsAllocated(addr)) {
+		TypedMemoryBlock info = m_MemoryBlockInfo[addr];
 		switch (info.type) {
 			case MemoryType::ALIGNED:
-				_aligned_free((void*)info.offset);
-				m_MemoryBlockInfo.erase(info.offset);
+				_aligned_free((void*)info.block.addr);
+				m_MemoryBlockInfo.erase(info.block.addr);
 				break;
 			case MemoryType::STANDARD:
-				free((void*)info.offset);
-				m_MemoryBlockInfo.erase(info.offset);
+				free((void*)info.block.addr);
+				m_MemoryBlockInfo.erase(info.block.addr);
 				break;
 			case MemoryType::CONTIGUOUS:
-				m_ContiguousMemoryRegions.erase(info.offset);
-				m_MemoryBlockInfo.erase(info.offset);
+				m_ContiguousMemoryBlocks.erase(info.block.addr);
+				m_MemoryBlockInfo.erase(info.block.addr);
 				break;
 			default:
 				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free memory of an unknown type");
@@ -211,17 +227,18 @@ void MemoryManager::Free(void* block)
 	LeaveCriticalSection(&m_CriticalSection);
 }
 
-size_t MemoryManager::QueryAllocationSize(void* block)
+size_t MemoryManager::QueryAllocationSize(void* addr)
 {
-	LOG_FUNC_ONE_ARG(block);
-
-	EnterCriticalSection(&m_CriticalSection);
+	LOG_FUNC_ONE_ARG(addr);
 
 	size_t ret = 0;
 
-	if (IsAllocated(block)) {
-		MemoryBlockInfo info = m_MemoryBlockInfo[(uint32_t)block];
-		ret = info.size;
+	EnterCriticalSection(&m_CriticalSection);
+	// TODO : Allow queries both from the start AND somewhere inside an allocated block,
+	// which will fix at least part of https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/283
+	if (IsAllocated(addr)) {
+		TypedMemoryBlock info = m_MemoryBlockInfo[addr];
+		ret = info.block.size;
 	}
 	else {
 		EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
