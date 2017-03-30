@@ -8252,7 +8252,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
     };
 
 	pPalette->Common |= (Size << 30);
-    pPalette->Data = (DWORD)new uint08[lk[Size]];
+    pPalette->Data = (DWORD)g_MemoryManager.AllocateContiguous(lk[Size], PAGE_SIZE);
     pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
