@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "MemoryManager.h"
 #include "EmuXTL.h"
 
+#include <assert.h>
 #include <process.h>
 #include <clocale>
 
@@ -372,7 +373,7 @@ VOID CxbxReleaseBackBufferLock()
 
 	if (D3D_OK == g_pD3DDevice8->GetBackBuffer(0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
 	{
-		// TODO : assert(pBackBuffer != nullptr);
+		assert(pBackBuffer != nullptr);
 
 		pBackBuffer->UnlockRect();
 		pBackBuffer->Release();
@@ -6047,6 +6048,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		if(g_bSupportsYUY2)
 		{
 			DDSURFACEDESC2  ddsd2;
+			// Make sure the overlay is allocated before using it
+			if (g_pDDSOverlay7 == nullptr) {
+				EMUPATCH(D3DDevice_EnableOverlay)(TRUE);
+
+				assert(g_pDDSOverlay7 != nullptr);
+			}
 
 			ZeroMemory(&ddsd2, sizeof(ddsd2));
 			ddsd2.dwSize = sizeof(ddsd2);
