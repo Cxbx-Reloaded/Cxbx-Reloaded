@@ -1676,10 +1676,10 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
         pStreamPatch->NeedPatch = pPatchData->NeedPatching;
 		// 2010/01/12 - revel8n - fixed allocated data size and type
-        pStreamPatch->pTypes = (UINT *)g_MemoryManager.Allocate(pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
+        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
         memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
         // 2010/12/06 - PatrickvL - do the same for new sizes :
-		pStreamPatch->pSizes = (UINT *)g_MemoryManager.Allocate(pPatchData->TypePatchData.NbrTypes * sizeof(UINT));
+		pStreamPatch->pSizes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT));
 		memcpy(pStreamPatch->pSizes, pPatchData->TypePatchData.NewSizes, pPatchData->TypePatchData.NbrTypes * sizeof(UINT));
 
         return TRUE;
@@ -1978,7 +1978,7 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-    *ppRecompiledDeclaration = (DWORD *)g_MemoryManager.Allocate(DeclarationSize);
+    *ppRecompiledDeclaration = (DWORD *)malloc(DeclarationSize);
     DWORD *pRecompiled = *ppRecompiledDeclaration;
     memcpy(pRecompiled, pDeclaration, DeclarationSize);
     *pDeclarationSize = DeclarationSize;
@@ -2002,7 +2002,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     // Copy the patches to the vertex shader struct
     DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
     pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
-    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)g_MemoryManager.Allocate(StreamsSize);
+    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)malloc(StreamsSize);
     memcpy(pVertexDynamicPatch->pStreamPatches,
            PatchData.StreamPatchData.pStreamPatches,
            StreamsSize);
@@ -2023,7 +2023,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
-    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)g_MemoryManager.AllocateZeroed(1, sizeof(VSH_XBOX_SHADER));
+    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
 	LPD3DXBUFFER		pErrors = NULL;
     HRESULT             hRet = 0;
 
@@ -2074,7 +2074,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // The size of the shader is
         *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
-        char* pShaderDisassembly = (char*)g_MemoryManager.Allocate(pShader->IntermediateCount * 100); // Should be plenty
+        char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 100); // Should be plenty
         DbgVshPrintf("-- Before conversion --\n");
         VshWriteShader(pShader, pShaderDisassembly, FALSE);
         DbgVshPrintf("%s", pShaderDisassembly);
@@ -2119,9 +2119,10 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		if( pErrors )
 			pErrors->Release();
 
-        g_MemoryManager.Free(pShaderDisassembly);
+        free(pShaderDisassembly);
     }
-    g_MemoryManager.Free(pShader);
+
+    free(pShader);
 
     return hRet;
 }
@@ -2130,12 +2131,13 @@ extern void XTL::FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader)
 {
     for (DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
     {
-        g_MemoryManager.Free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
+        free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
 		pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes = nullptr;
-		g_MemoryManager.Free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pSizes);
+		free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pSizes);
 		pVertexShader->VertexDynamicPatch.pStreamPatches[i].pSizes = nullptr;
     }
-    g_MemoryManager.Free(pVertexShader->VertexDynamicPatch.pStreamPatches);
+
+    free(pVertexShader->VertexDynamicPatch.pStreamPatches);
     pVertexShader->VertexDynamicPatch.pStreamPatches = NULL;
     pVertexShader->VertexDynamicPatch.NbrStreams = 0;
 }
