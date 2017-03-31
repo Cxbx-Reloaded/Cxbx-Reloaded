@@ -105,7 +105,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
-    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)g_MemoryManager.AllocateZeroed(1, sizeof(CACHEDSTREAM));
+    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)calloc(1, sizeof(CACHEDSTREAM));
 
     // Check if the cache is full, if so, throw away the least used stream
     if(g_PatchedStreamsCache.get_count() > VERTEX_BUFFER_CACHE_SIZE)
@@ -201,7 +201,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
     {
         if(pCachedStream->bIsUP && pCachedStream->pStreamUP)
         {
-            g_MemoryManager.Free(pCachedStream->pStreamUP);
+            free(pCachedStream->pStreamUP);
         }
         if(pCachedStream->Stream.pOriginalStream)
         {
@@ -211,7 +211,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
         {
             pCachedStream->Stream.pPatchedStream->Release();
         }
-        g_MemoryManager.Free(pCachedStream);
+        free(pCachedStream);
     }
     g_PatchedStreamsCache.Unlock();
     g_PatchedStreamsCache.remove(pStream);
@@ -228,7 +228,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     UINT                       uiLength;
     bool                       bApplied = false;
     uint32                     uiKey;
-    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)g_MemoryManager.Allocate(sizeof(CACHEDSTREAM));
+    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)malloc(sizeof(CACHEDSTREAM));
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
@@ -898,7 +898,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
-        m_pNewVertexStreamZeroData = (uint08*)g_MemoryManager.Allocate(dwNewSizeWR);
+        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSizeWR);
         m_bAllocatedStreamZeroData = true;
 
         pPatchedVertexData = (uint08*)m_pNewVertexStreamZeroData;
@@ -1038,7 +1038,7 @@ bool XTL::VertexPatcher::Restore()
 
             if(this->m_bAllocatedStreamZeroData)
             {
-                g_MemoryManager.Free(m_pNewVertexStreamZeroData);
+                free(m_pNewVertexStreamZeroData);
             }
         }
         else

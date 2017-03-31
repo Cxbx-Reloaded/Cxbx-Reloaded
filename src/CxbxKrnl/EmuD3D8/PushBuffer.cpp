@@ -132,7 +132,7 @@ static void EmuUnswizzleActiveTexture()
                 RECT  iRect = {0,0,0,0};
                 POINT iPoint = {0,0};
 
-                void *pTemp = g_MemoryManager.Allocate(dwHeight*dwPitch);
+                void *pTemp = malloc(dwHeight*dwPitch);
 
                 XTL::EmuUnswizzleRect
                 (
@@ -144,7 +144,7 @@ static void EmuUnswizzleActiveTexture()
 
                 pTexture->UnlockRect(0);
 
-				g_MemoryManager.Free(pTemp);
+				free(pTemp);
             }
         }
 

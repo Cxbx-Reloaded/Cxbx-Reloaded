@@ -1072,7 +1072,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     DWORD *lpCodes = 0;
 
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-                    lpCodes = (DWORD*)g_MemoryManager.Allocate(dwCodes*sizeof(DWORD));
+                    lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
                     g_bSupportsYUY2 = false;
                     for(DWORD v=0;v<dwCodes;v++)
@@ -1084,7 +1084,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         }
                     }
 
-                    g_MemoryManager.Free(lpCodes);						
+                    free(lpCodes);						
                     if(!g_bSupportsYUY2)
                         EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
 					else
@@ -1354,7 +1354,7 @@ static void EmuUnswizzleTextureStages()
 					RECT  iRect = {0,0,0,0};
 					POINT iPoint = {0,0};
 
-					void *pTemp = g_MemoryManager.Allocate(dwHeight*dwPitch);
+					void *pTemp = malloc(dwHeight*dwPitch);
 
 					XTL::EmuUnswizzleRect
 					(
@@ -1366,7 +1366,7 @@ static void EmuUnswizzleTextureStages()
 
 					pTexture->UnlockRect(0);
 
-					g_MemoryManager.Free(pTemp);
+					free(pTemp);
 				}
 			}
 
@@ -2075,7 +2075,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
            ");\n",
            pRamp);
 
-    D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)g_MemoryManager.Allocate(sizeof(D3DGAMMARAMP));
+    D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
 
     g_pD3DDevice8->GetGammaRamp(pGammaRamp);
 
@@ -2086,7 +2086,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
         pRamp->blue[v] = (BYTE)pGammaRamp->blue[v];
     }
 
-	g_MemoryManager.Free(pGammaRamp);
+	free(pGammaRamp);
 
     
 
@@ -2614,7 +2614,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     // Save the status, to remove things later
     pVertexShader->Status = hRet;
 
-    g_MemoryManager.Free(pRecompiledDeclaration);
+    free(pRecompiledDeclaration);
 
     pVertexShader->pDeclaration = (DWORD*)g_MemoryManager.Allocate(DeclarationSize);
     memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
@@ -4885,7 +4885,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
 										BYTE *pPixelData = (BYTE*)LockedRect.pBits;
                                         DWORD dwDataSize = dwMipWidth*dwMipHeight;
-										DWORD* pExpandedTexture = (DWORD*)g_MemoryManager.Allocate(dwDataSize * sizeof(DWORD));
+										DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
 										DWORD* pTexturePalette = (DWORD*)pCurrentPalette;
 
 										//__asm int 3;
@@ -4919,7 +4919,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                                         memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
 
                                         // Flush unused data buffers
-                                        g_MemoryManager.Free(pExpandedTexture);
+                                        free(pExpandedTexture);
                                     }
                                 }
                             }
