@@ -71,9 +71,10 @@ public:
 	void Free(void* addr);
 	size_t QueryAllocationSize(void* addr);
 private:
-	std::unordered_map<void *, TypedMemoryBlock> m_MemoryBlockInfo;
+	std::map<void *, TypedMemoryBlock> m_MemoryBlockInfo;
 	std::map<void *, MemoryBlock> m_ContiguousMemoryBlocks;
 	CRITICAL_SECTION m_CriticalSection;
+	TypedMemoryBlock *FindContainingTypedMemoryBlock(void* addr);
 };
 
 extern MemoryManager g_MemoryManager;
