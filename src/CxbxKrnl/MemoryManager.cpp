@@ -60,7 +60,7 @@ TypedMemoryBlock *MemoryManager::FindContainingTypedMemoryBlock(void* addr)
 		return nullptr;
 
 	// Find the first block whose address is not less than the requested address
-	std::map<void *, TypedMemoryBlock>::iterator low = m_MemoryBlockInfo.lower_bound(addr);
+	auto low = m_MemoryBlockInfo.lower_bound(addr);
 	if (low == m_MemoryBlockInfo.end())
 		// If there's no such block, it might fall into the last block
 		low = --m_MemoryBlockInfo.end();
