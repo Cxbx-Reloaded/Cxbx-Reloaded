@@ -291,16 +291,34 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetLight, 5558, 8)
+OOVPA_NO_XREF(D3DDevice_SetLight, 5558, 15)
 
-        { 0x1E, 0x00 },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x00 },
-        { 0x7E, 0x07 },
-        { 0x9E, 0xC8 },
-        { 0xBE, 0xC9 },
-        { 0xDE, 0x07 },
-        { 0xFE, 0xC1 },
+        // D3DDevice_SetLight+0x1f : add REG, 0x10
+        { 0x1f, 0x83 },
+        { 0x21, 0x10 },
+
+        // D3DDevice_SetLight+0x22 : and REG, 0xfffffff0
+        { 0x22, 0x83 },
+        { 0x24, 0xf0 },
+
+        // D3DDevice_SetLight+0x2c : push 0x24800000
+        { 0x2c, 0x68 },
+        { 0x2d, 0x00 },
+        { 0x2e, 0x00 },
+        { 0x2f, 0x80 },
+        { 0x30, 0x24 },
+
+        // D3DDevice_SetLight+0x65 : jz +8
+        { 0x65, 0x74 },
+        { 0x66, 0x08 },
+
+        // D3DDevice_SetLight+0xe3 : jz +8
+        { 0xe3, 0x74 },
+        { 0xe4, 0x08 },
+
+        // D3DDevice_SetLight+0xfe : shr ???, 2
+        { 0xfe, 0xc1 },
+        { 0x100, 0x02 },
 OOVPA_END;
 
 // ******************************************************************

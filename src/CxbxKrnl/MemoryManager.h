@@ -42,15 +42,10 @@
 #include <map>
 #include <unordered_map>
 
-// Define virtual base and alternate virtual base of kernel.
-#define KSEG0_BASE                  0x80000000
-// Define virtual base addresses for physical memory windows.
-#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
-#define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
-#define MM_64M_PHYSICAL_PAGE        0x04000
-#define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
-#define MM_INSTANCE_PAGE_COUNT      16
-#define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
+typedef struct {
+	void *addr;
+	size_t size;
+} MemoryBlock;
 
 enum struct MemoryType {
 	STANDARD = 0,
@@ -60,14 +55,8 @@ enum struct MemoryType {
 
 typedef struct {
 	MemoryType type;
-	uint32_t offset;
-	size_t size;
-} MemoryBlockInfo;
-
-typedef struct {
-	uint32_t offset;
-	size_t size;
-} ContiguousMemoryRegion;
+	MemoryBlock block;
+} TypedMemoryBlock;
 
 class MemoryManager
 {
@@ -78,12 +67,12 @@ public:
 	void* AllocateAligned(size_t size, size_t alignment);
 	void* AllocateContiguous(size_t size, size_t alignment);
 	void* AllocateZeroed(size_t num, size_t size);
-	bool IsAllocated(void* block);
-	void Free(void* block);
-	size_t QueryAllocationSize(void* block);
+	bool IsAllocated(void* addr);
+	void Free(void* addr);
+	size_t QueryAllocationSize(void* addr);
 private:
-	std::unordered_map<uint32_t, MemoryBlockInfo> m_MemoryBlockInfo;
-	std::map<uint32_t, ContiguousMemoryRegion> m_ContiguousMemoryRegions;
+	std::unordered_map<void *, TypedMemoryBlock> m_MemoryBlockInfo;
+	std::map<void *, MemoryBlock> m_ContiguousMemoryBlocks;
 	CRITICAL_SECTION m_CriticalSection;
 };
 
