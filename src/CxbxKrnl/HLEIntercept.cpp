@@ -843,7 +843,18 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Header *pXbeHeader)
 {
     xbaddr lower = pXbeHeader->dwBaseAddr;
-	xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
+	// Find the highest address contained within an executable segment
+	xbaddr upper = pXbeHeader->dwBaseAddr;
+	Xbe::SectionHeader* headers = reinterpret_cast<Xbe::SectionHeader*>(pXbeHeader->dwSectionHeadersAddr);
+
+	for (uint32_t i = 0; i < pXbeHeader->dwSections; i++) {
+		xbaddr end_addr = headers[i].dwVirtualAddr + headers[i].dwVirtualSize;
+		if (headers[i].dwFlags.bExecutable && end_addr > upper) {
+			upper = end_addr;
+		}	
+	}
+
 
     // traverse the full OOVPA table
     for(size_t a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
