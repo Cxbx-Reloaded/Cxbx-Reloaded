@@ -54,6 +54,25 @@ MemoryManager::~MemoryManager()
 	DeleteCriticalSection(&m_CriticalSection);
 }
 
+TypedMemoryBlock *MemoryManager::FindContainingTypedMemoryBlock(void* addr)
+{
+	if (m_MemoryBlockInfo.empty())
+		return nullptr;
+
+	// Find the first block whose address is not less than the requested address
+	std::map<void *, TypedMemoryBlock>::iterator low = m_MemoryBlockInfo.lower_bound(addr);
+	if (low == m_MemoryBlockInfo.end())
+		// If there's no such block, it might fall into the last block
+		low = --m_MemoryBlockInfo.end();
+
+	// Check if the requested address lies inside this block
+	TypedMemoryBlock *info = &(low->second);
+	if ((size_t)addr >= ((size_t)info->block.addr + info->block.size))
+		return nullptr;
+
+	return info;
+}
+
 void* MemoryManager::Allocate(size_t size)
 {
 	LOG_FUNC_ONE_ARG(size);
@@ -178,6 +197,8 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 {
+	LOG_FORWARD(Allocate);
+
 	void* addr = Allocate(num * size);
 	memset(addr, 0, num * size);
 	return addr;
@@ -185,10 +206,12 @@ void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 
 bool MemoryManager::IsAllocated(void* addr)
 {
+	bool result;
+
 	LOG_FUNC_ONE_ARG(addr);
 
 	EnterCriticalSection(&m_CriticalSection);
-	bool result = m_MemoryBlockInfo.find(addr) != m_MemoryBlockInfo.end();
+	result = (FindContainingTypedMemoryBlock(addr) != nullptr);
 	LeaveCriticalSection(&m_CriticalSection);
 	
 	RETURN(result);
@@ -200,24 +223,30 @@ void MemoryManager::Free(void* addr)
 
 	EnterCriticalSection(&m_CriticalSection);
 
-	if (IsAllocated(addr)) {
-		TypedMemoryBlock info = m_MemoryBlockInfo[addr];
-		switch (info.type) {
+	TypedMemoryBlock *info = FindContainingTypedMemoryBlock(addr);
+	if (info != nullptr) {
+		if (info->block.addr == addr) {
+			switch (info->type) {
 			case MemoryType::ALIGNED:
-				_aligned_free((void*)info.block.addr);
-				m_MemoryBlockInfo.erase(info.block.addr);
+				_aligned_free((void*)info->block.addr);
+				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			case MemoryType::STANDARD:
-				free((void*)info.block.addr);
-				m_MemoryBlockInfo.erase(info.block.addr);
+				free((void*)info->block.addr);
+				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			case MemoryType::CONTIGUOUS:
-				m_ContiguousMemoryBlocks.erase(info.block.addr);
-				m_MemoryBlockInfo.erase(info.block.addr);
+				m_ContiguousMemoryBlocks.erase(info->block.addr);
+				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			default:
 				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free memory of an unknown type");
 				break;
+			}
+		}
+		else {
+			__debugbreak();
+			CxbxKrnlCleanup("Fatal: MemoryManager attempted to free only a part of a block");
 		}
 	} else {
 		__debugbreak();
@@ -234,11 +263,10 @@ size_t MemoryManager::QueryAllocationSize(void* addr)
 	size_t ret = 0;
 
 	EnterCriticalSection(&m_CriticalSection);
-	// TODO : Allow queries both from the start AND somewhere inside an allocated block,
-	// which will fix at least part of https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/283
-	if (IsAllocated(addr)) {
-		TypedMemoryBlock info = m_MemoryBlockInfo[addr];
-		ret = info.block.size;
+	TypedMemoryBlock *info = FindContainingTypedMemoryBlock(addr);
+	if (info != nullptr) {
+		// Return the remaining size in this block		
+		ret = info->block.size - ((size_t)addr - (size_t)info->block.addr);
 	}
 	else {
 		EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
