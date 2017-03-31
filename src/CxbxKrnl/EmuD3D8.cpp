@@ -6169,6 +6169,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				{
 					// The following is a combination of https://pastebin.com/mDcwqJV3 and
 					// https://en.wikipedia.org/wiki/YUV#Y.E2.80.B2UV422_to_RGB888_conversion
+					// TODO : Improve this to use a library, or SIMD instructions like in
+					// https://github.com/descampsa/yuv2rgb/blob/master/yuv_rgb.c
+					// https://github.com/lemenkov/libyuv/blob/master/source/row_win.cc#L100
 					const int K1 = int(1.402f * (1 << 16));
 					const int K2 = int(0.334f * (1 << 16));
 					const int K3 = int(0.714f * (1 << 16));
