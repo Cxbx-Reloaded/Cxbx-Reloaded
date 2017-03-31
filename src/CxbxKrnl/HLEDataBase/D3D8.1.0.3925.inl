@@ -351,10 +351,12 @@ OOVPA_END;
 // * D3DDevice_GetTransform
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_GetTransform, 3925, 12)
-        // D3DDevice_GetTransform+0x0A : add esi, 0x22
+        // D3DDevice_GetTransform+0x0A : add esi, 0xXX
         { 0x0A, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0B, 0xC6 }, // (Offset,Value)-Pair #2
-        { 0x0C, 0x22 }, // (Offset,Value)-Pair #3
+
+        // D3DDevice_GetTransform+0x0D : push edi
+        { 0x0D, 0x57 }, // (Offset,Value)-Pair #3
 
         // D3DDevice_GetTransform+0x12 : shl esi, 6; add esi, eax
         { 0x12, 0xC1 }, // (Offset,Value)-Pair #4

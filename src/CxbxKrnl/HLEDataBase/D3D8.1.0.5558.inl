@@ -910,11 +910,11 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 5558, 10)
         { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
         { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
 
-        // Get2DSurfaceDesc+0x52 : mov edx, [eax+0x1A04]
+        // Get2DSurfaceDesc+0x52 : mov edx, [eax+0xXXXX]
         { 0x52, 0x8B }, // (Offset,Value)-Pair #5
         { 0x53, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x54, 0x04 }, // (Offset,Value)-Pair #7
-        { 0x55, 0x1A }, // (Offset,Value)-Pair #8
+        { 0x56, 0x00 }, // (Offset,Value)-Pair #7
+        { 0x57, 0x00 }, // (Offset,Value)-Pair #8
 
         // Get2DSurfaceDesc+0xAE : retn 0x0C
         { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
@@ -1583,6 +1583,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant4, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetTransform, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 5558, PATCH),
@@ -1651,6 +1652,9 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 5344, PATCH),
 };
 
 // ******************************************************************
