@@ -1437,6 +1437,8 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_SampleAlpha, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetOverlayUpdateStatus, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPalette, 5849, PATCH),
