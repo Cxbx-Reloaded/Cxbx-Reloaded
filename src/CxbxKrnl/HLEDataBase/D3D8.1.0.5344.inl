@@ -949,8 +949,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 5233, PATCH),
 	REGISTER_OOVPA(D3D_BlockOnTime, 5233, XREF),
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetTransform, 3925, PATCH), // XDK 5344
-	REGISTER_OOVPA(D3DDevice_GetTransform, 4361, PATCH), // XDK 5455?
+	REGISTER_OOVPA(D3DDevice_GetTransform, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPalette, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5233, DISABLED),
@@ -1014,6 +1013,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetModelView, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStipple, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShaderProgram, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 4627, PATCH),
 };
 
 // ******************************************************************
