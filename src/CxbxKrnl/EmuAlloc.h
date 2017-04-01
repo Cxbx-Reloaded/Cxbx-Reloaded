@@ -37,7 +37,7 @@
 #ifdef _DEBUG_ALLOC
 #define CxbxMalloc(Size)                         CxbxMallocDebug(Size, __FILE__, __LINE__)
 #define CxbxCalloc(Num, Size)                    CxbxCallocDebug(Num, Size, __FILE__, __LINE__)
-#define CxbxFree(Addr)                           CxbxFreeDebug(Addr, __FILE__, __LINE__)
+#define CxbxFree(Addr)							 CxbxFreeDebug(Addr, __FILE__, __LINE__)
 #define CxbxRtlAlloc(Heap, Flags, Bytes)         CxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__)
 #define CxbxRtlFree(Heap, Flags, pMem)           CxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__)
 #define CxbxRtlRealloc(Heap, Flags, pMem, Bytes) CxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__)

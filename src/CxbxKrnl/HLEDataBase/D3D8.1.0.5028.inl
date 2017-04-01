@@ -336,12 +336,12 @@ OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 5028, 11)
         { 0x16, 0x46 }, // (Offset,Value)-Pair #5
         { 0x17, 0x04 }, // (Offset,Value)-Pair #6
 
-        // D3DDevice_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0x1660]
+        // D3DDevice_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0xXXXX]
         { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
         { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
         { 0x3F, 0xCA }, // (Offset,Value)-Pair #9
-        { 0x40, 0x60 }, // (Offset,Value)-Pair #10
-        { 0x41, 0x16 }, // (Offset,Value)-Pair #11
+        { 0x42, 0x00 }, // (Offset,Value)-Pair #10
+        { 0x43, 0x00 }, // (Offset,Value)-Pair #11
 OOVPA_END;
 
 // ******************************************************************

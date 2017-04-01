@@ -45,6 +45,7 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
+#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -53,7 +54,7 @@ namespace NtDll
 };
 
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;
@@ -88,11 +89,11 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 
 	if (g_pPersistedData)
 	{
-		CxbxFree(g_pPersistedData);
+		g_MemoryManager.Free(g_pPersistedData);
 		g_pPersistedData = NULL;
 	}
 
-	g_pPersistedData = CxbxMalloc(640 * 480 * 4);
+	g_pPersistedData = g_MemoryManager.Allocate(640 * 480 * 4);
 
 #if 0
 	// Get a copy of the front buffer
@@ -115,7 +116,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 	FILE* fp = fopen( "PersistedSurface.bin", "rb" );
 	fseek( fp, 0, SEEK_END );
 	long size = ftell( fp );
-	g_pPersistedData = malloc( size );
+	g_pPersistedData = g_MemoryManager.Allocate( size );
 	fread( g_pPersistedData, size, 1, fp );
 	fclose(fp);
 	}*/

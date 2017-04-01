@@ -42,6 +42,7 @@
 #include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
+#include "CxbxKrnl/MemoryManager.h"
 
 #include <ctime>
 
@@ -104,7 +105,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
-    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxCalloc(1, sizeof(CACHEDSTREAM));
+    CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)calloc(1, sizeof(CACHEDSTREAM));
 
     // Check if the cache is full, if so, throw away the least used stream
     if(g_PatchedStreamsCache.get_count() > VERTEX_BUFFER_CACHE_SIZE)
@@ -200,7 +201,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
     {
         if(pCachedStream->bIsUP && pCachedStream->pStreamUP)
         {
-            CxbxFree(pCachedStream->pStreamUP);
+            free(pCachedStream->pStreamUP);
         }
         if(pCachedStream->Stream.pOriginalStream)
         {
@@ -210,7 +211,7 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
         {
             pCachedStream->Stream.pPatchedStream->Release();
         }
-        CxbxFree(pCachedStream);
+        free(pCachedStream);
     }
     g_PatchedStreamsCache.Unlock();
     g_PatchedStreamsCache.remove(pStream);
@@ -227,7 +228,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     UINT                       uiLength;
     bool                       bApplied = false;
     uint32                     uiKey;
-    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxMalloc(sizeof(CACHEDSTREAM));
+    //CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)malloc(sizeof(CACHEDSTREAM));
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
@@ -448,7 +449,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         // TODO: This is sometimes the number of indices, which isn't too good
         dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
-        pNewData = (uint08*)CxbxMalloc(dwNewSize);
+        pNewData = (uint08*)g_MemoryManager.Allocate(dwNewSize);
         if(!pNewData)
         {
             CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
@@ -776,7 +777,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 {
     PATCHEDSTREAM *pStream = &m_pStreams[uiStream];
 
-    if((pPatchDesc->PrimitiveType) < 1 || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
+    if((pPatchDesc->PrimitiveType < X_D3DPT_POINTLIST) || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
     {
         CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pPatchDesc->PrimitiveType);
     }
@@ -897,7 +898,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
-        m_pNewVertexStreamZeroData = (uint08*)CxbxMalloc(dwNewSizeWR);
+        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSizeWR);
         m_bAllocatedStreamZeroData = true;
 
         pPatchedVertexData = (uint08*)m_pNewVertexStreamZeroData;
@@ -1037,7 +1038,7 @@ bool XTL::VertexPatcher::Restore()
 
             if(this->m_bAllocatedStreamZeroData)
             {
-                CxbxFree(m_pNewVertexStreamZeroData);
+                free(m_pNewVertexStreamZeroData);
             }
         }
         else

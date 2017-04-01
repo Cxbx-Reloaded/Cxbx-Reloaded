@@ -135,10 +135,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 14,
+OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 2+14,
 
-    XREF_DXSRSCULLMODE,
-    XRefZero)
+    XREF_SETRENDERSTATE_CULLMODE,
+	XRefTwo)
+
+		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x00 : push esi
         { 0x00, 0x56 }, // (Offset,Value)-Pair #1
@@ -909,7 +912,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4034, 10)
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4034, 1+10,
+	
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY(0x11, XREF_D3DTSS_TEXCOORDINDEX), // Derived - TODO : Verify 0x11 (could be 0x18 or 0x19)
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x13 : shl eax, 0x07
         { 0x13, 0xC1 }, // (Offset,Value)-Pair #1

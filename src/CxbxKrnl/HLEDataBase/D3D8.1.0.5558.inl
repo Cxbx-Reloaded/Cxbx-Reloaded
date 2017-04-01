@@ -291,16 +291,34 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetLight, 5558, 8)
+OOVPA_NO_XREF(D3DDevice_SetLight, 5558, 15)
 
-        { 0x1E, 0x00 },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x00 },
-        { 0x7E, 0x07 },
-        { 0x9E, 0xC8 },
-        { 0xBE, 0xC9 },
-        { 0xDE, 0x07 },
-        { 0xFE, 0xC1 },
+        // D3DDevice_SetLight+0x1f : add REG, 0x10
+        { 0x1f, 0x83 },
+        { 0x21, 0x10 },
+
+        // D3DDevice_SetLight+0x22 : and REG, 0xfffffff0
+        { 0x22, 0x83 },
+        { 0x24, 0xf0 },
+
+        // D3DDevice_SetLight+0x2c : push 0x24800000
+        { 0x2c, 0x68 },
+        { 0x2d, 0x00 },
+        { 0x2e, 0x00 },
+        { 0x2f, 0x80 },
+        { 0x30, 0x24 },
+
+        // D3DDevice_SetLight+0x65 : jz +8
+        { 0x65, 0x74 },
+        { 0x66, 0x08 },
+
+        // D3DDevice_SetLight+0xe3 : jz +8
+        { 0xe3, 0x74 },
+        { 0xe4, 0x08 },
+
+        // D3DDevice_SetLight+0xfe : shr ???, 2
+        { 0xfe, 0xc1 },
+        { 0x100, 0x02 },
 OOVPA_END;
 
 // ******************************************************************
@@ -662,23 +680,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5558, 10)
+OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5558, 9)
 
         // D3DDevice_DrawVerticesUP+0x03 : sub esp, 0x14
         { 0x03, 0x83 }, // (Offset,Value)-Pair #1
         { 0x04, 0xEC }, // (Offset,Value)-Pair #2
         { 0x05, 0x14 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_DrawVerticesUP+0x37 : mov edx, [edi+0xC44]
-        { 0x37, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x38, 0x97 }, // (Offset,Value)-Pair #5
-        { 0x39, 0x44 }, // (Offset,Value)-Pair #6
-        { 0x3A, 0x0C }, // (Offset,Value)-Pair #7
+        // D3DDevice_DrawVerticesUP+0x40 : mov [edi], eax
+        { 0x40, 0x89 }, // (Offset,Value)-Pair #4
+        { 0x41, 0x07 }, // (Offset,Value)-Pair #5
+
+        // D3DDevice_DrawVerticesUP+0x42 : or dword ptr [edi+8], 800h
+        { 0x42, 0x81 }, // (Offset,Value)-Pair #6
 
         // D3DDevice_DrawVerticesUP+0xC4 : cmp esi, 0x80
-        { 0xC4, 0x81 }, // (Offset,Value)-Pair #8
-        { 0xC5, 0xFE }, // (Offset,Value)-Pair #9
-        { 0xC6, 0x80 }, // (Offset,Value)-Pair #10
+        { 0xC4, 0x81 }, // (Offset,Value)-Pair #7
+        { 0xC5, 0xFE }, // (Offset,Value)-Pair #8
+        { 0xC6, 0x80 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
 // ******************************************************************
@@ -701,16 +720,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer2, 5558, 7)
-
-        { 0x05, 0x00 },
-        { 0x0C, 0x50 },
-        { 0x13, 0xC0 },
-        { 0x1A, 0xC9 },
-        { 0x21, 0x04 },
-        { 0x28, 0xC7 },
-        { 0x2F, 0x48 },
-OOVPA_END;
+#define D3DDevice_CreateIndexBuffer2_5558 D3DDevice_CreateIndexBuffer2_5344
 
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback

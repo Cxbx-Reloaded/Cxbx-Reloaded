@@ -73,6 +73,7 @@
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
+#include <CxbxKrnl/MemoryManager.h>
 
 #include <process.h>
 #include <locale.h>
@@ -734,13 +735,13 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 	// The Xbox sets r0 to the alpha channel of texture 0, so it can be read before written!
 	if(bR0WAccess)
 	{
-		char *szNewCodeBuffer = (char *)CxbxMalloc((strlen(szCode)+20)*sizeof(char));
+		char *szNewCodeBuffer = (char*)malloc((strlen(szCode)+20)*sizeof(char));
 		strncpy(szNewCodeBuffer, szCode, iPreRunLen);
 		strcat(szNewCodeBuffer, "mov r0, t0.a\n");
 		strcat(szNewCodeBuffer, &szCode[iPreRunLen]);
 		strcpy(szCode, szNewCodeBuffer);
 
-		CxbxFree(szNewCodeBuffer);
+		free(szNewCodeBuffer);
 	}
 	/*DbgPrintf("r1 case! ... ");
 	if(bR1WAccess || bR1AWAccess || bR1RGBWAccess)

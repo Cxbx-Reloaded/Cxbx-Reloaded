@@ -132,7 +132,9 @@ extern const uint32 HLEDataBaseCount;
 enum XRefDataBaseOffset
 {
     XREF_D3DDEVICE=0,
-    XREF_DXSRSCULLMODE,
+    XREF_SETRENDERSTATE_CULLMODE,
+	XREF_D3DRS_CULLMODE,
+	XREF_D3DTSS_TEXCOORDINDEX,
     XREF_D3DRS_MULTISAMPLEMODE,
     XREF_D3DRS_MULTISAMPLERENDERTARGETMODE,
     XREF_D3DRS_ROPZCMPALWAYSREAD,
@@ -351,6 +353,7 @@ enum XRefDataBaseOffset
 
 #define XREF_ADDR_UNDETERMINED -1
 #define XREF_ADDR_NOT_FOUND ((xbaddr)nullptr)
+#define XREF_ADDR_DERIVE 1
 
 // ******************************************************************
 // * XRefDataBase

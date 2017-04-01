@@ -99,6 +99,7 @@ const uint08 XRefZero = (uint08)0;
 // This XRefOne constant, when set in the OOVPA.XRefCount field,
 // indicates the OOVPA contains one (1) {offset, XREF_* enum} pair.
 const uint08 XRefOne = (uint08)1;
+const uint08 XRefTwo = (uint08)2;
 
 // Note : Theoretically, there can be more than one {Offset, XREF_*-enum}
 // pair at the start of the OOVPA's, but there are no examples of that yet.

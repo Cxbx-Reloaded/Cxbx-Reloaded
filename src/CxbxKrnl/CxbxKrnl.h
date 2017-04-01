@@ -66,15 +66,26 @@ typedef uint32 xbaddr;
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 
+// Define virtual base and alternate virtual base of kernel.
+#define KSEG0_BASE                  0x80000000
+
+// Define virtual base addresses for physical memory windows.
+#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
+#define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
+#define MM_64M_PHYSICAL_PAGE        0x04000
+#define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
+#define MM_INSTANCE_PAGE_COUNT      16
+#define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
+
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
 #define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
+#define XBE_IMAGE_BASE 0x00010000
 
 /*! base addresses of various components */
-#define XBOX_KERNEL_BASE 0x80010000
+#define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
-#define XBE_IMAGE_BASE 0x00010000
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we
 // know of, is "BLiNX: the time sweeper", which has a section

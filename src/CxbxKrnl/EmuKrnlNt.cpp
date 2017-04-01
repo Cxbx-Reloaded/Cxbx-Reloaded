@@ -55,7 +55,8 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
+#include "MemoryManager.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -985,7 +986,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	}
 
 	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo = 
-		(NtDll::FILE_DIRECTORY_INFORMATION *) CxbxMalloc(NtFileDirectoryInformationSize + NtPathBufferSize);
+		(NtDll::FILE_DIRECTORY_INFORMATION *) malloc(NtFileDirectoryInformationSize + NtPathBufferSize);
 
 	// Short-hand pointer to Nt filename :
 	wchar_t *wcstr = NtFileDirInfo->FileName;
@@ -1024,7 +1025,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	}
 
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-	CxbxFree(NtFileDirInfo);
+	free(NtFileDirInfo);
 
 	RETURN(ret);
 }
@@ -1122,7 +1123,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	// We need to retry the operation in case the buffer is too small to fit the data
 	do
 	{
-		ntFileInfo = CxbxMalloc(bufferSize);
+		ntFileInfo = malloc(bufferSize);
 
 		ret = NtDll::NtQueryInformationFile(
 			FileHandle,
@@ -1134,14 +1135,14 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		// Buffer is too small; make a larger one
 		if (ret == STATUS_BUFFER_OVERFLOW)
 		{
-			CxbxFree(ntFileInfo);
+			free(ntFileInfo);
 
 			bufferSize *= 2;
 			// Bail out if the buffer gets too big
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 			
-			ntFileInfo = CxbxMalloc(bufferSize);
+			ntFileInfo = malloc(bufferSize);
 		}
 	} while (ret == STATUS_BUFFER_OVERFLOW);
 	
@@ -1149,7 +1150,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
 
 	// Make sure to free the memory first
-	CxbxFree(ntFileInfo);
+	free(ntFileInfo);
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);

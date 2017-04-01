@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -7,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4134.h
+// *   Cxbx->Win32->CxbxKrnl->MemoryManager.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,14 +33,50 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_4134_H
-#define D3D8_4134_H
 
-#include "OOVPA.h"
+#ifndef MEMORY_MANAGER_H
+#define MEMORY_MANAGER_H
 
-extern LOOVPA<1+10> D3DDevice_SetTextureState_TexCoordIndex_4134;
+#include <Windows.h>
+#include <cstdint>
+#include <map>
+#include <unordered_map>
 
-extern OOVPATable D3D8_4134[];
-extern uint32     D3D8_4134_SIZE;
+typedef struct {
+	void *addr;
+	size_t size;
+} MemoryBlock;
+
+enum struct MemoryType {
+	STANDARD = 0,
+	ALIGNED,
+	CONTIGUOUS
+};
+
+typedef struct {
+	MemoryType type;
+	MemoryBlock block;
+} TypedMemoryBlock;
+
+class MemoryManager
+{
+public:
+	MemoryManager();
+	~MemoryManager();
+	void* Allocate(size_t size);
+	void* AllocateAligned(size_t size, size_t alignment);
+	void* AllocateContiguous(size_t size, size_t alignment);
+	void* AllocateZeroed(size_t num, size_t size);
+	bool IsAllocated(void* addr);
+	void Free(void* addr);
+	size_t QueryAllocationSize(void* addr);
+private:
+	std::map<void *, TypedMemoryBlock> m_MemoryBlockInfo;
+	std::map<void *, MemoryBlock> m_ContiguousMemoryBlocks;
+	CRITICAL_SECTION m_CriticalSection;
+	TypedMemoryBlock *FindContainingTypedMemoryBlock(void* addr);
+};
+
+extern MemoryManager g_MemoryManager;
 
 #endif
