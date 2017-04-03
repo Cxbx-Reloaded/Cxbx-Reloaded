@@ -46,13 +46,11 @@
 
 static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper);
 static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Header *pXbeHeader);
-static void  EmuXRefFailure();
 
 #include <shlobj.h>
 #include <vector>
 
 uint32 fcount = 0;
-void * funcExclude[2048] = { nullptr };
 
 uint32 g_BuildVersion;
 uint32 g_OrigBuildVersion;
@@ -878,29 +876,12 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
         {
             printf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
 
-            if(OovpaTable[a].emuPatch == nullptr)
-            {
-				// Only place an XRef trapping patch when the OOVPA registration wasn't disabled
-				if ((OovpaTable[a].Flags & Flag_DontScan) == 0)
-				{
-					// Write breakpoint opcode
-					*(uint8_t*)pFunc = OPCODE_INT3_CC;
-					EmuInstallPatch(pFunc + 1, EmuXRefFailure);
-				}
-            }
-            else
+            if(OovpaTable[a].emuPatch == nullptr && (OovpaTable[a].Flags & Flag_DontScan == 0))
             {
                 EmuInstallPatch(pFunc, OovpaTable[a].emuPatch);
-                funcExclude[fcount++] = (void *)pFunc;
             }
         }
     }
-}
-
-// alert for the situation where an Xref function body is hit
-static void EmuXRefFailure()
-{
-    CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
 #ifdef _DEBUG_TRACE
