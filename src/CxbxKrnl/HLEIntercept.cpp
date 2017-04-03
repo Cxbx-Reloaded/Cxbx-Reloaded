@@ -51,6 +51,7 @@ static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 #include <vector>
 
 uint32 fcount = 0;
+void * funcExclude[2048] = { nullptr };
 
 uint32 g_BuildVersion;
 uint32 g_OrigBuildVersion;
@@ -662,7 +663,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
         {
             printf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
 
-            if(OovpaTable[a].emuPatch == nullptr && (OovpaTable[a].Flags & Flag_DontScan == 0))
+			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (OovpaTable[a].emuPatch != nullptr))
             {
                 EmuInstallPatch(pFunc, OovpaTable[a].emuPatch);
             }
