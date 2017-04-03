@@ -55,13 +55,6 @@ uint32 fcount = 0;
 uint32 g_BuildVersion;
 uint32 g_OrigBuildVersion;
 
-static std::vector<xbaddr> vCacheOut;
-
-static bool bCacheInp = false;
-static std::vector<xbaddr> vCacheInp;
-static std::vector<xbaddr>::const_iterator vCacheInpIter;
-
-
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
@@ -74,88 +67,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
-    char szCacheFileName[MAX_PATH];
-
     printf("\n");
 	printf("*******************************************************************************\n");
 	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
 	printf("*******************************************************************************\n");
 	printf("\n");
-
-    //
-    // initialize HLE cache file
-    //
-
-	{
-		SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
-
-		strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
-
-		CreateDirectory(szCacheFileName, NULL);
-
-		char *spot = strrchr(szCacheFileName, '\\');
-
-		//
-		// create HLECache directory
-		//
-
-		strcpy(spot, "\\HLECache");
-
-		CreateDirectory(szCacheFileName, NULL);
-		
-		//
-        // open title's cache file
-        //
-		sprintf(spot+9, "\\%08x.dat", pCertificate->dwTitleId);
-
-        FILE *pCacheFile = fopen(szCacheFileName, "rb");
-
-        if(pCacheFile != NULL)
-        {
-            bool bVerified = false;
-
-            //
-            // verify last compiled timestamp
-            //
-
-            char szCacheLastCompileTime[64];
-
-            memset(szCacheLastCompileTime, 0, 64);
-
-            if(fread(szCacheLastCompileTime, 64, 1, pCacheFile) == 1)
-            {
-                if(strcmp(szCacheLastCompileTime, szHLELastCompileTime) == 0)
-                {
-                    bVerified = true;
-                }
-            }
-
-            //
-            // load function addresses
-            //
-
-            if(bVerified)
-            {
-                while(true)
-                {
-					xbaddr cur;
-
-                    if(fread(&cur, 4, 1, pCacheFile) != 1)
-                        break;
-
-                    vCacheInp.push_back(cur);
-                }
-
-                bCacheInp = true;
-
-                vCacheInpIter = vCacheInp.begin();
-
-				printf("HLE: Loaded HLE Cache for 0x%.08X\n", pCertificate->dwTitleId);
-            }
-
-            fclose(pCacheFile);
-        }
-    }
 
 	//
     // initialize Microsoft XDK emulation
@@ -605,49 +521,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		printf("HLE: Resolved %d cross reference(s)\n", OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-    vCacheInp.clear();
-
-    //
-    // update cache file
-    //
-/* Turn of the nasty HLE cacheing (When you are adding oovaps anyway), it's in dire need of a better file identify system
-    if(vCacheOut.size() > 0)
-    {
-        FILE *pCacheFile = fopen(szCacheFileName, "wb");
-
-        if(pCacheFile != NULL)
-        {
-            DbgPrintf("HLE: Saving HLE Cache for 0x%.08X...\n", pCertificate->dwTitleId);
-
-            //
-            // write last compiled timestamp
-            //
-
-            char szCacheLastCompileTime[64];
-
-            memset(szCacheLastCompileTime, 0, 64);
-
-            strcpy(szCacheLastCompileTime, szHLELastCompileTime);
-
-            fwrite(szCacheLastCompileTime, 64, 1, pCacheFile);
-
-            //
-            // write function addresses
-            //
-
-            std::vector<void*>::const_iterator cur;
-
-            for(cur = vCacheOut.begin();cur != vCacheOut.end(); ++cur)
-            {
-                fwrite(&(*cur), 4, 1, pCacheFile);
-            }
-        }
-
-        fclose(pCacheFile);
-    }
-*/
-    vCacheOut.clear();
-
 	printf("\n");
 
     return;
@@ -860,17 +733,8 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 		xbaddr pFunc = (xbaddr)nullptr;
 
-        if(bCacheInp && (vCacheInpIter != vCacheInp.end()))
-        {
-            pFunc = *vCacheInpIter;
-            ++vCacheInpIter;
-        }
-        else
-        {
-            pFunc = EmuLocateFunction(Oovpa, lower, upper);
-			if (pFunc != (xbaddr)nullptr)
-				vCacheOut.push_back(pFunc);
-        }
+        
+        pFunc = EmuLocateFunction(Oovpa, lower, upper);
 
         if(pFunc != (xbaddr)nullptr)
         {
