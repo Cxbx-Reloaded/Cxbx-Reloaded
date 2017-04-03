@@ -2651,6 +2651,29 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_Deferred, 3925, 9)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_GetLight
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetLight, 3925, 10)
+// Based on Dxbx patterns for 3911, 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
+
+        // D3DDevice_GetLight+0x0B : mov esi, [ecx+XXXh]
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0xB1 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x10, 0x00 }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_GetLight+0x12 : mov edi, [esp+8+arg_4]
+        { 0x12, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x13, 0x7C }, // (Offset,Value)-Pair #6
+        { 0x14, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x15, 0x10 }, // (Offset,Value)-Pair #8
+
+        // D3DDevice_GetLight+0x1F : mov ecx, 1Ah
+        { 0x1E, 0xB9 }, // (Offset,Value)-Pair #9
+        { 0x1F, 0x1A }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetLight, 3925, 8)
@@ -3750,6 +3773,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DResource_GetType, 3925, DISABLED), // Probably not even necessary...
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	// REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
