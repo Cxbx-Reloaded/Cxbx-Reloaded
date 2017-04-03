@@ -1665,6 +1665,10 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_BeginPushBuffer, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndPushBuffer, 4627, PATCH),
 };
 
 // ******************************************************************
