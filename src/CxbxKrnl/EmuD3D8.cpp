@@ -8090,6 +8090,31 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_GetLight
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
+(
+    DWORD            Index,
+    D3DLIGHT8       *pLight
+)
+{
+    
+
+    DbgPrintf("EmuD3D8: EmuD3DDevice_GetLight\n"
+           "(\n"
+           "   Index               : 0x%.08X\n"
+           "   pLight              : 0x%.08X\n"
+           ");\n",
+           Index, pLight);
+
+    HRESULT hRet = g_pD3DDevice8->GetLight(Index, pLight);
+
+    
+
+    return hRet;
+}
+
+// ******************************************************************
 // * patch: D3DDevice_SetLight
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
