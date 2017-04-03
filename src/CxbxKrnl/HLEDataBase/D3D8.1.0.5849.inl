@@ -1348,6 +1348,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexData4ub, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_End, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5849, PATCH),
@@ -1396,6 +1397,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5849, PATCH),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock, 5849, PATCH),
@@ -1437,6 +1439,8 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_SampleAlpha, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetOverlayUpdateStatus, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPalette, 5849, PATCH),
@@ -1491,6 +1495,8 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePalette2, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 5344, PATCH),
 };
 
 // ******************************************************************

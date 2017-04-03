@@ -836,16 +836,43 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound_CDirectSoundVoice::SetConeOrientation
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetConeOrientation, 5344, 8,
+
+    XREF_DSVOICESETCONEORIENTATION,
+    XRefZero)
+
+        // DirectSound_CDirectSoundVoice_SetConeOrientation+0x0F : mov edx, [ebp+arg_4]
+        { 0x0F, 0x8B },
+        { 0x10, 0x55 },
+        { 0x11, 0x0C },
+
+        // DirectSound_CDirectSoundVoice_SetConeOrientation+0x12 : mov [ecx+28h], edx
+        { 0x12, 0x89 },
+        { 0x13, 0x51 },
+        { 0x14, 0x28 },
+
+        // DirectSound_CDirectSoundVoice_SetConeOrientation+0x4F : retn 14h
+        { 0x50, 0x14 },
+        { 0x51, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
 
 	REGISTER_OOVPA(DirectSoundCreate, 4134, PATCH),
 	REGISTER_OOVPA(DirectSoundDoWork, 4134, PATCH),
+	REGISTER_OOVPA(DirectSoundGetSampleTime, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundBuffer, 4134, XREF),
 	REGISTER_OOVPA(CMcpxAPU_SynchPlayback, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SynchPlayback, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SynchPlayback, 5233, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Pause, 4928, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Pause, 4928, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Pause, 4928, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, DISABLED),
@@ -996,6 +1023,11 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
+	REGISTER_OOVPA(XAudioDownloadEffectsImage, 4627, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetConeOrientation, 5344, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 4134, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 };
 
 // ******************************************************************

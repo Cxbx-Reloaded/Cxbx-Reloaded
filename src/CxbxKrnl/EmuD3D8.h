@@ -1279,6 +1279,15 @@ VOID WINAPI EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_GetLight
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(D3DDevice_GetLight)
+(
+    DWORD            Index,
+    D3DLIGHT8       *pLight
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetLight
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(D3DDevice_SetLight)
