@@ -279,9 +279,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
@@ -591,9 +588,6 @@
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl">
       <Filter>HLEDatabase</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl">

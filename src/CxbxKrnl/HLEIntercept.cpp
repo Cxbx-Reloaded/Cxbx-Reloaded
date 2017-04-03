@@ -155,12 +155,13 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				if(strcmp(szLibraryName, Lib_D3D8LTCG) == 0)
 				{
-					// Skip scanning for D3D8LTCG symbols when LLE GPU is selected
-					if (bLLE_GPU)
-						continue;
+					// If LLE GPU is not enabled, show a warning that the title is not supported
+					if (!bLLE_GPU) {
+						CxbxKrnlCleanup("LTCG Title Detected: This game is not supported by HLE");
+					}
 
-					// Test (do not release uncommented!)
-					/*strcpy(szLibraryName, Lib_D3D8);*/
+					// Skip LTCG libraries as we cannot reliably detect them
+					continue;
 				}
 				
 				if (strcmp(szLibraryName, Lib_D3D8) == 0)
@@ -238,7 +239,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
-                    else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
+                    else if(strcmp(Lib_D3D8, szLibraryName) == 0 && 
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
                       || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -415,85 +416,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             }
                         }
                     }
-					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 &&
-     //                   (BuildVersion == 5849))	// 5849 only so far...
-     //               {
-					//	// Save D3D8 build version
-					//	g_BuildVersion = BuildVersion;
-					//	g_OrigBuildVersion = OrigBuildVersion;
-
-     //                   xbaddr lower = pXbeHeader->dwBaseAddr;
-     //                   xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
-     //                   xbaddr pFunc = (xbaddr)nullptr;
-
-     //                   if(BuildVersion == 5849)
-					//		pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_LTCG_5849, lower, upper);
-
-     //                   // locate D3DDeferredRenderState
-     //                   if(pFunc != nullptr)
-     //                   {
-     //                       // offset for stencil cull enable render state in the deferred render state buffer
-     //                       int patchOffset = 0;
-
-     //                       if(BuildVersion == 5849)
-     //                       {
-     //                           // WARNING: Not thoroughly tested (just seemed very correct right away)
-     //                           XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x2B) - 0x24C + 92*4);
-     //                           patchOffset = 162*4 - 92*4;
-     //                       }
-
-     //                       XRefDataBase[XREF_D3DDEVICE]                   = *(DWORD*)((DWORD)pFunc + 0x03);
-     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
-     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
-     //                       XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
-     //                       XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
-     //                       XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
-     //                       XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
-
-     //                       for(int v=0;v<44;v++)
-     //                       {
-     //                           XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
-     //                       }
-
-     //                       DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
-     //                   }
-     //                   else
-     //                   {
-     //                       XTL::EmuD3DDeferredRenderState = nullptr;
-     //                       CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
-     //                   }
-
-     //                   // locate D3DDeferredTextureState
-     //                   {
-     //                       pFunc = (xbaddr)nullptr;
-
-     //                       if(BuildVersion == 3925)
-					//			pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849, lower, upper);
-
-     //                       if(pFunc != (xbaddr)nullptr)
-     //                       {
-     //                           if(BuildVersion == 3925) // 0x18F180
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x11) - 0x70); // TODO: Verify
-     //                           else if(BuildVersion == 4134)
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x18) - 0x70); // TODO: Verify
-     //                           else
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x19) - 0x70);
-
-     //                           for(int s=0;s<4;s++)
-     //                           {
-     //                               for(int v=0;v<32;v++)
-     //                                   XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
-     //                           }
-
-     //                           DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
-     //                       }
-     //                       else
-     //                       {
-     //                           XTL::EmuD3DDeferredTextureState = nullptr;
-     //                           CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
-     //                       }
-     //                   }
-     //               }
                 }
 
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
