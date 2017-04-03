@@ -1612,22 +1612,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetFormat
 // ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundStream_SetFormat, 5558, 9,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x36, XREF_DirectSound_CDirectSoundVoice_SetFormat ),
-
-        { 0x00, 0x56 },
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x35, 0xE8 },
-        { 0x40, 0x68 },
-        { 0x4B, 0x8B },
-OOVPA_END;
+#define DirectSound_CDirectSoundStream_SetFormat_5558 DirectSound_CDirectSoundStream_SetFormat_4361
 
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetMixBins
