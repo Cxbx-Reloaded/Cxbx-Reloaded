@@ -108,6 +108,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 uint16 OrigBuildVersion = BuildVersion;
 
                 // Aliases - for testing purposes only
+				// TODO: Remove these and come up with a better way to handle XDKs we don't hve databases for
 				if(BuildVersion == 4039) { BuildVersion = 4034; }
 				if(BuildVersion == 4238) { BuildVersion = 4361; }	// I don't think this XDK was released.
 				if(BuildVersion == 4242) { BuildVersion = 4361; }
@@ -149,7 +150,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Prevent scanning D3D8 again (since D3D8X is packed into it above)
 					if (bFoundD3D)
 					{
-						//DbgPrintf("Redundant\n");
 						continue;
 					}
 
@@ -158,11 +158,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Some 3911 titles have different D3D8 builds
 					if (BuildVersion <= 3948)
 						BuildVersion = 3925;
-
-					// Testing... don't release with this code in it!
-					// TODO: 5233 and 5558
-					//	if(BuildVersion == 4134)
-					//		BuildVersion = 4627;
 				}
 				else if(LibraryName == Lib_DSOUND)
                 {
@@ -197,8 +192,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if (bLLE_GPU)
 						continue;
 
-					//	if(BuildVersion == 4432)
-					//		BuildVersion = 4361;
 					if (BuildVersion == 3944)
 						BuildVersion = 3911;
 					if (OrigBuildVersion == 4531)
