@@ -50,9 +50,6 @@ static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 #include <shlobj.h>
 #include <vector>
 
-uint32 fcount = 0;
-void * funcExclude[2048] = { nullptr };
-
 uint32 g_BuildVersion;
 uint32 g_OrigBuildVersion;
 
@@ -77,7 +74,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	//
     // initialize Microsoft XDK emulation
     //
-
     if(pLibraryVersion != 0)
     {
 		printf("HLE: Detected Microsoft XDK application...\n");
@@ -124,37 +120,16 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
 				if(BuildVersion == 5120) { BuildVersion = 5233; }
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
-                /*
-                if(BuildVersion == 3944) { BuildVersion = 3925; }
-                if(BuildVersion == 4039) { BuildVersion = 4034; }
-                if(BuildVersion == 4242) { BuildVersion = 4432; }
-                if(BuildVersion == 4531) { BuildVersion = 4432; }
-                if(BuildVersion == 4721) { BuildVersion = 4432; }
-                if(BuildVersion == 4831) { BuildVersion = 4432; }
-                if(BuildVersion == 4928) { BuildVersion = 4432; }
-                if(BuildVersion == 5028) { BuildVersion = 4432; }
-                if(BuildVersion == 5120) { BuildVersion = 4432; }
-                if(BuildVersion == 5344) { BuildVersion = 4432; }
-                if(BuildVersion == 5455) { BuildVersion = 4432; }
-                if(BuildVersion == 5933) { BuildVersion = 4432; }
-                */
-
-                char szLibraryName[9] = {0};
-				char szOrigLibraryName[9] = {0};
-
-                for(uint32 c=0;c<8;c++)
-                {
-                    szLibraryName[c] = pLibraryVersion[v].szName[c];
-					szOrigLibraryName[c] = pLibraryVersion[v].szName[c];
-                }
+                
+				std::string LibraryName = std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
 
 				// TODO: HACK: D3DX8 is packed into D3D8 database
-				if (strcmp(szLibraryName, Lib_D3DX8) == 0)
+				if (LibraryName == Lib_D3DX8)
 				{
-					strcpy(szLibraryName, Lib_D3D8);
+					LibraryName = Lib_D3D8;
 				}
 
-				if(strcmp(szLibraryName, Lib_D3D8LTCG) == 0)
+				if (LibraryName == Lib_D3D8LTCG)
 				{
 					// If LLE GPU is not enabled, show a warning that the title is not supported
 					if (!bLLE_GPU) {
@@ -165,7 +140,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					continue;
 				}
 				
-				if (strcmp(szLibraryName, Lib_D3D8) == 0)
+				if (LibraryName == Lib_D3D8)
 				{
 					// Skip scanning for D3D8 symbols when LLE GPU is selected
 					if (bLLE_GPU)
@@ -189,7 +164,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					//	if(BuildVersion == 4134)
 					//		BuildVersion = 4627;
 				}
-				else if(strcmp(szLibraryName, Lib_DSOUND) == 0)
+				else if(LibraryName == Lib_DSOUND)
                 {
 					// Skip scanning for DSOUND symbols when LLE APU is selected
 					if (bLLE_APU)
@@ -206,7 +181,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
-				else if(strcmp(szLibraryName, Lib_XAPILIB) == 0)
+				else if(LibraryName == Lib_XAPILIB)
 				{
 					// Change a few XAPILIB versions to similar counterparts
 					if(BuildVersion == 3944)
@@ -216,7 +191,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
 				}
-				else if (strcmp(szLibraryName, Lib_XGRAPHC) == 0)
+				else if (LibraryName == Lib_XGRAPHC)
 				{
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
 					if (bLLE_GPU)
@@ -232,7 +207,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				if(bXRefFirstPass)
                 {
-                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && 
+                    if (LibraryName == Lib_XAPILIB &&
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233
                       || BuildVersion == 5344 || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -240,7 +215,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
-                    else if(strcmp(Lib_D3D8, szLibraryName) == 0 && 
+                    else if(LibraryName == Lib_D3D8 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
                       || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -419,11 +394,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                     }
                 }
 
-				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
+				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
                 const HLEData *FoundHLEData = nullptr;
                 for(uint32 d = 0; d < HLEDataBaseCount; d++) {
-					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(szLibraryName, HLEDataBase[d].Library) == 0) {
+					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(LibraryName.c_str(), HLEDataBase[d].Library) == 0) {
 						FoundHLEData = &HLEDataBase[d];
 						break;
 					}
