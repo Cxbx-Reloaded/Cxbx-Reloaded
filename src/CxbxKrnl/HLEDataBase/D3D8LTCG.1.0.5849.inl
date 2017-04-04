@@ -972,7 +972,7 @@ OOVPATable D3D8LTCG_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 5849, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5849, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 5849, LTCG),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 5849, LTCG),
