@@ -67,13 +67,7 @@ enum _ComponentEncoding {
 	R8G8B8A8,
 };
 
-typedef struct _ComponentEncodingInfo
-{
-	uint8_t ABits, RBits, GBits, BBits;
-	uint8_t AShift, RShift, GShift, BShift;
-} ComponentEncodingInfo;
-
-static ComponentEncodingInfo ComponentEncodingInfos[] = {
+static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
 	{ }, // NoComponents
 	// AB  RB  GB  BB ASh RSh GSh BSh
 	//its its its its ift ift ift ift
@@ -109,7 +103,7 @@ typedef struct _FormatInfo {
 	char *warning;
 } FormatInfo;
 
-static FormatInfo FormatInfos[] = {
+static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_L8 = 0x00,
 	{ 8, Swizzled, NoComponents, XTL::D3DFMT_L8 },
 	// X_D3DFMT_AL8 = 0x01,
@@ -256,6 +250,25 @@ static FormatInfo FormatInfos[] = {
 */
 };
 
+XTL::D3DCOLOR XTL::DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value)
+{
+	return D3DCOLOR_ARGB(
+		(value >> encoding->AShift) << (8 - encoding->ABits),
+		(value >> encoding->RShift) << (8 - encoding->RBits),
+		(value >> encoding->GShift) << (8 - encoding->GBits),
+		(value >> encoding->BShift) << (8 - encoding->BBits)
+	);
+};
+
+const XTL::ComponentEncodingInfo *XTL::EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		if (FormatInfos[Format].components != NoComponents)
+			return &(ComponentEncodingInfos[FormatInfos[Format].components]);
+
+	return nullptr;
+}
+
 DWORD XTL::EmuXBFormatBitsPerPixel(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
@@ -296,7 +309,7 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format)
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8) {
-		static FormatInfo *info = &FormatInfos[Format];
+		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr)
 			EmuWarning(info->warning);
 
