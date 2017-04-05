@@ -80,11 +80,11 @@ static void EmuUnswizzleActiveTexture()
         return;
 
 	XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+    DWORD dwBPP = 0;
 
-    if(!XTL::EmuXBFormatIsSwizzled(XBFormat))
+    if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
         return;
 
-	DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
     // remove lock
     pPixelContainer->EmuTexture8->UnlockRect(0);
     pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
