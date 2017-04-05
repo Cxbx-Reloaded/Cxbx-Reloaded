@@ -40,20 +40,14 @@
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
-// how many bits does this format use per pixel?
-extern DWORD EmuXBFormatBitsPerPixel(X_D3DFORMAT Format);
+// is this format swizzled, and if so - how many BPP?
+extern BOOL EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP);
 
-// how many bytes does this format use per pixel?
-extern DWORD EmuXBFormatBytesPerPixel(X_D3DFORMAT Format);
-
-// is this format compressed?
-extern BOOL EmuXBFormatIsCompressed(X_D3DFORMAT Format);
+// how many BPP does this format use?
+extern DWORD EmuXBFormatBPP(X_D3DFORMAT Format);
 
 // is this format linear?
 extern BOOL EmuXBFormatIsLinear(X_D3DFORMAT Format);
-
-// is this format swizzled?
-extern BOOL EmuXBFormatIsSwizzled(X_D3DFORMAT Format);
 
 // convert from xbox to pc color formats
 extern D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format);
