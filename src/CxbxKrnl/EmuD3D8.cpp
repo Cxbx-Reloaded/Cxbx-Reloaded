@@ -1302,11 +1302,11 @@ static void EmuUnswizzleTextureStages()
 			return;
 
 		XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-		DWORD dwBPP = 0;
 
-		if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
+		if(!XTL::EmuXBFormatIsSwizzled(XBFormat))
 			return;
 
+		DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
 		// remove lock
 		pPixelContainer->EmuTexture8->UnlockRect(0);
 		pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
@@ -3118,7 +3118,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
            Width, Height, Levels, Usage, Format, Pool, ppTexture);
 
 	// Get Bytes Per Pixel, for correct Pitch calculation :
-	DWORD dwBPP = EmuXBFormatBPP(Format);
+	DWORD dwBPP = EmuXBFormatBytesPerPixel(Format);
 
 	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for (X_)D3DFMT_YUY2?
 
@@ -4588,8 +4588,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
             }
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
-            BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format, &dwBPP), bCompressed = FALSE, dwCompressedSize = 0;
+            BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format), bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
+			dwBPP = EmuXBFormatBytesPerPixel(X_Format);
 
             // Interpret Width/Height/BPP
             if(X_Format == X_D3DFMT_X8R8G8B8 || X_Format == X_D3DFMT_A8R8G8B8
