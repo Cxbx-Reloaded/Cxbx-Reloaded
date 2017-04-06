@@ -4424,6 +4424,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
+			// Vertex buffers live in Physical Memory Region
+			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+
             // create vertex buffer
             {
                 DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
@@ -7429,6 +7432,8 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
            ");\n",
            ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
 
+	EmuVerifyResourceIsRegistered(ppVertexBuffer);
+
     IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
 
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
@@ -7460,6 +7465,8 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
            ppVertexBuffer, Flags);
 
     IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
+
+	EmuVerifyResourceIsRegistered(ppVertexBuffer);
 
     BYTE *pbData = NULL;
 

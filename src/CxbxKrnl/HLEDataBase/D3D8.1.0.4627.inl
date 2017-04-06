@@ -3162,7 +3162,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_Clear, 4627, ALIAS, D3DDevice_ClearB),
 	REGISTER_OOVPA(D3DDevice_Swap, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetOverlayUpdateStatus, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 4627, PATCH),
