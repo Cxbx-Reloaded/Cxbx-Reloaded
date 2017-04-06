@@ -36,15 +36,14 @@
 
 #include "CxbxKrnl.h"
 
-
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
 typedef struct _ComponentEncodingInfo
 {
-	uint8_t ABits, RBits, GBits, BBits;
-	uint8_t AShift, RShift, GShift, BShift;
+	int8_t ABits, RBits, GBits, BBits;
+	int8_t AShift, RShift, GShift, BShift;
 } ComponentEncodingInfo;
 
 extern const ComponentEncodingInfo *EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format);
