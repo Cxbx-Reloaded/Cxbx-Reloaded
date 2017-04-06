@@ -58,7 +58,8 @@ const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_L8 = 0x00,
 	{ 8, Swizzled, XTL::D3DFMT_L8 },
 	// X_D3DFMT_AL8 = 0x01,
-	{ 8, Swizzled, XTL::D3DFMT_A4L4, "X_D3DFMT_AL8 -> D3DFMT_A4L4" }, // Was : D3DFMT_A8 // Cxbx NOTE: Hack: Alpha ignored, basically
+	{ 8, Swizzled, XTL::D3DFMT_L8, "X_D3DFMT_AL8 -> D3DFMT_L8" }, // Cxbx NOTE: Hack: Alpha ignored, basically
+	// TODO : { 8, Swizzled, XTL::D3DFMT_A4L4, "X_D3DFMT_AL8 -> D3DFMT_A4L4" }, // Was : D3DFMT_A8
 	// X_D3DFMT_A1R5G5B5 = 0x02,
 	{ 16, Swizzled, XTL::D3DFMT_A1R5G5B5 },
 	// X_D3DFMT_X1R5G5B5 = 0x03,
@@ -94,7 +95,8 @@ const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_A8R8G8B8 = 0x12,
 	{ 32, Linear, XTL::D3DFMT_A8R8G8B8 },
 	// X_D3DFMT_LIN_L8 = 0x13,
-	{ 8, Linear, XTL::D3DFMT_L8 },
+	{ 8, Linear, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 8, Linear, XTL::D3DFMT_L8 },
 	// undefined : 0x14,
 	{ },
 	// undefined : 0x15,
@@ -111,7 +113,8 @@ const FormatInfo FormatInfos[] = {
 	{ 16, Swizzled, XTL::D3DFMT_R5G6B5, "X_D3DFMT_A8L8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
 	// TODO : { 16, Swizzled, XTL::D3DFMT_A8L8 },
 	// X_D3DFMT_LIN_AL8 = 0x1B,
-	{ 8, Linear, XTL::D3DFMT_A4L4, "X_D3DFMT_LIN_AL8 -> D3DFMT_A4L4" },
+	{ 8, Linear, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 8, Linear, XTL::D3DFMT_A4L4, "X_D3DFMT_LIN_AL8 -> D3DFMT_A4L4" },
 	// X_D3DFMT_LIN_X1R5G5B5 = 0x1C,
 	{ 16, Linear, XTL::D3DFMT_X1R5G5B5 },
 	// X_D3DFMT_LIN_A4R4G4B4 = 0x1D,
@@ -119,9 +122,11 @@ const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_X8R8G8B8 = 0x1E, // Alias : X_D3DFMT_LIN_X8L8V8U8
 	{ 32, Linear, XTL::D3DFMT_X8R8G8B8 },
 	// X_D3DFMT_LIN_A8 = 0x1F,
-	{ 8, Linear, XTL::D3DFMT_A8 },
+	{ 8, Linear, XTL::D3DFMT_L8 },
+	// TODO : { 8, Linear, XTL::D3DFMT_A8 },
 	// X_D3DFMT_LIN_A8L8 = 0x20,
-	{ 16, Linear, XTL::D3DFMT_A8L8 },
+	{ 16, Linear, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Linear, XTL::D3DFMT_A8L8 },
 	// undefined : 0x21,
 	{ },
 	// undefined : 0x22,
@@ -129,11 +134,13 @@ const FormatInfo FormatInfos[] = {
 	// undefined : 0x23,
 	{ },
 	// X_D3DFMT_YUY2 = 0x24,
-	{ 8, Undefined, XTL::D3DFMT_YUY2 },
+	{ 16, Undefined, XTL::D3DFMT_YUY2 },
+	// TODO : { 8, Undefined, XTL::D3DFMT_YUY2 },
 	// X_D3DFMT_UYVY = 0x25,
+	{ 16, Undefined, XTL::D3DFMT_UYVY },
+	// TODO : { 8, Undefined, XTL::D3DFMT_UYVY },
 	// undefined : 0x26,
 	{ },
-	{ 8, Undefined, XTL::D3DFMT_UYVY },
 	// X_D3DFMT_L6V5U5 = 0x27, // Alias : X_D3DFMT_R6G5B5
 	{ 16, Swizzled, XTL::D3DFMT_L6V5U5 }, // XQEMU NOTE: This might be signed
 	// X_D3DFMT_V8U8 = 0x28, // Alias : X_D3DFMT_G8B8
@@ -165,19 +172,24 @@ const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_L16 = 0x35,
 	{ 16, Linear, XTL::D3DFMT_UNKNOWN },
 	// X_D3DFMT_LIN_V16U16 = 0x36,
-	{ 32, Linear, XTL::D3DFMT_V16U16 },
+	{ 32, Linear, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 32, Linear, XTL::D3DFMT_V16U16 },
 	// X_D3DFMT_LIN_L6V5U5 = 0x37, // Alias : X_D3DFMT_LIN_R6G5B5
-	{ 16, Linear, XTL::D3DFMT_L6V5U5 }, // Untested...
+	{ 16, Linear, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Linear, XTL::D3DFMT_L6V5U5 },
 	// X_D3DFMT_R5G5B5A1 = 0x38,
-	{ 16, Swizzled, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" }, // TODO : Requires conversion
+	{ 16, Swizzled, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Swizzled, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" }, // TODO : Requires conversion
 	// X_D3DFMT_R4G4B4A4 = 0x39,
-	{ 16, Swizzled, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" }, // TODO : Requires conversion
+	{ 16, Swizzled, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Swizzled, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" }, // TODO : Requires conversion
 	// X_D3DFMT_A8B8G8R8 = 0x3A, // Alias : X_D3DFMT_Q8W8V8U8
 	{ 32, Swizzled, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8" }, // Cxbx NOTE: HACK: R<->B Swapped!
 	// TODO : // X_D3DFMT_Q8W8V8U8 = 0x3A, // Alias : X_D3DFMT_A8B8G8R8
 	// TODO : { 32, Swizzled, XTL::D3DFMT_Q8W8V8U8 }, // Untested...
 	// X_D3DFMT_B8G8R8A8 = 0x3B,
-	{ 32, Swizzled, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" }, // TODO : Requires conversion
+	{ 32, Swizzled, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 32, Swizzled, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" }, // TODO : Requires conversion
 	// X_D3DFMT_R8G8B8A8 = 0x3C,
 	{ 32, Swizzled, XTL::D3DFMT_UNKNOWN },
 	// X_D3DFMT_LIN_R5G5B5A1 = 0x3D,
@@ -204,9 +216,10 @@ const FormatInfo FormatInfos[] = {
 DWORD XTL::EmuXBFormatBitsPerPixel(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
-		return FormatInfos[Format].bits_per_pixel;
+		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
+			return FormatInfos[Format].bits_per_pixel;
 
-	return 8;
+	return 16; // TODO : 8
 }
 
 DWORD XTL::EmuXBFormatBytesPerPixel(X_D3DFORMAT Format)
@@ -227,7 +240,7 @@ BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Linear);
 
-	return false;
+	return (Format == X_D3DFMT_VERTEXDATA); // TODO : false;
 }
 
 BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format)
