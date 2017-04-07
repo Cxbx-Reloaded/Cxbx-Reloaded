@@ -314,9 +314,9 @@ END
 // TXT
 //
 
-IDR_CONTRIBUTORS        TXT                     "C:\\Users\\lukeu\\Desktop\\Projects\\Xbox\\cxbx-reloaded\\CONTRIBUTORS"
+IDR_CONTRIBUTORS        TXT                     "..\\CONTRIBUTORS"
 
-IDR_COPYING             TXT                     "C:\\Users\\lukeu\\Desktop\\Projects\\Xbox\\cxbx-reloaded\\COPYING"
+IDR_COPYING             TXT                     "..\\COPYING"
 
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
