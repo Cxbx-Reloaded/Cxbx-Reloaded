@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by S:\GitHub\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\lukeu\Desktop\Projects\Xbox\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -11,6 +11,9 @@
 #define IDD_VIDEO_CFG                   113
 #define IDR_JPEG_ABOUT                  116
 #define IDR_JPEG_SPLASH                 118
+#define IDD_ABOUT                       119
+#define IDR_CONTRIBUTORS                121
+#define IDR_COPYING                     122
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -49,6 +52,9 @@
 #define IDC_CV_VSYNC                    1042
 #define IDC_VC_VIDEO_RESOLUTION         1047
 #define IDC_CV_HARDWAREYUV              1050
+#define IDC_LIST2                       1055
+#define IDC_ABOUT                       1056
+#define IDC_TAB1                        1057
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -90,9 +96,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        119
+#define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         40083
-#define _APS_NEXT_CONTROL_VALUE         1051
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
