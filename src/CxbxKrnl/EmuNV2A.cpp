@@ -1056,7 +1056,7 @@ DEVICE_WRITE32(PRAMIN)
 	switch (addr) {
 	default:
 		DEVICE_WRITE32_REG(pramin);
-	}
+/	}
 
 	DEVICE_WRITE32_END(PRAMIN);
 }
