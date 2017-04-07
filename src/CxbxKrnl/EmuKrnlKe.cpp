@@ -384,8 +384,23 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 		LOG_FUNC_ARG(BugCheckParameter4)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	char buffer[1024];
+	sprintf(buffer, "The running software triggered KeBugCheck with the following information\n"
+		"BugCheckCode: 0x%08X\n"
+		"BugCheckParamater1 0x%08X\n"
+		"BugCheckParamater2 0x%08X\n"
+		"BugCheckParamater3 0x%08X\n"
+		"BugCheckParamater4 0x%08X\n"
+		"\nThis is the Xbox Equivilent to a BSOD and would cause the console to automatically reboot\n"
+		"\nContinue Execution (Not Recommended)?\n",
+		BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
 
+	HRESULT result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
+
+	if (result == IDNO)	{
+		CxbxKrnlCleanup(NULL);
+	}
+	
 	RETURN(S_OK);
 }
 
