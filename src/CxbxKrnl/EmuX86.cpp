@@ -51,6 +51,8 @@
 #include "EmuNV2A.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
+#include <assert.h>
+
 //
 // Read & write handlers handlers for I/O
 //
@@ -130,86 +132,138 @@ void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
 // Read & write handlers for memory-mapped hardware devices
 //
 
-uint32_t EmuX86_Read32(xbaddr addr)
+uint32_t EmuX86_Read32Aligned(xbaddr addr)
 {
-	// TODO : Should we assert ((addr & 3) == 0) here?
-	uint32_t value = 0;
+	assert((addr & 3) == 0);
+
+	uint32_t value;
+
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
 				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
-		} else
-			value = EmuNV2A_Read32(addr - NV2A_ADDR);
-	} else
-		if (g_bEmuException)
-			EmuWarning("EmuX86_Read32(0x%08X) [Unknown address]", addr);
-		else
+		}
+
+		// Access NV2A regardless weither HLE is disabled or not 
+		value = EmuNV2A_Read32(addr - NV2A_ADDR);
+		// Note : EmuNV2A_Read32 does it's own logging
+	} else {
+		if (g_bEmuException) {
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
+			value = 0;
+		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read32(addr);
+		}
+		DbgPrintf("EmuX86_Read32Aligned(0x%08X) = 0x%08X\n", addr, value);
+	}
 
-	DbgPrintf("EmuX86_Read32(0x%08X) = 0x%04X", addr, value);
+	return value;
+}
+
+uint32_t EmuX86_Read32(xbaddr addr)
+{
+	uint32_t value;
+
+	if ((addr & 3) == 0)
+		value = EmuX86_Read32Aligned(addr);
+	else {
+		EmuWarning("EmuX86_Read32(0x%08X) [Unaligned unimplemented]", addr);
+		value = 0;
+	}
+
 	return value;
 }
 
 uint16_t EmuX86_Read16(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
-	uint16_t value;
-	if (addr & 2)
-		value = (uint16_t)(EmuX86_Read32(addr - 2) >> 16);
-	else
-		value = (uint16_t)EmuX86_Read32(addr);
+	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
 
-	DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
+	int shift = (addr & 3) * 8;
+	xbaddr aligned_addr = addr & ~3;
+	uint16_t value = (uint16_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+
+	// Must the second byte be retrieved from the next DWORD?
+	if ((addr & 3) == 3)
+		value |= (uint16_t)((EmuX86_Read32Aligned(aligned_addr + 4) & 0xff) << 8);
+
+	DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
 	return value;
 }
 
 uint8_t EmuX86_Read8(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
-	uint8_t value;
-	if (addr & 1)
-		value = (uint8_t)(EmuX86_Read16(addr - 1) >> 8);
-	else
-		value = (uint8_t)EmuX86_Read16(addr);
+	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
 
-	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
+	int shift = (addr & 3) * 8;
+	xbaddr aligned_addr = addr & ~3;
+	uint8_t value = (uint8_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+
+	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
 	return value;
 }
 
-void EmuX86_Write32(xbaddr addr, uint32_t value)
+void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 {
-	// TODO : Should we assert ((addr & 3) == 0) here?
+	assert((addr & 3) == 0);
+
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+			EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
 				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
-			return;
 		}
 
+		// Access NV2A regardless weither HLE is disabled or not 
 		EmuNV2A_Write32(addr - NV2A_ADDR, value);
+		// Note : EmuNV2A_Write32 does it's own logging
 		return;
 	}
 
 	if (g_bEmuException) {
-		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unknown address]", addr, value);
+		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [Unknown address]", addr, value);
 		return;
 	}
 
 	// Outside EmuException, pass the memory-access through to normal memory :
+	DbgPrintf("EmuX86_Write32Aligned(0x%08X, 0x%08X)\n", addr, value);
 	EmuX86_Mem_Write32(addr, value);
+}
+
+void EmuX86_Write32(xbaddr addr, uint32_t value)
+{
+	if ((addr & 3) == 0) {
+		EmuX86_Write32Aligned(addr, value);
+	}
+	else
+		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unaligned unimplemented]", addr, value);
 }
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
-	EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
-	// TODO : If decided to do so, read32, mask value in, and forward to write32
+	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
+
+	assert((addr & 1) == 0);
+
+	int shift = (addr & 2) * 16;
+	xbaddr aligned_addr = addr & ~3;
+	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
+	uint32_t mask = 0xFFFF << shift;
+
+	// TODO : Must the second byte be written to the next DWORD?
+
+	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
-	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
-	// TODO : If decided to do so, read16, mask value in, and forward to write16
+	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
+
+	int shift = (addr & 3) * 8;
+	xbaddr aligned_addr = addr & ~3;
+	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
+	uint32_t mask = 0xFF << shift;
+
+	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
@@ -380,196 +434,154 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int opera
 		return base + index + (uint32_t)info.disp;
 }
 
-void EmuX86_Addr_Read(xbaddr srcAddr, uint16_t size, OUT uint32_t *value)
-{
-	switch (size) {
-	case 8:
-		*value = EmuX86_Read8(srcAddr);
-		return;
-	case 16:
-		*value = EmuX86_Read16(srcAddr);
-		return;
-	case 32:
-		*value = EmuX86_Read32(srcAddr);
-	}
-}
-
-void EmuX86_Addr_Write(xbaddr destAddr, uint16_t size, uint32_t value)
-{
-	switch (size) {
-	case 8:
-		EmuX86_Write8(destAddr, value & 0xFF);
-		return;
-	case 16:
-		EmuX86_Write16(destAddr, value & 0xFFFF);
-		return;
-	case 32:
-		EmuX86_Write32(destAddr, value);
-	}
-}
-
-bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
+xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, bool &is_internal_addr)
 {
 	switch (info.ops[operand].type) {
 	case O_NONE:
 	{
 		// ignore operand
-		return true;
+		return (xbaddr)nullptr;
 	}
 	case O_REG:
+		is_internal_addr = true;
+		return (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
 	{
-		void* regAddr = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
-		if (regAddr == 0)
-			return false;
-
-		switch (info.ops[operand].size) {
-		case 8:
-			*value = *((uint8_t*)regAddr);
-			return true;
-		case 16:
-			*value = *((uint16_t*)regAddr);
-			return true;
-		case 32:
-			*value = *((uint32_t*)regAddr);
-			return true;
-		}
-		return false;
 	}
 	case O_IMM:
 	{
-		switch (info.ops[operand].size) {
-		case 8:
-			*value = info.imm.byte;
-			return true;
-		case 16:
-			*value = info.imm.word;
-			return true;
-		case 32:
-			*value = info.imm.dword;
-			return true;
-		}
-		return false;
+		is_internal_addr = true;
+		return (xbaddr)(&info.imm);
 	}
 	case O_IMM1:
 	{
-		// TODO
-		return false;
+		is_internal_addr = true;
+		return (xbaddr)(&info.imm.ex.i1);
 	}
 	case O_IMM2:
 	{
-		// TODO
-		return false;
+		is_internal_addr = true;
+		return (xbaddr)(&info.imm.ex.i2);
 	}
 	case O_DISP:
 	{
-		xbaddr srcAddr = (xbaddr)info.disp;
-		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
-		return true;
+		is_internal_addr = false;
+		return (xbaddr)info.disp;
 	}
 	case O_SMEM:
 	{
-		xbaddr srcAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
-		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
-		return true;
+		is_internal_addr = false;
+		return EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
 	}
 	case O_MEM:
 	{
-		xbaddr srcAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
-		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
-		return true;
+		is_internal_addr = false;
+		return EmuX86_Distorm_O_MEM_Addr(e, info, operand);
 	}
 	case O_PC:
 	{
-		// TODO
-		return false;
+		is_internal_addr = false;
+		return (xbaddr)INSTRUCTION_GET_TARGET(&info);
 	}
 	case O_PTR:
 	{
-		// TODO
-		return false;
+		is_internal_addr = false;
+		return (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
 	}
 	default:
-		return false;
+		return (xbaddr)nullptr;
 	}
+
+	return (xbaddr)nullptr;
+}
+
+bool EmuX86_Addr_Read(xbaddr srcAddr, bool is_internal_addr, uint16_t size, OUT uint32_t *value)
+{
+	if (is_internal_addr)
+	{
+		switch (size) {
+		case 8:
+			*value = *((uint8_t*)srcAddr);
+			return true;
+		case 16:
+			*value = *((uint16_t*)srcAddr);
+			return true;
+		case 32:
+			*value = *((uint32_t*)srcAddr);
+			return true;
+		default:
+			return false;
+		}
+	}
+	else
+	{
+		switch (size) {
+		case 8:
+			*value = EmuX86_Read8(srcAddr);
+			return true;
+		case 16:
+			*value = EmuX86_Read16(srcAddr);
+			return true;
+		case 32:
+			*value = EmuX86_Read32(srcAddr);
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
+bool EmuX86_Addr_Write(xbaddr destAddr, bool is_internal_addr, uint16_t size, uint32_t value)
+{
+	if (is_internal_addr)
+	{
+		switch (size) {
+		case 8:
+			*((uint8_t*)destAddr) = (uint8_t)value;
+			return true;
+		case 16:
+			*((uint16_t*)destAddr) = (uint16_t)value;
+			return true;
+		case 32:
+			*((uint32_t*)destAddr) = value;
+			return true;
+		default:
+			return false;
+		}
+	}
+	else
+	{
+		switch (size) {
+		case 8:
+			EmuX86_Write8(destAddr, value & 0xFF);
+			return true;
+		case 16:
+			EmuX86_Write16(destAddr, value & 0xFFFF);
+			return true;
+		case 32:
+			EmuX86_Write32(destAddr, value);
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
+bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
+{
+	bool is_internal_addr;
+	xbaddr srcAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
+	if (srcAddr != (xbaddr)nullptr)
+		return EmuX86_Addr_Read(srcAddr, is_internal_addr, info.ops[operand].size, value);
 
 	return false;
 }
 
 bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
-	switch (info.ops[operand].type) {
-	case O_NONE:
-	{
-		// ignore operand
-		return true;
-	}
-	case O_REG:
-	{
-		void* regAddr = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
-		if (regAddr == nullptr)
-			return false;
-
-		switch (info.ops[operand].size) {
-		case 8:
-			*((uint8_t*)regAddr) = (uint8_t)value;
-			return true;
-		case 16:
-			*((uint16_t*)regAddr) = (uint16_t)value;
-			return true;
-		case 32:
-			*((uint32_t*)regAddr) = value;
-			return true;
-		default:
-			return false;
-		}
-		return false;
-	}
-	case O_IMM:
-	{
-		// TODO
-		return false;
-	}
-	case O_IMM1:
-	{
-		// TODO
-		return false;
-	}
-	case O_IMM2:
-	{
-		// TODO
-		return false;
-	}
-	case O_DISP:
-	{
-		xbaddr destAddr = (xbaddr)info.disp;
-		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
-		return true;
-	}
-	case O_SMEM:
-	{
-		xbaddr destAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
-		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
-		return true;
-	}
-	case O_MEM:
-	{
-		xbaddr destAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
-		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
-		return true;
-	}
-	case O_PC:
-	{
-		// TODO
-		return false;
-	}
-	case O_PTR:
-	{
-		// TODO
-		return false;
-	}
-	default:
-		return false;
-	}
+	bool is_internal_addr;
+	xbaddr destAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
+	if (destAddr != (xbaddr)nullptr)
+		return EmuX86_Addr_Write(destAddr, is_internal_addr, info.ops[operand].size, value);
 
 	return false;
 }
@@ -582,9 +594,12 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// ADD reads and writes destination :
-	xbaddr addr;
-	// TODO : Implement EmuX86_Operand_Addr, then enable the following line :
-	// if (!EmuX86_Operand_Addr(e, info, 0, &addr))
+	bool is_internal_addr;
+	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr);
+	if (addr == (xbaddr)nullptr)
+		return false;
+
+	if (is_internal_addr)
 		return false;
 
 	// TODO : Do this better
@@ -776,6 +791,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	unsigned int decodedInstructionsCount = 0;
 
 	_CodeInfo ci;
+	if (e->ContextRecord->Eip == 0x00023A8A)
+		//			00023A8A 03B2 28010000 add esi, [edx + $00000128]; CMiniport_SetDmaRange + 13E8
+		ci.code = (uint8_t*)e->ContextRecord->Eip;
+	else
 	ci.code = (uint8_t*)e->ContextRecord->Eip;
 	ci.codeLen = 20;
 	ci.codeOffset = 0;
