@@ -28,6 +28,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // remains consistent on all systems.
 IDI_CXBX                ICON                    "Cxbx.ico"
 
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -59,6 +60,7 @@ END
 //
 
 IDB_LOGO                BITMAP                  "Logo.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -128,14 +130,14 @@ BEGIN
         MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND, GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
-		MENUITEM SEPARATOR
-		POPUP "&LLE (Experimental)"
-		BEGIN
-			MENUITEM "LLE &JIT",				ID_EMULATION_LLE_JIT
-			MENUITEM "LLE &APU",				ID_EMULATION_LLE_APU
-			MENUITEM "LLE &GPU",				ID_EMULATION_LLE_GPU
-		END
-	END
+        MENUITEM SEPARATOR
+        POPUP "&LLE (Experimental)"
+        BEGIN
+            MENUITEM "LLE &JIT",                    ID_EMULATION_LLE_JIT
+            MENUITEM "LLE &APU",                    ID_EMULATION_LLE_APU
+            MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU
+        END
+    END
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
@@ -249,8 +251,74 @@ END
 //
 
 IDR_JPEG_ABOUT          JPEG                    "About.jpg"
+
 IDR_JPEG_SPLASH         JPEG                    "Splash.jpg"
+
 #endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United Kingdom) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 310, 177
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Cxbx-Reloaded"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_TAB1,"SysTabControl32",0x0,7,7,296,163
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TXT
+//
+
+IDR_CONTRIBUTORS        TXT                     "C:\\Users\\lukeu\\Desktop\\Projects\\Xbox\\cxbx-reloaded\\CONTRIBUTORS"
+
+IDR_COPYING             TXT                     "C:\\Users\\lukeu\\Desktop\\Projects\\Xbox\\cxbx-reloaded\\COPYING"
+
+#endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
