@@ -471,34 +471,6 @@ OOVPA_NO_XREF(D3DDevice_GetRenderTarget2, 4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetRenderTarget2B
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetRenderTarget2B, 4627, 10)
-
-        // D3DDevice_GetRenderTarget2B+0x00 : mov eax, [addr]
-        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
-
-        // D3DDevice_GetRenderTarget2B+0x05 : push esi
-        { 0x05, 0x56 }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_GetRenderTarget2B+0x06 : mov esi, [eax + 0x21B4]
-        { 0x06, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x07, 0xB0 }, // (Offset,Value)-Pair #4
-        { 0x08, 0xB4 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x21 }, // (Offset,Value)-Pair #6
-
-        // D3DDevice_GetRenderTarget2B+0x2A : jz + 0x06
-        { 0x2A, 0x74 }, // (Offset,Value)-Pair #7
-        { 0x2B, 0x06 }, // (Offset,Value)-Pair #8
-
-        // D3DDevice_GetRenderTarget2B+0x2D : call [addr]
-        { 0x2D, 0xE8 }, // (Offset,Value)-Pair #9
-
-        // D3DDevice_GetRenderTarget2B+0x37 : retn
-        { 0x37, 0xC3 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 10)
@@ -3105,7 +3077,6 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4928, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 4627, ALIAS, D3DDevice_GetRenderTarget2B),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 4627, ALIAS, D3DDevice_GetDepthStencilSurface2B),
 	REGISTER_OOVPA(D3DDevice_GetTile, 4627, PATCH),
