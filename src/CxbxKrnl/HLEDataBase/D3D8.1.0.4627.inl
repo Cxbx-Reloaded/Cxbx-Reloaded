@@ -1632,99 +1632,16 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(Get2DSurfaceDesc, 4627, 10)
 
-        // Get2DSurfaceDesc+0x2B : movzx edx, byte ptr [edi+0x0D]
-        { 0x2B, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x2C, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
-        { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
-
-        // Get2DSurfaceDesc+0x52 : mov edx, [eax+0x21C0]
-        { 0x52, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x53, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x54, 0xC0 }, // (Offset,Value)-Pair #7
-        { 0x55, 0x21 }, // (Offset,Value)-Pair #8
-
-        // Get2DSurfaceDesc+0xAE : retn 0x0C
-        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * Get2DSurfaceDescB
-// ******************************************************************
-OOVPA_XREF(Get2DSurfaceDescB, 4627, 9,
-
-    XREF_GET2DSURFACEDESCB,
-    XRefZero)
-
-        // Get2DSurfaceDescB+0x1D : movzx ecx, byte ptr [edi+0x0D]
-        { 0x1D, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x1E, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x1F, 0x4F }, // (Offset,Value)-Pair #3
-        { 0x20, 0x0D }, // (Offset,Value)-Pair #4
-
-        // Get2DSurfaceDescB+0x44 : mov edx, [eax+0x21C0]
-        { 0x44, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x45, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x46, 0xC0 }, // (Offset,Value)-Pair #7
-        { 0x47, 0x21 }, // (Offset,Value)-Pair #8
-
-        // Get2DSurfaceDescB+0x9E : retn
-        { 0x9E, 0xC3 }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
-// * Get2DSurfaceDescC
-// ******************************************************************
-OOVPA_XREF(Get2DSurfaceDescC, 4627, 10,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        // Get2DSurfaceDescC+0x10 : call [Get2DSurfaceDescB]
-        XREF_ENTRY( 0x10, XREF_GET2DSURFACEDESCB ), // (Offset,Value)-Pair #1
-
-        // Get2DSurfaceDescC+0x00 : push ebx; push esi; push edi
-        { 0x00, 0x53 }, // (Offset,Value)-Pair #2
-        { 0x05, 0x56 }, // (Offset,Value)-Pair #3
-        { 0x0A, 0x57 }, // (Offset,Value)-Pair #4
-
-        // Get2DSurfaceDescC+0x01 : mov ebx, [esp+0x0C]
-        { 0x01, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x02, 0x5C }, // (Offset,Value)-Pair #6
-        { 0x03, 0x24 }, // (Offset,Value)-Pair #7
-        { 0x04, 0x0C }, // (Offset,Value)-Pair #8
-
-        // Get2DSurfaceDescC+0x17 : retn 0x0C
-        { 0x17, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x18, 0x0C }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * Get2DSurfaceDescD
-// ******************************************************************
-OOVPA_XREF(Get2DSurfaceDescD, 4627, 10,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        // Get2DSurfaceDescD+0x0E : call [Get2DSurfaceDescB]
-        XREF_ENTRY( 0x0E, XREF_GET2DSURFACEDESCB ), // (Offset,Value)-Pair #1
-
-        // Get2DSurfaceDescD+0x00 : push ebx; push esi; push edi
-        { 0x00, 0x53 }, // (Offset,Value)-Pair #2
-        { 0x01, 0x56 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x57 }, // (Offset,Value)-Pair #4
-
-        // Get2DSurfaceDescD+0x02 : mov esi, [esp+0x10]
-        { 0x02, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x03, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x04, 0x24 }, // (Offset,Value)-Pair #7
-        { 0x05, 0x10 }, // (Offset,Value)-Pair #8
-
-        // Get2DSurfaceDescD+0x15 : retn 0x08
-        { 0x15, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x16, 0x08 }, // (Offset,Value)-Pair #10
+        { 0x10, 0x0D },
+        { 0x48, 0x08 },
+        { 0x49, 0x02 },
+        { 0x4A, 0x00 },
+        { 0x4B, 0x00 },
+        { 0x4C, 0x00 },
+        { 0x4D, 0xA1 },
+        { 0x58, 0x53 },
+        { 0x63, 0x80 },
+        { 0xAE, 0xC2 },
 OOVPA_END;
 
 // ******************************************************************
@@ -3048,9 +2965,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DResource_IsBusy, 4361, PATCH),
 	// REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4627, PATCH),
-	REGISTER_OOVPA(Get2DSurfaceDescB, 4627, XREF),
-	REGISTER_OOVPA(Get2DSurfaceDesc, 4627, ALIAS, Get2DSurfaceDescC),
-	REGISTER_OOVPA(Get2DSurfaceDescD, 4627, PATCH),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 4361, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 4627, PATCH),
