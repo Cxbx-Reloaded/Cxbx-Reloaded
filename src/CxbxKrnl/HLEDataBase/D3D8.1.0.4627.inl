@@ -1495,51 +1495,29 @@ OOVPA_END;
 // ******************************************************************
 // * D3DVertexBuffer_Lock2
 // ******************************************************************
-OOVPA_NO_XREF(D3DVertexBuffer_Lock2, 4627, 11)
+OOVPA_NO_XREF(D3DVertexBuffer_Lock2, 4627, 12)
+
+        // D3DVertexBuffer_Lock2B+0x00 : push ebx
+        { 0x00, 0x53 }, // (Offset,Value)-Pair #1
 
         // D3DVertexBuffer_Lock2+0x01 : mov bl, [esp+0x0C]
-        { 0x01, 0x8A }, // (Offset,Value)-Pair #1
-        { 0x02, 0x5C }, // (Offset,Value)-Pair #2
-        { 0x03, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x04, 0x0C }, // (Offset,Value)-Pair #4
-
-        // D3DVertexBuffer_Lock2+0x09 : jnz +0x24
-        { 0x09, 0x75 }, // (Offset,Value)-Pair #5
-        { 0x0A, 0x24 }, // (Offset,Value)-Pair #6
-
-        // D3DVertexBuffer_Lock2+0x2F : test bl, 0xA0
-        { 0x2F, 0xF6 }, // (Offset,Value)-Pair #7
-        { 0x30, 0xC3 }, // (Offset,Value)-Pair #8
-        { 0x31, 0xA0 }, // (Offset,Value)-Pair #9
-
-        // D3DVertexBuffer_Lock2+0x48 : retn 0x08
-        { 0x48, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x49, 0x08 }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
-// * D3DVertexBuffer_Lock2B
-// ******************************************************************
-OOVPA_NO_XREF(D3DVertexBuffer_Lock2B, 4627, 11)
-
-        // D3DVertexBuffer_Lock2B+0x01 : mov bl, [esp+0x0C]
-        { 0x01, 0x8A }, // (Offset,Value)-Pair #1
-        { 0x02, 0x5C }, // (Offset,Value)-Pair #2
-        { 0x03, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x04, 0x0C }, // (Offset,Value)-Pair #4
+        { 0x01, 0x8A }, // (Offset,Value)-Pair #2
+        { 0x02, 0x5C }, // (Offset,Value)-Pair #3
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x04, 0x0C }, // (Offset,Value)-Pair #5
 
         // D3DVertexBuffer_Lock2B+0x09 : jnz +0x24
-        { 0x09, 0x75 }, // (Offset,Value)-Pair #5
-        { 0x0A, 0x2D }, // (Offset,Value)-Pair #6
+        { 0x09, 0x75 }, // (Offset,Value)-Pair #6
+        { 0x0A, 0x24 }, // (Offset,Value)-Pair #7
 
-        // D3DVertexBuffer_Lock2B+0x2F : test bl, 0xA0
-        { 0x38, 0xF6 }, // (Offset,Value)-Pair #7
-        { 0x39, 0xC3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xA0 }, // (Offset,Value)-Pair #9
+        // D3DVertexBuffer_Lock2+0x3E : mov eax, [esi+4]
+        { 0x3E, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x3F, 0x46 }, // (Offset,Value)-Pair #9
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #10
 
-        // D3DVertexBuffer_Lock2B+0x48 : retn 0x08
-        { 0x6B, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x6C, 0x08 }, // (Offset,Value)-Pair #11
+        // D3DVertexBuffer_Lock2+0x48 : retn 0x08
+        { 0x48, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x49, 0x08 }, // (Offset,Value)-Pair #12
 OOVPA_END;
 
 // ******************************************************************
@@ -3063,7 +3041,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 4361, PATCH),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock2, 4627, PATCH),
-	REGISTER_OOVPA(D3DVertexBuffer_Lock2, 4627, ALIAS, D3DVertexBuffer_Lock2B),
 	REGISTER_OOVPA(D3DResource_Register, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_AddRef, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),
