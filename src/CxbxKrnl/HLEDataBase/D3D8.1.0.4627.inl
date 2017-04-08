@@ -1362,28 +1362,6 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_DrawVerticesUPB
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_DrawVerticesUPB, 4627, 10)
-
-        // D3DDevice_DrawVerticesUPB+0x03 : sub esp, 0x14
-        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x05, 0x14 }, // (Offset,Value)-Pair #3
-
-        // D3DDevice_DrawVerticesUPB+0x3C : mov edx, [esi+0x804]
-        { 0x3C, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x3D, 0x96 }, // (Offset,Value)-Pair #5
-        { 0x3E, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x3F, 0x08 }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_DrawVerticesUPB+0xF9 : cmp edi, 0x80
-        { 0xF9, 0x81 }, // (Offset,Value)-Pair #8
-        { 0xFA, 0xFF }, // (Offset,Value)-Pair #9
-        { 0xFB, 0x80 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_DrawIndexedVertices
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_DrawIndexedVertices, 4627, 11)
@@ -2853,7 +2831,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShader, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 4627, ALIAS, D3DDevice_DrawVerticesUPB),
 	REGISTER_OOVPA(D3DDevice_GetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 4627, PATCH),
