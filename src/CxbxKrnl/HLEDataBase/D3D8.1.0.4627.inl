@@ -1340,36 +1340,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 4627, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetRenderState_MultiSampleAntiAliasB
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleAntiAliasB, 4627, 12)
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x04 : push esi
-        { 0x04, 0x56 }, // (Offset,Value)-Pair #1
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x11 : call [abs]
-        { 0x11, 0xE8 }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x25 : shl edi, 0x10
-        { 0x25, 0xC1 }, // (Offset,Value)-Pair #3
-        { 0x26, 0xE7 }, // (Offset,Value)-Pair #4
-        { 0x27, 0x10 }, // (Offset,Value)-Pair #5
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x2C : jns +0x0C
-        { 0x2C, 0x79 }, // (Offset,Value)-Pair #6
-        { 0x2D, 0x0C }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x37 : or edi, 0x01
-        { 0x37, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x38, 0xCF }, // (Offset,Value)-Pair #9
-        { 0x39, 0x01 }, // (Offset,Value)-Pair #10
-
-        // D3DDevice_SetRenderState_MultiSampleAntiAliasB+0x7B : retn 0x04
-        { 0x7B, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x7C, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_DrawVerticesUP
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 4627, 10)
@@ -2872,7 +2842,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LineWidth, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_OcclusionCullEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleAntiAlias, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleAntiAlias, 4627, ALIAS, D3DDevice_SetRenderState_MultiSampleAntiAliasB),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ShadowFunc, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4134, PATCH),
