@@ -999,7 +999,6 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateTexture2, 4627, ALIAS, D3DDevice_CreateTexture2C),
 	REGISTER_OOVPA(D3DDevice_SetIndices, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
