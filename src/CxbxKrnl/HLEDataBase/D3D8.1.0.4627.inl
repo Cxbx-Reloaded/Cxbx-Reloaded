@@ -428,42 +428,18 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 4627, 12)
         { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
         { 0x0E, 0x19 }, // (Offset,Value)-Pair #5
 
-        // D3DDevice_GetBackBuffer+0x15 : mov esi, [ecx+eax*4+0x21C0]
-        { 0x15, 0x8B }, // (Offset,Value)-Pair #6
-        { 0x16, 0xB4 }, // (Offset,Value)-Pair #7
-        { 0x17, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x18, 0xC0 }, // (Offset,Value)-Pair #9
-        { 0x19, 0x21 }, // (Offset,Value)-Pair #10
+        // D3DDevice_GetBackBuffer+0x12 : mov eax, 1
+        { 0x0F, 0xB8 }, // (Offset,Value)-Pair #6
+        { 0x13, 0x00 }, // (Offset,Value)-Pair #7
+
+        // D3DDevice_GetBackBuffer+0x15 : mov esi, [ecx+eax*4+0xXXXX]
+        { 0x15, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x16, 0xB4 }, // (Offset,Value)-Pair #9
+        { 0x17, 0x81 }, // (Offset,Value)-Pair #10
 
         // D3DDevice_GetBackBuffer+0x40 : retn 0x04
         { 0x40, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x41, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_GetBackBuffer2B
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetBackBuffer2B, 4627, 12)
-
-        // D3DDevice_GetBackBuffer2B+0x04 : cmp eax, 0xFFFFFFFF
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xFF }, // (Offset,Value)-Pair #3
-
-        // D3DDevice_GetBackBuffer2B+0x0D : jnz +0x07
-        { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
-        { 0x0E, 0x07 }, // (Offset,Value)-Pair #5
-
-        // D3DDevice_GetBackBuffer2B+0x1E : mov esi, [ecx+eax*4+0x21C0]
-        { 0x1E, 0x8B }, // (Offset,Value)-Pair #6
-        { 0x1F, 0xB4 }, // (Offset,Value)-Pair #7
-        { 0x20, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x21, 0xC0 }, // (Offset,Value)-Pair #9
-        { 0x22, 0x21 }, // (Offset,Value)-Pair #10
-
-        // D3DDevice_GetBackBuffer2B+0x4C : retn 0x04
-        { 0x4C, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x4D, 0x04 }, // (Offset,Value)-Pair #12
 OOVPA_END;
 
 // ******************************************************************
@@ -3121,7 +3097,6 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_CopyRects, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 4627, ALIAS, D3DDevice_GetBackBuffer2B),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 4627, PATCH),
 	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 4627, XREF),
 	REGISTER_OOVPA(D3D_CommonSetRenderTargetB, 4627, XREF),
