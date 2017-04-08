@@ -1299,55 +1299,17 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZEnable
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 4627, 13)
+OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 4627, 9)
 
-        // D3DDevice_SetRenderState_ZEnable+0x0C : jb +0x05
-        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
-        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_SetRenderState_ZEnable+0x1B : mov ecx, [esi+0x21B8h]
-        { 0x1B, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x1C, 0x8E }, // (Offset,Value)-Pair #4
-        { 0x1D, 0xB8 }, // (Offset,Value)-Pair #5
-        { 0x1E, 0x21 }, // (Offset,Value)-Pair #6
-
-        // D3DDevice_SetRenderState_ZEnable+0x2E : mov dword ptr [eax], 0x4030
-        { 0x2E, 0xC7 }, // (Offset,Value)-Pair #7
-        { 0x2F, 0x00 }, // (Offset,Value)-Pair #8
-        { 0x30, 0x0C }, // (Offset,Value)-Pair #9
-        { 0x31, 0x03 }, // (Offset,Value)-Pair #10
-        { 0x32, 0x04 }, // (Offset,Value)-Pair #11
-
-        // D3DDevice_SetRenderState_ZEnable+0x8C : retn 0x04
-        { 0x8C, 0xC2 }, // (Offset,Value)-Pair #12
-        { 0x8D, 0x04 }, // (Offset,Value)-Pair #13
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetRenderState_ZEnableB
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnableB, 4627, 13)
-
-        // D3DDevice_SetRenderState_ZEnableB+0x0C : jb +0x0E
-        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
-        { 0x0D, 0x0E }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_SetRenderState_ZEnableB+0x1B : mov ecx, [esi+0x21B8h]
-        { 0x24, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x25, 0x8E }, // (Offset,Value)-Pair #4
-        { 0x26, 0xB8 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x21 }, // (Offset,Value)-Pair #6
-
-        // D3DDevice_SetRenderState_ZEnableB+0x37 : mov dword ptr [eax], 0x4030
-        { 0x37, 0xC7 }, // (Offset,Value)-Pair #7
-        { 0x38, 0x00 }, // (Offset,Value)-Pair #8
-        { 0x39, 0x0C }, // (Offset,Value)-Pair #9
-        { 0x3A, 0x03 }, // (Offset,Value)-Pair #10
-        { 0x3B, 0x04 }, // (Offset,Value)-Pair #11
-
-        // D3DDevice_SetRenderState_ZEnableB+0x99 : retn 0x04
-        { 0x99, 0xC2 }, // (Offset,Value)-Pair #12
-        { 0x9A, 0x04 }, // (Offset,Value)-Pair #13
+        { 0x08, 0x06 },
+        { 0x1D, 0xB8 },
+        { 0x48, 0xC0 },
+        { 0x49, 0x10 },
+        { 0x4A, 0x89 },
+        { 0x4B, 0x06 },
+        { 0x4C, 0xA1 },
+        { 0x5A, 0x74 },
+        { 0x60, 0x2A },
 OOVPA_END;
 
 // ******************************************************************
@@ -3077,7 +3039,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Simple, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 4627, ALIAS, D3DDevice_SetRenderState_ZEnableB),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilEnable, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilEnable, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LineWidth, 4627, PATCH),
