@@ -186,256 +186,18 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities, 4928, 12)
+OOVPA_NO_XREF(XInputGetCapabilities, 4831, 10)
 
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xAC }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0xE8 }, // (Offset,Value)-Pair #11
-        { 0x92, 0x7B }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities2
-// ******************************************************************
-/* Unreal Championship's version is different */
-OOVPA_NO_XREF(XInputGetCapabilities2, 4928, 12)
-
-		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x1C }, // (Offset,Value)-Pair #3
-
-		// test    byte ptr [esi+4], 2
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-		// rep stosd
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-		// mov  edi, offset unknown_libname_2
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0xCC }, // (Offset,Value)-Pair #11
-        { 0x92, 0x5C }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities3
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities3, 4928, 12)
-
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xA4 }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0x8A }, // (Offset,Value)-Pair #11
-        { 0x92, 0x2A }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities2
-// ******************************************************************
-/* Unreal Championship's version is different */
-OOVPA_NO_XREF(XInputGetCapabilities4, 4928, 12)
-
-		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xDC }, // (Offset,Value)-Pair #3
-
-		// test    byte ptr [esi+4], 2
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-		// rep stosd
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-		// mov  edi, offset unknown_libname_2
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0x8C }, // (Offset,Value)-Pair #11
-        { 0x92, 0x8C }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities5
-// ******************************************************************
-/* DOAV */
-OOVPA_NO_XREF(XInputGetCapabilities5, 4928, 12)
-
-		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xF4 }, // (Offset,Value)-Pair #3
-
-		// test    byte ptr [esi+4], 2
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-		// rep stosd
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-		// mov  edi, offset unknown_libname_2
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0x17 }, // (Offset,Value)-Pair #11
-        { 0x92, 0xB7 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities6
-// ******************************************************************
-/* Defender */
-OOVPA_NO_XREF(XInputGetCapabilities6, 4928, 12)
-
-		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x78 }, // (Offset,Value)-Pair #3
-
-		// test    byte ptr [esi+4], 2
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-		// rep stosd
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-		// mov  edi, offset unknown_libname_2
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0xE5 }, // (Offset,Value)-Pair #11
-        { 0x92, 0xCF }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities, 4831, 12)
-
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x88 }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
-        { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
-        { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities2
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities2, 4831, 12)
-
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x50 }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
-        { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
-        { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities3
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities3, 4831, 12)
-
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x14 }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
-        { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
-        { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities4
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities4, 4831, 12)
-
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0x9C }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
-        { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
-        { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * XInputGetCapabilities5
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities5, 4831, 8)
-
-		{ 0x22, 0xF6 },
-		{ 0x23, 0x46 },
-		{ 0x24, 0x04 },
-		{ 0x25, 0x02 },
-		{ 0x44, 0x6A },
-		{ 0x45, 0x12 },
-		{ 0xF1, 0xC2 },
-		{ 0xF2, 0x08 },
+        { 0x08, 0xF8 },
+        { 0x0C, 0x1D },
+        { 0x11, 0x56 },
+        { 0x1F, 0x0F },
+        { 0x95, 0x89 },
+        { 0x96, 0x7D },
+        { 0x97, 0xC0 },
+        { 0x98, 0x89 },
+        { 0x99, 0x55 },
+        { 0x9A, 0xD0 },
 OOVPA_END;
 
 // ******************************************************************
@@ -654,20 +416,10 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
 	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
 	REGISTER_OOVPA(XInputGetState, 4928, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, ALIAS, XInputGetCapabilities2),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, ALIAS, XInputGetCapabilities3),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, ALIAS, XInputGetCapabilities4),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, ALIAS, XInputGetCapabilities5),
 	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4928, PATCH),
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
 	REGISTER_OOVPA(XInputGetCapabilities, 4831, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4831, ALIAS, XInputGetCapabilities2),
-	REGISTER_OOVPA(XInputGetCapabilities, 4831, ALIAS, XInputGetCapabilities3),
-	REGISTER_OOVPA(XInputGetCapabilities, 4831, ALIAS, XInputGetCapabilities4),
-	REGISTER_OOVPA(XInputGetCapabilities, 4831, ALIAS, XInputGetCapabilities5),
-	REGISTER_OOVPA(XInputGetCapabilities, 4928, ALIAS, XInputGetCapabilities6),
 	// REGISTER_OOVPA(XCalculateSignatureBeginEx, 4627, PATCH), // +s, not necessary?
 	// REGISTER_OOVPA(XCalculateSignatureBegin, 4627, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureUpdate, 4627, PATCH),
