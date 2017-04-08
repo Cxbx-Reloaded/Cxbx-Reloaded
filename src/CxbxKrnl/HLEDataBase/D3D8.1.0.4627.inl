@@ -1647,7 +1647,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DTexture_GetSurfaceLevel2
 // ******************************************************************
-OOVPA_NO_XREF(D3DTexture_GetSurfaceLevel2, 4627, 14)
+OOVPA_NO_XREF(D3DTexture_GetSurfaceLevel2, 4627, 12)
 
         // D3DTexture_GetSurfaceLevel2+0x00 : sub esp, 0x0C
         { 0x00, 0x83 }, // (Offset,Value)-Pair #1
@@ -1670,46 +1670,8 @@ OOVPA_NO_XREF(D3DTexture_GetSurfaceLevel2, 4627, 14)
         { 0x1B, 0x8D }, // (Offset,Value)-Pair #10
         { 0x1E, 0x18 }, // (Offset,Value)-Pair #11
 
-        // D3DTexture_GetSurfaceLevel2+0x29 : call [abs]
-        { 0x29, 0xE8 }, // (Offset,Value)-Pair #12
-
-        // D3DTexture_GetSurfaceLevel2+0x47 : retn 0x08
-        { 0x47, 0xC2 }, // (Offset,Value)-Pair #13
-        { 0x48, 0x08 }, // (Offset,Value)-Pair #14
-OOVPA_END;
-
-// ******************************************************************
-// * D3DTexture_GetSurfaceLevel2B
-// ******************************************************************
-OOVPA_NO_XREF(D3DTexture_GetSurfaceLevel2B, 4627, 14)
-
-        // D3DTexture_GetSurfaceLevel2B+0x00 : sub esp, 0x0C
-        { 0x00, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x01, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x02, 0x0C }, // (Offset,Value)-Pair #3
-
-        // D3DTexture_GetSurfaceLevel2B+0x04 : mov esi, [esp+0x14]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x07, 0x14 }, // (Offset,Value)-Pair #5
-
-        // D3DTexture_GetSurfaceLevel2B+0x08 : lea eax, [esp+0x14]
-        { 0x08, 0x8D }, // (Offset,Value)-Pair #6
-        { 0x0B, 0x18 }, // (Offset,Value)-Pair #7
-
-        // D3DTexture_GetSurfaceLevel2B+0x17 : mov edx, [esp+0x24]
-        { 0x17, 0x8B }, // (Offset,Value)-Pair #8
-        { 0x1A, 0x24 }, // (Offset,Value)-Pair #9
-
-        // D3DTexture_GetSurfaceLevel2B+0x1B : lea eax, [esp+0x18]
-        { 0x1B, 0x8D }, // (Offset,Value)-Pair #10
-        { 0x1E, 0x18 }, // (Offset,Value)-Pair #11
-
-        // D3DTexture_GetSurfaceLevel2B+0x29 : call [abs]
-        { 0x29, 0xE8 }, // (Offset,Value)-Pair #12
-
-        // D3DTexture_GetSurfaceLevel2B+0x47 : retn 0x08
-        { 0x45, 0xC2 }, // (Offset,Value)-Pair #13
-        { 0x46, 0x08 }, // (Offset,Value)-Pair #14
+        // D3DTexture_GetSurfaceLevel2+0x3E : call [abs]
+        { 0x3E, 0xE8 }, // (Offset,Value)-Pair #12
 OOVPA_END;
 
 // ******************************************************************
@@ -2970,7 +2932,6 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 4627, PATCH),
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
-	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, ALIAS, D3DTexture_GetSurfaceLevel2B),
 	REGISTER_OOVPA(D3DTexture_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4627, PATCH),
