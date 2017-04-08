@@ -157,6 +157,7 @@ struct {
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
+	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
 } pgraph;
 
 
@@ -203,11 +204,11 @@ static void update_irq()
 
 	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
 		// TODO Raise IRQ
-		EmuWarning("EmuNV2A update_irq() : Raise IRQ Not Implemented");
+		EmuWarning("NV2A update_irq() : Raise IRQ Not Implemented");
 	}
 	else {
 		// TODO: Cancel IRQ
-		EmuWarning("EmuNV2A update_irq() : Cancel IRQ Not Implemented");
+		EmuWarning("NV2A update_irq() : Cancel IRQ Not Implemented");
 	}
 }
 
@@ -234,30 +235,30 @@ DEBUG_START(PMC)
 DEBUG_END(PMC)
 
 DEBUG_START(PBUS)
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_0, "_VENDOR_ID");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_0, ":VENDOR_ID");
 	DEBUG_CASE(NV_PBUS_PCI_NV_1);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_2, "_REVISION_ID");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_3, "_LATENCY_TIMER");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_2, ":REVISION_ID");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_3, ":LATENCY_TIMER");
 	DEBUG_CASE(NV_PBUS_PCI_NV_4);
 	DEBUG_CASE(NV_PBUS_PCI_NV_5);
 	DEBUG_CASE(NV_PBUS_PCI_NV_6);
 	DEBUG_CASE(NV_PBUS_PCI_NV_7);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_11, "_SUBSYSTEM");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_12, "_ROM_BASE");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_13, "_CAP_PTR");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_14, "_RESERVED");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_11, ":SUBSYSTEM");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_12, ":ROM_BASE");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_13, ":CAP_PTR");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_14, ":RESERVED");
 	DEBUG_CASE(NV_PBUS_PCI_NV_15);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_16, "_SUBSYSTEM");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_16, ":SUBSYSTEM");
 	DEBUG_CASE(NV_PBUS_PCI_NV_17);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_18, "_AGP_STATUS");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_19, "_AGP_COMMAND");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_20, "_ROM_SHADOW");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_21, "_VGA");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_22, "_SCRATCH");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_23, "_DT_TIMEOUT");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_24, "_PME");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_25, "_POWER_STATE");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_26, "_RESERVED");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_18, ":AGP_STATUS");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_19, ":AGP_COMMAND");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_20, ":ROM_SHADOW");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_21, ":VGA");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_22, ":SCRATCH");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_23, ":DT_TIMEOUT");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_24, ":PME");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_25, ":POWER_STATE");
+	DEBUG_CASE_EX(NV_PBUS_PCI_NV_26, ":RESERVED");
 DEBUG_END(PBUS)
 
 DEBUG_START(PFIFO)
@@ -511,23 +512,25 @@ DEBUG_END(USER)
 
 
 
-#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Handled, %s]\n", addr, result, DebugNV_##DEV##(addr));
-#define DEBUG_READ32_UNHANDLED(DEV)  DbgPrintf("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Unhandled, %s]\n", addr, result, DebugNV_##DEV##(addr));
+#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled, %s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled, %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]\n", addr, value, DebugNV_##DEV##(addr));
-#define DEBUG_WRITE32_UNHANDLED(DEV) DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]\n", addr, value, DebugNV_##DEV##(addr));
+#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled, %s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled, %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(xbaddr addr)
-#define DEVICE_READ32_SWITCH(addr) uint32_t result = 0; switch (addr) 
+#define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
+#define DEVICE_READ32_REG(dev) result = dev.regs[addr / sizeof(uint32_t)]
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
 #define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(xbaddr addr, uint32_t value)
-#define DEVICE_WRITE32_SWITCH(DEV, addr) DEBUG_WRITE32(DEV); switch (addr)
+#define DEVICE_WRITE32_REG(dev) dev.regs[addr / sizeof(uint32_t)] = value
+#define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
 
 DEVICE_READ32(PMC)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 	case NV_PMC_BOOT_0:	// chipset and stepping: NV2A, A02, Rev 0
 		result = 0x02A000A2;
 		break;
@@ -541,7 +544,7 @@ DEVICE_READ32(PMC)
 		result = NV20_REG_BASE_KERNEL;
 		break;
 	default:
-		DEBUG_READ32_UNHANDLED(PMC);
+		DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
 	}
 
 	DEVICE_READ32_END(PMC);
@@ -549,7 +552,7 @@ DEVICE_READ32(PMC)
 
 DEVICE_WRITE32(PMC)
 {
-	DEVICE_WRITE32_SWITCH(PMC, addr) {
+	switch(addr) {
 	case NV_PMC_INTR_0:
 		pmc.pending_interrupts &= ~value;
 		update_irq();
@@ -560,14 +563,16 @@ DEVICE_WRITE32(PMC)
 		break;
 
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PMC);
+		DEVICE_WRITE32_REG(pmc); // Was : DEBUG_WRITE32_UNHANDLED(PMC);
 	}
+
+	DEVICE_WRITE32_END(PMC);
 }
 
 
 DEVICE_READ32(PBUS)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 	case NV_PBUS_PCI_NV_0:
 		result = 0x10de;	// PCI_VENDOR_ID_NVIDIA	(?where to return PCI_DEVICE_ID_NVIDIA_NV2A = 0x01b7)
 
@@ -580,7 +585,7 @@ DEVICE_READ32(PBUS)
 		break;
 
 	default: 
-		DEBUG_READ32_UNHANDLED(PBUS);
+		DEBUG_READ32_UNHANDLED(PBUS); // TODO : DEVICE_READ32_REG(pbus);
 	}
 
 	DEVICE_READ32_END(PBUS);
@@ -588,23 +593,27 @@ DEVICE_READ32(PBUS)
 
 DEVICE_WRITE32(PBUS)
 {
-	DEVICE_WRITE32_SWITCH(PBUS, addr) {
-	// TODO : Handle write on NV_PBUS_PCI_NV_1 with  1 (NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED) + 4 (NV_PBUS_PCI_NV_1_BUS_MASTER_ENABLED)
+	switch(addr) {
+	case NV_PBUS_PCI_NV_1:
+		// TODO : Handle write on NV_PBUS_PCI_NV_1 with  1 (NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED) + 4 (NV_PBUS_PCI_NV_1_BUS_MASTER_ENABLED)
+		break;
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PBUS);
+		DEBUG_WRITE32_UNHANDLED(PBUS); // TODO : DEVICE_WRITE32_REG(pbus);
 	}
+
+	DEVICE_WRITE32_END(PBUS);
 }
 
 
 DEVICE_READ32(PFIFO)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 	case NV_PFIFO_RAMHT:
 		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
 	case NV_PFIFO_RAMFC:
 		result = 0x00890110; // = ? | NV_PFIFO_RAMFC_SIZE_2K | ?
-	default: 
-		DEBUG_READ32_UNHANDLED(PFIFO);
+	default:
+		DEVICE_READ32_REG(pfifo); // Was : DEBUG_READ32_UNHANDLED(PFIFO);
 	}
 
 	DEVICE_READ32_END(PFIFO);
@@ -612,18 +621,20 @@ DEVICE_READ32(PFIFO)
 
 DEVICE_WRITE32(PFIFO)
 {
-	DEVICE_WRITE32_SWITCH(PFIFO, addr) {
+	switch(addr) {
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PFIFO);
+		DEVICE_WRITE32_REG(pfifo); // Was : DEBUG_WRITE32_UNHANDLED(PFIFO);
 	}
+
+	DEVICE_WRITE32_END(PFIFO);
 }
 
 
 DEVICE_READ32(PRMA)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PRMA);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PRMA); // TODO : DEVICE_READ32_REG(prma);
 	}
 
 	DEVICE_READ32_END(PRMA);
@@ -631,22 +642,24 @@ DEVICE_READ32(PRMA)
 
 DEVICE_WRITE32(PRMA)
 {
-	DEVICE_WRITE32_SWITCH(PRMA, addr) {
+	switch(addr) {
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PRMA);
+		DEBUG_WRITE32_UNHANDLED(PRMA); // TODO : DEVICE_WRITE32_REG(prma);
 	}
+
+	DEVICE_WRITE32_END(PRMA);
 }
 
 
 DEVICE_READ32(PVIDEO)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 
 	case NV_PVIDEO_STOP:
 		result = 0;
 		break;
 	default:
-		result = pvideo.regs[addr];
+		DEVICE_READ32_REG(pvideo);
 	}
 
 	DEVICE_READ32_END(PVIDEO);
@@ -654,17 +667,19 @@ DEVICE_READ32(PVIDEO)
 
 DEVICE_WRITE32(PVIDEO)
 {
-	DEVICE_WRITE32_SWITCH(PVIDEO, addr) {
+	switch (addr) {
 	default:
-		pvideo.regs[addr] = value;
+		DEVICE_WRITE32_REG(pvideo);
 	}
+
+	DEVICE_WRITE32_END(PVIDEO);
 }
 
 DEVICE_READ32(PCOUNTER)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PCOUNTER);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PCOUNTER); // TODO : DEVICE_READ32_REG(pcounter);
 	}
 
 	DEVICE_READ32_END(PCOUNTER);
@@ -672,16 +687,18 @@ DEVICE_READ32(PCOUNTER)
 
 DEVICE_WRITE32(PCOUNTER)
 {
-	DEVICE_WRITE32_SWITCH(PCOUNTER, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PCOUNTER);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PCOUNTER); // TODO : DEVICE_WRITE32_REG(pcounter);
 	}
+
+	DEVICE_WRITE32_END(PCOUNTER);
 }
 
 
 DEVICE_READ32(PTIMER)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 
 	case NV_PTIMER_DENOMINATOR:
 		result = ptimer.denominator;
@@ -693,7 +710,7 @@ DEVICE_READ32(PTIMER)
 		result = ptimer.alarm_time;
 		break;
 	default: 
-		DEBUG_READ32_UNHANDLED(PTIMER);
+		DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
 	}
 
 	DEVICE_READ32_END(PTIMER);
@@ -702,7 +719,7 @@ DEVICE_READ32(PTIMER)
 
 DEVICE_WRITE32(PTIMER)
 {
-	DEVICE_WRITE32_SWITCH(PTIMER, addr) {
+	switch (addr) {
 
 	case NV_PTIMER_INTR_0:
 		ptimer.pending_interrupts &= ~value;
@@ -723,16 +740,18 @@ DEVICE_WRITE32(PTIMER)
 		break;
 
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PTIMER);
+		DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
 	}
+
+	DEVICE_WRITE32_END(PTIMER);
 }
 
 
 DEVICE_READ32(PVPE)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PVPE);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
 	}
 
 	DEVICE_READ32_END(PVPE);
@@ -741,18 +760,20 @@ DEVICE_READ32(PVPE)
 
 DEVICE_WRITE32(PVPE)
 {
-	DEVICE_WRITE32_SWITCH(PVPE, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PVPE);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
 	}
+
+	DEVICE_WRITE32_END(PVPE);
 }
 
 
 DEVICE_READ32(PTV)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PTV);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PTV); // TODO : DEVICE_READ32_REG(ptv);
 	}
 
 	DEVICE_READ32_END(PTV);
@@ -760,18 +781,20 @@ DEVICE_READ32(PTV)
 
 DEVICE_WRITE32(PTV)
 {
-	DEVICE_WRITE32_SWITCH(PTV, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PTV);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PTV); // TODO : DEVICE_WRITE32_REG(ptv);
 	}
+
+	DEVICE_WRITE32_END(PTV);
 }
 
 
 DEVICE_READ32(PRMFB)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PRMFB);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PRMFB); // TODO : DEVICE_READ32_REG(prmfb);
 	}
 
 	DEVICE_READ32_END(PRMFB);
@@ -779,18 +802,20 @@ DEVICE_READ32(PRMFB)
 
 DEVICE_WRITE32(PRMFB)
 {
-	DEVICE_WRITE32_SWITCH(PRMFB, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PRMFB);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PRMFB); // TODO : DEVICE_WRITE32_REG(prmfb);
 	}
+
+	DEVICE_WRITE32_END(PRMFB);
 }
 
 
 DEVICE_READ32(PRMVIO)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		DEBUG_READ32_UNHANDLED(PRMVIO);
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PRMVIO); // TODO : DEVICE_READ32_REG(prmvio);
 	}
 
 	DEVICE_READ32_END(PRMVIO);
@@ -798,20 +823,22 @@ DEVICE_READ32(PRMVIO)
 
 DEVICE_WRITE32(PRMVIO)
 {
-	DEVICE_WRITE32_SWITCH(PRMVIO, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PRMVIO);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PRMVIO); // TODO : DEVICE_WRITE32_REG(prmvio);
 	}
+
+	DEVICE_WRITE32_END(PRMVIO);
 }
 
 
 DEVICE_READ32(PFB)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 	case NV_PFB_CFG0:
 		result = 3; // = NV_PFB_CFG0_PART_4
 	default:
-		result = pfb.regs[addr];
+		DEVICE_READ32_REG(pfb);
 	}
 
 	DEVICE_READ32_END(PFB);
@@ -819,17 +846,19 @@ DEVICE_READ32(PFB)
 
 DEVICE_WRITE32(PFB)
 {
-	DEVICE_WRITE32_SWITCH(PFB, addr) {
+	switch (addr) {
 	default:
-		pfb.regs[addr] = value;
+		DEVICE_WRITE32_REG(pfb);
 	}
+
+	DEVICE_WRITE32_END(PFB);
 }
 
 
 DEVICE_READ32(PSTRAPS)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
+	DEVICE_READ32_SWITCH() {
+	default:
 		DEBUG_READ32_UNHANDLED(PSTRAPS);
 	}
 
@@ -838,17 +867,19 @@ DEVICE_READ32(PSTRAPS)
 
 DEVICE_WRITE32(PSTRAPS)
 {
-	DEVICE_WRITE32_SWITCH(PSTRAPS, addr) {
-	default: 
+	switch (addr) {
+	default:
 		DEBUG_WRITE32_UNHANDLED(PSTRAPS);
 	}
+
+	DEVICE_WRITE32_END(PSTRAPS);
 }
 
 
 DEVICE_READ32(PGRAPH)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
+	DEVICE_READ32_SWITCH() {
+	default:
 		DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
@@ -857,7 +888,7 @@ DEVICE_READ32(PGRAPH)
 
 DEVICE_WRITE32(PGRAPH)
 {
-	DEVICE_WRITE32_SWITCH(PGRAPH, addr) {
+	switch (addr) {
 	case NV_PGRAPH_INTR:
 		pgraph.pending_interrupts &= ~value;
 		update_irq();
@@ -867,14 +898,16 @@ DEVICE_WRITE32(PGRAPH)
 		update_irq();
 		break;
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PGRAPH);
+		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
 	}
+
+	DEVICE_WRITE32_END(PGRAPH);
 }
 
 
 DEVICE_READ32(PCRTC)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 
 	case NV_PCRTC_INTR_0:
 		result = pcrtc.pending_interrupts;
@@ -886,7 +919,7 @@ DEVICE_READ32(PCRTC)
 		result = pcrtc.start;
 		break;
 	default: 
-		DEBUG_READ32_UNHANDLED(PCRTC);
+		DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
 	}
 
 	DEVICE_READ32_END(PCRTC);
@@ -894,7 +927,7 @@ DEVICE_READ32(PCRTC)
 
 DEVICE_WRITE32(PCRTC)
 {
-	DEVICE_WRITE32_SWITCH(PCRTC, addr) {
+	switch (addr) {
 
 	case NV_PCRTC_INTR_0:
 		pcrtc.pending_interrupts &= ~value;
@@ -909,15 +942,17 @@ DEVICE_WRITE32(PCRTC)
 		break;
 
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PCRTC);
+		DEVICE_WRITE32_REG(pcrtc); // Was : DEBUG_WRITE32_UNHANDLED(PCRTC);
 	}
+
+	DEVICE_WRITE32_END(PCRTC);
 }
 
 
 DEVICE_READ32(PRMCIO)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
+	DEVICE_READ32_SWITCH() {
+	default:
 		DEBUG_READ32_UNHANDLED(PRMCIO);
 	}
 
@@ -926,16 +961,18 @@ DEVICE_READ32(PRMCIO)
 
 DEVICE_WRITE32(PRMCIO)
 {
-	DEVICE_WRITE32_SWITCH(PRMCIO, addr) {
-	default: 
-		DEBUG_WRITE32_UNHANDLED(PRMCIO);
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PRMCIO); // TODO : DEVICE_WRITE32_REG(prmcio);
 	}
+
+	DEVICE_WRITE32_END(PRMCIO);
 }
 
 
 DEVICE_READ32(PRAMDAC)
 {
-	DEVICE_READ32_SWITCH(addr) {
+	DEVICE_READ32_SWITCH() {
 
 	case NV_PRAMDAC_NVPLL_COEFF:
 		result = pramdac.core_clock_coeff;
@@ -955,7 +992,7 @@ DEVICE_READ32(PRAMDAC)
 		break;
 
 	default: 
-		DEBUG_READ32_UNHANDLED(PRAMDAC);
+		DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
 	}
 
 	DEVICE_READ32_END(PRAMDAC);
@@ -963,7 +1000,7 @@ DEVICE_READ32(PRAMDAC)
 
 DEVICE_WRITE32(PRAMDAC)
 {
-	DEVICE_WRITE32_SWITCH(PRAMDAC, addr) {
+	switch (addr) {
 
 	case NV_PRAMDAC_NVPLL_COEFF:
 		pramdac.core_clock_coeff = value;
@@ -976,15 +1013,17 @@ DEVICE_WRITE32(PRAMDAC)
 		break;
 
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PRAMDAC);
+		DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
 	}
+
+	DEVICE_WRITE32_END(PRAMDAC);
 }
 
 
 DEVICE_READ32(PRMDIO)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
+	DEVICE_READ32_SWITCH() {
+	default:
 		DEBUG_READ32_UNHANDLED(PRMDIO);
 	}
 
@@ -993,18 +1032,20 @@ DEVICE_READ32(PRMDIO)
 
 DEVICE_WRITE32(PRMDIO)
 {
-	DEVICE_WRITE32_SWITCH(PRMDIO, addr) {
-	default: 
+	switch (addr) {
+	default:
 		DEBUG_WRITE32_UNHANDLED(PRMDIO);
 	}
+
+	DEVICE_WRITE32_END(PRMDIO);
 }
 
 
 DEVICE_READ32(PRAMIN)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
-		result = pramin.regs[addr];
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEVICE_READ32_REG(pramin);
 	}
 
 	DEVICE_READ32_END(PRAMIN);
@@ -1012,17 +1053,19 @@ DEVICE_READ32(PRAMIN)
 
 DEVICE_WRITE32(PRAMIN)
 {
-	DEVICE_WRITE32_SWITCH(PRAMIN, addr) {
-	default: 
-		pramin.regs[addr] = value;
+	switch (addr) {
+	default:
+		DEVICE_WRITE32_REG(pramin);
 	}
+
+	DEVICE_WRITE32_END(PRAMIN);
 }
 
 
 DEVICE_READ32(USER)
 {
-	DEVICE_READ32_SWITCH(addr) {
-	default: 
+	DEVICE_READ32_SWITCH() {
+	default:
 		DEBUG_READ32_UNHANDLED(USER);
 	}
 
@@ -1031,10 +1074,12 @@ DEVICE_READ32(USER)
 
 DEVICE_WRITE32(USER)
 {
-	DEVICE_WRITE32_SWITCH(USER, addr) {
-	default: 
+	switch (addr) {
+	default:
 		DEBUG_WRITE32_UNHANDLED(USER);
 	}
+
+	DEVICE_WRITE32_END(USER);
 }
 
 

@@ -3724,7 +3724,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer, 3925, DISABLED),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Register, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),

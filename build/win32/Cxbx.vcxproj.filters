@@ -13,9 +13,6 @@
     <ClCompile Include="..\..\src\Cxbx\Wnd.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\WndAbout.cpp">
-      <Filter>GUI</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\WndMain.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -199,6 +196,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\MemoryManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -211,9 +211,6 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\Wnd.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\WndAbout.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\import\stb\stb_image.h">
@@ -546,6 +543,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\MemoryManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\DlgAbout.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\About.jpg">
@@ -722,6 +722,9 @@
     <None Include="..\..\resource\Logo.bmp">
       <Filter>Shared</Filter>
     </None>
+    <None Include="..\..\CONTRIBUTORS" />
+    <None Include="..\..\COPYING" />
+    <None Include="..\..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

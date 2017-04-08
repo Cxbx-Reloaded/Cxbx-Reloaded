@@ -245,7 +245,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x25);
 									Decrement = 0x1FC;  // TODO: Clean up (?)
 									Increment = 82 * 4;
-									patchOffset = 140 * 4; // TODO: Verify
+									patchOffset = 105 * 4; // TODO: Verify
 
 									//Decrement = 0x19F;  // TODO: Clean up (?)
 									//Increment = 72 * 4;

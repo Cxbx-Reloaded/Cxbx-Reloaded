@@ -40,271 +40,308 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
 
-BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
-{
-    switch(Format)
-    {
-	case X_D3DFMT_L8:
-	case X_D3DFMT_AL8:
-	case X_D3DFMT_P8:
-	case X_D3DFMT_A8:
-		*pBPP = 1;
-		return true;
-	case X_D3DFMT_A1R5G5B5:
-	case X_D3DFMT_X1R5G5B5:
-	case X_D3DFMT_A4R4G4B4:
-	case X_D3DFMT_R5G6B5:
-	case X_D3DFMT_A8L8:
-	case X_D3DFMT_R6G5B5: // Alias : X_D3DFMT_L6V5U5
-	case X_D3DFMT_G8B8: // Alias : X_D3DFMT_V8U8
-	case X_D3DFMT_R8B8:
-	case X_D3DFMT_D16: // Alias : X_D3DFMT_D16_LOCKABLE
-	case X_D3DFMT_F16:
-	case X_D3DFMT_L16:
-	case X_D3DFMT_R5G5B5A1:
-	case X_D3DFMT_R4G4B4A4:
-		*pBPP = 2;
-		return true;
-	case X_D3DFMT_A8R8G8B8:
-	case X_D3DFMT_X8R8G8B8: // Alias : X_D3DFMT_X8L8V8U8
-	case X_D3DFMT_D24S8:
-	case X_D3DFMT_F24S8:
-	case X_D3DFMT_V16U16:
-	case X_D3DFMT_A8B8G8R8: // Alias : X_D3DFMT_Q8W8V8U8
-	case X_D3DFMT_B8G8R8A8:
-	case X_D3DFMT_R8G8B8A8:
-		*pBPP = 4;
-		return true;
-	case X_D3DFMT_DXT1:
-	case X_D3DFMT_DXT3: // Alias : X_D3DFMT_DXT2
-	case X_D3DFMT_DXT5: // Alias : X_D3DFMT_DXT4
-	case X_D3DFMT_LIN_L8:
-	case X_D3DFMT_LIN_AL8:
-	case X_D3DFMT_LIN_A8:
-		*pBPP = 1;
-		return false;
-	case X_D3DFMT_YUY2:
-	case X_D3DFMT_UYVY:
-	case X_D3DFMT_LIN_R8B8:
-	case X_D3DFMT_LIN_G8B8: // Alias : X_D3DFMT_LIN_V8U8
-	case X_D3DFMT_LIN_R5G6B5:
-	case X_D3DFMT_LIN_X1R5G5B5:
-	case X_D3DFMT_LIN_A4R4G4B4:
-	case X_D3DFMT_LIN_A1R5G5B5:
-	case X_D3DFMT_LIN_A8L8:
-	case X_D3DFMT_LIN_D16:
-	case X_D3DFMT_LIN_F16:
-	case X_D3DFMT_LIN_L16:
-	case X_D3DFMT_LIN_R6G5B5: // Alias : X_D3DFMT_LIN_L6V5U5
-	case X_D3DFMT_LIN_R5G5B5A1:
-	case X_D3DFMT_LIN_R4G4B4A4:
-		*pBPP = 2;
-		return false;
-	case X_D3DFMT_LIN_X8R8G8B8: // Alias : X_D3DFMT_LIN_X8L8V8U8
-	case X_D3DFMT_LIN_A8R8G8B8:
-	case X_D3DFMT_LIN_D24S8:
-	case X_D3DFMT_LIN_F24S8:
-	case X_D3DFMT_LIN_V16U16:
-	case X_D3DFMT_LIN_A8B8G8R8:
-	case X_D3DFMT_LIN_B8G8R8A8:
-	case X_D3DFMT_LIN_R8G8B8A8:
-		*pBPP = 4;
-		return false;
+// About format color components:
+// A = alpha, byte : 0 = fully opaque, 255 = fully transparent
+// X = ignore these component bits
+// R = red
+// G = green
+// B = blue
+// L = luminance, byte : 0 = pure black ARGB(1, 0,0,0) to 255 = pure white ARGB(1,255,255,255)
+// P = pallete
+enum _ComponentEncoding {
+	NoComponents = 0, // Format doesn't contain any component (ARGB/QWVU)
+	A1R5G5B5,
+	X1R5G5B5,
+	A4R4G4B4,
+	__R5G6B5, // NOTE : A=255
+	A8R8G8B8,
+	X8R8G8B8,
+	____R8B8, // NOTE : A takes R, G takes B
+	____G8B8, // NOTE : A takes G, R takes B
+	______A8,
+	__R6G5B5,
+	R5G5B5A1,
+	R4G4B4A4,
+	A8B8G8R8,
+	B8G8R8A8,
+	R8G8B8A8,
+	______L8, // NOTE : A=255, R=G=B= L
+	_____AL8, // NOTE : A=R=G=B= L
+	_____L16, // NOTE : Actually G8B8, with A=R=255
+	____A8L8, // NOTE : R=G=B= L
+};
+
+static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
+	{ }, // NoComponents
+	// AB  RB  GB  BB ASh RSh GSh BSh
+	//its its its its ift ift ift ift
+	{  1,  5,  5,  5, 15, 10,  5,  0 }, // A1R5G5B5
+	{  0,  5,  5,  5,  0, 10,  5,  0 }, // X1R5G5B5
+	{  4,  4,  4,  4, 12,  8,  4,  0 }, // A4R4G4B4
+	{  0,  5,  6,  5, -1, 11,  6,  0 }, // __R5G6B5 // Shift=-1 turns A into 255
+	{  8,  8,  8,  8, 24, 16,  8,  0 }, // A8R8G8B8
+	{  0,  8,  8,  8,  0, 16,  8,  0 }, // X8R8G8B8
+	{  8,  8,  8,  8,  8,  8,  0,  0 }, // ____R8B8 // A takes R, G takes B
+	{  8,  8,  8,  8,  8,  0,  8,  0 }, // ____G8B8 // A takes G, R takes B
+	{  8,  0,  0,  0,  0,  0,  0,  0 }, // ______A8
+	{  0,  6,  5,  5,  0, 10,  5,  0 }, // __R6G5B5
+	{  1,  5,  5,  5,  0, 11,  6,  1 }, // R5G5B5A1
+	{  4,  4,  4,  4,  0, 12,  8,  4 }, // R4G4B4A4
+	{  8,  8,  8,  8, 24,  0,  8, 16 }, // A8B8G8R8
+	{  8,  8,  8,  8,  0,  8, 16, 24 }, // B8G8R8A8
+	{  8,  8,  8,  8,  0, 24, 16,  8 }, // R8G8B8A8	
+	{  8,  8,  8,  8, -1,  0,  0,  0 }, // ______L8	// Shift=-1 turns A into 255
+	{  8,  8,  8,  8,  0,  0,  0,  0 }, // _____AL8	// A,R,G,B take L
+	{  8,  8,  8,  8, -1, -1,  8,  0 }, // _____L16	// Shift=-1 turns A,R into 255
+	{  8,  8,  8,  8,  8,  0,  0,  0 }, // ____A8L8	// R,G,B take L
+    // Note : For formats that copy one components into another, the above bit-
+	// counts per component won't sum up to these format's byte-count per pixel!
+};
+
+enum _FormatStorage {
+	Undefined = 0,
+	Linear,
+	Swizzled,
+	Compressed
+};
+
+typedef struct _FormatInfo {
+	uint8_t bits_per_pixel;
+	_FormatStorage stored;
+	_ComponentEncoding components;
+	XTL::D3DFORMAT pc;
+	char *warning;
+} FormatInfo;
+
+static const FormatInfo FormatInfos[] = {
+	// X_D3DFMT_L8 = 0x00,
+	{ 8, Swizzled, ______L8, XTL::D3DFMT_L8 },
+	// X_D3DFMT_AL8 = 0x01,
+	{ 8, Swizzled, _____AL8, XTL::D3DFMT_L8, "X_D3DFMT_AL8 -> D3DFMT_L8" }, // Cxbx NOTE: Hack: Alpha ignored, basically // TODO : Requires conversion
+	// X_D3DFMT_A1R5G5B5 = 0x02,
+	{ 16, Swizzled, A1R5G5B5, XTL::D3DFMT_A1R5G5B5 },
+	// X_D3DFMT_X1R5G5B5 = 0x03,
+	{ 16, Swizzled, X1R5G5B5, XTL::D3DFMT_X1R5G5B5 },
+	// X_D3DFMT_A4R4G4B4 = 0x04,
+	{ 16, Swizzled, A4R4G4B4, XTL::D3DFMT_A4R4G4B4 },
+	// X_D3DFMT_R5G6B5 = 0x05,
+	{ 16, Swizzled, __R5G6B5, XTL::D3DFMT_R5G6B5 },
+	// X_D3DFMT_A8R8G8B8 = 0x06,
+	{ 32, Swizzled, A8R8G8B8, XTL::D3DFMT_A8R8G8B8 },
+	// X_D3DFMT_X8R8G8B8 = 0x07, // Alias : X_D3DFMT_X8L8V8U8
+	{ 32, Swizzled, X8R8G8B8, XTL::D3DFMT_X8R8G8B8 },
+	// undefined : 0x08,
+	{ },
+	// undefined : 0x09,
+	{ },
+	// undefined : 0x0A,
+	{ },
+	// X_D3DFMT_P8 = 0x0B, // 8-bit Palletized
+	{ 8, Swizzled, NoComponents, XTL::D3DFMT_P8 },
+	// X_D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
+	{ 4, Compressed, NoComponents, XTL::D3DFMT_DXT1 }, // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
+	// undefined : 0x0D,
+	{ },
+	// X_D3DFMT_DXT3 = 0x0E, // linear alpha. Alias : X_D3DFMT_DXT2
+	{ 8, Compressed, NoComponents, XTL::D3DFMT_DXT3 },
+	// X_D3DFMT_DXT5 = 0x0F, // interpolated alpha. Alias : X_D3DFMT_DXT4
+	{ 8, Compressed, NoComponents, XTL::D3DFMT_DXT5 },
+	// X_D3DFMT_LIN_A1R5G5B5 = 0x10,
+	{ 16, Linear, A1R5G5B5, XTL::D3DFMT_A1R5G5B5 },
+	// X_D3DFMT_LIN_R5G6B5 = 0x11,
+	{ 16, Linear, __R5G6B5, XTL::D3DFMT_R5G6B5 },
+	// X_D3DFMT_LIN_A8R8G8B8 = 0x12,
+	{ 32, Linear, A8R8G8B8, XTL::D3DFMT_A8R8G8B8 },
+	// X_D3DFMT_LIN_L8 = 0x13,
+	{ 8, Linear, ______L8, XTL::D3DFMT_L8 }, // Was : D3DFMT_UNKNOWN
+	// undefined : 0x14,
+	{ },
+	// undefined : 0x15,
+	{ },
+	// X_D3DFMT_LIN_R8B8 = 0x16,
+	{ 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	// X_D3DFMT_LIN_G8B8 = 0x17, // Alias : X_D3DFMT_LIN_V8U8
+	{ 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	// undefined : 0x18,
+	{ },
+	// X_D3DFMT_A8 = 0x19,
+	{ 8, Swizzled, ______A8, XTL::D3DFMT_A8 },
+	// X_D3DFMT_A8L8 = 0x1A,
+	{ 16, Swizzled, ____A8L8, XTL::D3DFMT_A8L8 }, // Was : D3DFMT_R5G6B5
+	// X_D3DFMT_LIN_AL8 = 0x1B,
+	{ 8, Linear, _____AL8, XTL::D3DFMT_L8, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" }, // Was : D3DFMT_UNKNOWN // Cxbx NOTE: Hack: Alpha ignored, basically // TODO : Requires conversion
+	// X_D3DFMT_LIN_X1R5G5B5 = 0x1C,
+	{ 16, Linear, X1R5G5B5, XTL::D3DFMT_X1R5G5B5 },
+	// X_D3DFMT_LIN_A4R4G4B4 = 0x1D,
+	{ 16, Linear, A4R4G4B4, XTL::D3DFMT_A4R4G4B4 },
+	// X_D3DFMT_LIN_X8R8G8B8 = 0x1E, // Alias : X_D3DFMT_LIN_X8L8V8U8
+	{ 32, Linear, X8R8G8B8, XTL::D3DFMT_X8R8G8B8 },
+	// X_D3DFMT_LIN_A8 = 0x1F,
+	{ 8, Linear, ______A8, XTL::D3DFMT_L8 },
+	// TODO : { 8, Linear, ______A8, XTL::D3DFMT_A8 },
+	// X_D3DFMT_LIN_A8L8 = 0x20,
+	{ 16, Linear, ____A8L8, XTL::D3DFMT_A8L8 }, // Was : D3DFMT_UNKNOWN
+	// undefined : 0x21,
+	{ },
+	// undefined : 0x22,
+	{ },
+	// undefined : 0x23,
+	{ },
+	// X_D3DFMT_YUY2 = 0x24,
+	{ 16, Undefined, NoComponents, XTL::D3DFMT_YUY2 },
+	// X_D3DFMT_UYVY = 0x25,
+	{ 16, Undefined, NoComponents, XTL::D3DFMT_UYVY },
+	// undefined : 0x26,
+	{ },
+	// X_D3DFMT_L6V5U5 = 0x27, // Alias : X_D3DFMT_R6G5B5
+	{ 16, Swizzled, __R6G5B5, XTL::D3DFMT_L6V5U5 }, // XQEMU NOTE: This might be signed
+	// X_D3DFMT_V8U8 = 0x28, // Alias : X_D3DFMT_G8B8
+	{ 16, Swizzled, ____G8B8, XTL::D3DFMT_V8U8 }, // XQEMU NOTE: This might be signed
+	// X_D3DFMT_R8B8 = 0x29,
+	{ 16, Swizzled, ____R8B8, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Swizzled, ____R8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong, // XQEMU NOTE : This might be signed
+	// X_D3DFMT_D24S8 = 0x2A,
+	{ 32, Swizzled, NoComponents, XTL::D3DFMT_D24S8 },
+	// X_D3DFMT_F24S8 = 0x2B,
+	{ 32, Swizzled, NoComponents, XTL::D3DFMT_D24S8, "X_D3DFMT_F24S8 -> D3DFMT_D24S8" }, // NOTE: Hack!! PC does not have XTL::D3DFMT_F24S8 (Float vs Int)
+	// X_D3DFMT_D16 = 0x2C, // Alias : X_D3DFMT_D16_LOCKABLE
+	{ 16, Swizzled, NoComponents, XTL::D3DFMT_D16 }, // TODO -oCXBX: XTL::D3DFMT_D16 on Xbox is always lockable - Should we use XTL::D3DFMT_D16_LOCKABLE instead? Needs testcase...
+	// X_D3DFMT_F16 = 0x2D,
+	{ 16, Swizzled, NoComponents, XTL::D3DFMT_D16, "X_D3DFMT_F16 -> D3DFMT_D16" }, // NOTE: Hack!! PC does not have XTL::D3DFMT_F16 (Float vs Int)
+	// X_D3DFMT_LIN_D24S8 = 0x2E,
+	{ 32, Linear, NoComponents, XTL::D3DFMT_D24S8 },
+	// X_D3DFMT_LIN_F24S8 = 0x2F,
+	{ 32, Linear, NoComponents, XTL::D3DFMT_D24S8, "X_D3DFMT_LIN_F24S8 -> D3DFMT_D24S8" }, // NOTE: Hack!! PC does not have XTL::D3DFMT_F24S8 (Float vs Int)
+	// X_D3DFMT_LIN_D16 = 0x30,
+	{ 16, Linear, NoComponents, XTL::D3DFMT_D16 }, // TODO -oCXBX: XTL::D3DFMT_D16 on Xbox is always lockable - Should we use XTL::D3DFMT_D16_LOCKABLE instead? Needs testcase...
+	// X_D3DFMT_LIN_F16 = 0x31,
+	{ 16, Linear, NoComponents, XTL::D3DFMT_D16, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // NOTE: Hack!! PC does not have XTL::D3DFMT_F16 (Float vs Int)
+	// X_D3DFMT_L16 = 0x32,
+	{ 16, Swizzled, _____L16, XTL::D3DFMT_UNKNOWN },
+	// X_D3DFMT_V16U16 = 0x33,
+	{ 32, Swizzled, NoComponents, XTL::D3DFMT_V16U16 },
+	// undefined : 0x34,
+	{ },
+	// X_D3DFMT_LIN_L16 = 0x35,
+	{ 16, Linear, _____L16, XTL::D3DFMT_UNKNOWN },
+	// X_D3DFMT_LIN_V16U16 = 0x36,
+	{ 32, Linear, NoComponents, XTL::D3DFMT_V16U16 }, // Was : D3DFMT_UNKNOWN
+	// X_D3DFMT_LIN_L6V5U5 = 0x37, // Alias : X_D3DFMT_LIN_R6G5B5
+	{ 16, Linear, __R6G5B5, XTL::D3DFMT_L6V5U5 }, // Was : D3DFMT_UNKNOWN
+	// X_D3DFMT_R5G5B5A1 = 0x38,
+	{ 16, Swizzled, R5G5B5A1, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Swizzled, R5G5B5A1, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" }, // TODO : Requires conversion
+	// X_D3DFMT_R4G4B4A4 = 0x39,
+	{ 16, Swizzled, R4G4B4A4, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Swizzled, R4G4B4A4, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" }, // TODO : Requires conversion
+	// X_D3DFMT_Q8W8V8U8 = 0x3A, // Alias : X_D3DFMT_A8B8G8R8
+	{ 32, Swizzled, A8B8G8R8, XTL::D3DFMT_Q8W8V8U8 }, // Was : D3DFMT_A8R8G8B8 // TODO : Test
+	// X_D3DFMT_B8G8R8A8 = 0x3B,
+	{ 32, Swizzled, B8G8R8A8, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 32, Swizzled, B8G8R8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" }, // TODO : Requires conversion
+	// X_D3DFMT_R8G8B8A8 = 0x3C,
+	{ 32, Swizzled, R8G8B8A8, XTL::D3DFMT_UNKNOWN },
+	// X_D3DFMT_LIN_R5G5B5A1 = 0x3D,
+	{ 16, Linear, R5G5B5A1, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Linear, R5G5B5A1, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" }, // TODO : Requires conversion
+	// X_D3DFMT_LIN_R4G4B4A4 = 0x3E,
+	{ 16, Linear, R4G4B4A4, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 16, Linear, R4G4B4A4, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" }, // TODO : Requires conversion
+	// X_D3DFMT_LIN_A8B8G8R8 = 0x3F,
+	{ 32, Linear, A8B8G8R8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8" }, // Cxbx NOTE: HACK: R<->B Swapped! // TODO : Requires conversion
+	// X_D3DFMT_LIN_B8G8R8A8 = 0x40,
+	{ 32, Linear, B8G8R8A8, XTL::D3DFMT_UNKNOWN },
+	// TODO : { 32, Linear, B8G8R8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" }, // TODO : Requires conversion
+	// X_D3DFMT_LIN_R8G8B8A8 = 0x41,
+	{ 32, Linear, R8G8B8A8, XTL::D3DFMT_UNKNOWN },
 /*
-	case X_D3DFMT_VERTEXDATA:
-	case X_D3DFMT_INDEX16: // Dxbx addition : Not an Xbox format, used internally
+	// undefined : 0x42-0x63
+	{},
+	// X_D3DFMT_VERTEXDATA = 0x64,
+	{ 8, Linear, NoComponents, XTL::D3DFMT_VERTEXDATA },
+	// Dxbx addition : X_D3DFMT_INDEX16 is not an Xbox format, but used internally
+	// X_D3DFMT_INDEX16 = 0x65 
+	{ 16, Linear, NoComponents, XTL::D3DFMT_INDEX16 },
 */
+};
 
-    }
+XTL::D3DCOLOR XTL::DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value)
+{
+	return D3DCOLOR_ARGB(
+		((encoding->AShift < 0) ? 255 : (value >> encoding->AShift)) << (8 - encoding->ABits),
+		((encoding->RShift < 0) ? 255 : (value >> encoding->RShift)) << (8 - encoding->RBits),
+		((encoding->GShift < 0) ? 255 : (value >> encoding->GShift)) << (8 - encoding->GBits),
+		((encoding->BShift < 0) ? 255 : (value >> encoding->BShift)) << (8 - encoding->BBits)
+	);
+};
 
-    return FALSE;
+const XTL::ComponentEncodingInfo *XTL::EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		if (FormatInfos[Format].components != NoComponents)
+			return &(ComponentEncodingInfos[FormatInfos[Format].components]);
+
+	return nullptr;
 }
 
-DWORD XTL::EmuXBFormatBPP(X_D3DFORMAT Format)
+DWORD XTL::EmuXBFormatBitsPerPixel(X_D3DFORMAT Format)
 {
-	DWORD dwBPP = 2; // Default, in case nothing is set
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
+			return FormatInfos[Format].bits_per_pixel;
 
-	EmuXBFormatIsSwizzled(Format, &dwBPP);
-	return dwBPP;
+	return 16; // TODO : 8
+}
+
+DWORD XTL::EmuXBFormatBytesPerPixel(X_D3DFORMAT Format)
+{
+	return ((EmuXBFormatBitsPerPixel(Format) + 4) / 8);
+}
+
+BOOL XTL::EmuXBFormatIsCompressed(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		return (FormatInfos[Format].stored == Compressed);
+
+	return false;
 }
 
 BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
 {
-    switch(Format)
-    {
-	case X_D3DFMT_LIN_L8: 
-	case X_D3DFMT_LIN_A8:
-	case X_D3DFMT_LIN_A1R5G5B5:
-	case X_D3DFMT_LIN_R5G6B5:
-	case X_D3DFMT_LIN_R8B8:
-	case X_D3DFMT_LIN_G8B8:
-	case X_D3DFMT_LIN_AL8:
-	case X_D3DFMT_LIN_X1R5G5B5:
-	case X_D3DFMT_LIN_A4R4G4B4:
-	case X_D3DFMT_LIN_A8L8:
-	case X_D3DFMT_LIN_D16:
-	case X_D3DFMT_LIN_F16:
-	case X_D3DFMT_LIN_L16:
-	case X_D3DFMT_LIN_R6G5B5:
-	case X_D3DFMT_LIN_R5G5B5A1:
-	case X_D3DFMT_LIN_R4G4B4A4:
-	case X_D3DFMT_LIN_A8R8G8B8:
-	case X_D3DFMT_LIN_X8R8G8B8:
-	case X_D3DFMT_LIN_D24S8:
-	case X_D3DFMT_LIN_F24S8:
-	case X_D3DFMT_LIN_V16U16:
-	case X_D3DFMT_LIN_A8B8G8R8:
-	case X_D3DFMT_LIN_B8G8R8A8:
-	case X_D3DFMT_LIN_R8G8B8A8:
-	case X_D3DFMT_VERTEXDATA:
-       return TRUE;
-    }
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		return (FormatInfos[Format].stored == Linear);
 
-    return FALSE;
+	return (Format == X_D3DFMT_VERTEXDATA); // TODO : false;
+}
+
+BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		return (FormatInfos[Format].stored == Swizzled);
+
+	return false;
 }
 
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
-	D3DFORMAT result;
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8) {
+		const FormatInfo *info = &FormatInfos[Format];
+		if (info->warning != nullptr)
+			EmuWarning(info->warning);
 
-    switch(Format)
-    {
-	case X_D3DFMT_L8: // Swizzled
-		result = D3DFMT_L8;
-		break;
-	case X_D3DFMT_AL8: // Swizzled    // Cxbx NOTE: Hack: Alpha ignored, basically
-	{
-		EmuWarning("X_D3DFMT_AL8 -> D3DFMT_L8");
-		result = D3DFMT_L8;
+		return info->pc;
 	}
-	break;
-	case X_D3DFMT_LIN_A1R5G5B5:  // Linear
-	case X_D3DFMT_A1R5G5B5: // Swizzled
-			result = D3DFMT_A1R5G5B5;
-			break;
-	case X_D3DFMT_X1R5G5B5: // Swizzled
-		result = D3DFMT_X1R5G5B5;
-		break;
-	case X_D3DFMT_LIN_A8:	// Linear
-		result = D3DFMT_L8;	
-		break;
-	case X_D3DFMT_A8L8: // Swizzled
-	{
-		EmuWarning("X_D3DFMT_A8L8 -> D3DFMT_R5G6B5");
-		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-	}
-	break;
-	case X_D3DFMT_A8: // Swizzled
-		result = D3DFMT_A8;
-		break;
-	case X_D3DFMT_LIN_X1R5G5B5:	// Linear
-		result = D3DFMT_X1R5G5B5;
-		break;
-	case X_D3DFMT_LIN_A4R4G4B4: case // Linear
-		X_D3DFMT_A4R4G4B4: // Swizzled
-			result = D3DFMT_A4R4G4B4;
-			break;
-	case X_D3DFMT_LIN_R5G6B5: case // Linear
-		X_D3DFMT_R5G6B5: // Swizzled
-			result = D3DFMT_R5G6B5;
-			break;
-	case X_D3DFMT_LIN_A8R8G8B8: case // Linear
-		X_D3DFMT_A8R8G8B8: // Swizzled
-			result = D3DFMT_A8R8G8B8;
-			break;
-	case X_D3DFMT_LIN_R8B8: // Linear
-	{
-		EmuWarning("X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5");
-		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-	}
-	break;
-	case X_D3DFMT_LIN_G8B8: // Linear
-	{
-		EmuWarning("X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5");
-		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
-	}
-	break;
-	case X_D3DFMT_A8B8G8R8: // Swizzled
-	{
-		EmuWarning("X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8");
-		result = D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
-	}
-	break;
-	case X_D3DFMT_LIN_A8B8G8R8: // Linear
-	{
-		EmuWarning("X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8");
-		result = D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
-	}
-	break;
-	case X_D3DFMT_LIN_X8R8G8B8: case // Linear
-		X_D3DFMT_X8R8G8B8: // Swizzled
-			result = D3DFMT_X8R8G8B8;
-			break;
-	case X_D3DFMT_P8: // Swizzled
-		result = D3DFMT_P8;
-		break;
-	case X_D3DFMT_DXT1: // Compressed
-		result = D3DFMT_DXT1;
-		break;
 
-	// case X_D3DFMT_DXT2:
-	case X_D3DFMT_DXT3: // Compressed
-		result = D3DFMT_DXT3;
-		break;
-
-	// case X_D3DFMT_DXT4:
-	case X_D3DFMT_DXT5: // Compressed
-		result = D3DFMT_DXT5;
-		break;
-	case X_D3DFMT_YUY2: // Swizzled
-		result = D3DFMT_YUY2;
-		break;
-	case X_D3DFMT_UYVY: // Swizzled
-		result = D3DFMT_UYVY;
-		break;
-	case X_D3DFMT_LIN_D24S8: case // Linear
-		X_D3DFMT_D24S8: // Swizzled
-			result = D3DFMT_D24S8;
-			break;
-	case X_D3DFMT_LIN_F24S8: case // Linear - Dxbx addition
-		X_D3DFMT_F24S8: // Swizzled
-	{
-		EmuWarning("X_D3DFMT_F24S8 -> D3DFMT_D24S8");
-		result = D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
-	}
-	break;
-	case X_D3DFMT_LIN_F16: case // Linear - Dxbx addition
-		X_D3DFMT_F16: // Swizzled - Dxbx addition
-	{
-		EmuWarning("X_D3DFMT_F16 -> D3DFMT_D16");
-		result = D3DFMT_D16; // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
-	}
-	break;
-	case X_D3DFMT_LIN_D16: case // Linear
-		X_D3DFMT_D16: // Swizzled
-			result = D3DFMT_D16;
-			break; // TODO -oCXBX: D3DFMT_D16 on Xbox is always lockable
-
-	case X_D3DFMT_L6V5U5: // Swizzled
-		result = D3DFMT_L6V5U5;
-		break;
-	case X_D3DFMT_V8U8: // Swizzled
-		result = D3DFMT_V8U8;
-		break;
-	case X_D3DFMT_V16U16: // Swizzled
-		result = D3DFMT_V16U16;
-		break;
+	switch (Format) {
 	case X_D3DFMT_VERTEXDATA:
-		result = D3DFMT_VERTEXDATA;
-		break;
+		return D3DFMT_VERTEXDATA;
 	case ((X_D3DFORMAT)0xffffffff):
-		result = D3DFMT_UNKNOWN;
-		break; // TODO -oCXBX: Not sure if this counts as swizzled or not...
+		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
 		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
-    }
+	}
 
-    return result;
+	return D3DFMT_UNKNOWN;
 }
 
 XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)

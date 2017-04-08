@@ -867,7 +867,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_Clear, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4361, PATCH),

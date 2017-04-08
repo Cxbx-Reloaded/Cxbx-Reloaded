@@ -39,6 +39,12 @@
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
+#include <commctrl.h>
+
+// Enable Visual Styles
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name = 'Microsoft.Windows.Common-Controls' version = '6.0.0.0' \
+processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"")
 
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -60,6 +66,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		CxbxKrnlMain(__argc, __argv);
 		return 0;
 	}
+
+	INITCOMMONCONTROLSEX icc;
+	icc.dwSize = sizeof(icc);
+	icc.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&icc);
 
     WndMain *MainWindow = new WndMain(hInstance);
 
