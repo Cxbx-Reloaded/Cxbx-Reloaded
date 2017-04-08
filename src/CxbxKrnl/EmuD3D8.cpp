@@ -5162,7 +5162,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
-            delete[] (PVOID)pThis->Data;
+            g_MemoryManager.Free((void*)pThis->Data);
             uRet = --pThis->Lock;
         }
         else if(pResource8 != nullptr)
