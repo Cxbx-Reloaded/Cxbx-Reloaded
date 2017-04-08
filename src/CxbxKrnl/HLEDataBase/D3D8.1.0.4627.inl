@@ -1014,40 +1014,16 @@ OOVPA_END;
 // * D3DDevice_Clear
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_Clear, 4627, 9)
-        // D3DDevice_Clear+0x0000 : sub esp, 38h
-        { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x0002, 0x38 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_Clear+0x000B : mov ebx, [ebp+0x21B8]
-        { 0x000B, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x000C, 0x9D }, // (Offset,Value)-Pair #5
-        { 0x000D, 0xB8 }, // (Offset,Value)-Pair #6
-        { 0x000E, 0x21 }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_Clear+0x0399 : retn 0x18
-        { 0x0399, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x039A, 0x18 }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_ClearB
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_ClearB, 4627, 9)
-        // D3DDevice_Clear+0x0000 : sub esp, 38h
-        { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x0002, 0x38 }, // (Offset,Value)-Pair #3
-
-        // D3DDevice_Clear+0x001C : mov ebx, [ebp+0x21B8]
-        { 0x001C, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x001D, 0xB5 }, // (Offset,Value)-Pair #5
-        { 0x001E, 0xB8 }, // (Offset,Value)-Pair #6
-        { 0x001F, 0x21 }, // (Offset,Value)-Pair #7
-
-        // D3DDevice_Clear+0x03C6 : retn 0x18
-        { 0x03C6, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x03C7, 0x18 }, // (Offset,Value)-Pair #9
+        { 0x0C, 0x9D },
+        { 0x1A, 0xB6 },
+        { 0x1B, 0x47 },
+        { 0x1C, 0x0D },
+        { 0x1D, 0x8A },
+        { 0x1E, 0x88 },
+        { 0x54, 0x05 },
+        { 0x81, 0xB6 },
+        { 0xF8, 0x95 },
 OOVPA_END;
 
 // ******************************************************************
@@ -3075,7 +3051,6 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_End, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_Clear, 4627, ALIAS, D3DDevice_ClearB),
 	REGISTER_OOVPA(D3DDevice_Swap, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 4627, DISABLED),
