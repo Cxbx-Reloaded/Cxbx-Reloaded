@@ -940,45 +940,6 @@ OOVPA_NO_XREF(D3DDevice_GetTile, 5788, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_Swap
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_Swap, 5788, 7)
-
-        { 0x1B, 0xE8 },
-        { 0x38, 0xC3 },
-        { 0x55, 0xC0 },
-        { 0x72, 0x3F },
-        { 0x8F, 0x8E },
-        { 0xAC, 0xC6 },
-        { 0xC9, 0xC0 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_Swap (2)
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_Swap2, 5788, 11)
-
-        // D3DDevice_Swap+0x2A : mov ebx, 5
-        { 0x2A, 0xBB }, // (Offset,Value)-Pair #1
-        { 0x2B, 0x05 }, // (Offset,Value)-Pair #2
-
-        // D3DDevice_Swap+0x37 : test bl, 3
-        { 0x37, 0xF6 }, // (Offset,Value)-Pair #3
-        { 0x38, 0xC3 }, // (Offset,Value)-Pair #4
-        { 0x39, 0x03 }, // (Offset,Value)-Pair #5
-
-        // D3DDevice_Swap+0x60 : inc dword ptr [esi+0x2478]
-        { 0x60, 0xFF }, // (Offset,Value)-Pair #6
-        { 0x61, 0x86 }, // (Offset,Value)-Pair #7
-        { 0x62, 0x78 }, // (Offset,Value)-Pair #8
-        { 0x63, 0x24 }, // (Offset,Value)-Pair #9
-
-        // D3DDevice_Swap+0xE0 : retn 4
-        { 0xE0, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0xE1, 0x04 }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_KickOff, 5788, 13)
@@ -1276,8 +1237,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_Swap, 5788, PATCH),
-	REGISTER_OOVPA(D3DDevice_Swap, 5788, ALIAS, D3DDevice_Swap2),
+	REGISTER_OOVPA(D3DDevice_Swap, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
