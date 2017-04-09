@@ -1993,6 +1993,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
            pSourceSurface, pSourceRectsArray, cRects,
            pDestinationSurface, pDestPointsArray);
 
+	EmuVerifyResourceIsRegistered(pSourceSurface);
+	EmuVerifyResourceIsRegistered(pDestinationSurface);
+
     pSourceSurface->EmuSurface8->UnlockRect();
 
     /*
@@ -5094,6 +5097,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 		return 0;
     }
 
+	EmuVerifyResourceIsRegistered(pThis);
+
 	// Initially, increment the Xbox refcount and return that
 	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
 
@@ -5157,7 +5162,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
-            delete[] (PVOID)pThis->Data;
+            g_MemoryManager.Free((void*)pThis->Data);
             uRet = --pThis->Lock;
         }
         else if(pResource8 != nullptr)
@@ -5240,6 +5245,8 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
            pThis);
 
 	D3DRESOURCETYPE rType;
+
+	EmuVerifyResourceIsRegistered(pThis);
 
 	// Check for Xbox specific resources (Azurik may need this)
 	DWORD dwType = pThis->Common & X_D3DCOMMON_TYPE_MASK;
@@ -5551,6 +5558,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
 //	DbgPrintf("EmuD3D8: EmuIDirect3DSurface8_LockRect (pThis->Surface = 0x%8.8X)\n", pThis->EmuSurface8 );
 
+	EmuVerifyResourceIsRegistered(pThis);
+
 	if(!pThis->EmuSurface8)
 	{
 		EmuWarning("Invalid Surface!" );
@@ -5558,8 +5567,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		
 		return E_FAIL;
 	}
-	
-    EmuVerifyResourceIsRegistered(pThis);
+
 
     if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
     {
@@ -10189,6 +10197,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	// Create a new surface
 	*ppCubeMapSurface = EmuNewD3DSurface();
 
+	EmuVerifyResourceIsRegistered(pThis);
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &(*ppCubeMapSurface)->EmuSurface8 );
 
 		
@@ -10220,6 +10229,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 	// Create a new surface
 	X_D3DSurface* pCubeMapSurface = EmuNewD3DSurface();
 
+	EmuVerifyResourceIsRegistered(pThis);
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &pCubeMapSurface->EmuSurface8 );
 
 		
