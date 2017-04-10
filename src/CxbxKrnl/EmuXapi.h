@@ -525,6 +525,7 @@ VOID WINAPI EMUPATCH(XRegisterThreadNotifyRoutine)
     BOOL                    fRegister
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: CreateFiber
 // ******************************************************************
@@ -534,7 +535,9 @@ LPVOID WINAPI EMUPATCH(CreateFiber)
 	LPFIBER_START_ROUTINE	lpStartRoutine,
 	LPVOID					lpParameter
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
@@ -542,7 +545,9 @@ VOID WINAPI EMUPATCH(DeleteFiber)
 (
 	LPVOID lpFiber
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
@@ -550,7 +555,9 @@ VOID WINAPI EMUPATCH(SwitchToFiber)
 (
 	LPVOID lpFiber 
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: ConvertThreadToFiber
 // ******************************************************************
@@ -558,11 +565,14 @@ LPVOID WINAPI EMUPATCH(ConvertThreadToFiber)
 (
 	LPVOID lpParameter
 );
+#endif
 
+#if 0 // patch never applied
 // ******************************************************************
 // * patch: XapiFiberStartup
 // ******************************************************************
 VOID WINAPI EMUPATCH(XapiFiberStartup)(DWORD dwDummy);
+#endif
 
 // ******************************************************************
 // * patch: QueueUserAPC

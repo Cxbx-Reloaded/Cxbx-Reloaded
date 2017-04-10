@@ -707,6 +707,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     }
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: CreateFiber
 // ******************************************************************
@@ -739,7 +740,9 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 
 	return pFiber;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
@@ -758,7 +761,9 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 	DeleteFiber( lpFiber );
 
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
@@ -789,7 +794,9 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 	DbgPrintf( "Finished executing fibers!\n" );
 
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: ConvertThreadToFiber
 // ******************************************************************
@@ -811,7 +818,9 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 
 	return pRet;
 }
+#endif
 
+#if 0 // patch never applied
 // ******************************************************************
 // * patch: XapiFiberStartup
 // ******************************************************************
@@ -841,6 +850,7 @@ VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 	}
 
 }
+#endif
 
 // ******************************************************************
 // * patch: QueueUserAPC
