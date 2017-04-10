@@ -1569,6 +1569,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
     D3DCAPS8    *pCaps
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_SetPushBufferSize
 // ******************************************************************
@@ -1577,6 +1578,7 @@ HRESULT WINAPI EMUPATCH(D3D_SetPushBufferSize)
     DWORD PushBufferSize,
     DWORD KickOffSize
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_InsertFence

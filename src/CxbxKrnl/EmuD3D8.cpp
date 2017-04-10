@@ -9109,6 +9109,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
     return hRet;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_SetPushBufferSize
 // ******************************************************************
@@ -9135,6 +9136,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 
     return hRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_InsertFence
