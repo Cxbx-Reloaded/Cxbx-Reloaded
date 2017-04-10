@@ -50,6 +50,8 @@ extern const ComponentEncodingInfo *EmuXBFormatComponentEncodingInfo(X_D3DFORMAT
 
 extern D3DCOLOR DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value);
 
+bool EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format);
+
 // how many bits does this format use per pixel?
 extern DWORD EmuXBFormatBitsPerPixel(X_D3DFORMAT Format);
 

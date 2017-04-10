@@ -284,6 +284,17 @@ const XTL::ComponentEncodingInfo *XTL::EmuXBFormatComponentEncodingInfo(X_D3DFOR
 	return nullptr;
 }
 
+bool XTL::EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format)
+{
+	const ComponentEncodingInfo *info = EmuXBFormatComponentEncodingInfo(Format);
+	// Conversion is required if there's ARGB conversion info present, and the format has a warning message
+	if (info != nullptr)
+		if (FormatInfos[Format].warning != nullptr)
+			return true;
+
+	return false;
+}
+
 DWORD XTL::EmuXBFormatBitsPerPixel(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
