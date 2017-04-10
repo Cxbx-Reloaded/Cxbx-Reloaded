@@ -174,6 +174,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	RETURN(ret);
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
@@ -217,6 +218,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 	RETURN(TRUE); // TODO : RETURN(bRet);
 }
+#endif
 
 // ******************************************************************
 // * patch: XInputOpen
@@ -705,6 +707,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     }
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: CreateFiber
 // ******************************************************************
@@ -737,7 +740,9 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 
 	return pFiber;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
@@ -756,7 +761,9 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 	DeleteFiber( lpFiber );
 
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
@@ -787,7 +794,9 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 	DbgPrintf( "Finished executing fibers!\n" );
 
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: ConvertThreadToFiber
 // ******************************************************************
@@ -809,7 +818,9 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 
 	return pRet;
 }
+#endif
 
+#if 0 // patch never applied
 // ******************************************************************
 // * patch: XapiFiberStartup
 // ******************************************************************
@@ -839,6 +850,7 @@ VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 	}
 
 }
+#endif
 
 // ******************************************************************
 // * patch: QueueUserAPC
@@ -977,6 +989,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 
 DWORD g_XGetLaunchInfo_Status = -1;
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetLaunchInfo
 // ******************************************************************
@@ -1024,6 +1037,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 
 	RETURN(ret);
 }
+#endif
 
 // ******************************************************************
 // * patch: XSetProcessQuantumLength

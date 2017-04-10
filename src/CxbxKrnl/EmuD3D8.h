@@ -88,10 +88,14 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
 BOOL WINAPI EMUPATCH(D3DDevice_IsBusy)();
 
 // ******************************************************************
-// * patch: D3D_CheckDeviceFormat
+// * patch: D3DDevice_GetCreationParameters
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PARAMETERS *pParameters);
+VOID WINAPI EMUPATCH(D3DDevice_GetCreationParameters)
+(
+	D3DDEVICE_CREATION_PARAMETERS *pParameters
+);
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_CheckDeviceFormat
 // ******************************************************************
@@ -104,7 +108,9 @@ HRESULT WINAPI EMUPATCH(D3D_CheckDeviceFormat)
     X_D3DRESOURCETYPE           RType,
     X_D3DFORMAT                 CheckFormat
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_GetDeviceCaps
 // ******************************************************************
@@ -112,11 +118,15 @@ VOID WINAPI EMUPATCH(D3DDevice_GetDeviceCaps)
 (
     D3DCAPS8                   *pCaps
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus);
+VOID WINAPI EMUPATCH(D3DDevice_GetDisplayFieldStatus)
+(
+	X_D3DFIELD_STATUS *pFieldStatus
+);
 
 // ******************************************************************
 // * patch: D3DDevice_BeginPush
@@ -681,6 +691,7 @@ ULONG WINAPI EMUPATCH(D3DResource_Release)
     X_D3DResource      *pThis
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: IDirect3DResource8_GetType
 // ******************************************************************
@@ -688,6 +699,7 @@ X_D3DRESOURCETYPE WINAPI EMUPATCH(D3DResource_GetType)
 (
     X_D3DResource      *pThis
 );
+#endif
 
 // ******************************************************************
 // * patch: IDirect3DResource8_AddRef
@@ -1559,6 +1571,7 @@ HRESULT WINAPI EMUPATCH(D3D_CheckDeviceMultiSampleType)
     D3DMULTISAMPLE_TYPE  MultiSampleType
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_GetDeviceCaps
 // ******************************************************************
@@ -1568,7 +1581,9 @@ HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
     D3DDEVTYPE  DeviceType,
     D3DCAPS8    *pCaps
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_SetPushBufferSize
 // ******************************************************************
@@ -1577,6 +1592,7 @@ HRESULT WINAPI EMUPATCH(D3D_SetPushBufferSize)
     DWORD PushBufferSize,
     DWORD KickOffSize
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_InsertFence
@@ -1855,6 +1871,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView);
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial);
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_GetAdapterIdentifier
 // ******************************************************************
@@ -1864,6 +1881,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
 	DWORD					Flags,
 	D3DADAPTER_IDENTIFIER8* pIdentifier
 );
+#endif
 
 // ******************************************************************
 // * patch: D3D::MakeRequestedSpace

@@ -875,8 +875,8 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Pause, 4928, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, DISABLED),
-	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, DISABLED),
+	// REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, DISABLED), // 5344 XREF is already in here
+	// REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, DISABLED), // 5344 XREF is already in here
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetVelocity, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 5344, XREF),
@@ -930,8 +930,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetDopplerFactor, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 5344, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SetRolloffFactor, 4134, DISABLED),
-	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 4134, DISABLED),
+	// REGISTER_OOVPA(DirectSound_CDirectSound_SetRolloffFactor, 4134, DISABLED), // 5344 XREF is already in here
 	REGISTER_OOVPA(DirectSound_CDirectSound_CommitDeferredSettings, 5344, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMaxDistance, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMaxDistance, 5344, XREF),
@@ -968,7 +967,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetRolloffFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffFactor, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetRolloffFactor, 5344, XREF),
-	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 5344, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 5344, PATCH), // Was 4134
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
