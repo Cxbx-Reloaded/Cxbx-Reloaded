@@ -161,7 +161,7 @@ static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_R8B8 = 0x16,
 	{ 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :) // TODO : Requires conversion
 	// X_D3DFMT_LIN_G8B8 = 0x17, // Alias : X_D3DFMT_LIN_V8U8
-	{ 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	{ 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :) // TODO : Requires conversion
 	// undefined : 0x18,
 	{ },
 	// X_D3DFMT_A8 = 0x19,
