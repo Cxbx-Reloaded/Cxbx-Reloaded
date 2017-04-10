@@ -4859,8 +4859,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                         BYTE *pSrc = (BYTE*)pBase;
 
-                        if( pBase != NULL ) pThis->Data = (DWORD)pSrc;
-
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                          ||( (DWORD)pBase == X_D3DRESOURCE_DATA_BACK_BUFFER))
                         {
@@ -4878,6 +4876,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                         }
                         else
                         {
+							if (level == 0)
+								pResource->Data = (DWORD)pSrc;
+
 							if((DWORD)pSrc == 0x80000000)
                             {
 								// TODO: Fix or handle this situation..?
