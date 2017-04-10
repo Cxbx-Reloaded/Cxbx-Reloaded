@@ -4415,12 +4415,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
     HRESULT hRet = S_OK;
 
-    X_D3DResource *pResource = (X_D3DResource*)pThis;
+    X_D3DResource *pResource = pThis;
 
     DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
 
     // add the offset of the current texture to the base
-    pBase = (PVOID)((DWORD)pBase+pThis->Data);
+    pBase = (PVOID)((DWORD)pBase + pResource->Data);
 
     // Determine the resource type, and initialize
     switch(dwCommonType)
@@ -4467,7 +4467,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 g_VBTrackTotal.insert(pResource->EmuVertexBuffer8);
                 #endif
 
-                BYTE *pData = 0;
+                BYTE *pData = NULL;
 
                 hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
 
@@ -4480,7 +4480,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                 pResource->EmuVertexBuffer8->Unlock();
 
-                pResource->Data = (ULONG)pData;
+                pResource->Data = (DWORD)pData;
             }
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pResource->EmuVertexBuffer8);
@@ -4519,7 +4519,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 								/*DXGetErrorString8A(hRet), *//*DXGetErrorDescription8A(hRet),*/ dwSize);
 
 
-                BYTE *pData = 0;
+                BYTE *pData = NULL;
 
                 hRet = pResource->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
 
@@ -4532,7 +4532,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                 pResource->EmuIndexBuffer8->Unlock();
 
-                pResource->Data = (ULONG)pData;
+                pResource->Data = (DWORD)pData;
             }
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created IndexBuffer (0x%.08X)\n", pResource->EmuIndexBuffer8);
@@ -4559,7 +4559,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     break;
                 }
 
-                pResource->Data = (ULONG)pBase;
+                pResource->Data = (DWORD)pBase;
             }
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
@@ -5078,7 +5078,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 pCurrentPalette = pBase;
 				dwCurrentPaletteSize = dwSize;
 
-                pResource->Data = (ULONG)pBase;
+                pResource->Data = (DWORD)pBase;
             }
 
             //DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pResource->Size, pResource->AllocationSize);
