@@ -153,13 +153,13 @@ static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_A8R8G8B8 = 0x12,
 	{ 32, Linear, A8R8G8B8, XTL::D3DFMT_A8R8G8B8 },
 	// X_D3DFMT_LIN_L8 = 0x13,
-	{ 8, Linear, ______L8, XTL::D3DFMT_L8 }, // Was : D3DFMT_UNKNOWN
+	{ 8, Linear, ______L8, XTL::D3DFMT_L8 },
 	// undefined : 0x14,
 	{ },
 	// undefined : 0x15,
 	{ },
 	// X_D3DFMT_LIN_R8B8 = 0x16,
-	{ 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	{ 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :) // TODO : Requires conversion
 	// X_D3DFMT_LIN_G8B8 = 0x17, // Alias : X_D3DFMT_LIN_V8U8
 	{ 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Cxbx NOTE: HACK: Totally and utterly wrong :)
 	// undefined : 0x18,
@@ -167,9 +167,9 @@ static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_A8 = 0x19,
 	{ 8, Swizzled, ______A8, XTL::D3DFMT_A8 },
 	// X_D3DFMT_A8L8 = 0x1A,
-	{ 16, Swizzled, ____A8L8, XTL::D3DFMT_A8L8 }, // Was : D3DFMT_R5G6B5
+	{ 16, Swizzled, ____A8L8, XTL::D3DFMT_A8L8 },
 	// X_D3DFMT_LIN_AL8 = 0x1B,
-	{ 8, Linear, _____AL8, XTL::D3DFMT_L8, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" }, // Was : D3DFMT_UNKNOWN // Cxbx NOTE: Hack: Alpha ignored, basically // TODO : Requires conversion
+	{ 8, Linear, _____AL8, XTL::D3DFMT_L8, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" }, // Cxbx NOTE: Hack: Alpha ignored, basically // TODO : Requires conversion
 	// X_D3DFMT_LIN_X1R5G5B5 = 0x1C,
 	{ 16, Linear, X1R5G5B5, XTL::D3DFMT_X1R5G5B5 },
 	// X_D3DFMT_LIN_A4R4G4B4 = 0x1D,
@@ -180,7 +180,7 @@ static const FormatInfo FormatInfos[] = {
 	{ 8, Linear, ______A8, XTL::D3DFMT_L8 },
 	// TODO : { 8, Linear, ______A8, XTL::D3DFMT_A8 },
 	// X_D3DFMT_LIN_A8L8 = 0x20,
-	{ 16, Linear, ____A8L8, XTL::D3DFMT_A8L8 }, // Was : D3DFMT_UNKNOWN
+	{ 16, Linear, ____A8L8, XTL::D3DFMT_A8L8 },
 	// undefined : 0x21,
 	{ },
 	// undefined : 0x22,
@@ -225,9 +225,9 @@ static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_L16 = 0x35,
 	{ 16, Linear, _____L16, XTL::D3DFMT_UNKNOWN },
 	// X_D3DFMT_LIN_V16U16 = 0x36,
-	{ 32, Linear, NoComponents, XTL::D3DFMT_V16U16 }, // Was : D3DFMT_UNKNOWN
+	{ 32, Linear, NoComponents, XTL::D3DFMT_V16U16 },
 	// X_D3DFMT_LIN_L6V5U5 = 0x37, // Alias : X_D3DFMT_LIN_R6G5B5
-	{ 16, Linear, __R6G5B5, XTL::D3DFMT_L6V5U5 }, // Was : D3DFMT_UNKNOWN
+	{ 16, Linear, __R6G5B5, XTL::D3DFMT_L6V5U5 },
 	// X_D3DFMT_R5G5B5A1 = 0x38,
 	{ 16, Swizzled, R5G5B5A1, XTL::D3DFMT_UNKNOWN },
 	// TODO : { 16, Swizzled, R5G5B5A1, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" }, // TODO : Requires conversion
