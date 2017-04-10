@@ -40,6 +40,16 @@
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
+typedef struct _ComponentEncodingInfo
+{
+	int8_t ABits, RBits, GBits, BBits;
+	int8_t AShift, RShift, GShift, BShift;
+} ComponentEncodingInfo;
+
+extern const ComponentEncodingInfo *EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format);
+
+extern D3DCOLOR DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value);
+
 // how many bits does this format use per pixel?
 extern DWORD EmuXBFormatBitsPerPixel(X_D3DFORMAT Format);
 

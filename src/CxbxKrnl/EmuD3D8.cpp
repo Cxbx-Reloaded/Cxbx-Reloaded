@@ -1997,6 +1997,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
            pSourceSurface, pSourceRectsArray, cRects,
            pDestinationSurface, pDestPointsArray);
 
+	EmuVerifyResourceIsRegistered(pSourceSurface);
+	EmuVerifyResourceIsRegistered(pDestinationSurface);
+
     pSourceSurface->EmuSurface8->UnlockRect();
 
     /*
@@ -4428,6 +4431,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
+			// Vertex buffers live in Physical Memory Region
+			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+
             // create vertex buffer
             {
                 DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
@@ -5095,6 +5101,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 		return 0;
     }
 
+	EmuVerifyResourceIsRegistered(pThis);
+
 	// Initially, increment the Xbox refcount and return that
 	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
 
@@ -5158,7 +5166,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
-            delete[] (PVOID)pThis->Data;
+            g_MemoryManager.Free((void*)pThis->Data);
             uRet = --pThis->Lock;
         }
         else if(pResource8 != nullptr)
@@ -5242,6 +5250,8 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
            pThis);
 
 	D3DRESOURCETYPE rType;
+
+	EmuVerifyResourceIsRegistered(pThis);
 
 	// Check for Xbox specific resources (Azurik may need this)
 	DWORD dwType = pThis->Common & X_D3DCOMMON_TYPE_MASK;
@@ -5554,6 +5564,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
 //	DbgPrintf("EmuD3D8: EmuIDirect3DSurface8_LockRect (pThis->Surface = 0x%8.8X)\n", pThis->EmuSurface8 );
 
+	EmuVerifyResourceIsRegistered(pThis);
+
 	if(!pThis->EmuSurface8)
 	{
 		EmuWarning("Invalid Surface!" );
@@ -5561,8 +5573,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		
 		return E_FAIL;
 	}
-	
-    EmuVerifyResourceIsRegistered(pThis);
+
 
     if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
     {
@@ -7435,6 +7446,8 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
            ");\n",
            ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
 
+	EmuVerifyResourceIsRegistered(ppVertexBuffer);
+
     IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
 
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
@@ -7466,6 +7479,8 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
            ppVertexBuffer, Flags);
 
     IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
+
+	EmuVerifyResourceIsRegistered(ppVertexBuffer);
 
     BYTE *pbData = NULL;
 
@@ -10194,6 +10209,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	// Create a new surface
 	*ppCubeMapSurface = EmuNewD3DSurface();
 
+	EmuVerifyResourceIsRegistered(pThis);
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &(*ppCubeMapSurface)->EmuSurface8 );
 
 		
@@ -10225,6 +10241,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 	// Create a new surface
 	X_D3DSurface* pCubeMapSurface = EmuNewD3DSurface();
 
+	EmuVerifyResourceIsRegistered(pThis);
 	hRet = pThis->EmuCubeTexture8->GetCubeMapSurface( FaceType, Level, &pCubeMapSurface->EmuSurface8 );
 
 		

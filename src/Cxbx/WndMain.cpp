@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 #include "WndMain.h"
-#include "WndAbout.h"
+#include "DlgAbout.h"
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
@@ -1016,15 +1016,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_HELP_ABOUT:
                 {
-                    WndAbout *AboutWnd = new WndAbout(m_hInstance, m_hwnd);
-
-                    while(!AboutWnd->HasError() && AboutWnd->ProcessMessages())
-                        Sleep(10);
-
-                    if(AboutWnd->HasError())
-                        MessageBox(m_hwnd, AboutWnd->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-
-                    delete AboutWnd;
+					ShowAboutDialog(hwnd);
                 }
                 break;
 

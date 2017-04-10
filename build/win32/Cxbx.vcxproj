@@ -92,7 +92,7 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -155,7 +155,7 @@ $(SOLUTIONDIR)Export.bat</Command>
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;dbghelp.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -289,6 +289,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
+    <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
@@ -297,13 +298,15 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
-    <ClInclude Include="..\..\src\Cxbx\WndAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
     <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\CONTRIBUTORS" />
+    <None Include="..\..\COPYING" />
+    <None Include="..\..\README.md" />
     <None Include="..\..\resource\About.jpg" />
     <None Include="..\..\resource\Cxbx.ico" />
     <None Include="..\..\resource\Logo.bmp" />
@@ -547,6 +550,7 @@ $(SOLUTIONDIR)Export.bat</Command>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -584,12 +588,6 @@ $(SOLUTIONDIR)Export.bat</Command>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\Wnd.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\WndAbout.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

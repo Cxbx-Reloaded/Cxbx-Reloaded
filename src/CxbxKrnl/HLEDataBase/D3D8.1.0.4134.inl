@@ -2040,7 +2040,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_Present, 3925, PATCH),
 	// REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer, 3925, DISABLED),
 	// REGISTER_OOVPA(D3DVertexBuffer_Lock, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Register, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),

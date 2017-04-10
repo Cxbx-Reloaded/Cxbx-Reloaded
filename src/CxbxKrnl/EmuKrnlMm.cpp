@@ -179,7 +179,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
 		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
 
-	EmuWarning("*NumberOfPaddingBytes = 0x%08X", *NumberOfPaddingBytes);
+	DbgPrintf("MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
 
 	if (NumberOfBytes != MAXULONG_PTR)
 	{

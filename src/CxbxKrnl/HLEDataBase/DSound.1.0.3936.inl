@@ -3331,48 +3331,48 @@ OOVPA_END;
 // ******************************************************************
 // * CSensaura3d::GetFullHRTFFilterPair
 // ******************************************************************
-OOVPA_XREF(CSensaura3d_GetFullHRTFFilterPair, 3936, 7,
+OOVPA_XREF(CSensaura3d_GetFullHRTFFilterPair, 3925, 7,
 
     XREF_CSensaura3d_GetFullHRTFFilterPair,
     XRefZero)
 
         { 0x1E, 0xEB },
+        { 0x2E, 0x6A },
         { 0x3E, 0x40 },
         { 0x5E, 0x7E },
         { 0x7E, 0x1E },
         { 0xA2, 0xD9 },
         { 0xBE, 0x09 },
-        { 0xDE, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
+// * CSensaura3d::GetFullHRTFFilterPair
+// ******************************************************************
+OOVPA_XREF(CSensaura3d_GetFullHRTFFilterPair, 3936, 9,
+
+    XREF_CSensaura3d_GetFullHRTFFilterPair,
+    XRefZero)
+
+        { 0x05, 0x0C },
+        { 0x0E, 0xD9 },
+        { 0x20, 0xEB },
+        { 0x28, 0xD9 },
+        { 0x30, 0x6A },
+        { 0xAA, 0xEB },
+        { 0xAB, 0x17 },
+        { 0xAC, 0xD8 },
+        { 0xAD, 0x05 },
 OOVPA_END;
 
 // ******************************************************************
 // * DirectSoundUseFullHRTF
 // ******************************************************************
-OOVPA_XREF(DirectSoundUseFullHRTF, 3936, 8,
+OOVPA_XREF(DirectSoundUseFullHRTF, 3925, 8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         XREF_ENTRY( 0x0D, XREF_CSensaura3d_GetFullHRTFFilterPair ),
-
-        { 0x05, 0x85 },
-        { 0x06, 0xC0 },
-        { 0x11, 0x74 },
-        { 0x12, 0x0B },
-        { 0x13, 0x68 },
-        { 0x18, 0xFF },
-        { 0x1E, 0xC3 },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSoundUseFullHRTF2
-// ******************************************************************
-OOVPA_XREF(DirectSoundUseFullHRTF2, 3936, 8,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_DirectSoundEnterCriticalSection ),
 
         { 0x05, 0x85 },
         { 0x06, 0xC0 },
@@ -4150,14 +4150,14 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(CMcpxAPU_Set3dDopplerFactor, 3936, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetDopplerFactor, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 3936, PATCH),
+	REGISTER_OOVPA(CSensaura3d_GetFullHRTFFilterPair, 3925, XREF),
 	REGISTER_OOVPA(CSensaura3d_GetFullHRTFFilterPair, 3936, XREF),
-	REGISTER_OOVPA(DirectSoundUseFullHRTF, 3936, PATCH),
+	REGISTER_OOVPA(DirectSoundUseFullHRTF, 3925, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_GetCaps, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetConeAngles, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 3936, PATCH),
 	REGISTER_OOVPA(DirectSoundEnterCriticalSection, 3936, XREF),
-	REGISTER_OOVPA(DirectSoundUseFullHRTF, 3936, ALIAS, DirectSoundUseFullHRTF2),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_PlayEx, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),

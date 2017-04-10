@@ -855,7 +855,6 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5344, PATCH), // Was 4627
 	REGISTER_OOVPA(D3DDevice_SetIndices, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH), // Was 4928
-	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, ALIAS, D3DDevice_SetTextureB),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 5233, PATCH), // Was 4627
 	REGISTER_OOVPA(D3DDevice_Begin, 5233, PATCH),
@@ -863,7 +862,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_Clear, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5344, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4361, PATCH),
