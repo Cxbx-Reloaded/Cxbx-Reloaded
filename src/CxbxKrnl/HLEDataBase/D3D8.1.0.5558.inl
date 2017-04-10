@@ -498,9 +498,9 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 5455, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_CheckDeviceMultiSampleType
+// * Direct3D_CheckDeviceMultiSampleType
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CheckDeviceMultiSampleType, 5558, 7)
+OOVPA_NO_XREF(Direct3D_CheckDeviceMultiSampleType, 5558, 7)
 
         { 0x0E, 0x00 },
         { 0x1E, 0x54 },
@@ -1547,9 +1547,9 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5233, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceMultiSampleType, 5558, PATCH),
+	REGISTER_OOVPA(Direct3D_CheckDeviceMultiSampleType, 5558, DISABLED),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5233, PATCH),
 	REGISTER_OOVPA(D3D_SetFence, 5558, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 5233, PATCH),

@@ -1309,8 +1309,8 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetModelView, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5558, PATCH),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, PATCH),
-	REGISTER_OOVPA(D3D_CheckDeviceMultiSampleType, 5558, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 5558, DISABLED),
+	REGISTER_OOVPA(Direct3D_CheckDeviceMultiSampleType, 5558, DISABLED),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5788, PATCH),
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5788, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH

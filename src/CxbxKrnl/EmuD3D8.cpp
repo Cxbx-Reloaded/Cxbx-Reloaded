@@ -1479,6 +1479,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PA
     return;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_CheckDeviceFormat
 // ******************************************************************
@@ -1521,6 +1522,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
 
     return hRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
@@ -1680,6 +1682,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     return D3D_OK;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_GetDeviceCaps
 // ******************************************************************
@@ -1704,6 +1707,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDeviceCaps)
 
     return;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_LoadVertexShader
@@ -5228,6 +5232,7 @@ BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
     return FALSE;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: IDirect3DResource8_GetType
 // ******************************************************************
@@ -5267,6 +5272,7 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 
     return (X_D3DRESOURCETYPE)rType;
 }
+#endif
 
 // ******************************************************************
 // * patch: Lock2DSurface
@@ -5896,6 +5902,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DDevice_Release)()
     return RefCount;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer
 // ******************************************************************
@@ -5912,7 +5919,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer)
 
     return D3D_OK;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer2
 // ******************************************************************
@@ -5951,6 +5960,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
 
     return pD3DVertexBuffer;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay
@@ -9021,10 +9031,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
     return D3D_OK;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
-// * patch: D3D_CheckDeviceMultiSampleType
+// * patch: Direct3D_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceMultiSampleType)
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -9094,7 +9105,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceMultiSampleType)
 
     return hRet;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_GetDeviceCaps
 // ******************************************************************
@@ -9123,7 +9136,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
 
     return hRet;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_SetPushBufferSize
 // ******************************************************************
@@ -9150,6 +9165,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 
     return hRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_InsertFence
@@ -10014,6 +10030,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial)
 	return S_OK;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3D_GetAdapterIdentifier
 // ******************************************************************
@@ -10048,6 +10065,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetAdapterIdentifier)
 
 	return hRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3D_MakeRequestedSpace
