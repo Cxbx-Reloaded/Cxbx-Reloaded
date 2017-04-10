@@ -5902,6 +5902,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DDevice_Release)()
     return RefCount;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer
 // ******************************************************************
@@ -5918,7 +5919,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer)
 
     return D3D_OK;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer2
 // ******************************************************************
@@ -5957,6 +5960,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
 
     return pD3DVertexBuffer;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay

@@ -845,6 +845,7 @@ HRESULT WINAPI EMUPATCH(D3DCubeTexture_LockRect)
     DWORD               Flags
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer
 // ******************************************************************
@@ -856,7 +857,9 @@ HRESULT WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer)
     D3DPOOL             Pool,
     X_D3DVertexBuffer **ppVertexBuffer
 );
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer2
 // ******************************************************************
@@ -864,6 +867,7 @@ X_D3DVertexBuffer* WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer2)
 (
     UINT Length
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay

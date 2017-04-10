@@ -820,7 +820,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 }
 #endif
 
-#if 0 // patch never applied
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XapiFiberStartup
 // ******************************************************************
