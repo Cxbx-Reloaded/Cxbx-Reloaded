@@ -177,8 +177,7 @@ static const FormatInfo FormatInfos[] = {
 	// X_D3DFMT_LIN_X8R8G8B8 = 0x1E, // Alias : X_D3DFMT_LIN_X8L8V8U8
 	{ 32, Linear, X8R8G8B8, XTL::D3DFMT_X8R8G8B8 },
 	// X_D3DFMT_LIN_A8 = 0x1F,
-	{ 8, Linear, ______A8, XTL::D3DFMT_L8 },
-	// TODO : { 8, Linear, ______A8, XTL::D3DFMT_A8 },
+	{ 8, Linear, ______A8, XTL::D3DFMT_A8 },
 	// X_D3DFMT_LIN_A8L8 = 0x20,
 	{ 16, Linear, ____A8L8, XTL::D3DFMT_A8L8 },
 	// undefined : 0x21,
