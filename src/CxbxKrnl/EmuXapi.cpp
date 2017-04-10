@@ -989,6 +989,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 
 DWORD g_XGetLaunchInfo_Status = -1;
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetLaunchInfo
 // ******************************************************************
@@ -1036,6 +1037,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 
 	RETURN(ret);
 }
+#endif
 
 // ******************************************************************
 // * patch: XSetProcessQuantumLength

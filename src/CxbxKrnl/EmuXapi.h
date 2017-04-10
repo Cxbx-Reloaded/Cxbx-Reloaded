@@ -604,6 +604,7 @@ DWORD WINAPI EMUPATCH(XLaunchNewImage)
 	PLAUNCH_DATA	pLaunchData
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetLaunchInfo
 // ******************************************************************
@@ -612,6 +613,7 @@ DWORD WINAPI EMUPATCH(XGetLaunchInfo)
 	PDWORD			pdwLaunchDataType,
 	PLAUNCH_DATA	pLaunchData
 );
+#endif
 
 // ******************************************************************
 // * patch: XSetProcessQuantumLength
