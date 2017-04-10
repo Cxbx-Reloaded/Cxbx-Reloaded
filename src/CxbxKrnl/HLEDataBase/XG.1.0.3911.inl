@@ -126,7 +126,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XG_3911[] = {
 
-	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, DISABLED),
+	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
 	// REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
 	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
 	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
