@@ -9031,10 +9031,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
     return D3D_OK;
 }
 
+#if 0 // patch disabled
 // ******************************************************************
-// * patch: D3D_CheckDeviceMultiSampleType
+// * patch: Direct3D_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceMultiSampleType)
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -9104,6 +9105,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceMultiSampleType)
 
     return hRet;
 }
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************

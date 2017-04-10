@@ -1563,10 +1563,11 @@ HRESULT WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
     X_D3DSURFACE_DESC* pDesc
 );
 
+#if 0 // patch disabled
 // ******************************************************************
-// * patch: D3D_CheckDeviceMultiSampleType
+// * patch: Direct3D_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_CheckDeviceMultiSampleType)
+HRESULT WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -1574,6 +1575,7 @@ HRESULT WINAPI EMUPATCH(D3D_CheckDeviceMultiSampleType)
     BOOL                 Windowed,
     D3DMULTISAMPLE_TYPE  MultiSampleType
 );
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************
