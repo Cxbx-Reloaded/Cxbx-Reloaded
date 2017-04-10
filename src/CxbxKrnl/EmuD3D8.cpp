@@ -3150,7 +3150,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
     }//*/
     else if(PCFormat == D3DFMT_YUY2)
     {
@@ -3277,8 +3277,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     // TODO: HACK: Devices that don't support this should somehow emulate it!
     if(PCFormat == D3DFMT_D16)
     {
-        EmuWarning("D3DFMT_16 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
     }
     else if(PCFormat == D3DFMT_P8)
     {
@@ -3288,7 +3288,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
     }
     else if(PCFormat == D3DFMT_YUY2)
     {
@@ -3366,8 +3366,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
     // TODO: HACK: Devices that don't support this should somehow emulate it!
     if(PCFormat == D3DFMT_D16)
     {
-        EmuWarning("D3DFMT_16 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5?
     }
     else if(PCFormat == D3DFMT_P8)
     {
@@ -3377,7 +3377,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
     }
     else if(PCFormat == D3DFMT_YUY2)
     {
