@@ -243,7 +243,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
 {
-	if (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+	if ((pThis->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
 		return nullptr;
 
 	if (pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
