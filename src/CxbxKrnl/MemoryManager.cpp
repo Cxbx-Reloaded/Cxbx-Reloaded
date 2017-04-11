@@ -91,6 +91,8 @@ void* MemoryManager::Allocate(size_t size)
 		EnterCriticalSection(&m_CriticalSection);
 		m_MemoryBlockInfo[addr] = info;
 		LeaveCriticalSection(&m_CriticalSection);
+	} else	{
+		EmuWarning("MemoryManager::Allocate Failed!");
 	}
 
 	RETURN((void*)addr);
@@ -197,10 +199,15 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 {
-	LOG_FORWARD(Allocate);
+	// Removed as it pollutes the log as it is used quite heavily
+	//LOG_FORWARD(Allocate);
 
 	void* addr = Allocate(num * size);
-	memset(addr, 0, num * size);
+	if (addr == nullptr)  {
+		EmuWarning("MemoryManager:AllocZeroed Failed");
+		return nullptr;
+	}
+	
 	return addr;
 }
 
