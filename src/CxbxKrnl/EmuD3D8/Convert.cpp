@@ -76,11 +76,11 @@ static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
 	// AB  RB  GB  BB ASh RSh GSh BSh
 	//its its its its ift ift ift ift
 	{  1,  5,  5,  5, 15, 10,  5,  0 }, // A1R5G5B5
-	{  0,  5,  5,  5,  0, 10,  5,  0 }, // X1R5G5B5
+	{  8,  5,  5,  5, -1, 10,  5,  0 }, // X1R5G5B5 // Test : Convert X into 255
 	{  4,  4,  4,  4, 12,  8,  4,  0 }, // A4R4G4B4
-	{  0,  5,  6,  5, -1, 11,  6,  0 }, // __R5G6B5 // Shift=-1 turns A into 255
+	{  8,  5,  6,  5, -1, 11,  5,  0 }, // __R5G6B5 // Shift=-1 turns A into 255
 	{  8,  8,  8,  8, 24, 16,  8,  0 }, // A8R8G8B8
-	{  0,  8,  8,  8,  0, 16,  8,  0 }, // X8R8G8B8
+	{  8,  8,  8,  8, -1, 16,  8,  0 }, // X8R8G8B8 // Test : Convert X into 255
 	{  8,  8,  8,  8,  8,  8,  0,  0 }, // ____R8B8 // A takes R, G takes B
 	{  8,  8,  8,  8,  8,  0,  8,  0 }, // ____G8B8 // A takes G, R takes B
 	{  8,  0,  0,  0,  0,  0,  0,  0 }, // ______A8
@@ -94,8 +94,12 @@ static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
 	{  8,  8,  8,  8,  0,  0,  0,  0 }, // _____AL8	// A,R,G,B take L
 	{  8,  8,  8,  8, -1, -1,  8,  0 }, // _____L16	// Shift=-1 turns A,R into 255
 	{  8,  8,  8,  8,  8,  0,  0,  0 }, // ____A8L8	// R,G,B take L
-    // Note : For formats that copy one components into another, the above bit-
+    // Notes : 
+	// * For formats that copy one components into another, the above bit-
 	// counts per component won't sum up to these format's byte-count per pixel!
+	// * Currently, when converting X1R5G5B5 and X8R8G8B8 to ARGB, their X-components are
+	// converted into A=255. It's probably more correct to convert these cases towards
+	// XRGB (as that would send unaltered data to shaders) but that's not supported yet.
 };
 
 enum _FormatStorage {
