@@ -91,6 +91,10 @@ void* MemoryManager::Allocate(size_t size)
 		EnterCriticalSection(&m_CriticalSection);
 		m_MemoryBlockInfo[addr] = info;
 		LeaveCriticalSection(&m_CriticalSection);
+	} else	{
+#if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)
+		EmuWarning("MemoryManager::Allocate Failed!");
+#endif
 	}
 
 	RETURN((void*)addr);
@@ -192,16 +196,21 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 	}
 	
 	LeaveCriticalSection(&m_CriticalSection);
+
 	RETURN((void*)addr);
 }
 
 void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 {
-	LOG_FORWARD(Allocate);
+	LOG_FORWARD(Allocate); // Log AllocateZeroed as the origin of the following RETURN log message
 
 	void* addr = Allocate(num * size);
-	memset(addr, 0, num * size);
-	return addr;
+	
+	if (addr != nullptr)  {
+		memset(addr, 0, num * size);	
+	}
+		
+	return addr; // Dont use RETURN, as Allocate already logs the result with that
 }
 
 bool MemoryManager::IsAllocated(void* addr)
@@ -269,9 +278,12 @@ size_t MemoryManager::QueryAllocationSize(void* addr)
 		ret = info->block.size - ((size_t)addr - (size_t)info->block.addr);
 	}
 	else {
+#if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)?
 		EmuWarning("MemoryManager: Attempted to query memory that was not allocated via MemoryManager");
+#endif
 	}
 
 	LeaveCriticalSection(&m_CriticalSection);
+
 	RETURN(ret);
 }
