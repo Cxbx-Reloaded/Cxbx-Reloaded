@@ -6060,11 +6060,214 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     return;
 }
 
-// Based on http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
-inline uint08 ClampIntToByte(int x)
-{
-	int r = x > 255 ? 255 : x;
-	return r < 0 ? 0 : (uint08)r;
+typedef uint8_t uint8;
+typedef int8_t int8;
+
+// From libyuv\include\libyuv\basic_types.h :
+#define LIBYUV_API
+
+// From libyuv\include\libyuv\row.h :
+// This struct is for Intel color conversion.
+struct YuvConstants {
+	int8 kUVToB[32];
+	int8 kUVToG[32];
+	int8 kUVToR[32];
+	int16 kUVBiasB[16];
+	int16 kUVBiasG[16];
+	int16 kUVBiasR[16];
+	int16 kYToRgb[16];
+};
+
+// From libyuv\include\libyuv\row.h :
+#if defined(VISUALC_HAS_AVX2)
+#define SIMD_ALIGNED(var) __declspec(align(32)) var
+#else
+#define SIMD_ALIGNED(var) __declspec(align(16)) var
+#endif
+
+// From libyuv\source\row_common.cc :
+// llvm x86 is poor at ternary operator, so use branchless min/max.
+#define USE_BRANCHLESS 1
+#if USE_BRANCHLESS
+static __inline int32 clamp0(int32 v) {
+	return ((-(v) >> 31) & (v));
+}
+
+static __inline int32 clamp255(int32 v) {
+	return (((255 - (v)) >> 31) | (v)) & 255;
+}
+
+static __inline uint32 Clamp(int32 val) {
+	int v = clamp0(val);
+	return (uint32)(clamp255(v));
+}
+
+static __inline uint32 Abs(int32 v) {
+	int m = v >> 31;
+	return (v + m) ^ m;
+}
+#else   // USE_BRANCHLESS
+static __inline int32 clamp0(int32 v) {
+	return (v < 0) ? 0 : v;
+}
+
+static __inline int32 clamp255(int32 v) {
+	return (v > 255) ? 255 : v;
+}
+
+static __inline uint32 Clamp(int32 val) {
+	int v = clamp0(val);
+	return (uint32)(clamp255(v));
+}
+
+static __inline uint32 Abs(int32 v) {
+	return (v < 0) ? -v : v;
+}
+#endif  // USE_BRANCHLESS
+
+// From libyuv\source\row_common.cc :
+// BT.601 YUV to RGB reference
+//  R = (Y - 16) * 1.164              - V * -1.596
+//  G = (Y - 16) * 1.164 - U *  0.391 - V *  0.813
+//  B = (Y - 16) * 1.164 - U * -2.018
+
+// Y contribution to R,G,B.  Scale and bias.
+#define YG 18997  /* round(1.164 * 64 * 256 * 256 / 257) */
+#define YGB -1160 /* 1.164 * 64 * -16 + 64 / 2 */
+
+// U and V contributions to R,G,B.
+#define UB -128 /* max(-128, round(-2.018 * 64)) */
+#define UG 25   /* round(0.391 * 64) */
+#define VG 52   /* round(0.813 * 64) */
+#define VR -102 /* round(-1.596 * 64) */
+
+// Bias values to subtract 16 from Y and 128 from U and V.
+#define BB (UB * 128 + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR (VR * 128 + YGB)
+
+const struct YuvConstants SIMD_ALIGNED(kYuvI601Constants) = {
+    {UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0,
+     UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0},
+    {UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG,
+     UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG},
+    {0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR,
+     0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+
+// C reference code that mimics the YUV assembly.
+static __inline void YuvPixel(uint8 y,
+                              uint8 u,
+                              uint8 v,
+                              uint8* b,
+                              uint8* g,
+                              uint8* r,
+                              const struct YuvConstants* yuvconstants) {
+  int ub = yuvconstants->kUVToB[0];
+  int ug = yuvconstants->kUVToG[0];
+  int vg = yuvconstants->kUVToG[1];
+  int vr = yuvconstants->kUVToR[1];
+  int bb = yuvconstants->kUVBiasB[0];
+  int bg = yuvconstants->kUVBiasG[0];
+  int br = yuvconstants->kUVBiasR[0];
+  int yg = yuvconstants->kYToRgb[0];
+
+  uint32 y1 = (uint32)(y * 0x0101 * yg) >> 16;
+  *b = Clamp((int32)(-(u * ub) + y1 + bb) >> 6);
+  *g = Clamp((int32)(-(u * ug + v * vg) + y1 + bg) >> 6);
+  *r = Clamp((int32)(-(v * vr) + y1 + br) >> 6);
+}
+
+void YUY2ToARGBRow_C(const uint8* src_yuy2,
+                     uint8* rgb_buf,
+                     const struct YuvConstants* yuvconstants,
+                     int width) {
+  int x;
+  for (x = 0; x < width - 1; x += 2) {
+    YuvPixel(src_yuy2[0], src_yuy2[1], src_yuy2[3], rgb_buf + 0, rgb_buf + 1,
+             rgb_buf + 2, yuvconstants);
+    rgb_buf[3] = 255;
+    YuvPixel(src_yuy2[2], src_yuy2[1], src_yuy2[3], rgb_buf + 4, rgb_buf + 5,
+             rgb_buf + 6, yuvconstants);
+    rgb_buf[7] = 255;
+    src_yuy2 += 4;
+    rgb_buf += 8;  // Advance 2 pixels.
+  }
+  if (width & 1) {
+    YuvPixel(src_yuy2[0], src_yuy2[1], src_yuy2[3], rgb_buf + 0, rgb_buf + 1,
+             rgb_buf + 2, yuvconstants);
+    rgb_buf[3] = 255;
+  }
+}
+
+// Convert YUY2 to ARGB.
+LIBYUV_API
+int YUY2ToARGB(const uint8* src_yuy2,
+	int src_stride_yuy2,
+	uint8* dst_argb,
+	int dst_stride_argb,
+	int width,
+	int height) {
+	int y;
+	void(*YUY2ToARGBRow)(const uint8* src_yuy2, uint8* dst_argb,
+		const struct YuvConstants* yuvconstants, int width) =
+		YUY2ToARGBRow_C;
+	if (!src_yuy2 || !dst_argb || width <= 0 || height == 0) {
+		return -1;
+	}
+	// Negative height means invert the image.
+	if (height < 0) {
+		height = -height;
+		src_yuy2 = src_yuy2 + (height - 1) * src_stride_yuy2;
+		src_stride_yuy2 = -src_stride_yuy2;
+	}
+	// Coalesce rows.
+	if (src_stride_yuy2 == width * 2 && dst_stride_argb == width * 4) {
+		width *= height;
+		height = 1;
+		src_stride_yuy2 = dst_stride_argb = 0;
+	}
+#if defined(HAS_YUY2TOARGBROW_SSSE3)
+	if (TestCpuFlag(kCpuHasSSSE3)) {
+		YUY2ToARGBRow = YUY2ToARGBRow_Any_SSSE3;
+		if (IS_ALIGNED(width, 16)) {
+			YUY2ToARGBRow = YUY2ToARGBRow_SSSE3;
+		}
+	}
+#endif
+#if defined(HAS_YUY2TOARGBROW_AVX2)
+	if (TestCpuFlag(kCpuHasAVX2)) {
+		YUY2ToARGBRow = YUY2ToARGBRow_Any_AVX2;
+		if (IS_ALIGNED(width, 32)) {
+			YUY2ToARGBRow = YUY2ToARGBRow_AVX2;
+		}
+	}
+#endif
+#if defined(HAS_YUY2TOARGBROW_NEON)
+	if (TestCpuFlag(kCpuHasNEON)) {
+		YUY2ToARGBRow = YUY2ToARGBRow_Any_NEON;
+		if (IS_ALIGNED(width, 8)) {
+			YUY2ToARGBRow = YUY2ToARGBRow_NEON;
+		}
+	}
+#endif
+#if defined(HAS_YUY2TOARGBROW_MSA)
+	if (TestCpuFlag(kCpuHasMSA)) {
+		YUY2ToARGBRow = YUY2ToARGBRow_Any_MSA;
+		if (IS_ALIGNED(width, 8)) {
+			YUY2ToARGBRow = YUY2ToARGBRow_MSA;
+		}
+	}
+#endif
+	for (y = 0; y < height; ++y) {
+		YUY2ToARGBRow(src_yuy2, dst_argb, &kYuvI601Constants, width);
+		src_yuy2 += src_stride_yuy2;
+		dst_argb += dst_stride_argb;
+	}
+	return 0;
 }
 
 // ******************************************************************
@@ -6181,8 +6384,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			{
 				uint08 *pbSource = (uint08*)pSurface->Lock;
 				uint08 *pbDest = (uint08*)LockedRectDest.pBits;
-				uint32 dx = 0, dy = 0;
-				uint32 dwImageSize = g_dwOverlayP*g_dwOverlayH;
 
 				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 				D3DSURFACE_DESC BackBufferDesc;
@@ -6194,89 +6395,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
 				uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
 
-				// grayscale - TODO : Either remove or make configurable
-				if(false)
-				{
-					// Clip to backbuffer height :
-					for(uint32 y=0;y<H;y++)
-					{
-						uint32 stop = g_dwOverlayW *4;
-						for(uint32 x=0;x<stop;x+=4)
-						{
-							uint08 Y = *pbSource;
-
-							// Clip to backbuffer width :
-							if (x / 4 < W)
-							{
-								pbDest[x + 0] = Y;
-								pbDest[x + 1] = Y;
-								pbDest[x + 2] = Y;
-								pbDest[x + 3] = 0xFF;
-							}
-
-							pbSource += 2;
-						}
-
-						pbDest += LockedRectDest.Pitch;
-					}
-				}
 				// full color conversion (YUY2->XRGB)
-				else
-				{
-					// The following is a combination of https://pastebin.com/mDcwqJV3 and
-					// https://en.wikipedia.org/wiki/YUV#Y.E2.80.B2UV422_to_RGB888_conversion
-					// TODO : Improve this to use a library, or SIMD instructions like in
-					// https://github.com/descampsa/yuv2rgb/blob/master/yuv_rgb.c
-					// https://github.com/lemenkov/libyuv/blob/master/source/row_win.cc#L100
-					const int K1 = int(1.402f * (1 << 16));
-					const int K2 = int(0.334f * (1 << 16));
-					const int K3 = int(0.714f * (1 << 16));
-					const int K4 = int(1.772f * (1 << 16));
-
-					for(uint32 v=0;v<dwImageSize;v+=4)
-					{
-						// Clip to backbuffer width :
-						if (dx < W)
-						{
-							uint8_t Y0 = pbSource[0];
-							uint8_t Cb = pbSource[1];
-							uint8_t Y1 = pbSource[2];
-							uint8_t Cr = pbSource[3];
-
-							int nCb = Cb - 128;
-							int nCr = Cr - 128;
-
-							int Rd =  (K1 * nCr) >> 16;
-							int Gd = ((K2 * nCb) + (K3 * nCr)) >> 16;
-							int Bd =  (K4 * nCb) >> 16;
-
-							uint32 i = (dy * LockedRectDest.Pitch) + (dx * 4);
-
-							pbDest[i + 0] = ClampIntToByte((int)Y0 + Bd);
-							pbDest[i + 1] = ClampIntToByte((int)Y0 - Gd);
-							pbDest[i + 2] = ClampIntToByte((int)Y0 + Rd);
-							pbDest[i + 3] = 0xFF;
-
-							pbDest[i + 4] = ClampIntToByte((int)Y1 + Bd);
-							pbDest[i + 5] = ClampIntToByte((int)Y1 - Gd);
-							pbDest[i + 6] = ClampIntToByte((int)Y1 + Rd);
-							pbDest[i + 7] = 0xFF;
-						}
-
-						pbSource += 4;
-						dx += 2;
-						if ((dx % g_dwOverlayW) == 0)
-						{
-							dy++;
-							// Clip to backbuffer height :
-							if (dy >= H)
-								break;
-
-							dx = 0;
-						}
-
-					}
-				}
+				YUY2ToARGB(pbSource, g_dwOverlayP, pbDest, BackBufferDesc.Width * 4, W, H);
 
 				pBackBuffer->UnlockRect();
 				pBackBuffer->Release();
