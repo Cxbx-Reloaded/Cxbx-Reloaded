@@ -208,6 +208,7 @@ void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 		return nullptr;
 	}
 	
+	memset(addr, 0, num * size);
 	return addr;
 }
 
