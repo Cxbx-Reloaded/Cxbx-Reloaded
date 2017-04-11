@@ -124,7 +124,7 @@ static const FormatInfo FormatInfos[] = {
 	// as otherwise locked buffers wouldn't be of the same size as on the Xbox, which
 	// could lead to out-of-bounds access violations.
 	// * Each format for which the host D3D8 doesn't have an identical native format,
-	// and does specify color components (other than NoComponents), MUST specify this fact
+	// and does specify color components (other than NoCmpnts), MUST specify this fact
 	// in the warning field, so EmuXBFormatRequiresConversionToARGB can return a conversion
 	// to ARGB is needed (which is implemented in EMUPATCH(D3DResource_Register).
 
