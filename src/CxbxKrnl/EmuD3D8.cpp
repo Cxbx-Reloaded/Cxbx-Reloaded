@@ -6270,6 +6270,29 @@ int YUY2ToARGB(const uint8* src_yuy2,
 	return 0;
 }
 
+
+IDirect3DSurface8 ExtraXRGBSurface = nullptr; // this is our pointer to the memory location containing our copy of the front buffer
+
+void AssureExtraXRGBSurface(IDirect3DSurface8 BackBufferSurface, std::string Caller)
+{
+	D3DSURFACE_DESC SurfaceDesc;
+	HRESULT aResult;
+
+	// Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
+	if (ExtraXRGBSurface == nullptr) {
+		BackBufferSurface.GetDesc(&SurfaceDesc);
+		aResult = IDirect3DDevice_CreateImageSurface(
+			g_pD3DDevice,
+			SurfaceDesc.Width,
+			SurfaceDesc.Height,
+			D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
+			&ExtraXRGBSurface);
+		if FAILED(aResult) {
+//			DbgPrintf("EmuD3D8 : %s could not create a extra buffer!\n", DxbxD3DErrorString(aResult), Caller);
+		}
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -6374,32 +6397,67 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		}
 		else
 		{
-			// TODO: dont assume X8R8G8B8 ?
-			D3DLOCKED_RECT LockedRectDest;
-
-			IDirect3DSurface8 *pBackBuffer = 0;
-			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+			IDirect3DSurface8 *pBackBufferSurface = nullptr;
+			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
 			// if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-			if (hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
-			{
-				uint08 *pbSource = (uint08*)pSurface->Lock;
-				uint08 *pbDest = (uint08*)LockedRectDest.pBits;
+			if (hRet == D3D_OK) {
+				IDirect3DSurface8 *pOverlayBufferSurface = nullptr;
+				D3DLOCKED_RECT LockedRectDest;
 
 				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 				D3DSURFACE_DESC BackBufferDesc;
-				pBackBuffer->GetDesc(&BackBufferDesc);
+				pBackBufferSurface->GetDesc(&BackBufferDesc);
 
-				// Limit the width and height of the output to the backbuffer dimensions.
-				// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
-				// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
-				uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
-				uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
+				// Determine if the overlay can be written directly to the backbuffer :
+				bool CanWriteToBackbuffer = (DstRect->left == SrcRect->left)
+					&& (DstRect->right == SrcRect->right)
+					&& (DstRect->top == SrcRect->top)
+					&& (DstRect->bottom == SrcRect->bottom)
+					&& ((BackBufferDesc.Format == D3DFMT_A8R8G8B8) || (BackBufferDesc.Format == D3DFMT_X8R8G8B8));
 
-				// full color conversion (YUY2->XRGB)
-				YUY2ToARGB(pbSource, g_dwOverlayP, pbDest, BackBufferDesc.Width * 4, W, H);
+				// If we can write to the back buffer, work with that, else use the screenshotbuffer as temporary surface :
+				if (CanWriteToBackbuffer)
+					pOverlayBufferSurface = pBackBufferSurface;
+				else {
+					AssureExtraXRGBSurface(pBackBufferSurface, "EmuD3DDevice_UpdateOverlay");
+					pOverlayBufferSurface = ExtraXRGBSurface; // Note : This surface is always in ARGB format
+				}
 
-				pBackBuffer->UnlockRect();
-				pBackBuffer->Release();
+				// Manually translate the YUY2 formatted input surface into the RGB buffer of the pre-determined output surface :
+				if (pOverlayBufferSurface->LockRect(&LockedRectDest, DstRect, 0) == D3D_OK) {
+					// Determine the start of the Xbox overlay buffer and Native destination buffer :
+					uint08 *pYUY2Input = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
+					uint08 *pARGBOutput = (uint08*)LockedRectDest.pBits;
+
+					// Limit the width and height of the output to the backbuffer dimensions.
+					// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
+					// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
+					uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
+					uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
+
+					// full color conversion (YUY2->XRGB)
+					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, BackBufferDesc.Width * 4, W, H);
+
+					pOverlayBufferSurface->UnlockRect();
+
+					if (!CanWriteToBackbuffer) {
+						// When the overlay could not directly be converted into the back buffer,
+						// we now have to stretch-copy there (this also does a format-conversion, if needed) :
+						if (D3DXLoadSurfaceFromSurface(
+							/* pDestSurface = */ pBackBufferSurface,
+							/* pDestPalette = */ nullptr, // Palette not needed for YUY2
+							DstRect,
+							/* pSrcSurface = */ pOverlayBufferSurface,
+							/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
+							SrcRect,
+							/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+							/* ColorKey = */ ColorKey) != D3D_OK) {
+								DbgPrintf("EmuD3D8 : UpdateOverlay could not convert buffer!\n");
+							}
+					}
+				}
+
+				pBackBufferSurface->Release();
 			}
 
 			// Update overlay if present was not called since the last call to
