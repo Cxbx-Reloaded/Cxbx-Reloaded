@@ -199,17 +199,15 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 void* MemoryManager::AllocateZeroed(size_t num, size_t size)
 {
-	// Removed as it pollutes the log as it is used quite heavily
-	//LOG_FORWARD(Allocate);
+	LOG_FORWARD(Allocate);
 
 	void* addr = Allocate(num * size);
-	if (addr == nullptr)  {
-		EmuWarning("MemoryManager:AllocZeroed Failed");
-		return nullptr;
-	}
 	
-	memset(addr, 0, num * size);
-	return addr;
+	if (addr != nullptr)  {
+		memset(addr, 0, num * size);	
+	}
+		
+	RETURN(addr);
 }
 
 bool MemoryManager::IsAllocated(void* addr)
