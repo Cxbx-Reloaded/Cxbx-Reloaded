@@ -3442,7 +3442,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetI3DL2Source)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetI3DL2Source
+// * patch: IDirectSoundBuffer_SetAllParameters
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
@@ -3465,7 +3465,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 
     
 
-    return S_OK;
+    return DS_OK;
 }
 
 // ******************************************************************

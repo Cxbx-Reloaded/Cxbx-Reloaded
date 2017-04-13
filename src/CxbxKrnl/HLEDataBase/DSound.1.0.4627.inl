@@ -1576,7 +1576,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetAllParameters, 4134, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetAllParameters, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetAllParameters, 4134, ALIAS, IDirectSoundBuffer_SetAllParameters), // Use that for now. Okay, it's your call pal...
+	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4134, PATCH), // Use that for now. Okay, it's your call pal...
 	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Pause, 4928, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Pause, 4928, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Pause, 4928, PATCH),
