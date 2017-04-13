@@ -55,7 +55,6 @@ uint32 fcount = 0;
 void * funcExclude[2048] = { nullptr };
 
 uint32 g_BuildVersion;
-uint32 g_OrigBuildVersion;
 
 static std::vector<xbaddr> vCacheOut;
 
@@ -331,7 +330,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                     {
 						// Save D3D8 build version
 						g_BuildVersion = BuildVersion;
-						g_OrigBuildVersion = OrigBuildVersion;
 
 						xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -506,7 +504,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
      //               {
 					//	// Save D3D8 build version
 					//	g_BuildVersion = BuildVersion;
-					//	g_OrigBuildVersion = OrigBuildVersion;
 
      //                   xbaddr lower = pXbeHeader->dwBaseAddr;
      //                   xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
