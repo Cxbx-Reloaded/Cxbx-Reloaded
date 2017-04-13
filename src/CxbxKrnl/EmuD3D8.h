@@ -1757,6 +1757,11 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 VOID WINAPI EMUPATCH(D3DDevice_KickOff)();
 
 // ******************************************************************
+// * patch: D3DDevice_KickPushBuffer
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_KickPushBuffer)();
+
+// ******************************************************************
 // * patch: D3DDevice_GetTexture2
 // ******************************************************************
 X_D3DResource* WINAPI EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage);

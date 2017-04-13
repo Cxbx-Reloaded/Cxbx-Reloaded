@@ -9582,6 +9582,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_KickOff)()
 }
 
 // ******************************************************************
+// * patch: D3DDevice_KickPushBuffer
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_KickPushBuffer)()
+{
+		
+
+	DbgPrintf("EmuD3D8: EmuD3DDevice_KickPushBuffer()\n");
+
+	// TODO -oDxbx : Locate the current PushBuffer address, and supply that to RunPushBuffer (without a fixup)
+	EmuWarning("D3DDevice_KickPushBuffer is not yet implemented!");
+
+	
+}
+
+// ******************************************************************
 // * patch: D3DDevice_GetTexture2
 // ******************************************************************
 XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)

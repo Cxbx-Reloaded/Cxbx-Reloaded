@@ -2934,7 +2934,7 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3D_LazySetPointParams, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetMaterial, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_KickOff, 4627, ALIAS, D3DDevice_KickPushBuffer),
+	REGISTER_OOVPA(D3DDevice_KickPushBuffer, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
