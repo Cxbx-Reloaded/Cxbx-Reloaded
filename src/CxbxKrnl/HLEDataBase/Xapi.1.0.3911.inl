@@ -1093,7 +1093,7 @@ OOVPATable XAPI_3911[] = {
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	// REGISTER_OOVPA(lstrcmpiW, 3911, PATCH),
-	REGISTER_OOVPA(XMountAlternateTitle, 3911, ALIAS, XMountAlternateTitleA),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitle, 3911, ALIAS, XUnmountAlternateTitleA),
 	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
 	REGISTER_OOVPA(XLaunchNewImage, 3911, ALIAS, XLaunchNewImageA),

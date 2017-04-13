@@ -1163,9 +1163,9 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 }
 
 // ******************************************************************
-// * patch: XMountAlternateTitle
+// * patch: XMountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitleA)
 (
 	LPCSTR		lpRootPath,               
 	DWORD		dwAltTitleId,               

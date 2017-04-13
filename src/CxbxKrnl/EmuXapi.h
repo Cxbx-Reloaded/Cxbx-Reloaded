@@ -695,9 +695,9 @@ DWORD WINAPI EMUPATCH(XMountMURootA)
 );
 
 // ******************************************************************
-// * patch: XMountAlternateTitle
+// * patch: XMountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XMountAlternateTitle)
+DWORD WINAPI EMUPATCH(XMountAlternateTitleA)
 (
 	LPCSTR		lpRootPath,               
 	DWORD		dwAltTitleId,               
