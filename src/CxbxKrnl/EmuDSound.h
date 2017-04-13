@@ -917,9 +917,9 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundStream_SetHeadroom
+// * patch: DirectSound_CDirectSoundStream_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetHeadroom)
+HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetHeadroom)
 (
     PVOID   pThis,
     DWORD   dwHeadroom

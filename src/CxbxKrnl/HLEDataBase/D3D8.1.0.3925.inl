@@ -3403,17 +3403,17 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetTile, 3925, 9)
 
-        // D3DDevice_SetTileNoWait+0x06 : sub esp, 0x18
+        // D3DDevice_SetTile+0x06 : sub esp, 0x18
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0xEC }, // (Offset,Value)-Pair #2
         { 0x08, 0x18 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_SetTileNoWait+0x15 : cmp [esi+4], eax
+        // D3DDevice_SetTile+0x15 : cmp [esi+4], eax
         { 0x15, 0x39 }, // (Offset,Value)-Pair #4
         { 0x16, 0x46 }, // (Offset,Value)-Pair #5
         { 0x17, 0x04 }, // (Offset,Value)-Pair #6
 
-        // D3DDevice_SetTileNoWait+0x7E : lea edi, [edx+ecx*8+21BCh]
+        // D3DDevice_SetTile+0x7E : lea edi, [edx+ecx*8+21BCh]
         { 0x7E, 0x83 }, // (Offset,Value)-Pair #7
         { 0x7F, 0xC4 }, // (Offset,Value)-Pair #8
         { 0x80, 0x18 }, // (Offset,Value)-Pair #9
@@ -3819,7 +3819,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginStateBlock, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndStateBlock, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 3925, ALIAS, D3DDevice_SetTile),
+	REGISTER_OOVPA(D3DDevice_SetTile, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetModelView, 3925, PATCH),

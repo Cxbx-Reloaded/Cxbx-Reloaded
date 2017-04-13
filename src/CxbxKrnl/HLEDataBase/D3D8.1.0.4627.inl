@@ -524,21 +524,21 @@ OOVPA_NO_XREF(D3DDevice_GetTile, 4627, 11)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTileNoWait
+// * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 4627, 11)
+OOVPA_NO_XREF(D3DDevice_SetTile, 4627, 11)
 
-        // D3DDevice_SetTileNoWait+0x06 : sub esp, 0x18
+        // D3DDevice_SetTile+0x06 : sub esp, 0x18
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0xEC }, // (Offset,Value)-Pair #2
         { 0x08, 0x18 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_SetTileNoWait+0x15 : cmp [esi+4], eax
+        // D3DDevice_SetTile+0x15 : cmp [esi+4], eax
         { 0x15, 0x39 }, // (Offset,Value)-Pair #4
         { 0x16, 0x46 }, // (Offset,Value)-Pair #5
         { 0x17, 0x04 }, // (Offset,Value)-Pair #6
 
-        // D3DDevice_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0x2260]
+        // D3DDevice_SetTile+0x3D : lea edi, [edx+ecx*8+0x2260]
         { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
         { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
         { 0x3F, 0xCA }, // (Offset,Value)-Pair #9
@@ -2742,7 +2742,7 @@ OOVPA_END;
 OOVPATable D3D8_4627[] = {
 
 	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, PATCH),
-	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, ALIAS, D3D_CreateDeviceX),
+	REGISTER_OOVPA(D3D_CreateDeviceX, 4627, XREF), // If hitting a Breakpoint, redirect to Direct3D_CreateDevice.
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4361, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
@@ -2765,7 +2765,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTile, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTile, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4134, PATCH),
@@ -2934,7 +2934,7 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3D_LazySetPointParams, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetMaterial, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_KickOff, 4627, ALIAS, D3DDevice_KickPushBuffer),
+	REGISTER_OOVPA(D3DDevice_KickPushBuffer, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!

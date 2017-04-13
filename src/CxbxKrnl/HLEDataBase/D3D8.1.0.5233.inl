@@ -521,9 +521,9 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShader, 5233, 14)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTileNoWait
+// * D3DDevice_SetTile
 // ******************************************************************
-#define D3DDevice_SetTileNoWait_5233 D3DDevice_SetTileNoWait_5028
+#define D3DDevice_SetTile_5233 D3DDevice_SetTile_5028
 
 // ******************************************************************
 // * D3DDevice_AddRef
@@ -985,7 +985,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTile, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginStateBlock, 4361, PATCH),
