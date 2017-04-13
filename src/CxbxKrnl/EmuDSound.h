@@ -573,6 +573,16 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    const LONG*             alVolumes
+);
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+(
+    LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins    // TODO: fill this out
 );
 

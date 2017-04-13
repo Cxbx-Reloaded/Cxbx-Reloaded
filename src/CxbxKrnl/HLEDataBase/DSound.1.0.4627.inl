@@ -210,9 +210,9 @@ OOVPA_END;
 #define DirectSound_CDirectSoundBuffer_SetMixBinVolumes_4627 DirectSound_CDirectSoundBuffer_SetMixBinVolumes_4134
 
 // ******************************************************************
-// * IDirectSoundBuffer_SetMixBinVolumes
+// * IDirectSoundBuffer_SetMixBinVolumes2
 // ******************************************************************
-#define IDirectSoundBuffer_SetMixBinVolumes_4627 IDirectSoundBuffer_SetMixBinVolumes_4134
+#define IDirectSoundBuffer_SetMixBinVolumes2_4627 IDirectSoundBuffer_SetMixBinVolumes2_4134
 
 // ******************************************************************
 // * DirectSound_CDirectSound::SetPositionA
@@ -544,9 +544,9 @@ OOVPA_XREF(CMcpxStream_Pause, 4928, 11,
 OOVPA_END;
 
 // ******************************************************************
-// * DirectSound_CDirectSoundStream_SetMixBinVolumes
+// * DirectSound_CDirectSoundStream_SetMixBinVolumes2
 // ******************************************************************
-#define DirectSound_CDirectSoundStream_SetMixBinVolumes_4627 DirectSound_CDirectSoundStream_SetMixBinVolumes_4134
+#define DirectSound_CDirectSoundStream_SetMixBinVolumes2_4627 DirectSound_CDirectSoundStream_SetMixBinVolumes2_4134
 
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
@@ -1471,7 +1471,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBinVolumes, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBinVolumes, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBinVolumes, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetPositionA, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetPositionA, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
@@ -1566,7 +1566,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetFormat, 4361, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes2, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, PATCH),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 4627, XREF),
