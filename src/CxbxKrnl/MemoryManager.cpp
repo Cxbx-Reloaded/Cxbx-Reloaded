@@ -274,8 +274,8 @@ size_t MemoryManager::QueryAllocationSize(void* addr)
 	EnterCriticalSection(&m_CriticalSection);
 	TypedMemoryBlock *info = FindContainingTypedMemoryBlock(addr);
 	if (info != nullptr) {
-		// Return the remaining size in this block		
-		ret = info->block.size - ((size_t)addr - (size_t)info->block.addr);
+		// Return the total size in this block		
+		ret = info->block.size;// -((size_t)addr - (size_t)info->block.addr);
 	}
 	else {
 #if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)?
