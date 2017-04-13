@@ -1692,9 +1692,9 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 5558, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLoopRegion, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 5788, PATCH),
-	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Stop, 5788, XREF),
+	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Stop, 5788, XREF), // TODO: Use XREF ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z?
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_StopEx, 5788, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 5788, ALIAS, DirectSound_CDirectSoundBuffer_StopEx),
+	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 5788, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetDistanceFactorA, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetRolloffFactor, 5788, XREF),
