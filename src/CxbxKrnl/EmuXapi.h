@@ -596,9 +596,9 @@ BOOL WINAPI EMUPATCH(GetOverlappedResult)
 );
 
 // ******************************************************************
-// * patch: XLaunchNewImage
+// * patch: XLaunchNewImageA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XLaunchNewImage)
+DWORD WINAPI EMUPATCH(XLaunchNewImageA)
 (
 	LPCSTR			lpTitlePath,
 	PLAUNCH_DATA	pLaunchData
