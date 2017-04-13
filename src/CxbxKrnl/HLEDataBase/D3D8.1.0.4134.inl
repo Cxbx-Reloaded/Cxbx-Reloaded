@@ -1634,17 +1634,17 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetTile, 4134, 11)
 
-        // D3DDevice_SetTileNoWait+0x00 : sub esp, 0x18
+        // D3DDevice_SetTile+0x00 : sub esp, 0x18
         { 0x00, 0x83 }, // (Offset,Value)-Pair #1
         { 0x01, 0xEC }, // (Offset,Value)-Pair #2
         { 0x02, 0x18 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_SetTileNoWait+0x16 : cmp [esi+4], eax
+        // D3DDevice_SetTile+0x16 : cmp [esi+4], eax
         { 0x16, 0x39 }, // (Offset,Value)-Pair #4
         { 0x17, 0x46 }, // (Offset,Value)-Pair #5
         { 0x18, 0x04 }, // (Offset,Value)-Pair #6
 
-        // D3DDevice_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0x211C]
+        // D3DDevice_SetTile+0x3D : lea edi, [edx+ecx*8+0x211C]
         { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
         { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
         { 0x3F, 0xCB }, // (Offset,Value)-Pair #9
@@ -2123,7 +2123,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTile, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 4134, ALIAS, D3DDevice_SetTile),
+	REGISTER_OOVPA(D3DDevice_SetTile, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderSize, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_KickOff, 4134, ALIAS, D3DDevice_KickOff),

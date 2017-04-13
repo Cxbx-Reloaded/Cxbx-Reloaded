@@ -322,21 +322,21 @@ OOVPA_NO_XREF(D3DDevice_SetIndices, 5028, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTileNoWait
+// * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 5028, 11)
+OOVPA_NO_XREF(D3DDevice_SetTile, 5028, 11)
 
-        // D3DDevice_SetTileNoWait+0x06 : sub esp, 0x18
+        // D3DDevice_SetTile+0x06 : sub esp, 0x18
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0xEC }, // (Offset,Value)-Pair #2
         { 0x08, 0x18 }, // (Offset,Value)-Pair #3
 
-        // D3DDevice_SetTileNoWait+0x15 : cmp [esi+4], eax
+        // D3DDevice_SetTile+0x15 : cmp [esi+4], eax
         { 0x15, 0x39 }, // (Offset,Value)-Pair #4
         { 0x16, 0x46 }, // (Offset,Value)-Pair #5
         { 0x17, 0x04 }, // (Offset,Value)-Pair #6
 
-        // D3DDevice_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0xXXXX]
+        // D3DDevice_SetTile+0x3D : lea edi, [edx+ecx*8+0xXXXX]
         { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
         { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
         { 0x3F, 0xCA }, // (Offset,Value)-Pair #9
@@ -831,7 +831,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTile, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTile, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4134, PATCH),

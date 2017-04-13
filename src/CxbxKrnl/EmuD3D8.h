@@ -354,9 +354,9 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetTile)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetTileNoWait
+// * patch: D3DDevice_SetTile
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetTileNoWait)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetTile)
 (
     DWORD               Index,
     CONST X_D3DTILE    *pTile

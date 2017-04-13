@@ -2476,9 +2476,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetTile)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetTileNoWait
+// * patch: D3DDevice_SetTile
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTileNoWait)
+// * Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTile)
 (
     DWORD               Index,
     CONST X_D3DTILE    *pTile
@@ -2486,7 +2488,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTileNoWait)
 {
     
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTileNoWait\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTile\n"
            "(\n"
            "   Index               : 0x%.08X\n"
            "   pTile               : 0x%.08X\n"
