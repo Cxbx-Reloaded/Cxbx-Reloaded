@@ -1807,7 +1807,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(XFileCreateMediaObjectAsync, 5849, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetFormat, 5558, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetPitch, 5849, PATCH),
-	REGISTER_OOVPA(IDirectSoundStream_SetHeadroom, 5849, ALIAS, DirectSound_CDirectSoundStream_SetHeadroom),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetHeadroom, 5849, PATCH),
 	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Play2, 5849, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Play, 5849, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 5849, PATCH),

@@ -2040,9 +2040,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundStream_SetHeadroom
+// * patch: DirectSound_CDirectSoundStream_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetHeadroom)
 (
     PVOID   pThis,
     DWORD   dwHeadroom
@@ -2050,7 +2050,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundStream_SetHeadroom\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetHeadroom\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwHeadroom                : 0x%.08X\n"
