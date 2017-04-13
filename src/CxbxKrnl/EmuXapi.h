@@ -705,9 +705,9 @@ DWORD WINAPI EMUPATCH(XMountAlternateTitleA)
 );
 
 // ******************************************************************
-// * patch: XUnmountAlternateTitle
+// * patch: XUnmountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XUnmountAlternateTitle)(CHAR chDrive);
+DWORD WINAPI EMUPATCH(XUnmountAlternateTitleA)(CHAR chDrive);
 
 // ******************************************************************
 // * patch: MoveFileA

@@ -442,7 +442,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 4627, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 4928, PATCH),
-	REGISTER_OOVPA(XUnmountAlternateTitle, 4627, ALIAS, XUnmountAlternateTitleA),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 4627, PATCH),
 	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),

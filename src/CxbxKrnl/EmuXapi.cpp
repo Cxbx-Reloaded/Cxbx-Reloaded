@@ -1185,9 +1185,9 @@ DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitleA)
 }
 
 // ******************************************************************
-// * patch: XUnmountAlternateTitle
+// * patch: XUnmountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitleA)
 (
 	CHAR chDrive
 )
