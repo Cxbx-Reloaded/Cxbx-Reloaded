@@ -1738,7 +1738,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(DirectSoundDoWork, 5788, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SynchPlayback, 5558, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound8_EnableHeadphones, 5558, ALIAS, IDirectSound_EnableHeadphones),
+	REGISTER_OOVPA(IDirectSound8_EnableHeadphones, 5558, PATCH),
 	REGISTER_OOVPA(XAudioDownloadEffectsImage, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_GetOutputLevels, 5558, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_GetOutputLevels, 5558, XREF),
