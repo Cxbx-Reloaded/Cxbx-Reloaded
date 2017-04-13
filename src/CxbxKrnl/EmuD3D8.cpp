@@ -6271,21 +6271,20 @@ int YUY2ToARGB(const uint8* src_yuy2,
 }
 
 
-IDirect3DSurface8 ExtraXRGBSurface = nullptr; // this is our pointer to the memory location containing our copy of the front buffer
+XTL::IDirect3DSurface8 *ExtraXRGBSurface = nullptr; // this is our pointer to the memory location containing our copy of the front buffer
 
-void AssureExtraXRGBSurface(IDirect3DSurface8 BackBufferSurface, std::string Caller)
+void AssureExtraXRGBSurface(XTL::IDirect3DSurface8 *pBackBufferSurface, std::string Caller)
 {
-	D3DSURFACE_DESC SurfaceDesc;
+	XTL::D3DSURFACE_DESC SurfaceDesc;
 	HRESULT aResult;
 
 	// Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
 	if (ExtraXRGBSurface == nullptr) {
-		BackBufferSurface.GetDesc(&SurfaceDesc);
-		aResult = IDirect3DDevice_CreateImageSurface(
-			g_pD3DDevice,
+		pBackBufferSurface->GetDesc(&SurfaceDesc);
+		aResult = g_pD3DDevice8->CreateImageSurface(
 			SurfaceDesc.Width,
 			SurfaceDesc.Height,
-			D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
+			XTL::D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
 			&ExtraXRGBSurface);
 		if FAILED(aResult) {
 //			DbgPrintf("EmuD3D8 : %s could not create a extra buffer!\n", DxbxD3DErrorString(aResult), Caller);
@@ -6409,16 +6408,26 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				pBackBufferSurface->GetDesc(&BackBufferDesc);
 
 				// Determine if the overlay can be written directly to the backbuffer :
-				bool CanWriteToBackbuffer = (DstRect->left == SrcRect->left)
-					&& (DstRect->right == SrcRect->right)
-					&& (DstRect->top == SrcRect->top)
-					&& (DstRect->bottom == SrcRect->bottom)
-					&& ((BackBufferDesc.Format == D3DFMT_A8R8G8B8) || (BackBufferDesc.Format == D3DFMT_X8R8G8B8));
+				bool CanWriteToBackbuffer = false;
+				if ((BackBufferDesc.Format == D3DFMT_A8R8G8B8) || (BackBufferDesc.Format == D3DFMT_X8R8G8B8)) {
+					if (DstRect == SrcRect) {
+						CanWriteToBackbuffer = true;
+					} else {
+						if (DstRect != nullptr && SrcRect != nullptr) {
+							if ((DstRect->left == SrcRect->left)
+								&& (DstRect->right == SrcRect->right)
+								&& (DstRect->top == SrcRect->top)
+								&& (DstRect->bottom == SrcRect->bottom)) {
+								CanWriteToBackbuffer = true;
+							}
+						}
+					}
+				}
 
 				// If we can write to the back buffer, work with that, else use the screenshotbuffer as temporary surface :
-				if (CanWriteToBackbuffer)
+				if (CanWriteToBackbuffer) {
 					pOverlayBufferSurface = pBackBufferSurface;
-				else {
+				} else {
 					AssureExtraXRGBSurface(pBackBufferSurface, "EmuD3DDevice_UpdateOverlay");
 					pOverlayBufferSurface = ExtraXRGBSurface; // Note : This surface is always in ARGB format
 				}
@@ -6438,7 +6447,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					// full color conversion (YUY2->XRGB)
 					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, BackBufferDesc.Width * 4, W, H);
 
-					pOverlayBufferSurface->UnlockRect();
+					pOverlayBufferSurface->UnlockRect(); // TODO : Could this be done after calling D3DXLoadSurfaceFromSurface (and would that improve performance)?
 
 					if (!CanWriteToBackbuffer) {
 						// When the overlay could not directly be converted into the back buffer,
