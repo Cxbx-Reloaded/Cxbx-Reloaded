@@ -1343,7 +1343,7 @@ static void EmuUnswizzleTextureStages()
 					//    break;
 					//CxbxKrnlCleanup("Temporarily unsupported format for active texture unswizzle (0x%.08X)", SurfaceDesc.Format);
 
-					hRet = pTexture->LockRect(v, &LockedRect, NULL, NULL);
+					hRet = pTexture->LockRect(v, &LockedRect, NULL, 0);
 
 					if(FAILED(hRet))
 						continue;
@@ -1355,7 +1355,7 @@ static void EmuUnswizzleTextureStages()
 					RECT  iRect = {0,0,0,0};
 					POINT iPoint = {0,0};
 
-					void *pTemp = malloc(dwHeight*dwPitch);
+					void *pTemp = malloc(dwPitch*dwHeight);
 
 					XTL::EmuUnswizzleRect
 					(
@@ -3227,7 +3227,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
              */
             D3DLOCKED_RECT LockedRect;
 
-            pTexture->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
+            pTexture->EmuTexture8->LockRect(0, &LockedRect, NULL, D3DLOCK_READONLY);
 			Texture_Data = (DWORD)LockedRect.pBits;
             g_DataToTexture.insert(Texture_Data, pTexture);
             pTexture->EmuTexture8->UnlockRect(0);
@@ -6171,7 +6171,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			IDirect3DSurface8 *pBackBuffer = 0;
 			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
 			// if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
-			if (hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
+			if (hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, 0) == D3D_OK) // TODO : Use DstRect
 			{
 				uint08 *pbSource = (uint08*)pSurface->Lock;
 				uint08 *pbDest = (uint08*)LockedRectDest.pBits;
@@ -9642,7 +9642,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 		{
 			void* ptr = g_MemoryManager.Allocate( BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
 
-			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, 0 ) ) )
+			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, D3DLOCK_READONLY ) ) )
 			{
 				CopyMemory( ptr, LockedRect.pBits, BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
 				
