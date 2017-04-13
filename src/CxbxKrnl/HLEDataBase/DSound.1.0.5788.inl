@@ -1708,7 +1708,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetVolume, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetVolume, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 5233, PATCH),
-	REGISTER_OOVPA(IDirectSoundStream_SetVolume, 5233, ALIAS, DirectSound_CDirectSoundStream_SetVolume), // This is actually the XREF we are using
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetVolume, 5233, PATCH), // This is actually the XREF we are using
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_PlayEx, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 5788, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetRolloffFactor, 5788, XREF),
