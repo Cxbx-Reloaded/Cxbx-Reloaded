@@ -675,6 +675,34 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    const LONG*             alVolumes
+)
+{
+        
+
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBinVolumes\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+           "   dwMixBinMask        : 0x%.08X\n"
+           "   alVolumes           : 0x%.08X\n"
+           ");\n",
+           pThis, dwMixBinMask, alVolumes);
+
+    // NOTE: Use this function for XDK 3911 only because the implementation was changed
+    // somewhere around the December 2001 (4134) update (or earlier, maybe).
+
+    EmuWarning("EmuIDirectSoundBuffer_SetMixBinVolumes not yet implemented");
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+(
+    LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
 )
 {
@@ -685,6 +713,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
                ");\n",
                pThis, pMixBins);
 
+    // NOTE: Read the above notes, and the rest is self explanitory...
     // TODO: Actually do something
 
     return DS_OK;
