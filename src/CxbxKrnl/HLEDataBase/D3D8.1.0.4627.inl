@@ -1747,7 +1747,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LoadVertexShaderProgram
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 4627, 9)
+OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 4627, 8)
 
         { 0x0B, 0x2D },
         { 0x18, 0x10 },
@@ -1757,7 +1757,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 4627, 9)
         { 0x1C, 0x8D },
         { 0x25, 0xE0 },
         { 0x32, 0x5F },
-        { 0x61, 0xC2 },
 OOVPA_END;
 
 // ******************************************************************
