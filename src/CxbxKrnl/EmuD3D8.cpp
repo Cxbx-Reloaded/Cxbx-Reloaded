@@ -53,6 +53,7 @@ namespace xboxkrnl
 #include "EmuAlloc.h"
 #include "MemoryManager.h"
 #include "EmuXTL.h"
+#include "libyuv_extract.h" // for YUY2ToARGB
 
 #include <assert.h>
 #include <process.h>
@@ -6062,13 +6063,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     return;
 }
 
-// Based on http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
-inline uint08 ClampIntToByte(int x)
-{
-	int r = x > 255 ? 255 : x;
-	return r < 0 ? 0 : (uint08)r;
-}
-
 // ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -6183,8 +6177,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			{
 				uint08 *pbSource = (uint08*)pSurface->Lock;
 				uint08 *pbDest = (uint08*)LockedRectDest.pBits;
-				uint32 dx = 0, dy = 0;
-				uint32 dwImageSize = g_dwOverlayP*g_dwOverlayH;
 
 				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 				D3DSURFACE_DESC BackBufferDesc;
@@ -6196,89 +6188,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
 				uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
 
-				// grayscale - TODO : Either remove or make configurable
-				if(false)
-				{
-					// Clip to backbuffer height :
-					for(uint32 y=0;y<H;y++)
-					{
-						uint32 stop = g_dwOverlayW *4;
-						for(uint32 x=0;x<stop;x+=4)
-						{
-							uint08 Y = *pbSource;
-
-							// Clip to backbuffer width :
-							if (x / 4 < W)
-							{
-								pbDest[x + 0] = Y;
-								pbDest[x + 1] = Y;
-								pbDest[x + 2] = Y;
-								pbDest[x + 3] = 0xFF;
-							}
-
-							pbSource += 2;
-						}
-
-						pbDest += LockedRectDest.Pitch;
-					}
-				}
 				// full color conversion (YUY2->XRGB)
-				else
-				{
-					// The following is a combination of https://pastebin.com/mDcwqJV3 and
-					// https://en.wikipedia.org/wiki/YUV#Y.E2.80.B2UV422_to_RGB888_conversion
-					// TODO : Improve this to use a library, or SIMD instructions like in
-					// https://github.com/descampsa/yuv2rgb/blob/master/yuv_rgb.c
-					// https://github.com/lemenkov/libyuv/blob/master/source/row_win.cc#L100
-					const int K1 = int(1.402f * (1 << 16));
-					const int K2 = int(0.334f * (1 << 16));
-					const int K3 = int(0.714f * (1 << 16));
-					const int K4 = int(1.772f * (1 << 16));
-
-					for(uint32 v=0;v<dwImageSize;v+=4)
-					{
-						// Clip to backbuffer width :
-						if (dx < W)
-						{
-							uint8_t Y0 = pbSource[0];
-							uint8_t Cb = pbSource[1];
-							uint8_t Y1 = pbSource[2];
-							uint8_t Cr = pbSource[3];
-
-							int nCb = Cb - 128;
-							int nCr = Cr - 128;
-
-							int Rd =  (K1 * nCr) >> 16;
-							int Gd = ((K2 * nCb) + (K3 * nCr)) >> 16;
-							int Bd =  (K4 * nCb) >> 16;
-
-							uint32 i = (dy * LockedRectDest.Pitch) + (dx * 4);
-
-							pbDest[i + 0] = ClampIntToByte((int)Y0 + Bd);
-							pbDest[i + 1] = ClampIntToByte((int)Y0 - Gd);
-							pbDest[i + 2] = ClampIntToByte((int)Y0 + Rd);
-							pbDest[i + 3] = 0xFF;
-
-							pbDest[i + 4] = ClampIntToByte((int)Y1 + Bd);
-							pbDest[i + 5] = ClampIntToByte((int)Y1 - Gd);
-							pbDest[i + 6] = ClampIntToByte((int)Y1 + Rd);
-							pbDest[i + 7] = 0xFF;
-						}
-
-						pbSource += 4;
-						dx += 2;
-						if ((dx % g_dwOverlayW) == 0)
-						{
-							dy++;
-							// Clip to backbuffer height :
-							if (dy >= H)
-								break;
-
-							dx = 0;
-						}
-
-					}
-				}
+				YUY2ToARGB(pbSource, g_dwOverlayP, pbDest, LockedRectDest.Pitch, W, H);
 
 				pBackBuffer->UnlockRect();
 				pBackBuffer->Release();
