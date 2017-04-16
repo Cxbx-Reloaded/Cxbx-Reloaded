@@ -620,15 +620,15 @@ OOVPA_END;
 */
 
 // ******************************************************************
-// * D3DDevice_SetTileNoWait
+// * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 5788, 10)
+OOVPA_NO_XREF(D3DDevice_SetTile, 5788, 10)
 
-	// D3DDevice_SetTileNoWait+0x00: sub esp, 0x1C
+	// D3DDevice_SetTile+0x00: sub esp, 0x1C
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },
 	{ 0x02, 0x1C },
-	// D3DDevice_SetTileNoWait+0x45: lea ebx, [ebx+ebp*8+0x1AC0]
+	// D3DDevice_SetTile+0x45: lea ebx, [ebx+ebp*8+0x1AC0]
 	{ 0x45, 0x8D },
 	{ 0x46, 0x9C },
 	{ 0x47, 0xEB },
@@ -1330,7 +1330,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5788, PATCH),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5788, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTile, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4928, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5788, PATCH),

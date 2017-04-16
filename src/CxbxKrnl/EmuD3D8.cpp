@@ -2477,9 +2477,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetTile)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetTileNoWait
+// * patch: D3DDevice_SetTile
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTileNoWait)
+// * Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTile)
 (
     DWORD               Index,
     CONST X_D3DTILE    *pTile
@@ -2487,7 +2489,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTileNoWait)
 {
     
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTileNoWait\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTile\n"
            "(\n"
            "   Index               : 0x%.08X\n"
            "   pTile               : 0x%.08X\n"
@@ -6235,7 +6237,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
 
 					// full color conversion (YUY2->XRGB)
-					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, LockedRectDest.Pitch * 4, W, H);
+					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, LockedRectDest.Pitch, W, H);
 
 					pOverlayBufferSurface->UnlockRect(); // TODO : Could this be done after calling D3DXLoadSurfaceFromSurface (and would that improve performance)?
 
@@ -9554,6 +9556,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_KickOff)()
 //	__asm int 3;
 
 		
+}
+
+// ******************************************************************
+// * patch: D3DDevice_KickPushBuffer
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_KickPushBuffer)()
+{
+		
+
+	DbgPrintf("EmuD3D8: EmuD3DDevice_KickPushBuffer()\n");
+
+	// TODO -oDxbx : Locate the current PushBuffer address, and supply that to RunPushBuffer (without a fixup)
+	EmuWarning("D3DDevice_KickPushBuffer is not yet implemented!");
+
+	
 }
 
 // ******************************************************************
