@@ -6235,7 +6235,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
 
 					// full color conversion (YUY2->XRGB)
-					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, BackBufferDesc.Width * 4, W, H);
+					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, LockedRectDest.Pitch * 4, W, H);
 
 					pOverlayBufferSurface->UnlockRect(); // TODO : Could this be done after calling D3DXLoadSurfaceFromSurface (and would that improve performance)?
 
