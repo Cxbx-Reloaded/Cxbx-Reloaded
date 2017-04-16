@@ -6187,7 +6187,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
 
 				// full color conversion (YUY2->XRGB)
-				YUY2ToARGB(pbSource, g_dwOverlayP, pbDest, BackBufferDesc.Width * 4, W, H);
+				YUY2ToARGB(pbSource, g_dwOverlayP, pbDest, LockedRectDest.Pitch, W, H);
 
 				pBackBuffer->UnlockRect();
 				pBackBuffer->Release();
