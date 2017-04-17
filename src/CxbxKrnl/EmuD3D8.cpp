@@ -113,7 +113,7 @@ static int                          g_iWireframe    = 0;
 extern uint32						g_BuildVersion;
 
 // resource caching for _Register
-static XTL::X_D3DResource pCache[16] = {0};
+std::vector<DWORD> g_RegisteredResources;
 
 // current active index buffer
 static XTL::X_D3DIndexBuffer       *g_pIndexBuffer  = NULL; // current active index buffer
@@ -1226,34 +1226,15 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if((pResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
         return;
 
-    int v=0;
-
-    for(v=0;v<16;v++)
-    {
-        if(pCache[v].Data == pResource->Data && pResource->Data != 0)
-        {
-            pResource->EmuResource8 = pCache[v].EmuResource8;
-            return;
-        }
-    }
+	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pResource->Data) != g_RegisteredResources.end()) {
+		return;
+	}
 
     XTL::EMUPATCH(D3DResource_Register)(pResource, 0/*(PVOID)pResource->Data*/);
         
 
-    if(pResource->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
-    {
-        for(v=0;v<16;v++)
-        {
-            if(pCache[v].Data == 0)
-            {
-                pCache[v].Data = pResource->Data;
-                pCache[v].EmuResource8 = pResource->EmuResource8;
-                break;
-            }
-
-            if(v == 16)
-                CxbxKrnlCleanup("X_D3DResource cache is maxed out!");
-        }
+    if(pResource->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE) {
+		g_RegisteredResources.push_back(pResource->Data);
     }
 }
 
@@ -5201,14 +5182,10 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
         }
         else if(pResource8 != nullptr)
         {
-            for(int v=0;v<16;v++)
-            {
-                if(pCache[v].Data == pThis->Data && pThis->Data != 0)
-                {
-                    pCache[v].Data = 0;
-                    break;
-                }
-            }
+			auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pThis->Data);
+			if (it != g_RegisteredResources.end()) {
+				g_RegisteredResources.erase(it);
+			}
 
             #ifdef _DEBUG_TRACE_VB
             D3DRESOURCETYPE Type = pResource8->GetType();
