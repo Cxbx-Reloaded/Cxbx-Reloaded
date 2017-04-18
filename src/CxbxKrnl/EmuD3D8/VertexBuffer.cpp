@@ -52,10 +52,10 @@
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // inline vertex buffer emulation
-XTL::DWORD                  *XTL::g_pIVBVertexBuffer = 0;
+XTL::DWORD                  *XTL::g_pIVBVertexBuffer = nullptr;
 XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
-struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
+struct XTL::_D3DIVB         *XTL::g_IVBTable = nullptr;
 extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
@@ -1055,7 +1055,7 @@ VOID XTL::EmuFlushIVB()
 {
     XTL::EmuUpdateDeferredStates();
 
-    DWORD *pdwVB = (DWORD*)g_IVBTable;
+    DWORD *pdwVB = (DWORD*)g_pIVBVertexBuffer;
 
     UINT uiStride = 0;
 
@@ -1080,23 +1080,18 @@ VOID XTL::EmuFlushIVB()
 
     DbgPrintf("g_IVBTblOffs := %d\n", g_IVBTblOffs);
 
-    for(uint v=0;v<g_IVBTblOffs;v++)
-    {
-        DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+    DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 
+	for(uint v=0;v<g_IVBTblOffs;v++)
+    {
         if(dwPos == D3DFVF_XYZ)
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*3);
-            }
-
             DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
- 
         }
         else if(dwPos == D3DFVF_XYZRHW)
         {
@@ -1104,11 +1099,6 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Rhw;
-
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*4);
-            }
 
             DbgPrintf("IVB Position := {%f, %f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
         }
@@ -1119,14 +1109,8 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
 			*(FLOAT*)pdwVB++ = g_IVBTable[v].Blend1;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*4);
-            }
-
 			DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1);
         }
-
         else
         {
 			CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
@@ -1139,23 +1123,12 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.z;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*3);
-            }
-
             DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z);
- 
         }
 
         if(dwCurFVF & D3DFVF_DIFFUSE)
         {
             *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(DWORD);
-            }
 
             DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
         }
@@ -1164,25 +1137,13 @@ VOID XTL::EmuFlushIVB()
         {
             *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(DWORD);
-            }
-
             DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
         }
-
-        DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 
         if(dwTexN >= 1)
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
 
             DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
         }
@@ -1192,11 +1153,6 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.y;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
-
             DbgPrintf("IVB TexCoord2 := {%f, %f}\n", g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
         }
 
@@ -1204,11 +1160,6 @@ VOID XTL::EmuFlushIVB()
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.y;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
 
             DbgPrintf("IVB TexCoord3 := {%f, %f}\n", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
         }
@@ -1218,21 +1169,29 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.y;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
-
             DbgPrintf("IVB TexCoord4 := {%f, %f}\n", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
         }
-    }
+
+		uint VertexBufferUsage = (BYTE *)pdwVB - (BYTE *)g_pIVBVertexBuffer;
+
+		if (v == 0)
+		{
+			// Stride is equal to the delta of the first vertex
+			uiStride = VertexBufferUsage;
+		}
+
+		if (VertexBufferUsage >= IVB_BUFFER_SIZE)
+		{
+			CxbxKrnlCleanup("Overflow g_pIVBVertexBuffer  : %d", v);
+		}
+	}
 
     VertexPatchDesc VPDesc;
 
     VPDesc.PrimitiveType = g_IVBPrimitiveType;
     VPDesc.dwVertexCount = g_IVBTblOffs;
     VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = g_IVBTable;
+    VPDesc.pVertexStreamZeroData = g_pIVBVertexBuffer;
     VPDesc.uiVertexStreamZeroStride = uiStride;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 
