@@ -53,7 +53,6 @@ namespace xboxkrnl
 #include "EmuAlloc.h"
 #include "MemoryManager.h"
 #include "EmuXTL.h"
-#include "libyuv_extract.h" // for YUY2ToARGB
 
 #include <assert.h>
 #include <process.h>
@@ -1324,7 +1323,7 @@ static void EmuUnswizzleTextureStages()
 					//    break;
 					//CxbxKrnlCleanup("Temporarily unsupported format for active texture unswizzle (0x%.08X)", SurfaceDesc.Format);
 
-					hRet = pTexture->LockRect(v, &LockedRect, NULL, NULL);
+					hRet = pTexture->LockRect(v, &LockedRect, NULL, 0);
 
 					if(FAILED(hRet))
 						continue;
@@ -1336,7 +1335,7 @@ static void EmuUnswizzleTextureStages()
 					RECT  iRect = {0,0,0,0};
 					POINT iPoint = {0,0};
 
-					void *pTemp = malloc(dwHeight*dwPitch);
+					void *pTemp = malloc(dwPitch*dwHeight);
 
 					XTL::EmuUnswizzleRect
 					(
@@ -3210,7 +3209,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
              */
             D3DLOCKED_RECT LockedRect;
 
-            pTexture->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
+            pTexture->EmuTexture8->LockRect(0, &LockedRect, NULL, D3DLOCK_READONLY);
 			Texture_Data = (DWORD)LockedRect.pBits;
             g_DataToTexture.insert(Texture_Data, pTexture);
             pTexture->EmuTexture8->UnlockRect(0);
@@ -4255,6 +4254,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     return ret;
 }
 
+#define CXBX_SWAP_PRESENT_FORWARD (256 + 4 + 1) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+
 // ******************************************************************
 // * patch: D3DDevice_Present
 // ******************************************************************
@@ -4266,8 +4267,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
     PVOID       pDummy2
 )
 {
-    
-
+	// LOG_FORWARD("D3DDevice_Swap");
     DbgPrintf("EmuD3D8: EmuD3DDevice_Present\n"
            "(\n"
            "   pSourceRect         : 0x%.08X\n"
@@ -4277,69 +4277,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
            ");\n",
            pSourceRect, pDestRect, pDummy1, pDummy2);
 
-	HRESULT hRet = S_OK;
-	
-	CxbxReleaseBackBufferLock();
-
-	// TODO: Make a video option to wait for VBlank before calling Present.
-	// Makes syncing to 30fps easier (which is the native frame rate for Azurik
-	// and Halo).
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
-
-	hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
-
-	// Put primitives per frame in the title
-	/*{
-		char szString[64];
-
-		sprintf( szString, "Cxbx: PPF(%d)", g_dwPrimPerFrame );
-
-		SetWindowText( CxbxKrnl_hEmuParent, szString );
-
-		g_dwPrimPerFrame = 0;
-	}*/
-
-	// not really accurate because you definately dont always present on every vblank
-	g_VBData.Swap = g_VBData.VBlank;
-
-	if(g_VBData.VBlank == g_VBLastSwap + 1)
-		g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
-	else
-	{
-		g_VBData.Flags = 2; // D3DVBLANK_SWAPMISSED
-		g_SwapData.MissedVBlanks++;
-	}
-
-	// Handle Swap Callback function
-	{
-		g_SwapData.Swap++;
-
-		if(g_pSwapCallback != NULL) 
-		{
-				
-			g_pSwapCallback(&g_SwapData);
-				
-		}
-	}
-
-	g_bHackUpdateSoftwareOverlay = FALSE;
-
-    
-
-    return hRet;
+	return EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
 
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
+DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 (
     DWORD Flags
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_Swap\n"
            "(\n"
            "   Flags               : 0x%.08X\n"
@@ -4348,7 +4296,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-        EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
+		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
+			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
 	CxbxReleaseBackBufferLock();	
 
@@ -4358,7 +4307,33 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 
-    HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
+	g_pD3DDevice8->Present(0, 0, 0, 0);
+
+	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
+	{
+		// Put primitives per frame in the title
+		/*{
+			char szString[64];
+
+			sprintf( szString, "Cxbx: PPF(%d)", g_dwPrimPerFrame );
+
+			SetWindowText( CxbxKrnl_hEmuParent, szString );
+
+			g_dwPrimPerFrame = 0;
+		}*/
+
+		// TODO : Check if this should be done at Swap-not-Present-time too :
+		// not really accurate because you definately dont always present on every vblank
+		g_VBData.Swap = g_VBData.VBlank;
+
+		if (g_VBData.VBlank == g_VBLastSwap + 1)
+			g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
+		else
+		{
+			g_VBData.Flags = 2; // D3DVBLANK_SWAPMISSED
+			g_SwapData.MissedVBlanks++;
+		}
+	}
 
 	// Handle Swap Callback function
 	{
@@ -4374,9 +4349,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	g_bHackUpdateSoftwareOverlay = FALSE;
 
-    
+	DWORD result;
+	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
+		result = S_OK; // Present always returns success
+	else
+		result = g_SwapData.Swap; // Swap returns number of swaps
 
-    return hRet;
+    return result;
 }
 
 // ******************************************************************
@@ -4838,10 +4817,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                             }
                         }
 
-                        RECT  iRect  = {0,0,0,0};
-                        POINT iPoint = {0,0};
-
-                        BYTE *pSrc = (BYTE*)pBase;
+                        BYTE *pSrc = (BYTE*)pBase; // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                          ||( (DWORD)pBase == X_D3DRESOURCE_DATA_BACK_BUFFER))
@@ -4858,20 +4834,27 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                                 pSrc  += dwMipPitch;
                             }
                         }
-                        else
-                        {
+						else
+						{
 							if (level == 0)
 								pResource->Data = (DWORD)pSrc;
 
 							if((DWORD)pSrc == 0x80000000)
-                            {
+							{
 								// TODO: Fix or handle this situation..?
 								// This is probably an unallocated resource, mapped into contiguous memory (0x80000000)
-                            }
+							}
+							else if (pSrc == nullptr)
+							{
+								// TODO: Fix or handle this situation..?
+							}
 							else
 							{
 								if (bSwizzled)
 								{
+									RECT  iRect = { 0,0,0,0 };
+									POINT iPoint = { 0,0 };
+
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleRect
 									(
@@ -4889,23 +4872,35 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 								}
 								else
 								{
+									/* TODO : // Let DirectX convert the surface (including palette formats) :
+									if(!EmuXBFormatRequiresConversionToARGB) {
+										D3DXLoadSurfaceFromMemory(
+											pResource->EmuSurface8,
+											nullptr, // no destination palette
+											&destRect,
+											pSrc, // Source buffer
+											dwMipPitch, // Source pitch
+											pCurrentPalette,
+											&SrcRect,
+											D3DX_DEFAULT, // D3DX_FILTER_NONE,
+											0 // No ColorKey?
+											);
+									} else {
+									*/
 									BYTE *pDest = (BYTE*)LockedRect.pBits;
 
-									if (pSrc)
+									if ((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
 									{
-										if ((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
+										memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
+									}
+									else
+									{
+										for (DWORD v = 0; v < dwMipHeight; v++)
 										{
-											memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
-										}
-										else
-										{
-											for (DWORD v = 0; v < dwMipHeight; v++)
-											{
-												memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
+											memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
 
-												pDest += LockedRect.Pitch;
-												pSrc += dwMipPitch;
-											}
+											pDest += LockedRect.Pitch;
+											pSrc += dwMipPitch;
 										}
 									}
 								}
@@ -6040,27 +6035,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     return;
 }
 
-XTL::IDirect3DSurface8 *ExtraXRGBSurface = nullptr; // this is our pointer to the memory location containing our copy of the front buffer
-
-void AssureExtraXRGBSurface(XTL::IDirect3DSurface8 *pBackBufferSurface, std::string Caller)
-{
-	XTL::D3DSURFACE_DESC SurfaceDesc;
-	HRESULT aResult;
-
-	// Assure we have a reusable surface (in the correct format) which the back buffer can be converted into :
-	if (ExtraXRGBSurface == nullptr) {
-		pBackBufferSurface->GetDesc(&SurfaceDesc);
-		aResult = g_pD3DDevice8->CreateImageSurface(
-			SurfaceDesc.Width,
-			SurfaceDesc.Height,
-			XTL::D3DFMT_A8R8G8B8, // This format is supported by D3DXSaveSurfaceToFile (D3DFMT_X8R8G8B8 works too)
-			&ExtraXRGBSurface);
-		if FAILED(aResult) {
-//			DbgPrintf("EmuD3D8 : %s could not create a extra buffer!\n", DxbxD3DErrorString(aResult), Caller);
-		}
-	}
-}
-
 // ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -6129,10 +6103,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			}
 		}
 
+		RECT SourRect = { 0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH };
+		if (SrcRect != NULL)
+			SourRect = *SrcRect;
+
 		// update overlay!
 		if(g_bSupportsYUY2)
 		{
-			RECT SourRect = {0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH}, DestRect;
+			RECT DestRect;
 			MONITORINFO MonitorInfo = {0};
 
 			int nTitleHeight  = 0;//GetSystemMetrics(SM_CYCAPTION);
@@ -6167,72 +6145,53 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		{
 			IDirect3DSurface8 *pBackBufferSurface = nullptr;
 			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
-			// if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
+			// if we obtained the backbuffer, load the YUY2 into the backbuffer
 			if (hRet == D3D_OK) {
-				IDirect3DSurface8 *pOverlayBufferSurface = nullptr;
-				D3DLOCKED_RECT LockedRectDest;
-
 				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 				D3DSURFACE_DESC BackBufferDesc;
 				pBackBufferSurface->GetDesc(&BackBufferDesc);
 
-				// Determine if the overlay can be written directly to the backbuffer :
-				bool CanWriteToBackbuffer = false;
-				if ((BackBufferDesc.Format == D3DFMT_A8R8G8B8) || (BackBufferDesc.Format == D3DFMT_X8R8G8B8)) {
-					if (DstRect == SrcRect) {
-						CanWriteToBackbuffer = true;
-					} else {
-						if (DstRect != nullptr && SrcRect != nullptr) {
-							if ((DstRect->left == SrcRect->left)
-								&& (DstRect->right == SrcRect->right)
-								&& (DstRect->top == SrcRect->top)
-								&& (DstRect->bottom == SrcRect->bottom)) {
-								CanWriteToBackbuffer = true;
-							}
-						}
+				// Limit the width and height of the output to the backbuffer dimensions.
+				// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
+				// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
+				RECT DestRect = { 0 };
+				{
+					// If there's a destination rectangle given, copy that into our local variable :
+					if (DstRect != NULL)
+						DestRect = *DstRect;
+
+					// Use our (bounded) copy when bounds exceed :
+					if (DestRect.right > BackBufferDesc.Width) {
+						DestRect.right = BackBufferDesc.Width;
+						DstRect = &DestRect;
+					}
+
+					if (g_dwOverlayH > BackBufferDesc.Height) {
+						DestRect.bottom = BackBufferDesc.Height;
+						DstRect = &DestRect;
 					}
 				}
 
-				// If we can write to the back buffer, work with that, else use the screenshotbuffer as temporary surface :
-				if (CanWriteToBackbuffer) {
-					pOverlayBufferSurface = pBackBufferSurface;
-				} else {
-					AssureExtraXRGBSurface(pBackBufferSurface, "EmuD3DDevice_UpdateOverlay");
-					pOverlayBufferSurface = ExtraXRGBSurface; // Note : This surface is always in ARGB format
-				}
+				uint08 *pYUY2Input = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
 
-				// Manually translate the YUY2 formatted input surface into the RGB buffer of the pre-determined output surface :
-				if (pOverlayBufferSurface->LockRect(&LockedRectDest, DstRect, 0) == D3D_OK) {
-					// Determine the start of the Xbox overlay buffer and Native destination buffer :
-					uint08 *pYUY2Input = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
-					uint08 *pARGBOutput = (uint08*)LockedRectDest.pBits;
-
-					// Limit the width and height of the output to the backbuffer dimensions.
-					// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
-					// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
-					uint32 W = min(g_dwOverlayW, BackBufferDesc.Width);
-					uint32 H = min(g_dwOverlayH, BackBufferDesc.Height);
-
-					// full color conversion (YUY2->XRGB)
-					YUY2ToARGB(pYUY2Input, g_dwOverlayP, pARGBOutput, LockedRectDest.Pitch, W, H);
-
-					pOverlayBufferSurface->UnlockRect(); // TODO : Could this be done after calling D3DXLoadSurfaceFromSurface (and would that improve performance)?
-
-					if (!CanWriteToBackbuffer) {
-						// When the overlay could not directly be converted into the back buffer,
-						// we now have to stretch-copy there (this also does a format-conversion, if needed) :
-						if (D3DXLoadSurfaceFromSurface(
-							/* pDestSurface = */ pBackBufferSurface,
-							/* pDestPalette = */ nullptr, // Palette not needed for YUY2
-							DstRect,
-							/* pSrcSurface = */ pOverlayBufferSurface,
-							/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
-							SrcRect,
-							/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
-							/* ColorKey = */ ColorKey) != D3D_OK) {
-								DbgPrintf("EmuD3D8 : UpdateOverlay could not convert buffer!\n");
-							}
-					}
+				// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
+				// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+				// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+				hRet = D3DXLoadSurfaceFromMemory(
+					/* pDestSurface = */ pBackBufferSurface,
+					/* pDestPalette = */ nullptr, // Palette not needed for YUY2
+					/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
+					/* pSrcMemory = */ pYUY2Input, // Source buffer
+					/* SrcFormat = */ D3DFMT_YUY2,
+					/* SrcPitch = */ g_dwOverlayP,
+					/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
+					/* pSrcRect = */ &SourRect,
+					/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+					/* ColorKey = */ EnableColorKey ? ColorKey : 0);
+				if (hRet != D3D_OK) {
+					DbgPrintf("EmuD3D8 : UpdateOverlay could not convert buffer!\n");
+					//DbgPrintf("EmuD3D8 : Error: %s error description: %s\n",
+					//	DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 				}
 
 				pBackBufferSurface->Release();
@@ -9702,7 +9661,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 		{
 			void* ptr = g_MemoryManager.Allocate( BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
 
-			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, 0 ) ) )
+			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, D3DLOCK_READONLY ) ) )
 			{
 				CopyMemory( ptr, LockedRect.pBits, BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
 				
