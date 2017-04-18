@@ -4857,10 +4857,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                             }
                         }
 
-                        RECT  iRect  = {0,0,0,0};
-                        POINT iPoint = {0,0};
-
-                        BYTE *pSrc = (BYTE*)pBase;
+                        BYTE *pSrc = (BYTE*)pBase; // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                          ||( (DWORD)pBase == X_D3DRESOURCE_DATA_BACK_BUFFER))
@@ -4877,20 +4874,27 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                                 pSrc  += dwMipPitch;
                             }
                         }
-                        else
-                        {
+						else
+						{
 							if (level == 0)
 								pResource->Data = (DWORD)pSrc;
 
 							if((DWORD)pSrc == 0x80000000)
-                            {
+							{
 								// TODO: Fix or handle this situation..?
 								// This is probably an unallocated resource, mapped into contiguous memory (0x80000000)
-                            }
+							}
+							else if (pSrc == nullptr)
+							{
+								// TODO: Fix or handle this situation..?
+							}
 							else
 							{
 								if (bSwizzled)
 								{
+									RECT  iRect = { 0,0,0,0 };
+									POINT iPoint = { 0,0 };
+
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleRect
 									(
@@ -4908,23 +4912,35 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 								}
 								else
 								{
+									/* TODO : // Let DirectX convert the surface (including palette formats) :
+									if(!EmuXBFormatRequiresConversionToARGB) {
+										D3DXLoadSurfaceFromMemory(
+											pResource->EmuSurface8,
+											nullptr, // no destination palette
+											&destRect,
+											pSrc, // Source buffer
+											dwMipPitch, // Source pitch
+											pCurrentPalette,
+											&SrcRect,
+											D3DX_DEFAULT, // D3DX_FILTER_NONE,
+											0 // No ColorKey?
+											);
+									} else {
+									*/
 									BYTE *pDest = (BYTE*)LockedRect.pBits;
 
-									if (pSrc)
+									if ((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
 									{
-										if ((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
+										memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
+									}
+									else
+									{
+										for (DWORD v = 0; v < dwMipHeight; v++)
 										{
-											memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
-										}
-										else
-										{
-											for (DWORD v = 0; v < dwMipHeight; v++)
-											{
-												memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
+											memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
 
-												pDest += LockedRect.Pitch;
-												pSrc += dwMipPitch;
-											}
+											pDest += LockedRect.Pitch;
+											pSrc += dwMipPitch;
 										}
 									}
 								}
