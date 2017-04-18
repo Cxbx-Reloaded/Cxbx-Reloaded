@@ -4255,6 +4255,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     return ret;
 }
 
+#define CXBX_SWAP_PRESENT_FORWARD (256 + 4 + 1) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+
 // ******************************************************************
 // * patch: D3DDevice_Present
 // ******************************************************************
@@ -4266,8 +4268,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
     PVOID       pDummy2
 )
 {
-    
-
+	// LOG_FORWARD("D3DDevice_Swap");
     DbgPrintf("EmuD3D8: EmuD3DDevice_Present\n"
            "(\n"
            "   pSourceRect         : 0x%.08X\n"
@@ -4277,69 +4278,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
            ");\n",
            pSourceRect, pDestRect, pDummy1, pDummy2);
 
-	HRESULT hRet = S_OK;
-	
-	CxbxReleaseBackBufferLock();
-
-	// TODO: Make a video option to wait for VBlank before calling Present.
-	// Makes syncing to 30fps easier (which is the native frame rate for Azurik
-	// and Halo).
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
-
-	hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
-
-	// Put primitives per frame in the title
-	/*{
-		char szString[64];
-
-		sprintf( szString, "Cxbx: PPF(%d)", g_dwPrimPerFrame );
-
-		SetWindowText( CxbxKrnl_hEmuParent, szString );
-
-		g_dwPrimPerFrame = 0;
-	}*/
-
-	// not really accurate because you definately dont always present on every vblank
-	g_VBData.Swap = g_VBData.VBlank;
-
-	if(g_VBData.VBlank == g_VBLastSwap + 1)
-		g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
-	else
-	{
-		g_VBData.Flags = 2; // D3DVBLANK_SWAPMISSED
-		g_SwapData.MissedVBlanks++;
-	}
-
-	// Handle Swap Callback function
-	{
-		g_SwapData.Swap++;
-
-		if(g_pSwapCallback != NULL) 
-		{
-				
-			g_pSwapCallback(&g_SwapData);
-				
-		}
-	}
-
-	g_bHackUpdateSoftwareOverlay = FALSE;
-
-    
-
-    return hRet;
+	return EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
 
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
+DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 (
     DWORD Flags
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_Swap\n"
            "(\n"
            "   Flags               : 0x%.08X\n"
@@ -4348,7 +4297,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-        EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
+		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
+			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
 	CxbxReleaseBackBufferLock();	
 
@@ -4358,7 +4308,33 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 
-    HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
+	g_pD3DDevice8->Present(0, 0, 0, 0);
+
+	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
+	{
+		// Put primitives per frame in the title
+		/*{
+			char szString[64];
+
+			sprintf( szString, "Cxbx: PPF(%d)", g_dwPrimPerFrame );
+
+			SetWindowText( CxbxKrnl_hEmuParent, szString );
+
+			g_dwPrimPerFrame = 0;
+		}*/
+
+		// TODO : Check if this should be done at Swap-not-Present-time too :
+		// not really accurate because you definately dont always present on every vblank
+		g_VBData.Swap = g_VBData.VBlank;
+
+		if (g_VBData.VBlank == g_VBLastSwap + 1)
+			g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
+		else
+		{
+			g_VBData.Flags = 2; // D3DVBLANK_SWAPMISSED
+			g_SwapData.MissedVBlanks++;
+		}
+	}
 
 	// Handle Swap Callback function
 	{
@@ -4374,9 +4350,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	g_bHackUpdateSoftwareOverlay = FALSE;
 
-    
+	DWORD result;
+	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
+		result = S_OK; // Present always returns success
+	else
+		result = g_SwapData.Swap; // Swap returns number of swaps
 
-    return hRet;
+    return result;
 }
 
 // ******************************************************************

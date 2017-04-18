@@ -669,7 +669,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_Present)
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_Swap)
+DWORD WINAPI EMUPATCH(D3DDevice_Swap)
 (
     DWORD Flags
 );
