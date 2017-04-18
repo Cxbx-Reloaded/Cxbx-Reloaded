@@ -1451,9 +1451,9 @@ OOVPA_NO_XREF(D3DDevice_GetViewportOffsetAndScale, 5558, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTileNoWait
+// * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 5558, 10)
+OOVPA_NO_XREF(D3DDevice_SetTile, 5558, 10)
 
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -1634,7 +1634,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTileNoWait, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTile, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeletePixelShader, 5344, PATCH),

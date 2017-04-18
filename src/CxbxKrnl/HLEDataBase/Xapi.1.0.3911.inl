@@ -1093,10 +1093,10 @@ OOVPATable XAPI_3911[] = {
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	// REGISTER_OOVPA(lstrcmpiW, 3911, PATCH),
-	REGISTER_OOVPA(XMountAlternateTitle, 3911, ALIAS, XMountAlternateTitleA),
-	REGISTER_OOVPA(XUnmountAlternateTitle, 3911, ALIAS, XUnmountAlternateTitleA),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
-	REGISTER_OOVPA(XLaunchNewImage, 3911, ALIAS, XLaunchNewImageA),
+	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
 	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
 	REGISTER_OOVPA(XAutoPowerDownResetTimer, 3911, DISABLED), // Just calls KeSetTimer
 	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),

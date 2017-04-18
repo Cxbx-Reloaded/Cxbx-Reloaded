@@ -911,9 +911,9 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 }
 
 // ******************************************************************
-// * patch: XLaunchNewImage
+// * patch: XLaunchNewImageA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
+DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 (
 	LPCSTR			lpTitlePath,
 	PLAUNCH_DATA	pLaunchData
@@ -934,7 +934,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 
 	// TODO : This patch can be removed once NtOpenSymbolicLinkObject()
 	// and NtQuerySymbolicLinkObject() work together correctly.
-	// Also, XLaunchNewImage() depends on XeImageHeader() and uses
+	// Also, XLaunchNewImageA() depends on XeImageHeader() and uses
 	// XWriteTitleInfoAndReboot() and indirectly XWriteTitleInfoNoReboot()
 
 	// Update the kernel's LaunchDataPage :
@@ -978,7 +978,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 
 	// Note : While this patch exists, HalReturnToFirmware() calls
 	// MmPersistContiguousMemory on LaunchDataPage. When this
-	// patch on XLaunchNewImage is removed, remove the call to
+	// patch on XLaunchNewImageA is removed, remove the call to
 	// MmPersistContiguousMemory from HalReturnToFirmware() too!!
 
 	xboxkrnl::HalReturnToFirmware(xboxkrnl::ReturnFirmwareQuickReboot);
@@ -1163,9 +1163,9 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 }
 
 // ******************************************************************
-// * patch: XMountAlternateTitle
+// * patch: XMountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitleA)
 (
 	LPCSTR		lpRootPath,               
 	DWORD		dwAltTitleId,               
@@ -1185,9 +1185,9 @@ DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitle)
 }
 
 // ******************************************************************
-// * patch: XUnmountAlternateTitle
+// * patch: XUnmountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitleA)
 (
 	CHAR chDrive
 )

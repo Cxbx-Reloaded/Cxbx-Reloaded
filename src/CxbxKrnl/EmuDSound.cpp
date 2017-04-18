@@ -675,6 +675,34 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    const LONG*             alVolumes
+)
+{
+        
+
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBinVolumes\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+           "   dwMixBinMask        : 0x%.08X\n"
+           "   alVolumes           : 0x%.08X\n"
+           ");\n",
+           pThis, dwMixBinMask, alVolumes);
+
+    // NOTE: Use this function for XDK 3911 only because the implementation was changed
+    // somewhere around the December 2001 (4134) update (or earlier, maybe).
+
+    EmuWarning("EmuIDirectSoundBuffer_SetMixBinVolumes not yet implemented");
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+(
+    LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
 )
 {
@@ -685,6 +713,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
                ");\n",
                pThis, pMixBins);
 
+    // NOTE: Read the above notes, and the rest is self explanitory...
     // TODO: Actually do something
 
     return DS_OK;
@@ -2040,9 +2069,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundStream_SetHeadroom
+// * patch: DirectSound_CDirectSoundStream_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetHeadroom)
 (
     PVOID   pThis,
     DWORD   dwHeadroom
@@ -2050,7 +2079,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 {
     
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundStream_SetHeadroom\n"
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetHeadroom\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
            "   dwHeadroom                : 0x%.08X\n"
@@ -3442,7 +3471,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetI3DL2Source)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetI3DL2Source
+// * patch: IDirectSoundBuffer_SetAllParameters
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
@@ -3465,7 +3494,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 
     
 
-    return S_OK;
+    return DS_OK;
 }
 
 // ******************************************************************
