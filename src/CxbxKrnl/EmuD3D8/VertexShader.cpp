@@ -1867,8 +1867,8 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
         DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
-        NewDataType = D3DVSDT_FLOAT3;
-		NewSize = 3*sizeof(FLOAT);
+        NewDataType = D3DVSDT_FLOAT4;
+		NewSize = 4*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NONE: // 0x02:

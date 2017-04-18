@@ -3815,20 +3815,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Begin)
 
     g_IVBPrimitiveType = PrimitiveType;
 
-    if(g_IVBTable == 0)
+    if(g_IVBTable == nullptr)
     {
-        g_IVBTable = (struct XTL::_D3DIVB*)g_MemoryManager.Allocate(sizeof(XTL::_D3DIVB)*1024);
+        g_IVBTable = (struct XTL::_D3DIVB*)g_MemoryManager.Allocate(sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
     }
 
     g_IVBTblOffs = 0;
     g_IVBFVF = 0;
 
     // default values
-    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*1024);
+    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
 
-    if(g_pIVBVertexBuffer == 0)
+    if(g_pIVBVertexBuffer == nullptr)
     {
-        g_pIVBVertexBuffer = (DWORD*)g_MemoryManager.Allocate(sizeof(XTL::_D3DIVB)*1024);
+        g_pIVBVertexBuffer = (DWORD*)g_MemoryManager.Allocate(IVB_BUFFER_SIZE);
     }
 
     
@@ -3913,14 +3913,18 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
     HRESULT hRet = S_OK;
 
+	int o = g_IVBTblOffs;
+
+	if (o >= IVB_TABLE_SIZE) {
+		CxbxKrnlCleanup("Overflow g_IVBTblOffs : %d", o);
+	}
+
     switch(Register)
     {
         // TODO: Blend weight.
 
         case X_D3DVSDE_POSITION:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].Position.x = a;
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
@@ -3929,13 +3933,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTblOffs++;
 
             g_IVBFVF |= D3DFVF_XYZRHW;
+	        break;
         }
-        break;
 
 		case X_D3DVSDE_BLENDWEIGHT:
 		{
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].Position.x = a;
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
@@ -3944,13 +3946,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTblOffs++;
 
             g_IVBFVF |= D3DFVF_XYZB1;
+		    break;
         }
-        break;
 
 		case X_D3DVSDE_NORMAL:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].Normal.x = a;
             g_IVBTable[o].Normal.y = b;
             g_IVBTable[o].Normal.z = c;
@@ -3958,13 +3958,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTblOffs++;
 
             g_IVBFVF |= D3DFVF_NORMAL;
+			break;
         }
-        break;
 
         case X_D3DVSDE_DIFFUSE:
         {
-            int o = g_IVBTblOffs;
-
             DWORD ca = FtoDW(d) << 24;
             DWORD cr = FtoDW(a) << 16;
             DWORD cg = FtoDW(b) << 8;
@@ -3973,13 +3971,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTable[o].dwDiffuse = ca | cr | cg | cb;
 
             g_IVBFVF |= D3DFVF_DIFFUSE;
+			break;
         }
-        break;
 
 		case X_D3DVSDE_SPECULAR:
         {
-            int o = g_IVBTblOffs;
-
             DWORD ca = FtoDW(d) << 24;
             DWORD cr = FtoDW(a) << 16;
             DWORD cg = FtoDW(b) << 8;
@@ -3988,13 +3984,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTable[o].dwSpecular = ca | cr | cg | cb;
 
             g_IVBFVF |= D3DFVF_SPECULAR;
+			break;
         }
-        break;
 
 		case X_D3DVSDE_TEXCOORD0:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].TexCoord1.x = a;
             g_IVBTable[o].TexCoord1.y = b;
 
@@ -4002,13 +3996,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             {
                 g_IVBFVF |= D3DFVF_TEX1;
             }
+
+			break;
         }
-        break;
 
 		case X_D3DVSDE_TEXCOORD1:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].TexCoord2.x = a;
             g_IVBTable[o].TexCoord2.y = b;
 
@@ -4016,13 +4009,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             {
                 g_IVBFVF |= D3DFVF_TEX2;
             }
+
+			break;
         }
-        break;
 
 		case X_D3DVSDE_TEXCOORD2:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].TexCoord3.x = a;
             g_IVBTable[o].TexCoord3.y = b;
 
@@ -4030,13 +4022,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             {
                 g_IVBFVF |= D3DFVF_TEX3;
             }
+
+			break;
         }
-        break;
 
 		case X_D3DVSDE_TEXCOORD3:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].TexCoord4.x = a;
             g_IVBTable[o].TexCoord4.y = b;
 
@@ -4044,13 +4035,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             {
                 g_IVBFVF |= D3DFVF_TEX4;
             }
+
+	        break;
         }
-        break;
 
         case X_D3DVSDE_VERTEX:
         {
-            int o = g_IVBTblOffs;
-
             g_IVBTable[o].Position.x = a;
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
@@ -4063,14 +4053,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_IVBTblOffs++;
 
             g_IVBFVF |= D3DFVF_XYZRHW;
+
+			break;
         }
-        break;
 
         default:
             CxbxKrnlCleanup("Unknown IVB Register : %d", Register);
-    }
-
-    
+    }   
 
     return hRet;
 }
