@@ -107,21 +107,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 5028, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetRenderState_MultiSampleMask
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMask, 5028, 8)
-
-        { 0x0A, 0xA3 },
-        { 0x12, 0x56 },
-        { 0x1C, 0x8B },
-        { 0x2A, 0x85 },
-        { 0x30, 0x01 },
-        { 0x3D, 0xC7 },
-        { 0x44, 0x78 },
-        { 0x4E, 0x04 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetRenderState_SampleAlpha
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_SampleAlpha, 5028, 7)
@@ -943,7 +928,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_GetProjectionViewportMatrix, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4531, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),
 	REGISTER_OOVPA(D3D_SetFence, 5028, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 4627, PATCH),
