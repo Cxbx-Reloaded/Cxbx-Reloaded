@@ -650,20 +650,6 @@ OOVPA_NO_XREF(D3D_CheckDeviceFormat, 4034, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_SetPushBufferSize
-// ******************************************************************
-OOVPA_NO_XREF(D3D_SetPushBufferSize, 4034, 7)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0x08 },
-        { 0x0D, 0x89 },
-        { 0x0E, 0x0D },
-        { 0x13, 0xC2 },
-        { 0x14, 0x08 },
-OOVPA_END;
-
-// ******************************************************************
 // * Get2DSurfaceDesc
 // ******************************************************************
 /*OOVPA_NO_XREF(Get2DSurfaceDesc, 4034, 10)
@@ -1233,7 +1219,7 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4034, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4034, DISABLED),
-	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, DISABLED),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, DISABLED),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZEnable, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 4034, PATCH),
