@@ -62,8 +62,8 @@ namespace xboxkrnl
 HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
-XTL::LPDIRECTDRAWSURFACE7           g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
-XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = NULL; // DirectDraw7 Clipper
+XTL::LPDIRECTDRAWSURFACE7           g_pDDSOverlay7 = nullptr; // DirectDraw7 Overlay Surface
+XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_CurrentVertexShader = 0;
 DWORD								g_dwCurrentPixelShader = 0;
 XTL::PIXEL_SHADER                  *g_CurrentPixelShader = NULL;
@@ -84,6 +84,7 @@ static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeigh
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
+static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
 static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
 static DWORD                        g_dwOverlayP    = 640;  // Cached Overlay Pitch
@@ -1060,6 +1061,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     if(FAILED(hRet))
                         CxbxKrnlCleanup("Could not initialize DirectDraw7");
 
+					g_pDD7->GetCaps(&g_DriverCaps, nullptr);
+
                     hRet = g_pDD7->SetCooperativeLevel(0, DDSCL_NORMAL);
 
                     if(FAILED(hRet))
@@ -1176,17 +1179,17 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 }
 
 				// cleanup overlay clipper
-				if (g_pDDClipper != 0)
+				if (g_pDDClipper != nullptr)
 				{
 					g_pDDClipper->Release();
-					g_pDDClipper = 0;
+					g_pDDClipper = nullptr;
 				}
 
 				// cleanup overlay surface
-				if (g_pDDSOverlay7 != 0)
+				if (g_pDDSOverlay7 != nullptr)
 				{
 					g_pDDSOverlay7->Release();
-					g_pDDSOverlay7 = 0;
+					g_pDDSOverlay7 = nullptr;
 				}
 
 				// cleanup directdraw surface
@@ -3569,8 +3572,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
             // NOTE: TODO: This is almost a hack! :)
             //
 
-            
-			EMUPATCH(D3DDevice_EnableOverlay)(TRUE);
 			EMUPATCH(D3DDevice_UpdateOverlay)((X_D3DSurface*)pTexture, 0, 0, FALSE, 0);
             
         }
@@ -5494,7 +5495,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 
     if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
     {
-        pDesc->Format = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
+        pDesc->Format = X_D3DFMT_YUY2;
         pDesc->Height = g_dwOverlayH;
         pDesc->Width  = g_dwOverlayW;
         pDesc->MultiSampleType = (D3DMULTISAMPLE_TYPE)0;
@@ -5980,25 +5981,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
            ");\n",
            Enable);
 
-    if(Enable == FALSE && (g_pDDSOverlay7 != NULL))
+    if(Enable == FALSE && (g_pDDSOverlay7 != nullptr))
     {
         g_pDDSOverlay7->UpdateOverlay(NULL, g_pDDSPrimary, NULL, DDOVER_HIDE, 0);
 
         // cleanup overlay clipper
-        if(g_pDDClipper != 0)
+        if(g_pDDClipper != nullptr)
         {
             g_pDDClipper->Release();
-            g_pDDClipper = 0;
+            g_pDDClipper = nullptr;
         }
 
         // cleanup overlay surface
-        if(g_pDDSOverlay7 != 0)
+        if(g_pDDSOverlay7 != nullptr)
         {
             g_pDDSOverlay7->Release();
-            g_pDDSOverlay7 = 0;
+            g_pDDSOverlay7 = nullptr;
         }
     }
-    else if(Enable == TRUE && (g_pDDSOverlay7 == 0))
+    else if(Enable == TRUE && (g_pDDSOverlay7 == nullptr))
     {
         // initialize overlay surface
         if(g_bSupportsYUY2)
@@ -6017,12 +6018,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
             ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
 
             HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
-
             if(FAILED(hRet))
                 CxbxKrnlCleanup("Could not create overlay surface");
 
             hRet = g_pDD7->CreateClipper(0, &g_pDDClipper, NULL);
-
             if(FAILED(hRet))
                 CxbxKrnlCleanup("Could not create overlay clipper");
 
@@ -6061,10 +6060,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 
 	if(pSurface)
 	{
+		uint08 *pYUY2SourceBuffer = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
+
+		RECT SourRect = { 0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH };
+		if (SrcRect != NULL)
+			SourRect = *SrcRect;
+
 		// manually copy data over to overlay
 		if(g_bSupportsYUY2)
 		{
-			DDSURFACEDESC2  ddsd2;
 			// Make sure the overlay is allocated before using it
 			if (g_pDDSOverlay7 == nullptr) {
 				EMUPATCH(D3DDevice_EnableOverlay)(TRUE);
@@ -6072,6 +6076,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				assert(g_pDDSOverlay7 != nullptr);
 			}
 
+			DDSURFACEDESC2  ddsd2;
 			ZeroMemory(&ddsd2, sizeof(ddsd2));
 			ddsd2.dwSize = sizeof(ddsd2);
 			if(FAILED(g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL)))
@@ -6080,7 +6085,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			// copy data
 			{
 				char *pDest = (char*)ddsd2.lpSurface;
-				char *pSour = (char*)pSurface->Lock;
+				char *pSour = (char*)pYUY2SourceBuffer;
 
 				int w = g_dwOverlayW;
 				int h = g_dwOverlayH;
@@ -6101,45 +6106,38 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 
 				g_pDDSOverlay7->Unlock(NULL);
 			}
-		}
 
-		RECT SourRect = { 0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH };
-		if (SrcRect != NULL)
-			SourRect = *SrcRect;
-
-		// update overlay!
-		if(g_bSupportsYUY2)
-		{
+			// update overlay!
 			RECT DestRect;
-			MONITORINFO MonitorInfo = {0};
+			if (DstRect) {
+				DestRect = *DstRect;
+			} else {
+				GetClientRect(g_hEmuWindow, &DestRect);
+			}
 
-			int nTitleHeight  = 0;//GetSystemMetrics(SM_CYCAPTION);
-			int nBorderWidth  = 0;//GetSystemMetrics(SM_CXSIZEFRAME);
-			int nBorderHeight = 0;//GetSystemMetrics(SM_CYSIZEFRAME);
+			// Get the screen (multi-monitor-compatible) coordinates of the client area :
+			MapWindowPoints(g_hEmuWindow, HWND_DESKTOP, (LPPOINT)&DestRect, 2);
 
-			MonitorInfo.cbSize = sizeof(MONITORINFO);
-			GetMonitorInfo(g_hMonitor, &MonitorInfo);
-
-			GetWindowRect(g_hEmuWindow, &DestRect);
-
-			DestRect.left   += nBorderWidth;
-			DestRect.right  -= nBorderWidth;
-			DestRect.top    += nTitleHeight + nBorderHeight;
-			DestRect.bottom -= nBorderHeight;
-
-			DestRect.left   -= MonitorInfo.rcMonitor.left;
-			DestRect.right  -= MonitorInfo.rcMonitor.left;
-			DestRect.top    -= MonitorInfo.rcMonitor.top;
-			DestRect.bottom -= MonitorInfo.rcMonitor.top;
+			DWORD dwUpdateFlags = DDOVER_SHOW;
 
 			DDOVERLAYFX ddofx;
-
 			ZeroMemory(&ddofx, sizeof(ddofx));
 			ddofx.dwSize = sizeof(DDOVERLAYFX);
-			ddofx.dckDestColorkey.dwColorSpaceLowValue = 0;
-			ddofx.dckDestColorkey.dwColorSpaceHighValue = 0;
+			if (EnableColorKey) {
+				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY) {
+					dwUpdateFlags |= DDOVER_KEYSRCOVERRIDE | DDOVER_DDFX;
+					ddofx.dckSrcColorkey.dwColorSpaceLowValue = ColorKey;
+					ddofx.dckSrcColorkey.dwColorSpaceHighValue = ColorKey;
+				}
+				else
+				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY) {
+					dwUpdateFlags |= DDOVER_KEYDESTOVERRIDE | DDOVER_DDFX;
+					ddofx.dckDestColorkey.dwColorSpaceLowValue = ColorKey;
+					ddofx.dckDestColorkey.dwColorSpaceHighValue = ColorKey;
+				}
+			}
 
-			HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, /*DDOVER_KEYDESTOVERRIDE | */DDOVER_SHOW, /*&ddofx*/0);
+			HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, dwUpdateFlags, &ddofx);
 		}
 		else
 		{
@@ -6172,8 +6170,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					}
 				}
 
-				uint08 *pYUY2Input = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
-
 				// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
 				// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
 				// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
@@ -6181,7 +6177,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					/* pDestSurface = */ pBackBufferSurface,
 					/* pDestPalette = */ nullptr, // Palette not needed for YUY2
 					/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
-					/* pSrcMemory = */ pYUY2Input, // Source buffer
+					/* pSrcMemory = */ pYUY2SourceBuffer, // Source buffer
 					/* SrcFormat = */ D3DFMT_YUY2,
 					/* SrcPitch = */ g_dwOverlayP,
 					/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
