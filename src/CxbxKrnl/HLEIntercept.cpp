@@ -48,7 +48,9 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper);
 static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Header *pXbeHeader);
 
 #include <shlobj.h>
-#include <vector>
+#include <unordered_map>
+
+std::unordered_map<std::string, uint32_t> g_HLECache;
 
 uint32 g_BuildVersion;
 
@@ -69,6 +71,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
 	printf("*******************************************************************************\n");
 	printf("\n");
+
+	// TODO: Hash the loaded XBE, use it as a filename
+	// TODO: Attempt to open the HLE Cache file of this filename
+	// TODO: Check the cache header to make sure the compiletime is valid
+	// TODO: If so, load it
+	// TODO: Iterate through the cache calling GetProcAddress on all functions.
 
 	//
     // initialize Microsoft XDK emulation
@@ -412,6 +420,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 	printf("\n");
 
+	// TODO: Save the found symbols into the file
     return;
 }
 
@@ -643,6 +652,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
             {
 				printf("\t*PATCHED*");
+				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)addr;
                 EmuInstallPatch(pFunc, addr);
             }
 
