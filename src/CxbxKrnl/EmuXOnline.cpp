@@ -107,7 +107,7 @@ DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
 // ******************************************************************
 // * patch: This::Emusocket
 // ******************************************************************
-SOCKET XTL::EmuThis::EMUPATCH(socket)
+SOCKET WINAPI XTL::EMUPATCH(socket)
 (
     int   af,
     int   type,
@@ -131,7 +131,7 @@ SOCKET XTL::EmuThis::EMUPATCH(socket)
 // ******************************************************************
 // * patch: This::Emuconnect
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(connect)
+int WINAPI XTL::EMUPATCH(connect)
 (
 	SOCKET s,
 	const struct sockaddr FAR *name,
@@ -155,7 +155,7 @@ int XTL::EmuThis::EMUPATCH(connect)
 // ******************************************************************
 // * patch: This::Emusend
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(send)
+int WINAPI XTL::EMUPATCH(send)
 (
 	SOCKET s,
 	const char FAR *buf,
@@ -181,7 +181,7 @@ int XTL::EmuThis::EMUPATCH(send)
 // ******************************************************************
 // * patch: This::Emurecv
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(recv)
+int WINAPI XTL::EMUPATCH(recv)
 (
 	SOCKET s,
 	char FAR *buf,
@@ -207,7 +207,7 @@ int XTL::EmuThis::EMUPATCH(recv)
 // ******************************************************************
 // * patch: This::Emubind
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(bind)
+int WINAPI XTL::EMUPATCH(bind)
 (
 	SOCKET s, 
 	const struct sockaddr FAR *name, 
@@ -233,7 +233,7 @@ int XTL::EmuThis::EMUPATCH(bind)
 // ******************************************************************
 // * patch: This::Emulisten
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(listen)
+int WINAPI XTL::EMUPATCH(listen)
 (
 	SOCKET s, 
 	int backlog
@@ -257,7 +257,7 @@ int XTL::EmuThis::EMUPATCH(listen)
 // ******************************************************************
 // * patch: This::Emuioctlsocket
 // ******************************************************************
-int XTL::EmuThis::EMUPATCH(ioctlsocket)
+int WINAPI XTL::EMUPATCH(ioctlsocket)
 (
 	SOCKET s, 
 	long cmd, 

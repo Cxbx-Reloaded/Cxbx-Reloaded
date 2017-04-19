@@ -627,12 +627,26 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 
         if(pFunc != (xbaddr)nullptr)
         {
-            printf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
+            printf("HLE: 0x%.08X -> %s %d", pFunc, OovpaTable[a].szFuncName, OovpaTable[a].Version);
+			std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
 
-			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (OovpaTable[a].emuPatch != nullptr))
+			void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+
+			if ((OovpaTable[a].Flags & Flag_XRef) == Flag_XRef) {
+				printf("\t*XRef*");
+			}
+
+			if ((OovpaTable[a].Flags & Flag_DontScan) == Flag_DontScan) {
+				printf("\t*DISABLED*");
+			}
+
+			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
             {
+				printf("\t*PATCHED*");
                 EmuInstallPatch(pFunc, OovpaTable[a].emuPatch);
             }
+
+			printf("\n");
         }
     }
 }
