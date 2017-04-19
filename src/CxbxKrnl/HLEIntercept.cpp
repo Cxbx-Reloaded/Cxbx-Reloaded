@@ -646,11 +646,6 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
                 EmuInstallPatch(pFunc, addr);
             }
 
-			if (addr != OovpaTable[a].emuPatch)
-			{
-				EmuWarning("Offset doesn't match!");
-			}
-
 			printf("\n");
         }
     }
