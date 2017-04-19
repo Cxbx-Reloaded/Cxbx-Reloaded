@@ -106,35 +106,6 @@ OOVPA_NO_XREF(XLaunchNewImageA, 5558, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * XGetLaunchInfo
-// ******************************************************************
-OOVPA_NO_XREF(XGetLaunchInfo, 5558, 7)
-
-        { 0x0B, 0x8B },
-        { 0x18, 0x15 },
-        { 0x25, 0x8B },
-        { 0x32, 0x30 },
-        { 0x3F, 0x00 },
-        { 0x4C, 0x83 },
-        { 0x59, 0x5E },
-OOVPA_END;
-
-// ******************************************************************
-// * XMountMUA
-// ******************************************************************
-OOVPA_NO_XREF(XMountMUA, 5558, 8)
-
-        { 0x22, 0x8A },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x5C },
-        { 0x7E, 0xF4 },
-        { 0x9E, 0x50 },
-        { 0xBE, 0xF8 },
-        { 0xDE, 0x8D },
-        { 0xFE, 0x09 },
-OOVPA_END;
-
-// ******************************************************************
 // * XapiFiberStartup
 // ******************************************************************
 OOVPA_NO_XREF(XapiFiberStartup, 5558, 7)
@@ -194,7 +165,7 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
 	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
-	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 5233, DISABLED),
 	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 5558, PATCH),
@@ -202,12 +173,12 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
 	REGISTER_OOVPA(XLaunchNewImageA, 5558, PATCH),
-	REGISTER_OOVPA(XGetLaunchInfo, 5558, DISABLED),
+	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
-	REGISTER_OOVPA(SetThreadPriorityBoost, 4627, PATCH),
-	REGISTER_OOVPA(GetThreadPriority, 4627, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
-	REGISTER_OOVPA(XMountMUA, 5558, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
 	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),

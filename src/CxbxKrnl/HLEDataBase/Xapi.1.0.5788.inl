@@ -48,20 +48,6 @@ OOVPA_NO_XREF(XapiInitProcess, 5788, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XGetDeviceChanges
-// ******************************************************************
-OOVPA_NO_XREF(XGetDeviceChanges, 5788, 7)
-
-        { 0x0C, 0x75 },
-        { 0x1A, 0x53 },
-        { 0x28, 0xF7 },
-        { 0x36, 0x56 },
-        { 0x44, 0x89 },
-        { 0x52, 0xC8 },
-        { 0x60, 0x5F },
-OOVPA_END;
-
-// ******************************************************************
 // * GetThreadPriority
 // ******************************************************************
 OOVPA_NO_XREF(GetThreadPriority, 5788, 7)
@@ -102,20 +88,6 @@ OOVPA_NO_XREF(XGetSectionSize, 5788, 5)
 OOVPA_END;
 
 // ******************************************************************
-// * RaiseException
-// ******************************************************************
-OOVPA_NO_XREF(RaiseException, 5788, 7)
-
-        { 0x09, 0x83 },
-        { 0x14, 0x8B },
-        { 0x1F, 0xC7 },
-        { 0x2A, 0x10 },
-        { 0x35, 0x89 },
-        { 0x40, 0x5F },
-        { 0x4B, 0xFF },
-OOVPA_END;
-
-// ******************************************************************
 // * XGetDeviceEnumerationStatus
 // ******************************************************************
 OOVPA_NO_XREF(XGetDeviceEnumerationStatus, 5788, 7)
@@ -150,21 +122,21 @@ OOVPATable XAPI_5788[] = {
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
 	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
-	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 5558, PATCH),
 	REGISTER_OOVPA(XInputGetState, 5558, PATCH),
-	REGISTER_OOVPA(XGetDeviceChanges, 5788, DISABLED), // Was PATCH
+	REGISTER_OOVPA(XGetDeviceChanges, 5233, DISABLED), // Was PATCH
     // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
-	REGISTER_OOVPA(XGetLaunchInfo, 5558, DISABLED),
+	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 5788, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 5788, PATCH),
 	// REGISTER_OOVPA(GetThreadPriorityBoost, 5788, PATCH),
-	REGISTER_OOVPA(XMountMUA, 5558, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
-	REGISTER_OOVPA(RaiseException, 5788, PATCH),
+	REGISTER_OOVPA(RaiseException, 4627, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 5558, PATCH),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 5788, PATCH),
