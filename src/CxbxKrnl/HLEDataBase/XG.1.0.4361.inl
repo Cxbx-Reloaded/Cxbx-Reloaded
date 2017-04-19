@@ -84,23 +84,6 @@ OOVPA_NO_XREF(XGSwizzleRect, 4361, 10)
         { 0xED, 0x0B }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
-/* Leave unpatched
-// ******************************************************************
-// * XGUnswizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect, 4361, 8)
-
-        { 0x1E, 0x03 },
-        { 0x3E, 0x00 },
-        { 0x5E, 0xD2 },
-        { 0x7E, 0x75 },
-        { 0x9E, 0x70 },
-        { 0xC1, 0xE9 },
-        { 0xDE, 0x89 },
-        { 0xFE, 0x60 },
-OOVPA_END;
-*/
-
 // ******************************************************************
 // * XGSetVertexBufferHeader
 // ******************************************************************
@@ -153,7 +136,7 @@ OOVPATable XG_4361[] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
 	// REGISTER_OOVPA(XGSwizzleRect, 4361, PATCH), // Leave unpatched
-	// REGISTER_OOVPA(XGUnswizzleRect, 4361, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
 	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
 	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
 	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
