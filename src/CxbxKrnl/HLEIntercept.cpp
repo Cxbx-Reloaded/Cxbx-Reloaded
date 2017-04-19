@@ -121,15 +121,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				if(BuildVersion == 5120) { BuildVersion = 5233; }
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
                 
-				std::string LibraryName = std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
-
+				std::string LibraryName(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
+				
 				// TODO: HACK: D3DX8 is packed into D3D8 database
-				if (LibraryName == Lib_D3DX8)
+				if (strcmp(LibraryName.c_str(), Lib_D3DX8) == 0)
 				{
 					LibraryName = Lib_D3D8;
 				}
 
-				if (LibraryName == Lib_D3D8LTCG)
+				if (strcmp(LibraryName.c_str(), Lib_D3D8LTCG) == 0)
 				{
 					// If LLE GPU is not enabled, show a warning that the title is not supported
 					if (!bLLE_GPU) {
@@ -140,7 +140,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					continue;
 				}
 				
-				if (LibraryName == Lib_D3D8)
+				if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0)
 				{
 					// Skip scanning for D3D8 symbols when LLE GPU is selected
 					if (bLLE_GPU)
@@ -158,7 +158,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if (BuildVersion <= 3948)
 						BuildVersion = 3925;
 				}
-				else if(LibraryName == Lib_DSOUND)
+				if (strcmp(LibraryName.c_str(), Lib_DSOUND) == 0)
                 {
 					// Skip scanning for DSOUND symbols when LLE APU is selected
 					if (bLLE_APU)
@@ -175,7 +175,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
-				else if(LibraryName == Lib_XAPILIB)
+				if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0)
 				{
 					// Change a few XAPILIB versions to similar counterparts
 					if(BuildVersion == 3944)
@@ -185,7 +185,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
 				}
-				else if (LibraryName == Lib_XGRAPHC)
+				if (strcmp(LibraryName.c_str(), Lib_XGRAPHC) == 0)
 				{
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
 					if (bLLE_GPU)
@@ -199,7 +199,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				if(bXRefFirstPass)
                 {
-                    if (LibraryName == Lib_XAPILIB &&
+                    if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0 &&
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233
                       || BuildVersion == 5344 || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -207,7 +207,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
-                    else if(LibraryName == Lib_D3D8 &&
+                    else if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
                       || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
