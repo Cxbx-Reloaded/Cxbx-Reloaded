@@ -61,6 +61,7 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
     X_D3DFORMAT Format
 )
 {
+	FUNC_EXPORTS
 	LOG_FUNC_ONE_ARG(Format);
 
 	RETURN(FALSE);
@@ -82,6 +83,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
     DWORD         BytesPerPixel
 )
 {
+	FUNC_EXPORTS
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(Pitch)
@@ -144,6 +146,8 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
     DWORD            BytesPerPixel
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(RowPitch)
@@ -204,6 +208,8 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 	BOOL			bWriteSurfaceAsTexture
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pResource)
 		LOG_FUNC_ARG(cPath)
@@ -235,6 +241,8 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	UINT			Pitch
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
@@ -296,7 +304,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 //	void			**ppFont
 //)
 //{
-//		
+//		FUNC_EXPORTS
 //
 //		LOG_FUNC_BEGIN
 //			LOG_FUNC_ARG(pFontData)

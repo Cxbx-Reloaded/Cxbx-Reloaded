@@ -59,6 +59,8 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
     WSADATA    *lpWSAData
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(wVersionRequested)
 		LOG_FUNC_ARG(lpWSAData)
@@ -77,6 +79,8 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
     const PVOID pDummy
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG(pDummy);
 
 	// Fake Successfull...hehehe...sucker...hehehehehe
@@ -90,6 +94,8 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC();
 
 	// for now, no ethernet connection is available
@@ -108,6 +114,8 @@ SOCKET XTL::EmuThis::EMUPATCH(socket)
     int   protocol
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(af)
@@ -130,6 +138,8 @@ int XTL::EmuThis::EMUPATCH(connect)
 	int namelen
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -153,6 +163,8 @@ int XTL::EmuThis::EMUPATCH(send)
 	int flags
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -177,6 +189,8 @@ int XTL::EmuThis::EMUPATCH(recv)
 	int flags
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -200,6 +214,8 @@ int XTL::EmuThis::EMUPATCH(bind)
 	int namelen
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -223,6 +239,8 @@ int XTL::EmuThis::EMUPATCH(listen)
 	int backlog
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -246,6 +264,8 @@ int XTL::EmuThis::EMUPATCH(ioctlsocket)
 	u_long FAR *argp
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(this)
 		LOG_FUNC_ARG(s)
@@ -291,6 +311,8 @@ HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
     HANDLE	pHandle
 )
 {
+	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pUsers)
 		LOG_FUNC_ARG(pdwServiceIDs)
