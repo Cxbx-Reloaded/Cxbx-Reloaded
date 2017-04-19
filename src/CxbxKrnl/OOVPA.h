@@ -178,7 +178,7 @@ const uint16_t Flag_Reserved = 4;
 
 #define XREF /* registration of an XRef-only OOVPA, for which no Patch is present */
 #define REGISTER_OOVPA_XREF(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol, Version, Flag_XRef)
+	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol ##, Version, Flag_XRef)
 
 #define ALIAS /* registration of a Patch using an alternatively named OOVPA */
 #define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
