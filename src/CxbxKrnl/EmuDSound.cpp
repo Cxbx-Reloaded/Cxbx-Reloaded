@@ -499,7 +499,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
     DWORD           dwApply
 )
 {
-    
+	FUNC_EXPORTS;
 
     DbgPrintf("EmuDSound: EmuIDirectSound_SetOrientation\n"
            "(\n"
