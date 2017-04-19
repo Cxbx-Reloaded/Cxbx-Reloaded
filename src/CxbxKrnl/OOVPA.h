@@ -188,10 +188,6 @@ const uint16_t Flag_Reserved = 4;
 #define REGISTER_OOVPA_EMUTHIS(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Symbol)), #Symbol ## "_" ## #Version, Version, 0)
 
-#define LTCG /* registration of a Patch using a LTCG specific OOVPA */
-#define REGISTER_OOVPA_LTCG(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol ## _LTCG, XTL::EMUPATCH(Symbol), #Symbol ## "_LTCG_" ## #Version ## " (LTCG)", Version, Flag_IsLTCG)
-
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
