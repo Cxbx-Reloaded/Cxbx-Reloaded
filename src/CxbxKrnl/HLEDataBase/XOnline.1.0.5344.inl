@@ -44,7 +44,7 @@ OOVPATable XOnline_5344[] = {
 	REGISTER_OOVPA(bind, 4361, PATCH),
 	// REGISTER_OOVPA(listen, 4361, PATCH),
 	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5233, PATCH),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
 	REGISTER_OOVPA(CXo_XOnlineLogon, 5233, XREF),
 	REGISTER_OOVPA(XOnlineLogon, 5233, PATCH),
 };

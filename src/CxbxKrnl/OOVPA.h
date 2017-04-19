@@ -182,7 +182,7 @@ const uint16_t Flag_Reserved = 4;
 
 #define ALIAS /* registration of a Patch using an alternatively named OOVPA */
 #define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
-	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, XTL::EMUPATCH(Symbol), #AliasOovpa ##, Version, 0)
+	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, XTL::EMUPATCH(Symbol), #Symbol ##, Version, 0)
 
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
