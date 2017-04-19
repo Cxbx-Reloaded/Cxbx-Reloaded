@@ -643,7 +643,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
             {
 				printf("\t*PATCHED*");
-                EmuInstallPatch(pFunc, OovpaTable[a].emuPatch);
+                EmuInstallPatch(pFunc, addr);
             }
 
 			if (addr != OovpaTable[a].emuPatch)
