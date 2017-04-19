@@ -33,53 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XnInit
-// ******************************************************************
-OOVPA_XREF(XnInit, 5849, 8,
-
-    XREF_XNINIT,
-    XRefZero)
-
-        { 0x1E, 0x3B },
-        { 0x3E, 0x45 },
-        { 0x5E, 0x00 },
-        { 0x81, 0x57 },
-        { 0xA2, 0x57 },
-        { 0xC0, 0x33 },
-        { 0xDE, 0xFE },
-        { 0xFE, 0x48 },
-OOVPA_END;
-
-// ******************************************************************
-// * XNetStartup
-// ******************************************************************
-OOVPA_NO_XREF(XNetStartup, 5849, 8)
-
-        { 0x01, 0xC0 },
-        { 0x04, 0x50 },
-        { 0x07, 0x24 },
-        { 0x0A, 0x68 },
-        { 0x0F, 0xE8 },
-        { 0x14, 0xC2 },
-        { 0x15, 0x04 },
-        { 0x16, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * WSAStartup
-// ******************************************************************
-OOVPA_NO_XREF(WSAStartup, 5849, 7)
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0x6A },
-        { 0x0E, 0x68 },
-        { 0x13, 0xE8 },
-        { 0x18, 0xC2 },
-        { 0x1A, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
 #define XNetGetEthernetLinkStatus_5849 XNetGetEthernetLinkStatus_4627
@@ -88,9 +41,9 @@ OOVPA_END;
 // * XOnline_5849
 // ******************************************************************
 OOVPATable XOnline_5849[] = {
-	REGISTER_OOVPA(XNetStartup, 5849, PATCH),
-	REGISTER_OOVPA(WSAStartup, 5849, PATCH),
-	REGISTER_OOVPA(XnInit, 5849, XREF),
+	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
+	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
+	REGISTER_OOVPA(XnInit, 5788, XREF),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5849, PATCH),
 };
 
