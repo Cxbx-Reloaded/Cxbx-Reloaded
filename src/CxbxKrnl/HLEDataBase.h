@@ -58,7 +58,6 @@
 #include "HLEDataBase/D3D8.1.0.5558.h"
 #include "HLEDataBase/D3D8.1.0.5788.h"
 #include "HLEDataBase/D3D8.1.0.5849.h"
-#include "HLEDataBase/D3D8LTCG.1.0.5849.h"
 #include "HLEDataBase/DSound.1.0.3936.h"
 #include "HLEDataBase/DSound.1.0.4134.h"
 #include "HLEDataBase/DSound.1.0.4361.h"
