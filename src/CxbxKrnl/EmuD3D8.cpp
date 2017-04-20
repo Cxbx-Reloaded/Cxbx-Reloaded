@@ -3572,7 +3572,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
             // NOTE: TODO: This is almost a hack! :)
             //
 
-			EMUPATCH(D3DDevice_UpdateOverlay)((X_D3DSurface*)pTexture, 0, 0, FALSE, 0);
+			EMUPATCH(D3DDevice_UpdateOverlay)((X_D3DSurface*)pTexture, NULL, NULL, FALSE, 0);
             
         }
         else
@@ -6046,8 +6046,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
     D3DCOLOR      ColorKey
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_UpdateOverlay\n"
            "(\n"
            "   pSurface            : 0x%.08X\n"
@@ -6058,13 +6056,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
            ");\n",
            pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
 
-	if(pSurface)
-	{
+	if (pSurface == NULL) {
+		EmuWarning("pSurface == NULL!");
+	} else {
 		uint08 *pYUY2SourceBuffer = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
+		RECT EmuSourRect;
+		RECT EmuDestRect;
 
-		RECT SourRect = { 0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH };
-		if (SrcRect != NULL)
-			SourRect = *SrcRect;
+		if (SrcRect != NULL) {
+			EmuSourRect = *SrcRect;
+		} else {
+			SetRect(&EmuSourRect, 0, 0, g_dwOverlayW, g_dwOverlayH);
+		}
+
+		if (DstRect != NULL) {
+			// If there's a destination rectangle given, copy that into our local variable :
+			EmuDestRect = *DstRect;
+		} else {
+			GetClientRect(g_hEmuWindow, &EmuDestRect);
+		}
 
 		// manually copy data over to overlay
 		if(g_bSupportsYUY2)
@@ -6087,18 +6097,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				char *pDest = (char*)ddsd2.lpSurface;
 				char *pSour = (char*)pYUY2SourceBuffer;
 
-				int w = g_dwOverlayW;
+				int p = g_dwOverlayW * 2; // 2 = EmuXBFormatBytesPerPixel(D3DFMT_YUY2);
 				int h = g_dwOverlayH;
 
 				// TODO: sucker the game into rendering directly to the overlay (speed boost)
-				if( (ddsd2.lPitch == w*2) && ((int)g_dwOverlayP == w*2) )
-					memcpy(pDest, pSour, h*w*2);
+				if( (ddsd2.lPitch == p) && ((int)g_dwOverlayP == p) )
+					memcpy(pDest, pSour, p*h);
 				else
 				{
 					for(int y=0;y<h;y++)
 					{
-						memcpy(pDest, pSour, w*2);
-
+						memcpy(pDest, pSour, p);
 						pDest += ddsd2.lPitch;
 						pSour += g_dwOverlayP;
 					}
@@ -6108,43 +6117,40 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			}
 
 			// update overlay!
-			RECT DestRect;
-			if (DstRect) {
-				DestRect = *DstRect;
-			} else {
-				GetClientRect(g_hEmuWindow, &DestRect);
-			}
-
-			// Get the screen (multi-monitor-compatible) coordinates of the client area :
-			MapWindowPoints(g_hEmuWindow, HWND_DESKTOP, (LPPOINT)&DestRect, 2);
-
 			DWORD dwUpdateFlags = DDOVER_SHOW;
-
 			DDOVERLAYFX ddofx;
+
 			ZeroMemory(&ddofx, sizeof(ddofx));
 			ddofx.dwSize = sizeof(DDOVERLAYFX);
 			if (EnableColorKey) {
-				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY) {
-					dwUpdateFlags |= DDOVER_KEYSRCOVERRIDE | DDOVER_DDFX;
-					ddofx.dckSrcColorkey.dwColorSpaceLowValue = ColorKey;
-					ddofx.dckSrcColorkey.dwColorSpaceHighValue = ColorKey;
-				}
-				else
-				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY) {
+				{
+				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_DESTOVERLAY)
 					dwUpdateFlags |= DDOVER_KEYDESTOVERRIDE | DDOVER_DDFX;
 					ddofx.dckDestColorkey.dwColorSpaceLowValue = ColorKey;
 					ddofx.dckDestColorkey.dwColorSpaceHighValue = ColorKey;
 				}
+			}  else {
+				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY)
+				{
+					dwUpdateFlags |= DDOVER_KEYSRCOVERRIDE | DDOVER_DDFX;
+					ddofx.dckSrcColorkey.dwColorSpaceLowValue = ColorKey;
+					ddofx.dckSrcColorkey.dwColorSpaceHighValue = ColorKey;
+				}
 			}
 
-			HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, dwUpdateFlags, &ddofx);
+			// Get the screen (multi-monitor-compatible) coordinates of the client area :
+			MapWindowPoints(g_hEmuWindow, HWND_DESKTOP, (LPPOINT)&EmuDestRect, 2);
+
+			HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&EmuSourRect, g_pDDSPrimary, &EmuDestRect, dwUpdateFlags, &ddofx);
 		}
-		else
+		else // No hardware overlay
 		{
 			IDirect3DSurface8 *pBackBufferSurface = nullptr;
 			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
 			// if we obtained the backbuffer, load the YUY2 into the backbuffer
-			if (hRet == D3D_OK) {
+			if (hRet != D3D_OK) {
+				EmuWarning("Unable to get backbuffer surface!");
+			} else {
 				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 				D3DSURFACE_DESC BackBufferDesc;
 				pBackBufferSurface->GetDesc(&BackBufferDesc);
@@ -6152,21 +6158,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				// Limit the width and height of the output to the backbuffer dimensions.
 				// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
 				// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
-				RECT DestRect = { 0 };
 				{
-					// If there's a destination rectangle given, copy that into our local variable :
-					if (DstRect != NULL)
-						DestRect = *DstRect;
-
 					// Use our (bounded) copy when bounds exceed :
-					if (DestRect.right > BackBufferDesc.Width) {
-						DestRect.right = BackBufferDesc.Width;
-						DstRect = &DestRect;
+					if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
+						EmuDestRect.right = (LONG)BackBufferDesc.Width;
+						DstRect = &EmuDestRect;
 					}
 
-					if (g_dwOverlayH > BackBufferDesc.Height) {
-						DestRect.bottom = BackBufferDesc.Height;
-						DstRect = &DestRect;
+					if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
+						EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
+						DstRect = &EmuDestRect;
 					}
 				}
 
@@ -6181,7 +6182,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 					/* SrcFormat = */ D3DFMT_YUY2,
 					/* SrcPitch = */ g_dwOverlayP,
 					/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
-					/* pSrcRect = */ &SourRect,
+					/* SrcRect = */ &EmuSourRect,
 					/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
 					/* ColorKey = */ EnableColorKey ? ColorKey : 0);
 				if (hRet != D3D_OK) {
@@ -6200,10 +6201,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 
 			g_bHackUpdateSoftwareOverlay = TRUE;
 		}
-	}
-	else
-	{
-		EmuWarning("pSurface == NULL!");
 	}   
 
     return;
@@ -7280,7 +7277,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
     if(g_fYuvEnabled)
     {
         
-		EMUPATCH(D3DDevice_UpdateOverlay)(g_pCachedYuvSurface, 0, 0, FALSE, 0);
+		EMUPATCH(D3DDevice_UpdateOverlay)(g_pCachedYuvSurface, NULL, NULL, FALSE, 0);
         
     }
 
