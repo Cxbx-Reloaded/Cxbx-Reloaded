@@ -7768,6 +7768,106 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
     return;
 }
 
+void CxbxUpdateActiveIndexBuffer
+(
+	CONST PWORD         pIndexData,
+	UINT                VertexCount,
+	UINT				&uiStartIndex,
+	UINT				&uiNumVertices,
+	bool				&bActiveIB,
+	XTL::IDirect3DIndexBuffer8 *&pIndexBuffer
+)
+{
+	//#if 0
+	// update index buffer, if necessary
+	if (g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
+	{
+		DWORD dwSize = VertexCount * 2;   // 16-bit indices
+
+		HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
+		(
+			dwSize, 0, XTL::D3DFMT_INDEX16, XTL::D3DPOOL_MANAGED,
+			&g_pIndexBuffer->EmuIndexBuffer8
+		);
+
+		if (FAILED(hRet))
+			CxbxKrnlCleanup("CreateIndexBuffer Failed!");
+
+		BYTE *pData = 0;
+
+		hRet = g_pIndexBuffer->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
+
+		if (FAILED(hRet))
+			CxbxKrnlCleanup("IndexBuffer Lock Failed!");
+
+		memcpy(pData, (void*)g_pIndexBuffer->Data, dwSize);
+
+		g_pIndexBuffer->EmuIndexBuffer8->Unlock();
+
+		g_pIndexBuffer->Data = (ULONG)pData;
+
+		hRet = g_pD3DDevice8->SetIndices(g_pIndexBuffer->EmuIndexBuffer8, g_dwBaseVertexIndex);
+
+		if (FAILED(hRet))
+			CxbxKrnlCleanup("SetIndices Failed!");
+	}
+
+#ifdef _DEBUG_TRACK_VB
+	if (!g_bVBSkipStream)
+	{
+#endif
+		// check if there is an active index buffer
+		{
+			UINT BaseIndex = 0;
+
+			g_pD3DDevice8->GetIndices(&pIndexBuffer, &BaseIndex);
+
+			if (pIndexBuffer != 0)
+			{
+				bActiveIB = true;
+				pIndexBuffer->Release();
+			}
+		}
+
+		// TODO: caching (if it becomes noticably slow to recreate the buffer each time)
+		if (!bActiveIB)
+		{
+			if (FAILED(g_pD3DDevice8->CreateIndexBuffer(VertexCount * 2, D3DUSAGE_WRITEONLY, XTL::D3DFMT_INDEX16, XTL::D3DPOOL_MANAGED, &pIndexBuffer)))
+				CxbxKrnlCleanup("Cound not create index buffer! (%d bytes)", VertexCount * 2);
+
+			if (pIndexBuffer == 0)
+				CxbxKrnlCleanup("Could not create index buffer! (%d bytes)", VertexCount * 2);
+
+			BYTE *pbData = 0;
+
+			pIndexBuffer->Lock(0, 0, &pbData, 0);
+
+			if (pbData == 0)
+				CxbxKrnlCleanup("Could not lock index buffer!");
+
+			if (pIndexData)
+				memcpy(pbData, pIndexData, VertexCount * 2);
+
+			pIndexBuffer->Unlock();
+
+			g_pD3DDevice8->SetIndices(pIndexBuffer, g_dwBaseVertexIndex);
+
+			uiNumVertices = VertexCount;
+			uiStartIndex = 0;
+		}
+		else
+		{
+			uiNumVertices = ((DWORD)pIndexData) / 2 + VertexCount;
+			uiStartIndex = ((DWORD)pIndexData) / 2;
+		}
+#ifdef _DEBUG_TRACK_VB
+	}
+#endif
+}
+
+#define VERTICES_PER_QUAD 4
+#define TRIANGLES_PER_QUAD 2
+
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices
 // ******************************************************************
@@ -7778,8 +7878,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     CONST PWORD         pIndexData
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_DrawIndexedVertices\n"
            "(\n"
            "   PrimitiveType       : 0x%.08X\n"
@@ -7787,55 +7885,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
            "   pIndexData          : 0x%.08X\n"
            ");\n",
            PrimitiveType, VertexCount, pIndexData);
-//#if 0
-    // update index buffer, if necessary
-    if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
-    {
-        DWORD dwSize = VertexCount*2;   // 16-bit indices
 
-        HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
-        (
-            dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
-            &g_pIndexBuffer->EmuIndexBuffer8
-        );
-
-        if(FAILED(hRet))
-            CxbxKrnlCleanup("CreateIndexBuffer Failed!");
-
-        BYTE *pData = 0;
-
-        hRet = g_pIndexBuffer->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
-
-        if(FAILED(hRet))
-            CxbxKrnlCleanup("IndexBuffer Lock Failed!");
-
-        memcpy(pData, (void*)g_pIndexBuffer->Data, dwSize);
-
-        g_pIndexBuffer->EmuIndexBuffer8->Unlock();
-
-        g_pIndexBuffer->Data = (ULONG)pData;
-
-        hRet = g_pD3DDevice8->SetIndices(g_pIndexBuffer->EmuIndexBuffer8, g_dwBaseVertexIndex);
-
-        if(FAILED(hRet))
-            CxbxKrnlCleanup("SetIndices Failed!");
-    }
-
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 	CxbxUpdateNativeD3DResources();
 
-    if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
-        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+	UINT uiStartIndex = 0;
+	UINT uiNumVertices = 0;
+	bool bActiveIB = false;
+	XTL::IDirect3DIndexBuffer8 *pIndexBuffer = 0;
 
-	// HACK: Azurik :(
-//	if( ((DWORD)PrimitiveType) > 11 )
-	/*if( PrimitiveType != X_D3DPT_POINTLIST && PrimitiveType != X_D3DPT_LINELIST && 
-		PrimitiveType != X_D3DPT_LINELOOP && PrimitiveType != X_D3DPT_LINESTRIP &&
-		PrimitiveType != X_D3DPT_TRIANGLELIST && PrimitiveType != X_D3DPT_TRIANGLESTRIP && 
-		PrimitiveType != X_D3DPT_TRIANGLEFAN && PrimitiveType != X_D3DPT_QUADLIST &&
-		PrimitiveType != X_D3DPT_QUADSTRIP && PrimitiveType != X_D3DPT_POLYGON )
-	{
-		CxbxKrnlCleanup("Invalid Primitive type! %d (0x%X)", (int)PrimitiveType, (DWORD)PrimitiveType);
-	}*/
+	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount, /*OUT*/uiStartIndex,
+		/*OUT*/uiNumVertices, /*OUT*/bActiveIB, /*OUT*/pIndexBuffer);
 
     VertexPatchDesc VPDesc;
 
@@ -7848,89 +7908,59 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
     VertexPatcher VertPatch;
 	bool FatalError = false;
-
     bool bPatched = VertPatch.Apply(&VPDesc, &FatalError);
-
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    {
-    #endif
-
-    bool bActiveIB = false;
-
-    IDirect3DIndexBuffer8 *pIndexBuffer = 0;
-
-    // check if there is an active index buffer
-    {
-        UINT BaseIndex = 0;
-
-        g_pD3DDevice8->GetIndices(&pIndexBuffer, &BaseIndex);
-
-        if(pIndexBuffer != 0)
-        {
-            bActiveIB = true;
-            pIndexBuffer->Release();
-        }
-    }
-
-    UINT uiNumVertices = 0;
-    UINT uiStartIndex = 0;
-
-    // TODO: caching (if it becomes noticably slow to recreate the buffer each time)
-    if(!bActiveIB)
-    {
-        if(FAILED(g_pD3DDevice8->CreateIndexBuffer(VertexCount*2, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer)))
-			CxbxKrnlCleanup("Cound not create index buffer! (%d bytes)", VertexCount*2);
-
-        if(pIndexBuffer == 0)
-            CxbxKrnlCleanup("Could not create index buffer! (%d bytes)", VertexCount*2);
-
-        BYTE *pbData = 0;
-
-        pIndexBuffer->Lock(0, 0, &pbData, 0);
-
-        if(pbData == 0)
-            CxbxKrnlCleanup("Could not lock index buffer!");
-
-		if(pIndexData)
-			memcpy(pbData, pIndexData, VertexCount*2);
-
-        pIndexBuffer->Unlock();
-
-        g_pD3DDevice8->SetIndices(pIndexBuffer, g_dwBaseVertexIndex);
-
-        uiNumVertices = VertexCount;
-        uiStartIndex = 0;
-    }
-    else
-    {
-        uiNumVertices = ((DWORD)pIndexData)/2 + VertexCount;
-        uiStartIndex = ((DWORD)pIndexData)/2;
-    }
 
     if(IsValidCurrentShader() && !FatalError)
     {
-        g_pD3DDevice8->DrawIndexedPrimitive
-        (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
-        );
+		VertexCount = VPDesc.dwVertexCount; // Dxbx addition : Use the new VertexCount
+
+		if (VPDesc.PrimitiveType == X_D3DPT_QUADLIST)
+		{
+			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
+			// 4 vertices are just enough for two triangles (a fan starts with 3 vertices for 1 triangle,
+			// and adds 1 triangle via 1 additional vertex)
+			// This is slower (because of call-overhead) but doesn't require any index buffer patching at all!
+			// Note : XDK samples reaching this case are : DisplacementMap, Ripple
+			while ((int)VertexCount >= VERTICES_PER_QUAD)
+			{
+				g_pD3DDevice8->DrawIndexedPrimitive
+				(
+					D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
+					//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
+					/* MinVertexIndex = */0,
+					/* NumVertices = */VERTICES_PER_QUAD, // Use all 4 vertices of 1 quad
+					uiStartIndex,
+					/* primCount = */TRIANGLES_PER_QUAD // Draw 2 triangles with that
+				);
+
+				uiStartIndex += VERTICES_PER_QUAD;
+				VertexCount -= VERTICES_PER_QUAD;
+			}
+		}
+		else
+		{
+			// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
+			g_pD3DDevice8->DrawIndexedPrimitive(
+				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+				/* MinVertexIndex = */0,
+				/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
+				// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
+				uiStartIndex,
+				VPDesc.dwPrimitiveCount);
+/*
+			if FAILED(hRet) then
+				EmuWarning("DrawIndexedPrimitive failed!\n" + DxbxD3DErrorString(hRet));
+*/
+
+			if (VPDesc.PrimitiveType == X_D3DPT_LINELOOP)
+			{
+				EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+				//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
+				// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
+			}
+		}
 
 		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
-
-		/*if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) ) 
-		{ 
-			g_pD3DDevice8->DrawPrimitive 
-			( 
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwPrimitiveCount 
-			); 
-		} 
-		else 
-		{ 
-			g_pD3DDevice8->DrawIndexedPrimitive 
-			( 
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount 
-			); 
-		} */
     }
 
     if(!bActiveIB)
@@ -7938,10 +7968,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
         g_pD3DDevice8->SetIndices(0, 0);
         pIndexBuffer->Release();
     }
-
-    #ifdef _DEBUG_TRACK_VB
-    }
-    #endif
 
     VertPatch.Restore();
 
