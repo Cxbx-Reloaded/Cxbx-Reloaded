@@ -35,62 +35,6 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleBox, 5558, 10)
-
-        // XGSwizzleBox+0x60 : sub ecx, [eax]
-        { 0x60, 0x2B }, // (Offset,Value)-Pair #1
-        { 0x61, 0x08 }, // (Offset,Value)-Pair #2
-
-        // XGSwizzleBox+0x8E : lea ecx, [ebp+0xD8]
-        { 0x8E, 0x8D }, // (Offset,Value)-Pair #3
-        { 0x8F, 0x4D }, // (Offset,Value)-Pair #4
-        { 0x90, 0xD8 }, // (Offset,Value)-Pair #5
-
-        // XGSwizzleBox+0xD5 : shl eax, 2
-        { 0xD5, 0xC1 }, // (Offset,Value)-Pair #6
-        { 0xD6, 0xE0 }, // (Offset,Value)-Pair #7
-        { 0xD7, 0x02 }, // (Offset,Value)-Pair #8
-
-        // XGSwizzleBox+0xE2 : test ebx, ebx
-        { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
-        { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * XGSwizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGSwizzleRect, 5558, 8)
-
-        { 0x1E, 0x03 },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x83 },
-        { 0x7E, 0x6C },
-        { 0x9E, 0xFF },
-        { 0xBE, 0xFF },
-        { 0xDE, 0x89 },
-        { 0xFE, 0x89 },
-OOVPA_END;
-
-/* Leave unpatched
-// ******************************************************************
-// * XGUnswizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect, 5558, 8)
-
-        { 0x1E, 0x03 },
-        { 0x3E, 0x00 },
-        { 0x5E, 0xD2 },
-        { 0x7E, 0x75 },
-        { 0x9E, 0x70 },
-        { 0xC1, 0xE9 },
-        { 0xDE, 0x89 },
-        { 0xFE, 0x60 },
-OOVPA_END;
-*/
-
-// ******************************************************************
-// * XGSwizzleBox
-// ******************************************************************
 //OOVPA_NO_XREF(XGSwizzleBox, 5558, 8)
 //
 //        { 0x1E, 0x75 },
@@ -125,9 +69,9 @@ OOVPATable XG_5558[] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
     
-	// REGISTER_OOVPA(XGSwizzleRect, 5558, PATCH), // Leave unpatched
-	REGISTER_OOVPA(XGSwizzleBox, 5558, PATCH), // (* UNTESTED *)
-	// REGISTER_OOVPA(XGUnswizzleRect, 5558, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
+	REGISTER_OOVPA(XGSwizzleBox, 4627, PATCH), // (* UNTESTED *)
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
 	// REGISTER_OOVPA(XGUnswizzleBox, 5558, PATCH), //  (* UNTESTED *)
 };
 
