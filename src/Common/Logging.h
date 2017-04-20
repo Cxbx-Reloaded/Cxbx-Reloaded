@@ -249,6 +249,14 @@ extern thread_local std::string _logPrefix;
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \
 		std::cout << _logPrefix << __func__ << " returns " << r << "\n";
+
+
+	// LOG_FORWARD indicates that an api is implemented by a forward to another API
+	#define LOG_FORWARD(api) \
+		do { if(g_bPrintfOn) { \
+			std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n"; \
+		} } while (0)
+
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)
@@ -256,6 +264,7 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
 	#define LOG_FUNC_RESULT(r)
+	#define LOG_FORWARD(arg)
 #endif
 
 //
@@ -273,12 +282,6 @@ extern thread_local std::string _logPrefix;
 
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
-
-// LOG_FORWARD indicates that an api is implemented by a forward to another API
-#define LOG_FORWARD(api) \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n"; \
-	} } while (0)
 
 // LOG_IGNORED indicates that Cxbx consiously ignores an api
 #define LOG_IGNORED() \
