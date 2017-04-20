@@ -43,12 +43,16 @@
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
+#include "xxhash32.h"
+#include <Shlwapi.h>
 
 static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper);
 static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Header *pXbeHeader);
+static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 
 #include <shlobj.h>
 #include <unordered_map>
+#include <sstream>
 
 std::unordered_map<std::string, uint32_t> g_HLECache;
 
@@ -72,11 +76,54 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("*******************************************************************************\n");
 	printf("\n");
 
-	// TODO: Hash the loaded XBE, use it as a filename
-	// TODO: Attempt to open the HLE Cache file of this filename
-	// TODO: Check the cache header to make sure the compiletime is valid
-	// TODO: If so, load it
-	// TODO: Iterate through the cache calling GetProcAddress on all functions.
+	// Hash the loaded XBE's header, use it as a filename
+	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
+	std::stringstream sstream;
+	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
+	std::string filename = sstream.str();
+
+	if (PathFileExists(filename.c_str())) {
+		printf("Found HLE Cache File: %08X.ini\n", uiHash);
+
+		// Verify the version of the cache file against the HLE Database
+		char buffer[SHRT_MAX] = { 0 };
+		char* bufferPtr = buffer;
+
+		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
+
+		if (strcmp(buffer, szHLELastCompileTime) == 0) {
+			printf("Using HLE Cache\n");
+			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
+
+			// Parse the .INI file into the cache
+			while (strlen(bufferPtr) > 0) {
+				std::string ini_entry(bufferPtr);
+
+				auto separator = ini_entry.find('=');
+				std::string key = ini_entry.substr(0, separator);
+				std::string value = ini_entry.substr(separator + 1, std::string::npos);
+				uint32_t addr = strtol(value.c_str(), 0, 16);
+
+				g_HLECache[key] = addr;
+				bufferPtr += strlen(bufferPtr) + 1;
+			}
+
+			// Iterate through the cache calling GetProcAddress on all functions.	
+			for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+				std::string patchName = "XTL::EmuPatch_" + (*it).first;		
+				void* pFunc = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+
+				if (pFunc != nullptr) {
+					printf("HLECache: 0x%08X => %s\n", (*it).second, (*it).first.c_str());
+					EmuInstallPatch((*it).second, pFunc);
+				}
+			}
+
+			return;
+		}
+
+		printf("HLE Cache file is outdated and will be regenerated\n");
+	}
 
 	//
     // initialize Microsoft XDK emulation
@@ -420,7 +467,30 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 	printf("\n");
 
-	// TODO: Save the found symbols into the file
+	// Write the HLE Database version string
+	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
+
+	// Write the Certificate Details to the cache file
+	char tAsciiTitle[40] = "Unknown";
+	setlocale(LC_ALL, "English");
+	wcstombs(tAsciiTitle, pCertificate->wszTitleName, sizeof(tAsciiTitle));
+	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
+
+	std::stringstream titleId;
+	titleId << std::hex << pCertificate->dwTitleId;
+	WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
+
+	std::stringstream region;
+	region << std::hex << pCertificate->dwGameRegion;
+	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
+
+	// Write the found HLE Patches into the cache file
+	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+		std::stringstream cacheAddress;
+		cacheAddress << std::hex << (*it).second;
+		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
+	}
+
     return;
 }
 
@@ -647,12 +717,14 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 
 			if ((OovpaTable[a].Flags & Flag_DontScan) == Flag_DontScan) {
 				printf("\t*DISABLED*");
+			} else	{
+				// Only store entries in the Cache if they are not disabled
+				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
 			}
 
 			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
             {
 				printf("\t*PATCHED*");
-				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)addr;
                 EmuInstallPatch(pFunc, addr);
             }
 
