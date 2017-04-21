@@ -52,10 +52,10 @@
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // inline vertex buffer emulation
-XTL::DWORD                  *XTL::g_pIVBVertexBuffer = 0;
+XTL::DWORD                  *XTL::g_pIVBVertexBuffer = nullptr;
 XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
-struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
+struct XTL::_D3DIVB         *XTL::g_IVBTable = nullptr;
 extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
@@ -100,7 +100,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
                                      UINT             uiStream)
 {
     UINT                       uiStride;
-    IDirect3DVertexBuffer8    *pOrigVertexBuffer;
+    IDirect3DVertexBuffer8    *pOrigVertexBuffer = nullptr;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
@@ -177,7 +177,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     }
 
     uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
-    if(!pPatchDesc->pVertexStreamZeroData)
+    if(pOrigVertexBuffer)
     {
         pOrigVertexBuffer->Unlock();
     }
@@ -222,7 +222,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 										   bool			   *pbFatalError)
 {
     UINT                       uiStride;
-    IDirect3DVertexBuffer8    *pOrigVertexBuffer;
+    IDirect3DVertexBuffer8    *pOrigVertexBuffer = nullptr;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     void                      *pCalculateData = NULL;
     UINT                       uiLength;
@@ -232,7 +232,10 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
-        g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
+        g_pD3DDevice8->GetStreamSource(
+			uiStream, 
+			&pOrigVertexBuffer, 
+			&uiStride);
         if(!pOrigVertexBuffer)
 		{
 			/*if(!g_pVertexBuffer || !g_pVertexBuffer->EmuVertexBuffer8)
@@ -261,6 +264,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         {
             CxbxKrnlCleanup("Trying to find a cached Draw..UP with more than stream zero!");
         }
+
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
         pCalculateData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         // TODO: This is sometimes the number of indices, which isn't too good
@@ -279,13 +283,14 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         bool bMismatch = false;
         if(pCachedStream->uiCount == (pCachedStream->uiCheckFrequency - 1))
         {
-            if(!pPatchDesc->pVertexStreamZeroData)
+            if(pOrigVertexBuffer)
             {
                 if(FAILED(pOrigVertexBuffer->Lock(0, 0, (uint08**)&pCalculateData, 0)))
                 {
                     CxbxKrnlCleanup("Couldn't lock the original buffer");
                 }
             }
+
             // Use the cached stream length (which is a must for the UP stream)
             uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
             if(uiHash == pCachedStream->uiHash)
@@ -311,7 +316,8 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 pCachedStream = NULL;
                 bMismatch = true;
             }
-            if(!pPatchDesc->pVertexStreamZeroData)
+
+            if(pOrigVertexBuffer)
             {
                 pOrigVertexBuffer->Unlock();
             }
@@ -320,6 +326,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         {
             pCachedStream->uiCount++;
         }
+
         if(!bMismatch)
         {
             if(!pCachedStream->bIsUP)
@@ -337,18 +344,21 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 pPatchDesc->pVertexStreamZeroData = pCachedStream->pStreamUP;
                 pPatchDesc->uiVertexStreamZeroStride = pCachedStream->Stream.uiNewStride;
             }
+
             if(pCachedStream->dwPrimitiveCount)
             {
                 // The primitives were patched, draw with the correct number of primimtives from the cache
                 pPatchDesc->dwPrimitiveCount = pCachedStream->dwPrimitiveCount;
             }
+
             bApplied = true;
             m_bPatched = true;
         }
     }
+
     g_PatchedStreamsCache.Unlock();
 
-    if(!pPatchDesc->pVertexStreamZeroData)
+    if(pOrigVertexBuffer)
     {
         pOrigVertexBuffer->Release();
     }
@@ -358,9 +368,9 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
 UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
 {
-    if(VshHandleIsVertexShader(g_CurrentVertexShader))
+    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
     {
-        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(g_CurrentVertexShader);
+        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(pPatchDesc->hVertexShader);
         if(pDynamicPatch)
         {
             return pDynamicPatch->NbrStreams;
@@ -370,7 +380,7 @@ UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
             return 1; // Could be more, but it doesn't matter as we're not going to patch the types
         }
     }
-    else if(g_CurrentVertexShader)
+    else if(pPatchDesc->hVertexShader)
     {
         return 1;
     }
@@ -405,6 +415,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
     IDirect3DVertexBuffer8    *pNewVertexBuffer;
     uint08                    *pOrigData;
     uint08                    *pNewData;
+	UINT                       uiVertexCount;
     UINT                       uiStride;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     PATCHEDSTREAM             *pStream = &m_pStreams[uiStream];
@@ -413,14 +424,21 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
-        g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
+        g_pD3DDevice8->GetStreamSource(
+			uiStream, 
+			&pOrigVertexBuffer, 
+			&uiStride);
         if(FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
         {
             CxbxKrnlCleanup("Could not retrieve original buffer size");
         }
         // Set a new (exact) vertex count
-        pPatchDesc->dwVertexCount = Desc.Size / uiStride;
-        dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
+		uiVertexCount = Desc.Size / uiStride;
+		// Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
+		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
+		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
+		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
 
         if(FAILED(pOrigVertexBuffer->Lock(0, 0, &pOrigData, 0)))
         {
@@ -445,9 +463,11 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
         }
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
-        pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
+		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+		pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         // TODO: This is sometimes the number of indices, which isn't too good
-        dwNewSize = pPatchDesc->dwVertexCount * pStreamPatch->ConvertedStride;
+		uiVertexCount = pPatchDesc->dwVertexCount;
+        dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
         pNewData = (uint08*)g_MemoryManager.Allocate(dwNewSize);
         if(!pNewData)
@@ -456,7 +476,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         }
     }
 
-	for (uint32 uiVertex = 0; uiVertex < pPatchDesc->dwVertexCount; uiVertex++)
+	for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++)
 	{
 		uint08 *pOrigVertex = &pOrigData[uiVertex * uiStride];
 		uint08 *pNewDataPos = &pNewData[uiVertex * pStreamPatch->ConvertedStride];
@@ -519,9 +539,11 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 			case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				//((FLOAT *)pNewDataPos)[1] = 0.0f; // Would be needed for FLOAT2
 				pOrigVertex += 1 * sizeof(SHORT);
 				break;
 			}
+#if !DXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -529,6 +551,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 2 * sizeof(SHORT);
 				break;
 			}
+#endif
 			case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -537,6 +560,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 3 * sizeof(SHORT);
 				break;
 			}
+#if !DXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -546,6 +570,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 4 * sizeof(SHORT);
 				break;
 			}
+#endif
 			case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT*)pOrigVertex)[0];
 				((FLOAT *)pNewDataPos)[1] = ((FLOAT*)pOrigVertex)[1];
@@ -619,7 +644,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 
     for(uint08 i = 0; i < 4; i++)
     {
-        X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)EmuD3DActiveTexture[i];
+        X_D3DPixelContainer *pPixelContainer = EmuD3DActiveTexture[i];
 		if (pPixelContainer)
 		{ 
 			XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
@@ -830,10 +855,10 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     DWORD dwNewSizeWR       = 0;
 
     // vertex data arrays
-    BYTE *pOrigVertexData = 0;
-    BYTE *pPatchedVertexData = 0;
+    BYTE *pOrigVertexData = nullptr;
+    BYTE *pPatchedVertexData = nullptr;
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         g_pD3DDevice8->GetStreamSource(0, &pStream->pOriginalStream, &pStream->uiOrigStride);
         pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
@@ -862,7 +887,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
     }
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         // Retrieve the original buffer size
         {
@@ -965,7 +990,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 	    memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
     }
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         pStream->pOriginalStream->Unlock();
         pStream->pPatchedStream->Unlock();
@@ -1039,6 +1064,9 @@ bool XTL::VertexPatcher::Restore()
             if(this->m_bAllocatedStreamZeroData)
             {
                 free(m_pNewVertexStreamZeroData);
+				// Cleanup, just to be sure :
+				m_pNewVertexStreamZeroData = nullptr;
+				this->m_bAllocatedStreamZeroData = false;
             }
         }
         else
@@ -1055,7 +1083,7 @@ VOID XTL::EmuFlushIVB()
 {
     XTL::EmuUpdateDeferredStates();
 
-    DWORD *pdwVB = (DWORD*)g_IVBTable;
+    DWORD *pdwVB = (DWORD*)g_pIVBVertexBuffer;
 
     UINT uiStride = 0;
 
@@ -1080,23 +1108,18 @@ VOID XTL::EmuFlushIVB()
 
     DbgPrintf("g_IVBTblOffs := %d\n", g_IVBTblOffs);
 
-    for(uint v=0;v<g_IVBTblOffs;v++)
-    {
-        DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+    DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 
+	for(uint v=0;v<g_IVBTblOffs;v++)
+    {
         if(dwPos == D3DFVF_XYZ)
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*3);
-            }
-
             DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
- 
         }
         else if(dwPos == D3DFVF_XYZRHW)
         {
@@ -1104,11 +1127,6 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Rhw;
-
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*4);
-            }
 
             DbgPrintf("IVB Position := {%f, %f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
         }
@@ -1119,14 +1137,8 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
 			*(FLOAT*)pdwVB++ = g_IVBTable[v].Blend1;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*4);
-            }
-
 			DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1);
         }
-
         else
         {
 			CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
@@ -1139,23 +1151,12 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.y;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.z;
 
-            if(v == 0)
-            {
-                uiStride += (sizeof(FLOAT)*3);
-            }
-
             DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z);
- 
         }
 
         if(dwCurFVF & D3DFVF_DIFFUSE)
         {
             *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(DWORD);
-            }
 
             DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
         }
@@ -1164,25 +1165,13 @@ VOID XTL::EmuFlushIVB()
         {
             *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(DWORD);
-            }
-
             DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
         }
-
-        DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 
         if(dwTexN >= 1)
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
 
             DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
         }
@@ -1192,11 +1181,6 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.y;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
-
             DbgPrintf("IVB TexCoord2 := {%f, %f}\n", g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
         }
 
@@ -1204,11 +1188,6 @@ VOID XTL::EmuFlushIVB()
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.y;
-
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
 
             DbgPrintf("IVB TexCoord3 := {%f, %f}\n", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
         }
@@ -1218,21 +1197,29 @@ VOID XTL::EmuFlushIVB()
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.y;
 
-            if(v == 0)
-            {
-                uiStride += sizeof(FLOAT)*2;
-            }
-
             DbgPrintf("IVB TexCoord4 := {%f, %f}\n", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
         }
-    }
+
+		uint VertexBufferUsage = (BYTE *)pdwVB - (BYTE *)g_pIVBVertexBuffer;
+
+		if (v == 0)
+		{
+			// Stride is equal to the delta of the first vertex
+			uiStride = VertexBufferUsage;
+		}
+
+		if (VertexBufferUsage >= IVB_BUFFER_SIZE)
+		{
+			CxbxKrnlCleanup("Overflow g_pIVBVertexBuffer  : %d", v);
+		}
+	}
 
     VertexPatchDesc VPDesc;
 
     VPDesc.PrimitiveType = g_IVBPrimitiveType;
     VPDesc.dwVertexCount = g_IVBTblOffs;
     VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = g_IVBTable;
+    VPDesc.pVertexStreamZeroData = g_pIVBVertexBuffer;
     VPDesc.uiVertexStreamZeroStride = uiStride;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 
@@ -1283,7 +1270,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
 
         X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 
-        if(X_Format != 0xCD && (pTexture->EmuResource8->GetType() == D3DRTYPE_TEXTURE))
+        if(X_Format != 0xCD && ((pTexture->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_TEXTURE))
         {
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
             BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
