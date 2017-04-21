@@ -1224,6 +1224,14 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if(pResource->Lock != 0 && pResource->Lock != 0xEEEEEEEE && pResource->Lock != 0xFFFFFFFF)
         return;
 
+	// Skip resources with unknown size
+	if (pResource->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
+		return;
+
+	// Skip resources without data
+	if (pResource->Data == NULL)
+		return;
+
     // Already "Registered" implicitly
     if((pResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
         return;
@@ -1234,10 +1242,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 
 	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
         
-
-    if(pResource->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE) {
-		g_RegisteredResources.push_back(pResource->Data);
-    }
+	g_RegisteredResources.push_back(pResource->Data);
 }
 
 // ensure a given width/height are powers of 2
