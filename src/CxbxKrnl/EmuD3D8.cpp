@@ -3529,8 +3529,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 //#if 0
 	if(pIndexData != NULL)
 	{
-		DbgPrintf("EmuD3DDevice_SetIndcies(): pIndexData->EmuIndexBuffer8:= 0x%.08X\n", pIndexData->EmuIndexBuffer8 );
-		DbgPrintf("EmuD3DDevice_SetIndcies(): pIndexData->Lock:= 0x%.08X\n", pIndexData->Lock );
+		DbgPrintf("EmuD3DDevice_SetIndices(): pIndexData->EmuIndexBuffer8:= 0x%.08X\n", pIndexData->EmuIndexBuffer8 );
+		DbgPrintf("EmuD3DDevice_SetIndices(): pIndexData->Lock:= 0x%.08X\n", pIndexData->Lock );
 	}
 
     g_dwBaseVertexIndex = BaseVertexIndex;
