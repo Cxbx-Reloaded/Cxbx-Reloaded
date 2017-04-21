@@ -368,9 +368,9 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
 UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
 {
-    if(VshHandleIsVertexShader(g_CurrentVertexShader))
+    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
     {
-        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(g_CurrentVertexShader);
+        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(pPatchDesc->hVertexShader);
         if(pDynamicPatch)
         {
             return pDynamicPatch->NbrStreams;
@@ -380,7 +380,7 @@ UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
             return 1; // Could be more, but it doesn't matter as we're not going to patch the types
         }
     }
-    else if(g_CurrentVertexShader)
+    else if(pPatchDesc->hVertexShader)
     {
         return 1;
     }
