@@ -867,6 +867,28 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ShowVideoConfig(hwnd);
                     break;
 
+				case ID_CACHE_CLEARHLECACHE:
+				{
+					std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+					std::string fullpath = cacheDir + "*.*";
+
+					WIN32_FIND_DATA data;
+					HANDLE hFind = FindFirstFile(fullpath.c_str(), &data);
+					if (hFind != INVALID_HANDLE_VALUE) {						BOOL bContinue = TRUE;							do	{							if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+								fullpath = cacheDir + data.cFileName;
+								if (!DeleteFile(fullpath.c_str())) {
+									break;
+								}
+							}
+
+							bContinue = FindNextFile(hFind, &data);
+						} while (bContinue);
+						FindClose(hFind);
+					}
+					MessageBox(m_hwnd, "The HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+				}
+				break;
+
                 case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
                 {
                     if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
