@@ -83,7 +83,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
 
-	if (PathFileExists(filename.c_str())) {
+	// TODO: Fix HLE Cache
+	// if (PathFileExists(filename.c_str())) {
+	if (false) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
 		// Verify the version of the cache file against the HLE Database
@@ -446,7 +448,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 }
 
 				// TODO: Re-enable this after fixing render states
-            	// If the HLE Cache was used, skip symbol maching/patching
+            	// uIf the HLE Cache was used, skip symbol maching/patching
 				//if (g_HLECacheUsed) {
 					//continue;
 				//}
