@@ -151,7 +151,7 @@ static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DResource *XTL::EmuD3DActiveTexture[4] = {0,0,0,0};
+XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[4] = {0,0,0,0};
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -1285,7 +1285,7 @@ static void EmuUnswizzleTextureStages()
 	for( int i = 0; i < 4; i++ )
 	{
 		// for current usages, we're always on stage 0
-		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)XTL::EmuD3DActiveTexture[i];
+		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
 
 		if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
 			return;
@@ -3581,10 +3581,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
            ");\n",
            Stage, pTexture);
 
-    IDirect3DBaseTexture8 *pBaseTexture8 = NULL;
+    IDirect3DBaseTexture8 *pBaseTexture8 = nullptr;
 
-    EmuD3DActiveTexture[Stage] = pTexture;
-
+    EmuD3DActiveTexture[Stage] = (X_D3DPixelContainer*)pTexture;
     if(pTexture != NULL)
     {
         EmuVerifyResourceIsRegistered(pTexture);
@@ -9587,7 +9586,7 @@ XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
            Stage);
 	
 	// Get the active texture from this stage
-	X_D3DResource* pRet = EmuD3DActiveTexture[Stage];
+	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
 
 		
 
