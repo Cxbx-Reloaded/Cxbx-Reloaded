@@ -1064,6 +1064,9 @@ bool XTL::VertexPatcher::Restore()
             if(this->m_bAllocatedStreamZeroData)
             {
                 free(m_pNewVertexStreamZeroData);
+				// Cleanup, just to be sure :
+				m_pNewVertexStreamZeroData = nullptr;
+				this->m_bAllocatedStreamZeroData = false;
             }
         }
         else
