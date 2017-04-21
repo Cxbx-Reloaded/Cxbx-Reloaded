@@ -3461,11 +3461,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 
     // update data ptr
     {
-        BYTE *pData = NULL;
+        BYTE *pNativeData = nullptr;
 
-        (*ppIndexBuffer)->EmuIndexBuffer8->Lock(0, Length, &pData, NULL);
+		hRet = (*ppIndexBuffer)->EmuIndexBuffer8->Lock(/*OffsetToLock=*/0, Length, &pNativeData, /*Flags=*/0);
+		if(FAILED(hRet))
+			CxbxKrnlCleanup("IndexBuffer Lock Failed!\n\nError: \nDesc: "/*,
+				DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
-        (*ppIndexBuffer)->Data = (DWORD)pData;
+        (*ppIndexBuffer)->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
     }
 
     return hRet;
@@ -3543,7 +3546,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 		
         IDirect3DIndexBuffer8 *pIndexBuffer = pIndexData->EmuIndexBuffer8;
 
-        if(pIndexData->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
+		if (pIndexData->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
+			; // this should have been prevented by EmuVerifyResourceIsRegistered
+		else
             hRet = g_pD3DDevice8->SetIndices(pIndexBuffer, BaseVertexIndex);
     }
     else
@@ -4450,21 +4455,22 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 g_VBTrackTotal.insert(pResource->EmuVertexBuffer8);
                 #endif
 
-                BYTE *pData = NULL;
+                BYTE *pNativeData = nullptr;
 
-                hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
-
+                hRet = pResource->EmuVertexBuffer8->Lock(
+					/*OffsetToLock=*/0, 
+					/*SizeToLock=*/0/*=entire buffer*/, 
+					&pNativeData, 
+					/*Flags=*/0);
                 if(FAILED(hRet))
                     CxbxKrnlCleanup("VertexBuffer Lock Failed!\n\nError: \nDesc: "/*,
-								DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
+						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
-
-                memcpy(pData, (void*)pBase, dwSize);
-
+                memcpy(pNativeData, (void*)pBase, dwSize);
                 pResource->EmuVertexBuffer8->Unlock();
 
-                pResource->Data = (DWORD)pData;
-            }
+				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
+			}
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pResource->EmuVertexBuffer8);
         }
@@ -4496,26 +4502,21 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     dwSize, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
                     &pIndexBuffer->EmuIndexBuffer8
                 );
-
                 if(FAILED(hRet))
 					CxbxKrnlCleanup("CreateIndexBuffer Failed!\n\nError: \nDesc: \nSize: %d",
 								/*DXGetErrorString8A(hRet), *//*DXGetErrorDescription8A(hRet),*/ dwSize);
 
+                BYTE *pNativeData = nullptr;
 
-                BYTE *pData = NULL;
-
-                hRet = pResource->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
-
+                hRet = pResource->EmuIndexBuffer8->Lock(/*OffsetToLock=*/0, dwSize, &pNativeData, /*Flags*/0);
                 if(FAILED(hRet))
                     CxbxKrnlCleanup("IndexBuffer Lock Failed!\n\nError: %s\nDesc: "/*,
-								DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
+						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
-
-                memcpy(pData, (void*)pBase, dwSize);
-
+                memcpy(pNativeData, (void*)pBase, dwSize);
                 pResource->EmuIndexBuffer8->Unlock();
 
-                pResource->Data = (DWORD)pData;
+                pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : Use pBase
             }
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created IndexBuffer (0x%.08X)\n", pResource->EmuIndexBuffer8);
@@ -7401,7 +7402,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 (
-    X_D3DVertexBuffer  *ppVertexBuffer,
+    X_D3DVertexBuffer  *pVertexBuffer,
     UINT                OffsetToLock,
     UINT                SizeToLock,
     BYTE              **ppbData,
@@ -7449,28 +7450,31 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
            "   ppVertexBuffer      : 0x%.08X\n"
            "   Flags               : 0x%.08X\n"
            ");\n",
-           ppVertexBuffer, Flags);
+           pVertexBuffer, Flags);
 
-    IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
 
-	EmuVerifyResourceIsRegistered(ppVertexBuffer);
+	EmuVerifyResourceIsRegistered(pVertexBuffer);
 
-    BYTE *pbData = NULL;
+    BYTE *pbNativeData = NULL;
 
     HRESULT hRet = S_OK;
 	
-	if( ppVertexBuffer->EmuVertexBuffer8 )
+    IDirect3DVertexBuffer8 *pVertexBuffer8 = pVertexBuffer->EmuVertexBuffer8;
+	if (pVertexBuffer8 == nullptr)
+		EmuWarning("ppVertexBuffer->EmuVertexBuffer8 == nullptr!");
+	else
 	{
-		pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
-		hRet = pVertexBuffer8->Lock(0, 0, &pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
-
+		hRet = pVertexBuffer8->Lock(
+			/*OffsetToLock=*/0, 
+			/*SizeToLock=*/0/*=entire buffer*/, 
+			&pbNativeData,
+			EmuXB2PC_D3DLock(Flags) // Fixed flags check, Battlestar Galactica now displays graphics correctly
+		);
 		if( FAILED( hRet ) )
 			EmuWarning("Lock vertex buffer failed!");
 	}
-	else
-		EmuWarning("ppVertexBuffer->EmuVertexBuffer8 == nullptr!");
 
-    return pbData;
+    return pbNativeData; // For now, give the native buffer memory to Xbox. TODO : pVertexBuffer->Data 
 }
 
 // ******************************************************************

@@ -1220,7 +1220,7 @@ VOID WINAPI EMUPATCH(D3DVertexBuffer_Lock)
 // ******************************************************************
 BYTE* WINAPI EMUPATCH(D3DVertexBuffer_Lock2)
 (
-    X_D3DVertexBuffer  *ppVertexBuffer,
+    X_D3DVertexBuffer  *pVertexBuffer,
     DWORD               Flags
 );
 
