@@ -2655,7 +2655,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     pD3DVertexShader->Handle = (DWORD)pVertexShader;
 
-    *pHandle = ((DWORD)pD3DVertexShader) | 0x80000000;
+	*pHandle = (DWORD)pD3DVertexShader; // DON'T collide with MM_SYSTEM_PHYSICAL_MAP (see VshHandleIsFVF and VshHandleIsVertexShader)
 
     if(FAILED(hRet))
     {
