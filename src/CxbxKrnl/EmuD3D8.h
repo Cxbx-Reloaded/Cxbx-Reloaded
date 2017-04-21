@@ -1208,7 +1208,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetTransform)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DVertexBuffer_Lock)
 (
-    X_D3DVertexBuffer   *ppVertexBuffer,
+    X_D3DVertexBuffer   *pVertexBuffer,
     UINT                OffsetToLock,
     UINT                SizeToLock,
     BYTE              **ppbData,

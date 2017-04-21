@@ -7413,17 +7413,17 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 
     DbgPrintf("EmuD3D8: EmuIDirect3DVertexBuffer8_Lock\n"
            "(\n"
-           "   ppVertexBuffer      : 0x%.08X\n"
+           "   pVertexBuffer       : 0x%.08X\n"
            "   OffsetToLock        : 0x%.08X\n"
            "   SizeToLock          : 0x%.08X\n"
            "   ppbData             : 0x%.08X\n"
            "   Flags               : 0x%.08X\n"
            ");\n",
-           ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
+           pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
 
-	EmuVerifyResourceIsRegistered(ppVertexBuffer);
+	EmuVerifyResourceIsRegistered(pVertexBuffer);
 
-    IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
+    IDirect3DVertexBuffer8 *pVertexBuffer8 = pVertexBuffer->EmuVertexBuffer8;
 
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
     if(FAILED(hRet))
@@ -7437,7 +7437,7 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 // ******************************************************************
 BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 (
-    X_D3DVertexBuffer  *ppVertexBuffer,
+    X_D3DVertexBuffer  *pVertexBuffer,
     DWORD               Flags
 )
 {
