@@ -1270,7 +1270,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
 
         X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 
-        if(X_Format != 0xCD && (pTexture->EmuResource8->GetType() == D3DRTYPE_TEXTURE))
+        if(X_Format != 0xCD && ((pTexture->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_TEXTURE))
         {
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
             BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
