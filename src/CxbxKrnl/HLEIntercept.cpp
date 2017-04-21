@@ -83,9 +83,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
 
-	// TODO: Fix HLE Cache
-	// if (PathFileExists(filename.c_str())) {
-	if (false) {
+	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
 		// Verify the version of the cache file against the HLE Database
@@ -93,6 +91,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		char* bufferPtr = buffer;
 
 		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
+		g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
 		if (strcmp(buffer, szHLELastCompileTime) == 0) {
 			printf("Using HLE Cache\n");
@@ -122,6 +121,28 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				}
 			}
 
+
+			// Fix up Render state and Texture States
+			if (g_HLECache.find("D3DDeferredRenderState") == g_HLECache.end()) {
+				CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+			}
+			
+			if (g_HLECache.find("D3DDeferredTextureState") == g_HLECache.end()) {
+				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+			}
+
+			XTL::EmuD3DDeferredRenderState = (DWORD*)g_HLECache["D3DDeferredRenderState"];
+			XTL::EmuD3DDeferredTextureState = (DWORD*)g_HLECache["D3DDeferredTextureState"];
+
+			// TODO: Move this into a function rather than duplicating from HLE scanning code
+			for (int v = 0; v<44; v++) {
+				XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+			}
+
+			for (int s = 0; s<4; s++) {
+				for (int v = 0; v<32; v++)
+					XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
+			}
 			g_HLECacheUsed = true;
 		}
 
@@ -130,6 +151,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			printf("HLE Cache file is outdated and will be regenerated\n");
 			g_HLECacheUsed = false;
 		}
+	}
+
+	// If the HLE Cache was used, skip symbol maching/patching
+	if (g_HLECacheUsed) {
+		return;
 	}
 
 	//
@@ -379,6 +405,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
                             }
 
+							g_HLECache["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
 							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
@@ -436,6 +463,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                         XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
                                 }
 
+								g_HLECache["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
 								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             }
                             else
@@ -446,12 +474,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         }
                     }
                 }
-
-				// TODO: Re-enable this after fixing render states
-            	// uIf the HLE Cache was used, skip symbol maching/patching
-				//if (g_HLECacheUsed) {
-					//continue;
-				//}
 
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
@@ -496,6 +518,19 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	std::stringstream region;
 	region << std::hex << pCertificate->dwGameRegion;
 	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
+
+	// Write Library Details
+	for (int i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
+		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
+		std::stringstream buildVersion;
+		buildVersion << pLibraryVersion[i].wBuildVersion;
+
+		WritePrivateProfileString("Libs", LibraryName.c_str(), buildVersion.str().c_str(), filename.c_str());
+	}
+
+	std::stringstream buildVersion;
+	buildVersion << g_BuildVersion;
+	WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
 
 	// Write the found HLE Patches into the cache file
 	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
