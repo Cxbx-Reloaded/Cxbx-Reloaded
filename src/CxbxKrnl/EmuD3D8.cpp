@@ -259,6 +259,76 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
 	return pThis->EmuResource8;
 }
 
+XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_SURFACE)
+		return nullptr;
+
+	return pThis->EmuSurface8;
+}
+
+XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+		return nullptr;
+
+	return pThis->EmuBaseTexture8;
+}
+
+XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+		return nullptr;
+
+	// TODO : Check for 1 face?
+
+	return pThis->EmuTexture8;
+}
+
+XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+		return nullptr;
+
+	// TODO : Check for 6 faces?
+
+	return pThis->EmuCubeTexture8;
+}
+
+XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_INDEXBUFFER)
+		return nullptr;
+
+	return pThis->EmuIndexBuffer8;
+}
+
+XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pThis)
+{
+	if (pThis == NULL)
+		return nullptr;
+
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
+		return nullptr;
+
+	return pThis->EmuVertexBuffer8;
+}
+
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 {
 	if (EmuResource != nullptr)
