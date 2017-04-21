@@ -3539,15 +3539,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
             pIndexData->Lock = 0;
 
         EmuVerifyResourceIsRegistered(pIndexData);
-
-		// HACK: Unreal Championship
-		if((pIndexData->Lock & 0xFFFF0000) == 0x00490000 || (pIndexData->Lock & 0xF0000000) != 0x00000000 || 
-			pIndexData->Lock == 0x10)
-		{
-			hRet = E_FAIL;
-			goto fail;
-		}
-
+		
         IDirect3DIndexBuffer8 *pIndexBuffer = pIndexData->EmuIndexBuffer8;
 
         if(pIndexData->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
@@ -3560,7 +3552,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
         hRet = g_pD3DDevice8->SetIndices(0, BaseVertexIndex);
     }
 //#endif
-fail:
     
 
     return hRet;
