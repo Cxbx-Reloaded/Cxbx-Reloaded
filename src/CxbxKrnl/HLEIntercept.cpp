@@ -55,6 +55,7 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 #include <sstream>
 
 std::unordered_map<std::string, uint32_t> g_HLECache;
+bool g_HLECacheUsed = false;
 
 uint32 g_BuildVersion;
 
@@ -119,10 +120,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				}
 			}
 
-			return;
+			g_HLECacheUsed = true;
 		}
 
-		printf("HLE Cache file is outdated and will be regenerated\n");
+		// If g_HLECache didn't get filled, the symbol cache is invalid
+		if (g_HLECache.empty()) {
+			printf("HLE Cache file is outdated and will be regenerated\n");
+			g_HLECacheUsed = false;
+		}
 	}
 
 	//
@@ -439,6 +444,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         }
                     }
                 }
+
+				// If the HLE Cache was used, skip symbol maching/patching
+				if (g_HLECacheUsed) {
+					continue;
+				}
 
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
