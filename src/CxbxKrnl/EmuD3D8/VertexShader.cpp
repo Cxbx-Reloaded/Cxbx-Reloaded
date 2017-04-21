@@ -295,7 +295,7 @@ typedef struct _VSH_IMD_PARAMETER
 {
     boolean         Active;
     VSH_PARAMETER   Parameter;
-	// There is only a single address register in Microsoft� DirectX� 8.0.
+	// There is only a single address register in Microsoft DirectX 8.0.
 	// The address register, designated as a0.x, may be used as signed
 	// integer offset in relative addressing into the constant register file.
 	//     c[a0.x + n]
@@ -2279,7 +2279,7 @@ boolean XTL::VshHandleIsValidShader(DWORD Handle)
 
     if (VshHandleIsVertexShader(Handle))
     {
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
         if (pVertexShader->Status != 0)
         {
