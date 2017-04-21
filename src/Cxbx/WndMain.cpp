@@ -870,22 +870,29 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case ID_CACHE_CLEARHLECACHE:
 				{
 					std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
-					std::string fullpath = cacheDir + "*.*";
+					std::string fullpath = cacheDir + "*.ini";
 
 					WIN32_FIND_DATA data;
-					HANDLE hFind = FindFirstFile(fullpath.c_str(), &data);
-					if (hFind != INVALID_HANDLE_VALUE) {						BOOL bContinue = TRUE;							do	{							if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-								fullpath = cacheDir + data.cFileName;
+					HANDLE hFind = FindFirstFile(fullpath.c_str(), &data);
+
+					if (hFind != INVALID_HANDLE_VALUE) {
+						BOOL bContinue = TRUE;	
+						do	{
+							if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+								fullpath = cacheDir + data.cFileName;
+
 								if (!DeleteFile(fullpath.c_str())) {
 									break;
 								}
 							}
 
 							bContinue = FindNextFile(hFind, &data);
-						} while (bContinue);
+						} while (bContinue);
+
 						FindClose(hFind);
 					}
-					MessageBox(m_hwnd, "The HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+
+					MessageBox(m_hwnd, "The HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 				}
 				break;
 
