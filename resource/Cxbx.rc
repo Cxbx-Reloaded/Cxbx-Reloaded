@@ -127,9 +127,14 @@ BEGIN
     END
     POPUP "&Settings"
     BEGIN
-        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
+        MENUITEM "Config &Controller...",		ID_SETTINGS_CONFIG_CONTROLLER
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND, GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
+        MENUITEM SEPARATOR
+        POPUP "&HLE Cache"
+        BEGIN
+            MENUITEM "&Clear HLE Cache",            ID_CACHE_CLEARHLECACHE
+        END
         MENUITEM SEPARATOR
         POPUP "&LLE (Experimental)"
         BEGIN

@@ -90,6 +90,8 @@
 #define ID_EDIT_DUMPXBEINFOTO_FILE      40071
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
 #define ID_EMULATION_STOP               40082
+#define ID_SETTINGS_CACHE               40083
+#define ID_CACHE_CLEARHLECACHE          40084
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -97,7 +99,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         40083
+#define _APS_NEXT_COMMAND_VALUE         40085
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
