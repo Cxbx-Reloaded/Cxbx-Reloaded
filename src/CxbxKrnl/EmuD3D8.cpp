@@ -1232,7 +1232,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 		return;
 	}
 
-    XTL::EMUPATCH(D3DResource_Register)(pResource, 0/*(PVOID)pResource->Data*/);
+	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
         
 
     if(pResource->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE) {
@@ -3437,11 +3437,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
            ");\n",
            Length, Usage, Format, Pool, ppIndexBuffer);
 
+
+	if (Format != X_D3DFMT_INDEX16)
+		EmuWarning("CreateIndexBuffer called with unexpected format! (0x%.08X)", Format);
+
     *ppIndexBuffer = EmuNewD3DIndexBuffer();
 
-    HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
+	HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
-        Length, NULL, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
+        Length/*InBytes*/, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
     );
 
     DbgPrintf("EmuD3D8: EmuIndexBuffer8 := 0x%.08X\n", (*ppIndexBuffer)->EmuIndexBuffer8);
@@ -3449,10 +3453,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
     if(FAILED(hRet))
         EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
 
-    //
     // update data ptr
-    //
-
     {
         BYTE *pData = NULL;
 
@@ -3460,8 +3461,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 
         (*ppIndexBuffer)->Data = (DWORD)pData;
     }
-
-    
 
     return hRet;
 }
@@ -3477,8 +3476,8 @@ XTL::X_D3DIndexBuffer * WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer2)(UINT 
 
 	EMUPATCH(D3DDevice_CreateIndexBuffer)
     (
-        Length,
-        NULL,
+        Length/*InBytes*/,
+        /*Usage=*/0,
         X_D3DFMT_INDEX16,
         D3DPOOL_MANAGED,
         &pIndexBuffer
@@ -3530,7 +3529,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 
     g_dwBaseVertexIndex = BaseVertexIndex;
 
-    if(pIndexData != 0)
+    if(pIndexData != NULL)
     {
         g_pIndexBuffer = pIndexData;
 
@@ -3543,9 +3542,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
     }
     else
     {
-        g_pIndexBuffer = 0;
+        g_pIndexBuffer = nullptr;
 
-        hRet = g_pD3DDevice8->SetIndices(0, BaseVertexIndex);
+        hRet = g_pD3DDevice8->SetIndices(nullptr, BaseVertexIndex);
     }
 //#endif
     
@@ -4488,7 +4487,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                 HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
                 (
-                    dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+                    dwSize, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
                     &pIndexBuffer->EmuIndexBuffer8
                 );
 
@@ -5192,7 +5191,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
             g_MemoryManager.Free((void*)pThis->Data);
-            uRet = --pThis->Lock;
+            uRet = --pThis->Lock; // TODO : This makes no sense (as it mangles X_D3DRESOURCE_LOCK_PALETTE) but crashes otherwise?!
         }
         else if(pResource8 != nullptr)
         {
@@ -6117,7 +6116,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			DDSURFACEDESC2  ddsd2;
 			ZeroMemory(&ddsd2, sizeof(ddsd2));
 			ddsd2.dwSize = sizeof(ddsd2);
-			if(FAILED(g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL)))
+			if(FAILED(g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, 0)))
 				EmuWarning("Unable to lock overlay surface!");
 			else
 			// copy data
@@ -7405,6 +7404,7 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 {
 	FUNC_EXPORTS
 
+
     DbgPrintf("EmuD3D8: EmuIDirect3DVertexBuffer8_Lock\n"
            "(\n"
            "   ppVertexBuffer      : 0x%.08X\n"
@@ -7420,11 +7420,8 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
     IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
 
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
-
     if(FAILED(hRet))
-        EmuWarning("VertexBuffer Lock Failed!");
-
-    
+        EmuWarning("VertexBuffer Lock Failed!");    
 
     return;
 }
@@ -7439,6 +7436,7 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 )
 {
 	FUNC_EXPORTS
+
 
     DbgPrintf("EmuD3D8: EmuIDirect3DVertexBuffer8_Lock2\n"
            "(\n"
@@ -7461,12 +7459,10 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 		hRet = pVertexBuffer8->Lock(0, 0, &pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
 
 		if( FAILED( hRet ) )
-			EmuWarning( "Lock vertex buffer failed!" );
+			EmuWarning("Lock vertex buffer failed!");
 	}
 	else
-		EmuWarning( "ppVertexBuffer->EmuVertexBuffer8 == NULL!" );
-
-    
+		EmuWarning("ppVertexBuffer->EmuVertexBuffer8 == nullptr!");
 
     return pbData;
 }
@@ -7852,7 +7848,7 @@ void CxbxUpdateActiveIndexBuffer
 #endif
 		// check if there is an active index buffer
 		{
-			UINT BaseIndex = 0;
+			UINT BaseIndex = 0; // ignored
 
 			g_pD3DDevice8->GetIndices(&pIndexBuffer, &BaseIndex);
 
@@ -7894,6 +7890,7 @@ void CxbxUpdateActiveIndexBuffer
 			uiNumVertices = ((DWORD)pIndexData) / 2 + VertexCount;
 			uiStartIndex = ((DWORD)pIndexData) / 2;
 		}
+
 #ifdef _DEBUG_TRACK_VB
 	}
 #endif
@@ -7914,6 +7911,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 {
 	FUNC_EXPORTS
 
+	// Note : In gamepad.xbe, the gamepad is drawn by D3DDevice_DrawIndexedVertices
     DbgPrintf("EmuD3D8: EmuD3DDevice_DrawIndexedVertices\n"
            "(\n"
            "   PrimitiveType       : 0x%.08X\n"
@@ -7928,7 +7926,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 	UINT uiStartIndex = 0;
 	UINT uiNumVertices = 0;
 	bool bActiveIB = false;
-	XTL::IDirect3DIndexBuffer8 *pIndexBuffer = 0;
+	XTL::IDirect3DIndexBuffer8 *pIndexBuffer = nullptr;
 
 	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount, /*OUT*/uiStartIndex,
 		/*OUT*/uiNumVertices, /*OUT*/bActiveIB, /*OUT*/pIndexBuffer);

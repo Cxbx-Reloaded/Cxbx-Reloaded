@@ -100,7 +100,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
                                      UINT             uiStream)
 {
     UINT                       uiStride;
-    IDirect3DVertexBuffer8    *pOrigVertexBuffer;
+    IDirect3DVertexBuffer8    *pOrigVertexBuffer = nullptr;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
@@ -222,7 +222,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 										   bool			   *pbFatalError)
 {
     UINT                       uiStride;
-    IDirect3DVertexBuffer8    *pOrigVertexBuffer;
+    IDirect3DVertexBuffer8    *pOrigVertexBuffer = nullptr;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
     void                      *pCalculateData = NULL;
     UINT                       uiLength;
@@ -232,7 +232,10 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
-        g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
+        g_pD3DDevice8->GetStreamSource(
+			uiStream, 
+			&pOrigVertexBuffer, 
+			&uiStride);
         if(!pOrigVertexBuffer)
 		{
 			/*if(!g_pVertexBuffer || !g_pVertexBuffer->EmuVertexBuffer8)
@@ -261,6 +264,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         {
             CxbxKrnlCleanup("Trying to find a cached Draw..UP with more than stream zero!");
         }
+
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
         pCalculateData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         // TODO: This is sometimes the number of indices, which isn't too good
@@ -286,6 +290,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                     CxbxKrnlCleanup("Couldn't lock the original buffer");
                 }
             }
+
             // Use the cached stream length (which is a must for the UP stream)
             uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
             if(uiHash == pCachedStream->uiHash)
@@ -320,6 +325,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         {
             pCachedStream->uiCount++;
         }
+
         if(!bMismatch)
         {
             if(!pCachedStream->bIsUP)
@@ -337,15 +343,18 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 pPatchDesc->pVertexStreamZeroData = pCachedStream->pStreamUP;
                 pPatchDesc->uiVertexStreamZeroStride = pCachedStream->Stream.uiNewStride;
             }
+
             if(pCachedStream->dwPrimitiveCount)
             {
                 // The primitives were patched, draw with the correct number of primimtives from the cache
                 pPatchDesc->dwPrimitiveCount = pCachedStream->dwPrimitiveCount;
             }
+
             bApplied = true;
             m_bPatched = true;
         }
     }
+
     g_PatchedStreamsCache.Unlock();
 
     if(!pPatchDesc->pVertexStreamZeroData)
@@ -413,7 +422,10 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 
     if(!pPatchDesc->pVertexStreamZeroData)
     {
-        g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
+        g_pD3DDevice8->GetStreamSource(
+			uiStream, 
+			&pOrigVertexBuffer, 
+			&uiStride);
         if(FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
         {
             CxbxKrnlCleanup("Could not retrieve original buffer size");
@@ -519,9 +531,11 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 			case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				//((FLOAT *)pNewDataPos)[1] = 0.0f; // Would be needed for FLOAT2
 				pOrigVertex += 1 * sizeof(SHORT);
 				break;
 			}
+#if !DXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -529,6 +543,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 2 * sizeof(SHORT);
 				break;
 			}
+#endif
 			case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -537,6 +552,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 3 * sizeof(SHORT);
 				break;
 			}
+#if !DXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -546,6 +562,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 4 * sizeof(SHORT);
 				break;
 			}
+#endif
 			case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT*)pOrigVertex)[0];
 				((FLOAT *)pNewDataPos)[1] = ((FLOAT*)pOrigVertex)[1];
