@@ -141,9 +141,9 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
-static PVOID pCurrentPalette = nullptr;
+static PVOID g_pCurrentPalette = nullptr;
 // cached palette size
-static DWORD dwCurrentPaletteSize = -1;
+static DWORD g_dwCurrentPaletteSize = -1;
 
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
@@ -4900,7 +4900,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 											&destRect,
 											pSrc, // Source buffer
 											dwMipPitch, // Source pitch
-											pCurrentPalette,
+											g_pCurrentPalette,
 											&SrcRect,
 											D3DX_DEFAULT, // D3DX_FILTER_NONE,
 											0 // No ColorKey?
@@ -4932,7 +4932,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
 									DWORD dwDataSize = dwMipWidth*dwMipHeight;
 									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-									DWORD* pTexturePalette = (DWORD*)pCurrentPalette; // For D3DFMT_P8
+									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette; // For D3DFMT_P8
 									const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
 
 									//__asm int 3;
@@ -5075,8 +5075,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     pPalette->Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
                 }
 
-                pCurrentPalette = pBase;
-				dwCurrentPaletteSize = dwSize;
+                g_pCurrentPalette = pBase;
+				g_dwCurrentPaletteSize = dwSize;
 
                 pResource->Data = (DWORD)pBase;
             }
@@ -8356,8 +8356,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	{
 		if( pPalette->Data )
 		{
-			pCurrentPalette = (LPVOID) pPalette->Data;
-			dwCurrentPaletteSize =  g_MemoryManager.QueryAllocationSize((LPVOID)pPalette->Data);
+			g_pCurrentPalette = (LPVOID) pPalette->Data;
+			g_dwCurrentPaletteSize =  g_MemoryManager.QueryAllocationSize((LPVOID)pPalette->Data);
 		}
 	}
 
