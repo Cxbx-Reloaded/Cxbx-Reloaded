@@ -445,10 +445,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                     }
                 }
 
-				// If the HLE Cache was used, skip symbol maching/patching
-				if (g_HLECacheUsed) {
-					continue;
-				}
+				// TODO: Re-enable this after fixing render states
+            	// If the HLE Cache was used, skip symbol maching/patching
+				//if (g_HLECacheUsed) {
+					//continue;
+				//}
 
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
