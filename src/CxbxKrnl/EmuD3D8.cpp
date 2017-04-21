@@ -3427,6 +3427,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 {
 	FUNC_EXPORTS
 
+
     DbgPrintf("EmuD3D8: EmuD3DDevice_CreateIndexBuffer\n"
            "(\n"
            "   Length              : 0x%.08X\n"
