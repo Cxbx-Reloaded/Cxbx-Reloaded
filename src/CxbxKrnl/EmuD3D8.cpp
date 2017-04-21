@@ -3159,13 +3159,13 @@ XTL::X_D3DResource * WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture2)
 
     switch(D3DResource)
     {
-        case 3: /*D3DRTYPE_TEXTURE*/
+        case X_D3DRTYPE_TEXTURE:
 			EMUPATCH(D3DDevice_CreateTexture)(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
             break;
-        case 4: /*D3DRTYPE_VOLUMETEXTURE*/
+		case X_D3DRTYPE_VOLUMETEXTURE:
 			EMUPATCH(D3DDevice_CreateVolumeTexture)(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DVolumeTexture**)&pTexture);
             break;
-        case 5: /*D3DRTYPE_CUBETEXTURE*/
+		case X_D3DRTYPE_CUBETEXTURE:
             //DbgPrintf( "D3DDevice_CreateTexture2: Width = 0x%X, Height = 0x%X\n", Width, Height );
 			//CxbxKrnlCleanup("Cube textures temporarily not supported!");
 			EMUPATCH(D3DDevice_CreateCubeTexture)(Width, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DCubeTexture**) &pTexture);
@@ -5320,10 +5320,6 @@ BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
            ");\n",
            pThis);
     //*/
-
-    IDirect3DResource8 *pResource8 = pThis->EmuResource8;
-
-    
 
     return FALSE;
 }
@@ -9326,13 +9322,14 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
     return;
 }
 
+#if 0 // patch DISABLED
 // ******************************************************************
 // * patch: IDirect3DVertexBuffer8_GetDesc
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_GetDesc)
 (
     X_D3DVertexBuffer    *pThis,
-    D3DVERTEXBUFFER_DESC *pDesc
+    X_D3DVERTEXBUFFER_DESC *pDesc
 )
 {
 	FUNC_EXPORTS
@@ -9344,10 +9341,10 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_GetDesc)
            ");\n",
            pThis, pDesc);
 
-    // TODO: Implement
-
-    
+	pDesc->Format = X_D3DFMT_VERTEXDATA;
+	pDesc->Type = X_D3DRTYPE_VERTEXBUFFER;
 }
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_SetScissors
