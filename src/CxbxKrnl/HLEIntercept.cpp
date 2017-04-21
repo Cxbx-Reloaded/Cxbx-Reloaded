@@ -77,10 +77,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("*******************************************************************************\n");
 	printf("\n");
 
+	// Make sure the HLE Cache directory exists
+	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\HLECache\\";
+	int result = SHCreateDirectoryEx(nullptr, cachePath.c_str(), nullptr);
+	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+		CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded HLECache folder!");
+	}
+
 	// Hash the loaded XBE's header, use it as a filename
 	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
 	std::stringstream sstream;
-	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
+	sstream << cachePath << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
 
 	if (PathFileExists(filename.c_str())) {
