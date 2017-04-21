@@ -177,7 +177,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     }
 
     uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
-    if(!pPatchDesc->pVertexStreamZeroData)
+    if(pOrigVertexBuffer)
     {
         pOrigVertexBuffer->Unlock();
     }
@@ -283,7 +283,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
         bool bMismatch = false;
         if(pCachedStream->uiCount == (pCachedStream->uiCheckFrequency - 1))
         {
-            if(!pPatchDesc->pVertexStreamZeroData)
+            if(pOrigVertexBuffer)
             {
                 if(FAILED(pOrigVertexBuffer->Lock(0, 0, (uint08**)&pCalculateData, 0)))
                 {
@@ -316,7 +316,8 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 pCachedStream = NULL;
                 bMismatch = true;
             }
-            if(!pPatchDesc->pVertexStreamZeroData)
+
+            if(pOrigVertexBuffer)
             {
                 pOrigVertexBuffer->Unlock();
             }
@@ -357,7 +358,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
     g_PatchedStreamsCache.Unlock();
 
-    if(!pPatchDesc->pVertexStreamZeroData)
+    if(pOrigVertexBuffer)
     {
         pOrigVertexBuffer->Release();
     }
