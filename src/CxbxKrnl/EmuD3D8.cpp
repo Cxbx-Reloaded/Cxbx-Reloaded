@@ -3505,10 +3505,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
     {
         g_pIndexBuffer = pIndexData;
 
-        // HACK: Halo Hack
-        if(pIndexData->Lock == 0x00840863)
-            pIndexData->Lock = 0;
-
         EmuVerifyResourceIsRegistered(pIndexData);
 		
         IDirect3DIndexBuffer8 *pIndexBuffer = pIndexData->EmuIndexBuffer8;
