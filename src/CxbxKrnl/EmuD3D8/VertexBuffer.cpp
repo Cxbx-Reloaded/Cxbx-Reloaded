@@ -855,10 +855,10 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     DWORD dwNewSizeWR       = 0;
 
     // vertex data arrays
-    BYTE *pOrigVertexData = 0;
-    BYTE *pPatchedVertexData = 0;
+    BYTE *pOrigVertexData = nullptr;
+    BYTE *pPatchedVertexData = nullptr;
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         g_pD3DDevice8->GetStreamSource(0, &pStream->pOriginalStream, &pStream->uiOrigStride);
         pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
@@ -887,7 +887,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
     }
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         // Retrieve the original buffer size
         {
@@ -990,7 +990,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 	    memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
     }
 
-    if(pPatchDesc->pVertexStreamZeroData == 0)
+    if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
         pStream->pOriginalStream->Unlock();
         pStream->pPatchedStream->Unlock();
