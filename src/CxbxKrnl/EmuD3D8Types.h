@@ -260,6 +260,21 @@ typedef struct _X_D3DDISPLAYMODE
 }
 X_D3DDISPLAYMODE;
 
+typedef struct _X_D3DVERTEXBUFFER_DESC
+{
+	X_D3DFORMAT           Format;
+	X_D3DRESOURCETYPE     Type;
+
+}
+X_D3DVERTEXBUFFER_DESC;
+
+typedef struct _X_D3DINDEXBUFFER_DESC
+{
+	X_D3DFORMAT           Format;
+	X_D3DRESOURCETYPE     Type;
+}
+X_D3DINDEXBUFFER_DESC;
+
 typedef struct _X_D3DSURFACE_DESC
 {
     X_D3DFORMAT         Format;

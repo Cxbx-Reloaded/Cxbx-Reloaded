@@ -396,8 +396,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	CxbxInitFilePaths();
-
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 
 	CxbxRestorePersistentMemoryRegions();
@@ -794,21 +792,14 @@ void CxbxKrnlInit
 
 void CxbxInitFilePaths()
 {
-	// Determine (local)appdata folder :
-	char *szLocalAppDataFolder = getenv("LOCALAPPDATA");
-	if (!szLocalAppDataFolder)
-	{
-		szLocalAppDataFolder = getenv("APPDATA");
-		if (!szLocalAppDataFolder)
-			CxbxKrnlCleanup("Could not determine %(LOCAL)APPDATA% folder");
-	}
-
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\CxbxReloaded", szLocalAppDataFolder);
+	char szAppData[MAX_PATH];
+	SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE);
+	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
 	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS))
-		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create CxbxReloaded AppData folder!");
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
 
 	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);

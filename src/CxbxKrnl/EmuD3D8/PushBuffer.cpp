@@ -74,7 +74,7 @@ void XTL::EmuExecutePushBuffer
 static void EmuUnswizzleActiveTexture()
 {
     // for current usages, we're always on stage 0
-    XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)XTL::EmuD3DActiveTexture[0];
+    XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[0];
 
     if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
         return;

@@ -960,7 +960,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData2s, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
-	REGISTER_OOVPA(D3DVertexBuffer_GetDesc, 5028, PATCH),
+	REGISTER_OOVPA(D3DVertexBuffer_GetDesc, 5028, DISABLED),
 };
 
 // ******************************************************************
