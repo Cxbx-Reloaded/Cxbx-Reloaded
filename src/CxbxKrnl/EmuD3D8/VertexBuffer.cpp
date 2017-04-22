@@ -530,6 +530,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				break;
 			}
 			case X_D3DVSDT_PBYTE4: { // 0x44: // Make it FLOAT4
+				// Hit by Jet Set Radio Future
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
 				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
 				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)pOrigVertex)[2]) / 255.0f;
@@ -564,9 +565,9 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 #if !DXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
 				// UNTESTED - Need test-case!
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
 				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
 				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((SHORT*)pOrigVertex)[3]) / 32767.0f;
 				pOrigVertex += 4 * sizeof(SHORT);
 				break;
