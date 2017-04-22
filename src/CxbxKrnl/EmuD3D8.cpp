@@ -241,6 +241,14 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 	SetFocus(g_hEmuWindow);
 }
 
+inline DWORD GetXboxResourceType(const XTL::X_D3DResource *pXboxResource)
+{
+	// Don't pass in unassigned Xbox resources
+	assert(pXboxResource != NULL);
+
+	return pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
+}
+
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
 {
 	if ((pThis->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
@@ -4380,7 +4388,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
     X_D3DResource *pResource = pThis;
 
-    DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
+    DWORD dwCommonType = GetXboxResourceType(pResource);
 
     // add the offset of the current texture to the base
     pBase = (PVOID)((DWORD)pBase + pResource->Data);
@@ -5256,7 +5264,7 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 	EmuVerifyResourceIsRegistered(pThis);
 
 	// Check for Xbox specific resources (Azurik may need this)
-	DWORD dwType = pThis->Common & X_D3DCOMMON_TYPE_MASK;
+	DWORD dwType = GetXboxResourceType(pThis);
 
 	switch(dwType)
 	{
