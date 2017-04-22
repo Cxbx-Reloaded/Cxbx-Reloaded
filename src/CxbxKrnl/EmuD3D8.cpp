@@ -250,91 +250,91 @@ inline DWORD GetXboxResourceType(const XTL::X_D3DResource *pXboxResource)
 	return pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
 }
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 {
-	if ((pThis->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
+	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
 		return nullptr;
 
-	if (pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
+	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	if (pThis->EmuResource8 == nullptr)
+	if (pXboxResource->EmuResource8 == nullptr)
 	{
 		__asm int 3;
 		//EmuWarning("EmuResource is not a valid pointer!");
 	}
 
-	return pThis->EmuResource8;
+	return pXboxResource->EmuResource8;
 }
 
-XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pThis)
+XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_SURFACE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE)
 		return nullptr;
 
-	return pThis->EmuSurface8;
+	return pXboxResource->EmuSurface8;
 }
 
-XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
-	return pThis->EmuBaseTexture8;
+	return pXboxResource->EmuBaseTexture8;
 }
 
-XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
 	// TODO : Check for 1 face?
 
-	return pThis->EmuTexture8;
+	return pXboxResource->EmuTexture8;
 }
 
-XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
 	// TODO : Check for 6 faces?
 
-	return pThis->EmuCubeTexture8;
+	return pXboxResource->EmuCubeTexture8;
 }
 
-XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pThis)
+XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_INDEXBUFFER)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_INDEXBUFFER)
 		return nullptr;
 
-	return pThis->EmuIndexBuffer8;
+	return pXboxResource->EmuIndexBuffer8;
 }
 
-XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pThis)
+XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
 		return nullptr;
 
-	return pThis->EmuVertexBuffer8;
+	return pXboxResource->EmuVertexBuffer8;
 }
 
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
