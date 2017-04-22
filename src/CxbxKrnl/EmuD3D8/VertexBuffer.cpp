@@ -291,6 +291,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 }
             }
 
+			/*
             // Use the cached stream length (which is a must for the UP stream)
             uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
             if(uiHash == pCachedStream->uiHash)
@@ -302,7 +303,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                 }
                 pCachedStream->uiCount = 0;
             }
-            else
+            else */
             {
                 // TODO: Do something about this
                 if(pCachedStream->bIsUP)
