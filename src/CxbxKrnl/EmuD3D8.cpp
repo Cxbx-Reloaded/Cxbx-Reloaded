@@ -337,6 +337,62 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 	return pXboxResource->EmuVertexBuffer8;
 }
 
+void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
+{
+	// Don't pass in unassigned Xbox resources
+	if(pXboxResource == NULL)
+		return nullptr;
+
+	xbaddr pData = pXboxResource->Data;
+	if (pData == NULL)
+		return nullptr;
+
+	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+	{
+		switch (pData) {
+		case X_D3DRESOURCE_DATA_BACK_BUFFER:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_YUV_SURFACE:
+			// YUV surfaces are marked as such in the Data field,
+			// and their data is put in their Lock field :s
+			pData = pXboxResource->Lock;
+			// TODO : What about X_D3DRESOURCE_LOCK_FLAG_NOSIZE?
+			break;
+		case X_D3DRESOURCE_DATA_RENDER_TARGET:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_SURFACE_LEVEL:
+			return nullptr;
+		default:
+			CxbxKrnlCleanup("Unhandled special resource type");
+		}
+	}
+
+	DWORD Type = GetXboxResourceType(pXboxResource);
+	switch (Type) {
+	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_INDEXBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_PALETTE:
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		break;
+	case X_D3DCOMMON_TYPE_TEXTURE:
+		break;
+	case X_D3DCOMMON_TYPE_SURFACE:
+		break;
+	case X_D3DCOMMON_TYPE_FIXUP:
+		break;
+	default:
+		CxbxKrnlCleanup("Unhandled resource type");
+	}
+
+	return (uint08*)pData;
+}
+
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 {
 	if (EmuResource != nullptr)
@@ -6166,7 +6222,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
 	} else {
-		uint08 *pYUY2SourceBuffer = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
+		uint08 *pYUY2SourceBuffer = (uint08*)GetDataFromXboxResource(pSurface);
 		RECT EmuSourRect;
 		RECT EmuDestRect;
 
