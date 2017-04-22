@@ -141,9 +141,9 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
-static PVOID g_pCurrentPalette = nullptr;
+static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 // cached palette size
-static DWORD g_dwCurrentPaletteSize = -1;
+static DWORD g_dwCurrentPaletteSize[TEXTURE_STAGES] = { -1, -1, -1, -1 };
 
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
@@ -151,7 +151,7 @@ static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[4] = {0,0,0,0};
+XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -1416,7 +1416,7 @@ static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
 // Derived from EmuUnswizzleActiveTexture
 static void EmuUnswizzleTextureStages()
 {
-	for( int i = 0; i < 4; i++ )
+	for( int i = 0; i < TEXTURE_STAGES; i++ )
 	{
 		// for current usages, we're always on stage 0
 		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
@@ -3785,9 +3785,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
     }
 
     /*
-    static IDirect3DTexture8 *pDummyTexture[4] = {0, 0, 0, 0};
+    static IDirect3DTexture8 *pDummyTexture[TEXTURE_STAGES] = {nullptr, nullptr, nullptr, nullptr};
 
-    if(pDummyTexture[Stage] == 0)
+    if(pDummyTexture[Stage] == nullptr)
     {
         if(Stage == 0)
         {
@@ -3839,10 +3839,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
            ");\n",
            Method, Data, Format);
 
-    DWORD StageLookup[] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
+    DWORD StageLookup[TEXTURE_STAGES] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
     DWORD Stage = -1;
 
-    for(int v=0;v<4;v++)
+    for(int v=0;v<TEXTURE_STAGES;v++)
     {
         if(StageLookup[v] == Method)
         {
@@ -4536,6 +4536,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
     HRESULT hRet = S_OK;
 
+	const int TextureStage = 0;
+
     X_D3DResource *pResource = pThis;
 
     DWORD dwCommonType = GetXboxResourceType(pResource);
@@ -5066,7 +5068,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
 									DWORD dwDataSize = dwMipWidth*dwMipHeight;
 									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette; // For D3DFMT_P8
+									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
 									const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
 
 									//__asm int 3;
@@ -5209,8 +5211,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     pPalette->Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
                 }
 
-                g_pCurrentPalette = pBase;
-				g_dwCurrentPaletteSize = dwSize;
+                g_pCurrentPalette[TextureStage] = pBase;
+				g_dwCurrentPaletteSize[TextureStage] = dwSize;
 
                 pResource->Data = (DWORD)pBase;
             }
@@ -8479,22 +8481,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
            ");\n",
            Stage, pPalette);
 
-//    g_pD3DDevice8->SetPaletteEntries(0, (PALETTEENTRY*)pPalette->Data);
+	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
+	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	// Cache palette data and size
-	if( pPalette )
+	if (Stage < TEXTURE_STAGES)
 	{
-		if( pPalette->Data )
-		{
-			g_pCurrentPalette = (LPVOID) pPalette->Data;
-			g_dwCurrentPaletteSize =  g_MemoryManager.QueryAllocationSize((LPVOID)pPalette->Data);
+		// Cache palette data and size
+		g_pCurrentPalette[Stage] = GetDataFromXboxResource(pPalette);
+		if (g_pCurrentPalette[Stage] != NULL)
+			g_dwCurrentPaletteSize[Stage] = g_MemoryManager.QueryAllocationSize((LPVOID)g_pCurrentPalette[Stage]);
+		else {
+			g_dwCurrentPaletteSize[Stage] = 0;
 		}
 	}
-
-    EmuWarning("Not setting palette");
-
-    
-
     return D3D_OK;
 }
 
