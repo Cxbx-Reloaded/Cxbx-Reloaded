@@ -70,23 +70,6 @@ OOVPA_NO_XREF(XGWriteSurfaceOrTextureToXPR, 4627, 7)
         { 0xE2, 0x8B },
 OOVPA_END;
 
-/* Leave unpatched
-// ******************************************************************
-// * XGUnswizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect, 4627, 8)
-
-        { 0x1E, 0x03 },
-        { 0x3E, 0x00 },
-        { 0x5E, 0xD2 },
-        { 0x7E, 0x75 },
-        { 0x9E, 0x70 },
-        { 0xC1, 0xE9 },
-        { 0xDE, 0x89 },
-        { 0xFE, 0x60 },
-OOVPA_END;
-*/
-
 // ******************************************************************
 // * XG_4627
 // ******************************************************************
@@ -94,7 +77,7 @@ OOVPATable XG_4627[] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
 	// REGISTER_OOVPA(XGSwizzleRect, 4361, PATCH), // Leave unpatched
-	// REGISTER_OOVPA(XGUnswizzleRect, 4627, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
 	REGISTER_OOVPA(XGSwizzleBox, 4627, PATCH),
 	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 4627, PATCH),
 };
