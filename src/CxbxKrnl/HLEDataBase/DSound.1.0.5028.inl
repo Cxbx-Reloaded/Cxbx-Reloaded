@@ -51,7 +51,22 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetFormat, 5028, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * Direct, 5028
+// * XFileCreateMediaObjectEx
+// ******************************************************************
+OOVPA_NO_XREF(XFileCreateMediaObjectEx, 5028, 8)
+
+        { 0x03, 0x56 },
+        { 0x22, 0x1B },
+        { 0x89, 0x1B },
+        { 0xA9, 0x85 },
+        { 0xAA, 0xF6 },
+        { 0xAB, 0x7C },
+        { 0xAC, 0x0C },
+        { 0xAD, 0x57 },
+OOVPA_END;
+
+// ******************************************************************
+// * DSound_5028
 // ******************************************************************
 OOVPATable DSound_5028[] = {
 
@@ -241,7 +256,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetRolloffCurve, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetRolloffCurve, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 4627, PATCH),
-	REGISTER_OOVPA(XFileCreateMediaObjectEx, 4627, PATCH),
+	REGISTER_OOVPA(XFileCreateMediaObjectEx, 5028, PATCH),
 	REGISTER_OOVPA(XWaveFileCreateMediaObject, 4627, PATCH),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
 	// REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, XREF),

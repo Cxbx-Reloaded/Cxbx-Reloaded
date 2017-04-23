@@ -1355,10 +1355,10 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 4627, 10)
         { 0x31, 0x04 }, // (Offset,Value)-Pair #6
         { 0x32, 0x08 }, // (Offset,Value)-Pair #7
 
-        // D3DDevice_DrawVerticesUP+0xC2 : cmp esi, 0x80
-        { 0xC2, 0x81 }, // (Offset,Value)-Pair #8
-        { 0xC3, 0xFE }, // (Offset,Value)-Pair #9
-        { 0xC4, 0x80 }, // (Offset,Value)-Pair #10
+        // D3DDevice_DrawVerticesUP+0x8A : mov [ebp+arg_C], eax
+        { 0x8A, 0x89 }, // (Offset,Value)-Pair #8
+        { 0x8B, 0x45 }, // (Offset,Value)-Pair #9
+        { 0x8C, 0x14 }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
 // ******************************************************************
