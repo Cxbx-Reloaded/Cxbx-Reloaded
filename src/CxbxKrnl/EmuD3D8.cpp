@@ -141,9 +141,9 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
-static PVOID g_pCurrentPalette = nullptr;
+static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 // cached palette size
-static DWORD g_dwCurrentPaletteSize = -1;
+static DWORD g_dwCurrentPaletteSize[TEXTURE_STAGES] = { -1, -1, -1, -1 };
 
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
@@ -151,7 +151,7 @@ static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[4] = {0,0,0,0};
+XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -242,91 +242,155 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 	SetFocus(g_hEmuWindow);
 }
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pThis)
+inline DWORD GetXboxResourceType(const XTL::X_D3DResource *pXboxResource)
 {
-	if ((pThis->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
+	// Don't pass in unassigned Xbox resources
+	assert(pXboxResource != NULL);
+
+	return pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
+}
+
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
+{
+	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
 		return nullptr;
 
-	if (pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
+	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	if (pThis->EmuResource8 == nullptr)
+	if (pXboxResource->EmuResource8 == nullptr)
 	{
 		__asm int 3;
 		//EmuWarning("EmuResource is not a valid pointer!");
 	}
 
-	return pThis->EmuResource8;
+	return pXboxResource->EmuResource8;
 }
 
-XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pThis)
+XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_SURFACE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE)
 		return nullptr;
 
-	return pThis->EmuSurface8;
+	return pXboxResource->EmuSurface8;
 }
 
-XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
-	return pThis->EmuBaseTexture8;
+	return pXboxResource->EmuBaseTexture8;
 }
 
-XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
 	// TODO : Check for 1 face?
 
-	return pThis->EmuTexture8;
+	return pXboxResource->EmuTexture8;
 }
 
-XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pThis)
+XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_TEXTURE)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
 		return nullptr;
 
 	// TODO : Check for 6 faces?
 
-	return pThis->EmuCubeTexture8;
+	return pXboxResource->EmuCubeTexture8;
 }
 
-XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pThis)
+XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_INDEXBUFFER)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_INDEXBUFFER)
 		return nullptr;
 
-	return pThis->EmuIndexBuffer8;
+	return pXboxResource->EmuIndexBuffer8;
 }
 
-XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pThis)
+XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
 {
-	if (pThis == NULL)
+	if (pXboxResource == NULL)
 		return nullptr;
 
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
 		return nullptr;
 
-	return pThis->EmuVertexBuffer8;
+	return pXboxResource->EmuVertexBuffer8;
+}
+
+void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
+{
+	// Don't pass in unassigned Xbox resources
+	if(pXboxResource == NULL)
+		return nullptr;
+
+	xbaddr pData = pXboxResource->Data;
+	if (pData == NULL)
+		return nullptr;
+
+	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+	{
+		switch (pData) {
+		case X_D3DRESOURCE_DATA_BACK_BUFFER:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_YUV_SURFACE:
+			// YUV surfaces are marked as such in the Data field,
+			// and their data is put in their Lock field :s
+			pData = pXboxResource->Lock;
+			// TODO : What about X_D3DRESOURCE_LOCK_FLAG_NOSIZE?
+			break;
+		case X_D3DRESOURCE_DATA_RENDER_TARGET:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_SURFACE_LEVEL:
+			return nullptr;
+		default:
+			CxbxKrnlCleanup("Unhandled special resource type");
+		}
+	}
+
+	DWORD Type = GetXboxResourceType(pXboxResource);
+	switch (Type) {
+	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_INDEXBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_PALETTE:
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		break;
+	case X_D3DCOMMON_TYPE_TEXTURE:
+		break;
+	case X_D3DCOMMON_TYPE_SURFACE:
+		break;
+	case X_D3DCOMMON_TYPE_FIXUP:
+		break;
+	default:
+		CxbxKrnlCleanup("Unhandled resource type");
+	}
+
+	return (uint08*)pData;
 }
 
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
@@ -1352,7 +1416,7 @@ static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
 // Derived from EmuUnswizzleActiveTexture
 static void EmuUnswizzleTextureStages()
 {
-	for( int i = 0; i < 4; i++ )
+	for( int i = 0; i < TEXTURE_STAGES; i++ )
 	{
 		// for current usages, we're always on stage 0
 		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
@@ -3721,9 +3785,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
     }
 
     /*
-    static IDirect3DTexture8 *pDummyTexture[4] = {0, 0, 0, 0};
+    static IDirect3DTexture8 *pDummyTexture[TEXTURE_STAGES] = {nullptr, nullptr, nullptr, nullptr};
 
-    if(pDummyTexture[Stage] == 0)
+    if(pDummyTexture[Stage] == nullptr)
     {
         if(Stage == 0)
         {
@@ -3775,10 +3839,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
            ");\n",
            Method, Data, Format);
 
-    DWORD StageLookup[] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
+    DWORD StageLookup[TEXTURE_STAGES] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
     DWORD Stage = -1;
 
-    for(int v=0;v<4;v++)
+    for(int v=0;v<TEXTURE_STAGES;v++)
     {
         if(StageLookup[v] == Method)
         {
@@ -4472,9 +4536,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
     HRESULT hRet = S_OK;
 
+	const int TextureStage = 0;
+
     X_D3DResource *pResource = pThis;
 
-    DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
+    DWORD dwCommonType = GetXboxResourceType(pResource);
 
     // add the offset of the current texture to the base
     pBase = (PVOID)((DWORD)pBase + pResource->Data);
@@ -5002,7 +5068,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
 									DWORD dwDataSize = dwMipWidth*dwMipHeight;
 									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette; // For D3DFMT_P8
+									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
 									const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
 
 									//__asm int 3;
@@ -5145,8 +5211,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     pPalette->Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
                 }
 
-                g_pCurrentPalette = pBase;
-				g_dwCurrentPaletteSize = dwSize;
+                g_pCurrentPalette[TextureStage] = pBase;
+				g_dwCurrentPaletteSize[TextureStage] = dwSize;
 
                 pResource->Data = (DWORD)pBase;
             }
@@ -5346,7 +5412,7 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 	EmuVerifyResourceIsRegistered(pThis);
 
 	// Check for Xbox specific resources (Azurik may need this)
-	DWORD dwType = pThis->Common & X_D3DCOMMON_TYPE_MASK;
+	DWORD dwType = GetXboxResourceType(pThis);
 
 	switch(dwType)
 	{
@@ -6158,7 +6224,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
 	} else {
-		uint08 *pYUY2SourceBuffer = (uint08*)pSurface->Lock; // TODO : DxbxGetDataFromXboxResource(pSurface);
+		uint08 *pYUY2SourceBuffer = (uint08*)GetDataFromXboxResource(pSurface);
 		RECT EmuSourRect;
 		RECT EmuDestRect;
 
@@ -8415,22 +8481,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
            ");\n",
            Stage, pPalette);
 
-//    g_pD3DDevice8->SetPaletteEntries(0, (PALETTEENTRY*)pPalette->Data);
+	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
+	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	// Cache palette data and size
-	if( pPalette )
+	if (Stage < TEXTURE_STAGES)
 	{
-		if( pPalette->Data )
-		{
-			g_pCurrentPalette = (LPVOID) pPalette->Data;
-			g_dwCurrentPaletteSize =  g_MemoryManager.QueryAllocationSize((LPVOID)pPalette->Data);
+		// Cache palette data and size
+		g_pCurrentPalette[Stage] = GetDataFromXboxResource(pPalette);
+		if (g_pCurrentPalette[Stage] != NULL)
+			g_dwCurrentPaletteSize[Stage] = g_MemoryManager.QueryAllocationSize((LPVOID)g_pCurrentPalette[Stage]);
+		else {
+			g_dwCurrentPaletteSize[Stage] = 0;
 		}
 	}
-
-    EmuWarning("Not setting palette");
-
-    
-
     return D3D_OK;
 }
 
