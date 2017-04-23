@@ -33,24 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * DirectSound::CDirectSoundVoice::SetFormat
-// ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundVoice_SetFormat, 5028, 8,
-
-    XREF_DirectSound_CDirectSoundVoice_SetFormat,
-    XRefZero)
-
-        { 0x06, 0x4E },
-        { 0x0E, 0xE8 },
-        { 0x18, 0x4E },
-        { 0x25, 0xFF },
-        { 0x2E, 0x0C },
-        { 0x34, 0x85 },
-        { 0x38, 0x8B },
-        { 0x43, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
 // * XFileCreateMediaObjectEx
 // ******************************************************************
 OOVPA_NO_XREF(XFileCreateMediaObjectEx, 5028, 8)
@@ -198,7 +180,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetI3DL2Source, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 5028, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 4721, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
