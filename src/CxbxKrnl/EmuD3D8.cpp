@@ -142,8 +142,6 @@ static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
-// cached palette size
-static DWORD g_dwCurrentPaletteSize[TEXTURE_STAGES] = { -1, -1, -1, -1 };
 
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
@@ -5212,7 +5210,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 }
 
                 g_pCurrentPalette[TextureStage] = pBase;
-				g_dwCurrentPaletteSize[TextureStage] = dwSize;
 
                 pResource->Data = (DWORD)pBase;
             }
@@ -8485,15 +8482,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
 	if (Stage < TEXTURE_STAGES)
-	{
 		// Cache palette data and size
 		g_pCurrentPalette[Stage] = GetDataFromXboxResource(pPalette);
-		if (g_pCurrentPalette[Stage] != NULL)
-			g_dwCurrentPaletteSize[Stage] = g_MemoryManager.QueryAllocationSize((LPVOID)g_pCurrentPalette[Stage]);
-		else {
-			g_dwCurrentPaletteSize[Stage] = 0;
-		}
-	}
+
     return D3D_OK;
 }
 
