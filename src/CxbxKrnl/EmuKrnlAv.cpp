@@ -61,17 +61,41 @@ PVOID g_pPersistedData = NULL;
 
 ULONG AvQueryAvCapabilities()
 {
-	// This is the only AV mode we currently emulate, so we can hardcode the return value
-	// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
-	// This function should first query the AV Pack type, read the user's EEPROM settings and
-	// return the correct flags based on this.
-	//
-	// For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
-	//
-	// To read the EEPROM, call ExQueryNonVolatileSetting() with these config flags :
-	// XC_FACTORY_AV_REGION; if that fails, fallback on AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
-	// XC_VIDEO_FLAGS; if that fails, fallback on 0
-	return AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	ULONG Type;
+	ULONG Result;
+	ULONG ResultLength;
+
+	// TODO: For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
+	ULONG Capabilities = AV_PACK_HDTV;
+
+	// Read the AV Region
+	NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(
+		xboxkrnl::XC_FACTORY_AV_REGION, 
+		&Type,
+		&Result,
+		sizeof(Result),
+		&ResultLength);
+
+	// If the value was not set, default to NTSC
+	if (status != STATUS_SUCCESS || ResultLength != sizeof(Result)) {
+		Result = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	}
+
+	Capabilities |= Result & (AV_STANDARD_MASK | AV_REFRESH_MASK);
+
+	// Read the User's configuration (Set in the Dashboard)
+	status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_VIDEO,
+		&Type,
+		&Result,
+		sizeof(Result),
+		&ResultLength);
+
+	// If no result, default to no options selected
+	if (status != STATUS_SUCCESS || ResultLength != sizeof(Result))	{
+		Result = 0;
+	}
+
+	return Capabilities | Result & ~(AV_STANDARD_MASK | AV_PACK_MASK);
 }
 
 // ******************************************************************
