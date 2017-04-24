@@ -74,6 +74,12 @@ ULONG AvQueryAvCapabilities()
 	return AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 }
 
+// Xbox code will set this address via AvSetSavedDataAddress
+// TODO: This value should be persisted between reboots
+// Xbox code sets this to the contiguous memory region 
+// so data is already persisted.
+PVOID g_AvSavedDataAddress = NULL;
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
@@ -81,47 +87,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 {
 	LOG_FUNC();
 
-	__asm int 3;
-
-	// Allocate a buffer the size of the screen buffer and return that.
-	// TODO: Fill this buffer with the contents of the front buffer.
-	// TODO: This isn't always the size we need...
-
-	if (g_pPersistedData)
-	{
-		g_MemoryManager.Free(g_pPersistedData);
-		g_pPersistedData = NULL;
-	}
-
-	g_pPersistedData = g_MemoryManager.Allocate(640 * 480 * 4);
-
-#if 0
-	// Get a copy of the front buffer
-	IDirect3DSurface8* pFrontBuffer = NULL;
-
-	if (SUCCEEDED(g_pD3DDevice8->GetFrontBuffer(pFrontBuffer)))
-	{
-		D3DLOCKED_RECT LockedRect;
-		pFrontBuffer->LockRect(0, NULL, &LockedRect);
-
-		CopyMemory(g_pPersistedData, LockRect.pBits, 640 * 480 * 4);
-
-		pFrontBuffer->UnlockRect();
-	}
-#endif
-
-	// TODO: We might want to return something sometime...
-	/*if( !g_pPersistedData )
-	{
-	FILE* fp = fopen( "PersistedSurface.bin", "rb" );
-	fseek( fp, 0, SEEK_END );
-	long size = ftell( fp );
-	g_pPersistedData = g_MemoryManager.Allocate( size );
-	fread( g_pPersistedData, size, 1, fp );
-	fclose(fp);
-	}*/
-
-	RETURN (NULL); //g_pPersistedData;
+	RETURN(g_AvSavedDataAddress);
 }
 
 // ******************************************************************
@@ -244,5 +210,5 @@ XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	g_AvSavedDataAddress = Address;
 }
