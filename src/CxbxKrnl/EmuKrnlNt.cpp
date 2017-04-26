@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 			AllocationType &= ~MEM_NOZERO;
 		}
 
-		ret = NtDll::NtAllocateVirtualMemory(
+		ret = g_MemoryManager.AllocateVirtualMemory(
 			/*ProcessHandle=*/g_CurrentProcessHandle,
 			BaseAddress,
 			ZeroBits,
@@ -717,7 +717,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+	NTSTATUS ret = g_MemoryManager.FreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
 	RETURN(ret);
 }

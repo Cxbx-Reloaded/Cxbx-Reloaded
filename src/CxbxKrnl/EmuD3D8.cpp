@@ -4619,7 +4619,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create index buffer
             {
-                DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
+                DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase, true);
 
                 if(dwSize == -1 || dwSize == 0)
                 {
