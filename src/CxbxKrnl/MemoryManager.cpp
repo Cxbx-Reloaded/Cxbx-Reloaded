@@ -42,10 +42,6 @@
 #include "Logging.h"
 #include "MemoryManager.h"
 
-namespace NtDll {
-	#include "EmuNtDll.h"
-}
-
 MemoryManager g_MemoryManager;
 
 MemoryManager::MemoryManager()
@@ -71,9 +67,8 @@ TypedMemoryBlock *MemoryManager::FindContainingTypedMemoryBlock(void* addr)
 
 	// Check if the requested address lies inside this block
 	TypedMemoryBlock *info = &(low->second);
-	if ((size_t)addr >= ((size_t)info->block.addr + info->block.size) || (size_t)addr < ((size_t)info->block.addr)) {
+	if ((size_t)addr >= ((size_t)info->block.addr + info->block.size))
 		return nullptr;
-	}
 
 	return info;
 }
@@ -231,7 +226,7 @@ bool MemoryManager::IsAllocated(void* addr)
 	RETURN(result);
 }
 
-void MemoryManager::Free(void* addr, bool VirtualMemory)
+void MemoryManager::Free(void* addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
@@ -253,15 +248,6 @@ void MemoryManager::Free(void* addr, bool VirtualMemory)
 				m_ContiguousMemoryBlocks.erase(info->block.addr);
 				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
-			case MemoryType::VIRTUAL:
-				if (VirtualMemory)	{
-					m_ContiguousMemoryBlocks.erase(info->block.addr);
-					m_MemoryBlockInfo.erase(info->block.addr);
-					break;
-				}
-
-				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free VirtualMemory without using FreeVirtualMemory");
-				break;
 			default:
 				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free memory of an unknown type");
 				break;
@@ -279,7 +265,7 @@ void MemoryManager::Free(void* addr, bool VirtualMemory)
 	LeaveCriticalSection(&m_CriticalSection);
 }
 
-size_t MemoryManager::QueryAllocationSize(void* addr, bool remainingSize)
+size_t MemoryManager::QueryAllocationSize(void* addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
@@ -288,12 +274,8 @@ size_t MemoryManager::QueryAllocationSize(void* addr, bool remainingSize)
 	EnterCriticalSection(&m_CriticalSection);
 	TypedMemoryBlock *info = FindContainingTypedMemoryBlock(addr);
 	if (info != nullptr) {
-		if (remainingSize)	{
-			ret = ((size_t)info->block.addr + (size_t)info->block.size) - (size_t)addr;
-		} else	{
-			// Return the total size in this block		
-			ret = info->block.size;// -((size_t)addr - (size_t)info->block.addr);			
-		}
+		// Return the total size in this block		
+		ret = info->block.size;// -((size_t)addr - (size_t)info->block.addr);
 	}
 	else {
 #if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)?
@@ -302,37 +284,6 @@ size_t MemoryManager::QueryAllocationSize(void* addr, bool remainingSize)
 	}
 
 	LeaveCriticalSection(&m_CriticalSection);
-
-	RETURN(ret);
-}
-
-NTSTATUS MemoryManager::AllocateVirtualMemory(HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protect)
-{
-	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect);
-
-	if (!FAILED(ret)) {
-		TypedMemoryBlock info;
-
-		info.type = MemoryType::VIRTUAL;
-		info.block.addr = BaseAddress;
-		info.block.size = *RegionSize;
-
-		EnterCriticalSection(&m_CriticalSection);
-		m_MemoryBlockInfo[BaseAddress] = info;
-		LeaveCriticalSection(&m_CriticalSection);
-	}
-
-	RETURN(ret);
-}
-
-NTSTATUS MemoryManager::FreeVirtualMemory(HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeType)
-{
-	NTSTATUS ret = NtDll::NtFreeVirtualMemory(ProcessHandle, BaseAddress, RegionSize, FreeType);
-
-	// If virtual free did not fail and we intend to release the memory, remove it from MemoryManager
-	if (!FAILED(ret) && FreeType == MEM_RELEASE) {
-		Free(BaseAddress, true);
-	}
 
 	RETURN(ret);
 }
