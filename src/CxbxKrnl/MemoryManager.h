@@ -50,7 +50,8 @@ typedef struct {
 enum struct MemoryType {
 	STANDARD = 0,
 	ALIGNED,
-	CONTIGUOUS
+	CONTIGUOUS,
+	VIRTUAL
 };
 
 typedef struct {
@@ -68,8 +69,12 @@ public:
 	void* AllocateContiguous(size_t size, size_t alignment);
 	void* AllocateZeroed(size_t num, size_t size);
 	bool IsAllocated(void* addr);
-	void Free(void* addr);
-	size_t QueryAllocationSize(void* addr);
+	void Free(void* addr, bool virtualMemory = false);
+	size_t QueryAllocationSize(void* addr, bool remainingSize = false);
+
+	// Virtual Memory
+	NTSTATUS AllocateVirtualMemory(HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protect);
+	NTSTATUS FreeVirtualMemory(HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeType);
 private:
 	std::map<void *, TypedMemoryBlock> m_MemoryBlockInfo;
 	std::map<void *, MemoryBlock> m_ContiguousMemoryBlocks;
