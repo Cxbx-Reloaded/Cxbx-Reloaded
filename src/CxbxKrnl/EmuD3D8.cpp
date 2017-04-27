@@ -1498,6 +1498,154 @@ static void EmuUnswizzleTextureStages()
 	}
 }
 
+typedef struct {
+	DWORD IndexData;
+	DWORD IndexEnd;
+	XTL::IDirect3DIndexBuffer8* pHostIndexBuffer;
+} ConvertedIndexBuffer;
+
+std::vector<ConvertedIndexBuffer> g_ConvertedIndexBuffers;
+	
+void CxbxRemoveIndexBuffer(PWORD pData)
+{
+	// Now, see if we already have a (partial) index buffer for this range :
+	ConvertedIndexBuffer* pConvertedIndexBuffer = nullptr;
+
+	auto it = g_ConvertedIndexBuffers.begin();
+	for (; it != g_ConvertedIndexBuffers.end(); ++it) {
+		// Check if we found an index buffer containing this pointer
+		if ((DWORD)it->IndexData <= (DWORD)pData && (DWORD)pData < (DWORD)it->IndexEnd) {
+			pConvertedIndexBuffer = &(*it);
+			break;
+		}
+	}
+
+	if (pConvertedIndexBuffer != nullptr) {
+		DbgPrintf("DxbxRemoveIndexBuffer: Removing buffer for 0x%08x-0x%08x", pConvertedIndexBuffer->IndexData, pConvertedIndexBuffer->IndexEnd);
+		pConvertedIndexBuffer->pHostIndexBuffer->Release();
+		g_ConvertedIndexBuffers.erase(it);
+	}
+}
+
+void CxbxUpdateActiveIndexBuffer
+(
+	PWORD         pIndexData,
+	UINT          IndexCount,
+	UINT       	  &uiStartIndex
+)
+{
+	PWORD pwInitialStart = pIndexData; // Remember this to calculate StartIndex later!
+	PWORD pwIndexEnd = pIndexData + IndexCount;
+	bool MustCopy = false;
+
+	// Note : We assume that all outdated index buffer(s) are already removed,
+	// so that we'll never merge with buffers already destroyed on the Xbox side!
+
+	// Now, see if we already have a (partial) index buffer for this range :
+	ConvertedIndexBuffer* pConvertedIndexBuffer = nullptr;
+
+	for (auto it = g_ConvertedIndexBuffers.begin(); it != g_ConvertedIndexBuffers.end(); ++it) {
+		// Check if the given index range overlaps with this buffer :
+		if ((DWORD)pIndexData > (DWORD)it->IndexEnd) {
+			// new buffer starts beyond current (so no overlap)
+		}
+		else if ((DWORD)pwIndexEnd < (DWORD)it->IndexData) {
+			// new buffer end before current (so no overlap)
+		}
+		else {
+			// The new and current buffer overlap - we found a merge candidate!
+			break;
+		}
+
+		pConvertedIndexBuffer = &(*it);
+	}
+
+	// Did we find a merge candidate?
+	if (pConvertedIndexBuffer == nullptr) {
+		DbgPrintf("DxbxUpdateActiveIndexBuffer: Creating new buffer for 0x%08x-0x%08x (%d indices)\n", pIndexData, pwIndexEnd, pwIndexEnd - pIndexData);
+
+		// No merge, so add a new converted index buffer to the chain :
+		ConvertedIndexBuffer buffer;
+		g_ConvertedIndexBuffers.push_back(buffer);
+
+		pConvertedIndexBuffer = &g_ConvertedIndexBuffers.back();
+		MustCopy = true;
+	}
+	else {
+		// We found an existing index buffer, see if we must extend it's bounds :
+		if ((DWORD)pIndexData < pConvertedIndexBuffer->IndexData) {
+			MustCopy = true; // The merge has a new start pointer
+		}
+		else {
+			pIndexData = (PWORD)pConvertedIndexBuffer->IndexData; // The merge keeps the old start pointer
+		}
+
+		if ((DWORD)pwIndexEnd > pConvertedIndexBuffer->IndexEnd) {
+			MustCopy = true; // The merge has a new end pointer
+		}
+		else {
+			pwIndexEnd = (PWORD)pConvertedIndexBuffer->IndexEnd; // The merge keeps the old end pointer
+		}
+
+		// TODO : What if this grow causes two (or more) existing ranges to overlap - we should merge them all...
+		// TOOD : What if the index buffer exceeds D3DCaps.MaxVertexIndex ?
+
+		// TODO : If not MustCopy, Add a CRC check on the contents (forcing MustCopy) ?
+
+		if (MustCopy) {
+			DbgPrintf("DxbxUpdateActiveIndexBuffer: Enlarging buffer to 0x%08x-0x%08x (%d indices)\n", pIndexData, pwIndexEnd, pwIndexEnd - pIndexData);
+
+			// Remove previous native buffer (this might leave one stale reference,
+			// but this one will be released automatically in the next SetIndices call) :
+			pConvertedIndexBuffer->pHostIndexBuffer->Release();
+			pConvertedIndexBuffer->pHostIndexBuffer = nullptr;
+		}
+	}
+
+	HRESULT hRet;
+
+	if (MustCopy) {
+		// Remember the (new) buffer bounds :
+		pConvertedIndexBuffer->IndexData = (DWORD)pIndexData;
+		pConvertedIndexBuffer->IndexEnd = (DWORD)pwIndexEnd;
+		IndexCount = pwIndexEnd - pIndexData; // Calculate the number of WORD's between start & end
+
+											  // Create a new native index buffer of the above determined size :
+		hRet = g_pD3DDevice8->CreateIndexBuffer(
+			IndexCount * 2,
+			D3DUSAGE_WRITEONLY,
+			XTL::D3DFMT_INDEX16,
+			XTL::D3DPOOL_MANAGED,
+			&pConvertedIndexBuffer->pHostIndexBuffer);
+
+		if (FAILED(hRet)) {
+			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+		}
+
+		// Copy the xbox indexes into this native buffer :
+		BYTE* pData = nullptr;
+
+		pConvertedIndexBuffer->pHostIndexBuffer->Lock(0, 0, &pData, 0);
+		if (pData == nullptr) {
+			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+		}
+
+		DbgPrintf("DxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
+		memcpy(pData, pIndexData, IndexCount * 2); // TODO : Why does this crash at the 4th copy in Cartoon sample?
+
+		pConvertedIndexBuffer->pHostIndexBuffer->Unlock();
+	}
+
+	// Activate the new native index buffer :
+	hRet = g_pD3DDevice8->SetIndices(pConvertedIndexBuffer->pHostIndexBuffer, 0);
+	if (FAILED(hRet)) {
+		CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+	}
+
+	// Make sure the caller knows what StartIndex it has to use to point to the indicated index start pointer :
+	uiStartIndex = (UINT)pwInitialStart - (UINT)pConvertedIndexBuffer->IndexData;
+}
+
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
 // ******************************************************************
@@ -5247,9 +5395,13 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
         }
         
 		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
-    }
-    else
-    {
+    } else if (pThis->Common & X_D3DCOMMON_TYPE_INDEXBUFFER)  {
+		if ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1) {
+			CxbxRemoveIndexBuffer((PWORD)GetDataFromXboxResource(pThis));
+		}
+
+		uRet = pThis->Common--; // Release
+    } else {
         IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
@@ -7859,130 +8011,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
     
 
     return;
-}
-
-typedef struct {
-	DWORD IndexData;
-	DWORD IndexEnd;
-	XTL::IDirect3DIndexBuffer8* pHostIndexBuffer;
-} ConvertedIndexBuffer;
-
-std::vector<ConvertedIndexBuffer> g_ConvertedIndexBuffers;
-
-void CxbxUpdateActiveIndexBuffer
-(
-	PWORD         pIndexData,
-	UINT          IndexCount,
-	UINT       	  &uiStartIndex
-)
-{
-	PWORD pwInitialStart = pIndexData; // Remember this to calculate StartIndex later!
-	PWORD pwIndexEnd = pIndexData + IndexCount;
-	bool MustCopy = false;
-
-	// Note : We assume that all outdated index buffer(s) are already removed,
-	// so that we'll never merge with buffers already destroyed on the Xbox side!
-
-	// Now, see if we already have a (partial) index buffer for this range :
-	ConvertedIndexBuffer* pConvertedIndexBuffer = nullptr;
-
-	for(auto it = g_ConvertedIndexBuffers.begin(); it != g_ConvertedIndexBuffers.end(); ++it) {
-		// Check if the given index range overlaps with this buffer :
-		if ((DWORD)pIndexData > (DWORD)it->IndexEnd) {
-			// new buffer starts beyond current (so no overlap)
-		}
-		else if ((DWORD)pwIndexEnd < (DWORD)it->IndexData) {
-			// new buffer end before current (so no overlap)
-		}
-		else {
-			// The new and current buffer overlap - we found a merge candidate!
-			break;
-		}
-
-		pConvertedIndexBuffer = &(*it);
-	}
-
-	// Did we find a merge candidate?
-	if (pConvertedIndexBuffer == nullptr) {
-		DbgPrintf("DxbxUpdateActiveIndexBuffer: Creating new buffer for 0x%08x-0x%08x (%d indices)\n", pIndexData, pwIndexEnd, pwIndexEnd - pIndexData);
-
-		// No merge, so add a new converted index buffer to the chain :
-		ConvertedIndexBuffer buffer;
-		g_ConvertedIndexBuffers.push_back(buffer);
-
-		pConvertedIndexBuffer = &g_ConvertedIndexBuffers.back();
-		MustCopy = true;
-	} else {
-		// We found an existing index buffer, see if we must extend it's bounds :
-		if ((DWORD)pIndexData < pConvertedIndexBuffer->IndexData) {
-			MustCopy = true; // The merge has a new start pointer
-		} else {
-			pIndexData = (PWORD)pConvertedIndexBuffer->IndexData; // The merge keeps the old start pointer
-		}
-
-		if ((DWORD)pwIndexEnd > pConvertedIndexBuffer->IndexEnd) {
-			MustCopy = true; // The merge has a new end pointer
-		} else {
-			pwIndexEnd = (PWORD)pConvertedIndexBuffer->IndexEnd; // The merge keeps the old end pointer
-		}
-
-		// TODO : What if this grow causes two (or more) existing ranges to overlap - we should merge them all...
-		// TOOD : What if the index buffer exceeds D3DCaps.MaxVertexIndex ?
-
-		// TODO : If not MustCopy, Add a CRC check on the contents (forcing MustCopy) ?
-
-		if (MustCopy) {
-			DbgPrintf("DxbxUpdateActiveIndexBuffer: Enlarging buffer to 0x%08x-0x%08x (%d indices)\n", pIndexData, pwIndexEnd, pwIndexEnd - pIndexData);
-
-			// Remove previous native buffer (this might leave one stale reference,
-			// but this one will be released automatically in the next SetIndices call) :
-			pConvertedIndexBuffer->pHostIndexBuffer->Release();
-			pConvertedIndexBuffer->pHostIndexBuffer = nullptr;
-		}
-	}
-
-	HRESULT hRet;
-
-	if (MustCopy) {
-		// Remember the (new) buffer bounds :
-		pConvertedIndexBuffer->IndexData = (DWORD)pIndexData;
-		pConvertedIndexBuffer->IndexEnd = (DWORD)pwIndexEnd;
-		IndexCount = pwIndexEnd - pIndexData; // Calculate the number of WORD's between start & end
-
-		// Create a new native index buffer of the above determined size :
-		hRet = g_pD3DDevice8->CreateIndexBuffer(
-			IndexCount * 2,
-			D3DUSAGE_WRITEONLY,
-			XTL::D3DFMT_INDEX16,
-			XTL::D3DPOOL_MANAGED,
-			&pConvertedIndexBuffer->pHostIndexBuffer);
-		  
-		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
-		}
-
-		// Copy the xbox indexes into this native buffer :
-		BYTE* pData = nullptr;
-		
-		pConvertedIndexBuffer->pHostIndexBuffer->Lock(0, 0, &pData, 0);
-		if (pData == nullptr) {
-			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
-		}
-
-		DbgPrintf("DxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
-		memcpy(pData, pIndexData, IndexCount * 2); // TODO : Why does this crash at the 4th copy in Cartoon sample?
-
-		pConvertedIndexBuffer->pHostIndexBuffer->Unlock();
-	}
-
-	// Activate the new native index buffer :
-	hRet = g_pD3DDevice8->SetIndices(pConvertedIndexBuffer->pHostIndexBuffer, 0);
-	if (FAILED(hRet)) {
-		CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: SetIndices Failed!");
-	}
-
-	// Make sure the caller knows what StartIndex it has to use to point to the indicated index start pointer :
-	uiStartIndex = (UINT)pwInitialStart - (UINT)pConvertedIndexBuffer->IndexData;
 }
 
 #define VERTICES_PER_QUAD 4
