@@ -61,18 +61,48 @@ PVOID g_pPersistedData = NULL;
 
 ULONG AvQueryAvCapabilities()
 {
-	// This is the only AV mode we currently emulate, so we can hardcode the return value
-	// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
-	// This function should first query the AV Pack type, read the user's EEPROM settings and
-	// return the correct flags based on this.
-	//
-	// For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
-	//
-	// To read the EEPROM, call ExQueryNonVolatileSetting() with these config flags :
-	// XC_FACTORY_AV_REGION; if that fails, fallback on AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
-	// XC_VIDEO_FLAGS; if that fails, fallback on 0
-	return AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	ULONG Type;
+	ULONG Result;
+	ULONG ResultLength;
+
+	// TODO: For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
+	ULONG Capabilities = AV_PACK_HDTV;
+
+	// Read the AV Region
+	NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(
+		xboxkrnl::XC_FACTORY_AV_REGION, 
+		&Type,
+		&Result,
+		sizeof(Result),
+		&ResultLength);
+
+	// If the value was not set, default to NTSC
+	if (status != STATUS_SUCCESS || ResultLength != sizeof(Result)) {
+		Result = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	}
+
+	Capabilities |= Result & (AV_STANDARD_MASK | AV_REFRESH_MASK);
+
+	// Read the User's configuration (Set in the Dashboard)
+	status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_VIDEO,
+		&Type,
+		&Result,
+		sizeof(Result),
+		&ResultLength);
+
+	// If no result, default to no options selected
+	if (status != STATUS_SUCCESS || ResultLength != sizeof(Result))	{
+		Result = 0;
+	}
+
+	return Capabilities | Result & ~(AV_STANDARD_MASK | AV_PACK_MASK);
 }
+
+// Xbox code will set this address via AvSetSavedDataAddress
+// TODO: This value should be persisted between reboots
+// Xbox code sets this to the contiguous memory region 
+// so data is already persisted.
+PVOID g_AvSavedDataAddress = NULL;
 
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
@@ -81,47 +111,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 {
 	LOG_FUNC();
 
-	__asm int 3;
-
-	// Allocate a buffer the size of the screen buffer and return that.
-	// TODO: Fill this buffer with the contents of the front buffer.
-	// TODO: This isn't always the size we need...
-
-	if (g_pPersistedData)
-	{
-		g_MemoryManager.Free(g_pPersistedData);
-		g_pPersistedData = NULL;
-	}
-
-	g_pPersistedData = g_MemoryManager.Allocate(640 * 480 * 4);
-
-#if 0
-	// Get a copy of the front buffer
-	IDirect3DSurface8* pFrontBuffer = NULL;
-
-	if (SUCCEEDED(g_pD3DDevice8->GetFrontBuffer(pFrontBuffer)))
-	{
-		D3DLOCKED_RECT LockedRect;
-		pFrontBuffer->LockRect(0, NULL, &LockedRect);
-
-		CopyMemory(g_pPersistedData, LockRect.pBits, 640 * 480 * 4);
-
-		pFrontBuffer->UnlockRect();
-	}
-#endif
-
-	// TODO: We might want to return something sometime...
-	/*if( !g_pPersistedData )
-	{
-	FILE* fp = fopen( "PersistedSurface.bin", "rb" );
-	fseek( fp, 0, SEEK_END );
-	long size = ftell( fp );
-	g_pPersistedData = g_MemoryManager.Allocate( size );
-	fread( g_pPersistedData, size, 1, fp );
-	fclose(fp);
-	}*/
-
-	RETURN (NULL); //g_pPersistedData;
+	RETURN(g_AvSavedDataAddress);
 }
 
 // ******************************************************************
@@ -244,5 +234,5 @@ XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	g_AvSavedDataAddress = Address;
 }

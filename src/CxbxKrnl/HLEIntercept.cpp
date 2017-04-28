@@ -936,31 +936,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
 {
-	if (context->against == nullptr) {
-		context->main_index = index;
-		// does this entry specify a redirection (patch)?
-		void * entry_redirect = table[index].emuPatch;
-		if (entry_redirect != nullptr) {
-			if (table[index].Oovpa == nullptr) {
-				HLEError(context, "Patch without an OOVPA at index %d",
-					index);
-			} else
-				// check no patch occurs twice in this table
-				for (uint32 t = index + 1; t < count; t++) {
-					if (entry_redirect == table[t].emuPatch) {
-						if (table[index].Oovpa == table[t].Oovpa) {
-							HLEError(context, "Patch registered again (with same OOVPA) at index %d",
-								t);
-						} else {
-							HLEError(context, "Patch also used for another OOVPA at index %d",
-								t);
-						}
-					}
-				}
-		}
-	}
-	else
-		context->against_index = index;
+	context->against_index = index;
 
 	// verify the OOVPA of this entry
 	if (table[index].Oovpa != nullptr)
