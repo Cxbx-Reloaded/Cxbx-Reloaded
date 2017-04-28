@@ -256,9 +256,20 @@ inline XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContain
 	return (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 }
 
+inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
+{
+	// Don't pass in unassigned Xbox resources
+	assert(pXboxResource != NULL);
+
+	return ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL);
+}
+
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 {
-	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
+	if (pXboxResource == NULL)
+		return nullptr;
+
+	if (IsSpecialXboxResource(pXboxResource)) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
 		return nullptr;
 
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
@@ -353,7 +364,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	if (pData == NULL)
 		return nullptr;
 
-	if ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+	if (IsSpecialXboxResource(pXboxResource))
 	{
 		switch (pData) {
 		case X_D3DRESOURCE_DATA_BACK_BUFFER:
@@ -1373,7 +1384,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 		return;
 
     // Already "Registered" implicitly
-    if((pResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+    if(IsSpecialXboxResource(pResource))
         return;
 
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pResource->Data) != g_RegisteredResources.end()) {
