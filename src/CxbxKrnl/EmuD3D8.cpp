@@ -1532,7 +1532,7 @@ void CxbxUpdateActiveIndexBuffer
 
 	// If the size has changed, free the buffer so it will be re-created
 	if (g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer != nullptr && 
-		g_ConvertedIndexBuffers[pIndexData].IndexCount != IndexCount) {
+		g_ConvertedIndexBuffers[pIndexData].IndexCount < IndexCount) {
 		g_ConvertedIndexBuffers[pIndexData].Hash = 0;
 		g_ConvertedIndexBuffers[pIndexData].IndexCount = 0;
 		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Release();
@@ -1550,7 +1550,7 @@ void CxbxUpdateActiveIndexBuffer
 			&g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer);
 
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
 		}
 	}
 
@@ -1563,11 +1563,13 @@ void CxbxUpdateActiveIndexBuffer
 
 		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Lock(0, 0, &pData, 0);
 		if (pData == nullptr) {
-			CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
 
-		DbgPrintf("DxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
+		printf("CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
 		memcpy(pData, pIndexData, IndexCount * 2); 
+
+		g_ConvertedIndexBuffers[pIndexData].Hash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
 
 		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Unlock();
 	}
@@ -1579,7 +1581,7 @@ void CxbxUpdateActiveIndexBuffer
 	// Activate the new native index buffer :
 	HRESULT hRet = g_pD3DDevice8->SetIndices(g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer, index);
 	if (FAILED(hRet)) {
-		CxbxKrnlCleanup("DxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 	}
 
 	// Make sure the caller knows what StartIndex it has to use to point to the indicated index start pointer :
