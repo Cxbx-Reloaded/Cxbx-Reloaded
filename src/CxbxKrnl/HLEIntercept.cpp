@@ -138,8 +138,13 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
 			}
 
+			if (g_HLECache.find("D3DDEVICE") == g_HLECache.end()) {
+				CxbxKrnlCleanup("D3DDEVICE was not found!");
+			}
+
 			XTL::EmuD3DDeferredRenderState = (DWORD*)g_HLECache["D3DDeferredRenderState"];
 			XTL::EmuD3DDeferredTextureState = (DWORD*)g_HLECache["D3DDeferredTextureState"];
+			XRefDataBase[XREF_D3DDEVICE] = g_HLECache["D3DDEVICE"];
 
 			// TODO: Move this into a function rather than duplicating from HLE scanning code
 			for (int v = 0; v<44; v++) {
@@ -150,6 +155,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				for (int v = 0; v<32; v++)
 					XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
 			}
+
 			g_HLECacheUsed = true;
 		}
 
@@ -384,6 +390,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
 								}
+
+								g_HLECache["D3DDEVICE"] = DerivedAddr_D3DDevice;
 
 								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
 								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)

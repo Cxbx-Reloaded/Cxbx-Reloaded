@@ -754,6 +754,9 @@ void CxbxKrnlInit
 	// initialize grapchics
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	EmuHLEIntercept(pXbeHeader);
+
 	if (bLLE_GPU)
 	{
 		DbgPrintf("EmuMain: Initializing OpenGL.\n");
@@ -765,7 +768,6 @@ void CxbxKrnlInit
 		XTL::EmuD3DInit();
 	}
 
-	EmuHLEIntercept(pXbeHeader);
 	// Apply Media Patches to bypass Anti-Piracy checks
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
