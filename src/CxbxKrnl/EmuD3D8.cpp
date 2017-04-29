@@ -145,7 +145,7 @@ static DWORD                        g_VertexShaderSlots[136];
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 // cached palette size
-static DWORD g_dwCurrentPaletteSize[TEXTURE_STAGES] = { -1, -1, -1, -1 };
+static DWORD g_dwCurrentPaletteSize[TEXTURE_STAGES] = { 0, 0, 0, 0 };
 
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
@@ -175,7 +175,7 @@ struct EmuD3D8CreateDeviceProxyData
 g_EmuCDPD = {0};
 
 // TODO: This should be a D3DDevice structure
-BYTE g_XboxD3DDevice[ONE_MB] = { 0 };
+DWORD g_XboxD3DDevice[64 * ONE_KB / sizeof(DWORD)] = { 0 };
 
 VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
@@ -1523,12 +1523,6 @@ void CxbxUpdateActiveIndexBuffer
 	UINT          IndexCount
 )
 {
-	// If the index buffer is not already in our data structure, add it
-	if(g_ConvertedIndexBuffers.find(pIndexData) == g_ConvertedIndexBuffers.end()) {
-		ConvertedIndexBuffer buffer = {};
-		g_ConvertedIndexBuffers[pIndexData] = buffer;
-	};
-
 	// Create a reference to the active buffer
 	ConvertedIndexBuffer& indexBuffer = g_ConvertedIndexBuffers[pIndexData];
 
@@ -1559,11 +1553,11 @@ void CxbxUpdateActiveIndexBuffer
 	if (uiHash != indexBuffer.Hash)	{
 		// Update the Index Count and the hash
 		indexBuffer.IndexCount = IndexCount;
-		indexBuffer.Hash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
+		indexBuffer.Hash = uiHash;
 
 		// Update the host index buffer
 		BYTE* pData = nullptr;
-		indexBuffer.pHostIndexBuffer->Lock(0, 0, &pData, 0);
+		indexBuffer.pHostIndexBuffer->Lock(0, 0, &pData, D3DLOCK_DISCARD);
 		if (pData == nullptr) {
 			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
@@ -1577,11 +1571,13 @@ void CxbxUpdateActiveIndexBuffer
 	// Determine active the vertex index
 	// This reads from g_pDevice->m_IndexBase in Xbox D3D
 	// TODO: Move this into a global symbol, similar to RenderState/Texture State
-	DWORD index = 0;
-	index = *(DWORD*)(g_XboxD3DDevice + 0x1C);
+	static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
+
+	DWORD indexBase = 0;
+	indexBase = *pdwXboxD3D_IndexBase;
 
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice8->SetIndices(g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer, index);
+	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, indexBase);
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 	}
@@ -5277,7 +5273,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
 
 	// Index buffers don't have a native resource assigned
-	if (pThis->Common & X_D3DCOMMON_TYPE_MASK != X_D3DCOMMON_TYPE_INDEXBUFFER) {
+	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
 		EmuVerifyResourceIsRegistered(pThis);
 
 		// If this is the first reference on a surface
@@ -8102,7 +8098,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
         CxbxKrnlCleanup("g_pIndexBuffer != 0");
 
 	CxbxUpdateNativeD3DResources();
-	
+	CxbxUpdateActiveIndexBuffer((PWORD)pIndexData, VertexCount);
+
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
