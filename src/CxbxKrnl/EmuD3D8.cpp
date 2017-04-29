@@ -1520,34 +1520,34 @@ void CxbxRemoveIndexBuffer(PWORD pData)
 void CxbxUpdateActiveIndexBuffer
 (
 	PWORD         pIndexData,
-	UINT          IndexCount,
-	UINT       	  &uiStartIndex
+	UINT          IndexCount
 )
 {
 	// If the index buffer is not already in our data structure, add it
 	if(g_ConvertedIndexBuffers.find(pIndexData) == g_ConvertedIndexBuffers.end()) {
-		ConvertedIndexBuffer buffer;
+		ConvertedIndexBuffer buffer = {};
 		g_ConvertedIndexBuffers[pIndexData] = buffer;
 	};
 
+	// Create a reference to the active buffer
+	ConvertedIndexBuffer& indexBuffer = g_ConvertedIndexBuffers[pIndexData];
+
 	// If the size has changed, free the buffer so it will be re-created
-	if (g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer != nullptr && 
-		g_ConvertedIndexBuffers[pIndexData].IndexCount < IndexCount) {
-		g_ConvertedIndexBuffers[pIndexData].Hash = 0;
-		g_ConvertedIndexBuffers[pIndexData].IndexCount = 0;
-		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Release();
-		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer = nullptr;
+	if (indexBuffer.pHostIndexBuffer != nullptr &&
+		indexBuffer.IndexCount < IndexCount) {
+		indexBuffer.pHostIndexBuffer->Release();
+		indexBuffer = {};
 	}
 
 	// If we need to create an index buffer, do so.
-	if (g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer == nullptr) {
+	if (indexBuffer.pHostIndexBuffer == nullptr) {
 		// Create a new native index buffer of the above determined size :
 		HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer(
 			IndexCount * 2,
 			D3DUSAGE_WRITEONLY,
 			XTL::D3DFMT_INDEX16,
 			XTL::D3DPOOL_MANAGED,
-			&g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer);
+			&indexBuffer.pHostIndexBuffer);
 
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
@@ -1556,12 +1556,14 @@ void CxbxUpdateActiveIndexBuffer
 
 	// If the data needs updating, do so
 	uint32_t uiHash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
-	if (uiHash != g_ConvertedIndexBuffers[pIndexData].Hash)	{
-		g_ConvertedIndexBuffers[pIndexData].IndexCount = IndexCount;
+	if (uiHash != indexBuffer.Hash)	{
+		// Update the Index Count and the hash
+		indexBuffer.IndexCount = IndexCount;
+		indexBuffer.Hash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
 
+		// Update the host index buffer
 		BYTE* pData = nullptr;
-
-		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Lock(0, 0, &pData, 0);
+		indexBuffer.pHostIndexBuffer->Lock(0, 0, &pData, 0);
 		if (pData == nullptr) {
 			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
@@ -1569,13 +1571,13 @@ void CxbxUpdateActiveIndexBuffer
 		printf("CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
 		memcpy(pData, pIndexData, IndexCount * 2); 
 
-		g_ConvertedIndexBuffers[pIndexData].Hash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
-
-		g_ConvertedIndexBuffers[pIndexData].pHostIndexBuffer->Unlock();
+		indexBuffer.pHostIndexBuffer->Unlock();
 	}
 
+	// Determine active the vertex index
+	// This reads from g_pDevice->m_IndexBase in Xbox D3D
+	// TODO: Move this into a global symbol, similar to RenderState/Texture State
 	DWORD index = 0;
-	// Determine the vertex index from D3D
 	index = *(DWORD*)(g_XboxD3DDevice + 0x1C);
 
 	// Activate the new native index buffer :
@@ -1583,9 +1585,6 @@ void CxbxUpdateActiveIndexBuffer
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 	}
-
-	// Make sure the caller knows what StartIndex it has to use to point to the indicated index start pointer :
-	uiStartIndex = 0;
 }
 
 // ******************************************************************
@@ -7983,11 +7982,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 	CxbxUpdateNativeD3DResources();
-
-	UINT uiStartIndex = 0;
-	UINT uiNumVertices = 0;
-
-	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount, uiStartIndex);
+	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
 
     VertexPatchDesc VPDesc;
 
@@ -8001,6 +7996,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     VertexPatcher VertPatch;
 	bool FatalError = false;
     VertPatch.Apply(&VPDesc, &FatalError);
+
+	UINT uiStartIndex = 0;
+	UINT uiNumVertices = VertexCount;
 
     if(IsValidCurrentShader() && !FatalError)
     {
