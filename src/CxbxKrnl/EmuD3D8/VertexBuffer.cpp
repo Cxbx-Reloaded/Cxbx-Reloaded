@@ -238,10 +238,10 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 			&uiStride);
         if(!pOrigVertexBuffer)
 		{
-			/*if(!g_pVertexBuffer || !g_pVertexBuffer->EmuVertexBuffer8)
+			/*if(!g_pVertexBuffer || !GetHostVertexBuffer(g_pVertexBuffer))
 				CxbxKrnlCleanup("Unable to retrieve original buffer (Stream := %d)", uiStream);
 			else
-				pOrigVertexBuffer = g_pVertexBuffer->EmuVertexBuffer8;*/
+				pOrigVertexBuffer = GetHostVertexBuffer(g_pVertexBuffer);*/
 
 			if(pbFatalError)
 				*pbFatalError = true;
