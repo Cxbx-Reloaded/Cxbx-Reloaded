@@ -187,13 +187,16 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
+	int symbolOffset = 0;
+	std::string symbolName = GetDetectedSymbolName(e->ContextRecord->Eip, &symbolOffset);
+
 	char buffer[256];
 	sprintf(buffer,
-		"Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
+		"Recieved Exception Code 0x%.08X @ EIP := 0x%.08X (= %s+0x%x)\n"
 		"\n"
 		"  Press \"OK\" to terminate emulation.\n"
 		"  Press \"Cancel\" to debug.",
-		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, symbolName.c_str(), symbolOffset);
 
 	if (MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 	{
