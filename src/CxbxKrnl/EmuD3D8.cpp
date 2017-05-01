@@ -7625,6 +7625,9 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
     return pbNativeData; // For now, give the native buffer memory to Xbox. TODO : pVertexBuffer->Data 
 }
 
+XTL::X_D3DVertexBuffer*g_D3DStreams[16];
+UINT g_D3DStreamStrides[16];
+
 // ******************************************************************
 // * patch: D3DDevice_GetStreamSource2
 // ******************************************************************
@@ -7645,8 +7648,19 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
                StreamNumber, pStride);
 
     EmuWarning("Not correctly implemented yet!");
-    X_D3DVertexBuffer* pVertexBuffer = EmuNewD3DVertexBuffer();
-    g_pD3DDevice8->GetStreamSource(StreamNumber, &pVertexBuffer->EmuVertexBuffer8, pStride);
+
+	X_D3DVertexBuffer* pVertexBuffer = NULL;
+	*pStride = 0;
+
+	if (StreamNumber <= 15)
+	{ 
+		pVertexBuffer = g_D3DStreams[StreamNumber];
+		if (pVertexBuffer)
+		{
+			EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
+			*pStride = g_D3DStreamStrides[StreamNumber];
+		}
+	}
 
     return pVertexBuffer;
 }
@@ -7685,6 +7699,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 //		EmuWarning( "pStreamData: = 0x%.08X (0x%.08X)", pStreamData, (pStreamData != 0) ? pStreamData->EmuVertexBuffer8 : NULL );
 ////		__asm int 3;
 //	}
+
+	if (StreamNumber < 16)
+	{
+		// Remember these for D3DDevice_GetStreamSource2 to read:
+		g_D3DStreams[StreamNumber] = pStreamData;
+		g_D3DStreamStrides[StreamNumber] = Stride;
+	}
 
     IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
 
