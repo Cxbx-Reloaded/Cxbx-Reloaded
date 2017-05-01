@@ -43,48 +43,6 @@
 #define XNET_ETHERNET_LINK_HALF_DUPLEX      0x10
 
 // ******************************************************************
-// * clas: EmuThis
-// ******************************************************************
-class EmuThis
-{
-    public:
-        // ******************************************************************
-        // * patch: socket
-        // ******************************************************************
-        SOCKET EMUPATCH(socket)(int af, int type, int protocol);
-
-		// ******************************************************************
-		// * patch: This::Emuconnect
-		// ******************************************************************
-		int EMUPATCH(connect)(SOCKET s, const struct sockaddr FAR *name, int namelen);
-
-		// ******************************************************************
-		// * patch: This::Emusend
-		// ******************************************************************
-		int EMUPATCH(send)(SOCKET s, const char FAR *buf, int len, int flags);
-
-		// ******************************************************************
-		// * patch: This::Emurecv
-		// ******************************************************************
-		int EMUPATCH(recv)(SOCKET s, char FAR *buf, int len, int flags);
-
-        // ******************************************************************
-        // * patch: bind
-        // ******************************************************************
-        int EMUPATCH(bind)(SOCKET s, const struct sockaddr FAR *name, int namelen);
-
-        // ******************************************************************
-        // * patch: listen
-        // ******************************************************************
-        int EMUPATCH(listen)(SOCKET s, int backlog);
-
-        // ******************************************************************
-        // * patch: ioctlsocket
-        // ******************************************************************
-        int EMUPATCH(ioctlsocket)(SOCKET s, long cmd, u_long FAR *argp);
-};
-
-// ******************************************************************
 // * patch: WSAStartup
 // ******************************************************************
 int WINAPI EMUPATCH(WSAStartup)
@@ -127,5 +85,55 @@ HRESULT WINAPI EMUPATCH(XOnlineLogon)
     HANDLE	pHandle
 );
 
+SOCKET WINAPI EMUPATCH(socket)
+(
+    int   af,
+    int   type,
+    int   protocol
+);
+
+int WINAPI EMUPATCH(connect)
+(
+    SOCKET s,
+    const struct sockaddr FAR *name,
+    int namelen
+);
+
+int WINAPI EMUPATCH(send)
+(
+    SOCKET s,
+    const char FAR *buf,
+    int len,
+    int flags
+);
+
+int WINAPI EMUPATCH(recv)
+(
+    SOCKET s,
+    char FAR *buf,
+    int len,
+    int flags
+);
+
+
+int WINAPI EMUPATCH(bind)
+(
+    SOCKET s, 
+    const struct sockaddr FAR *name, 
+    int namelen
+);
+
+int WINAPI EMUPATCH(listen)
+(
+    SOCKET s, 
+    int backlog
+);
+
+int WINAPI EMUPATCH(ioctlsocket)
+(
+    SOCKET s, 
+    long cmd, 
+    u_long FAR *argp
+);
 
 #endif

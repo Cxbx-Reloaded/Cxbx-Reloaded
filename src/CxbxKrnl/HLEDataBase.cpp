@@ -82,7 +82,6 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/D3D8.1.0.5558.inl"
 #include "HLEDataBase/D3D8.1.0.5788.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
-#include "HLEDataBase/D3D8LTCG.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
 #include "HLEDataBase/DSound.1.0.4134.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
@@ -154,8 +153,6 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5788),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5849),
-
-	HLE_ENTRY(Lib_D3D8LTCG, D3D8LTCG, 5849),
 
 	HLE_ENTRY(Lib_DSOUND, DSound, 3936),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4134),

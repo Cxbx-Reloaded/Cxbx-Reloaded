@@ -100,32 +100,6 @@ OOVPA_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4432, 10,
 OOVPA_END;
 
 // ******************************************************************
-// * DirectSound_CDirectSound::SetDistanceFactorA
-// ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSound_SetDistanceFactorA, 4432, 11,
-
-    XREF_SETDISTANCEFACTORA,
-    XRefZero)
-
-        // DirectSound_CDirectSound_SetDistanceFactorA+0x21 : mov eax, 0x80004005
-        { 0x21, 0xB8 }, // (Offset,Value)-Pair #1
-        { 0x22, 0x05 }, // (Offset,Value)-Pair #2
-        { 0x23, 0x40 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x00 }, // (Offset,Value)-Pair #4
-        { 0x25, 0x80 }, // (Offset,Value)-Pair #5
-
-        // DirectSound_CDirectSound_SetDistanceFactorA+0x39 : or dword ptr[eax+0xA4], 0x60
-        { 0x39, 0x83 }, // (Offset,Value)-Pair #6
-        { 0x3A, 0x88 }, // (Offset,Value)-Pair #7
-        { 0x3B, 0xA4 }, // (Offset,Value)-Pair #8
-        { 0x3F, 0x60 }, // (Offset,Value)-Pair #9
-
-        // DirectSound_CDirectSound_SetDistanceFactorA+0x4F : jz +0x0B
-        { 0x4F, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x50, 0x0B }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
 // * DirectSoundCreate, 4432
 // ******************************************************************
 OOVPATable DSound_4432[] = {
@@ -166,7 +140,7 @@ OOVPATable DSound_4432[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CommitDeferredSettings, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SetDistanceFactorA, 4432, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetDistanceFactorA, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),

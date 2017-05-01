@@ -43,25 +43,21 @@
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
+#include "xxhash32.h"
+#include <Shlwapi.h>
 
 static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper);
 static void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Header *pXbeHeader);
-static void  EmuXRefFailure();
+static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 
 #include <shlobj.h>
-#include <vector>
+#include <unordered_map>
+#include <sstream>
 
-uint32 fcount = 0;
-void * funcExclude[2048] = { nullptr };
+std::unordered_map<std::string, uint32_t> g_HLECache;
+bool g_HLECacheUsed = false;
 
 uint32 g_BuildVersion;
-
-static std::vector<xbaddr> vCacheOut;
-
-static bool bCacheInp = false;
-static std::vector<xbaddr> vCacheInp;
-static std::vector<xbaddr>::const_iterator vCacheInpIter;
-
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
@@ -75,93 +71,70 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
-    char szCacheFileName[MAX_PATH];
-
     printf("\n");
 	printf("*******************************************************************************\n");
 	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
 	printf("*******************************************************************************\n");
 	printf("\n");
 
-    //
-    // initialize HLE cache file
-    //
+	// Hash the loaded XBE's header, use it as a filename
+	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
+	std::stringstream sstream;
+	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
+	std::string filename = sstream.str();
 
-	{
-		SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
+	// TODO: Fix HLE Cache
+	// if (PathFileExists(filename.c_str())) {
+	if (false) {
+		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
-		strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
+		// Verify the version of the cache file against the HLE Database
+		char buffer[SHRT_MAX] = { 0 };
+		char* bufferPtr = buffer;
 
-		CreateDirectory(szCacheFileName, NULL);
+		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
 
-		char *spot = strrchr(szCacheFileName, '\\');
+		if (strcmp(buffer, szHLELastCompileTime) == 0) {
+			printf("Using HLE Cache\n");
+			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
-		//
-		// create HLECache directory
-		//
+			// Parse the .INI file into the cache
+			while (strlen(bufferPtr) > 0) {
+				std::string ini_entry(bufferPtr);
 
-		strcpy(spot, "\\HLECache");
+				auto separator = ini_entry.find('=');
+				std::string key = ini_entry.substr(0, separator);
+				std::string value = ini_entry.substr(separator + 1, std::string::npos);
+				uint32_t addr = strtol(value.c_str(), 0, 16);
 
-		CreateDirectory(szCacheFileName, NULL);
-		
-		//
-        // open title's cache file
-        //
-		sprintf(spot+9, "\\%08x.dat", pCertificate->dwTitleId);
+				g_HLECache[key] = addr;
+				bufferPtr += strlen(bufferPtr) + 1;
+			}
 
-        FILE *pCacheFile = fopen(szCacheFileName, "rb");
+			// Iterate through the cache calling GetProcAddress on all functions.	
+			for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+				std::string patchName = "XTL::EmuPatch_" + (*it).first;		
+				void* pFunc = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
 
-        if(pCacheFile != NULL)
-        {
-            bool bVerified = false;
+				if (pFunc != nullptr) {
+					printf("HLECache: 0x%08X => %s\n", (*it).second, (*it).first.c_str());
+					EmuInstallPatch((*it).second, pFunc);
+				}
+			}
 
-            //
-            // verify last compiled timestamp
-            //
+			g_HLECacheUsed = true;
+		}
 
-            char szCacheLastCompileTime[64];
-
-            memset(szCacheLastCompileTime, 0, 64);
-
-            if(fread(szCacheLastCompileTime, 64, 1, pCacheFile) == 1)
-            {
-                if(strcmp(szCacheLastCompileTime, szHLELastCompileTime) == 0)
-                {
-                    bVerified = true;
-                }
-            }
-
-            //
-            // load function addresses
-            //
-
-            if(bVerified)
-            {
-                while(true)
-                {
-					xbaddr cur;
-
-                    if(fread(&cur, 4, 1, pCacheFile) != 1)
-                        break;
-
-                    vCacheInp.push_back(cur);
-                }
-
-                bCacheInp = true;
-
-                vCacheInpIter = vCacheInp.begin();
-
-				printf("HLE: Loaded HLE Cache for 0x%.08X\n", pCertificate->dwTitleId);
-            }
-
-            fclose(pCacheFile);
-        }
-    }
+		// If g_HLECache didn't get filled, the symbol cache is invalid
+		if (g_HLECache.empty()) {
+			printf("HLE Cache file is outdated and will be regenerated\n");
+			g_HLECacheUsed = false;
+		}
+	}
 
 	//
     // initialize Microsoft XDK emulation
     //
-
     if(pLibraryVersion != 0)
     {
 		printf("HLE: Detected Microsoft XDK application...\n");
@@ -196,6 +169,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 uint16 OrigBuildVersion = BuildVersion;
 
                 // Aliases - for testing purposes only
+				// TODO: Remove these and come up with a better way to handle XDKs we don't hve databases for
 				if(BuildVersion == 4039) { BuildVersion = 4034; }
 				if(BuildVersion == 4238) { BuildVersion = 4361; }	// I don't think this XDK was released.
 				if(BuildVersion == 4242) { BuildVersion = 4361; }
@@ -208,47 +182,27 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
 				if(BuildVersion == 5120) { BuildVersion = 5233; }
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
-                /*
-                if(BuildVersion == 3944) { BuildVersion = 3925; }
-                if(BuildVersion == 4039) { BuildVersion = 4034; }
-                if(BuildVersion == 4242) { BuildVersion = 4432; }
-                if(BuildVersion == 4531) { BuildVersion = 4432; }
-                if(BuildVersion == 4721) { BuildVersion = 4432; }
-                if(BuildVersion == 4831) { BuildVersion = 4432; }
-                if(BuildVersion == 4928) { BuildVersion = 4432; }
-                if(BuildVersion == 5028) { BuildVersion = 4432; }
-                if(BuildVersion == 5120) { BuildVersion = 4432; }
-                if(BuildVersion == 5344) { BuildVersion = 4432; }
-                if(BuildVersion == 5455) { BuildVersion = 4432; }
-                if(BuildVersion == 5933) { BuildVersion = 4432; }
-                */
-
-                char szLibraryName[9] = {0};
-				char szOrigLibraryName[9] = {0};
-
-                for(uint32 c=0;c<8;c++)
-                {
-                    szLibraryName[c] = pLibraryVersion[v].szName[c];
-					szOrigLibraryName[c] = pLibraryVersion[v].szName[c];
-                }
-
+                
+				std::string LibraryName(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
+				
 				// TODO: HACK: D3DX8 is packed into D3D8 database
-				if (strcmp(szLibraryName, Lib_D3DX8) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_D3DX8) == 0)
 				{
-					strcpy(szLibraryName, Lib_D3D8);
+					LibraryName = Lib_D3D8;
 				}
 
-				if(strcmp(szLibraryName, Lib_D3D8LTCG) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_D3D8LTCG) == 0)
 				{
-					// Skip scanning for D3D8LTCG symbols when LLE GPU is selected
-					if (bLLE_GPU)
-						continue;
+					// If LLE GPU is not enabled, show a warning that the title is not supported
+					if (!bLLE_GPU) {
+						CxbxKrnlCleanup("LTCG Title Detected: This game is not supported by HLE");
+					}
 
-					// Test (do not release uncommented!)
-					/*strcpy(szLibraryName, Lib_D3D8);*/
+					// Skip LTCG libraries as we cannot reliably detect them
+					continue;
 				}
 				
-				if (strcmp(szLibraryName, Lib_D3D8) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0)
 				{
 					// Skip scanning for D3D8 symbols when LLE GPU is selected
 					if (bLLE_GPU)
@@ -257,7 +211,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Prevent scanning D3D8 again (since D3D8X is packed into it above)
 					if (bFoundD3D)
 					{
-						//DbgPrintf("Redundant\n");
 						continue;
 					}
 
@@ -266,13 +219,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Some 3911 titles have different D3D8 builds
 					if (BuildVersion <= 3948)
 						BuildVersion = 3925;
-
-					// Testing... don't release with this code in it!
-					// TODO: 5233 and 5558
-					//	if(BuildVersion == 4134)
-					//		BuildVersion = 4627;
 				}
-				else if(strcmp(szLibraryName, Lib_DSOUND) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_DSOUND) == 0)
                 {
 					// Skip scanning for DSOUND symbols when LLE APU is selected
 					if (bLLE_APU)
@@ -289,7 +237,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
-				else if(strcmp(szLibraryName, Lib_XAPILIB) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0)
 				{
 					// Change a few XAPILIB versions to similar counterparts
 					if(BuildVersion == 3944)
@@ -299,14 +247,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
 				}
-				else if (strcmp(szLibraryName, Lib_XGRAPHC) == 0)
+				if (strcmp(LibraryName.c_str(), Lib_XGRAPHC) == 0)
 				{
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
 					if (bLLE_GPU)
 						continue;
 
-					//	if(BuildVersion == 4432)
-					//		BuildVersion = 4361;
 					if (BuildVersion == 3944)
 						BuildVersion = 3911;
 					if (OrigBuildVersion == 4531)
@@ -315,7 +261,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				if(bXRefFirstPass)
                 {
-                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && 
+                    if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0 &&
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233
                       || BuildVersion == 5344 || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -323,7 +269,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
-                    else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
+                    else if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
                       || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
@@ -499,91 +445,19 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             }
                         }
                     }
-					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 &&
-     //                   (BuildVersion == 5849))	// 5849 only so far...
-     //               {
-					//	// Save D3D8 build version
-					//	g_BuildVersion = BuildVersion;
-
-     //                   xbaddr lower = pXbeHeader->dwBaseAddr;
-     //                   xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
-     //                   xbaddr pFunc = (xbaddr)nullptr;
-
-     //                   if(BuildVersion == 5849)
-					//		pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_LTCG_5849, lower, upper);
-
-     //                   // locate D3DDeferredRenderState
-     //                   if(pFunc != nullptr)
-     //                   {
-     //                       // offset for stencil cull enable render state in the deferred render state buffer
-     //                       int patchOffset = 0;
-
-     //                       if(BuildVersion == 5849)
-     //                       {
-     //                           // WARNING: Not thoroughly tested (just seemed very correct right away)
-     //                           XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)(pFunc + 0x2B) - 0x24C + 92*4);
-     //                           patchOffset = 162*4 - 92*4;
-     //                       }
-
-     //                       XRefDataBase[XREF_D3DDEVICE]                   = *(DWORD*)((DWORD)pFunc + 0x03);
-     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
-     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
-     //                       XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
-     //                       XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
-     //                       XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
-     //                       XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
-
-     //                       for(int v=0;v<44;v++)
-     //                       {
-     //                           XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
-     //                       }
-
-     //                       DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
-     //                   }
-     //                   else
-     //                   {
-     //                       XTL::EmuD3DDeferredRenderState = nullptr;
-     //                       CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
-     //                   }
-
-     //                   // locate D3DDeferredTextureState
-     //                   {
-     //                       pFunc = (xbaddr)nullptr;
-
-     //                       if(BuildVersion == 3925)
-					//			pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849, lower, upper);
-
-     //                       if(pFunc != (xbaddr)nullptr)
-     //                       {
-     //                           if(BuildVersion == 3925) // 0x18F180
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x11) - 0x70); // TODO: Verify
-     //                           else if(BuildVersion == 4134)
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x18) - 0x70); // TODO: Verify
-     //                           else
-     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)(pFunc + 0x19) - 0x70);
-
-     //                           for(int s=0;s<4;s++)
-     //                           {
-     //                               for(int v=0;v<32;v++)
-     //                                   XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
-     //                           }
-
-     //                           DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
-     //                       }
-     //                       else
-     //                       {
-     //                           XTL::EmuD3DDeferredTextureState = nullptr;
-     //                           CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
-     //                       }
-     //                   }
-     //               }
                 }
 
-				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
+				// TODO: Re-enable this after fixing render states
+            	// uIf the HLE Cache was used, skip symbol maching/patching
+				//if (g_HLECacheUsed) {
+					//continue;
+				//}
+
+				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
                 const HLEData *FoundHLEData = nullptr;
                 for(uint32 d = 0; d < HLEDataBaseCount; d++) {
-					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(szLibraryName, HLEDataBase[d].Library) == 0) {
+					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(LibraryName.c_str(), HLEDataBase[d].Library) == 0) {
 						FoundHLEData = &HLEDataBase[d];
 						break;
 					}
@@ -604,50 +478,31 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		printf("HLE: Resolved %d cross reference(s)\n", OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-    vCacheInp.clear();
-
-    //
-    // update cache file
-    //
-/* Turn of the nasty HLE cacheing (When you are adding oovaps anyway), it's in dire need of a better file identify system
-    if(vCacheOut.size() > 0)
-    {
-        FILE *pCacheFile = fopen(szCacheFileName, "wb");
-
-        if(pCacheFile != NULL)
-        {
-            DbgPrintf("HLE: Saving HLE Cache for 0x%.08X...\n", pCertificate->dwTitleId);
-
-            //
-            // write last compiled timestamp
-            //
-
-            char szCacheLastCompileTime[64];
-
-            memset(szCacheLastCompileTime, 0, 64);
-
-            strcpy(szCacheLastCompileTime, szHLELastCompileTime);
-
-            fwrite(szCacheLastCompileTime, 64, 1, pCacheFile);
-
-            //
-            // write function addresses
-            //
-
-            std::vector<void*>::const_iterator cur;
-
-            for(cur = vCacheOut.begin();cur != vCacheOut.end(); ++cur)
-            {
-                fwrite(&(*cur), 4, 1, pCacheFile);
-            }
-        }
-
-        fclose(pCacheFile);
-    }
-*/
-    vCacheOut.clear();
-
 	printf("\n");
+
+	// Write the HLE Database version string
+	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
+
+	// Write the Certificate Details to the cache file
+	char tAsciiTitle[40] = "Unknown";
+	setlocale(LC_ALL, "English");
+	wcstombs(tAsciiTitle, pCertificate->wszTitleName, sizeof(tAsciiTitle));
+	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
+
+	std::stringstream titleId;
+	titleId << std::hex << pCertificate->dwTitleId;
+	WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
+
+	std::stringstream region;
+	region << std::hex << pCertificate->dwGameRegion;
+	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
+
+	// Write the found HLE Patches into the cache file
+	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+		std::stringstream cacheAddress;
+		cacheAddress << std::hex << (*it).second;
+		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
+	}
 
     return;
 }
@@ -859,45 +714,36 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 		xbaddr pFunc = (xbaddr)nullptr;
 
-        if(bCacheInp && (vCacheInpIter != vCacheInp.end()))
-        {
-            pFunc = *vCacheInpIter;
-            ++vCacheInpIter;
-        }
-        else
-        {
-            pFunc = EmuLocateFunction(Oovpa, lower, upper);
-			if (pFunc != (xbaddr)nullptr)
-				vCacheOut.push_back(pFunc);
-        }
+        
+        pFunc = EmuLocateFunction(Oovpa, lower, upper);
 
         if(pFunc != (xbaddr)nullptr)
         {
-            printf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
+            printf("HLE: 0x%.08X -> %s %d", pFunc, OovpaTable[a].szFuncName, OovpaTable[a].Version);
+			std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
 
-            if(OovpaTable[a].emuPatch == nullptr)
+			void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+
+			if ((OovpaTable[a].Flags & Flag_XRef) == Flag_XRef) {
+				printf("\t*XRef*");
+			}
+
+			if ((OovpaTable[a].Flags & Flag_DontScan) == Flag_DontScan) {
+				printf("\t*DISABLED*");
+			} else	{
+				// Only store entries in the Cache if they are not disabled
+				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
+			}
+
+			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
             {
-				// Only place an XRef trapping patch when the OOVPA registration wasn't disabled
-				if ((OovpaTable[a].Flags & Flag_DontScan) == 0)
-				{
-					// Write breakpoint opcode
-					*(uint8_t*)pFunc = OPCODE_INT3_CC;
-					EmuInstallPatch(pFunc + 1, EmuXRefFailure);
-				}
+				printf("\t*PATCHED*");
+                EmuInstallPatch(pFunc, addr);
             }
-            else
-            {
-                EmuInstallPatch(pFunc, OovpaTable[a].emuPatch);
-                funcExclude[fcount++] = (void *)pFunc;
-            }
+
+			printf("\n");
         }
     }
-}
-
-// alert for the situation where an Xref function body is hit
-static void EmuXRefFailure()
-{
-    CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
 #ifdef _DEBUG_TRACE
