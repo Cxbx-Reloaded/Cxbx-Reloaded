@@ -73,21 +73,25 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 
 	for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
 		xbaddr symbolAddr = (*it).second;
-		int distance = symbolAddr - address;
-		if (distance >= 0)
+		if (symbolAddr <= address)
 		{
+			int distance = address - symbolAddr;
 			if (closestMatch > distance)
 			{
-				std::string symbolName = (*it).first;
-
 				closestMatch = distance;
-				result = symbolName;
+				result = (*it).first;
 			}
 		}
 	}
 
-	*symbolOffset = closestMatch;
-	return result;
+	if (closestMatch < MAXINT)
+	{
+		*symbolOffset = closestMatch;
+		return result;
+	}
+
+	*symbolOffset = 0;
+	return "unknown";
 }
 
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
