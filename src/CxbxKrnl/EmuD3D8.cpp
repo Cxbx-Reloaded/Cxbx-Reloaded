@@ -338,6 +338,46 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 	return pXboxResource->EmuVertexBuffer8;
 }
 
+void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *HostTexture)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+
+	pXboxResource->EmuTexture8 = HostTexture;
+}
+
+void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *HostCubeTexture)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+
+	pXboxResource->EmuCubeTexture8 = HostCubeTexture;
+}
+
+void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *HostVolumeTexture)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+
+	pXboxResource->EmuVolumeTexture8 = HostVolumeTexture;
+}
+
+void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *HostIndexBuffer)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
+
+	pXboxResource->EmuIndexBuffer8 = HostIndexBuffer;
+}
+
+void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *HostVertexBuffer)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
+
+	pXboxResource->EmuVertexBuffer8 = HostVertexBuffer;
+}
+
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
