@@ -763,6 +763,21 @@ OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 5028, 12)
 OOVPA_END;
 
 // ******************************************************************
+// * D3D::CDevice::KickOff
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_KickOff, 5028, 8)
+
+        { 0x07, 0x08 },
+        { 0x17, 0xC4 },
+        { 0x18, 0x20 },
+        { 0x19, 0x75 },
+        { 0x1A, 0x63 },
+        { 0x1B, 0xA1 },
+        { 0x6D, 0x85 },
+        { 0x7E, 0xBA },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_5028
 // ******************************************************************
 OOVPATable D3D8_5028[] = {
@@ -905,7 +920,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3D_SetFence, 5028, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 5028, PATCH),
-	REGISTER_OOVPA(D3DDevice_KickOff, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_KickOff, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4928, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 4627, PATCH),
@@ -960,7 +975,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData2s, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
-	REGISTER_OOVPA(D3DVertexBuffer_GetDesc, 5028, PATCH),
+	REGISTER_OOVPA(D3DVertexBuffer_GetDesc, 5028, DISABLED),
 };
 
 // ******************************************************************

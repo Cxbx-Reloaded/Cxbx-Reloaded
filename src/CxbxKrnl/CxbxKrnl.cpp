@@ -396,8 +396,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	CxbxInitFilePaths();
-
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 
 	CxbxRestorePersistentMemoryRegions();
@@ -756,6 +754,9 @@ void CxbxKrnlInit
 	// initialize grapchics
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	EmuHLEIntercept(pXbeHeader);
+
 	if (bLLE_GPU)
 	{
 		DbgPrintf("EmuMain: Initializing OpenGL.\n");
@@ -767,7 +768,6 @@ void CxbxKrnlInit
 		XTL::EmuD3DInit();
 	}
 
-	EmuHLEIntercept(pXbeHeader);
 	// Apply Media Patches to bypass Anti-Piracy checks
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
@@ -801,7 +801,7 @@ void CxbxInitFilePaths()
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
 	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS))
-		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
 
 	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);

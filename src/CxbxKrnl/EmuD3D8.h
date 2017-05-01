@@ -67,7 +67,7 @@ extern VOID EmuD3DCleanup();
 extern X_D3DTILE EmuD3DTileCache[0x08];
 
 // EmuD3DActiveTexture
-extern X_D3DResource *EmuD3DActiveTexture[4];
+extern X_D3DPixelContainer *EmuD3DActiveTexture[TEXTURE_STAGES];
 
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
@@ -1208,7 +1208,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetTransform)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DVertexBuffer_Lock)
 (
-    X_D3DVertexBuffer   *ppVertexBuffer,
+    X_D3DVertexBuffer   *pVertexBuffer,
     UINT                OffsetToLock,
     UINT                SizeToLock,
     BYTE              **ppbData,
@@ -1220,7 +1220,7 @@ VOID WINAPI EMUPATCH(D3DVertexBuffer_Lock)
 // ******************************************************************
 BYTE* WINAPI EMUPATCH(D3DVertexBuffer_Lock2)
 (
-    X_D3DVertexBuffer  *ppVertexBuffer,
+    X_D3DVertexBuffer  *pVertexBuffer,
     DWORD               Flags
 );
 
@@ -1629,14 +1629,16 @@ VOID WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
     X_D3DResource *pThis
 );
 
+#if 0 // patch DISABLED
 // ******************************************************************
 // * patch: D3DVertexBuffer_GetDesc
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DVertexBuffer_GetDesc)
 (
     X_D3DVertexBuffer    *pThis,
-    D3DVERTEXBUFFER_DESC *pDesc
+    X_D3DVERTEXBUFFER_DESC *pDesc
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_SetScissors
@@ -1658,60 +1660,11 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_InsertFence
-// ******************************************************************
-DWORD WINAPI EMUPATCH(D3DDevice_InsertFence)();
-
-// ******************************************************************
-// * patch: D3DDevice_BlockOnFence
-// ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_BlockOnFence)
-(
-	DWORD Fence
-);
-
-// ******************************************************************
-// * patch: D3DResource_BlockUntilNotBusy
-// ******************************************************************
-VOID WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
-(
-	X_D3DResource *pThis
-);
-
-// ******************************************************************
-// * patch: D3DVertexBuffer_GetDesc
-// ******************************************************************
-VOID WINAPI EMUPATCH(D3DVertexBuffer_GetDesc)
-(
-	X_D3DVertexBuffer    *pThis,
-	D3DVERTEXBUFFER_DESC *pDesc
-);
-
-// ******************************************************************
-// * patch: D3DDevice_SetScissors
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetScissors)
-(
-	DWORD          Count, 
-	BOOL           Exclusive, 
-	CONST D3DRECT  *pRects
-);
-
-// ******************************************************************
 // * patch: D3DDevice_SetPixelShaderProgram
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(D3DDevice_SetPixelShaderProgram)
 (
 	X_D3DPIXELSHADERDEF *pPSDef
-);
-
-// ******************************************************************
-// * patch: D3DDevice_SetScreenSpaceOffset
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetScreenSpaceOffset)
-(
-	FLOAT x,
-	FLOAT y
 );
 
 // ******************************************************************

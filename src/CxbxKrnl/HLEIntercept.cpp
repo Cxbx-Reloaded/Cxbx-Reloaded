@@ -77,15 +77,20 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("*******************************************************************************\n");
 	printf("\n");
 
+	// Make sure the HLE Cache directory exists
+	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\HLECache\\";
+	int result = SHCreateDirectoryEx(nullptr, cachePath.c_str(), nullptr);
+	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+		CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded HLECache folder!");
+	}
+
 	// Hash the loaded XBE's header, use it as a filename
 	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
 	std::stringstream sstream;
-	sstream << szFolder_CxbxReloadedData << "\\HLECache\\" << std::hex << uiHash << ".ini";
+	sstream << cachePath << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
 
-	// TODO: Fix HLE Cache
-	// if (PathFileExists(filename.c_str())) {
-	if (false) {
+	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
 		// Verify the version of the cache file against the HLE Database
@@ -93,6 +98,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		char* bufferPtr = buffer;
 
 		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
+		g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
 		if (strcmp(buffer, szHLELastCompileTime) == 0) {
 			printf("Using HLE Cache\n");
@@ -122,6 +128,34 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				}
 			}
 
+
+			// Fix up Render state and Texture States
+			if (g_HLECache.find("D3DDeferredRenderState") == g_HLECache.end()) {
+				CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+			}
+			
+			if (g_HLECache.find("D3DDeferredTextureState") == g_HLECache.end()) {
+				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+			}
+
+			if (g_HLECache.find("D3DDEVICE") == g_HLECache.end()) {
+				CxbxKrnlCleanup("D3DDEVICE was not found!");
+			}
+
+			XTL::EmuD3DDeferredRenderState = (DWORD*)g_HLECache["D3DDeferredRenderState"];
+			XTL::EmuD3DDeferredTextureState = (DWORD*)g_HLECache["D3DDeferredTextureState"];
+			XRefDataBase[XREF_D3DDEVICE] = g_HLECache["D3DDEVICE"];
+
+			// TODO: Move this into a function rather than duplicating from HLE scanning code
+			for (int v = 0; v<44; v++) {
+				XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+			}
+
+			for (int s = 0; s<4; s++) {
+				for (int v = 0; v<32; v++)
+					XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
+			}
+
 			g_HLECacheUsed = true;
 		}
 
@@ -130,6 +164,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			printf("HLE Cache file is outdated and will be regenerated\n");
 			g_HLECacheUsed = false;
 		}
+	}
+
+	// If the HLE Cache was used, skip symbol maching/patching
+	if (g_HLECacheUsed) {
+		return;
 	}
 
 	//
@@ -352,6 +391,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
 								}
 
+								g_HLECache["D3DDEVICE"] = DerivedAddr_D3DDevice;
+
 								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
 								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)
 								{
@@ -379,6 +420,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
                             }
 
+							g_HLECache["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
 							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
@@ -436,6 +478,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                         XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
                                 }
 
+								g_HLECache["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
 								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             }
                             else
@@ -446,12 +489,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         }
                     }
                 }
-
-				// TODO: Re-enable this after fixing render states
-            	// uIf the HLE Cache was used, skip symbol maching/patching
-				//if (g_HLECacheUsed) {
-					//continue;
-				//}
 
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
@@ -496,6 +533,19 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	std::stringstream region;
 	region << std::hex << pCertificate->dwGameRegion;
 	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
+
+	// Write Library Details
+	for (int i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
+		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
+		std::stringstream buildVersion;
+		buildVersion << pLibraryVersion[i].wBuildVersion;
+
+		WritePrivateProfileString("Libs", LibraryName.c_str(), buildVersion.str().c_str(), filename.c_str());
+	}
+
+	std::stringstream buildVersion;
+	buildVersion << g_BuildVersion;
+	WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
 
 	// Write the found HLE Patches into the cache file
 	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
@@ -894,31 +944,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
 {
-	if (context->against == nullptr) {
-		context->main_index = index;
-		// does this entry specify a redirection (patch)?
-		void * entry_redirect = table[index].emuPatch;
-		if (entry_redirect != nullptr) {
-			if (table[index].Oovpa == nullptr) {
-				HLEError(context, "Patch without an OOVPA at index %d",
-					index);
-			} else
-				// check no patch occurs twice in this table
-				for (uint32 t = index + 1; t < count; t++) {
-					if (entry_redirect == table[t].emuPatch) {
-						if (table[index].Oovpa == table[t].Oovpa) {
-							HLEError(context, "Patch registered again (with same OOVPA) at index %d",
-								t);
-						} else {
-							HLEError(context, "Patch also used for another OOVPA at index %d",
-								t);
-						}
-					}
-				}
-		}
-	}
-	else
-		context->against_index = index;
+	context->against_index = index;
 
 	// verify the OOVPA of this entry
 	if (table[index].Oovpa != nullptr)

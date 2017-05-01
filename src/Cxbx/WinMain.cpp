@@ -59,6 +59,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
+	/* Initialize Cxbx File Paths */
+	CxbxInitFilePaths();
+
     /*! initialize shared memory */
     EmuShared::Init();
 

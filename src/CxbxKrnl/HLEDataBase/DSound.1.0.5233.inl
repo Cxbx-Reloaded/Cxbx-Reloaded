@@ -192,7 +192,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
-#define DirectSound_CDirectSoundVoice_SetFormat_5233 DirectSound_CDirectSoundVoice_SetFormat_5028
+#define DirectSound_CDirectSoundVoice_SetFormat_5233 DirectSound_CDirectSoundVoice_SetFormat_4721
 
 // ******************************************************************
 // DirectSound_CDirectSoundVoice::SetMode

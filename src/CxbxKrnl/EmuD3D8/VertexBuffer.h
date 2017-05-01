@@ -130,6 +130,11 @@ extern DWORD                  *g_pIVBVertexBuffer;
 extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
 extern DWORD                   g_IVBFVF;
 
+#define IVB_TABLE_SIZE 1024
+#define IVB_BUFFER_SIZE sizeof(_D3DIVB)*1024
+// TODO : Enlarge IVB_TABLE_SIZE and IVB_BUFFER_SIZE
+// TODO : Calculate IVB_BUFFER_SIZE using sizeof(DWORD)
+
 extern struct _D3DIVB
 {
     XTL::D3DXVECTOR3 Position;   // Position
