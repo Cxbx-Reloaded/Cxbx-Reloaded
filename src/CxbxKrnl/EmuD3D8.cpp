@@ -1791,6 +1791,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 //	DbgDumpPushBuffer(g_pPrimaryPB, g_dwPrimaryPBCount*sizeof(DWORD));
 #endif
 
+
+	EmuUnswizzleTextureStages();
+
     EmuExecutePushBufferRaw(g_pPrimaryPB);
 
     delete[] g_pPrimaryPB;
@@ -4372,9 +4375,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunPushBuffer)
            ");\n",
            pPushBuffer, pFixup);
 
-    XTL::EmuExecutePushBuffer(pPushBuffer, pFixup);
+	EmuUnswizzleTextureStages();
 
-    
+	EmuExecutePushBuffer(pPushBuffer, pFixup);    
 
     return;
 }
