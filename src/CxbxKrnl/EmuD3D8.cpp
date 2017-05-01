@@ -7654,7 +7654,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
 // ******************************************************************
 // * patch: D3DDevice_SetStreamSource
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 (
     UINT                StreamNumber,
     X_D3DVertexBuffer  *pStreamData,
@@ -7707,10 +7707,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("SetStreamSource Failed!");
-
-    
-
-    return hRet;
 }
 
 // ******************************************************************
