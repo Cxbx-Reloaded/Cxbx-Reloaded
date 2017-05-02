@@ -865,7 +865,7 @@ void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "[0x%X] EmuMain: Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
+        sprintf(szBuffer1, "[0x%X] EmuMain: Received Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
 
