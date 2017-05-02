@@ -54,7 +54,7 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 #include <unordered_map>
 #include <sstream>
 
-std::unordered_map<std::string, uint32_t> g_HLECache;
+std::unordered_map<std::string, xbaddr> g_HLECache;
 bool g_HLECacheUsed = false;
 
 uint32 g_BuildVersion;
@@ -65,6 +65,34 @@ bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
 uint32 UnResolvedXRefs; // Tracks XRef location, used (read/write) in EmuHLEIntercept and EmuLocateFunction
+
+std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
+{
+	std::string result = "";
+	int closestMatch = MAXINT;
+
+	for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+		xbaddr symbolAddr = (*it).second;
+		if (symbolAddr <= address)
+		{
+			int distance = address - symbolAddr;
+			if (closestMatch > distance)
+			{
+				closestMatch = distance;
+				result = (*it).first;
+			}
+		}
+	}
+
+	if (closestMatch < MAXINT)
+	{
+		*symbolOffset = closestMatch;
+		return result;
+	}
+
+	*symbolOffset = 0;
+	return "unknown";
+}
 
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
