@@ -10452,38 +10452,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSur
 }
 
 // ******************************************************************
-// * patch: D3DDevice_GetPersistedSurface
+// * patch: D3DDevice_GetPersistedSurface2
 // ******************************************************************
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface2)()
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuD3D8: EmuD3DDevice_GetPersistedSurface()\n");
+	// LOG_FORWARD("D3DDevice_GetPersistedSurface");
 
-	// Attempt to load the persisted surface from persisted_surface.bmp
+	X_D3DSurface* pSurface = NULL;
 
-	X_D3DSurface* pSurface = EmuNewD3DSurface();
-
-	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &pSurface->EmuSurface8 );
-	if( SUCCEEDED( hr ) )
-	{
-		hr = D3DXLoadSurfaceFromFileA(GetHostSurface(pSurface), NULL, NULL, "persisted_surface.bmp",
-			NULL, D3DX_DEFAULT, 0, NULL );
-		if( SUCCEEDED( hr ) )
-		{
-			DbgPrintf( "Successfully loaded persisted_surface.bmp\n" );
-		}
-		else
-		{
-			EmuWarning( "Could not load persisted_surface.bmp!" );
-		}
-	}
-	else
-	{
-		EmuWarning( "Could not create temporary surface!" );
-	}
-	
-		
+	EMUPATCH(D3DDevice_GetPersistedSurface)(&pSurface);
 
 	return pSurface;
 }
