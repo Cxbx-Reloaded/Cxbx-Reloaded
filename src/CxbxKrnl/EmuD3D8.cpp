@@ -441,6 +441,27 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	return (uint08*)pData;
 }
 
+int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
+{
+	static int lk[4] =
+	{
+		256 * sizeof(XTL::D3DCOLOR),    // D3DPALETTE_256
+		128 * sizeof(XTL::D3DCOLOR),    // D3DPALETTE_128
+		64 * sizeof(XTL::D3DCOLOR),     // D3DPALETTE_64
+		32 * sizeof(XTL::D3DCOLOR)      // D3DPALETTE_32
+	};
+
+	return lk[Size];
+}
+
+inline XTL::X_D3DPALETTESIZE GetXboxPaletteSize(const XTL::X_D3DPalette *pPalette)
+{
+	XTL::X_D3DPALETTESIZE PaletteSize = (XTL::X_D3DPALETTESIZE)
+		((pPalette->Common & X_D3DPALETTE_COMMON_PALETTESIZE_MASK) >> X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+
+	return PaletteSize;
+}
+
 int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 {
 	if (EmuResource != nullptr)
@@ -5283,15 +5304,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create palette
             {
-                DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
-
-                if(dwSize == -1)
-                {
-                    // TODO: once this is known to be working, remove the warning
-                    EmuWarning("Palette allocation size unknown");
-
-                    pPalette->Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
-                }
+				DWORD dwSize = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette));
 
                 g_pCurrentPalette[TextureStage] = pBase;
 				g_dwCurrentPaletteSize[TextureStage] = dwSize;
@@ -8466,16 +8479,8 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
 
     X_D3DPalette *pPalette = EmuNewD3DPalette();
 
-    static int lk[4] =
-    {
-        256*sizeof(D3DCOLOR),    // D3DPALETTE_256
-        128*sizeof(D3DCOLOR),    // D3DPALETTE_128
-        64*sizeof(D3DCOLOR),     // D3DPALETTE_64
-        32*sizeof(D3DCOLOR)      // D3DPALETTE_32
-    };
-
-	pPalette->Common |= (Size << 30);
-    pPalette->Data = (DWORD)g_MemoryManager.AllocateContiguous(lk[Size], PAGE_SIZE);
+	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+    pPalette->Data = (DWORD)g_MemoryManager.AllocateContiguous(XboxD3DPaletteSizeToBytes(Size), PAGE_SIZE);
     pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
