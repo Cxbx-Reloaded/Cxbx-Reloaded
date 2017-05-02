@@ -7591,6 +7591,13 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 
     IDirect3DVertexBuffer8 *pVertexBuffer8 = pVertexBuffer->EmuVertexBuffer8;
 
+	// Let's verify this VB exists before trying to lock it...
+	if( !pVertexBuffer8 )
+	{
+		EmuWarning("EmuVertexBuffer8 == NULL!");
+		return;
+	}
+
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
     if(FAILED(hRet))
         EmuWarning("VertexBuffer Lock Failed!");    
