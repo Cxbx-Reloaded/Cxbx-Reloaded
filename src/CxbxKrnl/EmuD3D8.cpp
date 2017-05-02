@@ -5763,7 +5763,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 	if(!pThis->EmuSurface8)
 	{
 		EmuWarning("Invalid Surface!" );
-		__asm int 3;
+		//__asm int 3;
 		
 		return E_FAIL;
 	}
