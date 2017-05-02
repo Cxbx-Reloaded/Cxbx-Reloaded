@@ -319,7 +319,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	if (FAILED(ret))
 	{
-		EmuWarning("Trying fallback (without object attributes)...");
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
 
 		// If it fails, try again but without the object attributes stucture
 		// This fixes Panzer Dragoon games on non-Vista OSes.
@@ -332,6 +332,8 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 		if(FAILED(ret))
 			EmuWarning("NtCreateEvent Failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
 	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
@@ -423,7 +425,21 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		InitialOwner);
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateMutant Failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
+
+		// If it fails, try again but without the object attributes stucture
+		ret = NtDll::NtCreateMutant(
+			/*OUT*/MutantHandle, 
+			DesiredAccess,
+			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			InitialOwner);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateMutant Failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
 
@@ -483,7 +499,22 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		MaximumCount);
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateSemaphore failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
+
+		// If it fails, try again but without the object attributes stucture
+		ret = NtDll::NtCreateSemaphore(
+			/*OUT*/SemaphoreHandle,
+			DesiredAccess,
+			/*(NtDll::POBJECT_ATTRIBUTES)nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			InitialCount,
+			MaximumCount);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateSemaphore failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
 

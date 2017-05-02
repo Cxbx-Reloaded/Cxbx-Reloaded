@@ -2426,7 +2426,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
     DWORD dwHeight = pViewport->Height;
 
     // resize to fit screen (otherwise crashes occur)
-    {
+    /*{
         if(dwWidth > 640)
         {
             EmuWarning("Resizing Viewport->Width to 640");
@@ -2438,12 +2438,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
             EmuWarning("Resizing Viewport->Height to 480");
             ((D3DVIEWPORT8*)pViewport)->Height = 480;
         }
-    }
+    }*/
 
     HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
 
     // restore originals
-    {
+    /*{
         if(dwWidth > 640)
             ((D3DVIEWPORT8*)pViewport)->Width = dwWidth;
 
@@ -2455,7 +2455,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
     {
         EmuWarning("Unable to set viewport!");
         hRet = D3D_OK;
-    }
+    }*/
 
     
 
@@ -5699,32 +5699,35 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 
         D3DSURFACE_DESC SurfaceDesc;
 
-        hRet = pSurface8->GetDesc(&SurfaceDesc);
+		if( pThis->EmuSurface8 )
+		{
+			hRet = pSurface8->GetDesc(&SurfaceDesc);
 
-        // rearrange into windows format (remove D3DPool)
-        {
-            // Convert Format (PC->Xbox)
-            pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-            pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
+			// rearrange into windows format (remove D3DPool)
+			{
+				// Convert Format (PC->Xbox)
+				pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+				pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
 
-            if(pDesc->Type > 7)
-                CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+				if(pDesc->Type > 7)
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
 
-            pDesc->Usage  = SurfaceDesc.Usage;
-            pDesc->Size   = SurfaceDesc.Size;
+				pDesc->Usage  = SurfaceDesc.Usage;
+				pDesc->Size   = SurfaceDesc.Size;
 
-            // TODO: Convert from Xbox to PC!!
-            if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-                pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
-            else
-                CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+				// TODO: Convert from Xbox to PC!!
+				if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
+					pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
+				else
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
 
-            pDesc->Width  = SurfaceDesc.Width;
-            pDesc->Height = SurfaceDesc.Height;
-        }
-    }
-
-    
+				pDesc->Width  = SurfaceDesc.Width;
+				pDesc->Height = SurfaceDesc.Height;
+			}
+		}
+		else
+			hRet = D3DERR_INVALIDCALL;
+	}
 
     return hRet;
 }
