@@ -252,7 +252,8 @@ inline DWORD GetXboxResourceType(const XTL::X_D3DResource *pXboxResource)
 	// Don't pass in unassigned Xbox resources
 	assert(pXboxResource != NULL);
 
-	return pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
+	DWORD dwCommonType = pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
+	return dwCommonType;
 }
 
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
@@ -278,8 +279,8 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE)
-		return nullptr;
+	if(GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
+		assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
 	return (XTL::IDirect3DSurface8 *)pXboxResource->Lock;
 }
@@ -289,8 +290,8 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE)
-		return nullptr;
+	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
+		assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	return (XTL::IDirect3DBaseTexture8 *)pXboxResource->Lock;
 }
@@ -321,8 +322,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_INDEXBUFFER)
-		return nullptr;
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
 	return (XTL::IDirect3DIndexBuffer8 *)pXboxResource->Lock;
 }
@@ -332,8 +332,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_VERTEXBUFFER)
-		return nullptr;
+	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
 	return (XTL::IDirect3DVertexBuffer8 *)pXboxResource->Lock;
 }
@@ -1316,7 +1315,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				pHostSurface = nullptr;
 				g_pCachedDepthStencil->Data = X_D3DRESOURCE_DATA_DEPTH_STENCIL;
 				g_bHasDepthStencil = SUCCEEDED(g_pD3DDevice8->GetDepthStencilSurface(&pHostSurface));
-				SetHostSurface(g_pCachedDepthStencil, pHostSurface);
+				if (g_bHasDepthStencil)
+					SetHostSurface(g_pCachedDepthStencil, pHostSurface);
 
 				(void)g_pD3DDevice8->CreateVertexBuffer
                 (
@@ -1484,8 +1484,9 @@ static void EmuUnswizzleTextureStages()
 			return;
 
 		DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
+		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
 		// remove lock
-		GetHostTexture(pPixelContainer)->UnlockRect(0);
+		pHostTexture->UnlockRect(0);
 		pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
 
 		// TODO: potentially XXHash32::hash() to see if this surface was actually modified..
@@ -1495,7 +1496,6 @@ static void EmuUnswizzleTextureStages()
 		//
 
 		{
-			XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
 
 			DWORD dwLevelCount = pHostTexture->GetLevelCount();
 
@@ -2321,11 +2321,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
 			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &pHostSurface);
 		}
 	
-	SetHostSurface(*ppSurface, pHostSurface);
-
 	if(FAILED(hRet))
 		/*EmuWarning*/CxbxKrnlCleanup("CreateImageSurface failed!\nFormat = 0x%8.8X", Format);
-  
+	else
+		SetHostSurface(*ppSurface, pHostSurface);  
 
     return hRet;
 }
@@ -2423,16 +2422,12 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
         BackBuffer = 0;
 
     HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pHostSurface);
-
-	SetHostSurface(pBackBuffer, pHostSurface);
-
     if(FAILED(hRet))
         CxbxKrnlCleanup("Unable to retrieve back buffer");
-
+	
+	SetHostSurface(pBackBuffer, pHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
-
-    
 
     return pBackBuffer;
 }
@@ -3497,8 +3492,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
             PCFormat, PCPool, &pHostTexture
         );
 
-		SetHostTexture(pTexture, pHostTexture);
-
         if(FAILED(hRet))
         {
             EmuWarning("CreateTexture Failed!");
@@ -3506,6 +3499,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         }
         else
         {
+			SetHostTexture(pTexture, pHostTexture);
+
             /**
              * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock. 
              * It will cause an Error with the DirectX Debug runtime.
@@ -3621,12 +3616,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
             PCFormat, D3DPOOL_MANAGED, &pHostVolumeTexture
         );
 
-		SetHostVolumeTexture(*ppVolumeTexture, pHostVolumeTexture);
-
         if(FAILED(hRet))
             EmuWarning("CreateVolumeTexture Failed! (0x%.08X)", hRet);
-
-        DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, pHostVolumeTexture);
+		else
+		{
+			SetHostVolumeTexture(*ppVolumeTexture, pHostVolumeTexture);
+			DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, pHostVolumeTexture);
+		}
     }
 
     return hRet;
@@ -3691,14 +3687,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
         PCFormat, D3DPOOL_MANAGED, &pHostCubeTexture
     );
-	SetHostCubeTexture(*ppCubeTexture, pHostCubeTexture);
-
-    DbgPrintf("EmuD3D8: Created Cube Texture : 0x%.08X (0x%.08X)\n", *ppCubeTexture, pHostCubeTexture);
 
     if(FAILED(hRet))
         EmuWarning("CreateCubeTexture Failed!");
-
-    
+	else
+	{
+		SetHostCubeTexture(*ppCubeTexture, pHostCubeTexture);
+		DbgPrintf("EmuD3D8: Created Cube Texture : 0x%.08X (0x%.08X)\n", *ppCubeTexture, pHostCubeTexture);
+	}    
 
     return hRet;
 }
@@ -3742,12 +3738,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
         Length/*InBytes*/, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pHostIndexBuffer
     );
 
-	SetHostIndexBuffer(*ppIndexBuffer, pHostIndexBuffer);
-
-    DbgPrintf("D3DDevice_CreateIndexBuffer: pHostIndexBuffer := 0x%.08X\n", pHostIndexBuffer);
-
     if(FAILED(hRet))
         EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
+	else
+	{
+		SetHostIndexBuffer(*ppIndexBuffer, pHostIndexBuffer);
+		DbgPrintf("D3DDevice_CreateIndexBuffer: pHostIndexBuffer := 0x%.08X\n", pHostIndexBuffer);
+	}
 
     // update data ptr
     {
@@ -3841,6 +3838,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
     if(pTexture != NULL)
     {
         EmuVerifyResourceIsRegistered(pTexture);
+		pHostBaseTexture = GetHostBaseTexture(pTexture);
 
         if(pTexture->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
         {
@@ -3856,31 +3854,29 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 			// Remove old locks before setting
 			/*if(pTexture->Common & X_D3DCOMMON_ISLOCKED)
 			{
-				GetHostTexture(pTexture)->UnlockRect(0);
+				((IDirect3DTexture8*)pHostBaseTexture)->UnlockRect(0);
 				pTexture->Common &= ~X_D3DCOMMON_ISLOCKED;
 			}*/
 
-			pHostBaseTexture = GetHostBaseTexture(pTexture);
 
 			// Let's be SURE that the texture is unlocked AND unswizzled before
 			// we set it!!!
 		//	EmuUnswizzleTextureStages();
-		//	pHostBaseTexture = GetHostBaseTexture(EmuD3DActiveTexture[Stage]);
 
             #ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE
-            if(pTexture != NULL && (pHostBaseTexture != NULL))
+            if(pTexture != NULL && (pHostBaseTexture != nullptr))
             {
                 static int dwDumpTexture = 0;
 
                 char szBuffer[256];
 
-                switch(GetHostResource(pTexture)->GetType())
+                switch(pHostBaseTexture->GetType())
                 {
                     case D3DRTYPE_TEXTURE:
                     {
                         sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureNorm - %.03d (0x%.08X).bmp", dwDumpTexture++, pHostBaseTexture);
 
-						GetHostTexture(pTexture)->UnlockRect(0);
+						((IDirect3DTexture8 *)pHostBaseTexture)->UnlockRect(0);
 
                         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pHostBaseTexture, NULL);
                     }
@@ -3892,7 +3888,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
                         {
                             sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureCube%d - %.03d (0x%.08X).bmp", face, dwDumpTexture++, pHostBaseTexture);
 
-							GetHostCubeTexture(pTexture)->UnlockRect((D3DCUBEMAP_FACES)face, 0);
+							((IDirect3DCubeTexture8 *)pHostBaseTexture)->UnlockRect((D3DCUBEMAP_FACES)face, 0);
 
                             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pHostBaseTexture, NULL);
                         }
@@ -3932,7 +3928,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 
     //HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pDummyTexture[Stage]);
 
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, (g_iWireframe == 0) ? pHostBaseTexture : 0);
+    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, (g_iWireframe == 0) ? pHostBaseTexture : nullptr);
 
     
 
@@ -4698,8 +4694,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     &pHostVertexBuffer
                 );
 
-				SetHostVertexBuffer(pResource, pHostVertexBuffer);
-
 				if(FAILED(hRet))
 				{
 					char szString[256];
@@ -4709,6 +4703,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 					EmuWarning( szString );
 					return hRet;
 				}
+
+				SetHostVertexBuffer(pResource, pHostVertexBuffer);
 
                 #ifdef _DEBUG_TRACK_VB
                 g_VBTrackTotal.insert(pHostVertexBuffer);
@@ -4924,14 +4920,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 					XTL::IDirect3DSurface8 *pHostSurface = nullptr;
 
 					hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pHostSurface);
-					SetHostSurface(pResource, pHostSurface);
 
                     if(FAILED(hRet))
                         CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s"/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
-					else
-						DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pHostSurface);
 
+					SetHostSurface(pResource, pHostSurface);
+					DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pHostSurface);
                     DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, PCFormat);
                 }
                 else
@@ -4981,13 +4976,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                             dwWidth, dwMipMapLevels, 0, PCFormat,
                             D3DPOOL_MANAGED, &pHostCubeTexture
                         );
-						SetHostCubeTexture(pResource, pHostCubeTexture);
 
                         if(FAILED(hRet))
                             CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
-                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pHostCubeTexture);
+						SetHostCubeTexture(pResource, pHostCubeTexture);
+						DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pHostCubeTexture);
                     }
                     else
                     {
@@ -5018,12 +5013,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 							);
 						}*/
 
-						SetHostTexture(pResource, pHostTexture);
 
                         if(FAILED(hRet))
 							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
+						SetHostTexture(pResource, pHostTexture);
                         DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pHostTexture);
                     }
                 }
@@ -5817,58 +5812,77 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
            ");\n",
            pThis, pLockedRect, pRect, Flags);
 
-    HRESULT hRet;
-
-	EmuVerifyResourceIsRegistered(pThis);
-
-	IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
-
-	if(pHostSurface == nullptr)
-	{
-		EmuWarning("Invalid Surface!" );
-		__asm int 3;
-		
-		return E_FAIL;
-	}
-
+    HRESULT hRet = D3D_OK;
 
     if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
     {
         pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
-
-        hRet = D3D_OK;
     }
     else
     {
-        DWORD NewFlags = 0;
+		EmuVerifyResourceIsRegistered(pThis);
 
-        if(Flags & X_D3DLOCK_READONLY)
-            NewFlags |= D3DLOCK_READONLY;
+		DWORD NewFlags = 0;
+		if (Flags & X_D3DLOCK_READONLY)
+			NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & X_D3DLOCK_TILED)
-            EmuWarning("D3DLOCK_TILED ignored!");
+		if (Flags & X_D3DLOCK_TILED)
+			EmuWarning("D3DLOCK_TILED ignored!");
 
-        if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
-            CxbxKrnlCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+		if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
+			CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-		try
+		// As it turns out, D3DSurface_LockRect can also be called with textures (not just surfaces)
+		// so cater for that. TODO : Should we handle cube and volume textures here too?
+		DWORD dwCommonType = GetXboxResourceType(pThis);
+		switch (dwCommonType) {
+		case X_D3DCOMMON_TYPE_TEXTURE:
 		{
-			// Remove old lock(s)
-			pHostSurface->UnlockRect();
-
-			hRet = pHostSurface->LockRect(pLockedRect, pRect, NewFlags);
-
-			if(FAILED(hRet))
-				EmuWarning("LockRect Failed!");
+			IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+			if (pHostTexture == nullptr)
+			{
+				EmuWarning("Missing Texture!");
+				hRet = E_FAIL;
+			}
+			else
+			{
+				// Remove old lock(s)
+				pHostTexture->UnlockRect(0);
+				hRet = pHostTexture->LockRect(0, pLockedRect, pRect, Flags);
+			}
+			break;
 		}
-		catch(...)
+		case X_D3DCOMMON_TYPE_SURFACE:
 		{
-			EmuWarning("Invalid Surface!");
+			IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
+			if (pHostSurface == nullptr)
+			{
+				EmuWarning("Missing Surface!");
+				hRet = E_FAIL;
+			}
+			else
+			{
+				try
+				{
+					// Remove old lock(s)
+					pHostSurface->UnlockRect();
+					hRet = pHostSurface->LockRect(pLockedRect, pRect, NewFlags);
+				}
+				catch (...)
+				{
+					EmuWarning("Invalid Surface!");
+				}
+			}
+			break;
 		}
-    }
+		default:
+			EmuWarning("D3DSurface_LockRect: Unhandled type!");
+		}
+	}
 
-    
+	if (FAILED(hRet))
+		EmuWarning("LockRect Failed!");
 
     return hRet;
 }
@@ -5946,10 +5960,11 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 
 			IDirect3DSurface8 *pHostSurface = nullptr;
 			HRESULT hRet = pHostTexture->GetSurfaceLevel(Level, &pHostSurface);
-			SetHostSurface(result, pHostSurface);
 
 			if (FAILED(hRet))
 				EmuWarning("EmuIDirect3DTexture8_GetSurfaceLevel Failed!");
+			else
+				SetHostSurface(result, pHostSurface);
 
 			result->Parent = pThis;
 			pThis->Common++; // AddRef Parent too
@@ -6215,10 +6230,11 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
         &pHostVertexBuffer
     );
 
-	SetHostVertexBuffer(pD3DVertexBuffer, pHostVertexBuffer);
 
     if(FAILED(hRet))
         EmuWarning("CreateVertexBuffer Failed!");
+	else
+		SetHostVertexBuffer(pD3DVertexBuffer, pHostVertexBuffer);
 
     #ifdef _DEBUG_TRACK_VB
     g_VBTrackTotal.insert(pHostVertexBuffer);
@@ -10381,8 +10397,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	IDirect3DSurface8 *pHostSurface = nullptr;
 
 	hRet = GetHostCubeTexture(pThis)->GetCubeMapSurface(FaceType, Level, &pHostSurface);
-
-	SetHostSurface(*ppCubeMapSurface, pHostSurface);		
+	if (SUCCEEDED(hRet))
+		SetHostSurface(*ppCubeMapSurface, pHostSurface);		
 
 	return hRet;
 }
@@ -10451,10 +10467,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSur
 	IDirect3DSurface8 *pHostSurface = nullptr;
 
 	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &pHostSurface);
-	SetHostSurface(*ppSurface, pHostSurface);
 
 	if( SUCCEEDED( hr ) )
 	{
+		SetHostSurface(*ppSurface, pHostSurface);
 		hr = D3DXLoadSurfaceFromFileA(GetHostSurface(*ppSurface), NULL, NULL, "persisted_surface.bmp",
 			NULL, D3DX_DEFAULT, 0, NULL );
 		if( SUCCEEDED( hr ) )
