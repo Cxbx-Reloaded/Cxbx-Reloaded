@@ -40,6 +40,8 @@ extern bool bLLE_JIT; // Set this to true for experimental JIT
 
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
+std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset);
+
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();
 #endif
