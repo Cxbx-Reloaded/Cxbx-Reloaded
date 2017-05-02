@@ -3390,6 +3390,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         g_dwOverlayH = Height;
         g_dwOverlayP = Pitch;
     }
+	// TODO: HACK: This texture format fails on some newer hardware
+	else if(PCFormat == D3DFMT_X1R5G5B5)
+	{
+		EmuWarning("D3DFMT_X1R5G5B5 -> D3DFMT_R5G6B5");
+		PCFormat = D3DFMT_R5G6B5;
+	}
 
     HRESULT hRet;
 
@@ -3441,7 +3447,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
         if(FAILED(hRet))
         {
-            EmuWarning("CreateTexture Failed!");
+            //EmuWarning("CreateTexture Failed!");
+			EmuWarning("CreateTexture Failed!\n\n"
+								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, Width, Height);
 			Texture_Data = 0xBEADBEAD;
         }
         else
@@ -4720,6 +4728,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 PCFormat = D3DFMT_R5G6B5;
             }
 
+			// TODO: HACK: Since I have trouble with this texture format on modern hardware,
+			// Let's try using some 16-bit format instead...
+			if(X_Format == X_D3DFMT_X1R5G5B5 )
+			{
+				EmuWarning( "X_D3DFMT_X1R5G5B5 -> D3DFMT_R5GB5" );
+				X_Format = X_D3DFMT_R5G6B5;
+				PCFormat = D3DFMT_R5G6B5;
+			}
+
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
             BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format), bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
@@ -4938,10 +4955,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 						}*/
 
                         if(FAILED(hRet))
-							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
-
-                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuTexture8);
+							EmuWarning("CreateTexture Failed!\n\n"
+								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
+						else
+							DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuTexture8);
                     }
                 }
 

@@ -318,7 +318,21 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	// that would require us to create the event's kernel object with the Ob* api's too!
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateEvent Failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...");
+
+		// If it fails, try again but without the object attributes stucture
+		// This fixes Panzer Dragoon games on non-Vista OSes.
+		ret = NtDll::NtCreateEvent(
+			/*OUT*/EventHandle,
+			DesiredAccess,
+			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			(NtDll::EVENT_TYPE)EventType,
+			InitialState);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateEvent Failed!");
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
 

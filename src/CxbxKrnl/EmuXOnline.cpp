@@ -66,7 +66,10 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 		LOG_FUNC_ARG(lpWSAData)
 		LOG_FUNC_END;
 
-    int ret = WSAStartup(wVersionRequested, lpWSAData);
+	// Prevent this function from failing by requesting a version of Winsock that
+	// we know for sure is actually supported on Windows.  This also fixes one error
+	// in the 4920 dashboard.
+    int ret = WSAStartup(MAKEWORD(2,2) /*wVersionRequested*/, lpWSAData);
 
 	RETURN(ret);
 }
