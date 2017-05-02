@@ -128,9 +128,9 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 	// print debug information
 	{
 		if (IsBreakpointException)
-			printf("[0x%X] EmuMain: Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Received Breakpoint Exception (int 3)\n", GetCurrentThreadId());
 		else
-			printf("[0x%X] EmuMain: Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+			printf("[0x%X] EmuMain: Received Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
 
 		printf("\n"
 			" EIP := %s\n"
@@ -172,7 +172,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 
 	char buffer[256];
 	sprintf(buffer,
-		"Recieved Breakpoint Exception (int 3) @ EIP := %s\n"
+		"Received Breakpoint Exception (int 3) @ EIP := %s\n"
 		"\n"
 		"  Press Abort to terminate emulation.\n"
 		"  Press Retry to debug.\n"
@@ -203,7 +203,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 
 	char buffer[256];
 	sprintf(buffer,
-		"Recieved Exception Code 0x%.08X @ EIP := %s\n"
+		"Received Exception Code 0x%.08X @ EIP := %s\n"
 		"\n"
 		"  Press \"OK\" to terminate emulation.\n"
 		"  Press \"Cancel\" to debug.",
@@ -255,7 +255,7 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
 	// debug information
     printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-    printf("[0x%X] EmuMain: Recieved Exception [0x%.08X]@%s\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
+    printf("[0x%X] EmuMain: Received Exception [0x%.08X]@%s\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
     printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
@@ -337,6 +337,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 				int symbolOffset = 0;
 
 				symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
+
 				if (symbolOffset < 1000)
 					dwDisplacement = (DWORD64)symbolOffset;
 				else
