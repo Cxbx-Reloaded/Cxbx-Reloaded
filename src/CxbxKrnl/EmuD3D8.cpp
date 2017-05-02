@@ -338,44 +338,44 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 	return pXboxResource->EmuVertexBuffer8;
 }
 
-void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *HostTexture)
+void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->EmuTexture8 = HostTexture;
+	pXboxResource->EmuTexture8 = pHostTexture;
 }
 
-void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *HostCubeTexture)
+void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->EmuCubeTexture8 = HostCubeTexture;
+	pXboxResource->EmuCubeTexture8 = pHostCubeTexture;
 }
 
-void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *HostVolumeTexture)
+void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->EmuVolumeTexture8 = HostVolumeTexture;
+	pXboxResource->EmuVolumeTexture8 = pHostVolumeTexture;
 }
 
-void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *HostIndexBuffer)
+void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	pXboxResource->EmuIndexBuffer8 = HostIndexBuffer;
+	pXboxResource->EmuIndexBuffer8 = pHostIndexBuffer;
 }
 
-void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *HostVertexBuffer)
+void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	pXboxResource->EmuVertexBuffer8 = HostVertexBuffer;
+	pXboxResource->EmuVertexBuffer8 = pHostVertexBuffer;
 }
 
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
@@ -3714,16 +3714,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 
     *ppIndexBuffer = EmuNewD3DIndexBuffer();
 
-	XTL::IDirect3DIndexBuffer8 *HostIndexBuffer = nullptr;
+	XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer = nullptr;
 
 	HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
-        Length/*InBytes*/, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &HostIndexBuffer
+        Length/*InBytes*/, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pHostIndexBuffer
     );
 
-	SetHostIndexBuffer(*ppIndexBuffer, HostIndexBuffer);
+	SetHostIndexBuffer(*ppIndexBuffer, pHostIndexBuffer);
 
-    DbgPrintf("D3DDevice_CreateIndexBuffer: HostIndexBuffer := 0x%.08X\n", HostIndexBuffer);
+    DbgPrintf("D3DDevice_CreateIndexBuffer: pHostIndexBuffer := 0x%.08X\n", pHostIndexBuffer);
 
     if(FAILED(hRet))
         EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
@@ -3732,7 +3732,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
     {
         BYTE *pNativeData = nullptr;
 
-		hRet = HostIndexBuffer->Lock(/*OffsetToLock=*/0, Length, &pNativeData, /*Flags=*/0);
+		hRet = pHostIndexBuffer->Lock(/*OffsetToLock=*/0, Length, &pNativeData, /*Flags=*/0);
 		if(FAILED(hRet))
 			CxbxKrnlCleanup("IndexBuffer Lock Failed!\n\nError: \nDesc: "/*,
 				DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
@@ -4652,7 +4652,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
             DbgPrintf("EmuIDirect3DResource8_Register : Creating VertexBuffer...\n");
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
-			XTL::IDirect3DVertexBuffer8  *HostVertexBuffer = nullptr;
+			XTL::IDirect3DVertexBuffer8  *pHostVertexBuffer = nullptr;
 
 			// Vertex buffers live in Physical Memory Region
 			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
@@ -4673,10 +4673,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
                     dwSize, 0, 0, D3DPOOL_MANAGED,
-                    &HostVertexBuffer
+                    &pHostVertexBuffer
                 );
 
-				SetHostVertexBuffer(pResource, HostVertexBuffer);
+				SetHostVertexBuffer(pResource, pHostVertexBuffer);
 
 				if(FAILED(hRet))
 				{
@@ -4689,12 +4689,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 				}
 
                 #ifdef _DEBUG_TRACK_VB
-                g_VBTrackTotal.insert(HostVertexBuffer);
+                g_VBTrackTotal.insert(pHostVertexBuffer);
                 #endif
 
                 BYTE *pNativeData = nullptr;
 
-                hRet = HostVertexBuffer->Lock(
+                hRet = pHostVertexBuffer->Lock(
 					/*OffsetToLock=*/0, 
 					/*SizeToLock=*/0/*=entire buffer*/, 
 					&pNativeData, 
@@ -4704,12 +4704,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
                 memcpy(pNativeData, (void*)pBase, dwSize);
-                HostVertexBuffer->Unlock();
+                pHostVertexBuffer->Unlock();
 
 				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
 			}
 
-            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", HostVertexBuffer);
+            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pHostVertexBuffer);
         }
         break;
 
@@ -4949,20 +4949,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                         DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth,
                             dwMipMapLevels, PCFormat, &pResource->EmuTexture8);
 
-						XTL::IDirect3DCubeTexture8 *HostCubeTexture = nullptr;
+						XTL::IDirect3DCubeTexture8 *pHostCubeTexture = nullptr;
 
                         hRet = g_pD3DDevice8->CreateCubeTexture
                         (
                             dwWidth, dwMipMapLevels, 0, PCFormat,
-                            D3DPOOL_MANAGED, &HostCubeTexture
+                            D3DPOOL_MANAGED, &pHostCubeTexture
                         );
-						SetHostCubeTexture(pResource, HostCubeTexture);
+						SetHostCubeTexture(pResource, pHostCubeTexture);
 
                         if(FAILED(hRet))
                             CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
-                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, HostCubeTexture);
+                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pHostCubeTexture);
                     }
                     else
                     {
@@ -6173,7 +6173,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
            Length);
 
     X_D3DVertexBuffer *pD3DVertexBuffer = EmuNewD3DVertexBuffer();
-	XTL::IDirect3DVertexBuffer8  *HostVertexBuffer = nullptr;
+	XTL::IDirect3DVertexBuffer8  *pHostVertexBuffer = nullptr;
 	
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
@@ -6181,16 +6181,16 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
         0,
         0,
         D3DPOOL_MANAGED,
-        &HostVertexBuffer
+        &pHostVertexBuffer
     );
 
-	SetHostVertexBuffer(pD3DVertexBuffer, HostVertexBuffer);
+	SetHostVertexBuffer(pD3DVertexBuffer, pHostVertexBuffer);
 
     if(FAILED(hRet))
         EmuWarning("CreateVertexBuffer Failed!");
 
     #ifdef _DEBUG_TRACK_VB
-    g_VBTrackTotal.insert(HostVertexBuffer);
+    g_VBTrackTotal.insert(pHostVertexBuffer);
     #endif
 
     
