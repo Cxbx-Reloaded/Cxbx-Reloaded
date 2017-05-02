@@ -1023,7 +1023,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
         // if we have been signalled, create the device with cached parameters
         if(g_EmuCDPD.bReady)
         {
-            DbgPrintf("EmuD3D8: CreateDevice proxy thread recieved request.\n");
+            DbgPrintf("EmuD3D8: CreateDevice proxy thread received request.\n");
 
             if(g_EmuCDPD.bCreate)
             {
