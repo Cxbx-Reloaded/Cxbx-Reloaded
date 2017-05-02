@@ -336,7 +336,8 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 				// Try getting a symbol name from the HLE cache :
 				int symbolOffset = 0;
 
-				symbolName = GetDetectedSymbolName(frame.AddrPC.Offset, &symbolOffset);
+				symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
+
 				if (symbolOffset < 1000)
 					dwDisplacement = (DWORD64)symbolOffset;
 				else
