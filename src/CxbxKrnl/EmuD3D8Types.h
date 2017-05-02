@@ -422,7 +422,7 @@ struct X_D3DResource
         DWORD                    Lock;
         IDirect3DResource8      *EmuResource8;
         IDirect3DBaseTexture8   *EmuBaseTexture8;
-        IDirect3DTexture8       *EmuTexture8; // TODO : Remove all references to this
+        IDirect3DTexture8       *EmuTexture8;
         IDirect3DVolumeTexture8 *EmuVolumeTexture8;
         IDirect3DCubeTexture8   *EmuCubeTexture8;
         IDirect3DSurface8       *EmuSurface8; // TODO : Remove all references to this
