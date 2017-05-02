@@ -265,10 +265,8 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 		return nullptr;
 
 	XTL::IDirect3DResource8 *result = (XTL::IDirect3DResource8 *)pXboxResource->Lock;
-	if (result == nullptr)
-	{
-		__asm int 3;
-		//EmuWarning("EmuResource is not a valid pointer!");
+	if (result == nullptr) {
+		EmuWarning("EmuResource is not a valid pointer!");
 	}
 
 	return result;
