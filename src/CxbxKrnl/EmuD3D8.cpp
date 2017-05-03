@@ -5055,7 +5055,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
 						else
             {
-							DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuTexture8);
+							DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pHostTexture);
 
 							SetHostTexture(pResource, pHostTexture);
             }
