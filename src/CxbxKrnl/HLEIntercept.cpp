@@ -598,7 +598,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
 
 	// Write Library Details
-	for (int i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
+	for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
 		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
 		std::stringstream buildVersion;
 		buildVersion << pLibraryVersion[i].wBuildVersion;
@@ -1030,7 +1030,29 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
 {
-	context->against_index = index;
+	if (context->against == nullptr) {
+		context->main_index = index;
+	} else {
+		context->against_index = index;
+	}
+
+	if (context->against == nullptr) {
+		if (table[index].Flags & Flag_DontPatch)
+		{
+			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
+			{
+				HLEError(context, "OOVPA registration DISABLED while a patch exists!");
+			}
+		}
+		else
+		if (table[index].Flags & Flag_XRef)
+		{
+			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
+			{
+				HLEError(context, "OOVPA registration XREF while a patch exists!");
+			}
+		}
+	}
 
 	// verify the OOVPA of this entry
 	if (table[index].Oovpa != nullptr)
@@ -1044,6 +1066,10 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
 	} else {
 		context->against_data = data;
 	}
+
+	// Don't check a database against itself :
+	if (context->main_data == context->against_data)
+		return;
 
 	// verify each entry in this HLEData
 	uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
