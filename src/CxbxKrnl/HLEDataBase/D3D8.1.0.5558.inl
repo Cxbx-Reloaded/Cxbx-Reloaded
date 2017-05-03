@@ -1399,8 +1399,8 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ShadowFunc, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShader, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetIndices, 5558, PATCH),
-	// REGISTER_OOVPA(D3DDevice_SetIndices, 5455, PATCH), // TODO : Move to OOVPATable D3D8_5455
+	REGISTER_OOVPA(D3DDevice_SetIndices, 5558, DISABLED),
+	// REGISTER_OOVPA(D3DDevice_SetIndices, 5455, DISABLED), // TODO : Move to OOVPATable D3D8_5455
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_Begin, 4361, PATCH),
@@ -1443,8 +1443,8 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5558, DISABLED),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 5558, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5558, PATCH),
