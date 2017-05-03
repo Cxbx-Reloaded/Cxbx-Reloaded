@@ -5584,7 +5584,7 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuLock2DSurface\n"
+    DbgPrintf("EmuD3D8: EmuLock3DSurface\n"
            "(\n"
            "   pPixelContainer     : 0x%.08X\n"
            "   Level               : 0x%.08X\n"

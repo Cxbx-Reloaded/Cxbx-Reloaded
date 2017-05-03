@@ -40,7 +40,7 @@
 OOVPATable XG_4432[1] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 4361, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGSwizzleRect, 4361, DISABLED), // TODO : Uncomment
 };
 
 // ******************************************************************
