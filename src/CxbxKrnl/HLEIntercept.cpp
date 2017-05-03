@@ -36,6 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 
 #include <cmath>
+#include <iomanip> // For std::setfill and std::setw
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"
@@ -784,43 +785,67 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 		}	
 	}
 
-
     // traverse the full OOVPA table
     for(size_t a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
+		// Never used : skip scans when so configured
+		bool DontScan = (OovpaTable[a].Flags & Flag_DontScan) > 0;
+		if (DontScan)
+			continue;
+
+		// Skip already found & handled symbols
+		xbaddr pFunc = g_SymbolAddresses[OovpaTable[a].szFuncName];
+		if (pFunc != (xbaddr)nullptr)
+			continue;
+
+		// Search for each function's location using the OOVPA
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
-		xbaddr pFunc = (xbaddr)nullptr;
+		pFunc = (xbaddr)EmuLocateFunction(Oovpa, lower, upper);
+		if (pFunc == (xbaddr)nullptr)
+			continue;
 
-        
-        pFunc = EmuLocateFunction(Oovpa, lower, upper);
+		// Now that we found the address, store it (regardless if we patch it or not)
+		g_SymbolAddresses[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
 
-        if(pFunc != (xbaddr)nullptr)
-        {
-            printf("HLE: 0x%.08X -> %s %d", pFunc, OovpaTable[a].szFuncName, OovpaTable[a].Version);
-			std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
+		// Output some details
+		std::stringstream output;
+		output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << pFunc
+			<< " -> " << OovpaTable[a].szFuncName << " " << std::dec << OovpaTable[a].Version;
 
-			void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+		bool IsXRef = (OovpaTable[a].Flags & Flag_XRef) > 0;
+		if (IsXRef)
+			output << "\t(XREF)";
 
-			if ((OovpaTable[a].Flags & Flag_XRef) == Flag_XRef) {
-				printf("\t*XRef*");
+		// Retrieve the associated patch, if any is available
+		std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
+		void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+		bool DontPatch = (OovpaTable[a].Flags & Flag_DontPatch) > 0;
+		if (DontPatch)
+		{
+			// Mention if there's an unused patch
+			if (addr != nullptr)
+				output << "\t*PATCH UNUSED!*";
+			else
+				output << "\t*DISABLED*";
+		}
+		else
+		{
+			if (addr != nullptr)
+			{
+				EmuInstallPatch(pFunc, addr);
+				output << "\t*PATCHED*";
 			}
-
-			if ((OovpaTable[a].Flags & Flag_DontScan) == Flag_DontScan) {
-				printf("\t*DISABLED*");
-			} else	{
-				// Only store entries in the Cache if they are not disabled
-				g_SymbolAddresses[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
+			else
+			{
+				// Mention there's no patch available, if it was to be applied
+				if (!IsXRef) // TODO : Remove this restriction once we patch xrefs regularly
+					output << "\t*NO PATCH AVAILABLE!*";
 			}
+		}
 
-			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
-            {
-				printf("\t*PATCHED*");
-                EmuInstallPatch(pFunc, addr);
-            }
-
-			printf("\n");
-        }
-    }
+		output << "\n";
+		printf(output.str().c_str());
+	}
 }
 
 #ifdef _DEBUG_TRACE
