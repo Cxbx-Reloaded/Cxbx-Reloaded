@@ -1902,8 +1902,8 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DResource_IsBusy, 3925, PATCH),
 	REGISTER_OOVPA(D3DPalette_Lock, 3925, PATCH),
 	REGISTER_OOVPA(D3DTexture_LockRect, 3925, PATCH),
-	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3925, DISABLED),	// Just calls Lock2DSurface
-	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, DISABLED),	// Just calls Lock2DSurface
+	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3925, PATCH),	// Just calls Lock3DSurface
+	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH),	// Just calls Lock2DSurface
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel, 3925, PATCH),
     // REGISTER_OOVPA(Get2DSurfaceDesc, 3925, PATCH),
 
