@@ -95,6 +95,13 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 	return "unknown";
 }
 
+void *GetEmuPatchAddr(std::string aFunctionName)
+{
+	std::string patchName = "XTL::EmuPatch_" + aFunctionName;
+	void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+	return addr;
+}
+
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
@@ -146,14 +153,42 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				bufferPtr += strlen(bufferPtr) + 1;
 			}
 
-			// Iterate through the map of symbol addresses, calling GetProcAddress on all functions.	
+			// Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.	
 			for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-				std::string patchName = "XTL::EmuPatch_" + (*it).first;		
-				void* pFunc = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+				std::string functionName = (*it).first;
+				xbaddr location = (*it).second;
 
-				if (pFunc != nullptr) {
-					printf("HLECache: 0x%08X => %s\n", (*it).second, (*it).first.c_str());
-					EmuInstallPatch((*it).second, pFunc);
+				printf("HLECache: 0x%08X => %s", location, functionName.c_str());
+				void* pFunc = GetEmuPatchAddr(functionName);
+				if (pFunc != nullptr)
+				{
+					// skip entries that weren't located at all
+					if (location == NULL)
+					{
+						printf("\t(not patched)\n");
+						continue;
+					}
+
+					// Prevent patching illegal addresses
+					if (location < XBE_IMAGE_BASE)
+					{
+						printf("\t*ADDRESS TOO LOW!*\n");
+						continue;
+					}
+
+					if (location > XBOX_MEMORY_SIZE)
+					{
+						printf("\t*ADDRESS TOO HIGH!*\n");
+						continue;
+					}
+
+					EmuInstallPatch(location, pFunc);
+					printf("*PATCHED*\n");
+				}
+				else
+				{
+					if (location != NULL)
+						printf("\t(no patch)\n");
 				}
 			}
 
@@ -817,8 +852,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 			output << "\t(XREF)";
 
 		// Retrieve the associated patch, if any is available
-		std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
-		void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+		void* addr = GetEmuPatchAddr(std::string(OovpaTable[a].szFuncName));
 		bool DontPatch = (OovpaTable[a].Flags & Flag_DontPatch) > 0;
 		if (DontPatch)
 		{
