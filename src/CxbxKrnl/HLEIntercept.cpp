@@ -54,7 +54,7 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 #include <unordered_map>
 #include <sstream>
 
-std::unordered_map<std::string, xbaddr> g_HLECache;
+std::unordered_map<std::string, xbaddr> g_SymbolAddresses;
 bool g_HLECacheUsed = false;
 
 uint32 g_BuildVersion;
@@ -71,7 +71,7 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 	std::string result = "";
 	int closestMatch = MAXINT;
 
-	for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+	for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 		xbaddr symbolAddr = (*it).second;
 		if (symbolAddr <= address)
 		{
@@ -132,7 +132,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			printf("Using HLE Cache\n");
 			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
-			// Parse the .INI file into the cache
+			// Parse the .INI file into the map of symbol addresses
 			while (strlen(bufferPtr) > 0) {
 				std::string ini_entry(bufferPtr);
 
@@ -141,12 +141,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				std::string value = ini_entry.substr(separator + 1, std::string::npos);
 				uint32_t addr = strtol(value.c_str(), 0, 16);
 
-				g_HLECache[key] = addr;
+				g_SymbolAddresses[key] = addr;
 				bufferPtr += strlen(bufferPtr) + 1;
 			}
 
-			// Iterate through the cache calling GetProcAddress on all functions.	
-			for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+			// Iterate through the map of symbol addresses, calling GetProcAddress on all functions.	
+			for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 				std::string patchName = "XTL::EmuPatch_" + (*it).first;		
 				void* pFunc = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
 
@@ -156,23 +156,22 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				}
 			}
 
-
 			// Fix up Render state and Texture States
-			if (g_HLECache.find("D3DDeferredRenderState") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
 			}
 			
-			if (g_HLECache.find("D3DDeferredTextureState") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
 			}
 
-			if (g_HLECache.find("D3DDEVICE") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("D3DDEVICE was not found!");
 			}
 
-			XTL::EmuD3DDeferredRenderState = (DWORD*)g_HLECache["D3DDeferredRenderState"];
-			XTL::EmuD3DDeferredTextureState = (DWORD*)g_HLECache["D3DDeferredTextureState"];
-			XRefDataBase[XREF_D3DDEVICE] = g_HLECache["D3DDEVICE"];
+			XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
+			XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
+			XRefDataBase[XREF_D3DDEVICE] = g_SymbolAddresses["D3DDEVICE"];
 
 			// TODO: Move this into a function rather than duplicating from HLE scanning code
 			for (int v = 0; v<44; v++) {
@@ -187,14 +186,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			g_HLECacheUsed = true;
 		}
 
-		// If g_HLECache didn't get filled, the symbol cache is invalid
-		if (g_HLECache.empty()) {
+		// If g_SymbolAddresses didn't get filled, the HLE cache is invalid
+		if (g_SymbolAddresses.empty()) {
 			printf("HLE Cache file is outdated and will be regenerated\n");
 			g_HLECacheUsed = false;
 		}
 	}
 
-	// If the HLE Cache was used, skip symbol maching/patching
+	// If the HLE Cache was used, skip symbol searching/patching
 	if (g_HLECacheUsed) {
 		return;
 	}
@@ -419,7 +418,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
 								}
 
-								g_HLECache["D3DDEVICE"] = DerivedAddr_D3DDevice;
+								g_SymbolAddresses["D3DDEVICE"] = DerivedAddr_D3DDevice;
 
 								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
 								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)
@@ -448,7 +447,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
                             }
 
-							g_HLECache["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
+							g_SymbolAddresses["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
 							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
@@ -506,7 +505,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                         XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
                                 }
 
-								g_HLECache["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
+								g_SymbolAddresses["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
 								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             }
                             else
@@ -575,8 +574,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	buildVersion << g_BuildVersion;
 	WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
 
-	// Write the found HLE Patches into the cache file
-	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+	// Write the found symbol addresses into the cache file
+	for(auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 		std::stringstream cacheAddress;
 		cacheAddress << std::hex << (*it).second;
 		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
@@ -810,7 +809,7 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 				printf("\t*DISABLED*");
 			} else	{
 				// Only store entries in the Cache if they are not disabled
-				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
+				g_SymbolAddresses[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
 			}
 
 			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
