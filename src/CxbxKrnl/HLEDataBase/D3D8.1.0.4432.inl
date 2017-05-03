@@ -580,32 +580,6 @@ OOVPA_END;
 #define D3DDevice_SetScissors_4432 D3DDevice_SetScissors_4361
 
 // ******************************************************************
-// * D3DDevice_BeginVisibilityTest@0
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4432, 7 ) 
-        { 0x07, 0x8B },
-        { 0x0A, 0x46 },
-        { 0x13, 0xC7 },
-        { 0x16, 0x17 },
-        { 0x1C, 0x00 },
-        { 0x22, 0x48 },
-        { 0x28, 0x06 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_EndVisibilityTest@4
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4432, 7)
-        { 0x0B, 0x8B },
-        { 0x16, 0x5E },
-        { 0x22, 0x07 },
-        { 0x2E, 0x00 },
-        { 0x3A, 0x81 },
-        { 0x46, 0x89 },
-        { 0x55, 0x5F },
-OOVPA_END;
-
-// ******************************************************************
 // * D3D8_4432
 // ******************************************************************
 OOVPATable D3D8_4432[]  {
@@ -638,8 +612,8 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4432, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4432, PATCH),
+	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_EdgeAntiAlias, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FillMode, 4134, PATCH),
