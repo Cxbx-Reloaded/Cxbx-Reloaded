@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
 #include "MemoryManager.h"
+#include "Logging.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -698,7 +699,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the December 2001 (4134) update (or earlier, maybe).
 
-    EmuWarning("EmuIDirectSoundBuffer_SetMixBinVolumes not yet implemented");
+	LOG_UNIMPLEMENTED();
 
     return DS_OK;
 }
@@ -1533,7 +1534,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
 
-    EmuWarning("StopEx not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
     
 
@@ -1954,7 +1955,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetStatus)
            ");\n",
            pThis, pdwStatus);
 
-    EmuWarning("EmuDirectSound_CDirectSoundStream_GetStatus is not yet implemented");
+	LOG_UNIMPLEMENTED();
 
     *pdwStatus = DSBSTATUS_PLAYING;
 
@@ -2864,7 +2865,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
 
     // TODO: Implement
 
-    EmuWarning("EmuDirectSound_CDirectSoundStream_SetLFO not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
     return S_OK;
 }
@@ -3082,7 +3083,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 //	
 //	// This function wasn't part of the XDK until 4721.
 //	// TODO: Implement time stamp feature (a thread maybe?)
-//	EmuWarning("IDirectSoundBuffer_PauseEx not fully implemented!");
+//	LOG_UNIMPLEMENTED();	
 //
 //	HRESULT ret;
 //
@@ -3336,7 +3337,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
 
-//    EmuWarning("PlayEx not yet implemented!");
+//    LOG_UNIMPLEMENTED();	
 
 	// TODO: Handle other non-PC standard flags
 	DWORD dwPCFlags = ( dwFlags & DSBPLAY_LOOPING ) ? DSBPLAY_LOOPING : 0;
@@ -3408,7 +3409,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetPitch)
 
 	HRESULT hRet = S_OK;
 
-	EmuWarning("IDirectSoundStream_SetPitch not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
 		
 
@@ -3874,7 +3875,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 
 	// TODO: Implement
 
-	EmuWarning( "XFileCreateMediaObjectAsync not yet (properly) implemented!!!" );
+	LOG_UNIMPLEMENTED();
 
 	*ppMediaObject = new X_XFileMediaObject();
 

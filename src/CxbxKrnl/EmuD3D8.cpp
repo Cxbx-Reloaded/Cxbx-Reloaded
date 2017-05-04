@@ -2186,6 +2186,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginStateBig)()
 
     //ULONG ret = g_pD3DDevice8->BeginStateBlock();
 
+	LOG_UNIMPLEMENTED();
     CxbxKrnlCleanup("BeginStateBig is not implemented");
 
     
@@ -6900,7 +6901,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
 //  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
 //  g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
 
-//    EmuWarning("SetRenderState_EdgeAntiAlias not implemented!");
+//    LOG_UNIMPLEMENTED();	
 
     
 
@@ -6978,7 +6979,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_Dxt1NoiseEnable)
            ");\n",
            Value);
 
-    EmuWarning("SetRenderState_Dxt1NoiseEnable not implemented!");
+	LOG_UNIMPLEMENTED();
 
     
 
@@ -7559,7 +7560,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
     // EmuXB2PC_D3DCMPFUNC(Value);
 
     // this warning just gets annoying
-    // EmuWarning("ShadowFunc not implemented");
+    // LOG_UNIMPLEMENTED();	
 
     
 
@@ -7790,7 +7791,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
                ");\n",
                StreamNumber, pStride);
 
-    EmuWarning("Not correctly implemented yet!");
+	LOG_UNIMPLEMENTED();
 
 	X_D3DVertexBuffer* pVertexBuffer = NULL;
 	*pStride = 0;
@@ -8754,7 +8755,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShaderDirect)
                ");\n",
                pVAF,Address);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
+    LOG_UNIMPLEMENTED(); 
 
     
 }
@@ -8858,7 +8859,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
                ");\n",
                pVAF, StreamCount, pStreamInputs);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
+    LOG_UNIMPLEMENTED(); 
 
     
 
@@ -8886,7 +8887,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
                ");\n",
                pHandle, pStreamCount, pStreamInputs);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
+    LOG_UNIMPLEMENTED(); 
 
     
 
@@ -8914,7 +8915,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInput)
                ");\n",
                Handle, StreamCount, pStreamInputs);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
+    LOG_UNIMPLEMENTED(); 
 
     
 
@@ -8941,7 +8942,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
                ");\n",
                Address,pData);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
+    LOG_UNIMPLEMENTED(); 
 
     
 }
@@ -8965,9 +8966,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
                ");\n",
                pFunction,Address);
 
-    DbgPrintf("NOT YET IMPLEMENTED!\n");
-
-    
+	LOG_UNIMPLEMENTED();    
 }
 
 // ******************************************************************
@@ -9762,7 +9761,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_KickPushBuffer)()
 	DbgPrintf("EmuD3D8: EmuD3DDevice_KickPushBuffer()\n");
 
 	// TODO -oDxbx : Locate the current PushBuffer address, and supply that to RunPushBuffer (without a fixup)
-	EmuWarning("D3DDevice_KickPushBuffer is not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
 	
 }
@@ -10157,9 +10156,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginPushBuffer)
 
 	// TODO: Implement. Easier said than done with Direct3D, but OpenGL
 	// can emulate this functionality rather easily.
+	LOG_UNIMPLEMENTED();
 //	CxbxKrnlCleanup("BeginPushBuffer is not yet implemented!\n"
 	//				"This is going to be a difficult fix for Direct3D but NOT OpenGL!");
-	LOG_UNIMPLEMENTED();
 
 		
 
@@ -10296,7 +10295,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_MakeRequestedSpace)( DWORD Unknown1, DWORD Unkn
 	// NOTE: This function is not meant to me emulated.  Just use it to find out
 	// the function that is calling it, and emulate that instead!!!  If necessary,
 	// create an XRef...
-
+	LOG_UNIMPLEMENTED();
 	__asm int 3;
 	CxbxKrnlCleanup("D3D::MakeRequestedSpace not implemented (tell blueshogun)");
 
@@ -10316,6 +10315,7 @@ void WINAPI XTL::EMUPATCH(D3DDevice_MakeSpace)()
 
 	// NOTE: Like the above function, this should not be emulated.  The intended
 	// usage is the same as above.
+	LOG_UNIMPLEMENTED();
 
 	__asm int 3;
 	CxbxKrnlCleanup("D3DDevice::MakeSpace not implemented (tell blueshogun)");
