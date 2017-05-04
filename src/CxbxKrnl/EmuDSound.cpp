@@ -688,13 +688,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBinVolumes\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   dwMixBinMask        : 0x%.08X\n"
-           "   alVolumes           : 0x%.08X\n"
-           ");\n",
-           pThis, dwMixBinMask, alVolumes);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(dwMixBinMask)
+		LOG_FUNC_ARG(alVolumes)
+		LOG_FUNC_END;
 
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the December 2001 (4134) update (or earlier, maybe).
@@ -1523,13 +1521,11 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_StopEx\n"
-           "(\n"
-           "   pBuffer                   : 0x%.08X\n"
-           "   rtTimeStamp               : 0x%.08X\n"
-           "   dwFlags                   : 0x%.08X\n"
-           ");\n",
-           pBuffer, rtTimeStamp, dwFlags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pBuffer)
+		LOG_FUNC_ARG(rtTimeStamp)
+		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_END;
 
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
@@ -1948,18 +1944,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetStatus)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_GetStatus\n"
-           "(\n"
-           "   pThis                     : 0x%.08X\n"
-           "   pdwStatus                 : 0x%.08X\n"
-           ");\n",
-           pThis, pdwStatus);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pdwStatus)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
     *pdwStatus = DSBSTATUS_PLAYING;
-
-    
 
     return DS_OK;
 }
@@ -2856,12 +2848,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetLFO\n"
-           "(\n"
-           "   pThis                     : 0x%.08X\n"
-           "   pLFODesc                  : 0x%.08X\n"
-           ");\n",
-           pThis, pLFODesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pLFODesc)
+		LOG_FUNC_END;
 
     // TODO: Implement
 
@@ -3400,18 +3390,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetPitch)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundStream_SetPitch\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-		   "   lPitch              : 0x%.08X\n"
-		   ");\n",
-		   pThis, lPitch);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(lPitch)
+		LOG_FUNC_END;
 
 	HRESULT hRet = S_OK;
 
 	LOG_UNIMPLEMENTED();
-
-		
 
 	return hRet;
 }
@@ -3865,13 +3851,11 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuDSound: EmuXFileCreateMediaObjectAsync\n"
-           "(\n"
-           "   hFile                     : 0x%.08X\n"
-		   "   dwMaxPackets              : 0x%.08X\n"
-           "   ppMediaObject             : 0x%.08X\n"
-           ");\n",
-           hFile, dwMaxPackets, ppMediaObject);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hFile)
+		LOG_FUNC_ARG(dwMaxPackets)
+		LOG_FUNC_ARG(ppMediaObject)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
