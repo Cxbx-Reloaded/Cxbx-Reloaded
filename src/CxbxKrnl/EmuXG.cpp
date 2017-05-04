@@ -67,7 +67,7 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
 	RETURN(FALSE);
 }
 
-/* Leave unpatched
+#if 0 // Leave unpatched
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
@@ -127,7 +127,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
         }
     }
 }
-*/
+#endif
 
 // ******************************************************************
 // * patch: XGSwizzleBox
