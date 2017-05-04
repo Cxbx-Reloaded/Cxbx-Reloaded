@@ -158,38 +158,40 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				std::string functionName = (*it).first;
 				xbaddr location = (*it).second;
 
-				printf("HLECache: 0x%08X => %s", location, functionName.c_str());
+				std::stringstream output;
+				output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
+					<< " -> " << functionName;
 				void* pFunc = GetEmuPatchAddr(functionName);
 				if (pFunc != nullptr)
 				{
 					// skip entries that weren't located at all
 					if (location == NULL)
 					{
-						printf("\t(not patched)\n");
-						continue;
+						output << "\t(not patched)";
 					}
-
 					// Prevent patching illegal addresses
-					if (location < XBE_IMAGE_BASE)
+					else if (location < XBE_IMAGE_BASE)
 					{
-						printf("\t*ADDRESS TOO LOW!*\n");
-						continue;
+						output << "\t*ADDRESS TOO LOW!*";
 					}
-
-					if (location > XBOX_MEMORY_SIZE)
+					else if (location > XBOX_MEMORY_SIZE)
 					{
-						printf("\t*ADDRESS TOO HIGH!*\n");
-						continue;
+						output << "\t*ADDRESS TOO HIGH!*";
 					}
-
-					EmuInstallPatch(location, pFunc);
-					printf("*PATCHED*\n");
+					else
+					{
+						EmuInstallPatch(location, pFunc);
+						output << "\t*PATCHED*";
+					}
 				}
 				else
 				{
 					if (location != NULL)
-						printf("\t(no patch)\n");
+						output << "\t(no patch)";
 				}
+
+				output << "\n";
+				printf(output.str().c_str());
 			}
 
 			// Fix up Render state and Texture States
