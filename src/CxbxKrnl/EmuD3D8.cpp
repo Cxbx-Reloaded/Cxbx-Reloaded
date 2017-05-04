@@ -36,7 +36,6 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 #include "xxhash32.h"
-#include "Logging.h"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -56,6 +55,7 @@ namespace xboxkrnl
 #include "MemoryManager.h"
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
+#include "Logging.h"
 
 #include <assert.h>
 #include <process.h>
