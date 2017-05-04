@@ -380,7 +380,7 @@ ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 
 #undef LOGRENDER_TYPE
 
-#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << ": "
+#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
 #define LOGRENDER_MEMBER_VALUE(Member) << value.Member
 #define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
 #define LOGRENDER_MEMBER_SANITIZED(Member, Type) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((Type)value.Member)
