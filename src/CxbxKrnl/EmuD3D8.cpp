@@ -10353,7 +10353,7 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 	// the function that is calling it, and emulate that instead!!!  If necessary,
 	// create an XRef...
 
-//	__asm int 3;
+	__asm int 3;
 	CxbxKrnlCleanup("D3D::BlockOnTime not implemented (tell blueshogun)");
 
 		
