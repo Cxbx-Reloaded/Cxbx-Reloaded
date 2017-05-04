@@ -207,65 +207,110 @@ LOG_SANITIZE_OVERLOAD(sanitized_wchar_pointer, wchar_t *)
 // Logging defines
 //
 
-// For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
-// TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
-extern thread_local std::string _logPrefix;
-
 #define LOG_ARG_START "\n   " << std::setw(20)
 #define LOG_ARG_OUT_START "\n OUT " << std::setw(18)
 
 #ifdef _DEBUG_TRACE
-	#define LOG_FUNC_BEGIN \
-		do { if(g_bPrintfOn) { \
-			bool _had_arg = false; \
-			std::stringstream tmp; \
-			tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] " << __FILENAME__ << ": "; \
-			_logPrefix = tmp.str(); \
-			std::stringstream msg; \
-			msg << _logPrefix << __func__ << std::left << "(";
 
-	// LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
-	#define LOG_FUNC_ARG(arg) \
-			_had_arg = true; \
-			msg << LOG_ARG_START << #arg << " : " << _log_sanitize(arg);
+// For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
+// TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
+extern thread_local std::string _logPrefix;
 
-	// LOG_FUNC_ARG_TYPE writes output using the overloaded << operator of the given type
-	#define LOG_FUNC_ARG_TYPE(type, arg) \
-			_had_arg = true; \
-			msg << LOG_ARG_START << #arg << " : " << (type)arg;
+#define LOG_THREAD_INIT \
+	if (_logPrefix.length() == 0) { \
+		std::stringstream tmp; \
+		tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "]"; \
+		_logPrefix = tmp.str(); \
+    }
 
-	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
-	#define LOG_FUNC_ARG_OUT(arg) \
-			_had_arg = true; \
-			msg << LOG_ARG_OUT_START << #arg << " : " << hex4((uint32_t)arg);
+#define LOG_INIT \
+	LOG_THREAD_INIT \
+	static std::string _logFuncPrefix; \
+	if (_logFuncPrefix.length() == 0) {	\
+		std::stringstream tmp; \
+		tmp << _logPrefix << __FILENAME__ << ": " << __func__ << std::left << "("; \
+		_logFuncPrefix = tmp.str(); \
+	}
 
-	// LOG_FUNC_END closes off function and optional argument logging
-	#define LOG_FUNC_END \
-			if (_had_arg) msg << '\n'; \
-			msg << ");\n"; \
-			std::cout << msg.str(); \
-		} } while (0)
+#define LOG_FUNC_BEGIN \
+	LOG_INIT \
+	do { if(g_bPrintfOn) { \
+		bool _had_arg = false; \
+		std::stringstream msg; \
+		msg << _logFuncPrefix;
 
-	// LOG_FUNC_RESULT logs the function return result
-	#define LOG_FUNC_RESULT(r) \
-		std::cout << _logPrefix << __func__ << " returns " << r << "\n";
+// LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
+#define LOG_FUNC_ARG(arg) \
+		_had_arg = true; \
+		msg << LOG_ARG_START << #arg << " : " << _log_sanitize(arg);
 
+// LOG_FUNC_ARG_TYPE writes output using the overloaded << operator of the given type
+#define LOG_FUNC_ARG_TYPE(type, arg) \
+		_had_arg = true; \
+		msg << LOG_ARG_START << #arg << " : " << (type)arg;
 
-	// LOG_FORWARD indicates that an api is implemented by a forward to another API
-	#define LOG_FORWARD(api) \
-		do { if(g_bPrintfOn) { \
-			std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n"; \
-		} } while (0)
+// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
+#define LOG_FUNC_ARG_OUT(arg) \
+		_had_arg = true; \
+		msg << LOG_ARG_OUT_START << #arg << " : " << hex4((uint32_t)arg);
 
-#else
-	#define LOG_FUNC_BEGIN 
-	#define LOG_FUNC_ARG(arg)
-	#define LOG_FUNC_ARG_TYPE(type, arg)
-	#define LOG_FUNC_ARG_OUT(arg)
-	#define LOG_FUNC_END
-	#define LOG_FUNC_RESULT(r)
-	#define LOG_FORWARD(arg)
-#endif
+// LOG_FUNC_END closes off function and optional argument logging
+#define LOG_FUNC_END \
+		if (_had_arg) msg << "\n"; \
+		msg << ");\n"; \
+		std::cout << msg.str(); \
+	} } while (0)
+
+// LOG_FUNC_RESULT logs the function return result
+#define LOG_FUNC_RESULT(r) \
+	std::cout << _logFuncPrefix << " returns " << r << "\n";
+
+// LOG_FORWARD indicates that an api is implemented by a forward to another API
+#define LOG_FORWARD(api) \
+	LOG_INIT \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logFuncPrefix << " forwarding to "#api"...\n"; \
+	} } while (0)
+
+// LOG_IGNORED indicates that Cxbx consiously ignores an api
+#define LOG_IGNORED() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logFuncPrefix << " ignored!\n"; \
+	} } while (0)
+
+	// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
+#define LOG_UNIMPLEMENTED() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logFuncPrefix << " unimplemented!\n"; \
+	} } while (0)
+
+	// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
+#define LOG_INCOMPLETE() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logFuncPrefix << " incomplete!\n"; \
+	} } while (0)
+
+	// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
+#define LOG_NOT_SUPPORTED() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logFuncPrefix << __func__ << " not supported!\n"; \
+	} } while (0)
+
+#else // _DEBUG_TRACE
+
+#define LOG_FUNC_BEGIN
+#define LOG_FUNC_ARG(arg)
+#define LOG_FUNC_ARG_TYPE(type, arg)
+#define LOG_FUNC_ARG_OUT(arg)
+#define LOG_FUNC_END
+#define LOG_FUNC_RESULT(r)
+#define LOG_FORWARD(arg)
+#define LOG_IGNORED()
+#define LOG_UNIMPLEMENTED()
+#define LOG_INCOMPLETE()
+#define LOG_NOT_SUPPORTED()
+
+#endif //  _DEBUG_TRACE
 
 //
 // Short hand defines :
@@ -282,30 +327,6 @@ extern thread_local std::string _logPrefix;
 
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
-
-// LOG_IGNORED indicates that Cxbx consiously ignores an api
-#define LOG_IGNORED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << __func__ << " ignored!\n"; \
-	} } while (0)
-
-// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
-#define LOG_UNIMPLEMENTED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << __func__ << " unimplemented!\n"; \
-	} } while (0)
-
-// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
-#define LOG_INCOMPLETE() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << __func__ << " incomplete!\n"; \
-	} } while (0)
-
-// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
-#define LOG_NOT_SUPPORTED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << __func__ << " not supported!\n"; \
-	} } while (0)
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
