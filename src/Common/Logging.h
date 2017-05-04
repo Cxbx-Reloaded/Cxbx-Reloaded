@@ -207,8 +207,8 @@ LOG_SANITIZE_OVERLOAD(sanitized_wchar_pointer, wchar_t *)
 // Logging defines
 //
 
-#define LOG_ARG_START "\n   " << std::setw(20)
-#define LOG_ARG_OUT_START "\n OUT " << std::setw(18)
+#define LOG_ARG_START "\n   " << std::setw(20) << std::left 
+#define LOG_ARG_OUT_START "\n OUT " << std::setw(18) << std::left 
 
 #ifdef _DEBUG_TRACE
 
@@ -219,7 +219,7 @@ extern thread_local std::string _logPrefix;
 #define LOG_THREAD_INIT \
 	if (_logPrefix.length() == 0) { \
 		std::stringstream tmp; \
-		tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "]"; \
+		tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] "; \
 		_logPrefix = tmp.str(); \
     }
 
@@ -228,7 +228,7 @@ extern thread_local std::string _logPrefix;
 	static std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << _logPrefix << __FILENAME__ << ": " << __func__ << std::left << "("; \
+		tmp << _logPrefix << __FILENAME__ << ": " << __func__ << "("; \
 		_logFuncPrefix = tmp.str(); \
 	}
 
