@@ -301,6 +301,12 @@ extern thread_local std::string _logPrefix;
 		std::cout << _logPrefix << __func__ << " incomplete!\n"; \
 	} } while (0)
 
+// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
+#define LOG_NOT_SUPPORTED() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logPrefix << __func__ << " not supported!\n"; \
+	} } while (0)
+
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
