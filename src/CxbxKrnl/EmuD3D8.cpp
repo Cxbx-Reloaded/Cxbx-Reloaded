@@ -55,6 +55,7 @@ namespace xboxkrnl
 #include "MemoryManager.h"
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
+#include "Logging.h"
 
 #include <assert.h>
 #include <process.h>
@@ -2497,7 +2498,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
     DWORD dwHeight = pViewport->Height;
 
     // resize to fit screen (otherwise crashes occur)
-    {
+    /*{
         if(dwWidth > 640)
         {
             EmuWarning("Resizing Viewport->Width to 640");
@@ -2509,12 +2510,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
             EmuWarning("Resizing Viewport->Height to 480");
             ((D3DVIEWPORT8*)pViewport)->Height = 480;
         }
-    }
+    }*/
 
     HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
 
     // restore originals
-    {
+    /*{
         if(dwWidth > 640)
             ((D3DVIEWPORT8*)pViewport)->Width = dwWidth;
 
@@ -2526,7 +2527,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
     {
         EmuWarning("Unable to set viewport!");
         hRet = D3D_OK;
-    }
+    }*/
 
     
 
@@ -3331,7 +3332,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
         }
 
         if(!FAILED(hRet))
-            hRet = g_pD3DDevice8->SetPixelShader(dwHandle);
+            hRet = g_pD3DDevice8->SetPixelShader(g_iWireframe == 0 ? dwHandle : 0);
 
         if(FAILED(hRet))
             EmuWarning("Could not set pixel shader!");
@@ -3345,7 +3346,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
         EmuWarning("Trying fixed or recompiled programmable pipeline pixel shader!");
         g_bFakePixelShaderLoaded = FALSE;
 		g_dwCurrentPixelShader = Handle;
-        hRet = g_pD3DDevice8->SetPixelShader(Handle);
+        hRet = g_pD3DDevice8->SetPixelShader(g_iWireframe == 0 ? Handle : 0);
     }
 
     if(FAILED(hRet))
@@ -3461,6 +3462,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         g_dwOverlayH = Height;
         g_dwOverlayP = Pitch;
     }
+	// TODO: HACK: This texture format fails on some newer hardware
+	else if(PCFormat == D3DFMT_X1R5G5B5)
+	{
+		EmuWarning("D3DFMT_X1R5G5B5 -> D3DFMT_R5G6B5");
+		PCFormat = D3DFMT_R5G6B5;
+	}
 
     HRESULT hRet;
 
@@ -3513,7 +3520,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
         if(FAILED(hRet))
         {
-            EmuWarning("CreateTexture Failed!");
+            //EmuWarning("CreateTexture Failed!");
+			EmuWarning("CreateTexture Failed!\n\n"
+								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, Width, Height);
 			Texture_Data = 0xBEADBEAD;
         }
         else
@@ -4537,7 +4546,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     else
         dwFillMode = D3DFILL_POINT;
 
-    //g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
+    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
     HRESULT ret = g_pD3DDevice8->Clear(Count, pRects, Flags, Color, Z, Stencil);
 
@@ -4808,6 +4817,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 PCFormat = D3DFMT_R5G6B5;
             }
 
+			// TODO: HACK: Since I have trouble with this texture format on modern hardware,
+			// Let's try using some 16-bit format instead...
+			if(X_Format == X_D3DFMT_X1R5G5B5 )
+			{
+				EmuWarning( "X_D3DFMT_X1R5G5B5 -> D3DFMT_R5GB5" );
+				X_Format = X_D3DFMT_R5G6B5;
+				PCFormat = D3DFMT_R5G6B5;
+			}
+
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
             BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format), bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
@@ -5033,16 +5051,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 						}*/
 
 
-                        if(FAILED(hRet))
-							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
+						if(FAILED(hRet))
+							EmuWarning("CreateTexture Failed!\n\n"
+								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
+						else
+            {
+							DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pHostTexture);
 
-						SetHostTexture(pResource, pHostTexture);
-                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pHostTexture);
-                    }
-                }
+							SetHostTexture(pResource, pHostTexture);
+            }
+          }
+        }
 
-                uint32 stop = bCubemap ? 6 : 1;
+				uint32 stop = bCubemap ? 6 : 1;
 
 				for(uint32 r=0;r<stop;r++)
                 {
@@ -5771,32 +5792,35 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 
         D3DSURFACE_DESC SurfaceDesc;
 
+		if( pHostSurface != nullptr )
+		{
         hRet = pHostSurface->GetDesc(&SurfaceDesc);
 
-        // rearrange into windows format (remove D3DPool)
-        {
-            // Convert Format (PC->Xbox)
-            pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-            pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
+			// rearrange into windows format (remove D3DPool)
+			{
+				// Convert Format (PC->Xbox)
+				pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+				pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
 
-            if(pDesc->Type > 7)
-                CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+				if(pDesc->Type > 7)
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
 
-            pDesc->Usage  = SurfaceDesc.Usage;
-            pDesc->Size   = SurfaceDesc.Size;
+				pDesc->Usage  = SurfaceDesc.Usage;
+				pDesc->Size   = SurfaceDesc.Size;
 
-            // TODO: Convert from Xbox to PC!!
-            if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-                pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
-            else
-                CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+				// TODO: Convert from Xbox to PC!!
+				if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
+					pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
+				else
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
 
-            pDesc->Width  = SurfaceDesc.Width;
-            pDesc->Height = SurfaceDesc.Height;
-        }
-    }
-
-    
+				pDesc->Width  = SurfaceDesc.Width;
+				pDesc->Height = SurfaceDesc.Height;
+			}
+		}
+		else
+			hRet = D3DERR_INVALIDCALL;
+	}
 
     return hRet;
 }
@@ -7686,6 +7710,13 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 
     IDirect3DVertexBuffer8 *pHostVertexBuffer = GetHostVertexBuffer(pVertexBuffer);
 
+	// Let's verify this VB exists before trying to lock it...
+	if( !pHostVertexBuffer )
+	{
+		EmuWarning("pHostVertexBuffer == NULL!");
+		return;
+	}
+
     HRESULT hRet = pHostVertexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
     if(FAILED(hRet))
         EmuWarning("VertexBuffer Lock Failed!");    
@@ -9344,7 +9375,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_InsertFence)()
     // TODO: Actually implement this
     DWORD dwRet = 0x8000BEEF;
 
-    
+	LOG_UNIMPLEMENTED();
 
     return dwRet;
 }
@@ -9366,6 +9397,7 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsFencePending)
            Fence);
 
     // TODO: Implement
+	LOG_UNIMPLEMENTED();
 
     
 
@@ -9389,6 +9421,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockOnFence)
            Fence);
 
     // TODO: Implement
+	LOG_UNIMPLEMENTED();
 
     
 }
@@ -9410,7 +9443,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
            pThis);
 
     // TODO: Implement
-
+	LOG_UNIMPLEMENTED();
     // 
 
     return;
@@ -9461,6 +9494,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetScissors)
            Count, Exclusive, pRects);
 
     // TODO: Implement
+	LOG_UNIMPLEMENTED();
 
     
 
@@ -9594,7 +9628,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_InsertCallback)
 	g_CallbackType = Type;
 	g_CallbackParam = Context;
 
-		
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -9941,9 +9975,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PrimeVertexCache)
            VertexCount, pIndexData);
 
 	// TODO: Implement
-	EmuWarning("PrimeVertexCache is not supported!");
-
-		
+	LOG_UNIMPLEMENTED();
 
 	return S_OK;
 }
@@ -9966,7 +9998,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
 
 	// TODO: Implement?
 
-	EmuWarning("SampleAlpha not supported!");
+	LOG_UNIMPLEMENTED();
 
 		
 
@@ -10089,7 +10121,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetModelView)
 		   pModelView, pInverseModelView, pComposite);
 
 	// TODO: Implement
-//	CxbxKrnlCleanup("SetModelView not yet implemented (should be easy fix, tell blueshogun)");
+	LOG_UNIMPLEMENTED();
 
 		
 
@@ -10127,7 +10159,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginPushBuffer)
 	// can emulate this functionality rather easily.
 //	CxbxKrnlCleanup("BeginPushBuffer is not yet implemented!\n"
 	//				"This is going to be a difficult fix for Direct3D but NOT OpenGL!");
-	EmuWarning("BeginPushBuffer is not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
 		
 
@@ -10323,8 +10355,7 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 	// the function that is calling it, and emulate that instead!!!  If necessary,
 	// create an XRef...
 
-//	__asm int 3;
-	CxbxKrnlCleanup("D3D::BlockOnTime not implemented (tell blueshogun)");
+	LOG_UNIMPLEMENTED();
 
 		
 }
@@ -10343,7 +10374,7 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource )
 
 	// TODO: Implement
 	// NOTE: Azurik appears to call this directly from numerous points
-
+	LOG_UNIMPLEMENTED();
 		
 }
 
@@ -10365,7 +10396,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetPushBufferOffset)
 	// TODO: Implement
 	*pOffset = 0;
 
-		
+	LOG_UNIMPLEMENTED();
 
 	return S_OK;
 }

@@ -612,6 +612,8 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_EdgeAntiAlias, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FillMode, 4134, PATCH),
