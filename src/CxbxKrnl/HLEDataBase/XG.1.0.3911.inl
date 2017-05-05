@@ -127,8 +127,8 @@ OOVPA_END;
 OOVPATable XG_3911[] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
 	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
 	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
 	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
