@@ -1642,8 +1642,8 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 4627, PATCH),
 	REGISTER_OOVPA(XFileCreateMediaObjectEx, 4627, PATCH),
 	REGISTER_OOVPA(XWaveFileCreateMediaObject, 4627, PATCH),
-	// REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
-	// REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetNotificationPositions, 4627, XREF), // Uncommenting these fixes dashboard 4920
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetLFO, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetLFO, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLFO, 4627, XREF),

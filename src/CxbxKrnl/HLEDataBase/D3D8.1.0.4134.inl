@@ -1849,7 +1849,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_CreateTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVolumeTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateCubeTexture, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 4134, PATCH),
@@ -1864,8 +1864,8 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DResource_IsBusy, 3925, PATCH),
 	REGISTER_OOVPA(D3DPalette_Lock, 3925, PATCH),
 	REGISTER_OOVPA(D3DTexture_LockRect, 3925, PATCH),
-	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3925, DISABLED),	// Just calls Lock2DSurface
-	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, DISABLED),	// Just calls Lock2DSurface
+	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3925, PATCH),	// Just calls Lock3DSurface
+	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH),	// Just calls Lock2DSurface
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel, 3925, PATCH),
 
     // ********************** END WARNING UNTESTED!!! *******************
@@ -1884,7 +1884,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetIndices, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetIndices, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 4134, PATCH),

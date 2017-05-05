@@ -64,9 +64,9 @@ namespace NtDll
 
 #define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
 
-#define MM_HIGHEST_USER_ADDRESS     (PVOID)0x7FFEFFFF
+#define MM_HIGHEST_USER_ADDRESS     0x7FFEFFFF
 #define X64K                        ((ULONG)64*1024)
-#define MM_HIGHEST_VAD_ADDRESS      ((PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - X64K))
+#define MM_HIGHEST_VAD_ADDRESS      (MM_HIGHEST_USER_ADDRESS - X64K)
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -81,17 +81,20 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(BaseAddress)
+		LOG_FUNC_ARG_TYPE(PULONG, BaseAddress)
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
+
 	NTSTATUS ret = 0;
 
-	PVOID RequestedBaseAddress = *BaseAddress;
+	ULONG_PTR RequestedBaseAddress = (ULONG_PTR)*BaseAddress;
 	ULONG RequestedAllocationSize = *AllocationSize;
+
+	DbgPrintf("NtAllocateVirtualMemory requested range : 0x%.08X - 0x%.08X\n", RequestedBaseAddress, RequestedBaseAddress + RequestedAllocationSize);
 
 	// Don't allow base address to exceed highest virtual address
 	if (RequestedBaseAddress > MM_HIGHEST_VAD_ADDRESS)
@@ -106,7 +109,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		ret = STATUS_INVALID_PARAMETER;
 
 	// Allocation should fit in remaining address range
-	if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)RequestedBaseAddress + 1) < RequestedAllocationSize)
+	if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - RequestedBaseAddress + 1) < RequestedAllocationSize)
 		ret = STATUS_INVALID_PARAMETER;
 
 	// Only known flags are allowed
@@ -144,8 +147,16 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 			AllocationType,
 			Protect);
 
-		if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
-			EmuWarning("Invalid Param!");
+		if (NT_SUCCESS(ret))
+		{
+			ULONG_PTR ResultingBaseAddress = (ULONG_PTR)*BaseAddress;
+			ULONG ResultingAllocationSize = *AllocationSize;
+
+			DbgPrintf("NtAllocateVirtualMemory resulting range : 0x%.08X - 0x%.08X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize);
+		}
+		else
+			if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
+				EmuWarning("Invalid Param!");
 	}
 
 	RETURN(ret);
@@ -318,7 +329,23 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	// that would require us to create the event's kernel object with the Ob* api's too!
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateEvent Failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
+
+		// If it fails, try again but without the object attributes stucture
+		// This fixes Panzer Dragoon games on non-Vista OSes.
+		ret = NtDll::NtCreateEvent(
+			/*OUT*/EventHandle,
+			DesiredAccess,
+			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			(NtDll::EVENT_TYPE)EventType,
+			InitialState);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateEvent Failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
 
@@ -409,7 +436,21 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		InitialOwner);
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateMutant Failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
+
+		// If it fails, try again but without the object attributes stucture
+		ret = NtDll::NtCreateMutant(
+			/*OUT*/MutantHandle, 
+			DesiredAccess,
+			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			InitialOwner);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateMutant Failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
 
@@ -469,7 +510,22 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		MaximumCount);
 
 	if (FAILED(ret))
-		EmuWarning("NtCreateSemaphore failed!");
+	{
+		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
+
+		// If it fails, try again but without the object attributes stucture
+		ret = NtDll::NtCreateSemaphore(
+			/*OUT*/SemaphoreHandle,
+			DesiredAccess,
+			/*(NtDll::POBJECT_ATTRIBUTES)nativeObjectAttributes.NtObjAttrPtr*/ NULL,
+			InitialCount,
+			MaximumCount);
+
+		if(FAILED(ret))
+			EmuWarning("NtCreateSemaphore failed!");
+		else
+			DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
+	}
 	else
 		DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
 
