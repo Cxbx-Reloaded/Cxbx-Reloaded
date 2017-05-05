@@ -9262,9 +9262,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 
 
 // ******************************************************************
-// * patch: D3DDevice_Unknown1
+// * patch: D3D_CMiniport_GetDisplayCapabilities
 // ******************************************************************
-void WINAPI XTL::EMUPATCH(D3DDevice_Unknown1)()
+void WINAPI XTL::EMUPATCH(D3D_CMiniport_GetDisplayCapabilities)()
 {
 	FUNC_EXPORTS
 

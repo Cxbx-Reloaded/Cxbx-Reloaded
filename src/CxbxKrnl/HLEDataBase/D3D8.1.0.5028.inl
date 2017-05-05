@@ -871,7 +871,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DResource_AddRef, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_IsBusy, 4361, PATCH),
-	// REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
+	REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5028, PATCH),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 4134, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
@@ -924,8 +924,8 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4928, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 4627, PATCH),
-	// REGISTER_OOVPA(D3DDevice_SetStateVB, 4627, PATCH),
-	// REGISTER_OOVPA(D3DDevice_SetStateUP, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetStateVB, 4627, DISABLED),
+	REGISTER_OOVPA(D3DDevice_SetStateUP, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVerticesUP, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStipple, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, PATCH),
