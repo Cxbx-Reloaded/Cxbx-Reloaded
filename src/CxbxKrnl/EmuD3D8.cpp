@@ -2715,10 +2715,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     }
 
     LPD3DXBUFFER pRecompiledBuffer = NULL;
-    DWORD        *pRecompiledDeclaration;
+    DWORD        *pRecompiledDeclaration = NULL;
     DWORD        *pRecompiledFunction = NULL;
     DWORD        VertexShaderSize = 0;
-    DWORD        DeclarationSize;
+    DWORD        DeclarationSize = 0;
     DWORD        Handle = 0;
 
     HRESULT hRet = XTL::EmuRecompileVshDeclaration((DWORD*)pDeclaration,
@@ -9588,10 +9588,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_MakeRequestedSpace)( DWORD Unknown1, DWORD Unkn
 	// create an XRef...
 	LOG_UNIMPLEMENTED();
 
-	__asm int 3;
-	CxbxKrnlCleanup("D3D::MakeRequestedSpace not implemented (tell blueshogun)");
-
-
 	return S_OK;
 }
 
@@ -9607,10 +9603,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_MakeSpace)()
 	// NOTE: Like the above function, this should not be emulated.  The intended
 	// usage is the same as above.
 	LOG_UNIMPLEMENTED();
-
-	__asm int 3;
-	CxbxKrnlCleanup("D3DDevice::MakeSpace not implemented (tell blueshogun)");
-
 		
 }
 
@@ -9647,7 +9639,7 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 	// create an XRef...
 
 	//__asm int 3;
-	CxbxKrnlCleanup("D3D::BlockOnTime not implemented (tell blueshogun)");
+	EmuWarning("D3D::BlockOnTime not implemented (tell blueshogun)");
 
 	LOG_UNIMPLEMENTED();
 }
@@ -9914,9 +9906,6 @@ void WINAPI XTL::EMUPATCH(D3D_LazySetPointParams)( void* Device )
 	LOG_FUNC_ONE_ARG(Device);
 
 	LOG_UNIMPLEMENTED();
-
-	// Don't emulate this! Just look at the stack trace and go from there!
-//	__asm int 3;
 }
 
 // ******************************************************************
