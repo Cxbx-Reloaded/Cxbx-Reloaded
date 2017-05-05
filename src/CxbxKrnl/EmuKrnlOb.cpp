@@ -69,6 +69,8 @@ xboxkrnl::HANDLE EmuObCreateObjectHandle
 	IN xboxkrnl::PVOID Object
 )
 {
+	LOG_FUNC_ONE_ARG(Object);
+
 	HANDLE Handle = (HANDLE)Object; // Fake it for now
 
 	LOG_INCOMPLETE(); // TODO : Create an actual handle
@@ -82,6 +84,11 @@ xboxkrnl::NTSTATUS EmuObFindObjectByHandle
 	OUT PVOID *Object
 )
 {
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	*Object = (PVOID)Handle; // Fake it for now
@@ -100,6 +107,11 @@ xboxkrnl::NTSTATUS EmuObFindObjectByName
 	OUT PVOID *Object
 )
 {
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectName)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	LOG_UNIMPLEMENTED();

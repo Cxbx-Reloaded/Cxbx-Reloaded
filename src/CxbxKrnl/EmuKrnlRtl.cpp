@@ -444,9 +444,7 @@ XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAn
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	/** sorta pointless
 	LOG_FUNC_ONE_ARG(CriticalSection);
-	//*/
 
 	LOG_INCOMPLETE(); // TODO : How to enter region?
 
@@ -798,9 +796,7 @@ XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAn
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	/** sorta pointless
 	LOG_FUNC_ONE_ARG(CriticalSection);
-	//*/
 
 	RtlLeaveCriticalSection(CriticalSection);
 

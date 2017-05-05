@@ -36,6 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 
 #include <cmath>
+#include <iomanip> // For std::setfill and std::setw
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"
@@ -54,7 +55,7 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch);
 #include <unordered_map>
 #include <sstream>
 
-std::unordered_map<std::string, xbaddr> g_HLECache;
+std::unordered_map<std::string, xbaddr> g_SymbolAddresses;
 bool g_HLECacheUsed = false;
 
 uint32 g_BuildVersion;
@@ -71,7 +72,7 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 	std::string result = "";
 	int closestMatch = MAXINT;
 
-	for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+	for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 		xbaddr symbolAddr = (*it).second;
 		if (symbolAddr <= address)
 		{
@@ -92,6 +93,13 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 
 	*symbolOffset = 0;
 	return "unknown";
+}
+
+void *GetEmuPatchAddr(std::string aFunctionName)
+{
+	std::string patchName = "XTL::EmuPatch_" + aFunctionName;
+	void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+	return addr;
 }
 
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
@@ -132,7 +140,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			printf("Using HLE Cache\n");
 			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
-			// Parse the .INI file into the cache
+			// Parse the .INI file into the map of symbol addresses
 			while (strlen(bufferPtr) > 0) {
 				std::string ini_entry(bufferPtr);
 
@@ -141,38 +149,67 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				std::string value = ini_entry.substr(separator + 1, std::string::npos);
 				uint32_t addr = strtol(value.c_str(), 0, 16);
 
-				g_HLECache[key] = addr;
+				g_SymbolAddresses[key] = addr;
 				bufferPtr += strlen(bufferPtr) + 1;
 			}
 
-			// Iterate through the cache calling GetProcAddress on all functions.	
-			for (auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
-				std::string patchName = "XTL::EmuPatch_" + (*it).first;		
-				void* pFunc = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+			// Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.	
+			for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
+				std::string functionName = (*it).first;
+				xbaddr location = (*it).second;
 
-				if (pFunc != nullptr) {
-					printf("HLECache: 0x%08X => %s\n", (*it).second, (*it).first.c_str());
-					EmuInstallPatch((*it).second, pFunc);
+				std::stringstream output;
+				output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
+					<< " -> " << functionName;
+				void* pFunc = GetEmuPatchAddr(functionName);
+				if (pFunc != nullptr)
+				{
+					// skip entries that weren't located at all
+					if (location == NULL)
+					{
+						output << "\t(not patched)";
+					}
+					// Prevent patching illegal addresses
+					else if (location < XBE_IMAGE_BASE)
+					{
+						output << "\t*ADDRESS TOO LOW!*";
+					}
+					else if (location > XBOX_MEMORY_SIZE)
+					{
+						output << "\t*ADDRESS TOO HIGH!*";
+					}
+					else
+					{
+						EmuInstallPatch(location, pFunc);
+						output << "\t*PATCHED*";
+					}
 				}
+				else
+				{
+					if (location != NULL)
+						output << "\t(no patch)";
+				}
+
+				output << "\n";
+				printf(output.str().c_str());
 			}
 
-
 			// Fix up Render state and Texture States
-			if (g_HLECache.find("D3DDeferredRenderState") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
 			}
 			
-			if (g_HLECache.find("D3DDeferredTextureState") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
 			}
 
-			if (g_HLECache.find("D3DDEVICE") == g_HLECache.end()) {
+			if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
 				CxbxKrnlCleanup("D3DDEVICE was not found!");
 			}
 
-			XTL::EmuD3DDeferredRenderState = (DWORD*)g_HLECache["D3DDeferredRenderState"];
-			XTL::EmuD3DDeferredTextureState = (DWORD*)g_HLECache["D3DDeferredTextureState"];
-			XRefDataBase[XREF_D3DDEVICE] = g_HLECache["D3DDEVICE"];
+			XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
+			XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
+			XRefDataBase[XREF_D3DDEVICE] = g_SymbolAddresses["D3DDEVICE"];
 
 			// TODO: Move this into a function rather than duplicating from HLE scanning code
 			for (int v = 0; v<44; v++) {
@@ -187,14 +224,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			g_HLECacheUsed = true;
 		}
 
-		// If g_HLECache didn't get filled, the symbol cache is invalid
-		if (g_HLECache.empty()) {
+		// If g_SymbolAddresses didn't get filled, the HLE cache is invalid
+		if (g_SymbolAddresses.empty()) {
 			printf("HLE Cache file is outdated and will be regenerated\n");
 			g_HLECacheUsed = false;
 		}
 	}
 
-	// If the HLE Cache was used, skip symbol maching/patching
+	// If the HLE Cache was used, skip symbol searching/patching
 	if (g_HLECacheUsed) {
 		return;
 	}
@@ -419,7 +456,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
 								}
 
-								g_HLECache["D3DDEVICE"] = DerivedAddr_D3DDevice;
+								g_SymbolAddresses["D3DDEVICE"] = DerivedAddr_D3DDevice;
 
 								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
 								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)
@@ -448,7 +485,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
                             }
 
-							g_HLECache["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
+							g_SymbolAddresses["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
 							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
@@ -506,7 +543,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                         XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
                                 }
 
-								g_HLECache["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
+								g_SymbolAddresses["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
 								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             }
                             else
@@ -563,7 +600,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
 
 	// Write Library Details
-	for (int i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
+	for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
 		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
 		std::stringstream buildVersion;
 		buildVersion << pLibraryVersion[i].wBuildVersion;
@@ -575,8 +612,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	buildVersion << g_BuildVersion;
 	WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
 
-	// Write the found HLE Patches into the cache file
-	for(auto it = g_HLECache.begin(); it != g_HLECache.end(); ++it) {
+	// Write the found symbol addresses into the cache file
+	for(auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 		std::stringstream cacheAddress;
 		cacheAddress << std::hex << (*it).second;
 		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
@@ -785,43 +822,66 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 		}	
 	}
 
-
     // traverse the full OOVPA table
     for(size_t a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
+		// Never used : skip scans when so configured
+		bool DontScan = (OovpaTable[a].Flags & Flag_DontScan) > 0;
+		if (DontScan)
+			continue;
+
+		// Skip already found & handled symbols
+		xbaddr pFunc = g_SymbolAddresses[OovpaTable[a].szFuncName];
+		if (pFunc != (xbaddr)nullptr)
+			continue;
+
+		// Search for each function's location using the OOVPA
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
-		xbaddr pFunc = (xbaddr)nullptr;
+		pFunc = (xbaddr)EmuLocateFunction(Oovpa, lower, upper);
+		if (pFunc == (xbaddr)nullptr)
+			continue;
 
-        
-        pFunc = EmuLocateFunction(Oovpa, lower, upper);
+		// Now that we found the address, store it (regardless if we patch it or not)
+		g_SymbolAddresses[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
 
-        if(pFunc != (xbaddr)nullptr)
-        {
-            printf("HLE: 0x%.08X -> %s %d", pFunc, OovpaTable[a].szFuncName, OovpaTable[a].Version);
-			std::string patchName = "XTL::EmuPatch_" + std::string(OovpaTable[a].szFuncName);
+		// Output some details
+		std::stringstream output;
+		output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << pFunc
+			<< " -> " << OovpaTable[a].szFuncName << " " << std::dec << OovpaTable[a].Version;
 
-			void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+		bool IsXRef = (OovpaTable[a].Flags & Flag_XRef) > 0;
+		if (IsXRef)
+			output << "\t(XREF)";
 
-			if ((OovpaTable[a].Flags & Flag_XRef) == Flag_XRef) {
-				printf("\t*XRef*");
+		// Retrieve the associated patch, if any is available
+		void* addr = GetEmuPatchAddr(std::string(OovpaTable[a].szFuncName));
+		bool DontPatch = (OovpaTable[a].Flags & Flag_DontPatch) > 0;
+		if (DontPatch)
+		{
+			// Mention if there's an unused patch
+			if (addr != nullptr)
+				output << "\t*PATCH UNUSED!*";
+			else
+				output << "\t*DISABLED*";
+		}
+		else
+		{
+			if (addr != nullptr)
+			{
+				EmuInstallPatch(pFunc, addr);
+				output << "\t*PATCHED*";
 			}
-
-			if ((OovpaTable[a].Flags & Flag_DontScan) == Flag_DontScan) {
-				printf("\t*DISABLED*");
-			} else	{
-				// Only store entries in the Cache if they are not disabled
-				g_HLECache[OovpaTable[a].szFuncName] = (uint32_t)pFunc;
+			else
+			{
+				// Mention there's no patch available, if it was to be applied
+				if (!IsXRef) // TODO : Remove this restriction once we patch xrefs regularly
+					output << "\t*NO PATCH AVAILABLE!*";
 			}
+		}
 
-			if ((OovpaTable[a].Flags & Flag_DontScan) == 0 && (addr != nullptr))
-            {
-				printf("\t*PATCHED*");
-                EmuInstallPatch(pFunc, addr);
-            }
-
-			printf("\n");
-        }
-    }
+		output << "\n";
+		printf(output.str().c_str());
+	}
 }
 
 #ifdef _DEBUG_TRACE
@@ -972,7 +1032,29 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
 {
-	context->against_index = index;
+	if (context->against == nullptr) {
+		context->main_index = index;
+	} else {
+		context->against_index = index;
+	}
+
+	if (context->against == nullptr) {
+		if (table[index].Flags & Flag_DontPatch)
+		{
+			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
+			{
+				HLEError(context, "OOVPA registration DISABLED while a patch exists!");
+			}
+		}
+		else
+		if (table[index].Flags & Flag_XRef)
+		{
+			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
+			{
+				HLEError(context, "OOVPA registration XREF while a patch exists!");
+			}
+		}
+	}
 
 	// verify the OOVPA of this entry
 	if (table[index].Oovpa != nullptr)
@@ -986,6 +1068,10 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
 	} else {
 		context->against_data = data;
 	}
+
+	// Don't check a database against itself :
+	if (context->main_data == context->against_data)
+		return;
 
 	// verify each entry in this HLEData
 	uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
