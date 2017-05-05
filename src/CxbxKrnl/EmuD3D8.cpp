@@ -2715,10 +2715,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     }
 
     LPD3DXBUFFER pRecompiledBuffer = NULL;
-    DWORD        *pRecompiledDeclaration;
+    DWORD        *pRecompiledDeclaration = NULL;
     DWORD        *pRecompiledFunction = NULL;
     DWORD        VertexShaderSize = 0;
-    DWORD        DeclarationSize;
+    DWORD        DeclarationSize = 0;
     DWORD        Handle = 0;
 
     HRESULT hRet = XTL::EmuRecompileVshDeclaration((DWORD*)pDeclaration,
@@ -9588,8 +9588,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_MakeRequestedSpace)( DWORD Unknown1, DWORD Unkn
 	// create an XRef...
 	LOG_UNIMPLEMENTED();
 
-	__asm int 3;
-	CxbxKrnlCleanup("D3D::MakeRequestedSpace not implemented (tell blueshogun)");
+	//__asm int 3;
+	//CxbxKrnlCleanup("D3D::MakeRequestedSpace not implemented (tell blueshogun)");
 
 
 	return S_OK;
