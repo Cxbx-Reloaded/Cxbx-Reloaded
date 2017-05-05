@@ -1604,6 +1604,85 @@ OOVPA_END;
 #define IDirectSoundBuffer_SetEG_5558 IDirectSoundBuffer_SetEG_4627
 
 // ******************************************************************
+// * DirectSound::CDirectSoundVoice::Use3DVoiceData
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundVoice_Use3DVoiceData, 5558, 9,
+
+    XREF_DirectSound_CDirectSoundVoice_Use3DVoiceData,
+    XRefZero)
+
+        { 0x04, 0x00 },
+        { 0x07, 0x24 },
+        { 0x0B, 0x10 },
+        { 0x0F, 0x48 },
+        { 0x12, 0xEB },
+        { 0x16, 0x0B },
+        { 0x18, 0x33 },
+        { 0x1A, 0xC2 },
+        { 0x1B, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::Use3DVoiceData
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundBuffer_Use3DVoiceData, 5558, 9,
+
+    XREF_DirectSound_CDirectSoundBuffer_Use3DVoiceData,
+    XRefOne)
+
+        XREF_ENTRY( 0x31, XREF_DirectSound_CDirectSoundVoice_Use3DVoiceData ),
+
+        { 0x0C, 0x0F },
+        { 0x10, 0x16 },
+        { 0x15, 0x68 },
+        { 0x36, 0xC9 },
+        { 0x39, 0x74 },
+        { 0x3B, 0x68 },
+        { 0x49, 0xC2 },
+        { 0x4A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer::Use3DVoiceData
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_Use3DVoiceData, 5558, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x15, XREF_DirectSound_CDirectSoundBuffer_Use3DVoiceData ),
+
+        { 0x06, 0x24 },
+        { 0x08, 0x8B },
+        { 0x0C, 0xE4 },
+        { 0x0E, 0xD9 },
+        { 0x11, 0x23 },
+        { 0x14, 0xE8 },
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::Use3DVoiceData
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundStream_Use3DVoiceData, 5558, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x35, XREF_DirectSound_CDirectSoundVoice_Use3DVoiceData ),
+
+        { 0x0C, 0x0F },
+        { 0x10, 0x16 },
+        { 0x15, 0x68 },
+        { 0x3A, 0xC9 },
+        { 0x3D, 0x74 },
+        { 0x3F, 0x68 },
+        { 0x4D, 0xC2 },
+        { 0x4E, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_5558
 // ******************************************************************
 OOVPATable DSound_5558[] = {
@@ -1751,6 +1830,10 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4134, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetFilter, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFilter, 4134, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_Use3DVoiceData, 5558, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Use3DVoiceData, 5558, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Use3DVoiceData, 5558, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Use3DVoiceData, 5558, XREF),
 };
 
 // ******************************************************************
