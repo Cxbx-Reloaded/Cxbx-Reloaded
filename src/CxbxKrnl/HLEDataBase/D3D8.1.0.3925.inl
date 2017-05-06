@@ -3773,7 +3773,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, DISABLED),
 	REGISTER_OOVPA(D3DResource_GetType, 3925, DISABLED), // Probably not even necessary...
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
-	// REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_GetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 3925, PATCH),
@@ -3802,7 +3802,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZRead, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_DoNotCullUncompressed, 3925, PATCH),
-	// REGISTER_OOVPA(XMETAL_StartPush, 3925, PATCH),
+	REGISTER_OOVPA(XMETAL_StartPush, 3925, DISABLED),
 	REGISTER_OOVPA(D3D_SetFence, 3925, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShaderProgram, 3925, PATCH),

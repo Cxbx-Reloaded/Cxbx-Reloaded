@@ -182,7 +182,6 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	RETURN(ret);
 }
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
@@ -228,7 +227,6 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 	RETURN(TRUE); // TODO : RETURN(bRet);
 }
-#endif
 
 // ******************************************************************
 // * patch: XInputOpen
