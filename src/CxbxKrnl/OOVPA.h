@@ -140,7 +140,7 @@ struct OOVPATable
 
 const uint16_t Flag_DontScan = 1; // Indicates an entry that's currently disabled and thus shouldn't be searched for
 const uint16_t Flag_XRef = 2;	  // Indicates that an entry is an X-Ref
-const uint16_t Flag_Reserved = 4; 
+const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patched (even when it's found)
 
 #define OOVPA_TABLE_ENTRY_FULL(Oovpa, DebugName, Version, Flags) \
 	{ & Oovpa ## _ ## Version.Header, DebugName, Version, Flags }
@@ -168,7 +168,7 @@ const uint16_t Flag_Reserved = 4;
 
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_DontScan)
+	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_DontPatch)
 
 
 #pragma pack()

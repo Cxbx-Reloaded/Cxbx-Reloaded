@@ -38,8 +38,8 @@
 OOVPATable XG_5849[1] = {
 
 	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-    // REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
+    // REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
 	// REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 5788, PATCH),
 };
 

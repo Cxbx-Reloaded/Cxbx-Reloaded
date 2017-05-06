@@ -334,6 +334,8 @@ XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
 	IN OUT PPS_STATISTICS ProcessStatistics
 )
 {
+	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
+
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
