@@ -59,6 +59,7 @@ namespace xboxkrnl
 #include <shlobj.h>
 #include <clocale>
 #include <Shlwapi.h>
+#include <time.h> // For time()
 
 /* prevent name collisions */
 namespace NtDll
@@ -526,7 +527,7 @@ void LoadXboxKeys(std::string path)
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
 		} else {
-			EmuWarning("Keys.bin has an incorrent filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
+			EmuWarning("Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
@@ -580,23 +581,30 @@ void CxbxKrnlInit
 			freopen("CONIN$", "rt", stdin);
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
-	}
-	else if (DbgMode == DM_FILE)
-	{
-		FreeConsole();
-		freopen(szDebugFilename, "wt", stdout);
-		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
-		char buffer[16];
 		FreeConsole();
-		if (GetConsoleTitle(buffer, 16) != NULL)
-			freopen("nul", "w", stdout);
+		if (DbgMode == DM_FILE)
+			freopen(szDebugFilename, "wt", stdout);
+		else
+		{
+			char buffer[16];
+			if (GetConsoleTitle(buffer, 16) != NULL)
+				freopen("nul", "w", stdout);
+		}
+	}
+
+	// Write a header to the log
+	{
+		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		
+		time_t startTime = time(nullptr);
+		struct tm* tm_info = localtime(&startTime);
+		char timeString[26];
+		strftime(timeString, 26, "%F %T", tm_info);
+		printf("[0x%X] EmuMain: Log started at %s\n", GetCurrentThreadId(), timeString);
 	}
 
 	// debug trace
