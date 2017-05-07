@@ -74,6 +74,9 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 
 	for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 		xbaddr symbolAddr = (*it).second;
+		if (symbolAddr == NULL)
+			continue;
+
 		if (symbolAddr <= address)
 		{
 			int distance = address - symbolAddr;
@@ -451,7 +454,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								if (XRefDataBase[XREF_D3DDEVICE] != DerivedAddr_D3DDevice)
 								{
 									if (XRefDataBase[XREF_D3DDEVICE] != XREF_ADDR_DERIVE)
-										EmuWarning("Second derived XREF_D3DDEVICE differs from first!");
+										CxbxPopupMessage("Second derived XREF_D3DDEVICE differs from first!");
 
 									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
 								}
@@ -462,7 +465,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)
 								{
 									if (XRefDataBase[XREF_D3DRS_CULLMODE] != XREF_ADDR_DERIVE)
-										EmuWarning("Second derived XREF_D3DRS_CULLMODE differs from first!");
+										CxbxPopupMessage("Second derived XREF_D3DRS_CULLMODE differs from first!");
 
 									XRefDataBase[XREF_D3DRS_CULLMODE] = DerivedAddr_D3DRS_CULLMODE;
 								}
@@ -529,7 +532,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != DerivedAddr_D3DTSS_TEXCOORDINDEX)
 									{
 										if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != XREF_ADDR_DERIVE)
-											EmuWarning("Second derived XREF_D3DTSS_TEXCOORDINDEX differs from first!");
+											CxbxPopupMessage("Second derived XREF_D3DTSS_TEXCOORDINDEX differs from first!");
 
 										XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = DerivedAddr_D3DTSS_TEXCOORDINDEX;
 									}
