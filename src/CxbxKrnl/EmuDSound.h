@@ -1528,6 +1528,15 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetEffectData)
 );
 
 // ******************************************************************
+// * patch: IDirectSoundBuffer_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+(
+    LPVOID pThis,
+    LPUNKNOWN       pUnknown
+);
+
+// ******************************************************************
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileCreateMediaObjectAsync)

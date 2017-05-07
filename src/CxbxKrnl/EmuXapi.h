@@ -380,7 +380,6 @@ DWORD WINAPI EMUPATCH(XGetDevices)
     XPP_DEVICE_TYPE *DeviceType
 );
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
@@ -390,7 +389,6 @@ BOOL WINAPI EMUPATCH(XGetDeviceChanges)
     PDWORD           pdwInsertions,
     PDWORD           pdwRemovals
 );
-#endif
 
 // ******************************************************************
 // * patch: XInputOpen

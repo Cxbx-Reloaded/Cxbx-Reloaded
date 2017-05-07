@@ -2678,6 +2678,25 @@ OOVPA_NO_XREF(D3DDevice_PrimeVertexCache, 4627, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3D::BlockOnResource
+// ******************************************************************
+OOVPA_XREF(D3D_BlockOnResource, 4627, 9,
+
+    XREF_D3D_BlockOnResource,
+    XRefZero)
+
+		{ 0x35, 0x8B }, // mov edx, [ecx+0x1C]
+		{ 0x36, 0x42 },
+		{ 0x37, 0x30 },
+		{ 0x41, 0xC2 }, // retn 4
+		{ 0x42, 0x04 },
+		{ 0x43, 0x00 },
+		{ 0x65, 0xC2 }, // retn 4
+		{ 0x66, 0x04 },
+		{ 0x67, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4627
 // ******************************************************************
 OOVPATable D3D8_4627[] = {
@@ -2783,7 +2802,7 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 4627, PATCH),
 	REGISTER_OOVPA(D3DResource_IsBusy, 4361, PATCH),
-	// REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
+	REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4627, PATCH),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 4134, PATCH),
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
@@ -2836,8 +2855,8 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4928, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 4627, PATCH),
-	// REGISTER_OOVPA(D3DDevice_SetStateVB, 4627, PATCH),
-	// REGISTER_OOVPA(D3DDevice_SetStateUP, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetStateVB, 4627, DISABLED),
+	REGISTER_OOVPA(D3DDevice_SetStateUP, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVerticesUP, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStipple, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, PATCH),
@@ -2878,9 +2897,11 @@ REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_KickPushBuffer, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
-	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
+	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_PrimeVertexCache, 4627, PATCH),
+	REGISTER_OOVPA(D3D_BlockOnResource, 4627, PATCH),
+	REGISTER_OOVPA(D3DResource_BlockUntilNotBusy, 3925, PATCH),
 };
 
 // ******************************************************************
