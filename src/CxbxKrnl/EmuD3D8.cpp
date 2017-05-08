@@ -263,6 +263,52 @@ inline XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContain
 	return (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 }
 
+inline int GetXboxPixelContainerDimensionCount(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
+{
+	// Don't pass in unassigned Xbox pixel container
+	assert(pXboxPixelContainer != NULL);
+
+	return (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT);
+}
+
+XTL::X_D3DRESOURCETYPE GetXboxD3DResourceType(const XTL::X_D3DResource *pXboxResource)
+{
+	DWORD Type = GetXboxCommonResourceType(pXboxResource);
+	switch (Type)
+	{
+	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
+		return XTL::X_D3DRTYPE_VERTEXBUFFER;
+	case X_D3DCOMMON_TYPE_INDEXBUFFER:
+		return XTL::X_D3DRTYPE_INDEXBUFFER;
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
+		return XTL::X_D3DRTYPE_PUSHBUFFER;
+	case X_D3DCOMMON_TYPE_PALETTE:
+		return XTL::X_D3DRTYPE_PALETTE;
+	case X_D3DCOMMON_TYPE_TEXTURE:
+	{
+		DWORD Format = ((XTL::X_D3DPixelContainer *)pXboxResource)->Format;
+		if (Format & X_D3DFORMAT_CUBEMAP)
+			return XTL::X_D3DRTYPE_CUBETEXTURE;
+
+		if (GetXboxPixelContainerDimensionCount((XTL::X_D3DPixelContainer *)pXboxResource) > 2)
+			return XTL::X_D3DRTYPE_VOLUMETEXTURE;
+
+		return XTL::X_D3DRTYPE_TEXTURE;
+	}
+	case X_D3DCOMMON_TYPE_SURFACE:
+	{
+		if (GetXboxPixelContainerDimensionCount((XTL::X_D3DPixelContainer *)pXboxResource) > 2)
+			return XTL::X_D3DRTYPE_VOLUME;
+
+		return XTL::X_D3DRTYPE_SURFACE;
+	}
+	case X_D3DCOMMON_TYPE_FIXUP:
+		return XTL::X_D3DRTYPE_FIXUP;
+	}
+
+	return XTL::X_D3DRTYPE_NONE;
+}
+
 inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
@@ -612,6 +658,39 @@ VOID CxbxSetPixelContainerHeader
 		| (((Pitch - 1) << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK)
 		;
 }
+
+VOID CxbxGetPixelContainerMeasures
+(
+	XTL::X_D3DPixelContainer *pPixelContainer,
+	DWORD dwLevel,
+	UINT *pWidth,
+	UINT *pHeight,
+	UINT *pPitch,
+	UINT *pSize
+)
+{
+	DWORD Size = pPixelContainer->Size;
+
+	if (Size != 0)
+	{
+		*pWidth = ((Size & X_D3DSIZE_WIDTH_MASK) /* >> X_D3DSIZE_WIDTH_SHIFT*/) + 1;
+		*pHeight = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+		*pPitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
+	}
+	else
+	{
+		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
+		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
+		DWORD dwBPP = EmuXBFormatBytesPerPixel(GetXboxPixelContainerFormat(pPixelContainer));
+
+		*pHeight = 1 << l2h;
+		*pWidth = 1 << l2w;
+		*pPitch = *pWidth * dwBPP;
+	}
+
+	*pSize = *pHeight * *pPitch;
+}
+
 
 VOID CxbxReleaseBackBufferLock()
 {
