@@ -343,6 +343,28 @@ inline boolean IsResourceTypeGPUReadable(const DWORD ResourceType)
 	return false;
 }
 
+inline bool IsYuvSurface(const XTL::X_D3DResource *pXboxResource)
+{
+	// Was : return (pXboxResource->Data == X_D3DRESOURCE_DATA_YUV_SURFACE);
+	if (GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE)
+		if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
+			return true;
+
+	return false;
+}
+
+inline bool IsXboxResourceLocked(const XTL::X_D3DResource *pXboxResource)
+{
+	bool result = pXboxResource->Common & X_D3DCOMMON_ISLOCKED;
+	return result;
+}
+
+inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
+{
+	bool result = pXboxResource->Common & X_D3DCOMMON_D3DCREATED;
+	return result;
+}
+
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
@@ -1615,7 +1637,7 @@ static void EmuUnswizzleTextureStages()
 		// for current usages, we're always on stage 0
 		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
 
-		if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
+		if(pPixelContainer == NULL || !IsXboxResourceLocked(pPixelContainer))
 			return;
 
 		XTL::X_D3DFORMAT XBFormat = GetXboxPixelContainerFormat(pPixelContainer);
@@ -3839,7 +3861,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
            ");\n",
            Stage, pTexture);
 
-    IDirect3DBaseTexture8 *pHostBaseTexture = nullptr;
+	IDirect3DBaseTexture8 *pHostBaseTexture = nullptr;
 
     EmuD3DActiveTexture[Stage] = (X_D3DPixelContainer*)pTexture;
     if(pTexture != NULL)
@@ -3859,7 +3881,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
         else
         {			
 			// Remove old locks before setting
-			/*if(pTexture->Common & X_D3DCOMMON_ISLOCKED)
+			/*if(IsXboxResourceLocked(pTexture))
 			{
 				((IDirect3DTexture8*)pHostBaseTexture)->UnlockRect(0);
 				pTexture->Common &= ~X_D3DCOMMON_ISLOCKED;
@@ -5538,7 +5560,7 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
 		LOG_FUNC_ARG(pDesc)
 		LOG_FUNC_END;
 
-	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) works too
+	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) or IsYuvSurface(pPixelContainer) works too
 	pDesc->Format = GetXboxPixelContainerFormat(pPixelContainer);
     pDesc->Type = GetXboxD3DResourceType(pPixelContainer);
     pDesc->Usage = 0;
