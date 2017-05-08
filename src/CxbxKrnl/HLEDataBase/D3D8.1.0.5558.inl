@@ -1079,20 +1079,6 @@ OOVPA_NO_XREF(D3DDevice_SetIndices, 5558, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetIndices
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetIndices, 5455, 7)
-
-        { 0x0F, 0xBE },
-        { 0x20, 0xBE },
-        { 0x31, 0xFF },
-        { 0x42, 0x14 },
-        { 0x53, 0x00 },
-        { 0x64, 0x06 },
-        { 0x75, 0xDD },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_GetBackBuffer
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_GetBackBuffer, 5558, 6)
@@ -1400,7 +1386,6 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShader, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetIndices, 5558, DISABLED),
-	// REGISTER_OOVPA(D3DDevice_SetIndices, 5455, DISABLED), // TODO : Move to OOVPATable D3D8_5455
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_Begin, 4361, PATCH),
@@ -1466,7 +1451,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5558, PATCH),
 	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_MakeSpace, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_MakeSpace, 5558, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5558, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),

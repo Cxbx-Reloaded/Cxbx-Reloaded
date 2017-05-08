@@ -322,6 +322,8 @@ enum XRefDataBaseOffset
 	XREF_DirectSound_CDirectSound_GetEffectData,
 	XREF_CDirectSoundBuffer_SetNotificationPositions,
 	XREF_DirectSound_CMcpxBuffer_Play2,
+	XREF_DirectSound_CDirectSoundVoice_Use3DVoiceData,
+	XREF_DirectSound_CDirectSoundBuffer_Use3DVoiceData,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

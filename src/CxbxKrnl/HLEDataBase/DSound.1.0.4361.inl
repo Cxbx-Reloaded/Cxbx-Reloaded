@@ -576,7 +576,25 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetFormat, 4361, 9,
 OOVPA_END;
 
 // ******************************************************************
-// * DirectSoundCreate, 4361
+// * DirectSound::CMcpxBuffer::Play
+// ******************************************************************
+OOVPA_XREF(DirectSound_CMcpxBuffer_Play, 4361, 8,
+
+    XREF_DirectSound_CMcpxBuffer_Play,
+    XRefZero)
+
+        { 0x06, 0x56 },
+        { 0x0E, 0xF1 },
+        { 0x16, 0xFF },
+        { 0x1D, 0x03 },
+        { 0x1E, 0xFF },
+        { 0x26, 0x75 },
+        { 0x2F, 0x8B },
+        { 0x36, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
+// * DSound_4361
 // ******************************************************************
 OOVPATable DSound_4361[] = {
 

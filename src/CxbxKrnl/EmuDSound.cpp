@@ -3840,6 +3840,31 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 }
 
 // ******************************************************************
+// * patch: IDirectSoundBuffer_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+(
+    LPVOID pThis,
+    LPUNKNOWN       pUnknown
+)
+{
+    FUNC_EXPORTS
+
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Use3DVoiceData\n"
+           "(\n"
+           "   pThis                  : 0x%.08X\n"
+           "   pUnknown               : 0x%.08X\n"
+           ");\n",
+           pThis, pUnknown);
+
+    // TODO: Implement
+
+    EmuWarning("IDirectSoundBuffer_Use3DVoiceData not yet supported!");
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)

@@ -820,7 +820,7 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetConeOrientation, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * Direct, 5344
+// * DSound_5344
 // ******************************************************************
 OOVPATable DSound_5344[] = {
 
@@ -836,8 +836,6 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Pause, 4928, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 4928, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
-	// REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, DISABLED), // 5344 XREF is already in here
-	// REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, DISABLED), // 5344 XREF is already in here
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetVelocity, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 5344, XREF),
@@ -891,7 +889,6 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetDopplerFactor, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 3936, PATCH),
-	// REGISTER_OOVPA(DirectSound_CDirectSound_SetRolloffFactor, 4134, DISABLED), // 5344 XREF is already in here
 	REGISTER_OOVPA(DirectSound_CDirectSound_CommitDeferredSettings, 5344, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMaxDistance, 5344, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMaxDistance, 5344, XREF),
@@ -911,7 +908,6 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetVolume, 4134, PATCH), // (This is actually the XREF we are using)
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 5233, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, PATCH),
