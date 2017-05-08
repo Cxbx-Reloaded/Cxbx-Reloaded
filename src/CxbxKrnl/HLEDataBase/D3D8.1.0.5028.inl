@@ -873,7 +873,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DResource_IsBusy, 4361, PATCH),
 	REGISTER_OOVPA(D3DResource_GetType, 4627, DISABLED), // I forget why I had this in here...
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5028, PATCH),
-	REGISTER_OOVPA(D3DSurface_GetDesc, 4134, PATCH),
+	REGISTER_OOVPA(D3DSurface_GetDesc, 4134, DISABLED),
 	REGISTER_OOVPA(D3DSurface_LockRect, 3925, PATCH),
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 4361, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),

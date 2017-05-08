@@ -5515,6 +5515,7 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
     }
 }
 
+#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: IDirect3DSurface8_GetDesc
 // ******************************************************************
@@ -5587,6 +5588,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 
     return hRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: IDirect3DSurface8_LockRect
@@ -8580,6 +8582,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 }
 #endif
 
+#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: IDirect3DTexture8_GetLevelDesc
 // ******************************************************************
@@ -8603,6 +8606,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
 
     return D3D_OK;
 }
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************
