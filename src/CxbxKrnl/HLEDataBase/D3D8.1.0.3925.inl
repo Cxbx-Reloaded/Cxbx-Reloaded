@@ -337,14 +337,37 @@ OOVPA_END;
 // ******************************************************************
 // * D3DSurface_GetDesc
 // ******************************************************************
-OOVPA_NO_XREF(D3DSurface_GetDesc, 3925, 7)
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0x04 },
-        { 0x0A, 0x00 },
-        { 0x11, 0xC2 },
-        { 0x12, 0x08 },
-        { 0x13, 0x00 },
+OOVPA_NO_XREF(D3DSurface_GetDesc, 3925, 16)
+        // D3DSurface_GetDesc+0x00 : mov eax, [esp+0x08]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x08 }, // (Offset,Value)-Pair #4
+
+        // D3DSurface_GetDesc+0x04 : mov ecx, [esp+0x04]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x05, 0x4C }, // (Offset,Value)-Pair #6
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x07, 0x04 }, // (Offset,Value)-Pair #8
+
+        // D3DSurface_GetDesc+0x08 : push eax
+        { 0x08, 0x50 }, // (Offset,Value)-Pair #9
+
+        // D3DSurface_GetDesc+0x09 : push 0
+        { 0x09, 0x6A }, // (Offset,Value)-Pair #10
+        { 0x0A, 0x00 }, // (Offset,Value)-Pair #11
+
+        // D3DSurface_GetDesc+0x0B : push ecx
+        { 0x0B, 0x51 }, // (Offset,Value)-Pair #12
+
+        // D3DSurface_GetDesc+0x0C : call [abs]
+        { 0x0C, 0xE8 }, // (Offset,Value)-Pair #13
+
+        // D3DSurface_GetDesc+0x11 : retn 0x08
+        { 0x11, 0xC2 }, // (Offset,Value)-Pair #14
+		{ 0x12, 0x08 }, // (Offset,Value)-Pair #15
+		{ 0x13, 0x00 }, // (Offset,Value)-Pair #15
+
 OOVPA_END;
 
 // ******************************************************************
