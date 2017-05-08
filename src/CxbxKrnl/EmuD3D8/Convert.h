@@ -67,6 +67,12 @@ extern BOOL EmuXBFormatIsLinear(X_D3DFORMAT Format);
 // is this format swizzled?
 extern BOOL EmuXBFormatIsSwizzled(X_D3DFORMAT Format);
 
+// is this format a valid render target?
+extern BOOL EmuXBFormatIsRenderTarget(X_D3DFORMAT Format);
+
+// is this format a valid depth buffer?
+extern BOOL EmuXBFormatIsDepthBuffer(X_D3DFORMAT Format);
+
 // convert from xbox to pc color formats
 extern D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format);
 
