@@ -913,6 +913,32 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4s, 4361, 9)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_BeginVisibilityTest@0
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4361, 7) 
+        { 0x07, 0x8B },
+        { 0x0A, 0x46 },
+        { 0x13, 0xC7 },
+        { 0x16, 0x17 },
+        { 0x1C, 0x00 },
+        { 0x22, 0x48 },
+        { 0x28, 0x06 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_EndVisibilityTest@4
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4361, 7)
+        { 0x0B, 0x8B },
+        { 0x16, 0x5E },
+        { 0x22, 0x07 },
+        { 0x2E, 0x00 },
+        { 0x3A, 0x81 },
+        { 0x46, 0x89 },
+        { 0x55, 0x5F },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -946,7 +972,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetIndices, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetIndices, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4134, PATCH),
@@ -992,7 +1018,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_NormalizeNormals, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreatePalette, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 3925, DISABLED), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_AddRef, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),
@@ -1031,6 +1057,8 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_IsBusy, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4361, PATCH),

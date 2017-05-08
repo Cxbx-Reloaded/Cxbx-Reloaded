@@ -463,7 +463,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 		break;
 
 	case ReturnFirmwareFatal:
-		MessageBox(NULL, "Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)", "Cxbx-Reloaded", MB_OK);
+		CxbxPopupMessage("Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)");
 		break;
 
 	case ReturnFirmwareAll:

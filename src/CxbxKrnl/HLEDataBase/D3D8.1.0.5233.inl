@@ -551,22 +551,29 @@ OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5233, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_Unknown1
+// * D3D_CMiniport_GetDisplayCapabilities
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_Unknown1, 5233, 9)
+OOVPA_NO_XREF(D3D_CMiniport_GetDisplayCapabilities, 5233, 10)
 
-	// D3DDevice_Unknown1+0x00 : xor eax, eax
-	{ 0x00, 0x33 },
-	{ 0x01, 0xC0 },
-	// D3DDevice_Unknown1+0x13 : call ds:AvSendTVEncoderOption
-	{ 0x13, 0xFF },
-	{ 0x14, 0x15 },
-	{ 0x15, 0x08 },
-	{ 0x16, 0x94 },
-	{ 0x17, 0x19 },
-	{ 0x18, 0x00 },
-	// D3DDevice_Unknown1+0x1E : retn
-	{ 0x1E, 0xC3 },
+        // D3D_CMiniport_GetDisplayCapabilities+0x00 : xor eax, eax
+        { 0x00, 0x33 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xC0 }, // (Offset,Value)-Pair #2
+
+        // D3D_CMiniport_GetDisplayCapabilities+0x02 : cmp ds:_D3D__AvInfo, eax
+        { 0x02, 0x39 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x05 }, // (Offset,Value)-Pair #4
+
+        // D3D_CMiniport_GetDisplayCapabilities+0x10 : push 6, push eax
+        { 0x10, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x11, 0x06 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x50 }, // (Offset,Value)-Pair #7
+
+        // D3D_CMiniport_GetDisplayCapabilities+0x13 : call ds:AvSendTVEncoderOption
+        { 0x13, 0xFF }, // (Offset,Value)-Pair #8
+        { 0x14, 0x15 }, // (Offset,Value)-Pair #9
+
+        // D3D_CMiniport_GetDisplayCapabilities+0x1E : retn
+        { 0x1E, 0xC3 }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
 // ******************************************************************
@@ -642,7 +649,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_AddRef, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTile, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginStateBlock, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndStateBlock, 4361, PATCH),
@@ -655,7 +662,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetIndices, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetIndices, 5028, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4627, PATCH),
@@ -742,7 +749,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5233, PATCH),
-	// REGISTER_OOVPA(D3DDevice_Unknown1, 5233, PATCH)
+	REGISTER_OOVPA(D3D_CMiniport_GetDisplayCapabilities, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 4627, PATCH),

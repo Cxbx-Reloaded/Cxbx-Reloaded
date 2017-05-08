@@ -415,20 +415,8 @@ typedef struct _VERTEX_SHADER
 struct X_D3DResource
 {
     DWORD Common;
-    DWORD Data;
-
-    union
-    {
-        DWORD                    Lock;
-        IDirect3DResource8      *EmuResource8;
-        IDirect3DBaseTexture8   *EmuBaseTexture8;
-        IDirect3DTexture8       *EmuTexture8;
-        IDirect3DVolumeTexture8 *EmuVolumeTexture8;
-        IDirect3DCubeTexture8   *EmuCubeTexture8;
-        IDirect3DSurface8       *EmuSurface8;
-        IDirect3DVertexBuffer8  *EmuVertexBuffer8;
-        IDirect3DIndexBuffer8   *EmuIndexBuffer8;
-    };
+	DWORD Data;
+	DWORD Lock;
 };
 
 // d3d resource "common" masks
@@ -448,6 +436,10 @@ struct X_D3DResource
 #define X_D3DCOMMON_ISLOCKED           0x02000010 // Surface is currently locked (potential unswizzle candidate)
 #define X_D3DCOMMON_UNUSED_MASK        0xFE000000
 #define X_D3DCOMMON_UNUSED_SHIFT       25
+
+// d3d palette common
+#define X_D3DPALETTE_COMMON_PALETTESIZE_MASK       0xC0000000
+#define X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT      30
 
 // special resource data flags (must set _SPECIAL *AND* specific flag(s))
 #define X_D3DRESOURCE_DATA_FLAG_SPECIAL 0xFFFF0000

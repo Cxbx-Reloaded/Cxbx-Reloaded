@@ -59,6 +59,7 @@ namespace xboxkrnl
 #include <shlobj.h>
 #include <clocale>
 #include <Shlwapi.h>
+#include <time.h> // For time()
 
 /* prevent name collisions */
 namespace NtDll
@@ -320,6 +321,12 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 
 #pragma optimize("", off)
 
+void CxbxPopupMessage(const char *message)
+{
+	DbgPrintf("Popup : %s\n", message);
+	MessageBox(NULL, message, "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
+}
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -357,14 +364,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// verify base of code of our executable is 0x00001000
 		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			MessageBox(NULL, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000", "Cxbx-Reloaded", MB_OK);
+			CxbxPopupMessage("Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
 			return; // TODO : Halt(0); 
 		}
 
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
-			MessageBox(NULL, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+			CxbxPopupMessage("virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
 
@@ -403,7 +410,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
-		MessageBox(NULL, "Couldn't init EEPROM!", "Cxbx-Reloaded", MB_OK);
+		CxbxPopupMessage("Couldn't init EEPROM!");
 		return; // TODO : Halt(0); 
 	}
 
@@ -438,7 +445,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			xbaddr section_end = CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr + CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw;
 			if (section_end >= XBE_MAX_VA)
 			{
-				MessageBox(NULL, "Couldn't load XBE section - please report this!", "Cxbx-Reloaded", MB_OK);
+				CxbxPopupMessage("Couldn't load XBE section - please report this!");
 				return; // TODO : Halt(0); 
 			}
 		}
@@ -520,7 +527,7 @@ void LoadXboxKeys(std::string path)
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
 		} else {
-			EmuWarning("Keys.bin has an incorrent filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
+			EmuWarning("Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
@@ -555,7 +562,7 @@ void CxbxKrnlInit
 	g_CurrentProcessHandle = GetCurrentProcess();
 	CxbxInitPerformanceCounters();
 #ifdef _DEBUG
-//	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+//	CxbxPopupMessage("Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
 #endif
 
@@ -574,23 +581,30 @@ void CxbxKrnlInit
 			freopen("CONIN$", "rt", stdin);
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
-	}
-	else if (DbgMode == DM_FILE)
-	{
-		FreeConsole();
-		freopen(szDebugFilename, "wt", stdout);
-		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
-		char buffer[16];
 		FreeConsole();
-		if (GetConsoleTitle(buffer, 16) != NULL)
-			freopen("nul", "w", stdout);
+		if (DbgMode == DM_FILE)
+			freopen(szDebugFilename, "wt", stdout);
+		else
+		{
+			char buffer[16];
+			if (GetConsoleTitle(buffer, 16) != NULL)
+				freopen("nul", "w", stdout);
+		}
+	}
+
+	// Write a header to the log
+	{
+		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		
+		time_t startTime = time(nullptr);
+		struct tm* tm_info = localtime(&startTime);
+		char timeString[26];
+		strftime(timeString, 26, "%F %T", tm_info);
+		printf("[0x%X] EmuMain: Log started at %s\n", GetCurrentThreadId(), timeString);
 	}
 
 	// debug trace
@@ -754,6 +768,9 @@ void CxbxKrnlInit
 	// initialize grapchics
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	EmuHLEIntercept(pXbeHeader);
+
 	if (bLLE_GPU)
 	{
 		DbgPrintf("EmuMain: Initializing OpenGL.\n");
@@ -765,7 +782,6 @@ void CxbxKrnlInit
 		XTL::EmuD3DInit();
 	}
 
-	EmuHLEIntercept(pXbeHeader);
 	// Apply Media Patches to bypass Anti-Piracy checks
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
@@ -863,20 +879,16 @@ void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "[0x%X] EmuMain: Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
+        sprintf(szBuffer1, "[0x%X] EmuMain: Received Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
-
         vsprintf(szBuffer2, szErrorMessage, argp);
-
         va_end(argp);
 
         strcat(szBuffer1, szBuffer2);
         strcat(szBuffer1, "\n");
 
-        printf("%s\n", szBuffer1);
-
-        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+		CxbxPopupMessage(szBuffer1); // Will also DbgPrintf
     }
 
     printf("CxbxKrnl: Terminating Process\n");

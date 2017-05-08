@@ -111,22 +111,36 @@ void NTAPI EmuWarning(const char *szWarningMessage, ...)
 }
 #endif
 
+std::string EIPToString(xbaddr EIP)
+{
+	int symbolOffset = 0;
+	std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
+
+	char buffer[256];
+	sprintf(buffer, "0x%.08X(=%s+0x%x)", EIP, symbolName.c_str(), symbolOffset);
+
+	std::string result = buffer;
+	return result;
+}
+
 void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpointException)
 {
 	// print debug information
 	{
 		if (IsBreakpointException)
-			printf("[0x%X] EmuMain: Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Received Breakpoint Exception (int 3)\n", GetCurrentThreadId());
 		else
-			printf("[0x%X] EmuMain: Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+			printf("[0x%X] EmuMain: Received Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
 
 		printf("\n"
-			" EIP := 0x%.08X EFL := 0x%.08X\n"
+			" EIP := %s\n"
+			" EFL := 0x%.08X\n"
 			" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
 			" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
 			" CR2 := 0x%.08X\n"
 			"\n",
-			e->ContextRecord->Eip, e->ContextRecord->EFlags,
+			EIPToString(e->ContextRecord->Eip).c_str(),
+			e->ContextRecord->EFlags,
 			e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
 			e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
 			e->ContextRecord->Dr2);
@@ -158,12 +172,12 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 
 	char buffer[256];
 	sprintf(buffer,
-		"Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
+		"Received Breakpoint Exception (int 3) @ EIP := %s\n"
 		"\n"
 		"  Press Abort to terminate emulation.\n"
 		"  Press Retry to debug.\n"
 		"  Press Ignore to continue emulation.",
-		e->ContextRecord->Eip);
+		EIPToString(e->ContextRecord->Eip).c_str());
 
 	int ret = MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
 	if (ret == IDABORT)
@@ -189,11 +203,11 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 
 	char buffer[256];
 	sprintf(buffer,
-		"Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
+		"Received Exception Code 0x%.08X @ EIP := %s\n"
 		"\n"
 		"  Press \"OK\" to terminate emulation.\n"
 		"  Press \"Cancel\" to debug.",
-		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
 	if (MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 	{
@@ -239,9 +253,9 @@ int ExitException(LPEXCEPTION_POINTERS e)
 {
     static int count = 0;
 
-    // debug information
+	// debug information
     printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-    printf("[0x%X] EmuMain: Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+    printf("[0x%X] EmuMain: Received Exception [0x%.08X]@%s\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
     printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
@@ -276,8 +290,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 
     IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
 
-    BOOL fSymInitialized;
-    fSymInitialized = SymInitialize(g_CurrentProcessHandle, NULL, TRUE);
+    BOOL fSymInitialized = SymInitialize(g_CurrentProcessHandle, NULL, TRUE);
 
     STACKFRAME64 frame = { sizeof(STACKFRAME64) };
     frame.AddrPC.Offset    = ContextRecord->Eip;
@@ -301,34 +314,43 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
             NULL))
             break;
 
-        DWORD64 dwDisplacement = 0;
-        PSYMBOL_INFO pSymbol = 0;
-        BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN];
-
         SymGetModuleInfo64(g_CurrentProcessHandle, frame.AddrPC.Offset, &module);
-
-        if(fSymInitialized)
-        {
-            pSymbol = (PSYMBOL_INFO)symbol;
-            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
-            pSymbol->MaxNameLen = SYMBOL_MAXLEN;
-
-            if(!SymFromAddr(g_CurrentProcessHandle, frame.AddrPC.Offset, &dwDisplacement, pSymbol))
-                pSymbol = 0;
-        }
-
         if(module.ModuleName)
             printf(" %2d: %-8s 0x%.08X", i, module.ModuleName, frame.AddrPC.Offset);
         else
             printf(" %2d: %8c 0x%.08X", i, ' ', frame.AddrPC.Offset);
 
-        if(pSymbol)
+		BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN] = { 0 };
+		std::string symbolName = "";
+        DWORD64 dwDisplacement = 0;
+
+        if(fSymInitialized)
         {
-            printf(" %s+0x%.04X\n", pSymbol->Name, dwDisplacement);
+			PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)&symbol;
+            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
+            pSymbol->MaxNameLen = SYMBOL_MAXLEN;
+			if (SymFromAddr(g_CurrentProcessHandle, frame.AddrPC.Offset, &dwDisplacement, pSymbol))
+				symbolName = pSymbol->Name;
+			else
+			{
+				// Try getting a symbol name from the HLE cache :
+				int symbolOffset = 0;
+
+				symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
+
+				if (symbolOffset < 1000)
+					dwDisplacement = (DWORD64)symbolOffset;
+				else
+					symbolName = "";
+			}
         }
+
+        if(symbolName.length() > 0)
+            printf(" %s+0x%.04X\n", symbolName.c_str(), dwDisplacement);
         else
             printf("\n");
     }
+
     printf("\n");
 
     if(fSymInitialized)

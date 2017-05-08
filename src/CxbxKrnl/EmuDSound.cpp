@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
 #include "MemoryManager.h"
+#include "Logging.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -687,18 +688,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetMixBinVolumes\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   dwMixBinMask        : 0x%.08X\n"
-           "   alVolumes           : 0x%.08X\n"
-           ");\n",
-           pThis, dwMixBinMask, alVolumes);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(dwMixBinMask)
+		LOG_FUNC_ARG(alVolumes)
+		LOG_FUNC_END;
 
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the December 2001 (4134) update (or earlier, maybe).
 
-    EmuWarning("EmuIDirectSoundBuffer_SetMixBinVolumes not yet implemented");
+	LOG_UNIMPLEMENTED();
 
     return DS_OK;
 }
@@ -1522,18 +1521,16 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_StopEx\n"
-           "(\n"
-           "   pBuffer                   : 0x%.08X\n"
-           "   rtTimeStamp               : 0x%.08X\n"
-           "   dwFlags                   : 0x%.08X\n"
-           ");\n",
-           pBuffer, rtTimeStamp, dwFlags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pBuffer)
+		LOG_FUNC_ARG(rtTimeStamp)
+		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_END;
 
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
 
-    EmuWarning("StopEx not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
     
 
@@ -1947,18 +1944,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_GetStatus)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_GetStatus\n"
-           "(\n"
-           "   pThis                     : 0x%.08X\n"
-           "   pdwStatus                 : 0x%.08X\n"
-           ");\n",
-           pThis, pdwStatus);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pdwStatus)
+		LOG_FUNC_END;
 
-    EmuWarning("EmuDirectSound_CDirectSoundStream_GetStatus is not yet implemented");
+	LOG_UNIMPLEMENTED();
 
     *pdwStatus = DSBSTATUS_PLAYING;
-
-    
 
     return DS_OK;
 }
@@ -2855,16 +2848,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetLFO\n"
-           "(\n"
-           "   pThis                     : 0x%.08X\n"
-           "   pLFODesc                  : 0x%.08X\n"
-           ");\n",
-           pThis, pLFODesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pLFODesc)
+		LOG_FUNC_END;
 
     // TODO: Implement
 
-    EmuWarning("EmuDirectSound_CDirectSoundStream_SetLFO not yet implemented!");
+	LOG_UNIMPLEMENTED();
 
     return S_OK;
 }
@@ -3082,7 +3073,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 //	
 //	// This function wasn't part of the XDK until 4721.
 //	// TODO: Implement time stamp feature (a thread maybe?)
-//	EmuWarning("IDirectSoundBuffer_PauseEx not fully implemented!");
+//	LOG_UNIMPLEMENTED();	
 //
 //	HRESULT ret;
 //
@@ -3336,7 +3327,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
 
-//    EmuWarning("PlayEx not yet implemented!");
+//    LOG_UNIMPLEMENTED();	
 
 	// TODO: Handle other non-PC standard flags
 	DWORD dwPCFlags = ( dwFlags & DSBPLAY_LOOPING ) ? DSBPLAY_LOOPING : 0;
@@ -3399,18 +3390,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetPitch)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuDSound: EmuIDirectSoundStream_SetPitch\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-		   "   lPitch              : 0x%.08X\n"
-		   ");\n",
-		   pThis, lPitch);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(lPitch)
+		LOG_FUNC_END;
 
 	HRESULT hRet = S_OK;
 
-	EmuWarning("IDirectSoundStream_SetPitch not yet implemented!");
-
-		
+	LOG_UNIMPLEMENTED();
 
 	return hRet;
 }
@@ -3853,6 +3840,31 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 }
 
 // ******************************************************************
+// * patch: IDirectSoundBuffer_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+(
+    LPVOID pThis,
+    LPUNKNOWN       pUnknown
+)
+{
+    FUNC_EXPORTS
+
+    DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Use3DVoiceData\n"
+           "(\n"
+           "   pThis                  : 0x%.08X\n"
+           "   pUnknown               : 0x%.08X\n"
+           ");\n",
+           pThis, pUnknown);
+
+    // TODO: Implement
+
+    EmuWarning("IDirectSoundBuffer_Use3DVoiceData not yet supported!");
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
@@ -3864,17 +3876,15 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuDSound: EmuXFileCreateMediaObjectAsync\n"
-           "(\n"
-           "   hFile                     : 0x%.08X\n"
-		   "   dwMaxPackets              : 0x%.08X\n"
-           "   ppMediaObject             : 0x%.08X\n"
-           ");\n",
-           hFile, dwMaxPackets, ppMediaObject);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hFile)
+		LOG_FUNC_ARG(dwMaxPackets)
+		LOG_FUNC_ARG(ppMediaObject)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
-	EmuWarning( "XFileCreateMediaObjectAsync not yet (properly) implemented!!!" );
+	LOG_UNIMPLEMENTED();
 
 	*ppMediaObject = new X_XFileMediaObject();
 
