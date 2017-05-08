@@ -5511,6 +5511,7 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 		EmuWarning("Lock3DSurface failed!");
 }
 
+// TODO : Can be DISABLED once CreateDevice is unpatched (because this reads Data from the first Xbox FrameBuffer)
 // ******************************************************************
 // * patch: Get2DSurfaceDesc
 // ******************************************************************
@@ -5523,75 +5524,29 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuGet2DSurfaceDesc\n"
-           "(\n"
-           "   pPixelContainer     : 0x%.08X\n"
-           "   dwLevel             : 0x%.08X\n"
-           "   pDesc               : 0x%.08X\n"
-           ");\n",
-           pPixelContainer, dwLevel, pDesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(dwLevel)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
 
-    EmuVerifyResourceIsRegistered(pPixelContainer);
-
-    D3DSURFACE_DESC SurfaceDesc;
-
-    ZeroMemory(&SurfaceDesc, sizeof(SurfaceDesc));
-
-    HRESULT hRet;
-
-    {
-		DbgPrintf("HostTexture: = 0x%.08X\n", GetHostTexture(pPixelContainer));
-
-		if(pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-		{
-			hRet = E_FAIL;
-		}
+	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) works too
+	pDesc->Format = GetXboxPixelContainerFormat(pPixelContainer);
+    pDesc->Type = GetXboxD3DResourceType(pPixelContainer);
+    pDesc->Usage = 0;
+	if (dwLevel == 0)
+	{
+		if (EmuXBFormatIsRenderTarget(pDesc->Format))
+			pDesc->Usage = X_D3DUSAGE_RENDERTARGET;
 		else
-		{
-			hRet = E_FAIL;
+			if (EmuXBFormatIsDepthBuffer(pDesc->Format))
+				pDesc->Usage = X_D3DUSAGE_DEPTHSTENCIL;
+	}
 
-			// TODO: Find out why host texture is NULL in Crazy Taxi 3
-			if (GetHostTexture(pPixelContainer) != nullptr) {
-				hRet = GetHostTexture(pPixelContainer)->GetLevelDesc(dwLevel, &SurfaceDesc);
-			}
-			
-			if(FAILED(hRet))
-				EmuWarning("IDirect3DTexture8::GetSurfaceDesc failed!");
-		}
+	pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)X_D3DMULTISAMPLE_NONE;
 
-        /*
-        static int dwDumpTexture = 0;
-
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\GetDescTexture%.03d.bmp", dwDumpTexture++);
-
-        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, GetHostTexture(pPixelContainer), NULL);
-        */
-    }
-
-    // rearrange into xbox format (remove D3DPOOL)
-	if(SUCCEEDED(hRet))
-    {
-        // Convert Format (PC->Xbox)
-        pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-        pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
-
-        if(pDesc->Type > 7)
-            CxbxKrnlCleanup("EmuGet2DSurfaceDesc: pDesc->Type > 7");
-
-        pDesc->Usage  = SurfaceDesc.Usage;
-        pDesc->Size   = SurfaceDesc.Size;
-
-        // TODO: Convert from Xbox to PC!!
-        if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-            pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
-        else
-            CxbxKrnlCleanup("EmuGet2DSurfaceDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
-
-        pDesc->Width  = SurfaceDesc.Width;
-        pDesc->Height = SurfaceDesc.Height;
-    }
+	UINT dwPitch; // dummy value
+	CxbxGetPixelContainerMeasures(pPixelContainer, dwLevel, &(pDesc->Width), &(pDesc->Height), &dwPitch, &(pDesc->Size));
 }
 
 #if 0 // DISABLED (Just calls Get2DSurfaceDesc)
