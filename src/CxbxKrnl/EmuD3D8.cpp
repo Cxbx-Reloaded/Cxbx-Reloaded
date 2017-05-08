@@ -317,6 +317,8 @@ inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
 	return ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL);
 }
 
+// This can be used to determine if resource Data adddresses
+// need the MM_SYSTEM_PHYSICAL_MAP bit set or cleared
 inline boolean IsResourceTypeGPUReadable(const DWORD ResourceType)
 {
 	switch (ResourceType) {
@@ -4644,7 +4646,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
             DbgPrintf("EmuIDirect3DResource8_Register : Creating VertexBuffer...\n");
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
-			XTL::IDirect3DVertexBuffer8  *pHostVertexBuffer = nullptr;
+			XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
 
 			// Vertex buffers live in Physical Memory Region
 			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
@@ -4665,7 +4667,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
                     dwSize, 0, 0, D3DPOOL_MANAGED,
-                    &pHostVertexBuffer
+                    &pNewHostVertexBuffer
                 );
 
 				if(FAILED(hRet))
@@ -4678,15 +4680,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 					return hRet;
 				}
 
-				SetHostVertexBuffer(pResource, pHostVertexBuffer);
+				SetHostVertexBuffer(pResource, pNewHostVertexBuffer);
 
                 #ifdef _DEBUG_TRACK_VB
-                g_VBTrackTotal.insert(pHostVertexBuffer);
+                g_VBTrackTotal.insert(pNewHostVertexBuffer);
                 #endif
 
                 BYTE *pNativeData = nullptr;
 
-                hRet = pHostVertexBuffer->Lock(
+                hRet = pNewHostVertexBuffer->Lock(
 					/*OffsetToLock=*/0, 
 					/*SizeToLock=*/0/*=entire buffer*/, 
 					&pNativeData, 
@@ -4696,12 +4698,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
                 memcpy(pNativeData, (void*)pBase, dwSize);
-                pHostVertexBuffer->Unlock();
+                pNewHostVertexBuffer->Unlock();
 
 				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
 			}
 
-            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pHostVertexBuffer);
+            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pNewHostVertexBuffer);
         }
         break;
 
@@ -6057,7 +6059,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
 	LOG_FUNC_ONE_ARG(Length);
 
     X_D3DVertexBuffer *pD3DVertexBuffer = EmuNewD3DVertexBuffer();
-	XTL::IDirect3DVertexBuffer8  *pHostVertexBuffer = nullptr;
+	XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
 	
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
@@ -6065,17 +6067,17 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
         0,
         0,
         D3DPOOL_MANAGED,
-        &pHostVertexBuffer
+        &pNewHostVertexBuffer
     );
 
 
     if(FAILED(hRet))
         EmuWarning("CreateVertexBuffer Failed!");
 	else
-		SetHostVertexBuffer(pD3DVertexBuffer, pHostVertexBuffer);
+		SetHostVertexBuffer(pD3DVertexBuffer, pNewHostVertexBuffer);
 
     #ifdef _DEBUG_TRACK_VB
-    g_VBTrackTotal.insert(pHostVertexBuffer);
+    g_VBTrackTotal.insert(pNewHostVertexBuffer);
     #endif
 
     
@@ -7244,7 +7246,7 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 	// Let's verify this VB exists before trying to lock it...
 	if( !pHostVertexBuffer )
 	{
-		EmuWarning("pHostVertexBuffer == NULL!");
+		EmuWarning("pNewHostVertexBuffer == NULL!");
 		return;
 	}
 
@@ -7282,7 +7284,7 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 	
     IDirect3DVertexBuffer8 *pHostVertexBuffer = GetHostVertexBuffer(pVertexBuffer);
 	if (pHostVertexBuffer == nullptr)
-		EmuWarning("D3DVertexBuffer_Lock2 : pHostVertexBuffer == nullptr!");
+		EmuWarning("D3DVertexBuffer_Lock2 : pNewHostVertexBuffer == nullptr!");
 	else
 	{
 		pHostVertexBuffer->Unlock(); // remove old lock
