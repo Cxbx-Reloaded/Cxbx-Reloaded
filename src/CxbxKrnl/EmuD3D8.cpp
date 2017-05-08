@@ -5460,22 +5460,6 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
 
     HRESULT hRet;
 
-    if(dwLevel == 0xFEFEFEFE)
-    {
-		DbgPrintf("HostSurface: = 0x%.08X\n", GetHostSurface(pPixelContainer));
-        hRet = GetHostSurface(pPixelContainer)->GetDesc(&SurfaceDesc);
-
-        /*
-        static int dwDumpSurface = 0;
-
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\Surface%.03d.bmp", dwDumpSurface++);
-
-        D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, GetHostSurface(pPixelContainer), NULL, NULL);
-        */
-    }
-    else
     {
 		DbgPrintf("HostTexture: = 0x%.08X\n", GetHostTexture(pPixelContainer));
 
@@ -5529,22 +5513,6 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
         pDesc->Width  = SurfaceDesc.Width;
         pDesc->Height = SurfaceDesc.Height;
     }
-}
-
-// ******************************************************************
-// * patch: Get2DSurfaceDescD
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDescD)
-(
-    X_D3DPixelContainer *pPixelContainer,
-    X_D3DSURFACE_DESC   *pDesc
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("Get2DSurfaceDesc");
-        
-	EMUPATCH(Get2DSurfaceDesc)(pPixelContainer, 0xFEFEFEFE, pDesc);
 }
 
 // ******************************************************************

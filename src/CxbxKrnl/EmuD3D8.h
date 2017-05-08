@@ -753,15 +753,6 @@ VOID WINAPI EMUPATCH(Get2DSurfaceDesc)
 );
 
 // ******************************************************************
-// * patch: Get2DSurfaceDescD
-// ******************************************************************
-VOID WINAPI EMUPATCH(Get2DSurfaceDescD)
-(
-    X_D3DPixelContainer *pPixelContainer,
-    X_D3DSURFACE_DESC   *pDesc
-);
-
-// ******************************************************************
 // * patch: IDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(D3DSurface_GetDesc)
