@@ -5225,7 +5225,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
 
 	// Index buffers don't have a native resource assigned
-	if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
+	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
 		EmuVerifyResourceIsRegistered(pThis);
 
 		// If this is the first reference on a surface
@@ -5281,7 +5281,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
         }
         
 		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
-    } else if ((pThis->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_INDEXBUFFER)  {
+    } else if (GetXboxResourceType(pThis) == X_D3DCOMMON_TYPE_INDEXBUFFER)  {
 		if ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1) {
 			CxbxRemoveIndexBuffer((PWORD)GetDataFromXboxResource(pThis));
 		}
