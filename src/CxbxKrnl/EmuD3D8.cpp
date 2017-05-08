@@ -246,7 +246,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 	SetFocus(g_hEmuWindow);
 }
 
-inline DWORD GetXboxResourceType(const XTL::X_D3DResource *pXboxResource)
+inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource *pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
 	assert(pXboxResource != NULL);
@@ -321,8 +321,8 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if(GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
-		assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
+	if(GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
+		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
 	return (XTL::IDirect3DSurface8 *)pXboxResource->Lock;
 }
@@ -332,8 +332,8 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
-		assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
+		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	return (XTL::IDirect3DBaseTexture8 *)pXboxResource->Lock;
 }
@@ -364,7 +364,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
 	return (XTL::IDirect3DIndexBuffer8 *)pXboxResource->Lock;
 }
@@ -374,7 +374,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
 	return (XTL::IDirect3DVertexBuffer8 *)pXboxResource->Lock;
 }
@@ -382,7 +382,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
 	pXboxResource->Lock = (DWORD)pHostSurface;
 }
@@ -390,7 +390,7 @@ void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *p
 void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	pXboxResource->Lock = (DWORD)pHostTexture;
 }
@@ -398,7 +398,7 @@ void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *p
 void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	pXboxResource->Lock = (DWORD)pHostCubeTexture;
 }
@@ -406,7 +406,7 @@ void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTex
 void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	pXboxResource->Lock = (DWORD)pHostVolumeTexture;
 }
@@ -414,7 +414,7 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolum
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
 	pXboxResource->Lock = (DWORD)pHostIndexBuffer;
 }
@@ -422,7 +422,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
 {
 	assert(pXboxResource != NULL);
-	assert(GetXboxResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
 	pXboxResource->Lock = (DWORD)pHostVertexBuffer;
 }
@@ -459,7 +459,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 		}
 	}
 
-	DWORD Type = GetXboxResourceType(pXboxResource);
+	DWORD Type = GetXboxCommonResourceType(pXboxResource);
 	switch (Type) {
 	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
 		break;
@@ -4529,7 +4529,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
     X_D3DResource *pResource = pThis;
 
-    DWORD dwCommonType = GetXboxResourceType(pResource);
+    DWORD dwCommonType = GetXboxCommonResourceType(pResource);
 
     // add the offset of the current texture to the base
     pBase = (PVOID)((DWORD)pBase + pResource->Data);
@@ -5209,7 +5209,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
 
 	// Index buffers don't have a native resource assigned
-	if (GetXboxResourceType(pThis) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
+	if (GetXboxCommonResourceType(pThis) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
 		EmuVerifyResourceIsRegistered(pThis);
 
 		// If this is the first reference on a surface
@@ -5265,7 +5265,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
         }
         
 		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
-    } else if (GetXboxResourceType(pThis) == X_D3DCOMMON_TYPE_INDEXBUFFER)  {
+    } else if (GetXboxCommonResourceType(pThis) == X_D3DCOMMON_TYPE_INDEXBUFFER)  {
 		if ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1) {
 			CxbxRemoveIndexBuffer((PWORD)GetDataFromXboxResource(pThis));
 		}
@@ -5635,7 +5635,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
 		// As it turns out, D3DSurface_LockRect can also be called with textures (not just surfaces)
 		// so cater for that. TODO : Should we handle cube and volume textures here too?
-		DWORD dwCommonType = GetXboxResourceType(pThis);
+		DWORD dwCommonType = GetXboxCommonResourceType(pThis);
 		switch (dwCommonType) {
 		case X_D3DCOMMON_TYPE_TEXTURE:
 		{
