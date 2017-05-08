@@ -3330,44 +3330,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 	// Get Bytes Per Pixel, for correct Pitch calculation :
 	DWORD dwBPP = EmuXBFormatBytesPerPixel(Format);
 
-	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for (X_)D3DFMT_YUY2?
-
-    // Convert Format (Xbox->PC)
-    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
-
-    // TODO: HACK: Devices that don't support this should somehow emulate it!
-    //* This is OK on my GeForce FX 5600
-    if(PCFormat == D3DFMT_D16)
-    {
-        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
-        PCFormat = D3DFMT_R5G6B5;
-    }
-    //*
-    else if(PCFormat == D3DFMT_P8)
-    {
-        EmuWarning("D3DFMT_P8 is an unsupported texture format!");
-        PCFormat = D3DFMT_L8;
-    }
-    //*/
-    //* This is OK on my GeForce FX 5600
-    else if(PCFormat == D3DFMT_D24S8)
-    {
-        EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
-    }//*/
-    else if(PCFormat == D3DFMT_YUY2)
-    {
-        // cache the overlay size
-        g_dwOverlayW = Width;
-        g_dwOverlayH = Height;
-        g_dwOverlayP = Pitch;
-    }
-	// TODO: HACK: This texture format fails on some newer hardware
-	else if(PCFormat == D3DFMT_X1R5G5B5)
-	{
-		EmuWarning("D3DFMT_X1R5G5B5 -> D3DFMT_R5G6B5");
-		PCFormat = D3DFMT_R5G6B5;
-	}
+	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for X_D3DFMT_YUY2?
 
     HRESULT hRet;
 
@@ -3375,9 +3338,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 	IDirect3DTexture8 *pHostTexture = nullptr;
 	DWORD Texture_Data;
 
-    if(PCFormat == D3DFMT_YUY2)
+    if(Format == X_D3DFMT_YUY2)
     {
-        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
+        // cache the overlay size
+        g_dwOverlayW = Width;
+        g_dwOverlayH = Height;
+        g_dwOverlayP = Pitch;
+
+		// If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
         Texture_Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
         pTexture->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
 
@@ -3387,6 +3355,36 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
     }
     else
     {
+		// Convert Format (Xbox->PC)
+		D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+		// TODO: HACK: Devices that don't support this should somehow emulate it!
+		//* This is OK on my GeForce FX 5600
+		if(PCFormat == D3DFMT_D16)
+		{
+			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+			PCFormat = D3DFMT_R5G6B5;
+		}
+		//*
+		else if(PCFormat == D3DFMT_P8)
+		{
+			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+			PCFormat = D3DFMT_L8;
+		}
+		//*/
+		//* This is OK on my GeForce FX 5600
+		else if(PCFormat == D3DFMT_D24S8)
+		{
+			EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
+		}//*/
+		// TODO: HACK: This texture format fails on some newer hardware
+		else if(PCFormat == D3DFMT_X1R5G5B5)
+		{
+			EmuWarning("D3DFMT_X1R5G5B5 -> D3DFMT_R5G6B5");
+			PCFormat = D3DFMT_R5G6B5;
+		}
+
         DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
 //        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
         D3DPOOL PCPool  = D3DPOOL_MANAGED;
@@ -3487,39 +3485,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
            ");\n",
            Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture);
 
-    // Convert Format (Xbox->PC)
-    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+    *ppVolumeTexture = EmuNewD3DVolumeTexture();
 
-    // TODO: HACK: Devices that don't support this should somehow emulate it!
-    if(PCFormat == D3DFMT_D16)
-    {
-        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
-    }
-    else if(PCFormat == D3DFMT_P8)
-    {
-        EmuWarning("D3DFMT_P8 is an unsupported texture format!");
-        PCFormat = D3DFMT_L8;
-    }
-    else if(PCFormat == D3DFMT_D24S8)
-    {
-        EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
-    }
-    else if(PCFormat == D3DFMT_YUY2)
+    HRESULT hRet;
+
+    if(Format == X_D3DFMT_YUY2)
     {
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
         g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
-    }
 
-    *ppVolumeTexture = EmuNewD3DVolumeTexture();
-
-    HRESULT hRet;
-
-    if(PCFormat == D3DFMT_YUY2)
-    {
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
         (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
         (*ppVolumeTexture)->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
@@ -3533,7 +3509,27 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     }
     else
     {
-        EmuAdjustPower2(&Width, &Height);
+		// Convert Format (Xbox->PC)
+		D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+		// TODO: HACK: Devices that don't support this should somehow emulate it!
+		if (PCFormat == D3DFMT_D16)
+		{
+			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
+		}
+		else if (PCFormat == D3DFMT_P8)
+		{
+			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+			PCFormat = D3DFMT_L8;
+		}
+		else if (PCFormat == D3DFMT_D24S8)
+		{
+			EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
+		}
+
+		EmuAdjustPower2(&Width, &Height);
 
 		XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture = nullptr;
 
@@ -3582,6 +3578,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
            ");\n",
            EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture);
 
+	if(Format == X_D3DFMT_YUY2)
+    {
+        CxbxKrnlCleanup("YUV not supported for cube textures");
+    }
+
     // Convert Format (Xbox->PC)
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
@@ -3601,11 +3602,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
     }
-    else if(PCFormat == D3DFMT_YUY2)
-    {
-        CxbxKrnlCleanup("YUV not supported for cube textures");
-    }
-
+    
     *ppCubeTexture = EmuNewD3DCubeTexture();
 	XTL::IDirect3DCubeTexture8 *pHostCubeTexture = nullptr;
 
@@ -4758,28 +4755,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             if(X_Format == X_D3DFMT_YUY2)
             {
-                //
                 // cache the overlay size
-                //
-
                 g_dwOverlayW = dwWidth;
                 g_dwOverlayH = dwHeight;
                 g_dwOverlayP = RoundUp(g_dwOverlayW, 64) * dwBPP;
 
-                //
-                // create texture resource
-                //
-
                 // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
-				// TODO : Do we actually need to set these?
-				pPixelContainer->Common = X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
+				// Note : This is the only change to the pResource argument passed into D3DResource_Register !
                 pPixelContainer->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
                 pPixelContainer->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
-                pPixelContainer->Format = (X_D3DFMT_YUY2 << X_D3DFORMAT_FORMAT_SHIFT);
-
-                pPixelContainer->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-                pPixelContainer->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
-                pPixelContainer->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK;
             }
             else
             {
