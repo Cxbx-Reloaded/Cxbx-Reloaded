@@ -51,14 +51,11 @@ enum  PROTECTION_TYPE;
 
 #include <windows.h> // for PULONG
 #include <sstream> // for std::ostream
-//?#include "Logging.h"
+#include "Logging.h"
 
-
-// Headers for rendering non-Xbox types :
-std::ostream& operator<<(std::ostream& os, const PULONG& value);
-
-// Macro to ease declaration of a render function per Xbox Type:
-#define LOGRENDER_HEADER(Type) std::ostream& operator<<(std::ostream& os, const xboxkrnl::Type& value)
+// prevent name collisions
+namespace xboxkrnl
+{
 
 // Headers for rendering Xbox enum types :
 
@@ -155,8 +152,6 @@ LOGRENDER_HEADERS(UNICODE_STRING);
 // TODO : LOGRENDER_HEADER(XBOX_HARDWARE_INFO);
 // TODO : LOGRENDER_HEADER(XBOX_REFURB_INFO);
 
-#undef LOGRENDER_HEADERS
-
-// Don't #undef LOGRENDER_HEADER, because it's used in EmuKrnlLogging.cpp
+}; // end of namespace xboxkrnl
 
 #endif _EMU_KERNEL_LOGGING_H

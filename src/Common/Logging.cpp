@@ -96,3 +96,13 @@ inline void output_wchar(std::ostream& os, wchar_t c)
 	else
 		os << c;
 }
+
+std::ostream& operator<<(std::ostream& os, const PULONG& value)
+{
+	os << hex4((uint32_t)value);
+	if (value != nullptr)
+		os << " (*value: " << hex4(*value) << ")";
+
+	return os;
+}
+

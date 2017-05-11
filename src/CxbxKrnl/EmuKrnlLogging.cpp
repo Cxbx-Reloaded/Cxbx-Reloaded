@@ -55,32 +55,23 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 
-std::ostream& operator<<(std::ostream& os, const PULONG& value)
+// prevent name collisions
+namespace xboxkrnl
 {
-	os << hex4((uint32_t)value);
-	if (value != nullptr)
-		os << " (*value: " << hex4(*value) << ")";
 
-	return os;
+LOGRENDER_HEADER(BOOLEAN)
+{
+	return os << (BOOL)value;
 }
 
-// Macro for implementation of rendering any Type-ToString :
-#define LOGRENDER_TYPE(Type) LOGRENDER_HEADER(Type) \
-{ return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
+LOGRENDER_HEADER(PBYTE)
+{
+	os << "(PBYTE)";
+	if (value == nullptr)
+		return os << "NULL";
 
-// Macro's for Xbox Enum-ToString conversions :
-#define ENUM2STR_START(EnumType) const char * EnumType##ToString(const xboxkrnl::EnumType value) { switch (value) {
-#define ENUM2STR_CASE(a) case xboxkrnl::a: return #a;
-// ENUM2STR_CASE_DEF is needed for #define'd symbols
-#define ENUM2STR_CASE_DEF(a) case a: return #a;
-#define ENUM2STR_END(EnumType) default: return "Unknown_"#EnumType; } }
-#define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
-
-// Macro's for Xbox Flags-ToString conversions :
-#define FLAGS2STR_START(Type) std::string Type##ToString(const xboxkrnl::Type value) { std::string res;
-#define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
-#define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
-#define FLAGS2STR_END_and_LOGRENDER(Type) FLAGS2STR_END LOGRENDER_TYPE(Type)
+	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
+}
 
 //
 // Xbox (Enum)Type-ToString conversions :
@@ -368,69 +359,24 @@ ENUM2STR_START(XC_VALUE_INDEX)
 	ENUM2STR_CASE(XC_MAX_ALL)
 ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 
-#undef ENUM2STR_START
-#undef ENUM2STR_CASE
-#undef ENUM2STR_END
-#undef ENUM2STR_END_and_LOGRENDER
-
-#undef FLAGS2STR_START
-#undef FLAG2STR
-#undef FLAGS2STR_END
-#undef FLAGS2STR_END_and_LOGRENDER
-
-#undef LOGRENDER_TYPE
-
-#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
-#define LOGRENDER_MEMBER_VALUE(Member) << value.Member
-#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
-#define LOGRENDER_MEMBER_SANITIZED(Member, Type) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((Type)value.Member)
-
-
-LOGRENDER_HEADER(BOOLEAN)
-{
-	return os << (BOOL)value;
-}
-
-LOGRENDER_HEADER(PBYTE)
-{
-	os << "(PBYTE)";
-	if (value == nullptr)
-		return os << "NULL";
-
-	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
-}
-
-// Macro combining pointer-to-type implementation and type rendering header :
-#define LOGRENDER_TYPE(Type)                         \
-LOGRENDER_HEADER(P##Type)                            \
-{                                                    \
-	os << "0x" << (void*)value;                      \
-	if (value)                                       \
-		os << " -> P"#Type" {" << *value << "}";     \
-                                                     \
-	return os;                                       \
-}                                                    \
-                                                     \
-LOGRENDER_HEADER(Type)                               \
-
 //
 // Render Xbox types :
 //
 
-LOGRENDER_TYPE(FILETIME)
+LOGRENDER_TYPE_EX(FILETIME)
 {
 	return os
 		LOGRENDER_MEMBER(dwLowDateTime)
 		LOGRENDER_MEMBER(dwHighDateTime);
 }
 
-LOGRENDER_TYPE(LARGE_INTEGER)
+LOGRENDER_TYPE_EX(LARGE_INTEGER)
 {
 	return os 
 		LOGRENDER_MEMBER(QuadPart);
 }
 
-LOGRENDER_TYPE(LAUNCH_DATA_HEADER)
+LOGRENDER_TYPE_EX(LAUNCH_DATA_HEADER)
 {
 	return os
 		LOGRENDER_MEMBER(dwLaunchDataType)
@@ -439,7 +385,7 @@ LOGRENDER_TYPE(LAUNCH_DATA_HEADER)
 		LOGRENDER_MEMBER(dwFlags);
 }
 
-LOGRENDER_TYPE(LAUNCH_DATA_PAGE)
+LOGRENDER_TYPE_EX(LAUNCH_DATA_PAGE)
 {
 	return os
 		LOGRENDER_MEMBER_NAME(Header) << &value.Header
@@ -447,7 +393,7 @@ LOGRENDER_TYPE(LAUNCH_DATA_PAGE)
 		LOGRENDER_MEMBER(LaunchData);
 }
 
-LOGRENDER_TYPE(MM_STATISTICS)
+LOGRENDER_TYPE_EX(MM_STATISTICS)
 {
 	return os
 		LOGRENDER_MEMBER(Length)
@@ -462,7 +408,7 @@ LOGRENDER_TYPE(MM_STATISTICS)
 		LOGRENDER_MEMBER(ImagePagesCommitted);
 }
 
-LOGRENDER_TYPE(OBJECT_ATTRIBUTES)
+LOGRENDER_TYPE_EX(OBJECT_ATTRIBUTES)
 {
 	return os
 		LOGRENDER_MEMBER(RootDirectory)
@@ -470,7 +416,7 @@ LOGRENDER_TYPE(OBJECT_ATTRIBUTES)
 		LOGRENDER_MEMBER(Attributes);
 }
 
-LOGRENDER_TYPE(STRING)
+LOGRENDER_TYPE_EX(STRING)
 {
 	return os
 		LOGRENDER_MEMBER(Length)
@@ -478,7 +424,7 @@ LOGRENDER_TYPE(STRING)
 		LOGRENDER_MEMBER_SANITIZED(Buffer, char *);
 }
 
-LOGRENDER_TYPE(UNICODE_STRING)
+LOGRENDER_TYPE_EX(UNICODE_STRING)
 {
 	return os
 		LOGRENDER_MEMBER(Length)
@@ -486,6 +432,4 @@ LOGRENDER_TYPE(UNICODE_STRING)
 		LOGRENDER_MEMBER_SANITIZED(Buffer, wchar_t *);
 }
 
-#undef LOGRENDER_MEMBER
-#undef LOGRENDER_TYPE
-#undef LOGRENDER_HEADER
+}; // end of namespace xboxkrnl;

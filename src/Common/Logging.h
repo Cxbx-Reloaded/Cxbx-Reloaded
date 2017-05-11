@@ -331,4 +331,47 @@ extern thread_local std::string _logPrefix;
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
+
+// Headers for rendering non-Xbox types :
+std::ostream& operator<<(std::ostream& os, const PULONG& value);
+
+// Macro to ease declaration of a render function per Xbox Type:
+#define LOGRENDER_HEADER(Type) std::ostream& operator<<(std::ostream& os, const Type& value)
+
+// Macro for implementation of rendering any Type-ToString :
+#define LOGRENDER_TYPE(Type) LOGRENDER_HEADER(Type) \
+{ return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
+
+// Macro's for Xbox Enum-ToString conversions :
+#define ENUM2STR_START(EnumType) const char * EnumType##ToString(const EnumType value) { switch (value) {
+#define ENUM2STR_CASE(a) case a: return #a;
+// ENUM2STR_CASE_DEF is needed for #define'd symbols
+#define ENUM2STR_CASE_DEF(a) case a: return #a;
+#define ENUM2STR_END(EnumType) default: return "Unknown_"#EnumType; } }
+#define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
+
+// Macro's for Xbox Flags-ToString conversions :
+#define FLAGS2STR_START(Type) std::string Type##ToString(const Type value) { std::string res;
+#define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
+#define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
+#define FLAGS2STR_END_and_LOGRENDER(Type) FLAGS2STR_END LOGRENDER_TYPE(Type)
+
+#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
+#define LOGRENDER_MEMBER_VALUE(Member) << value.Member
+#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
+#define LOGRENDER_MEMBER_SANITIZED(Member, Type) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((Type)value.Member)
+
+// Macro combining pointer-to-type implementation and type rendering header :
+#define LOGRENDER_TYPE_EX(Type)                      \
+LOGRENDER_HEADER(P##Type)                            \
+{                                                    \
+	os << "0x" << (void*)value;                      \
+	if (value)                                       \
+		os << " -> P"#Type" {" << *value << "}";     \
+                                                     \
+	return os;                                       \
+}                                                    \
+                                                     \
+LOGRENDER_HEADER(Type)                               \
+
 #endif _LOGGING_H
