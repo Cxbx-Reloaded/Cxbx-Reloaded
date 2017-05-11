@@ -228,6 +228,7 @@ extern thread_local std::string _logPrefix;
 
 #else // _DEBUG_TRACE
 
+#define LOG_INIT
 #define LOG_FUNC_BEGIN
 #define LOG_FUNC_ARG(arg)
 #define LOG_FUNC_ARG_TYPE(type, arg)
