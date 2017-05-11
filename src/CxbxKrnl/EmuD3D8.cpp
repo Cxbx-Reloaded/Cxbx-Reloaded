@@ -62,8 +62,7 @@ namespace xboxkrnl
 #include <process.h>
 #include <clocale>
 
-//#include <d3dx8.h>
-#include <dxerr8.h> // DXGetErrorString8
+// This doesn't work : #include <dxerr8.h> // See DXGetErrorString8A below
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
@@ -180,23 +179,25 @@ g_EmuCDPD = {0};
 #define DEBUG_D3DRESULT(hRet, message) \
 	do { \
 		if (FAILED(hRet)) \
-			EmuWarning("%s%s : %s D3D error (%d: %s)", _logFuncPrefix, __func__, message, hRet, D3DErrorString(hRet)); \
+			if(g_bPrintfOn) \
+				printf("%s : %s D3D error (0x%.08X: %s)\n", _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
 	} while (0)
 
 // TODO: This should be a D3DDevice structure
 DWORD g_XboxD3DDevice[64 * ONE_KB / sizeof(DWORD)] = { 0 };
 
-char *D3DErrorString(HRESULT hResult)
+const char *CxbxGetErrorDescription(HRESULT hResult)
 {
-	static char buffer[1024];
-
+	// TODO : For D3D9, Use DXGetErrorDescription9(hResult) (requires another DLL though)
+	// See : http://www.fairyengine.com/articles/dxmultiviews.htm
+	// and : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
+	// and : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 	switch (hResult)
 	{
-#if 0
 	case D3DERR_INVALIDCALL: return "Invalid Call";
 	case D3DERR_NOTAVAILABLE: return "Not Available";
-	case D3DERR_OUTOFVIDEOMEMORY: return "Out of Video Memory";
-#else
+	// case D3DERR_OUTOFVIDEOMEMORY: return "Out of Video Memory"; // duplicate of DDERR_OUTOFVIDEOMEMORY
+
 	case D3D_OK: return "No error occurred.";
 #if 0
 	case D3DERR_BADMAJORVERSION: return "The service that you requested is unavailable in this major version of DirectX. (A major version denotes a primary release, such as DirectX 6.0.) ";
@@ -404,16 +405,32 @@ char *D3DErrorString(HRESULT hResult)
 	case DDERR_WASSTILLDRAWING: return "The previous blit operation that is transferring information to or from this surface is incomplete.";
 	case DDERR_WRONGMODE: return "This surface cannot be restored because it was created in a different mode.";
 	case DDERR_XALIGN: return "The provided rectangle was not horizontally aligned on a required boundary.";
-#endif
-	default: {
-		sprintf(buffer, "unknown d3d error %x", hResult);
-		//return DXGetErrorString8(hResult);
-		// TODO : For D3D9, Use DXGetErrorDescription9(hResult) (requires another DLL though)
-		// See : http://www.fairyengine.com/articles/dxmultiviews.htm
-		// and http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
-		// and : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 	}
+
+	return nullptr;
+}
+
+const char *D3DErrorString(HRESULT hResult)
+{
+	static char buffer[1024];
+	buffer[0] = 0; // Reset static buffer!
+
+	// HACK: dxerr8.h is not working!
+	// But als long as we link with dxerr8.lib, this works :
+	const char*  __stdcall DXGetErrorString8A(HRESULT hr);
+
+	const char* errorCodeString = DXGetErrorString8A(hResult);
+	if (errorCodeString)
+	{
+		strcat(buffer, errorCodeString);
+		strcat(buffer, ": ");
 	}
+
+	const char* errorDescription = CxbxGetErrorDescription(hResult);
+	if (errorDescription)
+		strcat(buffer, errorDescription);
+	else
+		strcat(buffer, "Unknown D3D error.");
 
 	return buffer;
 }
