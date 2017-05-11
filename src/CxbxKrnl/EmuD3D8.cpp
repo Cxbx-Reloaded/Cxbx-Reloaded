@@ -1684,6 +1684,8 @@ static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
 // Derived from EmuUnswizzleActiveTexture
 static void EmuUnswizzleTextureStages()
 {
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
 	for( int i = 0; i < TEXTURE_STAGES; i++ )
 	{
 		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
@@ -1795,6 +1797,8 @@ void CxbxUpdateActiveIndexBuffer
 	UINT          IndexCount
 )
 {
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
 	// Create a reference to the active buffer
 	ConvertedIndexBuffer& indexBuffer = g_ConvertedIndexBuffers[pIndexData];
 
@@ -2925,14 +2929,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreateVertexShader\n"
-           "(\n"
-           "   pDeclaration        : 0x%.08X\n"
-           "   pFunction           : 0x%.08X\n"
-           "   pHandle             : 0x%.08X\n"
-           "   Usage               : 0x%.08X\n"
-           ");\n",
-           pDeclaration, pFunction, pHandle, Usage);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pDeclaration)
+		LOG_FUNC_ARG(pFunction)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_END;
 
     // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_MemoryManager.AllocateZeroed(1, sizeof(X_D3DVertexShader));
@@ -3110,13 +3112,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetPixelShaderConstant\n"
-           "(\n"
-           "   Register            : 0x%.08X\n"
-           "   pConstantData       : 0x%.08X\n"
-           "   ConstantCount       : 0x%.08X\n"
-           ");\n",
-           Register, pConstantData, ConstantCount);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(pConstantData)
+		LOG_FUNC_ARG(ConstantCount)
+		LOG_FUNC_END;
 
 	// TODO: This hack is necessary for Vertex Shaders on XDKs prior to 4361, but if this
 	// causes problems with pixel shaders, feel free to comment out the hack below.
@@ -3151,13 +3151,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexShaderConstant\n"
-           "(\n"
-           "   Register            : 0x%.08X\n"
-           "   pConstantData       : 0x%.08X\n"
-           "   ConstantCount       : 0x%.08X\n"
-           ");\n",
-           Register, pConstantData, ConstantCount);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(pConstantData)
+		LOG_FUNC_ARG(ConstantCount)
+		LOG_FUNC_END;
 
 /*#ifdef _DEBUG_TRACK_VS_CONST
     for (uint32 i = 0; i < ConstantCount; i++)
@@ -3291,12 +3289,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreatePixelShader\n"
-           "(\n"
-           "   pPSDef              : 0x%.08X\n"
-           "   pHandle             : 0x%.08X (0x%.08X)\n"
-           ");\n",
-           pPSDef, pHandle, *pHandle);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPSDef)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
 	DWORD* pFunction = NULL;
@@ -3510,17 +3506,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreateTexture\n"
-           "(\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   Levels              : 0x%.08X\n"
-           "   Usage               : 0x%.08X\n"
-           "   Format              : 0x%.08X\n"
-           "   Pool                : 0x%.08X\n"
-           "   ppTexture           : 0x%.08X\n"
-           ");\n",
-           Width, Height, Levels, Usage, Format, Pool, ppTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppTexture)
+		LOG_FUNC_END;
 
 	// Get Bytes Per Pixel, for correct Pitch calculation :
 	DWORD dwBPP = EmuXBFormatBytesPerPixel(Format);
@@ -3668,18 +3662,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreateVolumeTexture\n"
-           "(\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   Depth               : 0x%.08X\n"
-           "   Levels              : 0x%.08X\n"
-           "   Usage               : 0x%.08X\n"
-           "   Format              : 0x%.08X\n"
-           "   Pool                : 0x%.08X\n"
-           "   ppVolumeTexture     : 0x%.08X\n"
-           ");\n",
-           Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Depth)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppVolumeTexture)
+		LOG_FUNC_END;
 
     *ppVolumeTexture = EmuNewD3DVolumeTexture();
 
@@ -3761,16 +3753,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreateCubeTexture\n"
-           "(\n"
-           "   EdgeLength          : 0x%.08X\n"
-           "   Levels              : 0x%.08X\n"
-           "   Usage               : 0x%.08X\n"
-           "   Format              : 0x%.08X\n"
-           "   Pool                : 0x%.08X\n"
-           "   ppCubeTexture       : 0x%.08X\n"
-           ");\n",
-           EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EdgeLength)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppCubeTexture)
+		LOG_FUNC_END;
 
 	if(Format == X_D3DFMT_YUY2)
     {
@@ -3943,12 +3933,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTexture\n"
-           "(\n"
-           "   Stage               : 0x%.08X\n"
-           "   pTexture            : 0x%.08X\n"
-           ");\n",
-           Stage, pTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(pTexture)
+		LOG_FUNC_END;
 
 	IDirect3DBaseTexture8 *pHostBaseTexture = nullptr;
 
@@ -4526,17 +4514,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_Clear\n"
-           "(\n"
-           "   Count               : 0x%.08X\n"
-           "   pRects              : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           "   Color               : 0x%.08X\n"
-           "   Z                   : %f\n"
-           "   Stencil             : 0x%.08X\n"
-           ");\n",
-           Count, pRects, Flags,
-           Color, Z, Stencil);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(pRects)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_ARG(Color)
+		LOG_FUNC_ARG(Z)
+		LOG_FUNC_ARG(Stencil)
+		LOG_FUNC_END;
 
     // make adjustments to parameters to make sense with windows d3d
     {
@@ -4711,12 +4696,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DResource8_Register\n"
-           "(\n"
-           "   pThis               : 0x%.08X (->Data : 0x%.08X)\n"
-           "   pBase               : 0x%.08X\n"
-           ");\n",
-           pThis, pThis->Data, pBase);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pBase)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -5587,16 +5570,14 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuLock2DSurface\n"
-           "(\n"
-           "   pPixelContainer     : 0x%.08X\n"
-           "   FaceType            : 0x%.08X\n"
-           "   Level               : 0x%.08X\n"
-           "   pLockedRect         : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     EmuVerifyResourceIsRegistered(pPixelContainer);
 
@@ -5625,15 +5606,13 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuLock3DSurface\n"
-           "(\n"
-           "   pPixelContainer     : 0x%.08X\n"
-           "   Level               : 0x%.08X\n"
-           "   pLockedVolume       : 0x%.08X\n"
-           "   pBox                : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pPixelContainer, Level, pLockedVolume, pBox, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedVolume)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     EmuVerifyResourceIsRegistered(pPixelContainer);
 
@@ -5773,14 +5752,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DSurface8_LockRect\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   pLockedRect         : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pThis, pLockedRect, pRect, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -5885,12 +5862,10 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel2\n"
-		"(\n"
-		"   pThis               : 0x%.08X\n"
-		"   Level               : 0x%.08X\n"
-		");\n",
-		pThis, Level);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_END;
 
     X_D3DSurface *result = NULL;
 
@@ -6035,15 +6010,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DVolumeTexture_LockBox)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DVolumeTexture8_LockBox\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   Level               : 0x%.08X\n"
-           "   pLockedVolume       : 0x%.08X\n"
-           "   pBox                : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pThis, Level, pLockedVolume, pBox, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedVolume)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     EmuVerifyResourceIsRegistered(pThis);
 
