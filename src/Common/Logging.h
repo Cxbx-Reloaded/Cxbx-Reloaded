@@ -337,6 +337,7 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value);
 
 // Macro to ease declaration of a render function per Xbox Type:
 #define LOGRENDER_HEADER(Type) std::ostream& operator<<(std::ostream& os, const Type& value)
+#define LOGRENDER_HEADER_PTR(Type) std::ostream& operator<<(std::ostream& os, const Type *value)
 
 // Macro for implementation of rendering any Type-ToString :
 #define LOGRENDER_TYPE(Type) LOGRENDER_HEADER(Type) \
@@ -362,16 +363,19 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value);
 #define LOGRENDER_MEMBER_SANITIZED(Member, Type) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((Type)value.Member)
 
 // Macro combining pointer-to-type implementation and type rendering header :
-#define LOGRENDER_TYPE_EX(Type)                      \
-LOGRENDER_HEADER(P##Type)                            \
+#define LOGRENDER_TYPE_and_PTR(Type)                 \
+LOGRENDER_HEADER_PTR(Type)                           \
 {                                                    \
 	os << "0x" << (void*)value;                      \
 	if (value)                                       \
-		os << " -> P"#Type" {" << *value << "}";     \
+		os << " -> "#Type"* {" << *value << "}";     \
                                                      \
 	return os;                                       \
 }                                                    \
                                                      \
 LOGRENDER_HEADER(Type)                               \
+
+// Macro to ease declaration of two render functions, for Xbox type and pointer-to-type :
+#define LOGRENDER_HEADER_and_PTR(Type) LOGRENDER_HEADER(Type); LOGRENDER_HEADER_PTR(Type)
 
 #endif _LOGGING_H

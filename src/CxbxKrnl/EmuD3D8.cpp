@@ -56,6 +56,7 @@ namespace xboxkrnl
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
 #include "Logging.h"
+#include "EmuD3D8Logging.h"
 
 #include <assert.h>
 #include <process.h>
@@ -1934,7 +1935,6 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
 
     LOG_IGNORED();
     
-
     return FALSE;
 }
 
@@ -1988,8 +1988,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
         g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF,
         EmuXB2PC_D3DFormat(AdapterFormat), Usage, (D3DRESOURCETYPE)RType, EmuXB2PC_D3DFormat(CheckFormat)
     );*/
-
-    
 
     return hRet;
 }
@@ -2616,9 +2614,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pViewport);
-	// TODO : Add logging overload for D3DVIEWPORT8
-	/* pViewport, pViewport->X, pViewport->Y, pViewport->Width,
-           pViewport->Height, pViewport->MinZ, pViewport->MaxZ);*/
 
     DWORD dwWidth  = pViewport->Width;
     DWORD dwHeight = pViewport->Height;

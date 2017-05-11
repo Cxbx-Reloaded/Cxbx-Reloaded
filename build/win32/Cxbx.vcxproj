@@ -186,6 +186,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
     <ClInclude Include="..\..\import\stb\stb_image.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
@@ -374,6 +375,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
