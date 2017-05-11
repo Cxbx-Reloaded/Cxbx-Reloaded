@@ -70,6 +70,14 @@ LOGRENDER(D3DVIEWPORT8)
 		LOGRENDER_MEMBER(MinZ)
 		LOGRENDER_MEMBER(MaxZ);
 }
+
+LOGRENDER(X_D3DResource)
+{
+	return os
+		LOGRENDER_MEMBER(Common)
+		LOGRENDER_MEMBER(Data)
+		LOGRENDER_MEMBER(Lock);
+}
 #endif
 
 }; // end of namespace XTL

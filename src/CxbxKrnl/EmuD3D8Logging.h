@@ -59,7 +59,11 @@ namespace XTL
 // Xbox D3D LOGRENDER_HEADER(Type) declarations
 //
 
-//LOGRENDER_HEADER(D3DVIEWPORT8);
+#if 0
+LOGRENDER_HEADER(D3DVIEWPORT8);
+
+LOGRENDER_HEADER(X_D3DResource);
+#endif
 
 }; // end of namespace XTL
 
