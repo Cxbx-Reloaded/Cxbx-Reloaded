@@ -34,6 +34,11 @@
 #ifndef STATE_H
 #define STATE_H
 
+#define X_D3DRS_UNSUPPORTED (X_D3DRS_LAST + 1)
+
+// XDK version independent renderstate table, containing pointers to the original locations.
+extern DWORD *EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
+
 // EmuD3DDeferredRenderState
 extern DWORD *EmuD3DDeferredRenderState;
 
