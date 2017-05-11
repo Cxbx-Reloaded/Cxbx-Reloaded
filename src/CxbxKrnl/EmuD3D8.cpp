@@ -1875,17 +1875,14 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3D8_CreateDevice\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   DeviceType                : 0x%.08X\n"
-           "   hFocusWindow              : 0x%.08X\n"
-           "   BehaviorFlags             : 0x%.08X\n"
-           "   pPresentationParameters   : 0x%.08X\n"
-           "   ppReturnedDeviceInterface : 0x%.08X\n"
-           ");\n",
-           Adapter, DeviceType, hFocusWindow,
-           BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
 
 	// Print a few of the pPresentationParameters contents to the console
 	DbgPrintf("BackBufferWidth:        = %d\n"
@@ -1972,17 +1969,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3D8_CheckDeviceFormat\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   DeviceType                : 0x%.08X\n"
-           "   AdapterFormat             : 0x%.08X\n"
-           "   Usage                     : 0x%.08X\n"
-           "   RType                     : 0x%.08X\n"
-           "   CheckFormat               : 0x%.08X\n"
-           ");\n",
-           Adapter, DeviceType, AdapterFormat,
-           Usage, RType, CheckFormat);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(AdapterFormat)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(RType)
+		LOG_FUNC_ARG(CheckFormat)
+		LOG_FUNC_END;
 
     if(RType > 7)
         CxbxKrnlCleanup("RType > 7");
@@ -2126,13 +2120,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_GetVisibilityTestResult\n"
-           "(\n"
-           "   Index                     : 0x%.08X\n"
-           "   pResult                   : 0x%.08X\n"
-           "   pTimeStamp                : 0x%.08X\n"
-           ");\n",
-           Index, pResult, pTimeStamp);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pResult)
+		LOG_FUNC_ARG(pTimeStamp)
+		LOG_FUNC_END;
 
     // TODO: actually emulate this!?
 
@@ -2179,13 +2171,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_LoadVertexShader\n"
-               "(\n"
-               "   Handle              : 0x%.08X\n"
-               "   Address             : 0x%.08X\n"
-               ");\n",
-               Handle,Address);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(Address)
+		LOG_FUNC_END;
 
     if(Address < 136 && VshHandleIsVertexShader(Handle))
     {
@@ -2196,8 +2185,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
             g_VertexShaderSlots[i] = Handle;
         }
     }
-
-    
 
     return D3D_OK;
 }
@@ -2628,13 +2615,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 {
 	FUNC_EXPORTS
 
-	// LOG_FUNC_ONE_ARG(pViewport); // TODO : Add logging overload for D3DVIEWPORT8, then remove this:
-	DbgPrintf("EmuD3D8: EmuD3DDevice_SetViewport\n"
-           "(\n"
-           "   pViewport           : 0x%.08X (%d, %d, %d, %d, %f, %f)\n"
-           ");\n",
-           pViewport, pViewport->X, pViewport->Y, pViewport->Width,
-           pViewport->Height, pViewport->MinZ, pViewport->MaxZ);
+	LOG_FUNC_ONE_ARG(pViewport);
+	// TODO : Add logging overload for D3DVIEWPORT8
+	/* pViewport, pViewport->X, pViewport->Y, pViewport->Width,
+           pViewport->Height, pViewport->MinZ, pViewport->MaxZ);*/
 
     DWORD dwWidth  = pViewport->Width;
     DWORD dwHeight = pViewport->Height;
@@ -2714,12 +2698,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_GetViewportOffsetAndScale\n"
-           "(\n"
-           "   pOffset             : 0x%.08X\n"
-           "   pScale              : 0x%.08X\n"
-           ");\n",
-           pOffset, pScale);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pOffset)
+		LOG_FUNC_ARG(pScale)
+		LOG_FUNC_END;
 
     float fScaleX = 1.0f;
     float fScaleY = 1.0f;
@@ -2822,9 +2804,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 
 	EMUPATCH(D3DResource_AddRef)(result);
 
-    DbgPrintf("EmuD3D8: RenderTarget := 0x%.08X\n", result);
-
-    return result;
+    RETURN(result);
 }
 
 // ******************************************************************
@@ -2857,9 +2837,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
 	EMUPATCH(D3DResource_AddRef)(result);
 		
-	DbgPrintf("EmuD3D8: DepthStencilSurface := 0x%.08X\n", result);
-
-    return result;
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -2873,17 +2851,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetTile)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_GetTile\n"
-           "(\n"
-           "   Index               : 0x%.08X\n"
-           "   pTile               : 0x%.08X\n"
-           ");\n",
-           Index, pTile);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pTile)
+		LOG_FUNC_END;
 
     if(pTile != NULL)
         memcpy(pTile, &EmuD3DTileCache[Index], sizeof(X_D3DTILE));
-
-    
 
     return D3D_OK;
 }
@@ -2901,17 +2875,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetTile)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTile\n"
-           "(\n"
-           "   Index               : 0x%.08X\n"
-           "   pTile               : 0x%.08X\n"
-           ");\n",
-           Index, pTile);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pTile)
+		LOG_FUNC_END;
 
     if(pTile != NULL)
         memcpy(&EmuD3DTileCache[Index], pTile, sizeof(X_D3DTILE));
-
-    
 
     return D3D_OK;
 }
@@ -3728,6 +3698,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
             PCFormat, D3DPOOL_MANAGED, &pNewHostVolumeTexture
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVolumeTexture");
+
         if(SUCCEEDED(hRet))
 		{
 			SetHostVolumeTexture(*ppVolumeTexture, pNewHostVolumeTexture);
@@ -3797,6 +3768,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         PCFormat, D3DPOOL_MANAGED, &pNewHostCubeTexture
     );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateCubeTexture");
+
     if(SUCCEEDED(hRet))
 	{
 		SetHostCubeTexture(*ppCubeTexture, pNewHostCubeTexture);
@@ -3821,17 +3793,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 {
 	FUNC_EXPORTS
 
-
-    DbgPrintf("EmuD3D8: EmuD3DDevice_CreateIndexBuffer\n"
-           "(\n"
-           "   Length              : 0x%.08X\n"
-           "   Usage               : 0x%.08X\n"
-           "   Format              : 0x%.08X\n"
-           "   Pool                : 0x%.08X\n"
-           "   ppIndexBuffer       : 0x%.08X\n"
-           ");\n",
-           Length, Usage, Format, Pool, ppIndexBuffer);
-
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppIndexBuffer)
+		LOG_FUNC_END;
 
 	if (Format != X_D3DFMT_INDEX16)
 		EmuWarning("CreateIndexBuffer called with unexpected format! (0x%.08X)", Format);
@@ -3905,12 +3873,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetIndices\n"
-           "(\n"
-           "   pIndexData          : 0x%.08X\n"
-           "   BaseVertexIndex     : 0x%.08X\n"
-           ");\n",
-           pIndexData, BaseVertexIndex);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pIndexData)
+		LOG_FUNC_ARG(BaseVertexIndex)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -4051,13 +4017,11 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SwitchTexture\n"
-           "(\n"
-           "   Method              : 0x%.08X\n"
-           "   Data                : 0x%.08X\n"
-           "   Format              : 0x%.08X\n"
-           ");\n",
-           Method, Data, Format);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Method)
+		LOG_FUNC_ARG(Data)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_END;
 
     DWORD StageLookup[TEXTURE_STAGES] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
     DWORD Stage = -1;
@@ -4229,15 +4193,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetVertexData4f\n"
-           "(\n"
-           "   Register            : 0x%.08X\n"
-           "   a                   : %f\n"
-           "   b                   : %f\n"
-           "   c                   : %f\n"
-           "   d                   : %f\n"
-           ");\n",
-           Register, a, b, c, d);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_ARG(c)
+		LOG_FUNC_ARG(d)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -4487,12 +4449,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunPushBuffer)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_RunPushBuffer\n"
-           "(\n"
-           "   pPushBuffer         : 0x%.08X\n"
-           "   pFixup              : 0x%.08X\n"
-           ");\n",
-           pPushBuffer, pFixup);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPushBuffer)
+		LOG_FUNC_ARG(pFixup)
+		LOG_FUNC_END;
 
 	EmuUnswizzleTextureStages();
 
@@ -4596,14 +4556,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Present)
 	FUNC_EXPORTS
 
 	// LOG_FORWARD("D3DDevice_Swap");
-    DbgPrintf("EmuD3D8: EmuD3DDevice_Present\n"
-           "(\n"
-           "   pSourceRect         : 0x%.08X\n"
-           "   pDestRect           : 0x%.08X\n"
-           "   pDummy1             : 0x%.08X\n"
-           "   pDummy2             : 0x%.08X\n"
-           ");\n",
-           pSourceRect, pDestRect, pDummy1, pDummy2);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSourceRect)
+		LOG_FUNC_ARG(pDestRect)
+		LOG_FUNC_ARG(pDummy1)
+		LOG_FUNC_ARG(pDummy2)
+		LOG_FUNC_END;
 
 	return EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
@@ -5676,12 +5634,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DSurface8_GetDesc\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   pDesc               : 0x%.08X\n"
-           ");\n",
-           pThis, pDesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
 
     HRESULT hRet;
 
@@ -5901,9 +5857,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 		result->Common++; // Don't EMUPATCH(D3DResource_AddRef)(result) - that would AddRef Parent one too many
 	}
 	
-	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", result);
-
-    return result;
+    RETURN(result);
 }
 
 // ******************************************************************
@@ -5920,19 +5874,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_LockRect\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   Level               : 0x%.08X\n"
-           "   pLockedRect         : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pThis, Level, pLockedRect, pRect, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
-
-	DbgPrintf("EmuD3D8: EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", GetHostTexture(pThis));
 
     EmuVerifyResourceIsRegistered(pThis);
 
@@ -6044,16 +5994,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_LockRect)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DCubeTexture8_LockRect\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   FaceType            : 0x%.08X\n"
-           "   Level               : 0x%.08X\n"
-           "   pLockedBox          : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pThis, FaceType, Level, pLockedBox, pRect, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedBox)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     EmuVerifyResourceIsRegistered(pThis);
 
@@ -8091,12 +8039,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetPalette\n"
-           "(\n"
-           "   Stage               : 0x%.08X\n"
-           "   pPalette            : 0x%.08X\n"
-           ");\n",
-           Stage, pPalette);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(pPalette)
+		LOG_FUNC_END;
 
 	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
@@ -8176,12 +8122,10 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DPalette8_Lock\n"
-           "(\n"
-           "   pThis               : 0x%.08X (->Data : 0x%.08X)\n"
-           "   Flags               : 0x%.08X\n"
-           ");\n",
-           pThis, pThis->Data, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     // If X_D3DLOCK_READONLY and X_D3DLOCK_NOOVERWRITE bitflags not set
     if( !(Flags & (X_D3DLOCK_READONLY | X_D3DLOCK_NOOVERWRITE)) )
@@ -8207,12 +8151,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_GetVertexShaderSize\n"
-               "(\n"
-               "   Handle               : 0x%.08X\n"
-               "   pSize                : 0x%.08X\n"
-               ");\n",
-               Handle, pSize);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pSize)
+		LOG_FUNC_END;
 
     if(pSize  && VshHandleIsVertexShader(Handle))
     {
@@ -8467,20 +8409,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_GetVertexShaderType\n"
-               "(\n"
-               "   Handle               : 0x%.08X\n"
-               "   pType                : 0x%.08X\n"
-               ");\n",
-               Handle, pType);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pType)
+		LOG_FUNC_END;
 
     if(pType && VshHandleIsVertexShader(Handle))
     {
         *pType = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
     }
-
-    
 }
 
 // ******************************************************************
@@ -8495,14 +8432,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_GetVertexShaderDeclaration\n"
-               "(\n"
-               "   Handle               : 0x%.08X\n"
-               "   pData                : 0x%.08X\n"
-               "   pSizeOfData          : 0x%.08X\n"
-               ");\n",
-               Handle, pData, pSizeOfData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pData)
+		LOG_FUNC_ARG(pSizeOfData)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3DERR_INVALIDCALL;
 
@@ -8538,14 +8472,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_GetVertexShaderFunction\n"
-               "(\n"
-               "   Handle               : 0x%.08X\n"
-               "   pData                : 0x%.08X\n"
-               "   pSizeOfData          : 0x%.08X\n"
-               ");\n",
-               Handle,pData,pSizeOfData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pData)
+		LOG_FUNC_ARG(pSizeOfData)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3DERR_INVALIDCALL;
 
@@ -8581,14 +8512,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuD3DDevice_SetDepthClipPlanes\n"
-               "(\n"
-               "   Near                : 0x%.08X\n"
-               "   Far                 : 0x%.08X\n"
-               "   Flags               : 0x%.08X\n"
-               ");\n",
-               Near, Far, Flags);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Near)
+		LOG_FUNC_ARG(Far)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -8653,13 +8581,10 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuIDirect3D8_AllocContiguousMemory\n"
-               "(\n"
-               "   dwSize              : 0x%.08X\n"
-               "   dwAllocAttributes   : 0x%.08X\n"
-               ");\n",
-               dwSize,dwAllocAttributes);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwSize)
+		LOG_FUNC_ARG(dwAllocAttributes)
+		LOG_FUNC_END;
 
     //
     // NOTE: Kludgey (but necessary) solution:
@@ -8681,9 +8606,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
         pRet = (PVOID)dwRet;
     }
 
-    DbgPrintf("EmuD3D8: EmuIDirect3D8_AllocContiguousMemory returned 0x%.08X\n", pRet);    
-
-    return pRet;
+	RETURN(pRet);
 }
 #endif
 
@@ -8699,15 +8622,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
 {
 	FUNC_EXPORTS
 
-    // debug trace
-    DbgPrintf( "EmuD3D8: EmuIDirect3DTexture8_GetLevelDesc\n"
-               "(\n"
-               "   Level               : 0x%.08X\n"
-               "   pDesc               : 0x%.08X\n"
-               ");\n",
-               Level,pDesc);
-
-    
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;    
 
     return D3D_OK;
 }
@@ -8728,15 +8646,13 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf( "EmuD3D8: EmuIDirect3D8_CheckDeviceMultiSampleType\n"
-               "(\n"
-               "   Adapter             : 0x%.08X\n"
-               "   DeviceType          : 0x%.08X\n"
-               "   SurfaceFormat       : 0x%.08X\n"
-               "   Windowed            : 0x%.08X\n"
-               "   MultiSampleType     : 0x%.08X\n"
-               ");\n",
-               Adapter, DeviceType, SurfaceFormat, Windowed, MultiSampleType);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(SurfaceFormat)
+		LOG_FUNC_ARG(Windowed)
+		LOG_FUNC_ARG(MultiSampleType)
+		LOG_FUNC_END;
 
     if(Adapter != D3DADAPTER_DEFAULT)
     {
@@ -8802,13 +8718,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3D8_GetDeviceCaps\n"
-           "(\n"
-           "   Adapter             : 0x%.08X\n"
-           "   DeviceType          : 0x%.08X\n"
-           "   pCaps               : 0x%.08X\n"
-           ");\n",
-           Adapter, DeviceType, pCaps);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(pCaps)
+		LOG_FUNC_END;
 
     HRESULT hRet = g_pD3D8->GetDeviceCaps(Adapter, DeviceType, pCaps);
 	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetDeviceCaps");
@@ -8832,12 +8746,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3D8_SetPushBufferSize\n"
-           "(\n"
-           "   PushBufferSize      : 0x%.08X\n"
-           "   KickOffSize         : 0x%.08X\n"
-           ");\n",
-           PushBufferSize, KickOffSize);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(PushBufferSize)
+		LOG_FUNC_ARG(KickOffSize)
+		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -8928,12 +8840,10 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_GetDesc)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DVertexBuffer8_GetDesc\n"
-           "(\n"
-           "   pThis               : 0x%.08X\n"
-           "   pDesc               : 0x%.08X\n"
-           ");\n",
-           pThis, pDesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
 
 	pDesc->Format = X_D3DFMT_VERTEXDATA;
 	pDesc->Type = X_D3DRTYPE_VERTEXBUFFER;
@@ -8976,12 +8886,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetScreenSpaceOffset\n"
-           "(\n"
-           "   x                   : %f\n"
-           "   y                   : %f\n"
-           ");\n",
-           x, y);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(x)
+		LOG_FUNC_ARG(y)
+		LOG_FUNC_END;
 
     EmuWarning("EmuD3DDevice_SetScreenSpaceOffset ignored");
 
@@ -9424,12 +9332,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Deferred)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetRenderState_Deferred\n"
-           "(\n"
-           "   State               : 0x%.08X\n"
-           "   Value               : 0x%.08X\n"
-           ");\n",
-           State, Value);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(State)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
 
 	// TODO: HACK: Technically, this function doesn't need to be emulated.
 	// The location of EmuD3DDeferredRenderState for 3911 isn't correct and at
@@ -9639,12 +9545,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetAdapterIdentifier)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuD3D8: EmuIDirect3D8_GetAdapterIdentifier\n"
-			"(\n"
-			"   Adapter          : 0x%.08X\n"
-			"   Flags            : 0x%.08X\n"
-			"   pIdentifier      : 0x%.08X (0x%.08X)\n"
-			");\n", Adapter, Flags, pIdentifier, pIdentifier);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_ARG(pIdentifier)
+		LOG_FUNC_END;
 
 	// TODO: Fill the Intentifier structure with the content of what an Xbox would return.
 	// It might not matter for now, but just in case.
@@ -9853,11 +9758,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetPixelShader)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuD3D8: EmuD3DDevice_GetPixelShader\n"
-			"(\n"
-			"   Name               : 0x%.08X\n"
-			"   pHandle            : 0x%.08X\n"
-			");\n", Name, pHandle);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Name)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_END;
 
 	// TODO: This implementation is very wrong, but better than nothing.
 	*pHandle = g_dwCurrentPixelShader;
