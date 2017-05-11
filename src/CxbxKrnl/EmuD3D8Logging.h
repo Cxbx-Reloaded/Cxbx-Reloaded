@@ -36,16 +36,30 @@
 
 #pragma once
 
-//#include <windows.h> // for PULONG
 //#include <sstream> // for std::ostream
 //#include "EmuXTL.h"
 #include "Logging.h"
+#include "EmuD3D8Types.h"
+
+// prevent name collisions
+namespace xboxkrnl
+{
+
+//
+// Host D3D LOGRENDER_HEADER(Type) declarations
+//
+
+}; // end of namespace xboxkrnl
 
 // prevent name collisions
 namespace XTL
 {
 
-LOGRENDER_HEADER_and_PTR(D3DVIEWPORT8);
+//
+// Xbox D3D LOGRENDER_HEADER(Type) declarations
+//
+
+//LOGRENDER_HEADER(D3DVIEWPORT8);
 
 }; // end of namespace XTL
 

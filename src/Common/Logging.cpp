@@ -34,6 +34,8 @@
 // *
 // ******************************************************************
 
+#include <windows.h> // for PULONG
+
 #include "Logging.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
@@ -97,7 +99,94 @@ inline void output_wchar(std::ostream& os, wchar_t c)
 		os << c;
 }
 
-std::ostream& operator<<(std::ostream& os, const PULONG& value)
+LOG_SANITIZE_HEADER(hex1, uint8_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+LOG_SANITIZE_HEADER(hex2, uint16_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+LOG_SANITIZE_HEADER(hex4, uint32_t)
+{
+	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+}
+
+LOG_SANITIZE_HEADER(sanitized_char, char)
+{
+	output_char(os, container.value);
+	return os;
+}
+
+LOG_SANITIZE_HEADER(sanitized_wchar, wchar_t)
+{
+	output_wchar(os, container.value);
+	return os;
+}
+
+LOG_SANITIZE_HEADER(sanitized_char_pointer, char *)
+{
+	char *v = container.value;
+
+	os << "(char *)";
+	if (v == nullptr)
+		return os << "NULL";
+
+	bool needsEscaping = false;
+
+	while (*v)
+		if (needs_escape(*v++))
+		{
+			needsEscaping = true;
+			break;
+		}
+
+	v = container.value;
+	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	if (needsEscaping)
+	{
+		while (*v)
+			output_char(os, *v++);
+	}
+	else
+		os << v;
+
+	return os << "\"";
+}
+
+LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
+{
+	wchar_t *v = container.value;
+
+	os << "(wchar *)";
+	if (v == nullptr)
+		return os << "NULL";
+
+	bool needsEscaping = false;
+
+	while (*v)
+		if (needs_escape(*v++))
+		{
+			needsEscaping = true;
+			break;
+		}
+
+	v = container.value;
+	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	if (needsEscaping)
+	{
+		while (*v)
+			output_wchar(os, *v++);
+	}
+	else
+		os << v;
+
+	return os << "\"";
+}
+
+LOGRENDER_HEADER_BY_REF(PULONG)
 {
 	os << hex4((uint32_t)value);
 	if (value != nullptr)

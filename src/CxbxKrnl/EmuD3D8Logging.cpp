@@ -36,26 +36,31 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#include "Logging.h"
+#include "EmuD3D8Types.h"
+#include "EmuD3D8Logging.h"
+
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h>
-};
 
+//
+// Host D3D LOGRENDER(Type) implementations
+//
 
-#include "Logging.h"
-#include "CxbxKrnl/EmuD3D8Types.h"
-#include "EmuD3D8Logging.h"
-
+}; // end of namespace xboxkrnl
+   
+   
 // prevent name collisions
 namespace XTL
 {
 
 //
-// Render Xbox D3D types :
+// Xbox D3D LOGRENDER(Type) implementations
 //
 
-LOGRENDER_TYPE_and_PTR(D3DVIEWPORT8)
+#if 0
+LOGRENDER(D3DVIEWPORT8)
 {
 	return os
 		LOGRENDER_MEMBER(X)
@@ -65,5 +70,6 @@ LOGRENDER_TYPE_and_PTR(D3DVIEWPORT8)
 		LOGRENDER_MEMBER(MinZ)
 		LOGRENDER_MEMBER(MaxZ);
 }
+#endif
 
 }; // end of namespace XTL
