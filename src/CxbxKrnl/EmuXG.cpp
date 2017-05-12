@@ -52,6 +52,7 @@ namespace NtDll
 };
 
 #include "EmuXTL.h"
+#include "EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 
 // ******************************************************************
 // * patch: XGIsSwizzledFormat

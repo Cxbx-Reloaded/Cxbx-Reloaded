@@ -457,7 +457,7 @@ X_D3DResource * WINAPI EMUPATCH(D3DDevice_CreateTexture2)
     UINT                Levels,
     DWORD               Usage,
     X_D3DFORMAT         Format,
-    D3DRESOURCETYPE     D3DResource
+    X_D3DRESOURCETYPE   D3DResource
 );
 
 // ******************************************************************
@@ -752,15 +752,7 @@ VOID WINAPI EMUPATCH(Get2DSurfaceDesc)
     X_D3DSURFACE_DESC   *pDesc
 );
 
-// ******************************************************************
-// * patch: Get2DSurfaceDescD
-// ******************************************************************
-VOID WINAPI EMUPATCH(Get2DSurfaceDescD)
-(
-    X_D3DPixelContainer *pPixelContainer,
-    X_D3DSURFACE_DESC   *pDesc
-);
-
+#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: IDirect3DSurface8_GetDesc
 // ******************************************************************
@@ -769,6 +761,7 @@ HRESULT WINAPI EMUPATCH(D3DSurface_GetDesc)
     X_D3DResource      *pThis,
     X_D3DSURFACE_DESC  *pDesc
 );
+#endif
 
 // ******************************************************************
 // * patch: IDirect3DSurface8_LockRect
@@ -1554,6 +1547,7 @@ PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
 );
 #endif
 
+#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: D3DTexture_GetLevelDesc
 // ******************************************************************
@@ -1562,6 +1556,7 @@ HRESULT WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
     UINT Level,
     X_D3DSURFACE_DESC* pDesc
 );
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************

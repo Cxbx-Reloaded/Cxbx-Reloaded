@@ -181,11 +181,13 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 
 	DbgPrintf("MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
 
+#ifdef _DEBUG_TRACE
 	if (NumberOfBytes != MAXULONG_PTR)
 	{
 		if (NumberOfBytes != 20480)
 			LOG_IGNORED();
 	}
+#endif
 
 	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(MM_HIGHEST_PHYSICAL_PAGE + 1)
 		- *NumberOfPaddingBytes;
