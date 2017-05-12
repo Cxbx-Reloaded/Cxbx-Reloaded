@@ -59,12 +59,12 @@ namespace xboxkrnl
 namespace xboxkrnl
 {
 
-LOGRENDER_HEADER(BOOLEAN)
+LOGRENDER_HEADER_BY_REF(BOOLEAN)
 {
 	return os << (BOOL)value;
 }
 
-LOGRENDER_HEADER(PBYTE)
+LOGRENDER_HEADER_BY_REF(PBYTE)
 {
 	os << "(PBYTE)";
 	if (value == nullptr)

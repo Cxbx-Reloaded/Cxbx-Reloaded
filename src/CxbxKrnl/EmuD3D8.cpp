@@ -3664,7 +3664,7 @@ XTL::X_D3DResource * WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture2)
     UINT                Levels,
     DWORD               Usage,
     X_D3DFORMAT         Format,
-    D3DRESOURCETYPE     D3DResource
+    X_D3DRESOURCETYPE   D3DResource
 )
 {
 	FUNC_EXPORTS
@@ -4310,12 +4310,12 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayMode)
 (
-    X_D3DDISPLAYMODE         *pMode
+    OUT X_D3DDISPLAYMODE         *pMode
 )
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(pMode);
+	LOG_FUNC_ONE_ARG_OUT(pMode);
 
     HRESULT hRet;
 
@@ -4336,8 +4336,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayMode)
         pMode->Width = 640;
         pMode->Height = 480;
     }
-
-    
 
     return hRet;
 }

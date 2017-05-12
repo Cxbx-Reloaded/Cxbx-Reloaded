@@ -277,7 +277,7 @@ extern thread_local std::string _logPrefix;
 { return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
 
 // Macro's for Enum-ToString conversions :
-#define ENUM2STR_HEADER(EnumType) LOGRENDER_HEADER_BY_REF(EnumType)
+#define ENUM2STR_HEADER(EnumType) LOGRENDER_HEADER_BY_REF(EnumType);
 #define ENUM2STR_START(EnumType) const char * EnumType##ToString(const EnumType &value) { switch (value) {
 #define ENUM2STR_CASE(a) case a: return #a;
 // ENUM2STR_CASE_DEF is needed for #define'd symbols
@@ -286,7 +286,7 @@ extern thread_local std::string _logPrefix;
 #define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
 
 // Macro's for Flags-ToString conversions :
-#define FLAGS2STR_HEADER(FlagType) LOGRENDER_HEADER_BY_REF(FlagType)
+#define FLAGS2STR_HEADER(FlagType) LOGRENDER_HEADER_BY_REF(FlagType);
 #define FLAGS2STR_START(FlagType) std::string FlagType##ToString(const FlagType &value) { std::string res;
 #define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
 #define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
@@ -299,7 +299,7 @@ extern thread_local std::string _logPrefix;
 #define LOGRENDER_MEMBER_SANITIZED(Member, MemberType) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((MemberType)value.Member)
 
 // Macro to ease declaration of two render functions, for type and pointer-to-type :
-#define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type)
+#define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);
 
 // Macro combining pointer-to-type implementation and type rendering header :
 #define LOGRENDER(Type)                                         \

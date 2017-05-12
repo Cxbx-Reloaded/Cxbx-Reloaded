@@ -457,7 +457,7 @@ X_D3DResource * WINAPI EMUPATCH(D3DDevice_CreateTexture2)
     UINT                Levels,
     DWORD               Usage,
     X_D3DFORMAT         Format,
-    D3DRESOURCETYPE     D3DResource
+    X_D3DRESOURCETYPE   D3DResource
 );
 
 // ******************************************************************

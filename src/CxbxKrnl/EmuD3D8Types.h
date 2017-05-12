@@ -268,7 +268,6 @@ typedef struct _X_D3DVERTEXBUFFER_DESC
 {
 	X_D3DFORMAT           Format;
 	X_D3DRESOURCETYPE     Type;
-
 }
 X_D3DVERTEXBUFFER_DESC;
 
@@ -354,7 +353,8 @@ typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
    DWORD    PSC0Mapping;               // Mapping of c0 regs to D3D constants
    DWORD    PSC1Mapping;               // Mapping of c1 regs to D3D constants
    DWORD    PSFinalCombinerConstants;  // Final combiner constant mapping
-}X_D3DPIXELSHADERDEF;
+}
+X_D3DPIXELSHADERDEF;
 
 // These structures are used by Cxbx, not by the Xbox!!!
 typedef struct _PixelShader_ 
@@ -379,7 +379,8 @@ typedef struct _PixelShader_
 
 	DWORD dwStageMap[TEXTURE_STAGES];
 
-} PIXEL_SHADER;
+}
+PIXEL_SHADER;
 
 typedef struct _STREAM_DYNAMIC_PATCH_
 {
@@ -388,13 +389,15 @@ typedef struct _STREAM_DYNAMIC_PATCH_
     DWORD NbrTypes;        // Number of the stream data types
     UINT  *pTypes;         // The stream data types (xbox)
 	UINT  *pSizes;         // The stream data sizes (pc)
-} STREAM_DYNAMIC_PATCH;
+}
+STREAM_DYNAMIC_PATCH;
 
 typedef struct _VERTEX_DYNAMIC_PATCH_
 {
     UINT                         NbrStreams; // The number of streams the vertex shader uses
     STREAM_DYNAMIC_PATCH        *pStreamPatches;
-} VERTEX_DYNAMIC_PATCH;
+}
+VERTEX_DYNAMIC_PATCH;
 
 typedef struct _VERTEX_SHADER
 {
@@ -412,7 +415,8 @@ typedef struct _VERTEX_SHADER
 
     // Needed for dynamic stream patching
     VERTEX_DYNAMIC_PATCH  VertexDynamicPatch;
-} VERTEX_SHADER;
+}
+VERTEX_SHADER;
 
 struct X_D3DResource
 {
