@@ -137,24 +137,14 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(PreallocTypes)
 		LOG_FUNC_END;
 
-	/*for( DWORD i = 0; i < dwPreallocTypeCount; i++ )
-	{
-		printf( "PreallocTypes[%d]: Device = 0x%.08X, 0x%.08X, 0x%.08X\n\tCount %d\n", i,
-			PreallocTypes[i].DeviceType->Reserved[0],
-			PreallocTypes[i].DeviceType->Reserved[1],
-			PreallocTypes[i].DeviceType->Reserved[2], PreallocTypes[i].dwPreallocCount );
-	}*/
-
-    int v;
-
-    for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {
         g_pXInputSetStateStatus[v].hDevice = 0;
         g_pXInputSetStateStatus[v].dwLatency = 0;
         g_pXInputSetStateStatus[v].pFeedback = 0;
     }
 
-    for(v=0;v<XINPUT_HANDLE_SLOTS;v++)
+    for(int v=0;v<XINPUT_HANDLE_SLOTS;v++)
     {
         g_hInputHandle[v] = 0;
     }
@@ -172,8 +162,10 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-	// Report DeviceConnected in Port 0
-	DeviceType->CurrentConnected = 1;
+	static BOOL first = true;
+	if (first)	{
+		DeviceType->CurrentConnected = 1;
+	}
 
     DWORD ret = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
@@ -200,32 +192,12 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(pdwRemovals)
 		LOG_FUNC_END;
 
-    BOOL bRet = FALSE;
-    static BOOL bFirst = TRUE;
 
-    // Return 1 Controller Inserted initially, then no changes forever
-    if(bFirst)
-    {
-        if(DeviceType->CurrentConnected == 0 && DeviceType->ChangeConnected == 0 && DeviceType->PreviousConnected == 0)
-		{
-			*pdwInsertions = (1<<0);
-			*pdwRemovals   = 0;
-			bRet = TRUE;
-			bFirst = FALSE;
-		}
-		else
-		{
-			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->CurrentConnected, DeviceType->ChangeConnected, DeviceType->PreviousConnected);
-		}
-    }
-    else
-    {
-        *pdwInsertions = (1<<0); //0;
-        *pdwRemovals   = 0;
-    }
+	// Always report no device changes
+	*pdwInsertions = 0;
+	*pdwRemovals = 0;  
 
-	RETURN(TRUE); // TODO : RETURN(bRet);
+	RETURN(FALSE);
 }
 
 // ******************************************************************
