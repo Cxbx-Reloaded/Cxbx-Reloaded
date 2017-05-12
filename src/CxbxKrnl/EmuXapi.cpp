@@ -200,7 +200,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(pdwRemovals)
 		LOG_FUNC_END;
 
-    BOOL bRet = ERROR_INVALID_FUNCTION; // TODO : Verify Error Code
+    BOOL bRet = TRUE;
     static BOOL bFirst = TRUE;
 
     // Return 1 Controller Inserted initially, then no changes forever
@@ -210,7 +210,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		{
 			*pdwInsertions = (1<<0);
 			*pdwRemovals   = 0;
-			bRet = ERROR_SUCCESS;
+			bRet = FALSE;
 			bFirst = FALSE;
 		}
 		else
@@ -225,7 +225,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         *pdwRemovals   = 0;
     }
 
-	RETURN(ERROR_SUCCESS); // TODO : RETURN(bRet);
+	RETURN(FALSE); // TODO : RETURN(bRet);
 }
 
 // ******************************************************************
