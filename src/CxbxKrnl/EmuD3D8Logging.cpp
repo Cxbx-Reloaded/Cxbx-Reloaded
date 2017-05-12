@@ -62,6 +62,28 @@ ENUM2STR_START(D3DPOOL)
 	ENUM2STR_CASE(D3DPOOL_SYSTEMMEM)
 ENUM2STR_END_and_LOGRENDER(D3DPOOL)
 
+
+//
+// Host D3D LOGRENDER(Type) implementations
+//
+
+LOGRENDER(D3DLOCKED_RECT)
+{
+	return os
+		LOGRENDER_MEMBER(Pitch)
+		LOGRENDER_MEMBER(pBits);
+}
+
+LOGRENDER(RECT)
+{
+	return os
+		LOGRENDER_MEMBER(left)
+		LOGRENDER_MEMBER(top)
+		LOGRENDER_MEMBER(right)
+		LOGRENDER_MEMBER(bottom);
+}
+
+
 //
 // Xbox D3D LOGRENDER(Type) implementations
 //

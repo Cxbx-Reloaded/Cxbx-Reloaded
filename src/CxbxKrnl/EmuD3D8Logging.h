@@ -45,11 +45,18 @@ namespace XTL
 #include "EmuD3D8Types.h"
 
 //
-// Host D3D LOGRENDER_HEADER(Type) declarations
+// Headers for rendering host D3D enum types :
 //
 
 ENUM2STR_HEADER(D3DCUBEMAP_FACES)
 ENUM2STR_HEADER(D3DPOOL)
+
+//
+// Host D3D LOGRENDER_HEADER(Type) declarations
+//
+
+LOGRENDER_HEADER(D3DLOCKED_RECT)
+LOGRENDER_HEADER(RECT);
 
 //
 // Headers for rendering Xbox D3D enum types :
