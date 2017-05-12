@@ -42,6 +42,7 @@
 #include <iomanip> // For std::setw
 #include "Cxbx.h" // For g_bPrintfOn
 
+
 //
 // __FILENAME__
 //
@@ -64,6 +65,7 @@ constexpr const char* file_name(const char* str) {
 
 #define __FILENAME__ file_name(__FILE__)
 
+
 //
 // Character escaping functions
 //
@@ -71,6 +73,7 @@ constexpr const char* file_name(const char* str) {
 extern const bool needs_escape(const wint_t _char);
 extern inline void output_char(std::ostream& os, char c);
 extern inline void output_wchar(std::ostream& os, wchar_t c);
+
 
 //
 // Data sanitization functions
@@ -91,120 +94,47 @@ inline const char * _log_sanitize(BOOL value)
 }
 
 // Macro to ease declaring a _log_sanitize overload (invokeable via C) for type T
-#define LOG_SANITIZE_OVERLOAD(C, T)     \
-struct Sane##C                          \
-{                                       \
-  T value;                              \
-  Sane##C(T _value) : value(_value) { } \
-};                                      \
-                                        \
-inline Sane##C C(T value)               \
-{                                       \
-    return Sane##C(value);              \
-}                                       \
-                                        \
-inline Sane##C _log_sanitize(T value)   \
-{                                       \
-    return C(value);                    \
-}                                       \
-                                        \
-inline std::ostream& operator<<(        \
-    std::ostream& os,                   \
-	const Sane##C& container)
+#define LOG_SANITIZE_HEADER(C, T)           \
+std::ostream& operator<<(                   \
+    std::ostream& os,                       \
+	const Sane##C& container)               \
+
+#define LOG_SANITIZE(C, T)                  \
+struct Sane##C                              \
+{                                           \
+  T value;                                  \
+  Sane##C(T _value) : value(_value) { }     \
+};                                          \
+                                            \
+inline Sane##C C(T value)                   \
+{                                           \
+    return Sane##C(value);                  \
+}                                           \
+                                            \
+inline Sane##C _log_sanitize(T value)       \
+{                                           \
+    return C(value);                        \
+}                                           \
+                                            \
+extern LOG_SANITIZE_HEADER(C, T)            \
+
 
 // Hex output (type safe)
 // http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
-LOG_SANITIZE_OVERLOAD(hex1, uint8_t)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
-}
-
-LOG_SANITIZE_OVERLOAD(hex2, uint16_t)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
-}
-
-LOG_SANITIZE_OVERLOAD(hex4, uint32_t)
-{
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
-}
+LOG_SANITIZE(hex1, uint8_t);
+LOG_SANITIZE(hex2, uint16_t);
+LOG_SANITIZE(hex4, uint32_t);
 
 // Character output (escaped into a C-string representation)
 // https://en.wikipedia.org/wiki/Escape_sequences_in_C
-LOG_SANITIZE_OVERLOAD(sanitized_char, char)
-{
-	output_char(os, container.value);
-	return os;
-}
+LOG_SANITIZE(sanitized_char, char);
+LOG_SANITIZE(sanitized_wchar, wchar_t);
+LOG_SANITIZE(sanitized_char_pointer, char *);
+LOG_SANITIZE(sanitized_wchar_pointer, wchar_t *);
 
-LOG_SANITIZE_OVERLOAD(sanitized_wchar, wchar_t)
-{
-	output_wchar(os, container.value);
-	return os;
-}
-
-LOG_SANITIZE_OVERLOAD(sanitized_char_pointer, char *)
-{
-	char *v = container.value;
-
-	os << "(char *)";
-	if (v == nullptr)
-		return os << "NULL";
-
-	bool needsEscaping = false;
-
-	while (*v)
-		if (needs_escape(*v++))
-		{
-			needsEscaping = true;
-			break;
-		}
-
-	v = container.value;
-	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
-	if (needsEscaping)
-	{
-		while (*v)
-			output_char(os, *v++);
-	}
-	else
-		os << v;
-
-	return os << "\"";
-}
-
-LOG_SANITIZE_OVERLOAD(sanitized_wchar_pointer, wchar_t *)
-{
-	wchar_t *v = container.value;
-
-	os << "(wchar *)";
-	if (v == nullptr)
-		return os << "NULL";
-
-	bool needsEscaping = false;
-
-	while (*v)
-		if (needs_escape(*v++))
-		{
-			needsEscaping = true;
-			break;
-		}
-
-	v = container.value;
-	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
-	if (needsEscaping)
-	{
-		while (*v)
-			output_wchar(os, *v++);
-	}
-	else
-		os << v;
-
-	return os << "\"";
-}
 
 //
-// Logging defines
+// Function (and argument) logging defines
 //
 
 #define LOG_ARG_START "\n   " << std::setw(20) << std::left 
@@ -278,19 +208,19 @@ extern thread_local std::string _logPrefix;
 		std::cout << _logFuncPrefix << " ignored!\n"; \
 	} } while (0)
 
-	// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
+// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
 #define LOG_UNIMPLEMENTED() \
 	do { if(g_bPrintfOn) { \
 		std::cout << _logFuncPrefix << " unimplemented!\n"; \
 	} } while (0)
 
-	// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
+// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
 #define LOG_INCOMPLETE() \
 	do { if(g_bPrintfOn) { \
 		std::cout << _logFuncPrefix << " incomplete!\n"; \
 	} } while (0)
 
-	// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
+// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
 #define LOG_NOT_SUPPORTED() \
 	do { if(g_bPrintfOn) { \
 		std::cout << _logFuncPrefix << __func__ << " not supported!\n"; \
@@ -298,6 +228,7 @@ extern thread_local std::string _logPrefix;
 
 #else // _DEBUG_TRACE
 
+#define LOG_INIT
 #define LOG_FUNC_BEGIN
 #define LOG_FUNC_ARG(arg)
 #define LOG_FUNC_ARG_TYPE(type, arg)
@@ -312,8 +243,9 @@ extern thread_local std::string _logPrefix;
 
 #endif //  _DEBUG_TRACE
 
+
 //
-// Short hand defines :
+// Short hand function logging defines :
 //
 
 // Log function without arguments
@@ -330,5 +262,62 @@ extern thread_local std::string _logPrefix;
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
+
+
+//
+// Headers for rendering enums, flags and (pointer-to-)types :
+//
+
+// Macro to ease declaration of a render function per Type:
+#define LOGRENDER_HEADER_BY_REF(Type) std::ostream& operator<<(std::ostream& os, const Type& value)
+#define LOGRENDER_HEADER_BY_PTR(Type) std::ostream& operator<<(std::ostream& os, const Type *value)
+
+// Macro for implementation of rendering any Type-ToString :
+#define LOGRENDER_TYPE(Type) LOGRENDER_HEADER_BY_REF(Type) \
+{ return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
+
+// Macro's for Enum-ToString conversions :
+#define ENUM2STR_HEADER(EnumType) LOGRENDER_HEADER_BY_REF(EnumType);
+#define ENUM2STR_START(EnumType) const char * EnumType##ToString(const EnumType &value) { switch (value) {
+#define ENUM2STR_CASE(a) case a: return #a;
+// ENUM2STR_CASE_DEF is needed for #define'd symbols
+#define ENUM2STR_CASE_DEF(a) case a: return #a;
+#define ENUM2STR_END(EnumType) default: return "Unknown_"#EnumType; } }
+#define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
+
+// Macro's for Flags-ToString conversions :
+#define FLAGS2STR_HEADER(FlagType) LOGRENDER_HEADER_BY_REF(FlagType);
+#define FLAGS2STR_START(FlagType) std::string FlagType##ToString(const FlagType &value) { std::string res;
+#define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
+#define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
+#define FLAGS2STR_END_and_LOGRENDER(FlagType) FLAGS2STR_END LOGRENDER_TYPE(FlagType)
+
+// Macro's for Struct-member rendering :
+#define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
+#define LOGRENDER_MEMBER_VALUE(Member) << value.Member
+#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
+#define LOGRENDER_MEMBER_SANITIZED(Member, MemberType) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((MemberType)value.Member)
+
+// Macro to ease declaration of two render functions, for type and pointer-to-type :
+#define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);
+
+// Macro combining pointer-to-type implementation and type rendering header :
+#define LOGRENDER(Type)                                         \
+LOGRENDER_HEADER_BY_PTR(Type)                                   \
+{                                                               \
+	os << "0x" << std::hex << std::uppercase << (void*)(value); \
+	if (value)                                                  \
+		os << " -> "#Type"* {" << *value << "}";                \
+                                                                \
+	return os;                                                  \
+}                                                               \
+                                                                \
+LOGRENDER_HEADER_BY_REF(Type)                                   \
+
+//
+// An example type rendering, for PULONG
+//
+
+LOGRENDER_HEADER_BY_REF(PULONG);
 
 #endif _LOGGING_H

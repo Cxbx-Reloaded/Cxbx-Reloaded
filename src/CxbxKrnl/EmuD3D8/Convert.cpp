@@ -39,6 +39,7 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
+#include "Convert.h"
 
 // About format color components:
 // A = alpha, byte : 0 = fully opaque, 255 = fully transparent
@@ -109,11 +110,18 @@ enum _FormatStorage {
 	Cmprsd // Compressed
 };
 
+enum _FormatSpecial {
+	None = 0,
+	RenderTarget,
+	DepthBuffer
+};
+
 typedef struct _FormatInfo {
 	uint8_t bits_per_pixel;
 	_FormatStorage stored;
 	_ComponentEncoding components;
 	XTL::D3DFORMAT pc;
+	_FormatSpecial special;
 	char *warning;
 } FormatInfo;
 
@@ -129,13 +137,13 @@ static const FormatInfo FormatInfos[] = {
 	// to ARGB is needed (which is implemented in EMUPATCH(D3DResource_Register).
 
 	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, XTL::D3DFMT_L8        },
-	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, XTL::D3DFMT_L8,       "X_D3DFMT_AL8 -> D3DFMT_L8" },
+	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, XTL::D3DFMT_L8        , None, "X_D3DFMT_AL8 -> D3DFMT_L8" },
 	/* 0x02 X_D3DFMT_A1R5G5B5     */ { 16, Swzzld, A1R5G5B5, XTL::D3DFMT_A1R5G5B5  },
-	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, XTL::D3DFMT_X1R5G5B5  },
+	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, XTL::D3DFMT_X1R5G5B5  , RenderTarget },
 	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, XTL::D3DFMT_A4R4G4B4  },
-	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, XTL::D3DFMT_R5G6B5    },
-	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, XTL::D3DFMT_A8R8G8B8  },
-	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, XTL::D3DFMT_X8R8G8B8  }, // Alias : X_D3DFMT_X8L8V8U8 
+	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, XTL::D3DFMT_R5G6B5    , RenderTarget },
+	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, XTL::D3DFMT_A8R8G8B8  , RenderTarget },
+	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, XTL::D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8 
 	/* 0x08 undefined             */ {},
 	/* 0x09 undefined             */ {},
 	/* 0x0A undefined             */ {},
@@ -145,20 +153,20 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, NoCmpnts, XTL::D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
 	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, NoCmpnts, XTL::D3DFMT_DXT5      }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
 	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { 16, Linear, A1R5G5B5, XTL::D3DFMT_A1R5G5B5  },
-	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, XTL::D3DFMT_R5G6B5    },
-	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, XTL::D3DFMT_A8R8G8B8  },
-	/* 0x13 X_D3DFMT_LIN_L8       */ {  8, Linear, ______L8, XTL::D3DFMT_L8        },
+	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, XTL::D3DFMT_R5G6B5    , RenderTarget },
+	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, XTL::D3DFMT_A8R8G8B8  , RenderTarget },
+	/* 0x13 X_D3DFMT_LIN_L8       */ {  8, Linear, ______L8, XTL::D3DFMT_L8        , RenderTarget },
 	/* 0x14 undefined             */ {},
 	/* 0x15 undefined             */ {},
-	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5,   "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" },
-	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5,   "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
+	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, XTL::D3DFMT_R5G6B5    , None, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" },
+	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, XTL::D3DFMT_R5G6B5    , RenderTarget, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
 	/* 0x18 undefined             */ {},
 	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, XTL::D3DFMT_A8        },
 	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, XTL::D3DFMT_A8L8      },
-	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, XTL::D3DFMT_L8,       "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" },
-	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, XTL::D3DFMT_X1R5G5B5  },
+	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, XTL::D3DFMT_L8        , None, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" },
+	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, XTL::D3DFMT_X1R5G5B5  , RenderTarget },
 	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { 16, Linear, A4R4G4B4, XTL::D3DFMT_A4R4G4B4  },
-	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, XTL::D3DFMT_X8R8G8B8  }, // Alias : X_D3DFMT_LIN_X8L8V8U8
+	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, XTL::D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_LIN_X8L8V8U8
 	/* 0x1F X_D3DFMT_LIN_A8       */ {  8, Linear, ______A8, XTL::D3DFMT_A8        },
 	/* 0x20 X_D3DFMT_LIN_A8L8     */ { 16, Linear, ____A8L8, XTL::D3DFMT_A8L8      },
 	/* 0x21 undefined             */ {},
@@ -169,31 +177,31 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x26 undefined             */ {},
 	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, XTL::D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
 	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, XTL::D3DFMT_V8U8      }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
-	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, XTL::D3DFMT_R5G6B5,   "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
-	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     },
-	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8,    "X_D3DFMT_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       }, // Alias : X_D3DFMT_D16_LOCKABLE // TODO : D3DFMT_D16 is always lockable on Xbox; Should PC use D3DFMT_D16_LOCKABLE instead? Needs testcase.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16,      "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
-	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     },
-	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8,    "X_D3DFMT_LIN_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       }, // TODO : D3DFMT_D16 is always lockable on Xbox; Should PC use D3DFMT_D16_LOCKABLE instead? Needs testcase.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16,      "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
-	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, XTL::D3DFMT_A8L8,     "X_D3DFMT_L16 -> D3DFMT_A8L8" },
+	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, XTL::D3DFMT_R5G6B5    , None, "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
+	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
+	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
+	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // Alias : X_D3DFMT_D16_LOCKABLE // TODO : D3DFMT_D16 is always lockable on Xbox; Should PC use D3DFMT_D16_LOCKABLE instead? Needs testcase.
+	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
+	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_LIN_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
+	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // TODO : D3DFMT_D16 is always lockable on Xbox; Should PC use D3DFMT_D16_LOCKABLE instead? Needs testcase.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, XTL::D3DFMT_A8L8      , None, "X_D3DFMT_L16 -> D3DFMT_A8L8" },
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
-	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, XTL::D3DFMT_A8L8,     "X_D3DFMT_LIN_L16 -> D3DFMT_A8L8" },
+	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, XTL::D3DFMT_A8L8      , None, "X_D3DFMT_LIN_L16 -> D3DFMT_A8L8" },
 	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, XTL::D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
-	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
-	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
+	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, XTL::D3DFMT_A1R5G5B5  , None, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
+	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, XTL::D3DFMT_A4R4G4B4  , None, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
 	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, XTL::D3DFMT_Q8W8V8U8  }, // Alias : X_D3DFMT_A8B8G8R8 // TODO : Needs testcase.
-	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, XTL::D3DFMT_A1R5G5B5, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
-	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { 16, Linear, R4G4B4A4, XTL::D3DFMT_A4R4G4B4, "X_D3DFMT_LIN_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
-	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8" },
-	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { 32, Linear, B8G8R8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_LIN_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { 32, Linear, R8G8B8A8, XTL::D3DFMT_A8R8G8B8, "X_D3DFMT_LIN_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, XTL::D3DFMT_A8R8G8B8  , None, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, XTL::D3DFMT_A8R8G8B8  , None, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, XTL::D3DFMT_A1R5G5B5  , None, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
+	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { 16, Linear, R4G4B4A4, XTL::D3DFMT_A4R4G4B4  , None, "X_D3DFMT_LIN_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
+	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, XTL::D3DFMT_A8R8G8B8  , None, "X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8" },
+	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { 32, Linear, B8G8R8A8, XTL::D3DFMT_A8R8G8B8  , None, "X_D3DFMT_LIN_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { 32, Linear, R8G8B8A8, XTL::D3DFMT_A8R8G8B8  , None, "X_D3DFMT_LIN_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
 #if 0
 	/* 0x42 to 0x63 undefined     */ {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},
 	/* 0x64 X_D3DFMT_VERTEXDATA   */ {  8, Linear, NoCmpnts, XTL::D3DFMT_VERTEXDATA },
@@ -265,6 +273,22 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Swzzld);
+
+	return false;
+}
+
+BOOL XTL::EmuXBFormatIsRenderTarget(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		return (FormatInfos[Format].special == RenderTarget);
+
+	return false;
+}
+
+BOOL XTL::EmuXBFormatIsDepthBuffer(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		return (FormatInfos[Format].special == DepthBuffer);
 
 	return false;
 }
@@ -662,3 +686,250 @@ void XTL::EmuUnswizzleRect
 		dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 	}
 } // EmuUnswizzleRect NOPATCH
+
+namespace XTL
+{
+
+const RenderStateInfo DxbxRenderStateInfo[] = {
+
+	//  String                                Ord   Version Type                     Method Native
+	{ "D3DRS_PSALPHAINPUTS0"              /*=   0*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(0) },
+	{ "D3DRS_PSALPHAINPUTS1"              /*=   1*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(1) },
+	{ "D3DRS_PSALPHAINPUTS2"              /*=   2*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(2) },
+	{ "D3DRS_PSALPHAINPUTS3"              /*=   3*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(3) },
+	{ "D3DRS_PSALPHAINPUTS4"              /*=   4*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(4) },
+	{ "D3DRS_PSALPHAINPUTS5"              /*=   5*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(5) },
+	{ "D3DRS_PSALPHAINPUTS6"              /*=   6*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(6) },
+	{ "D3DRS_PSALPHAINPUTS7"              /*=   7*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(7) },
+	{ "D3DRS_PSFINALCOMBINERINPUTSABCD"   /*=   8*/, 3424, xtDWORD,               NV2A_RC_FINAL0 },
+	{ "D3DRS_PSFINALCOMBINERINPUTSEFG"    /*=   9*/, 3424, xtDWORD,               NV2A_RC_FINAL1 },
+	{ "D3DRS_PSCONSTANT0_0"               /*=  10*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(0) },
+	{ "D3DRS_PSCONSTANT0_1"               /*=  11*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(1) },
+	{ "D3DRS_PSCONSTANT0_2"               /*=  12*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(2) },
+	{ "D3DRS_PSCONSTANT0_3"               /*=  13*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(3) },
+	{ "D3DRS_PSCONSTANT0_4"               /*=  14*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(4) },
+	{ "D3DRS_PSCONSTANT0_5"               /*=  15*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(5) },
+	{ "D3DRS_PSCONSTANT0_6"               /*=  16*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(6) },
+	{ "D3DRS_PSCONSTANT0_7"               /*=  17*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(7) },
+	{ "D3DRS_PSCONSTANT1_0"               /*=  18*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(0) },
+	{ "D3DRS_PSCONSTANT1_1"               /*=  19*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(1) },
+	{ "D3DRS_PSCONSTANT1_2"               /*=  20*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(2) },
+	{ "D3DRS_PSCONSTANT1_3"               /*=  21*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(3) },
+	{ "D3DRS_PSCONSTANT1_4"               /*=  22*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(4) },
+	{ "D3DRS_PSCONSTANT1_5"               /*=  23*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(5) },
+	{ "D3DRS_PSCONSTANT1_6"               /*=  24*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(6) },
+	{ "D3DRS_PSCONSTANT1_7"               /*=  25*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR1(7) },
+	{ "D3DRS_PSALPHAOUTPUTS0"             /*=  26*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(0) },
+	{ "D3DRS_PSALPHAOUTPUTS1"             /*=  27*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(1) },
+	{ "D3DRS_PSALPHAOUTPUTS2"             /*=  28*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(2) },
+	{ "D3DRS_PSALPHAOUTPUTS3"             /*=  29*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(3) },
+	{ "D3DRS_PSALPHAOUTPUTS4"             /*=  30*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(4) },
+	{ "D3DRS_PSALPHAOUTPUTS5"             /*=  31*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(5) },
+	{ "D3DRS_PSALPHAOUTPUTS6"             /*=  32*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(6) },
+	{ "D3DRS_PSALPHAOUTPUTS7"             /*=  33*/, 3424, xtDWORD,               NV2A_RC_OUT_ALPHA(7) },
+	{ "D3DRS_PSRGBINPUTS0"                /*=  34*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(0) },
+	{ "D3DRS_PSRGBINPUTS1"                /*=  35*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(1) },
+	{ "D3DRS_PSRGBINPUTS2"                /*=  36*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(2) },
+	{ "D3DRS_PSRGBINPUTS3"                /*=  37*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(3) },
+	{ "D3DRS_PSRGBINPUTS4"                /*=  38*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(4) },
+	{ "D3DRS_PSRGBINPUTS5"                /*=  39*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(5) },
+	{ "D3DRS_PSRGBINPUTS6"                /*=  40*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(6) },
+	{ "D3DRS_PSRGBINPUTS7"                /*=  41*/, 3424, xtDWORD,               NV2A_RC_IN_RGB(7) },
+	{ "D3DRS_PSCOMPAREMODE"               /*=  42*/, 3424, xtDWORD,               NV2A_TX_SHADER_CULL_MODE },
+	{ "D3DRS_PSFINALCOMBINERCONSTANT0"    /*=  43*/, 3424, xtDWORD,               NV2A_RC_COLOR0 },
+	{ "D3DRS_PSFINALCOMBINERCONSTANT1"    /*=  44*/, 3424, xtDWORD,               NV2A_RC_COLOR1 },
+	{ "D3DRS_PSRGBOUTPUTS0"               /*=  45*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(0) },
+	{ "D3DRS_PSRGBOUTPUTS1"               /*=  46*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(1) },
+	{ "D3DRS_PSRGBOUTPUTS2"               /*=  47*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(2) },
+	{ "D3DRS_PSRGBOUTPUTS3"               /*=  48*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(3) },
+	{ "D3DRS_PSRGBOUTPUTS4"               /*=  49*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(4) },
+	{ "D3DRS_PSRGBOUTPUTS5"               /*=  50*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(5) },
+	{ "D3DRS_PSRGBOUTPUTS6"               /*=  51*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(6) },
+	{ "D3DRS_PSRGBOUTPUTS7"               /*=  52*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(7) },
+	{ "D3DRS_PSCOMBINERCOUNT"             /*=  53*/, 3424, xtDWORD,               NV2A_RC_ENABLE },
+	{ "D3DRS_PS_RESERVED"                 /*=  54*/, 3424, xtDWORD,               NV2A_NOP }, // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+	{ "D3DRS_PSDOTMAPPING"                /*=  55*/, 3424, xtDWORD,               NV2A_TX_SHADER_DOTMAPPING },
+	{ "D3DRS_PSINPUTTEXTURE"              /*=  56*/, 3424, xtDWORD,               NV2A_TX_SHADER_PREVIOUS },
+	// End of "pixel-shader" render states, continuing with "simple" render states :
+	{ "D3DRS_ZFUNC"                       /*=  57*/, 3424, xtD3DCMPFUNC,          NV2A_DEPTH_FUNC, D3DRS_ZFUNC },
+	{ "D3DRS_ALPHAFUNC"                   /*=  58*/, 3424, xtD3DCMPFUNC,          NV2A_ALPHA_FUNC_FUNC, D3DRS_ALPHAFUNC },
+	{ "D3DRS_ALPHABLENDENABLE"            /*=  59*/, 3424, xtBOOL,                NV2A_BLEND_FUNC_ENABLE, D3DRS_ALPHABLENDENABLE, "TRUE to enable alpha blending" },
+	{ "D3DRS_ALPHATESTENABLE"             /*=  60*/, 3424, xtBOOL,                NV2A_ALPHA_FUNC_ENABLE, D3DRS_ALPHATESTENABLE, "TRUE to enable alpha tests" },
+	{ "D3DRS_ALPHAREF"                    /*=  61*/, 3424, xtBYTE,                NV2A_ALPHA_FUNC_REF, D3DRS_ALPHAREF },
+	{ "D3DRS_SRCBLEND"                    /*=  62*/, 3424, xtD3DBLEND,            NV2A_BLEND_FUNC_SRC, D3DRS_SRCBLEND },
+	{ "D3DRS_DESTBLEND"                   /*=  63*/, 3424, xtD3DBLEND,            NV2A_BLEND_FUNC_DST, D3DRS_DESTBLEND },
+	{ "D3DRS_ZWRITEENABLE"                /*=  64*/, 3424, xtBOOL,                NV2A_DEPTH_WRITE_ENABLE, D3DRS_ZWRITEENABLE, "TRUE to enable Z writes" },
+	{ "D3DRS_DITHERENABLE"                /*=  65*/, 3424, xtBOOL,                NV2A_DITHER_ENABLE, D3DRS_DITHERENABLE, "TRUE to enable dithering" },
+	{ "D3DRS_SHADEMODE"                   /*=  66*/, 3424, xtD3DSHADEMODE,        NV2A_SHADE_MODEL, D3DRS_SHADEMODE },
+	{ "D3DRS_COLORWRITEENABLE"            /*=  67*/, 3424, xtD3DCOLORWRITEENABLE, NV2A_COLOR_MASK, D3DRS_COLORWRITEENABLE }, // *_ALPHA, etc. per-channel write enable
+	{ "D3DRS_STENCILZFAIL"                /*=  68*/, 3424, xtD3DSTENCILOP,        NV2A_STENCIL_OP_ZFAIL, D3DRS_STENCILZFAIL, "Operation to do if stencil test passes and Z test fails" },
+	{ "D3DRS_STENCILPASS"                 /*=  69*/, 3424, xtD3DSTENCILOP,        NV2A_STENCIL_OP_ZPASS, D3DRS_STENCILPASS, "Operation to do if both stencil and Z tests pass" },
+	{ "D3DRS_STENCILFUNC"                 /*=  70*/, 3424, xtD3DCMPFUNC,          NV2A_STENCIL_FUNC_FUNC, D3DRS_STENCILFUNC },
+	{ "D3DRS_STENCILREF"                  /*=  71*/, 3424, xtBYTE,                NV2A_STENCIL_FUNC_REF, D3DRS_STENCILREF, "BYTE reference value used in stencil test" },
+	{ "D3DRS_STENCILMASK"                 /*=  72*/, 3424, xtBYTE,                NV2A_STENCIL_FUNC_MASK, D3DRS_STENCILMASK, "BYTE mask value used in stencil test" },
+	{ "D3DRS_STENCILWRITEMASK"            /*=  73*/, 3424, xtBYTE,                NV2A_STENCIL_MASK, D3DRS_STENCILWRITEMASK, "BYTE write mask applied to values written to stencil buffer" },
+	{ "D3DRS_BLENDOP"                     /*=  74*/, 3424, xtD3DBLENDOP,          NV2A_BLEND_EQUATION, D3DRS_BLENDOP },
+#ifdef DXBX_USE_D3D9
+	{ "D3DRS_BLENDCOLOR"                  /*=  75*/, 3424, xtD3DCOLOR,            NV2A_BLEND_COLOR, D3DRS_BLENDFACTOR, "D3DCOLOR for D3DBLEND_CONSTANTCOLOR" },
+	// D3D9 D3DRS_BLENDFACTOR : D3DCOLOR used for a constant blend factor during alpha blending for devices that support D3DPBLENDCAPS_BLENDFACTOR
+#else
+	{ "D3DRS_BLENDCOLOR"                  /*=  75*/, 3424, xtD3DCOLOR,            NV2A_BLEND_COLOR, D3DRS_NONE, "D3DCOLOR for D3DBLEND_CONSTANTCOLOR" },
+#endif
+	{ "D3DRS_SWATHWIDTH"                  /*=  76*/, 3424, xtD3DSWATH,            NV2A_SWATH_WIDTH },
+	{ "D3DRS_POLYGONOFFSETZSLOPESCALE"    /*=  77*/, 3424, xtFloat,               NV2A_POLYGON_OFFSET_FACTOR, D3DRS_NONE, "float Z factor for shadow maps" },
+	{ "D3DRS_POLYGONOFFSETZOFFSET"        /*=  78*/, 3424, xtFloat,               NV2A_POLYGON_OFFSET_UNITS },
+	{ "D3DRS_POINTOFFSETENABLE"           /*=  79*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_POINT_ENABLE },
+	{ "D3DRS_WIREFRAMEOFFSETENABLE"       /*=  80*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_LINE_ENABLE },
+	{ "D3DRS_SOLIDOFFSETENABLE"           /*=  81*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_FILL_ENABLE },
+	{ "D3DRS_DEPTHCLIPCONTROL"            /*=  82*/, 4627, xtD3DDCC,              NV2A_DEPTHCLIPCONTROL },
+	{ "D3DRS_STIPPLEENABLE"               /*=  83*/, 4627, xtBOOL,                NV2A_POLYGON_STIPPLE_ENABLE },
+	{ "D3DRS_SIMPLE_UNUSED8"              /*=  84*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED7"              /*=  85*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED6"              /*=  86*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED5"              /*=  87*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED4"              /*=  88*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED3"              /*=  89*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED2"              /*=  90*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SIMPLE_UNUSED1"              /*=  91*/, 4627, xtDWORD,               0 },
+	// End of "simple" render states, continuing with "deferred" render states :
+	{ "D3DRS_FOGENABLE"                   /*=  92*/, 3424, xtBOOL,                NV2A_FOG_ENABLE, D3DRS_FOGENABLE },
+	{ "D3DRS_FOGTABLEMODE"                /*=  93*/, 3424, xtD3DFOGMODE,          NV2A_FOG_MODE, D3DRS_FOGTABLEMODE },
+	{ "D3DRS_FOGSTART"                    /*=  94*/, 3424, xtFloat,               NV2A_FOG_COORD_DIST, D3DRS_FOGSTART },
+	{ "D3DRS_FOGEND"                      /*=  95*/, 3424, xtFloat,               NV2A_FOG_MODE, D3DRS_FOGEND },
+	{ "D3DRS_FOGDENSITY"                  /*=  96*/, 3424, xtFloat,               NV2A_FOG_EQUATION_CONSTANT, D3DRS_FOGDENSITY }, // + NV2A_FOG_EQUATION_LINEAR + NV2A_FOG_EQUATION_QUADRATIC
+	{ "D3DRS_RANGEFOGENABLE"              /*=  97*/, 3424, xtBOOL,                NV2A_FOG_COORD_DIST, D3DRS_RANGEFOGENABLE },
+	{ "D3DRS_WRAP0"                       /*=  98*/, 3424, xtD3DWRAP,             NV2A_TX_WRAP(0), D3DRS_WRAP0 },
+	{ "D3DRS_WRAP1"                       /*=  99*/, 3424, xtD3DWRAP,             NV2A_TX_WRAP(1), D3DRS_WRAP1 },
+	{ "D3DRS_WRAP2"                       /*= 100*/, 3424, xtD3DWRAP,             NV2A_TX_WRAP(2), D3DRS_WRAP2 },
+	{ "D3DRS_WRAP3"                       /*= 101*/, 3424, xtD3DWRAP,             NV2A_TX_WRAP(3), D3DRS_WRAP3 },
+	{ "D3DRS_LIGHTING"                    /*= 102*/, 3424, xtBOOL,                NV2A_LIGHT_MODEL, D3DRS_LIGHTING }, // TODO : Needs push-buffer data conversion
+	{ "D3DRS_SPECULARENABLE"              /*= 103*/, 3424, xtBOOL,                NV2A_RC_FINAL0, D3DRS_SPECULARENABLE },
+	{ "D3DRS_LOCALVIEWER"                 /*= 104*/, 3424, xtBOOL,                0, D3DRS_LOCALVIEWER },
+	{ "D3DRS_COLORVERTEX"                 /*= 105*/, 3424, xtBOOL,                0, D3DRS_COLORVERTEX },
+	{ "D3DRS_BACKSPECULARMATERIALSOURCE"  /*= 106*/, 3424, xtD3DMCS,              0 }, // nsp.
+	{ "D3DRS_BACKDIFFUSEMATERIALSOURCE"   /*= 107*/, 3424, xtD3DMCS,              0 }, // nsp.
+	{ "D3DRS_BACKAMBIENTMATERIALSOURCE"   /*= 108*/, 3424, xtD3DMCS,              0 }, // nsp.
+	{ "D3DRS_BACKEMISSIVEMATERIALSOURCE"  /*= 109*/, 3424, xtD3DMCS,              0 }, // nsp.
+	{ "D3DRS_SPECULARMATERIALSOURCE"      /*= 110*/, 3424, xtD3DMCS,              NV2A_COLOR_MATERIAL, D3DRS_SPECULARMATERIALSOURCE },
+	{ "D3DRS_DIFFUSEMATERIALSOURCE"       /*= 111*/, 3424, xtD3DMCS,              0, D3DRS_DIFFUSEMATERIALSOURCE },
+	{ "D3DRS_AMBIENTMATERIALSOURCE"       /*= 112*/, 3424, xtD3DMCS,              0, D3DRS_AMBIENTMATERIALSOURCE },
+	{ "D3DRS_EMISSIVEMATERIALSOURCE"      /*= 113*/, 3424, xtD3DMCS,              0, D3DRS_EMISSIVEMATERIALSOURCE },
+	{ "D3DRS_BACKAMBIENT"                 /*= 114*/, 3424, xtD3DCOLOR,            NV2A_LIGHT_MODEL_BACK_SIDE_PRODUCT_AMBIENT_PLUS_EMISSION_R }, // ..NV2A_MATERIAL_FACTOR_BACK_B nsp. Was NV2A_LIGHT_MODEL_BACK_AMBIENT_R
+	{ "D3DRS_AMBIENT"                     /*= 115*/, 3424, xtD3DCOLOR,            NV2A_LIGHT_MODEL_FRONT_SIDE_PRODUCT_AMBIENT_PLUS_EMISSION_R, D3DRS_AMBIENT }, // ..NV2A_LIGHT_MODEL_FRONT_AMBIENT_B + NV2A_MATERIAL_FACTOR_FRONT_R..NV2A_MATERIAL_FACTOR_FRONT_A  Was NV2A_LIGHT_MODEL_FRONT_AMBIENT_R
+	{ "D3DRS_POINTSIZE"                   /*= 116*/, 3424, xtFloat,               NV2A_POINT_PARAMETER(0), D3DRS_POINTSIZE },
+	{ "D3DRS_POINTSIZE_MIN"               /*= 117*/, 3424, xtFloat,               0, D3DRS_POINTSIZE_MIN },
+	{ "D3DRS_POINTSPRITEENABLE"           /*= 118*/, 3424, xtBOOL,                NV2A_POINT_SMOOTH_ENABLE, D3DRS_POINTSPRITEENABLE },
+	{ "D3DRS_POINTSCALEENABLE"            /*= 119*/, 3424, xtBOOL,                NV2A_POINT_PARAMETERS_ENABLE, D3DRS_POINTSCALEENABLE },
+	{ "D3DRS_POINTSCALE_A"                /*= 120*/, 3424, xtFloat,               0, D3DRS_POINTSCALE_A },
+	{ "D3DRS_POINTSCALE_B"                /*= 121*/, 3424, xtFloat,               0, D3DRS_POINTSCALE_B },
+	{ "D3DRS_POINTSCALE_C"                /*= 122*/, 3424, xtFloat,               0, D3DRS_POINTSCALE_C },
+	{ "D3DRS_POINTSIZE_MAX"               /*= 123*/, 3424, xtFloat,               0, D3DRS_POINTSIZE_MAX },
+	{ "D3DRS_PATCHEDGESTYLE"              /*= 124*/, 3424, xtDWORD,               0, D3DRS_PATCHEDGESTYLE }, // D3DPATCHEDGESTYLE?
+	{ "D3DRS_PATCHSEGMENTS"               /*= 125*/, 3424, xtDWORD,               0, D3DRS_PATCHSEGMENTS },
+	// TODO -oDxbx : Is X_D3DRS_SWAPFILTER really a xtD3DMULTISAMPLE_TYPE?
+	{ "D3DRS_SWAPFILTER"                  /*= 126*/, 4361, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_NONE, "D3DTEXF_LINEAR etc. filter to use for Swap" }, // nsp.
+	{ "D3DRS_PRESENTATIONINTERVAL"        /*= 127*/, 4627, xtDWORD,               0 }, // nsp.
+	{ "D3DRS_DEFERRED_UNUSED8"            /*= 128*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED7"            /*= 129*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED6"            /*= 130*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED5"            /*= 131*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED4"            /*= 132*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED3"            /*= 133*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED2"            /*= 134*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEFERRED_UNUSED1"            /*= 135*/, 4627, xtDWORD,               0 },
+	// End of "deferred" render states, continuing with "complex" render states :
+	{ "D3DRS_PSTEXTUREMODES"              /*= 136*/, 3424, xtDWORD,               0 },
+	{ "D3DRS_VERTEXBLEND"                 /*= 137*/, 3424, xtD3DVERTEXBLENDFLAGS, NV2A_SKIN_MODE, D3DRS_VERTEXBLEND },
+	{ "D3DRS_FOGCOLOR"                    /*= 138*/, 3424, xtD3DCOLOR,            NV2A_FOG_COLOR, D3DRS_FOGCOLOR }, // SwapRgb
+	{ "D3DRS_FILLMODE"                    /*= 139*/, 3424, xtD3DFILLMODE,         NV2A_POLYGON_MODE_FRONT, D3DRS_FILLMODE },
+	{ "D3DRS_BACKFILLMODE"                /*= 140*/, 3424, xtD3DFILLMODE,         0 }, // nsp.
+	{ "D3DRS_TWOSIDEDLIGHTING"            /*= 141*/, 3424, xtBOOL,                NV2A_POLYGON_MODE_BACK }, // nsp.
+	{ "D3DRS_NORMALIZENORMALS"            /*= 142*/, 3424, xtBOOL,                NV2A_NORMALIZE_ENABLE, D3DRS_NORMALIZENORMALS },
+	{ "D3DRS_ZENABLE"                     /*= 143*/, 3424, xtBOOL,                NV2A_DEPTH_TEST_ENABLE, D3DRS_ZENABLE }, // D3DZBUFFERTYPE?
+	{ "D3DRS_STENCILENABLE"               /*= 144*/, 3424, xtBOOL,                NV2A_STENCIL_ENABLE, D3DRS_STENCILENABLE },
+	{ "D3DRS_STENCILFAIL"                 /*= 145*/, 3424, xtD3DSTENCILOP,        NV2A_STENCIL_OP_FAIL, D3DRS_STENCILFAIL },
+	{ "D3DRS_FRONTFACE"                   /*= 146*/, 3424, xtD3DFRONT,            NV2A_FRONT_FACE }, // nsp.
+	{ "D3DRS_CULLMODE"                    /*= 147*/, 3424, xtD3DCULL,             NV2A_CULL_FACE, D3DRS_CULLMODE },
+	{ "D3DRS_TEXTUREFACTOR"               /*= 148*/, 3424, xtD3DCOLOR,            NV2A_RC_CONSTANT_COLOR0(0), D3DRS_TEXTUREFACTOR },
+#ifdef DXBX_USE_D3D9
+	{ "D3DRS_ZBIAS"                       /*= 149*/, 3424, xtLONG,                0, D3DRS_DEPTHBIAS },
+#else
+	{ "D3DRS_ZBIAS"                       /*= 149*/, 3424, xtLONG,                0, D3DRS_ZBIAS },
+#endif
+	{ "D3DRS_LOGICOP"                     /*= 150*/, 3424, xtD3DLOGICOP,          NV2A_COLOR_LOGIC_OP_OP }, // nsp.
+#ifdef DXBX_USE_D3D9
+	{ "D3DRS_EDGEANTIALIAS"               /*= 151*/, 3424, xtBOOL,                NV2A_LINE_SMOOTH_ENABLE, D3DRS_ANTIALIASEDLINEENABLE }, // Dxbx note : No Xbox ext. (according to Direct3D8) !
+#else
+	{ "D3DRS_EDGEANTIALIAS"               /*= 151*/, 3424, xtBOOL,                NV2A_LINE_SMOOTH_ENABLE, D3DRS_EDGEANTIALIAS }, // Dxbx note : No Xbox ext. (according to Direct3D8) !
+#endif
+	{ "D3DRS_MULTISAMPLEANTIALIAS"        /*= 152*/, 3424, xtBOOL,                NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEANTIALIAS },
+	{ "D3DRS_MULTISAMPLEMASK"             /*= 153*/, 3424, xtDWORD,               NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEMASK },
+//  { "D3DRS_MULTISAMPLETYPE"             /*= 154*/, 3424, xtD3DMULTISAMPLE_TYPE, 0 }, // [-3911] \_ aliasses  D3DMULTISAMPLE_TYPE
+	{ "D3DRS_MULTISAMPLEMODE"             /*= 154*/, 4361, xtD3DMULTISAMPLEMODE,  0 }, // [4361+] /            D3DMULTISAMPLEMODE for the backbuffer
+	{ "D3DRS_MULTISAMPLERENDERTARGETMODE" /*= 155*/, 4242, xtD3DMULTISAMPLEMODE,  NV2A_RT_FORMAT },
+	{ "D3DRS_SHADOWFUNC"                  /*= 156*/, 3424, xtD3DCMPFUNC,          NV2A_TX_RCOMP },
+	{ "D3DRS_LINEWIDTH"                   /*= 157*/, 3424, xtFloat,               NV2A_LINE_WIDTH },
+	{ "D3DRS_SAMPLEALPHA"                 /*= 158*/, 4627, xtD3DSAMPLEALPHA,      0 }, // TODO : Later than 3424, but earlier then 4627?
+	{ "D3DRS_DXT1NOISEENABLE"             /*= 159*/, 3424, xtBOOL,                NV2A_CLEAR_DEPTH_VALUE },
+	{ "D3DRS_YUVENABLE"                   /*= 160*/, 3911, xtBOOL,                NV2A_CONTROL0 },
+	{ "D3DRS_OCCLUSIONCULLENABLE"         /*= 161*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
+	{ "D3DRS_STENCILCULLENABLE"           /*= 162*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
+	{ "D3DRS_ROPZCMPALWAYSREAD"           /*= 163*/, 3911, xtBOOL,                0 },
+	{ "D3DRS_ROPZREAD"                    /*= 164*/, 3911, xtBOOL,                0 },
+	{ "D3DRS_DONOTCULLUNCOMPRESSED"       /*= 165*/, 3911, xtBOOL,                0 }
+};
+
+/*Direct3D8 states unused :
+	D3DRS_LINEPATTERN
+	D3DRS_LASTPIXEL
+	D3DRS_ZVISIBLE
+	D3DRS_WRAP4
+	D3DRS_WRAP5
+	D3DRS_WRAP6
+	D3DRS_WRAP7
+	D3DRS_CLIPPING
+	D3DRS_FOGVERTEXMODE
+	D3DRS_CLIPPLANEENABLE
+	D3DRS_SOFTWAREVERTEXPROCESSING
+	D3DRS_DEBUGMONITORTOKEN
+	D3DRS_INDEXEDVERTEXBLENDENABLE
+	D3DRS_TWEENFACTOR
+	D3DRS_POSITIONORDER
+	D3DRS_NORMALORDER
+
+Direct3D9 states unused :
+	D3DRS_SCISSORTESTENABLE = 174,
+	D3DRS_SLOPESCALEDEPTHBIAS = 175,
+	D3DRS_ANTIALIASEDLINEENABLE = 176,
+	D3DRS_MINTESSELLATIONLEVEL = 178,
+	D3DRS_MAXTESSELLATIONLEVEL = 179,
+	D3DRS_ADAPTIVETESS_X = 180,
+	D3DRS_ADAPTIVETESS_Y = 181,
+	D3DRS_ADAPTIVETESS_Z = 182,
+	D3DRS_ADAPTIVETESS_W = 183,
+	D3DRS_ENABLEADAPTIVETESSELLATION = 184,
+	D3DRS_TWOSIDEDSTENCILMODE = 185,   // BOOL enable/disable 2 sided stenciling
+	D3DRS_CCW_STENCILFAIL = 186,   // D3DSTENCILOP to do if ccw stencil test fails
+	D3DRS_CCW_STENCILZFAIL = 187,   // D3DSTENCILOP to do if ccw stencil test passes and Z test fails
+	D3DRS_CCW_STENCILPASS = 188,   // D3DSTENCILOP to do if both ccw stencil and Z tests pass
+	D3DRS_CCW_STENCILFUNC = 189,   // D3DCMPFUNC fn.  ccw Stencil Test passes if ((ref & mask) stencilfn (stencil & mask)) is true
+	D3DRS_COLORWRITEENABLE1 = 190,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+	D3DRS_COLORWRITEENABLE2 = 191,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+	D3DRS_COLORWRITEENABLE3 = 192,   // Additional ColorWriteEnables for the devices that support D3DPMISCCAPS_INDEPENDENTWRITEMASKS
+	D3DRS_SRGBWRITEENABLE = 194,   // Enable rendertarget writes to be DE-linearized to SRGB (for formats that expose D3DUSAGE_QUERY_SRGBWRITE)
+	D3DRS_DEPTHBIAS = 195,
+	D3DRS_WRAP8 = 198,   // Additional wrap states for vs_3_0+ attributes with D3DDECLUSAGE_TEXCOORD
+	D3DRS_WRAP9 = 199,
+	D3DRS_WRAP10 = 200,
+	D3DRS_WRAP11 = 201,
+	D3DRS_WRAP12 = 202,
+	D3DRS_WRAP13 = 203,
+	D3DRS_WRAP14 = 204,
+	D3DRS_WRAP15 = 205,
+	D3DRS_SEPARATEALPHABLENDENABLE = 206,  // TRUE to enable a separate blending function for the alpha channel
+	D3DRS_SRCBLENDALPHA = 207,  // SRC blend factor for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
+	D3DRS_DESTBLENDALPHA = 208,  // DST blend factor for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
+	D3DRS_BLENDOPALPHA = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
+*/
+
+}; // end of namespace XTL 
