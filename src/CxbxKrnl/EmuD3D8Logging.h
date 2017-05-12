@@ -39,7 +39,11 @@
 //#include <sstream> // for std::ostream
 //#include "EmuXTL.h"
 #include "Logging.h"
+
+namespace XTL
+{
 #include "EmuD3D8Types.h"
+}
 
 // prevent name collisions
 namespace xboxkrnl
@@ -59,11 +63,9 @@ namespace XTL
 // Xbox D3D LOGRENDER_HEADER(Type) declarations
 //
 
-#if 0
 LOGRENDER_HEADER(D3DVIEWPORT8);
 
 LOGRENDER_HEADER(X_D3DResource);
-#endif
 
 }; // end of namespace XTL
 

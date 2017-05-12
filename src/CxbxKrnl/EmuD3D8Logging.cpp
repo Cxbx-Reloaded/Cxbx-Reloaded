@@ -37,7 +37,6 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Logging.h"
-#include "EmuD3D8Types.h"
 #include "EmuD3D8Logging.h"
 
 // prevent name collisions
@@ -59,7 +58,6 @@ namespace XTL
 // Xbox D3D LOGRENDER(Type) implementations
 //
 
-#if 0
 LOGRENDER(D3DVIEWPORT8)
 {
 	return os
@@ -78,6 +76,5 @@ LOGRENDER(X_D3DResource)
 		LOGRENDER_MEMBER(Data)
 		LOGRENDER_MEMBER(Lock);
 }
-#endif
 
 }; // end of namespace XTL
