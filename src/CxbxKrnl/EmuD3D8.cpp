@@ -5857,7 +5857,6 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
 	CxbxGetPixelContainerMeasures(pPixelContainer, dwLevel, &(pDesc->Width), &(pDesc->Height), &dwPitch, &(pDesc->Size));
 }
 
-#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: IDirect3DSurface8_GetDesc
 // ******************************************************************
@@ -5928,7 +5927,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 
     return hRet;
 }
-#endif
 
 // ******************************************************************
 // * patch: IDirect3DSurface8_LockRect
