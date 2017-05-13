@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->State.h
+// *   Cxbx->EmuD3D8Logging.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,25 +26,60 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2004 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef STATE_H
-#define STATE_H
+#ifndef _EMU_D3D8_LOGGING_H
+#define _EMU_D3D8_LOGGING_H
 
-#define X_D3DRS_UNSUPPORTED (X_D3DRS_LAST + 1)
+#pragma once
 
-// XDK version independent renderstate table, containing pointers to the original locations.
-extern DWORD *EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
+//#include <sstream> // for std::ostream
+//#include "EmuXTL.h"
+#include "Logging.h"
 
-// EmuD3DDeferredRenderState
-extern DWORD *EmuD3DDeferredRenderState;
+namespace XTL
+{
+#include "EmuD3D8Types.h"
 
-// EmuD3DDeferredTextureState
-extern DWORD *EmuD3DDeferredTextureState;
+//
+// Host D3D LOGRENDER_HEADER(Type) declarations
+//
 
-extern void EmuUpdateDeferredStates();
+ENUM2STR_HEADER(D3DPOOL)
 
-#endif
+//
+// Headers for rendering Xbox D3D enum types :
+//
+
+// TODO: fill out these enumeration tables for convienance
+//ENUM2STR_HEADER(X_D3DBLENDOP)
+//ENUM2STR_HEADER(X_D3DBLEND)
+//ENUM2STR_HEADER(X_D3DCMPFUNC)
+//ENUM2STR_HEADER(X_D3DFILLMODE)
+//ENUM2STR_HEADER(X_D3DSHADEMODE)
+//ENUM2STR_HEADER(X_D3DSTENCILOP)
+//ENUM2STR_HEADER(X_D3DTEXTURESTAGESTATETYPE)
+//ENUM2STR_HEADER(X_D3DCALLBACK)
+
+//FLAGS2STR_HEADER(ALLOCATION_TYPE) // Not really an enum
+ENUM2STR_HEADER(X_D3DCULL)
+ENUM2STR_HEADER(X_D3DFORMAT)
+ENUM2STR_HEADER(X_D3DPRIMITIVETYPE)
+ENUM2STR_HEADER(X_D3DRESOURCETYPE)
+ENUM2STR_HEADER(X_D3DSET_DEPTH_CLIP_PLANES_FLAGS)
+
+//
+// Xbox D3D LOGRENDER_HEADER(Type) declarations
+//
+
+LOGRENDER_HEADER(D3DVIEWPORT8)
+LOGRENDER_HEADER(X_D3DDISPLAYMODE)
+LOGRENDER_HEADER(X_D3DResource)
+LOGRENDER_HEADER(X_D3DPixelContainer)
+
+}; // end of namespace XTL
+
+#endif _EMU_D3D8_LOGGING_H

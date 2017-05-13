@@ -75,10 +75,9 @@ OOVPA_XREF(D3D_BlockOnTime, 5849, 6, XREF_D3D_BLOCKONTIME, XRefZero)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DTexture_GetLevelDesc
+// * Get2DSurfaceDesc
 // ******************************************************************
-// * NOTE: We are actually intercepting Get2DSurfaceDesc, because
-// *       GetLevelDesc Simply redirects to that function
+// * NOTE: D3DTexture_GetLevelDesc and D3DSurface_GetDesc redirect here
 // ******************************************************************
 OOVPA_NO_XREF(Get2DSurfaceDesc, 5849, 10)
 
@@ -228,7 +227,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DResource_AddRef, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_Release, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_IsBusy, 4361, PATCH),
-	REGISTER_OOVPA(D3DSurface_GetDesc, 4134, PATCH),
+	REGISTER_OOVPA(D3DSurface_GetDesc, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5233, PATCH),
 	REGISTER_OOVPA(D3DPalette_Lock2, 4627, PATCH),
 	REGISTER_OOVPA(D3DTexture_LockRect, 5788, PATCH),

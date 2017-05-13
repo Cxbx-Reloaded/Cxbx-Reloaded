@@ -216,7 +216,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 			// TODO: Move this into a function rather than duplicating from HLE scanning code
 			for (int v = 0; v<44; v++) {
-				XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+				XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
 			}
 
 			for (int s = 0; s<4; s++) {
@@ -485,7 +485,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                             for(int v=0;v<44;v++)
                             {
-                                XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+                                XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
                             }
 
 							g_SymbolAddresses["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
