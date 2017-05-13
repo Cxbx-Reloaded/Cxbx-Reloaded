@@ -752,7 +752,6 @@ VOID WINAPI EMUPATCH(Get2DSurfaceDesc)
     X_D3DSURFACE_DESC   *pDesc
 );
 
-#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
 // ******************************************************************
 // * patch: IDirect3DSurface8_GetDesc
 // ******************************************************************
@@ -761,7 +760,6 @@ HRESULT WINAPI EMUPATCH(D3DSurface_GetDesc)
     X_D3DResource      *pThis,
     X_D3DSURFACE_DESC  *pDesc
 );
-#endif
 
 // ******************************************************************
 // * patch: IDirect3DSurface8_LockRect
