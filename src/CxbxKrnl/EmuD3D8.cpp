@@ -629,13 +629,13 @@ inline bool IsYuvSurface(const XTL::X_D3DResource *pXboxResource)
 
 inline bool IsXboxResourceLocked(const XTL::X_D3DResource *pXboxResource)
 {
-	bool result = pXboxResource->Common & X_D3DCOMMON_ISLOCKED;
+	bool result = !!(pXboxResource->Common & X_D3DCOMMON_ISLOCKED);
 	return result;
 }
 
 inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 {
-	bool result = pXboxResource->Common & X_D3DCOMMON_D3DCREATED;
+	bool result = !!(pXboxResource->Common & X_D3DCOMMON_D3DCREATED);
 	return result;
 }
 
