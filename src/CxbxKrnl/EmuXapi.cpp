@@ -162,11 +162,10 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-	static BOOL first = true;
-	if (first)	{
+	if (DeviceType->CurrentConnected == 0) {
 		DeviceType->CurrentConnected = 1;
 	}
-
+		
     DWORD ret = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
@@ -190,14 +189,22 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(pdwInsertions)
 		LOG_FUNC_ARG(pdwRemovals)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
+	BOOL ret = FALSE;
 
-	// Always report no device changes
-	*pdwInsertions = 0;
+	// If we have no connected devices, report one insertion
+	if (DeviceType->CurrentConnected == 0) {
+		*pdwInsertions = 1;
+		ret = TRUE;
+	} else	{
+		// Otherwise, report no changes
+		*pdwInsertions = 0;
+	}
+
 	*pdwRemovals = 0;  
 
-	RETURN(FALSE);
+	RETURN(ret);
 }
 
 // ******************************************************************
