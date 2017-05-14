@@ -1937,6 +1937,7 @@ static void EmuUnswizzleTextureStages()
 
 		HRESULT hRet;
 		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
+
 		if (pHostTexture != nullptr)
 		{
 			hRet = pHostTexture->UnlockRect(0); // remove old lock
@@ -2809,7 +2810,13 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
     //*/
 
-	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
+	
+	static X_D3DSurface *pBackBuffer;
+#if 1
+	pBackBuffer = g_pCachedRenderTarget;
+	pBackBuffer->Common++;
+#else
+	pBackBuffer = EmuNewD3DSurface();
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
     if(BackBuffer == -1)
@@ -2824,7 +2831,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	SetHostSurface(pBackBuffer, pNewHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
-
+#endif
     return pBackBuffer;
 }
 
@@ -8176,33 +8183,18 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-    IDirect3DSurface8 *pPCRenderTarget = nullptr;
+
+	if (pRenderTarget == NULL)
+		pRenderTarget = g_pCachedRenderTarget;
+
+	EmuVerifyResourceIsRegistered(pRenderTarget);
+    IDirect3DSurface8 *pPCRenderTarget = GetHostSurface(pRenderTarget);
+
     IDirect3DSurface8 *pPCNewZStencil  = nullptr;
-
-    if(pRenderTarget != NULL)
-    {
-		if(GetHostSurface(pRenderTarget) != nullptr)
-		{
-			EmuVerifyResourceIsRegistered(pRenderTarget);
-			pPCRenderTarget = GetHostSurface(pRenderTarget);
-		}
-		else
-		{
-			pPCRenderTarget = GetHostSurface(g_pCachedRenderTarget);
-		}
-    }
-
     if(pNewZStencil != NULL)
     {
-        if(GetHostSurface(pNewZStencil) != nullptr)
-        {
-            EmuVerifyResourceIsRegistered(pNewZStencil);
-            pPCNewZStencil = GetHostSurface(pNewZStencil);
-        }
-        else
-        {
-            pPCNewZStencil = GetHostSurface(g_pCachedDepthStencil);
-        }
+        EmuVerifyResourceIsRegistered(pNewZStencil);
+        pPCNewZStencil = GetHostSurface(pNewZStencil);
     }
 
     // TODO: Follow that stencil!
