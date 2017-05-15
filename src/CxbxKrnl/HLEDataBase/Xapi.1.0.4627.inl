@@ -287,6 +287,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(XInputGetState, 4928, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4928, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
 	REGISTER_OOVPA(XInputGetCapabilities, 4831, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureBeginEx, 4627, PATCH), // +s, not necessary?
