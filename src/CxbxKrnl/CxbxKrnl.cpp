@@ -316,6 +316,22 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		DbgPrintf("EmuMain: Loaded contiguous memory.bin\n");
 
+	// Map memory.bin contents into tiled memory too :
+	void *tiled_memory = (void *)MapViewOfFileEx(
+		hFileMapping,
+		FILE_MAP_READ | FILE_MAP_WRITE,
+		/* dwFileOffsetHigh */0,
+		/* dwFileOffsetLow */0,
+		CONTIGUOUS_MEMORY_SIZE,
+		(void *)0xF0000000);
+	if (tiled_memory == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory!");
+		return nullptr;
+	}
+
+	DbgPrintf("EmuMain: Mapped contiguous to tiled memory\n");
+
 	return memory;
 }
 
