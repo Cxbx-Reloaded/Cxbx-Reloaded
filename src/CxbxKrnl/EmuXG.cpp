@@ -248,7 +248,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
 		LOG_FUNC_ARG(Levels)
-		LOG_FUNC_ARG(Usage) // TODO : How to embed this?
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage) // TODO : How to embed this?
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_ARG(Pool) // TODO : How to embed this?
 		LOG_FUNC_ARG(pTexture)
