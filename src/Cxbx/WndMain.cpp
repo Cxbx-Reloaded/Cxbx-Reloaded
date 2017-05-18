@@ -43,6 +43,9 @@
 
 #include <io.h>
 
+#include <sstream> // for std::stringstream
+#include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
+
 #define STBI_ONLY_JPEG
 #define STBI_NO_LINEAR
 #define STB_IMAGE_IMPLEMENTATION
@@ -867,7 +870,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ShowVideoConfig(hwnd);
                     break;
 
-				case ID_CACHE_CLEARHLECACHE:
+				case ID_CACHE_CLEARHLECACHE_ALL:
 				{
 					std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
 					std::string fullpath = cacheDir + "*.ini";
@@ -892,11 +895,27 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						FindClose(hFind);
 					}
 
-					MessageBox(m_hwnd, "The HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+					MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 				}
 				break;
 
-                case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
+				case ID_CACHE_CLEARHLECACHE_CURRENT:
+				{
+					std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+
+					// Hash the loaded XBE's header, use it as a filename
+					uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
+					std::stringstream sstream;
+					sstream << cacheDir << std::hex << uiHash << ".ini";
+					std::string fullpath = sstream.str();
+
+					if (DeleteFile(fullpath.c_str())) {
+						MessageBox(m_hwnd, "This title's HLE Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
+					}
+				}
+				break;
+
+				case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
                 {
                     if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
                         m_KrnlDebug = DM_CONSOLE;
@@ -1161,6 +1180,12 @@ void WndMain::LoadLogo()
 // refresh menu items
 void WndMain::RefreshMenus()
 {
+	bool XbeLoaded = (m_Xbe != 0);
+	bool Running = (m_hwndChild != 0);
+	UINT MF_WhenXbeLoaded = XbeLoaded ? MF_ENABLED : MF_GRAYED;
+	UINT MF_WhenXbeLoadedNotRunning = (XbeLoaded && !Running) ? MF_ENABLED : MF_GRAYED;
+	UINT MF_WhenXbeLoadedAndRunning = (XbeLoaded && Running) ? MF_ENABLED : MF_GRAYED;
+
     // disable/enable appropriate menus
     {
         HMENU menu = GetMenu(m_hwnd);
@@ -1170,13 +1195,13 @@ void WndMain::RefreshMenus()
             HMENU file_menu = GetSubMenu(menu, 0);
 
             // enable/disable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable/disable save .xbe file
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable/disable save .xbe file as
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
 			
             // recent xbe files menu
             {
@@ -1195,14 +1220,14 @@ void WndMain::RefreshMenus()
             HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
             // enable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable logo bitmap menu
-            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_WhenXbeLoaded);
 
             // enable patch menu
-            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_WhenXbeLoaded);
 
             // patch menu
             {
@@ -1266,6 +1291,10 @@ void WndMain::RefreshMenus()
 		// settings menu
 		{
 			HMENU settings_menu = GetSubMenu(menu, 3);
+
+			// enable/disable clear current hle cache
+			EnableMenuItem(settings_menu, ID_CACHE_CLEARHLECACHE_CURRENT, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
+
 			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
 
 			UINT chk_flag = (m_FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
@@ -1283,10 +1312,10 @@ void WndMain::RefreshMenus()
             HMENU emul_menu = GetSubMenu(menu, 4);
 
             // enable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | ((m_Xbe == 0 || (m_hwndChild != NULL)) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
             // enable emulation stop
-            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | ((m_hwndChild == NULL) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
         }
     }
 }
