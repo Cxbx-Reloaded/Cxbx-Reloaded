@@ -526,7 +526,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 5558, 11,
 
-    XREF_DSBUFFERGETSTATUSA,
+	XREF_McpxBuffer_GetStatus,
     XRefZero)
 
         // CMcpxBuffer_GetStatus+0x04 : mov ecx, eax

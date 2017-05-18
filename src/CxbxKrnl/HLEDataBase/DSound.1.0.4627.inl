@@ -276,7 +276,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 4721, 10,
 
-    XREF_DSBUFFERGETSTATUSA,
+	XREF_McpxBuffer_GetStatus,
     XRefZero)
 
         // CMcpxBuffer_GetStatus+0x00 : movzx eax, word ptr [esi+0x12]
@@ -301,7 +301,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 4831, 13,
 
-    XREF_DSBUFFERGETSTATUSA,
+	XREF_McpxBuffer_GetStatus,
     XRefZero)
 
         { 0x00, 0x0F }, // (Offset,Value)-Pair #1

@@ -715,7 +715,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 4134, 11,
 
-    XREF_DSBUFFERGETSTATUSA,
+	XREF_MCPXBUFFER_GETSTATUS,
     XRefZero)
 
         // CMcpxBuffer_GetStatus+0x0A : mov esi, ecx
@@ -743,11 +743,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(DirectSound_CDirectSoundBuffer_GetStatus, 4134, 10,
 
-	XREF_DSBUFFERGETSTATUSB,
+	XREF_CDIRECTSOUNDBUFFER_GETSTATUS,
 	XRefOne)
 
 	// DirectSound_CDirectSoundBuffer_GetStatus+0x35 : call [CMcpxBuffer::GetStatus]
-	XREF_ENTRY(0x35, XREF_DSBUFFERGETSTATUSA),  // (Offset,Value)-Pair #1
+	XREF_ENTRY(0x35, XREF_MCPXBUFFER_GETSTATUS),  // (Offset,Value)-Pair #1
 
 												// DirectSound_CDirectSoundBuffer_GetStatus+0x21 : mov eax, 0x80004005
 	{ 0x21, 0xB8 }, // (Offset,Value)-Pair #2
@@ -2187,7 +2187,7 @@ OOVPA_XREF(IDirectSoundBuffer_GetStatus, 4134, 9,
     XRefOne)
 
         // IDirectSoundBuffer_GetStatus+0x15 : call [CDirectSoundBuffer::GetStatus]
-        XREF_ENTRY( 0x15, XREF_DSBUFFERGETSTATUSB ),  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x15, XREF_CDIRECTSOUNDBUFFER_GETSTATUS),  // (Offset,Value)-Pair #1
 
         // IDirectSoundBuffer_GetStatus+0x04 : push [esp+0x08]
         { 0x04, 0xFF }, // (Offset,Value)-Pair #2
