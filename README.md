@@ -11,7 +11,6 @@ Cxbx-Reloaded is still pretty unstable, don't expect it to run much at this poin
 
 ## System Requirements
   * 64-bit Windows (7, 8 and 10 are known to work, 32-bit installations are not supported)
-  * Any CPU that supports AVX [View List](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#CPUs_with_AVX)
   * A graphics card that supports Direct3D 8.
 
 ## Automated Builds

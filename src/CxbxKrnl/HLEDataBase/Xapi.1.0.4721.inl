@@ -52,6 +52,7 @@ OOVPATable XAPI_4721[] = {
 	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
 	// REGISTER_OOVPA(XInputClose, 4361, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete 
 	// REGISTER_OOVPA(XapiInitProcess, 4361, PATCH), // obsolete, Too High Level
     // REGISTER_OOVPA(XapiBootDash, 3911, PATCH), // obsolete 
