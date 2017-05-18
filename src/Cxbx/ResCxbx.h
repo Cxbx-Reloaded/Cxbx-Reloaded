@@ -91,7 +91,8 @@
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
 #define ID_EMULATION_STOP               40082
 #define ID_SETTINGS_CACHE               40083
-#define ID_CACHE_CLEARHLECACHE          40084
+#define ID_CACHE_CLEARHLECACHE_ALL      40084
+#define ID_CACHE_CLEARHLECACHE_CURRENT  40085
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
