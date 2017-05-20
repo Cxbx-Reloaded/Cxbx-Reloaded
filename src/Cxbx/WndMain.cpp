@@ -1033,7 +1033,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case ID_EMULATION_LLE_JIT:
 				{
 					m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
-
+					
 					RefreshMenus();
 				}
 				break;
@@ -1295,16 +1295,14 @@ void WndMain::RefreshMenus()
 			// enable/disable clear current hle cache
 			EnableMenuItem(settings_menu, ID_CACHE_CLEARHLECACHE_CURRENT, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
-			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
-
 			UINT chk_flag = (m_FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_JIT, chk_flag);
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_JIT, chk_flag);
 			
 			chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_APU, chk_flag);
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_APU, chk_flag);
 
 			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_GPU, chk_flag);
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
 		}
 
         // emulation menu
