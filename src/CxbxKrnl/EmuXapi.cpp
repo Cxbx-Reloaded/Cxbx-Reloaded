@@ -193,6 +193,17 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 	BOOL ret = FALSE;
 
+	// JSRF Hack: Always return no device changes
+	// Without this, JSRF hard crashes sometime after calling this function
+	// I HATE game specific hacks, but I've wasted three weeks trying to solve this already
+	// TitleID 0x49470018 = JSRF NTSC-U
+	// TitleID 0x5345000A = JSRF PAL
+	// ~Luke Usher
+	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
+	if (pCertificate->dwTitleId == 0x49470018 || pCertificate->dwTitleId == 0x5345000A) {
+		RETURN(ret);
+	}
+
 	// If we have no connected devices, report one insertion
 	if (DeviceType->CurrentConnected == 0) {
 		*pdwInsertions = 1;
