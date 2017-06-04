@@ -71,6 +71,7 @@ CHAR            *g_strCurDrive= NULL;
 volatile bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
+bool g_XInputEnabled = false;
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 LARGE_INTEGER	HostSystemTimeDelta = {};

@@ -37,6 +37,6 @@
 // ******************************************************************
 // * patch: XInputPCPoll
 // ******************************************************************
-// void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
+void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
 
 #endif

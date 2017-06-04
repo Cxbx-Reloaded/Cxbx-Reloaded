@@ -89,7 +89,6 @@ XFIBER g_Fibers[256];
 // Number of fiber routines queued
 int	   g_FiberCount = 0;
 
-
 // ******************************************************************
 // * patch: XFormatUtilityDrive
 // ******************************************************************
@@ -462,8 +461,12 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
             if(dwPort == 0)
             {
-                EmuDInputPoll(pState);
-		//		EmuXInputPCPoll(pState);
+				if (g_XInputEnabled) {
+					EmuXInputPCPoll(pState);
+				} else {
+					EmuDInputPoll(pState);
+				}
+				
                 ret = ERROR_SUCCESS;
             }
         }

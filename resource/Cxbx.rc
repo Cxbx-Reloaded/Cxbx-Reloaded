@@ -131,6 +131,8 @@ BEGIN
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND, GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM SEPARATOR
+        MENUITEM "Use XInput",                  ID_SETTINGS_XINPUT
+        MENUITEM SEPARATOR
         POPUP "&HLE Cache"
         BEGIN
             MENUITEM "&Clear entire HLE Cache",            ID_CACHE_CLEARHLECACHE_ALL
