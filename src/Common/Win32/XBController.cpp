@@ -782,76 +782,76 @@ void XBController::ListenPoll(XTL::XINPUT_STATE *Controller)
                     Controller->Gamepad.sThumbRX -= wValue;
                     break;
                 case XBCTRL_OBJECT_A:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_A] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_B:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_B] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_X:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_X] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_Y:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_Y] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_WHITE:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_WHITE] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_BLACK:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_BLACK] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_LTRIGGER:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_LEFT_TRIGGER] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_RTRIGGER:
-                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] = (wValue / 128);
+                    Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_RIGHT_TRIGGER] = (wValue / 128);
                     break;
                 case XBCTRL_OBJECT_DPADUP:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_UP;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_UP;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_UP;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_UP;
                     break;
                 case XBCTRL_OBJECT_DPADDOWN:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_DOWN;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_DOWN;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_DOWN;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_DOWN;
                     break;
                 case XBCTRL_OBJECT_DPADLEFT:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_LEFT;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_LEFT;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_LEFT;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_LEFT;
                     break;
                 case XBCTRL_OBJECT_DPADRIGHT:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_RIGHT;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_RIGHT;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_RIGHT;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_RIGHT;
                     break;
                 case XBCTRL_OBJECT_BACK:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_BACK;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_BACK;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_BACK;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_BACK;
                     break;
                 case XBCTRL_OBJECT_START:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_START;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_START;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_START;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_START;
                     break;
                 case XBCTRL_OBJECT_LTHUMB:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_LEFT_THUMB;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_LEFT_THUMB;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_LEFT_THUMB;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_LEFT_THUMB;
                     break;
                 case XBCTRL_OBJECT_RTHUMB:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_RIGHT_THUMB;
+                        Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_RIGHT_THUMB;
                     else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_RIGHT_THUMB;
+                        Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_RIGHT_THUMB;
                     break;
             }
         }

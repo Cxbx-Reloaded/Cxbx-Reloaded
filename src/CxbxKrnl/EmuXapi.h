@@ -230,6 +230,30 @@ typedef struct _XINPUT_STATE
 XINPUT_STATE, *PXINPUT_STATE;
 
 // ******************************************************************
+// * offsets into analog button array
+// ******************************************************************
+#define XB_XINPUT_GAMEPAD_A                0
+#define XB_XINPUT_GAMEPAD_B                1
+#define XB_XINPUT_GAMEPAD_X                2
+#define XB_XINPUT_GAMEPAD_Y                3
+#define XB_XINPUT_GAMEPAD_BLACK            4
+#define XB_XINPUT_GAMEPAD_WHITE            5
+#define XB_XINPUT_GAMEPAD_LEFT_TRIGGER     6
+#define XB_XINPUT_GAMEPAD_RIGHT_TRIGGER    7
+
+// ******************************************************************
+// * masks for digital buttons
+// ******************************************************************
+#define XB_XINPUT_GAMEPAD_DPAD_UP          0x00000001
+#define XB_XINPUT_GAMEPAD_DPAD_DOWN        0x00000002
+#define XB_XINPUT_GAMEPAD_DPAD_LEFT        0x00000004
+#define XB_XINPUT_GAMEPAD_DPAD_RIGHT       0x00000008
+#define XB_XINPUT_GAMEPAD_START            0x00000010
+#define XB_XINPUT_GAMEPAD_BACK             0x00000020
+#define XB_XINPUT_GAMEPAD_LEFT_THUMB       0x00000040
+#define XB_XINPUT_GAMEPAD_RIGHT_THUMB      0x00000080
+
+// ******************************************************************
 // * XINPUT_FEEDBACK_HEADER
 // ******************************************************************
 typedef struct _XINPUT_FEEDBACK_HEADER

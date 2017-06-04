@@ -95,6 +95,7 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 // 4 controllers
 #define XINPUT_HANDLE_SLOTS 4
 
+extern bool g_XInputEnabled;
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 extern void InitializeSectionStructures(void);
