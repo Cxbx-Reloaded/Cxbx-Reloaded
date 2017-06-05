@@ -199,15 +199,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 			// Fix up Render state and Texture States
 			if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
-				CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+				EmuWarning("EmuD3DDeferredRenderState was not found!");
 			}
 			
 			if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
-				CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+				EmuWarning("EmuD3DDeferredTextureState was not found!");
 			}
 
 			if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
-				CxbxKrnlCleanup("D3DDEVICE was not found!");
+				EmuWarning("D3DDEVICE was not found!");
 			}
 
 			XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
@@ -215,14 +215,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			XRefDataBase[XREF_D3DDEVICE] = g_SymbolAddresses["D3DDEVICE"];
 
 			// TODO: Move this into a function rather than duplicating from HLE scanning code
-			for (int v = 0; v<44; v++) {
-				XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
-			}
+			if (XTL::EmuD3DDeferredRenderState != nullptr) {
+				for (int v = 0; v<44; v++) {
+					XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
+				}
 
-			for (int s = 0; s<4; s++) {
-				for (int v = 0; v<32; v++)
-					XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
+				for (int s = 0; s<4; s++) {
+					for (int v = 0; v<32; v++)
+						XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
+				}
 			}
+		
 
 			g_HLECacheUsed = true;
 		}
