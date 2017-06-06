@@ -91,6 +91,12 @@ class EmuShared : public Mutex
 		void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
 		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
 
+		// ******************************************************************
+		// * XInput Flag Accessors
+		// ******************************************************************
+		void GetXInputEnabled(int* value) { Lock(); *value = m_XInputEnabled; Unlock(); }
+		void SetXInputEnabled(int* value) { Lock(); m_XInputEnabled = *value; Unlock(); }
+
     private:
         // ******************************************************************
         // * Constructor / Deconstructor
@@ -105,6 +111,7 @@ class EmuShared : public Mutex
         XBVideo      m_XBVideo;
         char         m_XbePath[MAX_PATH];
 		int          m_FlagsLLE;
+		int			 m_XInputEnabled;
 };
 
 // ******************************************************************

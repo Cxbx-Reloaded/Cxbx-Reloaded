@@ -93,6 +93,7 @@
 #define ID_SETTINGS_CACHE               40083
 #define ID_CACHE_CLEARHLECACHE_ALL      40084
 #define ID_CACHE_CLEARHLECACHE_CURRENT  40085
+#define ID_SETTINGS_XINPUT              40086
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -100,7 +101,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         40085
+#define _APS_NEXT_COMMAND_VALUE         40087
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
