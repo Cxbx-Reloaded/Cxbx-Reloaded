@@ -186,6 +186,26 @@ void EmuDSoundBufferUnlockXboxAdpcm(XTL::IDirectSoundBuffer* pDSBuffer, XTL::DSB
 // Convert XADPCM to PCM format helper function
 inline void EmuXADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat) {
 
+#if 0 //For testing purpose if XADPCM to PCM is not accurate.
+    DbgPrintf("EmuDSound: XADPCM WAVEFORMATEX\n"
+        "{\n"
+        "   wFormatTag              : 0x%.04hX\n"
+        "   nChannels               : 0x%.02hd\n"
+        "   nSamplesPerSec          : 0x%.08X\n"
+        "   nAvgBytesPerSec         : 0x%.08X\n"
+        "   nBlockAlign             : 0x%.02hd\n"
+        "   wBitsPerSample          : 0x%.04hX\n"
+        "   cbSize                  : 0x%.04hX\n"
+        "}\n",
+        lpwfxFormat->wFormatTag,
+        lpwfxFormat->nChannels,
+        lpwfxFormat->nSamplesPerSec,
+        lpwfxFormat->nAvgBytesPerSec,
+        lpwfxFormat->nBlockAlign,
+        lpwfxFormat->wBitsPerSample,
+        lpwfxFormat->cbSize);
+#endif
+
     lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
 
     //lpwfxFormat.wFormatTag;         /* format type */
@@ -206,6 +226,26 @@ inline void EmuXADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat) {
     if (waveOutOpen(NULL, WAVE_MAPPER, lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
         return DSERR_BADFORMAT;
     }
+#endif
+
+#if 0 //For testing purpose if XADPCM to PCM is not accurate.
+    DbgPrintf("EmuDSound: Converted to PCM WAVEFORMATEX\n"
+        "{\n"
+        "   wFormatTag              : 0x%.04hX\n"
+        "   nChannels               : 0x%.02hd\n"
+        "   nSamplesPerSec          : 0x%.08X\n"
+        "   nAvgBytesPerSec         : 0x%.08X\n"
+        "   nBlockAlign             : 0x%.02hd\n"
+        "   wBitsPerSample          : 0x%.04hX\n"
+        "   cbSize                  : 0x%.04hX\n"
+        "}\n",
+        lpwfxFormat->wFormatTag,
+        lpwfxFormat->nChannels,
+        lpwfxFormat->nSamplesPerSec,
+        lpwfxFormat->nAvgBytesPerSec,
+        lpwfxFormat->nBlockAlign,
+        lpwfxFormat->wBitsPerSample,
+        lpwfxFormat->cbSize);
 #endif
 }
 
