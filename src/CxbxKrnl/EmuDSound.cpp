@@ -199,6 +199,7 @@ inline void EmuXADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat) {
     lpwfxFormat->wBitsPerSample = 16;
     lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nChannels * lpwfxFormat->nSamplesPerSec * (lpwfxFormat->wBitsPerSample / 8);
     lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
+    lpwfxFormat->cbSize = 0;
     //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
     //This is just to verify format conversion is correct or not.
 #if 0
@@ -2265,21 +2266,25 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         HRESULT hRet = pThis->EmuDirectSoundBuffer->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
         if (SUCCEEDED(hRet)) {
+
+            if (pAudioPtr != 0)
+                memcpy(pAudioPtr, pThis->EmuBuffer, dwAudioBytes);
+
+            if (pAudioPtr2 != 0)
+                memcpy(pAudioPtr2, (PVOID)((DWORD)pThis->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+
+            pThis->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+
+            //TODO : This is currently a workaround for audio to work, sound did seem to be making some "pops" in the Rayman Arena's first intro.
+            //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
                 EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer,
                     pThis->EmuBufferDesc,
-                    pThis->EmuLockPtr1,
-                    pThis->EmuLockBytes1,
-                    pThis->EmuLockPtr2,
-                    pThis->EmuLockBytes2);
-            } else {
-                if (pAudioPtr != 0)
-                    memcpy(pAudioPtr, pThis->EmuBuffer, dwAudioBytes);
-
-                if (pAudioPtr2 != 0)
-                    memcpy(pAudioPtr2, (PVOID)((DWORD)pThis->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+                    pAudioPtr,
+                    dwAudioBytes,
+                    pAudioPtr2,
+                    dwAudioBytes2);
             }
-            pThis->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
 
             if (pAudioPtr != 0) {
                 hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
