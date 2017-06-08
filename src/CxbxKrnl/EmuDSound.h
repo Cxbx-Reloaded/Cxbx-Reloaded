@@ -219,7 +219,7 @@ struct X_CDirectSoundBuffer
     union                       // Offset: 0x20
     {
         PVOID                pMpcxBuffer;
-        IDirectSoundBuffer  *EmuDirectSoundBuffer8;
+        IDirectSoundBuffer  *EmuDirectSoundBuffer;
     };
 
     BYTE            UnknownB[0x0C];     // Offset: 0x24
@@ -231,7 +231,8 @@ struct X_CDirectSoundBuffer
     DWORD           EmuLockBytes2;      // Offset: 0x3C
     DWORD           EmuPlayFlags;       // Offset: 0x40
     DWORD           EmuFlags;           // Offset: 0x44
-    IDirectSound3DBuffer *EmuDirectSound3DBuffer8;
+    IDirectSound3DBuffer *EmuDirectSound3DBuffer;
+    IDirectSound3DListener *EmuDirectSound3DListener;
 };
 
 #define DSB_FLAG_ADPCM 0x00000001
@@ -340,8 +341,9 @@ class X_CDirectSoundStream
 
     public:
         // cached data
-        XTL::IDirectSoundBuffer    *EmuDirectSoundBuffer8;
-        XTL::IDirectSound3DBuffer  *EmuDirectSound3DBuffer8;
+        XTL::IDirectSoundBuffer    *EmuDirectSoundBuffer;
+        XTL::IDirectSound3DBuffer  *EmuDirectSound3DBuffer;
+        XTL::IDirectSound3DListener *EmuDirectSound3DListener;
         PVOID                       EmuBuffer;
         DSBUFFERDESC               *EmuBufferDesc;
         PVOID                       EmuLockPtr1;
@@ -943,8 +945,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
-    PVOID   pThis,
-    PVOID   pUnknown,
+    X_CDirectSoundStream *pThis,
+    LPCDS3DBUFFER   pUnknown,
     DWORD   dwApply
 );
 
@@ -953,7 +955,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
-    PVOID   pThis,
+    X_CDirectSoundStream *pThis,
     DWORD   dwInsideConeAngle,
     DWORD   dwOutsideConeAngle,
     DWORD   dwApply
@@ -964,7 +966,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
-    PVOID   pThis,
+    X_CDirectSoundStream *pThis,
     LONG    lConeOutsideVolume,
     DWORD   dwApply
 );
@@ -974,7 +976,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
-    PVOID    pThis,
+    X_CDirectSoundStream *pThis,
     D3DVALUE fMaxDistance,
     DWORD    dwApply
 );
@@ -984,7 +986,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
-    PVOID    pThis,
+    X_CDirectSoundStream *pThis,
     D3DVALUE fMinDistance,
     DWORD    dwApply
 );
@@ -994,7 +996,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
 (
-    PVOID    pThis,
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -1006,7 +1008,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
 (
-    PVOID    pThis,
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -1018,7 +1020,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
 (
-    PVOID    pThis,
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -1030,7 +1032,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFrequency)
 (
-    PVOID   pThis,
+    X_CDirectSoundStream *pThis,
     DWORD   dwFrequency
 );
 

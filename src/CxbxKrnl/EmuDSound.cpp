@@ -105,6 +105,16 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 };
 
 
+/* TODO Task list:
+ * * Need implement support for DirectSound3DListener in primary buffer
+ * ** Need proper DirectSoundBuffer created after DirectSoundCreate function
+ * ** etc...
+ * * Need to extract whole DSound lib section out of xbe and start matching all functions including one missings.
+ * ** Do this with 3+ xbe files with same versioning on DSound only
+ */
+
+
+
 // size of sound buffer cache (used for periodic sound buffer updates)
 #define SOUNDBUFFER_CACHE_SIZE 0x200
 
@@ -204,30 +214,30 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus;
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
 
-    hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwStatus);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
 
     // release old buffer
-    while(pThis->EmuDirectSoundBuffer8->Release() > 0) { }
+    while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
 
     pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
 
-    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer8, NULL);
+    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer, NULL);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
 
-    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayCursor);
+    pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayCursor);
 
     if(dwStatus & DSBSTATUS_PLAYING)
-        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        pThis->EmuDirectSoundBuffer->Play(0, 0, pThis->EmuPlayFlags);
 }
 
 // resize an emulated directsound stream, if necessary
@@ -238,30 +248,30 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus;
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
 
-    hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwStatus);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
 
     // release old buffer
-    while(pThis->EmuDirectSoundBuffer8->Release() > 0) { }
+    while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
 
     pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
 
-    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer8, NULL);
+    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer, NULL);
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
 
-    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayCursor);
+    pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayCursor);
 
     if(dwStatus & DSBSTATUS_PLAYING)
-        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        pThis->EmuDirectSoundBuffer->Play(0, 0, pThis->EmuPlayFlags);
 }
 
 // ******************************************************************
@@ -503,18 +513,18 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
         // unlock existing lock
         if (g_pDSoundBufferCache[v]->EmuLockPtr1 != 0) {
             if (g_pDSoundBufferCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
-                EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8,
+                EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundBufferCache[v]->EmuDirectSoundBuffer,
                     g_pDSoundBufferCache[v]->EmuBufferDesc,
                     g_pDSoundBufferCache[v]->EmuLockPtr1,
                     g_pDSoundBufferCache[v]->EmuLockBytes1,
                     g_pDSoundBufferCache[v]->EmuLockPtr2,
                     g_pDSoundBufferCache[v]->EmuLockBytes2);
             }
-            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(g_pDSoundBufferCache[v]->EmuLockPtr1, g_pDSoundBufferCache[v]->EmuLockBytes1, g_pDSoundBufferCache[v]->EmuLockPtr2, g_pDSoundBufferCache[v]->EmuLockBytes2);
+            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundBufferCache[v]->EmuLockPtr1, g_pDSoundBufferCache[v]->EmuLockBytes1, g_pDSoundBufferCache[v]->EmuLockPtr2, g_pDSoundBufferCache[v]->EmuLockBytes2);
             g_pDSoundBufferCache[v]->EmuLockPtr1 = 0;
         }
 
-        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
         if (SUCCEEDED(hRet)) {
             if (pAudioPtr != 0)
@@ -523,13 +533,63 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             if (pAudioPtr2 != 0)
                 memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
 
-            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+
+            hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
+            if (hRet == DS_OK) {
+                if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
+                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->SetCurrentPosition(0);
+                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Play(0, 0, 0);
+                }
+            }
         }
 
         // TODO: relock old lock ??
     }
 
-    
+
+    for (int v = 0; v<SOUNDSTREAM_CACHE_SIZE; v++) {
+        if (g_pDSoundStreamCache[v] == 0 || g_pDSoundStreamCache[v]->EmuBuffer == 0)
+            continue;
+
+        PVOID pAudioPtr, pAudioPtr2;
+        DWORD dwAudioBytes, dwAudioBytes2;
+
+        // unlock existing lock
+        if (g_pDSoundStreamCache[v]->EmuLockPtr1 != 0) {
+            if (g_pDSoundStreamCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
+                EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundStreamCache[v]->EmuDirectSoundBuffer,
+                    g_pDSoundStreamCache[v]->EmuBufferDesc,
+                    g_pDSoundStreamCache[v]->EmuLockPtr1,
+                    g_pDSoundStreamCache[v]->EmuLockBytes1,
+                    g_pDSoundStreamCache[v]->EmuLockPtr2,
+                    g_pDSoundStreamCache[v]->EmuLockBytes2);
+            }
+            g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundStreamCache[v]->EmuLockPtr1, g_pDSoundStreamCache[v]->EmuLockBytes1, g_pDSoundStreamCache[v]->EmuLockPtr2, g_pDSoundStreamCache[v]->EmuLockBytes2);
+            g_pDSoundStreamCache[v]->EmuLockPtr1 = 0;
+        }
+
+        HRESULT hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundStreamCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+
+        if (SUCCEEDED(hRet)) {
+            if (pAudioPtr != 0)
+                memcpy(pAudioPtr, g_pDSoundStreamCache[v]->EmuBuffer, dwAudioBytes);
+
+            if (pAudioPtr2 != 0)
+                memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundStreamCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+
+            g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+
+            hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
+            if (hRet == DS_OK) {
+                if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
+                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->SetCurrentPosition(0);
+                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Play(0, 0, 0);
+                }
+            }
+        }
+        // TODO: relock old lock ??
+    }
 
     return;
 }
@@ -995,8 +1055,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 
-    (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
-    (*ppBuffer)->EmuDirectSound3DBuffer8 = 0;
+    (*ppBuffer)->EmuDirectSoundBuffer = 0;
+    (*ppBuffer)->EmuDirectSound3DBuffer = 0;
+    (*ppBuffer)->EmuDirectSound3DListener = 0;
     (*ppBuffer)->EmuBuffer = 0;
     (*ppBuffer)->EmuBufferDesc = bIsSpecial ? pDSBufferDescSpecial : pDSBufferDesc;
     (*ppBuffer)->EmuLockPtr1 = 0;
@@ -1007,19 +1068,25 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, pDSBufferDesc->dwBufferBytes);
 
-    HRESULT hRet = g_pDSound8->CreateSoundBuffer(bIsSpecial ? pDSBufferDescSpecial : pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
+    HRESULT hRet = g_pDSound8->CreateSoundBuffer(bIsSpecial ? pDSBufferDescSpecial : pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer), NULL);
 
     if(FAILED(hRet))
 	{
         EmuWarning("CreateSoundBuffer Failed!");
-		(*ppBuffer)->EmuDirectSoundBuffer8 = NULL;
+		(*ppBuffer)->EmuDirectSoundBuffer = NULL;
     } else {
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
-            hRet = (*ppBuffer)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer8));
 
-            if (FAILED(hRet)) {
+            HRESULT hRet3D = (*ppBuffer)->EmuDirectSoundBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer));
+            if (FAILED(hRet3D)) {
                 EmuWarning("CreateSound3DBuffer Failed!");
-                (*ppBuffer)->EmuDirectSound3DBuffer8 = NULL;
+                (*ppBuffer)->EmuDirectSound3DBuffer = NULL;
+            }
+
+            hRet3D = (*ppBuffer)->EmuDirectSound3DBuffer->QueryInterface(IID_IDirectSound3DListener, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DListener));
+            if (FAILED(hRet3D)) {
+                EmuWarning("CreateSound3DListener Failed!");
+                (*ppBuffer)->EmuDirectSound3DListener = NULL;
             }
         }
     }
@@ -1122,7 +1189,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 	EmuResizeIDirectSoundBuffer8(pThis, dwBufferBytes);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM)
-        EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0);
+        EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0);
 
     return S_OK;
 }
@@ -1152,7 +1219,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-	// pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayStart)
+	// pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayStart)
 
     return DS_OK;
 }
@@ -1203,18 +1270,18 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         if (pThis->EmuLockPtr1 != 0) {
             //TODO: This is not really recommended place since new sound data are going to be replace anyway.
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-                EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+                EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer,
                     pThis->EmuBufferDesc,
                     pThis->EmuLockPtr1,
                     pThis->EmuLockBytes1,
                     pThis->EmuLockPtr2,
                     pThis->EmuLockBytes2);
             }
-            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
+            pThis->EmuDirectSoundBuffer->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
         }
 
         // TODO: Verify dwFlags is the same as windows
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
+        hRet = pThis->EmuDirectSoundBuffer->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
         if(FAILED(hRet))
             CxbxKrnlCleanup("DirectSoundBuffer Lock Failed!");
@@ -1307,7 +1374,11 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
     {
 		if(!(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA))
 		{
-			uRet = pThis->EmuDirectSoundBuffer8->Release();
+            if (pThis->EmuDirectSound3DBuffer)
+                pThis->EmuDirectSound3DBuffer->Release();
+            if (pThis->EmuDirectSound3DListener)
+                pThis->EmuDirectSound3DListener->Release();
+			uRet = pThis->EmuDirectSoundBuffer->Release();
 
 			if(uRet == 0)
 			{
@@ -1380,7 +1451,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 
     if(pThis != 0 && pThis->EmuBuffer == 0)
     {
-        hRet = pThis->EmuDirectSoundBuffer8->GetStatus(pdwStatus);
+        hRet = pThis->EmuDirectSoundBuffer->GetStatus(pdwStatus);
     }
     else
     {
@@ -1411,7 +1482,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
            pThis, dwNewPosition);
 
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwNewPosition);
 
     if(FAILED(hRet))
         EmuWarning("SetCurrentPosition Failed!");
@@ -1444,9 +1515,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 	HRESULT hRet = E_FAIL;
 
     // NOTE: TODO: This call always seems to fail on primary buffers!
-	if( pThis && pThis->EmuDirectSoundBuffer8 )
+	if( pThis && pThis->EmuDirectSoundBuffer )
 	{
-		hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+		hRet = pThis->EmuDirectSoundBuffer->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
 		if(FAILED(hRet))
 			EmuWarning("GetCurrentPosition Failed!");
@@ -1490,7 +1561,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     // rewind buffer
     if((dwFlags & X_DSBPLAY_FROMSTART) != X_DSBPLAY_FROMSTART)
     {
-        if(FAILED(pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0)))
+        if(FAILED(pThis->EmuDirectSoundBuffer->SetCurrentPosition(0)))
             EmuWarning("Rewinding buffer failed!");
 
         dwFlags &= ~X_DSBPLAY_FROMSTART;
@@ -1499,14 +1570,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     // close any existing locks
     if(pThis->EmuLockPtr1 != 0) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-            EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+            EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer,
                 pThis->EmuBufferDesc,
                 pThis->EmuLockPtr1,
                 pThis->EmuLockBytes1,
                 pThis->EmuLockPtr2,
                 pThis->EmuLockBytes2);
         }
-        pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
+        pThis->EmuDirectSoundBuffer->Unlock(pThis->EmuLockPtr1,
             pThis->EmuLockBytes1,
             pThis->EmuLockPtr2,
             pThis->EmuLockBytes2
@@ -1517,7 +1588,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
     pThis->EmuPlayFlags = dwFlags;
 
-    return pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+    return pThis->EmuDirectSoundBuffer->Play(0, 0, dwFlags);
 }
 
 // ******************************************************************
@@ -1539,10 +1610,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 	HRESULT hRet = D3D_OK;
     
 	if (pThis != nullptr)
-		if (pThis->EmuDirectSoundBuffer8 != nullptr) {
+		if (pThis->EmuDirectSoundBuffer != nullptr) {
 			// TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-			hRet = pThis->EmuDirectSoundBuffer8->Stop();
-			pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+			hRet = pThis->EmuDirectSoundBuffer->Stop();
+			pThis->EmuDirectSoundBuffer->SetCurrentPosition(0);
 		}
    
     return hRet;
@@ -1553,7 +1624,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 // ******************************************************************
 extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 (
-    X_CDirectSoundBuffer *pBuffer,
+    X_CDirectSoundBuffer *pThis,
     REFERENCE_TIME        rtTimeStamp,
     DWORD                 dwFlags
 )
@@ -1561,19 +1632,21 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pBuffer)
+		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(rtTimeStamp)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_END;
 
-    if(pBuffer->EmuDirectSoundBuffer8 == 0)
-        EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
+    HRESULT hRet = D3D_OK;
 
-	LOG_UNIMPLEMENTED();
+    if (pThis != nullptr)
+        if (pThis->EmuDirectSoundBuffer != nullptr) {
+            // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+            hRet = pThis->EmuDirectSoundBuffer->Stop();
+            pThis->EmuDirectSoundBuffer->SetCurrentPosition(0);
+        }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1599,8 +1672,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 
     HRESULT hRet = S_OK;
     if (pThis != NULL)
-        if (pThis->EmuDirectSoundBuffer8 != NULL)
-            hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
+        if (pThis->EmuDirectSoundBuffer != NULL)
+            hRet = pThis->EmuDirectSoundBuffer->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
 
     return hRet;
 }
@@ -1626,9 +1699,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
     HRESULT hRet = S_OK;
 
 	if (pThis != NULL)
-		if (pThis->EmuDirectSoundBuffer8 != NULL)
+		if (pThis->EmuDirectSoundBuffer != NULL)
 			// TODO : Test SetFrequency :
-			hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
+			hRet = pThis->EmuDirectSoundBuffer->SetFrequency(dwFrequency);
 
 	return hRet;
 }
@@ -1680,14 +1753,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
 
         if (pDSBufferDesc->lpwfxFormat == NULL) {
-            (*ppStream)->EmuDirectSoundBuffer8 = 0;
+            (*ppStream)->EmuDirectSoundBuffer = 0;
             return DS_OK;
         } else if (pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM) {
             dwEmuFlags |= DSB_FLAG_ADPCM;
             EmuXADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
         } else if (pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM) {
             EmuWarning("Invalid WAVE_FORMAT!");
-            (*ppStream)->EmuDirectSoundBuffer8 = 0;
+            (*ppStream)->EmuDirectSoundBuffer = 0;
             return DS_OK;
         }
 
@@ -1703,8 +1776,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 		}
     }
 
-    (*ppStream)->EmuDirectSoundBuffer8 = 0;
-    (*ppStream)->EmuDirectSound3DBuffer8 = 0;
+    (*ppStream)->EmuDirectSoundBuffer = 0;
+    (*ppStream)->EmuDirectSound3DBuffer = 0;
+    (*ppStream)->EmuDirectSound3DListener = 0;
     (*ppStream)->EmuBuffer = 0;
     (*ppStream)->EmuBufferDesc = pDSBufferDesc;
     (*ppStream)->EmuLockPtr1 = 0;
@@ -1748,17 +1822,23 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 			EmuWarning("DirectSound not initialized!");
 	}
 
-    HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer8, NULL);
+    HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer, NULL);
 
     if (FAILED(hRet)) {
         EmuWarning("CreateSoundBuffer Failed!");
     } else {
         if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-            hRet = (*ppStream)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer8));
 
-            if (FAILED(hRet)) {
+            HRESULT hRet3D = (*ppStream)->EmuDirectSoundBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer));
+            if (FAILED(hRet3D)) {
                 EmuWarning("CreateSound3DBuffer Failed!");
-                (*ppStream)->EmuDirectSound3DBuffer8 = NULL;
+                (*ppStream)->EmuDirectSound3DBuffer = NULL;
+            }
+
+            hRet3D = (*ppStream)->EmuDirectSound3DBuffer->QueryInterface(IID_IDirectSound3DListener, (LPVOID*)&((*ppStream)->EmuDirectSound3DListener));
+            if (FAILED(hRet3D)) {
+                EmuWarning("CreateSound3DListener Failed!");
+                (*ppStream)->EmuDirectSound3DListener = NULL;
             }
         }
     }
@@ -1845,9 +1925,8 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 
 	ULONG ret = DS_OK;
 
-    if (pThis != NULL)
-        if (pThis->EmuDirectSoundBuffer8 != NULL)
-            ret = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
+    if (pThis != NULL && pThis->EmuDirectSoundBuffer != NULL)
+        ret = pThis->EmuDirectSoundBuffer->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
 
     return ret;
 }
@@ -1872,11 +1951,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
            ");\n",
            pThis, fRolloffFactor, dwApply);
 
-    // TODO: Actually SetRolloffFactor
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DListener != NULL) {
+        pThis->EmuDirectSound3DListener->SetRolloffFactor(fRolloffFactor, dwApply);
+    }
 
-    
-
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1896,8 +1976,8 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_AddRef)
            pThis);
 
     if(pThis != 0)
-        if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
-            pThis->EmuDirectSoundBuffer8->AddRef();
+        if(pThis->EmuDirectSoundBuffer != 0) // HACK: Ignore unsupported codecs.
+            pThis->EmuDirectSoundBuffer->AddRef();
 
     
 
@@ -1922,9 +2002,13 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
 
     ULONG uRet = 0;
 
-    if(pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0))
+    if(pThis != 0 && (pThis->EmuDirectSoundBuffer != 0))
     {
-        uRet = pThis->EmuDirectSoundBuffer8->Release();
+        if (pThis->EmuDirectSound3DBuffer)
+            pThis->EmuDirectSound3DBuffer->Release();
+        if (pThis->EmuDirectSound3DListener)
+            pThis->EmuDirectSound3DListener->Release();
+        uRet = pThis->EmuDirectSoundBuffer->Release();
 
         if(uRet == 0)
         {
@@ -1968,7 +2052,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
            pThis, pInfo);
 
 	// TODO: A (real) implementation?
-	EmuWarning("CDirectSoundStream_GetInfo is not yet supported!");
+	EmuWarning("EmuDirectSound_CDirectSoundStream_GetInfo is not yet supported!");
 
 	if( pInfo )
 	{
@@ -1999,11 +2083,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 		LOG_FUNC_ARG(pdwStatus)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSoundBuffer->GetStatus(pdwStatus);
+    }
 
-    *pdwStatus = DSBSTATUS_PLAYING;
-
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2026,7 +2111,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
            ");\n",
            pThis, pInputBuffer, pOutputBuffer);
 
-    if(pThis->EmuDirectSoundBuffer8 != NULL)
+    if(pThis->EmuDirectSoundBuffer != NULL)
     {
         // update buffer data cache
         pThis->EmuBuffer = pInputBuffer->pvBuffer;
@@ -2039,11 +2124,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         PVOID pAudioPtr, pAudioPtr2;
         DWORD dwAudioBytes, dwAudioBytes2;
 
-        HRESULT hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+        HRESULT hRet = pThis->EmuDirectSoundBuffer->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
         if (SUCCEEDED(hRet)) {
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-                EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+                EmuDSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer,
                     pThis->EmuBufferDesc,
                     pThis->EmuLockPtr1,
                     pThis->EmuLockBytes1,
@@ -2056,13 +2141,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if (pAudioPtr2 != 0)
                     memcpy(pAudioPtr2, (PVOID)((DWORD)pThis->EmuBuffer + dwAudioBytes), dwAudioBytes2);
             }
-            pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+            pThis->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
 
             if (pAudioPtr != 0) {
-                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-                pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
-                if (!(dwAudioBytes & DSBSTATUS_PLAYING))
-                    pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+                //hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
+                //if (hRet == DS_OK) {
+                    //if (!(dwAudioBytes & DSBSTATUS_PLAYING)) {
+                        pThis->EmuDirectSoundBuffer->SetCurrentPosition(0);
+                        pThis->EmuDirectSoundBuffer->Play(0, 0, 0);
+                   // }
+                //}
             }
         }
     }
@@ -2161,9 +2249,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 
 	if (pThis != NULL)
 		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
-		if (pThis->EmuDirectSoundBuffer8 != NULL)
+		if (pThis->EmuDirectSoundBuffer != NULL)
 			// TODO: Test Pause (emulated via Stop)
-			pThis->EmuDirectSoundBuffer8->Stop();
+			pThis->EmuDirectSoundBuffer->Stop();
 
     return DS_OK;
 }
@@ -2198,7 +2286,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
-    PVOID   pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     DWORD   dwInsideConeAngle,
     DWORD   dwOutsideConeAngle,
     DWORD   dwApply
@@ -2215,11 +2303,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
            ");\n",
            pThis, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2227,7 +2316,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
-    PVOID   pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     LONG    lConeOutsideVolume,
     DWORD   dwApply
 )
@@ -2242,11 +2331,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
            ");\n",
            pThis, lConeOutsideVolume, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2254,8 +2344,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
-    PVOID    pUnknown,
+    X_CDirectSoundStream *pThis,
+    LPCDS3DBUFFER    pUnknown,
     DWORD    dwApply
 )
 {
@@ -2269,11 +2359,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
            ");\n",
            pThis, pUnknown, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetAllParameters(pUnknown, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2281,7 +2372,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     D3DVALUE fMaxDistance,
     DWORD    dwApply
 )
@@ -2296,11 +2387,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
            ");\n",
            pThis, fMaxDistance, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetMaxDistance(fMaxDistance, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2308,7 +2400,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     D3DVALUE fMinDistance,
     DWORD    dwApply
 )
@@ -2323,11 +2415,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
            ");\n",
            pThis, fMinDistance, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetMinDistance(fMinDistance, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2335,7 +2428,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2354,11 +2447,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
            ");\n",
            pThis, x, y, z, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetVelocity(x, y, z, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2366,7 +2460,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2385,11 +2479,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
            ");\n",
            pThis, x, y, z, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeOrientation(x, y, z, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2397,7 +2492,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 (
-    PVOID    pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     D3DVALUE x,
     D3DVALUE y,
     D3DVALUE z,
@@ -2416,11 +2511,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
            ");\n",
            pThis, x, y, z, dwApply);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetPosition(x, y, z, dwApply);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2428,7 +2524,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 (
-    PVOID   pThis, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     DWORD   dwFrequency
 )
 {
@@ -2441,11 +2537,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
            ");\n",
            pThis, dwFrequency);
 
-    // TODO: Actually implement this
+    HRESULT hRet = DS_OK;
+    if (pThis != NULL && pThis->EmuDirectSoundBuffer != NULL) {
+        pThis->EmuDirectSoundBuffer->SetFrequency(dwFrequency);
+    }
 
-    
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -2547,8 +2644,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 		pThis, flMaxDistance, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetMaxDistance(flMaxDistance, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetMaxDistance(flMaxDistance, dwApply);
     }
 
     return hRet;
@@ -2575,8 +2672,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
                pThis, flMinDistance, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetMinDistance(flMinDistance, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetMinDistance(flMinDistance, dwApply);
     }
 
     return hRet;
@@ -2603,10 +2700,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
                pThis, flRolloffFactor, dwApply);
 
     HRESULT hRet = DS_OK;
-    //TODO: SetRolloffFactor function doesn't exist in 3D buffer interface...
-    /*if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-    pThis->EmuDirectSound3DBuffer8->SetRolloffFactor(flRolloffFactor, dwApply);
-    }*/
+    if (pThis != NULL && pThis->EmuDirectSound3DListener != NULL) {
+        pThis->EmuDirectSound3DListener->SetRolloffFactor(flRolloffFactor, dwApply);
+    }
 
     return hRet;
 }
@@ -2632,10 +2728,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
                pThis, flDistanceFactor, dwApply);
 
     HRESULT hRet = DS_OK;
-    //TODO: SetDistanceFactor function doesn't exist in 3D buffer interface...
-    /*if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-    pThis->EmuDirectSound3DBuffer8->SetDistanceFactor(flDistanceFactor, dwApply);
-    }*/
+    if (pThis != NULL && pThis->EmuDirectSound3DListener != NULL) {
+        pThis->EmuDirectSound3DListener->SetDistanceFactor(flDistanceFactor, dwApply);
+    }
 
     return hRet;
 }
@@ -2664,8 +2759,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
                dwOutsideConeAngle, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
     }
 
     return hRet;
@@ -2696,8 +2791,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
                pThis, x, y, z, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetConeOrientation(x, y, z, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeOrientation(x, y, z, dwApply);
     }
 
     return hRet;
@@ -2724,8 +2819,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
                pThis, lConeOutsideVolume, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
     }
 
     return hRet;
@@ -2756,8 +2851,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPosition)
                pThis, x, y, z, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetPosition(x, y, z, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetPosition(x, y, z, dwApply);
     }
 
     return hRet;
@@ -2788,8 +2883,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVelocity)
                pThis, x, y, z, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetVelocity(x, y, z, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetVelocity(x, y, z, dwApply);
     }
 
     return hRet;
@@ -2816,8 +2911,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
                pThis, flDopplerFactor, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetConeOutsideVolume(flDopplerFactor, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetConeOutsideVolume(flDopplerFactor, dwApply);
     }
 
     return hRet;
@@ -2845,8 +2940,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 
     HRESULT hRet = DS_OK;
     //TODO: SetI3DL2Source function doesn't exist in 3D buffer interface...
-    /*if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-    pThis->EmuDirectSound3DBuffer8->SetI3DL2Source(pds3db, dwApply);
+    /*if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
+        pThis->EmuDirectSound3DBuffer->SetI3DL2Source(pds3db, dwApply);
     }*/
 
     return hRet;
@@ -3053,9 +3148,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
            pThis, lVolume);
 
     HRESULT hRet = S_OK;
-    if (pThis != NULL)
-        if (pThis->EmuDirectSoundBuffer8 != NULL)
-            hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
+    if (pThis != NULL && pThis->EmuDirectSoundBuffer != NULL)
+        hRet = pThis->EmuDirectSoundBuffer->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
 
     return hRet;
 }
@@ -3111,8 +3205,8 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 		}
 		else
 		{
-			if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
-				ret = pThis->EmuDirectSoundBuffer8->AddRef();
+			if(pThis->EmuDirectSoundBuffer != 0) // HACK: Ignore unsupported codecs.
+				ret = pThis->EmuDirectSoundBuffer->AddRef();
 		}
 	}
 
@@ -3145,14 +3239,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 	// Unstable!
 	/*if(pThis != NULL)
 	{
-		if(pThis->EmuDirectSoundBuffer8)
+		if(pThis->EmuDirectSoundBuffer)
 		{
 			if(dwPause == X_DSBPAUSE_PAUSE)
-				ret = pThis->EmuDirectSoundBuffer8->Stop();
+				ret = pThis->EmuDirectSoundBuffer->Stop();
 			if(dwPause == X_DSBPAUSE_RESUME)
 			{
 				DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-				ret = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+				ret = pThis->EmuDirectSoundBuffer->Play(0, 0, dwFlags);
 			}
 			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
 				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
@@ -3192,14 +3286,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 //
 //	if(pThis != NULL)
 //	{
-//		if(pThis->EmuDirectSoundBuffer8)
+//		if(pThis->EmuDirectSoundBuffer)
 //		{
 //			if(dwPause == X_DSBPAUSE_PAUSE)
-//				ret = pThis->EmuDirectSoundBuffer8->Stop();
+//				ret = pThis->EmuDirectSoundBuffer->Stop();
 //			if(dwPause == X_DSBPAUSE_RESUME)
 //			{
 //				DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-//				ret = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+//				ret = pThis->EmuDirectSoundBuffer->Play(0, 0, dwFlags);
 //			}
 //			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
 //				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
@@ -3437,14 +3531,14 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
            ");\n",
            pBuffer, rtTimeStamp, dwFlags);
 
-    if(pBuffer->EmuDirectSoundBuffer8 == 0)
-        EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
+    if(pBuffer->EmuDirectSoundBuffer == 0)
+        EmuWarning("pBuffer->EmuDirectSoundBuffer == 0");
 
 //    LOG_UNIMPLEMENTED();	
 
 	// TODO: Handle other non-PC standard flags
 	DWORD dwPCFlags = ( dwFlags & DSBPLAY_LOOPING ) ? DSBPLAY_LOOPING : 0;
-	HRESULT hr = pBuffer->EmuDirectSoundBuffer8->Play( 0, 0, dwPCFlags );
+	HRESULT hr = pBuffer->EmuDirectSoundBuffer->Play( 0, 0, dwPCFlags );
 
     
 
@@ -3671,7 +3765,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 	// in the first place, FYI.
 
 //	if(pThis)
-//		pThis->EmuDirectSoundBuffer8->SetFormat(pwfxFormat);
+//		pThis->EmuDirectSoundBuffer->SetFormat(pwfxFormat);
 
     
 
@@ -3869,9 +3963,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 
 	if( pThis )
 	{
-		if( pThis->EmuDirectSoundBuffer8 )
+		if( pThis->EmuDirectSoundBuffer )
 		{
-			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) &pNotify );
+			hr = pThis->EmuDirectSoundBuffer->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) &pNotify );
 			if( SUCCEEDED( hr ) && pNotify != nullptr )
 			{
 				hr = pNotify->SetNotificationPositions( dwNotifyCount, paNotifies );
