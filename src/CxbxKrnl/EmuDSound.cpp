@@ -3203,8 +3203,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
                pThis, flDopplerFactor, dwApply);
 
     HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer != NULL) {
-        pThis->EmuDirectSound3DBuffer->SetConeOutsideVolume(flDopplerFactor, dwApply);
+    if (pThis != NULL && pThis->EmuDirectSound3DListener != NULL) {
+        pThis->EmuDirectSound3DListener->SetDopplerFactor(flDopplerFactor, dwApply);
     }
 
     leaveCriticalSection;
