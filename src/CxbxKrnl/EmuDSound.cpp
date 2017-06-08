@@ -29,6 +29,8 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 blueshogun96
+// *  (c) 2017 RadWolfie
 // *
 // *  All rights reserved
 // *
@@ -50,6 +52,7 @@ namespace xboxkrnl
 #include "EmuXTL.h"
 #include "MemoryManager.h"
 #include "Logging.h"
+#include "XADPCM.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -108,12 +111,63 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x200
 
+// Xbox to PC volume ratio format (-10,000 / -6,400 )
+#define XBOX_TO_PC_VOLUME_RATIO 1.5625
+
 // Static Variable(s)
 static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
 static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
 static XTL::X_CDirectSoundStream   *g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE];
 static int							g_bDSoundCreateCalled = FALSE;
+
+//Xbox Decoder by blueshogun96 and revised by RadWolfie
+void EmuDSoundBufferUnlockXboxAdpcm(XTL::IDirectSoundBuffer* pDSBuffer, XTL::DSBUFFERDESC * pDSBufferDesc, LPVOID pAudioPtr, DWORD dwAudioBytes, LPVOID pAudioPtr2, DWORD dwAudioBytes2) {
+    if (!pDSBuffer)
+        return;
+
+    if (!pDSBufferDesc)
+        return;
+
+    // Predict the size of the converted buffers we're going to need
+    DWORD dwDecodedAudioBytes = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes) * pDSBufferDesc->lpwfxFormat->nChannels;
+    DWORD dwDecodedAudioBytes2 = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes2) * pDSBufferDesc->lpwfxFormat->nChannels;
+
+    // Allocate some temp buffers
+    uint8_t* buffer1 = (uint8_t*)malloc(dwDecodedAudioBytes);
+    uint8_t* buffer2 = NULL;
+
+    if (dwAudioBytes2 != 0)
+        buffer2 = (uint8_t*)malloc(dwDecodedAudioBytes2);
+
+    // Attempt to decode Xbox ADPCM data to PCM
+    //EmuWarning( "Guessing output size to be 0x%X bytes as opposed to 0x%X bytes.", TXboxAdpcmDecoder_guess_output_size(dwAudioBytes), dwAudioBytes );
+    TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr, dwAudioBytes, &buffer1[0], pDSBufferDesc->lpwfxFormat->nChannels);
+    if (dwAudioBytes2 != 0)
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr2, dwAudioBytes2, &buffer2[0], pDSBufferDesc->lpwfxFormat->nChannels);
+
+    // Lock this Xbox ADPCM buffer
+    void* pPtrX = NULL, *pPtrX2 = NULL;
+    DWORD dwBytesX = 0, dwBytesX2 = 0;
+
+    HRESULT hr = pDSBuffer->Lock(0, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
+    if (SUCCEEDED(hr)) {
+        // Write the converted PCM buffer bytes
+        if (dwDecodedAudioBytes > dwBytesX) dwDecodedAudioBytes = dwBytesX;
+        memcpy(pPtrX, buffer1, dwDecodedAudioBytes);
+
+        if (pPtrX2 != NULL) {
+            if (dwDecodedAudioBytes2 > dwBytesX2) dwDecodedAudioBytes2 = dwBytesX2;
+            memcpy(pPtrX2, buffer2, dwDecodedAudioBytes2);
+        }
+
+        pDSBuffer->Unlock(buffer1, dwAudioBytes, buffer2, dwAudioBytes2);
+    }
+
+    // Clean up our mess
+    if (buffer1) free(buffer1);
+    if (buffer2) free(buffer2);
+}
 
 // periodically update sound buffers
 static void HackUpdateSoundBuffers()
