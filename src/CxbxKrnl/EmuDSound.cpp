@@ -285,7 +285,7 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
     pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayCursor);
 
     if(dwStatus & DSBSTATUS_PLAYING)
-        pThis->EmuDirectSoundBuffer->Play(0, 0, pThis->EmuPlayFlags);
+        pThis->EmuDirectSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 }
 
 // ******************************************************************
@@ -1938,7 +1938,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     } else {
 
         (*ppStream)->EmuDirectSoundBuffer->SetCurrentPosition(0);
-        (*ppStream)->EmuDirectSoundBuffer->Play(0, 0, 1); //Apparently DirectSoundStream do not wait, let's go ahead start play "nothing".
+        (*ppStream)->EmuDirectSoundBuffer->Play(0, 0, DSBPLAY_LOOPING); //Apparently DirectSoundStream do not wait, let's go ahead start play "nothing".
 
         if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
 
@@ -2286,7 +2286,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if (hRet == DS_OK) {
                     if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
                         pThis->EmuDirectSoundBuffer->SetCurrentPosition(0);
-                        pThis->EmuDirectSoundBuffer->Play(0, 0, 1);
+                        pThis->EmuDirectSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
                     }
                 }
             }
@@ -2398,7 +2398,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
         HRESULT hRet;
         switch (dwPause) {
         case X_DSSPAUSE_RESUME:
-            pThis->EmuDirectSoundBuffer->Play(0, 0, 1);
+            pThis->EmuDirectSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
             break;
         case X_DSSPAUSE_PAUSE:
             hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwStatus);
@@ -2408,11 +2408,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
             }
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
+            EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:
+            EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
             break;
         }
     }
+
     leaveCriticalSection;
 
     return DS_OK;
@@ -3512,22 +3515,29 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 	// This function wasn't part of the XDK until 4721.
 	HRESULT ret = S_OK;
 
-	// Unstable!
-	/*if(pThis != NULL)
-	{
-		if(pThis->EmuDirectSoundBuffer)
-		{
-			if(dwPause == X_DSBPAUSE_PAUSE)
-				ret = pThis->EmuDirectSoundBuffer->Stop();
-			if(dwPause == X_DSBPAUSE_RESUME)
-			{
-				DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-				ret = pThis->EmuDirectSoundBuffer->Play(0, 0, dwFlags);
-			}
-			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
-				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
-		}
-	}*/
+
+    if (pThis != NULL && pThis->EmuDirectSoundBuffer != NULL) {
+        DWORD dwStatus;
+        HRESULT hRet;
+        switch (dwPause) {
+        case X_DSSPAUSE_RESUME:
+            pThis->EmuDirectSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            break;
+        case X_DSSPAUSE_PAUSE:
+            hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwStatus);
+            if (hRet == DS_OK) {
+                if (dwStatus & DSBSTATUS_PLAYING)
+                    pThis->EmuDirectSoundBuffer->Stop();
+            }
+            break;
+        case X_DSSPAUSE_SYNCHPLAYBACK:
+            EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
+            break;
+        case X_DSSPAUSE_PAUSENOACTIVATE:
+            EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
+            break;
+        }
+    }
 
     leaveCriticalSection;
 
