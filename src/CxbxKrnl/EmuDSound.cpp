@@ -169,6 +169,31 @@ void EmuDSoundBufferUnlockXboxAdpcm(XTL::IDirectSoundBuffer* pDSBuffer, XTL::DSB
     if (buffer2) free(buffer2);
 }
 
+// Convert XADPCM to PCM format helper function
+inline void EmuXADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat) {
+
+    lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+
+    //lpwfxFormat.wFormatTag;         /* format type */
+    //lpwfxFormat.nChannels;          /* number of channels (i.e. mono, stereo...) */ NO CHANGE
+    //lpwfxFormat.nSamplesPerSec;     /* sample rate */ NO CHANGE
+    //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
+    //lpwfxFormat.nBlockAlign;        /* block size of data */
+    //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
+    //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
+
+    lpwfxFormat->wBitsPerSample = 16;
+    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nChannels * lpwfxFormat->nSamplesPerSec * (lpwfxFormat->wBitsPerSample / 8);
+    lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
+    //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
+    //This is just to verify format conversion is correct or not.
+#if 0
+    if (waveOutOpen(NULL, WAVE_MAPPER, lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
+        return DSERR_BADFORMAT;
+    }
+#endif
+}
+
 // resize an emulated directsound buffer, if necessary
 static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD dwBytes)
 {
@@ -904,27 +929,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
             if(pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM) {
                 dwEmuFlags |= DSB_FLAG_ADPCM;
-
-                pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-
-                //lpwfxFormat.wFormatTag;         /* format type */
-                //lpwfxFormat.nChannels;          /* number of channels (i.e. mono, stereo...) */ NO CHANGE
-                //lpwfxFormat.nSamplesPerSec;     /* sample rate */ NO CHANGE
-                //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
-                //lpwfxFormat.nBlockAlign;        /* block size of data */
-                //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
-                //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
-
-                pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
-                pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nChannels * pDSBufferDesc->lpwfxFormat->nSamplesPerSec * (pDSBufferDesc->lpwfxFormat->wBitsPerSample / 8);
-                pDSBufferDesc->lpwfxFormat->nBlockAlign = 2 * pDSBufferDesc->lpwfxFormat->nChannels;
-                //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
-                //This is just to verify format conversion is correct or not.
-#if 0
-                if (waveOutOpen(NULL, WAVE_MAPPER, pDSBufferDesc->lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
-                    return DSERR_BADFORMAT;
-                }
-#endif
+                EmuXADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
             }
         }
 		else
@@ -1678,28 +1683,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
             return DS_OK;
         } else if (pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM) {
-                dwEmuFlags |= DSB_FLAG_ADPCM;
-
-                pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-
-                //lpwfxFormat.wFormatTag;         /* format type */
-                //lpwfxFormat.nChannels;          /* number of channels (i.e. mono, stereo...) */ NO CHANGE
-                //lpwfxFormat.nSamplesPerSec;     /* sample rate */ NO CHANGE
-                //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
-                //lpwfxFormat.nBlockAlign;        /* block size of data */
-                //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
-                //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
-
-                pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
-                pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nChannels * pDSBufferDesc->lpwfxFormat->nSamplesPerSec * (pDSBufferDesc->lpwfxFormat->wBitsPerSample / 8);
-                pDSBufferDesc->lpwfxFormat->nBlockAlign = 2 * pDSBufferDesc->lpwfxFormat->nChannels;
-                //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
-                //This is just to verify format conversion is correct or not.
-#if 0
-                if (waveOutOpen(NULL, WAVE_MAPPER, pDSBufferDesc->lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
-                    return DSERR_BADFORMAT;
-                }
-#endif
+            dwEmuFlags |= DSB_FLAG_ADPCM;
+            EmuXADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
         } else if (pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM) {
             EmuWarning("Invalid WAVE_FORMAT!");
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
