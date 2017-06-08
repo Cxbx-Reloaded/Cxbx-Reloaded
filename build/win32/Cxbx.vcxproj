@@ -190,6 +190,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
     <ClInclude Include="..\..\import\stb\stb_image.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
