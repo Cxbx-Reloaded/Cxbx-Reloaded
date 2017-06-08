@@ -216,7 +216,7 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
 
     DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pThis->EmuBufferDesc->dwBufferBytes, dwBytes);
 
-    DWORD dwPlayCursor, dwWriteCursor, dwStatus;
+    DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount;
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
@@ -229,7 +229,9 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
 
     // release old buffer
-    while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
+    refCount = pThis->EmuDirectSoundBuffer->Release();
+    if (refCount)
+        while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
 
     pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
 
@@ -237,6 +239,9 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
+
+    if (refCount)
+    while (pThis->EmuDirectSoundBuffer->AddRef() < refCount);
 
     pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayCursor);
 
@@ -250,7 +255,7 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
     if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
         return;
 
-    DWORD dwPlayCursor, dwWriteCursor, dwStatus;
+    DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount;
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
@@ -263,7 +268,9 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
 
     // release old buffer
-    while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
+    refCount = pThis->EmuDirectSoundBuffer->Release();
+    if (refCount)
+        while(pThis->EmuDirectSoundBuffer->Release() > 0) { }
 
     pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
 
@@ -271,6 +278,9 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
 
     if(FAILED(hRet))
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
+
+    if (refCount)
+        while (pThis->EmuDirectSoundBuffer->AddRef() < refCount);
 
     pThis->EmuDirectSoundBuffer->SetCurrentPosition(dwPlayCursor);
 
@@ -523,47 +533,50 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 {
     FUNC_EXPORTS
 
+    if (!g_bDSoundCreateCalled)
+        return;
     enterCriticalSection;
 
     DbgPrintf("EmuDSound: DirectSoundDoWork();\n");
+
+    DWORD dwStatus;
+    HRESULT hRet;
 
     for (int v = 0; v<SOUNDBUFFER_CACHE_SIZE; v++) {
         if (g_pDSoundBufferCache[v] == 0 || g_pDSoundBufferCache[v]->EmuBuffer == 0)
             continue;
 
-        PVOID pAudioPtr, pAudioPtr2;
-        DWORD dwAudioBytes, dwAudioBytes2;
 
-        // unlock existing lock
-        if (g_pDSoundBufferCache[v]->EmuLockPtr1 != 0) {
-            if (g_pDSoundBufferCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
-                EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundBufferCache[v]->EmuDirectSoundBuffer,
-                    g_pDSoundBufferCache[v]->EmuBufferDesc,
-                    g_pDSoundBufferCache[v]->EmuLockPtr1,
-                    g_pDSoundBufferCache[v]->EmuLockBytes1,
-                    g_pDSoundBufferCache[v]->EmuLockPtr2,
-                    g_pDSoundBufferCache[v]->EmuLockBytes2);
-            }
-            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundBufferCache[v]->EmuLockPtr1, g_pDSoundBufferCache[v]->EmuLockBytes1, g_pDSoundBufferCache[v]->EmuLockPtr2, g_pDSoundBufferCache[v]->EmuLockBytes2);
-            g_pDSoundBufferCache[v]->EmuLockPtr1 = 0;
-        }
-
-        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
-
-        if (SUCCEEDED(hRet)) {
-            if (pAudioPtr != 0)
-                memcpy(pAudioPtr, g_pDSoundBufferCache[v]->EmuBuffer, dwAudioBytes);
-
-            if (pAudioPtr2 != 0)
-                memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
-
-            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
-
-            hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
+            hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->GetStatus(&dwStatus);
             if (hRet == DS_OK) {
-                if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
-                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->SetCurrentPosition(0);
-                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Play(0, 0, 0);
+                if ((dwStatus & DSBSTATUS_PLAYING)) {
+                PVOID pAudioPtr, pAudioPtr2;
+                DWORD dwAudioBytes, dwAudioBytes2;
+
+                // unlock existing lock
+                if (g_pDSoundBufferCache[v]->EmuLockPtr1 != 0) {
+                    if (g_pDSoundBufferCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
+                        EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundBufferCache[v]->EmuDirectSoundBuffer,
+                            g_pDSoundBufferCache[v]->EmuBufferDesc,
+                            g_pDSoundBufferCache[v]->EmuLockPtr1,
+                            g_pDSoundBufferCache[v]->EmuLockBytes1,
+                            g_pDSoundBufferCache[v]->EmuLockPtr2,
+                            g_pDSoundBufferCache[v]->EmuLockBytes2);
+                    }
+                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundBufferCache[v]->EmuLockPtr1, g_pDSoundBufferCache[v]->EmuLockBytes1, g_pDSoundBufferCache[v]->EmuLockPtr2, g_pDSoundBufferCache[v]->EmuLockBytes2);
+                    g_pDSoundBufferCache[v]->EmuLockPtr1 = 0;
+                }
+
+                HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+
+                if (SUCCEEDED(hRet)) {
+                    if (pAudioPtr != 0)
+                        memcpy(pAudioPtr, g_pDSoundBufferCache[v]->EmuBuffer, dwAudioBytes);
+
+                    if (pAudioPtr2 != 0)
+                        memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+
+                    g_pDSoundBufferCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
                 }
             }
         }
@@ -576,39 +589,36 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
         if (g_pDSoundStreamCache[v] == 0 || g_pDSoundStreamCache[v]->EmuBuffer == 0)
             continue;
 
-        PVOID pAudioPtr, pAudioPtr2;
-        DWORD dwAudioBytes, dwAudioBytes2;
+        HRESULT hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->GetStatus(&dwStatus);
+        if (hRet == DS_OK) {
+            if ((dwStatus & DSBSTATUS_PLAYING)) {
+                PVOID pAudioPtr, pAudioPtr2;
+                DWORD dwAudioBytes, dwAudioBytes2;
 
-        // unlock existing lock
-        if (g_pDSoundStreamCache[v]->EmuLockPtr1 != 0) {
-            if (g_pDSoundStreamCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
-                EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundStreamCache[v]->EmuDirectSoundBuffer,
-                    g_pDSoundStreamCache[v]->EmuBufferDesc,
-                    g_pDSoundStreamCache[v]->EmuLockPtr1,
-                    g_pDSoundStreamCache[v]->EmuLockBytes1,
-                    g_pDSoundStreamCache[v]->EmuLockPtr2,
-                    g_pDSoundStreamCache[v]->EmuLockBytes2);
-            }
-            g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundStreamCache[v]->EmuLockPtr1, g_pDSoundStreamCache[v]->EmuLockBytes1, g_pDSoundStreamCache[v]->EmuLockPtr2, g_pDSoundStreamCache[v]->EmuLockBytes2);
-            g_pDSoundStreamCache[v]->EmuLockPtr1 = 0;
-        }
+                // unlock existing lock
+                if (g_pDSoundStreamCache[v]->EmuLockPtr1 != 0) {
+                    if (g_pDSoundStreamCache[v]->EmuFlags & DSB_FLAG_ADPCM) {
+                        EmuDSoundBufferUnlockXboxAdpcm(g_pDSoundStreamCache[v]->EmuDirectSoundBuffer,
+                            g_pDSoundStreamCache[v]->EmuBufferDesc,
+                            g_pDSoundStreamCache[v]->EmuLockPtr1,
+                            g_pDSoundStreamCache[v]->EmuLockBytes1,
+                            g_pDSoundStreamCache[v]->EmuLockPtr2,
+                            g_pDSoundStreamCache[v]->EmuLockBytes2);
+                    }
+                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(g_pDSoundStreamCache[v]->EmuLockPtr1, g_pDSoundStreamCache[v]->EmuLockBytes1, g_pDSoundStreamCache[v]->EmuLockPtr2, g_pDSoundStreamCache[v]->EmuLockBytes2);
+                    g_pDSoundStreamCache[v]->EmuLockPtr1 = 0;
+                }
 
-        HRESULT hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundStreamCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+                hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Lock(0, g_pDSoundStreamCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-        if (SUCCEEDED(hRet)) {
-            if (pAudioPtr != 0)
-                memcpy(pAudioPtr, g_pDSoundStreamCache[v]->EmuBuffer, dwAudioBytes);
+                if (SUCCEEDED(hRet)) {
+                    if (pAudioPtr != 0)
+                        memcpy(pAudioPtr, g_pDSoundStreamCache[v]->EmuBuffer, dwAudioBytes);
 
-            if (pAudioPtr2 != 0)
-                memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundStreamCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+                    if (pAudioPtr2 != 0)
+                        memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundStreamCache[v]->EmuBuffer + dwAudioBytes), dwAudioBytes2);
 
-            g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
-
-            hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
-            if (hRet == DS_OK) {
-                if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
-                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->SetCurrentPosition(0);
-                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Play(0, 0, 0);
+                    g_pDSoundStreamCache[v]->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
                 }
             }
         }
@@ -1835,6 +1845,18 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 {
 	FUNC_EXPORTS
 
+    if (!g_pDSound8) {
+        if (!g_bDSoundCreateCalled) {
+            HRESULT hRet;
+
+            EmuWarning("Initializing DirectSound pointer since it DirectSoundCreate was not called!");
+
+            hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
+            if (FAILED(hRet))
+                CxbxKrnlCleanup("Unable to initialize DirectSound!");
+        }
+    }
+
     enterCriticalSection;
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream\n"
@@ -1909,44 +1931,15 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
-	if(!g_pDSound8)
-	{
-		if( !g_bDSoundCreateCalled )
-		{
-			HRESULT hRet;
-
-			EmuWarning("Initializing DirectSound pointer since it DirectSoundCreate was not called!");
-
-			// Create the DirectSound buffer before continuing...
-			if(FAILED(DirectSoundCreate8( NULL, &g_pDSound8, NULL )))
-				CxbxKrnlCleanup("Unable to initialize DirectSound!");
-
-			hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
-            //TODO: RadWolfie - This is not safe to use...
-			if(FAILED(hRet))
-				CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
-
-			int v=0;
-			// clear sound buffer cache
-			for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
-				g_pDSoundBufferCache[v] = 0;
-
-			// clear sound stream cache
-			for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
-				g_pDSoundStreamCache[v] = 0;
-
-			// Let's count DirectSound as being initialized now
-			g_bDSoundCreateCalled = TRUE;
-		}
-		else
-			EmuWarning("DirectSound not initialized!");
-	}
-
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer, NULL);
 
     if (FAILED(hRet)) {
         EmuWarning("CreateSoundBuffer Failed!");
     } else {
+
+        (*ppStream)->EmuDirectSoundBuffer->SetCurrentPosition(0);
+        (*ppStream)->EmuDirectSoundBuffer->Play(0, 0, 1); //Apparently DirectSoundStream do not wait, let's go ahead start play "nothing".
+
         if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
 
             HRESULT hRet3D = (*ppStream)->EmuDirectSoundBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer));
@@ -2289,13 +2282,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
             pThis->EmuDirectSoundBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
 
             if (pAudioPtr != 0) {
-                //hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
-                //if (hRet == DS_OK) {
-                    //if (!(dwAudioBytes & DSBSTATUS_PLAYING)) {
+                hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwAudioBytes);
+                if (hRet == DS_OK) {
+                    if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
                         pThis->EmuDirectSoundBuffer->SetCurrentPosition(0);
-                        pThis->EmuDirectSoundBuffer->Play(0, 0, 0);
-                   // }
-                //}
+                        pThis->EmuDirectSoundBuffer->Play(0, 0, 1);
+                    }
+                }
             }
         }
     }
@@ -2400,12 +2393,26 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
            ");\n",
 		pThis, dwPause);
 
-	if (pThis != NULL)
-		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
-		if (pThis->EmuDirectSoundBuffer != NULL)
-			// TODO: Test Pause (emulated via Stop)
-			pThis->EmuDirectSoundBuffer->Stop();
-
+    if (pThis != NULL && pThis->EmuDirectSoundBuffer != NULL) {
+        DWORD dwStatus;
+        HRESULT hRet;
+        switch (dwPause) {
+        case X_DSSPAUSE_RESUME:
+            pThis->EmuDirectSoundBuffer->Play(0, 0, 1);
+            break;
+        case X_DSSPAUSE_PAUSE:
+            hRet = pThis->EmuDirectSoundBuffer->GetStatus(&dwStatus);
+            if (hRet == DS_OK) {
+                if (dwStatus & DSBSTATUS_PLAYING)
+                    pThis->EmuDirectSoundBuffer->Stop();
+            }
+            break;
+        case X_DSSPAUSE_SYNCHPLAYBACK:
+            break;
+        case X_DSSPAUSE_PAUSENOACTIVATE:
+            break;
+        }
+    }
     leaveCriticalSection;
 
     return DS_OK;
