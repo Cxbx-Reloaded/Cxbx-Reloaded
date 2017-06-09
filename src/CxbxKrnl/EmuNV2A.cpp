@@ -433,6 +433,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR0);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR1);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0);
+	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0_ADDRV);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS1);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS2);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS3);
@@ -837,6 +838,13 @@ DEVICE_READ32(PFB)
 	DEVICE_READ32_SWITCH() {
 	case NV_PFB_CFG0:
 		result = 3; // = NV_PFB_CFG0_PART_4
+		break;
+	case NV_PFB_CSTATUS:
+		result = CONTIGUOUS_MEMORY_SIZE;
+		break;
+	case NV_PFB_WBC:
+		result = 0; // Flush not pending
+		break;
 	default:
 		DEVICE_READ32_REG(pfb);
 	}
@@ -880,11 +888,11 @@ DEVICE_READ32(PGRAPH)
 {
 	DEVICE_READ32_SWITCH() {
 	default:
-		DEBUG_READ32_UNHANDLED(PGRAPH);
+		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
 	DEVICE_READ32_END(PGRAPH);
-}
+}	
 
 DEVICE_WRITE32(PGRAPH)
 {
@@ -1002,8 +1010,22 @@ DEVICE_WRITE32(PRAMDAC)
 {
 	switch (addr) {
 
+	uint32_t m, n, p;
 	case NV_PRAMDAC_NVPLL_COEFF:
 		pramdac.core_clock_coeff = value;
+
+		m = value & NV_PRAMDAC_NVPLL_COEFF_MDIV;
+		n = (value & NV_PRAMDAC_NVPLL_COEFF_NDIV) >> 8;
+		p = (value & NV_PRAMDAC_NVPLL_COEFF_PDIV) >> 16;
+
+		if (m == 0) {
+			pramdac.core_clock_freq = 0;
+		}
+		else {
+			pramdac.core_clock_freq = (NV2A_CRYSTAL_FREQ * n)
+				/ (1 << p) / m;
+		}
+
 		break;
 	case NV_PRAMDAC_MPLL_COEFF:
 		pramdac.memory_clock_coeff = value;
@@ -1420,16 +1442,6 @@ void InitOpenGLContext()
 	HGLRC RC;
 	std::string szCode;
 
-	//glutInit();
-	{ // rb_init_context();
-	/* link in gl functions at runtime */
-		glewExperimental = GL_TRUE;
-		GLenum err = glewInit();
-		if (err != GLEW_OK) {
-			//LOG_WARNING("GLEW initialization failed: %s", glewGetErrorString(err));
-			return;
-		}
-	}
 	g_EmuWindowsDC = GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
 	SetupPixelFormat(g_EmuWindowsDC);
 
@@ -1448,6 +1460,18 @@ void InitOpenGLContext()
 
 	//DxbxUpdateTransformProjection();
 	//DxbxUpdateViewport();
+
+
+	//glutInit();
+	{ // rb_init_context();
+	  /* link in gl functions at runtime */
+		glewExperimental = GL_TRUE;
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			EmuWarning("GLEW initialization failed: %s", glewGetErrorString(err));
+			return;
+		}
+	}
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1525,4 +1549,12 @@ void InitOpenGLContext()
 
 //	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
 	DxbxCompileShader(szCode);
+
+	// TODO: EmuNV2A_Init
+	pcrtc.start = 0;
+
+	pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
+	pramdac.core_clock_freq = 189000000;
+	pramdac.memory_clock_coeff = 0;
+	pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 }
