@@ -50,8 +50,8 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 
 //Xbox Audio Decoder by blueshogun96 and revised by RadWolfie
 void DSoundBufferUnlockXboxAdpcm(
-    IDirectSoundBuffer *pDSBuffer,
-    DSBUFFERDESC       *pDSBufferDesc,
+    IDirectSoundBuffer* pDSBuffer,
+    DSBUFFERDESC*       pDSBufferDesc,
     LPVOID              pAudioPtr,
     DWORD               dwAudioBytes,
     LPVOID              pAudioPtr2,
@@ -112,22 +112,22 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
     DbgPrintf("EmuDSound: XADPCM WAVEFORMATEX\n"
-        "{\n"
-        "   wFormatTag              : 0x%.04hX\n"
-        "   nChannels               : 0x%.02hd\n"
-        "   nSamplesPerSec          : 0x%.08X\n"
-        "   nAvgBytesPerSec         : 0x%.08X\n"
-        "   nBlockAlign             : 0x%.02hd\n"
-        "   wBitsPerSample          : 0x%.04hX\n"
-        "   cbSize                  : 0x%.04hX\n"
-        "}\n",
-        lpwfxFormat->wFormatTag,
-        lpwfxFormat->nChannels,
-        lpwfxFormat->nSamplesPerSec,
-        lpwfxFormat->nAvgBytesPerSec,
-        lpwfxFormat->nBlockAlign,
-        lpwfxFormat->wBitsPerSample,
-        lpwfxFormat->cbSize);
+              "{\n"
+              "   wFormatTag              : 0x%.04hX\n"
+              "   nChannels               : 0x%.02hd\n"
+              "   nSamplesPerSec          : 0x%.08X\n"
+              "   nAvgBytesPerSec         : 0x%.08X\n"
+              "   nBlockAlign             : 0x%.02hd\n"
+              "   wBitsPerSample          : 0x%.04hX\n"
+              "   cbSize                  : 0x%.04hX\n"
+              "}\n",
+              lpwfxFormat->wFormatTag,
+              lpwfxFormat->nChannels,
+              lpwfxFormat->nSamplesPerSec,
+              lpwfxFormat->nAvgBytesPerSec,
+              lpwfxFormat->nBlockAlign,
+              lpwfxFormat->wBitsPerSample,
+              lpwfxFormat->cbSize);
 #endif
 
     lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
@@ -154,29 +154,29 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
     DbgPrintf("EmuDSound: Converted to PCM WAVEFORMATEX\n"
-        "{\n"
-        "   wFormatTag              : 0x%.04hX\n"
-        "   nChannels               : 0x%.02hd\n"
-        "   nSamplesPerSec          : 0x%.08X\n"
-        "   nAvgBytesPerSec         : 0x%.08X\n"
-        "   nBlockAlign             : 0x%.02hd\n"
-        "   wBitsPerSample          : 0x%.04hX\n"
-        "   cbSize                  : 0x%.04hX\n"
-        "}\n",
-        lpwfxFormat->wFormatTag,
-        lpwfxFormat->nChannels,
-        lpwfxFormat->nSamplesPerSec,
-        lpwfxFormat->nAvgBytesPerSec,
-        lpwfxFormat->nBlockAlign,
-        lpwfxFormat->wBitsPerSample,
-        lpwfxFormat->cbSize);
+              "{\n"
+              "   wFormatTag              : 0x%.04hX\n"
+              "   nChannels               : 0x%.02hd\n"
+              "   nSamplesPerSec          : 0x%.08X\n"
+              "   nAvgBytesPerSec         : 0x%.08X\n"
+              "   nBlockAlign             : 0x%.02hd\n"
+              "   wBitsPerSample          : 0x%.04hX\n"
+              "   cbSize                  : 0x%.04hX\n"
+              "}\n",
+              lpwfxFormat->wFormatTag,
+              lpwfxFormat->nChannels,
+              lpwfxFormat->nSamplesPerSec,
+              lpwfxFormat->nAvgBytesPerSec,
+              lpwfxFormat->nBlockAlign,
+              lpwfxFormat->wBitsPerSample,
+              lpwfxFormat->cbSize);
 #endif
 }
 
 inline void GeneratePCMFormat(
-    DSBUFFERDESC *pDSBufferDesc, 
+    DSBUFFERDESC*   pDSBufferDesc,
     LPCWAVEFORMATEX lpwfxFormat,
-    DWORD &dwEmuFlags)
+    DWORD          &dwEmuFlags)
 {
     bool bIsSpecial = false;
 
@@ -232,8 +232,7 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->lpwfxFormat->nChannels = 2;
             pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 22050;
             pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
-            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec *
-            pDSBufferDesc->lpwfxFormat->nBlockAlign;
+            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
             pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
 
             pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
@@ -280,9 +279,9 @@ inline void GeneratePCMFormat(
 
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
-    IDirectSoundBuffer*    &pThis, 
-    DSBUFFERDESC           *pDSBufferDesc,
-    DWORD                   PlayFlags, 
+    IDirectSoundBuffer*    &pThis,
+    LPDSBUFFERDESC          pDSBufferDesc,
+    DWORD                   PlayFlags,
     DWORD                   dwBytes)
 {
 
@@ -327,12 +326,12 @@ inline void ResizeIDirectSoundBuffer(
 
 inline void DSoundBufferUpdate(
     IDirectSoundBuffer *pThis,
-    DSBUFFERDESC       *pDSBufferDesc, 
-    LPVOID              pBuffer, 
-    DWORD               dwFlags, 
-    LPVOID             &pLockPtr1, 
-    DWORD               dwLockBytes1, 
-    LPVOID              pLockPtr2, 
+    LPDSBUFFERDESC      pDSBufferDesc,
+    LPVOID              pBuffer,
+    DWORD               dwFlags,
+    LPVOID             &pLockPtr1,
+    DWORD               dwLockBytes1,
+    LPVOID              pLockPtr2,
     DWORD               dwLockBytes2)
 {
 
@@ -347,11 +346,11 @@ inline void DSoundBufferUpdate(
             if (pLockPtr1 != 0) {
                 if (dwFlags & DSB_FLAG_ADPCM) {
                     DSoundBufferUnlockXboxAdpcm(pThis,
-                        pDSBufferDesc,
-                        pLockPtr1,
-                        dwLockBytes1,
-                        pLockPtr2,
-                        dwLockBytes2);
+                                                pDSBufferDesc,
+                                                pLockPtr1,
+                                                dwLockBytes1,
+                                                pLockPtr2,
+                                                dwLockBytes2);
                 }
                 pThis->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
                 pLockPtr1 = 0;
@@ -377,13 +376,13 @@ inline void DSoundBufferUpdate(
 //IDirectSoundStream
 //IDirectSoundBuffer
 /*inline HRESULT HybridDirectSoundBuffer_Create(
-    IDirectSoundBuffer *pDSBuffer) {
+    IDirectSoundBuffer* pDSBuffer) {
 
     return DS_OK;
 };*/
 
 inline ULONG HybridDirectSoundBuffer_AddRef(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     enterCriticalSection;
@@ -396,7 +395,7 @@ inline ULONG HybridDirectSoundBuffer_AddRef(
 }
 
 inline ULONG HybridDirectSoundBuffer_Release(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     enterCriticalSection;
@@ -411,28 +410,28 @@ inline ULONG HybridDirectSoundBuffer_Release(
 /*
 //IDirectSoundStream
 inline HRESULT HybridDirectSoundBuffer_Discontinuity(
-    IDirectSoundBuffer *pDSBuffer) {
+    IDirectSoundBuffer* pDSBuffer) {
 
     return DS_OK;
 }
 
 //IDirectSoundStream
 inline HRESULT HybridDirectSoundBuffer_Flush(
-    IDirectSoundBuffer *pDSBuffer) {
+    IDirectSoundBuffer* pDSBuffer) {
 
     return DS_OK;
 }
 
 //IDirectSoundStream
 inline HRESULT HybridDirectSoundBuffer_FlushEx(
-    IDirectSoundBuffer *pDSBuffer) {
+    IDirectSoundBuffer* pDSBuffer) {
 
     return DS_OK;
 }
 
 //IDirectSoundStream
 inline HRESULT HybridDirectSoundBuffer_GetInfo(
-    IDirectSoundBuffer *pDSBuffer) {
+    IDirectSoundBuffer* pDSBuffer) {
 
     return DS_OK;
 }*/
@@ -440,9 +439,9 @@ inline HRESULT HybridDirectSoundBuffer_GetInfo(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
-    IDirectSoundBuffer *pDSBuffer, 
-    PDWORD              pdwCurrentPlayCursor, 
-    PDWORD              pdwCurrentWriteCursor) 
+    IDirectSoundBuffer* pDSBuffer,
+    PDWORD              pdwCurrentPlayCursor,
+    PDWORD              pdwCurrentWriteCursor)
 {
 
     enterCriticalSection;
@@ -452,7 +451,7 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     if (FAILED(hRet)) {
         EmuWarning("GetCurrentPosition Failed!");
     }
-    if(pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0) {
+    if (pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0) {
         DbgPrintf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
     }
 
@@ -464,7 +463,7 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_GetStatus(
-    IDirectSoundBuffer *pDSBuffer, 
+    IDirectSoundBuffer* pDSBuffer,
     PDWORD              pdwStatus)
 {
 
@@ -478,7 +477,7 @@ inline HRESULT HybridDirectSoundBuffer_GetStatus(
 
 /*
 inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -486,7 +485,7 @@ inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
 
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Lock(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -495,7 +494,7 @@ inline HRESULT HybridDirectSoundBuffer_Lock(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Pause(
-    IDirectSoundBuffer *pDSBuffer, 
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwPause)
 {
 
@@ -504,22 +503,22 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     DWORD dwStatus;
     HRESULT hRet;
     switch (dwPause) {
-    case X_DSSPAUSE_RESUME:
-        pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
-        break;
-    case X_DSSPAUSE_PAUSE:
-        hRet = pDSBuffer->GetStatus(&dwStatus);
-        if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
-            pDSBuffer->Stop();
-        }
-        break;
-    case X_DSSPAUSE_SYNCHPLAYBACK:
-        //TODO: Test case Rayman 3 - Hoodlum Havoc, and ... ?
-        EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
-        break;
-    case X_DSSPAUSE_PAUSENOACTIVATE:
-        EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
-        break;
+        case X_DSSPAUSE_RESUME:
+            pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            break;
+        case X_DSSPAUSE_PAUSE:
+            hRet = pDSBuffer->GetStatus(&dwStatus);
+            if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
+                pDSBuffer->Stop();
+            }
+            break;
+        case X_DSSPAUSE_SYNCHPLAYBACK:
+            //TODO: Test case Rayman 3 - Hoodlum Havoc, and ... ?
+            EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
+            break;
+        case X_DSSPAUSE_PAUSENOACTIVATE:
+            EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
+            break;
     }
 
     leaveCriticalSection;
@@ -528,7 +527,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
 }
 /*
 inline HRESULT HybridDirectSoundBuffer_PauseEx(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -537,7 +536,7 @@ inline HRESULT HybridDirectSoundBuffer_PauseEx(
 //Not really require it.
 //IDirectSoundStream
 inline HRESULT HybridDirectSoundBuffer_Process(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -546,17 +545,17 @@ inline HRESULT HybridDirectSoundBuffer_Process(
 //Both Play(Ex) only has one function, aka this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Play(
-    IDirectSoundBuffer *pDSBuffer,
-    DWORD dwFlags)
+    IDirectSoundBuffer* pDSBuffer,
+    DWORD               dwFlags)
 {
 
     return DS_OK;
 }
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_PlayEx(
-    IDirectSoundBuffer *pDSBuffer,
-    REFERENCE_TIME rtTimeStamp,
-    DWORD dwFlags)
+    IDirectSoundBuffer* pDSBuffer,
+    REFERENCE_TIME      rtTimeStamp,
+    DWORD               dwFlags)
 {
 
     return DS_OK;
@@ -565,14 +564,14 @@ inline HRESULT HybridDirectSoundBuffer_PlayEx(
 /*
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Restore(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
 }
 
 inline HRESULT HybridDirectSoundBuffer_SetAllParameters(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -581,7 +580,7 @@ inline HRESULT HybridDirectSoundBuffer_SetAllParameters(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetBufferData(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -590,7 +589,7 @@ inline HRESULT HybridDirectSoundBuffer_SetBufferData(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     DWORD                   dwInsideConeAngle,
     DWORD                   dwOutsideConeAngle,
     DWORD                   dwApply)
@@ -609,7 +608,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
@@ -628,7 +627,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     LONG                    lConeOutsideVolume,
     DWORD                   dwApply)
 {
@@ -645,7 +644,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetCurrentPosition(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwNewPosition)
 {
 
@@ -656,7 +655,7 @@ inline HRESULT HybridDirectSoundBuffer_SetCurrentPosition(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
-    IDirectSound3DListener *pDS3DListener,
+    IDirectSound3DListener* pDS3DListener,
     FLOAT                   flDistanceFactor,
     DWORD                   dwApply)
 {
@@ -674,7 +673,7 @@ inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
-    IDirectSound3DListener *pDS3DListener,
+    IDirectSound3DListener* pDS3DListener,
     FLOAT                   flDopplerFactor,
     DWORD                   dwApply)
 {
@@ -692,7 +691,7 @@ inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetEG(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     LPVOID              pEnvelopeDesc)
 {
 
@@ -703,8 +702,8 @@ inline HRESULT HybridDirectSoundBuffer_SetEG(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetFilter(
-    IDirectSoundBuffer     *pDSBuffer,
-    XTL::X_DSFILTERDESC    *pFilterDesc)
+    IDirectSoundBuffer*     pDSBuffer,
+    XTL::X_DSFILTERDESC*    pFilterDesc)
 {
 
     return DS_OK;
@@ -713,9 +712,9 @@ inline HRESULT HybridDirectSoundBuffer_SetFilter(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetFormat(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     LPCWAVEFORMATEX     pwfxFormat,
-    DSBUFFERDESC       *pBufferDesc,
+    LPDSBUFFERDESC      pBufferDesc,
     DWORD              &dwEmuFlags)
 {
 
@@ -733,7 +732,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetFrequency(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwFrequency)
 {
 
@@ -753,7 +752,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFrequency(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwHeadroom)
 {
 
@@ -764,7 +763,7 @@ inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetI3DL2Source(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     PVOID               pds3db,
     DWORD               dwApply)
 {
@@ -776,7 +775,7 @@ inline HRESULT HybridDirectSoundBuffer_SetI3DL2Source(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetLFO(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     LPCDSLFODESC        pLFODesc)
 {
 
@@ -787,7 +786,7 @@ inline HRESULT HybridDirectSoundBuffer_SetLFO(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetLoopRegion(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwLoopStart,
     DWORD               dwLoopLength)
 {
@@ -798,9 +797,9 @@ inline HRESULT HybridDirectSoundBuffer_SetLoopRegion(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
-    IDirectSound3DBuffer *pDS3DBuffer,
-    D3DVALUE            flMaxDistance,
-    DWORD               dwApply)
+    IDirectSound3DBuffer*   pDS3DBuffer,
+    D3DVALUE                flMaxDistance,
+    DWORD                   dwApply)
 {
 
     enterCriticalSection;
@@ -815,7 +814,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     D3DVALUE                flMinDistance,
     DWORD                   dwApply)
 {
@@ -833,7 +832,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     PVOID               pMixBins)
 {
 
@@ -844,7 +843,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 //IDirectSoundStream x2
 //IDirectSoundBuffer x2
 inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -853,7 +852,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMode(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     DWORD                   dwMode,
     DWORD                   dwApply)
 {
@@ -870,7 +869,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMode(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetNotificationPositions(
-    IDirectSoundBuffer     *pDSBuffer,
+    IDirectSoundBuffer*     pDSBuffer,
     DWORD                   dwNotifyCount,
     LPCDSBPOSITIONNOTIFY    paNotifies)
 {
@@ -882,8 +881,8 @@ inline HRESULT HybridDirectSoundBuffer_SetNotificationPositions(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
-    IDirectSoundBuffer      *pDSBuffer,
-    X_CDirectSoundBuffer    *pOutputBuffer)
+    IDirectSoundBuffer*     pDSBuffer,
+    X_CDirectSoundBuffer*   pOutputBuffer)
 {
 
     return DS_OK;
@@ -893,7 +892,7 @@ inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetPitch(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     LONG                lPitch)
 {
 
@@ -906,7 +905,7 @@ inline HRESULT HybridDirectSoundBuffer_SetPitch(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetPlayRegion(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     DWORD               dwPlayStart,
     DWORD               dwPlayLength)
 {
@@ -917,7 +916,7 @@ inline HRESULT HybridDirectSoundBuffer_SetPlayRegion(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetPosition(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
@@ -937,7 +936,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetPosition(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetRolloffCurve(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     const FLOAT        *pflPoints,
     DWORD               dwPointCount,
     DWORD               dwApply)
@@ -950,7 +949,7 @@ inline HRESULT HybridDirectSoundBuffer_SetRolloffCurve(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
-    IDirectSound3DListener *pDSBuffer,
+    IDirectSound3DListener* pDSBuffer,
     FLOAT                   fRolloffFactor,
     DWORD                   dwApply)
 {
@@ -968,7 +967,7 @@ inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetVelocity(
-    IDirectSound3DBuffer   *pDS3DBuffer,
+    IDirectSound3DBuffer*   pDS3DBuffer,
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
@@ -987,7 +986,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVelocity(
 //IDirectSoundStream x2
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetVolume(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     LONG                lVolume)
 {
 
@@ -1003,7 +1002,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Stop(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
@@ -1013,7 +1012,7 @@ inline HRESULT HybridDirectSoundBuffer_Stop(
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_StopEx(
-    IDirectSoundBuffer *pDSBuffer,
+    IDirectSoundBuffer* pDSBuffer,
     REFERENCE_TIME      rtTimeStamp,
     DWORD               dwFlags)
 {
@@ -1024,7 +1023,7 @@ inline HRESULT HybridDirectSoundBuffer_StopEx(
 // Xbox DSound does not seem to have Unlock function, has been confirmed with Cxbx developers.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Unlock(
-    IDirectSoundBuffer *pDSBuffer)
+    IDirectSoundBuffer* pDSBuffer)
 {
 
     return DS_OK;
