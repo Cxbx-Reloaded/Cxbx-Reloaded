@@ -329,7 +329,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
               ");\n",
               pThis);
 
-    //TODO: Test case Rayman 3 - Hoodlum Havoc
+    //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica
 
     EmuWarning("EmuIDirectSound_SynchPlayback ignored");
 
@@ -955,7 +955,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
 
-    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes);
+    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
         DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0);
@@ -1040,7 +1040,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         *pdwAudioBytes1 = dwBytes;
     } else {
         if (dwBytes > pThis->EmuBufferDesc->dwBufferBytes) {
-            ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, dwBytes);
+            ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, dwBytes, pThis->EmuDirectSound3DBuffer);
         }
 
         if (pThis->EmuLockPtr1 != 0) {
@@ -1156,7 +1156,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             uRet = pThis->EmuDirectSoundBuffer->Release();
 
             if (uRet == 0) {
-                if (pThis->EmuDirectSound3DBuffer) {
+                if (pThis->EmuDirectSound3DBuffer != NULL) {
                     pThis->EmuDirectSound3DBuffer->Release();
                 }
                 // remove cache entry
@@ -1686,7 +1686,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
         uRet = pThis->EmuDirectSoundBuffer->Release();
 
         if (uRet == 0) {
-            if (pThis->EmuDirectSound3DBuffer) {
+            if (pThis->EmuDirectSound3DBuffer != NULL) {
                 pThis->EmuDirectSound3DBuffer->Release();
             }
             // remove cache entry
@@ -1788,7 +1788,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         // update buffer data cache
         pThis->EmuBuffer = pInputBuffer->pvBuffer;
 
-        ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, pInputBuffer->dwMaxSize);
+        ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer, pThis->EmuBufferDesc, pThis->EmuFlags, pInputBuffer->dwMaxSize, pThis->EmuDirectSound3DBuffer);
 
         if (pInputBuffer->pdwStatus != 0) {
             *pInputBuffer->pdwStatus = S_OK;

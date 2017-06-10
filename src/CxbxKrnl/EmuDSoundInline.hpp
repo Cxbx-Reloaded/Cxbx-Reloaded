@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexShader.h
+// *   Cxbx->Win32->CxbxKrnl->EmuDSoundInline.hpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -525,7 +525,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             }
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
-            //TODO: Test case Rayman 3 - Hoodlum Havoc, and ... ?
+            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica and ... ?
             EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:
