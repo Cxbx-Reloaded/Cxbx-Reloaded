@@ -213,9 +213,9 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_AddRef)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
     return 1;
+
+    enterCriticalSection;
 
     DbgPrintf("EmuDSound: IDirectSound_AddRef\n"
               "(\n"
@@ -239,6 +239,8 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
 {
     FUNC_EXPORTS;
 
+    return 0;
+
     enterCriticalSection;
 
     DbgPrintf("EmuDSound: IDirectSound_Release\n"
@@ -247,7 +249,6 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
               ");\n",
               pThis);
 
-    return 0;
 
     ULONG uRet = g_pDSound->Release();
     if (uRet == 0) {
@@ -386,7 +387,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
     XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
     for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
-        if ((*pDSBuffer) == 0 || (*pDSBuffer)->EmuBuffer == 0) {
+        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->EmuBuffer == nullptr) {
             continue;
         }
         DSoundBufferUpdate((*pDSBuffer)->EmuDirectSoundBuffer,
@@ -402,7 +403,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == 0 || (*pDSStream)->EmuBuffer == 0) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->EmuBuffer == nullptr) {
             continue;
         }
         DSoundBufferUpdate((*pDSStream)->EmuDirectSoundBuffer,
