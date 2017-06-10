@@ -1153,12 +1153,12 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
     //TODO: RadWolfie - Need to move them into inline release function.
     if (pThis != 0) {
         if (!(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA)) {
-            if (pThis->EmuDirectSound3DBuffer) {
-                pThis->EmuDirectSound3DBuffer->Release();
-            }
             uRet = pThis->EmuDirectSoundBuffer->Release();
 
             if (uRet == 0) {
+                if (pThis->EmuDirectSound3DBuffer) {
+                    pThis->EmuDirectSound3DBuffer->Release();
+                }
                 // remove cache entry
                 for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
                     if (g_pDSoundBufferCache[v] == pThis) {
@@ -1683,12 +1683,12 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
     ULONG uRet = 0;
     //TODO: RadWolfie - Need to move them into inline release function.
     if (pThis != 0 && (pThis->EmuDirectSoundBuffer != 0)) {
-        if (pThis->EmuDirectSound3DBuffer) {
-            pThis->EmuDirectSound3DBuffer->Release();
-        }
         uRet = pThis->EmuDirectSoundBuffer->Release();
 
         if (uRet == 0) {
+            if (pThis->EmuDirectSound3DBuffer) {
+                pThis->EmuDirectSound3DBuffer->Release();
+            }
             // remove cache entry
             for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
                 if (g_pDSoundStreamCache[v] == pThis) {

@@ -279,10 +279,11 @@ inline void GeneratePCMFormat(
 
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
-    IDirectSoundBuffer*    &pThis,
+    IDirectSoundBuffer*    &pDSBuffer,
     LPDSBUFFERDESC          pDSBufferDesc,
     DWORD                   PlayFlags,
-    DWORD                   dwBytes)
+    DWORD                   dwBytes,
+    IDirectSound3DBuffer*  &pDS3DBuffer)
 {
 
     if (dwBytes == pDSBufferDesc->dwBufferBytes || dwBytes == 0) {
@@ -292,35 +293,46 @@ inline void ResizeIDirectSoundBuffer(
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount;
 
-    HRESULT hRet = pThis->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
     if (FAILED(hRet)) {
         CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
     }
-    hRet = pThis->GetStatus(&dwStatus);
+    hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (FAILED(hRet)) {
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
     }
+
+    if (pDS3DBuffer != NULL) {
+        pDS3DBuffer->Release();
+    }
     // release old buffer
-    refCount = pThis->Release();
+    refCount = pDSBuffer->Release();
     if (refCount) {
-        while (pThis->Release() > 0) {}
+        while (pDSBuffer->Release() > 0) {}
     }
     pDSBufferDesc->dwBufferBytes = dwBytes;
 
-    hRet = g_pDSound->CreateSoundBuffer(pDSBufferDesc, &pThis, NULL);
+    hRet = g_pDSound->CreateSoundBuffer(pDSBufferDesc, &pDSBuffer, NULL);
 
     if (FAILED(hRet)) {
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
     }
     if (refCount) {
-        while (pThis->AddRef() < refCount);
+        while (pDSBuffer->AddRef() < refCount);
     }
-    pThis->SetCurrentPosition(dwPlayCursor);
+    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
+        HRESULT hRet3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
+        if (FAILED(hRet3D)) {
+            EmuWarning("CreateSound3DBuffer Failed!");
+            pDS3DBuffer = NULL;
+        }
+    }
+    pDSBuffer->SetCurrentPosition(dwPlayCursor);
 
     if (dwStatus & DSBSTATUS_PLAYING) {
-        pThis->Play(0, 0, PlayFlags);
+        pDSBuffer->Play(0, 0, PlayFlags);
     }
 }
 
