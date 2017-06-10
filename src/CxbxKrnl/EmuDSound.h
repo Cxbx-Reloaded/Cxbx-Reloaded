@@ -238,7 +238,6 @@ struct X_CDirectSoundBuffer
     DWORD           EmuPlayFlags;       // Offset: 0x40
     DWORD           EmuFlags;           // Offset: 0x44
     IDirectSound3DBuffer *EmuDirectSound3DBuffer;
-    IDirectSound3DListener *EmuDirectSound3DListener;
 };
 
 #define DSB_FLAG_ADPCM 0x00000001
@@ -347,9 +346,8 @@ class X_CDirectSoundStream
 
     public:
         // cached data
-        XTL::IDirectSoundBuffer    *EmuDirectSoundBuffer;
-        XTL::IDirectSound3DBuffer  *EmuDirectSound3DBuffer;
-        XTL::IDirectSound3DListener *EmuDirectSound3DListener;
+        IDirectSoundBuffer    *EmuDirectSoundBuffer;
+        IDirectSound3DBuffer  *EmuDirectSound3DBuffer;
         PVOID                       EmuBuffer;
         DSBUFFERDESC               *EmuBufferDesc;
         PVOID                       EmuLockPtr1;
@@ -441,7 +439,7 @@ class X_XFileMediaObject
 HRESULT WINAPI EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
-    LPDIRECTSOUND8 *ppDirectSound,
+    LPDIRECTSOUND  *ppDirectSound,
     LPUNKNOWN       pUnknown
 );
 

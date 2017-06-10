@@ -214,6 +214,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
