@@ -279,11 +279,11 @@ inline void GeneratePCMFormat(
 
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
-    IDirectSoundBuffer*    &pDSBuffer,
-    LPDSBUFFERDESC          pDSBufferDesc,
-    DWORD                   PlayFlags,
-    DWORD                   dwBytes,
-    IDirectSound3DBuffer*  &pDS3DBuffer)
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    LPDSBUFFERDESC              pDSBufferDesc,
+    DWORD                       PlayFlags,
+    DWORD                       dwBytes,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
 {
 
     if (dwBytes == pDSBufferDesc->dwBufferBytes || dwBytes == 0) {
@@ -314,7 +314,17 @@ inline void ResizeIDirectSoundBuffer(
     }
     pDSBufferDesc->dwBufferBytes = dwBytes;
 
-    hRet = g_pDSound->CreateSoundBuffer(pDSBufferDesc, &pDSBuffer, NULL);
+    //Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
+    LPDIRECTSOUNDBUFFER pTempBuffer;
+    hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
+
+    if (FAILED(hRet)) {
+        CxbxKrnlCleanup("CreateSoundBuffer Failed!");
+        pDSBufferDesc = NULL;
+    } else {
+        hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
+        pTempBuffer->Release();
+    }
 
     if (FAILED(hRet)) {
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
@@ -337,14 +347,14 @@ inline void ResizeIDirectSoundBuffer(
 }
 
 inline void DSoundBufferUpdate(
-    IDirectSoundBuffer *pThis,
-    LPDSBUFFERDESC      pDSBufferDesc,
-    LPVOID              pBuffer,
-    DWORD               dwFlags,
-    LPVOID             &pLockPtr1,
-    DWORD               dwLockBytes1,
-    LPVOID              pLockPtr2,
-    DWORD               dwLockBytes2)
+    LPDIRECTSOUNDBUFFER8    pThis,
+    LPDSBUFFERDESC          pDSBufferDesc,
+    LPVOID                  pBuffer,
+    DWORD                   dwFlags,
+    LPVOID                 &pLockPtr1,
+    DWORD                   dwLockBytes1,
+    LPVOID                  pLockPtr2,
+    DWORD                   dwLockBytes2)
 {
 
     PVOID pAudioPtr, pAudioPtr2;
@@ -580,13 +590,22 @@ inline HRESULT HybridDirectSoundBuffer_Restore(
 {
 
     return DS_OK;
-}
+}*/
 
-inline HRESULT HybridDirectSoundBuffer_SetAllParameters(
-    IDirectSoundBuffer* pDSBuffer)
+//IDirectSoundStream
+//IDirectSoundBuffer
+inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    LPCDS3DBUFFER           pDS3DBufferParams,
+    DWORD                   dwApply)
 {
+    enterCriticalSection;
 
-    return DS_OK;
+    HRESULT hRet = pDS3DBuffer->SetAllParameters(pDS3DBufferParams, dwApply);
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 /*
 //Only has one function, this is not a requirement.
@@ -978,7 +997,7 @@ inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
 //IDirectSound
 //IDirectSoundStream
 //IDirectSoundBuffer
-inline HRESULT HybridDirectSoundBuffer_SetVelocity(
+inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
     IDirectSound3DBuffer*   pDS3DBuffer,
     FLOAT                   x,
     FLOAT                   y,

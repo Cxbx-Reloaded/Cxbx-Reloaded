@@ -173,17 +173,17 @@ typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
 // ******************************************************************
 struct X_DSOUTPUTLEVELS
 {
-    DWORD dwAnalogLeftTotalPeak;	// analog peak
+    DWORD dwAnalogLeftTotalPeak;    // analog peak
     DWORD dwAnalogRightTotalPeak;
-    DWORD dwAnalogLeftTotalRMS;		// analog RMS
+    DWORD dwAnalogLeftTotalRMS;        // analog RMS
     DWORD dwAnalogRightTotalRMS;
-    DWORD dwDigitalFrontLeftPeak;	// digital peak levels
+    DWORD dwDigitalFrontLeftPeak;    // digital peak levels
     DWORD dwDigitalFrontCenterPeak;
     DWORD dwDigitalFrontRightPeak;
     DWORD dwDigitalBackLeftPeak;
     DWORD dwDigitalBackRightPeak;
     DWORD dwDigitalLowFrequencyPeak;
-    DWORD dwDigitalFrontLeftRMS;	// digital RMS levels
+    DWORD dwDigitalFrontLeftRMS;    // digital RMS levels
     DWORD dwDigitalFrontCenterRMS;
     DWORD dwDigitalFrontRightRMS;
     DWORD dwDigitalBackLeftRMS;
@@ -224,20 +224,20 @@ struct X_CDirectSoundBuffer
 
     union                       // Offset: 0x20
     {
-        PVOID                pMpcxBuffer;
-        IDirectSoundBuffer  *EmuDirectSoundBuffer;
+        PVOID                   pMpcxBuffer;
+        LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8;
     };
 
-    BYTE            UnknownB[0x0C];     // Offset: 0x24
-    PVOID           EmuBuffer;          // Offset: 0x28
-    DSBUFFERDESC   *EmuBufferDesc;      // Offset: 0x2C
-    PVOID           EmuLockPtr1;        // Offset: 0x30
-    DWORD           EmuLockBytes1;      // Offset: 0x34
-    PVOID           EmuLockPtr2;        // Offset: 0x38
-    DWORD           EmuLockBytes2;      // Offset: 0x3C
-    DWORD           EmuPlayFlags;       // Offset: 0x40
-    DWORD           EmuFlags;           // Offset: 0x44
-    IDirectSound3DBuffer *EmuDirectSound3DBuffer;
+    BYTE                    UnknownB[0x0C];     // Offset: 0x24
+    PVOID                   EmuBuffer;          // Offset: 0x28
+    DSBUFFERDESC*           EmuBufferDesc;      // Offset: 0x2C
+    PVOID                   EmuLockPtr1;        // Offset: 0x30
+    DWORD                   EmuLockBytes1;      // Offset: 0x34
+    PVOID                   EmuLockPtr2;        // Offset: 0x38
+    DWORD                   EmuLockBytes2;      // Offset: 0x3C
+    DWORD                   EmuPlayFlags;       // Offset: 0x40
+    DWORD                   EmuFlags;           // Offset: 0x44
+    LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
 };
 
 #define DSB_FLAG_ADPCM 0x00000001
@@ -299,21 +299,21 @@ class X_CDirectSoundStream
             ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
             ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
             
-			HRESULT (WINAPI *GetInfo)										// 0x08
-			(
-				X_CDirectSoundStream   *pThis,
-				XMEDIAINFO			   *pInfo
-			);
+            HRESULT (WINAPI *GetInfo)                                       // 0x08
+            (
+                X_CDirectSoundStream*   pThis,
+                XMEDIAINFO*             pInfo
+            );
 
             HRESULT (WINAPI *GetStatus)                                     // 0x0C
             (
-                X_CDirectSoundStream   *pThis,
-                DWORD                  *pdwStatus
+                X_CDirectSoundStream*   pThis,
+                LPDWORD                 pdwStatus
             );
 
             HRESULT (WINAPI *Process)                                       // 0x10
             (
-                X_CDirectSoundStream   *pThis,
+                X_CDirectSoundStream*   pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
@@ -346,10 +346,10 @@ class X_CDirectSoundStream
 
     public:
         // cached data
-        IDirectSoundBuffer    *EmuDirectSoundBuffer;
-        IDirectSound3DBuffer  *EmuDirectSound3DBuffer;
+        LPDIRECTSOUNDBUFFER8        EmuDirectSoundBuffer8;
+        LPDIRECTSOUND3DBUFFER8      EmuDirectSound3DBuffer8;
         PVOID                       EmuBuffer;
-        DSBUFFERDESC               *EmuBufferDesc;
+        LPDSBUFFERDESC              EmuBufferDesc;
         PVOID                       EmuLockPtr1;
         DWORD                       EmuLockBytes1;
         PVOID                       EmuLockPtr2;
@@ -363,62 +363,62 @@ class X_CDirectSoundStream
 // ******************************************************************
 class X_XFileMediaObject
 {
-	public:
-	X_XFileMediaObject() : pVtbl(&vtbl) { EmuRefCount = 1; }
+    public:
+    X_XFileMediaObject() : pVtbl(&vtbl) { EmuRefCount = 1; }
 
-	private:
+    private:
         // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
             ULONG (WINAPI *AddRef)(X_XFileMediaObject *pThis);            // 0x00
             ULONG (WINAPI *Release)(X_XFileMediaObject *pThis);           // 0x04
 
-			HRESULT (WINAPI *GetInfo)										// 0x08
-			(
-				X_XFileMediaObject	   *pThis,
-				XMEDIAINFO			   *pInfo
-			);
-			                                                                                                  
+            HRESULT (WINAPI *GetInfo)                                        // 0x08
+            (
+                X_XFileMediaObject*     pThis,
+                XMEDIAINFO*             pInfo
+            );
+                                                                                                              
             HRESULT (WINAPI *GetStatus)                                     // 0x0C
             (
-                X_XFileMediaObject	   *pThis,
-                DWORD                  *pdwStatus
+                X_XFileMediaObject*     pThis,
+                LPDWORD                 pdwStatus
             );
  
             HRESULT (WINAPI *Process)                                       // 0x10
             (
-                X_XFileMediaObject	   *pThis,
+                X_XFileMediaObject*     pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
            
-            HRESULT (WINAPI *Discontinuity)(X_XFileMediaObject *pThis);		// 0x14
-			                                                               
+            HRESULT (WINAPI *Discontinuity)(X_XFileMediaObject *pThis);        // 0x14
+                                                                           
             DWORD Unknown7;
 /*
-            HRESULT (WINAPI *Flush)(X_XFileMediaObject *pThis);				// 0x18
+            HRESULT (WINAPI *Flush)(X_XFileMediaObject *pThis);                // 0x18
 */
-			HRESULT (WINAPI *Seek)											// 0x1C
-			(
-				X_XFileMediaObject	   *pThis,
-				LONG					lOffset, 
-				DWORD					dwOrigin, 
-				LPDWORD					pdwAbsolute
-			);
+            HRESULT (WINAPI *Seek)                                            // 0x1C
+            (
+                X_XFileMediaObject*     pThis,
+                LONG                    lOffset, 
+                DWORD                   dwOrigin, 
+                LPDWORD                 pdwAbsolute
+            );
 /*
-			HRESULT (WINAPI *GetLength)										// 0x20
-			(
-				X_XFileMediaObject	   *pThis,
-				LPDWORD					pdwLength
-			);*/
+            HRESULT (WINAPI *GetLength)                                        // 0x20
+            (
+                X_XFileMediaObject       *pThis,
+                LPDWORD                    pdwLength
+            );*/
 
             DWORD Unknown9;
 
-			void (WINAPI *DoWork)(X_XFileMediaObject *pThis);				// 0x24
-		}
-		*pVtbl;
+            void (WINAPI *DoWork)(X_XFileMediaObject *pThis);                // 0x24
+        }
+        *pVtbl;
 
-		// global vtbl for this class
+        // global vtbl for this class
         static _vtbl vtbl;
 
         // debug mode guard for detecting naughty data accesses
@@ -427,10 +427,10 @@ class X_XFileMediaObject
         #endif
 
     public:
-		// TODO: More?
-		LPVOID				EmuBuffer;
-		HANDLE				EmuHandle;
-		UINT				EmuRefCount;
+        // TODO: More?
+        LPVOID                EmuBuffer;
+        HANDLE                EmuHandle;
+        UINT                EmuRefCount;
 };
 
 // ******************************************************************
@@ -439,7 +439,7 @@ class X_XFileMediaObject
 HRESULT WINAPI EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
-    LPDIRECTSOUND  *ppDirectSound,
+    LPDIRECTSOUND8 *ppDirectSound,
     LPUNKNOWN       pUnknown
 );
 
@@ -469,7 +469,7 @@ ULONG WINAPI EMUPATCH(IDirectSound_Release)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
 (
-    X_CDirectSound         *pThis,
+    X_CDirectSound*         pThis,
     PDWORD                  pdwSpeakerConfig
 );
 
@@ -625,7 +625,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetVelocity)
 HRESULT WINAPI EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
-    LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
+    LPCDS3DLISTENER         pDS3DListenerParameters,
     DWORD                   dwApply
 );
 
@@ -634,7 +634,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetAllParameters)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSound_CommitDeferredSettings)
 (
-    X_CDirectSound         *pThis
+    X_CDirectSound*         pThis
 );
 
 // ******************************************************************
@@ -643,8 +643,8 @@ HRESULT WINAPI EMUPATCH(CDirectSound_CommitDeferredSettings)
 HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC         *pdsbd,
-    X_CDirectSoundBuffer  **ppBuffer,
+    X_DSBUFFERDESC*         pdsbd,
+    X_CDirectSoundBuffer**  ppBuffer,
     LPUNKNOWN               pUnkOuter
 );
 
@@ -653,8 +653,8 @@ HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(DirectSoundCreateBuffer)
 (
-    X_DSBUFFERDESC         *pdsbd,
-    X_CDirectSoundBuffer  **ppBuffer
+    X_DSBUFFERDESC*         pdsbd,
+    X_CDirectSoundBuffer**  ppBuffer
 );
 
 // ******************************************************************
@@ -663,8 +663,8 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateBuffer)
 HRESULT WINAPI EMUPATCH(IDirectSound_CreateBuffer)
 (
     LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC         *pdssd,
-    X_CDirectSoundBuffer  **ppBuffer,
+    X_DSBUFFERDESC*         pdssd,
+    X_CDirectSoundBuffer**  ppBuffer,
     PVOID                   pUnknown
 );
 
@@ -673,7 +673,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_CreateBuffer)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LPVOID                  pvBufferData,
     DWORD                   dwBufferBytes
 );
@@ -683,7 +683,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwPlayStart,
     DWORD                   dwPlayLength
 );
@@ -693,12 +693,12 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Lock)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwOffset,
     DWORD                   dwBytes,
-    LPVOID                 *ppvAudioPtr1,
+    LPVOID*                 ppvAudioPtr1,
     LPDWORD                 pdwAudioBytes1,
-    LPVOID                 *ppvAudioPtr2,
+    LPVOID*                 ppvAudioPtr2,
     LPDWORD                 pdwAudioBytes2,
     DWORD                   dwFlags
 );
@@ -708,7 +708,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Lock)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwHeadroom
 );
 
@@ -717,7 +717,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwLoopStart,
     DWORD                   dwLoopLength
 );
@@ -727,7 +727,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 // ******************************************************************
 ULONG WINAPI EMUPATCH(IDirectSoundBuffer_Release)
 (
-    X_CDirectSoundBuffer   *pThis
+    X_CDirectSoundBuffer*   pThis
 );
 
 // ******************************************************************
@@ -735,7 +735,7 @@ ULONG WINAPI EMUPATCH(IDirectSoundBuffer_Release)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPitch)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LONG                    lPitch
 );
 
@@ -744,7 +744,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPitch)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LPDWORD                 pdwStatus
 );
 
@@ -753,7 +753,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetStatus)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LONG                    lVolume
 );
 
@@ -762,7 +762,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwNewPosition
 );
 
@@ -771,7 +771,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     PDWORD                  pdwCurrentPlayCursor,
     PDWORD                  pdwCurrentWriteCursor
 );
@@ -781,7 +781,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
 (
-    X_CDirectSoundBuffer   *pThis
+    X_CDirectSoundBuffer*   pThis
 );
 
 // ******************************************************************
@@ -799,7 +799,7 @@ extern "C" HRESULT __stdcall EMUPATCH(IDirectSoundBuffer_StopEx)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Play)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwReserved1,
     DWORD                   dwReserved2,
     DWORD                   dwFlags
@@ -810,9 +810,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Play)
 // ******************************************************************
 extern "C" HRESULT __stdcall EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
-    X_CDirectSoundBuffer *pBuffer,
-    REFERENCE_TIME        rtTimeStamp,
-    DWORD                 dwFlags
+    X_CDirectSoundBuffer*   pBuffer,
+    REFERENCE_TIME          rtTimeStamp,
+    DWORD                   dwFlags
 );
 
 // ******************************************************************
@@ -820,7 +820,7 @@ extern "C" HRESULT __stdcall EMUPATCH(IDirectSoundBuffer_PlayEx)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LONG                    lVolume
 );
 
@@ -829,7 +829,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetFrequency)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwFrequency
 );
 
@@ -838,8 +838,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetFrequency)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(DirectSoundCreateStream)
 (
-    X_DSSTREAMDESC         *pdssd,
-    X_CDirectSoundStream  **ppStream
+    X_DSSTREAMDESC*         pdssd,
+    X_CDirectSoundStream**  ppStream
 );
 
 // ******************************************************************
@@ -848,8 +848,8 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateStream)
 HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
-    X_DSSTREAMDESC         *pdssd,
-    X_CDirectSoundStream  **ppStream,
+    X_DSSTREAMDESC*         pdssd,
+    X_CDirectSoundStream**  ppStream,
     PVOID                   pUnknown
 );
 
@@ -888,8 +888,8 @@ ULONG WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis);
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 (
-	X_CDirectSoundStream*	pThis, 
-	LPXMEDIAINFO			pInfo
+    X_CDirectSoundStream*    pThis, 
+    LPXMEDIAINFO            pInfo
 );
 
 // ******************************************************************
@@ -897,8 +897,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
 (
-    X_CDirectSoundStream   *pThis,
-    DWORD                  *pdwStatus
+    X_CDirectSoundStream*   pThis,
+    LPDWORD                 pdwStatus
 );
 
 // ******************************************************************
@@ -906,7 +906,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_Process)
 (
-    X_CDirectSoundStream   *pThis,
+    X_CDirectSoundStream*   pThis,
     PXMEDIAPACKET           pInputBuffer,
     PXMEDIAPACKET           pOutputBuffer
 );
@@ -931,8 +931,8 @@ HRESULT WINAPI EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown);
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_Pause)
 (
-	X_CDirectSoundStream *pThis,
-	DWORD   dwPause
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwPause
 );
 
 // ******************************************************************
@@ -940,8 +940,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_Pause)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
 (
-    PVOID   pThis,
-    DWORD   dwHeadroom
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwHeadroom
 );
 
 // ******************************************************************
@@ -949,9 +949,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
-    X_CDirectSoundStream *pThis,
-    LPCDS3DBUFFER   pUnknown,
-    DWORD   dwApply
+    X_CDirectSoundStream*   pThis,
+    LPCDS3DBUFFER           pc3DBufferParameters,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -959,10 +959,10 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
-    X_CDirectSoundStream *pThis,
-    DWORD   dwInsideConeAngle,
-    DWORD   dwOutsideConeAngle,
-    DWORD   dwApply
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwInsideConeAngle,
+    DWORD                   dwOutsideConeAngle,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -970,9 +970,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
-    X_CDirectSoundStream *pThis,
-    LONG    lConeOutsideVolume,
-    DWORD   dwApply
+    X_CDirectSoundStream*   pThis,
+    LONG                    lConeOutsideVolume,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -980,9 +980,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
-    X_CDirectSoundStream *pThis,
-    D3DVALUE fMaxDistance,
-    DWORD    dwApply
+    X_CDirectSoundStream*   pThis,
+    D3DVALUE                fMaxDistance,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -990,9 +990,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
-    X_CDirectSoundStream *pThis,
-    D3DVALUE fMinDistance,
-    DWORD    dwApply
+    X_CDirectSoundStream*   pThis,
+    D3DVALUE                fMinDistance,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1000,11 +1000,11 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
 (
-    X_CDirectSoundStream *pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
+    X_CDirectSoundStream*   pThis,
+    D3DVALUE                x,
+    D3DVALUE                y,
+    D3DVALUE                z,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1012,11 +1012,11 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
 (
-    X_CDirectSoundStream *pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
+    X_CDirectSoundStream*   pThis,
+    D3DVALUE                x,
+    D3DVALUE                y,
+    D3DVALUE                z,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1024,11 +1024,11 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
 (
-    X_CDirectSoundStream *pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
+    X_CDirectSoundStream*   pThis,
+    D3DVALUE                x,
+    D3DVALUE                y,
+    D3DVALUE                z,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1036,8 +1036,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFrequency)
 (
-    X_CDirectSoundStream *pThis,
-    DWORD   dwFrequency
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwFrequency
 );
 
 // ******************************************************************
@@ -1074,7 +1074,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_Unknown1)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   flMaxDistance,
     DWORD                   dwApply
 );
@@ -1084,7 +1084,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   flMaxDistance,
     DWORD                   dwApply
 );
@@ -1094,7 +1094,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   flRolloffFactor,
     DWORD                   dwApply
 );
@@ -1104,7 +1104,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   flDistanceFactor,
     DWORD                   dwApply
 );
@@ -1114,7 +1114,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwInsideConeAngle,
     DWORD                   dwOutsideConeAngle,
     DWORD                   dwApply
@@ -1125,7 +1125,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
@@ -1137,7 +1137,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LONG                    lConeOutsideVolume,
     DWORD                   dwApply
 );
@@ -1147,7 +1147,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
@@ -1159,7 +1159,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
@@ -1171,7 +1171,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     FLOAT                   flDopplerFactor,
     DWORD                   dwApply
 );
@@ -1183,7 +1183,7 @@ typedef void* LPCDSI3DL2BUFFER;
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
-    X_CDirectSoundBuffer   *pThis,
+    X_CDirectSoundBuffer*   pThis,
     LPCDSI3DL2BUFFER        pds3db,
     DWORD                   dwApply
 );
@@ -1194,7 +1194,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMode)
 (
-    X_CDirectSoundBuffer   *pBuffer,
+    X_CDirectSoundBuffer*   pBuffer,
     DWORD                   dwMode,
     DWORD                   dwApply
 );
@@ -1221,7 +1221,7 @@ STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 (
-    LPDIRECTSOUNDBUFFER  pThis,
+    LPDIRECTSOUNDBUFFER8 pThis,
     LPCDSLFODESC         pLFODesc
 );
 
@@ -1230,7 +1230,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
 (
-	X_CDirectSoundStream *pThis,
+    X_CDirectSoundStream *pThis,
     LPCDSLFODESC         pLFODesc
 );
 
@@ -1249,10 +1249,10 @@ VOID WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
-    LPDIRECTSOUNDBUFFER  pThis,
-    const FLOAT         *pflPoints,
-    DWORD                dwPointCount,
-    DWORD                dwApply
+    LPDIRECTSOUNDBUFFER8    pThis,
+    const FLOAT*            pflPoints,
+    DWORD                   dwPointCount,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1260,8 +1260,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetVolume)
 (
-    X_CDirectSoundStream  *pStream,
-    LONG                   lVolume
+    X_CDirectSoundStream*   pStream,
+    LONG                    lVolume
 );
 
 // ******************************************************************
@@ -1269,8 +1269,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetVolume)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
 (
-	LPDIRECTSOUND		pThis,
-	BOOL				fEnabled
+    LPDIRECTSOUND8      pThis,
+    BOOL                fEnabled
 );
 
 // ******************************************************************
@@ -1278,7 +1278,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
 // ******************************************************************
 ULONG WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
 (
-    X_CDirectSoundBuffer   *pThis
+    X_CDirectSoundBuffer*   pThis
 );
 
 // ******************************************************************
@@ -1286,8 +1286,8 @@ ULONG WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Pause)
 (
-    X_CDirectSoundBuffer   *pThis,
-	DWORD					dwPause
+    X_CDirectSoundBuffer*   pThis,
+    DWORD                   dwPause
 );
 
 // ******************************************************************
@@ -1295,9 +1295,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Pause)
 // ******************************************************************
 extern "C" HRESULT __stdcall EmuIDirectSoundBuffer_PauseEx
 (
-    X_CDirectSoundBuffer   *pThis,
-	REFERENCE_TIME			rtTimestamp,
-	DWORD					dwPause
+    X_CDirectSoundBuffer*   pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause
 );
 
 // ******************************************************************
@@ -1305,9 +1305,9 @@ extern "C" HRESULT __stdcall EmuIDirectSoundBuffer_PauseEx
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 (
-	LPDIRECTSOUND8		   *pThis,
-	X_DSOUTPUTLEVELS	   *pOutputLevels,
-	BOOL					bResetPeakValues
+    LPDIRECTSOUND8*         pThis,
+    X_DSOUTPUTLEVELS*       pOutputLevels,
+    BOOL                    bResetPeakValues
 );
 
 // ******************************************************************
@@ -1315,8 +1315,8 @@ HRESULT WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetEG)
 (
-	LPVOID		pThis,
-	LPVOID		pEnvelopeDesc
+    LPVOID        pThis,
+    LPVOID        pEnvelopeDesc
 );
 
 // ******************************************************************
@@ -1329,9 +1329,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_Flush)();
 // ******************************************************************
 extern "C" HRESULT WINAPI EMUPATCH(IDirectSoundStream_FlushEx)
 (
-	X_CDirectSoundStream*	pThis,
-	REFERENCE_TIME			rtTimeStamp,
-	DWORD					dwFlags
+    X_CDirectSoundStream*   pThis,
+    REFERENCE_TIME          rtTimeStamp,
+    DWORD                   dwFlags
 );
 
 // ******************************************************************
@@ -1339,20 +1339,20 @@ extern "C" HRESULT WINAPI EMUPATCH(IDirectSoundStream_FlushEx)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMode)
 (
-    X_CDirectSoundStream   *pStream,
+    X_CDirectSoundStream*   pStream,
     DWORD                   dwMode,
     DWORD                   dwApply
 );
-	
+    
 // ******************************************************************
 // * patch: XAudioDownloadEffectsImage
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XAudioDownloadEffectsImage)
 (
-    LPCSTR		pszImageName,
-    LPVOID		pImageLoc,
-    DWORD		dwFlags,
-    LPVOID	   *ppImageDesc
+    LPCSTR          pszImageName,
+    LPVOID          pImageLoc,
+    DWORD           dwFlags,
+    LPVOID*         ppImageDesc
 );
 
 // ******************************************************************
@@ -1360,8 +1360,8 @@ HRESULT WINAPI EMUPATCH(XAudioDownloadEffectsImage)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetFilter)
 (
-	LPVOID			pThis,
-	X_DSFILTERDESC* pFilterDesc
+    LPVOID            pThis,
+    X_DSFILTERDESC* pFilterDesc
 );
 
 // ******************************************************************
@@ -1369,8 +1369,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetFilter)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFilter)
 (
-	X_CDirectSoundStream*	pThis,
-	X_DSFILTERDESC*			pFilterDesc
+    X_CDirectSoundStream*    pThis,
+    X_DSFILTERDESC*            pFilterDesc
 );
 
 // ******************************************************************
@@ -1378,17 +1378,17 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFilter)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_GetCaps)
 (
-	X_CDirectSound*	pThis,
-    X_DSCAPS*		pDSCaps
+    X_CDirectSound*    pThis,
+    X_DSCAPS*        pDSCaps
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetPitch
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
-(	
-	X_CDirectSoundStream*	pThis,
-    LONG					lPitch
+(    
+    X_CDirectSoundStream*    pThis,
+    LONG                    lPitch
 );
 
 // ******************************************************************
@@ -1401,9 +1401,9 @@ DWORD WINAPI EMUPATCH(DirectSoundGetSampleTime)();
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 (
-	X_CDirectSoundStream*	pThis,
-    DWORD					dwMixBinMask,
-    const LONG*				alVolumes
+    X_CDirectSoundStream*    pThis,
+    DWORD                    dwMixBinMask,
+    const LONG*                alVolumes
 );
 
 // ******************************************************************
@@ -1411,8 +1411,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
 (
-    X_CDirectSoundStream*	pThis,
-    LPVOID					pMixBins
+    X_CDirectSoundStream*    pThis,
+    LPVOID                    pMixBins
 );
 
 // ******************************************************************
@@ -1430,9 +1430,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
-	X_CDirectSoundBuffer*	pThis,
-    VOID*					pcDs3dBuffer,
-    DWORD					dwApply
+    X_CDirectSoundBuffer*    pThis,
+    LPCDS3DBUFFER            pc3DBufferParameters,
+    DWORD                    dwApply
 );
 
 // ******************************************************************
@@ -1440,8 +1440,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFormat)
 (
-	X_CDirectSoundStream*	pThis,
-    LPCWAVEFORMATEX			pwfxFormat
+    X_CDirectSoundStream*    pThis,
+    LPCWAVEFORMATEX            pwfxFormat
 );
 
 // ******************************************************************
@@ -1449,8 +1449,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFormat)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 (
-	X_CDirectSoundBuffer*	pThis,
-    X_CDirectSoundBuffer*	pOutputBuffer
+    X_CDirectSoundBuffer*    pThis,
+    X_CDirectSoundBuffer*    pOutputBuffer
 );
 
 // ******************************************************************
@@ -1458,8 +1458,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 (
-	X_CDirectSoundStream*	pThis,
-	X_CDirectSoundBuffer*	pOutputBuffer
+    X_CDirectSoundStream*    pThis,
+    X_CDirectSoundBuffer*    pOutputBuffer
 );
 
 // ******************************************************************
@@ -1467,8 +1467,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileCreateMediaObjectEx)
 (
-    HANDLE	hFile,
-    void**	ppMediaObject
+    HANDLE    hFile,
+    void**    ppMediaObject
 );
 
 // ******************************************************************
@@ -1476,9 +1476,9 @@ HRESULT WINAPI EMUPATCH(XFileCreateMediaObjectEx)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 (
-    LPCSTR			pszFileName,
+    LPCSTR            pszFileName,
     LPCWAVEFORMATEX *ppwfxFormat,
-    void			**ppMediaObject
+    void            **ppMediaObject
 );
 
 // ******************************************************************
@@ -1486,8 +1486,8 @@ HRESULT WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 (
-	X_CDirectSoundBuffer*	pThis,
-    LPVOID					pEnvelopeDesc
+    X_CDirectSoundBuffer*   pThis,
+    LPVOID                  pEnvelopeDesc
 );
 
 // ******************************************************************
@@ -1495,11 +1495,11 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_GetEffectData)
 (
-	X_CDirectSound*	pThis,
-    DWORD			dwEffectIndex,
-    DWORD			dwOffset,
-    LPVOID			pvData,
-    DWORD			dwDataSize
+    X_CDirectSound*     pThis,
+    DWORD               dwEffectIndex,
+    DWORD               dwOffset,
+    LPVOID              pvData,
+    DWORD               dwDataSize
 );
 
 // ******************************************************************
@@ -1507,9 +1507,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound_GetEffectData)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 (
-	X_CDirectSoundBuffer*	pThis,
-    DWORD					dwNotifyCount,
-    LPCDSBPOSITIONNOTIFY	paNotifies
+    X_CDirectSoundBuffer*    pThis,
+    DWORD                    dwNotifyCount,
+    LPCDSBPOSITIONNOTIFY    paNotifies
 );
 
 // ******************************************************************
@@ -1517,10 +1517,10 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
-	X_CDirectSoundBuffer	*pThis,
-    const FLOAT				*pflPoints,
-    DWORD					dwPointCount,
-    DWORD					dwApply
+    X_CDirectSoundBuffer*   pThis,
+    const FLOAT*            pflPoints,
+    DWORD                   dwPointCount,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1528,7 +1528,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_SetEffectData)
 (
-	LPVOID pThis,
+    LPVOID pThis,
     DWORD dwEffectIndex,
     DWORD dwOffset,
     LPCVOID pvData,
@@ -1550,9 +1550,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileCreateMediaObjectAsync)
 (
-    HANDLE	hFile,
-    DWORD	dwMaxPackets,
-    void	**ppMediaObject
+    HANDLE    hFile,
+    DWORD    dwMaxPackets,
+    void    **ppMediaObject
 );
 
 // ******************************************************************
@@ -1560,10 +1560,10 @@ HRESULT WINAPI EMUPATCH(XFileCreateMediaObjectAsync)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_Seek)
 (
-	X_XFileMediaObject* pThis,
-    LONG				lOffset,
-    DWORD				dwOrigin,
-    LPDWORD				pdwAbsolute
+    X_XFileMediaObject* pThis,
+    LONG                lOffset,
+    DWORD               dwOrigin,
+    LPDWORD             pdwAbsolute
 );
 
 // ******************************************************************
@@ -1576,8 +1576,8 @@ VOID WINAPI EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis);
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_GetStatus)
 (
-	X_XFileMediaObject* pThis,
-    LPDWORD				pdwStatus
+    X_XFileMediaObject*     pThis,
+    LPDWORD                 pdwStatus
 );
 
 // ******************************************************************
@@ -1585,8 +1585,8 @@ HRESULT WINAPI EMUPATCH(XFileMediaObject_GetStatus)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_GetInfo)
 (
-	X_XFileMediaObject	   *pThis,
-	XMEDIAINFO			   *pInfo
+    X_XFileMediaObject       *pThis,
+    XMEDIAINFO               *pInfo
 );
 
 // ******************************************************************
@@ -1594,9 +1594,9 @@ HRESULT WINAPI EMUPATCH(XFileMediaObject_GetInfo)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_Process)
 (
-	X_XFileMediaObject	   *pThis,
-    LPXMEDIAPACKET			pInputBuffer, 
-    LPXMEDIAPACKET			pOutputBuffer
+    X_XFileMediaObject       *pThis,
+    LPXMEDIAPACKET            pInputBuffer, 
+    LPXMEDIAPACKET            pOutputBuffer
 );
 
 // ******************************************************************
