@@ -620,7 +620,7 @@ inline HRESULT HybridDirectSoundBuffer_SetBufferData(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     DWORD                   dwInsideConeAngle,
     DWORD                   dwOutsideConeAngle,
     DWORD                   dwApply)
@@ -639,7 +639,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
@@ -658,7 +658,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     LONG                    lConeOutsideVolume,
     DWORD                   dwApply)
 {
@@ -686,9 +686,9 @@ inline HRESULT HybridDirectSoundBuffer_SetCurrentPosition(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
-    IDirectSound3DListener* pDS3DListener,
-    FLOAT                   flDistanceFactor,
-    DWORD                   dwApply)
+    LPDIRECTSOUND3DLISTENER8    pDS3DListener,
+    FLOAT                       flDistanceFactor,
+    DWORD                       dwApply)
 {
 
     enterCriticalSection;
@@ -704,9 +704,9 @@ inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
-    IDirectSound3DListener* pDS3DListener,
-    FLOAT                   flDopplerFactor,
-    DWORD                   dwApply)
+    LPDIRECTSOUND3DLISTENER8    pDS3DListener,
+    FLOAT                       flDopplerFactor,
+    DWORD                       dwApply)
 {
 
     enterCriticalSection;
@@ -828,7 +828,7 @@ inline HRESULT HybridDirectSoundBuffer_SetLoopRegion(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     D3DVALUE                flMaxDistance,
     DWORD                   dwApply)
 {
@@ -845,7 +845,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     D3DVALUE                flMinDistance,
     DWORD                   dwApply)
 {
@@ -883,7 +883,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetMode(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     DWORD                   dwMode,
     DWORD                   dwApply)
 {
@@ -947,7 +947,7 @@ inline HRESULT HybridDirectSoundBuffer_SetPlayRegion(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetPosition(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
@@ -980,9 +980,9 @@ inline HRESULT HybridDirectSoundBuffer_SetRolloffCurve(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
-    IDirectSound3DListener* pDSBuffer,
-    FLOAT                   fRolloffFactor,
-    DWORD                   dwApply)
+    LPDIRECTSOUND3DLISTENER8    pDSBuffer,
+    FLOAT                       fRolloffFactor,
+    DWORD                       dwApply)
 {
 
     enterCriticalSection;
@@ -998,7 +998,7 @@ inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
-    IDirectSound3DBuffer*   pDS3DBuffer,
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
