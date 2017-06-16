@@ -1367,12 +1367,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
                                         pThis->EmuLockPtr2,
                                         pThis->EmuLockBytes2,
                                         true);
-        } else
-        pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
-                                            pThis->EmuLockBytes1,
-                                            pThis->EmuLockPtr2,
-                                            pThis->EmuLockBytes2
-        );
+        } else {
+            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
+                                                 pThis->EmuLockBytes1,
+                                                 pThis->EmuLockPtr2,
+                                                 pThis->EmuLockBytes2
+            );
+        }
 
         pThis->EmuLockPtr1 = 0;
     }
