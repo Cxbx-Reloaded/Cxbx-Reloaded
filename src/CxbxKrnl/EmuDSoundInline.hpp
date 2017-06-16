@@ -49,7 +49,7 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
 
 //Xbox Audio Decoder by blueshogun96 and revised by RadWolfie
-void DSoundBufferUnlockXboxAdpcm(
+void DSoundBufferXboxAdpcmDecoder(
     IDirectSoundBuffer* pDSBuffer,
     DSBUFFERDESC*       pDSBufferDesc,
     LPVOID              pAudioPtr,
@@ -386,7 +386,7 @@ inline void DSoundBufferUpdate(
             // unlock existing lock
             if (pLockPtr1 != 0) {
                 if (dwFlags & DSB_FLAG_ADPCM) {
-                    DSoundBufferUnlockXboxAdpcm(pThis,
+                    DSoundBufferXboxAdpcmDecoder(pThis,
                                                 pDSBufferDesc,
                                                 pLockPtr1,
                                                 dwLockBytes1,
@@ -399,7 +399,7 @@ inline void DSoundBufferUpdate(
                 pLockPtr1 = 0;
             }
             if (dwFlags & DSB_FLAG_ADPCM) {
-                DSoundBufferUnlockXboxAdpcm(pThis, pDSBufferDesc, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
+                DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
             } else {
                 HRESULT hRet = pThis->Lock(0, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 

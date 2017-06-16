@@ -994,7 +994,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-        DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0, false);
+        DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0, false);
     }
 
     leaveCriticalSection;
@@ -1082,7 +1082,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         if (pThis->EmuLockPtr1 != 0) {
             //TODO: This is not really recommended place since new sound data are going to be replace anyway.
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-                DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+                DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                             pThis->EmuBufferDesc,
                                             pThis->EmuLockPtr1,
                                             pThis->EmuLockBytes1,
@@ -1360,7 +1360,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     // close any existing locks
     if (pThis->EmuLockPtr1 != 0) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-            DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                         pThis->EmuBufferDesc,
                                         pThis->EmuLockPtr1,
                                         pThis->EmuLockBytes1,
@@ -1851,7 +1851,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
 
-            DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                         pThis->EmuBufferDesc,
                                         pThis->EmuBuffer,
                                         pInputBuffer->dwMaxSize,
