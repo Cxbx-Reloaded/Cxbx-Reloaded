@@ -441,7 +441,6 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                            (*pDSBuffer)->EmuLockBytes2);
     }
 
-
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
         if ((*pDSStream) == nullptr || (*pDSStream)->EmuBuffer == nullptr) {
@@ -995,7 +994,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-        DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0);
+        DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0, false);
     }
 
     leaveCriticalSection;
@@ -1088,9 +1087,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
                                             pThis->EmuLockPtr1,
                                             pThis->EmuLockBytes1,
                                             pThis->EmuLockPtr2,
-                                            pThis->EmuLockBytes2);
+                                            pThis->EmuLockBytes2,
+                                            true);
+            } else {
+                pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
             }
-            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
         }
 
         // TODO: Verify dwFlags is the same as windows
@@ -1364,8 +1365,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
                                         pThis->EmuLockPtr1,
                                         pThis->EmuLockBytes1,
                                         pThis->EmuLockPtr2,
-                                        pThis->EmuLockBytes2);
-        }
+                                        pThis->EmuLockBytes2,
+                                        true);
+        } else
         pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
                                             pThis->EmuLockBytes1,
                                             pThis->EmuLockPtr2,
@@ -1843,38 +1845,41 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
         PVOID pAudioPtr, pAudioPtr2;
         DWORD dwAudioBytes, dwAudioBytes2;
+        HRESULT hRet;
 
-        HRESULT hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-        if (SUCCEEDED(hRet)) {
+        //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
+        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
 
-            if (pAudioPtr != 0) {
-                memcpy(pAudioPtr, pThis->EmuBuffer, dwAudioBytes);
-            }
-            if (pAudioPtr2 != 0) {
-                memcpy(pAudioPtr2, (PVOID)((DWORD)pThis->EmuBuffer + dwAudioBytes), dwAudioBytes2);
-            }
-            pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+            DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
+                                        pThis->EmuBufferDesc,
+                                        pThis->EmuBuffer,
+                                        pInputBuffer->dwMaxSize,
+                                        0,
+                                        0,
+                                        false);
 
-            //TODO : This is currently a workaround for audio to work, sound did seem to be making some "pops" in the Rayman Arena's first intro.
-            //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
-            if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-                DSoundBufferUnlockXboxAdpcm(pThis->EmuDirectSoundBuffer8,
-                                            pThis->EmuBufferDesc,
-                                            pAudioPtr,
-                                            dwAudioBytes,
-                                            pAudioPtr2,
-                                            dwAudioBytes2);
-            }
+        } else {
+            hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-            if (pAudioPtr != 0) {
-                hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
-                if (hRet == DS_OK) {
-                    if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
-                        pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-                        pThis->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
-                    }
+            if (SUCCEEDED(hRet)) {
+
+                if (pAudioPtr != 0) {
+                    memcpy(pAudioPtr, pThis->EmuBuffer, dwAudioBytes);
                 }
+                if (pAudioPtr2 != 0) {
+                    memcpy(pAudioPtr2, (PVOID)((DWORD)pThis->EmuBuffer + dwAudioBytes), dwAudioBytes2);
+                }
+                pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+            }
+        }
+        //TODO: RadWolfie - If remove this part, XADPCM audio will stay running, Rayman Arena, except...
+        //...PCM audio does not for rest of titles. However it should not be here, so this is currently a workaround fix for now.
+        hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
+        if (hRet == DS_OK) {
+            if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+                pThis->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
             }
         }
     } else {

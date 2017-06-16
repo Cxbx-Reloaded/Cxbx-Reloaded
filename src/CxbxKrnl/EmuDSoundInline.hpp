@@ -55,7 +55,8 @@ void DSoundBufferUnlockXboxAdpcm(
     LPVOID              pAudioPtr,
     DWORD               dwAudioBytes,
     LPVOID              pAudioPtr2,
-    DWORD               dwAudioBytes2)
+    DWORD               dwAudioBytes2,
+    bool                isLock)
 {
 
     if (!pDSBuffer) {
@@ -87,18 +88,36 @@ void DSoundBufferUnlockXboxAdpcm(
     void* pPtrX = NULL, *pPtrX2 = NULL;
     DWORD dwBytesX = 0, dwBytesX2 = 0;
 
-    HRESULT hr = pDSBuffer->Lock(0, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
+    HRESULT hr = DS_OK;
+    if (isLock == false) {
+        hr = pDSBuffer->Lock(0, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
+    }
     if (SUCCEEDED(hr)) {
         // Write the converted PCM buffer bytes
-        if (dwDecodedAudioBytes > dwBytesX) dwDecodedAudioBytes = dwBytesX;
-        memcpy(pPtrX, buffer1, dwDecodedAudioBytes);
 
-        if (pPtrX2 != NULL) {
-            if (dwDecodedAudioBytes2 > dwBytesX2) dwDecodedAudioBytes2 = dwBytesX2;
-            memcpy(pPtrX2, buffer2, dwDecodedAudioBytes2);
+        if (isLock == false) {
+
+            if (dwDecodedAudioBytes > dwBytesX) dwDecodedAudioBytes = dwBytesX;
+            memcpy(pPtrX, buffer1, dwDecodedAudioBytes);
+
+            if (pPtrX2 != NULL) {
+                if (dwDecodedAudioBytes2 > dwBytesX2) dwDecodedAudioBytes2 = dwBytesX2;
+                memcpy(pPtrX2, buffer2, dwDecodedAudioBytes2);
+            }
+
+            hr = pDSBuffer->Unlock(pPtrX, dwBytesX, pPtrX2, dwBytesX2);
+
+        } else {
+
+            if (dwDecodedAudioBytes > dwAudioBytes) dwDecodedAudioBytes = dwAudioBytes;
+            memcpy(pAudioPtr, buffer1, dwDecodedAudioBytes);
+
+            if (pAudioPtr2 != NULL) {
+                if (dwDecodedAudioBytes2 > dwAudioBytes2) dwDecodedAudioBytes2 = dwAudioBytes2;
+                memcpy(pAudioPtr2, buffer2, dwDecodedAudioBytes2);
+            }
+            hr = pDSBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
         }
-
-        pDSBuffer->Unlock(buffer1, dwAudioBytes, buffer2, dwAudioBytes2);
     }
 
     // Clean up our mess
@@ -372,22 +391,27 @@ inline void DSoundBufferUpdate(
                                                 pLockPtr1,
                                                 dwLockBytes1,
                                                 pLockPtr2,
-                                                dwLockBytes2);
+                                                dwLockBytes2,
+                                                true);
+                } else {
+                    pThis->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
                 }
-                pThis->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
                 pLockPtr1 = 0;
             }
+            if (dwFlags & DSB_FLAG_ADPCM) {
+                DSoundBufferUnlockXboxAdpcm(pThis, pDSBufferDesc, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
+            } else {
+                HRESULT hRet = pThis->Lock(0, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-            HRESULT hRet = pThis->Lock(0, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
-
-            if (SUCCEEDED(hRet)) {
-                if (pAudioPtr != 0) {
-                    memcpy(pAudioPtr, pBuffer, dwAudioBytes);
+                if (SUCCEEDED(hRet)) {
+                    if (pAudioPtr != 0) {
+                        memcpy(pAudioPtr, pBuffer, dwAudioBytes);
+                    }
+                    if (pAudioPtr2 != 0) {
+                        memcpy(pAudioPtr2, (PVOID)((DWORD)pBuffer + dwAudioBytes), dwAudioBytes2);
+                    }
+                    pThis->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
                 }
-                if (pAudioPtr2 != 0) {
-                    memcpy(pAudioPtr2, (PVOID)((DWORD)pBuffer + dwAudioBytes), dwAudioBytes2);
-                }
-                pThis->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
             }
         }
     }
