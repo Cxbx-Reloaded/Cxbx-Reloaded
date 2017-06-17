@@ -435,6 +435,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             (*pDSBuffer)->EmuBufferDesc,
                            (*pDSBuffer)->EmuBuffer,
                            (*pDSBuffer)->EmuFlags,
+                           (*pDSBuffer)->EmuLockOffset,
                            (*pDSBuffer)->EmuLockPtr1,
                            (*pDSBuffer)->EmuLockBytes1,
                            (*pDSBuffer)->EmuLockPtr2,
@@ -450,6 +451,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             (*pDSStream)->EmuBufferDesc,
                            (*pDSStream)->EmuBuffer,
                            (*pDSStream)->EmuFlags,
+                           0,
                            (*pDSStream)->EmuLockPtr1,
                            (*pDSStream)->EmuLockBytes1,
                            (*pDSStream)->EmuLockPtr2,
@@ -865,6 +867,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     (*ppBuffer)->EmuDirectSound3DBuffer8 = 0;
     (*ppBuffer)->EmuBuffer = 0;
     (*ppBuffer)->EmuBufferDesc = pDSBufferDesc;
+    (*ppBuffer)->EmuLockOffset = 0;
     (*ppBuffer)->EmuLockPtr1 = 0;
     (*ppBuffer)->EmuLockBytes1 = 0;
     (*ppBuffer)->EmuLockPtr2 = 0;
@@ -991,10 +994,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
 
+    pThis->EmuLockOffset = 0;
+
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-        DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pvBufferData, dwBufferBytes, NULL, 0, false);
+        DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, 0, pvBufferData, dwBufferBytes, NULL, 0, false);
     }
 
     leaveCriticalSection;
@@ -1084,6 +1089,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                             pThis->EmuBufferDesc,
+                                            dwOffset,
                                             pThis->EmuLockPtr1,
                                             pThis->EmuLockBytes1,
                                             pThis->EmuLockPtr2,
@@ -1100,7 +1106,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         if (FAILED(hRet)) {
             CxbxKrnlCleanup("DirectSoundBuffer Lock Failed!");
         }
-
+        pThis->EmuLockOffset = dwOffset;
         pThis->EmuLockPtr1 = *ppvAudioPtr1;
         pThis->EmuLockBytes1 = *pdwAudioBytes1;
         pThis->EmuLockPtr2 = (ppvAudioPtr2 != NULL) ? *ppvAudioPtr2 : NULL;
@@ -1361,12 +1367,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     if (pThis->EmuLockPtr1 != 0) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                        pThis->EmuBufferDesc,
-                                        pThis->EmuLockPtr1,
-                                        pThis->EmuLockBytes1,
-                                        pThis->EmuLockPtr2,
-                                        pThis->EmuLockBytes2,
-                                        true);
+                                         pThis->EmuBufferDesc,
+                                         pThis->EmuLockOffset,
+                                         pThis->EmuLockPtr1,
+                                         pThis->EmuLockBytes1,
+                                         pThis->EmuLockPtr2,
+                                         pThis->EmuLockBytes2,
+                                         true);
         } else {
             pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
                                                  pThis->EmuLockBytes1,
@@ -1853,12 +1860,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
 
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                        pThis->EmuBufferDesc,
-                                        pThis->EmuBuffer,
-                                        pInputBuffer->dwMaxSize,
-                                        0,
-                                        0,
-                                        false);
+                                         pThis->EmuBufferDesc,
+                                         0,
+                                         pThis->EmuBuffer,
+                                         pInputBuffer->dwMaxSize,
+                                         0,
+                                         0,
+                                         false);
 
         } else {
             hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);

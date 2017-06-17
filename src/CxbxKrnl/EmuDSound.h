@@ -238,6 +238,7 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuPlayFlags;       // Offset: 0x40
     DWORD                   EmuFlags;           // Offset: 0x44
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
+    DWORD                   EmuLockOffset;
 };
 
 #define DSB_FLAG_ADPCM 0x00000001

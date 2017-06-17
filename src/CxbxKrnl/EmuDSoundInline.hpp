@@ -52,6 +52,7 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 void DSoundBufferXboxAdpcmDecoder(
     IDirectSoundBuffer* pDSBuffer,
     DSBUFFERDESC*       pDSBufferDesc,
+    DWORD               dwOffset,
     LPVOID              pAudioPtr,
     DWORD               dwAudioBytes,
     LPVOID              pAudioPtr2,
@@ -64,6 +65,9 @@ void DSoundBufferXboxAdpcmDecoder(
     }
 
     if (!pDSBufferDesc) {
+        return;
+    }
+    if (!pAudioPtr) {
         return;
     }
 
@@ -90,7 +94,7 @@ void DSoundBufferXboxAdpcmDecoder(
 
     HRESULT hr = DS_OK;
     if (isLock == false) {
-        hr = pDSBuffer->Lock(0, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
+        hr = pDSBuffer->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
     }
     if (SUCCEEDED(hr)) {
         // Write the converted PCM buffer bytes
@@ -370,6 +374,7 @@ inline void DSoundBufferUpdate(
     LPDSBUFFERDESC          pDSBufferDesc,
     LPVOID                  pBuffer,
     DWORD                   dwFlags,
+    DWORD                   dwOffset,
     LPVOID                 &pLockPtr1,
     DWORD                   dwLockBytes1,
     LPVOID                  pLockPtr2,
@@ -387,21 +392,22 @@ inline void DSoundBufferUpdate(
             if (pLockPtr1 != 0) {
                 if (dwFlags & DSB_FLAG_ADPCM) {
                     DSoundBufferXboxAdpcmDecoder(pThis,
-                                                pDSBufferDesc,
-                                                pLockPtr1,
-                                                dwLockBytes1,
-                                                pLockPtr2,
-                                                dwLockBytes2,
-                                                true);
+                                                 pDSBufferDesc,
+                                                 dwOffset,
+                                                 pLockPtr1,
+                                                 dwLockBytes1,
+                                                 pLockPtr2,
+                                                 dwLockBytes2,
+                                                 true);
                 } else {
                     pThis->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
                 }
                 pLockPtr1 = 0;
             }
             if (dwFlags & DSB_FLAG_ADPCM) {
-                DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
+                DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, dwOffset, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
             } else {
-                HRESULT hRet = pThis->Lock(0, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+                HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
                 if (SUCCEEDED(hRet)) {
                     if (pAudioPtr != 0) {
