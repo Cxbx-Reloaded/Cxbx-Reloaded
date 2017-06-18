@@ -996,7 +996,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
     pThis->EmuLockOffset = 0;
 
-    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
+    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
     if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
         DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, 0, pvBufferData, dwBufferBytes, NULL, 0, false);
@@ -1081,7 +1081,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         *pdwAudioBytes1 = dwBytes;
     } else {
         if (dwBytes > pThis->EmuBufferDesc->dwBufferBytes) {
-            ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwBytes, pThis->EmuDirectSound3DBuffer8);
+            ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBytes, pThis->EmuDirectSound3DBuffer8);
         }
 
         if (pThis->EmuLockPtr1 != 0) {
@@ -1169,7 +1169,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    //ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, dwLoopLength);
+    //ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwLoopLength);
 
     leaveCriticalSection;
 
@@ -1558,6 +1558,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     (*ppStream)->EmuLockPtr2 = 0;
     (*ppStream)->EmuLockBytes2 = 0;
     (*ppStream)->EmuFlags = dwEmuFlags;
+    (*ppStream)->EmuPlayFlags = DSBPLAY_LOOPING;
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
@@ -1845,7 +1846,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         // update buffer data cache
         pThis->EmuBuffer = pInputBuffer->pvBuffer;
 
-        ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuFlags, pInputBuffer->dwMaxSize, pThis->EmuDirectSound3DBuffer8);
+        ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, pInputBuffer->dwMaxSize, pThis->EmuDirectSound3DBuffer8);
 
         if (pInputBuffer->pdwStatus != 0) {
             *pInputBuffer->pdwStatus = S_OK;

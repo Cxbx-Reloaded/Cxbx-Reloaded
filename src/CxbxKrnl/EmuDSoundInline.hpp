@@ -373,7 +373,7 @@ inline void DSoundBufferUpdate(
     LPDIRECTSOUNDBUFFER8    pThis,
     LPDSBUFFERDESC          pDSBufferDesc,
     LPVOID                  pBuffer,
-    DWORD                   dwFlags,
+    DWORD                   dwEmuFlags,
     DWORD                   dwOffset,
     LPVOID                 &pLockPtr1,
     DWORD                   dwLockBytes1,
@@ -390,7 +390,7 @@ inline void DSoundBufferUpdate(
 
             // unlock existing lock
             if (pLockPtr1 != 0) {
-                if (dwFlags & DSB_FLAG_ADPCM) {
+                if (dwEmuFlags & DSB_FLAG_ADPCM) {
                     DSoundBufferXboxAdpcmDecoder(pThis,
                                                  pDSBufferDesc,
                                                  dwOffset,
@@ -404,7 +404,7 @@ inline void DSoundBufferUpdate(
                 }
                 pLockPtr1 = 0;
             }
-            if (dwFlags & DSB_FLAG_ADPCM) {
+            if (dwEmuFlags & DSB_FLAG_ADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, dwOffset, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
             } else {
                 HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
@@ -598,7 +598,7 @@ inline HRESULT HybridDirectSoundBuffer_Process(
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Play(
     IDirectSoundBuffer* pDSBuffer,
-    DWORD               dwFlags)
+    DWORD               dwEmuFlags)
 {
 
     return DS_OK;
@@ -1075,7 +1075,7 @@ inline HRESULT HybridDirectSoundBuffer_Stop(
 inline HRESULT HybridDirectSoundBuffer_StopEx(
     IDirectSoundBuffer* pDSBuffer,
     REFERENCE_TIME      rtTimeStamp,
-    DWORD               dwFlags)
+    DWORD               dwEmuFlags)
 {
 
     return DS_OK;
