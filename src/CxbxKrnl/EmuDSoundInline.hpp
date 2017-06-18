@@ -73,7 +73,10 @@ void DSoundBufferXboxAdpcmDecoder(
 
     // Predict the size of the converted buffers we're going to need
     DWORD dwDecodedAudioBytes = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes) * pDSBufferDesc->lpwfxFormat->nChannels;
-    DWORD dwDecodedAudioBytes2 = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes2) * pDSBufferDesc->lpwfxFormat->nChannels;
+    DWORD dwDecodedAudioBytes2 = 0;
+    if (dwAudioBytes2 != 0) {
+        dwDecodedAudioBytes2 = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes2) * pDSBufferDesc->lpwfxFormat->nChannels;
+    }
 
     // Allocate some temp buffers
     uint8_t* buffer1 = (uint8_t*)malloc(dwDecodedAudioBytes);
@@ -547,7 +550,8 @@ inline HRESULT HybridDirectSoundBuffer_Lock(
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Pause(
     IDirectSoundBuffer* pDSBuffer,
-    DWORD               dwPause)
+    DWORD               dwPause,
+    DWORD              &dwEmuFlags)
 {
 
     enterCriticalSection;
@@ -566,7 +570,12 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
-            EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
+            dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+            hRet = pDSBuffer->GetStatus(&dwStatus);
+            if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
+                pDSBuffer->Stop();
+                pDSBuffer->SetCurrentPosition(0);
+            }
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:
             EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
@@ -592,17 +601,42 @@ inline HRESULT HybridDirectSoundBuffer_Process(
 {
 
     return DS_OK;
-}
+}*/
 
 //Both Play(Ex) only has one function, aka this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Play(
     IDirectSoundBuffer* pDSBuffer,
-    DWORD               dwEmuFlags)
+    DWORD              &dwFlags,
+    DWORD              &dwEmuFlags)
 {
 
-    return DS_OK;
+    if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
+        CxbxKrnlCleanup("Unsupported Playing Flags");
+    }
+    // rewind buffer
+    if ((dwFlags & X_DSBPLAY_FROMSTART) != X_DSBPLAY_FROMSTART) {
+        if (FAILED(pDSBuffer->SetCurrentPosition(0))) {
+            EmuWarning("Rewinding buffer failed!");
+        }
+
+        dwFlags &= ~X_DSBPLAY_FROMSTART;
+    }
+
+    if (dwFlags & X_DSBPAUSE_SYNCHPLAYBACK) {
+        dwFlags &= ~X_DSBPAUSE_SYNCHPLAYBACK;
+        dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+    }
+
+    HRESULT hRet = DS_OK;
+
+    if (dwEmuFlags & ~DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+        hRet = pDSBuffer->Play(0, 0, dwFlags);
+    }
+
+    return hRet;
 }
+/*
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_PlayEx(
     IDirectSoundBuffer* pDSBuffer,

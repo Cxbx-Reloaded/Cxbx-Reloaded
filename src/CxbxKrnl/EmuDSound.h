@@ -241,8 +241,10 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuLockOffset;
 };
 
-#define DSB_FLAG_ADPCM 0x00000001
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
+//Custom flags?
+#define DSB_FLAG_ADPCM 0x00000001
+#define DSB_FLAG_SYNCHPLAYBACK_CONTROL 0x00000002
 #define DSB_FLAG_RECIEVEDATA 0x00001000
 
 // ******************************************************************

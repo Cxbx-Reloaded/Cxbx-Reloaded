@@ -371,7 +371,28 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 
     //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice
 
-    EmuWarning("EmuIDirectSound_SynchPlayback ignored");
+    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
+    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
+        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->EmuBuffer == nullptr) {
+            continue;
+        }
+
+        if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+            (*pDSBuffer)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+        }
+    }
+
+    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
+    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->EmuBuffer == nullptr) {
+            continue;
+        }
+        if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+            (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
+        }
+    }
 
     leaveCriticalSection;
 
@@ -434,14 +455,14 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             continue;
         }
         DSoundBufferUpdate((*pDSBuffer)->EmuDirectSoundBuffer8,
-            (*pDSBuffer)->EmuBufferDesc,
-                           (*pDSBuffer)->EmuBuffer,
-                           (*pDSBuffer)->EmuFlags,
-                           (*pDSBuffer)->EmuLockOffset,
-                           (*pDSBuffer)->EmuLockPtr1,
-                           (*pDSBuffer)->EmuLockBytes1,
-                           (*pDSBuffer)->EmuLockPtr2,
-                           (*pDSBuffer)->EmuLockBytes2);
+                            (*pDSBuffer)->EmuBufferDesc,
+                            (*pDSBuffer)->EmuBuffer,
+                            (*pDSBuffer)->EmuFlags,
+                            (*pDSBuffer)->EmuLockOffset,
+                            (*pDSBuffer)->EmuLockPtr1,
+                            (*pDSBuffer)->EmuLockBytes1,
+                            (*pDSBuffer)->EmuLockPtr2,
+                            (*pDSBuffer)->EmuLockBytes2);
     }
 
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
@@ -450,14 +471,14 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             continue;
         }
         DSoundBufferUpdate((*pDSStream)->EmuDirectSoundBuffer8,
-            (*pDSStream)->EmuBufferDesc,
-                           (*pDSStream)->EmuBuffer,
-                           (*pDSStream)->EmuFlags,
-                           0,
-                           (*pDSStream)->EmuLockPtr1,
-                           (*pDSStream)->EmuLockBytes1,
-                           (*pDSStream)->EmuLockPtr2,
-                           (*pDSStream)->EmuLockBytes2);
+                            (*pDSStream)->EmuBufferDesc,
+                            (*pDSStream)->EmuBuffer,
+                            (*pDSStream)->EmuFlags,
+                            0,
+                            (*pDSStream)->EmuLockPtr1,
+                            (*pDSStream)->EmuLockBytes1,
+                            (*pDSStream)->EmuLockPtr2,
+                            (*pDSStream)->EmuLockBytes2);
     }
 
     leaveCriticalSection;
@@ -1087,7 +1108,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         }
 
         if (pThis->EmuLockPtr1 != 0) {
-            //TODO: This is not really recommended place since new sound data are going to be replace anyway.
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                             pThis->EmuBufferDesc,
@@ -1353,18 +1373,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
               ");\n",
               pThis, dwReserved1, dwReserved2, dwFlags);
 
-    if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
-        CxbxKrnlCleanup("Unsupported Playing Flags");
-    }
-    // rewind buffer
-    if ((dwFlags & X_DSBPLAY_FROMSTART) != X_DSBPLAY_FROMSTART) {
-        if (FAILED(pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0))) {
-            EmuWarning("Rewinding buffer failed!");
-        }
-
-        dwFlags &= ~X_DSBPLAY_FROMSTART;
-    }
-
     // close any existing locks
     if (pThis->EmuLockPtr1 != 0) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
@@ -1389,7 +1397,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
     pThis->EmuPlayFlags = dwFlags;
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+    HRESULT hRet = HybridDirectSoundBuffer_Play(pThis->EmuDirectSoundBuffer8, pThis->EmuPlayFlags, pThis->EmuFlags);
 
     leaveCriticalSection;
 
@@ -1968,6 +1976,29 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
               ");\n",
               pUnknown);
 
+    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
+    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
+        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->EmuBuffer == nullptr) {
+            continue;
+        }
+
+        if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+            (*pDSBuffer)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+        }
+    }
+
+    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
+    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->EmuBuffer == nullptr) {
+            continue;
+        }
+        if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+            (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
+        }
+    }
+
     leaveCriticalSection;
 
     return DS_OK;
@@ -1990,7 +2021,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
               ");\n",
               pThis, dwPause);
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -2854,7 +2885,29 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 
     // This function wasn't part of the XDK until 4721.
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause);
+    // close any existing locks
+    if (pThis->EmuLockPtr1 != 0) {
+        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
+            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
+                                         pThis->EmuBufferDesc,
+                                         pThis->EmuLockOffset,
+                                         pThis->EmuLockPtr1,
+                                         pThis->EmuLockBytes1,
+                                         pThis->EmuLockPtr2,
+                                         pThis->EmuLockBytes2,
+                                         true);
+        } else {
+            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
+                                                 pThis->EmuLockBytes1,
+                                                 pThis->EmuLockPtr2,
+                                                 pThis->EmuLockBytes2
+            );
+        }
+
+        pThis->EmuLockPtr1 = 0;
+    }
+
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
 }
 
 //// ******************************************************************
@@ -3128,13 +3181,40 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
               ");\n",
               pThis, rtTimeStamp, dwFlags);
 
-    // TODO: Handle other non-PC standard flags
-    DWORD dwPCFlags = (dwFlags & DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-    HRESULT hr = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwPCFlags);
+    // close any existing locks
+    if (pThis->EmuLockPtr1 != 0) {
+        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
+            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
+                                         pThis->EmuBufferDesc,
+                                         pThis->EmuLockOffset,
+                                         pThis->EmuLockPtr1,
+                                         pThis->EmuLockBytes1,
+                                         pThis->EmuLockPtr2,
+                                         pThis->EmuLockBytes2,
+                                         true);
+        } else {
+            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
+                                                 pThis->EmuLockBytes1,
+                                                 pThis->EmuLockPtr2,
+                                                 pThis->EmuLockBytes2
+            );
+        }
+
+        pThis->EmuLockPtr1 = 0;
+    }
+
+    pThis->EmuPlayFlags = dwFlags;
+
+    //TODO: Need implement support for rtTimeStamp.
+    if (rtTimeStamp != 0) {
+        EmuWarning("Not implemented for rtTimeStamp greater than 0 of %08d", rtTimeStamp);
+    }
+
+    HRESULT hRet = HybridDirectSoundBuffer_Play(pThis->EmuDirectSoundBuffer8, pThis->EmuPlayFlags, pThis->EmuFlags);
 
     leaveCriticalSection;
 
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
