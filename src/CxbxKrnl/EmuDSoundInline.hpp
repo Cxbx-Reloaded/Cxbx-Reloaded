@@ -607,7 +607,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
 inline HRESULT HybridDirectSoundBuffer_PlayEx(
     IDirectSoundBuffer* pDSBuffer,
     REFERENCE_TIME      rtTimeStamp,
-    DWORD               dwFlags)
+    DWORD               dwEmuFlags)
 {
 
     return DS_OK;
