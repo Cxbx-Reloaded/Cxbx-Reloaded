@@ -565,7 +565,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             }
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
-            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica and ... ?
+            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
             EmuWarning("X_DSSPAUSE_SYNCHPLAYBACK is unsupported!");
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:

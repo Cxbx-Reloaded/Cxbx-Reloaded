@@ -369,7 +369,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
               ");\n",
               pThis);
 
-    //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica
+    //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice
 
     EmuWarning("EmuIDirectSound_SynchPlayback ignored");
 
@@ -425,6 +425,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     enterCriticalSection;
 
     DbgPrintf("EmuDSound: DirectSoundDoWork();\n");
+
+    //TODO: This need a lock in each frame. I think it does not wait for each frame.
 
     XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
     for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
