@@ -392,7 +392,7 @@ inline void DSoundBufferUpdate(
         if ((dwStatus & DSBSTATUS_PLAYING)) {
 
             // unlock existing lock
-            if (pLockPtr1 != 0) {
+            if (pLockPtr1 != nullptr) {
                 if (dwEmuFlags & DSB_FLAG_ADPCM) {
                     DSoundBufferXboxAdpcmDecoder(pThis,
                                                  pDSBufferDesc,
@@ -413,10 +413,10 @@ inline void DSoundBufferUpdate(
                 HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
                 if (SUCCEEDED(hRet)) {
-                    if (pAudioPtr != 0) {
+                    if (pAudioPtr != nullptr) {
                         memcpy(pAudioPtr, pBuffer, dwAudioBytes);
                     }
-                    if (pAudioPtr2 != 0) {
+                    if (pAudioPtr2 != nullptr) {
                         memcpy(pAudioPtr2, (PVOID)((DWORD)pBuffer + dwAudioBytes), dwAudioBytes2);
                     }
                     pThis->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
@@ -624,7 +624,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
     }
 
     if (dwFlags & X_DSBPAUSE_SYNCHPLAYBACK) {
-        dwFlags &= ~X_DSBPAUSE_SYNCHPLAYBACK;
+        dwFlags ^= X_DSBPAUSE_SYNCHPLAYBACK;
         dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
     }
 

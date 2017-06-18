@@ -927,7 +927,10 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pThis);
 // ******************************************************************
 // * patch: CDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown);
+HRESULT WINAPI EMUPATCH(CDirectSound_SynchPlayback)
+(
+    LPDIRECTSOUND8          pThis
+);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_Pause

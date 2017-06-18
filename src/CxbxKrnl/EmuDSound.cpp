@@ -361,42 +361,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
-    DbgPrintf("EmuDSound: IDirectSound_SynchPlayback\n"
-              "(\n"
-              "   pThis                     : 0x%.08X\n"
-              ");\n",
-              pThis);
-
-    //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice
-
-    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
-    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
-        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->EmuBuffer == nullptr) {
-            continue;
-        }
-
-        if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
-            (*pDSBuffer)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
-        }
-    }
-
-    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->EmuBuffer == nullptr) {
-            continue;
-        }
-        if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
-            (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-            (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
-        }
-    }
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return XTL::EMUPATCH(CDirectSound_SynchPlayback)(pThis);
 }
 
 // ******************************************************************
@@ -1107,7 +1072,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
             ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBytes, pThis->EmuDirectSound3DBuffer8);
         }
 
-        if (pThis->EmuLockPtr1 != 0) {
+        if (pThis->EmuLockPtr1 != nullptr) {
             if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                             pThis->EmuBufferDesc,
@@ -1374,7 +1339,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
               pThis, dwReserved1, dwReserved2, dwFlags);
 
     // close any existing locks
-    if (pThis->EmuLockPtr1 != 0) {
+    if (pThis->EmuLockPtr1 != nullptr) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                          pThis->EmuBufferDesc,
@@ -1964,7 +1929,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 // ******************************************************************
 // * patch: CDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
+HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
+(
+    LPDIRECTSOUND8 pThis)
 {
     FUNC_EXPORTS;
 
@@ -1972,9 +1939,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
 
     DbgPrintf("EmuDSound: CDirectSound_SynchPlayback\n"
               "(\n"
-              "   pUnknown           : 0x%.08X\n"
+              "   pThis              : 0x%.08X\n"
               ");\n",
-              pUnknown);
+              pThis);
+
+    //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and ...?
 
     XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
     for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
@@ -2886,7 +2855,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
     // This function wasn't part of the XDK until 4721.
 
     // close any existing locks
-    if (pThis->EmuLockPtr1 != 0) {
+    if (pThis->EmuLockPtr1 != nullptr) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                          pThis->EmuBufferDesc,
@@ -3182,7 +3151,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
               pThis, rtTimeStamp, dwFlags);
 
     // close any existing locks
-    if (pThis->EmuLockPtr1 != 0) {
+    if (pThis->EmuLockPtr1 != nullptr) {
         if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                          pThis->EmuBufferDesc,
