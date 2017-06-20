@@ -174,7 +174,7 @@ XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) DWORD NTAPI PhyGetLinkState
 (
 	IN ULONG	Mode
 );

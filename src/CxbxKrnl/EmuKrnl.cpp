@@ -50,6 +50,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h"
+#include "EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
@@ -344,16 +345,14 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 (
 	IN ULONG	Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
 }
 
 // ******************************************************************
