@@ -180,21 +180,45 @@ uint32_t EmuX86_Read32(xbaddr addr)
 
 uint16_t EmuX86_Read16(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read16(0x%08X)\n", addr);
+	uint16_t value;
+	
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read16(addr - NVNET_ADDR);
+	}
+	else {
+		if (g_bEmuException) {
+			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
+			value = 0;
+		}
+		else {
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read16(addr);
+		}
+		DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
+	}
 
-	CxbxKrnlCleanup("EmuX86_Read16 Unimplemented");
-
-	uint16_t value = 0;
 	return value;
 }
 
 uint8_t EmuX86_Read8(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr);
+	uint8_t value;
 
-	CxbxKrnlCleanup("EmuX86_Read8 Unimplemented");
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read8(addr - NVNET_ADDR);
+	}
+	else {
+		if (g_bEmuException) {
+			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
+			value = 0;
+		}
+		else {
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read8(addr);
+		}
+		DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
+	}
 
-	uint8_t value = 0;
 	return value;
 }
 
@@ -240,16 +264,36 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
-	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X)\n", addr, value);
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write16(addr - NVNET_ADDR, value);
+		return;
+	}
 
-	CxbxKrnlCleanup("EmuX86_Write16 Unimplemented");
-	assert((addr & 1) == 0);
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+		return;
+	}
+
+	// Outside EmuException, pass the memory-access through to normal memory :
+	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X)\n", addr, value);
+	EmuX86_Mem_Write16(addr, value);
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write8(addr - NVNET_ADDR, value);
+		return;
+	}
+
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+		return;
+	}
+
+	// Outside EmuException, pass the memory-access through to normal memory :
 	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X)\n", addr, value);
-	CxbxKrnlCleanup("EmuX86_Write8 Unimplemented");
+	EmuX86_Mem_Write8(addr, value);
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
