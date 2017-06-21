@@ -180,29 +180,21 @@ uint32_t EmuX86_Read32(xbaddr addr)
 
 uint16_t EmuX86_Read16(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
+	DbgPrintf("EmuX86_Read16(0x%08X)\n", addr);
 
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint16_t value = (uint16_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+	CxbxKrnlCleanup("EmuX86_Read16 Unimplemented");
 
-	// Must the second byte be retrieved from the next DWORD?
-	if ((addr & 3) == 3)
-		value |= (uint16_t)((EmuX86_Read32Aligned(aligned_addr + 4) & 0xff) << 8);
-
-	DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
+	uint16_t value = 0;
 	return value;
 }
 
 uint8_t EmuX86_Read8(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
+	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr);
 
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint8_t value = (uint8_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+	CxbxKrnlCleanup("EmuX86_Read8 Unimplemented");
 
-	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
+	uint8_t value = 0;
 	return value;
 }
 
@@ -248,30 +240,16 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
-	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
+	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X)\n", addr, value);
 
+	CxbxKrnlCleanup("EmuX86_Write16 Unimplemented");
 	assert((addr & 1) == 0);
-
-	int shift = (addr & 2) * 16;
-	xbaddr aligned_addr = addr & ~3;
-	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
-	uint32_t mask = 0xFFFF << shift;
-
-	// TODO : Must the second byte be written to the next DWORD?
-
-	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
-	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
-
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
-	uint32_t mask = 0xFF << shift;
-
-	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
+	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X)\n", addr, value);
+	CxbxKrnlCleanup("EmuX86_Write8 Unimplemented");
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
