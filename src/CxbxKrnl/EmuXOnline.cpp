@@ -93,21 +93,6 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
 }
 
 // ******************************************************************
-// * patch: XNetGetEthernetLinkStatus
-// ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-
-	// for now, no ethernet connection is available
-	DWORD ret = XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
-
-	RETURN(ret);
-}
-
-// ******************************************************************
 // * patch: This::Emusocket
 // ******************************************************************
 SOCKET WINAPI XTL::EMUPATCH(socket)
