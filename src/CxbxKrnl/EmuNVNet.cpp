@@ -259,12 +259,12 @@ void EmuNVNet_SetRegister(xbaddr addr, uint32_t value, unsigned int size)
 
 uint32_t EmuNVNet_Read32(xbaddr addr)
 {
-	DbgPrintf("EmuNVNet_Read32: %s (0x%08X)", EmuNVNet_GetRegisterName(addr), addr);
+	DbgPrintf("EmuNVNet_Read32: %s (0x%08X)\n", EmuNVNet_GetRegisterName(addr), addr);
 	return EmuNVNet_GetRegister(addr, sizeof(uint32_t));
 }
 
 void EmuNVNet_Write32(xbaddr addr, uint32_t value)
 {
-	DbgPrintf("EmuNVNet_Write32: %s (0x%08X) = 0x%08X", EmuNVNet_GetRegisterName(addr), addr, value);
+	DbgPrintf("EmuNVNet_Write32: %s (0x%08X) = 0x%08X\n", EmuNVNet_GetRegisterName(addr), addr, value);
 	return EmuNVNet_SetRegister(addr, value, sizeof(uint32_t));
 }
