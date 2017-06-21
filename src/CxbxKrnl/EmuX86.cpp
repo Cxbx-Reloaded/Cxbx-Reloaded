@@ -49,6 +49,7 @@
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuNV2A.h"
+#include "EmuNVNet.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
@@ -147,6 +148,8 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not 
 		value = EmuNV2A_Read32(addr - NV2A_ADDR);
 		// Note : EmuNV2A_Read32 does it's own logging
+	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read32(addr - NVNET_ADDR);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
@@ -216,6 +219,11 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 		// Access NV2A regardless weither HLE is disabled or not 
 		EmuNV2A_Write32(addr - NV2A_ADDR, value);
 		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
+
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write32(addr - NVNET_ADDR, value);
 		return;
 	}
 
