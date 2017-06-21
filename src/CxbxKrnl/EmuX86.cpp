@@ -766,10 +766,10 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
 	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
 	// Set Parity flag, based on "Compute parity in parallel" method from
 	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-	uint32_t v = 255 & dest;
+	uint32_t v = 255 & result;
 	v ^= v >> 4;
 	v &= 0xf;
 	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
