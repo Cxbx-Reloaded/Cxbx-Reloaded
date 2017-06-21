@@ -675,6 +675,76 @@ inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
+bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// AND Destination with src
+	dest &= src;
+
+	// Write back the result
+	if (!EmuX86_Operand_Write(e, info, 0, dest))
+		return false;
+
+	// OF/CF are cleared
+	// SF, ZF, and PF are set according to the result
+	// AF is undefined, so has been left out
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, dest == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
+bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// OR Destination with src
+	dest |= src;
+
+	// Write back the result
+	if (!EmuX86_Operand_Write(e, info, 0, dest))
+		return false;
+
+	// OF/CF are cleared
+	// SF, ZF, and PF are set according to the result
+	// AF is undefined, so has been left out
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, dest == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
 bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
@@ -827,6 +897,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				break;
 
 			goto unimplemented_opcode;
+		case I_AND:
+			if (EmuX86_Opcode_AND(e, info))
+				break;
+			goto unimplemented_opcode;
 		case I_CPUID:
 			EmuX86_Opcode_CPUID(e, info);
 			break;
@@ -842,6 +916,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			if (EmuX86_Opcode_MOVZX(e, info))
 				break;
 
+			goto unimplemented_opcode;
+		case I_OR:
+			if (EmuX86_Opcode_OR(e, info))
+				break;
 			goto unimplemented_opcode;
 		case I_OUT:
 			if (EmuX86_Opcode_OUT(e, info))
