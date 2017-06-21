@@ -710,6 +710,51 @@ bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	if (src == dest) {
+		EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 1);
+
+		// Write the source value to the destination operand
+		if (!EmuX86_Operand_Write(e, info, 0, src)) {
+			return false;
+		}
+	} else	{
+		EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 0);
+
+		// Write the dest value to the source operand
+		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
+			return false;
+		}
+	}
+
+	// Perform arithmatic operation for flag calculation
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	// CF, PF, AF, SF, and OF are set according to the result
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
+	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
 bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -899,6 +944,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			goto unimplemented_opcode;
 		case I_AND:
 			if (EmuX86_Opcode_AND(e, info))
+				break;
+			goto unimplemented_opcode;
+		case I_CMPXCHG:
+			if (EmuX86_Opcode_CMPXCHG(e, info))
 				break;
 			goto unimplemented_opcode;
 		case I_CPUID:
