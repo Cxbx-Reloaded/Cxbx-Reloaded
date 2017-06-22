@@ -259,3 +259,52 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * patch: XOnlineLaunchNewImage
+// ******************************************************************
+HRESULT WINAPI XOnlineLaunchNewImage
+(
+    LPCSTR	lpImagePath,
+    LPVOID	pLaunchData
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(lpImagePath)
+		LOG_FUNC_ARG(pLaunchData)
+		LOG_FUNC_END;
+
+	// TODO: Launch another .xbe from Cxbx someday?
+
+	HRESULT ret = E_FAIL;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * patch: XOnlineLogon
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
+(
+    VOID*	pUsers,
+    DWORD*	pdwServiceIDs,
+    DWORD	dwServices,
+    HANDLE	hEvent,
+    HANDLE	pHandle
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pUsers)
+		LOG_FUNC_ARG(pdwServiceIDs)
+		LOG_FUNC_ARG(dwServices)
+		LOG_FUNC_ARG(hEvent)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_END;
+
+	// TODO: What will it take to log on to Xbox Live?
+
+	HRESULT ret = HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+
+	RETURN(ret);
+}
