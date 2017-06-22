@@ -75,6 +75,24 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 }
 
 // ******************************************************************
+// * patch: XNetStartup
+// ******************************************************************
+INT WINAPI XTL::EMUPATCH(XNetStartup)
+(
+    const PVOID pDummy
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pDummy);
+
+	// Fake Successfull...hehehe...sucker...hehehehehe
+	INT ret = 0;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * patch: This::Emusocket
 // ******************************************************************
 SOCKET WINAPI XTL::EMUPATCH(socket)
