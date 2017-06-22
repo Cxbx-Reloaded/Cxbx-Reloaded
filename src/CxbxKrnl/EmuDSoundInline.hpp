@@ -502,7 +502,7 @@ inline ULONG HybridDirectSoundBuffer_AddRef(
 }
 
 inline ULONG HybridDirectSoundBuffer_Release(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+    LPDIRECTSOUNDBUFFER8    pDSBuffer)
 {
 
     enterCriticalSection;
@@ -637,6 +637,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Stop();
                 pDSBuffer->SetCurrentPosition(0);
             }
+
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:
             EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
