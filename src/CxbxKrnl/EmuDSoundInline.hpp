@@ -423,6 +423,7 @@ inline void DSoundBufferUpdate(
     DWORD                   dwLockBytes1,
     LPVOID                  pLockPtr2,
     DWORD                   dwLockBytes2,
+    DWORD                   dwLockFlags)
 {
 
     PVOID pAudioPtr, pAudioPtr2;
@@ -458,6 +459,22 @@ inline void DSoundBufferUpdate(
                 }
             }
         }
+    }
+}
+
+// Generic force remove synch playback control flag.
+inline void DSoundBufferRemoveSynchPlaybackFlag(
+    DWORD                  &dwEmuFlags
+
+    )
+{
+    if (g_iDSoundSynchPlaybackCounter == 0) {
+        return;
+    }
+
+    if (dwEmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+        g_iDSoundSynchPlaybackCounter--;
+        dwEmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
     }
 }
 
@@ -596,15 +613,24 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
             pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             break;
         case X_DSSPAUSE_PAUSE:
             hRet = pDSBuffer->GetStatus(&dwStatus);
             if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                 pDSBuffer->Stop();
             }
+            DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
+
+            //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
+            if (g_iDSoundSynchPlaybackCounter >= DSOUND_MAX_SYNCHPLAYBACK_AUDIO) {
+                return DSERR_GENERIC;
+            }
+
+            g_iDSoundSynchPlaybackCounter++;
             dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
             hRet = pDSBuffer->GetStatus(&dwStatus);
             if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {

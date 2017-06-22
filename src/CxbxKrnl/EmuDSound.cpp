@@ -123,6 +123,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 // Xbox to PC volume ratio format (-10,000 / -6,400 )
 #define XBOX_TO_PC_VOLUME_RATIO 1.5625
 
+// Xbox maximum synch playback audio
+#define DSOUND_MAX_SYNCHPLAYBACK_AUDIO 29
+
 // Static Variable(s)
 extern LPDIRECTSOUND8               g_pDSound8 = NULL; //This is necessary in order to allow share with EmuDSoundInline.hpp
 static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = NULL;
@@ -132,6 +135,7 @@ static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = NULL;
 static XTL::X_CDirectSoundBuffer*   g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static int                          g_bDSoundCreateCalled = FALSE;
+unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 
 #include "EmuDSoundInline.hpp"
 
@@ -433,7 +437,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             (*pDSBuffer)->EmuLockPtr1,
                             (*pDSBuffer)->EmuLockBytes1,
                             (*pDSBuffer)->EmuLockPtr2,
-                            (*pDSBuffer)->EmuLockBytes2);
+                            (*pDSBuffer)->EmuLockBytes2,
+                            (*pDSBuffer)->EmuLockFlags);
     }
 
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
@@ -449,7 +454,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             (*pDSStream)->EmuLockPtr1,
                             (*pDSStream)->EmuLockBytes1,
                             (*pDSStream)->EmuLockPtr2,
-                            (*pDSStream)->EmuLockBytes2);
+                            (*pDSStream)->EmuLockBytes2,
+                            0);
     }
 
     leaveCriticalSection;
@@ -1098,6 +1104,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         pThis->EmuLockBytes1 = *pdwAudioBytes1;
         pThis->EmuLockPtr2 = (ppvAudioPtr2 != NULL) ? *ppvAudioPtr2 : NULL;
         pThis->EmuLockBytes2 = (pdwAudioBytes2 != NULL) ? *pdwAudioBytes2 : NULL;
+        pThis->EmuLockFlags = dwFlags;
     }
 
     leaveCriticalSection;
@@ -1909,6 +1916,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     LOG_UNIMPLEMENTED_DSOUND();
 
+    DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+
     leaveCriticalSection;
 
     return DS_OK;
@@ -1942,6 +1951,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
             (*pDSBuffer)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
             (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+            (*pDSBuffer)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
 
@@ -1953,6 +1963,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
             (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
             (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
+            (*pDSStream)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
 
@@ -2963,15 +2974,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Flush)()
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
     DbgPrintf("EmuDSound: IDirectSoundStream_Flush()\n");
 
     LOG_UNIMPLEMENTED_DSOUND();
 
-    leaveCriticalSection;
-
-    return S_OK;
+    return XTL::EMUPATCH(CDirectSoundStream_Flush)(NULL);
 }
 
 // ******************************************************************
@@ -2999,7 +3006,7 @@ extern "C" HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_FlushEx)
 
     leaveCriticalSection;
 
-    return S_OK;
+    return XTL::EMUPATCH(CDirectSoundStream_Flush)(NULL);
 }
 
 // ******************************************************************

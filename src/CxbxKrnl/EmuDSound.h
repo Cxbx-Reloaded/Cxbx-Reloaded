@@ -239,6 +239,7 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuFlags;           // Offset: 0x44
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
     DWORD                   EmuLockOffset;
+    DWORD                   EmuLockFlags;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
