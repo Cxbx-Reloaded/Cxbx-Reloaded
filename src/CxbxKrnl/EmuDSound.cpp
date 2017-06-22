@@ -1916,7 +1916,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     LOG_UNIMPLEMENTED_DSOUND();
 
-    DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    if (pThis != NULL)
+        DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
     leaveCriticalSection;
 
