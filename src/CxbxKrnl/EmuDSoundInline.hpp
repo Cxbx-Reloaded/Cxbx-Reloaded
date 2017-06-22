@@ -303,6 +303,47 @@ inline void GeneratePCMFormat(
     }
 }
 
+inline void DSoundGenericUnlock(
+    DWORD                   dwEmuFlags,
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    LPDSBUFFERDESC          pDSBufferDesc,
+    DWORD                   dwOffset,
+    LPVOID                 &pLockPtr1,
+    DWORD                   dwLockBytes1,
+    LPVOID                  pLockPtr2,
+    DWORD                   dwLockBytes2,
+    DWORD                   dwLockFlags)
+{
+    // close any existing locks
+    if (pLockPtr1 != nullptr) {
+        if (dwEmuFlags & DSB_FLAG_ADPCM) {
+
+            //Since it is already locked, don't even need this.
+            /*if (dwLockFlags & DSBLOCK_FROMWRITECURSOR) {
+
+            }*/
+            if (dwLockFlags & DSBLOCK_ENTIREBUFFER) {
+                dwLockBytes1 = pDSBufferDesc->dwBufferBytes;
+            }
+
+
+            DSoundBufferXboxAdpcmDecoder(pDSBuffer,
+                                         pDSBufferDesc,
+                                         dwOffset,
+                                         pLockPtr1,
+                                         dwLockBytes1,
+                                         pLockPtr2,
+                                         dwLockBytes2,
+                                         true);
+        } else {
+            pDSBuffer->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
+        }
+
+        pLockPtr1 = 0;
+    }
+
+}
+
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
@@ -391,22 +432,16 @@ inline void DSoundBufferUpdate(
     if (hRet == DS_OK) {
         if ((dwStatus & DSBSTATUS_PLAYING)) {
 
-            // unlock existing lock
-            if (pLockPtr1 != nullptr) {
-                if (dwEmuFlags & DSB_FLAG_ADPCM) {
-                    DSoundBufferXboxAdpcmDecoder(pThis,
-                                                 pDSBufferDesc,
-                                                 dwOffset,
-                                                 pLockPtr1,
-                                                 dwLockBytes1,
-                                                 pLockPtr2,
-                                                 dwLockBytes2,
-                                                 true);
-                } else {
-                    pThis->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
-                }
-                pLockPtr1 = 0;
-            }
+            DSoundGenericUnlock(dwEmuFlags,
+                                pThis,
+                                pDSBufferDesc,
+                                dwOffset,
+                                pLockPtr1,
+                                dwLockBytes1,
+                                pLockPtr2,
+                                dwLockBytes2,
+                                dwLockFlags);
+
             if (dwEmuFlags & DSB_FLAG_ADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, dwOffset, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
             } else {

@@ -1078,20 +1078,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
             ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBytes, pThis->EmuDirectSound3DBuffer8);
         }
 
-        if (pThis->EmuLockPtr1 != nullptr) {
-            if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-                DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                            pThis->EmuBufferDesc,
-                                            dwOffset,
-                                            pThis->EmuLockPtr1,
-                                            pThis->EmuLockBytes1,
-                                            pThis->EmuLockPtr2,
-                                            pThis->EmuLockBytes2,
-                                            true);
-            } else {
-                pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
-            }
-        }
+        DSoundGenericUnlock(pThis->EmuFlags,
+                            pThis->EmuDirectSoundBuffer8,
+                            pThis->EmuBufferDesc,
+                            pThis->EmuLockOffset,
+                            pThis->EmuLockPtr1,
+                            pThis->EmuLockBytes1,
+                            pThis->EmuLockPtr2,
+                            pThis->EmuLockBytes2,
+                            pThis->EmuLockFlags);
 
         hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
@@ -1343,27 +1338,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
               ");\n",
               pThis, dwReserved1, dwReserved2, dwFlags);
 
-    // close any existing locks
-    if (pThis->EmuLockPtr1 != nullptr) {
-        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                         pThis->EmuBufferDesc,
-                                         pThis->EmuLockOffset,
-                                         pThis->EmuLockPtr1,
-                                         pThis->EmuLockBytes1,
-                                         pThis->EmuLockPtr2,
-                                         pThis->EmuLockBytes2,
-                                         true);
-        } else {
-            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
-                                                 pThis->EmuLockBytes1,
-                                                 pThis->EmuLockPtr2,
-                                                 pThis->EmuLockBytes2
-            );
-        }
-
-        pThis->EmuLockPtr1 = 0;
-    }
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->EmuLockOffset,
+                        pThis->EmuLockPtr1,
+                        pThis->EmuLockBytes1,
+                        pThis->EmuLockPtr2,
+                        pThis->EmuLockBytes2,
+                        pThis->EmuLockFlags);
 
     pThis->EmuPlayFlags = dwFlags;
 
@@ -2859,27 +2842,15 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 
     // This function wasn't part of the XDK until 4721.
 
-    // close any existing locks
-    if (pThis->EmuLockPtr1 != nullptr) {
-        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                         pThis->EmuBufferDesc,
-                                         pThis->EmuLockOffset,
-                                         pThis->EmuLockPtr1,
-                                         pThis->EmuLockBytes1,
-                                         pThis->EmuLockPtr2,
-                                         pThis->EmuLockBytes2,
-                                         true);
-        } else {
-            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
-                                                 pThis->EmuLockBytes1,
-                                                 pThis->EmuLockPtr2,
-                                                 pThis->EmuLockBytes2
-            );
-        }
-
-        pThis->EmuLockPtr1 = 0;
-    }
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->EmuLockOffset,
+                        pThis->EmuLockPtr1,
+                        pThis->EmuLockBytes1,
+                        pThis->EmuLockPtr2,
+                        pThis->EmuLockBytes2,
+                        pThis->EmuLockFlags);
 
     return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
 }
@@ -3155,27 +3126,15 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
               ");\n",
               pThis, rtTimeStamp, dwFlags);
 
-    // close any existing locks
-    if (pThis->EmuLockPtr1 != nullptr) {
-        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
-            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                         pThis->EmuBufferDesc,
-                                         pThis->EmuLockOffset,
-                                         pThis->EmuLockPtr1,
-                                         pThis->EmuLockBytes1,
-                                         pThis->EmuLockPtr2,
-                                         pThis->EmuLockBytes2,
-                                         true);
-        } else {
-            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1,
-                                                 pThis->EmuLockBytes1,
-                                                 pThis->EmuLockPtr2,
-                                                 pThis->EmuLockBytes2
-            );
-        }
-
-        pThis->EmuLockPtr1 = 0;
-    }
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->EmuLockOffset,
+                        pThis->EmuLockPtr1,
+                        pThis->EmuLockBytes1,
+                        pThis->EmuLockPtr2,
+                        pThis->EmuLockBytes2,
+                        pThis->EmuLockFlags);
 
     pThis->EmuPlayFlags = dwFlags;
 
