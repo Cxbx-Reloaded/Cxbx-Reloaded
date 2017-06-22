@@ -361,6 +361,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 {
     FUNC_EXPORTS;
 
+    DbgPrintf("EmuDSound: IDirectSound_SynchPlayback\n"
+              "(\n"
+              "   pThis                     : 0x%.08X\n"
+              ");\n",
+                            pThis);
+
     return XTL::EMUPATCH(CDirectSound_SynchPlayback)(pThis);
 }
 
@@ -1087,7 +1093,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
             }
         }
 
-        // TODO: Verify dwFlags is the same as windows
         hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
         if (FAILED(hRet)) {
