@@ -257,38 +257,13 @@ void EmuNVNet_SetRegister(xbaddr addr, uint32_t value, unsigned int size)
 	}
 }
 
-uint8_t EmuNVNet_Read8(xbaddr addr)
+uint32_t EmuNVNet_Read(xbaddr addr, int size)
 {
-	DbgPrintf("EmuNVNet_Read8: %s (0x%08X)\n", EmuNVNet_GetRegisterName(addr), addr);
-	return EmuNVNet_GetRegister(addr, sizeof(uint8_t));
+	DbgPrintf("EmuNVNet_Read%d: %s (0x%08X)\n", size, EmuNVNet_GetRegisterName(addr), addr);
+	return EmuNVNet_GetRegister(addr,size);
 }
-
-uint16_t EmuNVNet_Read16(xbaddr addr)
+void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 {
-	DbgPrintf("EmuNVNet_Read16: %s (0x%08X)\n", EmuNVNet_GetRegisterName(addr), addr);
-	return EmuNVNet_GetRegister(addr, sizeof(uint16_t));
-}
-
-uint32_t EmuNVNet_Read32(xbaddr addr)
-{
-	DbgPrintf("EmuNVNet_Read32: %s (0x%08X)\n", EmuNVNet_GetRegisterName(addr), addr);
-	return EmuNVNet_GetRegister(addr, sizeof(uint32_t));
-}
-
-void EmuNVNet_Write8(xbaddr addr, uint8_t value)
-{
-	DbgPrintf("EmuNVNet_Write8: %s (0x%08X) = 0x%02X\n", EmuNVNet_GetRegisterName(addr), addr, value);
-	return EmuNVNet_SetRegister(addr, value, sizeof(uint8_t));
-}
-
-void EmuNVNet_Write16(xbaddr addr, uint16_t value)
-{
-	DbgPrintf("EmuNVNet_Write16: %s (0x%08X) = 0x%04X\n", EmuNVNet_GetRegisterName(addr), addr, value);
-	return EmuNVNet_SetRegister(addr, value, sizeof(uint16_t));
-}
-
-void EmuNVNet_Write32(xbaddr addr, uint32_t value)
-{
-	DbgPrintf("EmuNVNet_Write32: %s (0x%08X) = 0x%08X\n", EmuNVNet_GetRegisterName(addr), addr, value);
-	return EmuNVNet_SetRegister(addr, value, sizeof(uint32_t));
+	DbgPrintf("EmuNVNet_Write%d: %s (0x%08X) = 0x%08X\n", size, EmuNVNet_GetRegisterName(addr), addr, value);
+	return EmuNVNet_SetRegister(addr, value, size);
 }

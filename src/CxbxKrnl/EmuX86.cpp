@@ -149,7 +149,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		value = EmuNV2A_Read32(addr - NV2A_ADDR);
 		// Note : EmuNV2A_Read32 does it's own logging
 	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read32(addr - NVNET_ADDR);
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
@@ -183,7 +183,7 @@ uint16_t EmuX86_Read16(xbaddr addr)
 	uint16_t value;
 	
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read16(addr - NVNET_ADDR);
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
 	}
 	else {
 		if (g_bEmuException) {
@@ -205,7 +205,7 @@ uint8_t EmuX86_Read8(xbaddr addr)
 	uint8_t value;
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read8(addr - NVNET_ADDR);
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
 	}
 	else {
 		if (g_bEmuException) {
@@ -239,7 +239,7 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 	}
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write32(addr - NVNET_ADDR, value);
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
 		return;
 	}
 
@@ -265,7 +265,7 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write16(addr - NVNET_ADDR, value);
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 16);
 		return;
 	}
 
@@ -282,7 +282,7 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write8(addr - NVNET_ADDR, value);
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
 		return;
 	}
 
@@ -766,7 +766,7 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
 	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, (uint32_t)(result >> 31));
 	// Set Parity flag, based on "Compute parity in parallel" method from
 	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 	uint32_t v = 255 & result;

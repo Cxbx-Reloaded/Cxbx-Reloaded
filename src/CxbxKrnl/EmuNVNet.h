@@ -37,12 +37,7 @@
 #define NVNET_ADDR  0xFEF00000 
 #define NVNET_SIZE  0x00000400
 
-uint8_t EmuNVNet_Read8(xbaddr addr);
-uint16_t EmuNVNet_Read16(xbaddr addr);
-uint32_t EmuNVNet_Read32(xbaddr addr);
-
-void EmuNVNet_Write8(xbaddr addr, uint8_t value);
-void EmuNVNet_Write16(xbaddr addr, uint16_t value);
-void EmuNVNet_Write32(xbaddr addr, uint32_t value);
+uint32_t EmuNVNet_Read(xbaddr addr, int size);
+void EmuNVNet_Write(xbaddr addr, uint32_t value, int size);
 
 #endif
