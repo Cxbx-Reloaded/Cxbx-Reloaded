@@ -146,7 +146,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		}
 
 		// Access NV2A regardless weither HLE is disabled or not 
-		value = EmuNV2A_Read32(addr - NV2A_ADDR);
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
 	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
@@ -181,16 +181,23 @@ uint32_t EmuX86_Read32(xbaddr addr)
 uint16_t EmuX86_Read16(xbaddr addr)
 {
 	uint16_t value;
-	
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
+
+		// Access NV2A regardless weither HLE is disabled or not 
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 16);
+		// Note : EmuNV2A_Read32 does it's own logging
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
-	}
-	else {
+	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
 			value = 0;
-		}
-		else {
+		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read16(addr);
 		}
@@ -204,10 +211,18 @@ uint8_t EmuX86_Read8(xbaddr addr)
 {
 	uint8_t value;
 
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
+
+		// Access NV2A regardless weither HLE is disabled or not 
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 8);
+		// Note : EmuNV2A_Read32 does it's own logging
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
-	}
-	else {
+	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
 			value = 0;
@@ -233,7 +248,7 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 		}
 
 		// Access NV2A regardless weither HLE is disabled or not 
-		EmuNV2A_Write32(addr - NV2A_ADDR, value);
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 32);
 		// Note : EmuNV2A_Write32 does it's own logging
 		return;
 	}
@@ -264,6 +279,18 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
+
+		// Access NV2A regardless weither HLE is disabled or not 
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 16);
+		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
+
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 16);
 		return;
@@ -281,6 +308,19 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
+
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
+
+		// Access NV2A regardless weither HLE is disabled or not 
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 8);
+		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
+
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
 		return;
