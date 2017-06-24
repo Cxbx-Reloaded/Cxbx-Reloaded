@@ -677,7 +677,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
         CxbxKrnlCleanup("Unsupported Playing Flags");
     }
     // rewind buffer
-    if ((dwFlags & X_DSBPLAY_FROMSTART) != X_DSBPLAY_FROMSTART) {
+    if ((dwFlags & X_DSBPLAY_FROMSTART)) {
         if (FAILED(pDSBuffer->SetCurrentPosition(0))) {
             EmuWarning("Rewinding buffer failed!");
         }
@@ -685,8 +685,8 @@ inline HRESULT HybridDirectSoundBuffer_Play(
         dwFlags &= ~X_DSBPLAY_FROMSTART;
     }
 
-    if (dwFlags & X_DSBPAUSE_SYNCHPLAYBACK) {
-        dwFlags ^= X_DSBPAUSE_SYNCHPLAYBACK;
+    if (dwFlags & X_DSBPLAY_SYNCHPLAYBACK) {
+        dwFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
         dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
     }
 
