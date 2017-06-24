@@ -32,5 +32,8 @@ Cxbx-Reloaded has a [wiki](http://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) c
 Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby) or [Discord](https://discord.gg/26Xjx23).
 You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 
+## Support
+You can support this project on [Patreon](https://www.patreon.com/LukeUsher).
+
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
