@@ -1414,7 +1414,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
         LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
-
+    //TODO: RadWolfie - Rayman 3 crash at end of first intro for this issue... if only return DS_OK, then it works fine until end of 2nd intro it crashed.
     if (pThis != nullptr && pThis->EmuDirectSoundBuffer8 != nullptr) {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
         hRet = pThis->EmuDirectSoundBuffer8->Stop();
@@ -1916,8 +1916,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     LOG_UNIMPLEMENTED_DSOUND();
 
-    if (pThis != NULL)
+    if (pThis != NULL) {
         DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    }
 
     leaveCriticalSection;
 
@@ -2056,8 +2057,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
     DbgPrintf("EmuDSound: CDirectSoundStream_SetConeOutsideVolume\n"
               "(\n"
               "   pThis                     : 0x%.08X\n"
@@ -2066,14 +2065,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
               ");\n",
               pThis, lConeOutsideVolume, dwApply);
 
-    HRESULT hRet = DS_OK;
-    if (pThis != NULL && pThis->EmuDirectSound3DBuffer8 != NULL) {
-        pThis->EmuDirectSound3DBuffer8->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
-    }
-
-    leaveCriticalSection;
-
-    return hRet;
+    return HybridDirectSound3DBuffer_SetConeOutsideVolume(pThis->EmuDirectSound3DBuffer8, lConeOutsideVolume, dwApply);
 }
 
 // ******************************************************************
@@ -2933,8 +2925,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
               pThis, pOutputLevels, bResetPeakValues);
 
     // TODO: Anything?  Either way, I've never seen a game to date use this...
-
-    LOG_UNIMPLEMENTED_DSOUND();
+    static bool bShowOnce = true;
+    if (bShowOnce) {
+        bShowOnce = false;
+        LOG_UNIMPLEMENTED_DSOUND();
+    }
 
     leaveCriticalSection;
 

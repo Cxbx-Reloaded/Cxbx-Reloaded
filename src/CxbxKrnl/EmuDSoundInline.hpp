@@ -727,7 +727,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
 {
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetAllParameters(pDS3DBufferParams, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetAllParameters(pDS3DBufferParams, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -755,7 +758,9 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
     enterCriticalSection;
 
     HRESULT hRet = DS_OK;
-    pDS3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -791,7 +796,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -961,7 +969,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetMaxDistance(flMaxDistance, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMaxDistance(flMaxDistance, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -978,11 +989,14 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetMinDistance(flMinDistance, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMinDistance(flMinDistance, dwApply);
+    }
 
     leaveCriticalSection;
 
-    return DS_OK;
+    return hRet;
 }
 /*
 //TODO: PC DirectSound does not have SetMixBins method function.
@@ -1016,7 +1030,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetMode(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetMode(dwMode, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMode(dwMode, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -1082,7 +1099,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetPosition(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetPosition(x, y, z, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetPosition(x, y, z, dwApply);
+    }
 
     leaveCriticalSection;
 
@@ -1133,7 +1153,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetVelocity(x, y, z, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetVelocity(x, y, z, dwApply);
+    }
 
     leaveCriticalSection;
 
