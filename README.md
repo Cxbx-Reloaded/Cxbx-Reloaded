@@ -25,5 +25,8 @@ I want to know what games actually do something, so if a game displays graphics 
 http://imgur.com/a/Bzvti
 The screenshot gallery is regularly updated
 
+## Support
+You can support this project on [Patreon](https://www.patreon.com/LukeUsher).
+
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all
