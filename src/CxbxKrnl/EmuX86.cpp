@@ -49,6 +49,7 @@
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuNV2A.h"
+#include "EmuNVNet.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
@@ -145,8 +146,10 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		}
 
 		// Access NV2A regardless weither HLE is disabled or not 
-		value = EmuNV2A_Read32(addr - NV2A_ADDR);
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
+	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
@@ -177,29 +180,60 @@ uint32_t EmuX86_Read32(xbaddr addr)
 
 uint16_t EmuX86_Read16(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
+	uint16_t value;
 
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint16_t value = (uint16_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
 
-	// Must the second byte be retrieved from the next DWORD?
-	if ((addr & 3) == 3)
-		value |= (uint16_t)((EmuX86_Read32Aligned(aligned_addr + 4) & 0xff) << 8);
+		// Access NV2A regardless weither HLE is disabled or not 
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 16);
+		// Note : EmuNV2A_Read32 does it's own logging
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
+	} else {
+		if (g_bEmuException) {
+			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
+			value = 0;
+		} else {
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read16(addr);
+		}
+		DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
+	}
 
-	DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
 	return value;
 }
 
 uint8_t EmuX86_Read8(xbaddr addr)
 {
-	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read32Aligned...\n", addr);
+	uint8_t value;
 
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint8_t value = (uint8_t)(EmuX86_Read32Aligned(aligned_addr) >> shift);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Read32Aligned(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
 
-	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
+		// Access NV2A regardless weither HLE is disabled or not 
+		value = EmuNV2A_Read(addr - NV2A_ADDR, 8);
+		// Note : EmuNV2A_Read32 does it's own logging
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
+	} else {
+		if (g_bEmuException) {
+			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
+			value = 0;
+		}
+		else {
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read8(addr);
+		}
+		DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
+	}
+
 	return value;
 }
 
@@ -214,8 +248,13 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 		}
 
 		// Access NV2A regardless weither HLE is disabled or not 
-		EmuNV2A_Write32(addr - NV2A_ADDR, value);
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 32);
 		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
+
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
 		return;
 	}
 
@@ -240,30 +279,61 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
-	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
 
-	assert((addr & 1) == 0);
+		// Access NV2A regardless weither HLE is disabled or not 
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 16);
+		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
 
-	int shift = (addr & 2) * 16;
-	xbaddr aligned_addr = addr & ~3;
-	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
-	uint32_t mask = 0xFFFF << shift;
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 16);
+		return;
+	}
 
-	// TODO : Must the second byte be written to the next DWORD?
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+		return;
+	}
 
-	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
+	// Outside EmuException, pass the memory-access through to normal memory :
+	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X)\n", addr, value);
+	EmuX86_Mem_Write16(addr, value);
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
-	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X) Forwarding to EmuX86_Read32Aligned+EmuX86_Write32Aligned\n", addr, value);
 
-	int shift = (addr & 3) * 8;
-	xbaddr aligned_addr = addr & ~3;
-	uint32_t aligned_value = EmuX86_Read32Aligned(aligned_addr);
-	uint32_t mask = 0xFF << shift;
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+		}
 
-	EmuX86_Write32Aligned(aligned_addr, (aligned_value & ~mask) | (value << shift));
+		// Access NV2A regardless weither HLE is disabled or not 
+		EmuNV2A_Write(addr - NV2A_ADDR, value, 8);
+		// Note : EmuNV2A_Write32 does it's own logging
+		return;
+	}
+
+	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
+		return;
+	}
+
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+		return;
+	}
+
+	// Outside EmuException, pass the memory-access through to normal memory :
+	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X)\n", addr, value);
+	EmuX86_Mem_Write8(addr, value);
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
@@ -667,6 +737,121 @@ inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
+bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// AND Destination with src
+	dest &= src;
+
+	// Write back the result
+	if (!EmuX86_Operand_Write(e, info, 0, dest))
+		return false;
+
+	// OF/CF are cleared
+	// SF, ZF, and PF are set according to the result
+	// AF is undefined, so has been left out
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, dest == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
+bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	if (src == dest) {
+		EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 1);
+
+		// Write the source value to the destination operand
+		if (!EmuX86_Operand_Write(e, info, 0, src)) {
+			return false;
+		}
+	} else	{
+		EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 0);
+
+		// Write the dest value to the source operand
+		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
+			return false;
+		}
+	}
+
+	// Perform arithmatic operation for flag calculation
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	// CF, PF, AF, SF, and OF are set according to the result
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
+	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, (uint32_t)(result >> 31));
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & result;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
+bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// OR Destination with src
+	dest |= src;
+
+	// Write back the result
+	if (!EmuX86_Operand_Write(e, info, 0, dest))
+		return false;
+
+	// OF/CF are cleared
+	// SF, ZF, and PF are set according to the result
+	// AF is undefined, so has been left out
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, dest >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, dest == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
 bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
@@ -819,6 +1004,14 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				break;
 
 			goto unimplemented_opcode;
+		case I_AND:
+			if (EmuX86_Opcode_AND(e, info))
+				break;
+			goto unimplemented_opcode;
+		case I_CMPXCHG:
+			if (EmuX86_Opcode_CMPXCHG(e, info))
+				break;
+			goto unimplemented_opcode;
 		case I_CPUID:
 			EmuX86_Opcode_CPUID(e, info);
 			break;
@@ -834,6 +1027,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			if (EmuX86_Opcode_MOVZX(e, info))
 				break;
 
+			goto unimplemented_opcode;
+		case I_OR:
+			if (EmuX86_Opcode_OR(e, info))
+				break;
 			goto unimplemented_opcode;
 		case I_OUT:
 			if (EmuX86_Opcode_OUT(e, info))

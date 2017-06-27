@@ -41,7 +41,7 @@ XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) VOID NTAPI HalEnableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode

@@ -202,6 +202,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuNVNet.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -550,6 +553,9 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuNVNet.h">
       <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
