@@ -564,7 +564,7 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream
@@ -579,7 +579,8 @@ inline HRESULT HybridDirectSoundBuffer_GetStatus(
     HRESULT hRet = pDSBuffer->GetStatus(pdwStatus);
 
     leaveCriticalSection;
-    return hRet;
+
+    RETURN_RESULT_CHECK(hRet);
 }
 
 /*
@@ -609,15 +610,15 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     enterCriticalSection;
 
     DWORD dwStatus;
-    HRESULT hRet;
+    HRESULT hRet = DS_OK, hStatus;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
             pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             break;
         case X_DSSPAUSE_PAUSE:
-            hRet = pDSBuffer->GetStatus(&dwStatus);
-            if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
+            hStatus = pDSBuffer->GetStatus(&dwStatus);
+            if (hStatus == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                 pDSBuffer->Stop();
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
@@ -627,17 +628,17 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
 
             //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
             if (g_iDSoundSynchPlaybackCounter >= DSOUND_MAX_SYNCHPLAYBACK_AUDIO) {
-                return DSERR_GENERIC;
-            }
+                hRet = DSERR_GENERIC;
+            } else {
 
-            g_iDSoundSynchPlaybackCounter++;
-            dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
-            hRet = pDSBuffer->GetStatus(&dwStatus);
-            if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
-                pDSBuffer->Stop();
-                pDSBuffer->SetCurrentPosition(0);
+                g_iDSoundSynchPlaybackCounter++;
+                dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+                hRet = pDSBuffer->GetStatus(&dwStatus);
+                if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
+                    pDSBuffer->Stop();
+                    pDSBuffer->SetCurrentPosition(0);
+                }
             }
-
             break;
         case X_DSSPAUSE_PAUSENOACTIVATE:
             EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
@@ -646,7 +647,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
 
     leaveCriticalSection;
 
-    return DS_OK;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 inline HRESULT HybridDirectSoundBuffer_PauseEx(
@@ -696,7 +697,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
         hRet = pDSBuffer->Play(0, 0, dwFlags);
     }
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //IDirectSoundBuffer
@@ -734,7 +735,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //Only has one function, this is not a requirement.
@@ -764,7 +765,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream
@@ -783,7 +784,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream
@@ -803,7 +804,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //Only has one function, this is not a requirement.
@@ -831,7 +832,7 @@ inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSound
@@ -849,7 +850,7 @@ inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //TODO: PC DirectSound does not have SetHeadroom method function.
@@ -891,7 +892,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream
@@ -909,7 +910,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFrequency(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 /*
@@ -976,7 +977,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream
@@ -996,7 +997,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //TODO: PC DirectSound does not have SetMixBins method function.
@@ -1037,7 +1038,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMode(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //Only has one function, this is not a requirement.
@@ -1106,7 +1107,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetPosition(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*
 //TODO: PC DirectSound does not have SetRolloffCurve method function.
@@ -1137,7 +1138,7 @@ inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSound
@@ -1160,7 +1161,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 //IDirectSoundStream x2
@@ -1176,7 +1177,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 /*/
 //Only has one function, this is not a requirement.

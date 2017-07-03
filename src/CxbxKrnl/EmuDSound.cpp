@@ -137,6 +137,12 @@ static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE]
 static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 
+#define RETURN_RESULT_CHECK(hRet) { static bool bPopupShown = false; if (!bPopupShown) { bPopupShown = true; \
+                                    printf("Return result report: 0x%08X\nIn %s (%s)", hRet, __func__, __FILE__); \
+                                    MessageBoxA(NULL, "An issue has been found. Please report game title and console's output of return result," \
+                                    " function, and file name to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/485", \
+                                    "WARNING", MB_OK | MB_ICONWARNING); } return hRet; }
+
 #include "EmuDSoundInline.hpp"
 
 // ******************************************************************
@@ -244,7 +250,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -498,7 +504,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -737,7 +743,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetPosition)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -769,7 +775,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetVelocity)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -797,7 +803,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -821,7 +827,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -1109,7 +1115,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -1297,7 +1303,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -1391,7 +1397,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -1423,7 +1429,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 
     leaveCriticalSection;
 
-    return hRet;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
@@ -3564,7 +3570,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
               ");\n",
               pThis, dwNotifyCount, paNotifies);
 
-    HRESULT hr = DSERR_INVALIDPARAM;
+    HRESULT hRet = DSERR_INVALIDPARAM;
 
     // If we have a valid buffer, query a PC IDirectSoundNotify pointer and
     // use the paramaters as is since they are directly compatible, then release
@@ -3575,10 +3581,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 
     if (pThis) {
         if (pThis->EmuDirectSoundBuffer8) {
-            hr = pThis->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSoundNotify8, (LPVOID*)&pNotify);
-            if (SUCCEEDED(hr) && pNotify != nullptr) {
-                hr = pNotify->SetNotificationPositions(dwNotifyCount, paNotifies);
-                if (FAILED(hr)) {
+            hRet = pThis->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSoundNotify8, (LPVOID*)&pNotify);
+            if (SUCCEEDED(hRet) && pNotify != nullptr) {
+                hRet = pNotify->SetNotificationPositions(dwNotifyCount, paNotifies);
+                if (FAILED(hRet)) {
                     EmuWarning("Could not set notification position(s)!");
                 }
 
@@ -3591,7 +3597,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 
     leaveCriticalSection;
 
-    return hr;
+    RETURN_RESULT_CHECK(hRet);
 }
 
 // ******************************************************************
