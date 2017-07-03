@@ -888,7 +888,12 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
 
     GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags);
 
-    HRESULT hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);
+    HRESULT hRet = DS_OK;
+    if (g_pDSoundPrimaryBuffer == pDSBuffer) {
+        hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);
+    } else {
+        //TODO: RadWolfie - Need to create a new buffer in order for this to work base on MSDN document.
+    }
 
     leaveCriticalSection;
 
@@ -1173,7 +1178,11 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDSBuffer->SetVolume(lVolume*XBOX_TO_PC_VOLUME_RATIO);
+    if (lVolume <= -6400) {
+        lVolume = -10000;
+    }
+
+    HRESULT hRet = pDSBuffer->SetVolume(lVolume);
 
     leaveCriticalSection;
 

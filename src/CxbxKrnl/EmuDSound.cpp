@@ -120,8 +120,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x200
 
+//Currently disabled since below may not be needed since under -6,400 is just silence yet accepting up to -10,000
 // Xbox to PC volume ratio format (-10,000 / -6,400 )
-#define XBOX_TO_PC_VOLUME_RATIO 1.5625
+//#define XBOX_TO_PC_VOLUME_RATIO 1.5625
 
 // Xbox maximum synch playback audio
 #define DSOUND_MAX_SYNCHPLAYBACK_AUDIO 29
@@ -861,7 +862,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     }
 
     pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-    pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+    pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
     pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
 
     GeneratePCMFormat(pDSBufferDesc, pdsbd->lpwfxFormat, dwEmuFlags);
@@ -900,7 +901,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
             HRESULT hRet3D = (*ppBuffer)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer8));
             if (FAILED(hRet3D)) {
-                EmuWarning("CreateSound3DBuffer Failed!");
+                EmuWarning("CreateSound3DBuffer8 Failed!");
                 (*ppBuffer)->EmuDirectSound3DBuffer8 = NULL;
             }
 
