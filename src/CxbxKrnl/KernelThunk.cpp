@@ -258,7 +258,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtCreateDirectoryObject),             // 0x00BC (188)
 	(uint32)FUNC(&xboxkrnl::NtCreateEvent),                       // 0x00BD (189)
 	(uint32)FUNC(&xboxkrnl::NtCreateFile),                        // 0x00BE (190)
-	(uint32)PANIC(0x00BF),                                        // 0x00BF (191) NtCreateIoCompletion
+	(uint32)FUNC(&xboxkrnl::NtCreateIoCompletion),                // 0x00BF (191)
 	(uint32)FUNC(&xboxkrnl::NtCreateMutant),                      // 0x00C0 (192)
 	(uint32)FUNC(&xboxkrnl::NtCreateSemaphore),                   // 0x00C1 (193)
 	(uint32)FUNC(&xboxkrnl::NtCreateTimer),                       // 0x00C2 (194)
