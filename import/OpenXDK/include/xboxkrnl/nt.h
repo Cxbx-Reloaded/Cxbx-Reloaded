@@ -94,7 +94,13 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI NtCreateFile
     IN  ULONG               CreateOptions
 );
 
-XBSYSAPI VOID *NtCreateIoCompletion;
+XBSYSAPI EXPORTNUM(191) NTSTATUS NTAPI NtCreateIoCompletion
+(
+	OUT PHANDLE IoCompletionHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG Count
+);
 
 // ******************************************************************
 // * NtCreateMutant

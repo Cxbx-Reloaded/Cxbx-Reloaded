@@ -385,6 +385,26 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 		0);
 }
 
+XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
+(
+	OUT PHANDLE IoCompletionHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(IoCompletionHandle)
+		LOG_FUNC_ARG(DesiredAccess)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(Count)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 // ******************************************************************
 // * 0x00C0 - NtCreateMutant()
 // ******************************************************************
