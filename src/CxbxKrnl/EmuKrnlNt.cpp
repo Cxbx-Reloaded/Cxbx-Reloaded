@@ -402,7 +402,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
 
 	LOG_UNIMPLEMENTED();
 
-	return STATUS_NOT_IMPLEMENTED;
+	RETURN(STATUS_NOT_IMPLEMENTED);
 }
 
 // ******************************************************************

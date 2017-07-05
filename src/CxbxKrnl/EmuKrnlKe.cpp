@@ -345,7 +345,11 @@ XBSYSAPI EXPORTNUM(94) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBoostPriorityThread
 	IN KPRIORITY Increment
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Thread);
+		LOG_FUNC_ARG(Increment);
+		LOG_FUNC_END;
+
 
 	LOG_UNIMPLEMENTED();
 
@@ -975,7 +979,7 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(134) xboxkrnl::LONG xboxkrnl::KeQueryBasePriorityThread
+XBSYSAPI EXPORTNUM(124) xboxkrnl::LONG xboxkrnl::KeQueryBasePriorityThread
 (
 	IN PKTHREAD Thread
 )
@@ -1359,7 +1363,7 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 	RETURN(ret);
 }
 
-XBSYSAPI EXPORTNUM(134) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
 	IN ULONG Disable
