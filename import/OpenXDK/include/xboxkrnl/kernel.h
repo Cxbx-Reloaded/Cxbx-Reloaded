@@ -271,7 +271,7 @@ XBSYSAPI EXPORTNUM(123) LONG NTAPI KePulseEvent
 	IN BOOLEAN Wait
 );
 
-XBSYSAPI EXPORTNUM(124) LONG KeQueryBasePriorityThread
+XBSYSAPI EXPORTNUM(124) LONG NTAPI KeQueryBasePriorityThread
 (
 	IN PKTHREAD Thread
 );
@@ -514,7 +514,7 @@ XBSYSAPI EXPORTNUM(157) ULONG KeTimeIncrement;
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
+XBSYSAPI EXPORTNUM(158) NTSTATUS NTAPI KeWaitForMultipleObjects
 (
     IN ULONG Count,
     IN PVOID Object[],
@@ -529,7 +529,7 @@ XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
 // ******************************************************************
 // * 0x009F - KeWaitForSingleObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(159) NTSTATUS KeWaitForSingleObject
+XBSYSAPI EXPORTNUM(159) NTSTATUS NTAPI KeWaitForSingleObject
 (
     IN PVOID Object,
     IN KWAIT_REASON WaitReason,

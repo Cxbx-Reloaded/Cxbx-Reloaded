@@ -460,7 +460,7 @@ XBSYSAPI EXPORTNUM(228) NTSTATUS NTAPI NtSetSystemTime
 // ******************************************************************
 // * 0x00E5 - NtSetTimerEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(229) NTSTATUS NtSetTimerEx
+XBSYSAPI EXPORTNUM(229) NTSTATUS NTAPI NtSetTimerEx
 (
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,

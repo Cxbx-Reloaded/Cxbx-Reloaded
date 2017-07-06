@@ -1696,7 +1696,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 // ******************************************************************
 // * 0x00E5 - NtSetTimerEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS xboxkrnl::NtSetTimerEx
+XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 (
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
