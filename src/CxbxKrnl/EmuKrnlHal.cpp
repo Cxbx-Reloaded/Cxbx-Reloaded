@@ -373,7 +373,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 // ******************************************************************
 // * 0x002F - HalRegisterShutdownNotification()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID xboxkrnl::HalRegisterShutdownNotification
+XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
 	IN BOOLEAN Register
@@ -404,7 +404,7 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 // ******************************************************************
 // * 0x0031 - HalReturnToFirmware()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalReturnToFirmware
 (
 	RETURN_FIRMWARE Routine
 )

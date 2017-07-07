@@ -90,8 +90,7 @@ typedef struct {
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 
-// TODO : NTAPI or FASTCALL ?
-XBSYSAPI EXPORTNUM(47) VOID HalRegisterShutdownNotification(
+XBSYSAPI EXPORTNUM(47) VOID NTAPI HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
     IN BOOLEAN Register
 );
@@ -108,7 +107,7 @@ XBSYSAPI EXPORTNUM(46) VOID FASTCALL HalRequestSoftwareInterrupt
 // * Reboot / Shutdown / Etc
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 (
     RETURN_FIRMWARE Routine
 );

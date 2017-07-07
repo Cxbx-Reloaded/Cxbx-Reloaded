@@ -1045,6 +1045,13 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
 			// We can safely ignore this
 			break;
+		case I_WRMSR:
+			// We do not emulate processor specific registers just yet
+			// Some titles attempt to manually set the TSC via this instruction
+			// This needs fixing eventually, but should be acceptible to ignore for now!
+			// Chase: Hollywood Stunt Driver hits this
+			EmuWarning("EmuX86: WRMSR instruction ignored");
+			break;
 		default:
 			goto unimplemented_opcode;
 		}
