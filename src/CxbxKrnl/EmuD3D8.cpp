@@ -36,6 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 #include "xxhash32.h"
+#include <condition_variable>
 
 // prevent name collisions
 namespace xboxkrnl
@@ -100,6 +101,8 @@ static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
+static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
+static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback routine
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
@@ -131,7 +134,7 @@ static XTL::IDirect3DVertexBuffer8 *g_pDummyBuffer = NULL;  // Dummy buffer, use
 static DWORD						g_dwLastSetStream = 0;	// The last stream set by D3DDevice::SetStreamSource
 
 // current vertical blank information
-static XTL::D3DVBLANKDATA           g_VBData = {0};
+static XTL::D3DVBLANKDATA			g_VBData = {0};
 static DWORD                        g_VBLastSwap = 0;
 
 // current swap information
@@ -1416,10 +1419,14 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     // current vertical blank count
     int curvb = 0;
 
+	// Calculate Next VBlank time
+	clock_t nextVBlankTime = clock() + (16 * (CLOCKS_PER_SEC / 1000));
+
     while(true)
     {
         xboxkrnl::KeTickCount = timeGetTime();
-        Sleep(1);
+        Sleep(0);
+		
 
         //
         // Poll input
@@ -1463,9 +1470,16 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
             }
         }
 
+		// If VBlank Interval has passed, trigger VBlank callback
         // trigger vblank callback
+		if (clock() > nextVBlankTime)
         {
-            g_VBData.VBlank++;
+			nextVBlankTime = clock() + (16 * (CLOCKS_PER_SEC / 1000));
+
+			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+			g_VBData.VBlank++;
+			g_VBConditionVariable.notify_all();
 
 			// TODO: Fixme.  This may not be right...
 			g_SwapData.SwapVBlank = 1;
@@ -6596,22 +6610,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 
 	LOG_FUNC();
 
-    // segaGT tends to freeze with this on
-//    if(g_XBVideo.GetVSync()) {
-//        HRESULT hRet = g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-//        DEBUG_D3DRESULT(hRet, "g_pDD7->WaitForVerticalBlank");
-//    }
-
-	// HACK: For many games (when used in mutithreaded code), using 
-	// DDraw::WaitForVerticalBlank will wreak havoc on CPU usage and really
-	// slow things down. This is the case for various SEGA and other Japanese
-	// titles.  On Xbox, it isn't a big deal, but for PC, I can't even
-	// guarantee this is a good idea.  So instead, I'll be "faking" 
-	// the vertical blank thing.
-
-	Sleep( 1000/60 );
-
-	LOG_INCOMPLETE();
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_VBConditionVariable.wait(lk);
 }
 
 // ******************************************************************
