@@ -1424,8 +1424,6 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 
-    timeBeginPeriod(0);
-
     // current vertical blank count
     int curvb = 0;
 
@@ -1512,8 +1510,6 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 			g_SwapData.TimeBetweenSwapVBlanks = 0;
         }
     }
-
-    timeEndPeriod(0);
 }
 
 // thread dedicated to create devices
