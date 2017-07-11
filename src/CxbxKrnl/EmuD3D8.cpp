@@ -1406,6 +1406,16 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return D3D_OK; // = 0
 }
 
+static clock_t GetNextVBlankTime()
+{
+	// TODO: Read display frequency from Xbox Display Adapter
+	// This is accessed by calling CMiniport::GetRefreshRate(); 
+	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
+	// This will require at least Direct3D_CreateDevice being unpatched
+	// otherwise, m_CurrentAvInfo will never be initialised!
+	return clock() + (CLOCKS_PER_SEC / 60);
+}
+
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
@@ -1420,7 +1430,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     int curvb = 0;
 
 	// Calculate Next VBlank time
-	clock_t nextVBlankTime = clock() + (16 * (CLOCKS_PER_SEC / 1000));
+	clock_t nextVBlankTime = GetNextVBlankTime();
 
     while(true)
     {
@@ -1471,10 +1481,11 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
         }
 
 		// If VBlank Interval has passed, trigger VBlank callback
-        // trigger vblank callback
+        // Note: This whole code block can be removed once NV2A interrupts are implemented
+		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
 		if (clock() > nextVBlankTime)
         {
-			nextVBlankTime = clock() + (16 * (CLOCKS_PER_SEC / 1000));
+			nextVBlankTime = GetNextVBlankTime();
 
 			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
 			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
