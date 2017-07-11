@@ -1434,9 +1434,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     while(true)
     {
-        xboxkrnl::KeTickCount = timeGetTime();
-        Sleep(0);
-		
+        xboxkrnl::KeTickCount = timeGetTime();	
+		SwitchToThread();
 
         //
         // Poll input
