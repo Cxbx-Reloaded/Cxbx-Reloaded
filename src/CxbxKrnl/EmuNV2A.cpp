@@ -59,6 +59,7 @@
 #include <gl\glew.h>
 #include <gl\GL.h>
 #include <gl\GLU.h>
+#include <cassert>
 //#include <gl\glut.h>
 
 #define NV_PMC_ADDR      0x00000000
@@ -1235,28 +1236,68 @@ const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
 	return nullptr;
 }
 
-uint32_t EmuNV2A_Read32(xbaddr addr)
+uint32_t EmuNV2A_Read(xbaddr addr, int size)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 	if (block != nullptr) {
-		return block->read(addr - block->offset);
+		switch (size) {
+			case 8:
+				return block->read(addr - block->offset) & 0xFF;
+			case 16:
+				return block->read(addr - block->offset) & 0xFFFF;
+			case 32:
+				return block->read(addr - block->offset);
+			default:
+				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
+				return 0;
+		}
 	}
 
-	EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
+	EmuWarning("EmuNV2A_Read%d: Unhandled Read Address %08X", size, addr);
 	return 0;
 }
 
-void EmuNV2A_Write32(xbaddr addr, uint32_t value)
+void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 	if (block != nullptr) {
-		block->write(addr - block->offset, value);
-		return;
+		int shift = 0;
+		xbaddr aligned_addr = 0;
+		uint32_t aligned_value = 0;
+		uint32_t mask = 0;
+		switch (size) {
+			case 8:
+				shift = (addr & 3) * 8;
+				aligned_addr = addr & ~3;
+				aligned_value = block->read(aligned_addr - block->offset);
+				mask = 0xFF << shift;
+
+				// TODO : Must the second byte be written to the next DWORD?		
+				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				return;
+			case 16:
+				assert((addr & 1) == 0);
+				
+				shift = (addr & 2) * 16;
+				aligned_addr = addr & ~3;
+				aligned_value = block->read(addr - block->offset);
+				 mask = 0xFFFF << shift;
+				
+				// TODO : Must the second byte be written to the next DWORD?		
+				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				return;
+			case 32:
+				block->write(addr - block->offset, value);
+				return;
+			default:
+				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
+				return;
+		}
 	}
 
-	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	EmuWarning("EmuNV2A_Write%d: Unhandled Write Address %08X (value %08X)", size, addr, value);
 	return;
 }
 

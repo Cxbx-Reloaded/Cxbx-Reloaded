@@ -1347,6 +1347,13 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
+typedef struct _KDEVICE_QUEUE_ENTRY 
+{
+	LIST_ENTRY DeviceListEntry;
+	ULONG SortKey;
+	BOOLEAN Inserted;
+} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY, *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
+
 // ******************************************************************
 // FILE_SEGMENT_ELEMENT
 // ******************************************************************
@@ -1789,7 +1796,7 @@ typedef struct _KQUEUE
 	ULONG MaximumCount;
 	LIST_ENTRY ThreadListHead;
 }
-KQUEUE, *PKQUEUE;
+KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 // ******************************************************************
 // * EXCEPTION_DISPOSITION
@@ -1895,7 +1902,7 @@ typedef struct _KAPC
 	/* 0x20/32 */ PVOID SystemArgument1;
 	/* 0x24/36 */ PVOID SystemArgument2;
 }
-KAPC, *PKAPC;
+KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
 
 // ******************************************************************
 // * KTHREAD
@@ -1950,7 +1957,7 @@ typedef struct _KTHREAD
 	/* 0x104/260 */ LIST_ENTRY ThreadListEntry;
 	/* 0x10C/268 */ UCHAR _padding[4];
 }
-KTHREAD, *PKTHREAD;
+KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 
 // ******************************************************************
 // * ETHREAD
