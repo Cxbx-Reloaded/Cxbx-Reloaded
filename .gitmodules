@@ -1,0 +1,3 @@
+[submodule "import/subhook"]
+	path = import/subhook
+	url = https://github.com/Zeex/subhook
