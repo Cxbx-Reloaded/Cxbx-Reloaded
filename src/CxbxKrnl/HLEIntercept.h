@@ -41,7 +41,7 @@ extern bool bLLE_JIT; // Set this to true for experimental JIT
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
 std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset);
-inline void* GetXboxFunctionPointer(std::string functionName);
+void* GetXboxFunctionPointer(std::string functionName);
 
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();

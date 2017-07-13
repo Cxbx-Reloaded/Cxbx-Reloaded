@@ -69,7 +69,7 @@ bool bLLE_JIT = false; // Set this to true for experimental JIT
 bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
 uint32 UnResolvedXRefs; // Tracks XRef location, used (read/write) in EmuHLEIntercept and EmuLocateFunction
 
-inline void* GetXboxFunctionPointer(std::string functionName)
+void* GetXboxFunctionPointer(std::string functionName)
 {
 	if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
 		return g_FunctionHooks[functionName].GetTrampoline();
