@@ -34,12 +34,21 @@
 #ifndef EMUDSOUND_H
 #define EMUDSOUND_H
 
-#include "Common/Xbe.h"
-
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
 
 #include <dsound.h>
+#include "CxbxKrnl.h"
+#include "Emu.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void CxbxInitAudio();
+
+#ifdef __cplusplus
+}
+#endif
 
 // EmuIDirectSoundBuffer_Play flags
 #define X_DSBPLAY_LOOPING       0x00000001

@@ -128,6 +128,7 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 #define DSOUND_MAX_SYNCHPLAYBACK_AUDIO 29
 
 // Static Variable(s)
+XBAudio                             g_XBAudio = XBAudio();
 extern LPDIRECTSOUND8               g_pDSound8 = NULL; //This is necessary in order to allow share with EmuDSoundInline.hpp
 static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = NULL;
 //TODO: RadWolfie - How to implement support if primary does not permit it for DSP usage?
@@ -145,6 +146,19 @@ unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
                                     "WARNING", MB_OK | MB_ICONWARNING); } return hRet; }
 
 #include "EmuDSoundInline.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void CxbxInitAudio()
+{
+    g_EmuShared->GetXBAudio(&g_XBAudio);
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 // ******************************************************************
 // * patch: DirectSoundCreate
@@ -179,7 +193,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     g_bDSoundCreateCalled = TRUE;
 
     if (!initialized || !g_pDSound8) {
-        hRet = DirectSoundCreate8(NULL, ppDirectSound, NULL);
+        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), ppDirectSound, NULL);
 
         if (FAILED(hRet)) {
             CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
