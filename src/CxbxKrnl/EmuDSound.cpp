@@ -1019,7 +1019,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
-    if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
+    if (pThis->EmuFlags & DSB_FLAG_XADPCM) {
         DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, 0, pvBufferData, dwBufferBytes, NULL, 0, false);
     }
 
@@ -1467,7 +1467,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1624,9 +1624,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
               ");\n",
               pThis, pdssd, ppStream, pUnknown);
 
-    EMUPATCH(DirectSoundCreateStream)(pdssd, ppStream);
-
-    return DS_OK;
+    return EMUPATCH(DirectSoundCreateStream)(pdssd, ppStream);;
 }
 
 // ******************************************************************
@@ -1663,7 +1661,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
               ");\n",
               pThis, lVolume);
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1849,7 +1847,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
 
         //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
-        if (pThis->EmuFlags & DSB_FLAG_ADPCM) {
+        if (pThis->EmuFlags & DSB_FLAG_XADPCM) {
 
             DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
                                          pThis->EmuBufferDesc,
@@ -2802,7 +2800,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
               ");\n",
               pThis, lVolume);
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
 }
 
 

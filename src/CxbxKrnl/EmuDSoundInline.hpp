@@ -232,9 +232,19 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
 
-            if (pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM) {
-                dwEmuFlags |= DSB_FLAG_ADPCM;
-                XADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
+            dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
+
+            switch (pDSBufferDesc->lpwfxFormat->wFormatTag) {
+                case WAVE_FORMAT_PCM:
+                    dwEmuFlags |= DSB_FLAG_PCM;
+                    break;
+                case WAVE_FORMAT_XBOX_ADPCM:
+                    dwEmuFlags |= DSB_FLAG_XADPCM;
+                    XADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
+                    break;
+                default:
+                    dwEmuFlags |= DSB_FLAG_PCM_UNKNOWN;
+                    break;
             }
         } else {
             bIsSpecial = true;
@@ -316,7 +326,7 @@ inline void DSoundGenericUnlock(
 {
     // close any existing locks
     if (pLockPtr1 != nullptr) {
-        if (dwEmuFlags & DSB_FLAG_ADPCM) {
+        if (dwEmuFlags & DSB_FLAG_XADPCM) {
 
             //Since it is already locked, don't even need this.
             /*if (dwLockFlags & DSBLOCK_FROMWRITECURSOR) {
@@ -359,6 +369,9 @@ inline void ResizeIDirectSoundBuffer(
     DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, dwBytes);
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount;
+    LONG lVolume;
+
+    pDSBuffer->GetVolume(&lVolume);
 
     HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
@@ -406,6 +419,9 @@ inline void ResizeIDirectSoundBuffer(
             pDS3DBuffer = NULL;
         }
     }
+
+    pDSBuffer->SetVolume(lVolume);
+
     pDSBuffer->SetCurrentPosition(dwPlayCursor);
 
     if (dwStatus & DSBSTATUS_PLAYING) {
@@ -443,7 +459,7 @@ inline void DSoundBufferUpdate(
                                 dwLockBytes2,
                                 dwLockFlags);
 
-            if (dwEmuFlags & DSB_FLAG_ADPCM) {
+            if (dwEmuFlags & DSB_FLAG_XADPCM) {
                 DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, dwOffset, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
             } else {
                 HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
@@ -1173,12 +1189,26 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetVolume(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    LONG                lVolume)
+    LONG                lVolume,
+    DWORD               dwEmuFlags)
 {
 
     enterCriticalSection;
 
-    if (lVolume <= -6400) {
+    if (dwEmuFlags & DSB_FLAG_PCM) {
+        if (!g_XBAudio.GetPCM()) {
+            lVolume = -10000;
+        }
+    } else if (dwEmuFlags & DSB_FLAG_XADPCM) {
+        if (!g_XBAudio.GetXADPCM()) {
+            lVolume = -10000;
+        }
+    } else if (dwEmuFlags & DSB_FLAG_PCM_UNKNOWN) {
+        if (!g_XBAudio.GetUnknownCodec()) {
+            lVolume = -10000;
+        }
+    }
+    if (lVolume > -10000 && lVolume <= -6400) {
         lVolume = -10000;
     }
 
