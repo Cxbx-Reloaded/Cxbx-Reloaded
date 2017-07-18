@@ -32,7 +32,8 @@
 // *  (c) 2016 Luke Usher <luke.usher@outlook.com>
 // * 
 // *  EmuNV2A.cpp is heavily based on code from XQEMU
-// *  (c) XQEMU Team
+// *  Copyright(c) 2012 espes
+// *  Copyright(c) 2015 Jannik Vogel
 // *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
 // * 
 // *  All rights reserved

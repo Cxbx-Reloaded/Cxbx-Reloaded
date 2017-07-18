@@ -15,3 +15,6 @@ build:
 artifacts:
 - path: export\Release.zip
 - path: export\Debug.zip
+install:
+  # Git clone happens between init and install 
+  - cmd: git submodule update --init --recursive
