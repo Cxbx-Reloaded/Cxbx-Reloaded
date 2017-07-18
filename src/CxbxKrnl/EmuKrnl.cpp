@@ -295,11 +295,8 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
 	KPCR* Pcr = KeGetPcr();
 
 	if (NewIrql < Pcr->Irql)	{
-		// TODO: Enable this after KeBugCheck is implemented
-		//KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
-		// for (;;);
-
-		CxbxKrnlCleanup("IRQL_NOT_GREATER_OR_EQUAL");
+		KeBugCheck(9); // IRQL_NOT_GREATER_OR_EQUAL
+		for (;;);
 	}
 	
 	OldIrql = Pcr->Irql;
@@ -323,11 +320,8 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 	KPCR* Pcr = KeGetPcr();
 
 	if (NewIrql > Pcr->Irql) {
-		// TODO: Enable this after KeBugCheck is implemented
-		//KeBugCheck(IRQL_NOT_LESS_OR_EQUAL);
-		// for (;;);
-
-		CxbxKrnlCleanup("IRQL_NOT_LESS_OR_EQUAL");
+		KeBugCheck(10); // IRQL_NOT_LESS_OR_EQUAL
+		for (;;);
 	}
 
 	Pcr->Irql = NewIrql;
