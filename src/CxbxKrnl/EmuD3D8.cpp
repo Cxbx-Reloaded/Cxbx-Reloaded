@@ -90,6 +90,7 @@ static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeigh
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
+static BOOL                         g_bSupportsP8   = FALSE;// Does device support palette textures?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -1649,6 +1650,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
    
+				// Does this device support paletized textures?
+				g_bSupportsP8 = g_D3DCaps.RasterCaps & RC_PALETTE;
+
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
 
@@ -3782,7 +3786,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 			PCFormat = D3DFMT_R5G6B5;
 		}
 		//*
-		else if(PCFormat == D3DFMT_P8)
+		else if(PCFormat == D3DFMT_P8 && !g_bSupportsP8)
 		{
 			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
 			PCFormat = D3DFMT_L8;
@@ -3933,7 +3937,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
 			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
 			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
 		}
-		else if (PCFormat == D3DFMT_P8)
+		else if (PCFormat == D3DFMT_P8 && !g_bSupportsP8)
 		{
 			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
 			PCFormat = D3DFMT_L8;
@@ -4004,7 +4008,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5?
     }
-    else if(PCFormat == D3DFMT_P8)
+    else if(PCFormat == D3DFMT_P8 && !g_bSupportsP8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCFormat = D3DFMT_L8;
@@ -5220,7 +5224,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     // Since most modern graphics cards does not support
                     // palette based textures we need to expand it to
                     // ARGB texture format
-					if (PCFormat == D3DFMT_P8 || EmuXBFormatRequiresConversionToARGB(X_Format))
+					if ((PCFormat == D3DFMT_P8 && !g_bSupportsP8) || EmuXBFormatRequiresConversionToARGB(X_Format))
                     {
 						if (PCFormat == D3DFMT_P8) //Palette
 							EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
@@ -8911,7 +8915,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCSurfaceFormat = D3DFMT_X8R8G8B8;
     }
-    else if(PCSurfaceFormat == D3DFMT_P8)
+    else if(PCSurfaceFormat == D3DFMT_P8 && !g_bSupportsP8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCSurfaceFormat = D3DFMT_X8R8G8B8;
