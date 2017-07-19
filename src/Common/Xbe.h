@@ -137,7 +137,11 @@ class Xbe : public Error
             uint32  dwVersion;                            // 0x00AC - version
             uint08  bzLanKey[16];                         // 0x00B0 - lan key
             uint08  bzSignatureKey[16];                   // 0x00C0 - signature key
+            // NOT ALL XBEs have these fields!
             uint08  bzTitleAlternateSignatureKey[16][16]; // 0x00D0 - alternate signature keys
+            uint32  dwOriginalCertificateSize;			  // 0x01D0 - Original Certificate Size?
+            uint32  dwOnlineService;					  // 0x01D4 - Online Service ID
+            uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
         }
         #include "AlignPosfix1.h"
         m_Certificate;
