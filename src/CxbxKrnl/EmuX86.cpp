@@ -148,7 +148,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not 
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
-	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
 	} else {
 		if (g_bEmuException) {
