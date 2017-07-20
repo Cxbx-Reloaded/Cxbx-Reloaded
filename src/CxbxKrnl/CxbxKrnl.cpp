@@ -392,6 +392,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
+	// using XeLoadImage from LaunchDataPage->Header.szLaunchPath
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
