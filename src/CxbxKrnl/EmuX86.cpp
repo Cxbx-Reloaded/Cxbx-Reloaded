@@ -983,6 +983,16 @@ bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 	return (decodedInstructionsCount == 1);
 }
 
+int EmuX86_OpcodeSize(uint8_t *Eip)
+{
+	_DInst info;
+	if (EmuX86_DecodeOpcode((uint8_t*)Eip, info))
+		return info.size;
+
+	EmuWarning("EmuX86: Error decoding opcode size at 0x%.8X", Eip);
+	return 1;
+}
+
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
 	// Only decode instructions which reside in the loaded Xbe
