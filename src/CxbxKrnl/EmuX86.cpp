@@ -964,19 +964,12 @@ bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 	return false;
 }
 
-bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
+bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 {
-	// Only decode instructions which reside in the loaded Xbe
-	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
-		return false;
-	}
-
-	// Decoded instruction information.
-	_DInst info;
 	unsigned int decodedInstructionsCount = 0;
 
 	_CodeInfo ci;
-	ci.code = (uint8_t*)e->ContextRecord->Eip;
+	ci.code = (uint8_t*)Eip;
 	ci.codeLen = 20;
 	ci.codeOffset = 0;
 	ci.dt = (_DecodeType)Decode32Bits;
@@ -987,7 +980,19 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// halt cleanly after reaching maxInstructions 1. So instead, just call distorm :
 	distorm_decompose(&ci, &info, /*maxInstructions=*/1, &decodedInstructionsCount);
 	// and check if it successfully decoded one instruction :
-	if (decodedInstructionsCount != 1)
+	return (decodedInstructionsCount == 1);
+}
+
+bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
+{
+	// Only decode instructions which reside in the loaded Xbe
+	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
+		return false;
+	}
+
+	// Decoded instruction information.
+	_DInst info;
+	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info))
 	{
 		EmuWarning("EmuX86: Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 	}
