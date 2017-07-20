@@ -128,6 +128,22 @@ void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
 	*(uint8_t*)addr = value;
 }
 
+uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
+{
+	uint32_t r;
+
+	switch (addr) {
+	case 0x78: // ROM_VERSION
+		r = 0x46; // DVT4
+		break;
+	default:
+		EmuWarning("EmuX86 Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
+		return -1;
+	}
+
+	DbgPrintf("EmuX86 Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
+	return r;
+}
 
 //
 // Read & write handlers for memory-mapped hardware devices
@@ -150,6 +166,8 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
@@ -193,6 +211,8 @@ uint16_t EmuX86_Read16(xbaddr addr)
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
@@ -222,6 +242,8 @@ uint8_t EmuX86_Read8(xbaddr addr)
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
@@ -255,6 +277,11 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
+		return;
+	}
+
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}
 
@@ -296,6 +323,11 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 		return;
 	}
 
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write16(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		return;
+	}
+
 	if (g_bEmuException) {
 		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
 		return;
@@ -323,6 +355,11 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
+		return;
+	}
+
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write8(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}
 
