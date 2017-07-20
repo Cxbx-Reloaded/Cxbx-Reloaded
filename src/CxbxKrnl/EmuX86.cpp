@@ -134,7 +134,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 
 	switch (addr) {
 	case 0x78: // ROM_VERSION
-		r = 0x46; // DVT4
+		r = 0x90; // Luke's hardware revision 1.6 Xbox returns this (also since XboxKrnlVersion is set to 5838)
 		break;
 	default:
 		EmuWarning("EmuX86 Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
