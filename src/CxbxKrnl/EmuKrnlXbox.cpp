@@ -58,8 +58,11 @@ XBSYSAPI EXPORTNUM(321) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = { 0 };
 // ******************************************************************
 XBSYSAPI EXPORTNUM(322) xboxkrnl::XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
 {
-	0xC0000035,
-	0,0,0,0
+	0xC0000031, // Flags: 1=INTERNAL_USB, 2=DEVKIT, 4=MACROVISION, 8=CHIHIRO
+	0xA2, // GpuRevision, byte read from NV2A first register, at 0xFD0000000 - see NV_PMC_BOOT_0
+	0xD3, // McpRevision, Retail 1.6 - see https://github.com/JayFoxRox/xqemu-jfr/wiki/MCPX-and-bootloader
+	0, // unknown
+	0 // unknown
 };
 
 // ******************************************************************
