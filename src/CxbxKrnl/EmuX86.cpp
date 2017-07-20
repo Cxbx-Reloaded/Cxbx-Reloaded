@@ -976,10 +976,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	unsigned int decodedInstructionsCount = 0;
 
 	_CodeInfo ci;
-	if (e->ContextRecord->Eip == 0x00023A8A)
-		//			00023A8A 03B2 28010000 add esi, [edx + $00000128]; CMiniport_SetDmaRange + 13E8
-		ci.code = (uint8_t*)e->ContextRecord->Eip;
-	else
 	ci.code = (uint8_t*)e->ContextRecord->Eip;
 	ci.codeLen = 20;
 	ci.codeOffset = 0;
