@@ -128,6 +128,22 @@ void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
 	*(uint8_t*)addr = value;
 }
 
+uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
+{
+	uint32_t r;
+
+	switch (addr) {
+	case 0x78: // ROM_VERSION
+		r = 0x90; // Luke's hardware revision 1.6 Xbox returns this (also since XboxKrnlVersion is set to 5838)
+		break;
+	default:
+		EmuWarning("EmuX86 Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
+		return -1;
+	}
+
+	DbgPrintf("EmuX86 Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
+	return r;
+}
 
 //
 // Read & write handlers for memory-mapped hardware devices
@@ -148,8 +164,10 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not 
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
-	} if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
+	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
@@ -193,6 +211,8 @@ uint16_t EmuX86_Read16(xbaddr addr)
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
@@ -222,6 +242,8 @@ uint8_t EmuX86_Read8(xbaddr addr)
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
+	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
@@ -255,6 +277,11 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
+		return;
+	}
+
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}
 
@@ -296,6 +323,11 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 		return;
 	}
 
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write16(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		return;
+	}
+
 	if (g_bEmuException) {
 		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
 		return;
@@ -323,6 +355,11 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 
 	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
 		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
+		return;
+	}
+
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+		EmuWarning("EmuX86_Write8(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}
 
@@ -964,23 +1001,12 @@ bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 	return false;
 }
 
-bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
+bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 {
-	// Only decode instructions which reside in the loaded Xbe
-	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
-		return false;
-	}
-
-	// Decoded instruction information.
-	_DInst info;
 	unsigned int decodedInstructionsCount = 0;
 
 	_CodeInfo ci;
-	if (e->ContextRecord->Eip == 0x00023A8A)
-		//			00023A8A 03B2 28010000 add esi, [edx + $00000128]; CMiniport_SetDmaRange + 13E8
-		ci.code = (uint8_t*)e->ContextRecord->Eip;
-	else
-	ci.code = (uint8_t*)e->ContextRecord->Eip;
+	ci.code = (uint8_t*)Eip;
 	ci.codeLen = 20;
 	ci.codeOffset = 0;
 	ci.dt = (_DecodeType)Decode32Bits;
@@ -991,7 +1017,29 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// halt cleanly after reaching maxInstructions 1. So instead, just call distorm :
 	distorm_decompose(&ci, &info, /*maxInstructions=*/1, &decodedInstructionsCount);
 	// and check if it successfully decoded one instruction :
-	if (decodedInstructionsCount != 1)
+	return (decodedInstructionsCount == 1);
+}
+
+int EmuX86_OpcodeSize(uint8_t *Eip)
+{
+	_DInst info;
+	if (EmuX86_DecodeOpcode((uint8_t*)Eip, info))
+		return info.size;
+
+	EmuWarning("EmuX86: Error decoding opcode size at 0x%.8X", Eip);
+	return 1;
+}
+
+bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
+{
+	// Only decode instructions which reside in the loaded Xbe
+	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
+		return false;
+	}
+
+	// Decoded instruction information.
+	_DInst info;
+	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info))
 	{
 		EmuWarning("EmuX86: Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 	}

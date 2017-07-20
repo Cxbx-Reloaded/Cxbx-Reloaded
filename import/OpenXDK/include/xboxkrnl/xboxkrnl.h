@@ -2070,8 +2070,8 @@ XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 typedef struct _XBOX_HARDWARE_INFO
 {
     ULONG Flags;
-    UCHAR Unknown1;
-    UCHAR Unknown2;
+    UCHAR GpuRevision;
+	UCHAR McpRevision;
     UCHAR Unknown3;
     UCHAR Unknown4;
 }
