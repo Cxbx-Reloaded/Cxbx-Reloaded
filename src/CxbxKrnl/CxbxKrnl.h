@@ -86,6 +86,9 @@ typedef uint32 xbaddr;
 #define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
+#define XBOX_FLASH_ROM_BASE      0xFFF00000
+#define XBOX_FLASH_ROM_SIZE      0x00100000 // - 0xFFFFFFF
+
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we
 // know of, is "BLiNX: the time sweeper", which has a section
