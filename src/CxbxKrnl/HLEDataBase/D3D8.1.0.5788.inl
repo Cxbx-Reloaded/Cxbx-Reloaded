@@ -851,21 +851,6 @@ OOVPA_NO_XREF(D3DDevice_GetBackMaterial, 5788, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_CaptureStateBlock
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CaptureStateBlock, 5788, 8)
-
-        { 0x1E, 0x3C },
-        { 0x3E, 0xC0 },
-        { 0x5E, 0x7E },
-        { 0x7E, 0x00 },
-        { 0x9E, 0x74 },
-        { 0xC0, 0x8B },
-        { 0xDE, 0x83 },
-        { 0xFE, 0x45 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_DeleteStateBlock
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_DeleteStateBlock, 5788, 9)
@@ -1110,7 +1095,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_GetScissors, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5788, PATCH),
+	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilCullEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_OcclusionCullEnable, 4134, PATCH),
