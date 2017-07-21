@@ -103,10 +103,10 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 
 
 // size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x100
+#define SOUNDBUFFER_CACHE_SIZE 0x200
 
 // size of sound stream cache (used for periodic sound stream updates)
-#define SOUNDSTREAM_CACHE_SIZE 0x100
+#define SOUNDSTREAM_CACHE_SIZE 0x200
 
 // Static Variable(s)
 static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
