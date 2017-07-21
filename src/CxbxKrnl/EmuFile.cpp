@@ -248,19 +248,20 @@ NTSTATUS _CxbxConvertFilePath(
 				RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
 			// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
 		}
-
-		// Check if the path accesses a partition from Harddisk0 :
-		if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0)
-		{
-			XboxFullPath = RelativePath;
-			// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-			RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-			// And set Root to the folder containing the partition-folders :
-			*RootDirectory = CxbxBasePathHandle;
-			HostPath = CxbxBasePath;
-		} else {
-			// Finally, Assume relative to Xbe path
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+		if (NtSymbolicLinkObject == NULL) {
+			// Check if the path accesses a partition from Harddisk0 :
+			if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0)
+			{
+				XboxFullPath = RelativePath;
+				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
+				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
+				// And set Root to the folder containing the partition-folders :
+				*RootDirectory = CxbxBasePathHandle;
+				HostPath = CxbxBasePath;
+			} else {
+				// Finally, Assume relative to Xbe path
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+			}
 		}
 
 		if (NtSymbolicLinkObject != NULL)
