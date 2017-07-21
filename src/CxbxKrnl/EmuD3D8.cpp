@@ -5992,8 +5992,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		if (Flags & X_D3DLOCK_READONLY)
 			NewFlags |= D3DLOCK_READONLY;
 
-		if (Flags & X_D3DLOCK_TILED)
-			EmuWarning("D3DLOCK_TILED ignored!");
+		//if (Flags & X_D3DLOCK_TILED)
+			//EmuWarning("D3DLOCK_TILED ignored!");
 
 		if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
 			CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
@@ -6165,8 +6165,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
         if(Flags & X_D3DLOCK_READONLY)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & X_D3DLOCK_TILED)
-            EmuWarning("D3DLOCK_TILED ignored!"); 
+        //if(Flags & X_D3DLOCK_TILED)
+            //EmuWarning("D3DLOCK_TILED ignored!"); 
 
         if(Flags & X_D3DLOCK_NOOVERWRITE)
             NewFlags |= D3DLOCK_NOOVERWRITE;
