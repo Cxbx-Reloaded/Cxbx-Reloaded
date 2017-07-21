@@ -1649,12 +1649,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
-   
-				// Does this device support paletized textures?
-				g_bSupportsP8 = g_D3DCaps.RasterCaps & RC_PALETTE;
 
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+				// Does this device support paletized textures?
+				g_bSupportsP8 = g_pD3D8->CheckDeviceFormat(
+					g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+					(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+					XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_P8) == D3D_OK;
 
 	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
