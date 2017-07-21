@@ -1673,24 +1673,13 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 		// TODO : What should we do with the (currently ignored)
 		//        WaitReason, WaitMode, WaitBlockArray?
 
-		if (Count == 1)
-		{
-			// Note : WaitType is irrelevant here
-			ret = NtDll::NtWaitForSingleObject(
-				Object[0],
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
-
-			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
-		}
-		else
-			// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-			ret = NtDll::NtWaitForMultipleObjects(
-				Count,
-				Object,
-				(NtDll::OBJECT_WAIT_TYPE)WaitType,
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
+		// Unused arguments : WaitReason, WaitMode, WaitBlockArray
+		ret = NtDll::NtWaitForMultipleObjects(
+			Count,
+			Object,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
 
 		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
