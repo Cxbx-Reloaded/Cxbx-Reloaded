@@ -1442,30 +1442,66 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
+	// Get the required size for the host buffer
+	// This may differ than the xbox buffer size so we also need to handle conversions!
+	ULONG HostBufferSize = 0;
+	switch ((DWORD)FileInformationClass) {
+		case FileFsVolumeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION);
+			break;
+		case FileFsLabelInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
+			break;
+		case FileFsSizeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_SIZE_INFORMATION);
+			break;
+		case FileFsDeviceInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_DEVICE_INFORMATION);
+			break;
+		case FileFsAttributeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_ATTRIBUTE_INFORMATION);
+			break;
+		case FileFsFullSizeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_FULL_SIZE_INFORMATION);
+			break;
+		case FileFsObjectIdInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_OBJECTID_INFORMATION);
+			break;
+	}
+
+	PVOID NativeFileInformation = _aligned_malloc(HostBufferSize, 8);
+
 	NTSTATUS ret = NtDll::NtQueryVolumeInformationFile(
 		FileHandle,
 		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
-		(NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
+		(NtDll::PFILE_FS_SIZE_INFORMATION)NativeFileInformation, HostBufferSize,
 		(NtDll::FS_INFORMATION_CLASS)FileInformationClass);
 
-	if (ret == STATUS_SUCCESS)
-	{
-		// NOTE: TODO: Dynamically fill in, or allow configuration?
-		if (FileInformationClass == FileFsSizeInformation)
-		{
-			FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
+	// Convert Xbox NativeFileInformation to FileInformation
+	if (ret == STATUS_SUCCESS) {
+		switch ((DWORD)FileInformationClass) {
+				case FileFsSizeInformation: {
+					PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
+					NtDll::PFILE_FS_SIZE_INFORMATION HostSizeInfo = (NtDll::PFILE_FS_SIZE_INFORMATION)NativeFileInformation;
 
-			SizeInfo->TotalAllocationUnits.QuadPart = 0x4C468;
-			SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
-			SizeInfo->SectorsPerAllocationUnit = 32;
-			SizeInfo->BytesPerSector = 512;
+					// TODO: Convert Total/Available to 512/32 based amounts
+					XboxSizeInfo->TotalAllocationUnits.QuadPart = HostSizeInfo->TotalAllocationUnits.QuadPart;
+					XboxSizeInfo->AvailableAllocationUnits.QuadPart = HostSizeInfo->AvailableAllocationUnits.QuadPart;
+					XboxSizeInfo->SectorsPerAllocationUnit = 32;
+					XboxSizeInfo->BytesPerSector = 512;
+				}
+				break;
+			default:
+				// For all other types, just do a memcpy and hope for the best!
+				EmuWarning("NtQueryVolumeInformationFile: Unknown FileInformationClass");
+				memcpy_s(FileInformation, Length, NativeFileInformation, HostBufferSize);
+				break;
 		}
-		else
-			LOG_UNIMPLEMENTED();
-
 	}
-	else
-	{
+
+	_aligned_free(NativeFileInformation);
+
+	if (FAILED(ret)) {
 		EmuWarning("NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
 
