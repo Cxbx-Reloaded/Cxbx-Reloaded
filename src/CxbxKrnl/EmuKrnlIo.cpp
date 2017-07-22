@@ -278,7 +278,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	if (FAILED(ret))
 	{
-		EmuWarning("EmuKrnl: IoCreateFile Failed! (0x%.08X)\n", ret);
+		EmuWarning("EmuKrnl: IoCreateFile Failed! (%s)\n", NtStatusToString(ret));
 	}
 	else
 	{
