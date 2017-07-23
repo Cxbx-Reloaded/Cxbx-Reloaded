@@ -40,9 +40,11 @@
 
 // LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation from DSound api
 #define LOG_UNIMPLEMENTED_DSOUND() \
-    do { if(g_bPrintfOn) { \
-        std::cout << __func__ << " unimplemented!\n"; \
-    } } while (0)
+    static bool b_echoOnce = true; \
+    if (g_bPrintfOn && b_echoOnce) { \
+            std::cout << __func__ << " unimplemented!\n"; \
+            b_echoOnce = false; \
+    }
 
 CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
@@ -1210,6 +1212,9 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     }
     if (lVolume > -10000 && lVolume <= -6400) {
         lVolume = -10000;
+    } else if (lVolume > 0) {
+        EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %d", lVolume);
+        lVolume = 0;
     }
 
     HRESULT hRet = pDSBuffer->SetVolume(lVolume);
