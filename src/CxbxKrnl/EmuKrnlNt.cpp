@@ -1625,7 +1625,7 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 
 	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
 
-	Sleep(10);
+	//Sleep(10);
 
 	RETURN(ret);
 }
