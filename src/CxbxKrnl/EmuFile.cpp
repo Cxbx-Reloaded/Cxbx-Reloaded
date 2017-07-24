@@ -331,6 +331,18 @@ NTSTATUS CxbxObjectAttributesToNT(
 	std::string ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
 	std::wstring RelativeHostPath;
 	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
+
+	// Handle special Xbox root directory constants
+	if (RootDirectory == (NtDll::HANDLE)-4) { 
+		RootDirectory = NULL;
+
+		if (ObjectName.size() == 0){
+			ObjectName = "\\BaseNamedObjects";
+		} else {
+			ObjectName = "\\BaseNamedObjects\\" + ObjectName;
+		}
+	}
+
 	// Is there a filename API given?
 	if (aFileAPIName.size() > 0)
 	{
