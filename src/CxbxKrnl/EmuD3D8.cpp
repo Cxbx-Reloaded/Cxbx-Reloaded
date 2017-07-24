@@ -1649,12 +1649,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
-   
-				// Does this device support paletized textures?
-				g_bSupportsP8 = g_D3DCaps.RasterCaps & RC_PALETTE;
 
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+				// Does this device support paletized textures?
+				g_bSupportsP8 = g_pD3D8->CheckDeviceFormat(
+					g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+					(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+					XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_P8) == D3D_OK;
 
 	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
@@ -2185,7 +2188,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
         Sleep(10);
 	
 	// Set the Xbox g_pD3DDevice pointer to our D3D Device object
-	*((DWORD*)XRefDataBase[XREF_D3DDEVICE]) = (DWORD)g_XboxD3DDevice;
+	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
+		*((DWORD*)XRefDataBase[XREF_D3DDEVICE]) = (DWORD)g_XboxD3DDevice;
+	}
 
     return g_EmuCDPD.hRet;
 }
@@ -5987,8 +5992,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		if (Flags & X_D3DLOCK_READONLY)
 			NewFlags |= D3DLOCK_READONLY;
 
-		if (Flags & X_D3DLOCK_TILED)
-			EmuWarning("D3DLOCK_TILED ignored!");
+		//if (Flags & X_D3DLOCK_TILED)
+			//EmuWarning("D3DLOCK_TILED ignored!");
 
 		if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
 			CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
@@ -6160,8 +6165,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
         if(Flags & X_D3DLOCK_READONLY)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & X_D3DLOCK_TILED)
-            EmuWarning("D3DLOCK_TILED ignored!"); 
+        //if(Flags & X_D3DLOCK_TILED)
+            //EmuWarning("D3DLOCK_TILED ignored!"); 
 
         if(Flags & X_D3DLOCK_NOOVERWRITE)
             NewFlags |= D3DLOCK_NOOVERWRITE;

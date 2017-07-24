@@ -131,19 +131,19 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
 			return D3DBLENDOP_MAX;
 		case 0xF006:
 			{
-				CxbxKrnlCleanup("D3DBLENDOP_ADDSIGNED is not supported!");
+				EmuWarning("D3DBLENDOP_ADDSIGNED is not supported!");
 				return D3DBLENDOP_ADD;
 			};
 		case 0xF005:
 			{
-				CxbxKrnlCleanup("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
+				EmuWarning("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
 				return D3DBLENDOP_REVSUBTRACT;
 			}
     }
 
-    CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+    EmuWarning("Unknown D3DBLENDOP (0x%.08X)", Value);
 
-    return (D3DBLENDOP)Value;
+    return (D3DBLENDOP)D3DBLENDOP_ADD;
 }
 
 // convert from xbox to pc blend types 

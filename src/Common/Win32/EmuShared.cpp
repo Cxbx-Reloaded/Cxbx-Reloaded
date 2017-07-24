@@ -151,10 +151,12 @@ void EmuShared::Load()
 {
 	m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
     m_XBVideo.Load("Software\\Cxbx-Reloaded\\XBVideo");
+    m_XBAudio.Load("Software\\Cxbx-Reloaded\\XBAudio");
 }
 
 void EmuShared::Save()
 {
 	m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
     m_XBVideo.Save("Software\\Cxbx-Reloaded\\XBVideo");
+    m_XBAudio.Save("Software\\Cxbx-Reloaded\\XBAudio");
 }

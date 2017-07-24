@@ -760,6 +760,8 @@ void CxbxKrnlInit
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
+    XTL::CxbxInitAudio();
+
 	EmuHLEIntercept(pXbeHeader);
 
 	if (bLLE_GPU)
