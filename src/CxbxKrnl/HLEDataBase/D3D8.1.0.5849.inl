@@ -317,7 +317,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_GetScissors, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5788, PATCH),
+	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilCullEnable, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, PATCH),
