@@ -558,26 +558,19 @@ OOVPA_END;
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Play2, 4361, 15,
+OOVPA_XREF(CMcpxBuffer_Play2, 4361, 8,
 
     XREF_CMcpxBuffer_Play2,
     XRefZero)
 
-        { 0x03, 0x8B },
 		{ 0x06, 0x56 },
         { 0x0E, 0xF1 },
         { 0x16, 0xFF },
-        { 0x1B, 0x08 },
-        { 0x1C, 0x6A },
         { 0x1D, 0x03 },
         { 0x1E, 0xFF },
-        { 0x1F, 0x50 },
         { 0x26, 0x75 },
         { 0x2F, 0x8B },
-        { 0x30, 0xF8 },
-        { 0x31, 0x8B },
         { 0x36, 0xC2 },
-        { 0x37, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
