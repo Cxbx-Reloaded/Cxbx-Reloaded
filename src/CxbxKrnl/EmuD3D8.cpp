@@ -514,9 +514,9 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+            SwitchToThread(); 
 
-        Sleep(50);
+		SwitchToThread();
     }
 
 	SetFocus(g_hEmuWindow);
@@ -1205,7 +1205,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             }
             else
             {
-                Sleep(10);
+				SwitchToThread();
 
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)
@@ -1883,7 +1883,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             }
         }
 
-        Sleep(1);
+		Sleep(1);
     }
 
     return 0;

@@ -1329,6 +1329,21 @@ OOVPA_NO_XREF(D3DDevice_SetTile, 5558, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_CaptureStateBlock
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_CaptureStateBlock, 5455, 8)
+	{ 0x1E, 0x3C },
+	{ 0x3E, 0xC0 },
+	{ 0x5E, 0x7E },
+	{ 0x7E, 0x00 },
+	{ 0x9E, 0x74 },
+	{ 0xC0, 0x8B },
+	{ 0xDE, 0x83 },
+	{ 0xFE, 0x45 },
+OOVPA_END;
+
+
+// ******************************************************************
 // * D3D8_5558
 // ******************************************************************
 OOVPATable D3D8_5558[] = {
@@ -1475,6 +1490,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_RopZRead, 3925, PATCH),
