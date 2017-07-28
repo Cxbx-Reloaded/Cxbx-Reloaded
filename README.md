@@ -16,6 +16,10 @@ Cxbx-Reloaded is still pretty unstable, don't expect it to run much at this poin
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, however the latest build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) by navigating to Configuration: Release => Artifacts => export\Release.zip
 
+## Compatibility
+Here's a basic compatibility list. Create a separate issue per game rather than commenting on this one!
+[Compatibility List](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/222)
+
 ## Bug Reports
 Cxbx-Reloaded is in the early stages right now and most games will either crash or do nothing, please do not submit issues for these games. 
 
