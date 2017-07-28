@@ -126,7 +126,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
@@ -151,16 +151,14 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
             // Prevent using an incorrect path from the registry if the debug folders have been moved
 
-            dwType = REG_SZ; dwSize = 0;
             if(PathFileExists((LPCSTR)m_CxbxDebugFilename) == FALSE)
             {
-                RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, NULL, dwSize);
+                m_CxbxDebugFilename = "";
             }
 
-            dwType = REG_SZ; dwSize = 0;
             if(PathFileExists((LPCSTR)m_KrnlDebugFilename) == FALSE)
             {
-                RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, NULL, dwSize);
+                m_KrnlDebugFilename = "";
             }
 
             int v=0;
