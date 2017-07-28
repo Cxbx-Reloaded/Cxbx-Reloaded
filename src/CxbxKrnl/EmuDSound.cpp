@@ -166,7 +166,7 @@ void CxbxInitAudio()
 HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
-    LPDIRECTSOUND8* ppDirectSound,
+    OUT LPDIRECTSOUND8* ppDirectSound,
     LPUNKNOWN       pUnknown)
 {
     FUNC_EXPORTS;
@@ -331,7 +331,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound*         pThis,
-    PDWORD                  pdwSpeakerConfig)
+    OUT PDWORD                  pdwSpeakerConfig)
 {
     FUNC_EXPORTS;
 
@@ -851,7 +851,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
 HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 (
     X_DSBUFFERDESC*         pdsbd,
-    X_CDirectSoundBuffer**  ppBuffer)
+    OUT X_CDirectSoundBuffer**  ppBuffer)
 {
     FUNC_EXPORTS;
 
@@ -949,7 +949,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC*         pdssd,
-    X_CDirectSoundBuffer**  ppBuffer,
+    OUT X_CDirectSoundBuffer**  ppBuffer,
     PVOID                   pUnknown)
 {
     FUNC_EXPORTS;
@@ -975,7 +975,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC*         pdsbd,
-    X_CDirectSoundBuffer**  ppBuffer,
+    OUT X_CDirectSoundBuffer**  ppBuffer,
     LPUNKNOWN               pUnkOuter)
 {
     FUNC_EXPORTS;
@@ -1276,7 +1276,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     X_CDirectSoundBuffer*   pThis,
-    LPDWORD                 pdwStatus)
+    OUT LPDWORD                 pdwStatus)
 {
     FUNC_EXPORTS;
 
@@ -1327,8 +1327,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 (
     X_CDirectSoundBuffer*   pThis,
-    PDWORD                  pdwCurrentPlayCursor,
-    PDWORD                  pdwCurrentWriteCursor)
+    OUT PDWORD                  pdwCurrentPlayCursor,
+    OUT PDWORD                  pdwCurrentWriteCursor)
 {
     FUNC_EXPORTS;
 
@@ -1496,7 +1496,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 (
     X_DSSTREAMDESC*         pdssd,
-    X_CDirectSoundStream**  ppStream)
+    OUT X_CDirectSoundStream**  ppStream)
 {
     FUNC_EXPORTS;
 
@@ -1610,7 +1610,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC*         pdssd,
-    X_CDirectSoundStream**  ppStream,
+    OUT X_CDirectSoundStream**  ppStream,
     PVOID                   pUnknown)
 {
     FUNC_EXPORTS;
@@ -1764,7 +1764,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 (
     X_CDirectSoundStream*   pThis,
-    LPXMEDIAINFO            pInfo)
+    OUT LPXMEDIAINFO            pInfo)
 {
     FUNC_EXPORTS;
 
@@ -1798,13 +1798,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD*                  pdwStatus)
+    OUT DWORD*                  pdwStatus)
 {
     FUNC_EXPORTS;
 
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(pdwStatus)
+        LOG_FUNC_ARG_OUT(pdwStatus)
         LOG_FUNC_END;
 
     return HybridDirectSoundBuffer_GetStatus(pThis->EmuDirectSoundBuffer8, pdwStatus);
@@ -2928,7 +2928,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 (
     LPDIRECTSOUND8*         pThis,
-    X_DSOUTPUTLEVELS*       pOutputLevels,
+    OUT X_DSOUTPUTLEVELS*       pOutputLevels,
     BOOL                    bResetPeakValues)
 {
     FUNC_EXPORTS;
@@ -3178,7 +3178,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 (
     X_CDirectSound*     pThis,
-    X_DSCAPS*           pDSCaps)
+    OUT X_DSCAPS*           pDSCaps)
 {
     FUNC_EXPORTS;
 
@@ -3453,7 +3453,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
 (
     HANDLE      hFile,
-    void**      ppMediaObject)
+    OUT void**      ppMediaObject)
 {
     FUNC_EXPORTS;
 
@@ -3480,7 +3480,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 (
     LPCSTR              pszFileName,
     LPCWAVEFORMATEX*    ppwfxFormat,
-    void**              ppMediaObject)
+    OUT void**              ppMediaObject)
 {
     FUNC_EXPORTS;
 
@@ -3535,7 +3535,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
     X_CDirectSound* pThis,
     DWORD           dwEffectIndex,
     DWORD           dwOffset,
-    LPVOID          pvData,
+    OUT LPVOID          pvData,
     DWORD           dwDataSize)
 {
     FUNC_EXPORTS;
@@ -3712,7 +3712,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE      hFile,
     DWORD       dwMaxPackets,
-    void**      ppMediaObject)
+    OUT void**      ppMediaObject)
 {
     FUNC_EXPORTS;
 
@@ -3789,7 +3789,7 @@ VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 (
     X_XFileMediaObject* pThis,
-    LPDWORD             pdwStatus)
+    OUT LPDWORD             pdwStatus)
 {
     FUNC_EXPORTS;
 
@@ -3815,7 +3815,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 (
     X_XFileMediaObject* pThis,
-    XMEDIAINFO*         pInfo)
+    OUT XMEDIAINFO*         pInfo)
 {
     FUNC_EXPORTS;
 
