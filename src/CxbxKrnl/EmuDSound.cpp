@@ -1122,6 +1122,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
     // (otherwise pThis is manipulated!)
 
     //ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwLoopLength);
+	LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
 
@@ -2640,7 +2641,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
 
-    leaveCriticalSection;
+	LOG_UNIMPLEMENTED_DSOUND();
+
+	leaveCriticalSection;
 
     return DS_OK;
 }
@@ -2866,6 +2869,8 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_ARG(ppImageDesc)
 		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
 
@@ -3672,6 +3677,8 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject 
     enterCriticalSection;
 
 	LOG_FUNC_ONE_ARG(pThis);
+
+	LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
 
