@@ -1547,6 +1547,12 @@ VOID WINAPI XTL::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2
     FUNC_EXPORTS;
 
     enterCriticalSection;
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwDummy1)
+		LOG_FUNC_ARG(dwDummy2)
+		LOG_FUNC_END;
+
     // Causes deadlock in Halo...
     // TODO: Verify that this is a Vista related problem (I HATE Vista!)
 //    EmuWarning("EmuCMcpxStream_Dummy_0x10 is ignored!");
