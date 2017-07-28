@@ -41,6 +41,8 @@
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
+// I am not sure if this is already included in the other includes. If it is, remove it
+#include "Shlwapi.h"
 
 #include <io.h>
 
@@ -80,15 +82,15 @@ void ClearHLECache()
 	printf("Cleared HLE Cache\n");
 }
 
-WndMain::WndMain(HINSTANCE x_hInstance) : 
-	Wnd(x_hInstance), 
-	m_bCreated(false), 
-	m_Xbe(0), 
-	m_bXbeChanged(false), 
-	m_bCanStart(true), 
-	m_hwndChild(NULL), 
-	m_KrnlDebug(DM_NONE), 
-	m_CxbxDebug(DM_NONE), 
+WndMain::WndMain(HINSTANCE x_hInstance) :
+	Wnd(x_hInstance),
+	m_bCreated(false),
+	m_Xbe(0),
+	m_bXbeChanged(false),
+	m_bCanStart(true),
+	m_hwndChild(NULL),
+	m_KrnlDebug(DM_NONE),
+	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_dwRecentXbe(0)
 {
@@ -124,7 +126,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
@@ -146,6 +148,20 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
             dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+
+            // Prevent using an incorrect path from the registry if the debug folders have been moved
+
+            dwType = REG_SZ; dwSize = 0;
+            if(PathFileExists((LPCSTR)m_CxbxDebugFilename) == FALSE)
+            {
+                RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, NULL, dwSize);
+            }
+
+            dwType = REG_SZ; dwSize = 0;
+            if(PathFileExists((LPCSTR)m_KrnlDebugFilename) == FALSE)
+            {
+                RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, NULL, dwSize);
+            }
 
             int v=0;
 
@@ -1071,7 +1087,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_XINPUT: 
+			case ID_SETTINGS_XINPUT:
 				m_XInputEnabled = !m_XInputEnabled;
 				RefreshMenus();
 				break;
@@ -1224,7 +1240,7 @@ void WndMain::RefreshMenus()
 
             // enable/disable save .xbe file as
             EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
-			
+
             // recent xbe files menu
             {
                 HMENU rxbe_menu = GetSubMenu(file_menu, 6);
