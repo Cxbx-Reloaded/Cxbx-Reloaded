@@ -418,6 +418,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     if (!g_bDSoundCreateCalled) {
         return;
     }
+
     enterCriticalSection;
 
 	LOG_FUNC();
@@ -960,7 +961,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
-
     pThis->EmuLockOffset = 0;
 
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
@@ -1355,6 +1355,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
         LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
+
     //TODO: RadWolfie - Rayman 3 crash at end of first intro for this issue... if only return DS_OK, then it works fine until end of 2nd intro it crashed.
     if (pThis != nullptr && pThis->EmuDirectSoundBuffer8 != nullptr) {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
@@ -2703,10 +2704,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 //(
 //    X_CDirectSoundBuffer   *pThis,
 //    REFERENCE_TIME            rtTimestamp,
-//    DWORD                    dwPause
-//)
+//    DWORD                    dwPause)
 //{
-//        
+//      FUNC_EXPORTS;
+//
+//		enterCriticalSection;
 //
 //    	LOG_FUNC_BEGIN
 //			LOG_FUNC_ARG(pThis)
@@ -2733,7 +2735,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 //        }
 //    }
 //
-//        
+//     leaveCriticalSection;   
 //
 //    return ret;
 //}
@@ -3330,6 +3332,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 		LOG_FUNC_END;
 
     LOG_UNIMPLEMENTED_DSOUND();
+
     if (!pvData) {
         pvData = g_MemoryManager.Allocate(dwDataSize); // TODO : FIXME : Shouldn't this be : *pvData = ...  ?!?
     }
@@ -3490,7 +3493,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(hFile)
         LOG_FUNC_ARG(dwMaxPackets)
-        LOG_FUNC_ARG(ppMediaObject)
+        LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
     LOG_UNIMPLEMENTED_DSOUND();
