@@ -3331,7 +3331,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 
     LOG_UNIMPLEMENTED_DSOUND();
     if (!pvData) {
-        pvData = g_MemoryManager.Allocate(dwDataSize);
+        pvData = g_MemoryManager.Allocate(dwDataSize); // TODO : FIXME : Shouldn't this be : *pvData = ...  ?!?
     }
 
     leaveCriticalSection;
@@ -3635,9 +3635,8 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
 
     ULONG Ret = 0;
 
-    if (pThis) {
-        pThis->EmuRefCount++;
-        Ret = pThis->EmuRefCount;
+    if (pThis) { // TODO : this should be an assert()
+        Ret = ++(pThis->EmuRefCount);
     }
 
     leaveCriticalSection;
@@ -3660,14 +3659,11 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
 
     ULONG Ret = 0;
 
-    if (pThis) {
-        pThis->EmuRefCount--;
-
-        if (pThis->EmuRefCount < 1) {
+    if (pThis) { // TODO : this should be an assert()
+        Ret = --(pThis->EmuRefCount);
+        if (Ret == 0) {
             delete pThis;
         }
-
-        Ret = pThis->EmuRefCount;
     }
 
     leaveCriticalSection;
