@@ -41,8 +41,6 @@
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
-// I am not sure if this is already included in the other includes. If it is, remove it
-#include "Shlwapi.h"
 
 #include <io.h>
 
@@ -148,18 +146,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
             dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
-
-            // Prevent using an incorrect path from the registry if the debug folders have been moved
-
-            if(PathFileExists((LPCSTR)m_CxbxDebugFilename) == FALSE)
-            {
-                m_CxbxDebugFilename = "";
-            }
-
-            if(PathFileExists((LPCSTR)m_KrnlDebugFilename) == FALSE)
-            {
-                m_KrnlDebugFilename = "";
-            }
 
             int v=0;
 
