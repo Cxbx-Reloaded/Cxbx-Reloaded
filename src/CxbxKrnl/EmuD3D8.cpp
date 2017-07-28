@@ -77,6 +77,7 @@ XTL::PIXEL_SHADER                  *g_CurrentPixelShader = NULL;
 BOOL                                g_bFakePixelShaderLoaded = FALSE;
 BOOL                                g_bIsFauxFullscreen = FALSE;
 BOOL								g_bHackUpdateSoftwareOverlay = FALSE;
+DWORD								g_CurrentFillMode = XTL::D3DFILL_SOLID;	// Used to backup/restore the fill mode when WireFrame is enabled
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -4787,7 +4788,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 	DWORD dwFillMode;
 
 	if(g_iWireframe == 0)
-        dwFillMode = D3DFILL_SOLID;
+        dwFillMode = g_CurrentFillMode;
     else if(g_iWireframe == 1)
         dwFillMode = D3DFILL_WIREFRAME;
     else
@@ -6903,8 +6904,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FillMode)
 
     DWORD dwFillMode;
 
+	g_CurrentFillMode = EmuXB2PC_D3DFILLMODE(Value);
+
     if(g_iWireframe == 0)
-        dwFillMode = EmuXB2PC_D3DFILLMODE(Value);
+        dwFillMode = g_CurrentFillMode;
     else if(g_iWireframe == 1)
         dwFillMode = D3DFILL_WIREFRAME;
     else
