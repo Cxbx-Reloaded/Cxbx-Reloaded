@@ -2487,9 +2487,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 // ******************************************************************
 // * patch: DirectSoundUseFullHRTF
 // ******************************************************************
-STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
-(
-    void)
+STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)(void)
 {
     FUNC_EXPORTS;
 
@@ -3625,7 +3623,9 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 // ******************************************************************
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject* pThis)
+ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
+(
+	X_XFileMediaObject* pThis)
 {
     FUNC_EXPORTS;
 
@@ -3648,7 +3648,9 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject* pThis)
 // ******************************************************************
 // * patch: XFileMediaObject_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject* pThis)
+ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
+(
+	X_XFileMediaObject* pThis)
 {
     FUNC_EXPORTS;
 
@@ -3676,7 +3678,9 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject* pThis)
 // ******************************************************************
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis)
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
+(
+	X_XFileMediaObject *pThis)
 {
     FUNC_EXPORTS;
 
