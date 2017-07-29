@@ -41,6 +41,7 @@
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
+#include "Shlwapi.h"
 
 #include <io.h>
 
@@ -141,11 +142,43 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+            dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeCxbxDebugFilename;
+			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
+			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+
+			// Prevent using an incorrect path from the registry if the debug folders have been moved
+
+			{
+				if(lErrCodeCxbxDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_CxbxDebugFilename) > strlen("\\CxbxDebug.txt"))
+				{
+					char *m_CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+
+					strncpy(m_CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+
+					if(PathFileExists((LPCSTR)m_CxbxDebugPath) == FALSE)
+					{
+						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+					}
+
+					free(m_CxbxDebugPath);
+				}
+				
+				if(lErrCodeKrnlDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_KrnlDebugFilename) > strlen("\\KrnlDebug.txt"))
+				{
+					char *m_KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+
+					strncpy(m_KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+
+					if(PathFileExists((LPCSTR)m_KrnlDebugPath) == FALSE)
+					{
+						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+					}
+
+					free(m_KrnlDebugPath);
+				}
+			}
 
             int v=0;
 
