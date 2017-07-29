@@ -23,7 +23,7 @@ We have a basic [compatibility list](https://github.com/Cxbx-Reloaded/Cxbx-Reloa
 ## Bug Reports
 As Cxbx-Reloaded is in early stages of development right now, most games will either crash or do nothing. Please do not submit issues for these games.
 
-Please report games that actually do something. If a game outputs graphics or audio before crashing, please submit a bug report containing the error message displayed (if any), screenshots, and an Xbe dump (this can be created via [Edit -> Dump Xbe Info To -> File]).
+Please report games that actually do something. If a game outputs graphics or audio before crashing, please submit a bug report containing the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File]) is selected.
 
 ## Screenshot Gallery
 You can find the regularly updated gallery at http://imgur.com/a/Bzvti.
