@@ -4,7 +4,7 @@
 // Desc: Additional infrastructure to extend the tuner.idl.  Works nicely
 //       from C++.
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -56,28 +56,28 @@ class TNTuningSpaceContainer : public PQTuningSpaceContainer {
 // tuning spaces
 template<class TUNINGSPACETYPE, class TUNEREQUESTTYPE> class TNTuningSpaceHelper : public TUNINGSPACETYPE {
 public:
-     TNTuningSpaceHelper() {}
-     TNTuningSpaceHelper(const TUNINGSPACETYPE &a) : TUNINGSPACETYPE(a) {}
-     TNTuningSpaceHelper(ITuningSpace *p) : TUNINGSPACETYPE(p) {}
-     TNTuningSpaceHelper(IUnknown *p) : TUNINGSPACETYPE(p) {}
-     TNTuningSpaceHelper(const TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE> &a) : TUNINGSPACETYPE(a) {}
-     TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& rhs) {
+    TNTuningSpaceHelper() {}
+    TNTuningSpaceHelper(const TUNINGSPACETYPE &a) : TUNINGSPACETYPE(a) {}
+    TNTuningSpaceHelper(ITuningSpace *p) : TUNINGSPACETYPE(p) {}
+    TNTuningSpaceHelper(IUnknown *p) : TUNINGSPACETYPE(p) {}
+    TNTuningSpaceHelper(const TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE> &a) : TUNINGSPACETYPE(a) {}
+    TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& rhs) {
         TUNINGSPACETYPE::operator=(rhs);
         return *this;
     }
-     TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(TUNINGSPACETYPE& rhs) {
+    TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(TUNINGSPACETYPE& rhs) {
         TUNINGSPACETYPE::operator=(rhs);
         return *this;
     }
-     TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(IUnknown *rhs) {
+    TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(IUnknown *rhs) {
         TUNINGSPACETYPE::operator=(rhs);
         return *this;
     }
-     TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(ITuningSpace *rhs) {
+    TNTuningSpaceHelper<TUNINGSPACETYPE, TUNEREQUESTTYPE>& operator=(ITuningSpace *rhs) {
         TUNINGSPACETYPE::operator=(rhs);
         return *this;
     }
-     bool  operator==(TUNINGSPACETYPE& rhs) {
+    bool  operator==(TUNINGSPACETYPE& rhs) {
         CComBSTR rhsname;
         HRESULT hr = rhs->get_UniqueName(&rhsname);
         if (FAILED(hr)) {
@@ -89,6 +89,9 @@ public:
             return false;
         }
         return name == rhsname;
+    }
+    bool  operator!=(TUNINGSPACETYPE& rhs) {
+        return !operator==(rhs);
     }
     PQTuneRequest CreateTuneRequest() {
         PQTuneRequest p;
@@ -632,9 +635,9 @@ public:
         PQLocator pc;
         HRESULT hr = (*this)->get_Locator(&pc);
         if (FAILED(hr)) {
-            return PQLocator();
+            return PQLocator().p;
         }
-        return pc;
+        return pc.p;
     }
     HRESULT Locator(LOCATORTYPE& pc) {
         _ASSERT(*this);

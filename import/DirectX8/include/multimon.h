@@ -10,7 +10,7 @@
 //
 // Exactly one source must include this with COMPILE_MULTIMON_STUBS defined.
 //
-// Copyright (c) 1985-1998, Microsoft Corporation
+// Copyright (c) Microsoft Corporation. All rights reserved. 
 //
 //=============================================================================
 

@@ -50,6 +50,7 @@ typedef struct _DMUS_BUFFERDESC
 #define DMUS_EFFECT_NONE             0x00000000
 #define DMUS_EFFECT_REVERB           0x00000001
 #define DMUS_EFFECT_CHORUS           0x00000002
+#define DMUS_EFFECT_DELAY            0x00000004
 
 /* For DMUS_PORTCAPS dwClass
  */ 

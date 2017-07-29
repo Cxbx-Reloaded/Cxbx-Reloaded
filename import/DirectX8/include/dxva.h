@@ -3,7 +3,7 @@
 //
 // Desc: DirectX Video Acceleration header file.
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -30,7 +30,6 @@ DEFINE_GUID(DXVA_ModeMPEG2_C, 0x1b81be0C, 0xa0c7,0x11d3,0xb9,0x84,0x00,0xc0,0x4f
 DEFINE_GUID(DXVA_ModeMPEG2_D, 0x1b81be0D, 0xa0c7,0x11d3,0xb9,0x84,0x00,0xc0,0x4f,0x2e,0x73,0xc5);
 
 DEFINE_GUID(DXVA_NoEncrypt,   0x1b81beD0, 0xa0c7,0x11d3,0xb9,0x84,0x00,0xc0,0x4f,0x2e,0x73,0xc5);
-DEFINE_GUID(DXVA_EncryptProt1, 0x1b81beD1, 0xa0c7,0x11d3,0xb9,0x84,0x00,0xc0,0x4f,0x2e,0x73,0xc5);
 
 #define DXVA_RESTRICTED_MODE_UNRESTRICTED        0xFFFF
 #define DXVA_RESTRICTED_MODE_H261_A              1
@@ -473,9 +472,12 @@ typedef struct _DXVA_ConfigAlphaCombine {
 
 /* AYUV sample for 16-entry YUV palette or graphic surface */
 
-typedef struct _DXVA_AYUVsample {
-  BYTE bSampleAlpha8, bY_Value, bCbValue, bCrValue;
-} DXVA_AYUVsample, *LPDXVA_AYUVsample;
+typedef struct _DXVA_AYUVsample2 {
+  BYTE bCrValue;
+  BYTE bCbValue;
+  BYTE bY_Value;
+  BYTE bSampleAlpha8;
+} DXVA_AYUVsample2, *LPDXVA_AYUVsample2;
 
 /* Macros for IA44 alpha blending surface samples */
 
@@ -526,35 +528,8 @@ typedef struct _DXVA_BlendCombination {
   WORD wBlendDelay;
   BYTE bBlendOn;
   BYTE bWholePlaneAlpha;
-  DXVA_AYUVsample OutsideYUVcolor;
+  DXVA_AYUVsample2 OutsideYUVcolor;
 } DXVA_BlendCombination, *LPDXVA_BlendCombination;
-
-
-/* Encryption Protocol #1 Data Structure */
-
-#define DXVA_MAX_URIsize  1024
-
-typedef struct _DXVA_EncryptProt1Data_Sign512_Accel512 {
-  DXVA_EncryptProtocolHeader header;
-
-  DWORD  dwSigningModulusSize;  /* equal to 64 */
-  BYTE   SigningModulusValue[64];
-  DWORD  dwSigningExponentSize; /* equal to 64 */
-  BYTE   SigningExponentValue[64];
-
-  DWORD  dwAccelModulusSize;    /* equal to 64 */
-  BYTE   AccelModulusValue[64];
-  DWORD  dwAccelExponentSize;   /* equal to 64 */
-  BYTE   AccelExponentValue[64];
-
-  DWORD  dwEncryptionFrequency;
-
-  DWORD  dwURIsize;
-  WCHAR  URIstring[DXVA_MAX_URIsize];
-
-  BYTE   Signature[64];
-} DXVA_EncryptProt1Data_Sign512_Accel512,
-  *LPDXVA_EncryptProt1Data_Sign512_Accel512;
 
 
 #pragma pack(push, 16)

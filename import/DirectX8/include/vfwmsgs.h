@@ -1285,6 +1285,15 @@
 #define VFW_E_CERTIFICATION_FAILURE      ((HRESULT)0x80040295L)
 
 //
+// MessageId: VFW_E_VMR_NOT_IN_MIXER_MODE
+//
+// MessageText:
+//
+//  The VMR has not yet created a mixing component.  That is, IVMRFilterConfig::SetNumberofStreams has not yet been called.%0
+//
+#define VFW_E_VMR_NOT_IN_MIXER_MODE      ((HRESULT)0x80040296L)
+
+//
 //
 // E_PROP_SET_UNSUPPORTED and E_PROP_ID_UNSUPPORTED are added here using
 // HRESULT_FROM_WIN32() because VC5 doesn't have WinNT's new error codes

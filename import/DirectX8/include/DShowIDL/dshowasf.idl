@@ -3,13 +3,13 @@
 //
 // Desc: 
 //
-// Copyright (c) 1992-2000, Microsoft Corporation. All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation. All rights reserved.
 //------------------------------------------------------------------------------
 
 
-import	"unknwn.idl";
-import	"objidl.idl";
-import	"strmif.idl";			// for media type and time definitions
+import  "unknwn.idl";
+import  "objidl.idl";
+import  "strmif.idl";           // for media type and time definitions
 import  "wmsdkidl.idl";
 
 cpp_quote( "EXTERN_GUID( IID_IConfigAsfWriter,0x45086030,0xF7E4,0x486a,0xB5,0x04,0x82,0x6B,0xB5,0x79,0x2A,0x3B );" )

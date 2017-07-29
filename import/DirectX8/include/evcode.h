@@ -3,7 +3,7 @@
 //
 // Desc: List of standard Quartz event codes and the expected params.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -61,6 +61,7 @@
 // DVD event codes           0x0100 - 0x0150 (dvdevcod.h)
 // audio device event codes  0x0200 - 0x0250 (audevcod.h)
 // WindowsMedia SDK-originated events 0x0251 - 0x0300 (see below)
+// MSVIDCTL                  0x0301 - 0x0325 (msvidctl.idl)
 
 #define EC_COMPLETE                         0x01
 // ( HRESULT, void ) : defaulted (special)
@@ -153,7 +154,7 @@
 // Notify application the previous pause request has completed
 
 
-#define EC_OPENING_FILE	                    0x10
+#define EC_OPENING_FILE                     0x10
 #define EC_BUFFERING_DATA                   0x11
 // ( BOOL, void ) : application
 // lParam1 == 1   --> starting to open file or buffer data
@@ -205,7 +206,7 @@
 // filter when too little data is arriving.
 
 
-#define EC_OLE_EVENT			    0x18
+#define EC_OLE_EVENT                        0x18
 // ( BSTR, BSTR ) : application
 // Sent by a filter to pass a text string to the application.
 // Conventionally, the first string is a type, and the second a parameter.
@@ -215,7 +216,7 @@
 // ( HWND, void ) : internal
 // Pass the window handle around during pin connection.
 
-#define EC_STREAM_CONTROL_STOPPED	    0x1A
+#define EC_STREAM_CONTROL_STOPPED           0x1A
 // ( IPin * pSender, DWORD dwCookie )
 // Notification that an earlier call to IAMStreamControl::StopAt
 // has now take effect.  Calls to the method can be marked
@@ -226,7 +227,7 @@
 // NB: IPin will point to the pin that actioned the Stop.  This
 // may not be the pin that the StopAt was sent to.
 
-#define EC_STREAM_CONTROL_STARTED	    0x1B
+#define EC_STREAM_CONTROL_STARTED           0x1B
 // ( IPin * pSender, DWORD dwCookie )
 // Notification that an earlier call to IAMStreamControl::StartAt
 // has now take effect.  Calls to the method can be marked
@@ -277,6 +278,7 @@
 // It is used to compute how many EC_END_OF_SEGMENT notifications
 // to expect at the end of a segment and as a consitency check
 
+
 #define EC_LENGTH_CHANGED                  0x1E
 // (void, void)
 // sent to indicate that the length of the "file" has changed
@@ -295,20 +297,28 @@
 // if the application issued some control request or because there
 // was a mode change etc etc
 
+// Event code 25 is reserved for future use.
 
-#define EC_SKIP_FRAMES                      0x25
-// ( nFramesToSkip, void ) : internal
-// Get the filter graph to seek accuratley.
-
-#define EC_TIMECODE_AVAILABLE			0x30
+#define EC_TIMECODE_AVAILABLE           0x30
 // Sent by filter supporting timecode
 // Param1 has a pointer to the sending object
 // Param2 has the device ID of the sending object
 
-#define EC_EXTDEVICE_MODE_CHANGE		0x31
+#define EC_EXTDEVICE_MODE_CHANGE        0x31
 // Sent by filter supporting IAMExtDevice
 // Param1 has the new mode
 // Param2 has the device ID of the sending object
+
+#define EC_STATE_CHANGE                    0x32
+// ( FILTER_STATE, BOOL bInternal)
+// Used to notify the application of any state changes in the filter graph.
+// lParam1  is of type enum FILTER_STATE (defined in strmif.h) and indicates
+//          the state of the filter graph.
+//
+// lParam2 == 0 indicates that the previous state change request has completed
+//              & a change in application state.
+// lParam2 == 1 reserved for future use to indicate internal state changes.
+
 
 #define EC_GRAPH_CHANGED                        0x50
 // Sent by filter to notify interesting graph changes
@@ -317,26 +327,89 @@
 // ( void, void ) : application
 // Used to notify the filter graph to unset the current graph clock.
 // Has the affect of forcing the filter graph to reestablish the graph clock
-// on the next Pause/Run (note that this is only used by ksproxy, when the pin 
+// on the next Pause/Run (note that this is only used by ksproxy, when the pin
 // of a clock providing filter is disconnected)
+
+#define EC_VMR_RENDERDEVICE_SET                 0x53
+// (Render_Device type, void)
+// Identifies the type of rendering mechanism the VMR
+// is using to display video.  Types used include:
+#define VMR_RENDER_DEVICE_OVERLAY       0x01
+#define VMR_RENDER_DEVICE_VIDMEM        0x02
+#define VMR_RENDER_DEVICE_SYSMEM        0x04
+
+
+#define EC_VMR_SURFACE_FLIPPED          0x54
+// (hr - Flip return code, void)
+// Identifies the VMR's allocator-presenter has called the DDraw flip api on
+// the surface being presented.   This allows the VMR to keep its DX-VA table
+// of DDraw surfaces in sync with DDraws flipping chain.
+
+#define EC_VMR_RECONNECTION_FAILED      0x55
+// (hr - ReceiveConnection return code, void)
+// Identifies that an upstream decoder tried to perform a dynamic format
+// change and the VMR was unable to accept the new format.
+
+
+
+//------------------------------------------
+//
+//  BDA events:
+//
+//      Event code 0x80 through 0x8f are reserved for BDA
+//
 
 
 //------------------------------------------
 //
 // WindowsMedia SDK filter-specific events:
+//
 // 
-#define EC_WMT_EVENT_BASE                   0x0251
+// Note that for EC_WMT_EVENT events the wmsdk-based filters use the following structure for 
+// passing event parameters to the app:
+#ifndef AM_WMT_EVENT_DATA_DEFINED
+#define AM_WMT_EVENT_DATA_DEFINED
+typedef struct {
+    HRESULT hrStatus;        // status code
+    void * pData;            // event data
+} AM_WMT_EVENT_DATA;
+#endif
+//
+#define EC_WMT_EVENT_BASE                  0x0251
 //
 #define EC_WMT_INDEX_EVENT                  EC_WMT_EVENT_BASE
 // WindowsMedia SDK-originated file indexing status, sent by WMSDK-based filters
 //
-// lParam1 is one of the enum WMT_STATUS messages listed below, sent by the WindowsMedia SDK 
-// lParam2 is specific to the lParam event 
+// lParam1 is one of the enum WMT_STATUS messages listed below, sent by the WindowsMedia SDK
+// lParam2 is specific to the lParam event
 //
 //     the following WMT_STATUS messages are sent for this event:
 //         WMT_STARTED        - lParam2 is 0
 //         WMT_CLOSED         - lParam2 is 0
 //         WMT_INDEX_PROGRESS - lParam2 is a DWORD containing the progress percent complete
 //
+#define EC_WMT_EVENT                        EC_WMT_EVENT_BASE+1
+// WindowsMedia SDK-originated event, sent by WMSDK-based filters
+//
+// lParam1 is one of the enum WMT_STATUS messages listed below, sent by the WindowsMedia SDK
+// lParam2 is a pointer an AM_WMT_EVENT_DATA structure where,
+//                          hrStatus is the status code sent by the wmsdk
+//                          pData is specific to the lParam1 event
+// 
+//     the following WMT_STATUS messages are sent by the WMSDK Reader filter for this event:
+//         WMT_NO_RIGHTS        - pData is a pointer to a WCHAR string containing a challenge URL
+//         WMT_ACQUIRE_LICENSE  - lParam2 is a pointer to a WM_GET_LICENSE_DATA struct
+//         WMT_NO_RIGHTS_EX     - lParam2 is a pointer to a WM_GET_LICENSE_DATA struct
+//         WMT_NEEDS_INDIVIDUALIZATION - lParam2 is NULL
+//         WMT_INDIVIDUALIZE    - lParam2 is a pointer to a WM_INDIVIDUALIZE_STATUS struct
+//
 // end WMSDK-originated events
 //-----------------------------------------
+
+
+#define EC_BUILT                            0x300
+// Sent to notify transition from unbuilt to built state
+
+
+#define EC_UNBUILT                          0x301
+// Sent to notify transtion from built to unbuilt state

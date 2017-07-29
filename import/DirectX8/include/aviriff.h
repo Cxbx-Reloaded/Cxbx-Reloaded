@@ -4,10 +4,10 @@
 // Desc: Structures and defines for the RIFF AVI file format extended to
 //       handle very large/long files.
 //
-// Copyright (c) 1996 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1996-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
-
+// Disable some compiler warnings
 #pragma warning(disable: 4097 4511 4512 4514 4705)
 
 
@@ -252,11 +252,11 @@ typedef struct _timecodedata {
 
 // index subtype codes
 //
-#define AVI_INDEX_SUB_DEFAULT     0x00
+#define AVI_INDEX_SUB_DEFAULT      0x00
 
 // INDEX_OF_CHUNKS subtype codes
 //
-#define AVI_INDEX_SUB_2FIELD      0x01
+#define AVI_INDEX_SUB_2FIELD       0x01
 
 // meta structure of all avi indexes
 //

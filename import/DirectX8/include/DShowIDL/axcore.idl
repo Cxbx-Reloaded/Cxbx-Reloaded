@@ -4,16 +4,16 @@
 // Desc: Core streaming interfaces.  Other ActiveMovie-only interfaces
 //       are in AXExtend.idl.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
 // include unknwn.idl and objidl.idl first
 
-
 #define CHARS_IN_GUID 39  // 128 bits, plus { - } punctuation and terminal null
                           // chars NOT BYTES in the standard representation
                           // e.g. {D3588AB0-0781-11ce-B03A-0020AF0BA770} + null
+
 cpp_quote("#define CHARS_IN_GUID     39")
 
 
@@ -23,17 +23,17 @@ cpp_quote("#define CHARS_IN_GUID     39")
 //=====================================================================
 //=====================================================================
 
-// there is a high-level media type (audio, compressed video,
+// There is a high-level media type (audio, compressed video,
 // mpeg video, midi). Within each type, there is a subtype (cinepak, pcm)
 // and a length+untyped data block defining the format in a
 // type-specific manner. EG for video/cinepak, the data block would be
 // a bitmapinfo.
-// the contents of the format block is defined by the formattype GUID
-// for example FORMAT_VideoInfo, FORMAT_WaveFormatEx. In the future this
+// The contents of the format block are defined by the formattype GUID.
+// For example, FORMAT_VideoInfo, FORMAT_WaveFormatEx. In the future, this
 // may be a pointer to an object supporting property style interfaces
 // in which case the GUID may be something like FORMAT_IUnknown. When
 // you are passed a media type you should check the format type, if
-// it isn't a type you recognise then don't touch the format block
+// it isn't a type you recognize, then don't touch the format block
 
 typedef struct _AMMediaType {
     GUID     majortype;
@@ -70,7 +70,7 @@ cpp_quote("#define MAX_FILTER_NAME  128")
 //=====================================================================
 // time information
 //
-// This represents a time (either reference or stream) in 100ns units
+// This represents a time (either reference or stream) in 100ns units.
 // The class library contains a CRefTime helper class
 // that supports simple comparison and arithmetic operations
 //=====================================================================
@@ -98,17 +98,17 @@ typedef DWORD_PTR HEVENT;
 //=====================================================================
 //=====================================================================
 typedef struct _AllocatorProperties {
-    	long cBuffers;	// count of buffers at this allocator
-	long cbBuffer;	// size of each buffer, excluding any prefix
+        long cBuffers;  // count of buffers at this allocator
+        long cbBuffer;  // size of each buffer, excluding any prefix
 
-    	// alignment of the buffer - buffer start will be aligned on a multiple of
+        // alignment of the buffer - buffer start will be aligned on a multiple of
         // this amount
-    	long cbAlign;
+        long cbAlign;
 
         // prefix amount. Each buffer is immediately preceeded by cbPrefix bytes.
-    	// note that GetPointer points to the beginning of the buffer proper.
+        // note that GetPointer points to the beginning of the buffer proper.
         // the prefix is aligned, i.e. (GetPointer() - cbPrefix) is aligned on cbAlign.
-    	long cbPrefix;
+        long cbPrefix;
 } ALLOCATOR_PROPERTIES;
 
 
@@ -197,9 +197,9 @@ interface IPin : IUnknown {
 
     // get information about the pin itself
     typedef struct _PinInfo {
-	IBaseFilter *pFilter;	// the filter this pin is on
-	PIN_DIRECTION dir;	// am I an input or output pin?
-	WCHAR achName[MAX_PIN_NAME];	// the name of this pin within this filter
+    IBaseFilter *pFilter;   // the filter this pin is on
+    PIN_DIRECTION dir;  // am I an input or output pin?
+    WCHAR achName[MAX_PIN_NAME];    // the name of this pin within this filter
     } PIN_INFO;
 
     HRESULT QueryPinInfo(
@@ -561,7 +561,7 @@ interface IMediaFilter : IPersist {
     typedef enum _FilterState {
         State_Stopped,            // not in use
         State_Paused,             // holding resources, ready to go
-        State_Running            // actively processing media stream
+        State_Running             // actively processing media stream
     } FILTER_STATE;
 
     // find out what state the filter is in.
@@ -650,8 +650,8 @@ interface IBaseFilter : IMediaFilter {
 
     // find out information about this filter
     typedef struct _FilterInfo {
-	WCHAR achName[MAX_FILTER_NAME]; // maybe null if not part of graph
-        IFilterGraph * pGraph; 	                 // null if not part of graph
+    WCHAR achName[MAX_FILTER_NAME]; // maybe null if not part of graph
+        IFilterGraph * pGraph;                   // null if not part of graph
     } FILTER_INFO;
 
     HRESULT QueryFilterInfo(
@@ -699,23 +699,23 @@ interface IReferenceClock : IUnknown {
 
     // get the time now
     HRESULT GetTime(
-    	[out] REFERENCE_TIME *pTime
+        [out] REFERENCE_TIME *pTime
     );
 
     // ask for an async notification that a time has elapsed
     HRESULT AdviseTime(
-    	[in] REFERENCE_TIME baseTime,	    // base reference time
-    	[in] REFERENCE_TIME streamTime,	    // stream offset time
-	[in] HEVENT hEvent,                 // advise via this event
-        [out] DWORD_PTR * pdwAdviseCookie       // where your cookie goes
+        [in] REFERENCE_TIME baseTime,       // base reference time
+        [in] REFERENCE_TIME streamTime,     // stream offset time
+    [in] HEVENT hEvent,                     // advise via this event
+        [out] DWORD_PTR * pdwAdviseCookie   // where your cookie goes
     );
 
     // ask for an async periodic notification that a time has elapsed
     HRESULT AdvisePeriodic(
-    	[in] REFERENCE_TIME startTime,	    // starting at this time
-        [in] REFERENCE_TIME periodTime,      // time between notifications
+        [in] REFERENCE_TIME startTime,      // starting at this time
+        [in] REFERENCE_TIME periodTime,     // time between notifications
         [in] HSEMAPHORE hSemaphore,         // advise via a semaphore
-	[out] DWORD_PTR * pdwAdviseCookie	    // where your cookie goes
+    [out] DWORD_PTR * pdwAdviseCookie       // where your cookie goes
     );
 
     // cancel a request for notification
@@ -772,16 +772,16 @@ interface IMediaSample : IUnknown {
 
     // get the stream time at which this sample should start and finish.
     HRESULT GetTime(
-    	[out] REFERENCE_TIME * pTimeStart,	// put time here
-	[out] REFERENCE_TIME * pTimeEnd
+        [out] REFERENCE_TIME * pTimeStart,  // put time here
+        [out] REFERENCE_TIME * pTimeEnd
     );
 
     // Set the stream time at which this sample should start and finish.
     // pTimeStart==pTimeEnd==NULL will invalidate the time stamps in
     // this sample
     HRESULT SetTime(
-    	[in] REFERENCE_TIME * pTimeStart,	// put time here
-	[in] REFERENCE_TIME * pTimeEnd
+        [in] REFERENCE_TIME * pTimeStart,   // put time here
+        [in] REFERENCE_TIME * pTimeEnd
     );
 
     // sync-point property. If true, then the beginning of this
@@ -816,16 +816,16 @@ interface IMediaSample : IUnknown {
 
     // get the media times for this sample
     HRESULT GetMediaTime(
-    	[out] LONGLONG * pTimeStart,
-	[out] LONGLONG * pTimeEnd
+        [out] LONGLONG * pTimeStart,
+        [out] LONGLONG * pTimeEnd
     );
 
     // Set the media times for this sample
     // pTimeStart==pTimeEnd==NULL will invalidate the media time stamps in
     // this sample
     HRESULT SetMediaTime(
-    	[in] LONGLONG * pTimeStart,
-	[in] LONGLONG * pTimeEnd
+        [in] LONGLONG * pTimeStart,
+        [in] LONGLONG * pTimeEnd
     );
 }
 
@@ -956,13 +956,20 @@ typedef IMediaSample2 *PMEDIASAMPLE2;
 // (keyframe) so now would be a bad time to return a buffer with a dynamic
 // format change, because you will be unable to switch to the new format without
 // waiting for the next sync point, causing some frames to be dropped.
-#define AM_GBF_PREVFRAMESKIPPED	1
-#define AM_GBF_NOTASYNCPOINT	2
+#define AM_GBF_PREVFRAMESKIPPED 1
+#define AM_GBF_NOTASYNCPOINT    2
 cpp_quote("#define AM_GBF_PREVFRAMESKIPPED 1")
 cpp_quote("#define AM_GBF_NOTASYNCPOINT 2")
 
 // This may not be supported by allocators
 cpp_quote("#define AM_GBF_NOWAIT 4")
+
+// This flag is supported by the VMR's surface allocator
+// When set the DDraw surface used for the media sample
+// is returned is an un-locked state.  Calls the GetPointer on
+// the returned media sample will fail and return a NULL pointer
+//
+cpp_quote("#define AM_GBF_NODDSURFACELOCK 8")
 
 //=====================================================================
 //=====================================================================
@@ -988,12 +995,12 @@ interface IMemAllocator : IUnknown {
     // Cannot be called unless the allocator is decommitted.
     // Calls to GetBuffer need not succeed until Commit is called.
     HRESULT SetProperties(
-		[in] ALLOCATOR_PROPERTIES* pRequest,
-		[out] ALLOCATOR_PROPERTIES* pActual);
+        [in] ALLOCATOR_PROPERTIES* pRequest,
+        [out] ALLOCATOR_PROPERTIES* pActual);
 
     // return the properties actually being used on this allocator
     HRESULT GetProperties(
-		[out] ALLOCATOR_PROPERTIES* pProps);
+        [out] ALLOCATOR_PROPERTIES* pProps);
 
 
     // commit the memory for the agreed buffers
@@ -1035,7 +1042,7 @@ typedef IMemAllocator *PMEMALLOCATOR;
 //
 // If the allocator supports IMemAllocator2 then callbacks are
 // available
-// 
+//
 //=====================================================================
 //=====================================================================
 [
@@ -1121,6 +1128,7 @@ interface IMemInputPin : IUnknown {
     // it may use the caller's thread to wait until it can.
     HRESULT Receive(
                 [in] IMediaSample * pSample);
+
     // Same as Receive but with multiple samples.  Useful for
     // fragmented streams
     HRESULT ReceiveMultiple(
@@ -1152,8 +1160,7 @@ pointer_default(unique)
 ]
 interface IAMovieSetup : IUnknown {
 
-    // methods to register and unregister
-    // filter, etc.
+    // methods to register and unregister filter, etc.
 
     HRESULT Register( );
     HRESULT Unregister( );
@@ -1172,18 +1179,18 @@ typedef IAMovieSetup *PAMOVIESETUP;
 
 typedef enum AM_SEEKING_SeekingFlags
 {
-    AM_SEEKING_NoPositioning		= 0x00,     // No change
-    AM_SEEKING_AbsolutePositioning	= 0x01,	    // Position is supplied and is absolute
-    AM_SEEKING_RelativePositioning	= 0x02,	    // Position is supplied and is relative
-    AM_SEEKING_IncrementalPositioning	= 0x03,	    // (Stop) position relative to current
-						    // Useful for seeking when paused (use +1)
-    AM_SEEKING_PositioningBitsMask	= 0x03,     // Useful mask
-    AM_SEEKING_SeekToKeyFrame		= 0x04,	    // Just seek to key frame (performance gain)
-    AM_SEEKING_ReturnTime		= 0x08,	    // Plug the media time equivalents back into the supplied LONGLONGs
+    AM_SEEKING_NoPositioning        = 0x00,     // No change
+    AM_SEEKING_AbsolutePositioning  = 0x01,     // Position is supplied and is absolute
+    AM_SEEKING_RelativePositioning  = 0x02,     // Position is supplied and is relative
+    AM_SEEKING_IncrementalPositioning   = 0x03, // (Stop) position relative to current
+                                                // Useful for seeking when paused (use +1)
+    AM_SEEKING_PositioningBitsMask  = 0x03,     // Useful mask
+    AM_SEEKING_SeekToKeyFrame       = 0x04,     // Just seek to key frame (performance gain)
+    AM_SEEKING_ReturnTime           = 0x08,     // Plug the media time equivalents back into the supplied LONGLONGs
 
-    AM_SEEKING_Segment                  = 0x10,     // At end just do EC_ENDOFSEGMENT,
-                                                    // don't do EndOfStream
-    AM_SEEKING_NoFlush                  = 0x20      // Don't flush
+    AM_SEEKING_Segment              = 0x10,     // At end just do EC_ENDOFSEGMENT,
+                                                // don't do EndOfStream
+    AM_SEEKING_NoFlush              = 0x20      // Don't flush
 } AM_SEEKING_SEEKING_FLAGS;
 
 typedef enum AM_SEEKING_SeekingCapabilities
@@ -1244,7 +1251,7 @@ interface IMediaSeeking : IUnknown {
     // Set current and end positions in one operation
     // Either pointer may be null, implying no change
     HRESULT SetPositions( [in,out] LONGLONG * pCurrent, [in] DWORD dwCurrentFlags
-			, [in,out] LONGLONG * pStop, [in] DWORD dwStopFlags );
+            , [in,out] LONGLONG * pStop, [in] DWORD dwStopFlags );
 
     // Get CurrentPosition & StopTime
     // Either pointer may be null, implying not interested
