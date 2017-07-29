@@ -967,7 +967,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_SampleAlpha, 5028, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4134, PATCH),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetModelView, 4134, PATCH),
