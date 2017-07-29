@@ -433,11 +433,7 @@ const char *D3DErrorString(HRESULT hResult)
 	static char buffer[1024];
 	buffer[0] = 0; // Reset static buffer!
 
-	// HACK: dxerr8.h is not working!
-	// But als long as we link with dxerr8.lib, this works :
-	const char*  __stdcall DXGetErrorString8A(HRESULT hr);
-
-	const char* errorCodeString = DXGetErrorString8A(hResult);
+	const char* errorCodeString = XTL::DXGetErrorString8A(hResult);
 	if (errorCodeString)
 	{
 		strcat(buffer, errorCodeString);
@@ -2193,6 +2189,131 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		*((DWORD*)XRefDataBase[XREF_D3DDEVICE]) = (DWORD)g_XboxD3DDevice;
 	}
 
+	// Finally, set all default render and texture states
+	// All commented out states are unsupported on this version of DirectX 8
+	g_pD3DDevice8->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+	g_pD3DDevice8->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
+	g_pD3DDevice8->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_ALPHAREF, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+	g_pD3DDevice8->SetRenderState(D3DRS_DESTBLEND, D3DCMP_ALWAYS);
+	g_pD3DDevice8->SetRenderState(D3DRS_ALPHAFUNC, D3DBLEND_ZERO);
+	g_pD3DDevice8->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+	g_pD3DDevice8->SetRenderState(D3DRS_DITHERENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+	g_pD3DDevice8->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN |
+		D3DCOLORWRITEENABLE_BLUE | D3DCOLORWRITEENABLE_ALPHA);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILREF, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILMASK, 0xffffffff);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILWRITEMASK, 0xffffffff);
+	g_pD3DDevice8->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BLENDCOLOR, 0);
+	//g_pD3DDevice8->SetRenderState(D3DRS_SWATHWIDTH, D3DSWATH_128);
+	//g_pD3DDevice8->SetRenderState(D3DRS_POLYGONOFFSETZSLOPESCALE, 0);
+	//g_pD3DDevice8->SetRenderState(D3DRS_POLYGONOFFSETZOFFSET, 0);
+	//g_pD3DDevice8->SetRenderState(D3DRS_POINTOFFSETENABLE, FALSE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_WIREFRAMEOFFSETENABLE, FALSE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_SOLIDOFFSETENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGSTART, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGEND, (DWORD)(1.0f));
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGDENSITY, (DWORD)(1.0f));
+	g_pD3DDevice8->SetRenderState(D3DRS_RANGEFOGENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_WRAP0, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_WRAP1, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_WRAP2, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_WRAP3, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, TRUE);
+	g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_LOCALVIEWER, TRUE);
+	g_pD3DDevice8->SetRenderState(D3DRS_COLORVERTEX, TRUE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKSPECULARMATERIALSOURCE, D3DMCS_COLOR2);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKDIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKAMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKEMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+	g_pD3DDevice8->SetRenderState(D3DRS_SPECULARMATERIALSOURCE, D3DMCS_COLOR2);
+	g_pD3DDevice8->SetRenderState(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
+	g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+	g_pD3DDevice8->SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKAMBIENT, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE, (DWORD)(1.0f));
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A, (DWORD)(1.0f));
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MAX, (DWORD)(64.0f));
+	g_pD3DDevice8->SetRenderState(D3DRS_PATCHEDGESTYLE, D3DPATCHEDGE_DISCRETE);
+	g_pD3DDevice8->SetRenderState(D3DRS_PATCHSEGMENTS, (DWORD)(1.0f));
+	//g_pD3DDevice8->SetRenderState(D3DRS_PSTEXTUREMODES, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, D3DVBF_DISABLE);
+	g_pD3DDevice8->SetRenderState(D3DRS_FOGCOLOR, 0);
+	g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+	//g_pD3DDevice8->SetRenderState(D3DRS_BACKFILLMODE, D3DFILL_SOLID);
+	//g_pD3DDevice8->SetRenderState(D3DRS_TWOSIDEDLIGHTING, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, D3DZB_USEW);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
+	//g_pD3DDevice8->SetRenderState(D3DRS_FRONTFACE, D3DFRONT_CW);
+	g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+	g_pD3DDevice8->SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffffff);
+	g_pD3DDevice8->SetRenderState(D3DRS_ZBIAS, 0);
+	//g_pD3DDevice8->SetRenderState(D3DRS_LOGICOP, D3DLOGICOP_NONE);
+	g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, FALSE);
+	g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
+	g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEMASK, 0xffffffff);
+	//g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEMODERENDERTARGETS, D3DMULTISAMPLEMODE_1X);
+	//g_pD3DDevice8->SetRenderState(D3DRS_SHADOWFUNC, D3DCMP_NEVER);	
+	//g_pD3DDevice8->SetRenderState(D3DRS_LINEWIDTH, (DWORD)(1.0f));
+	//g_pD3DDevice8->SetRenderState(D3DRS_DXT1NOISEENABLE, TRUE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_YUVENABLE, FALSE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_OCCLUSIONCULLENABLE, TRUE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_STENCILCULLENABLE, TRUE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_ROPZCMPALWAYSREAD, FALSE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_ROPZREAD, FALSE);
+	//g_pD3DDevice8->SetRenderState(D3DRS_DONOTCULLUNCOMPRESSED, FALSE);
+
+	// Xbox has 4 Texture Stages
+	for (int stage = 0; stage < 4; stage++)	{
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ADDRESSU, D3DTADDRESS_WRAP);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ADDRESSV, D3DTADDRESS_WRAP);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ADDRESSW, D3DTADDRESS_WRAP);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MAGFILTER, D3DTEXF_POINT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MINFILTER, D3DTEXF_POINT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MIPFILTER, D3DTEXF_NONE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MIPMAPLODBIAS, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MAXMIPLEVEL, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_MAXANISOTROPY, 1);
+		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORKEYOP, D3DTCOLORKEYOP_DISABLE);
+		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORSIGN, 0);
+		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAKILL, D3DTALPHAKILL_DISABLE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLOROP, D3DTOP_DISABLE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG0, D3DTA_CURRENT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG2, D3DTA_CURRENT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAARG0, D3DTA_CURRENT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_RESULTARG, D3DTA_CURRENT);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVMAT00, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVMAT01, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVMAT11, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVMAT10, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVLSCALE, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BUMPENVLOFFSET, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_TEXCOORDINDEX, 0);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BORDERCOLOR, 0);
+		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORKEYCOLOR, 0);
+	}
     return g_EmuCDPD.hRet;
 }
 
