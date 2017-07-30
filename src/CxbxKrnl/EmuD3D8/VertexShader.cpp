@@ -2213,14 +2213,18 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
 		{
-			EmuWarning("Cannot assemble empty vertex shader!");
-			EmuWarning("Attempting to use vertex declaration instead...");
+			EmuWarning("Replacing empty vertex shader with fallback");
 
-			// Attempt to use the vertex declaration for a fixed pipeline
-			// vertex shader instead...
-			*pbUseDeclarationOnly = 1;
+			static const char dummy[] =
+				"vs.1.1\n"
+				"mov oPos, v0\n";
 
-			hRet = S_OK;
+			hRet = D3DXAssembleShader(dummy,
+				strlen(dummy),
+				D3DXASM_SKIPVALIDATION,
+				NULL,
+				ppRecompiled,
+				NULL);
 		}
 		else
 		{
