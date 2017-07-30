@@ -42,8 +42,8 @@
 
 typedef struct {
 	DWORD Ignored[0x10];
-	DWORD Put; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
-	DWORD Get; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
+	DWORD* Put; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
+	DWORD* Get; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
 	DWORD Reference; // TODO : xbaddr / void* / DWORD ? 
 	DWORD Ignored2[0x7ED];
 } Nv2AControlDma;
