@@ -456,6 +456,17 @@ typedef struct _FILE_FS_SIZE_INFORMATION
 FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
 // ******************************************************************
+// * FILE_FS_VOLUME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+	LARGE_INTEGER	VolumeCreationTime;
+	ULONG			VolumeSerialNumber;
+	ULONG			VolumeLabelLength;
+	BOOLEAN			SupportsObjects;
+	CHAR			VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
+// ******************************************************************
 // * FILE_INFORMATION_CLASS
 // ******************************************************************
 typedef enum _FILE_INFORMATION_CLASS
