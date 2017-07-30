@@ -36,6 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 #include "xxhash32.h"
+#include <condition_variable>		 
 
 // prevent name collisions
 namespace xboxkrnl
@@ -89,6 +90,7 @@ static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeigh
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
+static BOOL                         g_bSupportsP8   = FALSE;// Does device support palette textures?																									
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -100,6 +102,8 @@ static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
+static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
+static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank																						 																		 
 static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback routine
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
@@ -510,9 +514,9 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+            SwitchToThread(); 
 
-        Sleep(50);
+		SwitchToThread();
     }
 
 	SetFocus(g_hEmuWindow);
@@ -1201,7 +1205,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             }
             else
             {
-                Sleep(10);
+                SwitchToThread();
 
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)
@@ -1403,6 +1407,16 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return D3D_OK; // = 0
 }
 
+static clock_t GetNextVBlankTime()
+{
+	// TODO: Read display frequency from Xbox Display Adapter
+	// This is accessed by calling CMiniport::GetRefreshRate(); 
+	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
+	// This will require at least Direct3D_CreateDevice being unpatched
+	// otherwise, m_CurrentAvInfo will never be initialised!
+	return clock() + (CLOCKS_PER_SEC / 60);
+}						 
+
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
@@ -1411,15 +1425,15 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 
-    timeBeginPeriod(0);
-
     // current vertical blank count
     int curvb = 0;
 
+	// Calculate Next VBlank time
+	clock_t nextVBlankTime = GetNextVBlankTime();						  
     while(true)
     {
-        xboxkrnl::KeTickCount = timeGetTime();
-        Sleep(1);
+        xboxkrnl::KeTickCount = timeGetTime();	
+		SwitchToThread();
 
         //
         // Poll input
@@ -1463,9 +1477,17 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
             }
         }
 
-        // trigger vblank callback
+		// If VBlank Interval has passed, trigger VBlank callback
+        // Note: This whole code block can be removed once NV2A interrupts are implemented
+		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
+		if (clock() > nextVBlankTime)
         {
-            g_VBData.VBlank++;
+			nextVBlankTime = GetNextVBlankTime();
+
+			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+			g_VBData.VBlank++;
+			g_VBConditionVariable.notify_all();
 
 			// TODO: Fixme.  This may not be right...
 			g_SwapData.SwapVBlank = 1;
@@ -1489,7 +1511,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
         }
     }
 
-    timeEndPeriod(0);
+
 }
 
 // thread dedicated to create devices
@@ -1631,6 +1653,12 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
    
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+				// Does this device support paletized textures?
+				g_bSupportsP8 = g_pD3D8->CheckDeviceFormat(
+					g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+					(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+					XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_P8) == D3D_OK;
 
 	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
@@ -6598,22 +6626,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 
 	LOG_FUNC();
 
-    // segaGT tends to freeze with this on
-//    if(g_XBVideo.GetVSync()) {
-//        HRESULT hRet = g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-//        DEBUG_D3DRESULT(hRet, "g_pDD7->WaitForVerticalBlank");
-//    }
-
-	// HACK: For many games (when used in mutithreaded code), using 
-	// DDraw::WaitForVerticalBlank will wreak havoc on CPU usage and really
-	// slow things down. This is the case for various SEGA and other Japanese
-	// titles.  On Xbox, it isn't a big deal, but for PC, I can't even
-	// guarantee this is a good idea.  So instead, I'll be "faking" 
-	// the vertical blank thing.
-
-	Sleep( 1000/60 );
-
-	LOG_INCOMPLETE();
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_VBConditionVariable.wait(lk);
 }
 
 // ******************************************************************
