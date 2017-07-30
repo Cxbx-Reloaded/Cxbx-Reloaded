@@ -68,7 +68,7 @@ CRITICAL_SECTION dbgCritical;
 // Global Variable(s)
 HANDLE           g_hCurDir    = NULL;
 CHAR            *g_strCurDrive= NULL;
-volatile bool    g_bEmuException = false;
+volatile thread_local  bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_XInputEnabled = false;
@@ -190,7 +190,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 		printf("[0x%X] EmuMain: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
 
-		e->ContextRecord->Eip += 1; // TODO : Skip actual instruction size bytes
+		e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip instruction size bytes
 
 		return true;
 	}

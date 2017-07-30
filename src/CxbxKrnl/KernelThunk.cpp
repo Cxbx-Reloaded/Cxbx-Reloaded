@@ -173,7 +173,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeGetCurrentIrql),                    // 0x0067 (103)
 	(uint32)FUNC(&xboxkrnl::KeGetCurrentThread),                  // 0x0068 (104)
 	(uint32)FUNC(&xboxkrnl::KeInitializeApc),                     // 0x0069 (105)
-	(uint32)PANIC(0x006A),                                        // 0x006A (106) KeInitializeDeviceQueue
+	(uint32)FUNC(&xboxkrnl::KeInitializeDeviceQueue),             // 0x006A (106)
 	(uint32)FUNC(&xboxkrnl::KeInitializeDpc),                     // 0x006B (107)
 	(uint32)FUNC(&xboxkrnl::KeInitializeEvent),                   // 0x006C (108)
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),               // 0x006D (109)
@@ -181,40 +181,40 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInitializeQueue),                   // 0x006F (111)
 	(uint32)FUNC(&xboxkrnl::KeInitializeSemaphore),               // 0x0070 (112)
 	(uint32)FUNC(&xboxkrnl::KeInitializeTimerEx),                 // 0x0071 (113)
-	(uint32)PANIC(0x0072),                                        // 0x0072 (114) KeInsertByKeyDeviceQueue
-	(uint32)PANIC(0x0073),                                        // 0x0073 (115) KeInsertDeviceQueue
-	(uint32)PANIC(0x0074),                                        // 0x0074 (116) KeInsertHeadQueue
-	(uint32)PANIC(0x0075),                                        // 0x0075 (117) KeInsertQueue
-	(uint32)PANIC(0x0076),                                        // 0x0076 (118) KeInsertQueueApc
+	(uint32)FUNC(&xboxkrnl::KeInsertByKeyDeviceQueue),            // 0x0072 (114)
+	(uint32)FUNC(&xboxkrnl::KeInsertDeviceQueue),                 // 0x0073 (115)
+	(uint32)FUNC(&xboxkrnl::KeInsertHeadQueue),                   // 0x0074 (116)
+	(uint32)FUNC(&xboxkrnl::KeInsertQueue),                       // 0x0075 (117)
+	(uint32)FUNC(&xboxkrnl::KeInsertQueueApc),                    // 0x0076 (118)
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                    // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                     // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)FUNC(&xboxkrnl::KeIsExecutingDpc),                    // 0x0079 (121)
 	(uint32)FUNC(&xboxkrnl::KeLeaveCriticalRegion),               // 0x007A (122)
-	(uint32)PANIC(0x007B),                                        // 0x007B (123) KePulseEvent
-	(uint32)PANIC(0x007C),                                        // 0x007C (124) KeQueryBasePriorityThread
+	(uint32)FUNC(&xboxkrnl::KePulseEvent),                        // 0x007B (123)
+	(uint32)FUNC(&xboxkrnl::KeQueryBasePriorityThread),           // 0x007C (124)
 	(uint32)FUNC(&xboxkrnl::KeQueryInterruptTime),                // 0x007D (125)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceCounter),           // 0x007E (126)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceFrequency),         // 0x007F (127)
 	(uint32)FUNC(&xboxkrnl::KeQuerySystemTime),                   // 0x0080 (128)
 	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToDpcLevel),               // 0x0081 (129)
 	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToSynchLevel),             // 0x0082 (130)
-	(uint32)PANIC(0x0083),                                        // 0x0083 (131) KeReleaseMutant
-	(uint32)PANIC(0x0084),                                        // 0x0084 (132) KeReleaseSemaphore
-	(uint32)PANIC(0x0085),                                        // 0x0085 (133) KeRemoveByKeyDeviceQueue
-	(uint32)PANIC(0x0086),                                        // 0x0086 (134) KeRemoveDeviceQueue
-	(uint32)PANIC(0x0087),                                        // 0x0087 (135) KeRemoveEntryDeviceQueue
-	(uint32)PANIC(0x0088),                                        // 0x0088 (136) KeRemoveQueue
+	(uint32)FUNC(&xboxkrnl::KeReleaseMutant),                     // 0x0083 (131)
+	(uint32)FUNC(&xboxkrnl::KeReleaseSemaphore),                  // 0x0084 (132)
+	(uint32)FUNC(&xboxkrnl::KeRemoveByKeyDeviceQueue),            // 0x0085 (133)
+	(uint32)FUNC(&xboxkrnl::KeRemoveDeviceQueue),                 // 0x0086 (134)
+	(uint32)FUNC(&xboxkrnl::KeRemoveEntryDeviceQueue),            // 0x0087 (135)
+	(uint32)FUNC(&xboxkrnl::KeRemoveQueue),                       // 0x0088 (136)
 	(uint32)FUNC(&xboxkrnl::KeRemoveQueueDpc),                    // 0x0089 (137)
 	(uint32)FUNC(&xboxkrnl::KeResetEvent),                        // 0x008A (138)
 	(uint32)FUNC(&xboxkrnl::KeRestoreFloatingPointState),         // 0x008B (139)
 	(uint32)FUNC(&xboxkrnl::KeResumeThread),                      // 0x008C (140)
-	(uint32)PANIC(0x008D),                                        // 0x008D (141) KeRundownQueue
+	(uint32)FUNC(&xboxkrnl::KeRundownQueue),                      // 0x008D (141)
 	(uint32)FUNC(&xboxkrnl::KeSaveFloatingPointState),            // 0x008E (142)
 	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),             // 0x008F (143)
-	(uint32)PANIC(0x0090),                                        // 0x0090 (144) KeSetDisableBoostThread
+	(uint32)FUNC(&xboxkrnl::KeSetDisableBoostThread),             // 0x0090 (144)
 	(uint32)FUNC(&xboxkrnl::KeSetEvent),                          // 0x0091 (145)
-	(uint32)PANIC(0x0092),                                        // 0x0092 (146) KeSetEventBoostPriority
-	(uint32)PANIC(0x0093),                                        // 0x0093 (147) KeSetPriorityProcess
+	(uint32)FUNC(&xboxkrnl::KeSetEventBoostPriority),             // 0x0092 (146)
+	(uint32)FUNC(&xboxkrnl::KeSetPriorityProcess),                // 0x0093 (147)
 	(uint32)FUNC(&xboxkrnl::KeSetPriorityThread),                 // 0x0094 (148)
 	(uint32)FUNC(&xboxkrnl::KeSetTimer),                          // 0x0095 (149)
 	(uint32)FUNC(&xboxkrnl::KeSetTimerEx),                        // 0x0096 (150)
@@ -258,7 +258,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtCreateDirectoryObject),             // 0x00BC (188)
 	(uint32)FUNC(&xboxkrnl::NtCreateEvent),                       // 0x00BD (189)
 	(uint32)FUNC(&xboxkrnl::NtCreateFile),                        // 0x00BE (190)
-	(uint32)PANIC(0x00BF),                                        // 0x00BF (191) NtCreateIoCompletion
+	(uint32)FUNC(&xboxkrnl::NtCreateIoCompletion),                // 0x00BF (191)
 	(uint32)FUNC(&xboxkrnl::NtCreateMutant),                      // 0x00C0 (192)
 	(uint32)FUNC(&xboxkrnl::NtCreateSemaphore),                   // 0x00C1 (193)
 	(uint32)FUNC(&xboxkrnl::NtCreateTimer),                       // 0x00C2 (194)

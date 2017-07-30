@@ -37,6 +37,7 @@
 #include "DlgAbout.h"
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
+#include "DlgAudioConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
@@ -79,15 +80,15 @@ void ClearHLECache()
 	printf("Cleared HLE Cache\n");
 }
 
-WndMain::WndMain(HINSTANCE x_hInstance) : 
-	Wnd(x_hInstance), 
-	m_bCreated(false), 
-	m_Xbe(0), 
-	m_bXbeChanged(false), 
-	m_bCanStart(true), 
-	m_hwndChild(NULL), 
-	m_KrnlDebug(DM_NONE), 
-	m_CxbxDebug(DM_NONE), 
+WndMain::WndMain(HINSTANCE x_hInstance) :
+	Wnd(x_hInstance),
+	m_bCreated(false),
+	m_Xbe(0),
+	m_bXbeChanged(false),
+	m_bCanStart(true),
+	m_hwndChild(NULL),
+	m_KrnlDebug(DM_NONE),
+	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_dwRecentXbe(0)
 {
@@ -904,6 +905,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ShowVideoConfig(hwnd);
 				break;
 
+            case ID_SETTINGS_CONFIG_AUDIO:
+                ShowAudioConfig(hwnd);
+                break;
+
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
 				ClearHLECache();
@@ -1066,7 +1071,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_XINPUT: 
+			case ID_SETTINGS_XINPUT:
 				m_XInputEnabled = !m_XInputEnabled;
 				RefreshMenus();
 				break;
@@ -1219,7 +1224,7 @@ void WndMain::RefreshMenus()
 
             // enable/disable save .xbe file as
             EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
-			
+
             // recent xbe files menu
             {
                 HMENU rxbe_menu = GetSubMenu(file_menu, 6);

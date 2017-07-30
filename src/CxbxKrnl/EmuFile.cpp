@@ -248,6 +248,21 @@ NTSTATUS _CxbxConvertFilePath(
 				RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
 			// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
 		}
+		if (NtSymbolicLinkObject == NULL) {
+			// Check if the path accesses a partition from Harddisk0 :
+			if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0)
+			{
+				XboxFullPath = RelativePath;
+				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
+				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
+				// And set Root to the folder containing the partition-folders :
+				*RootDirectory = CxbxBasePathHandle;
+				HostPath = CxbxBasePath;
+			} else {
+				// Finally, Assume relative to Xbe path
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+			}
+		}
 
 		if (NtSymbolicLinkObject != NULL)
 		{
@@ -264,22 +279,6 @@ NTSTATUS _CxbxConvertFilePath(
 
 			XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
 			*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
-		}
-		else
-		{
-			// No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
-			if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) != 0)
-			{
-				EmuWarning((("Path not available : ") + OriginalPath).c_str());
-				return STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
-			}
-
-			XboxFullPath = RelativePath;
-			// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-			RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-			// And set Root to the folder containing the partition-folders :
-			*RootDirectory = CxbxBasePathHandle;
-			HostPath = CxbxBasePath;
 		}
 
 		// Check for special case : Partition0
@@ -331,6 +330,18 @@ NTSTATUS CxbxObjectAttributesToNT(
 	std::string ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
 	std::wstring RelativeHostPath;
 	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
+
+	// Handle special root directory constants
+	if (RootDirectory == (NtDll::HANDLE)-4) { 
+		RootDirectory = NULL;
+
+		if (ObjectName.size() == 0){
+			ObjectName = "\\BaseNamedObjects";
+		} else {
+			ObjectName = "\\BaseNamedObjects\\" + ObjectName;
+		}
+	}
+
 	// Is there a filename API given?
 	if (aFileAPIName.size() > 0)
 	{
@@ -439,6 +450,14 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 		{
 			// Look up the partition in the list of pre-registered devices :
 			result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
+
+			// If aFullPath starts with a Drive letter, find the originating path and substitute that
+			if (aFullPath[1] == ':' && aFullPath[0] >= 'A' && aFullPath[0] <= 'Z') {
+				EmuNtSymbolicLinkObject* DriveLetterLink = FindNtSymbolicLinkObjectByDriveLetter(aFullPath[0]);
+				if (DriveLetterLink != NULL) {
+					aFullPath = DriveLetterLink->XboxSymbolicLinkPath;
+				}
+			}
 
  		    // Make a distinction between Xbox paths (starting with '\Device'...) and host paths :
 			IsHostBasedPath = _strnicmp(aFullPath.c_str(), DevicePrefix.c_str(), DevicePrefix.length()) != 0;

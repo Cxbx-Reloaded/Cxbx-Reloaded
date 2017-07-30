@@ -32,7 +32,8 @@
 // *  (c) 2016 Luke Usher <luke.usher@outlook.com>
 // * 
 // *  EmuNV2A.cpp is heavily based on code from XQEMU
-// *  (c) XQEMU Team
+// *  Copyright(c) 2012 espes
+// *  Copyright(c) 2015 Jannik Vogel
 // *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
 // * 
 // *  All rights reserved
@@ -59,6 +60,7 @@
 #include <gl\glew.h>
 #include <gl\GL.h>
 #include <gl\GLU.h>
+#include <cassert>
 //#include <gl\glut.h>
 
 #define NV_PMC_ADDR      0x00000000
@@ -97,7 +99,7 @@
 #define NV_PRAMDAC_SIZE             0x001000
 #define NV_PRMDIO_ADDR   0x00681000
 #define NV_PRMDIO_SIZE              0x001000
-#define NV_PRAMIN_ADDR   0x00710000
+#define NV_PRAMIN_ADDR   0x00700000
 #define NV_PRAMIN_SIZE              0x100000
 #define NV_USER_ADDR     0x00800000
 #define NV_USER_SIZE                0x800000
@@ -578,6 +580,7 @@ DEVICE_READ32(PMC)
 		break;
 	default:
 		DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
+		break;
 	}
 
 	DEVICE_READ32_END(PMC);
@@ -597,6 +600,7 @@ DEVICE_WRITE32(PMC)
 
 	default: 
 		DEVICE_WRITE32_REG(pmc); // Was : DEBUG_WRITE32_UNHANDLED(PMC);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PMC);
@@ -619,6 +623,7 @@ DEVICE_READ32(PBUS)
 
 	default: 
 		DEBUG_READ32_UNHANDLED(PBUS); // TODO : DEVICE_READ32_REG(pbus);
+		break;
 	}
 
 	DEVICE_READ32_END(PBUS);
@@ -632,6 +637,7 @@ DEVICE_WRITE32(PBUS)
 		break;
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PBUS); // TODO : DEVICE_WRITE32_REG(pbus);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PBUS);
@@ -641,6 +647,12 @@ DEVICE_WRITE32(PBUS)
 DEVICE_READ32(PFIFO)
 {
 	DEVICE_READ32_SWITCH() {
+	case NV_PFIFO_RAMHT:
+		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
+		break;
+	case NV_PFIFO_RAMFC:
+		result = 0x00890110; // = ? | NV_PFIFO_RAMFC_SIZE_2K | ?
+		break;
 	case NV_PFIFO_INTR_0:
 		result = pfifo.pending_interrupts;
 		break;
@@ -652,6 +664,7 @@ DEVICE_READ32(PFIFO)
 		break;
 	default:
 		DEVICE_READ32_REG(pfifo); // Was : DEBUG_READ32_UNHANDLED(PFIFO);
+		break;
 	}
 
 	DEVICE_READ32_END(PFIFO);
@@ -670,6 +683,7 @@ DEVICE_WRITE32(PFIFO)
 		break;
 	default: 
 		DEVICE_WRITE32_REG(pfifo); // Was : DEBUG_WRITE32_UNHANDLED(PFIFO);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PFIFO);
@@ -681,6 +695,7 @@ DEVICE_READ32(PRMA)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PRMA); // TODO : DEVICE_READ32_REG(prma);
+		break;
 	}
 
 	DEVICE_READ32_END(PRMA);
@@ -691,6 +706,7 @@ DEVICE_WRITE32(PRMA)
 	switch(addr) {
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PRMA); // TODO : DEVICE_WRITE32_REG(prma);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRMA);
@@ -706,6 +722,7 @@ DEVICE_READ32(PVIDEO)
 		break;
 	default:
 		DEVICE_READ32_REG(pvideo);
+		break;
 	}
 
 	DEVICE_READ32_END(PVIDEO);
@@ -716,6 +733,7 @@ DEVICE_WRITE32(PVIDEO)
 	switch (addr) {
 	default:
 		DEVICE_WRITE32_REG(pvideo);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PVIDEO);
@@ -726,6 +744,7 @@ DEVICE_READ32(PCOUNTER)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PCOUNTER); // TODO : DEVICE_READ32_REG(pcounter);
+		break;
 	}
 
 	DEVICE_READ32_END(PCOUNTER);
@@ -736,6 +755,7 @@ DEVICE_WRITE32(PCOUNTER)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PCOUNTER); // TODO : DEVICE_WRITE32_REG(pcounter);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PCOUNTER);
@@ -762,6 +782,7 @@ DEVICE_READ32(PTIMER)
 		break;
 	default: 
 		DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
+		break;
 	}
 
 	DEVICE_READ32_END(PTIMER);
@@ -792,6 +813,7 @@ DEVICE_WRITE32(PTIMER)
 
 	default: 
 		DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PTIMER);
@@ -803,6 +825,7 @@ DEVICE_READ32(PVPE)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
+		break;
 	}
 
 	DEVICE_READ32_END(PVPE);
@@ -814,6 +837,7 @@ DEVICE_WRITE32(PVPE)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PVPE);
@@ -825,6 +849,7 @@ DEVICE_READ32(PTV)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PTV); // TODO : DEVICE_READ32_REG(ptv);
+		break;
 	}
 
 	DEVICE_READ32_END(PTV);
@@ -835,6 +860,7 @@ DEVICE_WRITE32(PTV)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PTV); // TODO : DEVICE_WRITE32_REG(ptv);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PTV);
@@ -846,6 +872,7 @@ DEVICE_READ32(PRMFB)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PRMFB); // TODO : DEVICE_READ32_REG(prmfb);
+		break;
 	}
 
 	DEVICE_READ32_END(PRMFB);
@@ -856,6 +883,7 @@ DEVICE_WRITE32(PRMFB)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PRMFB); // TODO : DEVICE_WRITE32_REG(prmfb);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRMFB);
@@ -867,6 +895,7 @@ DEVICE_READ32(PRMVIO)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PRMVIO); // TODO : DEVICE_READ32_REG(prmvio);
+		break;
 	}
 
 	DEVICE_READ32_END(PRMVIO);
@@ -877,6 +906,7 @@ DEVICE_WRITE32(PRMVIO)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PRMVIO); // TODO : DEVICE_WRITE32_REG(prmvio);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRMVIO);
@@ -893,10 +923,11 @@ DEVICE_READ32(PFB)
 		result = CONTIGUOUS_MEMORY_SIZE;
 		break;
 	case NV_PFB_WBC:
-		result = 0; // Flush not pending
+		result = 0; // = !NV_PFB_WBC_FLUSH
 		break;
 	default:
 		DEVICE_READ32_REG(pfb);
+		break;
 	}
 
 	DEVICE_READ32_END(PFB);
@@ -907,6 +938,7 @@ DEVICE_WRITE32(PFB)
 	switch (addr) {
 	default:
 		DEVICE_WRITE32_REG(pfb);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PFB);
@@ -918,6 +950,7 @@ DEVICE_READ32(PSTRAPS)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PSTRAPS);
+		break;
 	}
 
 	DEVICE_READ32_END(PSTRAPS);
@@ -928,6 +961,7 @@ DEVICE_WRITE32(PSTRAPS)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PSTRAPS);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PSTRAPS);
@@ -1003,6 +1037,7 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	default: 
 		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PGRAPH);
@@ -1024,6 +1059,7 @@ DEVICE_READ32(PCRTC)
 		break;
 	default: 
 		DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
+		break;
 	}
 
 	DEVICE_READ32_END(PCRTC);
@@ -1047,6 +1083,7 @@ DEVICE_WRITE32(PCRTC)
 
 	default: 
 		DEVICE_WRITE32_REG(pcrtc); // Was : DEBUG_WRITE32_UNHANDLED(PCRTC);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PCRTC);
@@ -1058,6 +1095,7 @@ DEVICE_READ32(PRMCIO)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PRMCIO);
+		break;
 	}
 
 	DEVICE_READ32_END(PRMCIO);
@@ -1068,6 +1106,7 @@ DEVICE_WRITE32(PRMCIO)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PRMCIO); // TODO : DEVICE_WRITE32_REG(prmcio);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRMCIO);
@@ -1097,6 +1136,7 @@ DEVICE_READ32(PRAMDAC)
 
 	default: 
 		DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
+		break;
 	}
 
 	DEVICE_READ32_END(PRAMDAC);
@@ -1132,6 +1172,7 @@ DEVICE_WRITE32(PRAMDAC)
 
 	default: 
 		DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRAMDAC);
@@ -1143,6 +1184,7 @@ DEVICE_READ32(PRMDIO)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(PRMDIO);
+		break;
 	}
 
 	DEVICE_READ32_END(PRMDIO);
@@ -1153,6 +1195,7 @@ DEVICE_WRITE32(PRMDIO)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(PRMDIO);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRMDIO);
@@ -1164,6 +1207,7 @@ DEVICE_READ32(PRAMIN)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEVICE_READ32_REG(pramin);
+		break;
 	}
 
 	DEVICE_READ32_END(PRAMIN);
@@ -1174,6 +1218,7 @@ DEVICE_WRITE32(PRAMIN)
 	switch (addr) {
 	default:
 		DEVICE_WRITE32_REG(pramin);
+		break;
 	}
 
 	DEVICE_WRITE32_END(PRAMIN);
@@ -1185,6 +1230,7 @@ DEVICE_READ32(USER)
 	DEVICE_READ32_SWITCH() {
 	default:
 		DEBUG_READ32_UNHANDLED(USER);
+		break;
 	}
 
 	DEVICE_READ32_END(USER);
@@ -1195,6 +1241,7 @@ DEVICE_WRITE32(USER)
 	switch (addr) {
 	default:
 		DEBUG_WRITE32_UNHANDLED(USER);
+		break;
 	}
 
 	DEVICE_WRITE32_END(USER);
@@ -1318,7 +1365,7 @@ static const NV2ABlockInfo regions[] = {{
 		EmuNV2A_PRMDIO_Write32,
 	}, {
 		/* RAMIN access */
-		NV_PRAMIN_ADDR, // = 0x710000
+		NV_PRAMIN_ADDR, // = 0x700000
 		NV_PRAMIN_SIZE, // = 0x100000
 		EmuNV2A_PRAMIN_Read32,
 		EmuNV2A_PRAMIN_Write32,
@@ -1353,28 +1400,68 @@ const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
 	return nullptr;
 }
 
-uint32_t EmuNV2A_Read32(xbaddr addr)
+uint32_t EmuNV2A_Read(xbaddr addr, int size)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 	if (block != nullptr) {
-		return block->read(addr - block->offset);
+		switch (size) {
+			case 8:
+				return block->read(addr - block->offset) & 0xFF;
+			case 16:
+				return block->read(addr - block->offset) & 0xFFFF;
+			case 32:
+				return block->read(addr - block->offset);
+			default:
+				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
+				return 0;
+		}
 	}
 
-	EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
+	EmuWarning("EmuNV2A_Read%d: Unhandled Read Address %08X", size, addr);
 	return 0;
 }
 
-void EmuNV2A_Write32(xbaddr addr, uint32_t value)
+void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 	if (block != nullptr) {
-		block->write(addr - block->offset, value);
-		return;
+		int shift = 0;
+		xbaddr aligned_addr = 0;
+		uint32_t aligned_value = 0;
+		uint32_t mask = 0;
+		switch (size) {
+			case 8:
+				shift = (addr & 3) * 8;
+				aligned_addr = addr & ~3;
+				aligned_value = block->read(aligned_addr - block->offset);
+				mask = 0xFF << shift;
+
+				// TODO : Must the second byte be written to the next DWORD?		
+				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				return;
+			case 16:
+				assert((addr & 1) == 0);
+				
+				shift = (addr & 2) * 16;
+				aligned_addr = addr & ~3;
+				aligned_value = block->read(addr - block->offset);
+				 mask = 0xFFFF << shift;
+				
+				// TODO : Must the second byte be written to the next DWORD?		
+				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				return;
+			case 32:
+				block->write(addr - block->offset, value);
+				return;
+			default:
+				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
+				return;
+		}
 	}
 
-	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	EmuWarning("EmuNV2A_Write%d: Unhandled Write Address %08X (value %08X)", size, addr, value);
 	return;
 }
 

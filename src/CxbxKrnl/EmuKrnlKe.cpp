@@ -341,9 +341,15 @@ XBSYSAPI EXPORTNUM(93) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeAlertThread
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(94) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBoostPriorityThread
 (
+	IN PKTHREAD Thread,
+	IN KPRIORITY Increment
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Thread);
+		LOG_FUNC_ARG(Increment);
+		LOG_FUNC_END;
+
 
 	LOG_UNIMPLEMENTED();
 
@@ -393,10 +399,10 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 	char buffer[1024];
 	sprintf(buffer, "The running software triggered KeBugCheck with the following information\n"
 		"BugCheckCode: 0x%08X\n"
-		"BugCheckParamater1 0x%08X\n"
-		"BugCheckParamater2 0x%08X\n"
-		"BugCheckParamater3 0x%08X\n"
-		"BugCheckParamater4 0x%08X\n"
+		"BugCheckParameter1: 0x%08X\n"
+		"BugCheckParameter2: 0x%08X\n"
+		"BugCheckParameter3: 0x%08X\n"
+		"BugCheckParameter4: 0x%08X\n"
 		"\nThis is the Xbox equivalent to a BSOD and would cause the console to automatically reboot\n"
 		"\nContinue Execution (Not Recommended)?\n",
 		BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
@@ -584,6 +590,18 @@ XBSYSAPI EXPORTNUM(105) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeApc
 		Apc->ApcMode = KernelMode;
 		Apc->NormalContext = NULL;
 	}
+}
+
+// ******************************************************************
+// * 0x006A - KeInitializeDeviceQueue()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(106) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDeviceQueue
+(
+	OUT PKDEVICE_QUEUE DeviceQueue
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(DeviceQueue);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -776,6 +794,92 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 	Timer->Period = 0;
 }
 
+XBSYSAPI EXPORTNUM(114) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertByKeyDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue
+(
+	IN PRKQUEUE Queue,
+	IN PLIST_ENTRY Entry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Entry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
+(
+	IN PRKQUEUE Queue,
+	IN PLIST_ENTRY Entry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Entry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(118) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueApc
+(
+	IN PRKAPC Apc,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2,
+	IN KPRIORITY Increment
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Apc)
+		LOG_FUNC_ARG(SystemArgument1)
+		LOG_FUNC_ARG(SystemArgument2)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
 // ******************************************************************
 // * 0x0077 - KeInsertQueueDpc()
 // ******************************************************************
@@ -855,6 +959,36 @@ XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
 	// TODO : Enable kernel APCs
 
 	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
+(
+	IN PRKEVENT Event,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(124) xboxkrnl::LONG NTAPI xboxkrnl::KeQueryBasePriorityThread
+(
+	IN PKTHREAD Thread
+)
+{
+	LOG_FUNC_ONE_ARG(Thread);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
 }
 
 // ******************************************************************
@@ -988,6 +1122,113 @@ XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel(
 	RETURN(0);
 }
 
+XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
+(
+	IN PRKMUTANT Mutant,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Abandoned,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Mutant)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Abandoned)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+	
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
+(
+	IN PRKSEMAPHORE Semaphore,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Adjustment,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Semaphore)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Adjustment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(133) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveByKeyDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+XBSYSAPI EXPORTNUM(134) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+XBSYSAPI EXPORTNUM(135) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveEntryDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+
+XBSYSAPI EXPORTNUM(136) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRemoveQueue
+(
+	IN PRKQUEUE Queue,
+	IN KPROCESSOR_MODE WaitMode,
+	IN PLARGE_INTEGER Timeout
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
 // ******************************************************************
 // * 0x0089 - KeRemoveQueueDpc()
 // ******************************************************************
@@ -1068,6 +1309,18 @@ XBSYSAPI EXPORTNUM(140) xboxkrnl::ULONG NTAPI xboxkrnl::KeResumeThread
 	RETURN(ret);
 }
 
+XBSYSAPI EXPORTNUM(141) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRundownQueue
+(
+	IN PRKQUEUE Queue
+)
+{
+	LOG_FUNC_ONE_ARG(Queue);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
 // ******************************************************************
 // * 0x008E - KeSaveFloatingPointState()
 // ******************************************************************
@@ -1110,6 +1363,22 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 	RETURN(ret);
 }
 
+XBSYSAPI EXPORTNUM(144) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
+(
+	IN PKTHREAD Thread,
+	IN ULONG Disable
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_ARG(Disable)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
 // ******************************************************************
 // * 0x0091 - KeSetEvent()
 // ******************************************************************
@@ -1132,6 +1401,37 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 
 	RETURN(ret);
 }
+
+XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
+(
+	IN PRKEVENT Event,
+	IN PRKTHREAD *Thread
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
+(
+	IN PKPROCESS Process,
+	IN KPRIORITY BasePriority
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Process)
+		LOG_FUNC_ARG(BasePriority)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(BasePriority);
+}
+
 
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
@@ -1335,7 +1635,7 @@ XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_I
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
+XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObjects
 (
 	IN ULONG Count,
 	IN PVOID Object[],
@@ -1373,24 +1673,13 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 		// TODO : What should we do with the (currently ignored)
 		//        WaitReason, WaitMode, WaitBlockArray?
 
-		if (Count == 1)
-		{
-			// Note : WaitType is irrelevant here
-			ret = NtDll::NtWaitForSingleObject(
-				Object[0],
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
-
-			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
-		}
-		else
-			// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-			ret = NtDll::NtWaitForMultipleObjects(
-				Count,
-				Object,
-				(NtDll::OBJECT_WAIT_TYPE)WaitType,
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
+		// Unused arguments : WaitReason, WaitMode, WaitBlockArray
+		ret = NtDll::NtWaitForMultipleObjects(
+			Count,
+			Object,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
 
 		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
@@ -1402,7 +1691,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 // ******************************************************************
 // * 0x009F - KeWaitForSingleObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
+XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 (
 	IN PVOID Object,
 	IN KWAIT_REASON WaitReason,

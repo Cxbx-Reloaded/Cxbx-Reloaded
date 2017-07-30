@@ -120,48 +120,31 @@ void ApplyMediaPatches()
 	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 
 	// Patch the XBE Header to allow running from all media types
-	pCertificate->dwAllowedMedia = XBEIMAGE_MEDIA_TYPE_HARD_DISK | XBEIMAGE_MEDIA_TYPE_DVD_CD | XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD;
-
+	pCertificate->dwAllowedMedia |= 0
+		| XBEIMAGE_MEDIA_TYPE_HARD_DISK
+		| XBEIMAGE_MEDIA_TYPE_DVD_X2
+		| XBEIMAGE_MEDIA_TYPE_DVD_CD
+		| XBEIMAGE_MEDIA_TYPE_CD
+		| XBEIMAGE_MEDIA_TYPE_DVD_5_RO
+		| XBEIMAGE_MEDIA_TYPE_DVD_9_RO
+		| XBEIMAGE_MEDIA_TYPE_DVD_5_RW
+		| XBEIMAGE_MEDIA_TYPE_DVD_9_RW
+		;
 	// Patch the XBE Header to allow running on all regions
-	pCertificate->dwGameRegion = XBEIMAGE_GAME_REGION_MANUFACTURING | XBEIMAGE_GAME_REGION_NA | XBEIMAGE_GAME_REGION_JAPAN | XBEIMAGE_GAME_REGION_RESTOFWORLD;
-
-	// Generic Media Check Patches (From DVD2XBOX)
-	typedef struct
-	{
-		std::string name;
-		std::vector<uint8_t> data;
-		std::vector<uint8_t> patch;
-	} hexpatch_t;
-	
-	std::vector<hexpatch_t> mediaPatches;
-	mediaPatches.push_back({ "Media Patch 1", 
-		{ 0x74, 0x4B, 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0x7D, 0x06, 0x33, 0xC0, 0x50, 0x50, 0xEB, 0x44, 0xF6, 0x05},
-		{ 0x74, 0x4B, 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0xEB, 0x06, 0x33, 0xC0, 0x50, 0x50, 0xEB, 0x44, 0xF6, 0x05 }
-	});
-
-	mediaPatches.push_back({ "Media Patch 2", 
-		{ 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0x7D }, 
-		{ 0xE8, 0xCA, 0xFD, 0xFF, 0xFF, 0x85, 0xC0, 0xEB } 
-	});
-
-	mediaPatches.push_back({ "FATX Patch",
-		{ 0x46, 0x41, 0x54, 0x58, 0x00, 0x00, 0x00, 0x00, 0x44, 0x3A, 0x5C },
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } 
-	});
-
-	for (auto it = mediaPatches.begin(); it < mediaPatches.end(); ++it)	{
-		hexpatch_t patch = *it;
-		
-		// Iterate through the XBE until we find the patch
-		for (xbaddr addr = CxbxKrnl_XbeHeader->dwBaseAddr; addr < CxbxKrnl_XbeHeader->dwSizeofImage + CxbxKrnl_XbeHeader->dwBaseAddr; addr++) {
-			if (memcmp((void*)addr, &patch.data[0], patch.data.size()) == 0) {
-				printf("Applying %s\n", patch.name.c_str());
-				memcpy((void*)addr, &patch.patch[0], patch.patch.size());
-				addr += patch.data.size() - 1;
-			}
-		}
+	pCertificate->dwGameRegion = 0
+		| XBEIMAGE_GAME_REGION_MANUFACTURING
+		| XBEIMAGE_GAME_REGION_NA
+		| XBEIMAGE_GAME_REGION_JAPAN
+		| XBEIMAGE_GAME_REGION_RESTOFWORLD
+		;
+	// Patch the XBE Security Flag
+	// This field is only present if the Xbe Size is >= than our Certificate Structure
+	// This works as our structure is large enough to fit the newer certificate size, 
+	// while dwSize is the actual size of the certificate in the Xbe.
+	// Source: Various Hacked Kernels
+	if (pCertificate->dwSize >= sizeof(Xbe::Certificate)) {
+		pCertificate->dwSecurityFlags &= ~1;
 	}
-
 }
 
 void SetupPerTitleKeys()
@@ -431,6 +414,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
+	// using XeLoadImage from LaunchDataPage->Header.szLaunchPath
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
@@ -797,6 +781,8 @@ void CxbxKrnlInit
 	// initialize grapchics
 	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+    XTL::CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
 

@@ -36,6 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 #include "xxhash32.h"
+#include <condition_variable>
 
 // prevent name collisions
 namespace xboxkrnl
@@ -89,6 +90,7 @@ static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeigh
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
+static BOOL                         g_bSupportsP8   = FALSE;// Does device support palette textures?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -100,6 +102,8 @@ static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
+static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
+static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback routine
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
@@ -131,7 +135,7 @@ static XTL::IDirect3DVertexBuffer8 *g_pDummyBuffer = NULL;  // Dummy buffer, use
 static DWORD						g_dwLastSetStream = 0;	// The last stream set by D3DDevice::SetStreamSource
 
 // current vertical blank information
-static XTL::D3DVBLANKDATA           g_VBData = {0};
+static XTL::D3DVBLANKDATA			g_VBData = {0};
 static DWORD                        g_VBLastSwap = 0;
 
 // current swap information
@@ -510,9 +514,9 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
+            SwitchToThread(); 
 
-        Sleep(50);
+		SwitchToThread();
     }
 
 	SetFocus(g_hEmuWindow);
@@ -1201,7 +1205,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             }
             else
             {
-                Sleep(10);
+				SwitchToThread();
 
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)
@@ -1403,6 +1407,16 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return D3D_OK; // = 0
 }
 
+static clock_t GetNextVBlankTime()
+{
+	// TODO: Read display frequency from Xbox Display Adapter
+	// This is accessed by calling CMiniport::GetRefreshRate(); 
+	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
+	// This will require at least Direct3D_CreateDevice being unpatched
+	// otherwise, m_CurrentAvInfo will never be initialised!
+	return clock() + (CLOCKS_PER_SEC / 60);
+}
+
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
@@ -1411,15 +1425,16 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 
-    timeBeginPeriod(0);
-
     // current vertical blank count
     int curvb = 0;
 
+	// Calculate Next VBlank time
+	clock_t nextVBlankTime = GetNextVBlankTime();
+
     while(true)
     {
-        xboxkrnl::KeTickCount = timeGetTime();
-        Sleep(1);
+        xboxkrnl::KeTickCount = timeGetTime();	
+		SwitchToThread();
 
         //
         // Poll input
@@ -1463,9 +1478,17 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
             }
         }
 
-        // trigger vblank callback
+		// If VBlank Interval has passed, trigger VBlank callback
+        // Note: This whole code block can be removed once NV2A interrupts are implemented
+		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
+		if (clock() > nextVBlankTime)
         {
-            g_VBData.VBlank++;
+			nextVBlankTime = GetNextVBlankTime();
+
+			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+			g_VBData.VBlank++;
+			g_VBConditionVariable.notify_all();
 
 			// TODO: Fixme.  This may not be right...
 			g_SwapData.SwapVBlank = 1;
@@ -1488,8 +1511,6 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 			g_SwapData.TimeBetweenSwapVBlanks = 0;
         }
     }
-
-    timeEndPeriod(0);
 }
 
 // thread dedicated to create devices
@@ -1628,9 +1649,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
-   
+
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+				// Does this device support paletized textures?
+				g_bSupportsP8 = g_pD3D8->CheckDeviceFormat(
+					g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+					(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+					XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_P8) == D3D_OK;
 
 	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
@@ -1856,7 +1883,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             }
         }
 
-        Sleep(1);
+		Sleep(1);
     }
 
     return 0;
@@ -2161,7 +2188,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
         Sleep(10);
 	
 	// Set the Xbox g_pD3DDevice pointer to our D3D Device object
-	if (XRefDataBase[XREF_D3DDEVICE] != (xbaddr)nullptr) {
+	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
 		*((DWORD*)XRefDataBase[XREF_D3DDEVICE]) = (DWORD)g_XboxD3DDevice;
 	}
 
@@ -3764,7 +3791,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 			PCFormat = D3DFMT_R5G6B5;
 		}
 		//*
-		else if(PCFormat == D3DFMT_P8)
+		else if(PCFormat == D3DFMT_P8 && !g_bSupportsP8)
 		{
 			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
 			PCFormat = D3DFMT_L8;
@@ -3915,7 +3942,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
 			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
 			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
 		}
-		else if (PCFormat == D3DFMT_P8)
+		else if (PCFormat == D3DFMT_P8 && !g_bSupportsP8)
 		{
 			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
 			PCFormat = D3DFMT_L8;
@@ -3986,7 +4013,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5?
     }
-    else if(PCFormat == D3DFMT_P8)
+    else if(PCFormat == D3DFMT_P8 && !g_bSupportsP8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCFormat = D3DFMT_L8;
@@ -5202,7 +5229,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     // Since most modern graphics cards does not support
                     // palette based textures we need to expand it to
                     // ARGB texture format
-					if (PCFormat == D3DFMT_P8 || EmuXBFormatRequiresConversionToARGB(X_Format))
+					if ((PCFormat == D3DFMT_P8 && !g_bSupportsP8) || EmuXBFormatRequiresConversionToARGB(X_Format))
                     {
 						if (PCFormat == D3DFMT_P8) //Palette
 							EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
@@ -5965,8 +5992,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		if (Flags & X_D3DLOCK_READONLY)
 			NewFlags |= D3DLOCK_READONLY;
 
-		if (Flags & X_D3DLOCK_TILED)
-			EmuWarning("D3DLOCK_TILED ignored!");
+		//if (Flags & X_D3DLOCK_TILED)
+			//EmuWarning("D3DLOCK_TILED ignored!");
 
 		if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
 			CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
@@ -6138,8 +6165,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
         if(Flags & X_D3DLOCK_READONLY)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & X_D3DLOCK_TILED)
-            EmuWarning("D3DLOCK_TILED ignored!"); 
+        //if(Flags & X_D3DLOCK_TILED)
+            //EmuWarning("D3DLOCK_TILED ignored!"); 
 
         if(Flags & X_D3DLOCK_NOOVERWRITE)
             NewFlags |= D3DLOCK_NOOVERWRITE;
@@ -6598,22 +6625,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 
 	LOG_FUNC();
 
-    // segaGT tends to freeze with this on
-//    if(g_XBVideo.GetVSync()) {
-//        HRESULT hRet = g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-//        DEBUG_D3DRESULT(hRet, "g_pDD7->WaitForVerticalBlank");
-//    }
-
-	// HACK: For many games (when used in mutithreaded code), using 
-	// DDraw::WaitForVerticalBlank will wreak havoc on CPU usage and really
-	// slow things down. This is the case for various SEGA and other Japanese
-	// titles.  On Xbox, it isn't a big deal, but for PC, I can't even
-	// guarantee this is a good idea.  So instead, I'll be "faking" 
-	// the vertical blank thing.
-
-	Sleep( 1000/60 );
-
-	LOG_INCOMPLETE();
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_VBConditionVariable.wait(lk);
 }
 
 // ******************************************************************
@@ -8907,7 +8920,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCSurfaceFormat = D3DFMT_X8R8G8B8;
     }
-    else if(PCSurfaceFormat == D3DFMT_P8)
+    else if(PCSurfaceFormat == D3DFMT_P8 && !g_bSupportsP8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCSurfaceFormat = D3DFMT_X8R8G8B8;

@@ -594,7 +594,7 @@ extern void XTL::EmuExecutePushBufferRaw
     if(g_bStepPush)
     {
         g_pD3DDevice8->Present(0,0,0,0);
-        Sleep(500);
+		Sleep(500);
     }
 }
 

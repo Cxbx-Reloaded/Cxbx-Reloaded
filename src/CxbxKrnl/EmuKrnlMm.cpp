@@ -414,9 +414,18 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_ARG(ProtectionType)
 		LOG_FUNC_END;
 
-	// TODO: should this be aligned?
-	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
-	LOG_INCOMPLETE();
+	PVOID pRet;
+
+	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
+	if (PhysicalAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
+		// Return physical address as virtual (accesses will go through EmuException) :
+		pRet = (PVOID)PhysicalAddress;
+	}
+	else {
+		// TODO: should this be aligned?
+		pRet = g_MemoryManager.Allocate(NumberOfBytes);
+		LOG_INCOMPLETE();
+	}
 
 	RETURN(pRet);
 }
@@ -611,8 +620,13 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_END;
 
-	g_MemoryManager.Free(BaseAddress);
-	LOG_INCOMPLETE();
+	if ((xbaddr)BaseAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
+		// Don't free hardware devices (flash, NV2A, etc)
+	}
+	else {
+		g_MemoryManager.Free(BaseAddress);
+		LOG_INCOMPLETE();
+	}
 
 	RETURN(STATUS_SUCCESS);
 }

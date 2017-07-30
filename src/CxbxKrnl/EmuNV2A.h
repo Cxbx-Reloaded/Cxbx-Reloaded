@@ -40,8 +40,16 @@
 #define NV2A_ADDR  0xFD000000
 #define NV2A_SIZE             0x01000000
 
-uint32_t EmuNV2A_Read32(xbaddr addr);
-void EmuNV2A_Write32(xbaddr addr, uint32_t value);
+typedef struct {
+	DWORD Ignored[0x10];
+	DWORD* Put; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
+	DWORD* Get; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
+	DWORD Reference; // TODO : xbaddr / void* / DWORD ? 
+	DWORD Ignored2[0x7ED];
+} Nv2AControlDma;
+
+uint32_t EmuNV2A_Read(xbaddr addr, int size);
+void EmuNV2A_Write(xbaddr addr, uint32_t value, int size);
 
 void InitOpenGLContext();
 

@@ -84,7 +84,17 @@ typedef uint32 xbaddr;
 
 /*! base addresses of various components */
 #define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
-#define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
+#define XBOX_WRITE_COMBINED_BASE 0xF0000000
+#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
+
+#define XBOX_UNCACHED_BASE       0xF8000000
+#define XBOX_UNCACHED_SIZE       0x07F00000 // - 0xFFEFFFFF
+
+#define XBOX_NV2A_INIT_VECTOR    0xFF000008
+
+#define XBOX_FLASH_ROM_BASE      0xFFF00000
+#define XBOX_FLASH_ROM_SIZE      0x00100000 // - 0xFFFFFFF
 
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we
