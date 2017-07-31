@@ -54,9 +54,10 @@ static inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr
 
 #include <shlobj.h>
 #include <unordered_map>
+#include <map>
 #include <sstream>
 
-std::unordered_map<std::string, xbaddr> g_SymbolAddresses;
+std::map<std::string, xbaddr> g_SymbolAddresses;
 std::unordered_map<std::string, subhook::Hook> g_FunctionHooks;
 bool g_HLECacheUsed = false;
 

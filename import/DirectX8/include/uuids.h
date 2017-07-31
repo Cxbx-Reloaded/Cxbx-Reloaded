@@ -2,20 +2,21 @@
 // File: uuids.h
 //
 // Desc: Contains the GUIDs for the MediaType type, subtype fields and format
-//       types for standard media types, and also class ids for well-known
+//       types for standard media types, and also class IDs for well-known
 //       components.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
 //
-//  We want to use this list for generating strings for debugging too
-//  so we redefine OUR_GUID_ENTRY depending on what we want to do
+//  We want to use this list for generating strings for debugging too,
+//  so we redefine OUR_GUID_ENTRY depending on what we want to do.
 //
 //  It is imperative that all entries in this file are declared using
-//  OUR_GUID_ENTRY as that macro might have been defined in advance of
-//  including this file.  See wxdebug.cpp in sdk\classes\base.
+//  OUR_GUID_ENTRY, as that macro might have been defined in advance of
+//  including this file.  See wxdebug.cpp in the
+//  samples\multimedia\directshow\baseclasses directory.
 //
 
 #ifndef OUR_GUID_ENTRY
@@ -74,7 +75,11 @@ OUR_GUID_ENTRY(MEDIATYPE_ScriptCommand,
 OUR_GUID_ENTRY(MEDIATYPE_AUXLine21Data,
 0x670aea80, 0x3a82, 0x11d0, 0xb7, 0x9b, 0x0, 0xaa, 0x0, 0x37, 0x67, 0xa7)
 
-// 0482DEE3-7817-11cf-8a03-00aa006ecb65
+// F72A76E1-EB0A-11D0-ACE4-0000C0CC16BA            MEDIATYPE_VBI
+OUR_GUID_ENTRY(MEDIATYPE_VBI,
+0xf72a76e1, 0xeb0a, 0x11d0, 0xac, 0xe4, 0x00, 0x00, 0xc0, 0xcc, 0x16, 0xba)
+
+// 0482DEE3-7817-11cf-8a03-00aa006ecb65            MEDIATYPE_Timecode
 OUR_GUID_ENTRY(MEDIATYPE_Timecode,
 0x482dee3, 0x7817, 0x11cf, 0x8a, 0x3, 0x0, 0xaa, 0x0, 0x6e, 0xcb, 0x65)
 
@@ -212,9 +217,86 @@ OUR_GUID_ENTRY(MEDIASUBTYPE_RGB24,
 OUR_GUID_ENTRY(MEDIASUBTYPE_RGB32,
 0xe436eb7e, 0x524f, 0x11ce, 0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70)
 
+
+//
+// RGB surfaces that contain per pixel alpha values.
+//
+
+// 297C55AF-E209-4cb3-B757-C76D6B9C88A8            MEDIASUBTYPE_ARGB1555
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB1555,
+0x297c55af, 0xe209, 0x4cb3, 0xb7, 0x57, 0xc7, 0x6d, 0x6b, 0x9c, 0x88, 0xa8)
+
+// 6E6415E6-5C24-425f-93CD-80102B3D1CCA            MEDIASUBTYPE_ARGB4444
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB4444,
+0x6e6415e6, 0x5c24, 0x425f, 0x93, 0xcd, 0x80, 0x10, 0x2b, 0x3d, 0x1c, 0xca)
+
 // 773c9ac0-3274-11d0-B724-00aa006c1A01            MEDIASUBTYPE_ARGB32
-OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB32, 
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB32,
 0x773c9ac0, 0x3274, 0x11d0, 0xb7, 0x24, 0x0, 0xaa, 0x0, 0x6c, 0x1a, 0x1 )
+
+// 56555941-0000-0010-8000-00AA00389B71  'AYUV' == MEDIASUBTYPE_AYUV
+//
+// See the DX-VA header and documentation for a description of this format.
+//
+OUR_GUID_ENTRY(MEDIASUBTYPE_AYUV,
+0x56555941, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 34344941-0000-0010-8000-00AA00389B71  'AI44' == MEDIASUBTYPE_AI44
+//
+// See the DX-VA header and documentation for a description of this format.
+//
+OUR_GUID_ENTRY(MEDIASUBTYPE_AI44,
+0x34344941, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 34344149-0000-0010-8000-00AA00389B71  'IA44' == MEDIASUBTYPE_IA44
+//
+// See the DX-VA header and documentation for a description of this format.
+//
+OUR_GUID_ENTRY(MEDIASUBTYPE_IA44,
+0x34344149, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+
+//
+// DirectX7 D3D Render Target media subtypes.
+//
+
+// 32335237-0000-0010-8000-00AA00389B71  '7R32' == MEDIASUBTYPE_RGB32_D3D_DX7_RT
+OUR_GUID_ENTRY(MEDIASUBTYPE_RGB32_D3D_DX7_RT,
+0x32335237, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 36315237-0000-0010-8000-00AA00389B71  '7R16' == MEDIASUBTYPE_RGB16_D3D_DX7_RT
+OUR_GUID_ENTRY(MEDIASUBTYPE_RGB16_D3D_DX7_RT,
+0x36315237, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 38384137-0000-0010-8000-00AA00389B71  '7A88' == MEDIASUBTYPE_ARGB32_D3D_DX7_RT
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB32_D3D_DX7_RT,
+0x38384137, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 34344137-0000-0010-8000-00AA00389B71  '7A44' == MEDIASUBTYPE_ARGB4444_D3D_DX7_RT
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB4444_D3D_DX7_RT,
+0x34344137, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+// 35314137-0000-0010-8000-00AA00389B71  '7A15' == MEDIASUBTYPE_ARGB1555_D3D_DX7_RT
+OUR_GUID_ENTRY(MEDIASUBTYPE_ARGB1555_D3D_DX7_RT,
+0x35314137, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
+
+
+#define MEDIASUBTYPE_HASALPHA(mt) ( ((mt).subtype == MEDIASUBTYPE_ARGB4444)            || \
+                                    ((mt).subtype == MEDIASUBTYPE_ARGB32)              || \
+                                    ((mt).subtype == MEDIASUBTYPE_AYUV)                || \
+                                    ((mt).subtype == MEDIASUBTYPE_AI44)                || \
+                                    ((mt).subtype == MEDIASUBTYPE_IA44)                || \
+                                    ((mt).subtype == MEDIASUBTYPE_ARGB1555)            || \
+                                    ((mt).subtype == MEDIASUBTYPE_ARGB32_D3D_DX7_RT)   || \
+                                    ((mt).subtype == MEDIASUBTYPE_ARGB4444_D3D_DX7_RT) || \
+                                    ((mt).subtype == MEDIASUBTYPE_ARGB1555_D3D_DX7_RT) )
+
+#define MEDIASUBTYPE_D3D_DX7_RT(mt) (((mt).subtype == MEDIASUBTYPE_ARGB32_D3D_DX7_RT)   || \
+                                     ((mt).subtype == MEDIASUBTYPE_ARGB4444_D3D_DX7_RT) || \
+                                     ((mt).subtype == MEDIASUBTYPE_ARGB1555_D3D_DX7_RT) || \
+                                     ((mt).subtype == MEDIASUBTYPE_RGB32_D3D_DX7_RT)    || \
+                                     ((mt).subtype == MEDIASUBTYPE_RGB16_D3D_DX7_RT))
+
 
 // e436eb7f-524f-11ce-9f53-0020af0ba770            MEDIASUBTYPE_Overlay
 OUR_GUID_ENTRY(MEDIASUBTYPE_Overlay,
@@ -312,7 +394,7 @@ OUR_GUID_ENTRY(MEDIASUBTYPE_dvhd,
 // 6c(l)73(s)76(v)64(d)-0000-0010-8000-00AA00389B71  'dvsl' == MEDIASUBTYPE_dvsl
 OUR_GUID_ENTRY(MEDIASUBTYPE_dvsl,
 0x6c737664, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71)
-                                    
+
 // 6E8D4A22-310C-11d0-B79A-00AA003767A7         MEDIASUBTYPE_Line21_BytePair
 OUR_GUID_ENTRY(MEDIASUBTYPE_Line21_BytePair,
 0x6e8d4a22, 0x310c, 0x11d0, 0xb7, 0x9a, 0x0, 0xaa, 0x0, 0x37, 0x67, 0xa7)
@@ -324,6 +406,10 @@ OUR_GUID_ENTRY(MEDIASUBTYPE_Line21_GOPPacket,
 // 6E8D4A24-310C-11d0-B79A-00AA003767A7         MEDIASUBTYPE_Line21_VBIRawData
 OUR_GUID_ENTRY(MEDIASUBTYPE_Line21_VBIRawData,
 0x6e8d4a24, 0x310c, 0x11d0, 0xb7, 0x9a, 0x0, 0xaa, 0x0, 0x37, 0x67, 0xa7)
+
+// F72A76E3-EB0A-11D0-ACE4-0000C0CC16BA         MEDIASUBTYPE_TELETEXT
+OUR_GUID_ENTRY(MEDIASUBTYPE_TELETEXT,
+0xf72a76e3, 0xeb0a, 0x11d0, 0xac, 0xe4, 0x00, 0x00, 0xc0, 0xcc, 0x16, 0xba)
 
 // derived from WAVE_FORMAT_DRM
 // 00000009-0000-0010-8000-00aa00389b71
@@ -556,11 +642,11 @@ OUR_GUID_ENTRY(CLSID_AVIMIDIRender,
 0x07b65360, 0xc445, 0x11ce, 0xaf, 0xde, 0x00, 0xaa, 0x00, 0x6c, 0x14, 0xf4)
 
 // {187463A0-5BB7-11d3-ACBE-0080C75E246E}    WMSDK-based ASF reader
-OUR_GUID_ENTRY(CLSID_WMAsfReader, 
+OUR_GUID_ENTRY(CLSID_WMAsfReader,
 0x187463a0, 0x5bb7, 0x11d3, 0xac, 0xbe, 0x0, 0x80, 0xc7, 0x5e, 0x24, 0x6e)
 
 // {7c23220e-55bb-11d3-8b16-00c04fb6bd3d}    WMSDK-based ASF writer
-OUR_GUID_ENTRY(CLSID_WMAsfWriter, 
+OUR_GUID_ENTRY(CLSID_WMAsfWriter,
 0x7c23220e, 0x55bb, 0x11d3, 0x8b, 0x16, 0x0, 0xc0, 0x4f, 0xb6, 0xbd, 0x3d)
 
 //  {afb6c280-2c41-11d3-8a60-0000f81e0e4a}
@@ -596,6 +682,10 @@ OUR_GUID_ENTRY(CLSID_SeekingPassThru,
 OUR_GUID_ENTRY(CLSID_Line21Decoder,
 0x6e8d4a20, 0x310c, 0x11d0, 0xb7, 0x9a, 0x0, 0xaa, 0x0, 0x37, 0x67, 0xa7)
 
+// E4206432-01A1-4BEE-B3E1-3702C8EDC574                 Line21 (CC) Decoder v2
+OUR_GUID_ENTRY(CLSID_Line21Decoder2,
+0xe4206432, 0x01a1, 0x4bee, 0xb3, 0xe1, 0x37, 0x02, 0xc8, 0xed, 0xc5, 0x74)
+
 // {CD8743A1-3736-11d0-9E69-00C04FD7C15B}
 OUR_GUID_ENTRY(CLSID_OverlayMixer,
 0xcd8743a1, 0x3736, 0x11d0, 0x9e, 0x69, 0x0, 0xc0, 0x4f, 0xd7, 0xc1, 0x5b)
@@ -603,6 +693,20 @@ OUR_GUID_ENTRY(CLSID_OverlayMixer,
 // {814B9800-1C88-11d1-BAD9-00609744111A}
 OUR_GUID_ENTRY(CLSID_VBISurfaces,
 0x814b9800, 0x1c88, 0x11d1, 0xba, 0xd9, 0x0, 0x60, 0x97, 0x44, 0x11, 0x1a)
+
+// {70BC06E0-5666-11d3-A184-00105AEF9F33}               WST Teletext Decoder
+OUR_GUID_ENTRY(CLSID_WSTDecoder,
+0x70bc06e0, 0x5666, 0x11d3, 0xa1, 0x84, 0x0, 0x10, 0x5a, 0xef, 0x9f, 0x33)
+
+// {301056D0-6DFF-11d2-9EEB-006008039E37}
+OUR_GUID_ENTRY(CLSID_MjpegDec,
+0x301056d0, 0x6dff, 0x11d2, 0x9e, 0xeb, 0x0, 0x60, 0x8, 0x3, 0x9e, 0x37)
+
+// {B80AB0A0-7416-11d2-9EEB-006008039E37}
+OUR_GUID_ENTRY(CLSID_MJPGEnc,
+0xb80ab0a0, 0x7416, 0x11d2, 0x9e, 0xeb, 0x0, 0x60, 0x8, 0x3, 0x9e, 0x37)
+
+
 
 // pnp objects and categories
 // 62BE5D10-60EB-11d0-BD3B-00A0C911CE86                 ICreateDevEnum
@@ -683,7 +787,7 @@ OUR_GUID_ENTRY(CLSID_MemoryAllocator,
 // CDBD8D00-C193-11d0-BD4E-00A0C911CE86
 OUR_GUID_ENTRY(CLSID_MediaPropertyBag,
 0xcdbd8d00, 0xc193, 0x11d0, 0xbd, 0x4e, 0x0, 0xa0, 0xc9, 0x11, 0xce, 0x86)
-            
+
 // FCC152B7-F372-11d0-8E00-00C04FD7C08B
 OUR_GUID_ENTRY(CLSID_DvdGraphBuilder,
 0xFCC152B7, 0xF372, 0x11d0, 0x8E, 0x00, 0x00, 0xC0, 0x4F, 0xD7, 0xC0, 0x8B)
@@ -808,22 +912,27 @@ OUR_GUID_ENTRY(IID_IMixerPinConfig2,
 0xebf47182, 0x8764, 0x11d1, 0x9e, 0x69, 0x0, 0xc0, 0x4f, 0xd7, 0xc1, 0x5b)
 
 
-// This is a real pain in the neck. The OLE GUIDs are separated out into a
-// different file from the main header files. The header files can then be
-// included multiple times and are protected with the following statements,
+// {FA2AA8F4-8B62-11D0-A520-000000000000)
+OUR_GUID_ENTRY(IID_IAMMediaContent,
+0xFA2AA8F4, 0x8B62, 0x11D0, 0xA5, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+
+
+// This is a bit awkward. The OLE GUIDs are separated out into a different
+// file from the main header files. The header files can then be included
+// multiple times and are protected with the following statements,
 //
 //      #ifndef __SOMETHING_DEFINED__
 //      #define __SOMETHING_DEFINED__
 //          all the header contents
 //      #endif // __SOMETHING_DEFINED__
 //
-// When the actual GUIDs are to be defined (using initguid) the GUID header
-// file can then be included to really define them just once. Unfortunately
+// When the actual GUIDs are to be defined (using initguid), the GUID header
+// file can then be included to really define them just once. Unfortunately,
 // DirectDraw has the GUIDs defined in the main header file. So if the base
-// classes bring in ddraw.h to get at the DirectDraw structures and so on
+// classes bring in ddraw.h to get at the DirectDraw structures and so on,
 // nobody would then be able to really include ddraw.h to allocate the GUID
-// memory structures because of the aforementioned header file protection
-// Therefore the DirectDraw GUIDs are defined and allocated for real here
+// memory structures because of the aforementioned header file protection.
+// Therefore, the DirectDraw GUIDs are defined and really allocated here.
 
 #ifndef __DDRAW_INCLUDED__
 OUR_GUID_ENTRY(CLSID_DirectDraw,            0xD7B70EE0,0x4340,0x11CF,0xB0,0x63,0x00,0x20,0xAF,0xC2,0xCD,0x35)
@@ -891,6 +1000,19 @@ OUR_GUID_ENTRY(IID_IMpegAudioDecoder,
 // 6E8D4A21-310C-11d0-B79A-00AA003767A7            IID_IAMLine21Decoder
 OUR_GUID_ENTRY(IID_IAMLine21Decoder,
 0x6e8d4a21, 0x310c, 0x11d0, 0xb7, 0x9a, 0x0, 0xaa, 0x0, 0x37, 0x67, 0xa7)
+
+// --- WST Decoder interface GUID ---
+
+// C056DE21-75C2-11d3-A184-00105AEF9F33            IID_IAMWstDecoder
+OUR_GUID_ENTRY(IID_IAMWstDecoder,
+0xc056de21, 0x75c2, 0x11d3, 0xa1, 0x84, 0x0, 0x10, 0x5a, 0xef, 0x9f, 0x33)
+
+// --- WST Decoder Property Page ---
+
+// 04E27F80-91E4-11d3-A184-00105AEF9F33            WST Decoder Property Page
+OUR_GUID_ENTRY(CLSID_WstDecoderPropertyPage,
+0x4e27f80, 0x91e4, 0x11d3, 0xa1, 0x84, 0x0, 0x10, 0x5a, 0xef, 0x9f, 0x33)
+
 
 // -- Analog video related GUIDs ---
 
@@ -993,7 +1115,7 @@ OUR_GUID_ENTRY(MEDIATYPE_AnalogAudio,
 #include "ksuuids.h"
 
 
-// -- Well known time format GUIDs ---
+// -- Well-known time format GUIDs ---
 
 
 // 00000000-0000-0000-0000-000000000000
@@ -1077,7 +1199,7 @@ OUR_GUID_ENTRY(PIN_CATEGORY_VIDEOPORT_VBI,
 0xfb6c428c, 0x0353, 0x11d1, 0x90, 0x5f, 0x00, 0x00, 0xc0, 0xcc, 0x16, 0xba)
 
 
-// the following special GUIDS are used by ICaptureGraphBuilder::FindInterface
+// The following special GUIDS are used by ICaptureGraphBuilder::FindInterface
 
 // {AC798BE0-98E3-11d1-B3F1-00AA003761C5}
 OUR_GUID_ENTRY(LOOK_UPSTREAM_ONLY,
@@ -1110,11 +1232,11 @@ OUR_GUID_ENTRY(CLSID_VideoProcAmpPropertyPage,
 // {71F96465-78F3-11d0-A18C-00A0C9118956}
 OUR_GUID_ENTRY(CLSID_CameraControlPropertyPage,
 0x71f96465, 0x78f3, 0x11d0, 0xa1, 0x8c, 0x0, 0xa0, 0xc9, 0x11, 0x89, 0x56)
-                
+
 // {71F96466-78F3-11d0-A18C-00A0C9118956}
 OUR_GUID_ENTRY(CLSID_AnalogVideoDecoderPropertyPage,
 0x71f96466, 0x78f3, 0x11d0, 0xa1, 0x8c, 0x0, 0xa0, 0xc9, 0x11, 0x89, 0x56)
-                
+
 // {71F96467-78F3-11d0-A18C-00A0C9118956}
 OUR_GUID_ENTRY(CLSID_VideoStreamConfigPropertyPage,
 0x71f96467, 0x78f3, 0x11d0, 0xa1, 0x8c, 0x0, 0xa0, 0xc9, 0x11, 0x89, 0x56)
@@ -1125,13 +1247,28 @@ OUR_GUID_ENTRY(CLSID_AudioRendererAdvancedProperties,
 
 
 // -------------------------------------------------------------------------
-// VMRender GUIDS
+// VMR GUIDS
 // -------------------------------------------------------------------------
 
 // {B87BEB7B-8D29-423f-AE4D-6582C10175AC}
 OUR_GUID_ENTRY(CLSID_VideoMixingRenderer,
 0xB87BEB7B, 0x8D29, 0x423f, 0xAE, 0x4D, 0x65, 0x82, 0xC1, 0x01, 0x75, 0xAC)
 
+// {6BC1CFFA-8FC1-4261-AC22-CFB4CC38DB50}
+OUR_GUID_ENTRY(CLSID_VideoRendererDefault,
+0x6BC1CFFA, 0x8FC1, 0x4261, 0xAC, 0x22, 0xCF, 0xB4, 0xCC, 0x38, 0xDB, 0x50)
+
+// {99d54f63-1a69-41ae-aa4d-c976eb3f0713}
+OUR_GUID_ENTRY(CLSID_AllocPresenter,
+0x99d54f63, 0x1a69, 0x41ae, 0xaa, 0x4d, 0xc9, 0x76, 0xeb, 0x3f, 0x07, 0x13)
+
+// {4444ac9e-242e-471b-a3c7-45dcd46352bc}
+OUR_GUID_ENTRY(CLSID_AllocPresenterDDXclMode,
+0x4444ac9e, 0x242e, 0x471b, 0xa3, 0xc7, 0x45, 0xdc, 0xd4, 0x63, 0x52, 0xbc)
+
+// {6f26a6cd-967b-47fd-874a-7aed2c9d25a2}
+OUR_GUID_ENTRY(CLSID_VideoPortManager,
+0x6f26a6cd, 0x967b, 0x47fd, 0x87, 0x4a, 0x7a, 0xed, 0x2c, 0x9d, 0x25, 0xa2)
 
 // -------------------------------------------------------------------------
 // BDA Network Provider GUIDS
@@ -1148,6 +1285,28 @@ OUR_GUID_ENTRY(CLSID_ATSCNetworkPropertyPage,
 // {FA4B375A-45B4-4d45-8440-263957B11623}
 OUR_GUID_ENTRY(CLSID_DVBSNetworkProvider,
 0xfa4b375a, 0x45b4, 0x4d45, 0x84, 0x40, 0x26, 0x39, 0x57, 0xb1, 0x16, 0x23)
-                
+
+
+// -------------------------------------------------------------------------
+// TVE Receiver filter guids
+// -------------------------------------------------------------------------
+
+// The CLSID used by the TVE Receiver filter
+// {05500280-FAA5-4DF9-8246-BFC23AC5CEA8}
+OUR_GUID_ENTRY(CLSID_DShowTVEFilter,
+0x05500280, 0xFAA5, 0x4DF9, 0x82, 0x46, 0xBF, 0xC2, 0x3A, 0xC5, 0xCE, 0xA8)
+
+// {05500281-FAA5-4DF9-8246-BFC23AC5CEA8}
+OUR_GUID_ENTRY(CLSID_TVEFilterTuneProperties,
+0x05500281, 0xFAA5, 0x4DF9, 0x82, 0x46, 0xBF, 0xC2, 0x3A, 0xC5, 0xCE, 0xA8)
+
+
+// {05500282-FAA5-4DF9-8246-BFC23AC5CEA8}
+OUR_GUID_ENTRY(CLSID_TVEFilterCCProperties,
+0x05500282, 0xFAA5, 0x4DF9, 0x82, 0x46, 0xBF, 0xC2, 0x3A, 0xC5, 0xCE, 0xA8)
+
+// {05500283-FAA5-4DF9-8246-BFC23AC5CEA8}
+OUR_GUID_ENTRY(CLSID_TVEFilterStatsProperties,
+0x05500283, 0xFAA5, 0x4DF9, 0x82, 0x46, 0xBF, 0xC2, 0x3A, 0xC5, 0xCE, 0xA8)
 
 #undef OUR_GUID_ENTRY

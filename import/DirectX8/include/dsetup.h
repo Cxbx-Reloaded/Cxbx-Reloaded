@@ -51,8 +51,6 @@ extern "C" {
 #define DSETUP_DIRECTX  (DSETUP_DXCORE|DSETUP_DDRAWDRV|DSETUP_DSOUNDDRV)
 #define DSETUP_TESTINSTALL      0x00020000      /* just test install, don't do anything */
 #define DSETUP_USEROLDERFLAG	0x02000000		/* enable return DSETUPERR_NEWERVERSION */
-// Bug #22730 
-	// #define DSETUP_NTINSTALL		0x00080000		/* install on Win2K platform */
 
 // These OBSOLETE flags are here for compatibility with pre-DX5 apps only.
 // They are present to allow DX3 apps to be recompiled with DX5 and still work.

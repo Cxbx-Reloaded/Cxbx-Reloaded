@@ -4,7 +4,7 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 6.00.0338 */
+ /* File created by MIDL compiler version 6.00.0347 */
 /* Compiler settings for dmodshow.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust

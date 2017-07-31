@@ -200,7 +200,14 @@ typedef struct sockaddr SOCKADDR;
  *
  ****************************************************************************/
 
-HRESULT WINAPI DirectPlay8AddressCreate( const GUID * pcIID, void **ppvInterface, IUnknown *pUnknown);
+/*
+ * 
+ * This function is no longer supported.  It is recommended that CoCreateInstance be used to create 
+ * DirectPlay8 address objects. 
+ *
+ * HRESULT WINAPI DirectPlay8AddressCreate( const GUID * pcIID, void **ppvInterface, IUnknown *pUnknown);
+ *
+ */
 
 /****************************************************************************
  *

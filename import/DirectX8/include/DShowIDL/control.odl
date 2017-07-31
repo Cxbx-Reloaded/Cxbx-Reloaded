@@ -1,13 +1,10 @@
-//==========================================================================;
+//------------------------------------------------------------------------------
+// File: Control.odl
 //
-//  THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
-//  KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-//  IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR
-//  PURPOSE.
+// Desc: 
 //
-//  Copyright (c) 1992 - 1999  Microsoft Corporation.  All Rights Reserved.
-//
-//--------------------------------------------------------------------------;
+// Copyright (c) 1999-2001, Microsoft Corporation.  All rights reserved.
+//------------------------------------------------------------------------------
 
 // Neutral/English language type library for basic Quartz control interfaces
 
@@ -186,13 +183,13 @@ library QuartzTypeLib
         // cancelled by CancelDefaultHandling().
         HRESULT RestoreDefaultHandling( [in] long lEvCode);
 
-	// Free any resources associated with the parameters to an event.
+        // Free any resources associated with the parameters to an event.
         // Event parameters may be LONGs, IUnknown* or BSTR. No action
         // is taken with LONGs. IUnknown are passed addrefed and need a
         // Release call. BSTR are allocated by the task allocator and will be
         // freed by calling the task allocator.
         HRESULT FreeEventParams(
-        		[in] long lEvCode,
+                [in] long lEvCode,
                         [in] LONG_PTR lParam1,
                         [in] LONG_PTR lParam2
                         );
@@ -212,7 +209,7 @@ library QuartzTypeLib
         //    hwnd - handle of window to notify -
         //           pass NULL to stop notification
         //    lMsg - Message id to pass messages with
-	//    lInstanceData - will come back in lParam
+        //    lInstanceData - will come back in lParam
         //
         // The event information must still be retrived by a call
         // to GetEvent when the window message is received.
@@ -222,7 +219,7 @@ library QuartzTypeLib
         HRESULT SetNotifyWindow(
                         [in] OAHWND hwnd,
                         [in] long lMsg,
-			[in] LONG_PTR lInstanceData
+            [in] LONG_PTR lInstanceData
                         );
 
         // Turn events notification on or off
@@ -464,8 +461,8 @@ library QuartzTypeLib
                                    [out] long *pWidth,
                                    [out] long *pHeight);
 
-	// show and hide cursors useful when fullscreen
-	HRESULT HideCursor([in] long HideCursor);
+    // show and hide cursors useful when fullscreen
+    HRESULT HideCursor([in] long HideCursor);
         HRESULT IsCursorHidden([out] long *CursorHidden);
     }
 

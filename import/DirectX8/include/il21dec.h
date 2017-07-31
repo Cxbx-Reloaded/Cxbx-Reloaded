@@ -3,7 +3,7 @@
 //
 // Desc: Line 21 Decoder related definitions and interfaces for ActiveMovie.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -82,7 +82,7 @@ DECLARE_INTERFACE_(IAMLine21Decoder, IUnknown)
         // Output options to be used by downstream filters
         //
 
-        // What size, bitdepth etc should the output video be
+        // What size, bitdepth, etc. should the output video be
         STDMETHOD(GetOutputFormat)(THIS_ LPBITMAPINFOHEADER lpbmih) PURE ;
         // GetOutputFormat() method, if successful, returns 
         // 1.  S_FALSE if no output format has so far been defined by downstream filters

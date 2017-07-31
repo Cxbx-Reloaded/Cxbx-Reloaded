@@ -23,6 +23,10 @@ Supports visualization of alpha channel as a greyscale image or via a user-
 selectable background color
 Supports easy visual comparison of image quality between formats
 
+Note: DxTex does not currently support textures with surface formats that
+do not contain at least an R, G, and B texture (such as D3DFMT_G16R16 and 
+D3DFMT_A8), although D3DX can load and save such textures in DDS format.
+
 
 User Interface
 --------------

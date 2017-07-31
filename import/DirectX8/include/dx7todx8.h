@@ -1,6 +1,6 @@
 /*==========================================================================;
  *
- *  Copyright (C) 2000 Microsoft Corporation.  All Rights Reserved.
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:   dx7todx8.h
  *  Content:    DX7 to DX8 Direct3D aliases to aid porting DX7 apps to DX8

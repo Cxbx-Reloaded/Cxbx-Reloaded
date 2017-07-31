@@ -1,6 +1,6 @@
 /*==========================================================================;
  *
- *  Copyright (C) 1995-2000 Microsoft Corporation.  All Rights Reserved.
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:       d3d8types.h
  *  Content:    Direct3D capabilities include file
@@ -126,18 +126,18 @@ typedef struct _D3DVIEWPORT8 {
 #define D3DCS_PLANE4      0x00000400L
 #define D3DCS_PLANE5      0x00000800L
 
-#define D3DCS_ALL D3DCS_LEFT   | \
-                  D3DCS_RIGHT  | \
-                  D3DCS_TOP    | \
-                  D3DCS_BOTTOM | \
-                  D3DCS_FRONT  | \
-                  D3DCS_BACK   | \
-                  D3DCS_PLANE0 | \
-                  D3DCS_PLANE1 | \
-                  D3DCS_PLANE2 | \
-                  D3DCS_PLANE3 | \
-                  D3DCS_PLANE4 | \
-                  D3DCS_PLANE5;
+#define D3DCS_ALL (D3DCS_LEFT   | \
+                   D3DCS_RIGHT  | \
+                   D3DCS_TOP    | \
+                   D3DCS_BOTTOM | \
+                   D3DCS_FRONT  | \
+                   D3DCS_BACK   | \
+                   D3DCS_PLANE0 | \
+                   D3DCS_PLANE1 | \
+                   D3DCS_PLANE2 | \
+                   D3DCS_PLANE3 | \
+                   D3DCS_PLANE4 | \
+                   D3DCS_PLANE5)
 
 typedef struct _D3DCLIPSTATUS8 {
     DWORD ClipUnion;
@@ -319,7 +319,7 @@ typedef enum _D3DTRANSFORMSTATETYPE {
 
 typedef enum _D3DRENDERSTATETYPE {
     D3DRS_ZENABLE                   = 7,    /* D3DZBUFFERTYPE (or TRUE/FALSE for legacy) */
-    D3DRS_FILLMODE                  = 8,    /* D3DFILL_MODE        */
+    D3DRS_FILLMODE                  = 8,    /* D3DFILLMODE */
     D3DRS_SHADEMODE                 = 9,    /* D3DSHADEMODE */
     D3DRS_LINEPATTERN               = 10,   /* D3DLINEPATTERN */
     D3DRS_ZWRITEENABLE              = 14,   /* TRUE to enable z writes */
@@ -392,6 +392,8 @@ typedef enum _D3DRENDERSTATETYPE {
     D3DRS_COLORWRITEENABLE          = 168,  // per-channel write enable
     D3DRS_TWEENFACTOR               = 170,   // float tween factor
     D3DRS_BLENDOP                   = 171,   // D3DBLENDOP setting
+    D3DRS_POSITIONORDER             = 172,   // NPatch position interpolation order. D3DORDER_LINEAR or D3DORDER_CUBIC (default)
+    D3DRS_NORMALORDER               = 173,   // NPatch normal interpolation order. D3DORDER_LINEAR (default) or D3DORDER_QUADRATIC
 
     D3DRS_FORCE_DWORD               = 0x7fffffff, /* force 32-bit size enum */
 } D3DRENDERSTATETYPE;
@@ -471,7 +473,7 @@ typedef enum _D3DTEXTURESTAGESTATETYPE
 
 /*
  * Enumerations for COLOROP and ALPHAOP texture blending operations set in
- * texture processing stage controls in D3DRENDERSTATE.
+ * texture processing stage controls in D3DTSS.
  */
 typedef enum _D3DTEXTUREOP
 {
@@ -497,7 +499,7 @@ typedef enum _D3DTEXTUREOP
     // Linear alpha blend: Arg1*(Alpha) + Arg2*(1-Alpha)
     D3DTOP_BLENDDIFFUSEALPHA    = 12, // iterated alpha
     D3DTOP_BLENDTEXTUREALPHA    = 13, // texture alpha
-    D3DTOP_BLENDFACTORALPHA     = 14, // alpha from D3DRENDERSTATE_TEXTUREFACTOR
+    D3DTOP_BLENDFACTORALPHA     = 14, // alpha from D3DRS_TEXTUREFACTOR
 
     // Linear alpha blend with pre-multiplied arg1 input: Arg1 + Arg2*(1-Alpha)
     D3DTOP_BLENDTEXTUREALPHAPM  = 15, // texture alpha
@@ -540,7 +542,7 @@ typedef enum _D3DTEXTUREOP
 #define D3DTA_DIFFUSE           0x00000000  // select diffuse color (read only)
 #define D3DTA_CURRENT           0x00000001  // select stage destination register (read/write)
 #define D3DTA_TEXTURE           0x00000002  // select texture color (read only)
-#define D3DTA_TFACTOR           0x00000003  // select RENDERSTATE_TEXTUREFACTOR (read only)
+#define D3DTA_TFACTOR           0x00000003  // select D3DRS_TEXTUREFACTOR (read only)
 #define D3DTA_SPECULAR          0x00000004  // select specular color (read only)
 #define D3DTA_TEMP              0x00000005  // select temporary register color (read/write)
 #define D3DTA_COMPLEMENT        0x00000010  // take 1.0 - x (read modifier)
@@ -914,6 +916,16 @@ typedef enum _D3DSHADER_INSTRUCTION_OPCODE_TYPE
     D3DSIO_LOGP         ,       // VS
     D3DSIO_CND          ,       // PS
     D3DSIO_DEF          ,       // PS
+    D3DSIO_TEXREG2RGB   ,       // PS
+    D3DSIO_TEXDP3TEX    ,       // PS
+    D3DSIO_TEXM3x2DEPTH ,       // PS
+    D3DSIO_TEXDP3       ,       // PS
+    D3DSIO_TEXM3x3      ,       // PS
+    D3DSIO_TEXDEPTH     ,       // PS
+    D3DSIO_CMP          ,       // PS
+    D3DSIO_BEM          ,       // PS
+
+    D3DSIO_PHASE        = 0xFFFD,
     D3DSIO_COMMENT      = 0xFFFE,
     D3DSIO_END          = 0xFFFF,
 
@@ -930,7 +942,7 @@ typedef enum _D3DSHADER_INSTRUCTION_OPCODE_TYPE
 //
 // Parameter Token Bit Definitions
 //
-#define D3DSP_REGNUM_MASK       0x00000FFF
+#define D3DSP_REGNUM_MASK       0x00001FFF
 
 // destination parameter write mask
 #define D3DSP_WRITEMASK_0       0x00010000  // Component 0 (X;Red)
@@ -998,28 +1010,28 @@ typedef enum _D3DVS_ADDRESSMODE_TYPE
 #define D3DVS_SWIZZLE_SHIFT     16
 #define D3DVS_SWIZZLE_MASK      0x00FF0000
 
-// The following bits define where to take component X:
+// The following bits define where to take component X from:
 
 #define D3DVS_X_X       (0 << D3DVS_SWIZZLE_SHIFT)
 #define D3DVS_X_Y       (1 << D3DVS_SWIZZLE_SHIFT)
 #define D3DVS_X_Z       (2 << D3DVS_SWIZZLE_SHIFT)
 #define D3DVS_X_W       (3 << D3DVS_SWIZZLE_SHIFT)
 
-// The following bits define where to take component Y:
+// The following bits define where to take component Y from:
 
 #define D3DVS_Y_X       (0 << (D3DVS_SWIZZLE_SHIFT + 2))
 #define D3DVS_Y_Y       (1 << (D3DVS_SWIZZLE_SHIFT + 2))
 #define D3DVS_Y_Z       (2 << (D3DVS_SWIZZLE_SHIFT + 2))
 #define D3DVS_Y_W       (3 << (D3DVS_SWIZZLE_SHIFT + 2))
 
-// The following bits define where to take component Z:
+// The following bits define where to take component Z from:
 
 #define D3DVS_Z_X       (0 << (D3DVS_SWIZZLE_SHIFT + 4))
 #define D3DVS_Z_Y       (1 << (D3DVS_SWIZZLE_SHIFT + 4))
 #define D3DVS_Z_Z       (2 << (D3DVS_SWIZZLE_SHIFT + 4))
 #define D3DVS_Z_W       (3 << (D3DVS_SWIZZLE_SHIFT + 4))
 
-// The following bits define where to take component W:
+// The following bits define where to take component W from:
 
 #define D3DVS_W_X       (0 << (D3DVS_SWIZZLE_SHIFT + 6))
 #define D3DVS_W_Y       (1 << (D3DVS_SWIZZLE_SHIFT + 6))
@@ -1042,6 +1054,24 @@ typedef enum _D3DVS_ADDRESSMODE_TYPE
       (3 << (D3DSP_SWIZZLE_SHIFT + 6)) )
 
 // pixel-shader swizzle ops
+#define D3DSP_REPLICATERED \
+    ( (0 << (D3DSP_SWIZZLE_SHIFT + 0)) | \
+      (0 << (D3DSP_SWIZZLE_SHIFT + 2)) | \
+      (0 << (D3DSP_SWIZZLE_SHIFT + 4)) | \
+      (0 << (D3DSP_SWIZZLE_SHIFT + 6)) )
+
+#define D3DSP_REPLICATEGREEN \
+    ( (1 << (D3DSP_SWIZZLE_SHIFT + 0)) | \
+      (1 << (D3DSP_SWIZZLE_SHIFT + 2)) | \
+      (1 << (D3DSP_SWIZZLE_SHIFT + 4)) | \
+      (1 << (D3DSP_SWIZZLE_SHIFT + 6)) )
+
+#define D3DSP_REPLICATEBLUE \
+    ( (2 << (D3DSP_SWIZZLE_SHIFT + 0)) | \
+      (2 << (D3DSP_SWIZZLE_SHIFT + 2)) | \
+      (2 << (D3DSP_SWIZZLE_SHIFT + 4)) | \
+      (2 << (D3DSP_SWIZZLE_SHIFT + 6)) )
+
 #define D3DSP_REPLICATEALPHA \
     ( (3 << (D3DSP_SWIZZLE_SHIFT + 0)) | \
       (3 << (D3DSP_SWIZZLE_SHIFT + 2)) | \
@@ -1061,6 +1091,10 @@ typedef enum _D3DSHADER_PARAM_SRCMOD_TYPE
     D3DSPSM_SIGN    = 4<<D3DSP_SRCMOD_SHIFT, // sign
     D3DSPSM_SIGNNEG = 5<<D3DSP_SRCMOD_SHIFT, // sign and negate
     D3DSPSM_COMP    = 6<<D3DSP_SRCMOD_SHIFT, // complement
+    D3DSPSM_X2      = 7<<D3DSP_SRCMOD_SHIFT, // *2
+    D3DSPSM_X2NEG   = 8<<D3DSP_SRCMOD_SHIFT, // *2 and negate
+    D3DSPSM_DZ      = 9<<D3DSP_SRCMOD_SHIFT, // divide through by z component 
+    D3DSPSM_DW      = 10<<D3DSP_SRCMOD_SHIFT, // divide through by w component
     D3DSPSM_FORCE_DWORD = 0x7fffffff,        // force 32-bit size enum
 } D3DSHADER_PARAM_SRCMOD_TYPE;
 
@@ -1099,6 +1133,7 @@ typedef enum _D3DBASISTYPE
 typedef enum _D3DORDERTYPE
 {
    D3DORDER_LINEAR      = 1,
+   D3DORDER_QUADRATIC   = 2,
    D3DORDER_CUBIC       = 3,
    D3DORDER_QUINTIC     = 5,
    D3DORDER_FORCE_DWORD = 0x7fffffff,
@@ -1240,6 +1275,8 @@ typedef enum _D3DFORMAT
     D3DFMT_A8                   = 28,
     D3DFMT_A8R3G3B2             = 29,
     D3DFMT_X4R4G4B4             = 30,
+    D3DFMT_A2B10G10R10          = 31,
+    D3DFMT_G16R16               = 34,
 
     D3DFMT_A8P8                 = 40,
     D3DFMT_P8                   = 41,
@@ -1254,6 +1291,7 @@ typedef enum _D3DFORMAT
     D3DFMT_Q8W8V8U8             = 63,
     D3DFMT_V16U16               = 64,
     D3DFMT_W11V11U10            = 65,
+    D3DFMT_A2W10V10U10          = 67,
 
     D3DFMT_UYVY                 = MAKEFOURCC('U', 'Y', 'V', 'Y'),
     D3DFMT_YUY2                 = MAKEFOURCC('Y', 'U', 'Y', '2'),
@@ -1314,6 +1352,7 @@ typedef enum _D3DPOOL {
     D3DPOOL_DEFAULT                 = 0,
     D3DPOOL_MANAGED                 = 1,
     D3DPOOL_SYSTEMMEM               = 2,
+    D3DPOOL_SCRATCH                 = 3,
 
     D3DPOOL_FORCE_DWORD             = 0x7fffffff
 } D3DPOOL;
@@ -1591,6 +1630,42 @@ typedef enum _D3DDEBUGMONITORTOKENS {
     D3DDMT_DISABLE           = 1,    // disable debug monitor
     D3DDMT_FORCE_DWORD     = 0x7fffffff,
 } D3DDEBUGMONITORTOKENS;
+
+// GetInfo IDs
+
+#define D3DDEVINFOID_RESOURCEMANAGER    5           /* Used with D3DDEVINFO_RESOURCEMANAGER */
+#define D3DDEVINFOID_VERTEXSTATS        6           /* Used with D3DDEVINFO_D3DVERTEXSTATS */
+
+typedef struct _D3DRESOURCESTATS
+{
+// Data collected since last Present()
+    BOOL    bThrashing;             /* indicates if thrashing */
+    DWORD   ApproxBytesDownloaded;  /* Approximate number of bytes downloaded by resource manager */
+    DWORD   NumEvicts;              /* number of objects evicted */
+    DWORD   NumVidCreates;          /* number of objects created in video memory */
+    DWORD   LastPri;                /* priority of last object evicted */
+    DWORD   NumUsed;                /* number of objects set to the device */
+    DWORD   NumUsedInVidMem;        /* number of objects set to the device, which are already in video memory */
+// Persistent data
+    DWORD   WorkingSet;             /* number of objects in video memory */
+    DWORD   WorkingSetBytes;        /* number of bytes in video memory */
+    DWORD   TotalManaged;           /* total number of managed objects */
+    DWORD   TotalBytes;             /* total number of bytes of managed objects */
+} D3DRESOURCESTATS;
+
+#define D3DRTYPECOUNT (D3DRTYPE_INDEXBUFFER+1)
+
+typedef struct _D3DDEVINFO_RESOURCEMANAGER
+{
+    D3DRESOURCESTATS    stats[D3DRTYPECOUNT];
+} D3DDEVINFO_RESOURCEMANAGER, *LPD3DDEVINFO_RESOURCEMANAGER;
+
+typedef struct _D3DDEVINFO_D3DVERTEXSTATS
+{
+    DWORD   NumRenderedTriangles;       /* total number of triangles that are not clipped in this frame */
+    DWORD   NumExtraClippingTriangles;  /* Number of new triangles generated by clipping */
+} D3DDEVINFO_D3DVERTEXSTATS, *LPD3DDEVINFO_D3DVERTEXSTATS;
+
 
 #pragma pack()
 #pragma warning(default:4201)

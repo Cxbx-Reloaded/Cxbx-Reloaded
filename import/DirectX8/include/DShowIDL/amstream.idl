@@ -3,7 +3,7 @@
 //
 // Desc: 
 //
-// Copyright (c) 1998 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1998-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -93,34 +93,34 @@ pointer_default(unique)
 ]
 interface IAMMultiMediaStream : IMultiMediaStream
 {
-	HRESULT Initialize(
-		[in] STREAM_TYPE StreamType,
-                [in] DWORD dwFlags,
-		[in]  IGraphBuilder *pFilterGraph);
+    HRESULT Initialize(
+        [in] STREAM_TYPE StreamType,
+        [in] DWORD dwFlags,
+        [in]  IGraphBuilder *pFilterGraph);
 
-        HRESULT GetFilterGraph(
-                [out] IGraphBuilder **ppGraphBuilder);
+    HRESULT GetFilterGraph(
+        [out] IGraphBuilder **ppGraphBuilder);
 
-	HRESULT GetFilter(
-		[out] IMediaStreamFilter **ppFilter);
+    HRESULT GetFilter(
+        [out] IMediaStreamFilter **ppFilter);
 
-	HRESULT AddMediaStream(
-		[in]  IUnknown *pStreamObject,
-		[in]  const MSPID *PurposeId,
-		[in] DWORD dwFlags,
-		[out]  IMediaStream **ppNewStream);
+    HRESULT AddMediaStream(
+        [in]  IUnknown *pStreamObject,
+        [in]  const MSPID *PurposeId,
+        [in]  DWORD dwFlags,
+        [out] IMediaStream **ppNewStream);
 
-	HRESULT OpenFile(
-		[in] LPCWSTR pszFileName,
-		[in] DWORD dwFlags);
+    HRESULT OpenFile(
+        [in] LPCWSTR pszFileName,
+        [in] DWORD dwFlags);
 
-	HRESULT OpenMoniker(
-                [in] IBindCtx *pCtx,
-		[in] IMoniker *pMoniker,
-		[in] DWORD dwFlags);
+    HRESULT OpenMoniker(
+        [in] IBindCtx *pCtx,
+        [in] IMoniker *pMoniker,
+        [in] DWORD dwFlags);
 
-	HRESULT Render(
-		[in] DWORD dwFlags);
+    HRESULT Render(
+        [in] DWORD dwFlags);
 }
 
 
@@ -132,23 +132,23 @@ pointer_default(unique)
 ]
 interface IAMMediaStream : IMediaStream
 {
-	HRESULT Initialize(
-                [in]  IUnknown *pSourceObject,
-                [in] DWORD dwFlags,
-		[in] REFMSPID PurposeId,
-		[in] const STREAM_TYPE StreamType);
+    HRESULT Initialize(
+        [in]  IUnknown *pSourceObject,
+        [in] DWORD dwFlags,
+        [in] REFMSPID PurposeId,
+        [in] const STREAM_TYPE StreamType);
 
-	HRESULT SetState(
-		[in] FILTER_STATE State);
+    HRESULT SetState(
+        [in] FILTER_STATE State);
 
-	HRESULT JoinAMMultiMediaStream(
-		[in] IAMMultiMediaStream *pAMMultiMediaStream);
+    HRESULT JoinAMMultiMediaStream(
+        [in] IAMMultiMediaStream *pAMMultiMediaStream);
 
-	HRESULT JoinFilter(
-		[in] IMediaStreamFilter *pMediaStreamFilter);
+    HRESULT JoinFilter(
+        [in] IMediaStreamFilter *pMediaStreamFilter);
 
-	HRESULT JoinFilterGraph(
-		[in] IFilterGraph *pFilterGraph);
+    HRESULT JoinFilterGraph(
+        [in] IFilterGraph *pFilterGraph);
 };
 
 
@@ -163,33 +163,33 @@ pointer_default(unique)
 ]
 interface IMediaStreamFilter : IBaseFilter
 {
-	HRESULT AddMediaStream(
-		[in] IAMMediaStream *pAMMediaStream);
+    HRESULT AddMediaStream(
+        [in] IAMMediaStream *pAMMediaStream);
 
-	HRESULT GetMediaStream(
-		[in] REFMSPID idPurpose,
-		[out] IMediaStream **ppMediaStream);
+    HRESULT GetMediaStream(
+        [in] REFMSPID idPurpose,
+        [out] IMediaStream **ppMediaStream);
 
-	HRESULT EnumMediaStreams(
-		[in] long Index,
-		[out] IMediaStream **ppMediaStream);
+    HRESULT EnumMediaStreams(
+        [in] long Index,
+        [out] IMediaStream **ppMediaStream);
 
         HRESULT SupportSeeking(
-		[in] BOOL bRenderer);
+        [in] BOOL bRenderer);
 
-	HRESULT ReferenceTimeToStreamTime(
-		[in] [out] REFERENCE_TIME *pTime);
+    HRESULT ReferenceTimeToStreamTime(
+        [in] [out] REFERENCE_TIME *pTime);
 
-	HRESULT GetCurrentStreamTime(
-		[out] REFERENCE_TIME *pCurrentStreamTime);
+    HRESULT GetCurrentStreamTime(
+        [out] REFERENCE_TIME *pCurrentStreamTime);
 
-	HRESULT WaitUntil(
-		[in]  REFERENCE_TIME WaitStreamTime);
+    HRESULT WaitUntil(
+        [in]  REFERENCE_TIME WaitStreamTime);
 
-	HRESULT Flush(
-                [in] BOOL bCancelEOS);
+    HRESULT Flush(
+        [in] BOOL bCancelEOS);
 
-        HRESULT EndOfStream();
+    HRESULT EndOfStream();
 };
 
 
@@ -224,8 +224,6 @@ interface IDirectDrawMediaSample : IUnknown
 
 
 
-
-
 [
 object,
 local,
@@ -244,11 +242,11 @@ interface IAMMediaTypeStream : IMediaStream
                 [in]    DWORD dwFlags);
 
         HRESULT CreateSample(
-                [in]            long lSampleSize,
+                [in]  long lSampleSize,
                 [in]  BYTE * pbBuffer,
-                [in]            DWORD dwFlags,
+                [in]  DWORD dwFlags,
                 [in]  IUnknown *pUnkOuter,
-                [out]           IAMMediaTypeSample ** ppAMMediaTypeSample);
+                [out] IAMMediaTypeSample ** ppAMMediaTypeSample);
 
         HRESULT GetStreamAllocatorRequirements(
                 [out] ALLOCATOR_PROPERTIES *pProps);
@@ -294,31 +292,31 @@ interface IAMMediaTypeSample : IStreamSample
 
 
 [
-	uuid(4E6CDE29-C0C4-11d0-8FF1-00C04FD9189D),
-	version(1.0),
-	helpstring("DirectShowStream 1.0 Type Library")
+    uuid(4E6CDE29-C0C4-11d0-8FF1-00C04FD9189D),
+    version(1.0),
+    helpstring("DirectShowStream 1.0 Type Library")
 ]
 
 library DirectShowStreamLib
 {
-	importlib("stdole32.tlb");
-	importlib("stdole2.tlb");
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
 
-	[
-		uuid(49c47ce5-9ba4-11d0-8212-00c04fc32c45),
-		helpstring("DirectShow Multi Media Stream")
-	]
-	coclass AMMultiMediaStream
-	{
-		[default] dispinterface IDirectShowStream;
-	};
+    [
+        uuid(49c47ce5-9ba4-11d0-8212-00c04fc32c45),
+        helpstring("DirectShow Multi Media Stream")
+    ]
+    coclass AMMultiMediaStream
+    {
+        [default] dispinterface IDirectShowStream;
+    };
 };
 
 
 
 //
 //  The MIDL compiler wants to produce a CLSID for everything defined in
-//  our type library, but it also wants to generate huge, fat proxy code
+//  our type library, but it also wants to generate huge proxy code,
 //  so we use DEFINE_GUID for all other classes.  It has another interesting
 //  bug in that it defines CLSID_AMMultiMediaStream within a #ifdef __cplusplus
 //  block, so we need to define it outside of that scope.

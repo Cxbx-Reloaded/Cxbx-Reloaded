@@ -4,7 +4,7 @@
 // Desc: Interface to the parser to get current time.  This is useful for
 //       multifile playback.
 //
-// Copyright (c) 1996 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1996-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
