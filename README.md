@@ -13,6 +13,8 @@ Cxbx-Reloaded is early in development and still pretty unstable, so don't expect
 ### Minimum
   * OS: Windows 7 64-bit or newer. 32-bit installations are not supported.
   * Video card: anything that supports Direct3D 8.
+### Prerequisites
+  * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) (navigate to Configuration: Release => Artifacts => export\Release.zip).
