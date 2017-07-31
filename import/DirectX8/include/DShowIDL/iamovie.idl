@@ -3,7 +3,7 @@
 //
 // Desc: 
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -120,25 +120,25 @@ interface IAMovie : IFilterGraph
         HRESULT get_Rate(
                     [out] double * pdRate);
 
-	/* New methods */
-	HRESULT RemoveAllFilters();
-	HRESULT Play();
-	HRESULT PlayFile([in] LPCWSTR strFilename);
-	HRESULT EnumFiltersByInterface( [in] REFIID riid, [out] IEnumFilters ** ppEnum );
-	HRESULT EnumPins( [out] IEnumPins ** ppEnum );
-	HRESULT EnumPinsIn( [out] IEnumPins ** ppEnum );
-	HRESULT EnumPinsOut( [out] IEnumPins ** ppEnum );
-	HRESULT RenderAll();
-	HRESULT RenderNewFile( [in] LPCWSTR strFilename);
+    /* New methods */
+    HRESULT RemoveAllFilters();
+    HRESULT Play();
+    HRESULT PlayFile([in] LPCWSTR strFilename);
+    HRESULT EnumFiltersByInterface( [in] REFIID riid, [out] IEnumFilters ** ppEnum );
+    HRESULT EnumPins( [out] IEnumPins ** ppEnum );
+    HRESULT EnumPinsIn( [out] IEnumPins ** ppEnum );
+    HRESULT EnumPinsOut( [out] IEnumPins ** ppEnum );
+    HRESULT RenderAll();
+    HRESULT RenderNewFile( [in] LPCWSTR strFilename);
 
-	// Free any resources associated with the parameters to an event.
+    // Free any resources associated with the parameters to an event.
         // Event parameters may be LONGs, IUnknown* or BSTR. No action
         // is taken with LONGs. IUnknown are passed addrefed and need a
         // Release call. BSTR are allocated by the task allocator and will be
         // freed by calling the task allocator.
         HRESULT FreeEventParams(
-        		[in] long lEvCode,
-                        [in] long lParam1,
-                        [in] long lParam2);
+                    [in] long lEvCode,
+                    [in] long lParam1,
+                    [in] long lParam2);
 }
 

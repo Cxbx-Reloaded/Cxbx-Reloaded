@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 1999 Microsoft Corporation.  All Rights Reserved.
+//  Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //  File:       d3dx8core.h
 //  Content:    D3DX core types and functions
@@ -13,10 +13,17 @@
 #define __D3DX8CORE_H__
 
 
+
 ///////////////////////////////////////////////////////////////////////////
 // ID3DXBuffer:
 // ------------
-// The buffer object is used to return arbitrary lenght data.
+// The buffer object is used by D3DX to return arbitrary size data.
+//
+// GetBufferPointer -
+//    Returns a pointer to the beginning of the buffer.
+//
+// GetBufferSize -
+//    Returns the size of the buffer, in bytes.
 ///////////////////////////////////////////////////////////////////////////
 
 typedef interface ID3DXBuffer ID3DXBuffer;
@@ -25,6 +32,9 @@ typedef interface ID3DXBuffer *LPD3DXBUFFER;
 // {932E6A7E-C68E-45dd-A7BF-53D19C86DB1F}
 DEFINE_GUID(IID_ID3DXBuffer, 
 0x932e6a7e, 0xc68e, 0x45dd, 0xa7, 0xbf, 0x53, 0xd1, 0x9c, 0x86, 0xdb, 0x1f);
+
+#undef INTERFACE
+#define INTERFACE ID3DXBuffer
 
 DECLARE_INTERFACE_(ID3DXBuffer, IUnknown)
 {
@@ -37,8 +47,6 @@ DECLARE_INTERFACE_(ID3DXBuffer, IUnknown)
     STDMETHOD_(LPVOID, GetBufferPointer)(THIS) PURE;
     STDMETHOD_(DWORD, GetBufferSize)(THIS) PURE;
 };
-
-
 
 
 
@@ -59,16 +67,25 @@ DECLARE_INTERFACE_(ID3DXBuffer, IUnknown)
 //
 // End -
 //    Restores device state to how it was when Begin was called.
+//
+// OnLostDevice, OnResetDevice -
+//    Call OnLostDevice() on this object before calling Reset() on the
+//    device, so that this object can release any stateblocks and video
+//    memory resources.  After Reset(), the call OnResetDevice().
+//
 ///////////////////////////////////////////////////////////////////////////
 
 typedef interface ID3DXFont ID3DXFont;
 typedef interface ID3DXFont *LPD3DXFONT;
 
 
-// {2D501DF7-D253-4414-865F-A6D54A753138}
-DEFINE_GUID( IID_ID3DXFont,
-0x2d501df7, 0xd253, 0x4414, 0x86, 0x5f, 0xa6, 0xd5, 0x4a, 0x75, 0x31, 0x38);
+// {89FAD6A5-024D-49af-8FE7-F51123B85E25}
+DEFINE_GUID( IID_ID3DXFont, 
+0x89fad6a5, 0x24d, 0x49af, 0x8f, 0xe7, 0xf5, 0x11, 0x23, 0xb8, 0x5e, 0x25);
 
+
+#undef INTERFACE
+#define INTERFACE ID3DXFont
 
 DECLARE_INTERFACE_(ID3DXFont, IUnknown)
 {
@@ -82,11 +99,12 @@ DECLARE_INTERFACE_(ID3DXFont, IUnknown)
     STDMETHOD(GetLogFont)(THIS_ LOGFONT* pLogFont) PURE;
 
     STDMETHOD(Begin)(THIS) PURE;
-
     STDMETHOD_(INT, DrawTextA)(THIS_ LPCSTR  pString, INT Count, LPRECT pRect, DWORD Format, D3DCOLOR Color) PURE;
     STDMETHOD_(INT, DrawTextW)(THIS_ LPCWSTR pString, INT Count, LPRECT pRect, DWORD Format, D3DCOLOR Color) PURE;
-
     STDMETHOD(End)(THIS) PURE;
+
+    STDMETHOD(OnLostDevice)(THIS) PURE;
+    STDMETHOD(OnResetDevice)(THIS) PURE;
 };
 
 #ifndef DrawText
@@ -122,9 +140,6 @@ HRESULT WINAPI
 
 
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////
 // ID3DXSprite:
 // ------------
@@ -133,23 +148,31 @@ HRESULT WINAPI
 // Begin - 
 //    Prepares device for drawing sprites
 //
-// Draw, DrawAffine, DrawTransform
+// Draw, DrawAffine, DrawTransform -
 //    Draws a sprite in screen-space.  Before transformation, the sprite is
 //    the size of SrcRect, with its top-left corner at the origin (0,0).  
 //    The color and alpha channels are modulated by Color.
 //
 // End - 
 //     Restores device state to how it was when Begin was called.
+//
+// OnLostDevice, OnResetDevice -
+//    Call OnLostDevice() on this object before calling Reset() on the
+//    device, so that this object can release any stateblocks and video
+//    memory resources.  After Reset(), the call OnResetDevice().
 ///////////////////////////////////////////////////////////////////////////
 
 typedef interface ID3DXSprite ID3DXSprite;
 typedef interface ID3DXSprite *LPD3DXSPRITE;
 
 
-// {E8691849-87B8-4929-9050-1B0542D5538C}
+// {13D69D15-F9B0-4e0f-B39E-C91EB33F6CE7}
 DEFINE_GUID( IID_ID3DXSprite, 
-0xe8691849, 0x87b8, 0x4929, 0x90, 0x50, 0x1b, 0x5, 0x42, 0xd5, 0x53, 0x8c);
+0x13d69d15, 0xf9b0, 0x4e0f, 0xb3, 0x9e, 0xc9, 0x1e, 0xb3, 0x3f, 0x6c, 0xe7);
 
+
+#undef INTERFACE
+#define INTERFACE ID3DXSprite
 
 DECLARE_INTERFACE_(ID3DXSprite, IUnknown)
 {
@@ -173,6 +196,9 @@ DECLARE_INTERFACE_(ID3DXSprite, IUnknown)
         D3DCOLOR Color) PURE;
 
     STDMETHOD(End)(THIS) PURE;
+
+    STDMETHOD(OnLostDevice)(THIS) PURE;
+    STDMETHOD(OnResetDevice)(THIS) PURE;
 };
 
 
@@ -193,13 +219,22 @@ HRESULT WINAPI
 
 
 
-
 ///////////////////////////////////////////////////////////////////////////
 // ID3DXRenderToSurface:
 // ---------------------
 // This object abstracts rendering to surfaces.  These surfaces do not 
 // necessarily need to be render targets.  If they are not, a compatible
 // render target is used, and the result copied into surface at end scene.
+//
+// BeginScene, EndScene -
+//    Call BeginScene() and EndScene() at the beginning and ending of your
+//    scene.  These calls will setup and restore render targets, viewports, 
+//    etc.. 
+//
+// OnLostDevice, OnResetDevice -
+//    Call OnLostDevice() on this object before calling Reset() on the
+//    device, so that this object can release any stateblocks and video
+//    memory resources.  After Reset(), the call OnResetDevice().
 ///////////////////////////////////////////////////////////////////////////
 
 typedef struct _D3DXRTS_DESC
@@ -217,10 +252,13 @@ typedef interface ID3DXRenderToSurface ID3DXRenderToSurface;
 typedef interface ID3DXRenderToSurface *LPD3DXRENDERTOSURFACE;
 
 
-// {69CC587C-E40C-458d-B5D3-B029E18EB60A}
+// {82DF5B90-E34E-496e-AC1C-62117A6A5913}
 DEFINE_GUID( IID_ID3DXRenderToSurface, 
-0x69cc587c, 0xe40c, 0x458d, 0xb5, 0xd3, 0xb0, 0x29, 0xe1, 0x8e, 0xb6, 0xa);
+0x82df5b90, 0xe34e, 0x496e, 0xac, 0x1c, 0x62, 0x11, 0x7a, 0x6a, 0x59, 0x13);
 
+
+#undef INTERFACE
+#define INTERFACE ID3DXRenderToSurface
 
 DECLARE_INTERFACE_(ID3DXRenderToSurface, IUnknown)
 {
@@ -235,6 +273,9 @@ DECLARE_INTERFACE_(ID3DXRenderToSurface, IUnknown)
 
     STDMETHOD(BeginScene)(THIS_ LPDIRECT3DSURFACE8 pSurface, CONST D3DVIEWPORT8* pViewport) PURE;
     STDMETHOD(EndScene)(THIS) PURE;
+
+    STDMETHOD(OnLostDevice)(THIS) PURE;
+    STDMETHOD(OnResetDevice)(THIS) PURE;
 };
 
 
@@ -261,6 +302,29 @@ HRESULT WINAPI
 ///////////////////////////////////////////////////////////////////////////
 // ID3DXRenderToEnvMap:
 // --------------------
+// This object abstracts rendering to environment maps.  These surfaces 
+// do not necessarily need to be render targets.  If they are not, a 
+// compatible render target is used, and the result copied into the
+// environment map at end scene.
+//
+// BeginCube, BeginSphere, BeginHemisphere, BeginParabolic -
+//    This function initiates the rendering of the environment map.  As
+//    parameters, you pass the textures in which will get filled in with
+//    the resulting environment map.
+//
+// Face -
+//    Call this function to initiate the drawing of each face.  For each 
+//    environment map, you will call this six times.. once for each face 
+//    in D3DCUBEMAP_FACES.
+//
+// End -
+//    This will restore all render targets, and if needed compose all the
+//    rendered faces into the environment map surfaces.
+//
+// OnLostDevice, OnResetDevice -
+//    Call OnLostDevice() on this object before calling Reset() on the
+//    device, so that this object can release any stateblocks and video
+//    memory resources.  After Reset(), the call OnResetDevice().
 ///////////////////////////////////////////////////////////////////////////
 
 typedef struct _D3DXRTE_DESC
@@ -275,10 +339,13 @@ typedef struct _D3DXRTE_DESC
 typedef interface ID3DXRenderToEnvMap ID3DXRenderToEnvMap;
 typedef interface ID3DXRenderToEnvMap *LPD3DXRenderToEnvMap;
 
-// {9F6779E5-60A9-4d8b-AEE4-32770F405DBA}
+// {4E42C623-9451-44b7-8C86-ABCCDE5D52C8}
 DEFINE_GUID( IID_ID3DXRenderToEnvMap, 
-0x9f6779e5, 0x60a9, 0x4d8b, 0xae, 0xe4, 0x32, 0x77, 0xf, 0x40, 0x5d, 0xba);
+0x4e42c623, 0x9451, 0x44b7, 0x8c, 0x86, 0xab, 0xcc, 0xde, 0x5d, 0x52, 0xc8);
 
+
+#undef INTERFACE
+#define INTERFACE ID3DXRenderToEnvMap
 
 DECLARE_INTERFACE_(ID3DXRenderToEnvMap, IUnknown)
 {
@@ -307,6 +374,9 @@ DECLARE_INTERFACE_(ID3DXRenderToEnvMap, IUnknown)
 
     STDMETHOD(Face)(THIS_ D3DCUBEMAP_FACES Face) PURE;
     STDMETHOD(End)(THIS) PURE;
+
+    STDMETHOD(OnLostDevice)(THIS) PURE;
+    STDMETHOD(OnResetDevice)(THIS) PURE;
 };
 
 
@@ -356,13 +426,17 @@ extern "C" {
 
 //-------------------------------------------------------------------------
 // D3DXAssembleShader:
-// ------------------------
+// -------------------
 // Assembles an ascii description of a vertex or pixel shader into 
 // binary form.
 //
 // Parameters:
 //  pSrcFile
 //      Source file name
+//  hSrcModule
+//      Module handle. if NULL, current module will be used.
+//  pSrcResource
+//      Resource name in module
 //  pSrcData
 //      Pointer to source code
 //  SrcDataLen
@@ -400,6 +474,30 @@ HRESULT WINAPI
 #endif
 
 HRESULT WINAPI
+    D3DXAssembleShaderFromResourceA(
+        HMODULE               hSrcModule,
+        LPCSTR                pSrcResource,
+        DWORD                 Flags,
+        LPD3DXBUFFER*         ppConstants,
+        LPD3DXBUFFER*         ppCompiledShader,
+        LPD3DXBUFFER*         ppCompilationErrors);
+
+HRESULT WINAPI
+    D3DXAssembleShaderFromResourceW(
+        HMODULE               hSrcModule,
+        LPCWSTR               pSrcResource,
+        DWORD                 Flags,
+        LPD3DXBUFFER*         ppConstants,
+        LPD3DXBUFFER*         ppCompiledShader,
+        LPD3DXBUFFER*         ppCompilationErrors);
+
+#ifdef UNICODE
+#define D3DXAssembleShaderFromResource D3DXAssembleShaderFromResourceW
+#else
+#define D3DXAssembleShaderFromResource D3DXAssembleShaderFromResourceA
+#endif
+
+HRESULT WINAPI
     D3DXAssembleShader(
         LPCVOID               pSrcData,
         UINT                  SrcDataLen,
@@ -414,6 +512,7 @@ HRESULT WINAPI
 #endif //__cplusplus
 
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Misc APIs:
 ///////////////////////////////////////////////////////////////////////////
@@ -421,17 +520,6 @@ HRESULT WINAPI
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
-
-
-//-------------------------------------------------------------------------
-// D3DXGetFVFVertexSize:
-// ---------------------
-// Returns the size (in bytes) of a vertex for a given FVF.
-//-------------------------------------------------------------------------
-
-UINT WINAPI
-    D3DXGetFVFVertexSize(DWORD FVF);
-        
 
 //-------------------------------------------------------------------------
 // D3DXGetErrorString:
@@ -471,6 +559,5 @@ HRESULT WINAPI
 #ifdef __cplusplus
 }
 #endif //__cplusplus
-
 
 #endif //__D3DX8CORE_H__

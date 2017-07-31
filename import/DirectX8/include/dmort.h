@@ -3,7 +3,7 @@
 //
 // Desc: Miscellaneous runtime support for DirectShow Media Objects
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -11,8 +11,8 @@
 #define __DMORT_H__
 
 //
-// Mediatype helpers.  MoInitMediaType() goes with MoFreeMediaType(),
-// MoCreateMediaType() goes with MoDeleteMediaType() - don't mix !
+// Mediatype helpers.  MoInitMediaType() goes with MoFreeMediaType(), and
+// MoCreateMediaType() goes with MoDeleteMediaType().  Don't mix them!
 //
 
 

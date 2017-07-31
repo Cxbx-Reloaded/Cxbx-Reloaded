@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 1998 Microsoft Corporation.  All Rights Reserved.
+//  Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //  File:       d3dx8mesh.h
 //  Content:    D3DX mesh types and functions
@@ -14,51 +14,54 @@
 
 #include "dxfile.h"     // defines LPDIRECTXFILEDATA
 
-// {A69BA991-1F7D-11d3-B929-00C04F68DC23}
-DEFINE_GUID(IID_ID3DXBaseMesh,
-0xa69ba991, 0x1f7d, 0x11d3, 0xb9, 0x29, 0x0, 0xc0, 0x4f, 0x68, 0xdc, 0x23);
+// {2A835771-BF4D-43f4-8E14-82A809F17D8A}
+DEFINE_GUID(IID_ID3DXBaseMesh, 
+0x2a835771, 0xbf4d, 0x43f4, 0x8e, 0x14, 0x82, 0xa8, 0x9, 0xf1, 0x7d, 0x8a);
 
-// {9D84AC46-6B90-49a9-A721-085C7A3E3DAE}
+// {CCAE5C3B-4DD1-4d0f-997E-4684CA64557F}
 DEFINE_GUID(IID_ID3DXMesh, 
-0x9d84ac46, 0x6b90, 0x49a9, 0xa7, 0x21, 0x8, 0x5c, 0x7a, 0x3e, 0x3d, 0xae);
+0xccae5c3b, 0x4dd1, 0x4d0f, 0x99, 0x7e, 0x46, 0x84, 0xca, 0x64, 0x55, 0x7f);
 
-// {15981AA8-1A05-48e3-BBE7-FF5D49654E3F}
+// {19FBE386-C282-4659-97BD-CB869B084A6C}
 DEFINE_GUID(IID_ID3DXPMesh, 
-0x15981aa8, 0x1a05, 0x48e3, 0xbb, 0xe7, 0xff, 0x5d, 0x49, 0x65, 0x4e, 0x3f);
+0x19fbe386, 0xc282, 0x4659, 0x97, 0xbd, 0xcb, 0x86, 0x9b, 0x8, 0x4a, 0x6c);
 
-// {BC3BBDE2-1F7D-11d3-B929-00C04F68DC23}
+// {4E3CA05C-D4FF-4d11-8A02-16459E08F6F4}
 DEFINE_GUID(IID_ID3DXSPMesh, 
-0xbc3bbde2, 0x1f7d, 0x11d3, 0xb9, 0x29, 0x0, 0xc0, 0x4f, 0x68, 0xdc, 0x23);
+0x4e3ca05c, 0xd4ff, 0x4d11, 0x8a, 0x2, 0x16, 0x45, 0x9e, 0x8, 0xf6, 0xf4);
 
-// {82A53844-F322-409e-A2E9-992E1104069D}
+// {8DB06ECC-EBFC-408a-9404-3074B4773515}
 DEFINE_GUID(IID_ID3DXSkinMesh, 
-0x82a53844, 0xf322, 0x409e, 0xa2, 0xe9, 0x99, 0x2e, 0x11, 0x4, 0x6, 0x9d);
+0x8db06ecc, 0xebfc, 0x408a, 0x94, 0x4, 0x30, 0x74, 0xb4, 0x77, 0x35, 0x15);
 
-
+// Mesh options - lower 3 bytes only, upper byte used by _D3DXMESHOPT option flags
 enum _D3DXMESH {
-	D3DXMESH_32BIT			        = 0x001, // If set, then use 32 bit indices, if not set use 16 bit indices. 32BIT meshes currently not supported on ID3DXSkinMesh object
+    D3DXMESH_32BIT                  = 0x001, // If set, then use 32 bit indices, if not set use 16 bit indices.
     D3DXMESH_DONOTCLIP              = 0x002, // Use D3DUSAGE_DONOTCLIP for VB & IB.
     D3DXMESH_POINTS                 = 0x004, // Use D3DUSAGE_POINTS for VB & IB. 
     D3DXMESH_RTPATCHES              = 0x008, // Use D3DUSAGE_RTPATCHES for VB & IB. 
-	D3DXMESH_NPATCHES				= 0x4000,// Use D3DUSAGE_NPATCHES for VB & IB. 
-	D3DXMESH_VB_SYSTEMMEM		    = 0x010, // Use D3DPOOL_SYSTEMMEM for VB. Overrides D3DXMESH_MANAGEDVERTEXBUFFER
+    D3DXMESH_NPATCHES               = 0x4000,// Use D3DUSAGE_NPATCHES for VB & IB. 
+    D3DXMESH_VB_SYSTEMMEM           = 0x010, // Use D3DPOOL_SYSTEMMEM for VB. Overrides D3DXMESH_MANAGEDVERTEXBUFFER
     D3DXMESH_VB_MANAGED             = 0x020, // Use D3DPOOL_MANAGED for VB. 
     D3DXMESH_VB_WRITEONLY           = 0x040, // Use D3DUSAGE_WRITEONLY for VB.
     D3DXMESH_VB_DYNAMIC             = 0x080, // Use D3DUSAGE_DYNAMIC for VB.
-	D3DXMESH_IB_SYSTEMMEM			= 0x100, // Use D3DPOOL_SYSTEMMEM for IB. Overrides D3DXMESH_MANAGEDINDEXBUFFER
+    D3DXMESH_VB_SOFTWAREPROCESSING = 0x8000, // Use D3DUSAGE_SOFTWAREPROCESSING for VB.
+    D3DXMESH_IB_SYSTEMMEM           = 0x100, // Use D3DPOOL_SYSTEMMEM for IB. Overrides D3DXMESH_MANAGEDINDEXBUFFER
     D3DXMESH_IB_MANAGED             = 0x200, // Use D3DPOOL_MANAGED for IB.
     D3DXMESH_IB_WRITEONLY           = 0x400, // Use D3DUSAGE_WRITEONLY for IB.
     D3DXMESH_IB_DYNAMIC             = 0x800, // Use D3DUSAGE_DYNAMIC for IB.
+    D3DXMESH_IB_SOFTWAREPROCESSING= 0x10000, // Use D3DUSAGE_SOFTWAREPROCESSING for IB.
 
     D3DXMESH_VB_SHARE               = 0x1000, // Valid for Clone* calls only, forces cloned mesh/pmesh to share vertex buffer
 
     D3DXMESH_USEHWONLY              = 0x2000, // Valid for ID3DXSkinMesh::ConvertToBlendedMesh
 
     // Helper options
-    D3DXMESH_SYSTEMMEM				= 0x110, // D3DXMESH_VB_SYSTEMMEM | D3DXMESH_IB_SYSTEMMEM
+    D3DXMESH_SYSTEMMEM              = 0x110, // D3DXMESH_VB_SYSTEMMEM | D3DXMESH_IB_SYSTEMMEM
     D3DXMESH_MANAGED                = 0x220, // D3DXMESH_VB_MANAGED | D3DXMESH_IB_MANAGED
     D3DXMESH_WRITEONLY              = 0x440, // D3DXMESH_VB_WRITEONLY | D3DXMESH_IB_WRITEONLY
     D3DXMESH_DYNAMIC                = 0x880, // D3DXMESH_VB_DYNAMIC | D3DXMESH_IB_DYNAMIC
+    D3DXMESH_SOFTWAREPROCESSING   = 0x18000, // D3DXMESH_VB_SOFTWAREPROCESSING | D3DXMESH_IB_SOFTWAREPROCESSING
 
 };
 
@@ -72,7 +75,7 @@ enum _D3DXMESHSIMP
 
 enum _MAX_FVF_DECL_SIZE
 {
-	MAX_FVF_DECL_SIZE = 20
+    MAX_FVF_DECL_SIZE = 20
 };
 
 typedef struct ID3DXBaseMesh *LPD3DXBASEMESH;
@@ -117,6 +120,32 @@ typedef struct _D3DXATTRIBUTEWEIGHTS
 
 typedef D3DXATTRIBUTEWEIGHTS* LPD3DXATTRIBUTEWEIGHTS;
 
+enum _D3DXWELDEPSILONSFLAGS
+{
+    D3DXWELDEPSILONS_WELDALL = 0x1,              // weld all vertices marked by adjacency as being overlapping
+
+    D3DXWELDEPSILONS_WELDPARTIALMATCHES = 0x2,   // if a given vertex component is within epsilon, modify partial matched 
+                                                    // vertices so that both components identical AND if all components "equal"
+                                                    // remove one of the vertices
+    D3DXWELDEPSILONS_DONOTREMOVEVERTICES = 0x4,  // instructs weld to only allow modifications to vertices and not removal
+                                                    // ONLY valid if D3DXWELDEPSILONS_WELDPARTIALMATCHES is set
+                                                    // useful to modify vertices to be equal, but not allow vertices to be removed
+};
+
+typedef struct _D3DXWELDEPSILONS
+{
+    FLOAT SkinWeights;
+    FLOAT Normal;
+    FLOAT Tex[8];
+    DWORD Flags;
+} D3DXWELDEPSILONS;
+
+typedef D3DXWELDEPSILONS* LPD3DXWELDEPSILONS;
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXBaseMesh
+
 DECLARE_INTERFACE_(ID3DXBaseMesh, IUnknown)
 {
     // IUnknown
@@ -138,13 +167,21 @@ DECLARE_INTERFACE_(ID3DXBaseMesh, IUnknown)
                 CONST DWORD *pDeclaration, LPDIRECT3DDEVICE8 pD3DDevice, LPD3DXMESH* ppCloneMesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ LPDIRECT3DVERTEXBUFFER8* ppVB) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ LPDIRECT3DINDEXBUFFER8* ppIB) PURE;
-	STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-	STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(
                 THIS_ D3DXATTRIBUTERANGE *pAttribTable, DWORD* pAttribTableSize) PURE;
+
+    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* pPRep, DWORD* pAdjacency) PURE;
+    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* pAdjacency, DWORD* pPRep) PURE;
+    STDMETHOD(GenerateAdjacency)(THIS_ FLOAT Epsilon, DWORD* pAdjacency) PURE;
 };
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXMesh
 
 DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
 {
@@ -167,25 +204,31 @@ DECLARE_INTERFACE_(ID3DXMesh, ID3DXBaseMesh)
                 CONST DWORD *pDeclaration, LPDIRECT3DDEVICE8 pD3DDevice, LPD3DXMESH* ppCloneMesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ LPDIRECT3DVERTEXBUFFER8* ppVB) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ LPDIRECT3DINDEXBUFFER8* ppIB) PURE;
-	STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-	STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(
                 THIS_ D3DXATTRIBUTERANGE *pAttribTable, DWORD* pAttribTableSize) PURE;
 
-    // ID3DXMesh
-	STDMETHOD(LockAttributeBuffer)(THIS_ DWORD Flags, DWORD** ppData) PURE;
-	STDMETHOD(UnlockAttributeBuffer)(THIS) PURE;
     STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* pPRep, DWORD* pAdjacency) PURE;
     STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* pAdjacency, DWORD* pPRep) PURE;
-    STDMETHOD(GenerateAdjacency)(THIS_ FLOAT fEpsilon, DWORD* pAdjacency) PURE;
+    STDMETHOD(GenerateAdjacency)(THIS_ FLOAT Epsilon, DWORD* pAdjacency) PURE;
+
+    // ID3DXMesh
+    STDMETHOD(LockAttributeBuffer)(THIS_ DWORD Flags, DWORD** ppData) PURE;
+    STDMETHOD(UnlockAttributeBuffer)(THIS) PURE;
     STDMETHOD(Optimize)(THIS_ DWORD Flags, CONST DWORD* pAdjacencyIn, DWORD* pAdjacencyOut, 
                      DWORD* pFaceRemap, LPD3DXBUFFER *ppVertexRemap,  
                      LPD3DXMESH* ppOptMesh) PURE;
     STDMETHOD(OptimizeInplace)(THIS_ DWORD Flags, CONST DWORD* pAdjacencyIn, DWORD* pAdjacencyOut, 
                      DWORD* pFaceRemap, LPD3DXBUFFER *ppVertexRemap) PURE;
+
 };
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXPMesh
 
 DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
 {
@@ -208,12 +251,16 @@ DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
                 CONST DWORD *pDeclaration, LPDIRECT3DDEVICE8 pD3DDevice, LPD3DXMESH* ppCloneMesh) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ LPDIRECT3DVERTEXBUFFER8* ppVB) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ LPDIRECT3DINDEXBUFFER8* ppIB) PURE;
-	STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-	STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD Flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
     STDMETHOD(GetAttributeTable)(
                 THIS_ D3DXATTRIBUTERANGE *pAttribTable, DWORD* pAttribTableSize) PURE;
+
+    STDMETHOD(ConvertPointRepsToAdjacency)(THIS_ CONST DWORD* pPRep, DWORD* pAdjacency) PURE;
+    STDMETHOD(ConvertAdjacencyToPointReps)(THIS_ CONST DWORD* pAdjacency, DWORD* pPRep) PURE;
+    STDMETHOD(GenerateAdjacency)(THIS_ FLOAT Epsilon, DWORD* pAdjacency) PURE;
 
     // ID3DXPMesh
     STDMETHOD(ClonePMeshFVF)(THIS_ DWORD Options, 
@@ -231,8 +278,17 @@ DECLARE_INTERFACE_(ID3DXPMesh, ID3DXBaseMesh)
     STDMETHOD(Optimize)(THIS_ DWORD Flags, DWORD* pAdjacencyOut, 
                      DWORD* pFaceRemap, LPD3DXBUFFER *ppVertexRemap,  
                      LPD3DXMESH* ppOptMesh) PURE;
+
+    STDMETHOD(OptimizeBaseLOD)(THIS_ DWORD Flags, DWORD* pFaceRemap) PURE;
+    STDMETHOD(TrimByFaces)(THIS_ DWORD NewFacesMin, DWORD NewFacesMax, DWORD *rgiFaceRemap, DWORD *rgiVertRemap) PURE;
+    STDMETHOD(TrimByVertices)(THIS_ DWORD NewVerticesMin, DWORD NewVerticesMax, DWORD *rgiFaceRemap, DWORD *rgiVertRemap) PURE;
+
     STDMETHOD(GetAdjacency)(THIS_ DWORD* pAdjacency) PURE;
 };
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXSPMesh
 
 DECLARE_INTERFACE_(ID3DXSPMesh, IUnknown)
 {
@@ -260,19 +316,21 @@ DECLARE_INTERFACE_(ID3DXSPMesh, IUnknown)
     STDMETHOD(ReduceVertices)(THIS_ DWORD Vertices) PURE;
     STDMETHOD_(DWORD, GetMaxFaces)(THIS) PURE;
     STDMETHOD_(DWORD, GetMaxVertices)(THIS) PURE;
+    STDMETHOD(GetVertexAttributeWeights)(THIS_ LPD3DXATTRIBUTEWEIGHTS pVertexAttributeWeights) PURE;
+    STDMETHOD(GetVertexWeights)(THIS_ FLOAT *pVertexWeights) PURE;
 };
 
 #define UNUSED16 (0xffff)
 #define UNUSED32 (0xffffffff)
 
-// ID3DXMesh::Optimize options
+// ID3DXMesh::Optimize options - upper byte only, lower 3 bytes used from _D3DXMESH option flags
 enum _D3DXMESHOPT {
-	D3DXMESHOPT_COMPACT       = 0x001,
-	D3DXMESHOPT_ATTRSORT      = 0x002,
-	D3DXMESHOPT_VERTEXCACHE   = 0x004,
-	D3DXMESHOPT_STRIPREORDER  = 0x008,
-    D3DXMESHOPT_IGNOREVERTS   = 0x010,  // optimize faces only, don't touch vertices
-    D3DXMESHOPT_SHAREVB       = 0x020,
+    D3DXMESHOPT_COMPACT       = 0x01000000,
+    D3DXMESHOPT_ATTRSORT      = 0x02000000,
+    D3DXMESHOPT_VERTEXCACHE   = 0x04000000,
+    D3DXMESHOPT_STRIPREORDER  = 0x08000000,
+    D3DXMESHOPT_IGNOREVERTS   = 0x10000000,  // optimize faces only, don't touch vertices
+    D3DXMESHOPT_SHAREVB       =     0x1000,         // same as D3DXMESH_VB_SHARE
 };
 
 // Subset of the mesh that has the same attribute and bone combination.
@@ -284,8 +342,12 @@ typedef struct _D3DXBONECOMBINATION
     DWORD FaceCount;
     DWORD VertexStart;
     DWORD VertexCount;
-	DWORD* BoneId;
+    DWORD* BoneId;
 } D3DXBONECOMBINATION, *LPD3DXBONECOMBINATION;
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXSkinMesh
 
 DECLARE_INTERFACE_(ID3DXSkinMesh, IUnknown)
 {
@@ -294,7 +356,7 @@ DECLARE_INTERFACE_(ID3DXSkinMesh, IUnknown)
     STDMETHOD_(ULONG, AddRef)(THIS) PURE;
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
-	// ID3DXMesh
+    // ID3DXMesh
     STDMETHOD_(DWORD, GetNumFaces)(THIS) PURE;
     STDMETHOD_(DWORD, GetNumVertices)(THIS) PURE;
     STDMETHOD_(DWORD, GetFVF)(THIS) PURE;
@@ -303,31 +365,48 @@ DECLARE_INTERFACE_(ID3DXSkinMesh, IUnknown)
     STDMETHOD(GetDevice)(THIS_ LPDIRECT3DDEVICE8* ppDevice) PURE;
     STDMETHOD(GetVertexBuffer)(THIS_ LPDIRECT3DVERTEXBUFFER8* ppVB) PURE;
     STDMETHOD(GetIndexBuffer)(THIS_ LPDIRECT3DINDEXBUFFER8* ppIB) PURE;
-	STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
-	STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, BYTE** ppData) PURE;
-	STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
-	STDMETHOD(LockAttributeBuffer)(THIS_ DWORD flags, DWORD** ppData) PURE;
-	STDMETHOD(UnlockAttributeBuffer)(THIS) PURE;
+    STDMETHOD(LockVertexBuffer)(THIS_ DWORD flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockVertexBuffer)(THIS) PURE;
+    STDMETHOD(LockIndexBuffer)(THIS_ DWORD flags, BYTE** ppData) PURE;
+    STDMETHOD(UnlockIndexBuffer)(THIS) PURE;
+    STDMETHOD(LockAttributeBuffer)(THIS_ DWORD flags, DWORD** ppData) PURE;
+    STDMETHOD(UnlockAttributeBuffer)(THIS) PURE;
     // ID3DXSkinMesh
     STDMETHOD_(DWORD, GetNumBones)(THIS) PURE;
     STDMETHOD(GetOriginalMesh)(THIS_ LPD3DXMESH* ppMesh) PURE;
-	STDMETHOD(SetBoneInfluence)(THIS_ DWORD bone, DWORD numInfluences, CONST DWORD* vertices, CONST FLOAT* weights) PURE;
-	STDMETHOD_(DWORD, GetNumBoneInfluences)(THIS_ DWORD bone) PURE;
-	STDMETHOD(GetBoneInfluence)(THIS_ DWORD bone, DWORD* vertices, FLOAT* weights) PURE;
-	STDMETHOD(GetMaxVertexInfluences)(THIS_ DWORD* maxVertexInfluences) PURE;
-	STDMETHOD(GetMaxFaceInfluences)(THIS_ DWORD* maxFaceInfluences) PURE;
-	STDMETHOD(ConvertToBlendedMesh)(THIS_ DWORD options, CONST LPDWORD pAdjacencyIn, LPDWORD pAdjacencyOut,
-							DWORD* pNumBoneCombinations, LPD3DXBUFFER* ppBoneCombinationTable, LPD3DXMESH* ppMesh) PURE;
-	STDMETHOD(ConvertToIndexedBlendedMesh)(THIS_ DWORD options, 
+    STDMETHOD(SetBoneInfluence)(THIS_ DWORD bone, DWORD numInfluences, CONST DWORD* vertices, CONST FLOAT* weights) PURE;
+    STDMETHOD_(DWORD, GetNumBoneInfluences)(THIS_ DWORD bone) PURE;
+    STDMETHOD(GetBoneInfluence)(THIS_ DWORD bone, DWORD* vertices, FLOAT* weights) PURE;
+    STDMETHOD(GetMaxVertexInfluences)(THIS_ DWORD* maxVertexInfluences) PURE;
+    STDMETHOD(GetMaxFaceInfluences)(THIS_ DWORD* maxFaceInfluences) PURE;
+
+    STDMETHOD(ConvertToBlendedMesh)(THIS_ DWORD Options, 
+                                    CONST LPDWORD pAdjacencyIn, 
+                                    LPDWORD pAdjacencyOut,
+                                    DWORD* pNumBoneCombinations, 
+                                    LPD3DXBUFFER* ppBoneCombinationTable, 
+                                    DWORD* pFaceRemap, 
+                                    LPD3DXBUFFER *ppVertexRemap, 
+                                    LPD3DXMESH* ppMesh) PURE;
+
+    STDMETHOD(ConvertToIndexedBlendedMesh)(THIS_ DWORD Options, 
                                            CONST LPDWORD pAdjacencyIn, 
                                            DWORD paletteSize, 
                                            LPDWORD pAdjacencyOut, 
- 							               DWORD* pNumBoneCombinations, 
+                                           DWORD* pNumBoneCombinations, 
                                            LPD3DXBUFFER* ppBoneCombinationTable, 
+                                           DWORD* pFaceRemap, 
+                                           LPD3DXBUFFER *ppVertexRemap, 
                                            LPD3DXMESH* ppMesh) PURE;
-    STDMETHOD(GenerateSkinnedMesh)(THIS_ DWORD options, FLOAT minWeight, CONST LPDWORD pAdjacencyIn, LPDWORD pAdjacencyOut, LPD3DXMESH* ppMesh) PURE;
-	STDMETHOD(UpdateSkinnedMesh)(THIS_ CONST D3DXMATRIX* pBoneTransforms, LPD3DXMESH pMesh) PURE;
+
+    STDMETHOD(GenerateSkinnedMesh)(THIS_ DWORD Options, 
+                                   FLOAT minWeight, 
+                                   CONST LPDWORD pAdjacencyIn, 
+                                   LPDWORD pAdjacencyOut, 
+                                   DWORD* pFaceRemap, 
+                                   LPD3DXBUFFER *ppVertexRemap, 
+                                   LPD3DXMESH* ppMesh) PURE;
+    STDMETHOD(UpdateSkinnedMesh)(THIS_ CONST D3DXMATRIX* pBoneTransforms, CONST D3DXMATRIX* pBoneInvTransforms, LPD3DXMESH pMesh) PURE;
 };
 
 #ifdef __cplusplus
@@ -364,13 +443,16 @@ HRESULT WINAPI
 HRESULT WINAPI
     D3DXCleanMesh(
     LPD3DXMESH pMeshIn,
-    CONST DWORD* pAdjacency,
-    LPD3DXMESH* ppMeshOut);
+    CONST DWORD* pAdjacencyIn,
+    LPD3DXMESH* ppMeshOut,
+    DWORD* pAdjacencyOut,
+    LPD3DXBUFFER* ppErrorsAndWarnings);
 
 HRESULT WINAPI
     D3DXValidMesh(
     LPD3DXMESH pMeshIn,
-    CONST DWORD* pAdjacency);
+    CONST DWORD* pAdjacency,
+    LPD3DXBUFFER* ppErrorsAndWarnings);
 
 HRESULT WINAPI 
     D3DXGeneratePMesh(
@@ -410,7 +492,8 @@ HRESULT WINAPI
 
 HRESULT WINAPI 
     D3DXComputeNormals(
-        LPD3DXBASEMESH pMesh);
+        LPD3DXBASEMESH pMesh,
+        CONST DWORD *pAdjacency);
 
 HRESULT WINAPI 
     D3DXCreateBuffer(
@@ -425,7 +508,30 @@ HRESULT WINAPI
         LPDIRECT3DDEVICE8 pD3D, 
         LPD3DXBUFFER *ppAdjacency,
         LPD3DXBUFFER *ppMaterials, 
-        PDWORD pNumMaterials,
+        DWORD *pNumMaterials,
+        LPD3DXMESH *ppMesh);
+
+HRESULT WINAPI 
+    D3DXLoadMeshFromXInMemory(
+        PBYTE Memory,
+        DWORD SizeOfMemory,
+        DWORD Options, 
+        LPDIRECT3DDEVICE8 pD3D, 
+        LPD3DXBUFFER *ppAdjacency,
+        LPD3DXBUFFER *ppMaterials, 
+        DWORD *pNumMaterials,
+        LPD3DXMESH *ppMesh);
+
+HRESULT WINAPI 
+    D3DXLoadMeshFromXResource(
+        HMODULE Module,
+        LPCTSTR Name,
+        LPCTSTR Type,
+        DWORD Options, 
+        LPDIRECT3DDEVICE8 pD3D, 
+        LPD3DXBUFFER *ppAdjacency,
+        LPD3DXBUFFER *ppMaterials, 
+        DWORD *pNumMaterials,
         LPD3DXMESH *ppMesh);
 
 HRESULT WINAPI 
@@ -441,7 +547,7 @@ HRESULT WINAPI
 HRESULT WINAPI 
     D3DXCreatePMeshFromStream(
         IStream *pStream, 
-	DWORD Options,
+        DWORD Options,
         LPDIRECT3DDEVICE8 pD3DDevice, 
         LPD3DXBUFFER *ppMaterials,
         DWORD* pNumMaterials,
@@ -449,21 +555,21 @@ HRESULT WINAPI
 
 HRESULT WINAPI
     D3DXCreateSkinMesh(
-        DWORD numFaces, 
-        DWORD numVertices, 
-        DWORD numBones,
-        DWORD options, 
+        DWORD NumFaces, 
+        DWORD NumVertices, 
+        DWORD NumBones,
+        DWORD Options, 
         CONST DWORD *pDeclaration, 
         LPDIRECT3DDEVICE8 pD3D, 
         LPD3DXSKINMESH* ppSkinMesh);
 
 HRESULT WINAPI
     D3DXCreateSkinMeshFVF(
-        DWORD numFaces, 
-        DWORD numVertices, 
-        DWORD numBones,
-        DWORD options, 
-        DWORD fvf, 
+        DWORD NumFaces, 
+        DWORD NumVertices, 
+        DWORD NumBones,
+        DWORD Options, 
+        DWORD FVF, 
         LPDIRECT3DDEVICE8 pD3D, 
         LPD3DXSKINMESH* ppSkinMesh);
 
@@ -480,33 +586,37 @@ HRESULT WINAPI
         LPDIRECT3DDEVICE8 pD3DDevice, 
         LPD3DXBUFFER *ppAdjacency,
         LPD3DXBUFFER *ppMaterials, 
-        PDWORD pNumMaterials,
+        DWORD *pNumMaterials,
         LPD3DXMESH *ppMesh);
 
 HRESULT WINAPI
     D3DXLoadSkinMeshFromXof(
         LPDIRECTXFILEDATA pxofobjMesh, 
-        DWORD options,
+        DWORD Options,
         LPDIRECT3DDEVICE8 pD3D,
         LPD3DXBUFFER* ppAdjacency,
         LPD3DXBUFFER* ppMaterials,
-        PDWORD pMatOut,
+        DWORD *pMatOut,
         LPD3DXBUFFER* ppBoneNames,
         LPD3DXBUFFER* ppBoneTransforms,
         LPD3DXSKINMESH* ppMesh);
 
 HRESULT WINAPI
-    D3DXTesselateMesh(
+    D3DXTessellateNPatches(
         LPD3DXMESH pMeshIn,             
-        CONST DWORD* pAdjacency,             
+        CONST DWORD* pAdjacencyIn,             
         FLOAT NumSegs,                    
         BOOL  QuadraticInterpNormals,     // if false use linear intrep for normals, if true use quadratic
-        LPD3DXMESH *ppMeshOut);         
+        LPD3DXMESH *ppMeshOut,
+        LPD3DXBUFFER *ppAdjacencyOut);
+
+UINT WINAPI
+    D3DXGetFVFVertexSize(DWORD FVF);
 
 HRESULT WINAPI
     D3DXDeclaratorFromFVF(
         DWORD FVF,
-		DWORD Declaration[MAX_FVF_DECL_SIZE]);
+        DWORD Declaration[MAX_FVF_DECL_SIZE]);
 
 HRESULT WINAPI
     D3DXFVFFromDeclarator(
@@ -516,45 +626,130 @@ HRESULT WINAPI
 HRESULT WINAPI 
     D3DXWeldVertices(
         CONST LPD3DXMESH pMesh,         
-        float fEpsilon,                 
-        CONST DWORD *rgdwAdjacencyIn, 
-        DWORD *rgdwAdjacencyOut,
+        LPD3DXWELDEPSILONS pEpsilons,                 
+        CONST DWORD *pAdjacencyIn, 
+        DWORD *pAdjacencyOut,
         DWORD* pFaceRemap, 
-        LPD3DXBUFFER *ppbufVertexRemap);
+        LPD3DXBUFFER *ppVertexRemap);
+
+typedef struct _D3DXINTERSECTINFO
+{
+    DWORD FaceIndex;                // index of face intersected
+    FLOAT U;                        // Barycentric Hit Coordinates    
+    FLOAT V;                        // Barycentric Hit Coordinates
+    FLOAT Dist;                     // Ray-Intersection Parameter Distance
+} D3DXINTERSECTINFO, *LPD3DXINTERSECTINFO;
+
 
 HRESULT WINAPI
     D3DXIntersect(
         LPD3DXBASEMESH pMesh,
         CONST D3DXVECTOR3 *pRayPos,
-        CONST D3DXVECTOR3 *pRayDir,
-        BOOL    *pHit,
-        DWORD   *pFaceIndex,
-        FLOAT   *pU,
-        FLOAT   *pV,
-        FLOAT   *pDist);
+        CONST D3DXVECTOR3 *pRayDir, 
+        BOOL    *pHit,              // True if any faces were intersected
+        DWORD   *pFaceIndex,        // index of closest face intersected
+        FLOAT   *pU,                // Barycentric Hit Coordinates    
+        FLOAT   *pV,                // Barycentric Hit Coordinates
+        FLOAT   *pDist,             // Ray-Intersection Parameter Distance
+        LPD3DXBUFFER *ppAllHits,    // Array of D3DXINTERSECTINFOs for all hits (not just closest) 
+        DWORD   *pCountOfHits);     // Number of entries in AllHits array
+
+HRESULT WINAPI
+    D3DXIntersectSubset(
+        LPD3DXBASEMESH pMesh,
+        DWORD AttribId,
+        CONST D3DXVECTOR3 *pRayPos,
+        CONST D3DXVECTOR3 *pRayDir, 
+        BOOL    *pHit,              // True if any faces were intersected
+        DWORD   *pFaceIndex,        // index of closest face intersected
+        FLOAT   *pU,                // Barycentric Hit Coordinates    
+        FLOAT   *pV,                // Barycentric Hit Coordinates
+        FLOAT   *pDist,             // Ray-Intersection Parameter Distance
+        LPD3DXBUFFER *ppAllHits,    // Array of D3DXINTERSECTINFOs for all hits (not just closest) 
+        DWORD   *pCountOfHits);     // Number of entries in AllHits array
+
+
+HRESULT WINAPI D3DXSplitMesh
+    (
+    CONST LPD3DXMESH pMeshIn,         
+    CONST DWORD *pAdjacencyIn, 
+    CONST DWORD MaxSize,
+    CONST DWORD Options,
+    DWORD *pMeshesOut,
+    LPD3DXBUFFER *ppMeshArrayOut,
+    LPD3DXBUFFER *ppAdjacencyArrayOut,
+    LPD3DXBUFFER *ppFaceRemapArrayOut,
+    LPD3DXBUFFER *ppVertRemapArrayOut
+    );
+
+BOOL D3DXIntersectTri 
+(
+    CONST D3DXVECTOR3 *p0,           // Triangle vertex 0 position
+    CONST D3DXVECTOR3 *p1,           // Triangle vertex 1 position
+    CONST D3DXVECTOR3 *p2,           // Triangle vertex 2 position
+    CONST D3DXVECTOR3 *pRayPos,      // Ray origin
+    CONST D3DXVECTOR3 *pRayDir,      // Ray direction
+    FLOAT *pU,                       // Barycentric Hit Coordinates
+    FLOAT *pV,                       // Barycentric Hit Coordinates
+    FLOAT *pDist);                   // Ray-Intersection Parameter Distance
 
 BOOL WINAPI
     D3DXSphereBoundProbe(
-        CONST D3DXVECTOR3 *pvCenter,
-        FLOAT fRadius,
-        D3DXVECTOR3 *pvRayPosition,
-        D3DXVECTOR3 *pvRayDirection);
+        CONST D3DXVECTOR3 *pCenter,
+        FLOAT Radius,
+        CONST D3DXVECTOR3 *pRayPosition,
+        CONST D3DXVECTOR3 *pRayDirection);
 
 BOOL WINAPI 
     D3DXBoxBoundProbe(
-        CONST D3DXVECTOR3 *pvMin, 
-        CONST D3DXVECTOR3 *pvMax,
-        D3DXVECTOR3 *pvRayPosition,
-        D3DXVECTOR3 *pvRayDirection);
+        CONST D3DXVECTOR3 *pMin, 
+        CONST D3DXVECTOR3 *pMax,
+        CONST D3DXVECTOR3 *pRayPosition,
+        CONST D3DXVECTOR3 *pRayDirection);
 
 enum _D3DXERR {
-    D3DXERR_CANNOTMODIFYINDEXBUFFER		= MAKE_DDHRESULT(2900),
-	D3DXERR_INVALIDMESH					= MAKE_DDHRESULT(2901),
-	D3DXERR_CANNOTATTRSORT              = MAKE_DDHRESULT(2902),
-	D3DXERR_SKINNINGNOTSUPPORTED		= MAKE_DDHRESULT(2903),
-	D3DXERR_TOOMANYINFLUENCES			= MAKE_DDHRESULT(2904),
+    D3DXERR_CANNOTMODIFYINDEXBUFFER     = MAKE_DDHRESULT(2900),
+    D3DXERR_INVALIDMESH                 = MAKE_DDHRESULT(2901),
+    D3DXERR_CANNOTATTRSORT              = MAKE_DDHRESULT(2902),
+    D3DXERR_SKINNINGNOTSUPPORTED        = MAKE_DDHRESULT(2903),
+    D3DXERR_TOOMANYINFLUENCES           = MAKE_DDHRESULT(2904),
     D3DXERR_INVALIDDATA                 = MAKE_DDHRESULT(2905),
+    D3DXERR_LOADEDMESHASNODATA          = MAKE_DDHRESULT(2906),
 };
+
+
+#define D3DX_COMP_TANGENT_NONE 0xFFFFFFFF
+
+HRESULT WINAPI D3DXComputeTangent(LPD3DXMESH InMesh,
+                                 DWORD TexStage,
+                                 LPD3DXMESH OutMesh,
+                                 DWORD TexStageUVec,
+                                 DWORD TexStageVVec,
+                                 DWORD Wrap,
+                                 DWORD *Adjacency);
+
+HRESULT WINAPI
+D3DXConvertMeshSubsetToSingleStrip
+(
+    LPD3DXBASEMESH MeshIn,
+    DWORD AttribId,
+    DWORD IBOptions,
+    LPDIRECT3DINDEXBUFFER8 *ppIndexBuffer,
+    DWORD *pNumIndices
+);
+
+HRESULT WINAPI
+D3DXConvertMeshSubsetToStrips
+(
+    LPD3DXBASEMESH MeshIn,
+    DWORD AttribId,
+    DWORD IBOptions,
+    LPDIRECT3DINDEXBUFFER8 *ppIndexBuffer,
+    DWORD *pNumIndices,
+    LPD3DXBUFFER *ppStripLengths,
+    DWORD *pNumStrips
+);
+
 
 #ifdef __cplusplus
 }

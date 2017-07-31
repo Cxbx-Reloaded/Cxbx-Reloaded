@@ -5,7 +5,7 @@
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR
 // PURPOSE.
 //
-// Copyright (c) 1992 - 1999  Microsoft Corporation.  All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 //
 //===========================================================================
 //
@@ -313,6 +313,8 @@
 #define	ED_MEDIA_CAV			ED_BASE+528L
 #define ED_MEDIA_POSITION		ED_BASE+529L
 
+#define ED_MEDIA_NEO            ED_BASE+531L    // Mini digital tape for MPEG2TS signal
+
 #define ED_LINK_MODE			ED_BASE+530L	// OATRUE if transport controls
 							 					// are linked to graph's RUN, 
 							 					// STOP, and PAUSE methods
@@ -619,7 +621,20 @@
 #define	ED_TRANSBASIC_SIGNAL_625_50_SD  ED_BASE+944L
 #define	ED_TRANSBASIC_SIGNAL_625_50_SDL ED_BASE+945L
 
+#define	ED_TRANSBASIC_SIGNAL_625_60_HD  ED_BASE+947L
+#define	ED_TRANSBASIC_SIGNAL_625_50_HD  ED_BASE+948L
+
 #define	ED_TRANSBASIC_SIGNAL_MPEG2TS    ED_BASE+946L
+
+#define	ED_TRANSBASIC_SIGNAL_2500_60_MPEG    ED_BASE+980L
+#define	ED_TRANSBASIC_SIGNAL_1250_60_MPEG    ED_BASE+981L
+#define	ED_TRANSBASIC_SIGNAL_0625_60_MPEG    ED_BASE+982L
+
+#define	ED_TRANSBASIC_SIGNAL_2500_50_MPEG    ED_BASE+985L
+#define	ED_TRANSBASIC_SIGNAL_1250_50_MPEG    ED_BASE+986L
+#define	ED_TRANSBASIC_SIGNAL_0625_50_MPEG    ED_BASE+987L
+
+#define	ED_TRANSBASIC_SIGNAL_UNKNOWN    ED_BASE+990L
 
 //
 // TIMECODE/AbsoluteTrackNumber/RealTimeCounter read/seek/write
@@ -640,7 +655,18 @@
 #define ED_TIMEREF_ATN             ED_BASE+958L
 
 
+//
+// GUID used to identify a class driver
+//
 
+#ifndef OUR_GUID_ENTRY
+    #define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8);
+#endif
+
+// 8C0F6AF2-0EDB-44c1-8AEB-59040BD830ED  MSTapeDeviceGUID
+OUR_GUID_ENTRY(MSTapeDeviceGUID,
+0x8C0F6AF2, 0x0EDB, 0x44c1, 0x8A, 0xEB, 0x59, 0x04, 0x0B, 0xD8, 0x30, 0xED)
 
 #endif // __XPRTDEFS__
 

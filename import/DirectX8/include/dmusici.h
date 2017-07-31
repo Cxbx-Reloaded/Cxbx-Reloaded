@@ -136,14 +136,15 @@ typedef enum enumDMUS_COMPOSEF_FLAGS
     DMUS_COMPOSEF_MARKER            = 0x800,  /* Play the transition at the next marker in the current segment. */
     DMUS_COMPOSEF_MODULATE          = 0x1000,
     DMUS_COMPOSEF_LONG              = 0x2000,
-    DMUS_COMPOSEF_ENTIRE_TRANSITION = 0x4000,  /* play the entire transition pattern */
-    DMUS_COMPOSEF_1BAR_TRANSITION   = 0x8000,  /* play one bar of the transition pattern */
-    DMUS_COMPOSEF_ENTIRE_ADDITION   = 0x10000, /* play the additional pattern in its entirety */
-    DMUS_COMPOSEF_1BAR_ADDITION     = 0x20000,  /* play one bar of the additional pattern */
+    DMUS_COMPOSEF_ENTIRE_TRANSITION = 0x4000,    /* play the entire transition pattern */
+    DMUS_COMPOSEF_1BAR_TRANSITION   = 0x8000,    /* play one bar of the transition pattern */
+    DMUS_COMPOSEF_ENTIRE_ADDITION   = 0x10000,   /* play the additional pattern in its entirety */
+    DMUS_COMPOSEF_1BAR_ADDITION     = 0x20000,   /* play one bar of the additional pattern */
     DMUS_COMPOSEF_VALID_START_MEASURE = 0x40000, /* In conjunction with DMUS_COMPOSEF_ALIGN, allows the switch to occur on any bar. */
-    DMUS_COMPOSEF_DEFAULT           = 0x80000,  /* Use segment's default boundary */
+    DMUS_COMPOSEF_DEFAULT           = 0x80000,   /* Use segment's default boundary */
     DMUS_COMPOSEF_NOINVALIDATE      = 0x100000,  /* Play without invalidating the currently playing segment(s) */
-    DMUS_COMPOSEF_USE_AUDIOPATH     = 0x200000   /* Uses the audio paths that are embedded in the segments */
+    DMUS_COMPOSEF_USE_AUDIOPATH     = 0x200000,  /* Uses the audio paths that are embedded in the segments */
+    DMUS_COMPOSEF_INVALIDATE_PRI    = 0x400000   /* Invalidate only the current primary seg state */
 }   DMUS_COMPOSEF_FLAGS;
 
 #define DMUS_PMSG_PART                                                                              \
@@ -298,7 +299,8 @@ typedef enum enumDMUS_SEGF_FLAGS
     DMUS_SEGF_MARKER            = 1<<24,  /* 0x1000000 Play at next marker in the primary segment. If there are no markers, default to any other resolution requests. */
     DMUS_SEGF_TIMESIG_ALWAYS    = 1<<25,  /* 0x2000000 Even if there is no primary segment, align start time with current time signature. */
     DMUS_SEGF_USE_AUDIOPATH     = 1<<26,  /* 0x4000000 Uses the audio path that is embedded in the segment or song. */
-    DMUS_SEGF_VALID_START_MEASURE = 1<<27 /* 0x8000000 In conjunction with DMUS_SEGF_ALIGN, allows the switch to occur on any bar. */
+    DMUS_SEGF_VALID_START_MEASURE = 1<<27, /* 0x8000000 In conjunction with DMUS_SEGF_ALIGN, allows the switch to occur on any bar. */
+    DMUS_SEGF_INVALIDATE_PRI    = 1<<28   /* 0x10000000 invalidate only the current primary seg state */
 } DMUS_SEGF_FLAGS;
 
 #define DMUS_SEG_REPEAT_INFINITE    0xFFFFFFFF  /* For IDirectMusicSegment::SetRepeat*/
@@ -661,6 +663,7 @@ typedef struct _DMUS_WAVE_PMSG
 #define DMUS_WAVEF_OFF           1       /* If wave is playing and this is the off message. */
 #define DMUS_WAVEF_STREAMING     2       /* If wave is streaming. */
 #define DMUS_WAVEF_NOINVALIDATE  4       /* Don't invalidate this wave. */
+#define DMUS_WAVEF_NOPREROLL     8       /* Don't preroll any wave data. */   
 
 /* DMUS_LYRIC_PMSG */
 typedef struct _DMUS_LYRIC_PMSG

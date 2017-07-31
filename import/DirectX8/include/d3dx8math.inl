@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 1998 Microsoft Corporation.  All Rights Reserved.
+//  Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //  File:       d3dx8math.inl
 //  Content:    D3DX math inline functions

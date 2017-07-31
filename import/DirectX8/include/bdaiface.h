@@ -1,13 +1,19 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1999-2001.
+//
+//--------------------------------------------------------------------------
 
 #pragma warning( disable: 4049 )  /* more than 64k source lines */
 
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 6.00.0338 */
+ /* File created by MIDL compiler version 6.00.0347 */
 /* Compiler settings for bdaiface.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
-    protocol : dce , ms_ext, c_ext
+    protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
@@ -18,7 +24,7 @@
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__
-#define __REQUIRED_RPCNDR_H_VERSION__ 440
+#define __REQUIRED_RPCNDR_H_VERSION__ 475
 #endif
 
 #include "rpc.h"
@@ -84,6 +90,12 @@ typedef interface IBDA_SignalProperties IBDA_SignalProperties;
 #endif 	/* __IBDA_SignalProperties_FWD_DEFINED__ */
 
 
+#ifndef __IBDA_SignalStatistics_FWD_DEFINED__
+#define __IBDA_SignalStatistics_FWD_DEFINED__
+typedef interface IBDA_SignalStatistics IBDA_SignalStatistics;
+#endif 	/* __IBDA_SignalStatistics_FWD_DEFINED__ */
+
+
 #ifndef __IBDA_Topology_FWD_DEFINED__
 #define __IBDA_Topology_FWD_DEFINED__
 typedef interface IBDA_Topology IBDA_Topology;
@@ -108,6 +120,12 @@ typedef interface IBDA_FrequencyFilter IBDA_FrequencyFilter;
 #endif 	/* __IBDA_FrequencyFilter_FWD_DEFINED__ */
 
 
+#ifndef __IBDA_LNBInfo_FWD_DEFINED__
+#define __IBDA_LNBInfo_FWD_DEFINED__
+typedef interface IBDA_LNBInfo IBDA_LNBInfo;
+#endif 	/* __IBDA_LNBInfo_FWD_DEFINED__ */
+
+
 #ifndef __IBDA_AutoDemodulate_FWD_DEFINED__
 #define __IBDA_AutoDemodulate_FWD_DEFINED__
 typedef interface IBDA_AutoDemodulate IBDA_AutoDemodulate;
@@ -124,6 +142,12 @@ typedef interface IBDA_DigitalDemodulator IBDA_DigitalDemodulator;
 #define __IBDA_IPSinkControl_FWD_DEFINED__
 typedef interface IBDA_IPSinkControl IBDA_IPSinkControl;
 #endif 	/* __IBDA_IPSinkControl_FWD_DEFINED__ */
+
+
+#ifndef __IBDA_IPSinkInfo_FWD_DEFINED__
+#define __IBDA_IPSinkInfo_FWD_DEFINED__
+typedef interface IBDA_IPSinkInfo IBDA_IPSinkInfo;
+#endif 	/* __IBDA_IPSinkInfo_FWD_DEFINED__ */
 
 
 #ifndef __IEnumPIDMap_FWD_DEFINED__
@@ -1095,6 +1119,9 @@ EXTERN_C const IID IID_IBDA_PinControl;
         virtual HRESULT STDMETHODCALLTYPE GetPinType( 
             /* [out][in] */ ULONG *pulPinType) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE RegistrationContext( 
+            /* [out][in] */ ULONG *pulRegistrationCtx) = 0;
+        
     };
     
 #else 	/* C style interface */
@@ -1121,6 +1148,10 @@ EXTERN_C const IID IID_IBDA_PinControl;
         HRESULT ( STDMETHODCALLTYPE *GetPinType )( 
             IBDA_PinControl * This,
             /* [out][in] */ ULONG *pulPinType);
+        
+        HRESULT ( STDMETHODCALLTYPE *RegistrationContext )( 
+            IBDA_PinControl * This,
+            /* [out][in] */ ULONG *pulRegistrationCtx);
         
         END_INTERFACE
     } IBDA_PinControlVtbl;
@@ -1151,6 +1182,9 @@ EXTERN_C const IID IID_IBDA_PinControl;
 #define IBDA_PinControl_GetPinType(This,pulPinType)	\
     (This)->lpVtbl -> GetPinType(This,pulPinType)
 
+#define IBDA_PinControl_RegistrationContext(This,pulRegistrationCtx)	\
+    (This)->lpVtbl -> RegistrationContext(This,pulRegistrationCtx)
+
 #endif /* COBJMACROS */
 
 
@@ -1176,6 +1210,18 @@ HRESULT STDMETHODCALLTYPE IBDA_PinControl_GetPinType_Proxy(
 
 
 void __RPC_STUB IBDA_PinControl_GetPinType_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_PinControl_RegistrationContext_Proxy( 
+    IBDA_PinControl * This,
+    /* [out][in] */ ULONG *pulRegistrationCtx);
+
+
+void __RPC_STUB IBDA_PinControl_RegistrationContext_Stub(
     IRpcStubBuffer *This,
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,
@@ -1386,6 +1432,294 @@ void __RPC_STUB IBDA_SignalProperties_GetTuningSpace_Stub(
 #endif 	/* __IBDA_SignalProperties_INTERFACE_DEFINED__ */
 
 
+#ifndef __IBDA_SignalStatistics_INTERFACE_DEFINED__
+#define __IBDA_SignalStatistics_INTERFACE_DEFINED__
+
+/* interface IBDA_SignalStatistics */
+/* [unique][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IBDA_SignalStatistics;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("1347D106-CF3A-428a-A5CB-AC0D9A2A4338")
+    IBDA_SignalStatistics : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE put_SignalStrength( 
+            /* [in] */ LONG lDbStrength) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_SignalStrength( 
+            /* [out][in] */ LONG *plDbStrength) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_SignalQuality( 
+            /* [in] */ LONG lPercentQuality) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_SignalQuality( 
+            /* [out][in] */ LONG *plPercentQuality) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_SignalPresent( 
+            /* [in] */ BOOLEAN fPresent) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_SignalPresent( 
+            /* [out][in] */ BOOLEAN *pfPresent) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_SignalLocked( 
+            /* [in] */ BOOLEAN fLocked) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_SignalLocked( 
+            /* [out][in] */ BOOLEAN *pfLocked) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_SampleTime( 
+            /* [in] */ LONG lmsSampleTime) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_SampleTime( 
+            /* [out][in] */ LONG *plmsSampleTime) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IBDA_SignalStatisticsVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IBDA_SignalStatistics * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IBDA_SignalStatistics * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_SignalStrength )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ LONG lDbStrength);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_SignalStrength )( 
+            IBDA_SignalStatistics * This,
+            /* [out][in] */ LONG *plDbStrength);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_SignalQuality )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ LONG lPercentQuality);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_SignalQuality )( 
+            IBDA_SignalStatistics * This,
+            /* [out][in] */ LONG *plPercentQuality);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_SignalPresent )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ BOOLEAN fPresent);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_SignalPresent )( 
+            IBDA_SignalStatistics * This,
+            /* [out][in] */ BOOLEAN *pfPresent);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_SignalLocked )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ BOOLEAN fLocked);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_SignalLocked )( 
+            IBDA_SignalStatistics * This,
+            /* [out][in] */ BOOLEAN *pfLocked);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_SampleTime )( 
+            IBDA_SignalStatistics * This,
+            /* [in] */ LONG lmsSampleTime);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_SampleTime )( 
+            IBDA_SignalStatistics * This,
+            /* [out][in] */ LONG *plmsSampleTime);
+        
+        END_INTERFACE
+    } IBDA_SignalStatisticsVtbl;
+
+    interface IBDA_SignalStatistics
+    {
+        CONST_VTBL struct IBDA_SignalStatisticsVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IBDA_SignalStatistics_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IBDA_SignalStatistics_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IBDA_SignalStatistics_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IBDA_SignalStatistics_put_SignalStrength(This,lDbStrength)	\
+    (This)->lpVtbl -> put_SignalStrength(This,lDbStrength)
+
+#define IBDA_SignalStatistics_get_SignalStrength(This,plDbStrength)	\
+    (This)->lpVtbl -> get_SignalStrength(This,plDbStrength)
+
+#define IBDA_SignalStatistics_put_SignalQuality(This,lPercentQuality)	\
+    (This)->lpVtbl -> put_SignalQuality(This,lPercentQuality)
+
+#define IBDA_SignalStatistics_get_SignalQuality(This,plPercentQuality)	\
+    (This)->lpVtbl -> get_SignalQuality(This,plPercentQuality)
+
+#define IBDA_SignalStatistics_put_SignalPresent(This,fPresent)	\
+    (This)->lpVtbl -> put_SignalPresent(This,fPresent)
+
+#define IBDA_SignalStatistics_get_SignalPresent(This,pfPresent)	\
+    (This)->lpVtbl -> get_SignalPresent(This,pfPresent)
+
+#define IBDA_SignalStatistics_put_SignalLocked(This,fLocked)	\
+    (This)->lpVtbl -> put_SignalLocked(This,fLocked)
+
+#define IBDA_SignalStatistics_get_SignalLocked(This,pfLocked)	\
+    (This)->lpVtbl -> get_SignalLocked(This,pfLocked)
+
+#define IBDA_SignalStatistics_put_SampleTime(This,lmsSampleTime)	\
+    (This)->lpVtbl -> put_SampleTime(This,lmsSampleTime)
+
+#define IBDA_SignalStatistics_get_SampleTime(This,plmsSampleTime)	\
+    (This)->lpVtbl -> get_SampleTime(This,plmsSampleTime)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_put_SignalStrength_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [in] */ LONG lDbStrength);
+
+
+void __RPC_STUB IBDA_SignalStatistics_put_SignalStrength_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_get_SignalStrength_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [out][in] */ LONG *plDbStrength);
+
+
+void __RPC_STUB IBDA_SignalStatistics_get_SignalStrength_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_put_SignalQuality_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [in] */ LONG lPercentQuality);
+
+
+void __RPC_STUB IBDA_SignalStatistics_put_SignalQuality_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_get_SignalQuality_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [out][in] */ LONG *plPercentQuality);
+
+
+void __RPC_STUB IBDA_SignalStatistics_get_SignalQuality_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_put_SignalPresent_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [in] */ BOOLEAN fPresent);
+
+
+void __RPC_STUB IBDA_SignalStatistics_put_SignalPresent_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_get_SignalPresent_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [out][in] */ BOOLEAN *pfPresent);
+
+
+void __RPC_STUB IBDA_SignalStatistics_get_SignalPresent_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_put_SignalLocked_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [in] */ BOOLEAN fLocked);
+
+
+void __RPC_STUB IBDA_SignalStatistics_put_SignalLocked_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_get_SignalLocked_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [out][in] */ BOOLEAN *pfLocked);
+
+
+void __RPC_STUB IBDA_SignalStatistics_get_SignalLocked_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_put_SampleTime_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [in] */ LONG lmsSampleTime);
+
+
+void __RPC_STUB IBDA_SignalStatistics_put_SampleTime_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_SignalStatistics_get_SampleTime_Proxy( 
+    IBDA_SignalStatistics * This,
+    /* [out][in] */ LONG *plmsSampleTime);
+
+
+void __RPC_STUB IBDA_SignalStatistics_get_SampleTime_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IBDA_SignalStatistics_INTERFACE_DEFINED__ */
+
+
 #ifndef __IBDA_Topology_INTERFACE_DEFINED__
 #define __IBDA_Topology_INTERFACE_DEFINED__
 
@@ -1397,7 +1731,7 @@ EXTERN_C const IID IID_IBDA_Topology;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("A14EE835-0A23-11d3-9CC7-00C04F7971E0")
+    MIDL_INTERFACE("79B56888-7FEA-4690-B45D-38FD3C7849BE")
     IBDA_Topology : public IUnknown
     {
     public:
@@ -1406,11 +1740,16 @@ EXTERN_C const IID IID_IBDA_Topology;
             /* [in] */ ULONG ulcNodeTypesMax,
             /* [size_is][out][in] */ ULONG rgulNodeTypes[  ]) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE GetNodeDescriptors( 
+            /* [out][in] */ ULONG *ulcNodeDescriptors,
+            /* [in] */ ULONG ulcNodeDescriptorsMax,
+            /* [size_is][out][in] */ BDANODE_DESCRIPTOR rgNodeDescriptors[  ]) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE GetNodeInterfaces( 
             /* [in] */ ULONG ulNodeType,
             /* [out][in] */ ULONG *pulcInterfaces,
             /* [in] */ ULONG ulcInterfacesMax,
-            /* [size_is][out][in] */ GUID *rgguidInterfaces[  ]) = 0;
+            /* [size_is][out][in] */ GUID rgguidInterfaces[  ]) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE GetPinTypes( 
             /* [out][in] */ ULONG *pulcPinTypes,
@@ -1472,12 +1811,18 @@ EXTERN_C const IID IID_IBDA_Topology;
             /* [in] */ ULONG ulcNodeTypesMax,
             /* [size_is][out][in] */ ULONG rgulNodeTypes[  ]);
         
+        HRESULT ( STDMETHODCALLTYPE *GetNodeDescriptors )( 
+            IBDA_Topology * This,
+            /* [out][in] */ ULONG *ulcNodeDescriptors,
+            /* [in] */ ULONG ulcNodeDescriptorsMax,
+            /* [size_is][out][in] */ BDANODE_DESCRIPTOR rgNodeDescriptors[  ]);
+        
         HRESULT ( STDMETHODCALLTYPE *GetNodeInterfaces )( 
             IBDA_Topology * This,
             /* [in] */ ULONG ulNodeType,
             /* [out][in] */ ULONG *pulcInterfaces,
             /* [in] */ ULONG ulcInterfacesMax,
-            /* [size_is][out][in] */ GUID *rgguidInterfaces[  ]);
+            /* [size_is][out][in] */ GUID rgguidInterfaces[  ]);
         
         HRESULT ( STDMETHODCALLTYPE *GetPinTypes )( 
             IBDA_Topology * This,
@@ -1548,6 +1893,9 @@ EXTERN_C const IID IID_IBDA_Topology;
 #define IBDA_Topology_GetNodeTypes(This,pulcNodeTypes,ulcNodeTypesMax,rgulNodeTypes)	\
     (This)->lpVtbl -> GetNodeTypes(This,pulcNodeTypes,ulcNodeTypesMax,rgulNodeTypes)
 
+#define IBDA_Topology_GetNodeDescriptors(This,ulcNodeDescriptors,ulcNodeDescriptorsMax,rgNodeDescriptors)	\
+    (This)->lpVtbl -> GetNodeDescriptors(This,ulcNodeDescriptors,ulcNodeDescriptorsMax,rgNodeDescriptors)
+
 #define IBDA_Topology_GetNodeInterfaces(This,ulNodeType,pulcInterfaces,ulcInterfacesMax,rgguidInterfaces)	\
     (This)->lpVtbl -> GetNodeInterfaces(This,ulNodeType,pulcInterfaces,ulcInterfacesMax,rgguidInterfaces)
 
@@ -1596,12 +1944,26 @@ void __RPC_STUB IBDA_Topology_GetNodeTypes_Stub(
     DWORD *_pdwStubPhase);
 
 
+HRESULT STDMETHODCALLTYPE IBDA_Topology_GetNodeDescriptors_Proxy( 
+    IBDA_Topology * This,
+    /* [out][in] */ ULONG *ulcNodeDescriptors,
+    /* [in] */ ULONG ulcNodeDescriptorsMax,
+    /* [size_is][out][in] */ BDANODE_DESCRIPTOR rgNodeDescriptors[  ]);
+
+
+void __RPC_STUB IBDA_Topology_GetNodeDescriptors_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
 HRESULT STDMETHODCALLTYPE IBDA_Topology_GetNodeInterfaces_Proxy( 
     IBDA_Topology * This,
     /* [in] */ ULONG ulNodeType,
     /* [out][in] */ ULONG *pulcInterfaces,
     /* [in] */ ULONG ulcInterfacesMax,
-    /* [size_is][out][in] */ GUID *rgguidInterfaces[  ]);
+    /* [size_is][out][in] */ GUID rgguidInterfaces[  ]);
 
 
 void __RPC_STUB IBDA_Topology_GetNodeInterfaces_Stub(
@@ -1950,25 +2312,40 @@ EXTERN_C const IID IID_IBDA_FrequencyFilter;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE put_Autotune( 
-            /* [in] */ ULONG *pulTransponder) = 0;
+            /* [in] */ ULONG ulTransponder) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_Autotune( 
+            /* [out][in] */ ULONG *pulTransponder) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE put_Frequency( 
-            /* [in] */ ULONG *pulFrequency) = 0;
+            /* [in] */ ULONG ulFrequency) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE get_Frequency( 
             /* [out][in] */ ULONG *pulFrequency) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE put_Polarity( 
-            /* [in] */ ULONG *pulPolarity) = 0;
+            /* [in] */ Polarisation Polarity) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE get_Polarity( 
-            /* [out][in] */ ULONG *pulPolarity) = 0;
+            /* [out][in] */ Polarisation *pPolarity) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE put_Range( 
-            /* [in] */ ULONG *pulRange) = 0;
+            /* [in] */ ULONG ulRange) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE get_Range( 
             /* [out][in] */ ULONG *pulRange) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_Bandwidth( 
+            /* [in] */ ULONG ulBandwidth) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_Bandwidth( 
+            /* [out][in] */ ULONG *pulBandwidth) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_FrequencyMultiplier( 
+            /* [in] */ ULONG ulMultiplier) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_FrequencyMultiplier( 
+            /* [out][in] */ ULONG *pulMultiplier) = 0;
         
     };
     
@@ -1991,11 +2368,15 @@ EXTERN_C const IID IID_IBDA_FrequencyFilter;
         
         HRESULT ( STDMETHODCALLTYPE *put_Autotune )( 
             IBDA_FrequencyFilter * This,
-            /* [in] */ ULONG *pulTransponder);
+            /* [in] */ ULONG ulTransponder);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_Autotune )( 
+            IBDA_FrequencyFilter * This,
+            /* [out][in] */ ULONG *pulTransponder);
         
         HRESULT ( STDMETHODCALLTYPE *put_Frequency )( 
             IBDA_FrequencyFilter * This,
-            /* [in] */ ULONG *pulFrequency);
+            /* [in] */ ULONG ulFrequency);
         
         HRESULT ( STDMETHODCALLTYPE *get_Frequency )( 
             IBDA_FrequencyFilter * This,
@@ -2003,19 +2384,35 @@ EXTERN_C const IID IID_IBDA_FrequencyFilter;
         
         HRESULT ( STDMETHODCALLTYPE *put_Polarity )( 
             IBDA_FrequencyFilter * This,
-            /* [in] */ ULONG *pulPolarity);
+            /* [in] */ Polarisation Polarity);
         
         HRESULT ( STDMETHODCALLTYPE *get_Polarity )( 
             IBDA_FrequencyFilter * This,
-            /* [out][in] */ ULONG *pulPolarity);
+            /* [out][in] */ Polarisation *pPolarity);
         
         HRESULT ( STDMETHODCALLTYPE *put_Range )( 
             IBDA_FrequencyFilter * This,
-            /* [in] */ ULONG *pulRange);
+            /* [in] */ ULONG ulRange);
         
         HRESULT ( STDMETHODCALLTYPE *get_Range )( 
             IBDA_FrequencyFilter * This,
             /* [out][in] */ ULONG *pulRange);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_Bandwidth )( 
+            IBDA_FrequencyFilter * This,
+            /* [in] */ ULONG ulBandwidth);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_Bandwidth )( 
+            IBDA_FrequencyFilter * This,
+            /* [out][in] */ ULONG *pulBandwidth);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_FrequencyMultiplier )( 
+            IBDA_FrequencyFilter * This,
+            /* [in] */ ULONG ulMultiplier);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_FrequencyMultiplier )( 
+            IBDA_FrequencyFilter * This,
+            /* [out][in] */ ULONG *pulMultiplier);
         
         END_INTERFACE
     } IBDA_FrequencyFilterVtbl;
@@ -2040,26 +2437,41 @@ EXTERN_C const IID IID_IBDA_FrequencyFilter;
     (This)->lpVtbl -> Release(This)
 
 
-#define IBDA_FrequencyFilter_put_Autotune(This,pulTransponder)	\
-    (This)->lpVtbl -> put_Autotune(This,pulTransponder)
+#define IBDA_FrequencyFilter_put_Autotune(This,ulTransponder)	\
+    (This)->lpVtbl -> put_Autotune(This,ulTransponder)
 
-#define IBDA_FrequencyFilter_put_Frequency(This,pulFrequency)	\
-    (This)->lpVtbl -> put_Frequency(This,pulFrequency)
+#define IBDA_FrequencyFilter_get_Autotune(This,pulTransponder)	\
+    (This)->lpVtbl -> get_Autotune(This,pulTransponder)
+
+#define IBDA_FrequencyFilter_put_Frequency(This,ulFrequency)	\
+    (This)->lpVtbl -> put_Frequency(This,ulFrequency)
 
 #define IBDA_FrequencyFilter_get_Frequency(This,pulFrequency)	\
     (This)->lpVtbl -> get_Frequency(This,pulFrequency)
 
-#define IBDA_FrequencyFilter_put_Polarity(This,pulPolarity)	\
-    (This)->lpVtbl -> put_Polarity(This,pulPolarity)
+#define IBDA_FrequencyFilter_put_Polarity(This,Polarity)	\
+    (This)->lpVtbl -> put_Polarity(This,Polarity)
 
-#define IBDA_FrequencyFilter_get_Polarity(This,pulPolarity)	\
-    (This)->lpVtbl -> get_Polarity(This,pulPolarity)
+#define IBDA_FrequencyFilter_get_Polarity(This,pPolarity)	\
+    (This)->lpVtbl -> get_Polarity(This,pPolarity)
 
-#define IBDA_FrequencyFilter_put_Range(This,pulRange)	\
-    (This)->lpVtbl -> put_Range(This,pulRange)
+#define IBDA_FrequencyFilter_put_Range(This,ulRange)	\
+    (This)->lpVtbl -> put_Range(This,ulRange)
 
 #define IBDA_FrequencyFilter_get_Range(This,pulRange)	\
     (This)->lpVtbl -> get_Range(This,pulRange)
+
+#define IBDA_FrequencyFilter_put_Bandwidth(This,ulBandwidth)	\
+    (This)->lpVtbl -> put_Bandwidth(This,ulBandwidth)
+
+#define IBDA_FrequencyFilter_get_Bandwidth(This,pulBandwidth)	\
+    (This)->lpVtbl -> get_Bandwidth(This,pulBandwidth)
+
+#define IBDA_FrequencyFilter_put_FrequencyMultiplier(This,ulMultiplier)	\
+    (This)->lpVtbl -> put_FrequencyMultiplier(This,ulMultiplier)
+
+#define IBDA_FrequencyFilter_get_FrequencyMultiplier(This,pulMultiplier)	\
+    (This)->lpVtbl -> get_FrequencyMultiplier(This,pulMultiplier)
 
 #endif /* COBJMACROS */
 
@@ -2070,7 +2482,7 @@ EXTERN_C const IID IID_IBDA_FrequencyFilter;
 
 HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_Autotune_Proxy( 
     IBDA_FrequencyFilter * This,
-    /* [in] */ ULONG *pulTransponder);
+    /* [in] */ ULONG ulTransponder);
 
 
 void __RPC_STUB IBDA_FrequencyFilter_put_Autotune_Stub(
@@ -2080,9 +2492,21 @@ void __RPC_STUB IBDA_FrequencyFilter_put_Autotune_Stub(
     DWORD *_pdwStubPhase);
 
 
+HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_get_Autotune_Proxy( 
+    IBDA_FrequencyFilter * This,
+    /* [out][in] */ ULONG *pulTransponder);
+
+
+void __RPC_STUB IBDA_FrequencyFilter_get_Autotune_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
 HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_Frequency_Proxy( 
     IBDA_FrequencyFilter * This,
-    /* [in] */ ULONG *pulFrequency);
+    /* [in] */ ULONG ulFrequency);
 
 
 void __RPC_STUB IBDA_FrequencyFilter_put_Frequency_Stub(
@@ -2106,7 +2530,7 @@ void __RPC_STUB IBDA_FrequencyFilter_get_Frequency_Stub(
 
 HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_Polarity_Proxy( 
     IBDA_FrequencyFilter * This,
-    /* [in] */ ULONG *pulPolarity);
+    /* [in] */ Polarisation Polarity);
 
 
 void __RPC_STUB IBDA_FrequencyFilter_put_Polarity_Stub(
@@ -2118,7 +2542,7 @@ void __RPC_STUB IBDA_FrequencyFilter_put_Polarity_Stub(
 
 HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_get_Polarity_Proxy( 
     IBDA_FrequencyFilter * This,
-    /* [out][in] */ ULONG *pulPolarity);
+    /* [out][in] */ Polarisation *pPolarity);
 
 
 void __RPC_STUB IBDA_FrequencyFilter_get_Polarity_Stub(
@@ -2130,7 +2554,7 @@ void __RPC_STUB IBDA_FrequencyFilter_get_Polarity_Stub(
 
 HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_Range_Proxy( 
     IBDA_FrequencyFilter * This,
-    /* [in] */ ULONG *pulRange);
+    /* [in] */ ULONG ulRange);
 
 
 void __RPC_STUB IBDA_FrequencyFilter_put_Range_Stub(
@@ -2152,8 +2576,256 @@ void __RPC_STUB IBDA_FrequencyFilter_get_Range_Stub(
     DWORD *_pdwStubPhase);
 
 
+HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_Bandwidth_Proxy( 
+    IBDA_FrequencyFilter * This,
+    /* [in] */ ULONG ulBandwidth);
+
+
+void __RPC_STUB IBDA_FrequencyFilter_put_Bandwidth_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_get_Bandwidth_Proxy( 
+    IBDA_FrequencyFilter * This,
+    /* [out][in] */ ULONG *pulBandwidth);
+
+
+void __RPC_STUB IBDA_FrequencyFilter_get_Bandwidth_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_put_FrequencyMultiplier_Proxy( 
+    IBDA_FrequencyFilter * This,
+    /* [in] */ ULONG ulMultiplier);
+
+
+void __RPC_STUB IBDA_FrequencyFilter_put_FrequencyMultiplier_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_FrequencyFilter_get_FrequencyMultiplier_Proxy( 
+    IBDA_FrequencyFilter * This,
+    /* [out][in] */ ULONG *pulMultiplier);
+
+
+void __RPC_STUB IBDA_FrequencyFilter_get_FrequencyMultiplier_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
 
 #endif 	/* __IBDA_FrequencyFilter_INTERFACE_DEFINED__ */
+
+
+#ifndef __IBDA_LNBInfo_INTERFACE_DEFINED__
+#define __IBDA_LNBInfo_INTERFACE_DEFINED__
+
+/* interface IBDA_LNBInfo */
+/* [unique][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IBDA_LNBInfo;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("992CF102-49F9-4719-A664-C4F23E2408F4")
+    IBDA_LNBInfo : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE put_LocalOscilatorFrequencyLowBand( 
+            /* [in] */ ULONG ulLOFLow) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_LocalOscilatorFrequencyLowBand( 
+            /* [out][in] */ ULONG *pulLOFLow) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_LocalOscilatorFrequencyHighBand( 
+            /* [in] */ ULONG ulLOFHigh) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_LocalOscilatorFrequencyHighBand( 
+            /* [out][in] */ ULONG *pulLOFHigh) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE put_HighLowSwitchFrequency( 
+            /* [in] */ ULONG ulSwitchFrequency) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_HighLowSwitchFrequency( 
+            /* [out][in] */ ULONG *pulSwitchFrequency) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IBDA_LNBInfoVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IBDA_LNBInfo * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IBDA_LNBInfo * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IBDA_LNBInfo * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_LocalOscilatorFrequencyLowBand )( 
+            IBDA_LNBInfo * This,
+            /* [in] */ ULONG ulLOFLow);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_LocalOscilatorFrequencyLowBand )( 
+            IBDA_LNBInfo * This,
+            /* [out][in] */ ULONG *pulLOFLow);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_LocalOscilatorFrequencyHighBand )( 
+            IBDA_LNBInfo * This,
+            /* [in] */ ULONG ulLOFHigh);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_LocalOscilatorFrequencyHighBand )( 
+            IBDA_LNBInfo * This,
+            /* [out][in] */ ULONG *pulLOFHigh);
+        
+        HRESULT ( STDMETHODCALLTYPE *put_HighLowSwitchFrequency )( 
+            IBDA_LNBInfo * This,
+            /* [in] */ ULONG ulSwitchFrequency);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_HighLowSwitchFrequency )( 
+            IBDA_LNBInfo * This,
+            /* [out][in] */ ULONG *pulSwitchFrequency);
+        
+        END_INTERFACE
+    } IBDA_LNBInfoVtbl;
+
+    interface IBDA_LNBInfo
+    {
+        CONST_VTBL struct IBDA_LNBInfoVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IBDA_LNBInfo_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IBDA_LNBInfo_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IBDA_LNBInfo_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IBDA_LNBInfo_put_LocalOscilatorFrequencyLowBand(This,ulLOFLow)	\
+    (This)->lpVtbl -> put_LocalOscilatorFrequencyLowBand(This,ulLOFLow)
+
+#define IBDA_LNBInfo_get_LocalOscilatorFrequencyLowBand(This,pulLOFLow)	\
+    (This)->lpVtbl -> get_LocalOscilatorFrequencyLowBand(This,pulLOFLow)
+
+#define IBDA_LNBInfo_put_LocalOscilatorFrequencyHighBand(This,ulLOFHigh)	\
+    (This)->lpVtbl -> put_LocalOscilatorFrequencyHighBand(This,ulLOFHigh)
+
+#define IBDA_LNBInfo_get_LocalOscilatorFrequencyHighBand(This,pulLOFHigh)	\
+    (This)->lpVtbl -> get_LocalOscilatorFrequencyHighBand(This,pulLOFHigh)
+
+#define IBDA_LNBInfo_put_HighLowSwitchFrequency(This,ulSwitchFrequency)	\
+    (This)->lpVtbl -> put_HighLowSwitchFrequency(This,ulSwitchFrequency)
+
+#define IBDA_LNBInfo_get_HighLowSwitchFrequency(This,pulSwitchFrequency)	\
+    (This)->lpVtbl -> get_HighLowSwitchFrequency(This,pulSwitchFrequency)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_put_LocalOscilatorFrequencyLowBand_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [in] */ ULONG ulLOFLow);
+
+
+void __RPC_STUB IBDA_LNBInfo_put_LocalOscilatorFrequencyLowBand_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_get_LocalOscilatorFrequencyLowBand_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [out][in] */ ULONG *pulLOFLow);
+
+
+void __RPC_STUB IBDA_LNBInfo_get_LocalOscilatorFrequencyLowBand_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_put_LocalOscilatorFrequencyHighBand_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [in] */ ULONG ulLOFHigh);
+
+
+void __RPC_STUB IBDA_LNBInfo_put_LocalOscilatorFrequencyHighBand_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_get_LocalOscilatorFrequencyHighBand_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [out][in] */ ULONG *pulLOFHigh);
+
+
+void __RPC_STUB IBDA_LNBInfo_get_LocalOscilatorFrequencyHighBand_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_put_HighLowSwitchFrequency_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [in] */ ULONG ulSwitchFrequency);
+
+
+void __RPC_STUB IBDA_LNBInfo_put_HighLowSwitchFrequency_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_LNBInfo_get_HighLowSwitchFrequency_Proxy( 
+    IBDA_LNBInfo * This,
+    /* [out][in] */ ULONG *pulSwitchFrequency);
+
+
+void __RPC_STUB IBDA_LNBInfo_get_HighLowSwitchFrequency_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IBDA_LNBInfo_INTERFACE_DEFINED__ */
 
 
 #ifndef __IBDA_AutoDemodulate_INTERFACE_DEFINED__
@@ -2619,11 +3291,11 @@ void __RPC_STUB IBDA_DigitalDemodulator_get_SpectralInversion_Stub(
 #endif 	/* __IBDA_DigitalDemodulator_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_bdaiface_0388 */
+/* interface __MIDL_itf_bdaiface_0413 */
 /* [local] */ 
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_bdaiface_0388_0001
+enum __MIDL___MIDL_itf_bdaiface_0413_0001
     {	KSPROPERTY_IPSINK_MULTICASTLIST	= 0,
 	KSPROPERTY_IPSINK_ADAPTER_DESCRIPTION	= KSPROPERTY_IPSINK_MULTICASTLIST + 1,
 	KSPROPERTY_IPSINK_ADAPTER_ADDRESS	= KSPROPERTY_IPSINK_ADAPTER_DESCRIPTION + 1
@@ -2631,14 +3303,14 @@ enum __MIDL___MIDL_itf_bdaiface_0388_0001
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_bdaiface_0388_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_bdaiface_0388_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_bdaiface_0413_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_bdaiface_0413_v0_0_s_ifspec;
 
 #ifndef __IBDA_IPSinkControl_INTERFACE_DEFINED__
 #define __IBDA_IPSinkControl_INTERFACE_DEFINED__
 
 /* interface IBDA_IPSinkControl */
-/* [unique][uuid][object] */ 
+/* [helpstring][unique][uuid][object] */ 
 
 
 EXTERN_C const IID IID_IBDA_IPSinkControl;
@@ -2750,6 +3422,143 @@ void __RPC_STUB IBDA_IPSinkControl_GetAdapterIPAddress_Stub(
 
 
 #endif 	/* __IBDA_IPSinkControl_INTERFACE_DEFINED__ */
+
+
+#ifndef __IBDA_IPSinkInfo_INTERFACE_DEFINED__
+#define __IBDA_IPSinkInfo_INTERFACE_DEFINED__
+
+/* interface IBDA_IPSinkInfo */
+/* [unique][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IBDA_IPSinkInfo;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("A750108F-492E-4d51-95F7-649B23FF7AD7")
+    IBDA_IPSinkInfo : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE get_MulticastList( 
+            /* [out][in] */ ULONG *pulcbAddresses,
+            /* [size_is][out] */ BYTE **ppbAddressList) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_AdapterIPAddress( 
+            /* [out] */ BSTR *pbstrBuffer) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE get_AdapterDescription( 
+            /* [out] */ BSTR *pbstrBuffer) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IBDA_IPSinkInfoVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IBDA_IPSinkInfo * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IBDA_IPSinkInfo * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IBDA_IPSinkInfo * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_MulticastList )( 
+            IBDA_IPSinkInfo * This,
+            /* [out][in] */ ULONG *pulcbAddresses,
+            /* [size_is][out] */ BYTE **ppbAddressList);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_AdapterIPAddress )( 
+            IBDA_IPSinkInfo * This,
+            /* [out] */ BSTR *pbstrBuffer);
+        
+        HRESULT ( STDMETHODCALLTYPE *get_AdapterDescription )( 
+            IBDA_IPSinkInfo * This,
+            /* [out] */ BSTR *pbstrBuffer);
+        
+        END_INTERFACE
+    } IBDA_IPSinkInfoVtbl;
+
+    interface IBDA_IPSinkInfo
+    {
+        CONST_VTBL struct IBDA_IPSinkInfoVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IBDA_IPSinkInfo_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IBDA_IPSinkInfo_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IBDA_IPSinkInfo_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IBDA_IPSinkInfo_get_MulticastList(This,pulcbAddresses,ppbAddressList)	\
+    (This)->lpVtbl -> get_MulticastList(This,pulcbAddresses,ppbAddressList)
+
+#define IBDA_IPSinkInfo_get_AdapterIPAddress(This,pbstrBuffer)	\
+    (This)->lpVtbl -> get_AdapterIPAddress(This,pbstrBuffer)
+
+#define IBDA_IPSinkInfo_get_AdapterDescription(This,pbstrBuffer)	\
+    (This)->lpVtbl -> get_AdapterDescription(This,pbstrBuffer)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IBDA_IPSinkInfo_get_MulticastList_Proxy( 
+    IBDA_IPSinkInfo * This,
+    /* [out][in] */ ULONG *pulcbAddresses,
+    /* [size_is][out] */ BYTE **ppbAddressList);
+
+
+void __RPC_STUB IBDA_IPSinkInfo_get_MulticastList_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_IPSinkInfo_get_AdapterIPAddress_Proxy( 
+    IBDA_IPSinkInfo * This,
+    /* [out] */ BSTR *pbstrBuffer);
+
+
+void __RPC_STUB IBDA_IPSinkInfo_get_AdapterIPAddress_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IBDA_IPSinkInfo_get_AdapterDescription_Proxy( 
+    IBDA_IPSinkInfo * This,
+    /* [out] */ BSTR *pbstrBuffer);
+
+
+void __RPC_STUB IBDA_IPSinkInfo_get_AdapterDescription_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IBDA_IPSinkInfo_INTERFACE_DEFINED__ */
 
 
 #ifndef __IEnumPIDMap_INTERFACE_DEFINED__
@@ -3055,6 +3864,11 @@ void __RPC_STUB IMPEG2PIDMap_EnumPIDMap_Stub(
 
 
 /* Additional Prototypes for ALL interfaces */
+
+unsigned long             __RPC_USER  BSTR_UserSize(     unsigned long *, unsigned long            , BSTR * ); 
+unsigned char * __RPC_USER  BSTR_UserMarshal(  unsigned long *, unsigned char *, BSTR * ); 
+unsigned char * __RPC_USER  BSTR_UserUnmarshal(unsigned long *, unsigned char *, BSTR * ); 
+void                      __RPC_USER  BSTR_UserFree(     unsigned long *, BSTR * ); 
 
 /* end of Additional Prototypes */
 

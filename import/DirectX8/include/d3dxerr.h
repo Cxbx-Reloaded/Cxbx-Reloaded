@@ -2,7 +2,7 @@
 //                                                                      
 //   d3dxerr.h --  0xC code definitions for the D3DX API                
 //                                                                      
-//   Copyright (c) 1991-1999, Microsoft Corp. All rights reserved.      
+//   Copyright (c) Microsoft Corp. All rights reserved.      
 //                                                                      
 //----------------------------------------------------------------------
 #ifndef __D3DXERR_H__

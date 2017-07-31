@@ -3,7 +3,7 @@
 //
 // Desc: 
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -78,10 +78,10 @@ STDAPI DMOEnum(
    REFGUID guidCategory, // GUID_NULL for "all"
    DWORD dwFlags, // DMO_ENUMF_XXX
    //
-	// Enumerate only objects that support at least one of the specified input types
-	// and at least one of the specified output types.  If no input types are specified,
-	// enumerate objects regardless of what input types they support.  Same for
-	// output types.
+   // Enumerate only objects that support at least one of the specified input types
+   // and at least one of the specified output types.  If no input types are specified,
+   // enumerate objects regardless of what input types they support.  Same for
+   // output types.
    //
    DWORD cInTypes,
    const DMO_PARTIAL_MEDIATYPE *pInTypes, // can be NULL only of ulInTypes = 0
