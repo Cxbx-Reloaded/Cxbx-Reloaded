@@ -156,9 +156,32 @@ struct {
 	uint32_t regs[NV_PRAMIN_SIZE / sizeof(uint32_t)]; // TODO : union
 } pramin;
 
+typedef struct GraphicsContext {
+	bool channel_3d;
+	unsigned int subchannel;
+} GraphicsContext;
+
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
+
+	uint32_t context_table;
+	uint32_t context_address;
+
+	unsigned int trapped_method;
+	unsigned int trapped_subchannel;
+	unsigned int trapped_channel_id;
+	uint32_t trapped_data[2];
+	uint32_t notify_source;
+
+	bool fifo_access;
+
+	unsigned int channel_id;
+	bool channel_valid;
+	GraphicsContext context[NV2A_NUM_CHANNELS];
+
+
 	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
 } pgraph;
 
@@ -435,6 +458,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR0);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR1);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0);
+	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0_ADDRV);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS1);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS2);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS3);
@@ -509,7 +533,7 @@ DEBUG_START(USER)
 	DEBUG_CASE(NV_USER_DMA_GET);
 	DEBUG_CASE(NV_USER_REF);
 
-DEBUG_END(USER)
+	DEBUG_END(USER)
 
 
 
@@ -530,6 +554,18 @@ DEBUG_END(USER)
 #define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
 
+DWORD __index;
+#define GET_MASK(v, mask) {											  \
+		(bool)(((value) & (mask)) >> (_BitScanForward(&__index, mask) - 1)) \
+	}
+
+#define SET_MASK(v, mask, val) {                                     \
+        const unsigned int __val = val;                              \
+        const unsigned int __mask =  mask;                           \
+        (v) &= ~(__mask);                                            \
+        (v) |= ((__val) << (_BitScanForward(&__index, __mask)-1)) & (__mask);              \
+    }
+
 DEVICE_READ32(PMC)
 {
 	DEVICE_READ32_SWITCH() {
@@ -541,9 +577,6 @@ DEVICE_READ32(PMC)
 		break;
 	case NV_PMC_INTR_EN_0:
 		result = pmc.enabled_interrupts;
-		break;
-	case 0x0000020C: // What's this address? What does the xbe expect to read here? The Kernel base address perhaps?
-		result = NV20_REG_BASE_KERNEL;
 		break;
 	default:
 		DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
@@ -620,6 +653,15 @@ DEVICE_READ32(PFIFO)
 	case NV_PFIFO_RAMFC:
 		result = 0x00890110; // = ? | NV_PFIFO_RAMFC_SIZE_2K | ?
 		break;
+	case NV_PFIFO_INTR_0:
+		result = pfifo.pending_interrupts;
+		break;
+	case NV_PFIFO_INTR_EN_0:
+		result = pfifo.enabled_interrupts;
+		break;
+	case NV_PFIFO_RUNOUT_STATUS:
+		result = NV_PFIFO_RUNOUT_STATUS_LOW_MARK; /* low mark empty */
+		break;
 	default:
 		DEVICE_READ32_REG(pfifo); // Was : DEBUG_READ32_UNHANDLED(PFIFO);
 		break;
@@ -631,6 +673,14 @@ DEVICE_READ32(PFIFO)
 DEVICE_WRITE32(PFIFO)
 {
 	switch(addr) {
+	case NV_PFIFO_INTR_0:
+		pfifo.pending_interrupts &= ~value;
+		update_irq();
+		break;
+	case NV_PFIFO_INTR_EN_0:
+		pfifo.enabled_interrupts = value;
+		update_irq();
+		break;
 	default: 
 		DEVICE_WRITE32_REG(pfifo); // Was : DEBUG_WRITE32_UNHANDLED(PFIFO);
 		break;
@@ -715,7 +765,12 @@ DEVICE_WRITE32(PCOUNTER)
 DEVICE_READ32(PTIMER)
 {
 	DEVICE_READ32_SWITCH() {
-
+	case NV_PTIMER_INTR_0:
+		result = ptimer.pending_interrupts;
+		break;
+	case NV_PTIMER_INTR_EN_0:
+		result = ptimer.enabled_interrupts;
+		break;
 	case NV_PTIMER_DENOMINATOR:
 		result = ptimer.denominator;
 		break;
@@ -864,6 +919,9 @@ DEVICE_READ32(PFB)
 	case NV_PFB_CFG0:
 		result = 3; // = NV_PFB_CFG0_PART_4
 		break;
+	case NV_PFB_CSTATUS:
+		result = CONTIGUOUS_MEMORY_SIZE;
+		break;
 	case NV_PFB_WBC:
 		result = 0; // = !NV_PFB_WBC_FLUSH
 		break;
@@ -913,24 +971,69 @@ DEVICE_WRITE32(PSTRAPS)
 DEVICE_READ32(PGRAPH)
 {
 	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PGRAPH);
+	case NV_PGRAPH_INTR:
+		result = pgraph.pending_interrupts;
 		break;
+	case NV_PGRAPH_INTR_EN:
+		result = pgraph.enabled_interrupts;
+		break;
+	case NV_PGRAPH_NSOURCE:
+		result = pgraph.notify_source;
+		break;
+	case NV_PGRAPH_CTX_USER:
+		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D,
+			pgraph.context[pgraph.channel_id].channel_3d);
+		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D_VALID, 1);
+		SET_MASK(result, NV_PGRAPH_CTX_USER_SUBCH,
+			pgraph.context[pgraph.channel_id].subchannel << 13);
+		SET_MASK(result, NV_PGRAPH_CTX_USER_CHID, pgraph.channel_id);
+		break;
+	case NV_PGRAPH_TRAPPED_ADDR:
+		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_CHID, pgraph.trapped_channel_id);
+		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_SUBCH, pgraph.trapped_subchannel);
+		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_MTHD, pgraph.trapped_method);
+		break;
+	case NV_PGRAPH_TRAPPED_DATA_LOW:
+		result = pgraph.trapped_data[0];
+		break;
+	case NV_PGRAPH_FIFO:
+		SET_MASK(result, NV_PGRAPH_FIFO_ACCESS, pgraph.fifo_access);
+		break;
+	case NV_PGRAPH_CHANNEL_CTX_TABLE:
+		result = pgraph.context_table >> 4;
+		break;
+	case NV_PGRAPH_CHANNEL_CTX_POINTER:
+		result = pgraph.context_address >> 4;
+		break;
+	default:
+		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
 	DEVICE_READ32_END(PGRAPH);
-}
+}	
 
 DEVICE_WRITE32(PGRAPH)
 {
 	switch (addr) {
 	case NV_PGRAPH_INTR:
 		pgraph.pending_interrupts &= ~value;
-		update_irq();
 		break;
 	case NV_PGRAPH_INTR_EN:
 		pgraph.enabled_interrupts = value;
-		update_irq();
+		break;
+	case NV_PGRAPH_CTX_CONTROL:
+		pgraph.channel_valid = (value & NV_PGRAPH_CTX_CONTROL_CHID);
+		break;
+	case NV_PGRAPH_FIFO:
+		pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
+		break;
+	case NV_PGRAPH_CHANNEL_CTX_TABLE:
+		pgraph.context_table =
+			(value & NV_PGRAPH_CHANNEL_CTX_TABLE_INST) << 4;
+		break;
+	case NV_PGRAPH_CHANNEL_CTX_POINTER:
+		pgraph.context_address =
+			(value & NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
 		break;
 	default: 
 		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
@@ -1043,8 +1146,22 @@ DEVICE_WRITE32(PRAMDAC)
 {
 	switch (addr) {
 
+	uint32_t m, n, p;
 	case NV_PRAMDAC_NVPLL_COEFF:
 		pramdac.core_clock_coeff = value;
+
+		m = value & NV_PRAMDAC_NVPLL_COEFF_MDIV;
+		n = (value & NV_PRAMDAC_NVPLL_COEFF_NDIV) >> 8;
+		p = (value & NV_PRAMDAC_NVPLL_COEFF_PDIV) >> 16;
+
+		if (m == 0) {
+			pramdac.core_clock_freq = 0;
+		}
+		else {
+			pramdac.core_clock_freq = (NV2A_CRYSTAL_FREQ * n)
+				/ (1 << p) / m;
+		}
+
 		break;
 	case NV_PRAMDAC_MPLL_COEFF:
 		pramdac.memory_clock_coeff = value;
@@ -1508,16 +1625,6 @@ void InitOpenGLContext()
 	HGLRC RC;
 	std::string szCode;
 
-	//glutInit();
-	{ // rb_init_context();
-	/* link in gl functions at runtime */
-		glewExperimental = GL_TRUE;
-		GLenum err = glewInit();
-		if (err != GLEW_OK) {
-			//LOG_WARNING("GLEW initialization failed: %s", glewGetErrorString(err));
-			return;
-		}
-	}
 	g_EmuWindowsDC = GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
 	SetupPixelFormat(g_EmuWindowsDC);
 
@@ -1536,6 +1643,18 @@ void InitOpenGLContext()
 
 	//DxbxUpdateTransformProjection();
 	//DxbxUpdateViewport();
+
+
+	//glutInit();
+	{ // rb_init_context();
+	  /* link in gl functions at runtime */
+		glewExperimental = GL_TRUE;
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			EmuWarning("GLEW initialization failed: %s", glewGetErrorString(err));
+			return;
+		}
+	}
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1613,4 +1732,12 @@ void InitOpenGLContext()
 
 //	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
 	DxbxCompileShader(szCode);
+
+	// TODO: EmuNV2A_Init
+	pcrtc.start = 0;
+
+	pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
+	pramdac.core_clock_freq = 189000000;
+	pramdac.memory_clock_coeff = 0;
+	pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 }
