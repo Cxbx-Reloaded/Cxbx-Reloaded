@@ -1447,7 +1447,9 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	ULONG HostBufferSize = 0;
 	switch ((DWORD)FileInformationClass) {
 		case FileFsVolumeInformation:
-			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION);
+			// Reserve a large enough buffer for the file information 
+			// including the variable length path field
+			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION) + MAX_PATH;
 			break;
 		case FileFsLabelInformation:
 			HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
@@ -1489,6 +1491,20 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 					XboxSizeInfo->AvailableAllocationUnits.QuadPart = HostSizeInfo->AvailableAllocationUnits.QuadPart;
 					XboxSizeInfo->SectorsPerAllocationUnit = 32;
 					XboxSizeInfo->BytesPerSector = 512;
+				}
+				break;
+				case FileFsVolumeInformation: {
+					PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
+					NtDll::PFILE_FS_VOLUME_INFORMATION HostVolumeInfo = (NtDll::PFILE_FS_VOLUME_INFORMATION)NativeFileInformation;
+
+					// Most options can just be directly copied to the Xbox version, only the strings differ
+					XboxVolumeInfo->VolumeCreationTime.QuadPart = HostVolumeInfo->VolumeCreationTime.QuadPart;
+					XboxVolumeInfo->VolumeSerialNumber = HostVolumeInfo->VolumeSerialNumber;
+					XboxVolumeInfo->VolumeLabelLength = HostVolumeInfo->VolumeLabelLength;
+					XboxVolumeInfo->SupportsObjects = HostVolumeInfo->SupportsObjects;
+
+					// Convert strings to the Xbox format 
+					wcstombs(XboxVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabelLength);
 				}
 				break;
 			default:
