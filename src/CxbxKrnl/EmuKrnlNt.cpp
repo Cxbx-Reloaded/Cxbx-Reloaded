@@ -1055,7 +1055,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	{
 		if (FileMask != 0) {
 			// Xbox expects directories to be listed when *.* is passed
-			if (strncmp(FileMask->Buffer, "*", FileMask->Length) == 0) {
+			if (strncmp(FileMask->Buffer, "*.*", FileMask->Length) == 0) {
 				FileMask->Length = 1;
 				FileMask->Buffer = "*";
 			}
