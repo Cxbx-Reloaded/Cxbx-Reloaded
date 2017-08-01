@@ -1053,9 +1053,15 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
 	// initialize FileMask
 	{
-		if (FileMask != 0)
+		if (FileMask != 0) {
+			// Xbox expects directories to be listed when *.* is passed
+			if (strncmp(FileMask->Buffer, "*.*", FileMask->Length) == 0) {
+				FileMask->Length = 1;
+				FileMask->Buffer = "*";
+			}
+
 			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/FileMask->Buffer, /*MaxCount=*/MAX_PATH);
-		else
+		} else
 			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/"", /*MaxCount=*/MAX_PATH);
 
 		NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
