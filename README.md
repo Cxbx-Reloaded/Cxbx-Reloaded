@@ -33,7 +33,7 @@ Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby) or [Discord](https://dis
 You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 
 ## Support
-You can support this project on [Patreon](https://www.patreon.com/LukeUsher).
+You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
