@@ -20,15 +20,17 @@ Cxbx-Reloaded is early in development and still pretty unstable, so don't expect
 Cxbx-Reloaded is not yet ready for general release, but the latest development build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) (navigate to Configuration: Release => Artifacts => export\Release.zip).
 
 ## Compatibility
-We have a basic [compatibility list](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/222). If you have found an issue that has not been reported, please create a report for each issue per game rather than commenting on the list!
+We have a basic [compatibility list](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/222). If you have found an issue that has not been reported, please create a report (see below) for each issue per game rather than commenting on the list!
 
 ## Bug Reports
 As Cxbx-Reloaded is in early stages of development right now, most games will either crash or do nothing. Please do not submit issues for these games.
 
-Please report games that actually do something. If a game outputs graphics or audio before crashing, please submit a bug report containing the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File]) is selected.
+Please report games that actually do something. If a game outputs graphics or audio before crashing, please submit a bug report at [GitHub](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues) containing the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File]) is selected.
 
-## Screenshot Gallery
-You can find the regularly updated gallery at http://imgur.com/a/Bzvti.
+## Additional information
+Cxbx-Reloaded has a [wiki](://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
+Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby) or [Discord](https://discord.gg/26Xjx23).
+You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
