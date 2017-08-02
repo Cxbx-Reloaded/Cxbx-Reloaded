@@ -53,6 +53,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+typedef BOOL (WINAPI *ChangeWindowMessageFilterType)(UINT, DWORD); // for GetProcAddress()
+
 void ClearHLECache()
 {
 	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
@@ -197,6 +199,18 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
             RegCloseKey(hKey);
         }
     }
+
+	// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
+
+	HMODULE hUser32 = LoadLibrary("User32.dll");
+	ChangeWindowMessageFilterType pChangeWindowMessageFilter = (ChangeWindowMessageFilterType)GetProcAddress(hUser32, "ChangeWindowMessageFilter");
+	if(pChangeWindowMessageFilter)
+	{
+		ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
+		ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
+		ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
+	}
+	FreeLibrary(hUser32);
 
     return;
 }
@@ -355,6 +369,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
 
             SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+			DragAcceptFiles(hwnd, TRUE);
 
             m_bCreated = true;
         }
@@ -492,6 +507,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
         }
         break;
+
+		case WM_DROPFILES:
+		{
+			if(m_bCanStart)
+			{
+				if (m_Xbe != 0)
+				{
+					CloseXbe();
+				}
+				HDROP hDropInfo = NULL; char *DroppedXbeFilename = (char*)calloc(1, MAX_PATH);
+				hDropInfo = (HDROP)wParam;
+				DragQueryFile(hDropInfo, 0, DroppedXbeFilename, MAX_PATH);
+				OpenXbe(DroppedXbeFilename);
+				free(DroppedXbeFilename);
+			}
+		}
+		break;
 
         case WM_COMMAND:
         {
