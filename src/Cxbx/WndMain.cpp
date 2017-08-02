@@ -153,28 +153,53 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 
 			{
-				if(lErrCodeCxbxDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_CxbxDebugFilename) > strlen("\\CxbxDebug.txt"))
+				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND)
+				{
+					m_CxbxDebug = DM_NONE;
+				}
+				else
 				{
 					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
 
-					strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
-
-					if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
+					if(strlen(m_CxbxDebugFilename) < strlen("\\CxbxDebug.txt"))
 					{
 						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+						m_CxbxDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
+						{
+							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+							m_CxbxDebug = DM_NONE;
+						}
+
 					}
 					free(CxbxDebugPath);
 				}
 				
-				if(lErrCodeKrnlDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_KrnlDebugFilename) > strlen("\\KrnlDebug.txt"))
+				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND)
+				{
+					m_KrnlDebug = DM_NONE;
+				}
+				else
 				{
 					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
 
-					strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
-
-					if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
+					if(strlen(m_KrnlDebugFilename) < strlen("\\KrnlDebug.txt"))
 					{
 						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+						m_KrnlDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
+						{
+							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+							m_KrnlDebug = DM_NONE;
+						}
 					}
 					free(KrnlDebugPath);
 				}
