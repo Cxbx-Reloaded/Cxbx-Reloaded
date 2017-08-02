@@ -2294,7 +2294,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORKEYOP, D3DTCOLORKEYOP_DISABLE);
 		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORSIGN, 0);
 		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_ALPHAKILL, D3DTALPHAKILL_DISABLE);
-		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLOROP, D3DTOP_DISABLE);
+		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLOROP, D3DTOP_SELECTARG1); //  D3DTOP_DISABLE caused textures to go opaque
 		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG0, D3DTA_CURRENT);
 		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORARG2, D3DTA_CURRENT);
@@ -2314,6 +2314,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_BORDERCOLOR, 0);
 		//g_pD3DDevice8->SetTextureStageState(stage, D3DTSS_COLORKEYCOLOR, 0);
 	}
+
     return g_EmuCDPD.hRet;
 }
 
