@@ -155,30 +155,28 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			{
 				if(lErrCodeCxbxDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_CxbxDebugFilename) > strlen("\\CxbxDebug.txt"))
 				{
-					char *m_CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
 
-					strncpy(m_CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+					strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
 
-					if(PathFileExists((LPCSTR)m_CxbxDebugPath) == FALSE)
+					if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
 					{
 						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
 					}
-
-					free(m_CxbxDebugPath);
+					free(CxbxDebugPath);
 				}
 				
 				if(lErrCodeKrnlDebugFilename != ERROR_FILE_NOT_FOUND && strlen(m_KrnlDebugFilename) > strlen("\\KrnlDebug.txt"))
 				{
-					char *m_KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
 
-					strncpy(m_KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+					strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
 
-					if(PathFileExists((LPCSTR)m_KrnlDebugPath) == FALSE)
+					if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
 					{
 						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
 					}
-
-					free(m_KrnlDebugPath);
+					free(KrnlDebugPath);
 				}
 			}
 
