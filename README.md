@@ -26,7 +26,7 @@ http://imgur.com/a/Bzvti
 The screenshot gallery is regularly updated
 
 ## Support
-You can support this project on [Patreon](https://www.patreon.com/LukeUsher).
+You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all
