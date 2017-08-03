@@ -140,7 +140,7 @@ static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 
 #define RETURN_RESULT_CHECK(hRet) { static bool bPopupShown = false; if (!bPopupShown && hRet) { bPopupShown = true; \
-                                    printf("Return result report: 0x%08X\nIn %s (%s)", hRet, __func__, __FILE__); \
+                                    printf("Return result report: 0x%08X\nIn %s (%s)\n", hRet, __func__, __FILE__); \
                                     MessageBoxA(NULL, "An issue has been found. Please report game title and console's output of return result," \
                                     " function, and file name to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/485", \
                                     "WARNING", MB_OK | MB_ICONWARNING); } return hRet; }
