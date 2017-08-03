@@ -689,7 +689,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffFactor, 5788, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFrequency, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFrequency, 4134, XREF),
-	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 5558, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 5233, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetDopplerFactor, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDopplerFactor, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 5558, PATCH),
