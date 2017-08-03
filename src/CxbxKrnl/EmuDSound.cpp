@@ -1449,7 +1449,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     }
     pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
     //pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-    pDSBufferDesc->dwFlags = DSBCAPS_CTRLVOLUME;
+    pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY; //aka DSBCAPS_DEFAULT
     pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
 
 
