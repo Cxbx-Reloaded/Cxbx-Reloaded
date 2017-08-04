@@ -94,9 +94,6 @@
     <ClCompile Include="..\..\src\Common\Win32\Mutex.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\OpenXDK.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBController.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
