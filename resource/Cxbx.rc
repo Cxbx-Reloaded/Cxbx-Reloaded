@@ -288,8 +288,6 @@ END
 // JPEG
 //
 
-IDR_JPEG_ABOUT          JPEG                    ""
-
 IDR_JPEG_SPLASH         JPEG                    "Splash.jpg"
 
 #endif    // English (United States) resources
