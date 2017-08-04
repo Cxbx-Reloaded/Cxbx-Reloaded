@@ -578,8 +578,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-      <Filter>GUI</Filter>
-    </None>
     <None Include="..\..\resource\Splash.jpg">
       <Filter>GUI</Filter>
     </None>
