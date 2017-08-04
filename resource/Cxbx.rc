@@ -288,7 +288,7 @@ END
 // JPEG
 //
 
-IDR_JPEG_ABOUT          JPEG                    "About.jpg"
+IDR_JPEG_ABOUT          JPEG                    ""
 
 IDR_JPEG_SPLASH         JPEG                    "Splash.jpg"
 
