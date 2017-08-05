@@ -18,11 +18,11 @@ Questions can be asked at Gitter: https://gitter.im/Cxbx-Reloaded/Lobby
 ### Status
 **Previous behavior:** [Before regression]
 
-**Curret behavior:** [On the latest build]
+**Current behavior:** [On the latest build]
 
 ---
 
-### Screenshots [errors, graphics, glitchs, ect]
+### Screenshots [Errors, Graphics, Glitches, ECT]
 
 ---
 
