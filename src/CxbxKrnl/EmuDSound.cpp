@@ -959,7 +959,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 		LOG_FUNC_ARG(dwBufferBytes)
 		LOG_FUNC_END;
 
-    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
+    //TODO: Current workaround method since dwBufferBytes do set to zero. Otherwise it will produce lock error message.
+    if (dwBufferBytes == 0) {
+        leaveCriticalSection;
+        return DS_OK;
+    }
+	ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
 
     XTL::EMUPATCH(IDirectSoundBuffer_Lock)(pThis, 0, dwBufferBytes, &pThis->EmuLockPtr1, &pThis->EmuLockBytes1, NULL, NULL, pThis->EmuLockFlags);
 
