@@ -3,7 +3,7 @@
 //
 // Desc: 
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -59,9 +59,9 @@ enum
 // used to set volumes on the mixer and mixer pins
 typedef struct
 {
-    REFERENCE_TIME        rtEnd;        //end Time
-    double                dLevel;    //end Volume Level
-    BOOL                bMethod;    //jump or interpolate
+    REFERENCE_TIME      rtEnd;        //end Time
+    double              dLevel;       //end Volume Level
+    BOOL                bMethod;      //jump or interpolate
 } DEXTER_AUDIO_VOLUMEENVELOPE ;
 
 // used in IAMTimeline::Get(Set)InsertMode
@@ -1596,40 +1596,40 @@ enum
 
 // Filename doesn't exist, or DShow doesn't recognize the filetype
 // EXTRA - filename
-cpp_quote("#define DEX_IDS_BAD_SOURCE_NAME    1400")
+cpp_quote("#define DEX_IDS_BAD_SOURCE_NAME     1400")
 
 // Filename doesn't exist or contains unknown data
 // EXTRA - filename (maybe no codec?)
 cpp_quote("#define DEX_IDS_BAD_SOURCE_NAME2    1401")
 
 // filename was required, but wasn't given
-cpp_quote("#define DEX_IDS_MISSING_SOURCE_NAME    1402")
+cpp_quote("#define DEX_IDS_MISSING_SOURCE_NAME 1402")
 
 // cannot parse data provided by this source
 // !!! what source?
-cpp_quote("#define DEX_IDS_UNKNOWN_SOURCE    1403")
+cpp_quote("#define DEX_IDS_UNKNOWN_SOURCE      1403")
 
 // unexpected error - some DShow component not installed correctly
-cpp_quote("#define DEX_IDS_INSTALL_PROBLEM    1404")
+cpp_quote("#define DEX_IDS_INSTALL_PROBLEM     1404")
 
 // Source filter does not accept filenames
 // !!! What source?
-cpp_quote("#define DEX_IDS_NO_SOURCE_NAMES    1405")
+cpp_quote("#define DEX_IDS_NO_SOURCE_NAMES     1405")
 
 // The group's mediatype is not supported
 // EXTRA - gives you an integer group number
-cpp_quote("#define DEX_IDS_BAD_MEDIATYPE    1406")
+cpp_quote("#define DEX_IDS_BAD_MEDIATYPE       1406")
 
 // Invalid stream number for a source
 // EXTRA - gives the stream number !!! should identify which source!
-cpp_quote("#define DEX_IDS_STREAM_NUMBER    1407")
+cpp_quote("#define DEX_IDS_STREAM_NUMBER       1407")
 
 // You ran out of memory
-cpp_quote("#define DEX_IDS_OUTOFMEMORY        1408")
+cpp_quote("#define DEX_IDS_OUTOFMEMORY         1408")
 
 // One bitmap in a sequence was not the same type as the others
 // EXTRA - gives the bitmap name
-cpp_quote("#define DEX_IDS_DIBSEQ_NOTALLSAME    1409")
+cpp_quote("#define DEX_IDS_DIBSEQ_NOTALLSAME   1409")
 
 // Clip's mediatimes are invalid, or DibSeq too short, or a previous error caused this
 // !!! Needs to give the clip name
@@ -1637,19 +1637,19 @@ cpp_quote("#define DEX_IDS_CLIPTOOSHORT        1410")
 
 // Clsid of FX/Transition is not a DirectX Transform
 // EXTRA - gives the CLSID
-cpp_quote("#define DEX_IDS_INVALID_DXT        1411")
+cpp_quote("#define DEX_IDS_INVALID_DXT         1411")
 
 // Default FX/Transition Clsid is not a DirectX Transform"
 // EXTRA - gives the CLSID
-cpp_quote("#define DEX_IDS_INVALID_DEFAULT_DXT    1412")
+cpp_quote("#define DEX_IDS_INVALID_DEFAULT_DXT 1412")
 
 // Your version of DX doesn't support 3D transforms"
 // EXTRA - gives the CLSID of the 3D transform you tried to use
-cpp_quote("#define DEX_IDS_NO_3D        1413")
+cpp_quote("#define DEX_IDS_NO_3D               1413")
 
 // This DirectX Transform is not the right kind, or is broken
 // EXTRA - gives the CLSID of the broken transform
-cpp_quote("#define DEX_IDS_BROKEN_DXT        1414")
+cpp_quote("#define DEX_IDS_BROKEN_DXT          1414")
 
 // No such property exists on an object
 // EXTRA - gives the name of the property (if given as a string)
@@ -1657,11 +1657,11 @@ cpp_quote("#define DEX_IDS_NO_SUCH_PROPERTY    1415")
 
 // Illegal value for a property
 // EXTRA - gives the VARIANT value that was illegal
-cpp_quote("#define DEX_IDS_ILLEGAL_PROPERTY_VAL    1416")
+cpp_quote("#define DEX_IDS_ILLEGAL_PROPERTY_VAL  1416")
 
 // Syntax error in XML file at line:
 // EXTRA - gives I4 line number, if available
-cpp_quote("#define DEX_IDS_INVALID_XML        1417")
+cpp_quote("#define DEX_IDS_INVALID_XML         1417")
 
 // Can't find filter specified in XML by Category and Instance
 // EXTRA - gives friendly name (instance)
@@ -1682,14 +1682,14 @@ cpp_quote("#define DEX_IDS_CANT_FIND_COMPRESSOR 1421")
 // !!! Here go problems hooking up sources or finding codecs
 
 
-// THE FOLLOWING SHOULD NEVER HAPPEN - please call me if they do
+// THE FOLLOWING SHOULD NEVER HAPPEN - please email directx@microsoft.com if they do
 
 // Unexpected error in parsing the timeline
-cpp_quote("#define DEX_IDS_TIMELINE_PARSE    1426")
+cpp_quote("#define DEX_IDS_TIMELINE_PARSE     1426")
 // Unexpected error building the filtergraph
 cpp_quote("#define DEX_IDS_GRAPH_ERROR        1427")
 // Unexpected error with the internal grid
-cpp_quote("#define DEX_IDS_GRID_ERROR        1428")
+cpp_quote("#define DEX_IDS_GRID_ERROR         1428")
 // Unexpected error getting an interface
 cpp_quote("#define DEX_IDS_INTERFACE_ERROR    1429")
 

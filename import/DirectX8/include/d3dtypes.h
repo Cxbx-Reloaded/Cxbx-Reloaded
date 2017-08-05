@@ -1,6 +1,6 @@
 /*==========================================================================;
  *
- *  Copyright (C) 1995-1998 Microsoft Corporation.  All Rights Reserved.
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:   d3dtypes.h
  *  Content:    Direct3D types include file

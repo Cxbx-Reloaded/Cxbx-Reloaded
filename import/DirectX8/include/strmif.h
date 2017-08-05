@@ -4,10 +4,10 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 6.00.0338 */
+ /* File created by MIDL compiler version 6.00.0347 */
 /* Compiler settings for strmif.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
-    protocol : dce , ms_ext, c_ext
+    protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
@@ -18,7 +18,7 @@
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__
-#define __REQUIRED_RPCNDR_H_VERSION__ 440
+#define __REQUIRED_RPCNDR_H_VERSION__ 475
 #endif
 
 #include "rpc.h"
@@ -570,6 +570,12 @@ typedef interface IIPDVDec IIPDVDec;
 #endif 	/* __IIPDVDec_FWD_DEFINED__ */
 
 
+#ifndef __IDVRGB219_FWD_DEFINED__
+#define __IDVRGB219_FWD_DEFINED__
+typedef interface IDVRGB219 IDVRGB219;
+#endif 	/* __IDVRGB219_FWD_DEFINED__ */
+
+
 #ifndef __IDVSplitter_FWD_DEFINED__
 #define __IDVSplitter_FWD_DEFINED__
 typedef interface IDVSplitter IDVSplitter;
@@ -618,10 +624,22 @@ typedef interface IMPEG2StreamIdMap IMPEG2StreamIdMap;
 #endif 	/* __IMPEG2StreamIdMap_FWD_DEFINED__ */
 
 
-#ifndef __IAMovie_FWD_DEFINED__
-#define __IAMovie_FWD_DEFINED__
-typedef interface IAMovie IAMovie;
-#endif 	/* __IAMovie_FWD_DEFINED__ */
+#ifndef __IRegisterServiceProvider_FWD_DEFINED__
+#define __IRegisterServiceProvider_FWD_DEFINED__
+typedef interface IRegisterServiceProvider IRegisterServiceProvider;
+#endif 	/* __IRegisterServiceProvider_FWD_DEFINED__ */
+
+
+#ifndef __IAMDecoderCaps_FWD_DEFINED__
+#define __IAMDecoderCaps_FWD_DEFINED__
+typedef interface IAMDecoderCaps IAMDecoderCaps;
+#endif 	/* __IAMDecoderCaps_FWD_DEFINED__ */
+
+
+#ifndef __IAMClockSlave_FWD_DEFINED__
+#define __IAMClockSlave_FWD_DEFINED__
+typedef interface IAMClockSlave IAMClockSlave;
+#endif 	/* __IAMClockSlave_FWD_DEFINED__ */
 
 
 #ifndef __IDvdControl_FWD_DEFINED__
@@ -708,6 +726,90 @@ typedef interface IFilterChain IFilterChain;
 #endif 	/* __IFilterChain_FWD_DEFINED__ */
 
 
+#ifndef __IVMRImagePresenter_FWD_DEFINED__
+#define __IVMRImagePresenter_FWD_DEFINED__
+typedef interface IVMRImagePresenter IVMRImagePresenter;
+#endif 	/* __IVMRImagePresenter_FWD_DEFINED__ */
+
+
+#ifndef __IVMRSurfaceAllocator_FWD_DEFINED__
+#define __IVMRSurfaceAllocator_FWD_DEFINED__
+typedef interface IVMRSurfaceAllocator IVMRSurfaceAllocator;
+#endif 	/* __IVMRSurfaceAllocator_FWD_DEFINED__ */
+
+
+#ifndef __IVMRSurfaceAllocatorNotify_FWD_DEFINED__
+#define __IVMRSurfaceAllocatorNotify_FWD_DEFINED__
+typedef interface IVMRSurfaceAllocatorNotify IVMRSurfaceAllocatorNotify;
+#endif 	/* __IVMRSurfaceAllocatorNotify_FWD_DEFINED__ */
+
+
+#ifndef __IVMRWindowlessControl_FWD_DEFINED__
+#define __IVMRWindowlessControl_FWD_DEFINED__
+typedef interface IVMRWindowlessControl IVMRWindowlessControl;
+#endif 	/* __IVMRWindowlessControl_FWD_DEFINED__ */
+
+
+#ifndef __IVMRMixerControl_FWD_DEFINED__
+#define __IVMRMixerControl_FWD_DEFINED__
+typedef interface IVMRMixerControl IVMRMixerControl;
+#endif 	/* __IVMRMixerControl_FWD_DEFINED__ */
+
+
+#ifndef __IVMRMonitorConfig_FWD_DEFINED__
+#define __IVMRMonitorConfig_FWD_DEFINED__
+typedef interface IVMRMonitorConfig IVMRMonitorConfig;
+#endif 	/* __IVMRMonitorConfig_FWD_DEFINED__ */
+
+
+#ifndef __IVMRFilterConfig_FWD_DEFINED__
+#define __IVMRFilterConfig_FWD_DEFINED__
+typedef interface IVMRFilterConfig IVMRFilterConfig;
+#endif 	/* __IVMRFilterConfig_FWD_DEFINED__ */
+
+
+#ifndef __IVMRMixerBitmap_FWD_DEFINED__
+#define __IVMRMixerBitmap_FWD_DEFINED__
+typedef interface IVMRMixerBitmap IVMRMixerBitmap;
+#endif 	/* __IVMRMixerBitmap_FWD_DEFINED__ */
+
+
+#ifndef __IVMRImageCompositor_FWD_DEFINED__
+#define __IVMRImageCompositor_FWD_DEFINED__
+typedef interface IVMRImageCompositor IVMRImageCompositor;
+#endif 	/* __IVMRImageCompositor_FWD_DEFINED__ */
+
+
+#ifndef __IVMRVideoStreamControl_FWD_DEFINED__
+#define __IVMRVideoStreamControl_FWD_DEFINED__
+typedef interface IVMRVideoStreamControl IVMRVideoStreamControl;
+#endif 	/* __IVMRVideoStreamControl_FWD_DEFINED__ */
+
+
+#ifndef __IVMRSurface_FWD_DEFINED__
+#define __IVMRSurface_FWD_DEFINED__
+typedef interface IVMRSurface IVMRSurface;
+#endif 	/* __IVMRSurface_FWD_DEFINED__ */
+
+
+#ifndef __IVMRImagePresenterConfig_FWD_DEFINED__
+#define __IVMRImagePresenterConfig_FWD_DEFINED__
+typedef interface IVMRImagePresenterConfig IVMRImagePresenterConfig;
+#endif 	/* __IVMRImagePresenterConfig_FWD_DEFINED__ */
+
+
+#ifndef __IVMRImagePresenterExclModeConfig_FWD_DEFINED__
+#define __IVMRImagePresenterExclModeConfig_FWD_DEFINED__
+typedef interface IVMRImagePresenterExclModeConfig IVMRImagePresenterExclModeConfig;
+#endif 	/* __IVMRImagePresenterExclModeConfig_FWD_DEFINED__ */
+
+
+#ifndef __IVPManager_FWD_DEFINED__
+#define __IVPManager_FWD_DEFINED__
+typedef interface IVPManager IVPManager;
+#endif 	/* __IVPManager_FWD_DEFINED__ */
+
+
 /* header files for imported files */
 #include "unknwn.h"
 #include "objidl.h"
@@ -724,9 +826,22 @@ void __RPC_USER MIDL_user_free( void * );
 /* interface __MIDL_itf_strmif_0000 */
 /* [local] */ 
 
+//+-------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1999-2001.
+//
+//--------------------------------------------------------------------------
+// Disable /W4 compiler warning C4201: nameless struct/union
+#pragma warning(disable:4201)  // Disable C4201: nameless struct/union
+  
 #define CDEF_CLASS_DEFAULT      0x0001
 #define CDEF_BYPASS_CLASS_MANAGER   0x0002
 #define CDEF_MERIT_ABOVE_DO_NOT_USE  0x0008
+#define CDEF_DEVMON_CMGR_DEVICE  0x0010
+#define CDEF_DEVMON_DMO  0x0020
+#define CDEF_DEVMON_PNP_DEVICE  0x0040
+#define CDEF_DEVMON_FILTER  0x0080
+#define CDEF_DEVMON_SELECTIVE_MASK  0x00f0
 
 
 extern RPC_IF_HANDLE __MIDL_itf_strmif_0000_v0_0_c_ifspec;
@@ -828,7 +943,7 @@ void __RPC_STUB ICreateDevEnum_CreateClassEnumerator_Stub(
 #endif 	/* __ICreateDevEnum_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0108 */
+/* interface __MIDL_itf_strmif_0112 */
 /* [local] */ 
 
 #define CHARS_IN_GUID     39
@@ -885,8 +1000,8 @@ typedef struct _AllocatorProperties
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0108_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0108_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0112_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0112_v0_0_s_ifspec;
 
 #ifndef __IPin_INTERFACE_DEFINED__
 #define __IPin_INTERFACE_DEFINED__
@@ -1296,15 +1411,15 @@ void __RPC_STUB IPin_NewSegment_Stub(
 #endif 	/* __IPin_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0109 */
+/* interface __MIDL_itf_strmif_0113 */
 /* [local] */ 
 
 typedef IPin *PPIN;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0109_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0109_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0113_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0113_v0_0_s_ifspec;
 
 #ifndef __IEnumPins_INTERFACE_DEFINED__
 #define __IEnumPins_INTERFACE_DEFINED__
@@ -1465,15 +1580,15 @@ void __RPC_STUB IEnumPins_Clone_Stub(
 #endif 	/* __IEnumPins_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0110 */
+/* interface __MIDL_itf_strmif_0114 */
 /* [local] */ 
 
 typedef IEnumPins *PENUMPINS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0110_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0110_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0114_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0114_v0_0_s_ifspec;
 
 #ifndef __IEnumMediaTypes_INTERFACE_DEFINED__
 #define __IEnumMediaTypes_INTERFACE_DEFINED__
@@ -1634,15 +1749,15 @@ void __RPC_STUB IEnumMediaTypes_Clone_Stub(
 #endif 	/* __IEnumMediaTypes_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0111 */
+/* interface __MIDL_itf_strmif_0115 */
 /* [local] */ 
 
 typedef IEnumMediaTypes *PENUMMEDIATYPES;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0111_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0111_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0115_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0115_v0_0_s_ifspec;
 
 #ifndef __IFilterGraph_INTERFACE_DEFINED__
 #define __IFilterGraph_INTERFACE_DEFINED__
@@ -1897,15 +2012,15 @@ void __RPC_STUB IFilterGraph_SetDefaultSyncSource_Stub(
 #endif 	/* __IFilterGraph_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0112 */
+/* interface __MIDL_itf_strmif_0116 */
 /* [local] */ 
 
 typedef IFilterGraph *PFILTERGRAPH;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0112_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0112_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0116_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0116_v0_0_s_ifspec;
 
 #ifndef __IEnumFilters_INTERFACE_DEFINED__
 #define __IEnumFilters_INTERFACE_DEFINED__
@@ -2066,15 +2181,15 @@ void __RPC_STUB IEnumFilters_Clone_Stub(
 #endif 	/* __IEnumFilters_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0113 */
+/* interface __MIDL_itf_strmif_0117 */
 /* [local] */ 
 
 typedef IEnumFilters *PENUMFILTERS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0113_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0113_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0117_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0117_v0_0_s_ifspec;
 
 #ifndef __IMediaFilter_INTERFACE_DEFINED__
 #define __IMediaFilter_INTERFACE_DEFINED__
@@ -2288,15 +2403,15 @@ void __RPC_STUB IMediaFilter_GetSyncSource_Stub(
 #endif 	/* __IMediaFilter_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0114 */
+/* interface __MIDL_itf_strmif_0118 */
 /* [local] */ 
 
 typedef IMediaFilter *PMEDIAFILTER;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0114_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0114_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0118_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0118_v0_0_s_ifspec;
 
 #ifndef __IBaseFilter_INTERFACE_DEFINED__
 #define __IBaseFilter_INTERFACE_DEFINED__
@@ -2538,15 +2653,15 @@ void __RPC_STUB IBaseFilter_QueryVendorInfo_Stub(
 #endif 	/* __IBaseFilter_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0115 */
+/* interface __MIDL_itf_strmif_0119 */
 /* [local] */ 
 
 typedef IBaseFilter *PFILTER;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0115_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0115_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0119_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0119_v0_0_s_ifspec;
 
 #ifndef __IReferenceClock_INTERFACE_DEFINED__
 #define __IReferenceClock_INTERFACE_DEFINED__
@@ -2722,15 +2837,15 @@ void __RPC_STUB IReferenceClock_Unadvise_Stub(
 #endif 	/* __IReferenceClock_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0116 */
+/* interface __MIDL_itf_strmif_0120 */
 /* [local] */ 
 
 typedef IReferenceClock *PREFERENCECLOCK;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0116_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0116_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0120_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0120_v0_0_s_ifspec;
 
 #ifndef __IReferenceClock2_INTERFACE_DEFINED__
 #define __IReferenceClock2_INTERFACE_DEFINED__
@@ -2835,15 +2950,15 @@ EXTERN_C const IID IID_IReferenceClock2;
 #endif 	/* __IReferenceClock2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0117 */
+/* interface __MIDL_itf_strmif_0121 */
 /* [local] */ 
 
 typedef IReferenceClock2 *PREFERENCECLOCK2;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0117_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0117_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0121_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0121_v0_0_s_ifspec;
 
 #ifndef __IMediaSample_INTERFACE_DEFINED__
 #define __IMediaSample_INTERFACE_DEFINED__
@@ -3262,7 +3377,7 @@ void __RPC_STUB IMediaSample_SetMediaTime_Stub(
 #endif 	/* __IMediaSample_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0118 */
+/* interface __MIDL_itf_strmif_0122 */
 /* [local] */ 
 
 typedef IMediaSample *PMEDIASAMPLE;
@@ -3297,8 +3412,8 @@ typedef struct tagAM_SAMPLE2_PROPERTIES
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0118_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0118_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0122_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0122_v0_0_s_ifspec;
 
 #ifndef __IMediaSample2_INTERFACE_DEFINED__
 #define __IMediaSample2_INTERFACE_DEFINED__
@@ -3530,7 +3645,7 @@ void __RPC_STUB IMediaSample2_SetProperties_Stub(
 #endif 	/* __IMediaSample2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0119 */
+/* interface __MIDL_itf_strmif_0123 */
 /* [local] */ 
 
 typedef IMediaSample2 *PMEDIASAMPLE2;
@@ -3538,10 +3653,11 @@ typedef IMediaSample2 *PMEDIASAMPLE2;
 #define AM_GBF_PREVFRAMESKIPPED 1
 #define AM_GBF_NOTASYNCPOINT 2
 #define AM_GBF_NOWAIT 4
+#define AM_GBF_NODDSURFACELOCK 8
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0119_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0119_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0123_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0123_v0_0_s_ifspec;
 
 #ifndef __IMemAllocator_INTERFACE_DEFINED__
 #define __IMemAllocator_INTERFACE_DEFINED__
@@ -3749,15 +3865,15 @@ void __RPC_STUB IMemAllocator_ReleaseBuffer_Stub(
 #endif 	/* __IMemAllocator_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0120 */
+/* interface __MIDL_itf_strmif_0124 */
 /* [local] */ 
 
 typedef IMemAllocator *PMEMALLOCATOR;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0120_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0120_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0124_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0124_v0_0_s_ifspec;
 
 #ifndef __IMemAllocatorCallbackTemp_INTERFACE_DEFINED__
 #define __IMemAllocatorCallbackTemp_INTERFACE_DEFINED__
@@ -4209,15 +4325,15 @@ void __RPC_STUB IMemInputPin_ReceiveCanBlock_Stub(
 #endif 	/* __IMemInputPin_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0123 */
+/* interface __MIDL_itf_strmif_0127 */
 /* [local] */ 
 
 typedef IMemInputPin *PMEMINPUTPIN;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0123_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0123_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0127_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0127_v0_0_s_ifspec;
 
 #ifndef __IAMovieSetup_INTERFACE_DEFINED__
 #define __IAMovieSetup_INTERFACE_DEFINED__
@@ -4325,7 +4441,7 @@ void __RPC_STUB IAMovieSetup_Unregister_Stub(
 #endif 	/* __IAMovieSetup_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0124 */
+/* interface __MIDL_itf_strmif_0128 */
 /* [local] */ 
 
 typedef IAMovieSetup *PAMOVIESETUP;
@@ -4358,8 +4474,8 @@ enum AM_SEEKING_SeekingCapabilities
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0124_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0124_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0128_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0128_v0_0_s_ifspec;
 
 #ifndef __IMediaSeeking_INTERFACE_DEFINED__
 #define __IMediaSeeking_INTERFACE_DEFINED__
@@ -4827,7 +4943,7 @@ void __RPC_STUB IMediaSeeking_GetPreroll_Stub(
 #endif 	/* __IMediaSeeking_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0125 */
+/* interface __MIDL_itf_strmif_0129 */
 /* [local] */ 
 
 typedef IMediaSeeking *PMEDIASEEKING;
@@ -4888,7 +5004,8 @@ enum tagAM_MEDIAEVENT_FLAGS
 
 
 
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0125_0001
+
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0001
     {
     CLSID Clsid;
     LPWSTR Name;
@@ -4896,8 +5013,8 @@ typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0125_0001
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0125_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0125_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0129_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0129_v0_0_s_ifspec;
 
 #ifndef __IEnumRegFilters_INTERFACE_DEFINED__
 #define __IEnumRegFilters_INTERFACE_DEFINED__
@@ -5058,15 +5175,15 @@ void __RPC_STUB IEnumRegFilters_Clone_Stub(
 #endif 	/* __IEnumRegFilters_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0127 */
+/* interface __MIDL_itf_strmif_0131 */
 /* [local] */ 
 
 typedef IEnumRegFilters *PENUMREGFILTERS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0127_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0127_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0131_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0131_v0_0_s_ifspec;
 
 #ifndef __IFilterMapper_INTERFACE_DEFINED__
 #define __IFilterMapper_INTERFACE_DEFINED__
@@ -5390,16 +5507,16 @@ void __RPC_STUB IFilterMapper_EnumMatchingFilters_Stub(
 #endif 	/* __IFilterMapper_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0129 */
+/* interface __MIDL_itf_strmif_0133 */
 /* [local] */ 
 
-typedef /* [public][public][public][public][public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0001
+typedef /* [public][public][public][public][public][public][public] */ struct __MIDL___MIDL_itf_strmif_0133_0001
     {
     const CLSID *clsMajorType;
     const CLSID *clsMinorType;
     } 	REGPINTYPES;
 
-typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0002
+typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0133_0002
     {
     LPWSTR strName;
     BOOL bRendered;
@@ -5412,7 +5529,7 @@ typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0002
     const REGPINTYPES *lpMediaType;
     } 	REGFILTERPINS;
 
-typedef /* [public][public][public][public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0003
+typedef /* [public][public][public][public][public][public] */ struct __MIDL___MIDL_itf_strmif_0133_0003
     {
     CLSID clsMedium;
     DWORD dw1;
@@ -5420,13 +5537,13 @@ typedef /* [public][public][public][public][public][public] */ struct __MIDL___M
     } 	REGPINMEDIUM;
 
 
-enum __MIDL___MIDL_itf_strmif_0129_0004
+enum __MIDL___MIDL_itf_strmif_0133_0004
     {	REG_PINFLAG_B_ZERO	= 0x1,
 	REG_PINFLAG_B_RENDERER	= 0x2,
 	REG_PINFLAG_B_MANY	= 0x4,
 	REG_PINFLAG_B_OUTPUT	= 0x8
     } ;
-typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0005
+typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0133_0005
     {
     DWORD dwFlags;
     UINT cInstances;
@@ -5437,7 +5554,7 @@ typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0005
     const CLSID *clsPinCategory;
     } 	REGFILTERPINS2;
 
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0006
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0133_0006
     {
     DWORD dwVersion;
     DWORD dwMerit;
@@ -5459,8 +5576,8 @@ typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0129_0006
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0129_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0129_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0133_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0133_v0_0_s_ifspec;
 
 #ifndef __IFilterMapper2_INTERFACE_DEFINED__
 #define __IFilterMapper2_INTERFACE_DEFINED__
@@ -5829,7 +5946,7 @@ void __RPC_STUB IFilterMapper3_GetICreateDevEnum_Stub(
 #endif 	/* __IFilterMapper3_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0132 */
+/* interface __MIDL_itf_strmif_0136 */
 /* [local] */ 
 
 typedef 
@@ -5850,8 +5967,8 @@ typedef IQualityControl *PQUALITYCONTROL;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0132_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0132_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0136_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0136_v0_0_s_ifspec;
 
 #ifndef __IQualityControl_INTERFACE_DEFINED__
 #define __IQualityControl_INTERFACE_DEFINED__
@@ -5968,11 +6085,11 @@ void __RPC_STUB IQualityControl_SetSink_Stub(
 #endif 	/* __IQualityControl_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0133 */
+/* interface __MIDL_itf_strmif_0137 */
 /* [local] */ 
 
 
-enum __MIDL___MIDL_itf_strmif_0133_0001
+enum __MIDL___MIDL_itf_strmif_0137_0001
     {	CK_NOCOLORKEY	= 0,
 	CK_INDEX	= 0x1,
 	CK_RGB	= 0x2
@@ -5986,7 +6103,7 @@ typedef struct tagCOLORKEY
     } 	COLORKEY;
 
 
-enum __MIDL___MIDL_itf_strmif_0133_0002
+enum __MIDL___MIDL_itf_strmif_0137_0002
     {	ADVISE_NONE	= 0,
 	ADVISE_CLIPPING	= 0x1,
 	ADVISE_PALETTE	= 0x2,
@@ -6017,8 +6134,8 @@ typedef struct _RGNDATA
 #endif
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0133_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0133_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0137_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0137_v0_0_s_ifspec;
 
 #ifndef __IOverlayNotify_INTERFACE_DEFINED__
 #define __IOverlayNotify_INTERFACE_DEFINED__
@@ -6188,7 +6305,7 @@ void __RPC_STUB IOverlayNotify_OnPositionChange_Stub(
 #endif 	/* __IOverlayNotify_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0134 */
+/* interface __MIDL_itf_strmif_0138 */
 /* [local] */ 
 
 typedef IOverlayNotify *POVERLAYNOTIFY;
@@ -6203,8 +6320,8 @@ DECLARE_HANDLE(HMONITOR);
 #endif
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0134_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0134_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0138_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0138_v0_0_s_ifspec;
 
 #ifndef __IOverlayNotify2_INTERFACE_DEFINED__
 #define __IOverlayNotify2_INTERFACE_DEFINED__
@@ -6329,15 +6446,15 @@ void __RPC_STUB IOverlayNotify2_OnDisplayChange_Stub(
 #endif 	/* __IOverlayNotify2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0135 */
+/* interface __MIDL_itf_strmif_0139 */
 /* [local] */ 
 
 typedef IOverlayNotify2 *POVERLAYNOTIFY2;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0135_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0135_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0139_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0139_v0_0_s_ifspec;
 
 #ifndef __IOverlay_INTERFACE_DEFINED__
 #define __IOverlay_INTERFACE_DEFINED__
@@ -6642,15 +6759,15 @@ void __RPC_STUB IOverlay_Unadvise_Stub(
 #endif 	/* __IOverlay_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0136 */
+/* interface __MIDL_itf_strmif_0140 */
 /* [local] */ 
 
 typedef IOverlay *POVERLAY;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0136_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0136_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0140_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0140_v0_0_s_ifspec;
 
 #ifndef __IMediaEventSink_INTERFACE_DEFINED__
 #define __IMediaEventSink_INTERFACE_DEFINED__
@@ -6748,15 +6865,15 @@ void __RPC_STUB IMediaEventSink_Notify_Stub(
 #endif 	/* __IMediaEventSink_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0137 */
+/* interface __MIDL_itf_strmif_0141 */
 /* [local] */ 
 
 typedef IMediaEventSink *PMEDIAEVENTSINK;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0137_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0137_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0141_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0141_v0_0_s_ifspec;
 
 #ifndef __IFileSourceFilter_INTERFACE_DEFINED__
 #define __IFileSourceFilter_INTERFACE_DEFINED__
@@ -6876,15 +6993,15 @@ void __RPC_STUB IFileSourceFilter_GetCurFile_Stub(
 #endif 	/* __IFileSourceFilter_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0138 */
+/* interface __MIDL_itf_strmif_0142 */
 /* [local] */ 
 
 typedef IFileSourceFilter *PFILTERFILESOURCE;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0138_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0138_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0142_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0142_v0_0_s_ifspec;
 
 #ifndef __IFileSinkFilter_INTERFACE_DEFINED__
 #define __IFileSinkFilter_INTERFACE_DEFINED__
@@ -7004,15 +7121,15 @@ void __RPC_STUB IFileSinkFilter_GetCurFile_Stub(
 #endif 	/* __IFileSinkFilter_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0139 */
+/* interface __MIDL_itf_strmif_0143 */
 /* [local] */ 
 
 typedef IFileSinkFilter *PFILTERFILESINK;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0139_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0139_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0143_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0143_v0_0_s_ifspec;
 
 #ifndef __IFileSinkFilter2_INTERFACE_DEFINED__
 #define __IFileSinkFilter2_INTERFACE_DEFINED__
@@ -7143,20 +7260,20 @@ void __RPC_STUB IFileSinkFilter2_GetMode_Stub(
 #endif 	/* __IFileSinkFilter2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0140 */
+/* interface __MIDL_itf_strmif_0144 */
 /* [local] */ 
 
 typedef IFileSinkFilter2 *PFILESINKFILTER2;
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0140_0001
+enum __MIDL___MIDL_itf_strmif_0144_0001
     {	AM_FILE_OVERWRITE	= 0x1
     } 	AM_FILESINK_FLAGS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0140_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0140_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0144_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0144_v0_0_s_ifspec;
 
 #ifndef __IGraphBuilder_INTERFACE_DEFINED__
 #define __IGraphBuilder_INTERFACE_DEFINED__
@@ -8181,7 +8298,7 @@ void __RPC_STUB ICaptureGraphBuilder2_FindPin_Stub(
 #endif 	/* __ICaptureGraphBuilder2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0144 */
+/* interface __MIDL_itf_strmif_0148 */
 /* [local] */ 
 
 
@@ -8190,8 +8307,8 @@ enum _AM_RENSDEREXFLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0144_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0144_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0148_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0148_v0_0_s_ifspec;
 
 #ifndef __IFilterGraph2_INTERFACE_DEFINED__
 #define __IFilterGraph2_INTERFACE_DEFINED__
@@ -9488,18 +9605,18 @@ void __RPC_STUB IDistributorNotify_NotifyGraphChange_Stub(
 #endif 	/* __IDistributorNotify_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0151 */
+/* interface __MIDL_itf_strmif_0155 */
 /* [local] */ 
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0151_0001
+enum __MIDL___MIDL_itf_strmif_0155_0001
     {	AM_STREAM_INFO_START_DEFINED	= 0x1,
 	AM_STREAM_INFO_STOP_DEFINED	= 0x2,
 	AM_STREAM_INFO_DISCARDING	= 0x4,
 	AM_STREAM_INFO_STOP_SEND_EXTRA	= 0x10
     } 	AM_STREAM_INFO_FLAGS;
 
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0151_0002
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0155_0002
     {
     REFERENCE_TIME tStart;
     REFERENCE_TIME tStop;
@@ -9510,8 +9627,8 @@ typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0151_0002
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0151_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0151_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0155_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0155_v0_0_s_ifspec;
 
 #ifndef __IAMStreamControl_INTERFACE_DEFINED__
 #define __IAMStreamControl_INTERFACE_DEFINED__
@@ -9963,7 +10080,8 @@ typedef /* [public][public][public] */
 enum __MIDL_IConfigInterleaving_0001
     {	INTERLEAVE_NONE	= 0,
 	INTERLEAVE_CAPTURE	= INTERLEAVE_NONE + 1,
-	INTERLEAVE_FULL	= INTERLEAVE_CAPTURE + 1
+	INTERLEAVE_FULL	= INTERLEAVE_CAPTURE + 1,
+	INTERLEAVE_NONE_BUFFERED	= INTERLEAVE_FULL + 1
     } 	InterleavingMode;
 
 
@@ -10278,11 +10396,11 @@ void __RPC_STUB IConfigAviMux_GetOutputCompatibilityIndex_Stub(
 #endif 	/* __IConfigAviMux_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0158 */
+/* interface __MIDL_itf_strmif_0162 */
 /* [local] */ 
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0158_0001
+enum __MIDL___MIDL_itf_strmif_0162_0001
     {	CompressionCaps_CanQuality	= 0x1,
 	CompressionCaps_CanCrunch	= 0x2,
 	CompressionCaps_CanKeyFrame	= 0x4,
@@ -10292,8 +10410,8 @@ enum __MIDL___MIDL_itf_strmif_0158_0001
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0158_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0158_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0162_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0162_v0_0_s_ifspec;
 
 #ifndef __IAMVideoCompression_INTERFACE_DEFINED__
 #define __IAMVideoCompression_INTERFACE_DEFINED__
@@ -10629,18 +10747,18 @@ void __RPC_STUB IAMVideoCompression_OverrideFrameSize_Stub(
 #endif 	/* __IAMVideoCompression_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0159 */
+/* interface __MIDL_itf_strmif_0163 */
 /* [local] */ 
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0159_0001
+enum __MIDL___MIDL_itf_strmif_0163_0001
     {	VfwCaptureDialog_Source	= 0x1,
 	VfwCaptureDialog_Format	= 0x2,
 	VfwCaptureDialog_Display	= 0x4
     } 	VfwCaptureDialogs;
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0159_0002
+enum __MIDL___MIDL_itf_strmif_0163_0002
     {	VfwCompressDialog_Config	= 0x1,
 	VfwCompressDialog_About	= 0x2,
 	VfwCompressDialog_QueryConfig	= 0x4,
@@ -10649,8 +10767,8 @@ enum __MIDL___MIDL_itf_strmif_0159_0002
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0159_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0159_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0163_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0163_v0_0_s_ifspec;
 
 #ifndef __IAMVfwCaptureDialogs_INTERFACE_DEFINED__
 #define __IAMVfwCaptureDialogs_INTERFACE_DEFINED__
@@ -11131,14 +11249,14 @@ void __RPC_STUB IAMDroppedFrames_GetAverageFrameSize_Stub(
 #endif 	/* __IAMDroppedFrames_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0162 */
+/* interface __MIDL_itf_strmif_0166 */
 /* [local] */ 
 
 #define AMF_AUTOMATICGAIN -1.0
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0162_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0162_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0166_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0166_v0_0_s_ifspec;
 
 #ifndef __IAMAudioInputMixer_INTERFACE_DEFINED__
 #define __IAMAudioInputMixer_INTERFACE_DEFINED__
@@ -11672,7 +11790,7 @@ void __RPC_STUB IAMBufferNegotiation_GetAllocatorProperties_Stub(
 #endif 	/* __IAMBufferNegotiation_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0164 */
+/* interface __MIDL_itf_strmif_0168 */
 /* [local] */ 
 
 typedef 
@@ -11710,7 +11828,7 @@ enum tagTunerInputType
     } 	TunerInputType;
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0164_0001
+enum __MIDL___MIDL_itf_strmif_0168_0001
     {	VideoCopyProtectionMacrovisionBasic	= 0,
 	VideoCopyProtectionMacrovisionCBI	= VideoCopyProtectionMacrovisionBasic + 1
     } 	VideoCopyProtectionType;
@@ -11746,8 +11864,8 @@ enum tagPhysicalConnectorType
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0164_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0164_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0168_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0168_v0_0_s_ifspec;
 
 #ifndef __IAMAnalogVideoDecoder_INTERFACE_DEFINED__
 #define __IAMAnalogVideoDecoder_INTERFACE_DEFINED__
@@ -12015,7 +12133,7 @@ void __RPC_STUB IAMAnalogVideoDecoder_get_OutputEnable_Stub(
 #endif 	/* __IAMAnalogVideoDecoder_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0165 */
+/* interface __MIDL_itf_strmif_0169 */
 /* [local] */ 
 
 typedef 
@@ -12040,8 +12158,8 @@ enum tagVideoProcAmpFlags
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0165_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0165_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0169_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0169_v0_0_s_ifspec;
 
 #ifndef __IAMVideoProcAmp_INTERFACE_DEFINED__
 #define __IAMVideoProcAmp_INTERFACE_DEFINED__
@@ -12204,7 +12322,7 @@ void __RPC_STUB IAMVideoProcAmp_Get_Stub(
 #endif 	/* __IAMVideoProcAmp_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0166 */
+/* interface __MIDL_itf_strmif_0170 */
 /* [local] */ 
 
 typedef 
@@ -12226,8 +12344,8 @@ enum tagCameraControlFlags
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0166_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0166_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0170_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0170_v0_0_s_ifspec;
 
 #ifndef __IAMCameraControl_INTERFACE_DEFINED__
 #define __IAMCameraControl_INTERFACE_DEFINED__
@@ -12390,7 +12508,7 @@ void __RPC_STUB IAMCameraControl_Get_Stub(
 #endif 	/* __IAMCameraControl_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0167 */
+/* interface __MIDL_itf_strmif_0171 */
 /* [local] */ 
 
 typedef 
@@ -12403,8 +12521,8 @@ enum tagVideoControlFlags
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0167_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0167_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0171_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0171_v0_0_s_ifspec;
 
 #ifndef __IAMVideoControl_INTERFACE_DEFINED__
 #define __IAMVideoControl_INTERFACE_DEFINED__
@@ -12838,7 +12956,7 @@ void __RPC_STUB IAMCrossbar_get_CrossbarPinInfo_Stub(
 #endif 	/* __IAMCrossbar_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0169 */
+/* interface __MIDL_itf_strmif_0173 */
 /* [local] */ 
 
 typedef 
@@ -12871,8 +12989,8 @@ enum tagAMTunerEventType
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0169_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0169_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0173_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0173_v0_0_s_ifspec;
 
 #ifndef __IAMTuner_INTERFACE_DEFINED__
 #define __IAMTuner_INTERFACE_DEFINED__
@@ -14052,7 +14170,7 @@ void __RPC_STUB IBPCSatelliteTuner_IsTapingPermitted_Stub(
 #endif 	/* __IBPCSatelliteTuner_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0173 */
+/* interface __MIDL_itf_strmif_0177 */
 /* [local] */ 
 
 typedef 
@@ -14072,8 +14190,8 @@ enum tagAMTVAudioEventType
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0173_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0173_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0177_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0177_v0_0_s_ifspec;
 
 #ifndef __IAMTVAudio_INTERFACE_DEFINED__
 #define __IAMTVAudio_INTERFACE_DEFINED__
@@ -14590,11 +14708,11 @@ void __RPC_STUB IAMAnalogVideoEncoder_get_CCEnable_Stub(
 #endif 	/* __IAMAnalogVideoEncoder_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0176 */
+/* interface __MIDL_itf_strmif_0180 */
 /* [local] */ 
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0176_0001
+enum __MIDL___MIDL_itf_strmif_0180_0001
     {	AMPROPERTY_PIN_CATEGORY	= 0,
 	AMPROPERTY_PIN_MEDIUM	= AMPROPERTY_PIN_CATEGORY + 1
     } 	AMPROPERTY_PIN;
@@ -14605,8 +14723,8 @@ enum __MIDL___MIDL_itf_strmif_0176_0001
 #define KSPROPERTY_SUPPORT_SET  2
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0176_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0176_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0180_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0180_v0_0_s_ifspec;
 
 #ifndef __IKsPropertySet_INTERFACE_DEFINED__
 #define __IKsPropertySet_INTERFACE_DEFINED__
@@ -14781,14 +14899,14 @@ void __RPC_STUB IKsPropertySet_QuerySupported_Stub(
 #endif 	/* __IKsPropertySet_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0177 */
+/* interface __MIDL_itf_strmif_0181 */
 /* [local] */ 
 
 #endif // _IKsPropertySet_
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0177_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0177_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0181_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0181_v0_0_s_ifspec;
 
 #ifndef __IMediaPropertyBag_INTERFACE_DEFINED__
 #define __IMediaPropertyBag_INTERFACE_DEFINED__
@@ -15149,15 +15267,15 @@ void __RPC_STUB IAMPhysicalPinInfo_GetPhysicalType_Stub(
 #endif 	/* __IAMPhysicalPinInfo_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0322 */
+/* interface __MIDL_itf_strmif_0328 */
 /* [local] */ 
 
 typedef IAMPhysicalPinInfo *PAMPHYSICALPININFO;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0322_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0322_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0328_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0328_v0_0_s_ifspec;
 
 #ifndef __IAMExtDevice_INTERFACE_DEFINED__
 #define __IAMExtDevice_INTERFACE_DEFINED__
@@ -15415,15 +15533,15 @@ void __RPC_STUB IAMExtDevice_get_DevicePort_Stub(
 #endif 	/* __IAMExtDevice_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0323 */
+/* interface __MIDL_itf_strmif_0329 */
 /* [local] */ 
 
 typedef IAMExtDevice *PEXTDEVICE;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0323_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0323_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0329_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0329_v0_0_s_ifspec;
 
 #ifndef __IAMExtTransport_INTERFACE_DEFINED__
 #define __IAMExtTransport_INTERFACE_DEFINED__
@@ -16178,7 +16296,7 @@ void __RPC_STUB IAMExtTransport_put_EditStart_Stub(
 #endif 	/* __IAMExtTransport_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0324 */
+/* interface __MIDL_itf_strmif_0330 */
 /* [local] */ 
 
 typedef IAMExtTransport *PIAMEXTTRANSPORT;
@@ -16220,8 +16338,8 @@ typedef TIMECODE_SAMPLE *PTIMECODE_SAMPLE;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0324_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0324_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0330_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0330_v0_0_s_ifspec;
 
 #ifndef __IAMTimecodeReader_INTERFACE_DEFINED__
 #define __IAMTimecodeReader_INTERFACE_DEFINED__
@@ -16407,15 +16525,15 @@ void __RPC_STUB IAMTimecodeReader_GetTimecode_Stub(
 #endif 	/* __IAMTimecodeReader_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0325 */
+/* interface __MIDL_itf_strmif_0331 */
 /* [local] */ 
 
 typedef IAMTimecodeReader *PIAMTIMECODEREADER;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0325_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0325_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0331_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0331_v0_0_s_ifspec;
 
 #ifndef __IAMTimecodeGenerator_INTERFACE_DEFINED__
 #define __IAMTimecodeGenerator_INTERFACE_DEFINED__
@@ -16623,15 +16741,15 @@ void __RPC_STUB IAMTimecodeGenerator_GetTimecode_Stub(
 #endif 	/* __IAMTimecodeGenerator_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0326 */
+/* interface __MIDL_itf_strmif_0332 */
 /* [local] */ 
 
 typedef IAMTimecodeGenerator *PIAMTIMECODEGENERATOR;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0326_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0326_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0332_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0332_v0_0_s_ifspec;
 
 #ifndef __IAMTimecodeDisplay_INTERFACE_DEFINED__
 #define __IAMTimecodeDisplay_INTERFACE_DEFINED__
@@ -16795,15 +16913,15 @@ void __RPC_STUB IAMTimecodeDisplay_SetTCDisplay_Stub(
 #endif 	/* __IAMTimecodeDisplay_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0327 */
+/* interface __MIDL_itf_strmif_0333 */
 /* [local] */ 
 
 typedef IAMTimecodeDisplay *PIAMTIMECODEDISPLAY;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0327_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0327_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0333_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0333_v0_0_s_ifspec;
 
 #ifndef __IAMDevMemoryAllocator_INTERFACE_DEFINED__
 #define __IAMDevMemoryAllocator_INTERFACE_DEFINED__
@@ -16998,15 +17116,15 @@ void __RPC_STUB IAMDevMemoryAllocator_GetDevMemoryObject_Stub(
 #endif 	/* __IAMDevMemoryAllocator_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0328 */
+/* interface __MIDL_itf_strmif_0334 */
 /* [local] */ 
 
 typedef IAMDevMemoryAllocator *PAMDEVMEMORYALLOCATOR;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0328_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0328_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0334_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0334_v0_0_s_ifspec;
 
 #ifndef __IAMDevMemoryControl_INTERFACE_DEFINED__
 #define __IAMDevMemoryControl_INTERFACE_DEFINED__
@@ -17136,7 +17254,7 @@ void __RPC_STUB IAMDevMemoryControl_GetDevId_Stub(
 #endif 	/* __IAMDevMemoryControl_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0329 */
+/* interface __MIDL_itf_strmif_0335 */
 /* [local] */ 
 
 typedef IAMDevMemoryControl *PAMDEVMEMORYCONTROL;
@@ -17153,8 +17271,8 @@ enum _AMSTREAMSELECTENABLEFLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0329_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0329_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0335_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0335_v0_0_s_ifspec;
 
 #ifndef __IAMStreamSelect_INTERFACE_DEFINED__
 #define __IAMStreamSelect_INTERFACE_DEFINED__
@@ -17314,7 +17432,7 @@ void __RPC_STUB IAMStreamSelect_Enable_Stub(
 #endif 	/* __IAMStreamSelect_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0330 */
+/* interface __MIDL_itf_strmif_0336 */
 /* [local] */ 
 
 typedef IAMStreamSelect *PAMSTREAMSELECT;
@@ -17326,8 +17444,8 @@ enum _AMRESCTL_RESERVEFLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0330_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0330_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0336_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0336_v0_0_s_ifspec;
 
 #ifndef __IAMResourceControl_INTERFACE_DEFINED__
 #define __IAMResourceControl_INTERFACE_DEFINED__
@@ -17512,7 +17630,7 @@ void __RPC_STUB IAMClockAdjust_SetClockDelta_Stub(
 #endif 	/* __IAMClockAdjust_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0332 */
+/* interface __MIDL_itf_strmif_0338 */
 /* [local] */ 
 
 
@@ -17522,8 +17640,8 @@ enum _AM_FILTER_MISC_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0332_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0332_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0338_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0338_v0_0_s_ifspec;
 
 #ifndef __IAMFilterMiscFlags_INTERFACE_DEFINED__
 #define __IAMFilterMiscFlags_INTERFACE_DEFINED__
@@ -17858,7 +17976,7 @@ void __RPC_STUB IDecimateVideoImage_ResetDecimationImageSize_Stub(
 #endif 	/* __IDecimateVideoImage_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0335 */
+/* interface __MIDL_itf_strmif_0341 */
 /* [local] */ 
 
 typedef 
@@ -17872,8 +17990,8 @@ enum _DECIMATION_USAGE
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0335_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0335_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0341_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0341_v0_0_s_ifspec;
 
 #ifndef __IAMVideoDecimationProperties_INTERFACE_DEFINED__
 #define __IAMVideoDecimationProperties_INTERFACE_DEFINED__
@@ -18124,7 +18242,7 @@ void __RPC_STUB IVideoFrameStep_CancelStep_Stub(
 #endif 	/* __IVideoFrameStep_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0337 */
+/* interface __MIDL_itf_strmif_0343 */
 /* [local] */ 
 
 
@@ -18136,8 +18254,8 @@ enum _AM_PUSHSOURCE_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0337_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0337_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0343_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0343_v0_0_s_ifspec;
 
 #ifndef __IAMLatency_INTERFACE_DEFINED__
 #define __IAMLatency_INTERFACE_DEFINED__
@@ -18568,10 +18686,10 @@ void __RPC_STUB IAMDeviceRemoval_Disassociate_Stub(
 #endif 	/* __IAMDeviceRemoval_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0339 */
+/* interface __MIDL_itf_strmif_0345 */
 /* [local] */ 
 
-typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0339_0001
+typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0345_0001
     {
     DWORD dwDVAAuxSrc;
     DWORD dwDVAAuxCtl;
@@ -18582,7 +18700,7 @@ typedef /* [public][public][public] */ struct __MIDL___MIDL_itf_strmif_0339_0001
     DWORD dwDVReserved[ 2 ];
     } 	DVINFO;
 
-typedef struct __MIDL___MIDL_itf_strmif_0339_0001 *PDVINFO;
+typedef struct __MIDL___MIDL_itf_strmif_0345_0001 *PDVINFO;
 
 
 enum _DVENCODERRESOLUTION
@@ -18604,8 +18722,8 @@ enum _DVENCODERFORMAT
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0339_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0339_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0345_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0345_v0_0_s_ifspec;
 
 #ifndef __IDVEnc_INTERFACE_DEFINED__
 #define __IDVEnc_INTERFACE_DEFINED__
@@ -18743,7 +18861,7 @@ void __RPC_STUB IDVEnc_put_IFormatResolution_Stub(
 #endif 	/* __IDVEnc_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0340 */
+/* interface __MIDL_itf_strmif_0346 */
 /* [local] */ 
 
 
@@ -18762,8 +18880,8 @@ enum _DVRESOLUTION
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0340_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0340_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0346_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0346_v0_0_s_ifspec;
 
 #ifndef __IIPDVDec_INTERFACE_DEFINED__
 #define __IIPDVDec_INTERFACE_DEFINED__
@@ -18877,6 +18995,96 @@ void __RPC_STUB IIPDVDec_put_IPDisplay_Stub(
 #endif 	/* __IIPDVDec_INTERFACE_DEFINED__ */
 
 
+#ifndef __IDVRGB219_INTERFACE_DEFINED__
+#define __IDVRGB219_INTERFACE_DEFINED__
+
+/* interface IDVRGB219 */
+/* [unique][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IDVRGB219;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("58473A19-2BC8-4663-8012-25F81BABDDD1")
+    IDVRGB219 : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetRGB219( 
+            /* [in] */ BOOL bState) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IDVRGB219Vtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IDVRGB219 * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IDVRGB219 * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IDVRGB219 * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetRGB219 )( 
+            IDVRGB219 * This,
+            /* [in] */ BOOL bState);
+        
+        END_INTERFACE
+    } IDVRGB219Vtbl;
+
+    interface IDVRGB219
+    {
+        CONST_VTBL struct IDVRGB219Vtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IDVRGB219_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IDVRGB219_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IDVRGB219_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IDVRGB219_SetRGB219(This,bState)	\
+    (This)->lpVtbl -> SetRGB219(This,bState)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IDVRGB219_SetRGB219_Proxy( 
+    IDVRGB219 * This,
+    /* [in] */ BOOL bState);
+
+
+void __RPC_STUB IDVRGB219_SetRGB219_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IDVRGB219_INTERFACE_DEFINED__ */
+
+
 #ifndef __IDVSplitter_INTERFACE_DEFINED__
 #define __IDVSplitter_INTERFACE_DEFINED__
 
@@ -18967,7 +19175,7 @@ void __RPC_STUB IDVSplitter_DiscardAlternateVideoFrames_Stub(
 #endif 	/* __IDVSplitter_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0342 */
+/* interface __MIDL_itf_strmif_0349 */
 /* [local] */ 
 
 
@@ -18987,8 +19195,8 @@ enum _AM_AUDIO_RENDERER_STAT_PARAM
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0342_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0342_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0349_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0349_v0_0_s_ifspec;
 
 #ifndef __IAMAudioRendererStats_INTERFACE_DEFINED__
 #define __IAMAudioRendererStats_INTERFACE_DEFINED__
@@ -19086,7 +19294,7 @@ void __RPC_STUB IAMAudioRendererStats_GetStatParam_Stub(
 #endif 	/* __IAMAudioRendererStats_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0344 */
+/* interface __MIDL_itf_strmif_0351 */
 /* [local] */ 
 
 
@@ -19097,8 +19305,8 @@ enum _AM_INTF_SEARCH_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0344_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0344_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0351_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0351_v0_0_s_ifspec;
 
 #ifndef __IAMGraphStreams_INTERFACE_DEFINED__
 #define __IAMGraphStreams_INTERFACE_DEFINED__
@@ -19243,7 +19451,7 @@ void __RPC_STUB IAMGraphStreams_SetMaxGraphLatency_Stub(
 #endif 	/* __IAMGraphStreams_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0345 */
+/* interface __MIDL_itf_strmif_0352 */
 /* [local] */ 
 
 
@@ -19255,8 +19463,8 @@ enum AMOVERLAYFX
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0345_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0345_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0352_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0352_v0_0_s_ifspec;
 
 #ifndef __IAMOverlayFX_INTERFACE_DEFINED__
 #define __IAMOverlayFX_INTERFACE_DEFINED__
@@ -19391,15 +19599,6 @@ void __RPC_STUB IAMOverlayFX_GetOverlayFX_Stub(
 
 #endif 	/* __IAMOverlayFX_INTERFACE_DEFINED__ */
 
-
-/* interface __MIDL_itf_strmif_0346 */
-/* [local] */ 
-
-#define __OP_H__
-
-
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0346_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0346_v0_0_s_ifspec;
 
 #ifndef __IAMOpenProgress_INTERFACE_DEFINED__
 #define __IAMOpenProgress_INTERFACE_DEFINED__
@@ -19656,7 +19855,7 @@ void __RPC_STUB IMpeg2Demultiplexer_DeleteOutputPin_Stub(
 #endif 	/* __IMpeg2Demultiplexer_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0348 */
+/* interface __MIDL_itf_strmif_0355 */
 /* [local] */ 
 
 #define MPEG2_PROGRAM_STREAM_MAP                 0x00000000
@@ -19666,7 +19865,7 @@ void __RPC_STUB IMpeg2Demultiplexer_DeleteOutputPin_Stub(
 #define MPEG2_PROGRAM_PES_STREAM                 0x00000004
 #define MPEG2_PROGRAM_SYSTEM_HEADER              0x00000005
 #define SUBSTREAM_FILTER_VAL_NONE                0x10000000
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0348_0001
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0355_0001
     {
     ULONG stream_id;
     DWORD dwMediaSampleContent;
@@ -19676,8 +19875,8 @@ typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0348_0001
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0348_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0348_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0355_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0355_v0_0_s_ifspec;
 
 #ifndef __IEnumStreamIdMap_INTERFACE_DEFINED__
 #define __IEnumStreamIdMap_INTERFACE_DEFINED__
@@ -19984,313 +20183,55 @@ void __RPC_STUB IMPEG2StreamIdMap_EnumStreamIdMap_Stub(
 #endif 	/* __IMPEG2StreamIdMap_INTERFACE_DEFINED__ */
 
 
-#ifndef __IAMovie_INTERFACE_DEFINED__
-#define __IAMovie_INTERFACE_DEFINED__
+#ifndef __IRegisterServiceProvider_INTERFACE_DEFINED__
+#define __IRegisterServiceProvider_INTERFACE_DEFINED__
 
-/* interface IAMovie */
-/* [unique][uuid][object] */ 
+/* interface IRegisterServiceProvider */
+/* [unique][uuid][local][object] */ 
 
 
-EXTERN_C const IID IID_IAMovie;
+EXTERN_C const IID IID_IRegisterServiceProvider;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("359ace10-7688-11cf-8b23-00805f6cef60")
-    IAMovie : public IFilterGraph
+    MIDL_INTERFACE("7B3A2F01-0751-48DD-B556-004785171C54")
+    IRegisterServiceProvider : public IUnknown
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE Connect( 
-            /* [in] */ IPin *ppinOut,
-            /* [in] */ IPin *ppinIn) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Render( 
-            /* [in] */ IPin *ppinOut) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Run( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Pause( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Stop( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetState( 
-            /* [in] */ LONG msTimeout,
-            /* [out] */ FILTER_STATE *pfs) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE RenderFile( 
-            /* [in] */ LPCWSTR strFilename) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE AddSourceFilter( 
-            /* [in] */ LPCWSTR strFilename,
-            /* [out] */ IBaseFilter **ppUnk) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetEventHandle( 
-            /* [out] */ HEVENT *hEvent) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetEvent( 
-            /* [out] */ long *lEventCode,
-            /* [out] */ long *lParam1,
-            /* [out] */ long *lParam2,
-            /* [in] */ long msTimeout) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE WaitForCompletion( 
-            /* [in] */ long msTimeout,
-            /* [out] */ long *pEvCode) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE CancelDefaultHandling( 
-            /* [in] */ long lEvCode) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE RestoreDefaultHandling( 
-            /* [in] */ long lEvCode) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE get_Duration( 
-            /* [out] */ REFTIME *plength) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE put_CurrentPosition( 
-            /* [in] */ REFTIME llTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE get_CurrentPosition( 
-            /* [out] */ REFTIME *pllTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE get_StopTime( 
-            /* [out] */ REFTIME *pllTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE put_StopTime( 
-            /* [in] */ REFTIME llTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE get_PrerollTime( 
-            /* [out] */ REFTIME *pllTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE put_PrerollTime( 
-            /* [in] */ REFTIME llTime) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE put_Rate( 
-            /* [in] */ double dRate) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE get_Rate( 
-            /* [out] */ double *pdRate) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE RemoveAllFilters( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Play( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE PlayFile( 
-            /* [in] */ LPCWSTR strFilename) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE EnumFiltersByInterface( 
-            /* [in] */ REFIID riid,
-            /* [out] */ IEnumFilters **ppEnum) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE EnumPins( 
-            /* [out] */ IEnumPins **ppEnum) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE EnumPinsIn( 
-            /* [out] */ IEnumPins **ppEnum) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE EnumPinsOut( 
-            /* [out] */ IEnumPins **ppEnum) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE RenderAll( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE RenderNewFile( 
-            /* [in] */ LPCWSTR strFilename) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE FreeEventParams( 
-            /* [in] */ long lEvCode,
-            /* [in] */ long lParam1,
-            /* [in] */ long lParam2) = 0;
+        virtual HRESULT STDMETHODCALLTYPE RegisterService( 
+            /* [in] */ REFGUID guidService,
+            /* [in] */ IUnknown *pUnkObject) = 0;
         
     };
     
 #else 	/* C style interface */
 
-    typedef struct IAMovieVtbl
+    typedef struct IRegisterServiceProviderVtbl
     {
         BEGIN_INTERFACE
         
         HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IAMovie * This,
+            IRegisterServiceProvider * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void **ppvObject);
         
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IAMovie * This);
+            IRegisterServiceProvider * This);
         
         ULONG ( STDMETHODCALLTYPE *Release )( 
-            IAMovie * This);
+            IRegisterServiceProvider * This);
         
-        HRESULT ( STDMETHODCALLTYPE *AddFilter )( 
-            IAMovie * This,
-            /* [in] */ IBaseFilter *pFilter,
-            /* [string][in] */ LPCWSTR pName);
-        
-        HRESULT ( STDMETHODCALLTYPE *RemoveFilter )( 
-            IAMovie * This,
-            /* [in] */ IBaseFilter *pFilter);
-        
-        HRESULT ( STDMETHODCALLTYPE *EnumFilters )( 
-            IAMovie * This,
-            /* [out] */ IEnumFilters **ppEnum);
-        
-        HRESULT ( STDMETHODCALLTYPE *FindFilterByName )( 
-            IAMovie * This,
-            /* [string][in] */ LPCWSTR pName,
-            /* [out] */ IBaseFilter **ppFilter);
-        
-        HRESULT ( STDMETHODCALLTYPE *ConnectDirect )( 
-            IAMovie * This,
-            /* [in] */ IPin *ppinOut,
-            /* [in] */ IPin *ppinIn,
-            /* [unique][in] */ const AM_MEDIA_TYPE *pmt);
-        
-        HRESULT ( STDMETHODCALLTYPE *Reconnect )( 
-            IAMovie * This,
-            /* [in] */ IPin *ppin);
-        
-        HRESULT ( STDMETHODCALLTYPE *Disconnect )( 
-            IAMovie * This,
-            /* [in] */ IPin *ppin);
-        
-        HRESULT ( STDMETHODCALLTYPE *SetDefaultSyncSource )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *Connect )( 
-            IAMovie * This,
-            /* [in] */ IPin *ppinOut,
-            /* [in] */ IPin *ppinIn);
-        
-        HRESULT ( STDMETHODCALLTYPE *Render )( 
-            IAMovie * This,
-            /* [in] */ IPin *ppinOut);
-        
-        HRESULT ( STDMETHODCALLTYPE *Run )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *Pause )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *Stop )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetState )( 
-            IAMovie * This,
-            /* [in] */ LONG msTimeout,
-            /* [out] */ FILTER_STATE *pfs);
-        
-        HRESULT ( STDMETHODCALLTYPE *RenderFile )( 
-            IAMovie * This,
-            /* [in] */ LPCWSTR strFilename);
-        
-        HRESULT ( STDMETHODCALLTYPE *AddSourceFilter )( 
-            IAMovie * This,
-            /* [in] */ LPCWSTR strFilename,
-            /* [out] */ IBaseFilter **ppUnk);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetEventHandle )( 
-            IAMovie * This,
-            /* [out] */ HEVENT *hEvent);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetEvent )( 
-            IAMovie * This,
-            /* [out] */ long *lEventCode,
-            /* [out] */ long *lParam1,
-            /* [out] */ long *lParam2,
-            /* [in] */ long msTimeout);
-        
-        HRESULT ( STDMETHODCALLTYPE *WaitForCompletion )( 
-            IAMovie * This,
-            /* [in] */ long msTimeout,
-            /* [out] */ long *pEvCode);
-        
-        HRESULT ( STDMETHODCALLTYPE *CancelDefaultHandling )( 
-            IAMovie * This,
-            /* [in] */ long lEvCode);
-        
-        HRESULT ( STDMETHODCALLTYPE *RestoreDefaultHandling )( 
-            IAMovie * This,
-            /* [in] */ long lEvCode);
-        
-        HRESULT ( STDMETHODCALLTYPE *get_Duration )( 
-            IAMovie * This,
-            /* [out] */ REFTIME *plength);
-        
-        HRESULT ( STDMETHODCALLTYPE *put_CurrentPosition )( 
-            IAMovie * This,
-            /* [in] */ REFTIME llTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *get_CurrentPosition )( 
-            IAMovie * This,
-            /* [out] */ REFTIME *pllTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *get_StopTime )( 
-            IAMovie * This,
-            /* [out] */ REFTIME *pllTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *put_StopTime )( 
-            IAMovie * This,
-            /* [in] */ REFTIME llTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *get_PrerollTime )( 
-            IAMovie * This,
-            /* [out] */ REFTIME *pllTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *put_PrerollTime )( 
-            IAMovie * This,
-            /* [in] */ REFTIME llTime);
-        
-        HRESULT ( STDMETHODCALLTYPE *put_Rate )( 
-            IAMovie * This,
-            /* [in] */ double dRate);
-        
-        HRESULT ( STDMETHODCALLTYPE *get_Rate )( 
-            IAMovie * This,
-            /* [out] */ double *pdRate);
-        
-        HRESULT ( STDMETHODCALLTYPE *RemoveAllFilters )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *Play )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *PlayFile )( 
-            IAMovie * This,
-            /* [in] */ LPCWSTR strFilename);
-        
-        HRESULT ( STDMETHODCALLTYPE *EnumFiltersByInterface )( 
-            IAMovie * This,
-            /* [in] */ REFIID riid,
-            /* [out] */ IEnumFilters **ppEnum);
-        
-        HRESULT ( STDMETHODCALLTYPE *EnumPins )( 
-            IAMovie * This,
-            /* [out] */ IEnumPins **ppEnum);
-        
-        HRESULT ( STDMETHODCALLTYPE *EnumPinsIn )( 
-            IAMovie * This,
-            /* [out] */ IEnumPins **ppEnum);
-        
-        HRESULT ( STDMETHODCALLTYPE *EnumPinsOut )( 
-            IAMovie * This,
-            /* [out] */ IEnumPins **ppEnum);
-        
-        HRESULT ( STDMETHODCALLTYPE *RenderAll )( 
-            IAMovie * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *RenderNewFile )( 
-            IAMovie * This,
-            /* [in] */ LPCWSTR strFilename);
-        
-        HRESULT ( STDMETHODCALLTYPE *FreeEventParams )( 
-            IAMovie * This,
-            /* [in] */ long lEvCode,
-            /* [in] */ long lParam1,
-            /* [in] */ long lParam2);
+        HRESULT ( STDMETHODCALLTYPE *RegisterService )( 
+            IRegisterServiceProvider * This,
+            /* [in] */ REFGUID guidService,
+            /* [in] */ IUnknown *pUnkObject);
         
         END_INTERFACE
-    } IAMovieVtbl;
+    } IRegisterServiceProviderVtbl;
 
-    interface IAMovie
+    interface IRegisterServiceProvider
     {
-        CONST_VTBL struct IAMovieVtbl *lpVtbl;
+        CONST_VTBL struct IRegisterServiceProviderVtbl *lpVtbl;
     };
 
     
@@ -20298,136 +20239,18 @@ EXTERN_C const IID IID_IAMovie;
 #ifdef COBJMACROS
 
 
-#define IAMovie_QueryInterface(This,riid,ppvObject)	\
+#define IRegisterServiceProvider_QueryInterface(This,riid,ppvObject)	\
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IAMovie_AddRef(This)	\
+#define IRegisterServiceProvider_AddRef(This)	\
     (This)->lpVtbl -> AddRef(This)
 
-#define IAMovie_Release(This)	\
+#define IRegisterServiceProvider_Release(This)	\
     (This)->lpVtbl -> Release(This)
 
 
-#define IAMovie_AddFilter(This,pFilter,pName)	\
-    (This)->lpVtbl -> AddFilter(This,pFilter,pName)
-
-#define IAMovie_RemoveFilter(This,pFilter)	\
-    (This)->lpVtbl -> RemoveFilter(This,pFilter)
-
-#define IAMovie_EnumFilters(This,ppEnum)	\
-    (This)->lpVtbl -> EnumFilters(This,ppEnum)
-
-#define IAMovie_FindFilterByName(This,pName,ppFilter)	\
-    (This)->lpVtbl -> FindFilterByName(This,pName,ppFilter)
-
-#define IAMovie_ConnectDirect(This,ppinOut,ppinIn,pmt)	\
-    (This)->lpVtbl -> ConnectDirect(This,ppinOut,ppinIn,pmt)
-
-#define IAMovie_Reconnect(This,ppin)	\
-    (This)->lpVtbl -> Reconnect(This,ppin)
-
-#define IAMovie_Disconnect(This,ppin)	\
-    (This)->lpVtbl -> Disconnect(This,ppin)
-
-#define IAMovie_SetDefaultSyncSource(This)	\
-    (This)->lpVtbl -> SetDefaultSyncSource(This)
-
-
-#define IAMovie_Connect(This,ppinOut,ppinIn)	\
-    (This)->lpVtbl -> Connect(This,ppinOut,ppinIn)
-
-#define IAMovie_Render(This,ppinOut)	\
-    (This)->lpVtbl -> Render(This,ppinOut)
-
-#define IAMovie_Run(This)	\
-    (This)->lpVtbl -> Run(This)
-
-#define IAMovie_Pause(This)	\
-    (This)->lpVtbl -> Pause(This)
-
-#define IAMovie_Stop(This)	\
-    (This)->lpVtbl -> Stop(This)
-
-#define IAMovie_GetState(This,msTimeout,pfs)	\
-    (This)->lpVtbl -> GetState(This,msTimeout,pfs)
-
-#define IAMovie_RenderFile(This,strFilename)	\
-    (This)->lpVtbl -> RenderFile(This,strFilename)
-
-#define IAMovie_AddSourceFilter(This,strFilename,ppUnk)	\
-    (This)->lpVtbl -> AddSourceFilter(This,strFilename,ppUnk)
-
-#define IAMovie_GetEventHandle(This,hEvent)	\
-    (This)->lpVtbl -> GetEventHandle(This,hEvent)
-
-#define IAMovie_GetEvent(This,lEventCode,lParam1,lParam2,msTimeout)	\
-    (This)->lpVtbl -> GetEvent(This,lEventCode,lParam1,lParam2,msTimeout)
-
-#define IAMovie_WaitForCompletion(This,msTimeout,pEvCode)	\
-    (This)->lpVtbl -> WaitForCompletion(This,msTimeout,pEvCode)
-
-#define IAMovie_CancelDefaultHandling(This,lEvCode)	\
-    (This)->lpVtbl -> CancelDefaultHandling(This,lEvCode)
-
-#define IAMovie_RestoreDefaultHandling(This,lEvCode)	\
-    (This)->lpVtbl -> RestoreDefaultHandling(This,lEvCode)
-
-#define IAMovie_get_Duration(This,plength)	\
-    (This)->lpVtbl -> get_Duration(This,plength)
-
-#define IAMovie_put_CurrentPosition(This,llTime)	\
-    (This)->lpVtbl -> put_CurrentPosition(This,llTime)
-
-#define IAMovie_get_CurrentPosition(This,pllTime)	\
-    (This)->lpVtbl -> get_CurrentPosition(This,pllTime)
-
-#define IAMovie_get_StopTime(This,pllTime)	\
-    (This)->lpVtbl -> get_StopTime(This,pllTime)
-
-#define IAMovie_put_StopTime(This,llTime)	\
-    (This)->lpVtbl -> put_StopTime(This,llTime)
-
-#define IAMovie_get_PrerollTime(This,pllTime)	\
-    (This)->lpVtbl -> get_PrerollTime(This,pllTime)
-
-#define IAMovie_put_PrerollTime(This,llTime)	\
-    (This)->lpVtbl -> put_PrerollTime(This,llTime)
-
-#define IAMovie_put_Rate(This,dRate)	\
-    (This)->lpVtbl -> put_Rate(This,dRate)
-
-#define IAMovie_get_Rate(This,pdRate)	\
-    (This)->lpVtbl -> get_Rate(This,pdRate)
-
-#define IAMovie_RemoveAllFilters(This)	\
-    (This)->lpVtbl -> RemoveAllFilters(This)
-
-#define IAMovie_Play(This)	\
-    (This)->lpVtbl -> Play(This)
-
-#define IAMovie_PlayFile(This,strFilename)	\
-    (This)->lpVtbl -> PlayFile(This,strFilename)
-
-#define IAMovie_EnumFiltersByInterface(This,riid,ppEnum)	\
-    (This)->lpVtbl -> EnumFiltersByInterface(This,riid,ppEnum)
-
-#define IAMovie_EnumPins(This,ppEnum)	\
-    (This)->lpVtbl -> EnumPins(This,ppEnum)
-
-#define IAMovie_EnumPinsIn(This,ppEnum)	\
-    (This)->lpVtbl -> EnumPinsIn(This,ppEnum)
-
-#define IAMovie_EnumPinsOut(This,ppEnum)	\
-    (This)->lpVtbl -> EnumPinsOut(This,ppEnum)
-
-#define IAMovie_RenderAll(This)	\
-    (This)->lpVtbl -> RenderAll(This)
-
-#define IAMovie_RenderNewFile(This,strFilename)	\
-    (This)->lpVtbl -> RenderNewFile(This,strFilename)
-
-#define IAMovie_FreeEventParams(This,lEvCode,lParam1,lParam2)	\
-    (This)->lpVtbl -> FreeEventParams(This,lEvCode,lParam1,lParam2)
+#define IRegisterServiceProvider_RegisterService(This,guidService,pUnkObject)	\
+    (This)->lpVtbl -> RegisterService(This,guidService,pUnkObject)
 
 #endif /* COBJMACROS */
 
@@ -20436,388 +20259,13 @@ EXTERN_C const IID IID_IAMovie;
 
 
 
-HRESULT STDMETHODCALLTYPE IAMovie_Connect_Proxy( 
-    IAMovie * This,
-    /* [in] */ IPin *ppinOut,
-    /* [in] */ IPin *ppinIn);
+HRESULT STDMETHODCALLTYPE IRegisterServiceProvider_RegisterService_Proxy( 
+    IRegisterServiceProvider * This,
+    /* [in] */ REFGUID guidService,
+    /* [in] */ IUnknown *pUnkObject);
 
 
-void __RPC_STUB IAMovie_Connect_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_Render_Proxy( 
-    IAMovie * This,
-    /* [in] */ IPin *ppinOut);
-
-
-void __RPC_STUB IAMovie_Render_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_Run_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_Run_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_Pause_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_Pause_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_Stop_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_Stop_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_GetState_Proxy( 
-    IAMovie * This,
-    /* [in] */ LONG msTimeout,
-    /* [out] */ FILTER_STATE *pfs);
-
-
-void __RPC_STUB IAMovie_GetState_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_RenderFile_Proxy( 
-    IAMovie * This,
-    /* [in] */ LPCWSTR strFilename);
-
-
-void __RPC_STUB IAMovie_RenderFile_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_AddSourceFilter_Proxy( 
-    IAMovie * This,
-    /* [in] */ LPCWSTR strFilename,
-    /* [out] */ IBaseFilter **ppUnk);
-
-
-void __RPC_STUB IAMovie_AddSourceFilter_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_GetEventHandle_Proxy( 
-    IAMovie * This,
-    /* [out] */ HEVENT *hEvent);
-
-
-void __RPC_STUB IAMovie_GetEventHandle_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_GetEvent_Proxy( 
-    IAMovie * This,
-    /* [out] */ long *lEventCode,
-    /* [out] */ long *lParam1,
-    /* [out] */ long *lParam2,
-    /* [in] */ long msTimeout);
-
-
-void __RPC_STUB IAMovie_GetEvent_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_WaitForCompletion_Proxy( 
-    IAMovie * This,
-    /* [in] */ long msTimeout,
-    /* [out] */ long *pEvCode);
-
-
-void __RPC_STUB IAMovie_WaitForCompletion_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_CancelDefaultHandling_Proxy( 
-    IAMovie * This,
-    /* [in] */ long lEvCode);
-
-
-void __RPC_STUB IAMovie_CancelDefaultHandling_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_RestoreDefaultHandling_Proxy( 
-    IAMovie * This,
-    /* [in] */ long lEvCode);
-
-
-void __RPC_STUB IAMovie_RestoreDefaultHandling_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_get_Duration_Proxy( 
-    IAMovie * This,
-    /* [out] */ REFTIME *plength);
-
-
-void __RPC_STUB IAMovie_get_Duration_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_put_CurrentPosition_Proxy( 
-    IAMovie * This,
-    /* [in] */ REFTIME llTime);
-
-
-void __RPC_STUB IAMovie_put_CurrentPosition_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_get_CurrentPosition_Proxy( 
-    IAMovie * This,
-    /* [out] */ REFTIME *pllTime);
-
-
-void __RPC_STUB IAMovie_get_CurrentPosition_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_get_StopTime_Proxy( 
-    IAMovie * This,
-    /* [out] */ REFTIME *pllTime);
-
-
-void __RPC_STUB IAMovie_get_StopTime_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_put_StopTime_Proxy( 
-    IAMovie * This,
-    /* [in] */ REFTIME llTime);
-
-
-void __RPC_STUB IAMovie_put_StopTime_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_get_PrerollTime_Proxy( 
-    IAMovie * This,
-    /* [out] */ REFTIME *pllTime);
-
-
-void __RPC_STUB IAMovie_get_PrerollTime_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_put_PrerollTime_Proxy( 
-    IAMovie * This,
-    /* [in] */ REFTIME llTime);
-
-
-void __RPC_STUB IAMovie_put_PrerollTime_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_put_Rate_Proxy( 
-    IAMovie * This,
-    /* [in] */ double dRate);
-
-
-void __RPC_STUB IAMovie_put_Rate_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_get_Rate_Proxy( 
-    IAMovie * This,
-    /* [out] */ double *pdRate);
-
-
-void __RPC_STUB IAMovie_get_Rate_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_RemoveAllFilters_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_RemoveAllFilters_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_Play_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_Play_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_PlayFile_Proxy( 
-    IAMovie * This,
-    /* [in] */ LPCWSTR strFilename);
-
-
-void __RPC_STUB IAMovie_PlayFile_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_EnumFiltersByInterface_Proxy( 
-    IAMovie * This,
-    /* [in] */ REFIID riid,
-    /* [out] */ IEnumFilters **ppEnum);
-
-
-void __RPC_STUB IAMovie_EnumFiltersByInterface_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_EnumPins_Proxy( 
-    IAMovie * This,
-    /* [out] */ IEnumPins **ppEnum);
-
-
-void __RPC_STUB IAMovie_EnumPins_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_EnumPinsIn_Proxy( 
-    IAMovie * This,
-    /* [out] */ IEnumPins **ppEnum);
-
-
-void __RPC_STUB IAMovie_EnumPinsIn_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_EnumPinsOut_Proxy( 
-    IAMovie * This,
-    /* [out] */ IEnumPins **ppEnum);
-
-
-void __RPC_STUB IAMovie_EnumPinsOut_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_RenderAll_Proxy( 
-    IAMovie * This);
-
-
-void __RPC_STUB IAMovie_RenderAll_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_RenderNewFile_Proxy( 
-    IAMovie * This,
-    /* [in] */ LPCWSTR strFilename);
-
-
-void __RPC_STUB IAMovie_RenderNewFile_Stub(
-    IRpcStubBuffer *This,
-    IRpcChannelBuffer *_pRpcChannelBuffer,
-    PRPC_MESSAGE _pRpcMessage,
-    DWORD *_pdwStubPhase);
-
-
-HRESULT STDMETHODCALLTYPE IAMovie_FreeEventParams_Proxy( 
-    IAMovie * This,
-    /* [in] */ long lEvCode,
-    /* [in] */ long lParam1,
-    /* [in] */ long lParam2);
-
-
-void __RPC_STUB IAMovie_FreeEventParams_Stub(
+void __RPC_STUB IRegisterServiceProvider_RegisterService_Stub(
     IRpcStubBuffer *This,
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,
@@ -20825,10 +20273,233 @@ void __RPC_STUB IAMovie_FreeEventParams_Stub(
 
 
 
-#endif 	/* __IAMovie_INTERFACE_DEFINED__ */
+#endif 	/* __IRegisterServiceProvider_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0351 */
+/* interface __MIDL_itf_strmif_0358 */
+/* [local] */ 
+
+#define AM_GETDECODERCAP_QUERY_VMR_SUPPORT   0x00000001
+#define      VMR_NOTSUPPORTED                0x00000000
+#define      VMR_SUPPORTED                   0x00000001
+#define AM_QUERY_DECODER_VMR_SUPPORT         0x00000001
+#define AM_QUERY_DECODER_DXVA_1_SUPPORT      0x00000002
+#define AM_QUERY_DECODER_DVD_SUPPORT         0x00000003
+#define AM_QUERY_DECODER_ATSC_SD_SUPPORT     0x00000004
+#define AM_QUERY_DECODER_ATSC_HD_SUPPORT     0x00000005
+#define      DECODER_CAP_NOTSUPPORTED        0x00000000
+#define      DECODER_CAP_SUPPORTED           0x00000001
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0358_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0358_v0_0_s_ifspec;
+
+#ifndef __IAMDecoderCaps_INTERFACE_DEFINED__
+#define __IAMDecoderCaps_INTERFACE_DEFINED__
+
+/* interface IAMDecoderCaps */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IAMDecoderCaps;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("c0dff467-d499-4986-972b-e1d9090fa941")
+    IAMDecoderCaps : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE GetDecoderCaps( 
+            /* [in] */ DWORD dwCapIndex,
+            /* [out] */ DWORD *lpdwCap) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IAMDecoderCapsVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IAMDecoderCaps * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IAMDecoderCaps * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IAMDecoderCaps * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetDecoderCaps )( 
+            IAMDecoderCaps * This,
+            /* [in] */ DWORD dwCapIndex,
+            /* [out] */ DWORD *lpdwCap);
+        
+        END_INTERFACE
+    } IAMDecoderCapsVtbl;
+
+    interface IAMDecoderCaps
+    {
+        CONST_VTBL struct IAMDecoderCapsVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IAMDecoderCaps_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IAMDecoderCaps_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IAMDecoderCaps_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IAMDecoderCaps_GetDecoderCaps(This,dwCapIndex,lpdwCap)	\
+    (This)->lpVtbl -> GetDecoderCaps(This,dwCapIndex,lpdwCap)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IAMDecoderCaps_GetDecoderCaps_Proxy( 
+    IAMDecoderCaps * This,
+    /* [in] */ DWORD dwCapIndex,
+    /* [out] */ DWORD *lpdwCap);
+
+
+void __RPC_STUB IAMDecoderCaps_GetDecoderCaps_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IAMDecoderCaps_INTERFACE_DEFINED__ */
+
+
+#ifndef __IAMClockSlave_INTERFACE_DEFINED__
+#define __IAMClockSlave_INTERFACE_DEFINED__
+
+/* interface IAMClockSlave */
+/* [unique][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IAMClockSlave;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("9FD52741-176D-4b36-8F51-CA8F933223BE")
+    IAMClockSlave : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetErrorTolerance( 
+            /* [in] */ DWORD dwTolerance) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetErrorTolerance( 
+            /* [out] */ DWORD *pdwTolerance) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IAMClockSlaveVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IAMClockSlave * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IAMClockSlave * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IAMClockSlave * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetErrorTolerance )( 
+            IAMClockSlave * This,
+            /* [in] */ DWORD dwTolerance);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetErrorTolerance )( 
+            IAMClockSlave * This,
+            /* [out] */ DWORD *pdwTolerance);
+        
+        END_INTERFACE
+    } IAMClockSlaveVtbl;
+
+    interface IAMClockSlave
+    {
+        CONST_VTBL struct IAMClockSlaveVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IAMClockSlave_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IAMClockSlave_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IAMClockSlave_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IAMClockSlave_SetErrorTolerance(This,dwTolerance)	\
+    (This)->lpVtbl -> SetErrorTolerance(This,dwTolerance)
+
+#define IAMClockSlave_GetErrorTolerance(This,pdwTolerance)	\
+    (This)->lpVtbl -> GetErrorTolerance(This,pdwTolerance)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IAMClockSlave_SetErrorTolerance_Proxy( 
+    IAMClockSlave * This,
+    /* [in] */ DWORD dwTolerance);
+
+
+void __RPC_STUB IAMClockSlave_SetErrorTolerance_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IAMClockSlave_GetErrorTolerance_Proxy( 
+    IAMClockSlave * This,
+    /* [out] */ DWORD *pdwTolerance);
+
+
+void __RPC_STUB IAMClockSlave_GetErrorTolerance_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IAMClockSlave_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0360 */
 /* [local] */ 
 
 #include <ddraw.h>
@@ -20948,7 +20619,7 @@ typedef struct tagDVD_PLAYBACK_LOCATION
 typedef DWORD VALID_UOP_SOMTHING_OR_OTHER;
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0351_0001
+enum __MIDL___MIDL_itf_strmif_0360_0001
     {	UOP_FLAG_Play_Title_Or_AtTime	= 0x1,
 	UOP_FLAG_Play_Chapter	= 0x2,
 	UOP_FLAG_Play_Title	= 0x4,
@@ -20977,7 +20648,7 @@ enum __MIDL___MIDL_itf_strmif_0351_0001
     } 	VALID_UOP_FLAG;
 
 typedef /* [public] */ 
-enum __MIDL___MIDL_itf_strmif_0351_0002
+enum __MIDL___MIDL_itf_strmif_0360_0002
     {	DVD_CMD_FLAG_None	= 0,
 	DVD_CMD_FLAG_Flush	= 0x1,
 	DVD_CMD_FLAG_SendEvents	= 0x2,
@@ -20987,14 +20658,14 @@ enum __MIDL___MIDL_itf_strmif_0351_0002
     } 	DVD_CMD_FLAGS;
 
 typedef /* [public][public] */ 
-enum __MIDL___MIDL_itf_strmif_0351_0003
+enum __MIDL___MIDL_itf_strmif_0360_0003
     {	DVD_ResetOnStop	= 1,
 	DVD_NotifyParentalLevelChange	= 2,
 	DVD_HMSF_TimeCodeEvents	= 3
     } 	DVD_OPTION_FLAG;
 
 typedef /* [public][public] */ 
-enum __MIDL___MIDL_itf_strmif_0351_0004
+enum __MIDL___MIDL_itf_strmif_0360_0004
     {	DVD_Relative_Upper	= 1,
 	DVD_Relative_Lower	= 2,
 	DVD_Relative_Left	= 3,
@@ -21220,8 +20891,8 @@ typedef struct tagDVD_MenuAttributes
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0351_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0351_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0360_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0360_v0_0_s_ifspec;
 
 #ifndef __IDvdControl_INTERFACE_DEFINED__
 #define __IDvdControl_INTERFACE_DEFINED__
@@ -23960,7 +23631,7 @@ void __RPC_STUB IDvdControl2_SelectDefaultSubpictureLanguage_Stub(
 #endif 	/* __IDvdControl2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0362 */
+/* interface __MIDL_itf_strmif_0371 */
 /* [local] */ 
 
 
@@ -24034,8 +23705,8 @@ typedef struct tagDVD_DECODER_CAPS
 #define DVD_AUDIO_CAPS_SDDS		0x00000010
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0362_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0362_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0371_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0371_v0_0_s_ifspec;
 
 #ifndef __IDvdInfo2_INTERFACE_DEFINED__
 #define __IDvdInfo2_INTERFACE_DEFINED__
@@ -25095,7 +24766,7 @@ void __RPC_STUB IDvdInfo2_IsSubpictureStreamEnabled_Stub(
 #endif 	/* __IDvdInfo2_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0364 */
+/* interface __MIDL_itf_strmif_0373 */
 /* [local] */ 
 
 typedef 
@@ -25114,7 +24785,7 @@ enum _AM_DVD_STREAM_FLAGS
 	AM_DVD_STREAM_SUBPIC	= 0x4
     } 	AM_DVD_STREAM_FLAGS;
 
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0364_0001
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0373_0001
     {
     HRESULT hrVPEStatus;
     BOOL bDvdVolInvalid;
@@ -25128,8 +24799,8 @@ typedef /* [public][public] */ struct __MIDL___MIDL_itf_strmif_0364_0001
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0364_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0364_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0373_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0373_v0_0_s_ifspec;
 
 #ifndef __IDvdGraphBuilder_INTERFACE_DEFINED__
 #define __IDvdGraphBuilder_INTERFACE_DEFINED__
@@ -25517,7 +25188,7 @@ void __RPC_STUB IDDrawExclModeVideo_SetCallbackInterface_Stub(
 #endif 	/* __IDDrawExclModeVideo_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0366 */
+/* interface __MIDL_itf_strmif_0375 */
 /* [local] */ 
 
 
@@ -25528,8 +25199,8 @@ enum _AM_OVERLAY_NOTIFY_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0366_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0366_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0375_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0375_v0_0_s_ifspec;
 
 #ifndef __IDDrawExclModeVideoCallback_INTERFACE_DEFINED__
 #define __IDDrawExclModeVideoCallback_INTERFACE_DEFINED__
@@ -25698,7 +25369,7 @@ void __RPC_STUB IDDrawExclModeVideoCallback_OnUpdateSize_Stub(
 #endif 	/* __IDDrawExclModeVideoCallback_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0367 */
+/* interface __MIDL_itf_strmif_0376 */
 /* [local] */ 
 
 
@@ -25707,8 +25378,8 @@ void __RPC_STUB IDDrawExclModeVideoCallback_OnUpdateSize_Stub(
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0367_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0367_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0376_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0376_v0_0_s_ifspec;
 
 #ifndef __IPinConnection_INTERFACE_DEFINED__
 #define __IPinConnection_INTERFACE_DEFINED__
@@ -25953,7 +25624,7 @@ void __RPC_STUB IPinFlowControl_Block_Stub(
 #endif 	/* __IPinFlowControl_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_strmif_0369 */
+/* interface __MIDL_itf_strmif_0378 */
 /* [local] */ 
 
 
@@ -25978,8 +25649,8 @@ enum _AM_FILTER_FLAGS
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0369_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_strmif_0369_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0378_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0378_v0_0_s_ifspec;
 
 #ifndef __IGraphConfig_INTERFACE_DEFINED__
 #define __IGraphConfig_INTERFACE_DEFINED__
@@ -26567,6 +26238,2891 @@ void __RPC_STUB IFilterChain_RemoveChain_Stub(
 
 
 #endif 	/* __IFilterChain_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0381 */
+/* [local] */ 
+
+// Restore the previous setting for C4201 compiler warning
+#pragma warning(default:4201)
+
+
+#if 0
+typedef DWORD *LPDIRECTDRAW7;
+
+typedef DWORD *LPDIRECTDRAWSURFACE7;
+
+typedef DWORD *LPDDPIXELFORMAT;
+
+typedef DWORD *LPBITMAPINFOHEADER;
+
+typedef /* [public][public][public][public][public][public] */ struct __MIDL___MIDL_itf_strmif_0381_0001
+    {
+    DWORD dw1;
+    DWORD dw2;
+    } 	DDCOLORKEY;
+
+typedef DDCOLORKEY *LPDDCOLORKEY;
+
+#endif
+#include <ddraw.h>
+
+
+
+
+
+
+
+
+
+
+
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0381_0002
+    {	VMRSample_SyncPoint	= 0x1,
+	VMRSample_Preroll	= 0x2,
+	VMRSample_Discontinuity	= 0x4,
+	VMRSample_TimeValid	= 0x8
+    } 	VMRPresentationFlags;
+
+typedef struct tagVMRPRESENTATIONINFO
+    {
+    DWORD dwFlags;
+    LPDIRECTDRAWSURFACE7 lpSurf;
+    REFERENCE_TIME rtStart;
+    REFERENCE_TIME rtEnd;
+    SIZE szAspectRatio;
+    RECT rcSrc;
+    RECT rcDst;
+    DWORD dwTypeSpecificFlags;
+    DWORD dwInterlaceFlags;
+    } 	VMRPRESENTATIONINFO;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0381_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0381_v0_0_s_ifspec;
+
+#ifndef __IVMRImagePresenter_INTERFACE_DEFINED__
+#define __IVMRImagePresenter_INTERFACE_DEFINED__
+
+/* interface IVMRImagePresenter */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRImagePresenter;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("CE704FE7-E71E-41fb-BAA2-C4403E1182F5")
+    IVMRImagePresenter : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE StartPresenting( 
+            /* [in] */ DWORD_PTR dwUserID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE StopPresenting( 
+            /* [in] */ DWORD_PTR dwUserID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE PresentImage( 
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ VMRPRESENTATIONINFO *lpPresInfo) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRImagePresenterVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRImagePresenter * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRImagePresenter * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRImagePresenter * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *StartPresenting )( 
+            IVMRImagePresenter * This,
+            /* [in] */ DWORD_PTR dwUserID);
+        
+        HRESULT ( STDMETHODCALLTYPE *StopPresenting )( 
+            IVMRImagePresenter * This,
+            /* [in] */ DWORD_PTR dwUserID);
+        
+        HRESULT ( STDMETHODCALLTYPE *PresentImage )( 
+            IVMRImagePresenter * This,
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ VMRPRESENTATIONINFO *lpPresInfo);
+        
+        END_INTERFACE
+    } IVMRImagePresenterVtbl;
+
+    interface IVMRImagePresenter
+    {
+        CONST_VTBL struct IVMRImagePresenterVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRImagePresenter_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRImagePresenter_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRImagePresenter_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRImagePresenter_StartPresenting(This,dwUserID)	\
+    (This)->lpVtbl -> StartPresenting(This,dwUserID)
+
+#define IVMRImagePresenter_StopPresenting(This,dwUserID)	\
+    (This)->lpVtbl -> StopPresenting(This,dwUserID)
+
+#define IVMRImagePresenter_PresentImage(This,dwUserID,lpPresInfo)	\
+    (This)->lpVtbl -> PresentImage(This,dwUserID,lpPresInfo)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenter_StartPresenting_Proxy( 
+    IVMRImagePresenter * This,
+    /* [in] */ DWORD_PTR dwUserID);
+
+
+void __RPC_STUB IVMRImagePresenter_StartPresenting_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenter_StopPresenting_Proxy( 
+    IVMRImagePresenter * This,
+    /* [in] */ DWORD_PTR dwUserID);
+
+
+void __RPC_STUB IVMRImagePresenter_StopPresenting_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenter_PresentImage_Proxy( 
+    IVMRImagePresenter * This,
+    /* [in] */ DWORD_PTR dwUserID,
+    /* [in] */ VMRPRESENTATIONINFO *lpPresInfo);
+
+
+void __RPC_STUB IVMRImagePresenter_PresentImage_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRImagePresenter_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0382 */
+/* [local] */ 
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0382_0001
+    {	AMAP_PIXELFORMAT_VALID	= 0x1,
+	AMAP_3D_TARGET	= 0x2,
+	AMAP_ALLOW_SYSMEM	= 0x4,
+	AMAP_FORCE_SYSMEM	= 0x8,
+	AMAP_DIRECTED_FLIP	= 0x10,
+	AMAP_DXVA_TARGET	= 0x20
+    } 	VMRSurfaceAllocationFlags;
+
+typedef struct tagVMRALLOCATIONINFO
+    {
+    DWORD dwFlags;
+    LPBITMAPINFOHEADER lpHdr;
+    LPDDPIXELFORMAT lpPixFmt;
+    SIZE szAspectRatio;
+    DWORD dwMinBuffers;
+    DWORD dwMaxBuffers;
+    DWORD dwInterlaceFlags;
+    SIZE szNativeSize;
+    } 	VMRALLOCATIONINFO;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0382_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0382_v0_0_s_ifspec;
+
+#ifndef __IVMRSurfaceAllocator_INTERFACE_DEFINED__
+#define __IVMRSurfaceAllocator_INTERFACE_DEFINED__
+
+/* interface IVMRSurfaceAllocator */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRSurfaceAllocator;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("31ce832e-4484-458b-8cca-f4d7e3db0b52")
+    IVMRSurfaceAllocator : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE AllocateSurface( 
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ VMRALLOCATIONINFO *lpAllocInfo,
+            /* [out][in] */ DWORD *lpdwActualBuffers,
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE FreeSurface( 
+            /* [in] */ DWORD_PTR dwID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE PrepareSurface( 
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ LPDIRECTDRAWSURFACE7 lpSurface,
+            /* [in] */ DWORD dwSurfaceFlags) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE AdviseNotify( 
+            /* [in] */ IVMRSurfaceAllocatorNotify *lpIVMRSurfAllocNotify) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRSurfaceAllocatorVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRSurfaceAllocator * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRSurfaceAllocator * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRSurfaceAllocator * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *AllocateSurface )( 
+            IVMRSurfaceAllocator * This,
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ VMRALLOCATIONINFO *lpAllocInfo,
+            /* [out][in] */ DWORD *lpdwActualBuffers,
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface);
+        
+        HRESULT ( STDMETHODCALLTYPE *FreeSurface )( 
+            IVMRSurfaceAllocator * This,
+            /* [in] */ DWORD_PTR dwID);
+        
+        HRESULT ( STDMETHODCALLTYPE *PrepareSurface )( 
+            IVMRSurfaceAllocator * This,
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ LPDIRECTDRAWSURFACE7 lpSurface,
+            /* [in] */ DWORD dwSurfaceFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *AdviseNotify )( 
+            IVMRSurfaceAllocator * This,
+            /* [in] */ IVMRSurfaceAllocatorNotify *lpIVMRSurfAllocNotify);
+        
+        END_INTERFACE
+    } IVMRSurfaceAllocatorVtbl;
+
+    interface IVMRSurfaceAllocator
+    {
+        CONST_VTBL struct IVMRSurfaceAllocatorVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRSurfaceAllocator_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRSurfaceAllocator_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRSurfaceAllocator_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRSurfaceAllocator_AllocateSurface(This,dwUserID,lpAllocInfo,lpdwActualBuffers,lplpSurface)	\
+    (This)->lpVtbl -> AllocateSurface(This,dwUserID,lpAllocInfo,lpdwActualBuffers,lplpSurface)
+
+#define IVMRSurfaceAllocator_FreeSurface(This,dwID)	\
+    (This)->lpVtbl -> FreeSurface(This,dwID)
+
+#define IVMRSurfaceAllocator_PrepareSurface(This,dwUserID,lpSurface,dwSurfaceFlags)	\
+    (This)->lpVtbl -> PrepareSurface(This,dwUserID,lpSurface,dwSurfaceFlags)
+
+#define IVMRSurfaceAllocator_AdviseNotify(This,lpIVMRSurfAllocNotify)	\
+    (This)->lpVtbl -> AdviseNotify(This,lpIVMRSurfAllocNotify)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocator_AllocateSurface_Proxy( 
+    IVMRSurfaceAllocator * This,
+    /* [in] */ DWORD_PTR dwUserID,
+    /* [in] */ VMRALLOCATIONINFO *lpAllocInfo,
+    /* [out][in] */ DWORD *lpdwActualBuffers,
+    /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface);
+
+
+void __RPC_STUB IVMRSurfaceAllocator_AllocateSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocator_FreeSurface_Proxy( 
+    IVMRSurfaceAllocator * This,
+    /* [in] */ DWORD_PTR dwID);
+
+
+void __RPC_STUB IVMRSurfaceAllocator_FreeSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocator_PrepareSurface_Proxy( 
+    IVMRSurfaceAllocator * This,
+    /* [in] */ DWORD_PTR dwUserID,
+    /* [in] */ LPDIRECTDRAWSURFACE7 lpSurface,
+    /* [in] */ DWORD dwSurfaceFlags);
+
+
+void __RPC_STUB IVMRSurfaceAllocator_PrepareSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocator_AdviseNotify_Proxy( 
+    IVMRSurfaceAllocator * This,
+    /* [in] */ IVMRSurfaceAllocatorNotify *lpIVMRSurfAllocNotify);
+
+
+void __RPC_STUB IVMRSurfaceAllocator_AdviseNotify_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRSurfaceAllocator_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVMRSurfaceAllocatorNotify_INTERFACE_DEFINED__
+#define __IVMRSurfaceAllocatorNotify_INTERFACE_DEFINED__
+
+/* interface IVMRSurfaceAllocatorNotify */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRSurfaceAllocatorNotify;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("aada05a8-5a4e-4729-af0b-cea27aed51e2")
+    IVMRSurfaceAllocatorNotify : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE AdviseSurfaceAllocator( 
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ IVMRSurfaceAllocator *lpIVRMSurfaceAllocator) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetDDrawDevice( 
+            /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+            /* [in] */ HMONITOR hMonitor) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE ChangeDDrawDevice( 
+            /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+            /* [in] */ HMONITOR hMonitor) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE RestoreDDrawSurfaces( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE NotifyEvent( 
+            /* [in] */ LONG EventCode,
+            /* [in] */ LONG_PTR Param1,
+            /* [in] */ LONG_PTR Param2) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetBorderColor( 
+            /* [in] */ COLORREF clrBorder) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRSurfaceAllocatorNotifyVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRSurfaceAllocatorNotify * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRSurfaceAllocatorNotify * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *AdviseSurfaceAllocator )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ DWORD_PTR dwUserID,
+            /* [in] */ IVMRSurfaceAllocator *lpIVRMSurfaceAllocator);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetDDrawDevice )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+            /* [in] */ HMONITOR hMonitor);
+        
+        HRESULT ( STDMETHODCALLTYPE *ChangeDDrawDevice )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+            /* [in] */ HMONITOR hMonitor);
+        
+        HRESULT ( STDMETHODCALLTYPE *RestoreDDrawSurfaces )( 
+            IVMRSurfaceAllocatorNotify * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *NotifyEvent )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ LONG EventCode,
+            /* [in] */ LONG_PTR Param1,
+            /* [in] */ LONG_PTR Param2);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetBorderColor )( 
+            IVMRSurfaceAllocatorNotify * This,
+            /* [in] */ COLORREF clrBorder);
+        
+        END_INTERFACE
+    } IVMRSurfaceAllocatorNotifyVtbl;
+
+    interface IVMRSurfaceAllocatorNotify
+    {
+        CONST_VTBL struct IVMRSurfaceAllocatorNotifyVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRSurfaceAllocatorNotify_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRSurfaceAllocatorNotify_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRSurfaceAllocatorNotify_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRSurfaceAllocatorNotify_AdviseSurfaceAllocator(This,dwUserID,lpIVRMSurfaceAllocator)	\
+    (This)->lpVtbl -> AdviseSurfaceAllocator(This,dwUserID,lpIVRMSurfaceAllocator)
+
+#define IVMRSurfaceAllocatorNotify_SetDDrawDevice(This,lpDDrawDevice,hMonitor)	\
+    (This)->lpVtbl -> SetDDrawDevice(This,lpDDrawDevice,hMonitor)
+
+#define IVMRSurfaceAllocatorNotify_ChangeDDrawDevice(This,lpDDrawDevice,hMonitor)	\
+    (This)->lpVtbl -> ChangeDDrawDevice(This,lpDDrawDevice,hMonitor)
+
+#define IVMRSurfaceAllocatorNotify_RestoreDDrawSurfaces(This)	\
+    (This)->lpVtbl -> RestoreDDrawSurfaces(This)
+
+#define IVMRSurfaceAllocatorNotify_NotifyEvent(This,EventCode,Param1,Param2)	\
+    (This)->lpVtbl -> NotifyEvent(This,EventCode,Param1,Param2)
+
+#define IVMRSurfaceAllocatorNotify_SetBorderColor(This,clrBorder)	\
+    (This)->lpVtbl -> SetBorderColor(This,clrBorder)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_AdviseSurfaceAllocator_Proxy( 
+    IVMRSurfaceAllocatorNotify * This,
+    /* [in] */ DWORD_PTR dwUserID,
+    /* [in] */ IVMRSurfaceAllocator *lpIVRMSurfaceAllocator);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_AdviseSurfaceAllocator_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_SetDDrawDevice_Proxy( 
+    IVMRSurfaceAllocatorNotify * This,
+    /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+    /* [in] */ HMONITOR hMonitor);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_SetDDrawDevice_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_ChangeDDrawDevice_Proxy( 
+    IVMRSurfaceAllocatorNotify * This,
+    /* [in] */ LPDIRECTDRAW7 lpDDrawDevice,
+    /* [in] */ HMONITOR hMonitor);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_ChangeDDrawDevice_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_RestoreDDrawSurfaces_Proxy( 
+    IVMRSurfaceAllocatorNotify * This);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_RestoreDDrawSurfaces_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_NotifyEvent_Proxy( 
+    IVMRSurfaceAllocatorNotify * This,
+    /* [in] */ LONG EventCode,
+    /* [in] */ LONG_PTR Param1,
+    /* [in] */ LONG_PTR Param2);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_NotifyEvent_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurfaceAllocatorNotify_SetBorderColor_Proxy( 
+    IVMRSurfaceAllocatorNotify * This,
+    /* [in] */ COLORREF clrBorder);
+
+
+void __RPC_STUB IVMRSurfaceAllocatorNotify_SetBorderColor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRSurfaceAllocatorNotify_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0384 */
+/* [local] */ 
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0384_0001
+    {	VMR_ARMODE_NONE	= 0,
+	VMR_ARMODE_LETTER_BOX	= VMR_ARMODE_NONE + 1
+    } 	VMR_ASPECT_RATIO_MODE;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0384_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0384_v0_0_s_ifspec;
+
+#ifndef __IVMRWindowlessControl_INTERFACE_DEFINED__
+#define __IVMRWindowlessControl_INTERFACE_DEFINED__
+
+/* interface IVMRWindowlessControl */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRWindowlessControl;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("0eb1088c-4dcd-46f0-878f-39dae86a51b7")
+    IVMRWindowlessControl : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE GetNativeVideoSize( 
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight,
+            /* [out] */ LONG *lpARWidth,
+            /* [out] */ LONG *lpARHeight) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetMinIdealVideoSize( 
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetMaxIdealVideoSize( 
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetVideoPosition( 
+            /* [in] */ const LPRECT lpSRCRect,
+            /* [in] */ const LPRECT lpDSTRect) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetVideoPosition( 
+            /* [out] */ LPRECT lpSRCRect,
+            /* [out] */ LPRECT lpDSTRect) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetAspectRatioMode( 
+            /* [out] */ DWORD *lpAspectRatioMode) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetAspectRatioMode( 
+            /* [in] */ DWORD AspectRatioMode) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetVideoClippingWindow( 
+            /* [in] */ HWND hwnd) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE RepaintVideo( 
+            /* [in] */ HWND hwnd,
+            /* [in] */ HDC hdc) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE DisplayModeChanged( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetCurrentImage( 
+            /* [out] */ BYTE **lpDib) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetBorderColor( 
+            /* [in] */ COLORREF Clr) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetBorderColor( 
+            /* [out] */ COLORREF *lpClr) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetColorKey( 
+            /* [in] */ COLORREF Clr) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetColorKey( 
+            /* [out] */ COLORREF *lpClr) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRWindowlessControlVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRWindowlessControl * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRWindowlessControl * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetNativeVideoSize )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight,
+            /* [out] */ LONG *lpARWidth,
+            /* [out] */ LONG *lpARHeight);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetMinIdealVideoSize )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetMaxIdealVideoSize )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ LONG *lpWidth,
+            /* [out] */ LONG *lpHeight);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetVideoPosition )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ const LPRECT lpSRCRect,
+            /* [in] */ const LPRECT lpDSTRect);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetVideoPosition )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ LPRECT lpSRCRect,
+            /* [out] */ LPRECT lpDSTRect);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetAspectRatioMode )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ DWORD *lpAspectRatioMode);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetAspectRatioMode )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ DWORD AspectRatioMode);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetVideoClippingWindow )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ HWND hwnd);
+        
+        HRESULT ( STDMETHODCALLTYPE *RepaintVideo )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ HWND hwnd,
+            /* [in] */ HDC hdc);
+        
+        HRESULT ( STDMETHODCALLTYPE *DisplayModeChanged )( 
+            IVMRWindowlessControl * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetCurrentImage )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ BYTE **lpDib);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetBorderColor )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ COLORREF Clr);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetBorderColor )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ COLORREF *lpClr);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetColorKey )( 
+            IVMRWindowlessControl * This,
+            /* [in] */ COLORREF Clr);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetColorKey )( 
+            IVMRWindowlessControl * This,
+            /* [out] */ COLORREF *lpClr);
+        
+        END_INTERFACE
+    } IVMRWindowlessControlVtbl;
+
+    interface IVMRWindowlessControl
+    {
+        CONST_VTBL struct IVMRWindowlessControlVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRWindowlessControl_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRWindowlessControl_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRWindowlessControl_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRWindowlessControl_GetNativeVideoSize(This,lpWidth,lpHeight,lpARWidth,lpARHeight)	\
+    (This)->lpVtbl -> GetNativeVideoSize(This,lpWidth,lpHeight,lpARWidth,lpARHeight)
+
+#define IVMRWindowlessControl_GetMinIdealVideoSize(This,lpWidth,lpHeight)	\
+    (This)->lpVtbl -> GetMinIdealVideoSize(This,lpWidth,lpHeight)
+
+#define IVMRWindowlessControl_GetMaxIdealVideoSize(This,lpWidth,lpHeight)	\
+    (This)->lpVtbl -> GetMaxIdealVideoSize(This,lpWidth,lpHeight)
+
+#define IVMRWindowlessControl_SetVideoPosition(This,lpSRCRect,lpDSTRect)	\
+    (This)->lpVtbl -> SetVideoPosition(This,lpSRCRect,lpDSTRect)
+
+#define IVMRWindowlessControl_GetVideoPosition(This,lpSRCRect,lpDSTRect)	\
+    (This)->lpVtbl -> GetVideoPosition(This,lpSRCRect,lpDSTRect)
+
+#define IVMRWindowlessControl_GetAspectRatioMode(This,lpAspectRatioMode)	\
+    (This)->lpVtbl -> GetAspectRatioMode(This,lpAspectRatioMode)
+
+#define IVMRWindowlessControl_SetAspectRatioMode(This,AspectRatioMode)	\
+    (This)->lpVtbl -> SetAspectRatioMode(This,AspectRatioMode)
+
+#define IVMRWindowlessControl_SetVideoClippingWindow(This,hwnd)	\
+    (This)->lpVtbl -> SetVideoClippingWindow(This,hwnd)
+
+#define IVMRWindowlessControl_RepaintVideo(This,hwnd,hdc)	\
+    (This)->lpVtbl -> RepaintVideo(This,hwnd,hdc)
+
+#define IVMRWindowlessControl_DisplayModeChanged(This)	\
+    (This)->lpVtbl -> DisplayModeChanged(This)
+
+#define IVMRWindowlessControl_GetCurrentImage(This,lpDib)	\
+    (This)->lpVtbl -> GetCurrentImage(This,lpDib)
+
+#define IVMRWindowlessControl_SetBorderColor(This,Clr)	\
+    (This)->lpVtbl -> SetBorderColor(This,Clr)
+
+#define IVMRWindowlessControl_GetBorderColor(This,lpClr)	\
+    (This)->lpVtbl -> GetBorderColor(This,lpClr)
+
+#define IVMRWindowlessControl_SetColorKey(This,Clr)	\
+    (This)->lpVtbl -> SetColorKey(This,Clr)
+
+#define IVMRWindowlessControl_GetColorKey(This,lpClr)	\
+    (This)->lpVtbl -> GetColorKey(This,lpClr)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetNativeVideoSize_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ LONG *lpWidth,
+    /* [out] */ LONG *lpHeight,
+    /* [out] */ LONG *lpARWidth,
+    /* [out] */ LONG *lpARHeight);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetNativeVideoSize_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetMinIdealVideoSize_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ LONG *lpWidth,
+    /* [out] */ LONG *lpHeight);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetMinIdealVideoSize_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetMaxIdealVideoSize_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ LONG *lpWidth,
+    /* [out] */ LONG *lpHeight);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetMaxIdealVideoSize_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_SetVideoPosition_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ const LPRECT lpSRCRect,
+    /* [in] */ const LPRECT lpDSTRect);
+
+
+void __RPC_STUB IVMRWindowlessControl_SetVideoPosition_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetVideoPosition_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ LPRECT lpSRCRect,
+    /* [out] */ LPRECT lpDSTRect);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetVideoPosition_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetAspectRatioMode_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ DWORD *lpAspectRatioMode);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetAspectRatioMode_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_SetAspectRatioMode_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ DWORD AspectRatioMode);
+
+
+void __RPC_STUB IVMRWindowlessControl_SetAspectRatioMode_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_SetVideoClippingWindow_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ HWND hwnd);
+
+
+void __RPC_STUB IVMRWindowlessControl_SetVideoClippingWindow_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_RepaintVideo_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ HWND hwnd,
+    /* [in] */ HDC hdc);
+
+
+void __RPC_STUB IVMRWindowlessControl_RepaintVideo_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_DisplayModeChanged_Proxy( 
+    IVMRWindowlessControl * This);
+
+
+void __RPC_STUB IVMRWindowlessControl_DisplayModeChanged_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetCurrentImage_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ BYTE **lpDib);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetCurrentImage_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_SetBorderColor_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ COLORREF Clr);
+
+
+void __RPC_STUB IVMRWindowlessControl_SetBorderColor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetBorderColor_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ COLORREF *lpClr);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetBorderColor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_SetColorKey_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [in] */ COLORREF Clr);
+
+
+void __RPC_STUB IVMRWindowlessControl_SetColorKey_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRWindowlessControl_GetColorKey_Proxy( 
+    IVMRWindowlessControl * This,
+    /* [out] */ COLORREF *lpClr);
+
+
+void __RPC_STUB IVMRWindowlessControl_GetColorKey_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRWindowlessControl_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0385 */
+/* [local] */ 
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0385_0001
+    {	MixerPref_NoDecimation	= 0x1,
+	MixerPref_DecimateOutput	= 0x2,
+	MixerPref_DecimateMask	= 0xf,
+	MixerPref_BiLinearFiltering	= 0x10,
+	MixerPref_PointFiltering	= 0x20,
+	MixerPref_FilteringMask	= 0xf0,
+	MixerPref_RenderTargetRGB	= 0x100,
+	MixerPref_RenderTargetYUV420	= 0x200,
+	MixerPref_RenderTargetYUV422	= 0x400,
+	MixerPref_RenderTargetYUV444	= 0x800,
+	MixerPref_RenderTargetReserved	= 0xf000,
+	MixerPref_RenderTargetMask	= 0xff00
+    } 	VMRMixerPrefs;
+
+typedef struct _NORMALIZEDRECT
+    {
+    float left;
+    float top;
+    float right;
+    float bottom;
+    } 	NORMALIZEDRECT;
+
+typedef struct _NORMALIZEDRECT *PNORMALIZEDRECT;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0385_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0385_v0_0_s_ifspec;
+
+#ifndef __IVMRMixerControl_INTERFACE_DEFINED__
+#define __IVMRMixerControl_INTERFACE_DEFINED__
+
+/* interface IVMRMixerControl */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRMixerControl;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("1c1a17b0-bed0-415d-974b-dc6696131599")
+    IVMRMixerControl : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetAlpha( 
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ float Alpha) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetAlpha( 
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ float *pAlpha) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetZOrder( 
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ DWORD dwZ) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetZOrder( 
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ DWORD *pZ) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetOutputRect( 
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ const NORMALIZEDRECT *pRect) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetOutputRect( 
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ NORMALIZEDRECT *pRect) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetBackgroundClr( 
+            /* [in] */ COLORREF ClrBkg) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetBackgroundClr( 
+            /* [in] */ COLORREF *lpClrBkg) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetMixingPrefs( 
+            /* [in] */ DWORD dwMixerPrefs) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetMixingPrefs( 
+            /* [out] */ DWORD *pdwMixerPrefs) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRMixerControlVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRMixerControl * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRMixerControl * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRMixerControl * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetAlpha )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ float Alpha);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetAlpha )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ float *pAlpha);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetZOrder )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ DWORD dwZ);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetZOrder )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ DWORD *pZ);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetOutputRect )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [in] */ const NORMALIZEDRECT *pRect);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetOutputRect )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwStreamID,
+            /* [out] */ NORMALIZEDRECT *pRect);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetBackgroundClr )( 
+            IVMRMixerControl * This,
+            /* [in] */ COLORREF ClrBkg);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetBackgroundClr )( 
+            IVMRMixerControl * This,
+            /* [in] */ COLORREF *lpClrBkg);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetMixingPrefs )( 
+            IVMRMixerControl * This,
+            /* [in] */ DWORD dwMixerPrefs);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetMixingPrefs )( 
+            IVMRMixerControl * This,
+            /* [out] */ DWORD *pdwMixerPrefs);
+        
+        END_INTERFACE
+    } IVMRMixerControlVtbl;
+
+    interface IVMRMixerControl
+    {
+        CONST_VTBL struct IVMRMixerControlVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRMixerControl_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRMixerControl_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRMixerControl_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRMixerControl_SetAlpha(This,dwStreamID,Alpha)	\
+    (This)->lpVtbl -> SetAlpha(This,dwStreamID,Alpha)
+
+#define IVMRMixerControl_GetAlpha(This,dwStreamID,pAlpha)	\
+    (This)->lpVtbl -> GetAlpha(This,dwStreamID,pAlpha)
+
+#define IVMRMixerControl_SetZOrder(This,dwStreamID,dwZ)	\
+    (This)->lpVtbl -> SetZOrder(This,dwStreamID,dwZ)
+
+#define IVMRMixerControl_GetZOrder(This,dwStreamID,pZ)	\
+    (This)->lpVtbl -> GetZOrder(This,dwStreamID,pZ)
+
+#define IVMRMixerControl_SetOutputRect(This,dwStreamID,pRect)	\
+    (This)->lpVtbl -> SetOutputRect(This,dwStreamID,pRect)
+
+#define IVMRMixerControl_GetOutputRect(This,dwStreamID,pRect)	\
+    (This)->lpVtbl -> GetOutputRect(This,dwStreamID,pRect)
+
+#define IVMRMixerControl_SetBackgroundClr(This,ClrBkg)	\
+    (This)->lpVtbl -> SetBackgroundClr(This,ClrBkg)
+
+#define IVMRMixerControl_GetBackgroundClr(This,lpClrBkg)	\
+    (This)->lpVtbl -> GetBackgroundClr(This,lpClrBkg)
+
+#define IVMRMixerControl_SetMixingPrefs(This,dwMixerPrefs)	\
+    (This)->lpVtbl -> SetMixingPrefs(This,dwMixerPrefs)
+
+#define IVMRMixerControl_GetMixingPrefs(This,pdwMixerPrefs)	\
+    (This)->lpVtbl -> GetMixingPrefs(This,pdwMixerPrefs)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_SetAlpha_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [in] */ float Alpha);
+
+
+void __RPC_STUB IVMRMixerControl_SetAlpha_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_GetAlpha_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [out] */ float *pAlpha);
+
+
+void __RPC_STUB IVMRMixerControl_GetAlpha_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_SetZOrder_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [in] */ DWORD dwZ);
+
+
+void __RPC_STUB IVMRMixerControl_SetZOrder_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_GetZOrder_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [out] */ DWORD *pZ);
+
+
+void __RPC_STUB IVMRMixerControl_GetZOrder_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_SetOutputRect_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [in] */ const NORMALIZEDRECT *pRect);
+
+
+void __RPC_STUB IVMRMixerControl_SetOutputRect_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_GetOutputRect_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwStreamID,
+    /* [out] */ NORMALIZEDRECT *pRect);
+
+
+void __RPC_STUB IVMRMixerControl_GetOutputRect_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_SetBackgroundClr_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ COLORREF ClrBkg);
+
+
+void __RPC_STUB IVMRMixerControl_SetBackgroundClr_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_GetBackgroundClr_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ COLORREF *lpClrBkg);
+
+
+void __RPC_STUB IVMRMixerControl_GetBackgroundClr_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_SetMixingPrefs_Proxy( 
+    IVMRMixerControl * This,
+    /* [in] */ DWORD dwMixerPrefs);
+
+
+void __RPC_STUB IVMRMixerControl_SetMixingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerControl_GetMixingPrefs_Proxy( 
+    IVMRMixerControl * This,
+    /* [out] */ DWORD *pdwMixerPrefs);
+
+
+void __RPC_STUB IVMRMixerControl_GetMixingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRMixerControl_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0386 */
+/* [local] */ 
+
+typedef struct tagVMRGUID
+    {
+    GUID *pGUID;
+    GUID GUID;
+    } 	VMRGUID;
+
+typedef struct tagVMRMONITORINFO
+    {
+    VMRGUID guid;
+    RECT rcMonitor;
+    HMONITOR hMon;
+    DWORD dwFlags;
+    wchar_t szDevice[ 32 ];
+    wchar_t szDescription[ 256 ];
+    LARGE_INTEGER liDriverVersion;
+    DWORD dwVendorId;
+    DWORD dwDeviceId;
+    DWORD dwSubSysId;
+    DWORD dwRevision;
+    } 	VMRMONITORINFO;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0386_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0386_v0_0_s_ifspec;
+
+#ifndef __IVMRMonitorConfig_INTERFACE_DEFINED__
+#define __IVMRMonitorConfig_INTERFACE_DEFINED__
+
+/* interface IVMRMonitorConfig */
+/* [unique][helpstring][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IVMRMonitorConfig;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("9cf0b1b6-fbaa-4b7f-88cf-cf1f130a0dce")
+    IVMRMonitorConfig : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetMonitor( 
+            /* [in] */ const VMRGUID *pGUID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetMonitor( 
+            /* [out] */ VMRGUID *pGUID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetDefaultMonitor( 
+            /* [in] */ const VMRGUID *pGUID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetDefaultMonitor( 
+            /* [out] */ VMRGUID *pGUID) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetAvailableMonitors( 
+            /* [size_is][out] */ VMRMONITORINFO *pInfo,
+            /* [in] */ DWORD dwMaxInfoArraySize,
+            /* [out] */ DWORD *pdwNumDevices) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRMonitorConfigVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRMonitorConfig * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRMonitorConfig * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRMonitorConfig * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetMonitor )( 
+            IVMRMonitorConfig * This,
+            /* [in] */ const VMRGUID *pGUID);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetMonitor )( 
+            IVMRMonitorConfig * This,
+            /* [out] */ VMRGUID *pGUID);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetDefaultMonitor )( 
+            IVMRMonitorConfig * This,
+            /* [in] */ const VMRGUID *pGUID);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetDefaultMonitor )( 
+            IVMRMonitorConfig * This,
+            /* [out] */ VMRGUID *pGUID);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetAvailableMonitors )( 
+            IVMRMonitorConfig * This,
+            /* [size_is][out] */ VMRMONITORINFO *pInfo,
+            /* [in] */ DWORD dwMaxInfoArraySize,
+            /* [out] */ DWORD *pdwNumDevices);
+        
+        END_INTERFACE
+    } IVMRMonitorConfigVtbl;
+
+    interface IVMRMonitorConfig
+    {
+        CONST_VTBL struct IVMRMonitorConfigVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRMonitorConfig_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRMonitorConfig_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRMonitorConfig_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRMonitorConfig_SetMonitor(This,pGUID)	\
+    (This)->lpVtbl -> SetMonitor(This,pGUID)
+
+#define IVMRMonitorConfig_GetMonitor(This,pGUID)	\
+    (This)->lpVtbl -> GetMonitor(This,pGUID)
+
+#define IVMRMonitorConfig_SetDefaultMonitor(This,pGUID)	\
+    (This)->lpVtbl -> SetDefaultMonitor(This,pGUID)
+
+#define IVMRMonitorConfig_GetDefaultMonitor(This,pGUID)	\
+    (This)->lpVtbl -> GetDefaultMonitor(This,pGUID)
+
+#define IVMRMonitorConfig_GetAvailableMonitors(This,pInfo,dwMaxInfoArraySize,pdwNumDevices)	\
+    (This)->lpVtbl -> GetAvailableMonitors(This,pInfo,dwMaxInfoArraySize,pdwNumDevices)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRMonitorConfig_SetMonitor_Proxy( 
+    IVMRMonitorConfig * This,
+    /* [in] */ const VMRGUID *pGUID);
+
+
+void __RPC_STUB IVMRMonitorConfig_SetMonitor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMonitorConfig_GetMonitor_Proxy( 
+    IVMRMonitorConfig * This,
+    /* [out] */ VMRGUID *pGUID);
+
+
+void __RPC_STUB IVMRMonitorConfig_GetMonitor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMonitorConfig_SetDefaultMonitor_Proxy( 
+    IVMRMonitorConfig * This,
+    /* [in] */ const VMRGUID *pGUID);
+
+
+void __RPC_STUB IVMRMonitorConfig_SetDefaultMonitor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMonitorConfig_GetDefaultMonitor_Proxy( 
+    IVMRMonitorConfig * This,
+    /* [out] */ VMRGUID *pGUID);
+
+
+void __RPC_STUB IVMRMonitorConfig_GetDefaultMonitor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMonitorConfig_GetAvailableMonitors_Proxy( 
+    IVMRMonitorConfig * This,
+    /* [size_is][out] */ VMRMONITORINFO *pInfo,
+    /* [in] */ DWORD dwMaxInfoArraySize,
+    /* [out] */ DWORD *pdwNumDevices);
+
+
+void __RPC_STUB IVMRMonitorConfig_GetAvailableMonitors_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRMonitorConfig_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0387 */
+/* [local] */ 
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0387_0001
+    {	RenderPrefs_ForceOffscreen	= 0x1,
+	RenderPrefs_ForceOverlays	= 0x2,
+	RenderPrefs_AllowOverlays	= 0,
+	RenderPrefs_AllowOffscreen	= 0,
+	RenderPrefs_DoNotRenderColorKeyAndBorder	= 0x8,
+	RenderPrefs_RestrictToInitialMonitor	= 0x10,
+	RenderPrefs_PreferAGPMemWhenMixing	= 0x20,
+	RenderPrefs_Mask	= 0x3f
+    } 	VMRRenderPrefs;
+
+typedef /* [public] */ 
+enum __MIDL___MIDL_itf_strmif_0387_0002
+    {	VMRMode_Windowed	= 0x1,
+	VMRMode_Windowless	= 0x2,
+	VMRMode_Renderless	= 0x4,
+	VMRMode_Mask	= 0x7
+    } 	VMRMode;
+
+
+enum __MIDL___MIDL_itf_strmif_0387_0003
+    {	MAX_NUMBER_OF_STREAMS	= 16
+    } ;
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0387_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0387_v0_0_s_ifspec;
+
+#ifndef __IVMRFilterConfig_INTERFACE_DEFINED__
+#define __IVMRFilterConfig_INTERFACE_DEFINED__
+
+/* interface IVMRFilterConfig */
+/* [unique][helpstring][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IVMRFilterConfig;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("9e5530c5-7034-48b4-bb46-0b8a6efc8e36")
+    IVMRFilterConfig : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetImageCompositor( 
+            /* [in] */ IVMRImageCompositor *lpVMRImgCompositor) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetNumberOfStreams( 
+            /* [in] */ DWORD dwMaxStreams) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetNumberOfStreams( 
+            /* [out] */ DWORD *pdwMaxStreams) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetRenderingPrefs( 
+            /* [in] */ DWORD dwRenderFlags) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetRenderingPrefs( 
+            /* [out] */ DWORD *pdwRenderFlags) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetRenderingMode( 
+            /* [in] */ DWORD Mode) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetRenderingMode( 
+            /* [out] */ DWORD *pMode) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRFilterConfigVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRFilterConfig * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRFilterConfig * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRFilterConfig * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetImageCompositor )( 
+            IVMRFilterConfig * This,
+            /* [in] */ IVMRImageCompositor *lpVMRImgCompositor);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetNumberOfStreams )( 
+            IVMRFilterConfig * This,
+            /* [in] */ DWORD dwMaxStreams);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetNumberOfStreams )( 
+            IVMRFilterConfig * This,
+            /* [out] */ DWORD *pdwMaxStreams);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetRenderingPrefs )( 
+            IVMRFilterConfig * This,
+            /* [in] */ DWORD dwRenderFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetRenderingPrefs )( 
+            IVMRFilterConfig * This,
+            /* [out] */ DWORD *pdwRenderFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetRenderingMode )( 
+            IVMRFilterConfig * This,
+            /* [in] */ DWORD Mode);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetRenderingMode )( 
+            IVMRFilterConfig * This,
+            /* [out] */ DWORD *pMode);
+        
+        END_INTERFACE
+    } IVMRFilterConfigVtbl;
+
+    interface IVMRFilterConfig
+    {
+        CONST_VTBL struct IVMRFilterConfigVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRFilterConfig_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRFilterConfig_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRFilterConfig_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRFilterConfig_SetImageCompositor(This,lpVMRImgCompositor)	\
+    (This)->lpVtbl -> SetImageCompositor(This,lpVMRImgCompositor)
+
+#define IVMRFilterConfig_SetNumberOfStreams(This,dwMaxStreams)	\
+    (This)->lpVtbl -> SetNumberOfStreams(This,dwMaxStreams)
+
+#define IVMRFilterConfig_GetNumberOfStreams(This,pdwMaxStreams)	\
+    (This)->lpVtbl -> GetNumberOfStreams(This,pdwMaxStreams)
+
+#define IVMRFilterConfig_SetRenderingPrefs(This,dwRenderFlags)	\
+    (This)->lpVtbl -> SetRenderingPrefs(This,dwRenderFlags)
+
+#define IVMRFilterConfig_GetRenderingPrefs(This,pdwRenderFlags)	\
+    (This)->lpVtbl -> GetRenderingPrefs(This,pdwRenderFlags)
+
+#define IVMRFilterConfig_SetRenderingMode(This,Mode)	\
+    (This)->lpVtbl -> SetRenderingMode(This,Mode)
+
+#define IVMRFilterConfig_GetRenderingMode(This,pMode)	\
+    (This)->lpVtbl -> GetRenderingMode(This,pMode)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_SetImageCompositor_Proxy( 
+    IVMRFilterConfig * This,
+    /* [in] */ IVMRImageCompositor *lpVMRImgCompositor);
+
+
+void __RPC_STUB IVMRFilterConfig_SetImageCompositor_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_SetNumberOfStreams_Proxy( 
+    IVMRFilterConfig * This,
+    /* [in] */ DWORD dwMaxStreams);
+
+
+void __RPC_STUB IVMRFilterConfig_SetNumberOfStreams_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_GetNumberOfStreams_Proxy( 
+    IVMRFilterConfig * This,
+    /* [out] */ DWORD *pdwMaxStreams);
+
+
+void __RPC_STUB IVMRFilterConfig_GetNumberOfStreams_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_SetRenderingPrefs_Proxy( 
+    IVMRFilterConfig * This,
+    /* [in] */ DWORD dwRenderFlags);
+
+
+void __RPC_STUB IVMRFilterConfig_SetRenderingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_GetRenderingPrefs_Proxy( 
+    IVMRFilterConfig * This,
+    /* [out] */ DWORD *pdwRenderFlags);
+
+
+void __RPC_STUB IVMRFilterConfig_GetRenderingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_SetRenderingMode_Proxy( 
+    IVMRFilterConfig * This,
+    /* [in] */ DWORD Mode);
+
+
+void __RPC_STUB IVMRFilterConfig_SetRenderingMode_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRFilterConfig_GetRenderingMode_Proxy( 
+    IVMRFilterConfig * This,
+    /* [out] */ DWORD *pMode);
+
+
+void __RPC_STUB IVMRFilterConfig_GetRenderingMode_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRFilterConfig_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0388 */
+/* [local] */ 
+
+typedef struct _VMRALPHABITMAP
+    {
+    DWORD dwFlags;
+    HDC hdc;
+    LPDIRECTDRAWSURFACE7 pDDS;
+    RECT rSrc;
+    NORMALIZEDRECT rDest;
+    FLOAT fAlpha;
+    COLORREF clrSrcKey;
+    } 	VMRALPHABITMAP;
+
+typedef struct _VMRALPHABITMAP *PVMRALPHABITMAP;
+
+#define VMRBITMAP_DISABLE            0x00000001
+#define VMRBITMAP_HDC                0x00000002
+#define VMRBITMAP_ENTIREDDS          0x00000004
+#define VMRBITMAP_SRCCOLORKEY        0x00000008
+#define VMRBITMAP_SRCRECT            0x00000010
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0388_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0388_v0_0_s_ifspec;
+
+#ifndef __IVMRMixerBitmap_INTERFACE_DEFINED__
+#define __IVMRMixerBitmap_INTERFACE_DEFINED__
+
+/* interface IVMRMixerBitmap */
+/* [unique][helpstring][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IVMRMixerBitmap;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("1E673275-0257-40aa-AF20-7C608D4A0428")
+    IVMRMixerBitmap : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetAlphaBitmap( 
+            /* [in] */ const VMRALPHABITMAP *pBmpParms) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE UpdateAlphaBitmapParameters( 
+            /* [in] */ PVMRALPHABITMAP pBmpParms) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetAlphaBitmapParameters( 
+            /* [out] */ PVMRALPHABITMAP pBmpParms) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRMixerBitmapVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRMixerBitmap * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRMixerBitmap * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRMixerBitmap * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetAlphaBitmap )( 
+            IVMRMixerBitmap * This,
+            /* [in] */ const VMRALPHABITMAP *pBmpParms);
+        
+        HRESULT ( STDMETHODCALLTYPE *UpdateAlphaBitmapParameters )( 
+            IVMRMixerBitmap * This,
+            /* [in] */ PVMRALPHABITMAP pBmpParms);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetAlphaBitmapParameters )( 
+            IVMRMixerBitmap * This,
+            /* [out] */ PVMRALPHABITMAP pBmpParms);
+        
+        END_INTERFACE
+    } IVMRMixerBitmapVtbl;
+
+    interface IVMRMixerBitmap
+    {
+        CONST_VTBL struct IVMRMixerBitmapVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRMixerBitmap_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRMixerBitmap_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRMixerBitmap_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRMixerBitmap_SetAlphaBitmap(This,pBmpParms)	\
+    (This)->lpVtbl -> SetAlphaBitmap(This,pBmpParms)
+
+#define IVMRMixerBitmap_UpdateAlphaBitmapParameters(This,pBmpParms)	\
+    (This)->lpVtbl -> UpdateAlphaBitmapParameters(This,pBmpParms)
+
+#define IVMRMixerBitmap_GetAlphaBitmapParameters(This,pBmpParms)	\
+    (This)->lpVtbl -> GetAlphaBitmapParameters(This,pBmpParms)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerBitmap_SetAlphaBitmap_Proxy( 
+    IVMRMixerBitmap * This,
+    /* [in] */ const VMRALPHABITMAP *pBmpParms);
+
+
+void __RPC_STUB IVMRMixerBitmap_SetAlphaBitmap_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerBitmap_UpdateAlphaBitmapParameters_Proxy( 
+    IVMRMixerBitmap * This,
+    /* [in] */ PVMRALPHABITMAP pBmpParms);
+
+
+void __RPC_STUB IVMRMixerBitmap_UpdateAlphaBitmapParameters_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRMixerBitmap_GetAlphaBitmapParameters_Proxy( 
+    IVMRMixerBitmap * This,
+    /* [out] */ PVMRALPHABITMAP pBmpParms);
+
+
+void __RPC_STUB IVMRMixerBitmap_GetAlphaBitmapParameters_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRMixerBitmap_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_strmif_0389 */
+/* [local] */ 
+
+typedef struct _VMRVIDEOSTREAMINFO
+    {
+    LPDIRECTDRAWSURFACE7 pddsVideoSurface;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    DWORD dwStrmID;
+    FLOAT fAlpha;
+    DDCOLORKEY ddClrKey;
+    NORMALIZEDRECT rNormal;
+    } 	VMRVIDEOSTREAMINFO;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0389_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_strmif_0389_v0_0_s_ifspec;
+
+#ifndef __IVMRImageCompositor_INTERFACE_DEFINED__
+#define __IVMRImageCompositor_INTERFACE_DEFINED__
+
+/* interface IVMRImageCompositor */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRImageCompositor;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("7a4fb5af-479f-4074-bb40-ce6722e43c82")
+    IVMRImageCompositor : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE InitCompositionTarget( 
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE TermCompositionTarget( 
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetStreamMediaType( 
+            /* [in] */ DWORD dwStrmID,
+            /* [in] */ AM_MEDIA_TYPE *pmt,
+            /* [in] */ BOOL fTexture) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE CompositeImage( 
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget,
+            /* [in] */ AM_MEDIA_TYPE *pmtRenderTarget,
+            /* [in] */ REFERENCE_TIME rtStart,
+            /* [in] */ REFERENCE_TIME rtEnd,
+            /* [in] */ DWORD dwClrBkGnd,
+            /* [in] */ VMRVIDEOSTREAMINFO *pVideoStreamInfo,
+            /* [in] */ UINT cStreams) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRImageCompositorVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRImageCompositor * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRImageCompositor * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRImageCompositor * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *InitCompositionTarget )( 
+            IVMRImageCompositor * This,
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget);
+        
+        HRESULT ( STDMETHODCALLTYPE *TermCompositionTarget )( 
+            IVMRImageCompositor * This,
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetStreamMediaType )( 
+            IVMRImageCompositor * This,
+            /* [in] */ DWORD dwStrmID,
+            /* [in] */ AM_MEDIA_TYPE *pmt,
+            /* [in] */ BOOL fTexture);
+        
+        HRESULT ( STDMETHODCALLTYPE *CompositeImage )( 
+            IVMRImageCompositor * This,
+            /* [in] */ IUnknown *pD3DDevice,
+            /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget,
+            /* [in] */ AM_MEDIA_TYPE *pmtRenderTarget,
+            /* [in] */ REFERENCE_TIME rtStart,
+            /* [in] */ REFERENCE_TIME rtEnd,
+            /* [in] */ DWORD dwClrBkGnd,
+            /* [in] */ VMRVIDEOSTREAMINFO *pVideoStreamInfo,
+            /* [in] */ UINT cStreams);
+        
+        END_INTERFACE
+    } IVMRImageCompositorVtbl;
+
+    interface IVMRImageCompositor
+    {
+        CONST_VTBL struct IVMRImageCompositorVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRImageCompositor_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRImageCompositor_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRImageCompositor_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRImageCompositor_InitCompositionTarget(This,pD3DDevice,pddsRenderTarget)	\
+    (This)->lpVtbl -> InitCompositionTarget(This,pD3DDevice,pddsRenderTarget)
+
+#define IVMRImageCompositor_TermCompositionTarget(This,pD3DDevice,pddsRenderTarget)	\
+    (This)->lpVtbl -> TermCompositionTarget(This,pD3DDevice,pddsRenderTarget)
+
+#define IVMRImageCompositor_SetStreamMediaType(This,dwStrmID,pmt,fTexture)	\
+    (This)->lpVtbl -> SetStreamMediaType(This,dwStrmID,pmt,fTexture)
+
+#define IVMRImageCompositor_CompositeImage(This,pD3DDevice,pddsRenderTarget,pmtRenderTarget,rtStart,rtEnd,dwClrBkGnd,pVideoStreamInfo,cStreams)	\
+    (This)->lpVtbl -> CompositeImage(This,pD3DDevice,pddsRenderTarget,pmtRenderTarget,rtStart,rtEnd,dwClrBkGnd,pVideoStreamInfo,cStreams)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRImageCompositor_InitCompositionTarget_Proxy( 
+    IVMRImageCompositor * This,
+    /* [in] */ IUnknown *pD3DDevice,
+    /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget);
+
+
+void __RPC_STUB IVMRImageCompositor_InitCompositionTarget_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImageCompositor_TermCompositionTarget_Proxy( 
+    IVMRImageCompositor * This,
+    /* [in] */ IUnknown *pD3DDevice,
+    /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget);
+
+
+void __RPC_STUB IVMRImageCompositor_TermCompositionTarget_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImageCompositor_SetStreamMediaType_Proxy( 
+    IVMRImageCompositor * This,
+    /* [in] */ DWORD dwStrmID,
+    /* [in] */ AM_MEDIA_TYPE *pmt,
+    /* [in] */ BOOL fTexture);
+
+
+void __RPC_STUB IVMRImageCompositor_SetStreamMediaType_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImageCompositor_CompositeImage_Proxy( 
+    IVMRImageCompositor * This,
+    /* [in] */ IUnknown *pD3DDevice,
+    /* [in] */ LPDIRECTDRAWSURFACE7 pddsRenderTarget,
+    /* [in] */ AM_MEDIA_TYPE *pmtRenderTarget,
+    /* [in] */ REFERENCE_TIME rtStart,
+    /* [in] */ REFERENCE_TIME rtEnd,
+    /* [in] */ DWORD dwClrBkGnd,
+    /* [in] */ VMRVIDEOSTREAMINFO *pVideoStreamInfo,
+    /* [in] */ UINT cStreams);
+
+
+void __RPC_STUB IVMRImageCompositor_CompositeImage_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRImageCompositor_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVMRVideoStreamControl_INTERFACE_DEFINED__
+#define __IVMRVideoStreamControl_INTERFACE_DEFINED__
+
+/* interface IVMRVideoStreamControl */
+/* [unique][helpstring][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IVMRVideoStreamControl;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("058d1f11-2a54-4bef-bd54-df706626b727")
+    IVMRVideoStreamControl : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetColorKey( 
+            /* [in] */ LPDDCOLORKEY lpClrKey) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetColorKey( 
+            /* [out] */ LPDDCOLORKEY lpClrKey) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SetStreamActiveState( 
+            /* [in] */ BOOL fActive) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetStreamActiveState( 
+            /* [out] */ BOOL *lpfActive) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRVideoStreamControlVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRVideoStreamControl * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRVideoStreamControl * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRVideoStreamControl * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetColorKey )( 
+            IVMRVideoStreamControl * This,
+            /* [in] */ LPDDCOLORKEY lpClrKey);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetColorKey )( 
+            IVMRVideoStreamControl * This,
+            /* [out] */ LPDDCOLORKEY lpClrKey);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetStreamActiveState )( 
+            IVMRVideoStreamControl * This,
+            /* [in] */ BOOL fActive);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetStreamActiveState )( 
+            IVMRVideoStreamControl * This,
+            /* [out] */ BOOL *lpfActive);
+        
+        END_INTERFACE
+    } IVMRVideoStreamControlVtbl;
+
+    interface IVMRVideoStreamControl
+    {
+        CONST_VTBL struct IVMRVideoStreamControlVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRVideoStreamControl_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRVideoStreamControl_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRVideoStreamControl_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRVideoStreamControl_SetColorKey(This,lpClrKey)	\
+    (This)->lpVtbl -> SetColorKey(This,lpClrKey)
+
+#define IVMRVideoStreamControl_GetColorKey(This,lpClrKey)	\
+    (This)->lpVtbl -> GetColorKey(This,lpClrKey)
+
+#define IVMRVideoStreamControl_SetStreamActiveState(This,fActive)	\
+    (This)->lpVtbl -> SetStreamActiveState(This,fActive)
+
+#define IVMRVideoStreamControl_GetStreamActiveState(This,lpfActive)	\
+    (This)->lpVtbl -> GetStreamActiveState(This,lpfActive)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRVideoStreamControl_SetColorKey_Proxy( 
+    IVMRVideoStreamControl * This,
+    /* [in] */ LPDDCOLORKEY lpClrKey);
+
+
+void __RPC_STUB IVMRVideoStreamControl_SetColorKey_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRVideoStreamControl_GetColorKey_Proxy( 
+    IVMRVideoStreamControl * This,
+    /* [out] */ LPDDCOLORKEY lpClrKey);
+
+
+void __RPC_STUB IVMRVideoStreamControl_GetColorKey_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRVideoStreamControl_SetStreamActiveState_Proxy( 
+    IVMRVideoStreamControl * This,
+    /* [in] */ BOOL fActive);
+
+
+void __RPC_STUB IVMRVideoStreamControl_SetStreamActiveState_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRVideoStreamControl_GetStreamActiveState_Proxy( 
+    IVMRVideoStreamControl * This,
+    /* [out] */ BOOL *lpfActive);
+
+
+void __RPC_STUB IVMRVideoStreamControl_GetStreamActiveState_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRVideoStreamControl_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVMRSurface_INTERFACE_DEFINED__
+#define __IVMRSurface_INTERFACE_DEFINED__
+
+/* interface IVMRSurface */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRSurface;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("a9849bbe-9ec8-4263-b764-62730f0d15d0")
+    IVMRSurface : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE IsSurfaceLocked( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE LockSurface( 
+            /* [out] */ BYTE **lpSurface) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE UnlockSurface( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetSurface( 
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRSurfaceVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRSurface * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRSurface * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRSurface * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *IsSurfaceLocked )( 
+            IVMRSurface * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *LockSurface )( 
+            IVMRSurface * This,
+            /* [out] */ BYTE **lpSurface);
+        
+        HRESULT ( STDMETHODCALLTYPE *UnlockSurface )( 
+            IVMRSurface * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetSurface )( 
+            IVMRSurface * This,
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface);
+        
+        END_INTERFACE
+    } IVMRSurfaceVtbl;
+
+    interface IVMRSurface
+    {
+        CONST_VTBL struct IVMRSurfaceVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRSurface_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRSurface_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRSurface_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRSurface_IsSurfaceLocked(This)	\
+    (This)->lpVtbl -> IsSurfaceLocked(This)
+
+#define IVMRSurface_LockSurface(This,lpSurface)	\
+    (This)->lpVtbl -> LockSurface(This,lpSurface)
+
+#define IVMRSurface_UnlockSurface(This)	\
+    (This)->lpVtbl -> UnlockSurface(This)
+
+#define IVMRSurface_GetSurface(This,lplpSurface)	\
+    (This)->lpVtbl -> GetSurface(This,lplpSurface)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurface_IsSurfaceLocked_Proxy( 
+    IVMRSurface * This);
+
+
+void __RPC_STUB IVMRSurface_IsSurfaceLocked_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurface_LockSurface_Proxy( 
+    IVMRSurface * This,
+    /* [out] */ BYTE **lpSurface);
+
+
+void __RPC_STUB IVMRSurface_LockSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurface_UnlockSurface_Proxy( 
+    IVMRSurface * This);
+
+
+void __RPC_STUB IVMRSurface_UnlockSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRSurface_GetSurface_Proxy( 
+    IVMRSurface * This,
+    /* [out] */ LPDIRECTDRAWSURFACE7 *lplpSurface);
+
+
+void __RPC_STUB IVMRSurface_GetSurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRSurface_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVMRImagePresenterConfig_INTERFACE_DEFINED__
+#define __IVMRImagePresenterConfig_INTERFACE_DEFINED__
+
+/* interface IVMRImagePresenterConfig */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRImagePresenterConfig;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("9f3a1c85-8555-49ba-935f-be5b5b29d178")
+    IVMRImagePresenterConfig : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetRenderingPrefs( 
+            /* [in] */ DWORD dwRenderFlags) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetRenderingPrefs( 
+            /* [out] */ DWORD *dwRenderFlags) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRImagePresenterConfigVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRImagePresenterConfig * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRImagePresenterConfig * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRImagePresenterConfig * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetRenderingPrefs )( 
+            IVMRImagePresenterConfig * This,
+            /* [in] */ DWORD dwRenderFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetRenderingPrefs )( 
+            IVMRImagePresenterConfig * This,
+            /* [out] */ DWORD *dwRenderFlags);
+        
+        END_INTERFACE
+    } IVMRImagePresenterConfigVtbl;
+
+    interface IVMRImagePresenterConfig
+    {
+        CONST_VTBL struct IVMRImagePresenterConfigVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRImagePresenterConfig_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRImagePresenterConfig_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRImagePresenterConfig_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRImagePresenterConfig_SetRenderingPrefs(This,dwRenderFlags)	\
+    (This)->lpVtbl -> SetRenderingPrefs(This,dwRenderFlags)
+
+#define IVMRImagePresenterConfig_GetRenderingPrefs(This,dwRenderFlags)	\
+    (This)->lpVtbl -> GetRenderingPrefs(This,dwRenderFlags)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenterConfig_SetRenderingPrefs_Proxy( 
+    IVMRImagePresenterConfig * This,
+    /* [in] */ DWORD dwRenderFlags);
+
+
+void __RPC_STUB IVMRImagePresenterConfig_SetRenderingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenterConfig_GetRenderingPrefs_Proxy( 
+    IVMRImagePresenterConfig * This,
+    /* [out] */ DWORD *dwRenderFlags);
+
+
+void __RPC_STUB IVMRImagePresenterConfig_GetRenderingPrefs_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRImagePresenterConfig_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVMRImagePresenterExclModeConfig_INTERFACE_DEFINED__
+#define __IVMRImagePresenterExclModeConfig_INTERFACE_DEFINED__
+
+/* interface IVMRImagePresenterExclModeConfig */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVMRImagePresenterExclModeConfig;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("e6f7ce40-4673-44f1-8f77-5499d68cb4ea")
+    IVMRImagePresenterExclModeConfig : public IVMRImagePresenterConfig
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetXlcModeDDObjAndPrimarySurface( 
+            /* [in] */ LPDIRECTDRAW7 lpDDObj,
+            /* [in] */ LPDIRECTDRAWSURFACE7 lpPrimarySurf) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetXlcModeDDObjAndPrimarySurface( 
+            /* [out] */ LPDIRECTDRAW7 *lpDDObj,
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lpPrimarySurf) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVMRImagePresenterExclModeConfigVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVMRImagePresenterExclModeConfig * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVMRImagePresenterExclModeConfig * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVMRImagePresenterExclModeConfig * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetRenderingPrefs )( 
+            IVMRImagePresenterExclModeConfig * This,
+            /* [in] */ DWORD dwRenderFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetRenderingPrefs )( 
+            IVMRImagePresenterExclModeConfig * This,
+            /* [out] */ DWORD *dwRenderFlags);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetXlcModeDDObjAndPrimarySurface )( 
+            IVMRImagePresenterExclModeConfig * This,
+            /* [in] */ LPDIRECTDRAW7 lpDDObj,
+            /* [in] */ LPDIRECTDRAWSURFACE7 lpPrimarySurf);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetXlcModeDDObjAndPrimarySurface )( 
+            IVMRImagePresenterExclModeConfig * This,
+            /* [out] */ LPDIRECTDRAW7 *lpDDObj,
+            /* [out] */ LPDIRECTDRAWSURFACE7 *lpPrimarySurf);
+        
+        END_INTERFACE
+    } IVMRImagePresenterExclModeConfigVtbl;
+
+    interface IVMRImagePresenterExclModeConfig
+    {
+        CONST_VTBL struct IVMRImagePresenterExclModeConfigVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVMRImagePresenterExclModeConfig_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVMRImagePresenterExclModeConfig_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVMRImagePresenterExclModeConfig_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVMRImagePresenterExclModeConfig_SetRenderingPrefs(This,dwRenderFlags)	\
+    (This)->lpVtbl -> SetRenderingPrefs(This,dwRenderFlags)
+
+#define IVMRImagePresenterExclModeConfig_GetRenderingPrefs(This,dwRenderFlags)	\
+    (This)->lpVtbl -> GetRenderingPrefs(This,dwRenderFlags)
+
+
+#define IVMRImagePresenterExclModeConfig_SetXlcModeDDObjAndPrimarySurface(This,lpDDObj,lpPrimarySurf)	\
+    (This)->lpVtbl -> SetXlcModeDDObjAndPrimarySurface(This,lpDDObj,lpPrimarySurf)
+
+#define IVMRImagePresenterExclModeConfig_GetXlcModeDDObjAndPrimarySurface(This,lpDDObj,lpPrimarySurf)	\
+    (This)->lpVtbl -> GetXlcModeDDObjAndPrimarySurface(This,lpDDObj,lpPrimarySurf)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenterExclModeConfig_SetXlcModeDDObjAndPrimarySurface_Proxy( 
+    IVMRImagePresenterExclModeConfig * This,
+    /* [in] */ LPDIRECTDRAW7 lpDDObj,
+    /* [in] */ LPDIRECTDRAWSURFACE7 lpPrimarySurf);
+
+
+void __RPC_STUB IVMRImagePresenterExclModeConfig_SetXlcModeDDObjAndPrimarySurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVMRImagePresenterExclModeConfig_GetXlcModeDDObjAndPrimarySurface_Proxy( 
+    IVMRImagePresenterExclModeConfig * This,
+    /* [out] */ LPDIRECTDRAW7 *lpDDObj,
+    /* [out] */ LPDIRECTDRAWSURFACE7 *lpPrimarySurf);
+
+
+void __RPC_STUB IVMRImagePresenterExclModeConfig_GetXlcModeDDObjAndPrimarySurface_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVMRImagePresenterExclModeConfig_INTERFACE_DEFINED__ */
+
+
+#ifndef __IVPManager_INTERFACE_DEFINED__
+#define __IVPManager_INTERFACE_DEFINED__
+
+/* interface IVPManager */
+/* [unique][helpstring][uuid][local][object][local] */ 
+
+
+EXTERN_C const IID IID_IVPManager;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("aac18c18-e186-46d2-825d-a1f8dc8e395a")
+    IVPManager : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE SetVideoPortIndex( 
+            /* [in] */ DWORD dwVideoPortIndex) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetVideoPortIndex( 
+            /* [out] */ DWORD *pdwVideoPortIndex) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IVPManagerVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IVPManager * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IVPManager * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IVPManager * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *SetVideoPortIndex )( 
+            IVPManager * This,
+            /* [in] */ DWORD dwVideoPortIndex);
+        
+        HRESULT ( STDMETHODCALLTYPE *GetVideoPortIndex )( 
+            IVPManager * This,
+            /* [out] */ DWORD *pdwVideoPortIndex);
+        
+        END_INTERFACE
+    } IVPManagerVtbl;
+
+    interface IVPManager
+    {
+        CONST_VTBL struct IVPManagerVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IVPManager_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IVPManager_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IVPManager_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IVPManager_SetVideoPortIndex(This,dwVideoPortIndex)	\
+    (This)->lpVtbl -> SetVideoPortIndex(This,dwVideoPortIndex)
+
+#define IVPManager_GetVideoPortIndex(This,pdwVideoPortIndex)	\
+    (This)->lpVtbl -> GetVideoPortIndex(This,pdwVideoPortIndex)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IVPManager_SetVideoPortIndex_Proxy( 
+    IVPManager * This,
+    /* [in] */ DWORD dwVideoPortIndex);
+
+
+void __RPC_STUB IVPManager_SetVideoPortIndex_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IVPManager_GetVideoPortIndex_Proxy( 
+    IVPManager * This,
+    /* [out] */ DWORD *pdwVideoPortIndex);
+
+
+void __RPC_STUB IVPManager_GetVideoPortIndex_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IVPManager_INTERFACE_DEFINED__ */
 
 
 /* Additional Prototypes for ALL interfaces */

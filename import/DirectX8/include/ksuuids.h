@@ -4,7 +4,7 @@
 // Desc: Contains the GUIDs for the MediaType type, subtype fields and format
 //       types for DVD/MPEG2 media types.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -48,6 +48,10 @@ OUR_GUID_ENTRY(MEDIASUBTYPE_MPEG2_PROGRAM,
 // e06d8023-db46-11cf-b4d1-00805f6cbbea
 OUR_GUID_ENTRY(MEDIASUBTYPE_MPEG2_TRANSPORT,
 0xe06d8023, 0xdb46, 0x11cf, 0xb4, 0xd1, 0x00, 0x80, 0x05f, 0x6c, 0xbb, 0xea)
+
+// 138AA9A4-1EE2-4c5b-988E-19ABFDBC8A11
+OUR_GUID_ENTRY(MEDIASUBTYPE_MPEG2_TRANSPORT_STRIDE,
+0x138aa9a4, 0x1ee2, 0x4c5b, 0x98, 0x8e, 0x19, 0xab, 0xfd, 0xbc, 0x8a, 0x11)
 
 // e06d802b-db46-11cf-b4d1-00805f6cbbea
 OUR_GUID_ENTRY(MEDIASUBTYPE_MPEG2_AUDIO,

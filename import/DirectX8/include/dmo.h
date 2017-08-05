@@ -3,7 +3,7 @@
 //
 // Desc: Headers needed by almost all DMOs.
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -13,7 +13,7 @@
 
 #include "mediaerr.h"
 
-// When using ATL we get collisions on Lock so in this case rename
+// When using ATL we get collisions on Lock, so in this case rename
 // IMediaObject::Lock to IMediaObject::DMOLock
 
 #ifdef FIX_LOCK_NAME

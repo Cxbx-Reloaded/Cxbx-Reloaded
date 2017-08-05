@@ -3,7 +3,7 @@
 //
 // Desc: DirectShow interfaces to control playback of a DVD filter graph.
 //
-// Copyright (c) 1992-2000, Microsoft Corporation. All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation. All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -1493,8 +1493,8 @@ interface IDvdControl2 : IUnknown {
     // DVD_HMSF_TimeCodeEvents
     //
     //      Lets the application specify to the Navigator if it wants to get the new time
-	//      event EC_DVD_CURRENT_HMSF_TIME with the HMSF format rather than the older 
-	//      EC_DVD_CURRENT_TIME events.
+    //      event EC_DVD_CURRENT_HMSF_TIME with the HMSF format rather than the older 
+    //      EC_DVD_CURRENT_TIME events.
     //
     //      FALSE - disable (default).  Older EC_DVD_CURRENT_TIME events are returned.
     //      TRUE  - enable.  Navigator will send the app EC_DVD_CURRENT_HMSF_TIME events.
@@ -1660,11 +1660,11 @@ enum DVD_TextCharSet {
     DVD_CharSet_ShiftJIS_Kanji_Roman_Katakana = 4
 };
 
-cpp_quote ("#define DVD_TITLE_MENU				0x000")
+cpp_quote ("#define DVD_TITLE_MENU              0x000")
 cpp_quote ("#define DVD_STREAM_DATA_CURRENT     0x800")
 cpp_quote ("#define DVD_STREAM_DATA_VMGM        0x400")
 cpp_quote ("#define DVD_STREAM_DATA_VTSM        0x401")
-cpp_quote ("#define DVD_DEFAULT_AUDIO_STREAM	0x0f")
+cpp_quote ("#define DVD_DEFAULT_AUDIO_STREAM    0x0f")
 
 // DVD Decoder Caps data
 typedef struct tagDVD_DECODER_CAPS
@@ -1684,11 +1684,11 @@ typedef struct tagDVD_DECODER_CAPS
 } DVD_DECODER_CAPS ;
 
 // Bits for decoder's audio format support
-cpp_quote ("#define DVD_AUDIO_CAPS_AC3		0x00000001")
-cpp_quote ("#define DVD_AUDIO_CAPS_MPEG2	0x00000002")
-cpp_quote ("#define DVD_AUDIO_CAPS_LPCM		0x00000004")
-cpp_quote ("#define DVD_AUDIO_CAPS_DTS		0x00000008")
-cpp_quote ("#define DVD_AUDIO_CAPS_SDDS		0x00000010")
+cpp_quote ("#define DVD_AUDIO_CAPS_AC3      0x00000001")
+cpp_quote ("#define DVD_AUDIO_CAPS_MPEG2    0x00000002")
+cpp_quote ("#define DVD_AUDIO_CAPS_LPCM     0x00000004")
+cpp_quote ("#define DVD_AUDIO_CAPS_DTS      0x00000008")
+cpp_quote ("#define DVD_AUDIO_CAPS_SDDS     0x00000010")
 
 
 [

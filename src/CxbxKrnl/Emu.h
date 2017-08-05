@@ -56,7 +56,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord);
 #endif
 
 // global flags specifying current emulation state
-extern volatile bool g_bEmuException;
+extern volatile thread_local bool g_bEmuException;
 extern volatile bool g_bEmuSuspended;
 
 // global exception patching address

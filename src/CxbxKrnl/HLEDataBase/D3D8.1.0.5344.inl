@@ -941,7 +941,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePalette2, 5344, PATCH),

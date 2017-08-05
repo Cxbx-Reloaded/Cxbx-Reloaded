@@ -1,6 +1,6 @@
 /*==========================================================================;
  *
- *  Copyright (C) 1996-1997 Microsoft Corporation.  All Rights Reserved.
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:	dvp.h
  *  Content:	DirectDrawVideoPort include file
@@ -16,6 +16,9 @@
 #if defined( _WIN32 ) && (!defined( _NO_COM ) || defined( DEFINE_GUID ))
 DEFINE_GUID( IID_IDDVideoPortContainer,		0x6C142760,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60 );
 DEFINE_GUID( IID_IDirectDrawVideoPort,		0xB36D93E0,0x2B43,0x11CF,0xA2,0xDE,0x00,0xAA,0x00,0xB9,0x33,0x56 );
+DEFINE_GUID( IID_IDirectDrawVideoPortNotify,    0xA655FB94,0x0589,0x4E57,0xB3,0x33,0x56,0x7A,0x89,0x46,0x8C,0x88);
+
+
 
 DEFINE_GUID( DDVPTYPE_E_HREFH_VREFH, 0x54F39980L,0xDA60,0x11CF,0x9B,0x06,0x00,0xA0,0xC9,0x03,0xA3,0xB8);
 DEFINE_GUID( DDVPTYPE_E_HREFH_VREFL, 0x92783220L,0xDA60,0x11CF,0x9B,0x06,0x00,0xA0,0xC9,0x03,0xA3,0xB8);
@@ -62,18 +65,21 @@ struct IDirectDrawSurface;
 struct IDirectDrawPalette;
 struct IDirectDrawClipper;
 
-typedef struct IDDVideoPortContainer		FAR *LPDDVIDEOPORTCONTAINER;
-typedef struct IDirectDrawVideoPort		FAR *LPDIRECTDRAWVIDEOPORT;
+typedef struct IDDVideoPortContainer            FAR *LPDDVIDEOPORTCONTAINER;
+typedef struct IDirectDrawVideoPort             FAR *LPDIRECTDRAWVIDEOPORT;
+typedef struct IDirectDrawVideoPortNotify       FAR *LPDIRECTDRAWVIDEOPORTNOTIFY;
 
-typedef struct _DDVIDEOPORTCONNECT	FAR *LPDDVIDEOPORTCONNECT;
-typedef struct _DDVIDEOPORTCAPS		FAR *LPDDVIDEOPORTCAPS;
-typedef struct _DDVIDEOPORTDESC		FAR *LPDDVIDEOPORTDESC;
-typedef struct _DDVIDEOPORTINFO		FAR *LPDDVIDEOPORTINFO;
-typedef struct _DDVIDEOPORTBANDWIDTH	FAR *LPDDVIDEOPORTBANDWIDTH;
-typedef struct _DDVIDEOPORTSTATUS	FAR *LPDDVIDEOPORTSTATUS;
+typedef struct _DDVIDEOPORTCONNECT              FAR *LPDDVIDEOPORTCONNECT;
+typedef struct _DDVIDEOPORTCAPS                 FAR *LPDDVIDEOPORTCAPS;
+typedef struct _DDVIDEOPORTDESC                 FAR *LPDDVIDEOPORTDESC;
+typedef struct _DDVIDEOPORTINFO                 FAR *LPDDVIDEOPORTINFO;
+typedef struct _DDVIDEOPORTBANDWIDTH            FAR *LPDDVIDEOPORTBANDWIDTH;
+typedef struct _DDVIDEOPORTSTATUS               FAR *LPDDVIDEOPORTSTATUS;
+typedef struct _DDVIDEOPORTNOTIFY               FAR *LPDDVIDEOPORTNOTIFY;
 
-typedef struct IDDVideoPortContainerVtbl DDVIDEOPORTCONTAINERCALLBACKS;
-typedef struct IDirectDrawVideoPortVtbl  DIRECTDRAWVIDEOPORTCALLBACKS;
+typedef struct IDDVideoPortContainerVtbl        DDVIDEOPORTCONTAINERCALLBACKS;
+typedef struct IDirectDrawVideoPortVtbl         DIRECTDRAWVIDEOPORTCALLBACKS;
+typedef struct IDirectDrawVideoPortNotifyVtbl   DIRECTDRAWVIDEOPORTNOTIFYCALLBACKS;
 
 
 /*
@@ -197,6 +203,38 @@ DECLARE_INTERFACE_( IDirectDrawVideoPort, IUnknown )
 
 #endif
 
+/*
+ * IDirectDrawVideoPort
+ */
+#if defined( _WIN32 ) && !defined( _NO_COM )
+#undef INTERFACE
+#define INTERFACE IDirectDrawVideoPortNotify
+DECLARE_INTERFACE_( IDirectDrawVideoPortNotify, IUnknown )
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID FAR * ppvObj) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IVideoPort methods ***/
+    STDMETHOD(AcquireNotification)(THIS_ HANDLE *, LPDDVIDEOPORTNOTIFY) PURE;
+    STDMETHOD(ReleaseNotification)(THIS_ HANDLE) PURE;
+};
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define IVideoPortNotify_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define IVideoPortNotify_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define IVideoPortNotify_Release(p)                 (p)->lpVtbl->Release(p)
+#define IVideoPortNotify_AcquireNotification(p,a,b) (p)->lpVtbl->AcquireNotification(p,a,b)
+#define IVideoPortNotify_ReleaseNotification(p,a)   (p)->lpVtbl->ReleaseNotification(p,a)
+#else
+#define IVideoPortNotify_QueryInterface(p,a,b)      (p)->QueryInterface(a,b)
+#define IVideoPortNotify_AddRef(p)                  (p)->AddRef()
+#define IVideoPortNotify_Release(p)                 (p)->Release()
+#define IVideoPortNotify_AcquireNotification(p,a,b) (p)->lpVtbl->AcquireNotification(a,b)
+#define IVideoPortNotify_ReleaseNotification(p,a)   (p)->lpVtbl->ReleaseNotification(a)
+#endif
+
+#endif
 
 /*
  * DDVIDEOPORTCONNECT
@@ -351,6 +389,18 @@ typedef struct _DDVIDEOPORTSTATUS
     ULONG_PTR dwReserved2;		// Reserved for future use
     ULONG_PTR dwReserved3;		// Reserved for future use
 } DDVIDEOPORTSTATUS;
+
+/*
+ * DDVIDEOPORTNOTIFY
+ */
+typedef struct _DDVIDEOPORTNOTIFY
+{
+    LARGE_INTEGER ApproximateTimeStamp;	// Timestamp in the event notification
+    LONG lField;                        // 0 if even, 1 if odd, -1 if unknown
+    UINT dwSurfaceIndex;                // Index in the surface chain of the surface that received the sample
+    LONG lDone;                         // Call InterlockedIncrement on this when done with sample
+} DDVIDEOPORTNOTIFY;
+
 
 /*============================================================================
  *
@@ -910,7 +960,7 @@ typedef struct _DDVIDEOPORTSTATUS
 };
 #endif
 
-#endif	// GUID_DEFS_ONLY
+#endif  // GUID_DEFS_ONLY
 
 #endif
 

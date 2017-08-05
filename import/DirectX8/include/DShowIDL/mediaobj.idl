@@ -1,11 +1,10 @@
 //------------------------------------------------------------------------------
 // File: MediaObj.idl
 //
-// Desc: Define the interfaces for DirectX Media Objects.  This file will
-//       be processed by the MIDL tool to produce mediaobj.h and proxy-stub
-//       code.
+// Desc: Define the interfaces for DirectX Media Objects.  This file will be
+//       processed by the MIDL tool to produce mediaobj.h and proxy-stub code.
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -290,10 +289,10 @@ interface IMediaObject : IUnknown
         HRESULT ProcessOutput(
                 DWORD dwFlags, // DMO_PROCESS_OUTPUT_FLAGS
                 DWORD cOutputBufferCount, // # returned by GetStreamCount()
-		[in,out,size_is(cOutputBufferCount)]
-                   DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, // one per stream
-		[out] DWORD *pdwStatus  // TBD, must be set to 0
-	);
+                [in,out,size_is(cOutputBufferCount)]
+                  DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, // one per stream
+                [out] DWORD *pdwStatus  // TBD, must be set to 0
+    );
 
         //  Locking - lock if bLock is TRUE, otherwise unlock
         HRESULT Lock(LONG bLock);
@@ -349,7 +348,7 @@ interface IMediaObjectInPlace : IUnknown {
     // for very fast initialization of a number of In-Place objects
     // in a known state.
     HRESULT Clone(
-            [out] IMediaObjectInPlace **ppMediaObject
+        [out] IMediaObjectInPlace **ppMediaObject
     );
 
     // GetLatency - Returns a REFERENCE_TIME value
@@ -357,7 +356,7 @@ interface IMediaObjectInPlace : IUnknown {
     // processing this effect will add to the graph. This assumes
     // the effect cost per buffer is a constant.
     HRESULT GetLatency(
-    	[out] REFERENCE_TIME *pLatencyTime
+        [out] REFERENCE_TIME *pLatencyTime
     );
 }
 
@@ -393,20 +392,20 @@ uuid(be8f4f4e-5b16-4d29-b350-7f6b5d9298ac)
 ]
 interface IDMOVideoOutputOptimizations : IUnknown {
     HRESULT QueryOperationModePreferences (
-    	ULONG ulOutputStreamIndex,
-    	DWORD *pdwRequestedCapabilities
+        ULONG ulOutputStreamIndex,
+        DWORD *pdwRequestedCapabilities
     );
     HRESULT SetOperationMode (
-    	ULONG ulOutputStreamIndex,
-    	DWORD dwEnabledFeatures
+        ULONG ulOutputStreamIndex,
+        DWORD dwEnabledFeatures
     );
     HRESULT GetCurrentOperationMode (
-    	ULONG ulOutputStreamIndex,
-    	DWORD *pdwEnabledFeatures
+        ULONG ulOutputStreamIndex,
+        DWORD *pdwEnabledFeatures
     );
     HRESULT GetCurrentSampleRequirements (
-    	ULONG ulOutputStreamIndex,
-    	DWORD *pdwRequestedFeatures
+        ULONG ulOutputStreamIndex,
+        DWORD *pdwRequestedFeatures
     );
 }
 

@@ -1,6 +1,6 @@
 /*==========================================================================;
  *
- *  Copyright (C) 1994-1997 Microsoft Corporation.  All Rights Reserved.
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:       ddraw.h
  *  Content:    DirectDraw include file
@@ -2899,6 +2899,16 @@ typedef struct _DDCOLORCONTROL
 #define DDSCAPS2_DISCARDBACKBUFFER              0x10000000L
 
 /*
+ * Indicates that all surfaces in this creation chain should be given an alpha channel.
+ * This flag will be set on primary surface chains that may have no explicit pixel format
+ * (and thus take on the format of the current display mode).
+ * The driver should infer that all these surfaces have a format having an alpha channel.
+ * (e.g. assume D3DFMT_A8R8G8B8 if the display mode is x888.)
+ */
+#define DDSCAPS2_ENABLEALPHACHANNEL             0x20000000L
+
+
+/*
  * This is a mask that indicates the set of bits that may be set
  * at createsurface time to indicate number of samples per pixel
  * when multisampling
@@ -3248,9 +3258,26 @@ typedef struct _DDCOLORCONTROL
 #define DDCAPS2_SYSTONONLOCAL_AS_SYSTOLOCAL   0x04000000L
 
 /*
- * Indicates that the driver can support PUREHAL.
+ * was DDCAPS2_PUREHAL
  */
-#define DDCAPS2_PUREHAL                       0x08000000L
+#define DDCAPS2_RESERVED1                     0x08000000L
+
+/*
+ * Driver supports management of video memory, if this flag is ON,
+ * driver manages the resource if requested with DDSCAPS2_TEXTUREMANAGE on
+ * DirectX manages the resource if this flag is OFF and surface has DDSCAPS2_TEXTUREMANAGE on
+ */
+#define DDCAPS2_CANMANAGERESOURCE             0x10000000L
+
+/*
+ * Driver supports dynamic textures. This will allow the application to set
+ * D3DUSAGE_DYNAMIC (DDSCAPS2_HINTDYNAMIC for drivers) at texture create time.
+ * Video memory dynamic textures WILL be lockable by applications. It is
+ * expected that these locks will be very efficient (which implies that the
+ * driver should always maintain a linear copy, a pointer to which can be
+ * quickly handed out to the application).
+ */
+#define DDCAPS2_DYNAMICTEXTURES               0x20000000L
 
 
 /****************************************************************************
@@ -3561,7 +3588,6 @@ typedef struct _DDCOLORCONTROL
  */
 
 #define DDSVCAPS_STEREOSEQUENTIAL       0x00000010L
-
 
 
 
@@ -4686,6 +4712,15 @@ typedef struct _DDCOLORCONTROL
  */
 #define DDLOCK_DONOTWAIT                        0x00004000L
 
+/*
+ * This indicates volume texture lock with front and back specified.
+ */
+#define DDLOCK_HASVOLUMETEXTUREBOXRECT          0x00008000L
+
+/*
+ * This indicates that the driver should not update dirty rect information for this lock.
+ */
+#define DDLOCK_NODIRTYUPDATE                    0x00010000L
 
 
 /****************************************************************************
@@ -4958,7 +4993,7 @@ typedef struct _DDCOLORCONTROL
  *
  * Issued by: DirectDraw Commands and all callbacks
  */
-#define DD_OK                                   0
+#define DD_OK                                   S_OK
 #define DD_FALSE                                S_FALSE
 
 /****************************************************************************

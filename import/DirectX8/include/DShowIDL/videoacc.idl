@@ -4,7 +4,7 @@
 // Desc: An interface exposed by the overlay mixer to help decode samples
 //       using hardware video acceleration.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 

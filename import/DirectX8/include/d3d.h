@@ -1,5 +1,6 @@
 /*==========================================================================;
  *
+ *  Copyright (C) Microsoft Corporation.  All Rights Reserved.
  *
  *  File:   d3d.h
  *  Content:    Direct3D include file

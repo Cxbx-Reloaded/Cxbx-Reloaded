@@ -1,9 +1,9 @@
 //------------------------------------------------------------------------------
 // File: AuStream.idl
 //
-// Desc: 
+// Desc: Used by MIDL tool to generate austream.h
 //
-// Copyright (c) 1998 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1998-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -11,8 +11,8 @@ import "unknwn.idl";
 import "mmstream.idl";
 
 cpp_quote("//")
-cpp_quote("//	The following declarations within the 'if 0' block are dummy typedefs used to make")
-cpp_quote("//	the ddstream.idl file build.  The actual definitions are contained in DDRAW.H")
+cpp_quote("//   The following declarations within the 'if 0' block are dummy typedefs used to make")
+cpp_quote("//   the ddstream.idl file build.  The actual definitions are contained in DDRAW.H")
 cpp_quote("//")
 cpp_quote("#if 0")
 typedef struct tWAVEFORMATEX WAVEFORMATEX;
@@ -35,18 +35,18 @@ pointer_default(unique)
 interface IAudioMediaStream : IMediaStream
 {
 
-	HRESULT GetFormat(
-		[out]  WAVEFORMATEX *pWaveFormatCurrent
-	);
+    HRESULT GetFormat(
+        [out]  WAVEFORMATEX *pWaveFormatCurrent
+    );
 
-	HRESULT SetFormat(
-		[in] const WAVEFORMATEX *lpWaveFormat);
+    HRESULT SetFormat(
+        [in] const WAVEFORMATEX *lpWaveFormat);
 
-	HRESULT CreateSample(
-		[in] IAudioData *pAudioData,
-		[in] DWORD dwFlags,
-		[out] IAudioStreamSample **ppSample
-	);
+    HRESULT CreateSample(
+        [in] IAudioData *pAudioData,
+        [in] DWORD dwFlags,
+        [out] IAudioStreamSample **ppSample
+    );
 }
 
 [
@@ -57,9 +57,9 @@ pointer_default(unique)
 ]
 interface IAudioStreamSample : IStreamSample
 {
-	HRESULT GetAudioData(
-	    [out] IAudioData **ppAudio
-	);
+    HRESULT GetAudioData(
+        [out] IAudioData **ppAudio
+    );
 }
 
 
@@ -71,20 +71,20 @@ pointer_default(unique)
 ]
 interface IMemoryData : IUnknown
 {
-	HRESULT SetBuffer(
-		[in] DWORD cbSize,
-		[in] BYTE *pbData,
-		[in] DWORD dwFlags
-	);
+    HRESULT SetBuffer(
+        [in] DWORD cbSize,
+        [in] BYTE *pbData,
+        [in] DWORD dwFlags
+    );
 
-	HRESULT GetInfo(
-	    [out] DWORD *pdwLength,
-	    [out] BYTE **ppbData,
-	    [out] DWORD *pcbActualData
-	);
-	HRESULT SetActual(
-	    [in] DWORD cbDataValid
-	);
+    HRESULT GetInfo(
+        [out] DWORD *pdwLength,
+        [out] BYTE **ppbData,
+        [out] DWORD *pcbActualData
+    );
+    HRESULT SetActual(
+        [in] DWORD cbDataValid
+    );
 }
 
 [
@@ -95,12 +95,12 @@ pointer_default(unique)
 ]
 interface IAudioData : IMemoryData
 {
-	HRESULT GetFormat(
-		[out]  WAVEFORMATEX *pWaveFormatCurrent
-	);
+    HRESULT GetFormat(
+        [out]  WAVEFORMATEX *pWaveFormatCurrent
+    );
 
-	HRESULT SetFormat(
-		[in] const WAVEFORMATEX *lpWaveFormat
-	);
+    HRESULT SetFormat(
+        [in] const WAVEFORMATEX *lpWaveFormat
+    );
 }
 

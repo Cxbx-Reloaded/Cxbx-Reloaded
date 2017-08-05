@@ -41,6 +41,7 @@
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
+#include "Shlwapi.h"
 
 #include <io.h>
 
@@ -51,6 +52,8 @@
 #define STBI_NO_LINEAR
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+typedef BOOL (WINAPI *ChangeWindowMessageFilterType)(UINT, DWORD); // for GetProcAddress()
 
 void ClearHLECache()
 {
@@ -80,15 +83,15 @@ void ClearHLECache()
 	printf("Cleared HLE Cache\n");
 }
 
-WndMain::WndMain(HINSTANCE x_hInstance) : 
-	Wnd(x_hInstance), 
-	m_bCreated(false), 
-	m_Xbe(0), 
-	m_bXbeChanged(false), 
-	m_bCanStart(true), 
-	m_hwndChild(NULL), 
-	m_KrnlDebug(DM_NONE), 
-	m_CxbxDebug(DM_NONE), 
+WndMain::WndMain(HINSTANCE x_hInstance) :
+	Wnd(x_hInstance),
+	m_bCreated(false),
+	m_Xbe(0),
+	m_bXbeChanged(false),
+	m_bCanStart(true),
+	m_hwndChild(NULL),
+	m_KrnlDebug(DM_NONE),
+	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_dwRecentXbe(0)
 {
@@ -141,11 +144,66 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+            dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeCxbxDebugFilename;
+			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
+			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+
+			// Prevent using an incorrect path from the registry if the debug folders have been moved
+
+			{
+				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND)
+				{
+					m_CxbxDebug = DM_NONE;
+				}
+				else
+				{
+					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+
+					if(strlen(m_CxbxDebugFilename) < strlen("\\CxbxDebug.txt"))
+					{
+						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+						m_CxbxDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
+						{
+							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+							m_CxbxDebug = DM_NONE;
+						}
+
+					}
+					free(CxbxDebugPath);
+				}
+				
+				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND)
+				{
+					m_KrnlDebug = DM_NONE;
+				}
+				else
+				{
+					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+
+					if(strlen(m_KrnlDebugFilename) < strlen("\\KrnlDebug.txt"))
+					{
+						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+						m_KrnlDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
+						{
+							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+							m_KrnlDebug = DM_NONE;
+						}
+					}
+					free(KrnlDebugPath);
+				}
+			}
 
             int v=0;
 
@@ -164,6 +222,18 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
             RegCloseKey(hKey);
         }
     }
+
+	// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
+
+	HMODULE hUser32 = LoadLibrary("User32.dll");
+	ChangeWindowMessageFilterType pChangeWindowMessageFilter = (ChangeWindowMessageFilterType)GetProcAddress(hUser32, "ChangeWindowMessageFilter");
+	if(pChangeWindowMessageFilter)
+	{
+		ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
+		ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
+		ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
+	}
+	FreeLibrary(hUser32);
 
     return;
 }
@@ -322,6 +392,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
 
             SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+			DragAcceptFiles(hwnd, TRUE);
 
             m_bCreated = true;
         }
@@ -459,6 +530,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
         }
         break;
+
+		case WM_DROPFILES:
+		{
+			if(m_bCanStart)
+			{
+				if (m_Xbe != 0)
+				{
+					CloseXbe();
+				}
+				HDROP hDropInfo = NULL; char *DroppedXbeFilename = (char*)calloc(1, MAX_PATH);
+				hDropInfo = (HDROP)wParam;
+				DragQueryFile(hDropInfo, 0, DroppedXbeFilename, MAX_PATH);
+				OpenXbe(DroppedXbeFilename);
+				free(DroppedXbeFilename);
+			}
+		}
+		break;
 
         case WM_COMMAND:
         {
@@ -1071,7 +1159,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_XINPUT: 
+			case ID_SETTINGS_XINPUT:
 				m_XInputEnabled = !m_XInputEnabled;
 				RefreshMenus();
 				break;
@@ -1224,7 +1312,7 @@ void WndMain::RefreshMenus()
 
             // enable/disable save .xbe file as
             EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
-			
+
             // recent xbe files menu
             {
                 HMENU rxbe_menu = GetSubMenu(file_menu, 6);

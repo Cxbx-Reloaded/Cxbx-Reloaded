@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 1999 Microsoft Corporation.  All Rights Reserved.
+//  Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //  File:       d3dx.h
 //  Content:    D3DX utility library

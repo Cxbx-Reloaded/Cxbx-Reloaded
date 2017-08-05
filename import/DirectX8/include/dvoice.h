@@ -359,7 +359,6 @@ typedef DWORD DVID, *LPDVID, *PDVID;
 //
 #define DVPLAYERCAPS_LOCAL                  0x00000002
 
-
 /****************************************************************************
  *
  * DirectPlayVoice Structures (Non-Message)
@@ -620,7 +619,14 @@ typedef struct
  *
  ****************************************************************************/
 
-extern HRESULT WINAPI DirectPlayVoiceCreate( const GUID * pcIID, void **ppvInterface, IUnknown *pUnknown); 
+/*
+ * 
+ * This function is no longer supported.  It is recommended that CoCreateInstance be used to create 
+ * DirectPlay voice objects.  
+ *
+ * extern HRESULT WINAPI DirectPlayVoiceCreate( const GUID * pcIID, void **ppvInterface, IUnknown *pUnknown); 
+ *
+ */
 
 /****************************************************************************
  *

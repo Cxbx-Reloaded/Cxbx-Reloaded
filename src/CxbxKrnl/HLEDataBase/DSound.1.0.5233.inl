@@ -296,7 +296,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetFrequency
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetFrequency, 5233, 8,
+OOVPA_XREF(CDirectSoundStream_SetFrequency, 5233, 11,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -304,11 +304,20 @@ OOVPA_XREF(CDirectSoundStream_SetFrequency, 5233, 8,
         XREF_ENTRY( 0x36, XREF_DSBUFFERSETFREQUENCYB ),
 
         { 0x0E, 0xB6 },
+        // je XXXXXXXX + 0x0B
+        { 0x14, 0x74 },
         { 0x15, 0x0B },
+        // jmp XXXXXXXX + 0x26
+        { 0x26, 0xEB },
         { 0x27, 0x26 },
+
         { 0x2A, 0x24 },
+        // je XXXXXXXX + 0x0B
         { 0x3E, 0x74 },
-        { 0x4D, 0x5F },
+        { 0x3F, 0x0B },
+
+        // ret 8
+        { 0x4F, 0xC2 },
         { 0x50, 0x08 },
 OOVPA_END;
 

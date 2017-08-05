@@ -316,7 +316,6 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\CONTRIBUTORS" />
     <None Include="..\..\COPYING" />
     <None Include="..\..\README.md" />
-    <None Include="..\..\resource\About.jpg" />
     <None Include="..\..\resource\Cxbx.ico" />
     <None Include="..\..\resource\Logo.bmp" />
     <None Include="..\..\resource\Splash.jpg" />
