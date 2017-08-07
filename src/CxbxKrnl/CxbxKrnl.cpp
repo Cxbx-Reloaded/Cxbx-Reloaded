@@ -880,6 +880,9 @@ void CxbxKrnlInit
 
 	EmuHLEIntercept(pXbeHeader);
 
+	// Always initialise NV2A: We may need it for disabled HLE patches too!
+	EmuNV2A_Init();
+
 	if (bLLE_GPU)
 	{
 		DbgPrintf("EmuMain: Initializing OpenGL.\n");
