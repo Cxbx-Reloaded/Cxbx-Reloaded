@@ -1208,19 +1208,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             HDC hDC = GetDC(hwnd);
 
-			SelectObject(m_LogoDC, m_OrigLogo);
+            SelectObject(m_LogoDC, m_OrigLogo);
 
-			SelectObject(m_BackDC, m_OrigBmp);
+            SelectObject(m_BackDC, m_OrigBmp);
 
-			DeleteObject(m_LogoDC);
+            DeleteObject(m_LogoDC);
 
-			DeleteObject(m_BackDC);
+            DeleteObject(m_BackDC);
 
-			DeleteObject(m_LogoBmp);
+            DeleteObject(m_LogoBmp);
 
-			DeleteObject(m_BackBmp);
+            DeleteObject(m_BackBmp);
 
-			ReleaseDC(hwnd, hDC);
+            ReleaseDC(hwnd, hDC);
 
             delete m_Xbe;
 
