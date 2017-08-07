@@ -151,50 +151,55 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
-
 			{
-				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND)
+				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_CxbxDebugFilename) == 0)
 				{
 					m_CxbxDebug = DM_NONE;
 				}
 				else
 				{
 					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+					char *CxbxDebugName = (char*)calloc(1, MAX_PATH);
 
-					if(strlen(m_CxbxDebugFilename) < strlen("\\CxbxDebug.txt"))
+					strcpy(CxbxDebugName, strrchr(m_CxbxDebugFilename, '\\'));
+
+					if(strlen(m_CxbxDebugFilename) < strlen(CxbxDebugName))
 					{
 						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
 						m_CxbxDebug = DM_NONE;
 					}
 					else
 					{
-						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen(CxbxDebugName));
 						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
 						{
 							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
 							m_CxbxDebug = DM_NONE;
 						}
-
 					}
 					free(CxbxDebugPath);
+					free(CxbxDebugName);
 				}
 				
-				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND)
+				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_KrnlDebugFilename) == 0)
 				{
 					m_KrnlDebug = DM_NONE;
 				}
 				else
 				{
 					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+					char *KrnlDebugName = (char*)calloc(1, MAX_PATH);
 
-					if(strlen(m_KrnlDebugFilename) < strlen("\\KrnlDebug.txt"))
+					strcpy(KrnlDebugName, strrchr(m_KrnlDebugFilename, '\\'));
+
+					if(strlen(m_KrnlDebugFilename) < strlen(KrnlDebugName))
 					{
 						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
 						m_KrnlDebug = DM_NONE;
 					}
 					else
 					{
-						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen(KrnlDebugName));
 						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
 						{
 							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
@@ -202,6 +207,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 						}
 					}
 					free(KrnlDebugPath);
+					free(KrnlDebugName);
 				}
 			}
 
