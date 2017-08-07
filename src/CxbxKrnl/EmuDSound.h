@@ -60,7 +60,7 @@ void CxbxInitAudio();
 #define X_DSBPAUSE_PAUSE              0x00000001
 #define X_DSBPAUSE_SYNCHPLAYBACK      0x00000002
 
-// EmuIDirectSoundBuffer_Pause flags
+// EmuIDirectSoundStream_Pause flags
 #define X_DSSPAUSE_RESUME             0x00000000
 #define X_DSSPAUSE_PAUSE              0x00000001
 #define X_DSSPAUSE_SYNCHPLAYBACK      0x00000002
