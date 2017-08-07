@@ -50,6 +50,10 @@
 
 #include <distorm.h> // For uint32_t
 #include <string> // For std::string
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <thread>
 
 #include "CxbxKrnl.h"
 #include "device.h"
@@ -63,46 +67,127 @@
 #include <cassert>
 //#include <gl\glut.h>
 
-#define NV_PMC_ADDR      0x00000000
-#define NV_PMC_SIZE                 0x001000
-#define NV_PBUS_ADDR     0x00001000
-#define NV_PBUS_SIZE                0x001000
-#define NV_PFIFO_ADDR    0x00002000
-#define NV_PFIFO_SIZE               0x002000
-#define NV_PRMA_ADDR     0x00007000
-#define NV_PRMA_SIZE                0x001000
-#define NV_PVIDEO_ADDR   0x00008000
-#define NV_PVIDEO_SIZE              0x001000
-#define NV_PTIMER_ADDR   0x00009000
-#define NV_PTIMER_SIZE              0x001000
-#define NV_PCOUNTER_ADDR 0x0000A000
-#define NV_PCOUNTER_SIZE            0x001000
-#define NV_PVPE_ADDR     0x0000B000
-#define NV_PVPE_SIZE                0x001000
-#define NV_PTV_ADDR      0x0000D000
-#define NV_PTV_SIZE                 0x001000
-#define NV_PRMFB_ADDR    0x000A0000
-#define NV_PRMFB_SIZE               0x020000
-#define NV_PRMVIO_ADDR   0x000C0000
-#define NV_PRMVIO_SIZE              0x001000
-#define NV_PFB_ADDR      0x00100000
-#define NV_PFB_SIZE                 0x001000
-#define NV_PSTRAPS_ADDR  0x00101000
-#define NV_PSTRAPS_SIZE             0x001000
-#define NV_PGRAPH_ADDR   0x00400000
-#define NV_PGRAPH_SIZE              0x002000
-#define NV_PCRTC_ADDR    0x00600000
-#define NV_PCRTC_SIZE               0x001000
-#define NV_PRMCIO_ADDR   0x00601000
-#define NV_PRMCIO_SIZE              0x001000
-#define NV_PRAMDAC_ADDR  0x00680000
-#define NV_PRAMDAC_SIZE             0x001000
-#define NV_PRMDIO_ADDR   0x00681000
-#define NV_PRMDIO_SIZE              0x001000
-#define NV_PRAMIN_ADDR   0x00700000
-#define NV_PRAMIN_SIZE              0x100000
-#define NV_USER_ADDR     0x00800000
-#define NV_USER_SIZE                0x800000
+// Public Domain ffs Implementation
+// See: http://snipplr.com/view/22147/stringsh-implementation/
+int ffs(int v)
+{
+	unsigned int x = v;
+	int c = 1;
+
+	/*
+	* adapted from from
+	*      http://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightBinSearch
+	*
+	* a modified binary search algorithm to count 0 bits from
+	*  the right (lsb).  This algorithm should work regardless
+	*  of the size of ints on the platform.
+	*
+	*/
+
+	/* a couple special cases */
+	if (x == 0) return 0;
+	if (x & 1)  return 1;   /* probably pretty common */
+
+	c = 1;
+	while ((x & 0xffff) == 0) {
+		x >>= 16;
+		c += 16;
+	}
+	if ((x & 0xff) == 0) {
+		x >>= 8;
+		c += 8;
+	}
+	if ((x & 0x0f) == 0) {
+		x >>= 4;
+		c += 4;
+	}
+	if ((x & 0x03) == 0) {
+		x >>= 2;
+		c += 2;
+	}
+
+	c -= (x & 1);
+	c += 1;     /* ffs() requires indexing bits from 1 */
+				/*   ie., the lsb is bit 1, not bit 0  */
+	return c;
+}
+
+inline int GET_MASK(int v, int mask) {
+	return (((v) & (mask)) >> (ffs(mask) - 1));
+};
+
+inline int SET_MASK(int v, int mask, int val) {  
+    const unsigned int __val = (val);                            
+    const unsigned int __mask = (mask);                          
+
+    (v) &= ~(__mask);                                            
+    return (v) |= ((__val) << (ffs(__mask)-1)) & (__mask);              
+}
+
+typedef struct DMAObject {
+	unsigned int dma_class;
+	unsigned int dma_target;
+	xbaddr address;
+	xbaddr limit;
+} DMAObject;
+
+enum FifoMode {
+	FIFO_PIO = 0,
+	FIFO_DMA = 1,
+};
+
+enum FIFOEngine {
+	ENGINE_SOFTWARE = 0,
+	ENGINE_GRAPHICS = 1,
+	ENGINE_DVD = 2,
+};
+
+typedef struct CacheEntry {
+	unsigned int method : 14;
+	unsigned int subchannel : 3;
+	bool nonincreasing;
+	uint32_t parameter;
+} CacheEntry;
+
+typedef struct Cache1State {
+	unsigned int channel_id;
+	FifoMode mode;
+
+	/* Pusher state */
+	bool push_enabled;
+	bool dma_push_enabled;
+	bool dma_push_suspended;
+	xbaddr dma_instance;
+
+	bool method_nonincreasing;
+	unsigned int method : 14;
+	unsigned int subchannel : 3;
+	unsigned int method_count : 24;
+	uint32_t dcount;
+
+	bool subroutine_active;
+	xbaddr subroutine_return;
+	xbaddr get_jmp_shadow;
+	uint32_t rsvd_shadow;
+	uint32_t data_shadow;
+	uint32_t error;
+
+	bool pull_enabled;
+	enum FIFOEngine bound_engines[NV2A_NUM_SUBCHANNELS];
+	enum FIFOEngine last_engine;
+
+	/* The actual command queue */
+	std::mutex cache_lock;
+	std::condition_variable cache_cond;
+	std::queue<CacheEntry> cache;
+	std::queue<CacheEntry> working_cache;
+} Cache1State;
+
+typedef struct ChannelControl {
+	xbaddr dma_put;
+	xbaddr dma_get;
+	uint32_t ref;
+} ChannelControl;
 
 struct {
 	uint32_t pending_interrupts;
@@ -113,9 +198,8 @@ struct {
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
-	//TODO:
-	// QemuThread puller_thread;
-	// Cache1State cache1;
+	std::thread puller_thread;
+	Cache1State cache1;
 	uint32_t regs[NV_PFIFO_SIZE / sizeof(uint32_t)]; // TODO : union
 } pfifo;
 
@@ -156,6 +240,10 @@ struct {
 	uint32_t regs[NV_PRAMIN_SIZE / sizeof(uint32_t)]; // TODO : union
 } pramin;
 
+struct {
+	ChannelControl channel_control[NV2A_NUM_CHANNELS];
+} user;
+
 typedef struct GraphicsContext {
 	bool channel_3d;
 	unsigned int subchannel;
@@ -191,23 +279,21 @@ static void update_irq()
 	/* PFIFO */
 	if (pfifo.pending_interrupts & pfifo.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PFIFO;
-	}
-	else {
+	} else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PFIFO;
 	}
+
 	/* PCRTC */
 	if (pcrtc.pending_interrupts & pcrtc.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PCRTC;
-	}
-	else {
+	} else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PCRTC;
 	}
 
 	/* PGRAPH */
 	if (pgraph.pending_interrupts & pgraph.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PGRAPH;
-	}
-	else {
+	} else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
 	}
 
@@ -553,18 +639,191 @@ DEBUG_START(USER)
 #define DEVICE_WRITE32_REG(dev) dev.regs[addr / sizeof(uint32_t)] = value
 #define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
+static inline uint32_t ldl_le_p(const void *p)
+{
+	uint32_t val;
+	memcpy(&val, p, 4);
+	return val;
+}
 
-DWORD __index;
-#define GET_MASK(v, mask) {											  \
-		(bool)(((value) & (mask)) >> (_BitScanForward(&__index, mask) - 1)) \
+static DMAObject nv_dma_load(xbaddr dma_obj_address)
+{
+	assert(dma_obj_address < NV_PRAMIN_SIZE);
+
+	uint32_t *dma_obj = (uint32_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + dma_obj_address);
+	uint32_t flags = ldl_le_p(dma_obj);
+	uint32_t limit = ldl_le_p(dma_obj + 1);
+	uint32_t frame = ldl_le_p(dma_obj + 2);
+
+	DMAObject object;
+	object.dma_class = GET_MASK(flags, NV_DMA_CLASS);
+	object.dma_target = GET_MASK(flags, NV_DMA_TARGET);
+	object.address = (frame & NV_DMA_ADDRESS) | GET_MASK(flags, NV_DMA_ADJUST);
+	object.limit = limit;
+
+	return object;
+}
+
+static void *nv_dma_map(xbaddr dma_obj_address, xbaddr *len)
+{
+	assert(dma_obj_address < NV_PRAMIN_SIZE);
+
+	DMAObject dma = nv_dma_load(dma_obj_address);
+
+	/* TODO: Handle targets and classes properly */
+	DbgPrintf("dma_map %x, %x, %"  " %"  "\n",
+		dma.dma_class, dma.dma_target, dma.address, dma.limit);
+
+	dma.address &= 0x07FFFFFF;
+
+	// assert(dma.address + dma.limit < memory_region_size(d->vram));
+	*len = dma.limit;
+	return (void*)(MM_SYSTEM_PHYSICAL_MAP + dma.address);
+}
+
+/* pusher should be fine to run from a mimo handler
+* whenever's it's convenient */
+static void pfifo_run_pusher() {
+	uint8_t channel_id;
+	ChannelControl *control;
+	Cache1State *state;
+	CacheEntry *command;
+	uint8_t *dma;
+	xbaddr dma_len;
+	uint32_t word;
+
+	/* TODO: How is cache1 selected? */
+	state = &pfifo.cache1;
+	channel_id = state->channel_id;
+	control = &user.channel_control[channel_id];
+
+	if (!state->push_enabled) return;
+
+	/* only handling DMA for now... */
+
+	/* Channel running DMA */
+	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
+	assert(channel_modes & (1 << channel_id));
+	assert(state->mode == FIFO_DMA);
+
+	if (!state->dma_push_enabled) return;
+	if (state->dma_push_suspended) return;
+
+	/* We're running so there should be no pending errors... */
+	assert(state->error == NV_PFIFO_CACHE1_DMA_STATE_ERROR_NONE);
+
+	dma = (uint8_t*)nv_dma_map(state->dma_instance, &dma_len);
+
+	DbgPrintf("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
+		dma_len, control->dma_get, control->dma_put);
+
+	/* based on the convenient pseudocode in envytools */
+	while (control->dma_get != control->dma_put) {
+		if (control->dma_get >= dma_len) {
+
+			state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION;
+			break;
+		}
+
+		word = ldl_le_p((uint32_t*)(dma + control->dma_get));
+		control->dma_get += 4;
+
+		if (state->method_count) {
+			/* data word of methods command */
+			state->data_shadow = word;
+
+			CacheEntry command;
+			command.method = state->method;
+			command.subchannel = state->subchannel;
+			command.nonincreasing = state->method_nonincreasing;
+			command.parameter = word;
+
+			state->cache_lock.lock();
+			state->cache.push(command);
+			state->cache_cond.notify_all();
+			state->cache_lock.unlock();
+
+			if (!state->method_nonincreasing) {
+				state->method += 4;
+			}
+			state->method_count--;
+			state->dcount++;
+		}
+		else {
+			/* no command active - this is the first word of a new one */
+			state->rsvd_shadow = word;
+			/* match all forms */
+			if ((word & 0xe0000003) == 0x20000000) {
+				/* old jump */
+				state->get_jmp_shadow = control->dma_get;
+				control->dma_get = word & 0x1fffffff;
+				DbgPrintf("pb OLD_JMP 0x%08X\n", control->dma_get);
+			}
+			else if ((word & 3) == 1) {
+				/* jump */
+				state->get_jmp_shadow = control->dma_get;
+				control->dma_get = word & 0xfffffffc;
+				DbgPrintf("pb JMP 0x%08X\n", control->dma_get);
+			}
+			else if ((word & 3) == 2) {
+				/* call */
+				if (state->subroutine_active) {
+					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_CALL;
+					break;
+				}
+				state->subroutine_return = control->dma_get;
+				state->subroutine_active = true;
+				control->dma_get = word & 0xfffffffc;
+				DbgPrintf("pb CALL 0x%08X\n", control->dma_get);
+			}
+			else if (word == 0x00020000) {
+				/* return */
+				if (!state->subroutine_active) {
+					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RETURN;
+					break;
+				}
+				control->dma_get = state->subroutine_return;
+				state->subroutine_active = false;
+				DbgPrintf("pb RET 0x%08X\n", control->dma_get);
+			}
+			else if ((word & 0xe0030003) == 0) {
+				/* increasing methods */
+				state->method = word & 0x1fff;
+				state->subchannel = (word >> 13) & 7;
+				state->method_count = (word >> 18) & 0x7ff;
+				state->method_nonincreasing = false;
+				state->dcount = 0;
+			}
+			else if ((word & 0xe0030003) == 0x40000000) {
+				/* non-increasing methods */
+				state->method = word & 0x1fff;
+				state->subchannel = (word >> 13) & 7;
+				state->method_count = (word >> 18) & 0x7ff;
+				state->method_nonincreasing = true;
+				state->dcount = 0;
+			}
+			else {
+				DbgPrintf("pb reserved cmd 0x%08X - 0x%08X\n",
+					control->dma_get, word);
+				state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RESERVED_CMD;
+				break;
+			}
+		}
 	}
 
-#define SET_MASK(v, mask, val) {                                     \
-        const unsigned int __val = val;                              \
-        const unsigned int __mask =  mask;                           \
-        (v) &= ~(__mask);                                            \
-        (v) |= ((__val) << (_BitScanForward(&__index, __mask)-1)) & (__mask);              \
-    }
+	DbgPrintf("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
+		dma_len, control->dma_get, control->dma_put);
+
+	if (state->error) {
+		DbgPrintf("pb error: %d\n", state->error);
+		assert(false);
+
+		state->dma_push_suspended = true;
+
+		pfifo.pending_interrupts |= NV_PFIFO_INTR_0_DMA_PUSHER;
+		update_irq();
+	}
+}
 
 DEVICE_READ32(PMC)
 {
@@ -662,6 +921,79 @@ DEVICE_READ32(PFIFO)
 	case NV_PFIFO_RUNOUT_STATUS:
 		result = NV_PFIFO_RUNOUT_STATUS_LOW_MARK; /* low mark empty */
 		break;
+	case NV_PFIFO_CACHE1_PUSH0:
+		result = pfifo.cache1.push_enabled;
+		break;
+	case NV_PFIFO_CACHE1_PUSH1:
+		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_CHID, pfifo.cache1.channel_id);
+		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, pfifo.cache1.mode);
+		break;
+	case NV_PFIFO_CACHE1_STATUS:
+		pfifo.cache1.cache_lock.lock();
+		
+		if (pfifo.cache1.cache.empty()) {
+			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
+		}
+
+		pfifo.cache1.cache_lock.unlock();
+		break;
+	case NV_PFIFO_CACHE1_DMA_PUSH:
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS,
+			pfifo.cache1.dma_push_enabled);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_STATUS,
+			pfifo.cache1.dma_push_suspended);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_BUFFER, 1); /* buffer emoty */
+		break;
+	case NV_PFIFO_CACHE1_DMA_STATE:
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE,
+			pfifo.cache1.method_nonincreasing);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_STATE_METHOD,
+			pfifo.cache1.method >> 2);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_STATE_SUBCHANNEL,
+			pfifo.cache1.subchannel);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT,
+			pfifo.cache1.method_count);
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_STATE_ERROR,
+			pfifo.cache1.error);
+		break;
+	case NV_PFIFO_CACHE1_DMA_INSTANCE:
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS,
+			pfifo.cache1.dma_instance >> 4);
+		break;
+	case NV_PFIFO_CACHE1_DMA_PUT:
+		result = user.channel_control[pfifo.cache1.channel_id].dma_put;
+		break;
+	case NV_PFIFO_CACHE1_DMA_GET:
+		result = user.channel_control[pfifo.cache1.channel_id].dma_get;
+		break;
+	case NV_PFIFO_CACHE1_DMA_SUBROUTINE:
+		result = pfifo.cache1.subroutine_return
+			| pfifo.cache1.subroutine_active;
+		break;
+	case NV_PFIFO_CACHE1_PULL0:
+		pfifo.cache1.cache_lock.lock();
+		result = pfifo.cache1.pull_enabled;
+		pfifo.cache1.cache_lock.unlock();
+		break;
+	case NV_PFIFO_CACHE1_ENGINE:
+		pfifo.cache1.cache_lock.lock();
+		for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
+			result |= pfifo.cache1.bound_engines[i] << (i * 2);
+		}
+		pfifo.cache1.cache_lock.unlock();
+		break;
+	case NV_PFIFO_CACHE1_DMA_DCOUNT:
+		result = pfifo.cache1.dcount;
+		break;
+	case NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW:
+		result = pfifo.cache1.get_jmp_shadow;
+		break;
+	case NV_PFIFO_CACHE1_DMA_RSVD_SHADOW:
+		result = pfifo.cache1.rsvd_shadow;
+		break;
+	case NV_PFIFO_CACHE1_DMA_DATA_SHADOW:
+		result = pfifo.cache1.data_shadow;
+		break;
 	default:
 		DEVICE_READ32_REG(pfifo); // Was : DEBUG_READ32_UNHANDLED(PFIFO);
 		break;
@@ -673,22 +1005,91 @@ DEVICE_READ32(PFIFO)
 DEVICE_WRITE32(PFIFO)
 {
 	switch(addr) {
-	case NV_PFIFO_INTR_0:
-		pfifo.pending_interrupts &= ~value;
-		update_irq();
-		break;
-	case NV_PFIFO_INTR_EN_0:
-		pfifo.enabled_interrupts = value;
-		update_irq();
-		break;
-	default: 
-		DEVICE_WRITE32_REG(pfifo); // Was : DEBUG_WRITE32_UNHANDLED(PFIFO);
-		break;
+		case NV_PFIFO_INTR_0:
+			pfifo.pending_interrupts &= ~value;
+			update_irq();
+			break;
+		case NV_PFIFO_INTR_EN_0:
+			pfifo.enabled_interrupts = value;
+			update_irq();
+			break;
+		case NV_PFIFO_CACHE1_PUSH0:
+			pfifo.cache1.push_enabled = value & NV_PFIFO_CACHE1_PUSH0_ACCESS;
+			break;
+		case NV_PFIFO_CACHE1_PUSH1:
+			pfifo.cache1.channel_id = GET_MASK(value, NV_PFIFO_CACHE1_PUSH1_CHID);
+			pfifo.cache1.mode = (FifoMode)GET_MASK(value, NV_PFIFO_CACHE1_PUSH1_MODE);
+			assert(pfifo.cache1.channel_id < NV2A_NUM_CHANNELS);
+			break;
+		case NV_PFIFO_CACHE1_DMA_PUSH:
+			pfifo.cache1.dma_push_enabled = GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS);
+			if (pfifo.cache1.dma_push_suspended	&& !GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS)) {
+				pfifo.cache1.dma_push_suspended = false;
+				pfifo_run_pusher();
+			}
+			pfifo.cache1.dma_push_suspended = GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS);
+			break;
+		case NV_PFIFO_CACHE1_DMA_STATE:
+			pfifo.cache1.method_nonincreasing =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE);
+			pfifo.cache1.method = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD) << 2;
+			pfifo.cache1.subchannel = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_SUBCHANNEL);
+			pfifo.cache1.method_count =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT);
+			pfifo.cache1.error = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_ERROR);
+			break;
+		case NV_PFIFO_CACHE1_DMA_INSTANCE:
+			pfifo.cache1.dma_instance =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS) << 4;
+			break;
+		case NV_PFIFO_CACHE1_DMA_PUT:
+			user.channel_control[pfifo.cache1.channel_id].dma_put = value;
+			break;
+		case NV_PFIFO_CACHE1_DMA_GET:
+			user.channel_control[pfifo.cache1.channel_id].dma_get = value;
+			break;
+		case NV_PFIFO_CACHE1_DMA_SUBROUTINE:
+			pfifo.cache1.subroutine_return = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_RETURN_OFFSET);
+			pfifo.cache1.subroutine_active = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
+			break;
+		case NV_PFIFO_CACHE1_PULL0:
+			pfifo.cache1.cache_lock.lock();
+
+			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS) 
+				&& !pfifo.cache1.pull_enabled) {
+				pfifo.cache1.pull_enabled = true;
+
+				/* the puller thread should wake up */
+				pfifo.cache1.cache_cond.notify_all();
+			} else if (!(value & NV_PFIFO_CACHE1_PULL0_ACCESS)
+				&& pfifo.cache1.pull_enabled) {
+				pfifo.cache1.pull_enabled = false;
+			}
+			pfifo.cache1.cache_lock.unlock();
+			break;
+		case NV_PFIFO_CACHE1_ENGINE:
+			pfifo.cache1.cache_lock.lock();
+			for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
+				pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
+			}
+			pfifo.cache1.cache_lock.unlock();
+			break;
+		case NV_PFIFO_CACHE1_DMA_DCOUNT:
+			pfifo.cache1.dcount = (value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
+			break;
+		case NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW:
+			pfifo.cache1.get_jmp_shadow = (value & NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW_OFFSET);
+			break;
+		case NV_PFIFO_CACHE1_DMA_RSVD_SHADOW:
+			pfifo.cache1.rsvd_shadow = value;
+			break;
+		case NV_PFIFO_CACHE1_DMA_DATA_SHADOW:
+			pfifo.cache1.data_shadow = value;
+			break;
+		default:
+			DEVICE_WRITE32_REG(pfifo); // Was : DEBUG_WRITE32_UNHANDLED(PFIFO);
+			break;
 	}
 
 	DEVICE_WRITE32_END(PFIFO);
 }
-
 
 DEVICE_READ32(PRMA)
 {
@@ -731,6 +1132,16 @@ DEVICE_READ32(PVIDEO)
 DEVICE_WRITE32(PVIDEO)
 {
 	switch (addr) {
+	case NV_PVIDEO_BUFFER:
+		pvideo.regs[addr] = value;
+		// TODO: vga.enable_overlay = true;
+		// pvideo_vga_invalidate(d);
+		break;
+	case NV_PVIDEO_STOP:
+		pvideo.regs[NV_PVIDEO_BUFFER] = 0;
+		// TODO: vga.enable_overlay = false;
+		//pvideo_vga_invalidate(d);
+		break;
 	default:
 		DEVICE_WRITE32_REG(pvideo);
 		break;
@@ -761,6 +1172,7 @@ DEVICE_WRITE32(PCOUNTER)
 	DEVICE_WRITE32_END(PCOUNTER);
 }
 
+/* PIMTER - time measurement and time-based alarms */
 
 DEVICE_READ32(PTIMER)
 {
@@ -981,11 +1393,9 @@ DEVICE_READ32(PGRAPH)
 		result = pgraph.notify_source;
 		break;
 	case NV_PGRAPH_CTX_USER:
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D,
-			pgraph.context[pgraph.channel_id].channel_3d);
+		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D, pgraph.context[pgraph.channel_id].channel_3d);
 		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D_VALID, 1);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_SUBCH,
-			pgraph.context[pgraph.channel_id].subchannel << 13);
+		SET_MASK(result, NV_PGRAPH_CTX_USER_SUBCH, pgraph.context[pgraph.channel_id].subchannel << 13);
 		SET_MASK(result, NV_PGRAPH_CTX_USER_CHID, pgraph.channel_id);
 		break;
 	case NV_PGRAPH_TRAPPED_ADDR:
@@ -1010,7 +1420,14 @@ DEVICE_READ32(PGRAPH)
 	}
 
 	DEVICE_READ32_END(PGRAPH);
-}	
+}
+
+static void pgraph_set_context_user(uint32_t value)
+{
+	pgraph.channel_id = (value & NV_PGRAPH_CTX_USER_CHID) >> 24;
+	pgraph.context[pgraph.channel_id].channel_3d = GET_MASK(value, NV_PGRAPH_CTX_USER_CHANNEL_3D);
+	pgraph.context[pgraph.channel_id].subchannel = GET_MASK(value, NV_PGRAPH_CTX_USER_SUBCH);
+}
 
 DEVICE_WRITE32(PGRAPH)
 {
@@ -1023,6 +1440,9 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	case NV_PGRAPH_CTX_CONTROL:
 		pgraph.channel_valid = (value & NV_PGRAPH_CTX_CONTROL_CHID);
+		break;
+	case NV_PGRAPH_CTX_USER:
+		pgraph_set_context_user(value);
 		break;
 	case NV_PGRAPH_FIFO:
 		pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
@@ -1227,9 +1647,26 @@ DEVICE_WRITE32(PRAMIN)
 
 DEVICE_READ32(USER)
 {
+	unsigned int channel_id = addr >> 16;
+	assert(channel_id < NV2A_NUM_CHANNELS);
+
+	ChannelControl *control = &user.channel_control[channel_id];
+	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
+
+	addr &= 0xFFFF;
+
 	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(USER);
+		case NV_USER_DMA_PUT:
+			result = control->dma_put;
+			break;
+		case NV_USER_DMA_GET:
+			result = control->dma_get;
+			break;
+		case NV_USER_REF:
+			result = control->ref;
+			break;
+		default:
+			DEBUG_READ32_UNHANDLED(USER);
 		break;
 	}
 
@@ -1238,7 +1675,26 @@ DEVICE_READ32(USER)
 
 DEVICE_WRITE32(USER)
 {
-	switch (addr) {
+	unsigned int channel_id = addr >> 16;
+	assert(channel_id < NV2A_NUM_CHANNELS);
+
+	ChannelControl *control = &user.channel_control[channel_id];
+	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
+
+	switch (addr & 0xFFFF) {
+	case NV_USER_DMA_PUT:
+		control->dma_put = value;
+
+		if (pfifo.cache1.push_enabled) {
+			pfifo_run_pusher();
+		}
+		break;
+	case NV_USER_DMA_GET:
+		control->dma_get = value;
+		break;
+	case NV_USER_REF:
+		control->ref = value;
+		break;
 	default:
 		DEBUG_WRITE32_UNHANDLED(USER);
 		break;
@@ -1732,8 +2188,13 @@ void InitOpenGLContext()
 
 //	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
 	DxbxCompileShader(szCode);
+}
 
-	// TODO: EmuNV2A_Init
+void EmuNV2A_Init()
+{
+	// Allocate PRAMIN Region
+	VirtualAlloc((void*)(NV2A_ADDR + NV_PRAMIN_ADDR), NV_PRAMIN_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
 	pcrtc.start = 0;
 
 	pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
