@@ -124,13 +124,6 @@ inline int SET_MASK(int v, int mask, int val) {
     return (v) |= ((__val) << (ffs(__mask)-1)) & (__mask);              
 }
 
-typedef struct DMAObject {
-	unsigned int dma_class;
-	unsigned int dma_target;
-	xbaddr address;
-	xbaddr limit;
-} DMAObject;
-
 enum FifoMode {
 	FIFO_PIO = 0,
 	FIFO_DMA = 1,
@@ -141,6 +134,142 @@ enum FIFOEngine {
 	ENGINE_GRAPHICS = 1,
 	ENGINE_DVD = 2,
 };
+
+typedef struct RAMHTEntry {
+	uint32_t handle;
+	xbaddr instance;
+	enum FIFOEngine engine;
+	unsigned int channel_id : 5;
+	bool valid;
+} RAMHTEntry;
+
+typedef struct DMAObject {
+	unsigned int dma_class;
+	unsigned int dma_target;
+	xbaddr address;
+	xbaddr limit;
+} DMAObject;
+
+typedef struct VertexAttribute {
+	bool dma_select;
+	xbaddr offset;
+
+	/* inline arrays are packed in order?
+	* Need to pass the offset to converted attributes */
+	unsigned int inline_array_offset;
+
+	float inline_value[4];
+
+	unsigned int format;
+	unsigned int size; /* size of the data type */
+	unsigned int count; /* number of components */
+	uint32_t stride;
+
+	bool needs_conversion;
+	uint8_t *converted_buffer;
+	unsigned int converted_elements;
+	unsigned int converted_size;
+	unsigned int converted_count;
+
+	float *inline_buffer;
+
+	GLint gl_count;
+	GLenum gl_type;
+	GLboolean gl_normalize;
+
+	GLuint gl_converted_buffer;
+	GLuint gl_inline_buffer;
+} VertexAttribute;
+
+typedef struct Surface {
+	bool draw_dirty;
+	bool buffer_dirty;
+	bool write_enabled_cache;
+	unsigned int pitch;
+
+	xbaddr offset;
+} Surface;
+
+typedef struct SurfaceShape {
+	unsigned int z_format;
+	unsigned int color_format;
+	unsigned int zeta_format;
+	unsigned int log_width, log_height;
+	unsigned int clip_x, clip_y;
+	unsigned int clip_width, clip_height;
+	unsigned int anti_aliasing;
+} SurfaceShape;
+
+typedef struct TextureShape {
+	bool cubemap;
+	unsigned int dimensionality;
+	unsigned int color_format;
+	unsigned int levels;
+	unsigned int width, height, depth;
+
+	unsigned int min_mipmap_level, max_mipmap_level;
+	unsigned int pitch;
+} TextureShape;
+
+typedef struct TextureKey {
+	TextureShape state;
+	uint64_t data_hash;
+	uint8_t* texture_data;
+	uint8_t* palette_data;
+} TextureKey;
+
+typedef struct TextureBinding {
+	GLenum gl_target;
+	GLuint gl_texture;
+	unsigned int refcnt;
+} TextureBinding;
+
+typedef struct KelvinState {
+	xbaddr dma_notifies;
+	xbaddr dma_state;
+	xbaddr dma_semaphore;
+	unsigned int semaphore_offset;
+} KelvinState;
+
+typedef struct ContextSurfaces2DState {
+	xbaddr dma_image_source;
+	xbaddr dma_image_dest;
+	unsigned int color_format;
+	unsigned int source_pitch, dest_pitch;
+	xbaddr source_offset, dest_offset;
+
+} ContextSurfaces2DState;
+
+typedef struct ImageBlitState {
+	xbaddr context_surfaces;
+	unsigned int operation;
+	unsigned int in_x, in_y;
+	unsigned int out_x, out_y;
+	unsigned int width, height;
+
+} ImageBlitState;
+
+typedef struct GraphicsObject {
+	uint8_t graphics_class;
+	union {
+		ContextSurfaces2DState context_surfaces_2d;
+
+		ImageBlitState image_blit;
+
+		KelvinState kelvin;
+	} data;
+} GraphicsObject;
+
+typedef struct GraphicsSubchannel {
+	xbaddr object_instance;
+	GraphicsObject object;
+	uint32_t object_cache[5];
+} GraphicsSubchannel;
+
+typedef struct GraphicsContext {
+	bool channel_3d;
+	unsigned int subchannel;
+} GraphicsContext;
 
 typedef struct CacheEntry {
 	unsigned int method : 14;
@@ -177,10 +306,10 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::mutex cache_lock;
+	std::mutex mutex;
 	std::condition_variable cache_cond;
-	std::queue<CacheEntry> cache;
-	std::queue<CacheEntry> working_cache;
+	std::queue<CacheEntry*> cache;
+	//std::queue<CacheEntry*> working_cache;
 } Cache1State;
 
 typedef struct ChannelControl {
@@ -244,18 +373,16 @@ struct {
 	ChannelControl channel_control[NV2A_NUM_CHANNELS];
 } user;
 
-typedef struct GraphicsContext {
-	bool channel_3d;
-	unsigned int subchannel;
-} GraphicsContext;
-
-
 struct {
+	std::mutex mutex;
+
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
+	std::condition_variable interrupt_cond;
 
-	uint32_t context_table;
-	uint32_t context_address;
+	xbaddr context_table;
+	xbaddr context_address;
+
 
 	unsigned int trapped_method;
 	unsigned int trapped_subchannel;
@@ -264,11 +391,90 @@ struct {
 	uint32_t notify_source;
 
 	bool fifo_access;
+	std::condition_variable fifo_access_cond;
+	std::condition_variable flip_3d;
 
 	unsigned int channel_id;
 	bool channel_valid;
 	GraphicsContext context[NV2A_NUM_CHANNELS];
 
+	xbaddr dma_color, dma_zeta;
+	Surface surface_color, surface_zeta;
+	unsigned int surface_type;
+	SurfaceShape surface_shape;
+	SurfaceShape last_surface_shape;
+
+	xbaddr dma_a, dma_b;
+	//GLruCache *texture_cache;
+	bool texture_dirty[NV2A_MAX_TEXTURES];
+	TextureBinding *texture_binding[NV2A_MAX_TEXTURES];
+
+	//GHashTable *shader_cache;
+	//ShaderBinding *shader_binding;
+
+	bool texture_matrix_enable[NV2A_MAX_TEXTURES];
+
+	/* FIXME: Move to NV_PGRAPH_BUMPMAT... */
+	float bump_env_matrix[NV2A_MAX_TEXTURES - 1][4]; /* 3 allowed stages with 2x2 matrix each */
+
+	// wglContext *gl_context;
+	GLuint gl_framebuffer;
+	GLuint gl_color_buffer, gl_zeta_buffer;
+	GraphicsSubchannel subchannel_data[NV2A_NUM_SUBCHANNELS];
+
+	xbaddr dma_report;
+	xbaddr report_offset;
+	bool zpass_pixel_count_enable;
+	unsigned int zpass_pixel_count_result;
+	unsigned int gl_zpass_pixel_count_query_count;
+	GLuint* gl_zpass_pixel_count_queries;
+
+	xbaddr dma_vertex_a, dma_vertex_b;
+
+	unsigned int primitive_mode;
+
+	bool enable_vertex_program_write;
+
+	//uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
+
+	uint32_t vsh_constants[NV2A_VERTEXSHADER_CONSTANTS][4];
+	bool vsh_constants_dirty[NV2A_VERTEXSHADER_CONSTANTS];
+
+	/* lighting constant arrays */
+	uint32_t ltctxa[NV2A_LTCTXA_COUNT][4];
+	bool ltctxa_dirty[NV2A_LTCTXA_COUNT];
+	uint32_t ltctxb[NV2A_LTCTXB_COUNT][4];
+	bool ltctxb_dirty[NV2A_LTCTXB_COUNT];
+	uint32_t ltc1[NV2A_LTC1_COUNT][4];
+	bool ltc1_dirty[NV2A_LTC1_COUNT];
+
+	// should figure out where these are in lighting context
+	float light_infinite_half_vector[NV2A_MAX_LIGHTS][3];
+	float light_infinite_direction[NV2A_MAX_LIGHTS][3];
+	float light_local_position[NV2A_MAX_LIGHTS][3];
+	float light_local_attenuation[NV2A_MAX_LIGHTS][3];
+
+	//VertexAttribute vertex_attributes[NV2A_VERTEXSHADER_ATTRIBUTES];
+
+	unsigned int inline_array_length;
+	uint32_t inline_array[NV2A_MAX_BATCH_LENGTH];
+	GLuint gl_inline_array_buffer;
+
+	unsigned int inline_elements_length;
+	uint32_t inline_elements[NV2A_MAX_BATCH_LENGTH];
+
+	unsigned int inline_buffer_length;
+
+	unsigned int draw_arrays_length;
+	unsigned int draw_arrays_max_count;
+
+	/* FIXME: Unknown size, possibly endless, 1000 will do for now */
+	GLint gl_draw_arrays_start[1000];
+	GLsizei gl_draw_arrays_count[1000];
+
+	GLuint gl_element_buffer;
+	GLuint gl_memory_buffer;
+	GLuint gl_vertex_array;
 
 	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
 } pgraph;
@@ -699,6 +905,8 @@ static void pfifo_run_pusher() {
 
 	if (!state->push_enabled) return;
 
+	std::unique_lock<std::mutex> cache_lock(state->mutex, std::defer_lock);
+
 	/* only handling DMA for now... */
 
 	/* Channel running DMA */
@@ -732,16 +940,16 @@ static void pfifo_run_pusher() {
 			/* data word of methods command */
 			state->data_shadow = word;
 
-			CacheEntry command;
-			command.method = state->method;
-			command.subchannel = state->subchannel;
-			command.nonincreasing = state->method_nonincreasing;
-			command.parameter = word;
+			CacheEntry* command = new CacheEntry;
+			command->method = state->method;
+			command->subchannel = state->subchannel;
+			command->nonincreasing = state->method_nonincreasing;
+			command->parameter = word;
 
-			state->cache_lock.lock();
+			cache_lock.lock();
 			state->cache.push(command);
 			state->cache_cond.notify_all();
-			state->cache_lock.unlock();
+			cache_lock.unlock();
 
 			if (!state->method_nonincreasing) {
 				state->method += 4;
@@ -825,6 +1033,234 @@ static void pfifo_run_pusher() {
 	}
 }
 
+static uint32_t ramht_hash(uint32_t handle)
+{
+	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE) + 12);
+
+	/* XXX: Think this is different to what nouveau calculates... */
+	unsigned int bits = ffs(ramht_size) - 2;
+
+	uint32_t hash = 0;
+	while (handle) {
+		hash ^= (handle & ((1 << bits) - 1));
+		handle >>= bits;
+	}
+	hash ^= pfifo.cache1.channel_id << (bits - 4);
+
+	return hash;
+}
+
+
+static RAMHTEntry ramht_lookup(uint32_t handle)
+{
+	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE) + 12);
+
+	uint32_t hash = ramht_hash(handle);
+	assert(hash * 8 < ramht_size);
+
+	uint32_t ramht_address =
+		GET_MASK(pfifo.regs[NV_PFIFO_RAMHT],
+			NV_PFIFO_RAMHT_BASE_ADDRESS) << 12;
+
+	uint8_t *entry_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + ramht_address + hash * 8);
+
+	uint32_t entry_handle = ldl_le_p((uint32_t*)entry_ptr);
+	uint32_t entry_context = ldl_le_p((uint32_t*)(entry_ptr + 4));
+
+	RAMHTEntry entry;
+	entry.handle = entry_handle;
+	entry.instance = (entry_context & NV_RAMHT_INSTANCE) << 4;
+	entry.engine = (FIFOEngine)((entry_context & NV_RAMHT_ENGINE) >> 16);
+	entry.channel_id = (entry_context & NV_RAMHT_CHID) >> 24;
+	entry.valid = entry_context & NV_RAMHT_STATUS;
+
+	return entry;
+}
+
+static void pgraph_context_switch(unsigned int channel_id)
+{
+	std::unique_lock<std::mutex> pgraph_lock(pgraph.mutex, std::defer_lock);
+
+	bool valid;
+	valid = pgraph.channel_valid && pgraph.channel_id == channel_id;
+	if (!valid) {
+		pgraph.trapped_channel_id = channel_id;
+	}
+	if (!valid) {
+		DbgPrintf("puller needs to switch to ch %d\n", channel_id);
+
+		pgraph_lock.unlock();
+
+		//qemu_mutex_lock_iothread();
+		pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
+		update_irq();
+
+		pgraph_lock.lock();
+		//qemu_mutex_unlock_iothread();
+
+		while (pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
+			pgraph.interrupt_cond.wait(pgraph_lock);
+		}
+	}
+}
+
+static void pgraph_wait_fifo_access() {
+	std::unique_lock<std::mutex> lk(pgraph.mutex, std::defer_lock);
+
+	while (!pgraph.fifo_access) {	
+		pgraph.fifo_access_cond.wait(lk);
+	}
+}
+
+static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_class,unsigned int method, uint32_t parameter) {
+	static unsigned int last = 0;
+	static unsigned int count = 0;
+
+	if (last == 0x1800 && method != last) {
+		DbgPrintf("pgraph method (%d) 0x%08X * %d", subchannel, last, count);
+	}
+	if (method != 0x1800) {
+		const char* method_name = NULL;
+		unsigned int nmethod = 0;
+		switch (graphics_class) {
+		case NV_KELVIN_PRIMITIVE:
+			nmethod = method | (0x5c << 16);
+			break;
+		case NV_CONTEXT_SURFACES_2D:
+			nmethod = method | (0x6d << 16);
+			break;
+		default:
+			break;
+		}
+		/*
+		if (nmethod != 0 && nmethod < ARRAY_SIZE(nv2a_method_names)) {
+			method_name = nv2a_method_names[nmethod];
+		}
+		if (method_name) {
+			DbgPrintf("pgraph method (%d): %s (0x%x)\n",
+				subchannel, method_name, parameter);
+		}
+		else {
+		*/
+			DbgPrintf("pgraph method (%d): 0x%x -> 0x%04x (0x%x)\n",
+				subchannel, graphics_class, method, parameter);
+		//}
+
+	}
+	if (method == last) { count++; }
+	else { count = 0; }
+	last = method;
+}
+
+static void pgraph_method(unsigned int subchannel,	unsigned int method, uint32_t parameter)
+{
+	int i;
+	GraphicsSubchannel *subchannel_data;
+	GraphicsObject *object;
+
+	unsigned int slot;
+
+	assert(pgraph.channel_valid);
+	subchannel_data = &pgraph.subchannel_data[subchannel];
+	object = &subchannel_data->object;
+
+	ContextSurfaces2DState *context_surfaces_2d	= &object->data.context_surfaces_2d;
+	ImageBlitState *image_blit = &object->data.image_blit;
+	KelvinState *kelvin = &object->data.kelvin;
+
+
+	pgraph_method_log(subchannel, object->graphics_class, method, parameter);
+}
+
+static void* pfifo_puller_thread()
+{
+	Cache1State *state = &pfifo.cache1;
+	std::unique_lock<std::mutex> cache_lock(state->mutex, std::defer_lock);
+	std::unique_lock<std::mutex> pgraph_lock(pgraph.mutex, std::defer_lock);
+
+	while (true) {
+		cache_lock.lock();
+
+		while (state->cache.empty() || !state->pull_enabled) {
+			state->cache_cond.wait(cache_lock);
+		}
+
+		cache_lock.unlock();
+		pgraph_lock.lock();
+
+		while (!state->cache.empty()) {
+			CacheEntry * command = state->cache.front();
+			state->cache.pop();
+
+			if (command->method == 0) {
+				// qemu_mutex_lock_iothread();
+				RAMHTEntry entry = ramht_lookup(command->parameter);
+				assert(entry.valid);
+
+				assert(entry.channel_id == state->channel_id);
+				// qemu_mutex_unlock_iothread();
+
+				switch (entry.engine) {
+				case ENGINE_GRAPHICS:
+					pgraph_context_switch(entry.channel_id);
+					pgraph_wait_fifo_access();
+					pgraph_method(command->subchannel, 0, entry.instance);
+					break;
+				default:
+					assert(false);
+					break;
+				}
+
+				/* the engine is bound to the subchannel */
+				cache_lock.lock();
+				state->bound_engines[command->subchannel] = entry.engine;
+				state->last_engine = entry.engine;
+				cache_lock.unlock();
+			}
+			else if (command->method >= 0x100) {
+				/* method passed to engine */
+
+				uint32_t parameter = command->parameter;
+
+				/* methods that take objects.
+				* TODO: Check this range is correct for the nv2a */
+				if (command->method >= 0x180 && command->method < 0x200) {
+					//qemu_mutex_lock_iothread();
+					RAMHTEntry entry = ramht_lookup(parameter);
+					assert(entry.valid);
+					assert(entry.channel_id == state->channel_id);
+					parameter = entry.instance;
+					//qemu_mutex_unlock_iothread();
+				}
+
+				// qemu_mutex_lock(&state->cache_lock);
+				enum FIFOEngine engine = state->bound_engines[command->subchannel];
+				// qemu_mutex_unlock(&state->cache_lock);
+
+				switch (engine) {
+				case ENGINE_GRAPHICS:
+					pgraph_wait_fifo_access();
+					pgraph_method(command->subchannel, command->method, parameter);
+					break;
+				default:
+					assert(false);
+					break;
+				}
+
+				// qemu_mutex_lock(&state->cache_lock);
+				state->last_engine = state->bound_engines[command->subchannel];
+				// qemu_mutex_unlock(&state->cache_lock);
+			}
+
+			free(command);
+		}
+
+		pgraph_lock.unlock();
+	}
+
+	return NULL;
+}
+
 DEVICE_READ32(PMC)
 {
 	DEVICE_READ32_SWITCH() {
@@ -905,6 +1341,8 @@ DEVICE_WRITE32(PBUS)
 
 DEVICE_READ32(PFIFO)
 {
+	std::unique_lock<std::mutex> cache_lock(pfifo.cache1.mutex, std::defer_lock);
+
 	DEVICE_READ32_SWITCH() {
 	case NV_PFIFO_RAMHT:
 		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
@@ -929,13 +1367,13 @@ DEVICE_READ32(PFIFO)
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, pfifo.cache1.mode);
 		break;
 	case NV_PFIFO_CACHE1_STATUS:
-		pfifo.cache1.cache_lock.lock();
+		cache_lock.lock();
 		
 		if (pfifo.cache1.cache.empty()) {
 			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
 		}
 
-		pfifo.cache1.cache_lock.unlock();
+		cache_lock.unlock();
 		break;
 	case NV_PFIFO_CACHE1_DMA_PUSH:
 		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS,
@@ -971,16 +1409,16 @@ DEVICE_READ32(PFIFO)
 			| pfifo.cache1.subroutine_active;
 		break;
 	case NV_PFIFO_CACHE1_PULL0:
-		pfifo.cache1.cache_lock.lock();
+		cache_lock.lock();
 		result = pfifo.cache1.pull_enabled;
-		pfifo.cache1.cache_lock.unlock();
+		cache_lock.unlock();
 		break;
 	case NV_PFIFO_CACHE1_ENGINE:
-		pfifo.cache1.cache_lock.lock();
+		cache_lock.lock();
 		for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
 			result |= pfifo.cache1.bound_engines[i] << (i * 2);
 		}
-		pfifo.cache1.cache_lock.unlock();
+		cache_lock.unlock();
 		break;
 	case NV_PFIFO_CACHE1_DMA_DCOUNT:
 		result = pfifo.cache1.dcount;
@@ -1004,6 +1442,8 @@ DEVICE_READ32(PFIFO)
 
 DEVICE_WRITE32(PFIFO)
 {
+	std::unique_lock<std::mutex> cache_lock(pfifo.cache1.mutex, std::defer_lock);
+
 	switch(addr) {
 		case NV_PFIFO_INTR_0:
 			pfifo.pending_interrupts &= ~value;
@@ -1050,7 +1490,7 @@ DEVICE_WRITE32(PFIFO)
 			pfifo.cache1.subroutine_active = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
 			break;
 		case NV_PFIFO_CACHE1_PULL0:
-			pfifo.cache1.cache_lock.lock();
+			cache_lock.lock();
 
 			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS) 
 				&& !pfifo.cache1.pull_enabled) {
@@ -1062,14 +1502,14 @@ DEVICE_WRITE32(PFIFO)
 				&& pfifo.cache1.pull_enabled) {
 				pfifo.cache1.pull_enabled = false;
 			}
-			pfifo.cache1.cache_lock.unlock();
+			cache_lock.unlock();
 			break;
 		case NV_PFIFO_CACHE1_ENGINE:
-			pfifo.cache1.cache_lock.lock();
+			cache_lock.lock();
 			for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
 				pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
 			}
-			pfifo.cache1.cache_lock.unlock();
+			cache_lock.unlock();
 			break;
 		case NV_PFIFO_CACHE1_DMA_DCOUNT:
 			pfifo.cache1.dcount = (value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
@@ -2201,4 +2641,7 @@ void EmuNV2A_Init()
 	pramdac.core_clock_freq = 189000000;
 	pramdac.memory_clock_coeff = 0;
 	pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
+
+	MessageBoxA(NULL, "TEST", "TEST", 0);
+	pfifo.puller_thread = std::thread(pfifo_puller_thread);
 }
