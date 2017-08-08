@@ -816,7 +816,7 @@ void CxbxKrnlInit
 	CxbxLaunchXbe(Entry);
     DbgPrintf("EmuMain: Initial thread ended.\n");
     fflush(stdout);
-	EmuShared::Cleanup();
+	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
     return;
 }

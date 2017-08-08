@@ -173,6 +173,11 @@ class WndMain : public Wnd
         // ******************************************************************
         char       *m_CxbxDebugFilename;
         char       *m_KrnlDebugFilename;
+
+		// ******************************************************************
+		// * Last FPS Value for benchmarking
+		// ******************************************************************
+		int			m_LastFPSVal = 0;
 };
 
 #endif

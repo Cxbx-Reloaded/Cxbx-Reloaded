@@ -333,27 +333,53 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
+                    SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
-
-                    char AsciiTitle[MAX_PATH];
-
-					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
-
-                    SetWindowText(m_hwnd, AsciiTitle);
-
-                    RefreshMenus();
+					RefreshMenus();
+                    m_LastFPSVal = 0;
                 }
                 break;
 
                 case WM_DESTROY:
                 {
+                    KillTimer(hwnd, 0);
                     m_hwndChild = NULL;
                     SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
                     RefreshMenus();
+                    m_LastFPSVal = 0;
                 }
                 break;
             }
         };
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+				case 0:
+				{
+					char AsciiTitle[MAX_PATH];
+					int currentMSFVal = 0;
+					int currentFPSVal = 0;
+					int avgFPSVal = 0; // averege between the current and the last FPS value
+					if (g_EmuShared != NULL) {
+						g_EmuShared->GetCurrentMSF(&currentMSFVal);
+						if (currentMSFVal != 0) {
+							currentFPSVal = 1000 / currentMSFVal;
+						}
+						else {
+							currentFPSVal = 0;
+						}
+					}
+					avgFPSVal = (currentFPSVal + m_LastFPSVal) / 2;
+					m_LastFPSVal = currentFPSVal;
+					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS(AVG): %d  MS/F: %d", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, avgFPSVal, currentMSFVal);
+					SetWindowText(m_hwnd, AsciiTitle);
+				}
+				break;
+			}
+		}
+		break;
 
         case WM_SYSKEYDOWN:
         {

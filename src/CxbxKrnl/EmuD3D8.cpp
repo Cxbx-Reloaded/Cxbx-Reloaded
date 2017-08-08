@@ -87,6 +87,7 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
+static void							UpdateCurrentMSF();
 
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
@@ -110,6 +111,7 @@ static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback rou
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
+static SYSTEMTIME					g_LastDrawFunctionCallTime; // Used for benchmarking/fps count
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // D3D based variables
@@ -161,6 +163,7 @@ XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
 XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
+
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -4915,6 +4918,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
     DWORD Flags
 )
 {
+	
+
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Flags);
@@ -4931,6 +4936,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	// and Halo).
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
+
+	UpdateCurrentMSF();
 
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
@@ -10205,4 +10212,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 		EmuWarning("We're lying about getting a material!");
         hRet = D3D_OK;
     }
+}
+
+// ******************************************************************
+// * update the current milliseconds per frame
+// ******************************************************************
+static void UpdateCurrentMSF()
+{
+	SYSTEMTIME currentDrawFunctionCallTime;
+	int currentMSFVal = 0;
+	GetSystemTime(&currentDrawFunctionCallTime);
+	currentMSFVal = currentDrawFunctionCallTime.wMilliseconds - g_LastDrawFunctionCallTime.wMilliseconds;
+
+	if (g_EmuShared) {
+		g_EmuShared->SetCurrentMSF(&currentMSFVal);
+	}
+
+	g_LastDrawFunctionCallTime = currentDrawFunctionCallTime;
 }
