@@ -970,6 +970,36 @@ void  EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 	}
 }
 
+bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t value = 0;
+	uint32_t addr;
+
+	if (!EmuX86_Operand_Read(e, info, 1, &addr))
+		return false;
+	
+	switch (info.ops[0].size) {
+		case 8:
+			value = EmuX86_IORead8(addr);
+			break;
+		case 16:
+			value = EmuX86_IORead16(addr);
+			break;
+		case 32: 
+			value = EmuX86_IORead32(addr);
+			break;
+		default:
+			return false;
+	}
+
+	if (!EmuX86_Operand_Write(e, info, 0, value)) {
+		return false;
+	}
+
+	return true;
+}
+
+
 bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// OUT will address the first operand :
@@ -1063,6 +1093,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		case I_CPUID:
 			EmuX86_Opcode_CPUID(e, info);
 			break;
+		case I_IN:
+			if (EmuX86_Opcode_IN(e, info))
+				break;
+
+			goto unimplemented_opcode;
 		case I_INVD: // Flush internal caches; initiate flushing of external caches.
 			 // We can safely ignore this
 			break;
