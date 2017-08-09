@@ -54,6 +54,7 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuFS.h"
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
@@ -178,6 +179,11 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
 	while (true)
 	{
 		// While we're working with the DpcQueue, we need to be thread-safe :
@@ -200,12 +206,19 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 			pkdpc->Inserted = FALSE;
 			// Set DpcRoutineActive to support KeIsExecutingDpc:
 			KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-			// Call the Deferred Procedure  :
-			pkdpc->DeferredRoutine(
-				pkdpc,
-				pkdpc->DeferredContext,
-				pkdpc->SystemArgument1,
-				pkdpc->SystemArgument2);
+
+			__try {
+				// Call the Deferred Procedure  :
+				pkdpc->DeferredRoutine(
+					pkdpc,
+					pkdpc->DeferredContext,
+					pkdpc->SystemArgument1,
+					pkdpc->SystemArgument2);
+			} __except (EmuException(GetExceptionInformation()))
+			{
+				EmuWarning("Problem with ExceptionFilter!");
+			}
+
 			KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 		}
 
@@ -237,10 +250,16 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 				if (pkdpc == nullptr)
 					break; // while
 
-				pkdpc->DeferredRoutine(pkdpc,
-					pkdpc->DeferredContext,
-					pkdpc->SystemArgument1,
-					pkdpc->SystemArgument2);
+				__try {
+					pkdpc->DeferredRoutine(
+						pkdpc,
+						pkdpc->DeferredContext,
+						pkdpc->SystemArgument1,
+						pkdpc->SystemArgument2);
+				} __except (EmuException(GetExceptionInformation()))
+				{
+					EmuWarning("Problem with ExceptionFilter!");
+				}
 			}
 		}
 
@@ -251,6 +270,8 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 
 		// TODO : Wait for shutdown too here
 		WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
+
+		SwitchToThread();
 	} // while
 
 	return S_OK;
@@ -265,6 +286,7 @@ void InitDpcAndTimerThread()
 	InitializeListHead(&(g_DpcData.TimerQueue));
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 	g_DpcData.DpcThread = CreateThread(/*lpThreadAttributes=*/nullptr, /*dwStackSize=*/0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, /*lpParameter=*/nullptr, /*dwCreationFlags=*/0, &dwThreadId);
+	SetThreadAffinityMask(g_DpcData.DpcThread, g_CPUXbox);
 	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
 }
 

@@ -1527,7 +1527,7 @@ struct _KDPC;
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-typedef VOID (*PKDEFERRED_ROUTINE)
+typedef VOID (__stdcall *PKDEFERRED_ROUTINE)
 (
     IN struct _KDPC *Dpc,
     IN PVOID         DeferredContext,
