@@ -2674,9 +2674,10 @@ static unsigned int WINAPI EmuNV2A_InterruptThread(PVOID param)
 					// If GPU Interrupt is connected, call the interrupt service routine
 					if (EmuInterruptList[3]->Connected) {
 						// Get a function pointer to the service routine
-						void(*ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (void(*)(xboxkrnl::PKINTERRUPT, void*))EmuInterruptList[3]->ServiceRoutine;
+						BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))EmuInterruptList[3]->ServiceRoutine;
 						// Call the routine, passing the service context and interrupt object
-						ServiceRoutine(EmuInterruptList[3], EmuInterruptList[3]->ServiceContext);
+						BOOLEAN result = ServiceRoutine(EmuInterruptList[3], EmuInterruptList[3]->ServiceContext);
+						// TODO: What is the result for?
 					}
 				}
 				else {
