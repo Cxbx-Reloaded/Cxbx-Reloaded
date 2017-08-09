@@ -490,8 +490,6 @@ struct {
 	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
 } pgraph;
 
-bool interruptsUpdated = false;
-
 static void update_irq()
 {
 	/* PFIFO */
@@ -531,7 +529,13 @@ static void update_irq()
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_SOFTWARE;
 	} */
 
-	interruptsUpdated = true;
+	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
+		HalSystemInterrupts[3].Assert(true);
+	} else {
+		HalSystemInterrupts[3].Assert(false);
+	}
+
+	SwitchToThread();
 }
 
 
@@ -2652,6 +2656,7 @@ static void nv2a_vblank_thread()
 	}
 }
 
+// TODO: Move this into the kernel
 static unsigned int WINAPI EmuNV2A_InterruptThread(PVOID param)
 {
 	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
@@ -2660,38 +2665,14 @@ static unsigned int WINAPI EmuNV2A_InterruptThread(PVOID param)
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 
 	while (true) {
-		__try {
-			// If interrupts need processing, service the NV2A interrupt
-			// TODO: Move this into the kernel/make this generic, not NV2A specific
-			// An interrupt thread should exist in the kernel which iterates through
-			// EmuInterruptList and calls and pending interrupts!
-			// Note: This is implemented here as currently only NV2A generates 
-			// interrupts, and we have no mechanism for telling the kernel an
-			// interrupt needs to be fired!
-			if (interruptsUpdated) {
-				interruptsUpdated = false;
-				if (pmc.pending_interrupts && pmc.enabled_interrupts) {
-					// If GPU Interrupt is connected, call the interrupt service routine
-					if (EmuInterruptList[3]->Connected) {
-						// Get a function pointer to the service routine
-						BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))EmuInterruptList[3]->ServiceRoutine;
-						// Call the routine, passing the service context and interrupt object
-						BOOLEAN result = ServiceRoutine(EmuInterruptList[3], EmuInterruptList[3]->ServiceContext);
-						// TODO: What is the result for?
-					}
-				}
-				else {
-					// TODO: Cancel IRQ
-					// EmuWarning("NV2A update_irq() : Cancel IRQ Not Implemented");
-				}
+		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+			// If the interrupt is pending, pending and connected, process it
+			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 			}
+		}
 
-			SwitchToThread();
-		}
-		__except (EmuException(GetExceptionInformation()))
-		{
-			EmuWarning("Problem with ExceptionFilter!");
-		}
+		SwitchToThread();
 	}
 
 	return 0; 
