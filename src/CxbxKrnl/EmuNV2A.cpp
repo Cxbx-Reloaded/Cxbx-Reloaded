@@ -42,6 +42,15 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#include <process.h> // For __beginthreadex(), etc.
+
+// prevent name collisions
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
+
 #ifdef _MSC_VER                         // Check if MS Visual C compiler
 #  pragma comment(lib, "opengl32.lib")  // Compiler-specific directive to avoid manually configuration
 //#  pragma comment(lib, "glu32.lib")     // Link libraries
@@ -58,6 +67,8 @@
 #include "CxbxKrnl.h"
 #include "device.h"
 #include "Emu.h"
+#include "EmuFS.h"
+#include "EmuKrnl.h"
 #include "EmuNV2A.h"
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
 
@@ -479,6 +490,7 @@ struct {
 	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
 } pgraph;
 
+bool interruptsUpdated = false;
 
 static void update_irq()
 {
@@ -519,14 +531,7 @@ static void update_irq()
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_SOFTWARE;
 	} */
 
-	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
-		// TODO Raise IRQ
-		EmuWarning("NV2A update_irq() : Raise IRQ Not Implemented");
-	}
-	else {
-		// TODO: Cancel IRQ
-		EmuWarning("NV2A update_irq() : Cancel IRQ Not Implemented");
-	}
+	interruptsUpdated = true;
 }
 
 
@@ -928,7 +933,6 @@ static void pfifo_run_pusher() {
 	/* based on the convenient pseudocode in envytools */
 	while (control->dma_get != control->dma_put) {
 		if (control->dma_get >= dma_len) {
-
 			state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION;
 			break;
 		}
@@ -2630,6 +2634,68 @@ void InitOpenGLContext()
 	DxbxCompileShader(szCode);
 }
 
+// HACK: Until we implement VGA/proper interrupt generation
+// we simulate VBLANK by calling the interrupt at 60Hz
+std::thread vblank_thread;
+extern clock_t GetNextVBlankTime();
+static void nv2a_vblank_thread()
+{
+	clock_t nextVBlankTime = GetNextVBlankTime();
+
+	while (true) {
+		// Handle VBlank
+		if (clock() > nextVBlankTime) {
+			pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
+			update_irq();
+			nextVBlankTime = GetNextVBlankTime();
+		}
+	}
+}
+
+static unsigned int WINAPI EmuNV2A_InterruptThread(PVOID param)
+{
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
+	while (true) {
+		__try {
+			// If interrupts need processing, service the NV2A interrupt
+			// TODO: Move this into the kernel/make this generic, not NV2A specific
+			// An interrupt thread should exist in the kernel which iterates through
+			// EmuInterruptList and calls and pending interrupts!
+			// Note: This is implemented here as currently only NV2A generates 
+			// interrupts, and we have no mechanism for telling the kernel an
+			// interrupt needs to be fired!
+			if (interruptsUpdated) {
+				interruptsUpdated = false;
+				if (pmc.pending_interrupts && pmc.enabled_interrupts) {
+					// If GPU Interrupt is connected, call the interrupt service routine
+					if (EmuInterruptList[3]->Connected) {
+						// Get a function pointer to the service routine
+						void(*ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (void(*)(xboxkrnl::PKINTERRUPT, void*))EmuInterruptList[3]->ServiceRoutine;
+						// Call the routine, passing the service context and interrupt object
+						ServiceRoutine(EmuInterruptList[3], EmuInterruptList[3]->ServiceContext);
+					}
+				}
+				else {
+					// TODO: Cancel IRQ
+					// EmuWarning("NV2A update_irq() : Cancel IRQ Not Implemented");
+				}
+			}
+
+			SwitchToThread();
+		}
+		__except (EmuException(GetExceptionInformation()))
+		{
+			EmuWarning("Problem with ExceptionFilter!");
+		}
+	}
+
+	return 0; 
+}
+
 void EmuNV2A_Init()
 {
 	// Allocate PRAMIN Region
@@ -2644,4 +2710,10 @@ void EmuNV2A_Init()
 
 	MessageBoxA(NULL, "TEST", "TEST", 0);
 	pfifo.puller_thread = std::thread(pfifo_puller_thread);
+
+	vblank_thread = std::thread(nv2a_vblank_thread);
+
+	// Start an Xbox Thread for Interrupt Processing!
+	DWORD dwThreadId;
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, EmuNV2A_InterruptThread, NULL, NULL, (uint*)&dwThreadId);
 }
