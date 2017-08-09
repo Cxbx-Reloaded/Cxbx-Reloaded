@@ -2690,9 +2690,8 @@ void EmuNV2A_Init()
 	pramdac.memory_clock_coeff = 0;
 	pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
-	MessageBoxA(NULL, "TEST", "TEST", 0);
 	pfifo.puller_thread = std::thread(pfifo_puller_thread);
-
+	
 	vblank_thread = std::thread(nv2a_vblank_thread);
 
 	// Start an Xbox Thread for Interrupt Processing!
