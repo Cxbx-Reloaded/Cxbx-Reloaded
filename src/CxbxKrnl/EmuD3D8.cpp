@@ -58,6 +58,7 @@ namespace xboxkrnl
 #include "HLEDatabase.h"
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
+#include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
 #include <process.h>
@@ -1451,7 +1452,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return D3D_OK; // = 0
 }
 
-static clock_t GetNextVBlankTime()
+clock_t GetNextVBlankTime()
 {
 	// TODO: Read display frequency from Xbox Display Adapter
 	// This is accessed by calling CMiniport::GetRefreshRate(); 
@@ -1525,7 +1526,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 		// If VBlank Interval has passed, trigger VBlank callback
         // Note: This whole code block can be removed once NV2A interrupts are implemented
 		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
-		if (clock() > nextVBlankTime)
+		// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
+		if (!(bLLE_GPU) && clock() > nextVBlankTime)
         {
 			nextVBlankTime = GetNextVBlankTime();
 
