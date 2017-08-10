@@ -82,17 +82,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/D3D8.1.0.5558.inl"
 #include "HLEDataBase/D3D8.1.0.5788.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
-#include "HLEDataBase/DSound.1.0.3936.inl"
-#include "HLEDataBase/DSound.1.0.4134.inl"
-#include "HLEDataBase/DSound.1.0.4361.inl"
-#include "HLEDataBase/DSound.1.0.4432.inl"
-#include "HLEDataBase/DSound.1.0.4627.inl"
-#include "HLEDataBase/DSound.1.0.5028.inl"
-#include "HLEDataBase/DSound.1.0.5233.inl"
-#include "HLEDataBase/DSound.1.0.5344.inl"
-#include "HLEDataBase/DSound.1.0.5558.inl"
-#include "HLEDataBase/DSound.1.0.5788.inl"
-#include "HLEDataBase/DSound.1.0.5849.inl"
+#include "HLEDataBase/DSound.OOVPA.inl"
 #include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4034.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
@@ -154,7 +144,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5788),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5849),
-
+#if ENABLE_LEGACY_DSOUND_DB
 	HLE_ENTRY(Lib_DSOUND, DSound, 3936),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4134),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4361),
@@ -166,7 +156,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_DSOUND, DSound, 5558),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5788),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5849),
-
+#endif
 	HLE_ENTRY(Lib_XGRAPHC, XG, 3911),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4034),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4361),
@@ -197,12 +187,18 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XACTENG, XactEng, 5849),
 };
 
+const HLEDataV2 HLEDataBaseV2[] = {
+    { Lib_DSOUND, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 }
+};
+
 // ******************************************************************
 // * HLEDataBaseCount
 // ******************************************************************
-extern const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
+const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
+
+const uint32 HLEDataBaseCountV2 = sizeof(HLEDataBaseV2) / sizeof(HLEDataV2);
 
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern xbaddr XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept
+xbaddr XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept
