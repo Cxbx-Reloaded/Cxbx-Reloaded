@@ -55,7 +55,7 @@ OOVPA_NO_XREF(Direct3D_CreateDevice, 4627, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_CreateDeviceX (From D3D8X)
+// * D3D_CreateDeviceX (Direct3D_CreateDevice from D3D8LTCG)
 // ******************************************************************
 OOVPA_NO_XREF(D3D_CreateDeviceX, 4627, 8)
 
@@ -2702,7 +2702,7 @@ OOVPA_END;
 OOVPATable D3D8_4627[] = {
 
 	REGISTER_OOVPA(Direct3D_CreateDevice, 4627, PATCH),
-	REGISTER_OOVPA(D3D_CreateDeviceX, 4627, XREF), // If hitting a Breakpoint, redirect to Direct3D_CreateDevice.
+	REGISTER_OOVPA(D3D_CreateDeviceX, 4627, DISABLED),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),

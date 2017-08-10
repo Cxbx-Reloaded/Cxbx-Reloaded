@@ -267,8 +267,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
-		bool bFoundD3D = false;
-
 		bXRefFirstPass = true; // Set to false for search speed optimization
 
 		// Mark all Xrefs initially as undetermined
@@ -306,12 +304,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
                 
 				std::string LibraryName(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
-				
-				// TODO: HACK: D3DX8 is packed into D3D8 database
-				if (strcmp(LibraryName.c_str(), Lib_D3DX8) == 0)
-				{
-					LibraryName = Lib_D3D8;
-				}
 
 				if (strcmp(LibraryName.c_str(), Lib_D3D8LTCG) == 0)
 				{
@@ -329,14 +321,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Skip scanning for D3D8 symbols when LLE GPU is selected
 					if (bLLE_GPU)
 						continue;
-
-					// Prevent scanning D3D8 again (since D3D8X is packed into it above)
-					if (bFoundD3D)
-					{
-						continue;
-					}
-
-					bFoundD3D = true;
 
 					// Some 3911 titles have different D3D8 builds
 					if (BuildVersion <= 3948)
