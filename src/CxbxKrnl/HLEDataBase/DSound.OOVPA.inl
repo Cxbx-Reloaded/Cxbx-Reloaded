@@ -163,7 +163,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundVoice_SetOutputBuffer, XREF, 4627),
     REGISTER_OOVPAS(CDirectSoundVoice_SetPitch, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_SetPosition, XREF, 4134, 4627, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffCurve, XREF, 4627, 5233, 5344),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffCurve, XREF, 4627, 5233, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffFactor, XREF, 4134, 5344, 5788), // s+ (from 4134's comment)
     REGISTER_OOVPAS(CDirectSoundVoice_SetVelocity, XREF, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetVolume, XREF, 4134, 5233),
