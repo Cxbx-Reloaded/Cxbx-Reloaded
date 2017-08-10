@@ -135,6 +135,13 @@ inline int SET_MASK(int v, int mask, int val) {
     return (v) |= ((__val) << (ffs(__mask)-1)) & (__mask);              
 }
 
+#define CASE_4(v, step)                                              \
+    case (v):                                                        \
+	case (v)+(step) :												 \
+	case (v)+(step) * 2:                                             \
+	case (v)+(step) * 3
+
+
 enum FifoMode {
 	FIFO_PIO = 0,
 	FIFO_DMA = 1,
@@ -320,7 +327,7 @@ typedef struct Cache1State {
 	std::mutex mutex;
 	std::condition_variable cache_cond;
 	std::queue<CacheEntry*> cache;
-	//std::queue<CacheEntry*> working_cache;
+	std::queue<CacheEntry*> working_cache;
 } Cache1State;
 
 typedef struct ChannelControl {
@@ -886,7 +893,7 @@ static void *nv_dma_map(xbaddr dma_obj_address, xbaddr *len)
 	DMAObject dma = nv_dma_load(dma_obj_address);
 
 	/* TODO: Handle targets and classes properly */
-	DbgPrintf("dma_map %x, %x, %"  " %"  "\n",
+	printf("dma_map %x, %x, %x %x"  "\n",
 		dma.dma_class, dma.dma_target, dma.address, dma.limit);
 
 	dma.address &= 0x07FFFFFF;
@@ -914,8 +921,6 @@ static void pfifo_run_pusher() {
 
 	if (!state->push_enabled) return;
 
-	std::unique_lock<std::mutex> cache_lock(state->mutex, std::defer_lock);
-
 	/* only handling DMA for now... */
 
 	/* Channel running DMA */
@@ -931,7 +936,7 @@ static void pfifo_run_pusher() {
 
 	dma = (uint8_t*)nv_dma_map(state->dma_instance, &dma_len);
 
-	DbgPrintf("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
+	printf("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
 		dma_len, control->dma_get, control->dma_put);
 
 	/* based on the convenient pseudocode in envytools */
@@ -948,24 +953,24 @@ static void pfifo_run_pusher() {
 			/* data word of methods command */
 			state->data_shadow = word;
 
-			CacheEntry* command = new CacheEntry;
+			CacheEntry* command = (CacheEntry*)calloc(1, sizeof(CacheEntry));
 			command->method = state->method;
 			command->subchannel = state->subchannel;
 			command->nonincreasing = state->method_nonincreasing;
 			command->parameter = word;
 
-			cache_lock.lock();
+			printf("Adding Command to Cache\n");
+			std::lock_guard<std::mutex> lk(state->mutex);
 			state->cache.push(command);
 			state->cache_cond.notify_all();
-			cache_lock.unlock();
 
 			if (!state->method_nonincreasing) {
 				state->method += 4;
 			}
+
 			state->method_count--;
 			state->dcount++;
-		}
-		else {
+		} else {
 			/* no command active - this is the first word of a new one */
 			state->rsvd_shadow = word;
 			/* match all forms */
@@ -973,13 +978,13 @@ static void pfifo_run_pusher() {
 				/* old jump */
 				state->get_jmp_shadow = control->dma_get;
 				control->dma_get = word & 0x1fffffff;
-				DbgPrintf("pb OLD_JMP 0x%08X\n", control->dma_get);
+				printf("pb OLD_JMP 0x%08X\n", control->dma_get);
 			}
 			else if ((word & 3) == 1) {
 				/* jump */
 				state->get_jmp_shadow = control->dma_get;
 				control->dma_get = word & 0xfffffffc;
-				DbgPrintf("pb JMP 0x%08X\n", control->dma_get);
+				printf("pb JMP 0x%08X\n", control->dma_get);
 			}
 			else if ((word & 3) == 2) {
 				/* call */
@@ -990,7 +995,7 @@ static void pfifo_run_pusher() {
 				state->subroutine_return = control->dma_get;
 				state->subroutine_active = true;
 				control->dma_get = word & 0xfffffffc;
-				DbgPrintf("pb CALL 0x%08X\n", control->dma_get);
+				printf("pb CALL 0x%08X\n", control->dma_get);
 			}
 			else if (word == 0x00020000) {
 				/* return */
@@ -1000,7 +1005,7 @@ static void pfifo_run_pusher() {
 				}
 				control->dma_get = state->subroutine_return;
 				state->subroutine_active = false;
-				DbgPrintf("pb RET 0x%08X\n", control->dma_get);
+				printf("pb RET 0x%08X\n", control->dma_get);
 			}
 			else if ((word & 0xe0030003) == 0) {
 				/* increasing methods */
@@ -1019,7 +1024,7 @@ static void pfifo_run_pusher() {
 				state->dcount = 0;
 			}
 			else {
-				DbgPrintf("pb reserved cmd 0x%08X - 0x%08X\n",
+				printf("pb reserved cmd 0x%08X - 0x%08X\n",
 					control->dma_get, word);
 				state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RESERVED_CMD;
 				break;
@@ -1027,11 +1032,11 @@ static void pfifo_run_pusher() {
 		}
 	}
 
-	DbgPrintf("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
+	printf("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
 		dma_len, control->dma_get, control->dma_put);
 
 	if (state->error) {
-		DbgPrintf("pb error: %d\n", state->error);
+		printf("pb error: %d\n", state->error);
 		assert(false);
 
 		state->dma_push_suspended = true;
@@ -1087,33 +1092,36 @@ static RAMHTEntry ramht_lookup(uint32_t handle)
 
 static void pgraph_context_switch(unsigned int channel_id)
 {
-	std::unique_lock<std::mutex> pgraph_lock(pgraph.mutex, std::defer_lock);
+	bool valid = false;
 
-	bool valid;
-	valid = pgraph.channel_valid && pgraph.channel_id == channel_id;
-	if (!valid) {
-		pgraph.trapped_channel_id = channel_id;
+	// Scope the lock so that it gets unlocked at end of this block
+	{
+		std::lock_guard<std::mutex> lk(pgraph.mutex);
+
+		valid = pgraph.channel_valid && pgraph.channel_id == channel_id;
+		if (!valid) {
+			pgraph.trapped_channel_id = channel_id;
+		}
 	}
-	if (!valid) {
-		DbgPrintf("puller needs to switch to ch %d\n", channel_id);
 
-		pgraph_lock.unlock();
+	if (!valid) {
+		printf("puller needs to switch to ch %d\n", channel_id);
 
 		//qemu_mutex_lock_iothread();
 		pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
 		update_irq();
 
-		pgraph_lock.lock();
+		std::unique_lock<std::mutex> lk(pgraph.mutex);
 		//qemu_mutex_unlock_iothread();
 
 		while (pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			pgraph.interrupt_cond.wait(pgraph_lock);
+			pgraph.interrupt_cond.wait(lk);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access() {
-	std::unique_lock<std::mutex> lk(pgraph.mutex, std::defer_lock);
+	std::unique_lock<std::mutex> lk(pgraph.mutex);
 
 	while (!pgraph.fifo_access) {	
 		pgraph.fifo_access_cond.wait(lk);
@@ -1125,7 +1133,7 @@ static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_cla
 	static unsigned int count = 0;
 
 	if (last == 0x1800 && method != last) {
-		DbgPrintf("pgraph method (%d) 0x%08X * %d", subchannel, last, count);
+		printf("pgraph method (%d) 0x%08X * %d", subchannel, last, count);
 	}
 	if (method != 0x1800) {
 		const char* method_name = NULL;
@@ -1145,12 +1153,12 @@ static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_cla
 			method_name = nv2a_method_names[nmethod];
 		}
 		if (method_name) {
-			DbgPrintf("pgraph method (%d): %s (0x%x)\n",
+			printf("pgraph method (%d): %s (0x%x)\n",
 				subchannel, method_name, parameter);
 		}
 		else {
 		*/
-			DbgPrintf("pgraph method (%d): 0x%x -> 0x%04x (0x%x)\n",
+			printf("pgraph method (%d): 0x%x -> 0x%04x (0x%x)\n",
 				subchannel, graphics_class, method, parameter);
 		//}
 
@@ -1176,29 +1184,41 @@ static void pgraph_method(unsigned int subchannel,	unsigned int method, uint32_t
 	ImageBlitState *image_blit = &object->data.image_blit;
 	KelvinState *kelvin = &object->data.kelvin;
 
-
+	printf("PGRAPH METHOD!\n");
 	pgraph_method_log(subchannel, object->graphics_class, method, parameter);
 }
 
 static void* pfifo_puller_thread()
 {
 	Cache1State *state = &pfifo.cache1;
-	std::unique_lock<std::mutex> cache_lock(state->mutex, std::defer_lock);
-	std::unique_lock<std::mutex> pgraph_lock(pgraph.mutex, std::defer_lock);
 
 	while (true) {
-		cache_lock.lock();
+		// Scope the lock so that it automatically unlocks at tne end of this block
+		{
+			std::unique_lock<std::mutex> lk(state->mutex);
 
-		while (state->cache.empty() || !state->pull_enabled) {
-			state->cache_cond.wait(cache_lock);
+			while (state->cache.empty() || !state->pull_enabled) {
+				printf("Waiting for Cache Lock\n");	
+				state->cache_cond.wait(lk);
+				printf("Done Waiting for Cache Lock\n");
+			}
+
+			// Copy cache to working_cache
+			printf("Building Working Cache\n");
+			while (!state->cache.empty()) {
+				printf("Copying To Working Cache\n");
+				state->working_cache.push(state->cache.front());
+				state->cache.pop();
+			}
 		}
 
-		cache_lock.unlock();
-		pgraph_lock.lock();
+		printf("Cache is not empty! \n");
 
-		while (!state->cache.empty()) {
-			CacheEntry * command = state->cache.front();
-			state->cache.pop();
+		std::lock_guard<std::mutex> lk(pgraph.mutex);
+
+		while (!state->working_cache.empty()) {
+			CacheEntry* command = state->working_cache.front();
+			state->working_cache.pop();
 
 			if (command->method == 0) {
 				// qemu_mutex_lock_iothread();
@@ -1220,12 +1240,10 @@ static void* pfifo_puller_thread()
 				}
 
 				/* the engine is bound to the subchannel */
-				cache_lock.lock();
+				std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
 				state->bound_engines[command->subchannel] = entry.engine;
 				state->last_engine = entry.engine;
-				cache_lock.unlock();
-			}
-			else if (command->method >= 0x100) {
+			} else if (command->method >= 0x100) {
 				/* method passed to engine */
 
 				uint32_t parameter = command->parameter;
@@ -1262,8 +1280,6 @@ static void* pfifo_puller_thread()
 
 			free(command);
 		}
-
-		pgraph_lock.unlock();
 	}
 
 	return NULL;
@@ -1282,7 +1298,8 @@ DEVICE_READ32(PMC)
 		result = pmc.enabled_interrupts;
 		break;
 	default:
-		DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
+		result = 0;
+		//DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
 		break;
 	}
 
@@ -1302,7 +1319,7 @@ DEVICE_WRITE32(PMC)
 		break;
 
 	default: 
-		DEVICE_WRITE32_REG(pmc); // Was : DEBUG_WRITE32_UNHANDLED(PMC);
+		//DEVICE_WRITE32_REG(pmc); // Was : DEBUG_WRITE32_UNHANDLED(PMC);
 		break;
 	}
 
@@ -1349,8 +1366,6 @@ DEVICE_WRITE32(PBUS)
 
 DEVICE_READ32(PFIFO)
 {
-	std::unique_lock<std::mutex> cache_lock(pfifo.cache1.mutex, std::defer_lock);
-
 	DEVICE_READ32_SWITCH() {
 	case NV_PFIFO_RAMHT:
 		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
@@ -1374,15 +1389,14 @@ DEVICE_READ32(PFIFO)
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_CHID, pfifo.cache1.channel_id);
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, pfifo.cache1.mode);
 		break;
-	case NV_PFIFO_CACHE1_STATUS:
-		cache_lock.lock();
-		
+	case NV_PFIFO_CACHE1_STATUS: {
+		std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
+
 		if (pfifo.cache1.cache.empty()) {
 			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
 		}
 
-		cache_lock.unlock();
-		break;
+	}	break;
 	case NV_PFIFO_CACHE1_DMA_PUSH:
 		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS,
 			pfifo.cache1.dma_push_enabled);
@@ -1416,18 +1430,17 @@ DEVICE_READ32(PFIFO)
 		result = pfifo.cache1.subroutine_return
 			| pfifo.cache1.subroutine_active;
 		break;
-	case NV_PFIFO_CACHE1_PULL0:
-		cache_lock.lock();
+	case NV_PFIFO_CACHE1_PULL0: {
+		std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
 		result = pfifo.cache1.pull_enabled;
-		cache_lock.unlock();
-		break;
-	case NV_PFIFO_CACHE1_ENGINE:
-		cache_lock.lock();
-		for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
+	} break;
+	case NV_PFIFO_CACHE1_ENGINE: {
+		std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
+		for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 			result |= pfifo.cache1.bound_engines[i] << (i * 2);
 		}
-		cache_lock.unlock();
-		break;
+		
+	}	break;
 	case NV_PFIFO_CACHE1_DMA_DCOUNT:
 		result = pfifo.cache1.dcount;
 		break;
@@ -1450,8 +1463,6 @@ DEVICE_READ32(PFIFO)
 
 DEVICE_WRITE32(PFIFO)
 {
-	std::unique_lock<std::mutex> cache_lock(pfifo.cache1.mutex, std::defer_lock);
-
 	switch(addr) {
 		case NV_PFIFO_INTR_0:
 			pfifo.pending_interrupts &= ~value;
@@ -1497,28 +1508,29 @@ DEVICE_WRITE32(PFIFO)
 			pfifo.cache1.subroutine_return = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_RETURN_OFFSET);
 			pfifo.cache1.subroutine_active = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
 			break;
-		case NV_PFIFO_CACHE1_PULL0:
-			cache_lock.lock();
+		case NV_PFIFO_CACHE1_PULL0: {
+			std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
 
-			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS) 
+			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& !pfifo.cache1.pull_enabled) {
 				pfifo.cache1.pull_enabled = true;
 
 				/* the puller thread should wake up */
+				printf("Waking up the Cache lock\n");
 				pfifo.cache1.cache_cond.notify_all();
 			} else if (!(value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& pfifo.cache1.pull_enabled) {
 				pfifo.cache1.pull_enabled = false;
 			}
-			cache_lock.unlock();
-			break;
-		case NV_PFIFO_CACHE1_ENGINE:
-			cache_lock.lock();
-			for (int i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
+		}	break;
+		case NV_PFIFO_CACHE1_ENGINE: {
+			std::lock_guard<std::mutex> lk(pfifo.cache1.mutex);
+
+			for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 				pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
 			}
-			cache_lock.unlock();
-			break;
+
+		} break;
 		case NV_PFIFO_CACHE1_DMA_DCOUNT:
 			pfifo.cache1.dcount = (value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
 			break;
@@ -1673,7 +1685,8 @@ DEVICE_READ32(PTIMER)
 		result = (ptimer_get_clock() >> 27) & 0x1fffffff;
 		break;
 	default: 
-		DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
+		result = 0;
+		//DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
 		break;
 	}
 
@@ -1702,9 +1715,8 @@ DEVICE_WRITE32(PTIMER)
 	case NV_PTIMER_ALARM_0:
 		ptimer.alarm_time = value;
 		break;
-
 	default: 
-		DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
+		//DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
 		break;
 	}
 
@@ -1862,6 +1874,8 @@ DEVICE_WRITE32(PSTRAPS)
 
 DEVICE_READ32(PGRAPH)
 {
+	std::lock_guard<std::mutex> lk(pgraph.mutex);
+
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
 		result = pgraph.pending_interrupts;
@@ -1911,9 +1925,12 @@ static void pgraph_set_context_user(uint32_t value)
 
 DEVICE_WRITE32(PGRAPH)
 {
+	std::lock_guard<std::mutex> lk(pgraph.mutex);
+
 	switch (addr) {
 	case NV_PGRAPH_INTR:
 		pgraph.pending_interrupts &= ~value;
+		pgraph.interrupt_cond.notify_all();
 		break;
 	case NV_PGRAPH_INTR_EN:
 		pgraph.enabled_interrupts = value;
@@ -1924,16 +1941,46 @@ DEVICE_WRITE32(PGRAPH)
 	case NV_PGRAPH_CTX_USER:
 		pgraph_set_context_user(value);
 		break;
+	case NV_PGRAPH_INCREMENT:
+		if (value & NV_PGRAPH_INCREMENT_READ_3D) {
+			SET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
+				NV_PGRAPH_SURFACE_READ_3D,
+				(GET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
+					NV_PGRAPH_SURFACE_READ_3D) + 1)
+				% GET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
+					NV_PGRAPH_SURFACE_MODULO_3D));
+
+			pgraph.flip_3d.notify_all();
+		}
+		break;
 	case NV_PGRAPH_FIFO:
 		pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
+		pgraph.fifo_access_cond.notify_all();
 		break;
 	case NV_PGRAPH_CHANNEL_CTX_TABLE:
-		pgraph.context_table =
-			(value & NV_PGRAPH_CHANNEL_CTX_TABLE_INST) << 4;
+		pgraph.context_table = (value & NV_PGRAPH_CHANNEL_CTX_TABLE_INST) << 4;
 		break;
 	case NV_PGRAPH_CHANNEL_CTX_POINTER:
 		pgraph.context_address =
 			(value & NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
+		break;
+	case NV_PGRAPH_CHANNEL_CTX_TRIGGER:
+		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
+			printf("PGRAPH: read channel %d context from %0x08X\n",
+				pgraph.channel_id, pgraph.context_address);
+
+			uint8_t *context_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + pgraph.context_address);
+			uint32_t context_user = ldl_le_p((uint32_t*)context_ptr);
+
+			printf("    - CTX_USER = 0x%x\n", context_user);
+
+
+			pgraph_set_context_user(context_user);
+		}
+		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT) {
+			/* do stuff ... */
+		}
+
 		break;
 	default: 
 		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
@@ -1958,7 +2005,8 @@ DEVICE_READ32(PCRTC)
 		result = pcrtc.start;
 		break;
 	default: 
-		DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
+		result = 0;
+		//DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
 		break;
 	}
 
@@ -2152,7 +2200,7 @@ DEVICE_READ32(USER)
 			break;
 		default:
 			DEBUG_READ32_UNHANDLED(USER);
-		break;
+			break;
 	}
 
 	DEVICE_READ32_END(USER);
@@ -2164,25 +2212,33 @@ DEVICE_WRITE32(USER)
 	assert(channel_id < NV2A_NUM_CHANNELS);
 
 	ChannelControl *control = &user.channel_control[channel_id];
+
 	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
 
-	switch (addr & 0xFFFF) {
-	case NV_USER_DMA_PUT:
-		control->dma_put = value;
+	if (channel_modes & (1 << channel_id)) {
+		/* DMA Mode */
+		switch (addr & 0xFFFF) {
+		case NV_USER_DMA_PUT:
+			control->dma_put = value;
 
-		if (pfifo.cache1.push_enabled) {
-			pfifo_run_pusher();
+			if (pfifo.cache1.push_enabled) {
+				pfifo_run_pusher();
+			}
+			break;
+		case NV_USER_DMA_GET:
+			control->dma_get = value;
+			break;
+		case NV_USER_REF:
+			control->ref = value;
+			break;
+		default:
+			DEBUG_WRITE32_UNHANDLED(USER);
+			break;
 		}
-		break;
-	case NV_USER_DMA_GET:
-		control->dma_get = value;
-		break;
-	case NV_USER_REF:
-		control->ref = value;
-		break;
-	default:
-		DEBUG_WRITE32_UNHANDLED(USER);
-		break;
+	}
+	else {
+		/* PIO Mode */
+		assert(false);
 	}
 
 	DEVICE_WRITE32_END(USER);
