@@ -207,6 +207,7 @@ inline void GeneratePCMFormat(
     DWORD          &dwEmuFlags)
 {
     bool bIsSpecial = false;
+    DWORD checkAvgBps;
 
     // convert from Xbox to PC DSound
     {
@@ -239,6 +240,13 @@ inline void GeneratePCMFormat(
             switch (pDSBufferDesc->lpwfxFormat->wFormatTag) {
                 case WAVE_FORMAT_PCM:
                     dwEmuFlags |= DSB_FLAG_PCM;
+
+                    //TODO: Phantasy Star Online Episode I & II made an attempt to use avg byte/second below sample/second requirement.
+                    //In other word, this is a workaround to fix title mistake...
+                    checkAvgBps = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
+                    if (lpwfxFormat->nAvgBytesPerSec < checkAvgBps) {
+                        pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = checkAvgBps;
+                    }
                     break;
                 case WAVE_FORMAT_XBOX_ADPCM:
                     dwEmuFlags |= DSB_FLAG_XADPCM;
