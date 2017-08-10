@@ -54,7 +54,6 @@
 #include "stb_image.h"
 
 typedef BOOL (WINAPI *ChangeWindowMessageFilterType)(UINT, DWORD); // for GetProcAddress()
-static float                     g_LastFPSVal = 0; // Last FPS Value for benchmarking
 
 void ClearHLECache()
 {
@@ -411,10 +410,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
+					double fps = 0;
+					float mspf = 0;
+					g_EmuShared->SetCurrentMSpF(&mspf);
+					g_EmuShared->SetCurrentFPS(&fps);
                     SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					RefreshMenus();
-                    g_LastFPSVal = 0;
                 }
                 break;
 
@@ -424,7 +426,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     m_hwndChild = NULL;
                     SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
                     RefreshMenus();
-                    g_LastFPSVal = 0;
                 }
                 break;
             }
@@ -1525,17 +1526,12 @@ void WndMain::UpdateRecentFiles()
 void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
+	double currentFPSVal = 0;
 	float currentMSpFVal = 0;
-	float currentFPSVal = 0;
-	//float avgFPSVal = 0; // averege between the current and the last FPS value
 	if (g_EmuShared != NULL) {
+		g_EmuShared->GetCurrentFPS(&currentFPSVal);
 		g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
-		if (currentMSpFVal != 0) {
-			currentFPSVal = 1000 / currentMSpFVal;
-		}
 	}
-	//avgFPSVal = (currentFPSVal + g_LastFPSVal) / 2;
-	g_LastFPSVal = currentFPSVal;
 	sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS: %.2f  MS/F: %.2f", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, currentFPSVal, currentMSpFVal);
 	SetWindowText(m_hwnd, AsciiTitle);
 }

@@ -88,6 +88,7 @@ static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 static void							UpdateCurrentMSpF();
+static void							UpdateCurrentFPS();
 
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
@@ -111,7 +112,9 @@ static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback rou
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
-static SYSTEMTIME					g_LastDrawFunctionCallTime; // Used for benchmarking/fps count
+static double						g_CurrentFPSVal = 30;       // Used for benchmarking/fps count
+static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count
+static unsigned int					g_Frames = 0;				 // Used for benchmarking/fps count
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // D3D based variables
@@ -4919,8 +4922,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
     DWORD Flags
 )
 {
-	
-
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Flags);
@@ -4938,11 +4939,22 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 
-	UpdateCurrentMSpF();
+	clock_t beginFrame = clock();
+	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0); 
+	clock_t endFrame = clock();
 
-	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
 
+	g_DeltaTime += endFrame - beginFrame;
+	g_Frames++;
+
+	if (g_DeltaTime > CLOCKS_PER_SEC) {
+		UpdateCurrentMSpF();
+		UpdateCurrentFPS();
+		g_Frames = 0;
+		g_DeltaTime -= CLOCKS_PER_SEC;
+	}
+	
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
 		// Put primitives per frame in the title
@@ -10218,15 +10230,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 // ******************************************************************
 // * update the current milliseconds per frame
 // ******************************************************************
+static void UpdateCurrentFPS()
+{
+	if (g_EmuShared) {
+		g_CurrentFPSVal = (double)g_Frames*0.5 + g_CurrentFPSVal*0.5;
+		g_EmuShared->SetCurrentFPS(&g_CurrentFPSVal);
+	}
+}
+
 static void UpdateCurrentMSpF()
 {
-	SYSTEMTIME currentDrawFunctionCallTime;
-	GetSystemTime(&currentDrawFunctionCallTime);
-
 	if (g_EmuShared) {
-		float currentMSpFVal = currentDrawFunctionCallTime.wMilliseconds - g_LastDrawFunctionCallTime.wMilliseconds;
+		float currentMSpFVal = (float)(1000.0 / (g_CurrentFPSVal == 0 ? 0.001 : g_CurrentFPSVal));
 		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
 	}
-
-	g_LastDrawFunctionCallTime = currentDrawFunctionCallTime;
 }
