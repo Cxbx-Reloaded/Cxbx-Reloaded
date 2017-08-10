@@ -895,30 +895,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 }
 
 // ******************************************************************
-// * patch: IDirectSound_CreateBuffer
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateBuffer)
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC*         pdssd,
-    OUT X_CDirectSoundBuffer**  ppBuffer,
-    PVOID                   pUnknown)
-{
-    FUNC_EXPORTS;
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pdssd)
-		LOG_FUNC_ARG_OUT(ppBuffer)
-		LOG_FUNC_ARG(pUnknown)
-		LOG_FUNC_END;
-
-    EMUPATCH(DirectSoundCreateBuffer)(pdssd, ppBuffer);
-
-    return DS_OK;
-}
-
-// ******************************************************************
 // * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundBuffer)

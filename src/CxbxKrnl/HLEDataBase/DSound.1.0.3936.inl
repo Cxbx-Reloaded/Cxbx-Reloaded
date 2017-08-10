@@ -232,7 +232,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_CreateBuffer
 // ******************************************************************
-OOVPA_XREF(IDirectSound_CreateBuffer, 3936, 10,
+OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3943,7 +3943,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundBuffer, 3936, XREF),
-	REGISTER_OOVPA(IDirectSound_CreateBuffer, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitchB, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitchA, 3936, XREF),

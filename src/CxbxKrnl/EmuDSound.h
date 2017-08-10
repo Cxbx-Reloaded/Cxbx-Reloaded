@@ -674,17 +674,6 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateBuffer)
 );
 
 // ******************************************************************
-// * patch: IDirectSound_CreateBuffer
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound_CreateBuffer)
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC*         pdssd,
-    X_CDirectSoundBuffer**  ppBuffer,
-    PVOID                   pUnknown
-);
-
-// ******************************************************************
 // * patch: IDirectSoundBuffer_SetBufferData
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
