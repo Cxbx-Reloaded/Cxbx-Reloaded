@@ -121,10 +121,21 @@ extern const struct HLEData
 }
 HLEDataBase[];
 
+extern const struct HLEDataV2
+{
+    const char     *Library;
+
+    OOVPATable  *OovpaTable;
+    uint32          OovpaTableSize;
+}
+HLEDataBaseV2[];
+
 // ******************************************************************
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
+
+extern const uint32 HLEDataBaseCountV2;
 
 // ******************************************************************
 // * XRefDataBaseOffset
