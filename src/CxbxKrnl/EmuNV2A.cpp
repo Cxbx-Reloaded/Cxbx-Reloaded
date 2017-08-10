@@ -847,11 +847,11 @@ DEBUG_START(USER)
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
-#define DEVICE_READ32_REG(dev) result = dev.regs[addr / sizeof(uint32_t)]
+#define DEVICE_READ32_REG(dev) result = dev.regs[addr]
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
 #define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(xbaddr addr, uint32_t value)
-#define DEVICE_WRITE32_REG(dev) dev.regs[addr / sizeof(uint32_t)] = value
+#define DEVICE_WRITE32_REG(dev) dev.regs[addr] = value
 #define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
 static inline uint32_t ldl_le_p(const void *p)
@@ -1620,7 +1620,33 @@ DEVICE_WRITE32(PCOUNTER)
 	DEVICE_WRITE32_END(PCOUNTER);
 }
 
+static inline uint64_t muldiv64(uint64_t a, uint32_t b, uint32_t c)
+{
+	union {
+		uint64_t ll;
+		struct {
+			uint32_t low, high;
+		} l;
+	} u, res;
+	uint64_t rl, rh;
+
+	u.ll = a;
+	rl = (uint64_t)u.l.low * (uint64_t)b;
+	rh = (uint64_t)u.l.high * (uint64_t)b;
+	rh += (rl >> 32);
+	res.l.high = rh / c;
+	res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
+	return res.ll;
+}
+
 /* PIMTER - time measurement and time-based alarms */
+static uint32_t ptimer_get_clock()
+{
+	// Get time in nanoseconds
+	long int time = static_cast<long int>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+	
+	return muldiv64(time, pramdac.core_clock_freq * ptimer.numerator, CLOCKS_PER_SEC * ptimer.denominator);
+}
 
 DEVICE_READ32(PTIMER)
 {
@@ -1639,6 +1665,12 @@ DEVICE_READ32(PTIMER)
 		break;
 	case NV_PTIMER_ALARM_0:
 		result = ptimer.alarm_time;
+		break;
+	case NV_PTIMER_TIME_0:
+		result = (ptimer_get_clock() & 0x7ffffff) << 5;
+		break;
+	case NV_PTIMER_TIME_1:
+		result = (ptimer_get_clock() >> 27) & 0x1fffffff;
 		break;
 	default: 
 		DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
@@ -2101,8 +2133,13 @@ DEVICE_READ32(USER)
 	ChannelControl *control = &user.channel_control[channel_id];
 	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
 
-	addr &= 0xFFFF;
+	/* PIO Mode */
+	if (!channel_modes & (1 << channel_id)) {
+		assert(false);
+	}
 
+	/* DMA Mode */
+	addr &= 0xFFFF;
 	DEVICE_READ32_SWITCH() {
 		case NV_USER_DMA_PUT:
 			result = control->dma_put;
