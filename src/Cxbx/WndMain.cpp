@@ -52,6 +52,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+static float                     g_LastFPSVal = 0; // Last FPS Value for benchmarking
+
 void ClearHLECache()
 {
 	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
@@ -336,7 +338,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					RefreshMenus();
-                    m_LastFPSVal = 0;
+                    g_LastFPSVal = 0;
                 }
                 break;
 
@@ -346,7 +348,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     m_hwndChild = NULL;
                     SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
                     RefreshMenus();
-                    m_LastFPSVal = 0;
+                    g_LastFPSVal = 0;
                 }
                 break;
             }
@@ -358,23 +360,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				case 0:
 				{
-					char AsciiTitle[MAX_PATH];
-					int currentMSFVal = 0;
-					int currentFPSVal = 0;
-					int avgFPSVal = 0; // averege between the current and the last FPS value
-					if (g_EmuShared != NULL) {
-						g_EmuShared->GetCurrentMSF(&currentMSFVal);
-						if (currentMSFVal != 0) {
-							currentFPSVal = 1000 / currentMSFVal;
-						}
-						else {
-							currentFPSVal = 0;
-						}
-					}
-					avgFPSVal = (currentFPSVal + m_LastFPSVal) / 2;
-					m_LastFPSVal = currentFPSVal;
-					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS(AVG): %d  MS/F: %d", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, avgFPSVal, currentMSFVal);
-					SetWindowText(m_hwnd, AsciiTitle);
+					UpdateCaption();
 				}
 				break;
 			}
@@ -1441,6 +1427,24 @@ void WndMain::UpdateRecentFiles()
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
+}
+
+void WndMain::UpdateCaption()
+{
+	char AsciiTitle[MAX_PATH];
+	float currentMSpFVal = 0;
+	float currentFPSVal = 0;
+	//float avgFPSVal = 0; // averege between the current and the last FPS value
+	if (g_EmuShared != NULL) {
+		g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+		if (currentMSpFVal != 0) {
+			currentFPSVal = 1000 / currentMSpFVal;
+		}
+	}
+	//avgFPSVal = (currentFPSVal + g_LastFPSVal) / 2;
+	g_LastFPSVal = currentFPSVal;
+	sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS: %.2f  MS/F: %.2f", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, currentFPSVal, currentMSpFVal);
+	SetWindowText(m_hwnd, AsciiTitle);
 }
 
 // open an xbe file

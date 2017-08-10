@@ -107,8 +107,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentMSF(int *value) { Lock(); *value = m_MSF; Unlock(); }
-		void SetCurrentMSF(int *value) { Lock(); m_MSF = *value; Unlock(); }
+		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
+		void SetCurrentMSpF(float *value) { Lock(); m_MSpF = *value; Unlock(); }
 
 
     private:
@@ -127,7 +127,7 @@ class EmuShared : public Mutex
         char         m_XbePath[MAX_PATH];
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
-		int			 m_MSF;
+		float		 m_MSpF;
 };
 
 // ******************************************************************

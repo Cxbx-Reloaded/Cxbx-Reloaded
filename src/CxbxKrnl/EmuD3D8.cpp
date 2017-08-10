@@ -87,7 +87,7 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
-static void							UpdateCurrentMSF();
+static void							UpdateCurrentMSpF();
 
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
@@ -4937,7 +4937,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 //	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
 
-	UpdateCurrentMSF();
+	UpdateCurrentMSpF();
 
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
@@ -10217,15 +10217,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 // ******************************************************************
 // * update the current milliseconds per frame
 // ******************************************************************
-static void UpdateCurrentMSF()
+static void UpdateCurrentMSpF()
 {
 	SYSTEMTIME currentDrawFunctionCallTime;
-	int currentMSFVal = 0;
 	GetSystemTime(&currentDrawFunctionCallTime);
-	currentMSFVal = currentDrawFunctionCallTime.wMilliseconds - g_LastDrawFunctionCallTime.wMilliseconds;
 
 	if (g_EmuShared) {
-		g_EmuShared->SetCurrentMSF(&currentMSFVal);
+		float currentMSpFVal = currentDrawFunctionCallTime.wMilliseconds - g_LastDrawFunctionCallTime.wMilliseconds;
+		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
 	}
 
 	g_LastDrawFunctionCallTime = currentDrawFunctionCallTime;
