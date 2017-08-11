@@ -154,21 +154,79 @@ const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patc
 #define REGISTER_OOVPA(Symbol, Version, TYPE, ...) \
 	REGISTER_OOVPA_##TYPE(Symbol, Version, __VA_ARGS__)
 
-#define PATCH /* most common registration, Symbol indicates both an OOVPA and Patch */
+#define PATCH PATCH/* most common registration, Symbol indicates both an OOVPA and Patch */
 #define REGISTER_OOVPA_PATCH(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, 0)
 
-#define XREF /* registration of an XRef-only OOVPA, for which no Patch is present */
+#define XREF XREF/* registration of an XRef-only OOVPA, for which no Patch is present */
 #define REGISTER_OOVPA_XREF(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_XRef)
 
-#define ALIAS /* registration of a Patch using an alternatively named OOVPA */
+#define ALIAS ALIAS/* registration of a Patch using an alternatively named OOVPA */
 #define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
 	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, #Symbol ##, Version, 0)
 
-#define DISABLED /* registration is (temporarily) disabled by a flag */
+#define DISABLED DISABLED/* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_DontPatch)
+
+//Below this is a revise version 2 to improve OOPVA scan as possible.
+
+#define REGISTER_OOVPA_V2(Symbol, TYPE, Version) \
+    MSVC_EXPAND(REGISTER_OOVPA_##TYPE(Symbol, Version))
+//	{ &(Symbol ## _ ## Version).Header, #Symbol, Version, Flags }
+
+// ******************************************************************
+// * OOVPATable
+// ******************************************************************
+struct OOVPATableV2 {
+    char  *szSymbolName;
+    uint16_t Version;
+    OOVPA *pOovpa;
+};
+
+// http://stackoverflow.com/questions/5134523/msvc-doesnt-expand-va-args-correctly
+// MSVC_EXPAND works around a Visual C++ problem, expanding __VA_ARGS__ incorrectly:
+#define MSVC_EXPAND(x) x
+
+// Based on https://codecraft.co/2014/11/25/variadic-macros-tricks/
+// and https://groups.google.com/d/msg/comp.std.c/d-6Mj5Lko_s/jqonQLK20HcJ
+#define REGISTER_OOVPA_0(...)
+ #define REGISTER_OOVPA_1(Symbol, TYPE, Version) REGISTER_OOVPA_V2(Symbol, TYPE, Version)
+ #define REGISTER_OOVPA_2(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_1(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_3(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_2(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_4(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_3(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_5(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_4(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_6(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_5(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_7(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_6(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_8(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_7(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_9(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_8(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_10(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_9(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_11(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_10(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_12(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_11(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_13(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_12(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_14(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_13(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_15(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_14(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_16(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_15(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_17(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_16(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_18(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_17(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_19(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_18(Symbol, TYPE, __VA_ARGS__))
+
+// Accept any number of args >= N, but expand to just the Nth one. In this case,
+// we have settled on 20 as N. We could pick a different number by adjusting
+// the count of throwaway args before N. Note that this macro is preceded by
+// an underscore--it's an implementation detail, not something we expect people
+// to call directly.
+#define _GET_NTH_ARG( \
+	 _19,  _18,  _17,  _16,  _15,  _14,  _13,  _12,  _11,  _10, \
+	 _9,  _8,  _7,  _6,  _5,  _4,  _3,  _2,  _1,  _0, \
+	N, ...) N
+
+#define REGISTER_OOVPAS(Symbol, TYPE, ...) MSVC_EXPAND(_GET_NTH_ARG("ignored", __VA_ARGS__, \
+	REGISTER_OOVPA_19, REGISTER_OOVPA_18, REGISTER_OOVPA_17, REGISTER_OOVPA_16, REGISTER_OOVPA_15, \
+	REGISTER_OOVPA_14, REGISTER_OOVPA_13, REGISTER_OOVPA_12, REGISTER_OOVPA_11, REGISTER_OOVPA_10, \
+	REGISTER_OOVPA_9, REGISTER_OOVPA_8, REGISTER_OOVPA_7, REGISTER_OOVPA_6, REGISTER_OOVPA_5, \
+	REGISTER_OOVPA_4, REGISTER_OOVPA_3, REGISTER_OOVPA_2, REGISTER_OOVPA_1, REGISTER_OOVPA_0)(Symbol, TYPE, __VA_ARGS__))
 
 
 #pragma pack()
