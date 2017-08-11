@@ -111,7 +111,6 @@ static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback rou
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
-static clock_t						g_LastDrawFunctionCallTime = 0; // Used for benchmarking/fps count
 static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count
 static unsigned int					g_Frames = 0;				 // Used for benchmarking/fps count
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
@@ -4925,6 +4924,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	LOG_FUNC_ONE_ARG(Flags);
 
+	static clock_t lastDrawFunctionCallTime = 0;
+
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
 		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
@@ -4942,8 +4943,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
 
-	g_DeltaTime += currentDrawFunctionCallTime - g_LastDrawFunctionCallTime;
-	g_LastDrawFunctionCallTime = currentDrawFunctionCallTime;
+	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
+	lastDrawFunctionCallTime = currentDrawFunctionCallTime;
 	g_Frames++;
 
 	if (g_DeltaTime >= CLOCKS_PER_SEC) {
