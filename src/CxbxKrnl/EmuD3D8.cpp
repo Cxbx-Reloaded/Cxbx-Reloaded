@@ -10230,8 +10230,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 
 static void UpdateCurrentMSpFAndFPS() {
 	if (g_EmuShared) {
-		float currentFPSVal;
-		g_EmuShared->GetCurrentFPS(&currentFPSVal);
+		static float currentFPSVal;
 
 		float currentMSpFVal = (float)(1000.0 / (currentFPSVal == 0 ? 0.001 : currentFPSVal));
 		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
