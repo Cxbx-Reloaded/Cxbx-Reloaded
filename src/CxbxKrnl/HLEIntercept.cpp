@@ -588,6 +588,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                     }
                     for (uint32 d2 = 0; d2 < HLEDataBaseCountV2; d2++) {
                         if (strcmp(LibraryName.c_str(), HLEDataBaseV2[d2].Library) == 0 && pSectionScan != nullptr) {
+                            if (g_bPrintfOn) printf("Found\n");
                             EmuInstallPatchesV2(HLEDataBaseV2[d2].OovpaTable, HLEDataBaseV2[d2].OovpaTableSize, pSectionScan, OrigBuildVersion);
                             notFoundHLEDB = false;
                             break;
@@ -990,6 +991,12 @@ static void EmuInstallPatchesV2(OOVPATable *OovpaTable, uint32 OovpaTableSize, X
         xbaddr pFunc = (xbaddr)EmuLocateFunction(pLoop->Oovpa, lower, upper);
         if (pFunc == (xbaddr)nullptr)
             continue;
+
+        if (pFunc == pLastKnownFunc && pLastKnownSymbol == pLoop-1) {
+            if (g_SymbolAddresses[pLastKnownSymbol->szFuncName] == 0) {
+                printf("HLE: Duplicate OOVPA signature found for %s, %d vs %d!\n", pLastKnownSymbol->szFuncName, pLastKnownSymbol->Version, pLoop->Version);
+            }
+        }
 
         pLastKnownFunc = pFunc;
         pLastKnownSymbol = pLoop;
