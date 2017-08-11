@@ -134,7 +134,7 @@ class EmuShared : public Mutex
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
 		float		 m_MSpF;
-		float        m_FPS = 30;
+		float        m_FPS;
 };
 
 // ******************************************************************
