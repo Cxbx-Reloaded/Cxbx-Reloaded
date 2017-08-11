@@ -410,7 +410,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
-					double fps = 0;
+					float fps = 0;
 					float mspf = 0;
 					g_EmuShared->SetCurrentMSpF(&mspf);
 					g_EmuShared->SetCurrentFPS(&fps);
@@ -1526,7 +1526,7 @@ void WndMain::UpdateRecentFiles()
 void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
-	double currentFPSVal = 0;
+	float currentFPSVal = 0;
 	float currentMSpFVal = 0;
 	if (g_EmuShared != NULL) {
 		g_EmuShared->GetCurrentFPS(&currentFPSVal);

@@ -113,8 +113,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentFPS(double *value) { Lock(); *value = m_FPS; Unlock(); }
-		void SetCurrentFPS(double *value) { Lock(); m_FPS = *value; Unlock(); }
+		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
+		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 
     private:
@@ -134,7 +134,7 @@ class EmuShared : public Mutex
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
 		float		 m_MSpF;
-		double       m_FPS;
+		float        m_FPS = 30;
 };
 
 // ******************************************************************
