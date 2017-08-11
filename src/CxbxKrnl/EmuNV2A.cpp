@@ -1170,6 +1170,8 @@ static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_cla
 
 static void pgraph_method(unsigned int subchannel,	unsigned int method, uint32_t parameter)
 {
+	std::lock_guard<std::mutex> lk(pgraph.mutex);
+
 	int i;
 	GraphicsSubchannel *subchannel_data;
 	GraphicsObject *object;
@@ -1213,8 +1215,6 @@ static void* pfifo_puller_thread()
 		}
 
 		printf("Cache is not empty! \n");
-
-		std::lock_guard<std::mutex> lk(pgraph.mutex);
 
 		while (!state->working_cache.empty()) {
 			CacheEntry* command = state->working_cache.front();
