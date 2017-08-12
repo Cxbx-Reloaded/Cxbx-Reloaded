@@ -59,7 +59,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_Play, XREF, 3936, 4134, 4361, 5558, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_PlayEx, XREF, 3936, 4361, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetAllParameters, XREF, 4134),
-    REGISTER_OOVPAS(CDirectSoundBuffer_SetBufferData, XREF, 4134, 5558),
+    REGISTER_OOVPAS(CDirectSoundBuffer_SetBufferData, XREF, 4134, 5558, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetConeAngles, XREF, 4134, 5558),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetConeOrientation, XREF, 3936, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetConeOutsideVolume, XREF, 3936, 4134),
@@ -242,7 +242,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_PlayEx, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Release, PATCH, 3936), // +s (from 4134's comment)
     REGISTER_OOVPAS(IDirectSoundBuffer_SetAllParameters, PATCH, 4134), // Use that for now. Okay, it's your call pal... (from 4134's comment)
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetBufferData, PATCH, 3936, 4134, 5558),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetBufferData, PATCH, 3936, 4134, 5558, 5788),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetBufferDataA, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetConeAngles, PATCH, 3936, 4134, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetConeOrientation, PATCH, 3936),
@@ -253,6 +253,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetCurrentPositionA, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetCurrentPositionB, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetEG, PATCH, 4627),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetLFO, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundStream_FlushEx, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetFilter, PATCH, 4134),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetFormat, PATCH, 4361, 4627, 5558),
