@@ -544,6 +544,12 @@ OOVPA_NO_XREF(XFileCreateMediaObjectAsync, 5788, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * Rollback support signature(s)
+// ******************************************************************
+#define CDirectSoundBuffer_SetBufferData_5788 CDirectSoundBuffer_SetBufferData_4134
+#define IDirectSoundBuffer_SetBufferData_5788 IDirectSoundBuffer_SetBufferData_4134
+
+// ******************************************************************
 // * DSound_5788
 // ******************************************************************
 OOVPATable DSound_5788[] = {
