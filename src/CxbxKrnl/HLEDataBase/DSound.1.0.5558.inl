@@ -1606,6 +1606,9 @@ OOVPA_XREF(CDirectSoundStream_Use3DVoiceData, 5558, 9,
         { 0x4E, 0x08 },
 OOVPA_END;
 
+// ******************************************************************
+// * Rollback support signature(s)
+// ******************************************************************
 #define CDirectSoundVoice_SetRolloffCurve_5558 CDirectSoundVoice_SetRolloffCurve_5233
 
 // ******************************************************************

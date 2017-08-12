@@ -230,7 +230,7 @@ OOVPA_XREF(CDirectSound_CreateSoundBuffer, 3936, 16,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound_CreateBuffer
+// * IDirectSound_CreateSoundBuffer
 // ******************************************************************
 OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 10,
 
@@ -239,21 +239,21 @@ OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 10,
 
     // TODO: tidy up the xref names (are probably not accurate)
 
-        // IDirectSound_CreateBuffer+0x1D : call [CDirectSound::CreateSoundStream]
+        // IDirectSound_CreateSoundBuffer+0x1D : call [CDirectSound::CreateSoundBuffer]
         XREF_ENTRY( 0x1D, XREF_DSCREATESOUNDBUFFER ), // (Offset,Value)-Pair #1
 
-        // IDirectSound_CreateBuffer+0x04 : mov eax, [esp+0x08]
+        // IDirectSound_CreateSoundBuffer+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B }, // (Offset,Value)-Pair #2
         { 0x05, 0x44 }, // (Offset,Value)-Pair #3
         { 0x06, 0x24 }, // (Offset,Value)-Pair #4
         { 0x07, 0x08 }, // (Offset,Value)-Pair #5
 
-        // IDirectSound_CreateBuffer+0x12 : and eax, 0xFFFFFFF8
+        // IDirectSound_CreateSoundBuffer+0x12 : and eax, 0xFFFFFFF8
         { 0x12, 0x83 }, // (Offset,Value)-Pair #6
         { 0x13, 0xC0 }, // (Offset,Value)-Pair #7
         { 0x14, 0xF8 }, // (Offset,Value)-Pair #8
 
-        // IDirectSound_CreateBuffer+0x21 : retn 0x10
+        // IDirectSound_CreateSoundBuffer+0x21 : retn 0x10
         { 0x21, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x22, 0x10 }, // (Offset,Value)-Pair #10
 OOVPA_END;
