@@ -781,8 +781,9 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 				}
 				default:
 				{
-					if (XRefDataBase[Oovpa->XRefSaveIndex] != cur)
+					if (XRefDataBase[Oovpa->XRefSaveIndex] != cur) {
 						EmuWarning("Found OOVPA on other address than in XRefDataBase!");
+					}
 					break;
 				}
 				}
@@ -923,8 +924,42 @@ void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
         << " -> " << OopvaTable->szFuncName << " " << std::dec << OopvaTable->Version;
 
     bool IsXRef = (OopvaTable->Flags & Flag_XRef) > 0;
-    if (IsXRef)
+    if (IsXRef) {
         output << "\t(XREF)";
+
+        // do we need to save the found address?
+        OOVPA* Oovpa = OopvaTable->Oovpa;
+        if (Oovpa->XRefSaveIndex != XRefNoSaveIndex) {
+            // is the XRef not saved yet?
+            switch (XRefDataBase[Oovpa->XRefSaveIndex]) {
+                case XREF_ADDR_NOT_FOUND:
+                {
+                    EmuWarning("Found OOVPA after first finding nothing?");
+                    // fallthrough to XREF_ADDR_UNDETERMINED
+                }
+                case XREF_ADDR_UNDETERMINED:
+                {
+                    // save and count the found address
+                    UnResolvedXRefs--;
+                    XRefDataBase[Oovpa->XRefSaveIndex] = pFunc;
+                    break;
+                }
+                case XREF_ADDR_DERIVE:
+                {
+                    EmuWarning("Cannot derive a save index!");
+                    break;
+                }
+                default:
+                {
+                    if (XRefDataBase[OopvaTable->Oovpa->XRefSaveIndex] != pFunc) {
+                        EmuWarning("Found OOVPA on other address than in XRefDataBase!");
+                        EmuWarning("%s: %4d - pFunc: %08X, stored: %08X", OopvaTable->szFuncName, Oovpa->XRefSaveIndex, pFunc, XRefDataBase[Oovpa->XRefSaveIndex]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
     // Retrieve the associated patch, if any is available
     void* addr = GetEmuPatchAddr(std::string(OopvaTable->szFuncName));
@@ -948,6 +983,89 @@ void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
 
     output << "\n";
     printf(output.str().c_str());
+}
+
+
+// locate the given function, searching within lower and upper bounds
+xbaddr EmuLocateFunctionV2(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
+{
+    // skip out if this is an unnecessary search
+    if (!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
+        return (xbaddr)nullptr;
+
+    uint32_t derive_indices = 0;
+    // Check all XRefs are known (if not, don't do a useless scan) :
+    for (uint32 v = 0; v < Oovpa->XRefCount; v++) {
+        uint32 XRef;
+        uint08 Offset;
+
+        // get currently registered (un)known address
+        GetXRefEntry(Oovpa, v, XRef, Offset);
+        xbaddr XRefAddr = XRefDataBase[XRef];
+        // Undetermined XRef cannot be checked yet
+        if (XRefAddr == XREF_ADDR_UNDETERMINED)
+            // Skip this scan over the address range
+            return (xbaddr)nullptr;
+
+        // Don't verify an xref that has to be (but isn't yet) derived
+        if (XRefAddr == XREF_ADDR_DERIVE) {
+            // Mark (up to index 32) which xref needs to be derived
+            derive_indices |= (1 << v);
+            continue;
+        }
+    }
+
+    // correct upper bound with highest Oovpa offset
+    uint32 count = Oovpa->Count;
+    {
+        uint32 Offset;
+        uint08 Value; // ignored
+
+        GetOovpaEntry(Oovpa, count - 1, Offset, Value);
+        upper -= Offset;
+    }
+
+    // search all of the image memory
+    for (xbaddr cur = lower; cur < upper; cur++)
+        if (CompareOOVPAToAddress(Oovpa, cur)) {
+
+            while (derive_indices > 0) {
+                uint32 XRef;
+                uint08 Offset;
+                DWORD derive_index;
+
+                // Extract an index from the indices mask :
+                _BitScanReverse(&derive_index, derive_indices); // MSVC intrinsic; GCC has __builtin_clz
+                derive_indices ^= (1 << derive_index);
+
+                // get currently registered (un)known address
+                GetXRefEntry(Oovpa, derive_index, XRef, Offset);
+
+                // Calculate the address where the XRef resides
+                xbaddr XRefAddr = cur + Offset;
+                // Read the address it points to
+                XRefAddr = *((xbaddr*)XRefAddr);
+
+                /* For now assume it's a direct reference;
+                // TODO : Check if it's PC-relative reference?
+                if (XRefAddr + cur + Offset + 4 < XBE_MAX_VA)
+                XRefAddr = XRefAddr + cur + Offset + 4;
+                */
+
+                // Does the address seem valid?
+                if (XRefAddr < XBE_MAX_VA) {
+                    // save and count the derived address
+                    UnResolvedXRefs--;
+                    XRefDataBase[XRef] = XRefAddr;
+                    printf("Derived OOVPA!\n");
+                }
+            }
+
+            return cur;
+        }
+
+    // found nothing
+    return (xbaddr)nullptr;
 }
 
 // install function interception wrappers
@@ -988,7 +1106,7 @@ static void EmuInstallPatchesV2(OOVPATable *OovpaTable, uint32 OovpaTableSize, X
             continue;
 
         // Search for each function's location using the OOVPA
-        xbaddr pFunc = (xbaddr)EmuLocateFunction(pLoop->Oovpa, lower, upper);
+        xbaddr pFunc = (xbaddr)EmuLocateFunctionV2(pLoop->Oovpa, lower, upper);
         if (pFunc == (xbaddr)nullptr)
             continue;
 
