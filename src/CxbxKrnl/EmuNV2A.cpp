@@ -2749,28 +2749,6 @@ static void nv2a_vblank_thread()
 	}
 }
 
-// TODO: Move this into the kernel
-static unsigned int WINAPI EmuNV2A_InterruptThread(PVOID param)
-{
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
-
-	while (true) {
-		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-			// If the interrupt is pending, pending and connected, process it
-			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
-				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-			}
-		}
-
-		SwitchToThread();
-	}
-
-	return 0; 
-}
-
 void EmuNV2A_Init()
 {
 	// Allocate PRAMIN Region
@@ -2785,9 +2763,5 @@ void EmuNV2A_Init()
 
 	pfifo.puller_thread = std::thread(pfifo_puller_thread);
 	
-	vblank_thread = std::thread(nv2a_vblank_thread);
-
-	// Start an Xbox Thread for Interrupt Processing!
-	DWORD dwThreadId;
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, EmuNV2A_InterruptThread, NULL, NULL, (uint*)&dwThreadId);
+	vblank_thread = std::thread(nv2a_vblank_thread);;
 }
