@@ -211,7 +211,7 @@ OOVPA_XREF(IDirectSound_SetI3DL2Listener, 4134, 12,
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 4134, 12,
 
-    XREF_DSBUFFERSETHEADROOMB,
+    XREF_CDirectSoundVoice_SetHeadroom,
     XRefZero)
 
         { 0x00, 0x8B },
@@ -233,10 +233,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetHeadroom, 4134, 8,
 
-	XREF_DSBUFFERSETHEADROOMA,
+	XREF_CDirectSoundBuffer_SetHeadroom,
 	XRefOne)
 
-        XREF_ENTRY( 0x32, XREF_DSBUFFERSETHEADROOMB ),
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetHeadroom ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -256,8 +256,8 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        // IDirectSoundBuffer_SetHeadroom+0x32 : call [CDirectSoundBuffer_SetHeadroom]
-        XREF_ENTRY(0x32, XREF_DSBUFFERSETHEADROOMA),
+        // IDirectSoundBuffer_SetHeadroom+0x15 : call [CDirectSoundBuffer_SetHeadroom]
+        XREF_ENTRY(0x15, XREF_CDirectSoundBuffer_SetHeadroom),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
