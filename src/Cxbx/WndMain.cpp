@@ -410,20 +410,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
+					float fps = 0;
+					float mspf = 0;
+					g_EmuShared->SetCurrentMSpF(&mspf);
+					g_EmuShared->SetCurrentFPS(&fps);
+                    SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
-
-                    char AsciiTitle[MAX_PATH];
-
-					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
-
-                    SetWindowText(m_hwnd, AsciiTitle);
-
-                    RefreshMenus();
+					RefreshMenus();
                 }
                 break;
 
                 case WM_DESTROY:
                 {
+                    KillTimer(hwnd, 0);
                     m_hwndChild = NULL;
                     SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
                     RefreshMenus();
@@ -431,6 +430,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
             }
         };
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+				case 0:
+				{
+					UpdateCaption();
+				}
+				break;
+			}
+		}
+		break;
 
         case WM_SYSKEYDOWN:
         {
@@ -1509,6 +1521,19 @@ void WndMain::UpdateRecentFiles()
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
+}
+
+void WndMain::UpdateCaption()
+{
+	char AsciiTitle[MAX_PATH];
+	float currentFPSVal = 0;
+	float currentMSpFVal = 0;
+	if (g_EmuShared != NULL) {
+		g_EmuShared->GetCurrentFPS(&currentFPSVal);
+		g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+	}
+	sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS: %.2f  MS/F: %.2f", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, currentFPSVal, currentMSpFVal);
+	SetWindowText(m_hwnd, AsciiTitle);
 }
 
 // open an xbe file
