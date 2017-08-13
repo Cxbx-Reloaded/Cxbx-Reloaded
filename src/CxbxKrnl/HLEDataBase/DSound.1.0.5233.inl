@@ -339,7 +339,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBins, 5233, 8,
         { 0x4D, 0x5F },
         { 0x50, 0x08 },
 OOVPA_END;
-
+#if 0 // Don't use. Duplicate detection CDirectSoundVoice_SetConeAngles.
 // ******************************************************************
 // * CDirectSoundVoice::SetRolloffCurve
 // ******************************************************************
@@ -357,7 +357,7 @@ OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 5233, 8,
         { 0x34, 0x10 },
         { 0x3E, 0x33 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DSound_5233
 // ******************************************************************
@@ -423,7 +423,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 5233, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
-	REGISTER_OOVPA(CDirectSound_SetDistanceFactorA, 4627, XREF),
+	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDistanceFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
@@ -457,7 +457,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5233, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 5233, PATCH),
-	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffCurve, 5233, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffCurve, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetRolloffCurve, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),

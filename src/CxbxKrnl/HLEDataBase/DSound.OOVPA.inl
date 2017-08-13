@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDatabase->DSound.OOPVA.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDatabase->DSound.OOVPA.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -145,27 +145,27 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundVoice_SetAllParameters, XREF, 3936, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetConeAngles, XREF, 3936, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetConeOrientation, XREF, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetConeOutsideVolume, XREF, 4134, 5344),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetConeOutsideVolume, XREF, 4134, 4361, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetFilter, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_SetLFO, XREF, 4627),
     REGISTER_OOVPAS(CDirectSoundVoice_SetFormat, XREF, 4361, 4627, 4721, 5233, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetDistanceFactor, XREF, 4134, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetDopplerFactor, XREF, 4134, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetDistanceFactor, XREF, 4134, 4361, 4627, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetDopplerFactor, XREF, 4134, 4361, 4627, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetEG, XREF, 4627),
     REGISTER_OOVPAS(CDirectSoundVoice_SetFrequency, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_SetHeadroom, XREF, 3936, 4627, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetI3DL2Source, XREF, 3936, 4134, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetMaxDistance, XREF, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetMinDistance, XREF, 4134, 5344),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetMaxDistance, XREF, 4134, 4361, 5344),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetMinDistance, XREF, 4134, 4361, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMixBins, XREF, 3936, 4134, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMixBinVolumes, XREF, 3936, 4134, 4361, 4627),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMode, XREF, 3936, 4134, 5233, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetOutputBuffer, XREF, 4627),
     REGISTER_OOVPAS(CDirectSoundVoice_SetPitch, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_SetPosition, XREF, 4134, 4627, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffCurve, XREF, 4627, 5233, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffFactor, XREF, 4134, 5344, 5788), // s+ (from 4134's comment)
-    REGISTER_OOVPAS(CDirectSoundVoice_SetVelocity, XREF, 4134, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffCurve, XREF, 4627, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffFactor, XREF, 4134, 4361, 5344, 5788), // s+ (from 4134's comment)
+    REGISTER_OOVPAS(CDirectSoundVoice_SetVelocity, XREF, 4134, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetVolume, XREF, 4134, 5233),
     REGISTER_OOVPAS(CDirectSoundVoice_Use3DVoiceData, XREF, 5558),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettings, PATCH, 3936, 4134, 5344, 5558, 5788),
@@ -179,8 +179,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_GetSpeakerConfig, PATCH, 4627),
     REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3936, 4831, 5558),
     REGISTER_OOVPAS(CDirectSound_SetAllParametersA, XREF, 4627, 4721, 4831),
-    REGISTER_OOVPAS(CDirectSound_SetDistanceFactor, XREF, 5344),
-    REGISTER_OOVPAS(CDirectSound_SetDistanceFactorA, XREF, 3936, 4134, 4627, 5558),
+    REGISTER_OOVPAS(CDirectSound_SetDistanceFactor, XREF, 4134, 4627, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSound_SetDistanceFactorA, XREF, 3936),
     REGISTER_OOVPAS(CDirectSound_SetDistanceFactorB, XREF, 3936),
     REGISTER_OOVPAS(CDirectSound_SetDopplerFactor, XREF, 3936, 4134, 4627, 5344, 5558, 5788),
     REGISTER_OOVPAS(IDirectSound_SetEffectData, PATCH, 5344, 5788),
