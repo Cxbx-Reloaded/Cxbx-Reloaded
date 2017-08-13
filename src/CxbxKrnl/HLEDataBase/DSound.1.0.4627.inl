@@ -406,27 +406,37 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetDistanceFactorA
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetDistanceFactorA, 4627, 11,
+OOVPA_XREF(CDirectSound_SetDistanceFactor, 4627, 17,
 
     XREF_SETDISTANCEFACTORA,
     XRefZero)
 
-        // CDirectSound_SetDistanceFactorA+0x21 : mov eax, 0x80004005
+        // CDirectSound_SetDistanceFactor+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 }, // (Offset,Value)-Pair #1
         { 0x22, 0x05 }, // (Offset,Value)-Pair #2
         { 0x23, 0x40 }, // (Offset,Value)-Pair #3
         { 0x24, 0x00 }, // (Offset,Value)-Pair #4
         { 0x25, 0x80 }, // (Offset,Value)-Pair #5
 
-        // CDirectSound_SetDistanceFactorA+0x39 : or byte ptr[eax+0xA4], 0xE0
-        { 0x39, 0x80 }, // (Offset,Value)-Pair #6
-        { 0x3A, 0x88 }, // (Offset,Value)-Pair #7
-        { 0x3B, 0xA4 }, // (Offset,Value)-Pair #8
-        { 0x3F, 0xE0 }, // (Offset,Value)-Pair #9
+        // CDirectSound_SetDistanceFactor+0x33 : mov [eax+68h], edx
+        { 0x33, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x34, 0x50 }, // (Offset,Value)-Pair #7
+        { 0x35, 0x68 }, // (Offset,Value)-Pair #8
 
-        // CDirectSound_SetDistanceFactorA+0x4F : jz +0x0B
-        { 0x4F, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x50, 0x0B }, // (Offset,Value)-Pair #11
+        // CDirectSound_SetDistanceFactor+0x36 : mov eax, [ecx+8]
+        { 0x36, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x37, 0x41 }, // (Offset,Value)-Pair #10
+        { 0x38, 0x08 }, // (Offset,Value)-Pair #11
+
+        // CDirectSound_SetDistanceFactor+0x39 : or byte ptr[eax+0xA4], 0xE0
+        { 0x39, 0x80 }, // (Offset,Value)-Pair #12
+        { 0x3A, 0x88 }, // (Offset,Value)-Pair #13
+        { 0x3B, 0xA4 }, // (Offset,Value)-Pair #14
+        { 0x3F, 0xE0 }, // (Offset,Value)-Pair #15
+
+        // CDirectSound_SetDistanceFactor+0x4F : jz +0x0B
+        { 0x4F, 0x74 }, // (Offset,Value)-Pair #16
+        { 0x50, 0x0B }, // (Offset,Value)-Pair #17
 OOVPA_END;
 
 // ******************************************************************
@@ -1142,14 +1152,17 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetRolloffCurve
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 4627, 8,
+OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 4627, 11,
 
     XREF_DSVOICESETROLLOFFCURVE,
     XRefZero)
 
         { 0x07, 0x8B },
         { 0x10, 0x08 },
+        { 0x11, 0x89 },
+        { 0x12, 0x51 },
         { 0x13, 0x70 },
+        { 0x14, 0x8B },
         { 0x19, 0xB4 },
         { 0x22, 0x51 },
         { 0x2B, 0x00 },
@@ -1423,6 +1436,62 @@ OOVPA_XREF(CDirectSoundStream_SetPitch, 4627, 12,
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSoundVoice::SetDistanceFactor
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetDistanceFactor, 4627, 12,
+
+    XREF_DSVOICESETDISTANCEFACTOR,
+    XRefZero)
+
+        // CDirectSoundVoice_SetDistanceFactor+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // CDirectSoundVoice_SetDistanceFactor+0x11 : mov [eax+40h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x50 },
+        { 0x13, 0x40 },
+
+        { 0x14, 0x8B },
+        { 0x1D, 0x80 },
+        { 0x1F, 0x78 },
+
+        // CDirectSoundVoice_SetDistanceFactor+0x30 : retn 0Ch
+        { 0x31, 0x0C },
+        { 0x32, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetDopplerFactor
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetDopplerFactor, 4627, 12,
+
+	XREF_CDirectSoundVoice_SetDopplerFactor,
+    XRefZero)
+
+        // CDirectSoundVoice_SetDopplerFactor+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // CDirectSoundVoice_SetDopplerFactor+0x12 : mov [eax+48h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x50 },
+        { 0x13, 0x48 },
+
+        { 0x14, 0x8B },
+        { 0x1D, 0x80 },
+        { 0x1F, 0x78 },
+
+        // CDirectSoundVoice_SetDopplerFactor+0x31 : retn 0Ch
+        { 0x31, 0x0C },
+        { 0x32, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_4627
 // ******************************************************************
 OOVPATable DSound_4627[] = {
@@ -1501,8 +1570,8 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
-	REGISTER_OOVPA(CDirectSound_SetDistanceFactorA, 4134, XREF),
-	REGISTER_OOVPA(CDirectSound_SetDistanceFactorA, 4627, XREF),
+	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4134, XREF),
+	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetRolloffFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 4134, PATCH),
@@ -1519,7 +1588,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffFactor, 4134, XREF), // s+
 	REGISTER_OOVPA(CDirectSoundBuffer_SetRolloffFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffFactor, 4134, PATCH),
-	REGISTER_OOVPA(CDirectSoundVoice_SetDistanceFactor, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetDistanceFactor, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDistanceFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 4134, XREF),
@@ -1537,7 +1606,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetVelocity, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetVelocity, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVelocity, 3936, PATCH),
-	REGISTER_OOVPA(CDirectSoundVoice_SetDopplerFactor, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetDopplerFactor, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDopplerFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetI3DL2Source, 4134, XREF),
