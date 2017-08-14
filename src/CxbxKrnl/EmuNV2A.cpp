@@ -339,7 +339,7 @@ typedef struct ChannelControl {
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
-	uint32_t regs[NV_PMC_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PMC_SIZE]; // TODO : union
 } pmc;
 
 struct {
@@ -347,11 +347,11 @@ struct {
 	uint32_t enabled_interrupts;
 	std::thread puller_thread;
 	Cache1State cache1;
-	uint32_t regs[NV_PFIFO_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PFIFO_SIZE]; // TODO : union
 } pfifo;
 
 struct {
-	uint32_t regs[NV_PVIDEO_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PVIDEO_SIZE]; // TODO : union
 } pvideo;
 
 
@@ -361,18 +361,18 @@ struct {
 	uint32_t numerator;
 	uint32_t denominator;
 	uint32_t alarm_time;
-	uint32_t regs[NV_PTIMER_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PTIMER_SIZE]; // TODO : union
 } ptimer;
 
 struct {
-	uint32_t regs[NV_PFB_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PFB_SIZE]; // TODO : union
 } pfb;
 
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 	uint32_t start;
-	uint32_t regs[NV_PCRTC_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PCRTC_SIZE]; // TODO : union
 } pcrtc;
 
 struct {
@@ -380,11 +380,11 @@ struct {
 	uint64_t core_clock_freq;
 	uint32_t memory_clock_coeff;
 	uint32_t video_clock_coeff;
-	uint32_t regs[NV_PRAMDAC_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PRAMDAC_SIZE]; // TODO : union
 } pramdac;
 
 struct {
-	uint32_t regs[NV_PRAMIN_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PRAMIN_SIZE]; // TODO : union
 } pramin;
 
 struct {
@@ -494,7 +494,7 @@ struct {
 	GLuint gl_memory_buffer;
 	GLuint gl_vertex_array;
 
-	uint32_t regs[NV_PGRAPH_SIZE / sizeof(uint32_t)]; // TODO : union
+	uint32_t regs[NV_PGRAPH_SIZE]; // TODO : union
 } pgraph;
 
 static void update_irq()
@@ -846,11 +846,11 @@ DEBUG_START(USER)
 
 
 
-#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled, %s]\n", addr, result, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled, %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Handle%s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandle%s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled, %s]\n", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled, %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
+#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Handle%s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandle%s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
@@ -863,9 +863,7 @@ DEBUG_START(USER)
 
 static inline uint32_t ldl_le_p(const void *p)
 {
-	uint32_t val;
-	memcpy(&val, p, 4);
-	return val;
+	return *(uint32_t*)p;
 }
 
 static DMAObject nv_dma_load(xbaddr dma_obj_address)
@@ -1128,7 +1126,7 @@ static void pgraph_wait_fifo_access() {
 	}
 }
 
-static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_class,unsigned int method, uint32_t parameter) {
+static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_class, unsigned int method, uint32_t parameter) {
 	static unsigned int last = 0;
 	static unsigned int count = 0;
 
@@ -1168,7 +1166,31 @@ static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_cla
 	last = method;
 }
 
-static void pgraph_method(unsigned int subchannel,	unsigned int method, uint32_t parameter)
+static void load_graphics_object(xbaddr instance_address, GraphicsObject *obj)
+{
+	uint8_t *obj_ptr;
+	uint32_t switch1, switch2, switch3;
+	
+	assert(instance_address < NV_PRAMIN_SIZE);
+	obj_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR  + instance_address);
+
+	switch1 = ldl_le_p((uint32_t*)obj_ptr);
+	switch2 = ldl_le_p((uint32_t*)(obj_ptr + 4));
+	switch3 = ldl_le_p((uint32_t*)(obj_ptr + 8));
+
+	obj->graphics_class = switch1 & NV_PGRAPH_CTX_SWITCH1_GRCLASS;
+
+	/* init graphics object */
+	switch (obj->graphics_class) {
+	case NV_KELVIN_PRIMITIVE:
+		// kelvin->vertex_attributes[NV2A_VERTEX_ATTR_DIFFUSE].inline_value = 0xFFFFFFF;
+		break;
+	default:
+		break;
+	}
+}
+
+static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t parameter)
 {
 	std::lock_guard<std::mutex> lk(pgraph.mutex);
 
@@ -1182,12 +1204,27 @@ static void pgraph_method(unsigned int subchannel,	unsigned int method, uint32_t
 	subchannel_data = &pgraph.subchannel_data[subchannel];
 	object = &subchannel_data->object;
 
-	ContextSurfaces2DState *context_surfaces_2d	= &object->data.context_surfaces_2d;
+	ContextSurfaces2DState *context_surfaces_2d = &object->data.context_surfaces_2d;
 	ImageBlitState *image_blit = &object->data.image_blit;
 	KelvinState *kelvin = &object->data.kelvin;
 
-	printf("PGRAPH METHOD!\n");
 	pgraph_method_log(subchannel, object->graphics_class, method, parameter);
+
+	if (method == NV_SET_OBJECT) {
+		subchannel_data->object_instance = parameter;
+
+		//qemu_mutex_lock_iothread();
+		load_graphics_object(parameter, object);
+		//qemu_mutex_unlock_iothread();
+		return;
+	}
+
+	switch (object->graphics_class) {
+	
+	default:
+		EmuWarning("EmuNV2A: Unknown Graphics Class/Method 0x%08Xm 0x%08X\n", object->graphics_class, method);
+		break;
+	}
 }
 
 static void* pfifo_puller_thread()
@@ -1669,14 +1706,11 @@ DEVICE_READ32(PTIMER)
 	case NV_PTIMER_INTR_EN_0:
 		result = ptimer.enabled_interrupts;
 		break;
-	case NV_PTIMER_DENOMINATOR:
-		result = ptimer.denominator;
-		break;
 	case NV_PTIMER_NUMERATOR:
 		result = ptimer.numerator;
 		break;
-	case NV_PTIMER_ALARM_0:
-		result = ptimer.alarm_time;
+	case NV_PTIMER_DENOMINATOR:
+		result = ptimer.denominator;
 		break;
 	case NV_PTIMER_TIME_0:
 		result = (ptimer_get_clock() & 0x7ffffff) << 5;
@@ -2083,7 +2117,7 @@ DEVICE_READ32(PRAMDAC)
 		break;
 
 	default: 
-		DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
+		//DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
 		break;
 	}
 
@@ -2119,7 +2153,7 @@ DEVICE_WRITE32(PRAMDAC)
 		break;
 
 	default: 
-		DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
+		//DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
 		break;
 	}
 
