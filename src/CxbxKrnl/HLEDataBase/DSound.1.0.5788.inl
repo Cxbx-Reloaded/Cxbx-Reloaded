@@ -542,6 +542,7 @@ OOVPA_END;
 // ******************************************************************
 #define CDirectSoundBuffer_SetBufferData_5788 CDirectSoundBuffer_SetBufferData_4134
 #define IDirectSoundBuffer_SetBufferData_5788 IDirectSoundBuffer_SetBufferData_4134
+#define XAudioDownloadEffectsImage_5788 XAudioDownloadEffectsImage_4627
 
 // ******************************************************************
 // * DSound_5788

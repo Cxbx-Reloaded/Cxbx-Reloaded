@@ -931,7 +931,6 @@ OOVPA_END;
 // * XAudioDownloadEffectsImage
 // ******************************************************************
 OOVPA_NO_XREF(XAudioDownloadEffectsImage, 4627, 8)
-#define XAudioDownloadEffectsImage_5788 XAudioDownloadEffectsImage_4627
 
         { 0x1E, 0xB6 },
         { 0x41, 0x83 },
