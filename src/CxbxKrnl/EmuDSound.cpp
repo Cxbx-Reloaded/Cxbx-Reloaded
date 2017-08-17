@@ -1059,6 +1059,45 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
 }
 
 // ******************************************************************
+// * patch: IDirectSoundBuffer_Unlock
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Unlock)
+(
+    X_CDirectSoundBuffer*   pThis,
+    LPVOID                  ppvAudioPtr1,
+    DWORD                   pdwAudioBytes1,
+    LPVOID                  ppvAudioPtr2,
+    DWORD                   pdwAudioBytes2
+    )
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(ppvAudioPtr1)
+        LOG_FUNC_ARG(pdwAudioBytes1)
+        LOG_FUNC_ARG(ppvAudioPtr2)
+        LOG_FUNC_ARG(pdwAudioBytes2)
+        LOG_FUNC_END;
+
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->EmuLockOffset,
+                        pThis->EmuLockPtr1,
+                        pThis->EmuLockBytes1,
+                        pThis->EmuLockPtr2,
+                        pThis->EmuLockBytes2,
+                        pThis->EmuLockFlags);
+
+    leaveCriticalSection;
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)

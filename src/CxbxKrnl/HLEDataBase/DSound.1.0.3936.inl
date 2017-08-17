@@ -4036,6 +4036,21 @@ OOVPA_XREF(IDirectSoundBuffer_SetConeOutsideVolume, 3936, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * IDirectSoundBuffer_Unlock
+// ******************************************************************
+OOVPA_NO_XREF(IDirectSoundBuffer_Unlock, 3936, 5)
+
+    // IDirectSoundBuffer_Unlock+0x00 : xor eax, eax
+    { 0x00, 0x33 },
+    { 0x01, 0xC0 },
+
+    // IDirectSoundBuffer_Unlock+0x02 : ret 14h
+    { 0x02, 0xC2 },
+    { 0x03, 0x14 },
+    { 0x04, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_3936
 // ******************************************************************
 OOVPATable DSound_3936[] = {
