@@ -4205,6 +4205,7 @@ OOVPATable DSound_3936[] = {
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
     REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 3936, XREF),
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 3936, PATCH),
+    REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
 };
 
 // ******************************************************************
