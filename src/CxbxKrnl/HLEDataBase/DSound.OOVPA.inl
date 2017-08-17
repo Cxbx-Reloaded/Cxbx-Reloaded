@@ -284,6 +284,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetVolumeB, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Stop, PATCH, 3936, 4134, 4361),
     REGISTER_OOVPAS(IDirectSoundBuffer_StopEx, PATCH, 4361),
+    REGISTER_OOVPAS(IDirectSoundBuffer_Unlock, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Use3DVoiceData, PATCH, 5558),
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSound_CreateSoundBuffer, PATCH, 3936/*, 4134, 4361*/),
