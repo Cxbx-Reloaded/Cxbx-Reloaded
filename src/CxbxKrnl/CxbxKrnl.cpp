@@ -326,6 +326,49 @@ void CxbxPopupMessage(const char *message)
 	MessageBox(NULL, message, "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
 }
 
+void PrintCurrentConfigurationLog() {
+	// Print current LLE configuration
+	{
+		printf("---------------------------- LLE CONFIG ----------------------------\n");
+		printf("[0x%X] EmuMain: LLE for APU is %s\n", GetCurrentThreadId(), bLLE_APU ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: LLE for GPU is %s\n", GetCurrentThreadId(), bLLE_GPU ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: LLE for JIT is %s\n", GetCurrentThreadId(), bLLE_JIT ? "enabled" : "disabled");
+	}
+
+	// Print current INPUT configuration
+	{
+		printf("--------------------------- INPUT CONFIG ---------------------------\n");
+		printf("[0x%X] EmuMain: Using %s\n", GetCurrentThreadId(), g_XInputEnabled ? "XInput" : "DirectInput");
+	}
+
+	// Print current video configuration
+	{
+		XBVideo XBVideoConf;
+		g_EmuShared->GetXBVideo(&XBVideoConf);
+
+		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
+		printf("[0x%X] EmuMain: Direct3D Device: %s\n", GetCurrentThreadId(), XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		printf("[0x%X] EmuMain: Video Resolution: %s\n", GetCurrentThreadId(), XBVideoConf.GetVideoResolution());
+		printf("[0x%X] EmuMain: Force VSync is %s\n", GetCurrentThreadId(), XBVideoConf.GetVSync() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Fullscreen is %s\n", GetCurrentThreadId(), XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Hardware YUV is %s\n", GetCurrentThreadId(), XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
+	}
+
+	// Print current audio configuration
+	{
+		XBAudio XBAudioConf;
+		g_EmuShared->GetXBAudio(&XBAudioConf);
+
+		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
+		printf("[0x%X] EmuMain: Audio Adapter: %s\n", GetCurrentThreadId(), XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		printf("[0x%X] EmuMain: Legacy Audio Hack is %s\n", GetCurrentThreadId(), XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: PCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetPCM() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: XADPCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Unknown Codec is %s\n", GetCurrentThreadId(), XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+	}
+
+}
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -599,7 +642,7 @@ void CxbxKrnlInit
 	// Write a header to the log
 	{
 		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		
+
 		time_t startTime = time(nullptr);
 		struct tm* tm_info = localtime(&startTime);
 		char timeString[26];
@@ -652,33 +695,22 @@ void CxbxKrnlInit
 	{
 		int CxbxLLE_Flags;
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
-
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
-		if (bLLE_APU)
-			DbgPrintf("EmuMain : LLE enabled for APU.\n");
-
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-		if (bLLE_GPU)
-			DbgPrintf("EmuMain : LLE enabled for GPU.\n");
-
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
-		if (bLLE_JIT)
-			DbgPrintf("EmuMain : LLE enabled for JIT.\n");
 	}
 
 	// Process XInput Enabled flag
 	{
 		int XInputEnabled;
 		g_EmuShared->GetXInputEnabled(&XInputEnabled);
-		if (XInputEnabled) {
-			g_XInputEnabled = true;
-			printf("EmuMain : Using XInput\n");
-		} else {
-			g_XInputEnabled = false;
-			printf("EmuMain : Using DirectInput\n");
-		}
+		g_XInputEnabled = XInputEnabled;
 	}
 
+#ifdef _DEBUG_PRINT_CURRENT_CONF
+	PrintCurrentConfigurationLog();
+#endif
+	
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
