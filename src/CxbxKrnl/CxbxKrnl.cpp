@@ -367,6 +367,8 @@ void PrintCurrentConfigurationLog() {
 		printf("[0x%X] EmuMain: Unknown Codec is %s\n", GetCurrentThreadId(), XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
 	}
 
+	printf("------------------------- END OF CONFIG LOG ------------------------\n");
+
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
