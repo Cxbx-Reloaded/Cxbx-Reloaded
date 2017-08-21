@@ -430,6 +430,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
             }
         };
+		break; // added per PVS suggestion.
 
 		case WM_TIMER:
 		{
@@ -451,6 +452,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 SendMessage(m_hwndChild, uMsg, wParam, lParam);
             }
         };
+		break; // added per PVS suggestion.
 
         case WM_PAINT:
         {
