@@ -957,7 +957,6 @@ static void pfifo_run_pusher() {
 			command->nonincreasing = state->method_nonincreasing;
 			command->parameter = word;
 
-			printf("Adding Command to Cache\n");
 			std::lock_guard<std::mutex> lk(state->mutex);
 			state->cache.push(command);
 			state->cache_cond.notify_all();
@@ -1190,6 +1189,104 @@ static void load_graphics_object(xbaddr instance_address, GraphicsObject *obj)
 	}
 }
 
+static GraphicsObject* lookup_graphics_object(xbaddr instance_address)
+{
+	int i;
+	for (i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
+		if (pgraph.subchannel_data[i].object_instance == instance_address) {
+			return &pgraph.subchannel_data[i].object;
+		}
+	}
+	return NULL;
+}
+
+static bool pgraph_color_write_enabled()
+{
+	return pgraph.regs[NV_PGRAPH_CONTROL_0] & (
+		NV_PGRAPH_CONTROL_0_ALPHA_WRITE_ENABLE
+		| NV_PGRAPH_CONTROL_0_RED_WRITE_ENABLE
+		| NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE
+		| NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE);
+}
+
+static bool pgraph_zeta_write_enabled()
+{
+	return pgraph.regs[NV_PGRAPH_CONTROL_0] & (
+		NV_PGRAPH_CONTROL_0_ZWRITEENABLE
+		| NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE);
+}
+
+static unsigned int kelvin_map_stencil_op(uint32_t parameter)
+{
+	unsigned int op;
+	switch (parameter) {
+	case NV097_SET_STENCIL_OP_V_KEEP:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_KEEP; break;
+	case NV097_SET_STENCIL_OP_V_ZERO:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_ZERO; break;
+	case NV097_SET_STENCIL_OP_V_REPLACE:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_REPLACE; break;
+	case NV097_SET_STENCIL_OP_V_INCRSAT:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_INCRSAT; break;
+	case NV097_SET_STENCIL_OP_V_DECRSAT:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_DECRSAT; break;
+	case NV097_SET_STENCIL_OP_V_INVERT:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_INVERT; break;
+	case NV097_SET_STENCIL_OP_V_INCR:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_INCR; break;
+	case NV097_SET_STENCIL_OP_V_DECR:
+		op = NV_PGRAPH_CONTROL_2_STENCIL_OP_V_DECR; break;
+	default:
+		assert(false);
+		break;
+	}
+	return op;
+}
+
+static unsigned int kelvin_map_polygon_mode(uint32_t parameter)
+{
+	unsigned int mode;
+	switch (parameter) {
+	case NV097_SET_FRONT_POLYGON_MODE_V_POINT:
+		mode = NV_PGRAPH_SETUPRASTER_FRONTFACEMODE_POINT; break;
+	case NV097_SET_FRONT_POLYGON_MODE_V_LINE:
+		mode = NV_PGRAPH_SETUPRASTER_FRONTFACEMODE_LINE; break;
+	case NV097_SET_FRONT_POLYGON_MODE_V_FILL:
+		mode = NV_PGRAPH_SETUPRASTER_FRONTFACEMODE_FILL; break;
+	default:
+		assert(false);
+		break;
+	}
+	return mode;
+}
+
+static unsigned int kelvin_map_texgen(uint32_t parameter, unsigned int channel)
+{
+	assert(channel < 4);
+	unsigned int texgen;
+	switch (parameter) {
+	case NV097_SET_TEXGEN_S_DISABLE:
+		texgen = NV_PGRAPH_CSV1_A_T0_S_DISABLE; break;
+	case NV097_SET_TEXGEN_S_EYE_LINEAR:
+		texgen = NV_PGRAPH_CSV1_A_T0_S_EYE_LINEAR; break;
+	case NV097_SET_TEXGEN_S_OBJECT_LINEAR:
+		texgen = NV_PGRAPH_CSV1_A_T0_S_OBJECT_LINEAR; break;
+	case NV097_SET_TEXGEN_S_SPHERE_MAP:
+		assert(channel < 2);
+		texgen = NV_PGRAPH_CSV1_A_T0_S_SPHERE_MAP; break;
+	case NV097_SET_TEXGEN_S_REFLECTION_MAP:
+		assert(channel < 3);
+		texgen = NV_PGRAPH_CSV1_A_T0_S_REFLECTION_MAP; break;
+	case NV097_SET_TEXGEN_S_NORMAL_MAP:
+		assert(channel < 3);
+		texgen = NV_PGRAPH_CSV1_A_T0_S_NORMAL_MAP; break;
+	default:
+		assert(false);
+		break;
+	}
+	return texgen;
+}
+
 static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t parameter)
 {
 	std::lock_guard<std::mutex> lk(pgraph.mutex);
@@ -1220,9 +1317,672 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 	}
 
 	switch (object->graphics_class) {
+	case NV_CONTEXT_SURFACES_2D: {
+		switch (method) {
+		case NV062_SET_CONTEXT_DMA_IMAGE_SOURCE:
+			context_surfaces_2d->dma_image_source = parameter;
+			break;
+		case NV062_SET_CONTEXT_DMA_IMAGE_DESTIN:
+			context_surfaces_2d->dma_image_dest = parameter;
+			break;
+		case NV062_SET_COLOR_FORMAT:
+			context_surfaces_2d->color_format = parameter;
+			break;
+		case NV062_SET_PITCH:
+			context_surfaces_2d->source_pitch = parameter & 0xFFFF;
+			context_surfaces_2d->dest_pitch = parameter >> 16;
+			break;
+		case NV062_SET_OFFSET_SOURCE:
+			context_surfaces_2d->source_offset = parameter & 0x07FFFFFF;
+			break;
+		case NV062_SET_OFFSET_DESTIN:
+			context_surfaces_2d->dest_offset = parameter & 0x07FFFFFF;
+			break;
+		default:
+			EmuWarning("EmuNV2A: Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
+		}
 	
+		break; 
+	}
+	
+	case NV_IMAGE_BLIT: {
+		switch (method) {
+		case NV09F_SET_CONTEXT_SURFACES:
+			image_blit->context_surfaces = parameter;
+			break;
+		case NV09F_SET_OPERATION:
+			image_blit->operation = parameter;
+			break;
+		case NV09F_CONTROL_POINT_IN:
+			image_blit->in_x = parameter & 0xFFFF;
+			image_blit->in_y = parameter >> 16;
+			break;
+		case NV09F_CONTROL_POINT_OUT:
+			image_blit->out_x = parameter & 0xFFFF;
+			image_blit->out_y = parameter >> 16;
+			break;
+		case NV09F_SIZE:
+			image_blit->width = parameter & 0xFFFF;
+			image_blit->height = parameter >> 16;
+
+			/* I guess this kicks it off? */
+			if (image_blit->operation == NV09F_SET_OPERATION_SRCCOPY) {
+
+				printf("NV09F_SET_OPERATION_SRCCOPY");
+
+				GraphicsObject *context_surfaces_obj = lookup_graphics_object(image_blit->context_surfaces);
+				assert(context_surfaces_obj);
+				assert(context_surfaces_obj->graphics_class == NV_CONTEXT_SURFACES_2D);
+
+				ContextSurfaces2DState *context_surfaces =	&context_surfaces_obj->data.context_surfaces_2d;
+
+				unsigned int bytes_per_pixel;
+				switch (context_surfaces->color_format) {
+				case NV062_SET_COLOR_FORMAT_LE_Y8:
+					bytes_per_pixel = 1;
+					break;
+				case NV062_SET_COLOR_FORMAT_LE_R5G6B5:
+					bytes_per_pixel = 2;
+					break;
+				case NV062_SET_COLOR_FORMAT_LE_A8R8G8B8:
+					bytes_per_pixel = 4;
+					break;
+				default:
+					printf("Unknown blit surface format: 0x%x\n", context_surfaces->color_format);
+					assert(false);
+					break;
+				}
+
+				xbaddr source_dma_len, dest_dma_len;
+				uint8_t *source, *dest;
+
+				source = (uint8_t*)nv_dma_map(context_surfaces->dma_image_source,	&source_dma_len);
+				assert(context_surfaces->source_offset < source_dma_len);
+				source += context_surfaces->source_offset;
+
+				dest = (uint8_t*)nv_dma_map(context_surfaces->dma_image_dest,	&dest_dma_len);
+				assert(context_surfaces->dest_offset < dest_dma_len);
+				dest += context_surfaces->dest_offset;
+
+				printf("  - 0x%tx -> 0x%tx\n", source - MM_SYSTEM_PHYSICAL_MAP,dest - MM_SYSTEM_PHYSICAL_MAP);
+
+				int y;
+				for (y = 0; y<image_blit->height; y++) {
+					uint8_t *source_row = source
+						+ (image_blit->in_y + y) * context_surfaces->source_pitch
+						+ image_blit->in_x * bytes_per_pixel;
+
+					uint8_t *dest_row = dest
+						+ (image_blit->out_y + y) * context_surfaces->dest_pitch
+						+ image_blit->out_x * bytes_per_pixel;
+
+					memmove(dest_row, source_row,
+						image_blit->width * bytes_per_pixel);
+				}
+			}
+			else {
+				assert(false);
+			}
+
+			break;
+		default:
+			EmuWarning("EmuNV2A: Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
+		}
+		break;
+	}
+
+	case NV_KELVIN_PRIMITIVE: {
+		switch (method) {
+		case NV097_SET_CONTEXT_DMA_NOTIFIES:
+			kelvin->dma_notifies = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_A:
+			pgraph.dma_a = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_B:
+			pgraph.dma_b = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_STATE:
+			kelvin->dma_state = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_COLOR:
+			printf("TODO: pgraph_update_surface\n");
+			/* try to get any straggling draws in before the surface's changed :/ */
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.dma_color = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_ZETA:
+			pgraph.dma_zeta = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_VERTEX_A:
+			pgraph.dma_vertex_a = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_VERTEX_B:
+			pgraph.dma_vertex_b = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_SEMAPHORE:
+			kelvin->dma_semaphore = parameter;
+			break;
+		case NV097_SET_CONTEXT_DMA_REPORT:
+			pgraph.dma_report = parameter;
+			break;
+		case NV097_SET_SURFACE_CLIP_HORIZONTAL:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_shape.clip_x =
+				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
+			pgraph.surface_shape.clip_width =
+				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
+			break;
+		case NV097_SET_SURFACE_CLIP_VERTICAL:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_shape.clip_y =
+				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
+			pgraph.surface_shape.clip_height =
+				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
+			break;
+		case NV097_SET_SURFACE_FORMAT:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_shape.color_format =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_COLOR);
+			pgraph.surface_shape.zeta_format =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_ZETA);
+			pgraph.surface_type =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_TYPE);
+			pgraph.surface_shape.anti_aliasing =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING);
+			pgraph.surface_shape.log_width =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_WIDTH);
+			pgraph.surface_shape.log_height =
+				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_HEIGHT);
+			break;
+		case NV097_SET_SURFACE_PITCH:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_color.pitch =
+				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_COLOR);
+			pgraph.surface_zeta.pitch =
+				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_ZETA);
+			break;
+		case NV097_SET_SURFACE_COLOR_OFFSET:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_color.offset = parameter;
+			break;
+		case NV097_SET_SURFACE_ZETA_OFFSET:
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			pgraph.surface_zeta.offset = parameter;
+			break;
+		// TODO: Is there a better way to do this?
+		// MSVC doesn't support GCC's case_range extention
+		// this prevents use of NV097_SET_COMBINER_ALPHA_ICW ... NV097_SET_COMBINER_ALPHA_ICW + 28
+		// Investigated making a macro, but doesn't seem possible to do a variable number of results
+		case NV097_SET_COMBINER_ALPHA_ICW: case NV097_SET_COMBINER_ALPHA_ICW + 1: case NV097_SET_COMBINER_ALPHA_ICW + 2:
+		case NV097_SET_COMBINER_ALPHA_ICW + 3:	case NV097_SET_COMBINER_ALPHA_ICW + 4:	case NV097_SET_COMBINER_ALPHA_ICW + 5:
+		case NV097_SET_COMBINER_ALPHA_ICW + 6:	case NV097_SET_COMBINER_ALPHA_ICW + 7:	case NV097_SET_COMBINER_ALPHA_ICW + 8:
+		case NV097_SET_COMBINER_ALPHA_ICW + 9:	case NV097_SET_COMBINER_ALPHA_ICW + 10:	case NV097_SET_COMBINER_ALPHA_ICW + 11:
+		case NV097_SET_COMBINER_ALPHA_ICW + 12:	case NV097_SET_COMBINER_ALPHA_ICW + 13:	case NV097_SET_COMBINER_ALPHA_ICW + 14:
+		case NV097_SET_COMBINER_ALPHA_ICW + 15:	case NV097_SET_COMBINER_ALPHA_ICW + 16:	case NV097_SET_COMBINER_ALPHA_ICW + 17:
+		case NV097_SET_COMBINER_ALPHA_ICW + 18:	case NV097_SET_COMBINER_ALPHA_ICW + 19:	case NV097_SET_COMBINER_ALPHA_ICW + 20:
+		case NV097_SET_COMBINER_ALPHA_ICW + 21:	case NV097_SET_COMBINER_ALPHA_ICW + 22:	case NV097_SET_COMBINER_ALPHA_ICW + 23:
+		case NV097_SET_COMBINER_ALPHA_ICW + 24:	case NV097_SET_COMBINER_ALPHA_ICW + 25:	case NV097_SET_COMBINER_ALPHA_ICW + 26:
+		case NV097_SET_COMBINER_ALPHA_ICW + 27:	case NV097_SET_COMBINER_ALPHA_ICW + 28:
+				slot = (method - NV097_SET_COMBINER_ALPHA_ICW) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINEALPHAI0 + slot * 4] = parameter;
+				break;
+		case NV097_SET_COMBINER_SPECULAR_FOG_CW0:
+			pgraph.regs[NV_PGRAPH_COMBINESPECFOG0] = parameter;
+			break;
+		case NV097_SET_COMBINER_SPECULAR_FOG_CW1:
+			pgraph.regs[NV_PGRAPH_COMBINESPECFOG1] = parameter;
+			break;
+		CASE_4(NV097_SET_TEXTURE_ADDRESS, 64):
+			slot = (method - NV097_SET_TEXTURE_ADDRESS) / 64;
+			pgraph.regs[NV_PGRAPH_TEXADDRESS0 + slot * 4] = parameter;
+			break;
+		case NV097_SET_CONTROL0: {
+			printf("TODO: pgraph_update_surface\n");
+			//pgraph_update_surface(d, false, true, true);
+
+			bool stencil_write_enable =
+				parameter & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE,
+				stencil_write_enable);
+
+			uint32_t z_format = GET_MASK(parameter, NV097_SET_CONTROL0_Z_FORMAT);
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_Z_FORMAT, z_format);
+
+			bool z_perspective =
+				parameter & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
+				z_perspective);
+			break;
+		}
+
+		case NV097_SET_FOG_MODE: {
+			/* FIXME: There is also NV_PGRAPH_CSV0_D_FOG_MODE */
+			unsigned int mode;
+			switch (parameter) {
+			case NV097_SET_FOG_MODE_V_LINEAR:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_LINEAR; break;
+			case NV097_SET_FOG_MODE_V_EXP:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_EXP; break;
+			case NV097_SET_FOG_MODE_V_EXP2:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_EXP2; break;
+			case NV097_SET_FOG_MODE_V_EXP_ABS:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_EXP_ABS; break;
+			case NV097_SET_FOG_MODE_V_EXP2_ABS:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_EXP2_ABS; break;
+			case NV097_SET_FOG_MODE_V_LINEAR_ABS:
+				mode = NV_PGRAPH_CONTROL_3_FOG_MODE_LINEAR_ABS; break;
+			default:
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_3], NV_PGRAPH_CONTROL_3_FOG_MODE,
+				mode);
+			break;
+		}
+		case NV097_SET_FOG_GEN_MODE: {
+			unsigned int mode;
+			switch (parameter) {
+			case NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA:
+				mode = NV_PGRAPH_CSV0_D_FOGGENMODE_SPEC_ALPHA; break;
+			case NV097_SET_FOG_GEN_MODE_V_RADIAL:
+				mode = NV_PGRAPH_CSV0_D_FOGGENMODE_RADIAL; break;
+			case NV097_SET_FOG_GEN_MODE_V_PLANAR:
+				mode = NV_PGRAPH_CSV0_D_FOGGENMODE_PLANAR; break;
+			case NV097_SET_FOG_GEN_MODE_V_ABS_PLANAR:
+				mode = NV_PGRAPH_CSV0_D_FOGGENMODE_ABS_PLANAR; break;
+			case NV097_SET_FOG_GEN_MODE_V_FOG_X:
+				mode = NV_PGRAPH_CSV0_D_FOGGENMODE_FOG_X; break;
+			default:
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_FOGGENMODE, mode);
+			break;
+		}
+		case NV097_SET_FOG_ENABLE:
+			/*
+			FIXME: There is also:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_FOGENABLE,
+			parameter);
+			*/
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_3], NV_PGRAPH_CONTROL_3_FOGENABLE,
+				parameter);
+			break;
+		case NV097_SET_FOG_COLOR: {
+			/* PGRAPH channels are ARGB, parameter channels are ABGR */
+			uint8_t red = GET_MASK(parameter, NV097_SET_FOG_COLOR_RED);
+			uint8_t green = GET_MASK(parameter, NV097_SET_FOG_COLOR_GREEN);
+			uint8_t blue = GET_MASK(parameter, NV097_SET_FOG_COLOR_BLUE);
+			uint8_t alpha = GET_MASK(parameter, NV097_SET_FOG_COLOR_ALPHA);
+			SET_MASK(pgraph.regs[NV_PGRAPH_FOGCOLOR], NV_PGRAPH_FOGCOLOR_RED, red);
+			SET_MASK(pgraph.regs[NV_PGRAPH_FOGCOLOR], NV_PGRAPH_FOGCOLOR_GREEN, green);
+			SET_MASK(pgraph.regs[NV_PGRAPH_FOGCOLOR], NV_PGRAPH_FOGCOLOR_BLUE, blue);
+			SET_MASK(pgraph.regs[NV_PGRAPH_FOGCOLOR], NV_PGRAPH_FOGCOLOR_ALPHA, alpha);
+			break;
+		}
+		case NV097_SET_ALPHA_TEST_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_ALPHATESTENABLE, parameter);
+			break;
+		case NV097_SET_BLEND_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_BLEND], NV_PGRAPH_BLEND_EN, parameter);
+			break;
+		case NV097_SET_CULL_FACE_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_CULLENABLE,
+				parameter);
+			break;
+		case NV097_SET_DEPTH_TEST_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZENABLE,
+				parameter);
+			break;
+		case NV097_SET_DITHER_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_DITHERENABLE, parameter);
+			break;
+		case NV097_SET_LIGHTING_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_C], NV_PGRAPH_CSV0_C_LIGHTING,
+				parameter);
+			break;
+		case NV097_SET_SKIN_MODE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_SKIN,
+				parameter);
+			break;
+		case NV097_SET_STENCIL_TEST_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_1],
+				NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE, parameter);
+			break;
+		case NV097_SET_POLY_OFFSET_POINT_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE, parameter);
+			break;
+		case NV097_SET_POLY_OFFSET_LINE_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE, parameter);
+			break;
+		case NV097_SET_POLY_OFFSET_FILL_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE, parameter);
+			break;
+		case NV097_SET_ALPHA_FUNC:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_ALPHAFUNC, parameter & 0xF);
+			break;
+		case NV097_SET_ALPHA_REF:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_ALPHAREF, parameter);
+			break;
+		case NV097_SET_BLEND_FUNC_SFACTOR: {
+			unsigned int factor;
+			switch (parameter) {
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ZERO:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ZERO; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_SRC_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_SRC_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_SRC_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_SRC_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_DST_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_DST_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_DST_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_DST_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_DST_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_DST_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_DST_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_DST_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA_SATURATE:
+				factor = NV_PGRAPH_BLEND_SFACTOR_SRC_ALPHA_SATURATE; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_CONSTANT_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_CONSTANT_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_CONSTANT_COLOR:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_CONSTANT_COLOR; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_CONSTANT_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_CONSTANT_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_CONSTANT_ALPHA:
+				factor = NV_PGRAPH_BLEND_SFACTOR_ONE_MINUS_CONSTANT_ALPHA; break;
+			default:
+				fprintf(stderr, "Unknown blend source factor: 0x%x\n", parameter);
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_BLEND], NV_PGRAPH_BLEND_SFACTOR, factor);
+
+			break;
+		}
+
+		case NV097_SET_BLEND_FUNC_DFACTOR: {
+			unsigned int factor;
+			switch (parameter) {
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ZERO:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ZERO; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_SRC_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_SRC_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_SRC_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_SRC_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_SRC_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_SRC_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_DST_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_DST_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_DST_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_DST_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_DST_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_DST_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_DST_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_DST_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_SRC_ALPHA_SATURATE:
+				factor = NV_PGRAPH_BLEND_DFACTOR_SRC_ALPHA_SATURATE; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_CONSTANT_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_CONSTANT_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_CONSTANT_COLOR:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_CONSTANT_COLOR; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_CONSTANT_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_CONSTANT_ALPHA; break;
+			case NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_CONSTANT_ALPHA:
+				factor = NV_PGRAPH_BLEND_DFACTOR_ONE_MINUS_CONSTANT_ALPHA; break;
+			default:
+				fprintf(stderr, "Unknown blend destination factor: 0x%x\n", parameter);
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_BLEND], NV_PGRAPH_BLEND_DFACTOR, factor);
+
+			break;
+		}
+
+		case NV097_SET_BLEND_COLOR:
+			pgraph.regs[NV_PGRAPH_BLENDCOLOR] = parameter;
+			break;
+
+		case NV097_SET_BLEND_EQUATION: {
+			unsigned int equation;
+			switch (parameter) {
+			case NV097_SET_BLEND_EQUATION_V_FUNC_SUBTRACT:
+				equation = 0; break;
+			case NV097_SET_BLEND_EQUATION_V_FUNC_REVERSE_SUBTRACT:
+				equation = 1; break;
+			case NV097_SET_BLEND_EQUATION_V_FUNC_ADD:
+				equation = 2; break;
+			case NV097_SET_BLEND_EQUATION_V_MIN:
+				equation = 3; break;
+			case NV097_SET_BLEND_EQUATION_V_MAX:
+				equation = 4; break;
+			case NV097_SET_BLEND_EQUATION_V_FUNC_REVERSE_SUBTRACT_SIGNED:
+				equation = 5; break;
+			case NV097_SET_BLEND_EQUATION_V_FUNC_ADD_SIGNED:
+				equation = 6; break;
+			default:
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_BLEND], NV_PGRAPH_BLEND_EQN, equation);
+
+			break;
+		}
+
+		case NV097_SET_DEPTH_FUNC:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZFUNC,
+				parameter & 0xF);
+			break;
+
+		case NV097_SET_COLOR_MASK: {
+			pgraph.surface_color.write_enabled_cache |= pgraph_color_write_enabled();
+
+			bool alpha = parameter & NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
+			bool red = parameter & NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
+			bool green = parameter & NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
+			bool blue = parameter & NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_ALPHA_WRITE_ENABLE, alpha);
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_RED_WRITE_ENABLE, red);
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE, green);
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE, blue);
+			break;
+		}
+		case NV097_SET_DEPTH_MASK:
+			pgraph.surface_zeta.write_enabled_cache |= pgraph_zeta_write_enabled();
+
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_ZWRITEENABLE, parameter);
+			break;
+		case NV097_SET_STENCIL_MASK:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_1],
+				NV_PGRAPH_CONTROL_1_STENCIL_MASK_WRITE, parameter);
+			break;
+		case NV097_SET_STENCIL_FUNC:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_1],
+				NV_PGRAPH_CONTROL_1_STENCIL_FUNC, parameter & 0xF);
+			break;
+		case NV097_SET_STENCIL_FUNC_REF:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_1],
+				NV_PGRAPH_CONTROL_1_STENCIL_REF, parameter);
+			break;
+		case NV097_SET_STENCIL_FUNC_MASK:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_1],
+				NV_PGRAPH_CONTROL_1_STENCIL_MASK_READ, parameter);
+			break;
+		case NV097_SET_STENCIL_OP_FAIL:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_2],
+				NV_PGRAPH_CONTROL_2_STENCIL_OP_FAIL,
+				kelvin_map_stencil_op(parameter));
+			break;
+		case NV097_SET_STENCIL_OP_ZFAIL:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_2],
+				NV_PGRAPH_CONTROL_2_STENCIL_OP_ZFAIL,
+				kelvin_map_stencil_op(parameter));
+			break;
+		case NV097_SET_STENCIL_OP_ZPASS:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CONTROL_2],
+				NV_PGRAPH_CONTROL_2_STENCIL_OP_ZPASS,
+				kelvin_map_stencil_op(parameter));
+			break;
+
+		case NV097_SET_POLYGON_OFFSET_SCALE_FACTOR:
+			pgraph.regs[NV_PGRAPH_ZOFFSETFACTOR] = parameter;
+			break;
+		case NV097_SET_POLYGON_OFFSET_BIAS:
+			pgraph.regs[NV_PGRAPH_ZOFFSETBIAS] = parameter;
+			break;
+		case NV097_SET_FRONT_POLYGON_MODE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_FRONTFACEMODE,
+				kelvin_map_polygon_mode(parameter));
+			break;
+		case NV097_SET_BACK_POLYGON_MODE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_BACKFACEMODE,
+				kelvin_map_polygon_mode(parameter));
+			break;
+		case NV097_SET_CLIP_MIN:
+			pgraph.regs[NV_PGRAPH_ZCLIPMIN] = parameter;
+			break;
+		case NV097_SET_CLIP_MAX:
+			pgraph.regs[NV_PGRAPH_ZCLIPMAX] = parameter;
+			break;
+		case NV097_SET_CULL_FACE: {
+			unsigned int face;
+			switch (parameter) {
+			case NV097_SET_CULL_FACE_V_FRONT:
+				face = NV_PGRAPH_SETUPRASTER_CULLCTRL_FRONT; break;
+			case NV097_SET_CULL_FACE_V_BACK:
+				face = NV_PGRAPH_SETUPRASTER_CULLCTRL_BACK; break;
+			case NV097_SET_CULL_FACE_V_FRONT_AND_BACK:
+				face = NV_PGRAPH_SETUPRASTER_CULLCTRL_FRONT_AND_BACK; break;
+			default:
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_CULLCTRL,
+				face);
+			break;
+		}
+		case NV097_SET_FRONT_FACE: {
+			bool ccw;
+			switch (parameter) {
+			case NV097_SET_FRONT_FACE_V_CW:
+				ccw = false; break;
+			case NV097_SET_FRONT_FACE_V_CCW:
+				ccw = true; break;
+			default:
+				fprintf(stderr, "Unknown front face: 0x%x\n", parameter);
+				assert(false);
+				break;
+			}
+			SET_MASK(pgraph.regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_FRONTFACE,
+				ccw ? 1 : 0);
+			break;
+		}
+		case NV097_SET_NORMALIZATION_ENABLE:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_C],
+				NV_PGRAPH_CSV0_C_NORMALIZATION_ENABLE,
+				parameter);
+			break;
+
+		case NV097_SET_LIGHT_ENABLE_MASK:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D],
+				NV_PGRAPH_CSV0_D_LIGHTS,
+				parameter);
+			break;
+
+			CASE_4(NV097_SET_TEXGEN_S, 16) : {
+				slot = (method - NV097_SET_TEXGEN_S) / 16;
+				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+					: NV_PGRAPH_CSV1_B;
+				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
+					: NV_PGRAPH_CSV1_A_T0_S;
+				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 0));
+				break;
+			}
+			CASE_4(NV097_SET_TEXGEN_T, 16) : {
+				slot = (method - NV097_SET_TEXGEN_T) / 16;
+				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+					: NV_PGRAPH_CSV1_B;
+				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_T
+					: NV_PGRAPH_CSV1_A_T0_T;
+				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 1));
+				break;
+			}
+			CASE_4(NV097_SET_TEXGEN_R, 16) : {
+				slot = (method - NV097_SET_TEXGEN_R) / 16;
+				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+					: NV_PGRAPH_CSV1_B;
+				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_R
+					: NV_PGRAPH_CSV1_A_T0_R;
+				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 2));
+				break;
+			}
+			CASE_4(NV097_SET_TEXGEN_Q, 16) : {
+				slot = (method - NV097_SET_TEXGEN_Q) / 16;
+				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+					: NV_PGRAPH_CSV1_B;
+				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_Q
+					: NV_PGRAPH_CSV1_A_T0_Q;
+				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 3));
+				break;
+			}
+			CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) :
+				slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
+			pgraph.texture_matrix_enable[slot] = parameter;
+			break;
+
+		default:
+			EmuWarning("EmuNV2A: Unknown NV_KELVIN_PRIMITIVE Method: 0x%08X\n", method);
+		}
+		break;
+	}
+
 	default:
-		EmuWarning("EmuNV2A: Unknown Graphics Class/Method 0x%08Xm 0x%08X\n", object->graphics_class, method);
+		EmuWarning("EmuNV2A: Unknown Graphics Class/Method 0x%08X/0x%08X\n", object->graphics_class, method);
 		break;
 	}
 }
@@ -1237,21 +1997,15 @@ static void* pfifo_puller_thread()
 			std::unique_lock<std::mutex> lk(state->mutex);
 
 			while (state->cache.empty() || !state->pull_enabled) {
-				printf("Waiting for Cache Lock\n");	
 				state->cache_cond.wait(lk);
-				printf("Done Waiting for Cache Lock\n");
 			}
 
 			// Copy cache to working_cache
-			printf("Building Working Cache\n");
 			while (!state->cache.empty()) {
-				printf("Copying To Working Cache\n");
 				state->working_cache.push(state->cache.front());
 				state->cache.pop();
 			}
 		}
-
-		printf("Cache is not empty! \n");
 
 		while (!state->working_cache.empty()) {
 			CacheEntry* command = state->working_cache.front();
@@ -1553,7 +2307,6 @@ DEVICE_WRITE32(PFIFO)
 				pfifo.cache1.pull_enabled = true;
 
 				/* the puller thread should wake up */
-				printf("Waking up the Cache lock\n");
 				pfifo.cache1.cache_cond.notify_all();
 			} else if (!(value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& pfifo.cache1.pull_enabled) {
