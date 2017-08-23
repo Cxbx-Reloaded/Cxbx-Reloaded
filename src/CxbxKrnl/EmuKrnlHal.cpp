@@ -107,7 +107,6 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 )
 {
 	LOG_FUNC_ONE_ARG(Request);
-
 	LOG_UNIMPLEMENTED();
 }
 
