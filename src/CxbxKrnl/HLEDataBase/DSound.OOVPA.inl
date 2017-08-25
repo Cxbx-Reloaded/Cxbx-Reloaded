@@ -295,6 +295,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSound_GetOutputLevels, PATCH, 4627, 5558),
     REGISTER_OOVPAS(IDirectSound_Release, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSound_SetAllParameters, PATCH, 3936),
+    REGISTER_OOVPAS(IDirectSound8_SetAllParameters, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSound_SetDistanceFactor, PATCH, 3936, 4134),
     REGISTER_OOVPAS(IDirectSound_SetDopplerFactor, PATCH, 3936, 4134),
     REGISTER_OOVPAS(IDirectSound_SetEffectData, PATCH, 4134, 5344),
