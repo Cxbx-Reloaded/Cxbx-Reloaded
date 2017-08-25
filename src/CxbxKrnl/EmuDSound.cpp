@@ -339,30 +339,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_EnableHeadphones
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_EnableHeadphones)
-(
-    LPDIRECTSOUND8          pThis,
-    BOOL                    fEnabled)
-{
-    FUNC_EXPORTS;
-
-    enterCriticalSection;
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(fEnabled)
-		LOG_FUNC_END;
-
-    EmuWarning("EmuIDirectSound8_EnableHeadphones ignored");
-
-    leaveCriticalSection;
-
-    return S_OK;
-}
-
-// ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
@@ -2671,7 +2647,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED_DSOUND();
+    //Windows Vista and later does not set speaker configuration from SetSpeakerConfig function.
+    EmuWarning("EmuIDirectSound_EnableHeadphones ignored");
 
 	leaveCriticalSection;
 

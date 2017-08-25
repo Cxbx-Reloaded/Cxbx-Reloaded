@@ -490,15 +490,6 @@ HRESULT WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_EnableHeadphones
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_EnableHeadphones)
-(
-    LPDIRECTSOUND8          pThis,
-    BOOL                    fEnabled
-);
-
-// ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_SynchPlayback)
