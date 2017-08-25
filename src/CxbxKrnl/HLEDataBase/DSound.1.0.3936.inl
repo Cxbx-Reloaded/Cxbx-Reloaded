@@ -3077,6 +3077,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 3936, 10,
         { 0x49, 0x0C }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
+//TODO: Which one is accurate for 3936 and older version? IDirectSound8_SetAllParameters or IDirectSound_SetAllParameters?
 // ******************************************************************
 // * IDirectSound8_SetAllParameters
 // ******************************************************************

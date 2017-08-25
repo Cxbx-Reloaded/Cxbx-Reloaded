@@ -51,7 +51,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 5233, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound8_EnableHeadphones
+// * IDirectSound_EnableHeadphones
 // ******************************************************************
 OOVPA_XREF(IDirectSound_EnableHeadphones, 5233, 8,
 
@@ -60,16 +60,16 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 5233, 8,
 
         XREF_ENTRY( 0x15, XREF_DSENABLEHEADPHONES ), // (Offset,Value)-Pair #1
 
-        // IDirectSound8_EnableHeadphones+0x0A : add eax, 0xFFFFFFF8
+        // IDirectSound_EnableHeadphones+0x0A : add eax, 0xFFFFFFF8
         { 0x0A, 0x83 }, // (Offset,Value)-Pair #2
         { 0x0B, 0xC0 }, // (Offset,Value)-Pair #3
         { 0x0C, 0xF8 }, // (Offset,Value)-Pair #4
 
-        // IDirectSound8_EnableHeadphones+0x0F : sbb ecx, ecx
+        // IDirectSound_EnableHeadphones+0x0F : sbb ecx, ecx
         { 0x0F, 0x1B }, // (Offset,Value)-Pair #5
         { 0x10, 0xC9 }, // (Offset,Value)-Pair #6
 
-        // IDirectSound8_EnableHeadphones+0x19 : retn 0x08
+        // IDirectSound_EnableHeadphones+0x19 : retn 0x08
         { 0x19, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x1A, 0x08 }, // (Offset,Value)-Pair #8
 OOVPA_END;
@@ -243,16 +243,16 @@ OOVPA_XREF(IDirectSoundBuffer_SetMode, 5233, 8,
 
         XREF_ENTRY( 0x19, XREF_DSBUFFERSETMODEA ), // (Offset,Value)-Pair #1
 
-        // IDirectSound8_EnableHeadphones+0x0E : add eax, 0xFFFFFFE4
+        // IDirectSoundBuffer_SetMode+0x0E : add eax, 0xFFFFFFE4
         { 0x0E, 0x83 }, // (Offset,Value)-Pair #2
         { 0x0F, 0xC0 }, // (Offset,Value)-Pair #3
         { 0x10, 0xE4 }, // (Offset,Value)-Pair #4
 
-        // IDirectSound8_EnableHeadphones+0x13 : sbb ecx, ecx
+        // IDirectSoundBuffer_SetMode+0x13 : sbb ecx, ecx
         { 0x13, 0x1B }, // (Offset,Value)-Pair #5
         { 0x14, 0xC9 }, // (Offset,Value)-Pair #6
 
-        // IDirectSound8_EnableHeadphones+0x19 : retn 0x0C
+        // IDirectSoundBuffer_SetMode+0x19 : retn 0x0C
         { 0x1D, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x1E, 0x0C }, // (Offset,Value)-Pair #8
 OOVPA_END;
