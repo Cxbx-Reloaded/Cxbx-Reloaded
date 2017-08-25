@@ -304,12 +304,20 @@ class Xbe : public Error
 		#include "AlignPosfix1.h"
 		*m_xprImage;
 
-		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap); // FIXME move this elsewhere
-		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap); // FIXME move this elsewhere
+		struct TRGB32 // FIXME move this elsewhere - this struct might be also need a rename
+		{
+			unsigned char B;
+			unsigned char G;
+			unsigned char R;
+			unsigned char A;
+		};
 
-		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap); // FIXME move this elsewhere
-		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap); // FIXME move this elsewhere
-		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap); // FIXME move this elsewhere
+		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+
+		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
 };
 
 // debug/retail XOR keys

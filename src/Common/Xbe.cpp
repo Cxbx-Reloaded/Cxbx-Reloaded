@@ -1010,20 +1010,22 @@ bool Xbe::ExportLogoBitmap()
 		printf("Game Logo is 16bit\n");
 		result = ReadD3D16bitTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
-			m_xprImage->pBits[0],
+			&m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
 			width,
 			height,
+			pitch,
 			bitmap);
 	}
 	else {
 		printf("Game Logo is 32bit\n");
 		result = ReadD3DTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
-			m_xprImage->pBits[0],
+			&m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
 			width,
 			height,
+			pitch,
 			bitmap);
 	}
 		
@@ -1031,18 +1033,18 @@ bool Xbe::ExportLogoBitmap()
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
 	switch (format)
 	{
 	case X_D3DFMT_DXT1:
 	case X_D3DFMT_DXT3:
 	case X_D3DFMT_DXT5:
-		return ReadS3TCFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
+		return ReadS3TCFormatIntoBitmap(format, data, dataSize, width, height, pitch, bitmap);
 		break;
 	case X_D3DFMT_A8R8G8B8:
 	case X_D3DFMT_X8R8G8B8:
-		return ReadSwizzledFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
+		return ReadSwizzledFormatIntoBitmap(format, data, dataSize, width, height, pitch, bitmap);
 		break;
 	default:
 		return false;
@@ -1051,12 +1053,12 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uin
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
 	switch (format)
 	{
 	case X_D3DFMT_R5G6B5:
-		return ReadSwizzled16bitFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
+		return ReadSwizzled16bitFormatIntoBitmap(format, data, dataSize, width, height, pitch, bitmap);
 		break;
 	default:
 		return false;
@@ -1065,10 +1067,10 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
 	uint08 color[3];
-	uint32 color32b[4];
+	TRGB32 color32b[4];
 	uint32 r, g, b, r1, g1, b1, pixelmap;
 	int j, k, p, x, y;
 
@@ -1086,9 +1088,72 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 			if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 				j += 8;
 
+			// Read two 16-bit pixels
 			color[0] = (data[j + 0] << 0) + (data[j + 1] << 8);
+			color[1] = (data[j + 2] << 0) + (data[j + 3] << 8);
 
-			// FIXME - This function is incomplete
+			// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
+			r = ((color[0] >> 11) & 31) * 255 / 31;
+			g = ((color[0] >>  5) & 63) * 255 / 63;
+			b = ((color[0]) & 31) * 255 / 31;
+
+			r1 = ((color[1] >> 11) & 31) * 255 / 31;
+			g1 = ((color[1] >>  5) & 63) * 255 / 63;
+			b1 = ((color[1]) & 31) * 255 / 31;
+
+			// Build first half of RGB32 color map :
+			color32b[0].R = r;
+			color32b[0].G = g;
+			color32b[0].B = b;
+
+			color32b[1].R = r1;
+			color32b[1].G = g1;
+			color32b[1].B = b1;
+
+			// Build second half of RGB32 color map :
+			if (color[0] > color[1])
+			{
+				// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
+				color32b[2].R = (r + r + r1 + 2) / 3;
+				color32b[2].G = (g + g + g1 + 2) / 3;
+				color32b[2].B = (b + b + b1 + 2) / 3;
+
+				color32b[3].R = (r + r1 + r1 + 2) / 3;
+				color32b[3].G = (g + g1 + g1 + 2) / 3;
+				color32b[3].B = (b + b1 + b1 + 2) / 3;
+			}
+			else 
+			{
+				// Make up one new color : 1/2 A + 1/2 B :
+				color32b[2].R = (r + r1) / 2;
+				color32b[2].G = (g + g1) / 2;
+				color32b[2].B = (b + b1) / 2;
+
+				color32b[3].R = 0;
+				color32b[3].G = 0;
+				color32b[3].B = 0;
+			}
+
+			x = (k / 2) % width;
+			y = (k / 2) / width * 4;
+
+			// Forza Motorsport needs this safety measure, as it has dataSize=147456, while we need 16384 bytes :
+			if (y >= height)
+				break;
+
+			pixelmap = (data[j + 4] << 0) 
+				+ (data[j + 5] << 8)
+				+ (data[j + 6] << 16)
+				+ (data[j + 7] << 24);
+
+			for (p = 0; p < 16 - 1; p++)
+			{
+				((TRGB32*)bitmap)[x + (p & 3) + pitch * (y + (p >> 2))] = color32b[pixelmap & 3];
+				pixelmap = pixelmap >> 2;
+			};
+			
+			j = j + 8;
+			k = k + 8;
 		}
 		catch (int e)
 		{
@@ -1099,13 +1164,17 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
 	// FIXME - STUB
+	printf("ReadSwizzledFormatIntoBitmap - STUB \n");
+	return false;
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
 	// FIXME - STUB
+	printf("ReadSwizzled16bitFormatIntoBitmap - STUB \n");
+	return false;
 }
