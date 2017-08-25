@@ -36,6 +36,9 @@ Cxbx-Reloaded has a [wiki](http://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) c
 Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby) or [Discord](https://discord.gg/26Xjx23).
 You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 
+## Contributing
+We welcome contributions, large and small. If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes). Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
+
 ## Support
 You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
