@@ -1012,6 +1012,8 @@ bool Xbe::ExportLogoBitmap()
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
+			width,
+			height,
 			bitmap);
 	}
 	else {
@@ -1020,26 +1022,27 @@ bool Xbe::ExportLogoBitmap()
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
+			width,
+			height,
 			bitmap);
 	}
-	
-	
+		
 	return result;
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
 {
 	switch (format)
 	{
 	case X_D3DFMT_DXT1:
 	case X_D3DFMT_DXT3:
 	case X_D3DFMT_DXT5:
-		return ReadS3TCFormatIntoBitmap(format, data, dataSize, bitmap);
+		return ReadS3TCFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
 		break;
 	case X_D3DFMT_A8R8G8B8:
 	case X_D3DFMT_X8R8G8B8:
-		return ReadSwizzledFormatIntoBitmap(format, data, dataSize, bitmap);
+		return ReadSwizzledFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
 		break;
 	default:
 		return false;
@@ -1048,12 +1051,12 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char &data, uin
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
 {
 	switch (format)
 	{
 	case X_D3DFMT_R5G6B5:
-		return ReadSwizzled16bitFormatIntoBitmap(format, data, dataSize, bitmap);
+		return ReadSwizzled16bitFormatIntoBitmap(format, data, dataSize, width, height, bitmap);
 		break;
 	default:
 		return false;
@@ -1062,19 +1065,47 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char &data
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
+{
+	uint08 color[3];
+	uint32 color32b[4];
+	uint32 r, g, b, r1, g1, b1, pixelmap;
+	int j, k, p, x, y;
+
+	r = g = b = r1 = g1 = b1 = pixelmap = 0;
+	j = k = p = x = y = 0;
+
+	if (format != X_D3DFMT_DXT1 || format != X_D3DFMT_DXT3 || format != X_D3DFMT_DXT5)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	while (j < dataSize) {
+		try
+		{
+			if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+				j += 8;
+
+			color[0] = (data[j + 0] << 0) + (data[j + 1] << 8);
+
+			// FIXME - This function is incomplete
+		}
+		catch (int e)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
 {
 	// FIXME - STUB
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
-{
-	// FIXME - STUB
-}
-
-// FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, void* bitmap)
 {
 	// FIXME - STUB
 }
