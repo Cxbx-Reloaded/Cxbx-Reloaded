@@ -51,15 +51,51 @@ OOVPA_XREF(XnInit, 5788, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * XoUpdateLaunchNewImageInternal
+// ******************************************************************
+OOVPA_XREF(XoUpdateLaunchNewImageInternal, 5788, 16,
+
+    XREF_XoUpdateLaunchNewImageInternal,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0xF0 },
+        { 0x06, 0x02 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+        { 0x09, 0x53 },
+        { 0x0A, 0x56 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x75 },
+        { 0x0D, 0x08 },
+
+        { 0x6E, 0xEB },
+        { 0x88, 0x3D },
+OOVPA_END;
+
+// ******************************************************************
 // * XOnline_5788
 // ******************************************************************
 OOVPATable XOnline_5788[] = {
+
+	REGISTER_OOVPA(XnInit, 5788, XREF),
 	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
 	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
-	REGISTER_OOVPA(XnInit, 5788, XREF),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-	REGISTER_OOVPA(bind, 4361, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
+	REGISTER_OOVPA(socket, 5558, PATCH),
+	REGISTER_OOVPA(bind, 4627, PATCH),
+	REGISTER_OOVPA(listen, 4627, PATCH),
+	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
+	REGISTER_OOVPA(connect, 5233, PATCH),
+	REGISTER_OOVPA(send, 3911, PATCH),
+	REGISTER_OOVPA(recv, 3911, PATCH),
+	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 5788, XREF),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 5558, XREF),
+	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
 };
 
 // ******************************************************************
