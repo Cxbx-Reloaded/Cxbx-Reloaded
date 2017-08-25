@@ -36,6 +36,7 @@
 #include "Xbe.h"
 #include "CxbxVersion.h"
 #include "CxbxUtil.h"
+#include "CxbxKrnl\EmuD3D8Types.h"
 
 #include <memory.h>
 #include <clocale>
@@ -312,6 +313,9 @@ Xbe::Xbe(const char *x_szFilename)
 
         printf("OK\n");
     }
+	printf("-------\n");
+	ExportLogoBitmap(); // FIXME move this line elsewhere
+	printf("-------\n");
 
 cleanup:
 
@@ -966,4 +970,111 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     }
 
     return 0;
+}
+
+bool Xbe::ExportLogoBitmap()
+{
+	bool result = false;
+	uint32 dwOffs = 0;
+	uint32 dwLength = 0;
+	int index = 0;
+	for (uint32 v = 0; v < m_Header.dwSections; v++)
+	{
+		if (strcmp(m_szSectionName[v], "$$XTIMAG")==0) {
+			dwOffs = m_SectionHeader[v].dwVirtualAddr;
+			dwLength = m_SectionHeader[v].dwVirtualSize;
+			index = v;
+		}
+	}
+	if (dwOffs == 0 || dwLength == 0)
+		return 0;
+
+	printf("Game Logo Addr: 0x%08X\n", dwOffs);
+	printf("Game Logo Size: 0x%08X\n", dwLength);
+
+	m_xprImage = (XprImage*) m_bzSection[index];
+
+	printf("GameLogoHeader Magic: %s\n", &m_xprImage->xprImageHeader.xprHeader.dwXprMagic);
+	printf("GameLogoHeader Total Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize);
+	printf("GameLogoHeader Header Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize);
+	
+	int width = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+	int height = 1 <<((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+	printf("Game Logo Width: %X\n", width);
+	printf("Game Logo Height: %X\n", height);
+
+	int pitch = width * sizeof(uint32);
+	void* bitmap = (void*)malloc(sizeof(uint32) * pitch * height);
+
+	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / width / height == 2) {
+		printf("Game Logo is 16bit\n");
+		result = ReadD3D16bitTextureFormatIntoBitmap(
+			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
+			m_xprImage->pBits[0],
+			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
+			bitmap);
+	}
+	else {
+		printf("Game Logo is 32bit\n");
+		result = ReadD3DTextureFormatIntoBitmap(
+			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
+			m_xprImage->pBits[0],
+			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
+			bitmap);
+	}
+	
+	
+	return result;
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+{
+	switch (format)
+	{
+	case X_D3DFMT_DXT1:
+	case X_D3DFMT_DXT3:
+	case X_D3DFMT_DXT5:
+		return ReadS3TCFormatIntoBitmap(format, data, dataSize, bitmap);
+		break;
+	case X_D3DFMT_A8R8G8B8:
+	case X_D3DFMT_X8R8G8B8:
+		return ReadSwizzledFormatIntoBitmap(format, data, dataSize, bitmap);
+		break;
+	default:
+		return false;
+		break;
+	}
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+{
+	switch (format)
+	{
+	case X_D3DFMT_R5G6B5:
+		return ReadSwizzled16bitFormatIntoBitmap(format, data, dataSize, bitmap);
+		break;
+	default:
+		return false;
+		break;
+	}
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+{
+	// FIXME - STUB
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+{
+	// FIXME - STUB
+}
+
+// FIXME: this function should be moved elsewhere
+bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap)
+{
+	// FIXME - STUB
 }

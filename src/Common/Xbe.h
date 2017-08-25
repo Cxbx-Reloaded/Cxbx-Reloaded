@@ -261,6 +261,55 @@ class Xbe : public Error
             }
             m_Sixteen;
         };
+
+		// Export Game Logo - FIXME this function isn't complete yet 
+		bool ExportLogoBitmap();
+
+		struct X_D3DResourceLoc
+		{
+			uint32 Common;
+			uint32 Data;
+			uint32 Lock;
+			uint32 Format;
+			uint32 Size;
+		};
+
+		#include "AlignPrefix1.h"
+		struct XprHeader
+		{
+			uint32 dwXprMagic;
+			uint32 dwXprTotalSize;
+			uint32 dwXprHeaderSize;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprHeader;
+
+		#include "AlignPrefix1.h"
+		struct XprImageHeader
+		{
+			XprHeader xprHeader;
+			X_D3DResourceLoc d3dTexture;
+			uint32 dwEndOfHeader;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImageHeader;
+
+		#include "AlignPrefix1.h"
+		struct XprImage
+		{
+			XprImageHeader xprImageHeader;
+			char strPad[2048 - sizeof(XprImageHeader) - 1];
+			unsigned char pBits[(128 * 128) / 2];
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImage;
+
+		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap); // FIXME move this elsewhere
+		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap); // FIXME move this elsewhere
+
+		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap); // FIXME move this elsewhere
+		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap); // FIXME move this elsewhere
+		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char &data, uint32 dataSize, void* bitmap); // FIXME move this elsewhere
 };
 
 // debug/retail XOR keys

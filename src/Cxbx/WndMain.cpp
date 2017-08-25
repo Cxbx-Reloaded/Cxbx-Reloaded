@@ -389,7 +389,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 m_BackDC   = CreateCompatibleDC(hDC);
                 m_LogoDC   = CreateCompatibleDC(hDC);
-
+				
                 m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
                 m_OrigLogo = (HBITMAP)SelectObject(m_LogoDC, m_LogoBmp);
 
@@ -1268,6 +1268,8 @@ void WndMain::XbeLoaded()
 {
     LoadLogo();
 
+	LoadGameLogo();
+
     RefreshMenus();
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
@@ -1306,6 +1308,13 @@ void WndMain::LoadLogo()
 
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
+
+// load logo bitmap - FIXME this is only a stub
+void WndMain::LoadGameLogo()
+{
+/*m_GameLogoBMP*/
+}
+
 
 // refresh menu items
 void WndMain::RefreshMenus()
