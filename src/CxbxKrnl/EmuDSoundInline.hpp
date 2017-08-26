@@ -378,10 +378,19 @@ inline void ResizeIDirectSoundBuffer(
     }
     DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, dwBytes);
 
-    DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount;
-    LONG lVolume;
+    DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount, dwFrequency;
+    LONG lVolume, lPan;
+    WAVEFORMATEX cfxFormatEx;
+    DS3DBUFFER ds3dBuffer;
 
     pDSBuffer->GetVolume(&lVolume);
+    pDSBuffer->GetFrequency(&dwFrequency);
+    pDSBuffer->GetPan(&lPan);
+    pDSBuffer->GetFormat(&cfxFormatEx, sizeof(WAVEFORMATEX), &dwStatus);
+
+    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
+        pDS3DBuffer->GetAllParameters(&ds3dBuffer);
+    }
 
     HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
@@ -427,11 +436,15 @@ inline void ResizeIDirectSoundBuffer(
         if (FAILED(hRet3D)) {
             EmuWarning("CreateSound3DBuffer Failed!");
             pDS3DBuffer = NULL;
+        } else {
+            pDS3DBuffer->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
         }
     }
 
+    pDSBuffer->SetFormat(&cfxFormatEx);
+    pDSBuffer->SetPan(lPan);
+    pDSBuffer->SetFrequency(dwFrequency);
     pDSBuffer->SetVolume(lVolume);
-
     pDSBuffer->SetCurrentPosition(dwPlayCursor);
 
     if (dwStatus & DSBSTATUS_PLAYING) {
