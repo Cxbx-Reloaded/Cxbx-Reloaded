@@ -218,7 +218,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSoundCreateBuffer
 // ******************************************************************
-OOVPA_XREF(DirectSoundCreateBuffer, 4627, 12,
+OOVPA_XREF(DirectSoundCreateBuffer, 4242, 12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1491,7 +1491,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSound_SetPositionA, 4627, XREF),
 	REGISTER_OOVPA(CDirectSound_SetPositionA, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
-	REGISTER_OOVPA(DirectSoundCreateBuffer, 4627, PATCH),
+	REGISTER_OOVPA(DirectSoundCreateBuffer, 4242, PATCH),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFrequency, 4134, XREF),
