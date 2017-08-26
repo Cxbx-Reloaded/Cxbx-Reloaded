@@ -314,7 +314,7 @@ Xbe::Xbe(const char *x_szFilename)
         printf("OK\n");
     }
 	printf("-------\n");
-	ExportLogoBitmap(); // FIXME move this line elsewhere
+	ExportGameLogoBitmap(); // FIXME move this line elsewhere
 	printf("-------\n");
 
 cleanup:
@@ -972,7 +972,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-bool Xbe::ExportLogoBitmap()
+bool Xbe::ExportGameLogoBitmap()
 {
 	bool result = false;
 	uint32 dwOffs = 0;
@@ -984,6 +984,7 @@ bool Xbe::ExportLogoBitmap()
 			dwOffs = m_SectionHeader[v].dwVirtualAddr;
 			dwLength = m_SectionHeader[v].dwVirtualSize;
 			index = v;
+			break;
 		}
 	}
 	if (dwOffs == 0 || dwLength == 0)
@@ -1004,7 +1005,7 @@ bool Xbe::ExportLogoBitmap()
 	printf("Game Logo Height: %X\n", height);
 
 	int pitch = width * sizeof(uint32);
-	void* bitmap = (void*)malloc(sizeof(uint32) * pitch * height);
+	void* bitmap = (void*)malloc(pitch * height);
 
 	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / width / height == 2) {
 		printf("Game Logo is 16bit\n");

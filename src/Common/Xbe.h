@@ -263,7 +263,7 @@ class Xbe : public Error
         };
 
 		// Export Game Logo - FIXME this function isn't complete yet 
-		bool ExportLogoBitmap();
+		bool ExportGameLogoBitmap();
 
 		struct X_D3DResourceLoc
 		{
