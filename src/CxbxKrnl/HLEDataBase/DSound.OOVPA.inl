@@ -223,7 +223,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3936, 4134),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3925, 3936),
     REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3936, 4134),
-    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 4627),
+    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 4242),
     REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3936, 4134, 5558),
     REGISTER_OOVPAS(DirectSoundDoWorkA, XREF, 3936),

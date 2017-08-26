@@ -624,7 +624,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDistanceFactor, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 5788, PATCH),
-	REGISTER_OOVPA(DirectSoundCreateBuffer, 4627, PATCH),
+	REGISTER_OOVPA(DirectSoundCreateBuffer, 4242, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 5788, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetCurrentPosition, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 5788, PATCH),
