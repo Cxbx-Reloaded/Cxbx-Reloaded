@@ -174,7 +174,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_CreateSoundBuffer, XREF, 3936, 4134),
     REGISTER_OOVPAS(CDirectSound_CreateSoundStream, XREF, 3936, 4134, 5558),
     REGISTER_OOVPAS(CDirectSound_EnableHeadphones, XREF, 3936, 4627, 5233, 5344, 5558),
-    REGISTER_OOVPAS(CDirectSound_GetCaps, XREF, 3936),
+    REGISTER_OOVPAS(CDirectSound_GetCaps, XREF, 3936, 4361),
     REGISTER_OOVPAS(CDirectSound_GetOutputLevels, XREF, 4627, 5558),
     REGISTER_OOVPAS(CDirectSound_GetSpeakerConfig, PATCH, 4627),
     REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3936, 4831, 5558),
@@ -197,8 +197,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_SetVelocity, XREF, 4134, 4627, 5344, 5558),
     REGISTER_OOVPAS(CDirectSound_SetVelocityA, XREF, 3936),
     REGISTER_OOVPAS(CDirectSound_SetVelocityB, XREF, 3936),
-    REGISTER_OOVPAS(CDirectSound_SynchPlayback, XREF, 5233, 5344),
-    REGISTER_OOVPAS(CDirectSound_SynchPlayback, PATCH, 5558), // TODO: Do a patch or just XREF? Will need find IDirectSound_SynchPlayback patch address
+    REGISTER_OOVPAS(CDirectSound_SynchPlayback, XREF, 5233, 5344, 5558),
     REGISTER_OOVPAS(CMcpxAPU_Set3dDopplerFactor, XREF, 3936),
     REGISTER_OOVPAS(CMcpxAPU_Set3dParameters, XREF, 3936),
     REGISTER_OOVPAS(CMcpxAPU_SynchPlayback, XREF, 5233),

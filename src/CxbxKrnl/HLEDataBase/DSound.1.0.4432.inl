@@ -32,6 +32,25 @@
 // *
 // ******************************************************************
 
+//TODO: Need further verification for 4361 titles, 4432 is last known lowest build match.
+//Test case for 4361: Burnout (found a match yet is called twice for every time joystick is moved. Is this normal?)
+// ******************************************************************
+// * DirectSound::GetCaps
+// ******************************************************************
+OOVPA_XREF(CDirectSound_GetCaps, 4361, 7,
+
+    XREF_CDirectSound_GetCaps,
+    XRefZero)
+
+        { 0x0C, 0x0F },
+        { 0x0D, 0xB6 },
+        { 0x0E, 0xC8 },
+        { 0x46, 0x8B },
+        { 0x4C, 0x8B },
+        { 0x69, 0xC2 },
+        { 0x6A, 0x08 },
+OOVPA_END;
+
 #if 0 // Used 3936
 // ******************************************************************
 // * IDirectSound_Release
@@ -141,6 +160,8 @@ OOVPATable DSound_4432[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 };
 
 // ******************************************************************
