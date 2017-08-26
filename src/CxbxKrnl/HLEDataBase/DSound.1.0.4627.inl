@@ -1645,6 +1645,8 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetLFO, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 };
 
 // ******************************************************************

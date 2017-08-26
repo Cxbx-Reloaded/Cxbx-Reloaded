@@ -239,6 +239,8 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 5233, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 };
 
 // ******************************************************************

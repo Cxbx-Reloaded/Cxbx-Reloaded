@@ -35,7 +35,9 @@
 // ******************************************************************
 // * CDirectSound::SynchPlayback
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSound_SynchPlayback, 5558, 7)
+OOVPA_XREF(CDirectSound_SynchPlayback, 5558, 7,
+           XREF_DSSYNCHPLAYBACKA,
+           XRefZero)
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -1627,7 +1629,8 @@ OOVPATable DSound_5558[] = {
 
 	REGISTER_OOVPA(DirectSoundCreate, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundBuffer, 4134, XREF),
-	REGISTER_OOVPA(CDirectSound_SynchPlayback, 5558, PATCH),
+	REGISTER_OOVPA(CDirectSound_SynchPlayback, 5558, XREF),
+	REGISTER_OOVPA(IDirectSound_SynchPlayback, 5233, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 4831, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_Pause, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_Pause, 4361, PATCH),
@@ -1777,7 +1780,9 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Use3DVoiceData, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_Use3DVoiceData, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH)
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
+	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 };
 
 // ******************************************************************
