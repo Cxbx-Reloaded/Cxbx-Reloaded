@@ -180,8 +180,8 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
 	REGISTER_OOVPA(CDirectSoundVoice_SetFormat, 4721, XREF),
-	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4361, PATCH),
+	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4242, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSound_EnableHeadphones, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
