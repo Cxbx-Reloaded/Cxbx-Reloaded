@@ -453,8 +453,8 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH), // (This is actually the XREF we are using)
 	REGISTER_OOVPA(CDirectSoundVoice_SetFormat, 4721, XREF),
-	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4361, PATCH),
+	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4242, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5233, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 5233, PATCH),

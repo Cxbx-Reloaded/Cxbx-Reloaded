@@ -690,7 +690,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(XFileCreateMediaObjectAsync, 5788, PATCH),
 	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
 	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),
-	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4361, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetHeadroom, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 5558, XREF),
