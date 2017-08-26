@@ -65,6 +65,9 @@ class Xbe : public Error
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
 
+		// Export Game Logo bitmap
+		bool ExportGameLogoBitmap(void* bitmapData, int *width, int *height);
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
@@ -262,9 +265,7 @@ class Xbe : public Error
             m_Sixteen;
         };
 
-		// Export Game Logo - FIXME this function isn't complete yet 
-		bool ExportGameLogoBitmap();
-
+		// used to decode game logo bitmap data
 		struct X_D3DResourceLoc
 		{
 			uint32 Common;
@@ -304,20 +305,27 @@ class Xbe : public Error
 		#include "AlignPosfix1.h"
 		*m_xprImage;
 
-		struct TRGB32 // FIXME move this elsewhere - this struct might be also need a rename
+		struct TRGB32 // FIXME move this elsewhere - this struct might also need a rename
 		{
 			unsigned char B;
 			unsigned char G;
 			unsigned char R;
 			unsigned char A;
 		};
-
+				
 		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
 		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
 
 		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
 		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
 		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+
+		uint32 Swizzle(uint32 value, uint32 max, uint32 shift); // FIXME move this elsewhere
+
+		typedef TRGB32 PRGB32Array[INT_MAX / sizeof(TRGB32) - 1]; // FIXME move this elsewhere - this typedef might also need a rename
+		typedef uint16 TRGB16; // FIXME move this elsewhere - this typedef might also need a rename
+		typedef TRGB16 PRGB16Array[INT_MAX / sizeof(TRGB16)]; // FIXME move this elsewhere - this typedef might also need a rename
+
 };
 
 // debug/retail XOR keys

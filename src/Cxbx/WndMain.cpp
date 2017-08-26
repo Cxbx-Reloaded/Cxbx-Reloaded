@@ -1312,7 +1312,7 @@ void WndMain::LoadLogo()
 // load logo bitmap - FIXME this is only a stub
 void WndMain::LoadGameLogo()
 {
-/*m_GameLogoBMP*/
+	// FIXME this is only a stub
 }
 
 

@@ -313,9 +313,15 @@ Xbe::Xbe(const char *x_szFilename)
 
         printf("OK\n");
     }
-	printf("-------\n");
-	ExportGameLogoBitmap(); // FIXME move this line elsewhere
-	printf("-------\n");
+	printf("-------\n");															// * FIXME remove this block (it is here only for debug purpose)
+	void* bitmapData;																// *************************************************************
+	int width;																		// *************************************************************
+	int height;																		// *************************************************************
+	bool res = ExportGameLogoBitmap(&bitmapData, &width, &height);					// *************************************************************
+	printf("Result is: %d\n", res);													// *************************************************************
+	printf("Widht: %d and height: %d of game logo after export\n", width, height);	// *************************************************************
+	//free(bitmapData);																// *************************************************************
+	printf("-------\n");															// *************************************************************
 
 cleanup:
 
@@ -972,7 +978,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-bool Xbe::ExportGameLogoBitmap()
+bool Xbe::ExportGameLogoBitmap(void* bitmapData, int *width, int *height)
 {
 	bool result = false;
 	uint32 dwOffs = 0;
@@ -999,24 +1005,26 @@ bool Xbe::ExportGameLogoBitmap()
 	printf("GameLogoHeader Total Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize);
 	printf("GameLogoHeader Header Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize);
 	
-	int width = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-	int height = 1 <<((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-	printf("Game Logo Width: %X\n", width);
-	printf("Game Logo Height: %X\n", height);
+	*width = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+	*height = 1 <<((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+	printf("Game Logo Width: %d\n", *width);
+	printf("Game Logo Height: %d\n", *height);
 
-	int pitch = width * sizeof(uint32);
-	void* bitmap = (void*)malloc(pitch * height);
+	int pitch = *width * sizeof(uint32);
+	bitmapData = (void*)malloc(pitch * *height);
 
-	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / width / height == 2) {
+	printf("Game Logo Pitch is: %d\n", pitch);
+
+	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / *width / *height == 2) {
 		printf("Game Logo is 16bit\n");
 		result = ReadD3D16bitTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			&m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
-			width,
-			height,
+			*width,
+			*height,
 			pitch,
-			bitmap);
+			&bitmapData);
 	}
 	else {
 		printf("Game Logo is 32bit\n");
@@ -1024,18 +1032,19 @@ bool Xbe::ExportGameLogoBitmap()
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			&m_xprImage->pBits[0],
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
-			width,
-			height,
+			*width,
+			*height,
 			pitch,
-			bitmap);
+			&bitmapData);
 	}
-		
+
 	return result;
 }
 
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
+	printf("ReadD3DTextureFormatIntoBitmap\n");
 	switch (format)
 	{
 	case X_D3DFMT_DXT1:
@@ -1056,6 +1065,7 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uin
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
+	printf("ReadD3D16bitTextureFormatIntoBitmap\n");
 	switch (format)
 	{
 	case X_D3DFMT_R5G6B5:
@@ -1070,15 +1080,16 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
+	printf("ReadS3TCFormatIntoBitmap\n");
 	uint08 color[3];
 	TRGB32 color32b[4];
-	uint32 r, g, b, r1, g1, b1, pixelmap;
-	int j, k, p, x, y;
+	uint32 r, g, b, r1, g1, b1, pixelmap, j;
+	int k, p, x, y;
 
 	r = g = b = r1 = g1 = b1 = pixelmap = 0;
 	j = k = p = x = y = 0;
 
-	if (format != X_D3DFMT_DXT1 || format != X_D3DFMT_DXT3 || format != X_D3DFMT_DXT5)
+	if (format != X_D3DFMT_DXT1 && format != X_D3DFMT_DXT3 && format != X_D3DFMT_DXT5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
@@ -1158,6 +1169,7 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 		}
 		catch (int e)
 		{
+			printf("Exception in ReadS3TCFormatIntoBitmap\n");
 			return false;
 		}
 	}
@@ -1167,15 +1179,104 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
-	// FIXME - STUB
-	printf("ReadSwizzledFormatIntoBitmap - STUB \n");
-	return false;
+	printf("ReadSwizzledFormatIntoBitmap\n");
+	uint32* xSwizzle;
+	uint32	x, y, sy;
+	PRGB32Array* yscanline;
+
+	if (format != X_D3DFMT_A8R8G8B8 && format != X_D3DFMT_X8R8G8B8)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
+	if (xSwizzle == NULL)
+		return false;
+
+	if (width > 0) // Dxbx addition, to prevent underflow
+		for (x = 0; x < width-1; x++)
+			xSwizzle[x] = Swizzle(x, (height * 2), 0);
+
+
+
+	// Loop over all lines :
+	if (height > 0) // Dxbx addition, to prevent underflow
+		for (y = 0; y < height-1; y++)
+		{
+			// Calculate y-swizzle :
+			sy = Swizzle(y, width, 1);
+
+			// Copy whole line in one go (using pre-calculated x-swizzle) :
+			yscanline = (PRGB32Array*)((void *)bitmap) + (y*pitch); // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
+			if(width > 0) // Dxbx addition, to prevent underflow
+				for( x = 0; x < width-1; x++)
+					*yscanline[x] = *((PRGB32Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
+		} // for y
+
+	free(xSwizzle);
+	return true;
 }
 
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
 {
-	// FIXME - STUB
-	printf("ReadSwizzled16bitFormatIntoBitmap - STUB \n");
-	return false;
+	printf("ReadSwizzled16bitFormatIntoBitmap\n");
+	uint32* xSwizzle;
+	uint32	x, y, sy;
+	PRGB16Array* yscanline;
+
+	if (format != X_D3DFMT_R5G6B5)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
+	if (xSwizzle == NULL)
+		return false;
+
+	if (width > 0) // Dxbx addition, to prevent underflow
+		for (x = 0; x < width-1; x++)
+			xSwizzle[x] = Swizzle(x, (height * 2), 0);
+
+	// Loop over all lines :
+	if (height > 0) // Dxbx addition, to prevent underflow
+		for (y = 0; y < height-1; y++)
+		{
+			// Calculate y-swizzle :
+			sy = Swizzle(y, width, 1);
+
+			// Copy whole line in one go (using pre-calculated x-swizzle) :
+			yscanline = (PRGB16Array*)((void *)bitmap) + (y*pitch); // // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
+			if (width > 0)  // Dxbx addition, to prevent underflow
+				for (x = 0; x < width-1; x++)
+					*yscanline[x] = *((PRGB16Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
+		} // for y
+
+	free(xSwizzle);
+	return true;
+}
+
+// FIXME: this function should be moved elsewhere
+uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift)
+{
+	uint32 result;
+
+	if (value < max)
+		result = value;
+	else
+		result = value % max;
+
+	// The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+													// --------------------------------11111111111111111111111111111111
+	result = (result | (result << 8)) & 0x00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
+	result = (result | (result << 4)) & 0x0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
+	result = (result | (result << 2)) & 0x33333333; // 0011001100110011001100110011001100110011001100110011001100110011
+	result = (result | (result << 1)) & 0x55555555; // 0101010101010101010101010101010101010101010101010101010101010101
+
+	result = result << shift; // y counts twice :      1010101010101010101010101010101010101010101010101010101010101010
+
+	if (value >= max)
+		result += (value / max) * max * max >>(1 - shift);  // x halves this
+
+	return result;
 }
