@@ -380,13 +380,11 @@ inline void ResizeIDirectSoundBuffer(
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount, dwFrequency;
     LONG lVolume, lPan;
-    WAVEFORMATEX cfxFormatEx;
     DS3DBUFFER ds3dBuffer;
 
     pDSBuffer->GetVolume(&lVolume);
     pDSBuffer->GetFrequency(&dwFrequency);
     pDSBuffer->GetPan(&lPan);
-    pDSBuffer->GetFormat(&cfxFormatEx, sizeof(WAVEFORMATEX), &dwStatus);
 
     if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
         pDS3DBuffer->GetAllParameters(&ds3dBuffer);
@@ -441,7 +439,6 @@ inline void ResizeIDirectSoundBuffer(
         }
     }
 
-    pDSBuffer->SetFormat(&cfxFormatEx);
     pDSBuffer->SetPan(lPan);
     pDSBuffer->SetFrequency(dwFrequency);
     pDSBuffer->SetVolume(lVolume);
