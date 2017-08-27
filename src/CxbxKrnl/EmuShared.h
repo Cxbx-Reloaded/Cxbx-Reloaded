@@ -68,23 +68,23 @@ class EmuShared : public Mutex
         // ******************************************************************
         static void Cleanup();
 
-        // ******************************************************************
-        // * Xbox Video Accessors
-        // ******************************************************************
-        void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-        void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+		// ******************************************************************
+		// * Xbox Video Accessors
+		// ******************************************************************
+		void GetXBVideo(      XBVideo *video) { Lock(); *video = XBVideo(m_XBVideo); Unlock(); }
+		void SetXBVideo(const XBVideo *video) { Lock(); m_XBVideo = XBVideo(*video); Unlock(); }
 
-        // ******************************************************************
-        // * Xbox Audio Accessors
-        // ******************************************************************
-        void GetXBAudio(      XBAudio *audio) { Lock(); memcpy(audio, &m_XBAudio, sizeof(XBAudio)); Unlock(); }
-        void SetXBAudio(const XBAudio *audio) { Lock(); memcpy(&m_XBAudio, audio, sizeof(XBAudio)); Unlock(); }
+		// ******************************************************************
+		// * Xbox Audio Accessors
+		// ******************************************************************
+		void GetXBAudio(      XBAudio *audio) { Lock(); *audio = XBAudio(m_XBAudio); Unlock(); }
+		void SetXBAudio(const XBAudio *audio) { Lock(); m_XBAudio = XBAudio(*audio); Unlock(); }
 
-        // ******************************************************************
-        // * Xbox Controller Accessors
-        // ******************************************************************
-        void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-        void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+		// ******************************************************************
+		// * Xbox Controller Accessors
+		// ******************************************************************
+		void GetXBController(      XBController *ctrl) { Lock(); *ctrl = XBController(m_XBController); Unlock(); }
+		void SetXBController(const XBController *ctrl) { Lock(); m_XBController = XBController(*ctrl); Unlock(); }
 
         // ******************************************************************
         // * Xbe Path Accessors
