@@ -343,28 +343,28 @@ void PrintCurrentConfigurationLog() {
 
 	// Print current video configuration
 	{
-		XBVideo XBVideoConf;
-		g_EmuShared->GetXBVideo(&XBVideoConf);
+		XBVideo *XBVideoConf = new XBVideo();
+		g_EmuShared->GetXBVideo(XBVideoConf);
 
 		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
-		printf("[0x%X] EmuMain: Direct3D Device: %s\n", GetCurrentThreadId(), XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
-		printf("[0x%X] EmuMain: Video Resolution: %s\n", GetCurrentThreadId(), XBVideoConf.GetVideoResolution());
-		printf("[0x%X] EmuMain: Force VSync is %s\n", GetCurrentThreadId(), XBVideoConf.GetVSync() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Fullscreen is %s\n", GetCurrentThreadId(), XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Hardware YUV is %s\n", GetCurrentThreadId(), XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Direct3D Device: %s\n", GetCurrentThreadId(), XBVideoConf->GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		printf("[0x%X] EmuMain: Video Resolution: %s\n", GetCurrentThreadId(), XBVideoConf->GetVideoResolution());
+		printf("[0x%X] EmuMain: Force VSync is %s\n", GetCurrentThreadId(), XBVideoConf->GetVSync() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Fullscreen is %s\n", GetCurrentThreadId(), XBVideoConf->GetFullscreen() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Hardware YUV is %s\n", GetCurrentThreadId(), XBVideoConf->GetHardwareYUV() ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration
 	{
-		XBAudio XBAudioConf;
-		g_EmuShared->GetXBAudio(&XBAudioConf);
+		XBAudio *XBAudioConf = new XBAudio();
+		g_EmuShared->GetXBAudio(XBAudioConf);
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
-		printf("[0x%X] EmuMain: Audio Adapter: %s\n", GetCurrentThreadId(), XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("[0x%X] EmuMain: Legacy Audio Hack is %s\n", GetCurrentThreadId(), XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: PCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetPCM() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: XADPCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Unknown Codec is %s\n", GetCurrentThreadId(), XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Audio Adapter: %s\n", GetCurrentThreadId(), XBAudioConf->GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		printf("[0x%X] EmuMain: Legacy Audio Hack is %s\n", GetCurrentThreadId(), XBAudioConf->GetLegacyAudioHack() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: PCM is %s\n", GetCurrentThreadId(), XBAudioConf->GetPCM() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: XADPCM is %s\n", GetCurrentThreadId(), XBAudioConf->GetXADPCM() ? "enabled" : "disabled");
+		printf("[0x%X] EmuMain: Unknown Codec is %s\n", GetCurrentThreadId(), XBAudioConf->GetUnknownCodec() ? "enabled" : "disabled");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
