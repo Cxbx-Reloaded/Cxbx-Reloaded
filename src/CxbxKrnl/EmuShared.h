@@ -52,21 +52,21 @@ enum {
 // ******************************************************************
 class EmuShared : public Mutex
 {
-    public:
+	public:
 		int m_RefCount;
 
-        // ******************************************************************
-        // * Each process needs to call this to initialize shared memory
-        // ******************************************************************
-        static void Init();
+		// ******************************************************************
+		// * Each process needs to call this to initialize shared memory
+		// ******************************************************************
+		static void Init();
 
 		void EmuShared::Load();
 		void EmuShared::Save();
 
 		// ******************************************************************
-        // * Each process needs to call this to cleanup shared memory
-        // ******************************************************************
-        static void Cleanup();
+		// * Each process needs to call this to cleanup shared memory
+		// ******************************************************************
+		static void Cleanup();
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -86,11 +86,11 @@ class EmuShared : public Mutex
 		void GetXBController(      XBController *ctrl) { Lock(); *ctrl = XBController(m_XBController); Unlock(); }
 		void SetXBController(const XBController *ctrl) { Lock(); m_XBController = XBController(*ctrl); Unlock(); }
 
-        // ******************************************************************
-        // * Xbe Path Accessors
-        // ******************************************************************
-        void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
-        void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
+		// ******************************************************************
+		// * Xbe Path Accessors
+		// ******************************************************************
+		void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
+		void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -117,20 +117,20 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 
-    private:
-        // ******************************************************************
-        // * Constructor / Deconstructor
-        // ******************************************************************
-         EmuShared();
-        ~EmuShared();
+	private:
+		// ******************************************************************
+		// * Constructor / Deconstructor
+		// ******************************************************************
+		EmuShared();
+		~EmuShared();
 
-        // ******************************************************************
-        // * Shared configuration
-        // ******************************************************************
-        XBController m_XBController;
-        XBVideo      m_XBVideo;
-        XBAudio      m_XBAudio;
-        char         m_XbePath[MAX_PATH];
+		// ******************************************************************
+		// * Shared configuration
+		// ******************************************************************
+		XBController m_XBController;
+		XBVideo      m_XBVideo;
+		XBAudio      m_XBAudio;
+		char         m_XbePath[MAX_PATH];
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
 		float		 m_MSpF;
