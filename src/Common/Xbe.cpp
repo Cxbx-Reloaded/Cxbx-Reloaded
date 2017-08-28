@@ -317,7 +317,7 @@ Xbe::Xbe(const char *x_szFilename)
 	void* bitmapData;																// *************************************************************
 	int width;																		// *************************************************************
 	int height;																		// *************************************************************
-	bool res = ExportGameLogoBitmap(&bitmapData, &width, &height);					// *************************************************************
+	bool res = ExportGameLogoBitmap(bitmapData, &width, &height);					// *************************************************************
 	printf("Result is: %d\n", res);													// *************************************************************
 	printf("Widht: %d and height: %d of game logo after export\n", width, height);	// *************************************************************
 	//free(bitmapData);																// *************************************************************
@@ -978,7 +978,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-bool Xbe::ExportGameLogoBitmap(void* bitmapData, int *width, int *height)
+bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height)
 {
 	bool result = false;
 	uint32 dwOffs = 0;
@@ -1024,7 +1024,7 @@ bool Xbe::ExportGameLogoBitmap(void* bitmapData, int *width, int *height)
 			*width,
 			*height,
 			pitch,
-			&bitmapData);
+			bitmapData);
 	}
 	else {
 		printf("Game Logo is 32bit\n");
@@ -1035,14 +1035,14 @@ bool Xbe::ExportGameLogoBitmap(void* bitmapData, int *width, int *height)
 			*width,
 			*height,
 			pitch,
-			&bitmapData);
+			bitmapData);
 	}
 
 	return result;
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
+bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadD3DTextureFormatIntoBitmap\n");
 	switch (format)
@@ -1063,7 +1063,7 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uin
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
+bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadD3D16bitTextureFormatIntoBitmap\n");
 	switch (format)
@@ -1078,7 +1078,7 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
+bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadS3TCFormatIntoBitmap\n");
 	uint08 color[3];
@@ -1169,7 +1169,7 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 		}
 		catch (int e)
 		{
-			printf("Exception in ReadS3TCFormatIntoBitmap\n");
+			printf("Exception in ReadS3TCFormatIntoBitmap: %d\n",e);
 			return false;
 		}
 	}
@@ -1177,11 +1177,12 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
+bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadSwizzledFormatIntoBitmap\n");
 	uint32* xSwizzle;
-	uint32	x, y, sy;
+	int x, y;
+	uint32	sy;
 	PRGB32Array* yscanline;
 
 	if (format != X_D3DFMT_A8R8G8B8 && format != X_D3DFMT_X8R8G8B8)
@@ -1218,11 +1219,12 @@ bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 }
 
 // FIXME: this function should be moved elsewhere
-bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap)
+bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadSwizzled16bitFormatIntoBitmap\n");
 	uint32* xSwizzle;
-	uint32	x, y, sy;
+	int x, y;
+	uint32	sy;
 	PRGB16Array* yscanline;
 
 	if (format != X_D3DFMT_R5G6B5)

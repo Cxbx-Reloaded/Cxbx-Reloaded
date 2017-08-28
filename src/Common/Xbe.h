@@ -66,7 +66,7 @@ class Xbe : public Error
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
 
 		// Export Game Logo bitmap
-		bool ExportGameLogoBitmap(void* bitmapData, int *width, int *height);
+		bool ExportGameLogoBitmap(void*& bitmapData, int *width, int *height);
 
         // Xbe header
         #include "AlignPrefix1.h"
@@ -313,12 +313,12 @@ class Xbe : public Error
 			unsigned char A;
 		};
 				
-		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
-		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
+		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
 
-		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
-		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
-		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void* bitmap); // FIXME move this elsewhere
+		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
+		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
+		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
 
 		uint32 Swizzle(uint32 value, uint32 max, uint32 shift); // FIXME move this elsewhere
 
