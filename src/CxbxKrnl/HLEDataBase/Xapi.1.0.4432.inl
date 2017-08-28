@@ -58,6 +58,7 @@ OOVPA_END;
 // * XAPI_4432
 // ******************************************************************
 OOVPATable XAPI_4432[] = {
+
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
@@ -78,10 +79,22 @@ OOVPATable XAPI_4432[] = {
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
-	REGISTER_OOVPA(timeSetEvent, 4134, PATCH),
-	REGISTER_OOVPA(timeKillEvent, 4134, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
 };
 
 // ******************************************************************

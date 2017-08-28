@@ -322,7 +322,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMUA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMUA, 4361, 8)
+OOVPA_NO_XREF(XMountMUA, 4361, 8) // generic version
 
         { 0x22, 0x8A },
         { 0x3E, 0x89 },
@@ -332,6 +332,48 @@ OOVPA_NO_XREF(XMountMUA, 4361, 8)
         { 0xBE, 0xF8 },
         { 0xDE, 0x8D },
         { 0xFE, 0x09 },
+OOVPA_END;
+
+// ******************************************************************
+// * XFormatUtilityDrive
+// ******************************************************************
+OOVPA_NO_XREF(XFormatUtilityDrive, 4361, 12)
+
+        { 0x02, 0xEC },
+        { 0x10, 0x50 },
+        { 0x1E, 0xEC },
+
+        { 0x40, 0xF8 },
+        { 0x41, 0x8D },
+        { 0x42, 0x45 },
+        { 0x43, 0xE4 },
+        { 0x44, 0x50 },
+        { 0x45, 0x8D },
+        { 0x46, 0x45 },
+        { 0x47, 0xF4 },
+
+        { 0x6D, 0x33 },
+OOVPA_END;
+
+// ******************************************************************
+// * XMountMURootA
+// ******************************************************************
+OOVPA_NO_XREF(XMountMURootA, 4361, 12)
+
+        { 0x16, 0xBF },
+        { 0x22, 0x8A },
+        { 0x39, 0x05 },
+
+        { 0x50, 0x55 },
+        { 0x51, 0x58 },
+        { 0x52, 0xE9 },
+        { 0x53, 0x0E },
+        { 0x54, 0x01 },
+        { 0x55, 0x00 },
+        { 0x56, 0x00 },
+        { 0x57, 0x66 },
+
+        { 0x72, 0xE8 },
 OOVPA_END;
 
 // ******************************************************************
@@ -361,9 +403,20 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
-	REGISTER_OOVPA(timeSetEvent, 4134, PATCH),
-	REGISTER_OOVPA(timeKillEvent, 4134, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
 };
 
 // ******************************************************************
