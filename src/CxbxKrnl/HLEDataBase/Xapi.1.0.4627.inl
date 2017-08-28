@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
@@ -45,6 +46,7 @@ OOVPA_NO_XREF(XFormatUtilityDrive, 4627, 7)
         { 0x6D, 0x33 },
         { 0x7C, 0x40 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XID_fCloseDevice
@@ -127,6 +129,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 4831, 10)
         { 0x9A, 0xD0 },
 OOVPA_END;
 
+#if 0 // Moved to 3911
 // ******************************************************************
 // * GetOverlappedResult
 // ******************************************************************
@@ -140,7 +143,35 @@ OOVPA_NO_XREF(GetOverlappedResult, 4627, 7)
         { 0x4C, 0x89 },
         { 0x59, 0x56 },
 OOVPA_END;
+#endif
 
+
+// ******************************************************************
+// * XLaunchNewImageA
+// ******************************************************************
+OOVPA_NO_XREF(XLaunchNewImageA, 4721, 15)
+
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0x84 },
+        { 0x06, 0x03 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+
+        { 0x33, 0x3C },
+        { 0x34, 0x44 },
+
+        { 0xA0, 0x3B },
+        { 0xA1, 0xC3 },
+        { 0xA2, 0x7C },
+        { 0xA3, 0x5A },
+        { 0xA4, 0x57 },
+        { 0xA5, 0x8D },
+
+        { 0xC1, 0x15 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4721 version
 // ******************************************************************
 // * XLaunchNewImageA
 // ******************************************************************
@@ -162,7 +193,8 @@ OOVPA_NO_XREF(XLaunchNewImageA, 4928, 12)
 		{ 0x43, 0x02 },
 		{ 0x44, 0x5C },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4134
 // ******************************************************************
 // * XSetProcessQuantumLength
 // ******************************************************************
@@ -176,7 +208,8 @@ OOVPA_NO_XREF(XSetProcessQuantumLength, 4627, 7)
         { 0x10, 0x89 },
         { 0x13, 0xC2 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * timeSetEvent
 // ******************************************************************
@@ -190,7 +223,8 @@ OOVPA_NO_XREF(timeSetEvent, 4627, 7)
         { 0xBE, 0x32 },
         { 0xDE, 0x89 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * timeKillEvent
 // ******************************************************************
@@ -205,7 +239,8 @@ OOVPA_NO_XREF(timeKillEvent, 4627, 8)
         { 0x60, 0x5E },
         { 0x6E, 0x00 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * RaiseException
 // ******************************************************************
@@ -219,7 +254,9 @@ OOVPA_NO_XREF(RaiseException, 4627, 7)
         { 0x40, 0x5F },
         { 0x4B, 0xFF },
 OOVPA_END;
+#endif
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
@@ -233,7 +270,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 4928, 7)
         { 0xBE, 0x01 },
         { 0xDE, 0x45 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * MoveFileA
 // ******************************************************************
@@ -247,7 +284,7 @@ OOVPA_NO_XREF(MoveFileA, 4627, 7)
         { 0x74, 0xFF },
         { 0x83, 0x33 },
 OOVPA_END;
-
+#if 0 // No longer used, this was _XInputGetCapabilities@8
 // ******************************************************************
 // * XInputGetDeviceDescription
 // ******************************************************************
@@ -263,13 +300,37 @@ OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 9)
 		{ 0x34, 0x6A },
 		{ 0x35, 0x06 },
 OOVPA_END;
+#endif
+
+// ******************************************************************
+// * XGetDeviceEnumerationStatus
+// ******************************************************************
+OOVPA_NO_XREF(XGetDeviceEnumerationStatus, 4831, 14)
+
+        { 0x04, 0x15 },
+        { 0x0A, 0x35 },
+        { 0x10, 0x09 },
+
+        { 0x17, 0x00 },
+        { 0x18, 0x74 },
+        { 0x19, 0x03 },
+        { 0x1A, 0x33 },
+        { 0x1B, 0xF6 },
+        { 0x1C, 0x46 },
+        { 0x1D, 0x8A },
+        { 0x1E, 0xC8 },
+        { 0x1F, 0xFF },
+
+        { 0x25, 0x8B },
+        { 0x28, 0xC3 },
+OOVPA_END;
 
 // ******************************************************************
 // * XAPI_4627
 // ******************************************************************
 OOVPATable XAPI_4627[] = {
 
-	REGISTER_OOVPA(XFormatUtilityDrive, 4627, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
@@ -278,7 +339,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
-	REGISTER_OOVPA(XInputPoll, 4134, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
 	REGISTER_OOVPA(XID_fCloseDevice, 4627, XREF),
 	REGISTER_OOVPA(XID_fCloseDevice, 4928, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
@@ -300,22 +361,24 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
-	REGISTER_OOVPA(GetOverlappedResult, 4627, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
-	REGISTER_OOVPA(XLaunchNewImageA, 4928, PATCH),
+	REGISTER_OOVPA(XLaunchNewImageA, 4721, PATCH),
 	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
-	REGISTER_OOVPA(XSetProcessQuantumLength, 4627, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
-	REGISTER_OOVPA(timeSetEvent, 4627, PATCH),
-	REGISTER_OOVPA(timeKillEvent, 4627, PATCH),
-	REGISTER_OOVPA(RaiseException, 4627, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
-	REGISTER_OOVPA(XMountAlternateTitleA, 4928, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
+	//REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH), // NOT XInputGetDeviceDescription
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 
 // ******************************************************************
