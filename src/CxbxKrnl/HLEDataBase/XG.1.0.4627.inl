@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
@@ -55,7 +56,8 @@ OOVPA_NO_XREF(XGSwizzleBox, 4627, 10)
         { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
         { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
@@ -69,17 +71,23 @@ OOVPA_NO_XREF(XGWriteSurfaceOrTextureToXPR, 4627, 7)
         { 0xBE, 0xF0 },
         { 0xE2, 0x8B },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * XG_4627
 // ******************************************************************
 OOVPATable XG_4627[] = {
 
-	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 4361, DISABLED), // TODO : Uncomment
+	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
 	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSwizzleBox, 4627, PATCH),
-	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 4627, PATCH),
+	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
+	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
+	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
+	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
+	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
+	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
 };
 
 // ******************************************************************
