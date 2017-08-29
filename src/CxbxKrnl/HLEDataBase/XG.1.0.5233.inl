@@ -35,10 +35,19 @@
 // ******************************************************************
 // * XG_5233
 // ******************************************************************
-OOVPATable XG_5233[1] = {
+OOVPATable XG_5233[] = {
 
-	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 4361, DISABLED), // TODO : Uncomment
+	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
+	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
+	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
+	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
+	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
+	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
+	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
 };
 
 // ******************************************************************
