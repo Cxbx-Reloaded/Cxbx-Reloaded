@@ -128,6 +128,7 @@ class WndMain : public Wnd
 		HDC         m_GameLogoDC;
         HBITMAP     m_OrigBmp;
         HBITMAP     m_OrigLogo;
+		HBITMAP     m_OrigGameLogo;
         HBITMAP     m_BackBmp;
         HBITMAP     m_LogoBmp;
 		HBITMAP		m_GameLogoBMP;

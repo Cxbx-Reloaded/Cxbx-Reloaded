@@ -266,6 +266,7 @@ class Xbe : public Error
         };
 
 		// used to decode game logo bitmap data
+		#include "AlignPrefix1.h"
 		struct X_D3DResourceLoc
 		{
 			uint32 Common;
@@ -273,7 +274,9 @@ class Xbe : public Error
 			uint32 Lock;
 			uint32 Format;
 			uint32 Size;
-		};
+		}
+		#include "AlignPosfix1.h"
+		;
 
 		#include "AlignPrefix1.h"
 		struct XprHeader
@@ -299,8 +302,8 @@ class Xbe : public Error
 		struct XprImage
 		{
 			XprImageHeader xprImageHeader;
-			char strPad[2048 - sizeof(XprImageHeader) - 1];
-			unsigned char pBits[(128 * 128) / 2];
+			char strPad[2048 - sizeof(XprImageHeader)];
+			unsigned char pBits[((128 * 128) / 2)];
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImage;
@@ -322,7 +325,7 @@ class Xbe : public Error
 
 		uint32 Swizzle(uint32 value, uint32 max, uint32 shift); // FIXME move this elsewhere
 
-		typedef TRGB32 PRGB32Array[INT_MAX / sizeof(TRGB32) - 1]; // FIXME move this elsewhere - this typedef might also need a rename
+		typedef TRGB32 PRGB32Array[INT_MAX / sizeof(TRGB32)]; // FIXME move this elsewhere - this typedef might also need a rename
 		typedef uint16 TRGB16; // FIXME move this elsewhere - this typedef might also need a rename
 		typedef TRGB16 PRGB16Array[INT_MAX / sizeof(TRGB16)]; // FIXME move this elsewhere - this typedef might also need a rename
 

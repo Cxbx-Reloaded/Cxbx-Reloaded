@@ -55,6 +55,8 @@
 
 typedef BOOL (WINAPI *ChangeWindowMessageFilterType)(UINT, DWORD); // for GetProcAddress()
 
+static int gameLogoWidth, gameLogoHeight;
+
 void ClearHLECache()
 {
 	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
@@ -378,7 +380,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                     }
-
+					
                     stbi_image_free(bmpBuff);
 
                     FreeResource(hRes);
@@ -481,7 +483,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
                 BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
-//              BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
+
+				BitBlt(hDC, m_w - gameLogoWidth, m_h - nLogoBmpH - 8 - gameLogoHeight, gameLogoWidth, gameLogoHeight, m_GameLogoDC, 0, 0, SRCCOPY);
+
                 BitBlt(hDC, m_w-nLogoBmpW-4, m_h-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
                 int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
@@ -1226,13 +1230,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             SelectObject(m_BackDC, m_OrigBmp);
 
+			SelectObject(m_GameLogoDC, m_OrigGameLogo);
+
             DeleteObject(m_LogoDC);
 
             DeleteObject(m_BackDC);
 
+			DeleteObject(m_GameLogoDC);
+
             DeleteObject(m_LogoBmp);
 
             DeleteObject(m_BackBmp);
+
+			DeleteObject(m_GameLogoBMP);
 
             ReleaseDC(hwnd, hDC);
 
@@ -1312,7 +1322,57 @@ void WndMain::LoadLogo()
 // load logo bitmap - FIXME this is only a stub
 void WndMain::LoadGameLogo()
 {
-	// FIXME this is only a stub
+
+	void* bitmapData;																
+	gameLogoWidth = 0;
+	gameLogoHeight = 0;	
+	bool res = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight);
+	printf("Result is: %d\n", res); // FIXME - check result
+
+	HDC hDC = GetDC(m_hwnd);
+	m_GameLogoBMP = CreateCompatibleBitmap(hDC, gameLogoWidth, gameLogoHeight);
+
+	// create bitmap
+	{
+		BITMAPINFO BmpInfo;
+
+		BmpInfo.bmiHeader.biSize = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
+		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
+		BmpInfo.bmiHeader.biPlanes = 1;
+		BmpInfo.bmiHeader.biBitCount = 24;
+		BmpInfo.bmiHeader.biCompression = BI_RGB;
+		BmpInfo.bmiHeader.biSizeImage = 0;
+		BmpInfo.bmiHeader.biXPelsPerMeter = 0;
+		BmpInfo.bmiHeader.biYPelsPerMeter = 0;
+		BmpInfo.bmiHeader.biClrUsed = 0;
+		BmpInfo.bmiHeader.biClrImportant = 0;
+
+		SetDIBits(hDC, m_GameLogoBMP, 0, gameLogoHeight, bitmapData, &BmpInfo, DIB_RGB_COLORS);
+	}
+
+
+	m_GameLogoDC = CreateCompatibleDC(hDC);
+	m_OrigGameLogo = (HBITMAP)SelectObject(m_GameLogoDC, m_GameLogoBMP);
+
+	/*uint32 v = 0;
+	for (uint32 y = 0; y<17; y++)
+	{
+		for (uint32 x = 0; x<100; x++)
+		{
+			SetPixel(m_GameLogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
+			v++;
+		}
+	}*/
+
+	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+
+
+	if (hDC != NULL)
+		ReleaseDC(m_hwnd, hDC);
+
+	free(bitmapData);																// *************************************************************
+
 }
 
 
@@ -1665,6 +1725,11 @@ void WndMain::CloseXbe()
             }
         }
     }
+
+	// clear game logo bitmap
+	SelectObject(m_GameLogoDC, m_OrigGameLogo);
+	DeleteObject(m_GameLogoDC);
+	DeleteObject(m_GameLogoBMP);
 
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }

@@ -313,15 +313,6 @@ Xbe::Xbe(const char *x_szFilename)
 
         printf("OK\n");
     }
-	printf("-------\n");															// * FIXME remove this block (it is here only for debug purpose)
-	void* bitmapData;																// *************************************************************
-	int width;																		// *************************************************************
-	int height;																		// *************************************************************
-	bool res = ExportGameLogoBitmap(bitmapData, &width, &height);					// *************************************************************
-	printf("Result is: %d\n", res);													// *************************************************************
-	printf("Widht: %d and height: %d of game logo after export\n", width, height);	// *************************************************************
-	//free(bitmapData);																// *************************************************************
-	printf("-------\n");															// *************************************************************
 
 cleanup:
 
@@ -1081,8 +1072,13 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadS3TCFormatIntoBitmap\n");
+	printf("data[0]=0x%08X\n", data[0]);
+	printf("data[1]=0x%08X\n", data[1]);
+	printf("data[2]=0x%08X\n", data[2]);
+	printf("data[3]=0x%08X\n", data[3]);
 	uint08 color[3];
 	TRGB32 color32b[4];
+	//TRGB32 color32b[1024 * sizeof(TRGB32)];
 	uint32 r, g, b, r1, g1, b1, pixelmap, j;
 	int k, p, x, y;
 
@@ -1107,39 +1103,39 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 			// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
 			r = ((color[0] >> 11) & 31) * 255 / 31;
 			g = ((color[0] >>  5) & 63) * 255 / 63;
-			b = ((color[0]) & 31) * 255 / 31;
+			b = ((color[0]		) & 31) * 255 / 31;
 
 			r1 = ((color[1] >> 11) & 31) * 255 / 31;
 			g1 = ((color[1] >>  5) & 63) * 255 / 63;
-			b1 = ((color[1]) & 31) * 255 / 31;
+			b1 = ((color[1]		 ) & 31) * 255 / 31;
 
 			// Build first half of RGB32 color map :
-			color32b[0].R = r;
-			color32b[0].G = g;
-			color32b[0].B = b;
+			color32b[0].R = (unsigned char)r;
+			color32b[0].G = (unsigned char)g;
+			color32b[0].B = (unsigned char)b;
 
-			color32b[1].R = r1;
-			color32b[1].G = g1;
-			color32b[1].B = b1;
+			color32b[1].R = (unsigned char)r1;
+			color32b[1].G = (unsigned char)g1;
+			color32b[1].B = (unsigned char)b1;
 
 			// Build second half of RGB32 color map :
 			if (color[0] > color[1])
 			{
 				// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
-				color32b[2].R = (r + r + r1 + 2) / 3;
-				color32b[2].G = (g + g + g1 + 2) / 3;
-				color32b[2].B = (b + b + b1 + 2) / 3;
+				color32b[2].R = (unsigned char)((r + r + r1 + 2) / 3);
+				color32b[2].G = (unsigned char)((g + g + g1 + 2) / 3);
+				color32b[2].B = (unsigned char)((b + b + b1 + 2) / 3);
 
-				color32b[3].R = (r + r1 + r1 + 2) / 3;
-				color32b[3].G = (g + g1 + g1 + 2) / 3;
-				color32b[3].B = (b + b1 + b1 + 2) / 3;
+				color32b[3].R = (unsigned char)((r + r1 + r1 + 2) / 3);
+				color32b[3].G = (unsigned char)((g + g1 + g1 + 2) / 3);
+				color32b[3].B = (unsigned char)((b + b1 + b1 + 2) / 3);
 			}
 			else 
 			{
 				// Make up one new color : 1/2 A + 1/2 B :
-				color32b[2].R = (r + r1) / 2;
-				color32b[2].G = (g + g1) / 2;
-				color32b[2].B = (b + b1) / 2;
+				color32b[2].R = (unsigned char)((r + r1) / 2);
+				color32b[2].G = (unsigned char)((g + g1) / 2);
+				color32b[2].B = (unsigned char)((b + b1) / 2);
 
 				color32b[3].R = 0;
 				color32b[3].G = 0;
@@ -1161,15 +1157,15 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 			for (p = 0; p < 16 - 1; p++)
 			{
 				((TRGB32*)bitmap)[x + (p & 3) + pitch * (y + (p >> 2))] = color32b[pixelmap & 3];
-				pixelmap = pixelmap >> 2;
+				pixelmap >>= 2;
 			};
 			
 			j = j + 8;
 			k = k + 8;
 		}
-		catch (int e)
+		catch (const char* msg)
 		{
-			printf("Exception in ReadS3TCFormatIntoBitmap: %d\n",e);
+			printf("Exception in ReadS3TCFormatIntoBitmap: %s\n",msg);
 			return false;
 		}
 	}
