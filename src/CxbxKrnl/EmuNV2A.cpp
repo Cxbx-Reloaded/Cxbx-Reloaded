@@ -1523,23 +1523,6 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 
 			pgraph.surface_zeta.offset = parameter;
 			break;
-		// TODO: Is there a better way to do this?
-		// MSVC doesn't support GCC's case_range extention
-		// this prevents use of NV097_SET_COMBINER_ALPHA_ICW ... NV097_SET_COMBINER_ALPHA_ICW + 28
-		// Investigated making a macro, but doesn't seem possible to do a variable number of results
-		case NV097_SET_COMBINER_ALPHA_ICW: case NV097_SET_COMBINER_ALPHA_ICW + 1: case NV097_SET_COMBINER_ALPHA_ICW + 2:
-		case NV097_SET_COMBINER_ALPHA_ICW + 3:	case NV097_SET_COMBINER_ALPHA_ICW + 4:	case NV097_SET_COMBINER_ALPHA_ICW + 5:
-		case NV097_SET_COMBINER_ALPHA_ICW + 6:	case NV097_SET_COMBINER_ALPHA_ICW + 7:	case NV097_SET_COMBINER_ALPHA_ICW + 8:
-		case NV097_SET_COMBINER_ALPHA_ICW + 9:	case NV097_SET_COMBINER_ALPHA_ICW + 10:	case NV097_SET_COMBINER_ALPHA_ICW + 11:
-		case NV097_SET_COMBINER_ALPHA_ICW + 12:	case NV097_SET_COMBINER_ALPHA_ICW + 13:	case NV097_SET_COMBINER_ALPHA_ICW + 14:
-		case NV097_SET_COMBINER_ALPHA_ICW + 15:	case NV097_SET_COMBINER_ALPHA_ICW + 16:	case NV097_SET_COMBINER_ALPHA_ICW + 17:
-		case NV097_SET_COMBINER_ALPHA_ICW + 18:	case NV097_SET_COMBINER_ALPHA_ICW + 19:	case NV097_SET_COMBINER_ALPHA_ICW + 20:
-		case NV097_SET_COMBINER_ALPHA_ICW + 21:	case NV097_SET_COMBINER_ALPHA_ICW + 22:	case NV097_SET_COMBINER_ALPHA_ICW + 23:
-		case NV097_SET_COMBINER_ALPHA_ICW + 24:	case NV097_SET_COMBINER_ALPHA_ICW + 25:	case NV097_SET_COMBINER_ALPHA_ICW + 26:
-		case NV097_SET_COMBINER_ALPHA_ICW + 27:	case NV097_SET_COMBINER_ALPHA_ICW + 28:
-				slot = (method - NV097_SET_COMBINER_ALPHA_ICW) / 4;
-				pgraph.regs[NV_PGRAPH_COMBINEALPHAI0 + slot * 4] = parameter;
-				break;
 		case NV097_SET_COMBINER_SPECULAR_FOG_CW0:
 			pgraph.regs[NV_PGRAPH_COMBINESPECFOG0] = parameter;
 			break;
@@ -1934,48 +1917,189 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 				parameter);
 			break;
 
-			CASE_4(NV097_SET_TEXGEN_S, 16) : {
-				slot = (method - NV097_SET_TEXGEN_S) / 16;
-				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
-					: NV_PGRAPH_CSV1_B;
-				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
-					: NV_PGRAPH_CSV1_A_T0_S;
-				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 0));
-				break;
-			}
-			CASE_4(NV097_SET_TEXGEN_T, 16) : {
-				slot = (method - NV097_SET_TEXGEN_T) / 16;
-				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
-					: NV_PGRAPH_CSV1_B;
-				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_T
-					: NV_PGRAPH_CSV1_A_T0_T;
-				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 1));
-				break;
-			}
-			CASE_4(NV097_SET_TEXGEN_R, 16) : {
-				slot = (method - NV097_SET_TEXGEN_R) / 16;
-				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
-					: NV_PGRAPH_CSV1_B;
-				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_R
-					: NV_PGRAPH_CSV1_A_T0_R;
-				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 2));
-				break;
-			}
-			CASE_4(NV097_SET_TEXGEN_Q, 16) : {
-				slot = (method - NV097_SET_TEXGEN_Q) / 16;
-				unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
-					: NV_PGRAPH_CSV1_B;
-				unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_Q
-					: NV_PGRAPH_CSV1_A_T0_Q;
-				SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 3));
-				break;
-			}
-			CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) :
-				slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
-			pgraph.texture_matrix_enable[slot] = parameter;
+		CASE_4(NV097_SET_TEXGEN_S, 16) : {
+			slot = (method - NV097_SET_TEXGEN_S) / 16;
+			unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+				: NV_PGRAPH_CSV1_B;
+			unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
+				: NV_PGRAPH_CSV1_A_T0_S;
+			SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 0));
 			break;
+		}
+		CASE_4(NV097_SET_TEXGEN_T, 16) : {
+			slot = (method - NV097_SET_TEXGEN_T) / 16;
+			unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+				: NV_PGRAPH_CSV1_B;
+			unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_T
+				: NV_PGRAPH_CSV1_A_T0_T;
+			SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 1));
+			break;
+		}
+		CASE_4(NV097_SET_TEXGEN_R, 16) : {
+			slot = (method - NV097_SET_TEXGEN_R) / 16;
+			unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+				: NV_PGRAPH_CSV1_B;
+			unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_R
+				: NV_PGRAPH_CSV1_A_T0_R;
+			SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 2));
+			break;
+		}
+		CASE_4(NV097_SET_TEXGEN_Q, 16) : {
+			slot = (method - NV097_SET_TEXGEN_Q) / 16;
+			unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A
+				: NV_PGRAPH_CSV1_B;
+			unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_Q
+				: NV_PGRAPH_CSV1_A_T0_Q;
+			SET_MASK(pgraph.regs[reg], mask, kelvin_map_texgen(parameter, 3));
+			break;
+		}
+		CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) :
+			slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
+		pgraph.texture_matrix_enable[slot] = parameter;
+		break;
 
+		case NV097_SET_TEXGEN_VIEW_MODEL:
+			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_TEXGEN_REF, parameter);
+			break;
 		default:
+			if (method >= NV097_SET_COMBINER_ALPHA_ICW && method <= NV097_SET_COMBINER_ALPHA_ICW + 28) {
+				slot = (method - NV097_SET_COMBINER_ALPHA_ICW) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINEALPHAI0 + slot * 4] = parameter;
+				break;
+			}
+
+			if (method >= NV097_SET_PROJECTION_MATRIX && method <= NV097_SET_PROJECTION_MATRIX + 0x3c) {
+				slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
+				// pg->projection_matrix[slot] = *(float*)&parameter;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
+				pgraph.vsh_constants[row][slot % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_MODEL_VIEW_MATRIX && method <= NV097_SET_MODEL_VIEW_MATRIX + 0xfc) {
+				slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
+				unsigned int matnum = slot / 16;
+				unsigned int entry = slot % 16;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_MMAT0 + matnum * 8 + entry / 4;
+				pgraph.vsh_constants[row][entry % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_INVERSE_MODEL_VIEW_MATRIX && method <= NV097_SET_INVERSE_MODEL_VIEW_MATRIX + 0xfc) {
+				slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
+				unsigned int matnum = slot / 16;
+				unsigned int entry = slot % 16;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_IMMAT0 + matnum * 8 + entry / 4;
+				pgraph.vsh_constants[row][entry % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_COMPOSITE_MATRIX && method <= NV097_SET_COMPOSITE_MATRIX + 0x3c) {
+				slot = (method - NV097_SET_COMPOSITE_MATRIX) / 4;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
+				pgraph.vsh_constants[row][slot % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_TEXTURE_MATRIX && method <= NV097_SET_TEXTURE_MATRIX + 0xfc) {
+				slot = (method - NV097_SET_TEXTURE_MATRIX) / 4;
+				unsigned int tex = slot / 16;
+				unsigned int entry = slot % 16;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_T0MAT + tex * 8 + entry / 4;
+				pgraph.vsh_constants[row][entry % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_FOG_PARAMS && method <= NV097_SET_FOG_PARAMS + 8) {
+				slot = (method - NV097_SET_FOG_PARAMS) / 4;
+				if (slot < 2) {
+					pgraph.regs[NV_PGRAPH_FOGPARAM0 + slot * 4] = parameter;
+				}
+				else {
+					/* FIXME: No idea where slot = 2 is */
+				}
+
+				pgraph.ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = parameter;
+				pgraph.ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FOG_K] = true;
+				break;
+			}
+				
+			/* Handles NV097_SET_TEXGEN_PLANE_S,T,R,Q */
+			if (method >= NV097_SET_TEXGEN_PLANE_S && method <=	NV097_SET_TEXGEN_PLANE_S + 0xfc) {
+				slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
+				unsigned int tex = slot / 16;
+				unsigned int entry = slot % 16;
+				unsigned int row = NV_IGRAPH_XF_XFCTX_TG0MAT + tex * 8 + entry / 4;
+				pgraph.vsh_constants[row][entry % 4] = parameter;
+				pgraph.vsh_constants_dirty[row] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_FOG_PLANE && method <= NV097_SET_FOG_PLANE + 12) {
+				slot = (method - NV097_SET_FOG_PLANE) / 4;
+				pgraph.vsh_constants[NV_IGRAPH_XF_XFCTX_FOG][slot] = parameter;
+				pgraph.vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_FOG] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_SCENE_AMBIENT_COLOR && method <= NV097_SET_SCENE_AMBIENT_COLOR + 8) {
+				slot = (method - NV097_SET_SCENE_AMBIENT_COLOR) / 4;
+				// ??
+				pgraph.ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = parameter;
+				pgraph.ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_VIEWPORT_OFFSET && method <= NV097_SET_VIEWPORT_OFFSET + 12) {
+				slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
+				pgraph.vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = parameter;
+				pgraph.vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
+				break; 
+			}
+
+			if (method >= NV097_SET_EYE_POSITION  && method <= NV097_SET_EYE_POSITION + 12) {
+				slot = (method - NV097_SET_EYE_POSITION) / 4;
+				pgraph.vsh_constants[NV_IGRAPH_XF_XFCTX_EYEP][slot] = parameter;
+				pgraph.vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_EYEP] = true;
+				break;
+			}
+
+			if (method >= NV097_SET_COMBINER_FACTOR0 && method <= NV097_SET_COMBINER_FACTOR0 + 28) {
+				slot = (method - NV097_SET_COMBINER_FACTOR0) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINEFACTOR0 + slot * 4] = parameter;
+				break;
+			}
+
+			if (method >= NV097_SET_COMBINER_FACTOR1 && method <= NV097_SET_COMBINER_FACTOR1 + 28) {
+				slot = (method - NV097_SET_COMBINER_FACTOR1) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINEFACTOR1 + slot * 4] = parameter;
+				break;
+			}
+
+			if (method >= NV097_SET_COMBINER_ALPHA_OCW && method <= NV097_SET_COMBINER_ALPHA_OCW + 28) {
+				slot = (method - NV097_SET_COMBINER_ALPHA_OCW) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINEALPHAO0 + slot * 4] = parameter;
+				break;
+			}
+
+			if (method >= NV097_SET_COMBINER_COLOR_ICW && method <= NV097_SET_COMBINER_COLOR_ICW + 28) {
+				slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+				pgraph.regs[NV_PGRAPH_COMBINECOLORI0 + slot * 4] = parameter;
+				break;
+			}
+
+			if (method >= NV097_SET_VIEWPORT_SCALE && method <= NV097_SET_VIEWPORT_SCALE + 12) {
+				slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
+				pgraph.vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = parameter;
+				pgraph.vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
+				break;
+			}
+
 			EmuWarning("EmuNV2A: Unknown NV_KELVIN_PRIMITIVE Method: 0x%08X\n", method);
 		}
 		break;
