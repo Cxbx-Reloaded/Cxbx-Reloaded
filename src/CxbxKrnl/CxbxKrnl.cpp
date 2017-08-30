@@ -382,7 +382,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 	while (true) {
 		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-			// If the interrupt is pending, pending and connected, process it
+			// If the interrupt is pending and connected, process it
 			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
 				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 			}
