@@ -50,6 +50,7 @@ namespace xboxkrnl
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
+#include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
@@ -58,6 +59,7 @@ namespace xboxkrnl
 
 #include <shlobj.h>
 #include <clocale>
+#include <process.h>
 #include <Shlwapi.h>
 #include <time.h> // For time()
 
@@ -369,6 +371,27 @@ void PrintCurrentConfigurationLog() {
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
 
+}
+
+static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
+{
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
+	while (true) {
+		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+			// If the interrupt is pending, pending and connected, process it
+			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+			}
+		}
+
+		SwitchToThread();
+	}
+
+	return 0;
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -846,6 +869,11 @@ void CxbxKrnlInit
 	}
 
 	EmuX86_Init();
+	// Create the interrupt processing thread
+	DWORD dwThreadId;
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
+	// Make sure Xbox1 code runs on one core :
+	SetThreadAffinityMask(hThread, g_CPUXbox);
     DbgPrintf("EmuMain: Initial thread starting.\n");
 	CxbxLaunchXbe(Entry);
     DbgPrintf("EmuMain: Initial thread ended.\n");
