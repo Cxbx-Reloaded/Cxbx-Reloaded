@@ -60,19 +60,31 @@
 
 uint32_t EmuX86_IORead32(xbaddr addr)
 {
-	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
+	switch (addr) {
+	case 0x8008:	// TIMER
+		// HACK: This is very wrong.
+		// This timer should count at a specific frequency (3579.545 ticks per ms)
+		// But this is enough to keep NXDK from hanging for now.
+		LARGE_INTEGER performanceCount;
+		QueryPerformanceCounter(&performanceCount);
+		return performanceCount.QuadPart;
+		break;
+		
+	}
+
+	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
 	return 0;
 }
 
 uint16_t EmuX86_IORead16(xbaddr addr)
 {
-	EmuWarning("EmuX86_IORead16(0x%08X) Not Implemented", addr);
+	EmuWarning("EmuX86_IORead16(0x%08X) [Unknown address]", addr);
 	return 0;
 }
 
 uint8_t EmuX86_IORead8(xbaddr addr)
 {
-	EmuWarning("EmuX86_IORead8(0x%08X) Not Implemented", addr);
+	EmuWarning("EmuX86_IORead8(0x%08X) [Unknown address]", addr);
 	return 0;
 }
 
