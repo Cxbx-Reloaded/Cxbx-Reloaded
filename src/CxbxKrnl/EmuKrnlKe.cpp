@@ -178,6 +178,8 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
+	InitXboxThread();
+
 	while (true)
 	{
 		// While we're working with the DpcQueue, we need to be thread-safe :

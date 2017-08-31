@@ -465,9 +465,6 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
-		// Ported from Dxbx :
-        // If possible, assign this thread to another core than the one that runs Xbox1 code :
-        SetThreadAffinityMask(hThread, g_CPUOthers);
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 

@@ -310,8 +310,6 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 		WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
 
-		//        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
-
 		DbgPrintf("EmuKrnl: ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", *ThreadHandle, dwThreadId);
 
 		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
