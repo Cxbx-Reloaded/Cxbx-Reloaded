@@ -165,11 +165,6 @@ OOVPATable XAPI_4034[] = {
 
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
-/* These functions havent been rev'd yet (may be same as new/old)
-	REGISTER_OOVPA(XInputOpen, 4034, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
-	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
-*/
 	// REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
 	// REGISTER_OOVPA(CloseHandle, (???, PATCH)),
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
@@ -178,7 +173,6 @@ OOVPATable XAPI_4034[] = {
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
-	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
@@ -190,6 +184,26 @@ OOVPATable XAPI_4034[] = {
 	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
+	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 3911, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
+
+	// ******************************************************************
+	// Provisional registration functions in XDK 4034
+	// TODO: Need test cases
+	// ******************************************************************
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	// ******************************************************************
 };
 
 // ******************************************************************

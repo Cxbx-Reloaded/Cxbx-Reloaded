@@ -33,6 +33,33 @@
 // ******************************************************************
 
 // ******************************************************************
+// * CXo::XOnlineLogon
+// ******************************************************************
+OOVPA_XREF(CXo_XOnlineLogon, 5558, 14,
+
+    XREF_CXo_XOnlineLogon,
+    XRefZero)
+
+        { 0x02, 0xEC },
+
+        { 0x15, 0xE9 },
+        { 0x1C, 0xF0 },
+
+        { 0x27, 0xA8 },
+        { 0x28, 0x01 },
+        { 0x29, 0x75 },
+        { 0x2A, 0x0C },
+        { 0x2B, 0xC7 },
+        { 0x2C, 0x45 },
+//      { 0x2D, 0x10 },
+        { 0x2E, 0x00 },
+        { 0x2F, 0x10 },
+        { 0x30, 0x15 },
+        { 0x31, 0x80 },
+        { 0x32, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
 // * WSAStartup
 // ******************************************************************
 OOVPA_NO_XREF(WSAStartup, 5558, 7)
@@ -47,20 +74,65 @@ OOVPA_NO_XREF(WSAStartup, 5558, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * CXnSock::socket
+// ******************************************************************
+OOVPA_NO_XREF(socket, 5558, 10) // Up to 5849
+
+        { 0x00, 0x51 },
+        { 0x0A, 0xB9 },
+
+        { 0xB8, 0x83 },
+        { 0xB9, 0xC8 },
+        { 0xBA, 0xFF },
+        { 0xBB, 0xEB },
+        { 0xBC, 0x73 },
+        { 0xBD, 0x53 },
+        { 0xBE, 0xFF },
+        { 0xBF, 0x15 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4361 version
+// ******************************************************************
+// * XOnlineLogon
+// ******************************************************************
+OOVPA_XREF(XOnlineLogon, 5558, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x0B, XREF_CXo_XOnlineLogon ),
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x8B },
+        { 0x04, 0x0D },
+        { 0x09, 0x5D },
+        { 0x0A, 0xE9 },
+OOVPA_END;
+#endif
+
+// ******************************************************************
 // * XOnline_5558
 // ******************************************************************
 // * TODO: Verify all of these
 // ******************************************************************
 OOVPATable XOnline_5558[] = {
 
+	REGISTER_OOVPA(XnInit, 4627, XREF),
 	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
 	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
-	REGISTER_OOVPA(XnInit, 4627, XREF),
-	// REGISTER_OOVPA(socket, 4361, PATCH),
-	REGISTER_OOVPA(bind, 4361, PATCH),
-	// REGISTER_OOVPA(listen, 4361, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
+	REGISTER_OOVPA(socket, 5558, PATCH),
+	REGISTER_OOVPA(bind, 4627, PATCH),
+	REGISTER_OOVPA(listen, 4627, PATCH),
+	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
+	REGISTER_OOVPA(connect, 5233, PATCH),
+	REGISTER_OOVPA(send, 3911, PATCH),
+	REGISTER_OOVPA(recv, 3911, PATCH),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
+	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 4627, XREF),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 5558, XREF),
+	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
 };
 
 // ******************************************************************

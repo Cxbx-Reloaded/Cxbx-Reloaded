@@ -196,10 +196,11 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	// Without this, JSRF hard crashes sometime after calling this function
 	// I HATE game specific hacks, but I've wasted three weeks trying to solve this already
 	// TitleID 0x49470018 = JSRF NTSC-U
-	// TitleID 0x5345000A = JSRF PAL
+	// TitleID 0x5345000A = JSRF PAL, NTSC-J
+	// TitleID 0x53450016 = JSRF NTSC-J (Demo)
 	// ~Luke Usher
 	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-	if (pCertificate->dwTitleId == 0x49470018 || pCertificate->dwTitleId == 0x5345000A) {
+	if (pCertificate->dwTitleId == 0x49470018 || pCertificate->dwTitleId == 0x5345000A || pCertificate->dwTitleId == 0x53450016) {
 		RETURN(ret);
 	}
 

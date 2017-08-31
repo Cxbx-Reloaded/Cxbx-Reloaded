@@ -109,9 +109,9 @@ OOVPA_XREF(XnInit, 4361, 10,
         { 0xBD, 0xEC }, // (Offset,Value)-Pair #9
         { 0xBE, 0x01 }, // (Offset,Value)-Pair #10
 OOVPA_END;
-
+#if 0 // Moved to XNet 3911
 // ******************************************************************
-// * socket
+// * CXnSock::socket
 // ******************************************************************
 OOVPA_NO_XREF(socket, 4361, 9)
 
@@ -130,9 +130,10 @@ OOVPA_NO_XREF(socket, 4361, 9)
         { 0xDA, 0x4E }, // (Offset,Value)-Pair #8
         { 0xDB, 0x04 }, // (Offset,Value)-Pair #9
 OOVPA_END;
-
+#endif
+#if 0 // Moved to XNet 3911
 // ******************************************************************
-// * bind
+// * CXnSock::bind
 // ******************************************************************
 OOVPA_NO_XREF(bind, 4361, 10)
 
@@ -154,9 +155,10 @@ OOVPA_NO_XREF(bind, 4361, 10)
         { 0x80, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x81, 0x0C }, // (Offset,Value)-Pair #10
 OOVPA_END;
-
+#endif
+#if 0 // Moved to XNet 3911
 // ******************************************************************
-// * listen
+// * CXnSock::listen
 // ******************************************************************
 OOVPA_NO_XREF(listen, 4361, 9)
 
@@ -177,9 +179,10 @@ OOVPA_NO_XREF(listen, 4361, 9)
         { 0x7F, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x80, 0x08 }, // (Offset,Value)-Pair #9
 OOVPA_END;
-
+#endif
+#if 0 // Moved to XNet 3911
 // ******************************************************************
-// * ioctlsocket
+// * CXnSock::ioctlsocket
 // ******************************************************************
 OOVPA_NO_XREF(ioctlsocket, 4361, 10)
 
@@ -201,19 +204,87 @@ OOVPA_NO_XREF(ioctlsocket, 4361, 10)
         { 0xC5, 0xC2 }, // (Offset,Value)-Pair #9
         { 0xC6, 0x0C }, // (Offset,Value)-Pair #10
 OOVPA_END;
+#endif
+// ******************************************************************
+// * CXo::XOnlineLogon
+// ******************************************************************
+OOVPA_XREF(CXo_XOnlineLogon, 4361, 12,
+
+    XREF_CXo_XOnlineLogon,
+    XRefZero)
+
+        { 0x02, 0xEC },
+
+        { 0x0D, 0xFC },
+        { 0x0E, 0x75 },
+        { 0x0F, 0x07 },
+        { 0x10, 0xB8 },
+        { 0x11, 0x05 },
+        { 0x12, 0x00 },
+        { 0x13, 0x15 },
+        { 0x14, 0x80 },
+        { 0x15, 0xEB },
+
+        { 0x24, 0xA8 },
+        { 0x32, 0x33 },
+OOVPA_END;
+
+// ******************************************************************
+// * XOnlineLogon
+// ******************************************************************
+OOVPA_XREF(XOnlineLogon, 4361, 5,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x0B, XREF_CXo_XOnlineLogon ),
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x0A, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
+// * XNetGetEthernetLinkStatus
+// ******************************************************************
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
+
+        { 0x00, 0x56 },
+        { 0x01, 0x33 },
+        { 0x02, 0xF3 },
+        { 0x03, 0xB8 },
+        { 0x04, 0x00 },
+        { 0x05, 0x00 },
+        { 0x06, 0x00 },
+        { 0x07, 0x00 },
+        { 0x08, 0xB9 },
+
+        { 0x0D, 0xBA },
+        { 0x1A, 0xE8 },
+
+        { 0x27, 0x75 },
+        { 0x2C, 0x15 },
+OOVPA_END;
 
 // ******************************************************************
 // * XOnline_4361
 // ******************************************************************
 OOVPATable XOnline_4361[] = {
 
+	REGISTER_OOVPA(XnInit, 4361, XREF),
 	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
-	REGISTER_OOVPA(XnInit, 4361, XREF),
-	REGISTER_OOVPA(socket, 4361, PATCH),
-	REGISTER_OOVPA(bind, 4361, PATCH),
-	REGISTER_OOVPA(listen, 4361, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 4361, XREF),
+	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4361, PATCH),
+	REGISTER_OOVPA(socket, 3911, PATCH),
+	REGISTER_OOVPA(bind, 3911, PATCH),
+	REGISTER_OOVPA(listen, 3911, PATCH),
+	REGISTER_OOVPA(ioctlsocket, 3911, PATCH),
+	REGISTER_OOVPA(connect, 3911, PATCH),
+	REGISTER_OOVPA(send, 3911, PATCH),
+	REGISTER_OOVPA(recv, 3911, PATCH),
 };
 
 // ******************************************************************

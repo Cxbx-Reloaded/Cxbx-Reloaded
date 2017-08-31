@@ -157,6 +157,26 @@ OOVPA_XREF(XInputClose, 5558, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * XMountAlternateTitleA
+// ******************************************************************
+OOVPA_NO_XREF(XMountAlternateTitleA, 5558, 11)
+
+        { 0x0B, 0x08 },
+
+        { 0x18, 0x0B },
+        { 0x19, 0x57 },
+        { 0x1A, 0x33 },
+        { 0x1B, 0xFF },
+        { 0x1C, 0x80 },
+        { 0x1D, 0xE3 },
+        { 0x1E, 0xDF },
+        { 0x1F, 0x80 },
+
+        { 0xC1, 0x83 },
+        { 0xD0, 0x15 },
+OOVPA_END;
+
+// ******************************************************************
 // * XAPI_5558
 // ******************************************************************
 OOVPATable XAPI_5558[] = {
@@ -187,6 +207,20 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(XID_fCloseDevice, 5558, XREF),
 	REGISTER_OOVPA(XInputClose, 5558, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 5558, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetDeviceDescription, 5344, PATCH),
+	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 
 // ******************************************************************

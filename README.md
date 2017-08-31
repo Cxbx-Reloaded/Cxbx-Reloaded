@@ -43,4 +43,4 @@ We welcome contributions, large and small. If you want to do some coding, be sur
 You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
-All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
+All contributors to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.

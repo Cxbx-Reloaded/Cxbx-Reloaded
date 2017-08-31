@@ -111,7 +111,7 @@ OOVPA_NO_XREF(XMountUtilityDrive, 4134, 10)
         { 0xAB, 0x45 }, // (Offset,Value)-Pair #9
         { 0xAC, 0xF0 }, // (Offset,Value)-Pair #10
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * XInputPoll
 // ******************************************************************
@@ -130,7 +130,8 @@ OOVPA_NO_XREF(XInputPoll, 4134, 10)
         { 0x3B, 0xC0 }, // (Offset,Value)-Pair #9
         { 0x3C, 0x52 }, // (Offset,Value)-Pair #10
 OOVPA_END;
-
+#endif
+#if 0 // version 4361, Not 4134
 // ******************************************************************
 // * XMountMUA
 // ******************************************************************
@@ -145,7 +146,8 @@ OOVPA_NO_XREF(XMountMUA, 4134, 8)
         { 0xDE, 0x8D },
         { 0xFE, 0x09 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * timeSetEvent
 // ******************************************************************
@@ -159,7 +161,8 @@ OOVPA_NO_XREF(timeSetEvent, 4134, 7)
         { 0xBE, 0x32 },
         { 0xDE, 0x89 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * timeKillEvent
 // ******************************************************************
@@ -173,6 +176,21 @@ OOVPA_NO_XREF(timeKillEvent, 4134, 8)
         { 0x52, 0x00 },
         { 0x60, 0x5E },
         { 0x6E, 0x00 },
+OOVPA_END;
+#endif
+
+// ******************************************************************
+// * XSetProcessQuantumLength
+// ******************************************************************
+OOVPA_NO_XREF(XSetProcessQuantumLength, 4134, 7)
+
+        { 0x01, 0xA1 },
+        { 0x04, 0x00 },
+        { 0x07, 0x4C },
+        { 0x0A, 0x8B },
+        { 0x0D, 0x8D },
+        { 0x10, 0x89 },
+        { 0x13, 0xC2 },
 OOVPA_END;
 
 // ******************************************************************
@@ -199,15 +217,21 @@ OOVPATable XAPI_4134[] = {
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
-	REGISTER_OOVPA(XInputPoll, 4134, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
-	REGISTER_OOVPA(XMountMUA, 4134, PATCH),
-	REGISTER_OOVPA(timeSetEvent, 4134, PATCH),
-	REGISTER_OOVPA(timeKillEvent, 4134, PATCH),
+	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
 };
 
 // ******************************************************************

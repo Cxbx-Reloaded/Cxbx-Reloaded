@@ -546,7 +546,7 @@ OOVPA_END;
 // ******************************************************************
 // * SetThreadPriorityBoost
 // ******************************************************************
-OOVPA_NO_XREF(SetThreadPriorityBoost, 3911, 10)
+OOVPA_NO_XREF(SetThreadPriorityBoost, 3911, 10) // generic version
 
         // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
@@ -778,7 +778,7 @@ OOVPA_END;
 // ******************************************************************
 // * SignalObjectAndWait
 // ******************************************************************
-OOVPA_NO_XREF(SignalObjectAndWait, 3911, 8)
+OOVPA_NO_XREF(SignalObjectAndWait, 3911, 8) // generic version
 
         { 0x07, 0x75 },
         { 0x12, 0x8B },
@@ -793,7 +793,7 @@ OOVPA_END;
 // ******************************************************************
 // * QueueUserAPC
 // ******************************************************************
-OOVPA_NO_XREF(QueueUserAPC, 3911, 7)
+OOVPA_NO_XREF(QueueUserAPC, 3911, 7) // generic version
 
         { 0x03, 0x74 },
         { 0x08, 0x24 },
@@ -822,6 +822,30 @@ OOVPA_END;
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
+OOVPA_NO_XREF(XMountAlternateTitleA, 3911, 13)
+
+        { 0x04, 0xEC },
+
+        { 0x0F, 0x18 },
+        { 0x10, 0x01 },
+        { 0x11, 0x01 },
+        { 0x12, 0x00 },
+        { 0x13, 0x53 },
+        { 0x14, 0x8A },
+
+        { 0x30, 0x39 },
+        { 0x31, 0x55 },
+        { 0x32, 0x0C },
+        { 0x33, 0x74 },
+        { 0x34, 0x09 },
+
+        { 0x3D, 0xEC },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * XMountAlternateTitleA
+// ******************************************************************
 OOVPA_NO_XREF(XMountAlternateTitleA, 3911, 7)
 
         { 0x1E, 0x0F },
@@ -832,6 +856,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 3911, 7)
         { 0xBE, 0x66 },
         { 0xDE, 0xF0 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XUnmountAlternateTitleA
@@ -850,7 +875,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMUA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMUA, 3911, 7)
+OOVPA_NO_XREF(XMountMUA, 3911, 7) // generic version
 
         { 0x1E, 0x0C },
         { 0x3E, 0x66 },
@@ -1008,7 +1033,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMURootA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMURootA, 3911, 7)
+OOVPA_NO_XREF(XMountMURootA, 3911, 7) // generic version
 
         { 0x1E, 0x0C },
         { 0x3E, 0x00 },
@@ -1064,6 +1089,128 @@ OOVPA_NO_XREF(WriteFileEx, 3911, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * XInputPoll
+// ******************************************************************
+OOVPA_NO_XREF(XInputPoll, 3911, 14)
+
+        { 0x00, 0x53 },
+        { 0x01, 0x56 },
+        { 0x02, 0x33 },
+        { 0x03, 0xF6 },
+        { 0x04, 0xFF },
+        { 0x05, 0x15 },
+
+        { 0x18, 0x04 },
+        { 0x19, 0x02 },
+        { 0x1A, 0x75 },
+        { 0x1B, 0x29 },
+        { 0x1C, 0xF6 },
+        { 0x1D, 0x80 },
+        { 0x1E, 0xA2 },
+        { 0x1F, 0x00 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * XInputPoll
+// ******************************************************************
+OOVPA_NO_XREF(XInputPoll, 3911, 10)
+
+        { 0x16, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x17, 0x41 }, // (Offset,Value)-Pair #2
+        { 0x18, 0x04 }, // (Offset,Value)-Pair #3
+        { 0x19, 0x02 }, // (Offset,Value)-Pair #4
+
+        { 0x25, 0x39 }, // (Offset,Value)-Pair #5
+        { 0x26, 0x70 }, // (Offset,Value)-Pair #6
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #7
+
+        { 0x3A, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x3B, 0xC0 }, // (Offset,Value)-Pair #9
+        { 0x3C, 0x52 }, // (Offset,Value)-Pair #10
+OOVPA_END;
+#endif
+
+// ******************************************************************
+// * timeSetEvent
+// ******************************************************************
+OOVPA_NO_XREF(timeSetEvent, 3911, 7) // generic version
+
+        { 0x1E, 0x8D },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x15 },
+        { 0x7E, 0x3F },
+        { 0x9E, 0x03 },
+        { 0xBE, 0x32 },
+        { 0xDE, 0x89 },
+OOVPA_END;
+
+// ******************************************************************
+// * timeKillEvent
+// ******************************************************************
+OOVPA_NO_XREF(timeKillEvent, 3911, 12)
+
+        { 0x02, 0xBF },
+        { 0x13, 0x0D },
+
+        { 0x18, 0x0F },
+        { 0x19, 0xB7 },
+        { 0x1A, 0xC2 },
+        { 0x1B, 0x48 },
+        { 0x1C, 0x85 },
+        { 0x1D, 0xC9 },
+        { 0x1E, 0x74 },
+        { 0x1F, 0x3E },
+
+        { 0x4A, 0x6A },
+        { 0x55, 0x15 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * timeKillEvent
+// ******************************************************************
+OOVPA_NO_XREF(timeKillEvent, 3911, 8)
+
+        { 0x0E, 0x8B },
+        { 0x1A, 0xC2 },
+        { 0x28, 0x8D },
+        { 0x36, 0x56 },
+        { 0x44, 0x00 },
+        { 0x52, 0x00 },
+        { 0x60, 0x5E },
+        { 0x6E, 0x00 },
+OOVPA_END;
+#endif
+// ******************************************************************
+// * GetOverlappedResult
+// ******************************************************************
+OOVPA_NO_XREF(GetOverlappedResult, 3911, 7)
+
+        { 0x0B, 0x75 },
+        { 0x18, 0xC0 },
+        { 0x27, 0xEB },
+        { 0x32, 0x00 },
+        { 0x3F, 0xEB },
+        { 0x4C, 0x89 },
+        { 0x59, 0x56 },
+OOVPA_END;
+
+// ******************************************************************
+// * RaiseException
+// ******************************************************************
+OOVPA_NO_XREF(RaiseException, 3911, 7)
+
+        { 0x09, 0x83 },
+        { 0x14, 0x8B },
+        { 0x1F, 0xC7 },
+        { 0x2A, 0x10 },
+        { 0x35, 0x89 },
+        { 0x40, 0x5F },
+        { 0x4B, 0xFF },
+OOVPA_END;
+
+// ******************************************************************
 // * XAPI_3911
 // ******************************************************************
 OOVPATable XAPI_3911[] = {
@@ -1102,6 +1249,11 @@ OOVPATable XAPI_3911[] = {
 	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
 	// REGISTER_OOVPA(ReadFileEx, 3911, PATCH),
 	// REGISTER_OOVPA(WriteFileEx, 3911, PATCH),
 	// REGISTER_OOVPA(CloseHandle, 3911, PATCH),
