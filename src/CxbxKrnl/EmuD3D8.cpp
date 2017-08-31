@@ -1417,7 +1417,7 @@ static clock_t GetNextVBlankTime()
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
     // since callbacks come from here
-	InitXboxThread();
+	InitXboxThread(g_CPUOthers); // avoid Xbox1 core for lowest possible latency
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 

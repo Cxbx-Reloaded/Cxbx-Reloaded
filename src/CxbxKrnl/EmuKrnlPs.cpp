@@ -92,7 +92,7 @@ void LOG_PCSTProxy
 		LOG_FUNC_END;
 }
 
-void InitXboxThread()
+void InitXboxThread(DWORD_PTR cores)
 {
 	// initialize FS segment selector
 	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
@@ -100,8 +100,8 @@ void InitXboxThread()
 	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 
-	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+	// Run this thread solely on the indicated core(s) :
+	SetThreadAffinityMask(GetCurrentThread(), cores);
 }
 
 // PsCreateSystemThread proxy procedure
@@ -132,7 +132,7 @@ static unsigned int WINAPI PCSTProxy
 		hStartedEvent);
 
 	// Do minimal thread initialization
-	InitXboxThread();
+	InitXboxThread(g_CPUXbox);
 
 	if (StartSuspended == TRUE)
 		// Suspend right before calling the thread notification routines

@@ -861,7 +861,7 @@ void CxbxKrnlInit
 
 	EmuInitFS();
 
-	InitXboxThread();
+	InitXboxThread(g_CPUXbox);
 
 	EmuX86_Init();
 	// Create the interrupt processing thread

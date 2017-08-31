@@ -179,7 +179,11 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
-	InitXboxThread();
+	// since callbacks come from here
+	// Note : This function runs on the Xbox core to somewhat approximate
+	// CPU locking (the prevention of interrupts to avoid thread-switches)
+	// so that callbacks don't get preempted. This needs more work.
+	InitXboxThread(g_CPUXbox);
 
 	while (true)
 	{
