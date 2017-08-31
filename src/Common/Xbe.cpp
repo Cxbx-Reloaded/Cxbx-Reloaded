@@ -1072,13 +1072,8 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	printf("ReadS3TCFormatIntoBitmap\n");
-	printf("data[0]=0x%08X\n", data[0]);
-	printf("data[1]=0x%08X\n", data[1]);
-	printf("data[2]=0x%08X\n", data[2]);
-	printf("data[3]=0x%08X\n", data[3]);
-	uint08 color[3];
+	uint16 color[3];
 	TRGB32 color32b[4];
-	//TRGB32 color32b[1024 * sizeof(TRGB32)];
 	uint32 r, g, b, r1, g1, b1, pixelmap, j;
 	int k, p, x, y;
 
@@ -1122,13 +1117,13 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 			if (color[0] > color[1])
 			{
 				// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
-				color32b[2].R = (unsigned char)((r + r + r1 + 2) / 3);
-				color32b[2].G = (unsigned char)((g + g + g1 + 2) / 3);
-				color32b[2].B = (unsigned char)((b + b + b1 + 2) / 3);
+				color32b[2].R =  (unsigned char) ((r + r + r1 + 2) / 3);
+				color32b[2].G =	 (unsigned char) ((g + g + g1 + 2) / 3);
+				color32b[2].B = (unsigned char) ((b + b + b1 + 2) / 3);
 
-				color32b[3].R = (unsigned char)((r + r1 + r1 + 2) / 3);
-				color32b[3].G = (unsigned char)((g + g1 + g1 + 2) / 3);
-				color32b[3].B = (unsigned char)((b + b1 + b1 + 2) / 3);
+				color32b[3].R = (unsigned char) ((r + r1 + r1 + 2) / 3);
+				color32b[3].G = (unsigned char) ((g + g1 + g1 + 2) / 3);
+				color32b[3].B = (unsigned char) ((b + b1 + b1 + 2) / 3);
 			}
 			else 
 			{
@@ -1137,9 +1132,9 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 				color32b[2].G = (unsigned char)((g + g1) / 2);
 				color32b[2].B = (unsigned char)((b + b1) / 2);
 
-				color32b[3].R = 0;
-				color32b[3].G = 0;
-				color32b[3].B = 0;
+				color32b[3].R = (unsigned char)0;
+				color32b[3].G = (unsigned char)0;
+				color32b[3].B = (unsigned char)0;
 			}
 
 			x = (k / 2) % width;
@@ -1154,14 +1149,14 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 				+ (data[j + 6] << 16)
 				+ (data[j + 7] << 24);
 
-			for (p = 0; p < 16 - 1; p++)
+			for (p = 0; p < 16; p++)
 			{
-				((TRGB32*)bitmap)[x + (p & 3) + pitch * (y + (p >> 2))] = color32b[pixelmap & 3];
+				((TRGB32*)bitmap)[x + (p & 3) + (pitch/sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
 				pixelmap >>= 2;
 			};
 			
-			j = j + 8;
-			k = k + 8;
+			j += 8;
+			k += 8;
 		}
 		catch (const char* msg)
 		{
@@ -1190,25 +1185,23 @@ bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 	if (xSwizzle == NULL)
 		return false;
 
-	if (width > 0) // Dxbx addition, to prevent underflow
-		for (x = 0; x < width-1; x++)
-			xSwizzle[x] = Swizzle(x, (height * 2), 0);
-
-
+	for (x = 0; x < width; x++)
+		xSwizzle[x] = Swizzle(x, (height * 2), 0);
 
 	// Loop over all lines :
-	if (height > 0) // Dxbx addition, to prevent underflow
-		for (y = 0; y < height-1; y++)
-		{
-			// Calculate y-swizzle :
-			sy = Swizzle(y, width, 1);
+	for (y = 0; y < height; y++)
+	{
+		// Calculate y-swizzle :
+		sy = Swizzle(y, width, 1);
 
-			// Copy whole line in one go (using pre-calculated x-swizzle) :
-			yscanline = (PRGB32Array*)((void *)bitmap) + (y*pitch); // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
-			if(width > 0) // Dxbx addition, to prevent underflow
-				for( x = 0; x < width-1; x++)
-					*yscanline[x] = *((PRGB32Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
-		} // for y
+		// Copy whole line in one go (using pre-calculated x-swizzle) :
+
+/*		yscanline = (PRGB32Array*)(bitmap)[y*pitch]; // FIXME - ERROR: this should be a port of "yscanline: = aOutput.Scanlines[y];"
+		
+		for (x = 0; x < width; x++)
+			*yscanline[x] = *((PRGB32Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error*/
+			
+	} // for y
 
 	free(xSwizzle);
 	return true;
@@ -1232,23 +1225,20 @@ bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, 
 	if (xSwizzle == NULL)
 		return false;
 
-	if (width > 0) // Dxbx addition, to prevent underflow
-		for (x = 0; x < width-1; x++)
-			xSwizzle[x] = Swizzle(x, (height * 2), 0);
+	for (x = 0; x < width; x++)
+		xSwizzle[x] = Swizzle(x, (height * 2), 0);
 
 	// Loop over all lines :
-	if (height > 0) // Dxbx addition, to prevent underflow
-		for (y = 0; y < height-1; y++)
-		{
-			// Calculate y-swizzle :
-			sy = Swizzle(y, width, 1);
+	for (y = 0; y < height; y++)
+	{
+		// Calculate y-swizzle :
+		sy = Swizzle(y, width, 1);
 
-			// Copy whole line in one go (using pre-calculated x-swizzle) :
-			yscanline = (PRGB16Array*)((void *)bitmap) + (y*pitch); // // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
-			if (width > 0)  // Dxbx addition, to prevent underflow
-				for (x = 0; x < width-1; x++)
-					*yscanline[x] = *((PRGB16Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
-		} // for y
+		// Copy whole line in one go (using pre-calculated x-swizzle) :
+		yscanline = (PRGB16Array*)((void *)bitmap) + (y*pitch); // // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
+		for (x = 0; x < width; x++)
+			*yscanline[x] = *((PRGB16Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
+	} // for y
 
 	free(xSwizzle);
 	return true;

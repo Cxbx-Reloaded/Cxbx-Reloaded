@@ -1329,6 +1329,9 @@ void WndMain::LoadGameLogo()
 	bool res = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight);
 	printf("Result is: %d\n", res); // FIXME - check result
 
+	if (!res)
+		return;
+
 	HDC hDC = GetDC(m_hwnd);
 	m_GameLogoBMP = CreateCompatibleBitmap(hDC, gameLogoWidth, gameLogoHeight);
 
@@ -1340,7 +1343,7 @@ void WndMain::LoadGameLogo()
 		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
 		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
 		BmpInfo.bmiHeader.biPlanes = 1;
-		BmpInfo.bmiHeader.biBitCount = 24;
+		BmpInfo.bmiHeader.biBitCount = 32;
 		BmpInfo.bmiHeader.biCompression = BI_RGB;
 		BmpInfo.bmiHeader.biSizeImage = 0;
 		BmpInfo.bmiHeader.biXPelsPerMeter = 0;

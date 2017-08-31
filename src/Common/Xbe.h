@@ -308,13 +308,16 @@ class Xbe : public Error
 		#include "AlignPosfix1.h"
 		*m_xprImage;
 
+		#include "AlignPrefix1.h"
 		struct TRGB32 // FIXME move this elsewhere - this struct might also need a rename
 		{
 			unsigned char B;
 			unsigned char G;
 			unsigned char R;
 			unsigned char A;
-		};
+		}
+		#include "AlignPosfix1.h"
+		;
 				
 		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
 		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
