@@ -308,7 +308,7 @@ __declspec(naked) void EmuFS_PopDwordPtrFs00()
 }
 
 // initialize fs segment selector emulation
-void EmuInitFS()
+void PatchFSOpcodes()
 {
 	/**
 	* Build the vector of FS instructions we need to intercept.

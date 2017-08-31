@@ -40,7 +40,7 @@
 #include <windows.h>
 
 // initialize fs segment selector emulation
-extern void EmuInitFS();
+extern void PatchFSOpcodes();
 
 // generate fs segment selector
 extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
