@@ -34,16 +34,18 @@
 
 //Xbe Explorer generated pattern, derived from address $0027927D in "EA SPORTSÅERUGBY 2005" :
 //558BEC83EC14536880153200FF15........8B0D........33DB3BCB7548538D 1F 4046 0124 _timeSetEvent@20 ^ 000ED __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003FR _CreateThread@24 ^ 0047D _timeSetEvent@20+0112 ^ 004DR _CloseHandle@4 ^ 005CD __imp__KeWaitForSingleObject@20 ^ 0062D _XapiMmTimerThreadState ^0082D _timeSetEvent@20+010F ^0090D _XapiMmTimerSerialNumber ^0097D _XapiMmTimerSerialNumber ^ 00C0R __allmul ^ 00CCD __imp__KeQueryInterruptTime@0 ^00E7D __imp__KeSetTimerEx@20 ^ 00ECD _XapiMmTimerThreadState ^ 00FBD __imp__KeSetEvent@12 ^0119D __imp__RtlLeaveCriticalSection@4
-OOVPA_NO_XREF(timeSetEvent, 5849, 9)
+//Improved pattern using timeSetEvent in "Kingdom Under Fire: The Crusaders" at address $00221F2E
+OOVPA_NO_XREF(timeSetEvent, 5849, 10)
 	{0x00, 0x55},
 	{0x01, 0x8B},
 	{0x02, 0xEC},
 	{0x04, 0xEC},
-	{0x08, 0x80},
 	{0x0D, 0x15},
 	{0x12, 0x8B},
 	{0x13, 0x0D},
-	{0x18, 0x33}		
+	{0x18, 0x33},
+	{0x19, 0xDB},
+	{0x1A, 0x3B}
 OOVPA_END;
 
 //; Xbe Explorer generated pattern, derived from address $002793A1 in "EA SPORTSÅERUGBY 2005" :
