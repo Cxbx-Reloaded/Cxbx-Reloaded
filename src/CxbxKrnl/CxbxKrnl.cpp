@@ -859,7 +859,7 @@ void CxbxKrnlInit
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
 
-	PatchFSOpcodes();
+	EmuInitFS();
 
 	InitXboxThread();
 
