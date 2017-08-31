@@ -196,7 +196,6 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     {
         *pdwInsertions = 0;
         *pdwRemovals = 0;
-        RETURN(ret);
     }
     else
     {
@@ -210,7 +209,6 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         DeviceType->ChangeConnected = 0;
         DeviceType->PreviousConnected = DeviceType->CurrentConnected;
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
-        RETURN(ret);
     }
     /*
 	// JSRF Hack: Always return no device changes
@@ -235,9 +233,8 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	}
 
 	*pdwRemovals = 0;  
-
+        */
 	RETURN(ret);
-    */
 }
 
 // ******************************************************************
