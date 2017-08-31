@@ -210,7 +210,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         DeviceType->PreviousConnected = DeviceType->CurrentConnected;
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
     }
-    /*
+        /*
 	// JSRF Hack: Always return no device changes
 	// Without this, JSRF hard crashes sometime after calling this function
 	// I HATE game specific hacks, but I've wasted three weeks trying to solve this already
