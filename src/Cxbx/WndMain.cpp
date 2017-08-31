@@ -484,7 +484,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
 
-				BitBlt(hDC, m_w - gameLogoWidth, m_h - nLogoBmpH - 8 - gameLogoHeight, gameLogoWidth, gameLogoHeight, m_GameLogoDC, 0, 0, SRCCOPY);
+				BitBlt(hDC, m_w - gameLogoWidth - 3, m_h - nLogoBmpH - 12 - gameLogoHeight, gameLogoWidth, gameLogoHeight, m_GameLogoDC, 0, 0, SRCCOPY);
 
                 BitBlt(hDC, m_w-nLogoBmpW-4, m_h-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
@@ -1319,17 +1319,16 @@ void WndMain::LoadLogo()
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
-// load logo bitmap - FIXME this is only a stub
+// load game logo bitmap
 void WndMain::LoadGameLogo()
 {
-
-	void* bitmapData;																
+	void* bitmapData;
+	int bit;
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;	
-	bool res = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight);
-	printf("Result is: %d\n", res); // FIXME - check result
-
-	if (!res)
+	bool result = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight, &bit);
+	
+	if (!result) // no game logo found
 		return;
 
 	HDC hDC = GetDC(m_hwnd);
@@ -1343,7 +1342,7 @@ void WndMain::LoadGameLogo()
 		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
 		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
 		BmpInfo.bmiHeader.biPlanes = 1;
-		BmpInfo.bmiHeader.biBitCount = 32;
+		BmpInfo.bmiHeader.biBitCount = bit;
 		BmpInfo.bmiHeader.biCompression = BI_RGB;
 		BmpInfo.bmiHeader.biSizeImage = 0;
 		BmpInfo.bmiHeader.biXPelsPerMeter = 0;
@@ -1354,28 +1353,15 @@ void WndMain::LoadGameLogo()
 		SetDIBits(hDC, m_GameLogoBMP, 0, gameLogoHeight, bitmapData, &BmpInfo, DIB_RGB_COLORS);
 	}
 
-
 	m_GameLogoDC = CreateCompatibleDC(hDC);
 	m_OrigGameLogo = (HBITMAP)SelectObject(m_GameLogoDC, m_GameLogoBMP);
 
-	/*uint32 v = 0;
-	for (uint32 y = 0; y<17; y++)
-	{
-		for (uint32 x = 0; x<100; x++)
-		{
-			SetPixel(m_GameLogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
-			v++;
-		}
-	}*/
-
 	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
-
 
 	if (hDC != NULL)
 		ReleaseDC(m_hwnd, hDC);
 
-	free(bitmapData);																// *************************************************************
-
+	free(bitmapData);
 }
 
 

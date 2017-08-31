@@ -42,6 +42,9 @@
 //#include <windef.h> // For MAX_PATH
 // The above leads to 55 compile errors, so until we've sorted out why that happens, declare MAX_PATH ourselves for now :
 #define MAX_PATH 260
+#define XPR_IMAGE_WH 128
+#define XPR_IMAGE_DATA_SIZE (XPR_IMAGE_WH * XPR_IMAGE_WH) / 2
+#define XPR_IMAGE_HDR_SIZE 2048
 
 // Xbe (Xbox Executable) file object
 class Xbe : public Error
@@ -65,8 +68,8 @@ class Xbe : public Error
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
 
-		// Export Game Logo bitmap
-		bool ExportGameLogoBitmap(void*& bitmapData, int *width, int *height);
+		// Export Game Logo bitmap (XTIMAG or XSIMAG)
+		bool ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *bit);
 
         // Xbe header
         #include "AlignPrefix1.h"
@@ -298,12 +301,13 @@ class Xbe : public Error
 		#include "AlignPosfix1.h"
 		*m_xprImageHeader;
 
+
 		#include "AlignPrefix1.h"
 		struct XprImage
 		{
 			XprImageHeader xprImageHeader;
-			char strPad[2048 - sizeof(XprImageHeader)];
-			unsigned char pBits[((128 * 128) / 2)];
+			char strPad[XPR_IMAGE_HDR_SIZE - sizeof(XprImageHeader)];
+			unsigned char pBits[XPR_IMAGE_DATA_SIZE];
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImage;
@@ -328,9 +332,7 @@ class Xbe : public Error
 
 		uint32 Swizzle(uint32 value, uint32 max, uint32 shift); // FIXME move this elsewhere
 
-		typedef TRGB32 PRGB32Array[INT_MAX / sizeof(TRGB32)]; // FIXME move this elsewhere - this typedef might also need a rename
 		typedef uint16 TRGB16; // FIXME move this elsewhere - this typedef might also need a rename
-		typedef TRGB16 PRGB16Array[INT_MAX / sizeof(TRGB16)]; // FIXME move this elsewhere - this typedef might also need a rename
 
 };
 

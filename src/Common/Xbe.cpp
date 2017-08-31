@@ -969,45 +969,49 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height)
+// Export Game Logo bitmap (XTIMAG or XSIMAG)
+bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *bit)
 {
 	bool result = false;
 	uint32 dwOffs = 0;
 	uint32 dwLength = 0;
-	int index = 0;
-	for (uint32 v = 0; v < m_Header.dwSections; v++)
+	int sectionIndex = -1;
+
+	for (uint32 v = 0; v < m_Header.dwSections; v++)				// Check for XTIMAGE
 	{
 		if (strcmp(m_szSectionName[v], "$$XTIMAG")==0) {
 			dwOffs = m_SectionHeader[v].dwVirtualAddr;
 			dwLength = m_SectionHeader[v].dwVirtualSize;
-			index = v;
+			sectionIndex = v;
 			break;
 		}
 	}
-	if (dwOffs == 0 || dwLength == 0)
+
+	if (sectionIndex == -1) {
+		for (uint32 v = 0; v < m_Header.dwSections; v++)			// if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		{
+			if (strcmp(m_szSectionName[v], "$$XSIMAG") == 0) {
+				dwOffs = m_SectionHeader[v].dwVirtualAddr;
+				dwLength = m_SectionHeader[v].dwVirtualSize;
+				sectionIndex = v;
+				break;
+			}
+		}
+	}
+
+	if (sectionIndex == -1 || dwOffs == 0 || dwLength == 0)
 		return 0;
 
-	printf("Game Logo Addr: 0x%08X\n", dwOffs);
-	printf("Game Logo Size: 0x%08X\n", dwLength);
+	m_xprImage = (XprImage*) m_bzSection[sectionIndex];
 
-	m_xprImage = (XprImage*) m_bzSection[index];
-
-	printf("GameLogoHeader Magic: %s\n", &m_xprImage->xprImageHeader.xprHeader.dwXprMagic);
-	printf("GameLogoHeader Total Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize);
-	printf("GameLogoHeader Header Size: 0x%08X\n", m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize);
-	
 	*width = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
 	*height = 1 <<((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-	printf("Game Logo Width: %d\n", *width);
-	printf("Game Logo Height: %d\n", *height);
 
 	int pitch = *width * sizeof(uint32);
 	bitmapData = (void*)malloc(pitch * *height);
 
-	printf("Game Logo Pitch is: %d\n", pitch);
-
 	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / *width / *height == 2) {
-		printf("Game Logo is 16bit\n");
+		*bit = 16;
 		result = ReadD3D16bitTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			&m_xprImage->pBits[0],
@@ -1018,7 +1022,7 @@ bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height)
 			bitmapData);
 	}
 	else {
-		printf("Game Logo is 32bit\n");
+		*bit = 32;
 		result = ReadD3DTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
 			&m_xprImage->pBits[0],
@@ -1035,7 +1039,6 @@ bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height)
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
-	printf("ReadD3DTextureFormatIntoBitmap\n");
 	switch (format)
 	{
 	case X_D3DFMT_DXT1:
@@ -1056,7 +1059,6 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uin
 // FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
-	printf("ReadD3D16bitTextureFormatIntoBitmap\n");
 	switch (format)
 	{
 	case X_D3DFMT_R5G6B5:
@@ -1069,9 +1071,9 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 }
 
 // FIXME: this function should be moved elsewhere
+// test-case: Frogger, Turok, Crazy Taxi 3 and many more
 bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
-	printf("ReadS3TCFormatIntoBitmap\n");
 	uint16 color[3];
 	TRGB32 color32b[4];
 	uint32 r, g, b, r1, g1, b1, pixelmap, j;
@@ -1080,102 +1082,98 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 	r = g = b = r1 = g1 = b1 = pixelmap = 0;
 	j = k = p = x = y = 0;
 
+	// sanity checks
 	if (format != X_D3DFMT_DXT1 && format != X_D3DFMT_DXT3 && format != X_D3DFMT_DXT5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
 
 	while (j < dataSize) {
-		try
-		{
-			if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
-				j += 8;
-
-			// Read two 16-bit pixels
-			color[0] = (data[j + 0] << 0) + (data[j + 1] << 8);
-			color[1] = (data[j + 2] << 0) + (data[j + 3] << 8);
-
-			// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
-			r = ((color[0] >> 11) & 31) * 255 / 31;
-			g = ((color[0] >>  5) & 63) * 255 / 63;
-			b = ((color[0]		) & 31) * 255 / 31;
-
-			r1 = ((color[1] >> 11) & 31) * 255 / 31;
-			g1 = ((color[1] >>  5) & 63) * 255 / 63;
-			b1 = ((color[1]		 ) & 31) * 255 / 31;
-
-			// Build first half of RGB32 color map :
-			color32b[0].R = (unsigned char)r;
-			color32b[0].G = (unsigned char)g;
-			color32b[0].B = (unsigned char)b;
-
-			color32b[1].R = (unsigned char)r1;
-			color32b[1].G = (unsigned char)g1;
-			color32b[1].B = (unsigned char)b1;
-
-			// Build second half of RGB32 color map :
-			if (color[0] > color[1])
-			{
-				// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
-				color32b[2].R =  (unsigned char) ((r + r + r1 + 2) / 3);
-				color32b[2].G =	 (unsigned char) ((g + g + g1 + 2) / 3);
-				color32b[2].B = (unsigned char) ((b + b + b1 + 2) / 3);
-
-				color32b[3].R = (unsigned char) ((r + r1 + r1 + 2) / 3);
-				color32b[3].G = (unsigned char) ((g + g1 + g1 + 2) / 3);
-				color32b[3].B = (unsigned char) ((b + b1 + b1 + 2) / 3);
-			}
-			else 
-			{
-				// Make up one new color : 1/2 A + 1/2 B :
-				color32b[2].R = (unsigned char)((r + r1) / 2);
-				color32b[2].G = (unsigned char)((g + g1) / 2);
-				color32b[2].B = (unsigned char)((b + b1) / 2);
-
-				color32b[3].R = (unsigned char)0;
-				color32b[3].G = (unsigned char)0;
-				color32b[3].B = (unsigned char)0;
-			}
-
-			x = (k / 2) % width;
-			y = (k / 2) / width * 4;
-
-			// Forza Motorsport needs this safety measure, as it has dataSize=147456, while we need 16384 bytes :
-			if (y >= height)
-				break;
-
-			pixelmap = (data[j + 4] << 0) 
-				+ (data[j + 5] << 8)
-				+ (data[j + 6] << 16)
-				+ (data[j + 7] << 24);
-
-			for (p = 0; p < 16; p++)
-			{
-				((TRGB32*)bitmap)[x + (p & 3) + (pitch/sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
-				pixelmap >>= 2;
-			};
-			
+		
+		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 			j += 8;
-			k += 8;
-		}
-		catch (const char* msg)
+
+		// Read two 16-bit pixels
+		color[0] = (data[j + 0] << 0) + (data[j + 1] << 8);
+		color[1] = (data[j + 2] << 0) + (data[j + 3] << 8);
+
+		// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
+		r = ((color[0] >> 11) & 31) * 255 / 31;
+		g = ((color[0] >>  5) & 63) * 255 / 63;
+		b = ((color[0]		) & 31) * 255 / 31;
+
+		r1 = ((color[1] >> 11) & 31) * 255 / 31;
+		g1 = ((color[1] >>  5) & 63) * 255 / 63;
+		b1 = ((color[1]		 ) & 31) * 255 / 31;
+
+		// Build first half of RGB32 color map :
+		color32b[0].R = (unsigned char)r;
+		color32b[0].G = (unsigned char)g;
+		color32b[0].B = (unsigned char)b;
+
+		color32b[1].R = (unsigned char)r1;
+		color32b[1].G = (unsigned char)g1;
+		color32b[1].B = (unsigned char)b1;
+
+		// Build second half of RGB32 color map :
+		if (color[0] > color[1])
 		{
-			printf("Exception in ReadS3TCFormatIntoBitmap: %s\n",msg);
-			return false;
+			// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
+			color32b[2].R =  (unsigned char) ((r + r + r1 + 2) / 3);
+			color32b[2].G =	 (unsigned char) ((g + g + g1 + 2) / 3);
+			color32b[2].B = (unsigned char) ((b + b + b1 + 2) / 3);
+
+			color32b[3].R = (unsigned char) ((r + r1 + r1 + 2) / 3);
+			color32b[3].G = (unsigned char) ((g + g1 + g1 + 2) / 3);
+			color32b[3].B = (unsigned char) ((b + b1 + b1 + 2) / 3);
 		}
+		else 
+		{
+			// Make up one new color : 1/2 A + 1/2 B :
+			color32b[2].R = (unsigned char)((r + r1) / 2);
+			color32b[2].G = (unsigned char)((g + g1) / 2);
+			color32b[2].B = (unsigned char)((b + b1) / 2);
+
+			color32b[3].R = (unsigned char)0;
+			color32b[3].G = (unsigned char)0;
+			color32b[3].B = (unsigned char)0;
+		}
+
+		x = (k / 2) % width;
+		y = (k / 2) / width * 4;
+
+		// Forza Motorsport needs this safety measure, as it has dataSize=147456, while we need 16384 bytes :
+		if (y >= height)
+			break;
+
+		pixelmap = (data[j + 4] << 0) 
+			+ (data[j + 5] << 8)
+			+ (data[j + 6] << 16)
+			+ (data[j + 7] << 24);
+
+		for (p = 0; p < 16; p++)
+		{
+			((TRGB32*)bitmap)[x + (p & 3) + (pitch/sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
+			pixelmap >>= 2;
+		};
+			
+		j += 8;
+		k += 8;
+		
 	}
 	return true;
 }
 
 // FIXME: this function should be moved elsewhere
+// test-case: Baku Baku 2 (Homebrew)
 bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
-	printf("ReadSwizzledFormatIntoBitmap\n");
 	uint32* xSwizzle;
 	int x, y;
-	uint32	sy;
-	PRGB32Array* yscanline;
+	uint32	ySwizzle;
+	TRGB32* yscanline;
 
+	// sanity checks
 	if (format != X_D3DFMT_A8R8G8B8 && format != X_D3DFMT_X8R8G8B8)
 		return false;
 	if (!(width > 0) || !(height > 0))
@@ -1192,30 +1190,29 @@ bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 	for (y = 0; y < height; y++)
 	{
 		// Calculate y-swizzle :
-		sy = Swizzle(y, width, 1);
+		ySwizzle = Swizzle(y, width, 1);
 
 		// Copy whole line in one go (using pre-calculated x-swizzle) :
-
-/*		yscanline = (PRGB32Array*)(bitmap)[y*pitch]; // FIXME - ERROR: this should be a port of "yscanline: = aOutput.Scanlines[y];"
+		yscanline = &((TRGB32*)bitmap)[y*(pitch/sizeof(TRGB32))];
 		
 		for (x = 0; x < width; x++)
-			*yscanline[x] = *((PRGB32Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error*/
-			
-	} // for y
+			yscanline[x] = ((TRGB32*)data)[xSwizzle[x] + ySwizzle];
+	}
 
 	free(xSwizzle);
 	return true;
 }
 
 // FIXME: this function should be moved elsewhere
+// UNTESTED - Need test-case! (Sorry I wasn't able to find a game using this format)
 bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
-	printf("ReadSwizzled16bitFormatIntoBitmap\n");
 	uint32* xSwizzle;
 	int x, y;
-	uint32	sy;
-	PRGB16Array* yscanline;
+	uint32	ySwizzle;
+	TRGB16* yscanline;
 
+	// sanity checks
 	if (format != X_D3DFMT_R5G6B5)
 		return false;
 	if (!(width > 0) || !(height > 0))
@@ -1232,13 +1229,13 @@ bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, 
 	for (y = 0; y < height; y++)
 	{
 		// Calculate y-swizzle :
-		sy = Swizzle(y, width, 1);
+		ySwizzle = Swizzle(y, width, 1);
 
 		// Copy whole line in one go (using pre-calculated x-swizzle) :
-		yscanline = (PRGB16Array*)((void *)bitmap) + (y*pitch); // // FIXME - check if this line is a correct port of "yscanline: = aOutput.Scanlines[y];"
+		yscanline = &((TRGB16*)bitmap)[y*(pitch / sizeof(TRGB16))];
 		for (x = 0; x < width; x++)
-			*yscanline[x] = *((PRGB16Array*)data)[xSwizzle[x] + sy]; // FIXME - possible error
-	} // for y
+			yscanline[x] = ((TRGB16*)data)[xSwizzle[x] + ySwizzle];
+	}
 
 	free(xSwizzle);
 	return true;
