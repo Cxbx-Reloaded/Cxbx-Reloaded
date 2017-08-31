@@ -29,7 +29,7 @@ Software that actually does something (for example, it outputs graphics or audio
 
 For emulation issues that are suspected to be generic (NOT specific to any single piece of software), a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
 
-Make sure bug reports contains the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File] is selected).
+Make sure bug reports contains the build tested with, error message displayed (if any), screenshots, a Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File] is selected).
 
 ## Additional information
 Cxbx-Reloaded has a [wiki](http://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
@@ -43,4 +43,4 @@ We welcome contributions, large and small. If you want to do some coding, be sur
 You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
-All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
+All contributors to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
