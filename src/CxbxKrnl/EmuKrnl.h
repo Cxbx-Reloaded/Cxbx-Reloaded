@@ -34,6 +34,9 @@
 #ifndef EMUKRNL_H
 #define EMUKRNL_H
 
+#include "CxbxKrnl.h"
+#include "Emu.h"
+
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
 // See http://stackoverflow.com/questions/8240273/a-portable-way-to-calculate-pointer-to-the-whole-structure-using-pointer-to-a-fi
@@ -54,5 +57,62 @@ xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead);
 xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
 
 extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
+extern xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
+
+class HalSystemInterrupt {
+public:
+	void Assert(bool state) {
+		// If the interrupt was marked as Asserted, and was previously not, set the pending flag too!
+		if (m_Asserted == 0 && state == 1) {
+			m_Pending = true;
+		}
+
+		m_Asserted = state;
+	};
+
+	void Enable() {
+		m_Enabled = true;
+	}
+
+	void Disable() {
+		m_Enabled = false;
+	}
+
+	bool IsEnabled() {
+		return m_Enabled;
+	}
+
+	bool IsPending() {
+		return m_Asserted && m_Pending;
+	}
+
+	void SetInterruptMode(xboxkrnl::KINTERRUPT_MODE InterruptMode) {
+		m_InterruptMode = InterruptMode;
+	}
+
+	void Trigger(xboxkrnl::PKINTERRUPT Interrupt) {
+		// If interrupt was level sensitive, we clear the pending flag, oreventing the interrupt from being triggered 
+		// until it is deasserted then asserted again. Latched interrupts are triggered until the line is Deasserted!
+		if (m_InterruptMode == xboxkrnl::KINTERRUPT_MODE::LevelSensitive) {
+			m_Pending = false;
+		}
+
+		__try {
+			BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
+			BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+		}
+		__except (EmuException(GetExceptionInformation()))
+		{
+			EmuWarning("Problem with ExceptionFilter!");
+		}
+	}
+private:
+	bool m_Asserted = false;
+	bool m_Enabled = false;
+	xboxkrnl::KINTERRUPT_MODE m_InterruptMode;
+	bool m_Pending = false;
+};
+
+extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 #endif

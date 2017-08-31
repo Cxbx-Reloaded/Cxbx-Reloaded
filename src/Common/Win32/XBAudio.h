@@ -59,7 +59,7 @@ class XBAudio : public Error
         // ******************************************************************
         // * SetAudioAdapter
         // ******************************************************************
-        void  SetAudioAdapter(GUID binAudioAdapter) { m_binAudioAdapter = binAudioAdapter; }
+        void SetAudioAdapter(GUID binAudioAdapter) { m_binAudioAdapter = binAudioAdapter; }
         GUID GetAudioAdapter() const { return m_binAudioAdapter; }
 
         // ******************************************************************

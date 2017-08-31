@@ -119,6 +119,27 @@ OOVPATable XAPI_5233[] = {
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 5028, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XLaunchNewImageA, 4721, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
+
+	// ******************************************************************
+	// Provisional registration functions in XDK 5233
+	// TODO: Need test cases
+	// ******************************************************************
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	// ******************************************************************
 };
 
 // ******************************************************************

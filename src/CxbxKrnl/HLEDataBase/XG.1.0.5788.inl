@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // Moved to 4361
 // ******************************************************************
 // * XFONT_OpenBitmapFontFromMemory
 // ******************************************************************
@@ -46,16 +47,24 @@ OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory, 5788, 8)
         { 0x59, 0x45 },
         { 0x66, 0x0C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XG_5788
 // ******************************************************************
 OOVPATable XG_5788[] = {
 
-	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-    // REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
+	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
 	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 5788, PATCH),
+	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
+	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
+	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
+	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
+	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
+	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
 };
 
 // ******************************************************************

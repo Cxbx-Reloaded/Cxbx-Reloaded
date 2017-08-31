@@ -33,6 +33,50 @@
 // ******************************************************************
 
 // ******************************************************************
+// * XInputGetDeviceDescription
+// ******************************************************************
+OOVPA_NO_XREF(XInputGetDeviceDescription, 5344, 15)
+
+        { 0x04, 0xEC },
+        { 0x0B, 0x15 },
+
+        { 0x13, 0x45 },
+        { 0x14, 0x08 },
+        { 0x15, 0x8B },
+        { 0x16, 0x30 },
+        { 0x17, 0x3B },
+        { 0x18, 0xF3 },
+        { 0x19, 0x88 },
+        { 0x1A, 0x4D },
+        { 0x1B, 0xFF },
+        { 0x1C, 0x0F },
+        { 0x1D, 0x84 },
+
+        { 0x30, 0x45 },
+        { 0x31, 0xF8 },
+OOVPA_END;
+
+// ******************************************************************
+// * XLaunchNewImageA
+// ******************************************************************
+OOVPA_NO_XREF(XLaunchNewImageA, 5344, 11)
+
+        { 0x00, 0xB8 },
+
+        { 0x18, 0x75 },
+        { 0x19, 0x19 },
+        { 0x1A, 0x83 },
+        { 0x1B, 0xC1 },
+        { 0x1C, 0x04 },
+        { 0x1D, 0x3B },
+        { 0x1E, 0xC8 },
+        { 0x1F, 0x72 },
+
+        { 0x30, 0xC2 },
+        { 0x41, 0xEE },
+OOVPA_END;
+
+// ******************************************************************
 // * XAPI_5344
 // ******************************************************************
 OOVPATable XAPI_5344[] = {
@@ -58,6 +102,22 @@ OOVPATable XAPI_5344[] = {
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitleA, 5028, PATCH),
+	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XLaunchNewImageA, 5344, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
+	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
+	REGISTER_OOVPA(RaiseException, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetDeviceDescription, 5344, PATCH),
+	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 
 // ******************************************************************

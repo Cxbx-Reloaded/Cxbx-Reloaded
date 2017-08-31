@@ -20,17 +20,27 @@ Cxbx-Reloaded is early in development and still pretty unstable, so don't expect
 Cxbx-Reloaded is not yet ready for general release, but the latest development build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) (navigate to Configuration: Release => Artifacts => export\Release.zip).
 
 ## Compatibility
-We have a basic [compatibility list](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/222). If you have found an issue that has not been reported, please create a report (see below) for each issue per game rather than commenting on the list!
+Cxbx-Reloaded has a separate [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues). If you have something to report on a title, please create or update the issue for it over there. (Please, read the [Read-me file](https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md) first!)
 
 ## Bug Reports
-As Cxbx-Reloaded is in early stages of development right now, most games will either crash or do nothing. Please do not submit issues for these games.
+As Cxbx-Reloaded is in early stages of development right now, most software will either crash or do nothing. Please do not submit issues for this.
 
-Please report games that actually do something. If a game outputs graphics or audio before crashing, please submit a bug report at [GitHub](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues) containing the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File]) is selected.
+Software that actually does something (for example, it outputs graphics or audio before crashing), can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues).
+
+For emulation issues that are suspected to be generic (NOT specific to any single piece of software), a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
+
+Make sure bug reports contains the build tested with, error message displayed (if any), screenshots, an Xbe dump (created via [Edit -> Dump Xbe Info To -> File]), and a Kernel Debug file (created when running a game when [View -> Debug Output (Kernel) -> File] is selected).
 
 ## Additional information
 Cxbx-Reloaded has a [wiki](http://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
 Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby) or [Discord](https://discord.gg/26Xjx23).
 You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 
+## Contributing
+We welcome contributions, large and small. If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes). Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
+
+## Support
+You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
+
 ## Special Thanks
-All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.
+All contributors to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all.

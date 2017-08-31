@@ -132,15 +132,181 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
         { 0x3F, 0xC3 }, // (Offset,Value)-Pair #8
 OOVPA_END;
 
+
+// ******************************************************************
+// * CXnSock::socket
+// ******************************************************************
+OOVPA_NO_XREF(socket, 3911, 9)
+
+        // socket+0x10 : push 0x276D
+        { 0x10, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x11, 0x6D }, // (Offset,Value)-Pair #2
+        { 0x12, 0x27 }, // (Offset,Value)-Pair #3
+
+        // socket+0x52 : cmp eax, 0x11
+        { 0x52, 0x83 }, // (Offset,Value)-Pair #4
+        { 0x53, 0xF8 }, // (Offset,Value)-Pair #5
+        { 0x54, 0x11 }, // (Offset,Value)-Pair #6
+
+        // socket+0xD9 : mov [esi+4], ecx
+        { 0xD9, 0x89 }, // (Offset,Value)-Pair #7
+        { 0xDA, 0x4E }, // (Offset,Value)-Pair #8
+        { 0xDB, 0x04 }, // (Offset,Value)-Pair #9
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::bind
+// ******************************************************************
+OOVPA_NO_XREF(bind, 3911, 10)
+
+        // bind+0x11 : push 0x276D
+        { 0x11, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x12, 0x6D }, // (Offset,Value)-Pair #2
+        { 0x13, 0x27 }, // (Offset,Value)-Pair #3
+
+        // bind+0x4C : mov [eax], cx
+        { 0x4C, 0x66 }, // (Offset,Value)-Pair #4
+        { 0x4D, 0x89 }, // (Offset,Value)-Pair #5
+        { 0x4E, 0x08 }, // (Offset,Value)-Pair #6
+
+        // bind+0x5B : xor eax, eax
+        { 0x5B, 0x33 }, // (Offset,Value)-Pair #7
+        { 0x5C, 0xC0 }, // (Offset,Value)-Pair #8
+
+        // bind+0x80 : retn 0x0C
+        { 0x80, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x81, 0x0C }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::listen
+// ******************************************************************
+OOVPA_NO_XREF(listen, 3911, 9)
+
+        // listen+0x10 : push 0x276D
+        { 0x10, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x11, 0x6D }, // (Offset,Value)-Pair #2
+        { 0x12, 0x27 }, // (Offset,Value)-Pair #3
+
+        // listen+0x42 : test al, 0x10
+        { 0x42, 0xA8 }, // (Offset,Value)-Pair #4
+        { 0x43, 0x10 }, // (Offset,Value)-Pair #5
+
+        // listen+0x51 : mov ecx, edi
+        { 0x51, 0x8B }, // (Offset,Value)-Pair #6
+        { 0x52, 0xCF }, // (Offset,Value)-Pair #7
+
+        // listen+0x7F : retn 0x08
+        { 0x7F, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x80, 0x08 }, // (Offset,Value)-Pair #9
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::ioctlsocket
+// ******************************************************************
+OOVPA_NO_XREF(ioctlsocket, 3911, 10)
+
+        // ioctlsocket+0x12 : push 0x276D
+        { 0x12, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x13, 0x6D }, // (Offset,Value)-Pair #2
+        { 0x14, 0x27 }, // (Offset,Value)-Pair #3
+
+        // ioctlsocket+0x61 : lea edx, [esi+0x24]
+        { 0x61, 0x8D }, // (Offset,Value)-Pair #4
+        { 0x62, 0x56 }, // (Offset,Value)-Pair #5
+        { 0x63, 0x24 }, // (Offset,Value)-Pair #6
+
+        // ioctlsocket+0x80 : mov cl, al
+        { 0x80, 0x8A }, // (Offset,Value)-Pair #7
+        { 0x81, 0xC8 }, // (Offset,Value)-Pair #8
+
+        // ioctlsocket+0xC5 : retn 0x0C
+        { 0xC5, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0xC6, 0x0C }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::send
+// ******************************************************************
+OOVPA_NO_XREF(send, 3911, 14) // Up to 5849
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x20 },
+        { 0x06, 0x57 },
+        { 0x07, 0x8B },
+        { 0x08, 0xF9 },
+        { 0x09, 0x85 },
+        { 0x0A, 0xFF },
+        { 0x0B, 0x74 },
+
+        { 0x12, 0x00 },
+        { 0x1A, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::connect
+// ******************************************************************
+OOVPA_NO_XREF(connect, 3911, 14) // Up to 5028
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x53 },
+        { 0x04, 0x56 },
+        { 0x05, 0x8B },
+        { 0x06, 0xD9 },
+        { 0x07, 0x33 },
+        { 0x08, 0xF6 },
+        { 0x09, 0x3B },
+        { 0x0A, 0xDE },
+        { 0x0B, 0x74 },
+
+        { 0x12, 0x00 },
+        { 0x19, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::recv
+// ******************************************************************
+OOVPA_NO_XREF(recv, 3911, 14) // Up to 5849
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x1C },
+        { 0x06, 0x57 },
+        { 0x07, 0x8B },
+        { 0x08, 0xF9 },
+        { 0x09, 0x85 },
+        { 0x0A, 0xFF },
+        { 0x0B, 0x74 },
+
+        { 0x12, 0x00 },
+        { 0x1A, 0x00 },
+OOVPA_END;
+
 // ******************************************************************
 // * XNet_3911
 // ******************************************************************
 OOVPATable XNet_3911[] = {
 
+	REGISTER_OOVPA(XnInit, 3911, XREF),
 	REGISTER_OOVPA(XNetStartup, 3911, PATCH),
 	REGISTER_OOVPA(WSAStartup, 3911, PATCH),
-	REGISTER_OOVPA(XnInit, 3911, XREF),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
+	REGISTER_OOVPA(socket, 3911, PATCH),
+	REGISTER_OOVPA(bind, 3911, PATCH),
+	REGISTER_OOVPA(listen, 3911, PATCH),
+	REGISTER_OOVPA(ioctlsocket, 3911, PATCH),
+	REGISTER_OOVPA(connect, 3911, PATCH),
+	REGISTER_OOVPA(send, 3911, PATCH),
+	REGISTER_OOVPA(recv, 3911, PATCH),
 };
 
 // ******************************************************************

@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuEEPROM.h" // For EEPROM
 #include "EmuShared.h"
@@ -58,6 +59,8 @@ namespace NtDll
 {
 #include "EmuNtDll.h"
 };
+
+HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
@@ -115,7 +118,7 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 {
 	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
+	HalSystemInterrupts[BusInterruptLevel].Disable();
 }
 
 // ******************************************************************
@@ -150,7 +153,8 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::VOID NTAPI xboxkrnl::HalEnableSystemInterrupt
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
+	HalSystemInterrupts[BusInterruptLevel].Enable();
+	HalSystemInterrupts[BusInterruptLevel].SetInterruptMode(InterruptMode);
 }
 
 #ifdef _DEBUG_TRACE
@@ -260,6 +264,8 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 
 	NTSTATUS Status = STATUS_SUCCESS;
 
+	// This really should use the correct EmuX86_WriteIO/ReadIO functions so the actual
+	// hardware can be implemented in only one single location!
 	switch (Address) {
 	case SMBUS_EEPROM_READ: {
 		if (ReadWord)

@@ -151,50 +151,55 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
-
 			{
-				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND)
+				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_CxbxDebugFilename) == 0)
 				{
 					m_CxbxDebug = DM_NONE;
 				}
 				else
 				{
 					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+					char *CxbxDebugName = (char*)calloc(1, MAX_PATH);
 
-					if(strlen(m_CxbxDebugFilename) < strlen("\\CxbxDebug.txt"))
+					strcpy(CxbxDebugName, strrchr(m_CxbxDebugFilename, '\\'));
+
+					if(strlen(m_CxbxDebugFilename) < strlen(CxbxDebugName))
 					{
 						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
 						m_CxbxDebug = DM_NONE;
 					}
 					else
 					{
-						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen("\\CxbxDebug.txt"));
+						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen(CxbxDebugName));
 						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
 						{
 							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
 							m_CxbxDebug = DM_NONE;
 						}
-
 					}
 					free(CxbxDebugPath);
+					free(CxbxDebugName);
 				}
 				
-				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND)
+				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_KrnlDebugFilename) == 0)
 				{
 					m_KrnlDebug = DM_NONE;
 				}
 				else
 				{
 					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+					char *KrnlDebugName = (char*)calloc(1, MAX_PATH);
 
-					if(strlen(m_KrnlDebugFilename) < strlen("\\KrnlDebug.txt"))
+					strcpy(KrnlDebugName, strrchr(m_KrnlDebugFilename, '\\'));
+
+					if(strlen(m_KrnlDebugFilename) < strlen(KrnlDebugName))
 					{
 						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
 						m_KrnlDebug = DM_NONE;
 					}
 					else
 					{
-						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen("\\KrnlDebug.txt"));
+						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen(KrnlDebugName));
 						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
 						{
 							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
@@ -202,6 +207,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 						}
 					}
 					free(KrnlDebugPath);
+					free(KrnlDebugName);
 				}
 			}
 
@@ -404,20 +410,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
+					float fps = 0;
+					float mspf = 0;
+					g_EmuShared->SetCurrentMSpF(&mspf);
+					g_EmuShared->SetCurrentFPS(&fps);
+                    SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
                     m_hwndChild = GetWindow(hwnd, GW_CHILD);
-
-                    char AsciiTitle[MAX_PATH];
-
-					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
-
-                    SetWindowText(m_hwnd, AsciiTitle);
-
-                    RefreshMenus();
+					RefreshMenus();
                 }
                 break;
 
                 case WM_DESTROY:
                 {
+                    KillTimer(hwnd, 0);
                     m_hwndChild = NULL;
                     SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
                     RefreshMenus();
@@ -425,6 +430,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
             }
         };
+		break; // added per PVS suggestion.
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+				case 0:
+				{
+					UpdateCaption();
+				}
+				break;
+			}
+		}
+		break;
 
         case WM_SYSKEYDOWN:
         {
@@ -433,6 +452,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 SendMessage(m_hwndChild, uMsg, wParam, lParam);
             }
         };
+		break; // added per PVS suggestion.
 
         case WM_PAINT:
         {
@@ -1503,6 +1523,19 @@ void WndMain::UpdateRecentFiles()
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
+}
+
+void WndMain::UpdateCaption()
+{
+	char AsciiTitle[MAX_PATH];
+	float currentFPSVal = 0;
+	float currentMSpFVal = 0;
+	if (g_EmuShared != NULL) {
+		g_EmuShared->GetCurrentFPS(&currentFPSVal);
+		g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+	}
+	sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS: %.2f  MS/F: %.2f", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, currentFPSVal, currentMSpFVal);
+	SetWindowText(m_hwnd, AsciiTitle);
 }
 
 // open an xbe file

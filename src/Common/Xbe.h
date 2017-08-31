@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Xbe.h
+// *   Cxbx->Common->Xbe.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -293,9 +293,5 @@ const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD         = 0x00000200;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK = 0x40000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE      = 0x80000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_MASK          = 0x00FFFFFF;
-
-// OpenXDK logo bitmap (used by cxbe by default)
-extern uint08 OpenXDK[];
-extern uint32 dwSizeOfOpenXDK;
 
 #endif

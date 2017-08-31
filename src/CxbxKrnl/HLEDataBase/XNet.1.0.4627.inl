@@ -124,7 +124,29 @@ OOVPA_XREF(WSAStartup, 4627, 9,
         { 0x07, 0x08 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
-///////
+// ******************************************************************
+// * CXnSock::socket
+// ******************************************************************
+OOVPA_NO_XREF(socket, 4627, 14) // Up to 5344
+
+        { 0x00, 0x51 },
+        { 0x01, 0x85 },
+        { 0x02, 0xC9 },
+        { 0x03, 0x89 },
+        { 0x04, 0x4C },
+        { 0x05, 0x24 },
+        { 0x06, 0x00 },
+        { 0x07, 0x74 },
+        { 0x08, 0x0A },
+        { 0x09, 0x66 },
+        { 0x0A, 0x83 },
+        { 0x0B, 0xB9 },
+
+        { 0x1E, 0xC8 },
+        { 0x1F, 0xFF },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * socket
 // ******************************************************************
@@ -162,9 +184,9 @@ OOVPA_NO_XREF(socket, 4627, 20)
         { 0x012E, 0x0C }, // (Offset,Value)-Pair #19
         { 0x012F, 0x00 }, // (Offset,Value)-Pair #20
 OOVPA_END;
-
+#endif
 // ******************************************************************
-// * socket
+// * connect
 // ******************************************************************
 OOVPA_NO_XREF(connect, 4627, 24)
 
@@ -302,6 +324,27 @@ OOVPA_NO_XREF(recv, 4627, 24)
 OOVPA_END;
 
 // ******************************************************************
+// * CXnSock::ioctlsocket
+// ******************************************************************
+OOVPA_NO_XREF(ioctlsocket, 4627, 12) // Up to 5849
+
+        { 0x0C, 0x99 },
+        { 0x1D, 0x83 },
+
+        { 0x30, 0x3B },
+        { 0x31, 0xF3 },
+        { 0x32, 0x75 },
+        { 0x33, 0x08 },
+        { 0x34, 0x83 },
+        { 0x35, 0xC8 },
+        { 0x36, 0xFF },
+        { 0x37, 0xE9 },
+        { 0x38, 0x87 },
+
+        { 0x57, 0x15 },
+OOVPA_END;
+#if 0 // No longer used, replaced by generic 4627 version
+// ******************************************************************
 // * ioctlsocket
 // ******************************************************************
 OOVPA_NO_XREF(ioctlsocket, 4627, 10)
@@ -324,15 +367,61 @@ OOVPA_NO_XREF(ioctlsocket, 4627, 10)
         { 0xC6, 0xC2 }, // (Offset,Value)-Pair #9
         { 0xC7, 0x0C }, // (Offset,Value)-Pair #10
 OOVPA_END;
+#endif
+
+// ******************************************************************
+// * CXnSock::bind
+// ******************************************************************
+OOVPA_NO_XREF(bind, 4627, 12) // Up to 5849
+
+        { 0x00, 0x56 },
+        { 0x1D, 0xE8 },
+
+        { 0x30, 0x27 },
+        { 0x31, 0x00 },
+        { 0x32, 0x00 },
+        { 0x33, 0xEB },
+        { 0x34, 0x32 },
+        { 0x35, 0x8B },
+        { 0x36, 0x4C },
+        { 0x37, 0x24 },
+        { 0x38, 0x10 },
+
+        { 0x53, 0xE8 },
+OOVPA_END;
+
+// ******************************************************************
+// * CXnSock::listen
+// ******************************************************************
+OOVPA_NO_XREF(listen, 4627, 12)  // Up to 5849
+
+        { 0x09, 0xBF },
+        { 0x1B, 0x83 },
+
+        { 0x30, 0x83 },
+        { 0x31, 0xC8 },
+        { 0x32, 0xFF },
+        { 0x33, 0xEB },
+        { 0x34, 0x49 },
+        { 0x35, 0x8B },
+        { 0x36, 0x46 },
+        { 0x37, 0x0C },
+        { 0x38, 0xA8 },
+
+        { 0x55, 0xE8 },
+OOVPA_END;
 
 // ******************************************************************
 // * XNet_4627
 // ******************************************************************
 OOVPATable XNet_4627[] = {
+
+	REGISTER_OOVPA(XnInit, 4627, XREF),
 	REGISTER_OOVPA(XNetStartup, 4627, PATCH), // same as xonline 4361
 	REGISTER_OOVPA(WSAStartup, 4627, PATCH), // same as xonline 4361
-	REGISTER_OOVPA(XnInit, 4627, XREF),
 	REGISTER_OOVPA(socket, 4627, PATCH),
+	REGISTER_OOVPA(bind, 4627, PATCH),
+	REGISTER_OOVPA(listen, 4627, PATCH),
 	REGISTER_OOVPA(connect, 4627, PATCH),
 	REGISTER_OOVPA(send, 4627, PATCH),
 	REGISTER_OOVPA(recv, 4627, PATCH),
