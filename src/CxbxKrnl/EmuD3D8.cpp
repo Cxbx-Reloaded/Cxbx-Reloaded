@@ -486,8 +486,6 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         dwThreadId = 0;
         {hThread :=} CreateThread(NULL, 0, EmuThreadHandleVBlank, NULL, 0, &dwThreadId);
-        // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
-        SetThreadAffinityMask(dwThreadId, g_CPUXbox);
     }
 */
     // create window message processing thread
@@ -1418,7 +1416,7 @@ static clock_t GetNextVBlankTime()
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
     // since callbacks come from here
-    EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+	InitXboxThread();
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 

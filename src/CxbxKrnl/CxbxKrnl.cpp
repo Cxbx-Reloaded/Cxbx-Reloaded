@@ -773,9 +773,6 @@ void CxbxKrnlInit
 			// Else the other threads must run on the same core as the Xbox code :
 			g_CPUOthers = g_CPUXbox;
 		}
-
-		// Make sure Xbox1 code runs on one core :
-		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
 	}
 
 	// initialize grapchics
@@ -805,11 +802,8 @@ void CxbxKrnlInit
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
 
-	// initialize FS segment selector
-	{
 		EmuInitFS();
-		EmuGenerateFS(pTLS, pTLSData);
-	}
+	InitXboxThread();
 
 	EmuX86_Init();
     DbgPrintf("EmuMain: Initial thread starting.\n");
