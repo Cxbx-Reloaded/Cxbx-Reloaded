@@ -164,6 +164,8 @@ void ConnectWindowsTimersToThunkTable();
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
+void InitXboxThread(DWORD_PTR cores);
+
 /*! thread local storage structure */
 extern Xbe::TLS *CxbxKrnl_TLS;
 

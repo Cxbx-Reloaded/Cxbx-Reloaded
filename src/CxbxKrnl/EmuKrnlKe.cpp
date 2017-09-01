@@ -179,10 +179,11 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+	// since callbacks come from here
+	// Note : This function runs on the Xbox core to somewhat approximate
+	// CPU locking (the prevention of interrupts to avoid thread-switches)
+	// so that callbacks don't get preempted. This needs more work.
+	InitXboxThread(g_CPUXbox);
 
 	while (true)
 	{

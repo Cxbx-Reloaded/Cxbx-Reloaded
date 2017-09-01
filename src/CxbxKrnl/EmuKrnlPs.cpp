@@ -92,6 +92,18 @@ void LOG_PCSTProxy
 		LOG_FUNC_END;
 }
 
+void InitXboxThread(DWORD_PTR cores)
+{
+	// initialize FS segment selector
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
+	// Run this thread solely on the indicated core(s) :
+	SetThreadAffinityMask(GetCurrentThread(), cores);
+}
+
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
@@ -120,12 +132,7 @@ static unsigned int WINAPI PCSTProxy
 		hStartedEvent);
 
 	// Do minimal thread initialization
-	{
-		EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-		_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-		_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
-	}
+	InitXboxThread(g_CPUXbox);
 
 	if (StartSuspended == TRUE)
 		// Suspend right before calling the thread notification routines
@@ -301,12 +308,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 		*ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 
-		// Make sure Xbox1 code runs on one core :
-		SetThreadAffinityMask(*ThreadHandle, g_CPUXbox);
-
 		WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
-
-		//        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
 		DbgPrintf("EmuKrnl: ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", *ThreadHandle, dwThreadId);
 

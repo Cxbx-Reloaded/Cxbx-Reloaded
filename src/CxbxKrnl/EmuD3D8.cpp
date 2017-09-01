@@ -395,7 +395,7 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	case DDERR_NOTLOCKED: return "An attempt was made to unlock a surface that was not locked.";
 	case DDERR_NOTPAGELOCKED: return "An attempt was made to page-unlock a surface with no outstanding page locks.";
 	case DDERR_NOTPALETTIZED: return "The surface being used is not a palette-based surface.";
-	case DDERR_NOVSYNCHW: return "There is no hardware support for vertical blank–synchronized operations.";
+	case DDERR_NOVSYNCHW: return "There is no hardware support for vertical blankÂ–synchronized operations.";
 	case DDERR_NOZBUFFERHW: return "The operation to create a z-buffer in display memory or to perform a blit, using a z-buffer cannot be carried out because there is no hardware support for z-buffers.";
 	case DDERR_NOZOVERLAYHW: return "The overlay surfaces cannot be z-layered, based on the z-order because the hardware does not support z-ordering of overlays.";
 	case DDERR_OUTOFCAPS: return "The hardware needed for the requested operation has already been allocated.";
@@ -469,9 +469,6 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
-		// Ported from Dxbx :
-        // If possible, assign this thread to another core than the one that runs Xbox1 code :
-        SetThreadAffinityMask(hThread, g_CPUOthers);
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
@@ -490,8 +487,6 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         dwThreadId = 0;
         {hThread :=} CreateThread(NULL, 0, EmuThreadHandleVBlank, NULL, 0, &dwThreadId);
-        // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
-        SetThreadAffinityMask(dwThreadId, g_CPUXbox);
     }
 */
     // create window message processing thread
@@ -1422,7 +1417,7 @@ static clock_t GetNextVBlankTime()
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
     // since callbacks come from here
-    EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+	InitXboxThread(g_CPUOthers); // avoid Xbox1 core for lowest possible latency
 
     DbgPrintf("EmuD3D8: Timing thread is running.\n");
 

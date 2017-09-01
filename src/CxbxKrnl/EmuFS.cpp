@@ -387,20 +387,26 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Be aware that TLS might be absent (for example in homebrew "Wolf3d-xbox")
 	if (pTLS != nullptr) {
-		// Make sure the TLS Start and End addresses are within Xbox virtual memory
-		if (pTLS->dwDataStartAddr >= XBE_MAX_VA || pTLS->dwDataEndAddr >= XBE_MAX_VA) {
-			return;
-		}
-
-
 		// copy global TLS to the current thread
 		{
-			uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+			uint32 dwCopySize = 0;
 			uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
+
+			if (pTLSData != NULL) {
+				// Make sure the TLS Start and End addresses are within Xbox virtual memory
+				if (pTLS->dwDataStartAddr >= XBE_MAX_VA || pTLS->dwDataEndAddr >= XBE_MAX_VA) {
+					// ignore
+				}
+				else {
+					dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+				}
+			}
 
 			pNewTLS = g_MemoryManager.AllocateZeroed(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
-			memcpy(pNewTLS, pTLSData, dwCopySize);
+			if (dwCopySize > 0) {
+				memcpy(pNewTLS, pTLSData, dwCopySize);
+			}
 
 #ifdef _DEBUG_TRACE
 			// dump raw TLS data
