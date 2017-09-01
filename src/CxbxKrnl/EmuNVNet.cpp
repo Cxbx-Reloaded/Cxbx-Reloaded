@@ -40,8 +40,16 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+// prevent name collisions
+
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuKrnl.h"
 #include "EmuNVNet.h"
 
 // NVNET Register Definitions
@@ -178,6 +186,116 @@ enum {
 #       define NVREG_POWERSTATE_D3        0x0003
 };
 
+#define IOPORT_SIZE 0x8
+#define MMIO_SIZE   0x400
+
+#define NV_TX_LASTPACKET      (1<<0)
+#define NV_TX_RETRYERROR      (1<<3)
+#define NV_TX_LASTPACKET1     (1<<8)
+#define NV_TX_DEFERRED        (1<<10)
+#define NV_TX_CARRIERLOST     (1<<11)
+#define NV_TX_LATECOLLISION   (1<<12)
+#define NV_TX_UNDERFLOW       (1<<13)
+#define NV_TX_ERROR           (1<<14)
+#define NV_TX_VALID           (1<<15)
+#define NV_RX_DESCRIPTORVALID (1<<0)
+#define NV_RX_MISSEDFRAME     (1<<1)
+#define NV_RX_SUBSTRACT1      (1<<3)
+#define NV_RX_BIT4            (1<<4)
+#define NV_RX_ERROR1          (1<<7)
+#define NV_RX_ERROR2          (1<<8)
+#define NV_RX_ERROR3          (1<<9)
+#define NV_RX_ERROR4          (1<<10)
+#define NV_RX_CRCERR          (1<<11)
+#define NV_RX_OVERFLOW        (1<<12)
+#define NV_RX_FRAMINGERR      (1<<13)
+#define NV_RX_ERROR           (1<<14)
+#define NV_RX_AVAIL           (1<<15)
+
+/* Miscelaneous hardware related defines: */
+#define NV_PCI_REGSZ          0x270
+
+/* various timeout delays: all in usec */
+#define NV_TXRX_RESET_DELAY   4
+#define NV_TXSTOP_DELAY1      10
+#define NV_TXSTOP_DELAY1MAX   500000
+#define NV_TXSTOP_DELAY2      100
+#define NV_RXSTOP_DELAY1      10
+#define NV_RXSTOP_DELAY1MAX   500000
+#define NV_RXSTOP_DELAY2      100
+#define NV_SETUP5_DELAY       5
+#define NV_SETUP5_DELAYMAX    50000
+#define NV_POWERUP_DELAY      5
+#define NV_POWERUP_DELAYMAX   5000
+#define NV_MIIBUSY_DELAY      50
+#define NV_MIIPHY_DELAY       10
+#define NV_MIIPHY_DELAYMAX    10000
+#define NV_WAKEUPPATTERNS     5
+#define NV_WAKEUPMASKENTRIES  4
+
+/* General driver defaults */
+#define NV_WATCHDOG_TIMEO     (2*HZ)
+#define DEFAULT_MTU           1500
+
+#define RX_RING               4
+#define TX_RING               2
+/* limited to 1 packet until we understand NV_TX_LASTPACKET */
+#define TX_LIMIT_STOP         10
+#define TX_LIMIT_START        5
+
+/* rx/tx mac addr + type + vlan + align + slack*/
+#define RX_NIC_BUFSIZE        (DEFAULT_MTU + 64)
+/* even more slack */
+#define RX_ALLOC_BUFSIZE      (DEFAULT_MTU + 128)
+
+#define OOM_REFILL            (1+HZ/20)
+#define POLL_WAIT             (1+HZ/100)
+
+#define MII_READ      (-1)
+#define MII_PHYSID1   0x02    /* PHYS ID 1                   */
+#define MII_PHYSID2   0x03    /* PHYS ID 2                   */
+#define MII_BMCR      0x00    /* Basic mode control register */
+#define MII_BMSR      0x01    /* Basic mode status register  */
+#define MII_ADVERTISE 0x04    /* Advertisement control reg   */
+#define MII_LPA       0x05    /* Link partner ability reg    */
+
+#define BMSR_ANEGCOMPLETE 0x0020 /* Auto-negotiation complete   */
+#define BMSR_BIT2         0x0004 /* Unknown... */
+
+/* Link partner ability register. */
+#define LPA_SLCT     0x001f  /* Same as advertise selector  */
+#define LPA_10HALF   0x0020  /* Can do 10mbps half-duplex   */
+#define LPA_10FULL   0x0040  /* Can do 10mbps full-duplex   */
+#define LPA_100HALF  0x0080  /* Can do 100mbps half-duplex  */
+#define LPA_100FULL  0x0100  /* Can do 100mbps full-duplex  */
+#define LPA_100BASE4 0x0200  /* Can do 100mbps 4k packets   */
+#define LPA_RESV     0x1c00  /* Unused...                   */
+#define LPA_RFAULT   0x2000  /* Link partner faulted        */
+#define LPA_LPACK    0x4000  /* Link partner acked us       */
+#define LPA_NPAGE    0x8000  /* Next page bit               */
+
+/*******************************************************************************
+* Primary State Structure
+******************************************************************************/
+
+struct NvNetState {
+	uint8_t      regs[MMIO_SIZE / 4];
+	uint32_t     phy_regs[6];
+	uint8_t      tx_ring_index;
+	uint8_t      tx_ring_size;
+	uint8_t      rx_ring_index;
+	uint8_t      rx_ring_size;
+	uint8_t      txrx_dma_buf[RX_ALLOC_BUFSIZE];
+	FILE         *packet_dump_file;
+	char         *packet_dump_path;
+} NvNetState;
+
+struct RingDesc {
+	uint32_t packet_buffer;
+	uint16_t length;
+	uint16_t flags;
+};
+
 char* EmuNVNet_GetRegisterName(xbaddr addr)
 {
 	switch (addr) {
@@ -226,17 +344,28 @@ char* EmuNVNet_GetRegisterName(xbaddr addr)
 	}
 }
 
-uint8_t NVNetRegs[NVNET_SIZE];
+char* EmuNVNet_GetMiiRegisterName(uint8_t reg)
+{
+	switch (reg) {
+	case MII_PHYSID1:   return "MII_PHYSID1";
+	case MII_PHYSID2:   return "MII_PHYSID2";
+	case MII_BMCR:      return "MII_BMCR";
+	case MII_BMSR:      return "MII_BMSR";
+	case MII_ADVERTISE: return "MII_ADVERTISE";
+	case MII_LPA:       return "MII_LPA";
+	default:            return "Unknown";
+	}
+}
 
 uint32_t EmuNVNet_GetRegister(xbaddr addr, unsigned int size)
 {
 	switch (size) {
-		case sizeof(uint32_t) :
-			return ((uint32_t *)NVNetRegs)[addr >> 2];
-		case sizeof(uint16_t) :
-			return ((uint16_t *)NVNetRegs)[addr >> 1];
-		case sizeof(uint8_t) :
-			return NVNetRegs[addr];
+	case sizeof(uint32_t) :
+		return ((uint32_t *)NvNetState.regs)[addr >> 2];
+	case sizeof(uint16_t) :
+		return ((uint16_t *)NvNetState.regs)[addr >> 1];
+	case sizeof(uint8_t) :
+		return NvNetState.regs[addr];
 	}
 
 	return 0;
@@ -245,25 +374,135 @@ uint32_t EmuNVNet_GetRegister(xbaddr addr, unsigned int size)
 void EmuNVNet_SetRegister(xbaddr addr, uint32_t value, unsigned int size)
 {
 	switch (size) {
-		case sizeof(uint32_t) :
-			((uint32_t *)NVNetRegs)[addr >> 2] = value;
-			break;
-		case sizeof(uint16_t) :
-			((uint16_t *)NVNetRegs)[addr >> 1] = (uint16_t)value;
-			break;
-		case sizeof(uint8_t) :
-			NVNetRegs[addr] = (uint8_t)value;
-				break;
+	case sizeof(uint32_t):
+		((uint32_t *)NvNetState.regs)[addr >> 2] = value;
+		break;
+	case sizeof(uint16_t):
+		((uint16_t *)NvNetState.regs)[addr >> 1] = (uint16_t)value;
+		break;
+	case sizeof(uint8_t):
+		NvNetState.regs[addr] = (uint8_t)value;
+		break;
 	}
+}
+
+void EmuNVNet_UpdateIRQ()
+{
+	if (EmuNVNet_GetRegister(NvRegIrqMask, 4) &&
+		EmuNVNet_GetRegister(NvRegIrqStatus, 4)) {
+		DbgPrintf("EmuNVNet: Asserting IRQ\n");
+		HalSystemInterrupts[4].Assert(true);
+	} else {
+		HalSystemInterrupts[4].Assert(false);
+	}
+}
+
+int EmuNVNet_MiiReadWrite(uint64_t val)
+{
+	uint32_t mii_ctl;
+	int write, retval, phy_addr, reg;
+	
+	retval = 0;
+	mii_ctl = EmuNVNet_GetRegister(NvRegMIIControl, 4);
+
+	phy_addr = (mii_ctl >> NVREG_MIICTL_ADDRSHIFT) & 0x1f;
+	reg = mii_ctl & ((1 << NVREG_MIICTL_ADDRSHIFT) - 1);
+	write = mii_ctl & NVREG_MIICTL_WRITE;
+
+	DbgPrintf("nvnet mii %s: phy 0x%x %s [0x%x]\n", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
+
+	if (phy_addr != 1) {
+		return -1;
+	}
+
+	if (write) {
+		return retval;
+	}
+
+	switch (reg) {
+	case MII_BMSR:
+		/* Phy initialization code waits for BIT2 to be set.. If not set,
+		* software may report controller as not running */
+		retval = BMSR_ANEGCOMPLETE | BMSR_BIT2;
+		break;
+	case MII_ADVERTISE:
+		/* Fall through... */
+	case MII_LPA:
+		retval = LPA_10HALF | LPA_10FULL;
+		retval |= LPA_100HALF | LPA_100FULL | LPA_100BASE4;
+		break;
+	default:
+		break;
+	}
+
+	return retval;
 }
 
 uint32_t EmuNVNet_Read(xbaddr addr, int size)
 {
 	DbgPrintf("EmuNVNet_Read%d: %s (0x%08X)\n", size, EmuNVNet_GetRegisterName(addr), addr);
+
+	switch (addr) {
+		case NvRegMIIData:
+			return EmuNVNet_MiiReadWrite(MII_READ);
+		case NvRegMIIControl:
+			return EmuNVNet_GetRegister(addr, size) & ~NVREG_MIICTL_INUSE;
+		case NvRegMIIStatus:
+			return 0;
+	}
+
 	return EmuNVNet_GetRegister(addr,size);
 }
+
 void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 {
+	switch (addr) {
+	case NvRegRingSizes:
+		EmuNVNet_SetRegister(addr, value, size);
+		NvNetState.rx_ring_size = ((value >> NVREG_RINGSZ_RXSHIFT) & 0xffff) + 1;
+		NvNetState.tx_ring_size = ((value >> NVREG_RINGSZ_TXSHIFT) & 0xffff) + 1;
+		break;
+	case NvRegMIIData:
+		EmuNVNet_MiiReadWrite(value);
+		break;
+	case NvRegTxRxControl:
+		if (value == NVREG_TXRXCTL_KICK) {
+			DbgPrintf("NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
+			EmuWarning("TODO: nvnet_dma_packet_from_guest");
+			// nvnet_dma_packet_from_guest(s);
+		}
+
+		if (value & NVREG_TXRXCTL_BIT2) {
+			EmuNVNet_SetRegister(NvRegTxRxControl, NVREG_TXRXCTL_IDLE, 4);
+			break;
+		}
+
+		if (value & NVREG_TXRXCTL_BIT1) {
+			EmuNVNet_SetRegister(NvRegIrqStatus, 0, 4);
+			break;
+		} else if (value == 0) {
+			uint32_t temp = EmuNVNet_GetRegister(NvRegUnknownSetupReg3, 4);
+			if (temp == NVREG_UNKSETUP3_VAL1) {
+				/* forcedeth waits for this bit to be set... */
+				EmuNVNet_SetRegister(NvRegUnknownSetupReg5,
+					NVREG_UNKSETUP5_BIT31, 4);
+				break;
+			}
+		}
+		EmuNVNet_SetRegister(NvRegTxRxControl, value, size);
+		break;
+	case NvRegIrqMask:
+		EmuNVNet_SetRegister(addr, value, size);
+		EmuNVNet_UpdateIRQ();
+		break;
+	case NvRegIrqStatus:
+		EmuNVNet_SetRegister(addr, EmuNVNet_GetRegister(addr, size) & ~value, size);
+		EmuNVNet_UpdateIRQ();
+		break;
+	default:
+		EmuNVNet_SetRegister(addr, value, size);
+		break;
+	}
+
 	DbgPrintf("EmuNVNet_Write%d: %s (0x%08X) = 0x%08X\n", size, EmuNVNet_GetRegisterName(addr), addr, value);
-	return EmuNVNet_SetRegister(addr, value, size);
 }
