@@ -939,6 +939,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	RETURN(dwRet);
 }
 
+#if 0 // Handled by WaitForSingleObject
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
@@ -966,6 +967,7 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 
 	RETURN(bRet);
 }
+#endif
 
 // ******************************************************************
 // * patch: XLaunchNewImageA
