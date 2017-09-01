@@ -606,6 +606,7 @@ DWORD WINAPI EMUPATCH(QueueUserAPC)
 	DWORD   	dwData
 );
 
+#if 0 // Handled by WaitForSingleObject
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
@@ -616,6 +617,7 @@ BOOL WINAPI EMUPATCH(GetOverlappedResult)
 	LPDWORD			lpNumberOfBytesTransferred,
 	BOOL			bWait
 );
+#endif
 
 // ******************************************************************
 // * patch: XLaunchNewImageA
