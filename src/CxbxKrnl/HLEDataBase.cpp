@@ -115,6 +115,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XOnline.1.0.5788.inl"
 #include "HLEDataBase/XOnline.1.0.5849.inl"
 #include "HLEDataBase/XactEng.1.0.4627.inl"
+#include "HLEDataBase/XactEng.1.0.5849.inl"
 
 
 // ******************************************************************
@@ -193,6 +194,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
 
 	HLE_ENTRY(Lib_XACTENG, XactEng, 4627),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5849),
 };
 
 // ******************************************************************
