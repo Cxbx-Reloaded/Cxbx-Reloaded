@@ -307,13 +307,13 @@ class Xbe : public Error
 		{
 			XprImageHeader xprImageHeader;
 			char strPad[XPR_IMAGE_HDR_SIZE - sizeof(XprImageHeader)];
-			unsigned char pBits[XPR_IMAGE_DATA_SIZE];
+			unsigned char pBits;
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImage;
 
 		#include "AlignPrefix1.h"
-		struct TRGB32 // FIXME move this elsewhere - this struct might also need a rename
+		struct TRGB32
 		{
 			unsigned char B;
 			unsigned char G;
@@ -322,18 +322,17 @@ class Xbe : public Error
 		}
 		#include "AlignPosfix1.h"
 		;
-				
-		bool ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
-		bool ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
 
-		bool ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
-		bool ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
-		bool ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap); // FIXME move this elsewhere
+		typedef uint16 TRGB16;
 
-		uint32 Swizzle(uint32 value, uint32 max, uint32 shift); // FIXME move this elsewhere
+		bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
 
-		typedef uint16 TRGB16; // FIXME move this elsewhere - this typedef might also need a rename
+		bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
 
+		uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift); // Generic swizzle function, usable for both x and y dimensions.
 };
 
 // debug/retail XOR keys

@@ -1009,23 +1009,23 @@ bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *
 
 	int pitch = *width * sizeof(uint32);
 	bitmapData = (void*)malloc(pitch * *height);
-
-	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / *width / *height == 2) {
+	
+	if ((m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize) / *width / *height == 2) { // 16bit logo
 		*bit = 16;
 		result = ReadD3D16bitTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
-			&m_xprImage->pBits[0],
+			&m_xprImage->pBits,
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
 			*width,
 			*height,
 			pitch,
 			bitmapData);
 	}
-	else {
+	else { // 32bit logo
 		*bit = 32;
 		result = ReadD3DTextureFormatIntoBitmap(
 			(m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT,
-			&m_xprImage->pBits[0],
+			&m_xprImage->pBits,
 			m_xprImage->xprImageHeader.xprHeader.dwXprTotalSize - m_xprImage->xprImageHeader.xprHeader.dwXprHeaderSize,
 			*width,
 			*height,
@@ -1036,7 +1036,6 @@ bool Xbe::ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *
 	return result;
 }
 
-// FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	switch (format)
@@ -1056,7 +1055,6 @@ bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uin
 	}
 }
 
-// FIXME: this function should be moved elsewhere
 bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
 	switch (format)
@@ -1070,7 +1068,6 @@ bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data
 	}
 }
 
-// FIXME: this function should be moved elsewhere
 // test-case: Frogger, Turok, Crazy Taxi 3 and many more
 bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
@@ -1089,7 +1086,7 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 		return false;
 
 	while (j < dataSize) {
-		
+
 		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 			j += 8;
 
@@ -1099,12 +1096,12 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 
 		// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
 		r = ((color[0] >> 11) & 31) * 255 / 31;
-		g = ((color[0] >>  5) & 63) * 255 / 63;
-		b = ((color[0]		) & 31) * 255 / 31;
+		g = ((color[0] >> 5) & 63) * 255 / 63;
+		b = ((color[0]) & 31) * 255 / 31;
 
 		r1 = ((color[1] >> 11) & 31) * 255 / 31;
-		g1 = ((color[1] >>  5) & 63) * 255 / 63;
-		b1 = ((color[1]		 ) & 31) * 255 / 31;
+		g1 = ((color[1] >> 5) & 63) * 255 / 63;
+		b1 = ((color[1]) & 31) * 255 / 31;
 
 		// Build first half of RGB32 color map :
 		color32b[0].R = (unsigned char)r;
@@ -1119,15 +1116,15 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 		if (color[0] > color[1])
 		{
 			// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
-			color32b[2].R =  (unsigned char) ((r + r + r1 + 2) / 3);
-			color32b[2].G =	 (unsigned char) ((g + g + g1 + 2) / 3);
-			color32b[2].B = (unsigned char) ((b + b + b1 + 2) / 3);
+			color32b[2].R = (unsigned char)((r + r + r1 + 2) / 3);
+			color32b[2].G = (unsigned char)((g + g + g1 + 2) / 3);
+			color32b[2].B = (unsigned char)((b + b + b1 + 2) / 3);
 
-			color32b[3].R = (unsigned char) ((r + r1 + r1 + 2) / 3);
-			color32b[3].G = (unsigned char) ((g + g1 + g1 + 2) / 3);
-			color32b[3].B = (unsigned char) ((b + b1 + b1 + 2) / 3);
+			color32b[3].R = (unsigned char)((r + r1 + r1 + 2) / 3);
+			color32b[3].G = (unsigned char)((g + g1 + g1 + 2) / 3);
+			color32b[3].B = (unsigned char)((b + b1 + b1 + 2) / 3);
 		}
-		else 
+		else
 		{
 			// Make up one new color : 1/2 A + 1/2 B :
 			color32b[2].R = (unsigned char)((r + r1) / 2);
@@ -1146,25 +1143,24 @@ bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 da
 		if (y >= height)
 			break;
 
-		pixelmap = (data[j + 4] << 0) 
+		pixelmap = (data[j + 4] << 0)
 			+ (data[j + 5] << 8)
 			+ (data[j + 6] << 16)
 			+ (data[j + 7] << 24);
 
 		for (p = 0; p < 16; p++)
 		{
-			((TRGB32*)bitmap)[x + (p & 3) + (pitch/sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
+			((TRGB32*)bitmap)[x + (p & 3) + (pitch / sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
 			pixelmap >>= 2;
 		};
-			
+
 		j += 8;
 		k += 8;
-		
+
 	}
 	return true;
 }
 
-// FIXME: this function should be moved elsewhere
 // test-case: Baku Baku 2 (Homebrew)
 bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
@@ -1193,8 +1189,8 @@ bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 		ySwizzle = Swizzle(y, width, 1);
 
 		// Copy whole line in one go (using pre-calculated x-swizzle) :
-		yscanline = &((TRGB32*)bitmap)[y*(pitch/sizeof(TRGB32))];
-		
+		yscanline = &((TRGB32*)bitmap)[y*(pitch / sizeof(TRGB32))];
+
 		for (x = 0; x < width; x++)
 			yscanline[x] = ((TRGB32*)data)[xSwizzle[x] + ySwizzle];
 	}
@@ -1203,7 +1199,6 @@ bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 	return true;
 }
 
-// FIXME: this function should be moved elsewhere
 // UNTESTED - Need test-case! (Sorry I wasn't able to find a game using this format)
 bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
@@ -1241,7 +1236,9 @@ bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, 
 	return true;
 }
 
-// FIXME: this function should be moved elsewhere
+/* Generic swizzle function, usable for both x and y dimensions.
+When passing x, Max should be 2*height, and Shift should be 0
+When passing y, Max should be width, and Shift should be 1 */
 uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift)
 {
 	uint32 result;
@@ -1252,7 +1249,7 @@ uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift)
 		result = value % max;
 
 	// The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
-													// --------------------------------11111111111111111111111111111111
+	// --------------------------------11111111111111111111111111111111
 	result = (result | (result << 8)) & 0x00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
 	result = (result | (result << 4)) & 0x0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
 	result = (result | (result << 2)) & 0x33333333; // 0011001100110011001100110011001100110011001100110011001100110011
@@ -1261,7 +1258,7 @@ uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift)
 	result = result << shift; // y counts twice :      1010101010101010101010101010101010101010101010101010101010101010
 
 	if (value >= max)
-		result += (value / max) * max * max >>(1 - shift);  // x halves this
+		result += (value / max) * max * max >> (1 - shift);  // x halves this
 
 	return result;
 }
