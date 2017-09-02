@@ -95,6 +95,11 @@ class WndMain : public Wnd
         // ******************************************************************
         void LoadLogo();
 
+		// ******************************************************************
+		// * refresh the game logo in the main window
+		// ******************************************************************
+		void LoadGameLogo();
+
         // ******************************************************************
         // * refresh all menus (checks, enabled, disabled, etc)
         // ******************************************************************
@@ -120,10 +125,13 @@ class WndMain : public Wnd
         // ******************************************************************
         HDC         m_BackDC;
         HDC         m_LogoDC;
+		HDC         m_GameLogoDC;
         HBITMAP     m_OrigBmp;
         HBITMAP     m_OrigLogo;
+		HBITMAP     m_OrigGameLogo;
         HBITMAP     m_BackBmp;
         HBITMAP     m_LogoBmp;
+		HBITMAP		m_GameLogoBMP;
 
         // ******************************************************************
         // * Xbe objects

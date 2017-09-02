@@ -42,6 +42,9 @@
 //#include <windef.h> // For MAX_PATH
 // The above leads to 55 compile errors, so until we've sorted out why that happens, declare MAX_PATH ourselves for now :
 #define MAX_PATH 260
+#define XPR_IMAGE_WH 128
+#define XPR_IMAGE_DATA_SIZE (XPR_IMAGE_WH * XPR_IMAGE_WH) / 2
+#define XPR_IMAGE_HDR_SIZE 2048
 
 // Xbe (Xbox Executable) file object
 class Xbe : public Error
@@ -64,6 +67,9 @@ class Xbe : public Error
 
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
+
+		// Export Game Logo bitmap (XTIMAG or XSIMAG)
+		bool ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *bit);
 
         // Xbe header
         #include "AlignPrefix1.h"
@@ -261,6 +267,72 @@ class Xbe : public Error
             }
             m_Sixteen;
         };
+
+		// used to decode game logo bitmap data
+		#include "AlignPrefix1.h"
+		struct X_D3DResourceLoc
+		{
+			uint32 Common;
+			uint32 Data;
+			uint32 Lock;
+			uint32 Format;
+			uint32 Size;
+		}
+		#include "AlignPosfix1.h"
+		;
+
+		#include "AlignPrefix1.h"
+		struct XprHeader
+		{
+			uint32 dwXprMagic;
+			uint32 dwXprTotalSize;
+			uint32 dwXprHeaderSize;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprHeader;
+
+		#include "AlignPrefix1.h"
+		struct XprImageHeader
+		{
+			XprHeader xprHeader;
+			X_D3DResourceLoc d3dTexture;
+			uint32 dwEndOfHeader;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImageHeader;
+
+
+		#include "AlignPrefix1.h"
+		struct XprImage
+		{
+			XprImageHeader xprImageHeader;
+			char strPad[XPR_IMAGE_HDR_SIZE - sizeof(XprImageHeader)];
+			unsigned char pBits;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImage;
+
+		#include "AlignPrefix1.h"
+		struct TRGB32
+		{
+			unsigned char B;
+			unsigned char G;
+			unsigned char R;
+			unsigned char A;
+		}
+		#include "AlignPosfix1.h"
+		;
+
+		typedef uint16 TRGB16;
+
+		bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+
+		bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+		bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
+
+		uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift); // Generic swizzle function, usable for both x and y dimensions.
 };
 
 // debug/retail XOR keys
