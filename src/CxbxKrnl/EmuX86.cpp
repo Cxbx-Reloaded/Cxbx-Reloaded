@@ -69,7 +69,6 @@ uint32_t EmuX86_IORead32(xbaddr addr)
 		QueryPerformanceCounter(&performanceCount);
 		return performanceCount.QuadPart;
 		break;
-		
 	}
 
 	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
@@ -82,8 +81,17 @@ uint16_t EmuX86_IORead16(xbaddr addr)
 	return 0;
 }
 
+static int field_pin = 0;
 uint8_t EmuX86_IORead8(xbaddr addr)
 {
+	switch (addr) {
+		case 0x80C0:
+			// field pin from tv encoder?
+			field_pin = (field_pin + 1) & 1;
+			return field_pin << 5;
+			break;
+	}
+
 	EmuWarning("EmuX86_IORead8(0x%08X) [Unknown address]", addr);
 	return 0;
 }
