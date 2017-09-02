@@ -284,10 +284,21 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
             LastUnResolvedXRefs = UnResolvedXRefs;
 
+            bool bDSoundLibSection = false;
+            uint16 preserveVersion = 0;
+
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
                 uint16 OrigBuildVersion = BuildVersion;
+
+                if (preserveVersion < BuildVersion) {
+                    preserveVersion = BuildVersion;
+                }
+
+				std::string LibraryName(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
+
+                reProcessScan:
 
                 // Aliases - for testing purposes only
 				// TODO: Remove these and come up with a better way to handle XDKs we don't hve databases for
@@ -303,8 +314,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
 				if(BuildVersion == 5120) { BuildVersion = 5233; }
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
-                
-				std::string LibraryName(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8);
 
                 Xbe::SectionHeader* pSectionHeaders = reinterpret_cast<Xbe::SectionHeader*>(pXbeHeader->dwSectionHeadersAddr);
                 Xbe::SectionHeader* pSectionScan = nullptr;
@@ -333,6 +342,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				}
 				if (strcmp(LibraryName.c_str(), Lib_DSOUND) == 0)
                 {
+                    bDSoundLibSection = true;
 					// Skip scanning for DSOUND symbols when LLE APU is selected
 					if (bLLE_APU)
 						continue;
@@ -597,6 +607,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                 }
                 if (g_bPrintfOn && notFoundHLEDB) printf("Skipped\n");
+
+                if (v == dwLibraryVersions - 1 && bDSoundLibSection == false) {
+                    LibraryName = Lib_DSOUND;
+                    OrigBuildVersion = BuildVersion = preserveVersion;
+                    goto reProcessScan;
+                }
 			}
 
             bXRefFirstPass = false;
