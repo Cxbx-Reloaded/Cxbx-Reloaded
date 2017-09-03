@@ -356,8 +356,8 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
-
-	return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
+	LOG_UNIMPLEMENTED();
+	return 0;
 }
 
 // ******************************************************************
