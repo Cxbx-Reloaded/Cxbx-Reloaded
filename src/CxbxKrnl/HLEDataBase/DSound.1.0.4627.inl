@@ -1621,7 +1621,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_StopEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 4361, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4039, PATCH),
+	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 4627, XREF),
