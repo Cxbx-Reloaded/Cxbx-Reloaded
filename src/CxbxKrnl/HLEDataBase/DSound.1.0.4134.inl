@@ -2432,33 +2432,32 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetVolume, 4134, 11,
+OOVPA_XREF(CDirectSoundBuffer_SetVolume, 4134, 12,
 
     XREF_CDirectSoundBuffer_SetVolume,
-    XRefZero)
+    XRefOne)
 
-/* xref•K—v
-        // CDirectSoundVoice_SetVolume+0x32 : call [CMcpxVoiceClient::SetVolume]
-        XREF_ENTRY( 0x32, XREF_DSSTREAMSETVOLUME ),*/
+        // CDirectSoundBuffer_SetVolume+0x32 : call [CDirectSoundVoice::SetVolume]
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetVolume ), // (Offset,Value)-Pair #1
 
         // CDirectSoundBuffer_SetVolume+0x0D : movzx esi, al
-        { 0x0D, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x0E, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0xF0 }, // (Offset,Value)-Pair #3
+        { 0x0D, 0x0F }, // (Offset,Value)-Pair #2
+        { 0x0E, 0xB6 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0xF0 }, // (Offset,Value)-Pair #4
 
         // CDirectSoundBuffer_SetVolume+0x26 : jmp +0x22
-        { 0x26, 0xEB }, // (Offset,Value)-Pair #4
-        { 0x27, 0x22 }, // (Offset,Value)-Pair #5
+        { 0x26, 0xEB }, // (Offset,Value)-Pair #5
+        { 0x27, 0x22 }, // (Offset,Value)-Pair #6
 
         // CDirectSoundBuffer_SetVolume+0x2D : push [esp+0x10]
-        { 0x2D, 0xFF }, // (Offset,Value)-Pair #6
-        { 0x2E, 0x74 }, // (Offset,Value)-Pair #7
-        { 0x2F, 0x24 }, // (Offset,Value)-Pair #8
-        { 0x30, 0x10 }, // (Offset,Value)-Pair #9
+        { 0x2D, 0xFF }, // (Offset,Value)-Pair #7
+        { 0x2E, 0x74 }, // (Offset,Value)-Pair #8
+        { 0x2F, 0x24 }, // (Offset,Value)-Pair #9
+        { 0x30, 0x10 }, // (Offset,Value)-Pair #10
 
         // CDirectSoundBuffer_SetVolume+0x4B : retn 0x08
-        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x4C, 0x08 }, // (Offset,Value)-Pair #11
+        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x4C, 0x08 }, // (Offset,Value)-Pair #12
 OOVPA_END;
 
 #if 0 // Moved to 4039
