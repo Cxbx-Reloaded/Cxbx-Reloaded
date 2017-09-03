@@ -204,6 +204,11 @@ OOVPA_XREF(CDirectSound_CreateSoundBuffer, 3936, 16,
     XREF_DSCREATESOUNDBUFFER,
     XRefZero)
 
+    /*TODO: Need verification offset 0x00 is push ebp or different op code.
+      This is needed to avoid false detection for 4039 and later XDK version.
+        // CDirectSound_CreateSoundBuffer+0x00 : push ebp
+        { 0x00, 0x55 },
+    */
         // CDirectSound_CreateSoundBuffer+0x2D : and esi, 0x7FF8FFF2
         { 0x2D, 0x81 }, // (Offset,Value)-Pair #1
         { 0x2E, 0xE6 }, // (Offset,Value)-Pair #2
