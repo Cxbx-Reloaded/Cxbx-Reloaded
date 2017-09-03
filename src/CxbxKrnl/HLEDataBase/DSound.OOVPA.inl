@@ -37,6 +37,7 @@
 #include "../OOVPA.h"
 
 #include "DSound.1.0.3936.inl"
+#include "DSound.1.0.4039.inl"
 #include "DSound.1.0.4134.inl"
 #include "DSound.1.0.4361.inl"
 #include "DSound.1.0.4432.inl"
@@ -171,7 +172,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettings, PATCH, 3936, 4134, 5344, 5558, 5788),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettingsA, XREF, 3936),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettingsB, XREF, 3936),
-    REGISTER_OOVPAS(CDirectSound_CreateSoundBuffer, XREF, 3936, 4134),
+    REGISTER_OOVPAS(CDirectSound_CreateSoundBuffer, XREF, 3936, 4039, 4134),
     REGISTER_OOVPAS(CDirectSound_CreateSoundStream, XREF, 3936, 4134, 5558),
     REGISTER_OOVPAS(CDirectSound_EnableHeadphones, XREF, 3936, 4627, 5233, 5344, 5558),
     REGISTER_OOVPAS(CDirectSound_GetCaps, XREF, 3936, 4361),
@@ -222,8 +223,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3936, 4134),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3925, 3936),
-    REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3936, 4134),
-    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 4242),
+    REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3936, 4039, 4134),
+    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 4039, 4242),
     REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3936, 4134, 5558),
     REGISTER_OOVPAS(DirectSoundDoWorkA, XREF, 3936),
