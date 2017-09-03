@@ -82,7 +82,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_SetMode, XREF, 4134, 5233),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetNotificationPositions, XREF, 3936, 4627), // Uncommenting these fixes dashboard 4920 (from 4627 comment)
     REGISTER_OOVPAS(CDirectSoundBuffer_SetOutputBuffer, XREF, 4627),
-    REGISTER_OOVPAS(CDirectSoundBuffer_SetPitch, XREF, 4039, 4627),
+    REGISTER_OOVPAS(CDirectSoundBuffer_SetPitch, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetPlayRegion, XREF, 4361, 5558),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetPosition, XREF, 3936, 4134, 5558),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetRolloffCurve, XREF, 4627),
@@ -127,7 +127,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes2, PATCH, 4134, 5788), //TODO: What's the difference from this and above?
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3936, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetOutputBuffer, PATCH, 4627),
-    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 4627, 5849),
+    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetPosition, PATCH, 3936, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetPositionA, XREF, 3936),
     REGISTER_OOVPAS(CDirectSoundStream_SetPositionB, XREF, 3936),
@@ -270,7 +270,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMode, PATCH, 3936, 4134, 5233),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetNotificationPositions, PATCH, 3936, 4627),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetOutputBuffer, PATCH, 4627),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetPitch, PATCH, 3936, 4627),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetPitch, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetPitchA, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetPitchB, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetPlayRegion, PATCH, 3936, 4361),
