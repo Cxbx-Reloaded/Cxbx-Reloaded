@@ -632,7 +632,7 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl">
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.OOVPA.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl">
@@ -663,6 +663,9 @@
       <Filter>HLEDatabase\DSound</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl">
+      <Filter>HLEDatabase\DSound</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl">
