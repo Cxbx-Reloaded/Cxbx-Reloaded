@@ -165,7 +165,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 4134, PATCH), // TODO : Use 5344?
 	REGISTER_OOVPA(CDirectSound_SetDopplerFactor, 5788, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4039, PATCH),
+	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 4627, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play2, 4361, XREF),

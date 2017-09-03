@@ -983,7 +983,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4039, PATCH),
+	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetMixBinHeadroom, 4627, XREF),
