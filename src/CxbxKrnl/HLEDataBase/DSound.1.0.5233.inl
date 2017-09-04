@@ -40,14 +40,14 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 5233, 8,
     XREF_DSENABLEHEADPHONES,
     XRefZero)
 
-        { 0x16, 0x45 }, // (Offset,Value)-Pair #1
-        { 0x1D, 0x0B }, // (Offset,Value)-Pair #2
-        { 0x2A, 0x05 }, // (Offset,Value)-Pair #3
-        { 0x46, 0x95 }, // (Offset,Value)-Pair #4
-        { 0x56, 0x80 }, // (Offset,Value)-Pair #5
-        { 0x5D, 0x7F }, // (Offset,Value)-Pair #6
-        { 0x74, 0xA4 }, // (Offset,Value)-Pair #7
-        { 0x99, 0x08 }, // (Offset,Value)-Pair #8
+        { 0x16, 0x45 },
+        { 0x1D, 0x0B },
+        { 0x2A, 0x05 },
+        { 0x46, 0x95 },
+        { 0x56, 0x80 },
+        { 0x5D, 0x7F },
+        { 0x74, 0xA4 },
+        { 0x99, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -58,20 +58,20 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 5233, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x15, XREF_DSENABLEHEADPHONES ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x15, XREF_DSENABLEHEADPHONES ),
 
         // IDirectSound_EnableHeadphones+0x0A : add eax, 0xFFFFFFF8
-        { 0x0A, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x0B, 0xC0 }, // (Offset,Value)-Pair #3
-        { 0x0C, 0xF8 }, // (Offset,Value)-Pair #4
+        { 0x0A, 0x83 },
+        { 0x0B, 0xC0 },
+        { 0x0C, 0xF8 },
 
         // IDirectSound_EnableHeadphones+0x0F : sbb ecx, ecx
-        { 0x0F, 0x1B }, // (Offset,Value)-Pair #5
-        { 0x10, 0xC9 }, // (Offset,Value)-Pair #6
+        { 0x0F, 0x1B },
+        { 0x10, 0xC9 },
 
         // IDirectSound_EnableHeadphones+0x19 : retn 0x08
-        { 0x19, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x1A, 0x08 }, // (Offset,Value)-Pair #8
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -82,25 +82,25 @@ OOVPA_XREF(CDirectSoundStream_FlushEx, 5233, 15,
     XREF_DSFLUSHEX2,
     XRefZero)
 
-        { 0x24, 0xB8 }, // (Offset,Value)-Pair #1
-        { 0x25, 0x05 }, // (Offset,Value)-Pair #2
-        { 0x26, 0x40 }, // (Offset,Value)-Pair #3
-        { 0x27, 0x00 }, // (Offset,Value)-Pair #4
-        { 0x28, 0x80 }, // (Offset,Value)-Pair #5
+        { 0x24, 0xB8 },
+        { 0x25, 0x05 },
+        { 0x26, 0x40 },
+        { 0x27, 0x00 },
+        { 0x28, 0x80 },
 
-        { 0x29, 0xEB }, // (Offset,Value)-Pair #6
-        { 0x2A, 0x3A }, // (Offset,Value)-Pair #7
-        { 0x2B, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x2C, 0x7D }, // (Offset,Value)-Pair #9
+        { 0x29, 0xEB },
+        { 0x2A, 0x3A },
+        { 0x2B, 0x83 },
+        { 0x2C, 0x7D },
 
-        { 0x36, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x37, 0x12 }, // (Offset,Value)-Pair #11
+        { 0x36, 0x74 },
+        { 0x37, 0x12 },
 
-        { 0x3E, 0xFF }, // (Offset,Value)-Pair #12
-        { 0x40, 0x0C }, // (Offset,Value)-Pair #13
+        { 0x3E, 0xFF },
+        { 0x40, 0x0C },
 
-        { 0x67, 0xC2 }, // (Offset,Value)-Pair #14
-        { 0x68, 0x10 }, // (Offset,Value)-Pair #15
+        { 0x67, 0xC2 },
+        { 0x68, 0x10 },
 OOVPA_END;
 
 #if 0 // Used 4627
@@ -112,19 +112,19 @@ OOVPA_XREF(IDirectSoundStream_FlushEx, 5233, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x11, XREF_DSFLUSHEX2 ),  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x11, XREF_DSFLUSHEX2 ), 
 
-        { 0x00, 0xFF }, // (Offset,Value)-Pair #2
-        { 0x03, 0x10 }, // (Offset,Value)-Pair #3
+        { 0x00, 0xFF },
+        { 0x03, 0x10 },
 
-        { 0x04, 0xFF }, // (Offset,Value)-Pair #4
-        { 0x07, 0x10 }, // (Offset,Value)-Pair #5
+        { 0x04, 0xFF },
+        { 0x07, 0x10 },
 
-        { 0x08, 0xFF }, // (Offset,Value)-Pair #6
-        { 0x0B, 0x10 }, // (Offset,Value)-Pair #7
+        { 0x08, 0xFF },
+        { 0x0B, 0x10 },
 
-        { 0x15, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x16, 0x10 }, // (Offset,Value)-Pair #9
+        { 0x15, 0xC2 },
+        { 0x16, 0x10 },
 OOVPA_END;
 #endif
 
@@ -136,14 +136,14 @@ OOVPA_XREF(CMcpxAPU_SynchPlayback, 5233, 8,
     XREF_DSSYNCHPLAYBACKB,
     XRefZero)
 
-        { 0x0C, 0x74 }, // (Offset,Value)-Pair #1
-        { 0x1A, 0x1A }, // (Offset,Value)-Pair #2
-        { 0x25, 0x53 }, // (Offset,Value)-Pair #3
-        { 0x37, 0xF2 }, // (Offset,Value)-Pair #4
-        { 0x58, 0xBC }, // (Offset,Value)-Pair #5
-        { 0x84, 0x43 }, // (Offset,Value)-Pair #6
-        { 0x9E, 0x64 }, // (Offset,Value)-Pair #7
-        { 0xFF, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x0C, 0x74 },
+        { 0x1A, 0x1A },
+        { 0x25, 0x53 },
+        { 0x37, 0xF2 },
+        { 0x58, 0xBC },
+        { 0x84, 0x43 },
+        { 0x9E, 0x64 },
+        { 0xFF, 0x00 },
 OOVPA_END;
 
 // ******************************************************************
@@ -154,22 +154,22 @@ OOVPA_XREF(CDirectSound_SynchPlayback, 5233, 10,
     XREF_DSSYNCHPLAYBACKA,
     XRefOne)
 
-        XREF_ENTRY( 0x08, XREF_DSSYNCHPLAYBACKB ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x08, XREF_DSSYNCHPLAYBACKB ),
 
         // CDirectSound_SynchPlayback+0x00 : mov eax, [esp+0x04]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #2
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #3
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #4
-        { 0x03, 0x04 }, // (Offset,Value)-Pair #5
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
 
         // CDirectSound_SynchPlayback+0x04 : mov ecx, [eax+0x0C]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #6
-        { 0x05, 0x48 }, // (Offset,Value)-Pair #7
-        { 0x06, 0x0C }, // (Offset,Value)-Pair #8
+        { 0x04, 0x8B },
+        { 0x05, 0x48 },
+        { 0x06, 0x0C },
 
         // CDirectSound_SynchPlayback+0x0C : retn 0x04
-        { 0x0C, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x0D, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x0C, 0xC2 },
+        { 0x0D, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -180,20 +180,20 @@ OOVPA_XREF(IDirectSound_SynchPlayback, 5233, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x11, XREF_DSSYNCHPLAYBACKA ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x11, XREF_DSSYNCHPLAYBACKA ),
 
         // IDirectSound_SynchPlayback+0x06 : add eax, 0xFFFFFFF8
-        { 0x06, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x07, 0xC0 }, // (Offset,Value)-Pair #3
-        { 0x08, 0xF8 }, // (Offset,Value)-Pair #4
+        { 0x06, 0x83 },
+        { 0x07, 0xC0 },
+        { 0x08, 0xF8 },
 
         // IDirectSound_SynchPlayback+0x0B : sbb ecx, ecx
-        { 0x0B, 0x1B }, // (Offset,Value)-Pair #5
-        { 0x0C, 0xC9 }, // (Offset,Value)-Pair #6
+        { 0x0B, 0x1B },
+        { 0x0C, 0xC9 },
 
         // IDirectSound_SynchPlayback+0x15 : retn 0x04
-        { 0x15, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x16, 0x04 }, // (Offset,Value)-Pair #8
+        { 0x15, 0xC2 },
+        { 0x16, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -204,14 +204,14 @@ OOVPA_XREF(CDirectSoundVoice_SetMode, 5233, 8,
     XREF_DSBUFFERSETMODEB,
     XRefZero)
 
-        { 0x00, 0xF6 }, // (Offset,Value)-Pair #1
-        { 0x07, 0x24 }, // (Offset,Value)-Pair #2
-        { 0x0B, 0x10 }, // (Offset,Value)-Pair #3
-        { 0x0E, 0xB4 }, // (Offset,Value)-Pair #4
-        { 0x18, 0x3C }, // (Offset,Value)-Pair #5
-        { 0x1A, 0x06 }, // (Offset,Value)-Pair #6
-        { 0x21, 0x33 }, // (Offset,Value)-Pair #7
-        { 0x24, 0x0C }, // (Offset,Value)-Pair #8
+        { 0x00, 0xF6 },
+        { 0x07, 0x24 },
+        { 0x0B, 0x10 },
+        { 0x0E, 0xB4 },
+        { 0x18, 0x3C },
+        { 0x1A, 0x06 },
+        { 0x21, 0x33 },
+        { 0x24, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -222,15 +222,15 @@ OOVPA_XREF(CDirectSoundBuffer_SetMode, 5233, 8,
     XREF_DSBUFFERSETMODEA,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSBUFFERSETMODEB ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x36, XREF_DSBUFFERSETMODEB ),
 
-        { 0x01, 0xE8 }, // (Offset,Value)-Pair #2
-        { 0x15, 0x0B }, // (Offset,Value)-Pair #3
-        { 0x22, 0x05 }, // (Offset,Value)-Pair #4
-        { 0x27, 0x26 }, // (Offset,Value)-Pair #5
-        { 0x34, 0x14 }, // (Offset,Value)-Pair #6
-        { 0x3F, 0x0B }, // (Offset,Value)-Pair #7
-        { 0x50, 0x0C }, // (Offset,Value)-Pair #8
+        { 0x01, 0xE8 },
+        { 0x15, 0x0B },
+        { 0x22, 0x05 },
+        { 0x27, 0x26 },
+        { 0x34, 0x14 },
+        { 0x3F, 0x0B },
+        { 0x50, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -241,20 +241,20 @@ OOVPA_XREF(IDirectSoundBuffer_SetMode, 5233, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x19, XREF_DSBUFFERSETMODEA ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x19, XREF_DSBUFFERSETMODEA ),
 
         // IDirectSoundBuffer_SetMode+0x0E : add eax, 0xFFFFFFE4
-        { 0x0E, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #3
-        { 0x10, 0xE4 }, // (Offset,Value)-Pair #4
+        { 0x0E, 0x83 },
+        { 0x0F, 0xC0 },
+        { 0x10, 0xE4 },
 
         // IDirectSoundBuffer_SetMode+0x13 : sbb ecx, ecx
-        { 0x13, 0x1B }, // (Offset,Value)-Pair #5
-        { 0x14, 0xC9 }, // (Offset,Value)-Pair #6
+        { 0x13, 0x1B },
+        { 0x14, 0xC9 },
 
         // IDirectSoundBuffer_SetMode+0x19 : retn 0x0C
-        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x1E, 0x0C }, // (Offset,Value)-Pair #8
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
 OOVPA_END;
 
 // ******************************************************************

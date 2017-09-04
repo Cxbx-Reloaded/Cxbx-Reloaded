@@ -58,26 +58,26 @@ OOVPA_END;
 OOVPA_NO_XREF(IDirectSound_Release, 4432, 12)
 
         // IDirectSound_Release+0x04 : lea ecx, [eax-8]
-        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x05, 0x48 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xF8 }, // (Offset,Value)-Pair #3
+        { 0x04, 0x8D },
+        { 0x05, 0x48 },
+        { 0x06, 0xF8 },
 
         // IDirectSound_Release+0x07 : neg eax
-        { 0x07, 0xF7 }, // (Offset,Value)-Pair #4
-        { 0x08, 0xD8 }, // (Offset,Value)-Pair #5
+        { 0x07, 0xF7 },
+        { 0x08, 0xD8 },
 
         // IDirectSound_Release+0x09 : sbb eax, eax
-        { 0x09, 0x1B }, // (Offset,Value)-Pair #6
-        { 0x0A, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x09, 0x1B },
+        { 0x0A, 0xC0 },
 
         // IDirectSound_Release+0x0D : mov ecx, [eax]
-        { 0x0D, 0x8B }, // (Offset,Value)-Pair #8
-        { 0x0E, 0x08 }, // (Offset,Value)-Pair #9
+        { 0x0D, 0x8B },
+        { 0x0E, 0x08 },
 
         // IDirectSound_Release+0x10 : call dword ptr [ecx+8]
-        { 0x10, 0xFF }, // (Offset,Value)-Pair #10
-        { 0x11, 0x51 }, // (Offset,Value)-Pair #11
-        { 0x12, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x10, 0xFF },
+        { 0x11, 0x51 },
+        { 0x12, 0x08 },
 OOVPA_END;
 #endif
 #if 0 // Used 4134
@@ -92,22 +92,22 @@ OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4432, 10,
     XRefZero)
 
         // CDirectSoundVoiceSettings_SetMixBins+0x06 : jnz +0x1A
-        { 0x06, 0x75 }, // (Offset,Value)-Pair #1
-        { 0x07, 0x1A }, // (Offset,Value)-Pair #2
+        { 0x06, 0x75 },
+        { 0x07, 0x1A },
 
         // CDirectSoundVoiceSettings_SetMixBins+0x08 : test byte ptr [ecx+8], 0x10
-        { 0x08, 0xF6 }, // (Offset,Value)-Pair #3
-        { 0x09, 0x41 }, // (Offset,Value)-Pair #4
-        { 0x0A, 0x08 }, // (Offset,Value)-Pair #5
-        { 0x0B, 0x10 }, // (Offset,Value)-Pair #6
+        { 0x08, 0xF6 },
+        { 0x09, 0x41 },
+        { 0x0A, 0x08 },
+        { 0x0B, 0x10 },
 
         // CDirectSoundVoiceSettings_SetMixBins+0x2B : jbe +0x2B
-        { 0x2B, 0x76 }, // (Offset,Value)-Pair #7
-        { 0x2C, 0x2B }, // (Offset,Value)-Pair #8
+        { 0x2B, 0x76 },
+        { 0x2C, 0x2B },
 
         // CDirectSoundVoiceSettings_SetMixBins+0xB2 : retn 0x04
-        { 0xB2, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xB3, 0x04 }, // (Offset,Value)-Pair #10
+        { 0xB2, 0xC2 },
+        { 0xB3, 0x04 },
 OOVPA_END;
 #endif
 
