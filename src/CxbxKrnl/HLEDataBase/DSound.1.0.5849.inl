@@ -131,11 +131,12 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 5788, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4361, XREF),
-	REGISTER_OOVPA(CMcpxBuffer_Stop, 4361, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_Stop2, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_StopEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 4361, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3936, PATCH), // (Possibly weak, but quite OK for 4627 DSOUND)
+    REGISTER_OOVPA(CMcpxBuffer_Stop, 4242, XREF),
+    REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetHeadroom, 5558, XREF),
@@ -160,7 +161,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 5558, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetRolloffFactor, 5849, XREF),
 	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 4134, PATCH), // TODO : Use 5344?
 	REGISTER_OOVPA(CDirectSound_SetDopplerFactor, 5788, XREF),

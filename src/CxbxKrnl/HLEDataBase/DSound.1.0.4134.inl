@@ -2788,6 +2788,88 @@ OOVPA_XREF(IDirectSound_SetEffectData, 4134, 13,
 OOVPA_END;
 
 // ******************************************************************
+// * CMcpxBuffer_Stop
+// ******************************************************************
+OOVPA_XREF(CMcpxBuffer_Stop, 4134, 9,
+
+	XREF_CMcpxBuffer_Stop,
+    XRefZero)
+
+        // CMcpxBuffer_Stop+0x0B : cmp al, 3
+        { 0x0B, 0x3C },
+        { 0x0C, 0x03 },
+
+        // CMcpxBuffer_Stop+0x1A : jne +0x59
+        { 0x1A, 0x75 },
+        { 0x1B, 0x59 },
+
+        // CMcpxBuffer_Stop+0x1C : test [esp+0Ch], 2
+        { 0x1C, 0xF6 },
+        { 0x1D, 0x44 },
+        { 0x1E, 0x24 },
+        { 0x1F, 0x0C },
+        { 0x20, 0x02 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxBuffer_Stop
+// ******************************************************************
+//Generic OOVPA as of 4242 and newer.
+OOVPA_XREF(CMcpxBuffer_Stop, 4242, 9,
+
+	XREF_CMcpxBuffer_Stop,
+    XRefZero)
+
+        // CMcpxBuffer_Stop+0x0E : cmp al, 3
+        { 0x0E, 0x3C },
+        { 0x0F, 0x03 },
+
+        // CMcpxBuffer_Stop+0x17 : jne +0x2A
+        { 0x17, 0x74 },
+        { 0x18, 0x2A },
+
+        // CMcpxBuffer_Stop+0x19 : test [esp+10h], 2
+        { 0x19, 0xF6 },
+        { 0x1A, 0x44 },
+        { 0x1B, 0x24 },
+        { 0x1C, 0x10 },
+        { 0x1D, 0x02 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer_Stop
+// ******************************************************************
+//Generic OOVPA as of 4134 and newer.
+OOVPA_XREF(CDirectSoundBuffer_Stop, 4134, 13,
+
+    XREF_CDirectSoundBuffer_Stop,
+    XRefOne)
+
+        // CDirectSoundBuffer_Stop+0x33 : call [CMcpxBuffer::Stop]
+        XREF_ENTRY( 0x33, XREF_CMcpxBuffer_Stop), 
+
+        // CDirectSoundBuffer_Stop+0x21 : mov eax, 0x80004005
+        { 0x21, 0xB8 },
+        { 0x22, 0x05 },
+        { 0x23, 0x40 },
+        { 0x24, 0x00 },
+        { 0x25, 0x80 },
+
+        // CDirectSoundBuffer_Stop+0x2C : mov ecx,[eax+20]
+        { 0x2C, 0x8B },
+        { 0x2D, 0x48 },
+        { 0x2E, 0x20 },
+
+        // CDirectSoundBuffer_Stop+0x3B : jz +0x0B
+        { 0x3B, 0x74 },
+        { 0x3C, 0x0B },
+
+        // CDirectSoundBuffer_Stop+0x4C : retn 0x04
+        { 0x4C, 0xC2 },
+        { 0x4D, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 4134
 // ******************************************************************
 OOVPATable DSound_4134[] = {
@@ -2799,7 +2881,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundBuffer, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 4134, XREF),
@@ -2890,7 +2972,9 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetI3DL2Source, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetI3DL2Source, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3936, PATCH),
+    REGISTER_OOVPA(CMcpxBuffer_Stop, 4134, XREF),
+    REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetAllParameters, 4134, XREF),

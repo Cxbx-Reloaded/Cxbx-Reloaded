@@ -644,7 +644,39 @@ OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 4039, 12,
         { 0x11, 0x23 },
         { 0x12, 0xC8 },
 OOVPA_END;
-#if 0 // No longer used, replaced by generic 3936 version
+
+// ******************************************************************
+// * CDirectSoundBuffer_Stop
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_Stop, 4039, 12,
+
+    XREF_CDirectSoundBuffer_Stop,
+    XRefZero)
+
+        // CDirectSoundBuffer_Stop+0x33 : call [CMcpxBuffer::Stop]
+        //XREF_ENTRY( 0x30, XREF_CMcpxBuffer_Stop), //TODO: is this CMcpxBuffer::Stop or something else?
+
+        // CDirectSoundBuffer_Stop+0x20 : mov eax, 0x80004005
+        { 0x20, 0xB8 },
+        { 0x21, 0x05 },
+        { 0x22, 0x40 },
+        { 0x23, 0x00 },
+        { 0x24, 0x80 },
+
+        // CDirectSoundBuffer_Stop+0x2B : mov ecx,[eax+20]
+        { 0x2B, 0x8B },
+        { 0x2C, 0x48 },
+        { 0x2D, 0x20 },
+
+        // CDirectSoundBuffer_Stop+0x38 : jz +0x0B
+        { 0x38, 0x74 },
+        { 0x39, 0x0B },
+
+        // CDirectSoundBuffer_Stop+0x49 : retn 0x04
+        { 0x49, 0xC2 },
+        { 0x4A, 0x04 },
+OOVPA_END;
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * IDirectSoundBuffer_Stop
 // ******************************************************************

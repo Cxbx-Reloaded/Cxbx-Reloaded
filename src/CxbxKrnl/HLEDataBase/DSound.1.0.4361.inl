@@ -257,10 +257,11 @@ OOVPA_XREF(IDirectSoundBuffer_Play, 4361, 9,
         { 0x19, 0x23 },
         { 0x1A, 0xC8 },
 OOVPA_END;
-
+#if 0 //Moved to 4242
 // ******************************************************************
 // * CMcpxBuffer_Stop
 // ******************************************************************
+
 OOVPA_XREF(CMcpxBuffer_Stop, 4361, 9,
 
 	XREF_CMcpxBuffer_Stop,
@@ -281,7 +282,8 @@ OOVPA_XREF(CMcpxBuffer_Stop, 4361, 9,
         { 0x1C, 0x10 },
         { 0x1D, 0x02 },
 OOVPA_END;
-
+#endif
+#if 0 //Moved to 4134
 // ******************************************************************
 // * CDirectSoundBuffer_Stop
 // ******************************************************************
@@ -308,7 +310,8 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4361, 10,
         { 0x4C, 0xC2 },
         { 0x4D, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 //Using generic 3911
 // ******************************************************************
 // * IDirectSoundBuffer_Stop
 // ******************************************************************
@@ -333,7 +336,7 @@ OOVPA_XREF(IDirectSoundBuffer_Stop, 4361, 8,
         { 0x0D, 0x23 },
         { 0x0E, 0xC8 },
 OOVPA_END;
-
+#endif
 #if 0 // Used 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundVoiceSettings::SetMixBinVolumes
@@ -755,7 +758,7 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetBufferData, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetBufferData, 4134, XREF),
@@ -769,10 +772,10 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 4361, PATCH),
-	REGISTER_OOVPA(CMcpxBuffer_Stop, 4361, XREF),
+	REGISTER_OOVPA(CMcpxBuffer_Stop, 4242, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_Stop2, 4361, XREF),
-	REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4361, PATCH),
+	REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
