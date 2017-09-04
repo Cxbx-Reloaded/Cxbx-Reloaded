@@ -561,23 +561,23 @@ OOVPA_XREF(CDirectSoundVoice_SetFrequency, 4039, 11,
     XRefZero)
 
         // CDirectSoundVoice_SetFrequency+0x0D : mov eax, [esi+0x10]
-        { 0x0D, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0E, 0x46 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0x10 }, // (Offset,Value)-Pair #3
+        { 0x0D, 0x8B },
+        { 0x0E, 0x46 },
+        { 0x0F, 0x10 },
 
         // CDirectSoundVoice_SetFrequency+0x10 : mov eax, [eax+0x18]
-        { 0x10, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x11, 0x40 }, // (Offset,Value)-Pair #5
-        { 0x12, 0x18 }, // (Offset,Value)-Pair #6 // 4039 0x18 vs 4134 0x10
+        { 0x10, 0x8B },
+        { 0x11, 0x40 },
+        { 0x12, 0x18 }, // 4039 0x18 vs 4134 0x10
 
         // CDirectSoundVoice_SetFrequency+0x14 : call [abs]; push eax; push esi
-        { 0x14, 0xE8 }, // (Offset,Value)-Pair #7
-        { 0x19, 0x50 }, // (Offset,Value)-Pair #8
-        { 0x1A, 0x56 }, // (Offset,Value)-Pair #9
+        { 0x14, 0xE8 },
+        { 0x19, 0x50 },
+        { 0x1A, 0x56 },
 
         // CDirectSoundVoice_SetFrequency+0x22 : retn 0x08
-        { 0x21, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x22, 0x08 }, // (Offset,Value)-Pair #11
+        { 0x21, 0xC2 },
+        { 0x22, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -623,26 +623,26 @@ OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 4039, 12,
     XRefOne)
 
         // IDirectSoundBuffer_SetFrequency+0x15 : call [CDirectSound::SetFrequency]
-        XREF_ENTRY( 0x15, XREF_DSBUFFERSETFREQUENCYA), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x15, XREF_DSBUFFERSETFREQUENCYA),
 
         // IDirectSoundBuffer_SetFrequency+0x04 : push [esp+0x08]
-        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
-        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
-        { 0x07, 0x08 }, // (Offset,Value)-Pair #5
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
 
         // IDirectSoundBuffer_SetFrequency0x0A : add eax, 0xFFFFFFE4
-        { 0x0A, 0x83 }, // (Offset,Value)-Pair #6
-        { 0x0B, 0xC0 }, // (Offset,Value)-Pair #7
-        { 0x0C, 0xE4 }, // (Offset,Value)-Pair #8
+        { 0x0A, 0x83 },
+        { 0x0B, 0xC0 },
+        { 0x0C, 0xE4 },
 
         // IDirectSoundBuffer_SetFrequency+0x0F : sbb ecx, ecx
-        { 0x0F, 0x1B }, // (Offset,Value)-Pair #9
-        { 0x10, 0xC9 }, // (Offset,Value)-Pair #10
+        { 0x0F, 0x1B },
+        { 0x10, 0xC9 },
 
         // IDirectSoundBuffer_SetFrequency+0x11 : and ecx, eax
-        { 0x11, 0x23 }, // (Offset,Value)-Pair #11
-        { 0x12, 0xC8 }, // (Offset,Value)-Pair #12
+        { 0x11, 0x23 },
+        { 0x12, 0xC8 },
 OOVPA_END;
 #if 0 // No longer used, replaced by generic 3936 version
 // ******************************************************************

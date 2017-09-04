@@ -41,21 +41,21 @@ OOVPA_XREF(CMcpxBuffer_SetBufferData, 5788, 9,
     XRefZero)
 
         // CMcpxBuffer_SetBufferData+0x1E : cmp eax, ebx
-        { 0x1E, 0x3B }, // (Offset,Value)-Pair #1
-        { 0x1F, 0xC3 }, // (Offset,Value)-Pair #2
+        { 0x1E, 0x3B },
+        { 0x1F, 0xC3 },
 
         // CMcpxBuffer_SetBufferData+0x20 : jz +0x0C
-        { 0x20, 0x74 }, // (Offset,Value)-Pair #3
-        { 0x21, 0x0C }, // (Offset,Value)-Pair #4
+        { 0x20, 0x74 },
+        { 0x21, 0x0C },
 
         // CMcpxBuffer_SetBufferData+0x45 : mov [esi+0xBC], ecx
-        { 0x45, 0x89 }, // (Offset,Value)-Pair #5
-        { 0x46, 0x8E }, // (Offset,Value)-Pair #6
-        { 0x47, 0xBC }, // (Offset,Value)-Pair #7
+        { 0x45, 0x89 },
+        { 0x46, 0x8E },
+        { 0x47, 0xBC },
 
         // CMcpxBuffer_SetBufferData+0x89 : retn 0x08
-        { 0x89, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x8A, 0x08 }, // (Offset,Value)-Pair #9
+        { 0x89, 0xC2 },
+        { 0x8A, 0x08 },
 OOVPA_END;
 #if 0 // Used CMcpxBuffer_Play 4831
 // ******************************************************************
