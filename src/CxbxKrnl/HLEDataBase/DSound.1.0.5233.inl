@@ -303,7 +303,7 @@ OOVPA_XREF(CDirectSoundStream_SetFrequency, 5233, 11,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSBUFFERSETFREQUENCYB ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetFrequency ),
 
         { 0x0E, 0xB6 },
         // je XXXXXXXX + 0x0B
@@ -449,7 +449,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetI3DL2Source, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetI3DL2Source, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH), // (This is actually the XREF we are using)
 	REGISTER_OOVPA(CDirectSoundVoice_SetFormat, 4721, XREF),
@@ -463,7 +463,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
     REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
-    REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 4039, PATCH),
+    REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH),
     REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
     REGISTER_OOVPA(CDirectSoundBuffer_SetCurrentPosition, 4134, XREF),
     REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 4134, PATCH),
