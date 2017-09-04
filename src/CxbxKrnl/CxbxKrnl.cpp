@@ -375,10 +375,8 @@ void PrintCurrentConfigurationLog() {
 
 static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 {
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+	// Make sure Xbox1 code runs on one core :
+	InitXboxThread(g_CPUXbox);
 
 	while (true) {
 		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
@@ -867,8 +865,6 @@ void CxbxKrnlInit
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
-	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(hThread, g_CPUXbox);
     DbgPrintf("EmuMain: Initial thread starting.\n");
 	CxbxLaunchXbe(Entry);
     DbgPrintf("EmuMain: Initial thread ended.\n");
