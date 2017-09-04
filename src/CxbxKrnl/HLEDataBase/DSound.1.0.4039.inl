@@ -154,7 +154,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetLoopRegion
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetLoopRegion, 4039, 15,
+OOVPA_XREF(CDirectSoundBuffer_SetLoopRegion, 4039, 16,
 
     XREF_CDirectSoundBuffer_SetLoopRegion,
     XRefZero)
@@ -174,34 +174,18 @@ OOVPA_XREF(CDirectSoundBuffer_SetLoopRegion, 4039, 15,
         // CDirectSoundBuffer_SetLoopRegion+0x3F : cmp ebx, [eax+148h]
         { 0x3F, 0x3B }, // Was 4134 Offset 0x40 cmp ebx, [eax+0C4h] 
         { 0x40, 0x98 },
-        { 0x41, 0x48 },
-        { 0x42, 0x01 },
-        { 0x43, 0x00 },
-        { 0x44, 0x00 },
 
-        // CDirectSoundBuffer_SetLoopRegion+0x2D : call CMcpxBuffer_SetLoopRegion
+        // CDirectSoundBuffer_SetLoopRegion+0x5D : mov [eax+150h], ecx
+        { 0x61, 0x00 },
+        { 0x62, 0x00 },
+
+        // CDirectSoundBuffer_SetLoopRegion+0x63 : mov ecx, [edx+20h]
+        { 0x63, 0x8B },
+        { 0x64, 0x4A },
+        { 0x65, 0x20 },
+
+        // CDirectSoundBuffer_SetLoopRegion+0x66 : call CMcpxBuffer_SetLoopRegion
         { 0x66, 0xE8 },
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSoundBuffer8::SetLoopRegion
-// ******************************************************************
-// Same as 4134
-OOVPA_XREF(IDirectSoundBuffer_SetLoopRegion, 4039, 9,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetLoopRegion ),
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0xFF },
-        { 0x0E, 0x83 },
-        { 0x12, 0xD9 },
-        { 0x16, 0xC8 },
-        { 0x1D, 0xC2 },
-        { 0x1E, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -310,6 +294,7 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient_SetVolume
 // ******************************************************************
+// Verified with Agent Under Fire title.
 OOVPA_XREF(CMcpxVoiceClient_SetVolume, 4039, 13,
 
     XREF_DSSTREAMSETVOLUME,
@@ -338,6 +323,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetVolume
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundVoice_SetVolume, 4039, 13,
 
     XREF_CDirectSoundVoice_SetVolume,
@@ -370,6 +356,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetVolume
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundBuffer_SetVolume, 4039, 10,
 
     XREF_CDirectSoundBuffer_SetVolume,
@@ -399,7 +386,8 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer::SetVolume
 // ******************************************************************
-// Same as 4134
+// Verified with Agent Under Fire.
+// Side note: It is compatible down to XDK 3911. Except 3911 is calling to CDirectSoundVoice_SetVolume directly.
 OOVPA_XREF(IDirectSoundBuffer_SetVolume, 4039, 8,
 
     XRefNoSaveIndex,
@@ -482,6 +470,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer_SetBufferData
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 4039, 16,
 
     XREF_DSSETBUFFERDATA,
@@ -515,6 +504,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetPitch
 // ******************************************************************
+// Verified with Agent Under Fire.
 // Same as 4134
 OOVPA_XREF(CDirectSoundVoice_SetPitch, 4039, 6,
 
@@ -556,7 +546,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetPitch, 4039, 13,
         // CDirectSoundBuffer_SetPitch+0x48 : pop edi
         { 0x48, 0x5F },
 
-        // CDirectSoundBuffer_SetFrequency+0x4A : retn 0x08
+        // CDirectSoundBuffer_SetPitch+0x4A : retn 0x08
         { 0x4A, 0xC2 },
         { 0x4B, 0x08 },
 OOVPA_END;
@@ -564,9 +554,10 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetFrequency
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundVoice_SetFrequency, 4039, 11,
 
-    XREF_DSBUFFERSETFREQUENCYB,
+    XREF_CDirectSoundVoice_SetFrequency,
     XRefZero)
 
         // CDirectSoundVoice_SetFrequency+0x0D : mov eax, [esi+0x10]
@@ -592,13 +583,14 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetFrequency
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundBuffer_SetFrequency, 4039, 13,
 
     XREF_DSBUFFERSETFREQUENCYA,
     XRefOne)
 
         // CDirectSoundBuffer_SetFrequency+0x31 : call [CDirectSoundVoice::SetFrequency]
-        XREF_ENTRY( 0x31, XREF_DSBUFFERSETFREQUENCYB ), // Was 4134 Offset -0x01h
+        XREF_ENTRY( 0x31, XREF_CDirectSoundVoice_SetFrequency ), // Was 4134 Offset -0x01h
 
         // CDirectSoundBuffer_SetFrequency+0x00 : push esi
         { 0x00, 0x56 },
@@ -624,14 +616,14 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetFrequency
 // ******************************************************************
-// Same as 4134
+// Verified with Agent Under Fire.
 OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 4039, 12,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // IDirectSoundBuffer_SetFrequency+0x15 : call [CDirectSound::SetFrequency]
-        XREF_ENTRY( 0x15, XREF_DSBUFFERSETFREQUENCYA ), // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x15, XREF_DSBUFFERSETFREQUENCYA), // (Offset,Value)-Pair #1
 
         // IDirectSoundBuffer_SetFrequency+0x04 : push [esp+0x08]
         { 0x04, 0xFF }, // (Offset,Value)-Pair #2
@@ -652,11 +644,10 @@ OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 4039, 12,
         { 0x11, 0x23 }, // (Offset,Value)-Pair #11
         { 0x12, 0xC8 }, // (Offset,Value)-Pair #12
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 3936 version
 // ******************************************************************
 // * IDirectSoundBuffer_Stop
 // ******************************************************************
-// Same as 4134
 OOVPA_NO_XREF(IDirectSoundBuffer_Stop, 4039, 11)
 
         // IDirectSoundBuffer_Stop+0x00 : mov eax, [esp+arg_0]
@@ -678,10 +669,12 @@ OOVPA_NO_XREF(IDirectSoundBuffer_Stop, 4039, 11)
         { 0x16, 0x04 },
         { 0x17, 0x00 }
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSound::CommitDeferredSettings
 // ******************************************************************
+// Verified with Agent Under Fire.
 OOVPA_NO_XREF(CDirectSound_CommitDeferredSettings, 4039, 14)
 
         // CDirectSound_CommitDeferredSettings+0x00 : push    ebp

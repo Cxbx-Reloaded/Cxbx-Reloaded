@@ -594,7 +594,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CMcpxBuffer_Stop2, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_StopEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 4361, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4039, PATCH), // (Possibly weak, but quite OK for 4627 DSOUND)
+	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3936, PATCH), // (Possibly weak, but quite OK for 4627 DSOUND)
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(CFullHRTFSource_GetCenterVolume, 5558, XREF),
 	REGISTER_OOVPA(CHRTFSource_SetFullHRTF5Channel, 5558, XREF),
@@ -637,7 +637,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPlayRegion, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 5558, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetRolloffFactor, 5788, XREF),

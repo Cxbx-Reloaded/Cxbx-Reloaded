@@ -4057,6 +4057,26 @@ OOVPA_NO_XREF(IDirectSoundBuffer_Unlock, 3936, 5)
 OOVPA_END;
 
 // ******************************************************************
+// * IDirectSoundBuffer::SetLoopRegion
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetLoopRegion, 3936, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetLoopRegion ),
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_3936
 // ******************************************************************
 OOVPATable DSound_3936[] = {
@@ -4212,6 +4232,7 @@ OOVPATable DSound_3936[] = {
     REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 3936, XREF),
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 3936, PATCH),
     REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+    REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3936, PATCH), // TODO Added CDirectSoundBuffer_SetLoopRegion
 };
 
 // ******************************************************************
