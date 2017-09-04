@@ -61,6 +61,7 @@ class WndMain : public Wnd
         // ******************************************************************
         void OpenXbe(const char *x_filename);
         void CloseXbe();
+        void OpenMRU(int mru);
         void SaveXbe(const char *x_filename);
         void SaveXbeAs();
 
@@ -142,7 +143,7 @@ class WndMain : public Wnd
         // * changes remembered for internal purposes
         // ******************************************************************
         bool        m_bXbeChanged;
-        bool        m_bCanStart;
+        bool        m_bIsStarted;
 
         // ******************************************************************
         // * cached filenames
