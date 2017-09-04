@@ -88,9 +88,9 @@ void ClearHLECache()
 WndMain::WndMain(HINSTANCE x_hInstance) :
 	Wnd(x_hInstance),
 	m_bCreated(false),
-	m_Xbe(0),
+	m_Xbe(nullptr),
 	m_bXbeChanged(false),
-	m_bCanStart(true),
+	m_bIsStarted(false),
 	m_hwndChild(NULL),
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
@@ -412,22 +412,27 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
-					float fps = 0;
-					float mspf = 0;
-					g_EmuShared->SetCurrentMSpF(&mspf);
-					g_EmuShared->SetCurrentFPS(&fps);
-                    SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
-                    m_hwndChild = GetWindow(hwnd, GW_CHILD);
-					RefreshMenus();
+					if (m_hwndChild == NULL) {
+						float fps = 0;
+						float mspf = 0;
+						g_EmuShared->SetCurrentMSpF(&mspf);
+						g_EmuShared->SetCurrentFPS(&fps);
+						SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
+						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
+						UpdateCaption();
+						RefreshMenus();
+					}
                 }
                 break;
 
                 case WM_DESTROY:
                 {
-                    KillTimer(hwnd, 0);
-                    m_hwndChild = NULL;
-                    SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
-                    RefreshMenus();
+					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
+					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
+						KillTimer(hwnd, 0);
+						m_hwndChild = NULL;
+						StopEmulation();
+					}
                 }
                 break;
             }
@@ -449,7 +454,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_SYSKEYDOWN:
         {
-            if(m_hwndChild != 0)
+            if(m_hwndChild != NULL)
             {
                 SendMessage(m_hwndChild, uMsg, wParam, lParam);
             }
@@ -500,7 +505,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 char buffer[255];
 
-                if(m_Xbe != 0 && m_Xbe->HasError())
+                if(m_Xbe != nullptr && m_Xbe->HasError())
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
                     sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
@@ -527,26 +532,26 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case VK_F5:
                 {
-                    if(m_Xbe != 0 && (m_hwndChild == NULL) && m_bCanStart)
-                    {
-                        m_bCanStart = false;
-                        StartEmulation(hwnd);
-                    }
+					// Try to open the most recent Xbe if none is opened yet :
+					if (m_Xbe == nullptr)
+						OpenMRU(0);
+
+					if (m_Xbe != nullptr)
+						if(!m_bIsStarted)
+							StartEmulation(hwnd);
                 }
                 break;
 
                 case VK_F6:
                 {
-                    if(m_hwndChild != NULL && !m_bCanStart)
-                    {
+					if(m_bIsStarted)
                         StopEmulation();
-                    }
                 }
                 break;
 
                 default:
                 {
-                    if(m_hwndChild != 0)
+                    if(m_hwndChild != NULL)
                     {
                         SendMessage(m_hwndChild, uMsg, wParam, lParam);
                     }
@@ -557,17 +562,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case WM_DROPFILES:
 		{
-			if(m_bCanStart)
-			{
-				if (m_Xbe != 0)
-				{
-					CloseXbe();
-				}
-				HDROP hDropInfo = NULL; char *DroppedXbeFilename = (char*)calloc(1, MAX_PATH);
-				hDropInfo = (HDROP)wParam;
-				DragQueryFile(hDropInfo, 0, DroppedXbeFilename, MAX_PATH);
+			if(!m_bIsStarted) {
+				char DroppedXbeFilename[MAX_PATH];
+				DragQueryFile((HDROP)wParam, 0, DroppedXbeFilename, MAX_PATH);
 				OpenXbe(DroppedXbeFilename);
-				free(DroppedXbeFilename);
 			}
 		}
 		break;
@@ -595,12 +593,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				if (GetOpenFileName(&ofn) == TRUE)
 				{
-					if (m_Xbe != 0)
-						CloseXbe();
-
-					if (m_Xbe != 0)
-						break;
-
 					OpenXbe(ofn.lpstrFile);
 				}
 			}
@@ -634,23 +626,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_FILE_RXBE_8:
 			case ID_FILE_RXBE_9:
 			{
-				if (m_Xbe != 0)
-					CloseXbe();
-
-				if (m_Xbe != 0)
-					break;
-
-				HMENU menu = GetMenu(m_hwnd);
-				HMENU file_menu = GetSubMenu(menu, 0);
-				HMENU rxbe_menu = GetSubMenu(file_menu, 6);
-
-				char szBuffer[270];
-
-				GetMenuString(rxbe_menu, LOWORD(wParam), szBuffer, 269, MF_BYCOMMAND);
-
-				char *szFilename = (char*)((uint32)szBuffer + 5);
-
-				OpenXbe(szFilename);
+				OpenMRU(LOWORD(wParam) - ID_FILE_RXBE_0);
 			}
 			break;
 
@@ -1212,10 +1188,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_CLOSE:
         {
-            if(m_Xbe != 0)
+            if(m_Xbe != nullptr)
                 CloseXbe();
 
-            if(m_Xbe == 0)
+            if(m_Xbe == nullptr)
                 DestroyWindow(hwnd);
         }
         break;
@@ -1248,7 +1224,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             delete m_Xbe;
 
-            m_Xbe = 0;
+            m_Xbe = nullptr;
 
             PostQuitMessage(0);
         }
@@ -1280,6 +1256,7 @@ void WndMain::XbeLoaded()
 
 	LoadGameLogo();
 
+	UpdateCaption();
     RefreshMenus();
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
@@ -1368,8 +1345,8 @@ void WndMain::LoadGameLogo()
 // refresh menu items
 void WndMain::RefreshMenus()
 {
-	bool XbeLoaded = (m_Xbe != 0);
-	bool Running = (m_hwndChild != 0);
+	bool XbeLoaded = (m_Xbe != nullptr);
+	bool Running = (m_hwndChild != NULL); // TODO : Use m_bIsStarted?
 	UINT MF_WhenXbeLoaded = XbeLoaded ? MF_ENABLED : MF_GRAYED;
 	UINT MF_WhenXbeLoadedNotRunning = (XbeLoaded && !Running) ? MF_ENABLED : MF_GRAYED;
 	UINT MF_WhenXbeLoadedAndRunning = (XbeLoaded && Running) ? MF_ENABLED : MF_GRAYED;
@@ -1420,7 +1397,7 @@ void WndMain::RefreshMenus()
             // patch menu
             {
                 // check "allow >64 MB" if appropriate
-                if(m_Xbe != 0)
+                if(m_Xbe != nullptr)
                 {
                     UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
 
@@ -1428,7 +1405,7 @@ void WndMain::RefreshMenus()
                 }
 
                 // check "debug mode" if appropriate
-                if(m_Xbe != 0)
+                if(m_Xbe != nullptr)
                 {
                     UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
 
@@ -1586,21 +1563,39 @@ void WndMain::UpdateRecentFiles()
 void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
-	float currentFPSVal = 0;
-	float currentMSpFVal = 0;
-	if (g_EmuShared != NULL) {
-		g_EmuShared->GetCurrentFPS(&currentFPSVal);
-		g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+
+	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", _CXBX_VERSION);
+	if (m_Xbe != nullptr) {
+		if (m_bIsStarted) {
+			i += sprintf(AsciiTitle + i, " : Emulating ");
+		}
+		else {
+			i += sprintf(AsciiTitle + i, " : Loaded ");
+		}
+
+		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);
+		
+		if (m_bIsStarted) {
+			float currentFPSVal = 0;
+			float currentMSpFVal = 0;
+			if (g_EmuShared != NULL) {
+				g_EmuShared->GetCurrentFPS(&currentFPSVal);
+				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+				i += sprintf(AsciiTitle + i, " - FPS: %.2f  MS/F: %.2f", currentFPSVal, currentMSpFVal);
+			}
+		}
 	}
-	sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s - FPS: %.2f  MS/F: %.2f", _CXBX_VERSION, m_Xbe->m_szAsciiTitle, currentFPSVal, currentMSpFVal);
 	SetWindowText(m_hwnd, AsciiTitle);
 }
 
 // open an xbe file
 void WndMain::OpenXbe(const char *x_filename)
 {
-    if(m_Xbe != 0)
-        return;
+    if (m_Xbe != nullptr) {
+        CloseXbe();
+        if (m_Xbe != nullptr)
+            return;
+    }
 
     strcpy(m_XbeFilename, x_filename);
 
@@ -1610,8 +1605,9 @@ void WndMain::OpenXbe(const char *x_filename)
     {
         MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
-        delete m_Xbe; m_Xbe = 0;
+        delete m_Xbe; m_Xbe = nullptr;
 
+        UpdateCaption();
         return;
     }
 
@@ -1682,7 +1678,8 @@ void WndMain::OpenXbe(const char *x_filename)
 // close xbe file
 void WndMain::CloseXbe()
 {
-    StopEmulation();
+    if (m_bIsStarted)
+        StopEmulation();
 
     if(m_bXbeChanged)
     {
@@ -1698,8 +1695,9 @@ void WndMain::CloseXbe()
 
     m_bXbeChanged = false;
 
-    delete m_Xbe; m_Xbe = 0;
+    delete m_Xbe; m_Xbe = nullptr;
 
+    UpdateCaption();
     RefreshMenus();
 
     // clear logo bitmap
@@ -1721,6 +1719,21 @@ void WndMain::CloseXbe()
 	DeleteObject(m_GameLogoBMP);
 
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+void WndMain::OpenMRU(int mru)
+{
+	HMENU menu = GetMenu(m_hwnd);
+	HMENU file_menu = GetSubMenu(menu, 0);
+	HMENU rxbe_menu = GetSubMenu(file_menu, 6);
+
+	char szBuffer[270];
+
+	GetMenuString(rxbe_menu, ID_FILE_RXBE_0 + mru, szBuffer, 269, MF_BYCOMMAND);
+
+	char *szFilename = (char*)((uint32)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
+
+	OpenXbe(szFilename);
 }
 
 // save xbe file
@@ -1809,13 +1822,13 @@ void WndMain::StartEmulation(HWND hwndParent)
 
         if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
-            m_bCanStart = true;
             MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }
         else
         {
+			m_bIsStarted = true;
             printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
         }
     }
@@ -1824,13 +1837,15 @@ void WndMain::StartEmulation(HWND hwndParent)
 // stop emulation
 void WndMain::StopEmulation()
 {
-    if(!IsWindow(m_hwndChild))
-    {
-        m_hwndChild = NULL;
-        SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
-        RefreshMenus();
+    m_bIsStarted = false;
+    if (m_hwndChild != NULL) {
+		if (IsWindow(m_hwndChild)) {
+			SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
+		}
+
+		m_hwndChild = NULL;
     }
 
-    SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
-    m_bCanStart = true;
+	UpdateCaption();
+    RefreshMenus();
 }
