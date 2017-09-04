@@ -82,20 +82,20 @@ OOVPA_END;
 OOVPA_NO_XREF(Get2DSurfaceDesc, 5849, 10)
 
         // Get2DSurfaceDesc+0x2B : movzx edx, byte ptr [edi+0x0D]
-        { 0x2B, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x2C, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
-        { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
+        { 0x2B, 0x0F },
+        { 0x2C, 0xB6 },
+        { 0x2D, 0x57 },
+        { 0x2E, 0x0D },
 
         // Get2DSurfaceDesc+0x52 : mov edx, [eax+0x1A14]
-        { 0x52, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x53, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x54, 0x14 }, // (Offset,Value)-Pair #7
-        { 0x55, 0x1A }, // (Offset,Value)-Pair #8
+        { 0x52, 0x8B },
+        { 0x53, 0x90 },
+        { 0x54, 0x14 },
+        { 0x55, 0x1A },
 
         // Get2DSurfaceDesc+0xAE : retn 0x0C
-        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
+        { 0xAE, 0xC2 },
+        { 0xAF, 0x0C },
 OOVPA_END;
 
 #if 0 // No longer used, replaced by generic 5455 version
@@ -104,18 +104,18 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5849, 8)
 	// D3DDevice_SetScreenSpaceOffset+0x13 : fstp [esi+0x0EF8]
-	{ 0x13, 0xD9 }, // (Offset,Value)-Pair #1
-	{ 0x14, 0x9E }, // (Offset,Value)-Pair #2
-	{ 0x15, 0xF8 }, // (Offset,Value)-Pair #3
-	{ 0x16, 0x0E }, // (Offset,Value)-Pair #4
+	{ 0x13, 0xD9 },
+	{ 0x14, 0x9E },
+	{ 0x15, 0xF8 },
+	{ 0x16, 0x0E },
 
 	// D3DDevice_SetScreenSpaceOffset+0x33 : jb +0x05
-	{ 0x33, 0x72 }, // (Offset,Value)-Pair #5
-	{ 0x34, 0x05 }, // (Offset,Value)-Pair #6
+	{ 0x33, 0x72 },
+	{ 0x34, 0x05 },
 
 	// D3DDevice_SetScreenSpaceOffset+0x46 : retn 0x08
-	{ 0x46, 0xC2 }, // (Offset,Value)-Pair #7
-	{ 0x47, 0x08 }, // (Offset,Value)-Pair #8
+	{ 0x46, 0xC2 },
+	{ 0x47, 0x08 },
 OOVPA_END;
 #endif
 
@@ -125,23 +125,23 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 11)
 
         // _D3DDevice_SetDepthClipPlanes+0x00 : mov eax, [esp+Flags]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x0C }, // (Offset,Value)-Pair #4
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x0C },
 
         // _D3DDevice_SetDepthClipPlanes+0x0F : ja short loc_27ABD0 ; jumptable 0027AB71 default case
-        { 0x0F, 0x77 }, // (Offset,Value)-Pair #5
-        { 0x10, 0x5F }, // (Offset,Value)-Pair #6
+        { 0x0F, 0x77 },
+        { 0x10, 0x5F },
 
         // _D3DDevice_SetDepthClipPlanes+0x11 : jmp ds:off_27ABEC[eax*4] ; switch jump
-        { 0x11, 0xFF }, // (Offset,Value)-Pair #7
-        { 0x12, 0x24 }, // (Offset,Value)-Pair #8
-        { 0x13, 0x85 }, // (Offset,Value)-Pair #9
+        { 0x11, 0xFF },
+        { 0x12, 0x24 },
+        { 0x13, 0x85 },
 
         // _D3DDevice_SetDepthClipPlanes+0x88 : retn 0Ch
-        { 0x88, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x89, 0x0C }, // (Offset,Value)-Pair #11
+        { 0x88, 0xC2 },
+        { 0x89, 0x0C },
 OOVPA_END;
 
 // ******************************************************************

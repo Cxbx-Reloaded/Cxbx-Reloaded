@@ -68,21 +68,21 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetRenderState_TextureFactor, 5028, 9)
 
         // D3DDevice_SetRenderState_TextureFactor+0x07 : mov eax, [esi+0x036C]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x86 }, // (Offset,Value)-Pair #2
-        { 0x09, 0x6C }, // (Offset,Value)-Pair #3
-        { 0x0A, 0x03 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x8B },
+        { 0x08, 0x86 },
+        { 0x09, 0x6C },
+        { 0x0A, 0x03 },
 
         // D3DDevice_SetRenderState_TextureFactor+0x2F : nop
-        { 0x2F, 0x90 }, // (Offset,Value)-Pair #5
+        { 0x2F, 0x90 },
 
         // D3DDevice_SetRenderState_TextureFactor+0x41 : retn 0x04
-        { 0x41, 0xC2 }, // (Offset,Value)-Pair #6
-        { 0x42, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x41, 0xC2 },
+        { 0x42, 0x04 },
 
         // D3DDevice_SetRenderState_TextureFactor+0x4E : retn 0x04
-        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x4F, 0x04 }, // (Offset,Value)-Pair #9
+        { 0x4E, 0xC2 },
+        { 0x4F, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -166,24 +166,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 5028, 12)
 
         // D3DDevice_GetBackBuffer2+0x04 : cmp eax, 0xFFFFFFFF
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xFF }, // (Offset,Value)-Pair #3
+        { 0x04, 0x83 },
+        { 0x05, 0xF8 },
+        { 0x06, 0xFF },
 
         // D3DDevice_GetBackBuffer+0x0D : jnz +0x19
-        { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
-        { 0x0E, 0x19 }, // (Offset,Value)-Pair #5
+        { 0x0D, 0x75 },
+        { 0x0E, 0x19 },
 
         // D3DDevice_GetBackBuffer+0x15 : mov esi, [ecx+eax*4+0x15C0]
-        { 0x15, 0x8B }, // (Offset,Value)-Pair #6
-        { 0x16, 0xB4 }, // (Offset,Value)-Pair #7
-        { 0x17, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x18, 0xC0 }, // (Offset,Value)-Pair #9
-        { 0x19, 0x15 }, // (Offset,Value)-Pair #10
+        { 0x15, 0x8B },
+        { 0x16, 0xB4 },
+        { 0x17, 0x81 },
+        { 0x18, 0xC0 },
+        { 0x19, 0x15 },
 
         // D3DDevice_GetBackBuffer+0x40 : retn 0x04
-        { 0x40, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x41, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x40, 0xC2 },
+        { 0x41, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -219,19 +219,19 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetViewport, 5028, 9)
 
         // D3DDevice_SetViewport+0x0A : mov eax, [esi+0x15B4]
-        { 0x0A, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0B, 0x86 }, // (Offset,Value)-Pair #2
-        { 0x0C, 0xB4 }, // (Offset,Value)-Pair #3
-        { 0x0D, 0x15 }, // (Offset,Value)-Pair #4
+        { 0x0A, 0x8B },
+        { 0x0B, 0x86 },
+        { 0x0C, 0xB4 },
+        { 0x0D, 0x15 },
 
         // D3DDevice_SetViewport+0x63 : shl edi, cl
-        { 0x63, 0xD3 }, // (Offset,Value)-Pair #5
-        { 0x64, 0xE7 }, // (Offset,Value)-Pair #6
+        { 0x63, 0xD3 },
+        { 0x64, 0xE7 },
 
         // D3DDevice_SetViewport+0xDF : and ecx, 0x0F
-        { 0xDF, 0x83 }, // (Offset,Value)-Pair #7
-        { 0xE0, 0xE1 }, // (Offset,Value)-Pair #8
-        { 0xE1, 0x0F }, // (Offset,Value)-Pair #9
+        { 0xDF, 0x83 },
+        { 0xE0, 0xE1 },
+        { 0xE1, 0x0F },
 OOVPA_END;
 
 // ******************************************************************
@@ -240,24 +240,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetLight, 5028, 12)
 
         // D3DDevice_SetLight+0x11 : mov edi, [ebp+0x390]
-        { 0x11, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x12, 0xBD }, // (Offset,Value)-Pair #2
-        { 0x13, 0x90 }, // (Offset,Value)-Pair #3
-        { 0x14, 0x03 }, // (Offset,Value)-Pair #4
+        { 0x11, 0x8B },
+        { 0x12, 0xBD },
+        { 0x13, 0x90 },
+        { 0x14, 0x03 },
 
         // D3DDevice_SetLight+0x30 : shl eax, 0x04
-        { 0x30, 0xC1 }, // (Offset,Value)-Pair #5
-        { 0x31, 0xE0 }, // (Offset,Value)-Pair #6
-        { 0x32, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x30, 0xC1 },
+        { 0x31, 0xE0 },
+        { 0x32, 0x04 },
 
         // D3DDevice_SetLight+0xBD : rep stosb
-        { 0xBD, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0xBE, 0xAB }, // (Offset,Value)-Pair #9
+        { 0xBD, 0xF3 },
+        { 0xBE, 0xAB },
 
         // D3DDevice_SetLight+0xFD : mov ecx, [ebx+0x68]
-        { 0xFD, 0x8B }, // (Offset,Value)-Pair #10
-        { 0xFE, 0x4B }, // (Offset,Value)-Pair #11
-        { 0xFF, 0x68 }, // (Offset,Value)-Pair #12
+        { 0xFD, 0x8B },
+        { 0xFE, 0x4B },
+        { 0xFF, 0x68 },
 OOVPA_END;
 
 // ******************************************************************
@@ -266,27 +266,27 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_LightEnable, 5028, 13)
 
         // D3DDevice_LightEnable+0x0F : cmp ebx, [esi+0x0390]
-        { 0x0F, 0x3B }, // (Offset,Value)-Pair #1
-        { 0x10, 0x9E }, // (Offset,Value)-Pair #2
-        { 0x11, 0x90 }, // (Offset,Value)-Pair #3
-        { 0x12, 0x03 }, // (Offset,Value)-Pair #4
+        { 0x0F, 0x3B },
+        { 0x10, 0x9E },
+        { 0x11, 0x90 },
+        { 0x12, 0x03 },
 
         // D3DDevice_LightEnable+0x6B : test eax, eax
-        { 0x6B, 0x85 }, // (Offset,Value)-Pair #5
-        { 0x6C, 0xC0 }, // (Offset,Value)-Pair #6
+        { 0x6B, 0x85 },
+        { 0x6C, 0xC0 },
 
         // D3DDevice_LightEnable+0x9E : mov eax, [eax+0x8C]
-        { 0x9E, 0x8B }, // (Offset,Value)-Pair #7
-        { 0x9F, 0x80 }, // (Offset,Value)-Pair #8
-        { 0xA0, 0x8C }, // (Offset,Value)-Pair #9
+        { 0x9E, 0x8B },
+        { 0x9F, 0x80 },
+        { 0xA0, 0x8C },
 
         // D3DDevice_LightEnable+0xBC : jz +0x12
-        { 0xBC, 0x74 }, // (Offset,Value)-Pair #10
-        { 0xBD, 0x12 }, // (Offset,Value)-Pair #11
+        { 0xBC, 0x74 },
+        { 0xBD, 0x12 },
 
         // D3DDevice_LightEnable+0xE1 : retn 0x08
-        { 0xE1, 0xC2 }, // (Offset,Value)-Pair #12
-        { 0xE2, 0x08 }, // (Offset,Value)-Pair #13
+        { 0xE1, 0xC2 },
+        { 0xE2, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -309,21 +309,21 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetTile, 5028, 11)
 
         // D3DDevice_SetTile+0x06 : sub esp, 0x18
-        { 0x06, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x07, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x08, 0x18 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x83 },
+        { 0x07, 0xEC },
+        { 0x08, 0x18 },
 
         // D3DDevice_SetTile+0x15 : cmp [esi+4], eax
-        { 0x15, 0x39 }, // (Offset,Value)-Pair #4
-        { 0x16, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x17, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x15, 0x39 },
+        { 0x16, 0x46 },
+        { 0x17, 0x04 },
 
         // D3DDevice_SetTile+0x3D : lea edi, [edx+ecx*8+0xXXXX]
-        { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
-        { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
-        { 0x3F, 0xCA }, // (Offset,Value)-Pair #9
-        { 0x42, 0x00 }, // (Offset,Value)-Pair #10
-        { 0x43, 0x00 }, // (Offset,Value)-Pair #11
+        { 0x3D, 0x8D },
+        { 0x3E, 0xBC },
+        { 0x3F, 0xCA },
+        { 0x42, 0x00 },
+        { 0x43, 0x00 },
 OOVPA_END;
 
 
@@ -445,26 +445,26 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetVertexShader, 5028, 14)
 
         // D3DDevice_SetVertexShader+0x06 : test bl, 1
-        { 0x06, 0xF6 }, // (Offset,Value)-Pair #1
-        { 0x07, 0xC3 }, // (Offset,Value)-Pair #2
-        { 0x08, 0x01 }, // (Offset,Value)-Pair #3
+        { 0x06, 0xF6 },
+        { 0x07, 0xC3 },
+        { 0x08, 0x01 },
 
         // D3DDevice_SetVertexShader+0x11 : mov eax, [esi+0x037C]
-        { 0x11, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x12, 0x86 }, // (Offset,Value)-Pair #5
-        { 0x13, 0x7C }, // (Offset,Value)-Pair #6
-        { 0x14, 0x03 }, // (Offset,Value)-Pair #7
+        { 0x11, 0x8B },
+        { 0x12, 0x86 },
+        { 0x13, 0x7C },
+        { 0x14, 0x03 },
 
         // D3DDevice_SetVertexShader+0x90 : retn 0x04
-        { 0x90, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x91, 0x04 }, // (Offset,Value)-Pair #9
+        { 0x90, 0xC2 },
+        { 0x91, 0x04 },
 
         // D3DDevice_SetVertexShader+0xB0 : mov dword ptr [eax], 0x4194C
-        { 0xB0, 0xC7 }, // (Offset,Value)-Pair #10
-        { 0xB1, 0x00 }, // (Offset,Value)-Pair #11
-        { 0xB2, 0x4C }, // (Offset,Value)-Pair #12
-        { 0xB3, 0x19 }, // (Offset,Value)-Pair #13
-        { 0xB4, 0x04 }, // (Offset,Value)-Pair #14
+        { 0xB0, 0xC7 },
+        { 0xB1, 0x00 },
+        { 0xB2, 0x4C },
+        { 0xB3, 0x19 },
+        { 0xB4, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -520,25 +520,25 @@ OOVPA_END;
 OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle, 5028, 9)
 
         // D3D_KickOffAndWaitForIdle+0x00 : mov eax, [addr]
-        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+        { 0x00, 0xA1 },
 
         // D3D_KickOffAndWaitForIdle+0x05 : mov ecx, [eax+0x2C]
-        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
-        { 0x06, 0x48 }, // (Offset,Value)-Pair #3
-        { 0x07, 0x2C }, // (Offset,Value)-Pair #4
+        { 0x05, 0x8B },
+        { 0x06, 0x48 },
+        { 0x07, 0x2C },
 
         // D3D_KickOffAndWaitForIdle+0x08 : push 2
-        { 0x08, 0x6A }, // (Offset,Value)-Pair #5
-        { 0x09, 0x02 }, // (Offset,Value)-Pair #6
+        { 0x08, 0x6A },
+        { 0x09, 0x02 },
 
         // D3D_KickOffAndWaitForIdle+0x0A : push ecx
-        { 0x0A, 0x51 }, // (Offset,Value)-Pair #7
+        { 0x0A, 0x51 },
 
         // D3D_KickOffAndWaitForIdle+0x0B : call [addr]
-        { 0x0B, 0xE8 }, // (Offset,Value)-Pair #8
+        { 0x0B, 0xE8 },
 
         // D3D_KickOffAndWaitForIdle+0x10 : retn
-        { 0x10, 0xC3 }, // (Offset,Value)-Pair #9
+        { 0x10, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -547,20 +547,20 @@ OOVPA_END;
 OOVPA_NO_XREF(Get2DSurfaceDesc, 5028, 10)
 
         // Get2DSurfaceDesc+0x2B : movzx edx, byte ptr [edi+0x0D]
-        { 0x2B, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x2C, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
-        { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
+        { 0x2B, 0x0F },
+        { 0x2C, 0xB6 },
+        { 0x2D, 0x57 },
+        { 0x2E, 0x0D },
 
         // Get2DSurfaceDesc+0x52 : mov edx, [eax+0x15C0]
-        { 0x52, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x53, 0x90 }, // (Offset,Value)-Pair #6
-        { 0x54, 0xC0 }, // (Offset,Value)-Pair #7
-        { 0x55, 0x15 }, // (Offset,Value)-Pair #8
+        { 0x52, 0x8B },
+        { 0x53, 0x90 },
+        { 0x54, 0xC0 },
+        { 0x55, 0x15 },
 
         // Get2DSurfaceDesc+0xAE : retn 0x0C
-        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
+        { 0xAE, 0xC2 },
+        { 0xAF, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -588,22 +588,22 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_AddRef, 5028, 10)
 
         // D3DDevice_AddRef+0x00 : mov eax, [addr]
-        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+        { 0x00, 0xA1 },
 
         // D3DDevice_AddRef+0x05 : mov ecx, [eax+0x04FC]
-        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
-        { 0x06, 0x88 }, // (Offset,Value)-Pair #3
-        { 0x07, 0xFC }, // (Offset,Value)-Pair #4
-        { 0x08, 0x04 }, // (Offset,Value)-Pair #5
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0xFC },
+        { 0x08, 0x04 },
 
         // D3DDevice_AddRef+0x0B : inc ecx
-        { 0x0B, 0x41 }, // (Offset,Value)-Pair #6
+        { 0x0B, 0x41 },
 
         // D3DDevice_AddRef+0x0C : mov [eax+0x04FC], ecx
-        { 0x0C, 0x89 }, // (Offset,Value)-Pair #7
-        { 0x0D, 0x88 }, // (Offset,Value)-Pair #8
-        { 0x0E, 0xFC }, // (Offset,Value)-Pair #9
-        { 0x0F, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x0C, 0x89 },
+        { 0x0D, 0x88 },
+        { 0x0E, 0xFC },
+        { 0x0F, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -770,24 +770,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_End, 5028, 12)
 
         // D3DDevice_End+0x13 : mov dword ptr [eax], 0x417FC
-        { 0x13, 0xC7 }, // (Offset,Value)-Pair #1
-        { 0x14, 0x00 }, // (Offset,Value)-Pair #2
-        { 0x15, 0xFC }, // (Offset,Value)-Pair #3
-        { 0x16, 0x17 }, // (Offset,Value)-Pair #4
-        { 0x17, 0x04 }, // (Offset,Value)-Pair #5
-        { 0x18, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x13, 0xC7 },
+        { 0x14, 0x00 },
+        { 0x15, 0xFC },
+        { 0x16, 0x17 },
+        { 0x17, 0x04 },
+        { 0x18, 0x00 },
 
         // D3DDevice_End+0x28 : test ah, 0x10
-        { 0x28, 0xF6 }, // (Offset,Value)-Pair #7
-        { 0x29, 0xC4 }, // (Offset,Value)-Pair #8
-        { 0x2A, 0x10 }, // (Offset,Value)-Pair #9
+        { 0x28, 0xF6 },
+        { 0x29, 0xC4 },
+        { 0x2A, 0x10 },
 
         // D3DDevice_End+0x2B : jz +0x07
-        { 0x2B, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x2C, 0x07 }, // (Offset,Value)-Pair #11
+        { 0x2B, 0x74 },
+        { 0x2C, 0x07 },
 
         // D3DDevice_End+0x3C : retn
-        { 0x3C, 0xC3 }, // (Offset,Value)-Pair #12
+        { 0x3C, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -828,24 +828,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 5028, 12)
 
         // D3DDevice_GetOverlayUpdateStatus+0x05 : mov ecx, [eax+0x2BA8]
-        { 0x05, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x06, 0x88 }, // (Offset,Value)-Pair #2
-        { 0x07, 0xA8 }, // (Offset,Value)-Pair #3
-        { 0x08, 0x1F }, // (Offset,Value)-Pair #4
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0xA8 },
+        { 0x08, 0x1F },
 
         // D3DDevice_GetOverlayUpdateStatus+0x0C : mov esi, [eax+0x2580]
-        { 0x0C, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x0D, 0xB0 }, // (Offset,Value)-Pair #6
-        { 0x0E, 0x80 }, // (Offset,Value)-Pair #7
-        { 0x0F, 0x19 }, // (Offset,Value)-Pair #8
+        { 0x0C, 0x8B },
+        { 0x0D, 0xB0 },
+        { 0x0E, 0x80 },
+        { 0x0F, 0x19 },
 
         // D3DDevice_GetOverlayUpdateStatus+0x16 : setnz dl
-        { 0x16, 0x0F }, // (Offset,Value)-Pair #9
-        { 0x17, 0x95 }, // (Offset,Value)-Pair #10
-        { 0x18, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x16, 0x0F },
+        { 0x17, 0x95 },
+        { 0x18, 0xC2 },
 
         // D3DDevice_GetOverlayUpdateStatus+0x1C : retn
-        { 0x1C, 0xC3 }, // (Offset,Value)-Pair #12
+        { 0x1C, 0xC3 },
 OOVPA_END;
 #endif
 // ******************************************************************
@@ -959,24 +959,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 5028, 12)
 
         // D3DDevice_SetSwapCallback+0x00 : mov eax, [esp+0x04]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x04 }, // (Offset,Value)-Pair #4
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
 
         // D3DDevice_SetSwapCallback+0x04 : mov ecx, [addr]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x05, 0x0D }, // (Offset,Value)-Pair #6
+        { 0x04, 0x8B },
+        { 0x05, 0x0D },
 
         // D3DDevice_SetSwapCallback+0x0A : mov [ecx+0x194C], eax
-        { 0x0A, 0x89 }, // (Offset,Value)-Pair #7
-        { 0x0B, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0x4C }, // (Offset,Value)-Pair #9 // 4C vs 50
-        { 0x0D, 0x19 }, // (Offset,Value)-Pair #10
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0C, 0x4C }, // 4C vs 50
+        { 0x0D, 0x19 },
 
         // D3DDevice_SetSwapCallback+0x10 : retn 0x04
-        { 0x10, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x11, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x10, 0xC2 },
+        { 0x11, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -985,24 +985,24 @@ OOVPA_END;
 OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 5028, 12)
 
         // D3DDevice_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x04 }, // (Offset,Value)-Pair #4
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
 
         // D3DDevice_SetVerticalBlankCallback+0x04 : mov ecx, [addr]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x05, 0x0D }, // (Offset,Value)-Pair #6
+        { 0x04, 0x8B },
+        { 0x05, 0x0D },
 
         // D3DDevice_SetVerticalBlankCallback+0x0A : mov [ecx+0x1950], eax
-        { 0x0A, 0x89 }, // (Offset,Value)-Pair #7
-        { 0x0B, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9 // 4C vs 50
-        { 0x0D, 0x19 }, // (Offset,Value)-Pair #10
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0C, 0x50 }, // 4C vs 50
+        { 0x0D, 0x19 },
 
         // D3DDevice_SetVerticalBlankCallback+0x10 : retn 0x04
-        { 0x10, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x11, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x10, 0xC2 },
+        { 0x11, 0x04 },
 OOVPA_END;
 
 // ******************************************************************

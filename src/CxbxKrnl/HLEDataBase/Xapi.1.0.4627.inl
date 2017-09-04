@@ -73,20 +73,20 @@ OOVPA_XREF(XID_fCloseDevice, 4928, 11,
     XREF_FCLOSEDEVICE,
     XRefZero)
 
-        { 0x13, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x14, 0x86 }, // (Offset,Value)-Pair #2
-        { 0x15, 0xA3 }, // (Offset,Value)-Pair #3
+        { 0x13, 0x8B },
+        { 0x14, 0x86 },
+        { 0x15, 0xA3 },
 
-        { 0x4C, 0x89 }, // (Offset,Value)-Pair #4
-        { 0x4D, 0x86 }, // (Offset,Value)-Pair #5
-        { 0x4E, 0x9E }, // (Offset,Value)-Pair #6
+        { 0x4C, 0x89 },
+        { 0x4D, 0x86 },
+        { 0x4E, 0x9E },
 
-        { 0x87, 0x89 }, // (Offset,Value)-Pair #7
-        { 0x88, 0x86 }, // (Offset,Value)-Pair #8
-        { 0x89, 0xA7 }, // (Offset,Value)-Pair #9
+        { 0x87, 0x89 },
+        { 0x88, 0x86 },
+        { 0x89, 0xA7 },
 
-        { 0x95, 0xC9 }, // (Offset,Value)-Pair #10
-        { 0x96, 0xC3 }, // (Offset,Value)-Pair #11
+        { 0x95, 0xC9 },
+        { 0x96, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -94,22 +94,22 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(XInputGetState, 4928, 12)
 
-        { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
-        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x8B },
+        { 0x0F, 0x8A },
+        { 0x10, 0xA3 },
 
-        { 0x1A, 0x6A }, // (Offset,Value)-Pair #4
-        { 0x1B, 0x57 }, // (Offset,Value)-Pair #5
+        { 0x1A, 0x6A },
+        { 0x1B, 0x57 },
 
-        { 0x1D, 0xEB }, // (Offset,Value)-Pair #6
-        { 0x1E, 0x3E }, // (Offset,Value)-Pair #7
+        { 0x1D, 0xEB },
+        { 0x1E, 0x3E },
 
-        { 0x3A, 0x8B }, // (Offset,Value)-Pair #8
-        { 0x3B, 0x8A }, // (Offset,Value)-Pair #9
-        { 0x3C, 0xA3 }, // (Offset,Value)-Pair #10
+        { 0x3A, 0x8B },
+        { 0x3B, 0x8A },
+        { 0x3C, 0xA3 },
 
-        { 0x69, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x6A, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x69, 0xC2 },
+        { 0x6A, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
