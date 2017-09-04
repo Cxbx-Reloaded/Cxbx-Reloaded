@@ -159,22 +159,22 @@ OOVPA_XREF(XACT_CEngine_RegisterStreamedWaveBank, 4928, 13,
     XRefZero)
 
         // XACT_CEngine_RegisterStreamedWaveBank+0x07 : push 0x7C
-		{ 0x07, 0x6A }, // (Offset,Value)-Pair #1
-		{ 0x08, 0x7C }, // (Offset,Value)-Pair #2
+		{ 0x07, 0x6A },
+		{ 0x08, 0x7C },
 		// XACT_CEngine_RegisterStreamedWaveBank+0x30 : add esi, 0x8007000E
-		{ 0x30, 0x81 }, // (Offset,Value)-Pair #3
-		{ 0x31, 0xC7 }, // (Offset,Value)-Pair #4
-		{ 0x32, 0x0E }, // (Offset,Value)-Pair #5
-		{ 0x33, 0x00 }, // (Offset,Value)-Pair #6
-		{ 0x34, 0x07 }, // (Offset,Value)-Pair #7
-		{ 0x35, 0x80 }, // (Offset,Value)-Pair #8
+		{ 0x30, 0x81 },
+		{ 0x31, 0xC7 },
+		{ 0x32, 0x0E },
+		{ 0x33, 0x00 },
+		{ 0x34, 0x07 },
+		{ 0x35, 0x80 },
 		// XACT_CEngine_RegisterStreamedWaveBank+0x50 : add ecx, 0x44
-		{ 0x50, 0x83 }, // (Offset,Value)-Pair #9
-		{ 0x51, 0xC1 }, // (Offset,Value)-Pair #10
-		{ 0x52, 0x44 }, // (Offset,Value)-Pair #11
+		{ 0x50, 0x83 },
+		{ 0x51, 0xC1 },
+		{ 0x52, 0x44 },
 		// XACT_CEngine_RegisterStreamedWaveBank+0x71 : retn 0x0C
-		{ 0x71, 0xC2 }, // (Offset,Value)-Pair #12
-		{ 0x72, 0x0C }, // (Offset,Value)-Pair #13
+		{ 0x71, 0xC2 },
+		{ 0x72, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -248,22 +248,22 @@ OOVPA_XREF(XACT_CEngine_CreateSoundBank, 4928, 13,
     XREF_XACT_CEngine_CreateSoundBank,
     XRefZero)
 		// XACT::CEngine::CreateSoundBank+0x02 : push 0x34
-		{ 0x02, 0x6A }, // (Offset,Value)-Pair #1
-		{ 0x03, 0x34 }, // (Offset,Value)-Pair #2
+		{ 0x02, 0x6A },
+		{ 0x03, 0x34 },
 		// XACT::CEngine::CreateSoundBank+0x2B : add edi, 0x8007000E
-		{ 0x2B, 0x81 }, // (Offset,Value)-Pair #3
-		{ 0x2C, 0xC7 }, // (Offset,Value)-Pair #4
-		{ 0x2D, 0x0E }, // (Offset,Value)-Pair #5
-		{ 0x2E, 0x00 }, // (Offset,Value)-Pair #6
-		{ 0x2F, 0x07 }, // (Offset,Value)-Pair #7
-		{ 0x30, 0x80 }, // (Offset,Value)-Pair #8
+		{ 0x2B, 0x81 },
+		{ 0x2C, 0xC7 },
+		{ 0x2D, 0x0E },
+		{ 0x2E, 0x00 },
+		{ 0x2F, 0x07 },
+		{ 0x30, 0x80 },
 		// XACT::CEngine::CreateSoundBank+0x4F : add ecx, 0x4C
-		{ 0x4F, 0x83 }, // (Offset,Value)-Pair #9
-		{ 0x50, 0xC1 }, // (Offset,Value)-Pair #10
-		{ 0x51, 0x4C }, // (Offset,Value)-Pair #11
+		{ 0x4F, 0x83 },
+		{ 0x50, 0xC1 },
+		{ 0x51, 0x4C },
 		// XACT::CEngine::CreateSoundBank+0x73 : retn 0x10
-		{ 0x73, 0xC2 }, // (Offset,Value)-Pair #12
-		{ 0x74, 0x10 }, // (Offset,Value)-Pair #13
+		{ 0x73, 0xC2 },
+		{ 0x74, 0x10 },
 OOVPA_END;
 
 // ******************************************************************

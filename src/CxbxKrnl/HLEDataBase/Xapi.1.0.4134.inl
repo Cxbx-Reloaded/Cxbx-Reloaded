@@ -38,28 +38,28 @@
 OOVPA_NO_XREF(XInputOpen, 4134, 12)
 
         // XInputOpen+0x13 : jmp +0x18
-        { 0x13, 0xEB }, // (Offset,Value)-Pair #1
-        { 0x14, 0x18 }, // (Offset,Value)-Pair #2
+        { 0x13, 0xEB },
+        { 0x14, 0x18 },
 
         // XInputOpen+0x4A : add edx, 0x10
-        { 0x4A, 0x83 }, // (Offset,Value)-Pair #3
-        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #4
-        { 0x4C, 0x10 }, // (Offset,Value)-Pair #5
+        { 0x4A, 0x83 },
+        { 0x4B, 0xC2 },
+        { 0x4C, 0x10 },
 
         // XInputOpen+0x5B : jnz +0x06
-        { 0x5B, 0x75 }, // (Offset,Value)-Pair #6
-        { 0x5C, 0x06 }, // (Offset,Value)-Pair #7
+        { 0x5B, 0x75 },
+        { 0x5C, 0x06 },
 
         // XInputOpen+0x68 : push 0x57
-        { 0x68, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x69, 0x57 }, // (Offset,Value)-Pair #9
+        { 0x68, 0x6A },
+        { 0x69, 0x57 },
 
         // XInputOpen+0x71 : leave
-        { 0x71, 0xC9 }, // (Offset,Value)-Pair #10
+        { 0x71, 0xC9 },
 
         // XInputOpen+0x72 : retn 0x10
-        { 0x72, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x73, 0x10 }, // (Offset,Value)-Pair #12
+        { 0x72, 0xC2 },
+        { 0x73, 0x10 },
 OOVPA_END;
 
 // ******************************************************************
@@ -68,26 +68,26 @@ OOVPA_END;
 OOVPA_NO_XREF(XInputGetState, 4134, 12)
 
         // XInputGetState+0x0E : cmp byte ptr [edx+0xA3], 1
-        { 0x0E, 0x80 }, // (Offset,Value)-Pair #1
-        { 0x0F, 0xBA }, // (Offset,Value)-Pair #2
-        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x80 },
+        { 0x0F, 0xBA },
+        { 0x10, 0xA3 },
 
         // XInputGetState+0x17 : push 0x57
-        { 0x17, 0x6A }, // (Offset,Value)-Pair #4
-        { 0x18, 0x57 }, // (Offset,Value)-Pair #5
+        { 0x17, 0x6A },
+        { 0x18, 0x57 },
 
         // XInputGetState+0x1A : jmp +0x46
-        { 0x1A, 0xEB }, // (Offset,Value)-Pair #6
-        { 0x1B, 0x46 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0xEB },
+        { 0x1B, 0x46 },
 
         // XInputGetState+0x28 : mov ebx, 0x048F
-        { 0x28, 0xBB }, // (Offset,Value)-Pair #8
-        { 0x29, 0x8F }, // (Offset,Value)-Pair #9
-        { 0x2A, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x28, 0xBB },
+        { 0x29, 0x8F },
+        { 0x2A, 0x04 },
 
         // XInputGetState+0x6E : retn 8
-        { 0x6E, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x6F, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x6E, 0xC2 },
+        { 0x6F, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -96,20 +96,20 @@ OOVPA_END;
 OOVPA_NO_XREF(XMountUtilityDrive, 4134, 10)
 
         // XMountUtilityDrive+0x03 : sub esp, 0x0114
-        { 0x03, 0x81 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x05, 0x14 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x01 }, // (Offset,Value)-Pair #4
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+        { 0x06, 0x01 },
 
         // XMountUtilityDrive+0x45 : push 0x0104
-        { 0x45, 0x68 }, // (Offset,Value)-Pair #5
-        { 0x46, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x47, 0x01 }, // (Offset,Value)-Pair #7
+        { 0x45, 0x68 },
+        { 0x46, 0x04 },
+        { 0x47, 0x01 },
 
         // XMountUtilityDrive+0xAA : lea eax, [ebp-0x10]
-        { 0xAA, 0x8D }, // (Offset,Value)-Pair #8
-        { 0xAB, 0x45 }, // (Offset,Value)-Pair #9
-        { 0xAC, 0xF0 }, // (Offset,Value)-Pair #10
+        { 0xAA, 0x8D },
+        { 0xAB, 0x45 },
+        { 0xAC, 0xF0 },
 OOVPA_END;
 #if 0 // Moved to 3911
 // ******************************************************************
@@ -117,18 +117,18 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(XInputPoll, 4134, 10)
 
-        { 0x16, 0xF6 }, // (Offset,Value)-Pair #1
-        { 0x17, 0x41 }, // (Offset,Value)-Pair #2
-        { 0x18, 0x04 }, // (Offset,Value)-Pair #3
-        { 0x19, 0x02 }, // (Offset,Value)-Pair #4
+        { 0x16, 0xF6 },
+        { 0x17, 0x41 },
+        { 0x18, 0x04 },
+        { 0x19, 0x02 },
 
-        { 0x25, 0x39 }, // (Offset,Value)-Pair #5
-        { 0x26, 0x70 }, // (Offset,Value)-Pair #6
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x39 },
+        { 0x26, 0x70 },
+        { 0x27, 0x04 },
 
-        { 0x3A, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x3B, 0xC0 }, // (Offset,Value)-Pair #9
-        { 0x3C, 0x52 }, // (Offset,Value)-Pair #10
+        { 0x3A, 0x83 },
+        { 0x3B, 0xC0 },
+        { 0x3C, 0x52 },
 OOVPA_END;
 #endif
 #if 0 // version 4361, Not 4134

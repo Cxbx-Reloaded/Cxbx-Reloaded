@@ -40,28 +40,28 @@
 OOVPA_NO_XREF(XInputGetCapabilities, 4361, 14)
 
         // XInputGetCapabilities+0x03 : sub esp, 0x48
-        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x05, 0x48 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x48 },
 
         // XInputGetCapabilities+0x24 : test byte ptr [esi+4], 2
-        { 0x24, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x25, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x26, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x27, 0x02 }, // (Offset,Value)-Pair #7
+        { 0x24, 0xF6 },
+        { 0x25, 0x46 },
+        { 0x26, 0x04 },
+        { 0x27, 0x02 },
 
         // XInputGetCapabilities+0x3A : stosb
-        { 0x3A, 0xAA }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAA },
 
         // XInputGetCapabilities+0x7D : mov [ebp+var_48], 0x30
-        { 0x7D, 0xC6 }, // (Offset,Value)-Pair #9
-        { 0x7E, 0x45 }, // (Offset,Value)-Pair #10
-        { 0x7F, 0xB8 }, // (Offset,Value)-Pair #11
-        { 0x80, 0x30 }, // (Offset,Value)-Pair #12
+        { 0x7D, 0xC6 },
+        { 0x7E, 0x45 },
+        { 0x7F, 0xB8 },
+        { 0x80, 0x30 },
 
         // XInputGetCapabilities+0xEE : cmp [eax], ebx
-        { 0xEE, 0x39 }, // (Offset,Value)-Pair #13
-        { 0xEF, 0x18 }, // (Offset,Value)-Pair #14
+        { 0xEE, 0x39 },
+        { 0xEF, 0x18 },
 OOVPA_END;
 
 // ******************************************************************
@@ -70,26 +70,26 @@ OOVPA_END;
 OOVPA_NO_XREF(XInputGetState, 4361, 12)
 
         // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
-        { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
-        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x8B },
+        { 0x0F, 0x8A },
+        { 0x10, 0xA3 },
 
         // XInputGetState+0x1D : push 0x57
-        { 0x1D, 0x6A }, // (Offset,Value)-Pair #4
-        { 0x1E, 0x57 }, // (Offset,Value)-Pair #5
+        { 0x1D, 0x6A },
+        { 0x1E, 0x57 },
 
         // XInputGetState+0x20 : jmp +0x3E
-        { 0x20, 0xEB }, // (Offset,Value)-Pair #6
-        { 0x21, 0x3E }, // (Offset,Value)-Pair #7
+        { 0x20, 0xEB },
+        { 0x21, 0x3E },
 
         // XInputGetState+0x2E : mov ebx, 0x048F
-        { 0x2E, 0xBB }, // (Offset,Value)-Pair #8
-        { 0x2F, 0x8F }, // (Offset,Value)-Pair #9
-        { 0x30, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x2E, 0xBB },
+        { 0x2F, 0x8F },
+        { 0x30, 0x04 },
 
         // XInputGetState+0x6C : retn 8
-        { 0x6C, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x6D, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x6C, 0xC2 },
+        { 0x6D, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -98,18 +98,18 @@ OOVPA_END;
 OOVPA_NO_XREF(CreateThread, 4361, 8)
 
         // CreateThread+0x0A : mov eax, ds:10130h
-        { 0x0A, 0xA1 }, // (Offset,Value)-Pair #1
-        { 0x0B, 0x30 }, // (Offset,Value)-Pair #2
-        { 0x0C, 0x01 }, // (Offset,Value)-Pair #3
+        { 0x0A, 0xA1 },
+        { 0x0B, 0x30 },
+        { 0x0C, 0x01 },
 
         // CreateThread+0x1C : and ecx, 0xFFFFFF01
-        { 0x1C, 0x81 }, // (Offset,Value)-Pair #4
-        { 0x1D, 0xE1 }, // (Offset,Value)-Pair #5
-        { 0x1E, 0x01 }, // (Offset,Value)-Pair #6
+        { 0x1C, 0x81 },
+        { 0x1D, 0xE1 },
+        { 0x1E, 0x01 },
 
         // CreateThread+0x6B : retn 0x18
-        { 0x6B, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x6C, 0x18 }, // (Offset,Value)-Pair #8
+        { 0x6B, 0xC2 },
+        { 0x6C, 0x18 },
 OOVPA_END;
 
 // ******************************************************************
@@ -118,22 +118,22 @@ OOVPA_END;
 OOVPA_NO_XREF(CloseHandle, 4361, 10)
 
         // CloseHandle+0x00 : push [esp+4]
-        { 0x00, 0xFF }, // (Offset,Value)-Pair #1
-        { 0x01, 0x74 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x04 }, // (Offset,Value)-Pair #4
+        { 0x00, 0xFF },
+        { 0x01, 0x74 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
 
         // CloseHandle+0x04 : call ds:[addr]
-        { 0x04, 0xFF }, // (Offset,Value)-Pair #5
-        { 0x05, 0x15 }, // (Offset,Value)-Pair #6
+        { 0x04, 0xFF },
+        { 0x05, 0x15 },
 
         // CloseHandle+0x11 : jmp +0x08
-        { 0x11, 0xEB }, // (Offset,Value)-Pair #7
-        { 0x12, 0x08 }, // (Offset,Value)-Pair #8
+        { 0x11, 0xEB },
+        { 0x12, 0x08 },
 
         // CloseHandle+0x1B : retn 4
-        { 0x1B, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x1C, 0x04 }, // (Offset,Value)-Pair #10
+        { 0x1B, 0xC2 },
+        { 0x1C, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -142,19 +142,19 @@ OOVPA_END;
 OOVPA_NO_XREF(XapiInitProcess, 4361, 7)
 
         // XapiInitProcess+0x00 : sub esp, 30h
-        { 0x05, 0x30 }, // (Offset,Value)-Pair #1
+        { 0x05, 0x30 },
 
         // XapiInitProcess+0x0F : push 0x0C
-        { 0x0F, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x10, 0x0C }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x6A },
+        { 0x10, 0x0C },
 
         // XapiInitProcess+0x17 : repe stosd
-        { 0x17, 0xF3 }, // (Offset,Value)-Pair #4
-        { 0x18, 0xAB }, // (Offset,Value)-Pair #5
+        { 0x17, 0xF3 },
+        { 0x18, 0xAB },
 
         // XapiInitProcess+0x42 : jnz +0x0B
-        { 0x42, 0x75 }, // (Offset,Value)-Pair #6
-        { 0x43, 0x0B }, // (Offset,Value)-Pair #7
+        { 0x42, 0x75 },
+        { 0x43, 0x0B },
 OOVPA_END;
 */
 

@@ -39,22 +39,22 @@
 OOVPA_NO_XREF(XGSwizzleBox, 4627, 10)
 
         // XGSwizzleBox+0x60 : sub ecx, [eax]
-        { 0x60, 0x2B }, // (Offset,Value)-Pair #1
-        { 0x61, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x60, 0x2B },
+        { 0x61, 0x08 },
 
         // XGSwizzleBox+0x8E : lea ecx, [ebp+0xD8]
-        { 0x8E, 0x8D }, // (Offset,Value)-Pair #3
-        { 0x8F, 0x4D }, // (Offset,Value)-Pair #4
-        { 0x90, 0xD8 }, // (Offset,Value)-Pair #5
+        { 0x8E, 0x8D },
+        { 0x8F, 0x4D },
+        { 0x90, 0xD8 },
 
         // XGSwizzleBox+0xD5 : shl eax, 2
-        { 0xD5, 0xC1 }, // (Offset,Value)-Pair #6
-        { 0xD6, 0xE0 }, // (Offset,Value)-Pair #7
-        { 0xD7, 0x02 }, // (Offset,Value)-Pair #8
+        { 0xD5, 0xC1 },
+        { 0xD6, 0xE0 },
+        { 0xD7, 0x02 },
 
         // XGSwizzleBox+0xE2 : test ebx, ebx
-        { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
-        { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
+        { 0xE2, 0x85 },
+        { 0xE3, 0xDB },
 OOVPA_END;
 #endif
 #if 0 // No longer used, replaced by generic 3911 version

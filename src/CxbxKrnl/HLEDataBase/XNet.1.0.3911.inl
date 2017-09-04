@@ -41,21 +41,21 @@ OOVPA_XREF(XNetStartup, 3911, 9,
     XRefOne)
 
         // XNetStartup+0x07 : call [XnInit]
-        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ), 
 
         // XNetStartup+0x00 : push 0
-        { 0x00, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x01, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x00, 0x6A },
+        { 0x01, 0x00 },
 
         // XNetStartup+0x02 : push [esp+0x08]
-        { 0x02, 0xFF }, // (Offset,Value)-Pair #4
-        { 0x03, 0x74 }, // (Offset,Value)-Pair #5
-        { 0x04, 0x24 }, // (Offset,Value)-Pair #6
-        { 0x05, 0x08 }, // (Offset,Value)-Pair #7
+        { 0x02, 0xFF },
+        { 0x03, 0x74 },
+        { 0x04, 0x24 },
+        { 0x05, 0x08 },
 
         // XNetStartup+0x0B : retn 0x04
-        { 0x0B, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0x04 }, // (Offset,Value)-Pair #9
+        { 0x0B, 0xC2 },
+        { 0x0C, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -67,21 +67,21 @@ OOVPA_XREF(WSAStartup, 3911, 11,
     XRefOne)
 
         // WSAStartup+0x07 : call [XnInit]
-        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ), 
 
         // WSAStartup+0x01 : push 1; xor ebx, ebx
-        { 0x01, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x02, 0x01 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x33 }, // (Offset,Value)-Pair #4
-        { 0x04, 0xDB }, // (Offset,Value)-Pair #5
+        { 0x01, 0x6A },
+        { 0x02, 0x01 },
+        { 0x03, 0x33 },
+        { 0x04, 0xDB },
 
         // WSAStartup+0x1B : mov word ptr [ecx+2], 0x0202
-        { 0x1B, 0x66 }, // (Offset,Value)-Pair #6
-        { 0x1C, 0xC7 }, // (Offset,Value)-Pair #7
-        { 0x1D, 0x41 }, // (Offset,Value)-Pair #8
-        { 0x1E, 0x02 }, // (Offset,Value)-Pair #9
-        { 0x1F, 0x02 }, // (Offset,Value)-Pair #10
-        { 0x20, 0x02 }, // (Offset,Value)-Pair #11
+        { 0x1B, 0x66 },
+        { 0x1C, 0xC7 },
+        { 0x1D, 0x41 },
+        { 0x1E, 0x02 },
+        { 0x1F, 0x02 },
+        { 0x20, 0x02 },
 OOVPA_END;
 
 // ******************************************************************
@@ -93,21 +93,21 @@ OOVPA_XREF(XnInit, 3911, 11,
     XRefZero)
 
         // XnInit+0x31 : push 0x3554454E
-        { 0x31, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x32, 0x4E }, // (Offset,Value)-Pair #2
-        { 0x33, 0x45 }, // (Offset,Value)-Pair #3
-        { 0x34, 0x54 }, // (Offset,Value)-Pair #4
-        { 0x35, 0x35 }, // (Offset,Value)-Pair #5
+        { 0x31, 0x68 },
+        { 0x32, 0x4E },
+        { 0x33, 0x45 },
+        { 0x34, 0x54 },
+        { 0x35, 0x35 },
 
         // XnInit+0xA4 : inc dword ptr [eax+0x2B4]
-        { 0xA4, 0xFF }, // (Offset,Value)-Pair #6
-        { 0xA5, 0x80 }, // (Offset,Value)-Pair #7
-        { 0xA6, 0xB4 }, // (Offset,Value)-Pair #8
-        { 0xA7, 0x02 }, // (Offset,Value)-Pair #9
+        { 0xA4, 0xFF },
+        { 0xA5, 0x80 },
+        { 0xA6, 0xB4 },
+        { 0xA7, 0x02 },
 
         // XnInit+0xBD : retn 0x08
-        { 0xBD, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0xBE, 0x08 }, // (Offset,Value)-Pair #11
+        { 0xBD, 0xC2 },
+        { 0xBE, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -116,20 +116,20 @@ OOVPA_END;
 OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
 
         // XNetGetEthernetLinkStatus+0x12 : cmpxchg [ecx], edx
-        { 0x12, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x13, 0xB1 }, // (Offset,Value)-Pair #2
-        { 0x14, 0x11 }, // (Offset,Value)-Pair #3
+        { 0x12, 0x0F },
+        { 0x13, 0xB1 },
+        { 0x14, 0x11 },
 
         // XNetStartup+0x17 : jz +0x08
-        { 0x17, 0x74 }, // (Offset,Value)-Pair #4
-        { 0x18, 0x08 }, // (Offset,Value)-Pair #5
+        { 0x17, 0x74 },
+        { 0x18, 0x08 },
 
         // XNetStartup+0x1F : jmp +0xE2
-        { 0x1F, 0xEB }, // (Offset,Value)-Pair #6
-        { 0x20, 0xE2 }, // (Offset,Value)-Pair #7
+        { 0x1F, 0xEB },
+        { 0x20, 0xE2 },
 
         // XNetStartup+0x3F : retn
-        { 0x3F, 0xC3 }, // (Offset,Value)-Pair #8
+        { 0x3F, 0xC3 },
 OOVPA_END;
 
 
@@ -139,19 +139,19 @@ OOVPA_END;
 OOVPA_NO_XREF(socket, 3911, 9)
 
         // socket+0x10 : push 0x276D
-        { 0x10, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x11, 0x6D }, // (Offset,Value)-Pair #2
-        { 0x12, 0x27 }, // (Offset,Value)-Pair #3
+        { 0x10, 0x68 },
+        { 0x11, 0x6D },
+        { 0x12, 0x27 },
 
         // socket+0x52 : cmp eax, 0x11
-        { 0x52, 0x83 }, // (Offset,Value)-Pair #4
-        { 0x53, 0xF8 }, // (Offset,Value)-Pair #5
-        { 0x54, 0x11 }, // (Offset,Value)-Pair #6
+        { 0x52, 0x83 },
+        { 0x53, 0xF8 },
+        { 0x54, 0x11 },
 
         // socket+0xD9 : mov [esi+4], ecx
-        { 0xD9, 0x89 }, // (Offset,Value)-Pair #7
-        { 0xDA, 0x4E }, // (Offset,Value)-Pair #8
-        { 0xDB, 0x04 }, // (Offset,Value)-Pair #9
+        { 0xD9, 0x89 },
+        { 0xDA, 0x4E },
+        { 0xDB, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -160,22 +160,22 @@ OOVPA_END;
 OOVPA_NO_XREF(bind, 3911, 10)
 
         // bind+0x11 : push 0x276D
-        { 0x11, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x12, 0x6D }, // (Offset,Value)-Pair #2
-        { 0x13, 0x27 }, // (Offset,Value)-Pair #3
+        { 0x11, 0x68 },
+        { 0x12, 0x6D },
+        { 0x13, 0x27 },
 
         // bind+0x4C : mov [eax], cx
-        { 0x4C, 0x66 }, // (Offset,Value)-Pair #4
-        { 0x4D, 0x89 }, // (Offset,Value)-Pair #5
-        { 0x4E, 0x08 }, // (Offset,Value)-Pair #6
+        { 0x4C, 0x66 },
+        { 0x4D, 0x89 },
+        { 0x4E, 0x08 },
 
         // bind+0x5B : xor eax, eax
-        { 0x5B, 0x33 }, // (Offset,Value)-Pair #7
-        { 0x5C, 0xC0 }, // (Offset,Value)-Pair #8
+        { 0x5B, 0x33 },
+        { 0x5C, 0xC0 },
 
         // bind+0x80 : retn 0x0C
-        { 0x80, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x81, 0x0C }, // (Offset,Value)-Pair #10
+        { 0x80, 0xC2 },
+        { 0x81, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -184,21 +184,21 @@ OOVPA_END;
 OOVPA_NO_XREF(listen, 3911, 9)
 
         // listen+0x10 : push 0x276D
-        { 0x10, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x11, 0x6D }, // (Offset,Value)-Pair #2
-        { 0x12, 0x27 }, // (Offset,Value)-Pair #3
+        { 0x10, 0x68 },
+        { 0x11, 0x6D },
+        { 0x12, 0x27 },
 
         // listen+0x42 : test al, 0x10
-        { 0x42, 0xA8 }, // (Offset,Value)-Pair #4
-        { 0x43, 0x10 }, // (Offset,Value)-Pair #5
+        { 0x42, 0xA8 },
+        { 0x43, 0x10 },
 
         // listen+0x51 : mov ecx, edi
-        { 0x51, 0x8B }, // (Offset,Value)-Pair #6
-        { 0x52, 0xCF }, // (Offset,Value)-Pair #7
+        { 0x51, 0x8B },
+        { 0x52, 0xCF },
 
         // listen+0x7F : retn 0x08
-        { 0x7F, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x80, 0x08 }, // (Offset,Value)-Pair #9
+        { 0x7F, 0xC2 },
+        { 0x80, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -207,22 +207,22 @@ OOVPA_END;
 OOVPA_NO_XREF(ioctlsocket, 3911, 10)
 
         // ioctlsocket+0x12 : push 0x276D
-        { 0x12, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x13, 0x6D }, // (Offset,Value)-Pair #2
-        { 0x14, 0x27 }, // (Offset,Value)-Pair #3
+        { 0x12, 0x68 },
+        { 0x13, 0x6D },
+        { 0x14, 0x27 },
 
         // ioctlsocket+0x61 : lea edx, [esi+0x24]
-        { 0x61, 0x8D }, // (Offset,Value)-Pair #4
-        { 0x62, 0x56 }, // (Offset,Value)-Pair #5
-        { 0x63, 0x24 }, // (Offset,Value)-Pair #6
+        { 0x61, 0x8D },
+        { 0x62, 0x56 },
+        { 0x63, 0x24 },
 
         // ioctlsocket+0x80 : mov cl, al
-        { 0x80, 0x8A }, // (Offset,Value)-Pair #7
-        { 0x81, 0xC8 }, // (Offset,Value)-Pair #8
+        { 0x80, 0x8A },
+        { 0x81, 0xC8 },
 
         // ioctlsocket+0xC5 : retn 0x0C
-        { 0xC5, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xC6, 0x0C }, // (Offset,Value)-Pair #10
+        { 0xC5, 0xC2 },
+        { 0xC6, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
