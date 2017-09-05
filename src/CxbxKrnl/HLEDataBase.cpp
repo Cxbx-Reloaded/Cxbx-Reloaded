@@ -40,19 +40,44 @@
 #include <windows.h>
 
 #include "CxbxKrnl.h" // For xbaddr
+#include "HLEDataBase.h" // For PairScanLibSec
 
 extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 
 const char *Lib_D3D8 = "D3D8";
+const char *Sec_D3D = "D3D";
 const char *Lib_D3D8LTCG = "D3D8LTCG";
 const char *Lib_D3DX8 = "D3DX8";
+const char *Sec_D3DX = "D3DX";
 const char *Lib_DSOUND = "DSOUND";
+const char *Sec_DSOUND = Lib_DSOUND;
 const char *Lib_XACTENG = "XACTENG";
 const char *Lib_XAPILIB = "XAPILIB";
+const char *Sec_XPP = "XPP";
 const char *Lib_XGRAPHC = "XGRAPHC";
+const char *Sec_XGRPH = "XGRPH";
 const char *Lib_XNETS = "XNETS";
 const char *Lib_XONLINE = "XONLINE"; // TODO : Typo for XONLINES?
+const char *Sec_XONLINE = Lib_XONLINE;
 const char *Lib_XONLINES = "XONLINES";
+const char *Sec_XNET = "XNET";
+
+const PairScanLibSec PairScanLibSection[] = {
+    { Lib_D3D8, { Sec_D3D } },
+    { Lib_D3D8LTCG, { Sec_D3D } },
+    { Lib_D3DX8, { Sec_D3DX } },
+    { Lib_DSOUND, { Sec_DSOUND } },
+    //{ Lib_DSOUNDH, Sec_DSOUND },
+    //Lib_XACTENG = Sec_????
+    //{ Lib_XACTENLT, Sec_XACTENG },
+    { Lib_XAPILIB, { Sec_XPP } },
+    { Lib_XGRAPHC, { Sec_XGRPH } },
+    { Lib_XONLINE, { Sec_XONLINE } },
+    { Lib_XONLINES, { Sec_XONLINE, Sec_XNET } }, //and Sec_XNET too.
+    { Lib_XNETS, { Sec_XNET } },
+};
+
+const uint32 StrScanLibSectionCount = sizeof(PairScanLibSection) / sizeof(PairScanLibSec);
 
 #include "Emu.h"
 #include "EmuXTL.h"
@@ -188,7 +213,41 @@ const HLEData HLEDataBase[] =
 };
 
 const HLEDataV2 HLEDataBaseV2[] = {
-    { Lib_DSOUND, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 }
+    //
+    //{ Lib_D3D8,{ Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
+
+    // Cannot support LTCG in HLE
+    //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_SIZEV2 },
+
+    // Jarupxx mention this is not a requirement?
+    //{ Lib_D3DX8,{ Sec_D3DX }, _OOVPAV2, _OOVPA_SIZEV2 },
+
+    //
+    { Lib_DSOUND,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 },
+
+    // DSOUNDH is just meant to define hot fix, there is no seperate section
+    //{ Lib_DSOUNDH,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 },
+
+    // I have not seen which header section it supposed to go with...
+    //{ Lib_XACTENG, { Sec_???? }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
+
+    //
+    //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
+
+    //
+    //{ Lib_XAPILIB,{ Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_SIZEV2 },
+
+    //
+    //{ Lib_XGRAPHC,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
+
+    //
+    //{ Lib_XONLINE,{ Sec_XONLINE }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+
+    // Fun fact, XONLINES are split into 2 header sections.
+    //{ Lib_XONLINES,{ Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+
+    // XNETS only has XNET, might be true.
+    //{ Lib_XNETS,{ Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 };
 
 // ******************************************************************

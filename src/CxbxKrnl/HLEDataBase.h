@@ -97,6 +97,7 @@
 // ******************************************************************
 extern "C" const char *szHLELastCompileTime;
 
+//TODO: Need to remove these externs as v2 is no longer require it.
 extern const char *Lib_D3D8;
 extern const char *Lib_D3D8LTCG;
 extern const char *Lib_D3DX8;
@@ -105,7 +106,7 @@ extern const char *Lib_XACTENG;
 extern const char *Lib_XAPILIB;
 extern const char *Lib_XGRAPHC;
 extern const char *Lib_XNETS;
-extern const char *Lib_XONLINE; // TODO : Typo for XONLINES?
+extern const char *Lib_XONLINE; //Is not a typo issue
 extern const char *Lib_XONLINES;
 
 // ******************************************************************
@@ -121,9 +122,17 @@ extern const struct HLEData
 }
 HLEDataBase[];
 
+#define PAIRSCANSEC_MAX 2
+
+extern const struct PairScanLibSec {
+    const char *library;
+    const char *section[PAIRSCANSEC_MAX];
+}
+PairScanLibSection[];
+
 extern const struct HLEDataV2
 {
-    const char     *Library;
+    const PairScanLibSec LibSec;
 
     OOVPATable  *OovpaTable;
     uint32          OovpaTableSize;
