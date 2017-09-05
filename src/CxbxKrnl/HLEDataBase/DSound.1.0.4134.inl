@@ -428,7 +428,7 @@ OOVPA_XREF(CDirectSound_SetPositionA, 4134, 11,
         { 0x4F, 0x00 },
         { 0x52, 0xFF },
 OOVPA_END;
-
+#if 0 //Moved to 3911
 // ******************************************************************
 // * IDirectSound_CreateSoundBuffer
 // ******************************************************************
@@ -459,7 +459,7 @@ OOVPA_XREF(IDirectSound_CreateSoundBuffer, 4134, 12,
         { 0x21, 0xC2 },
         { 0x22, 0x10 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundVoice::SetFrequency
 // ******************************************************************
@@ -2895,7 +2895,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetPositionA, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFrequency, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFrequency, 4134, XREF),
@@ -2920,7 +2920,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Play, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Play, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),

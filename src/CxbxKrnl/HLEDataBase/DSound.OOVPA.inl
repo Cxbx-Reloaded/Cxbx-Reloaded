@@ -36,6 +36,7 @@
 
 #include "../OOVPA.h"
 
+#include "DSound.1.0.3911.inl"
 #include "DSound.1.0.3936.inl"
 #include "DSound.1.0.4039.inl"
 #include "DSound.1.0.4134.inl"
@@ -57,7 +58,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_GetCurrentPosition, XREF, 3936, 4134, 5558),
     REGISTER_OOVPAS(CDirectSoundBuffer_GetStatus, XREF, 3936, 4134, 4721),
     REGISTER_OOVPAS(CDirectSoundBuffer_Pause, XREF, 4928),
-    REGISTER_OOVPAS(CDirectSoundBuffer_Play, XREF, 3936, 4134, 4361, 5558, 5788),
+    REGISTER_OOVPAS(CDirectSoundBuffer_Play, XREF, 3911, 4039, 4134, 4361, 5558, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_PlayEx, XREF, 3936, 4361, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetAllParameters, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetBufferData, XREF, 4039, 4134, 5558, 5788),
@@ -167,7 +168,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffCurve, XREF, 4627, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetRolloffFactor, XREF, 4134, 4361, 5344, 5788), // s+ (from 4134's comment)
     REGISTER_OOVPAS(CDirectSoundVoice_SetVelocity, XREF, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetVolume, XREF, 4039, 4134, 5233),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetVolume, XREF, 3911, 4039, 4134, 5233),
     REGISTER_OOVPAS(CDirectSoundVoice_Use3DVoiceData, XREF, 5558),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettings, PATCH, 3936, 4039, 4134, 5344, 5558, 5788),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettingsA, XREF, 3936),
@@ -206,7 +207,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_GetCurrentPosition2, XREF, 3936),
     REGISTER_OOVPAS(CMcpxBuffer_GetStatus, XREF, 3936, 4134, 4721, 4831, 5558),
     REGISTER_OOVPAS(CMcpxBuffer_Pause, XREF, 4831),
-    REGISTER_OOVPAS(CMcpxBuffer_Play, XREF, 3925, 4361, 4721, 4831), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJK@Z
+    REGISTER_OOVPAS(CMcpxBuffer_Play, XREF, 3911, 4361, 4721, 4831), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Play2, XREF, 4361, 5558), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxBuffer_SetBufferData, XREF, 4134, 5788),
     REGISTER_OOVPAS(CMcpxBuffer_SetCurrentPosition, XREF, 4134, 5558, 5788),
@@ -238,7 +239,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_Lock, PATCH, 3936, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_LockA, XREF, 3936, 4134),
     REGISTER_OOVPAS(IDirectSoundBuffer_Pause, PATCH, 4928),
-    REGISTER_OOVPAS(IDirectSoundBuffer_Play, PATCH, 3936, 4361, 5558),
+    REGISTER_OOVPAS(IDirectSoundBuffer_Play, PATCH, 3911, 4361, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_PlayEx, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Release, PATCH, 3936), // +s (from 4134's comment)
     REGISTER_OOVPAS(IDirectSoundBuffer_SetAllParameters, PATCH, 4134), // Use that for now. Okay, it's your call pal... (from 4134's comment)
@@ -279,7 +280,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetRolloffCurve, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetRolloffFactor, PATCH, 4134, 5788),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetVelocity, PATCH, 3936, 5558),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetVolume, PATCH, 3936, 4039),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetVolume, PATCH, 3911, 3936, 4039),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetVolumeA, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetVolumeB, XREF, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Stop, PATCH, 3911),
@@ -287,7 +288,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_Unlock, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundBuffer_Use3DVoiceData, PATCH, 5558),
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3936),
-    REGISTER_OOVPAS(IDirectSound_CreateSoundBuffer, PATCH, 3936/*, 4134, 4361*/),
+    REGISTER_OOVPAS(IDirectSound_CreateSoundBuffer, PATCH, 3911 /*3936, 4134, 4361*/),
     REGISTER_OOVPAS(IDirectSound_CreateSoundStream, PATCH, 3936, 5558),
     REGISTER_OOVPAS(IDirectSound_DownloadEffectsImage, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSound_EnableHeadphones, PATCH, 3936, 4627, 5233, 5558),

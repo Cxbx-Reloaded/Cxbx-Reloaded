@@ -731,3 +731,35 @@ OOVPA_NO_XREF(CDirectSound_CommitDeferredSettings, 4039, 14)
         // CDirectSound_CommitDeferredSettings+0x78 : leave
         { 0x6F, 0xC9 },
 OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer::Play
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_Play, 4039, 13,
+
+    XREF_CDirectSoundBuffer_Play,
+    XRefZero)
+
+    //CDirectSoundBuffer_Play+0x00 : push esi
+    { 0x00, 0x56 },
+
+    //CDirectSoundBuffer_Play+0x20 : mov eax, 80004005h
+    { 0x20, 0xB8 },
+    { 0x21, 0x05 },
+    { 0x22, 0x40 },
+    { 0x23, 0x00 },
+    { 0x24, 0x80 },
+
+    //CDirectSoundBuffer_Play+0x2F : mov ecx, dword ptr [esp+18h]
+    { 0x2F , 0xFF },
+    { 0x30 , 0x74 },
+    { 0x31 , 0x24 },
+    { 0x32 , 0x18 },
+
+    //CDirectSoundBuffer_Play+0x4D : ret 10h
+    { 0x4D , 0xC2 },
+    { 0x4E , 0x10 },
+    { 0x4F , 0x00 },
+OOVPA_END;
+
+
