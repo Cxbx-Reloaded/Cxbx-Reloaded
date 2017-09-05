@@ -173,7 +173,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	// initialize members
 	{
 		m_classname = "WndMain";
-		m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
+		m_wndname   = "Cxbx-Reloaded";
 	}
 
 	// load configuration from settings file
@@ -1867,7 +1867,7 @@ void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
 
-	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", _CXBX_VERSION);
+	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", CxbxVersionStr);
 	if (m_Xbe != nullptr) {
 		if (m_bIsStarted) {
 			i += sprintf(AsciiTitle + i, " : Emulating ");
