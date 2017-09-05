@@ -124,11 +124,10 @@ HLEDataBase[];
 
 #define PAIRSCANSEC_MAX 2
 
-extern const struct PairScanLibSec {
+const struct PairScanLibSec {
     const char *library;
     const char *section[PAIRSCANSEC_MAX];
-}
-PairScanLibSection[];
+};
 
 extern const struct HLEDataV2
 {

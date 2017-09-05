@@ -62,23 +62,6 @@ const char *Sec_XONLINE = Lib_XONLINE;
 const char *Lib_XONLINES = "XONLINES";
 const char *Sec_XNET = "XNET";
 
-const PairScanLibSec PairScanLibSection[] = {
-    { Lib_D3D8, { Sec_D3D } },
-    { Lib_D3D8LTCG, { Sec_D3D } },
-    { Lib_D3DX8, { Sec_D3DX } },
-    { Lib_DSOUND, { Sec_DSOUND } },
-    //{ Lib_DSOUNDH, Sec_DSOUND },
-    //Lib_XACTENG = Sec_????
-    //{ Lib_XACTENLT, Sec_XACTENG },
-    { Lib_XAPILIB, { Sec_XPP } },
-    { Lib_XGRAPHC, { Sec_XGRPH } },
-    { Lib_XONLINE, { Sec_XONLINE } },
-    { Lib_XONLINES, { Sec_XONLINE, Sec_XNET } }, //and Sec_XNET too.
-    { Lib_XNETS, { Sec_XNET } },
-};
-
-const uint32 StrScanLibSectionCount = sizeof(PairScanLibSection) / sizeof(PairScanLibSec);
-
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "HLEDataBase.h"
