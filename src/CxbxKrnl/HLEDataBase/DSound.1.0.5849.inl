@@ -112,7 +112,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 5788, PATCH),
-	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFrequency, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFrequency, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFrequency, 4039, PATCH),
