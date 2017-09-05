@@ -3720,14 +3720,14 @@ void InitOpenGLContext()
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
 std::thread vblank_thread;
-extern clock_t GetNextVBlankTime();
+extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
 static void nv2a_vblank_thread()
 {
-	clock_t nextVBlankTime = GetNextVBlankTime();
+	auto nextVBlankTime = GetNextVBlankTime();
 
 	while (true) {
 		// Handle VBlank
-		if (clock() > nextVBlankTime) {
+		if (std::chrono::steady_clock::now() > nextVBlankTime) {
 			pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
 			update_irq();
 			nextVBlankTime = GetNextVBlankTime();

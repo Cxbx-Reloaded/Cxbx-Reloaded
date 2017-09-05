@@ -1452,15 +1452,19 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return D3D_OK; // = 0
 }
 
-clock_t GetNextVBlankTime()
+std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime()
 {
+	using namespace std::literals::chrono_literals;
+
 	// TODO: Read display frequency from Xbox Display Adapter
 	// This is accessed by calling CMiniport::GetRefreshRate(); 
 	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
 	// This will require at least Direct3D_CreateDevice being unpatched
 	// otherwise, m_CurrentAvInfo will never be initialised!
-	return clock() + (CLOCKS_PER_SEC / 60);
+	// 20ms should be used in the case of 50hz
+	return std::chrono::steady_clock::now() + 16.6666666667ms;
 }
+
 
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
@@ -1474,7 +1478,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     int curvb = 0;
 
 	// Calculate Next VBlank time
-	clock_t nextVBlankTime = GetNextVBlankTime();
+	auto nextVBlankTime = GetNextVBlankTime();
 
     while(true)
     {
@@ -1525,9 +1529,10 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
 		// If VBlank Interval has passed, trigger VBlank callback
         // Note: This whole code block can be removed once NV2A interrupts are implemented
+		// And Both Swap and Present can be ran unpatched
 		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
 		// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
-		if (!(bLLE_GPU) && clock() > nextVBlankTime)
+		if (!(bLLE_GPU) && std::chrono::steady_clock::now() > nextVBlankTime)
         {
 			nextVBlankTime = GetNextVBlankTime();
 
