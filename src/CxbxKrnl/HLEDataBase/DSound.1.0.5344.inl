@@ -403,24 +403,24 @@ OOVPA_XREF(CDirectSoundVoice_SetMode, 5344, 11,
 OOVPA_END;
 
 // ******************************************************************
-// * CDirectSound::SetPositionA
+// * CDirectSound_SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetPositionA, 5344, 10,
+OOVPA_XREF(CDirectSound_SetPosition, 5344, 10,
 
     XREF_DSSETPOSITIONA,
     XRefZero)
 
-        // CDirectSound_SetPositionA+0x2B : mov ecx, [ebp+0x08]
+        // CDirectSound_SetPosition+0x2B : mov ecx, [ebp+0x08]
         { 0x2B, 0x8B },
         { 0x2C, 0x4D },
         { 0x2D, 0x08 },
 
-        // CDirectSound_SetPositionA+0x37 : mov [edx+0x3C], edi
+        // CDirectSound_SetPosition+0x37 : mov [edx+0x3C], edi
         { 0x37, 0x89 },
         { 0x38, 0x7A },
         { 0x39, 0x3C },
 
-        // CDirectSound_SetPositionA+0x4C : or dword ptr [eax+34h], 1
+        // CDirectSound_SetPosition+0x4C : or dword ptr [eax+34h], 1
         { 0x4C, 0x83 },
         { 0x4D, 0x48 },
         { 0x4E, 0x34 },
@@ -896,7 +896,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBins, 5233, PATCH),
-	REGISTER_OOVPA(CDirectSound_SetPositionA, 5344, XREF),
+	REGISTER_OOVPA(CDirectSound_SetPosition, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
 	REGISTER_OOVPA(DirectSoundCreateBuffer, 4242, PATCH),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
@@ -909,7 +909,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetVolume, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_LockA, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundBuffer_Lock, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
