@@ -330,15 +330,15 @@ void PrintCurrentConfigurationLog() {
 	// Print current LLE configuration
 	{
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
-		printf("[0x%X] EmuMain: LLE for APU is %s\n", GetCurrentThreadId(), bLLE_APU ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: LLE for GPU is %s\n", GetCurrentThreadId(), bLLE_GPU ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: LLE for JIT is %s\n", GetCurrentThreadId(), bLLE_JIT ? "enabled" : "disabled");
+		printf("EmuMain: LLE for APU is %s\n", bLLE_APU ? "enabled" : "disabled");
+		printf("EmuMain: LLE for GPU is %s\n", bLLE_GPU ? "enabled" : "disabled");
+		printf("EmuMain: LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
 	// Print current INPUT configuration
 	{
 		printf("--------------------------- INPUT CONFIG ---------------------------\n");
-		printf("[0x%X] EmuMain: Using %s\n", GetCurrentThreadId(), g_XInputEnabled ? "XInput" : "DirectInput");
+		printf("EmuMain: Using %s\n", g_XInputEnabled ? "XInput" : "DirectInput");
 	}
 
 	// Print current video configuration
@@ -347,11 +347,11 @@ void PrintCurrentConfigurationLog() {
 		g_EmuShared->GetXBVideo(&XBVideoConf);
 
 		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
-		printf("[0x%X] EmuMain: Direct3D Device: %s\n", GetCurrentThreadId(), XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
-		printf("[0x%X] EmuMain: Video Resolution: %s\n", GetCurrentThreadId(), XBVideoConf.GetVideoResolution());
-		printf("[0x%X] EmuMain: Force VSync is %s\n", GetCurrentThreadId(), XBVideoConf.GetVSync() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Fullscreen is %s\n", GetCurrentThreadId(), XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Hardware YUV is %s\n", GetCurrentThreadId(), XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
+		printf("EmuMain: Direct3D Device: %s\n", XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		printf("EmuMain: Video Resolution: %s\n", XBVideoConf.GetVideoResolution());
+		printf("EmuMain: Force VSync is %s\n", XBVideoConf.GetVSync() ? "enabled" : "disabled");
+		printf("EmuMain: Fullscreen is %s\n", XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
+		printf("EmuMain: Hardware YUV is %s\n", XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration
@@ -360,15 +360,14 @@ void PrintCurrentConfigurationLog() {
 		g_EmuShared->GetXBAudio(&XBAudioConf);
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
-		printf("[0x%X] EmuMain: Audio Adapter: %s\n", GetCurrentThreadId(), XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("[0x%X] EmuMain: Legacy Audio Hack is %s\n", GetCurrentThreadId(), XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: PCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetPCM() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: XADPCM is %s\n", GetCurrentThreadId(), XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
-		printf("[0x%X] EmuMain: Unknown Codec is %s\n", GetCurrentThreadId(), XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+		printf("EmuMain: Audio Adapter: %s\n", XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		printf("EmuMain: Legacy Audio Hack is %s\n", XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
+		printf("EmuMain: PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
+		printf("EmuMain: XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
+		printf("EmuMain: Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
-
 }
 
 static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
@@ -604,6 +603,28 @@ void LoadXboxKeys(std::string path)
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
+// game region flags for Xbe certificate
+#define XBEIMAGE_GAME_REGION_US_CANADA  XBEIMAGE_GAME_REGION_NA
+#define XBEIMAGE_GAME_REGION_ALL (XBEIMAGE_GAME_REGION_US_CANADA | XBEIMAGE_GAME_REGION_JAPAN | XBEIMAGE_GAME_REGION_RESTOFWORLD)
+#define XBEIMAGE_GAME_REGION_KNOWN (XBEIMAGE_GAME_REGION_ALL | XBEIMAGE_GAME_REGION_MANUFACTURING)
+
+const char *GameRegionToString(DWORD aGameRegion)
+{
+	const char *Regions[] = {
+		"UNKNOWN", "NTSC", "JAP", "NTSC+JAP",
+		"PAL", "PAL+NTSC", "PAL+JAP", "ALL",
+
+		"DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
+		"PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "ALL (DEBUG)"
+	};
+
+	if ((aGameRegion & ~XBEIMAGE_GAME_REGION_KNOWN) > 0)
+		return "REGION ERROR";
+
+	DWORD index = (aGameRegion & 7) | (aGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING ? 8 : 0);
+	return Regions[index];
+}
+
 void CxbxKrnlInit
 (
 	HWND                    hwndParent,
@@ -780,7 +801,10 @@ void CxbxKrnlInit
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
 		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
-		// Determine Xbox path to XBE and place it in XeImageFileName
+	}
+
+	// Determine Xbox path to XBE and place it in XeImageFileName
+	{
 		std::string fileName(xbePath);
 		// Strip out the path, leaving only the XBE file name
 		// NOTE: we assume that the XBE is always on the root of the D: drive
@@ -796,7 +820,26 @@ void CxbxKrnlInit
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_MemoryManager.Allocate(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
+		printf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
+	}
+
+	// Dump Xbe information
+	{
+		// Dump Xbe certificate
+		if (g_pCertificate != NULL) {
+			printf("EmuMain : XBE TitleID : %.8X\n", g_pCertificate->dwTitleId);
+			printf("EmuMain : XBE TitleName : %ls\n", g_pCertificate->wszTitleName);
+			printf("EmuMain : XBE Region : %s\n", GameRegionToString(g_pCertificate->dwGameRegion));
+		}
+
+		// Dump Xbe library build numbers
+		Xbe::LibraryVersion* libVersionInfo = pLibraryVersion;// (LibraryVersion *)(CxbxKrnl_XbeHeader->dwLibraryVersionsAddr);
+		if (libVersionInfo != NULL) {
+			for (uint32 v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
+				printf("EmuMain : XBE Library %u : %.8s (version %d)\n", v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
+				libVersionInfo++;
+			}
+		}
 	}
 
 	// duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
