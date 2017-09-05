@@ -85,6 +85,8 @@ void ClearHLECache()
 	printf("Cleared HLE Cache\n");
 }
 
+#define TIMERID_FPS 0
+
 WndMain::WndMain(HINSTANCE x_hInstance) :
 	Wnd(x_hInstance),
 	m_bCreated(false),
@@ -417,7 +419,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						float mspf = 0;
 						g_EmuShared->SetCurrentMSpF(&mspf);
 						g_EmuShared->SetCurrentFPS(&fps);
-						SetTimer(hwnd, 0, 1000, (TIMERPROC)NULL);
+						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
 						UpdateCaption();
 						RefreshMenus();
@@ -429,7 +431,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
 					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
 					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
-						KillTimer(hwnd, 0);
+						KillTimer(hwnd, TIMERID_FPS);
 						m_hwndChild = NULL;
 						StopEmulation();
 					}
@@ -443,7 +445,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			switch (wParam)
 			{
-				case 0:
+				case TIMERID_FPS:
 				{
 					UpdateCaption();
 				}
@@ -1573,18 +1575,18 @@ void WndMain::UpdateCaption()
 			i += sprintf(AsciiTitle + i, " : Loaded ");
 		}
 
-		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);
-		
+		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);		
 		if (m_bIsStarted) {
-			float currentFPSVal = 0;
-			float currentMSpFVal = 0;
 			if (g_EmuShared != NULL) {
+				float currentFPSVal = 0;
+				float currentMSpFVal = 0;
 				g_EmuShared->GetCurrentFPS(&currentFPSVal);
 				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
 				i += sprintf(AsciiTitle + i, " - FPS: %.2f  MS/F: %.2f", currentFPSVal, currentMSpFVal);
 			}
 		}
 	}
+
 	SetWindowText(m_hwnd, AsciiTitle);
 }
 
