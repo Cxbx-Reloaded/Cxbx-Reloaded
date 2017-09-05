@@ -80,6 +80,7 @@ Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 HWND CxbxKrnl_hEmuParent = NULL;
 DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
 char* CxbxKrnl_DebugFileName = NULL;
+Xbe::Certificate *g_pCertificate = NULL;
 
 /*! thread handles */
 static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
@@ -119,10 +120,8 @@ XbeType GetXbeType(Xbe::Header *pXbeHeader)
 
 void ApplyMediaPatches()
 {
-	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-
 	// Patch the XBE Header to allow running from all media types
-	pCertificate->dwAllowedMedia |= 0
+	g_pCertificate->dwAllowedMedia |= 0
 		| XBEIMAGE_MEDIA_TYPE_HARD_DISK
 		| XBEIMAGE_MEDIA_TYPE_DVD_X2
 		| XBEIMAGE_MEDIA_TYPE_DVD_CD
@@ -133,7 +132,7 @@ void ApplyMediaPatches()
 		| XBEIMAGE_MEDIA_TYPE_DVD_9_RW
 		;
 	// Patch the XBE Header to allow running on all regions
-	pCertificate->dwGameRegion = 0
+	g_pCertificate->dwGameRegion = 0
 		| XBEIMAGE_GAME_REGION_MANUFACTURING
 		| XBEIMAGE_GAME_REGION_NA
 		| XBEIMAGE_GAME_REGION_JAPAN
@@ -144,28 +143,27 @@ void ApplyMediaPatches()
 	// This works as our structure is large enough to fit the newer certificate size, 
 	// while dwSize is the actual size of the certificate in the Xbe.
 	// Source: Various Hacked Kernels
-	if (pCertificate->dwSize >= sizeof(Xbe::Certificate)) {
-		pCertificate->dwSecurityFlags &= ~1;
+	if (g_pCertificate->dwSize >= sizeof(Xbe::Certificate)) {
+		g_pCertificate->dwSecurityFlags &= ~1;
 	}
 }
 
 void SetupPerTitleKeys()
 {
 	// Generate per-title keys from the XBE Certificate
-	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
 	UCHAR Digest[20] = {};
 
 	// Set the LAN Key
-	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, pCertificate->bzLanKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
+	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzLanKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
 	memcpy(xboxkrnl::XboxLANKey, Digest, xboxkrnl::XBOX_KEY_LENGTH);
 
 	// Signature Key
-	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, pCertificate->bzSignatureKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
+	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzSignatureKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
 	memcpy(xboxkrnl::XboxSignatureKey, Digest, xboxkrnl::XBOX_KEY_LENGTH);
 
 	// Alternate Signature Keys
 	for (int i = 0; i < xboxkrnl::ALTERNATE_SIGNATURE_COUNT; i++) {
-		xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, pCertificate->bzTitleAlternateSignatureKey[i], xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
+		xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzTitleAlternateSignatureKey[i], xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
 		memcpy(xboxkrnl::XboxAlternateSignatureKeys[i], Digest, xboxkrnl::XBOX_KEY_LENGTH);
 	}
 
@@ -625,6 +623,7 @@ void CxbxKrnlInit
 	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 	CxbxKrnl_DebugMode = DbgMode;
 	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
+	g_pCertificate = (Xbe::Certificate *)(CxbxKrnl_XbeHeader->dwCertificateAddr);
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 	g_CurrentProcessHandle = GetCurrentProcess();

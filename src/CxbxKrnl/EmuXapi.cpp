@@ -199,8 +199,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	// TitleID 0x5345000A = JSRF PAL, NTSC-J
 	// TitleID 0x53450016 = JSRF NTSC-J (Demo)
 	// ~Luke Usher
-	Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-	if (pCertificate->dwTitleId == 0x49470018 || pCertificate->dwTitleId == 0x5345000A || pCertificate->dwTitleId == 0x53450016) {
+	if (g_pCertificate->dwTitleId == 0x49470018 || g_pCertificate->dwTitleId == 0x5345000A || g_pCertificate->dwTitleId == 0x53450016) {
 		RETURN(ret);
 	}
 
@@ -1006,8 +1005,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 		if (xboxkrnl::LaunchDataPage == NULL)
 			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 
-		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
+		xboxkrnl::LaunchDataPage->Header.dwTitleId = g_pCertificate->dwTitleId;
 		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
 		xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
 
@@ -1079,10 +1077,8 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 		// Note : Here, CxbxRestoreLaunchDataPage() was already called,
 		// which has loaded LaunchDataPage from a binary file (if present).
 
-		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-
 		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
-		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == pCertificate->dwTitleId)
+		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == g_pCertificate->dwTitleId)
 			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
 			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DEBUGGER_CMDLINE))
 		{
