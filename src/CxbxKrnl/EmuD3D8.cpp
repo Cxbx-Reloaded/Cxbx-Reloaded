@@ -987,6 +987,76 @@ VOID CxbxGetPixelContainerMeasures
 	*pSize = *pHeight * *pPitch;
 }
 
+uint8 *XTL::ConvertD3DTextureToARGB(
+	XTL::X_D3DPixelContainer *pXboxPixelContainer,
+	uint8 *pSrc,
+	int *pWidth, int *pHeight
+)
+{
+	XTL::X_D3DFORMAT X_Format = (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+	// TODO : Use XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
+
+	//	*pWidth = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+	//	*pHeight = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+	uint SrcPitch, SrcSize;
+	CxbxGetPixelContainerMeasures(
+		pXboxPixelContainer,
+		0, // dwLevel
+		(UINT*)pWidth,
+		(UINT*)pHeight,
+		&SrcPitch,
+		&SrcSize
+	);
+
+	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	if (ConvertRowToARGB == nullptr)
+		return nullptr; // Unhandled conversion
+
+	int DestPitch = *pWidth * sizeof(DWORD);
+	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
+
+	// TODO : Fix DXT1 pitch determination in CxbxGetPixelContainerMeasures
+	if (X_Format == XTL::X_D3DFMT_DXT1) {
+		SrcPitch *= 2;
+	}
+
+	uint8 *unswizleBuffer = nullptr;
+	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
+		unswizleBuffer = (uint8*)malloc(SrcPitch * *pHeight);
+		// First we need to unswizzle the texture data
+		XTL::EmuUnswizzleRect
+		(
+			pSrc, *pWidth, *pHeight, 1, unswizleBuffer,
+			SrcPitch, {}, {}, 4 // TODO : Pass real BPP
+		);
+		
+		pSrc = unswizleBuffer;
+	}
+
+	DWORD SrcRowOff = 0;
+	uint8 *pDestRow = pDest;
+
+	if (X_Format == XTL::X_D3DFMT_DXT1) {
+		for (int y = 0; y < *pHeight; y+=4) {
+			*(int*)pDestRow = DestPitch; // Dirty hack, to avoid an extra parameter to all conversion callbacks
+			ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, *pWidth);
+			SrcRowOff += SrcPitch;
+			pDestRow += DestPitch * 4;
+		}
+	}
+	else {
+		while (SrcRowOff < SrcSize) {
+			ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, *pWidth);
+			SrcRowOff += SrcPitch;
+			pDestRow += DestPitch;
+		}
+	}
+
+	if (unswizleBuffer)
+		free(unswizleBuffer);
+
+	return pDest;
+}
 
 VOID CxbxReleaseBackBufferLock()
 {
@@ -5523,15 +5593,15 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
 									DWORD dwDataSize = dwMipWidth*dwMipHeight;
 									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-									DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
-									const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
 
 									//__asm int 3;
 									unsigned int w = 0;
 									unsigned int x = 0;
-									for (unsigned int y = 0;y < dwDataSize;y++)
+									if (CacheFormat == D3DFMT_P8) // Palette
 									{
-										if (CacheFormat == D3DFMT_P8) // Palette
+										DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
+
+										for (unsigned int y = 0;y < dwDataSize;y++)
 										{
 											if (pTexturePalette != nullptr) {
 												// Read P8 pixel :
@@ -5543,8 +5613,23 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 											} else {
 												pExpandedTexture[y] = 0;
 											}
+
+											// are we at the end of a line?
+											if (++x == dwMipWidth)
+											{
+												x = 0;
+												// Since P8 contains byte pixels instead of dword ARGB pixels,
+												// the next line resides 3 bytes additional per pixel further :
+												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
+											}
 										}
-										else
+									}
+									else
+									{
+#ifdef OLD_COLOR_CONVERSION
+										const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
+
+										for (unsigned int y = 0; y < dwDataSize; y++)
 										{
 											uint32 value = 0;
 
@@ -5561,16 +5646,33 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 											}
 
 											pExpandedTexture[y] = DecodeUInt32ToColor(encoding, value);
+											// are we at the end of a line?
+											if(++x == dwMipWidth)
+											{
+												x = 0;
+												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
+											}
 										}
+#else // !OLD_COLOR_CONVERSION
+										// Convert a row at a time, using a libyuv-like callback approach :
+										const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+										if (ConvertRowToARGB == nullptr)
+											CxbxKrnlCleanup("Unhandled conversion!");
+										
+										uint8 *pSrc = pPixelData;
+										uint8 *pDest = (uint8 *)pExpandedTexture;
+										DWORD dwSrcPitch = dwMipWidth * sizeof(DWORD);
+										DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
+										DWORD dwMipSizeInBytes = dwDataSize;
 
-										// are we at the end of a line?
-										if(++x == dwMipWidth)
-										{
-											x = 0;
-											// Since P8 contains byte pixels instead of dword ARGB pixels,
-											// the next line resides 3 bytes additional per pixel further :
-											w += dwMipWidth * (sizeof(DWORD) - dwBPP);
+										DWORD SrcRowOff = 0;
+										uint8 *pDestRow = (uint8 *)pDest;
+										while (SrcRowOff < dwMipSizeInBytes) {
+											ConvertRowToARGB(((uint8 *)pSrc) + SrcRowOff, pDestRow, dwMipWidth);
+											SrcRowOff += dwSrcPitch;
+											pDestRow += dwDestPitch;
 										}
+#endif // !OLD_COLOR_CONVERSION
 									}
 
 									//__asm int 3;

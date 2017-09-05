@@ -70,8 +70,12 @@ enum _ComponentEncoding {
 	_____AL8, // NOTE : A=R=G=B= L
 	_____L16, // NOTE : Actually G8B8, with A=R=255
 	____A8L8, // NOTE : R=G=B= L
+	____DXT1,
+	____DXT3,
+	____DXT5,
 };
 
+#ifdef OLD_COLOR_CONVERSION
 static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
 	{ }, // NoComponents
 	// AB  RB  GB  BB ASh RSh GSh BSh
@@ -101,6 +105,416 @@ static const XTL::ComponentEncodingInfo ComponentEncodingInfos[] = {
 	// * Currently, when converting X1R5G5B5 and X8R8G8B8 to ARGB, their X-components are
 	// converted into A=255. It's probably more correct to convert these cases towards
 	// XRGB (as that would send unaltered data to shaders) but that's not supported yet.
+};
+
+#endif // OLD_COLOR_CONVERSION
+
+// Conversion functions copied from libyuv
+// See https://chromium.googlesource.com/libyuv/libyuv/+/master/source/row_common.cc
+void RGB565ToARGBRow_C(const uint8* src_rgb565, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_rgb565[0] & 0x1f;
+		uint8 g = (src_rgb565[0] >> 5) | ((src_rgb565[1] & 0x07) << 3);
+		uint8 r = src_rgb565[1] >> 3;
+		dst_argb[0] = (b << 3) | (b >> 2);
+		dst_argb[1] = (g << 2) | (g >> 4);
+		dst_argb[2] = (r << 3) | (r >> 2);
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_rgb565 += 2;
+	}
+}
+void ARGB1555ToARGBRow_C(const uint8* src_argb1555,
+	uint8* dst_argb,
+	int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_argb1555[0] & 0x1f;
+		uint8 g = (src_argb1555[0] >> 5) | ((src_argb1555[1] & 0x03) << 3);
+		uint8 r = (src_argb1555[1] & 0x7c) >> 2;
+		uint8 a = src_argb1555[1] >> 7;
+		dst_argb[0] = (b << 3) | (b >> 2);
+		dst_argb[1] = (g << 3) | (g >> 2);
+		dst_argb[2] = (r << 3) | (r >> 2);
+		dst_argb[3] = -a;
+		dst_argb += 4;
+		src_argb1555 += 2;
+	}
+}
+void ARGB4444ToARGBRow_C(const uint8* src_argb4444,
+	uint8* dst_argb,
+	int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_argb4444[0] & 0x0f;
+		uint8 g = src_argb4444[0] >> 4;
+		uint8 r = src_argb4444[1] & 0x0f;
+		uint8 a = src_argb4444[1] >> 4;
+		dst_argb[0] = (b << 4) | b;
+		dst_argb[1] = (g << 4) | g;
+		dst_argb[2] = (r << 4) | r;
+		dst_argb[3] = (a << 4) | a;
+		dst_argb += 4;
+		src_argb4444 += 2;
+	}
+}
+
+// Cxbx color component conversion functions 
+void X1R5G5B5ToARGBRow_C(const uint8* src_x1r5g5b5, uint8* dst_argb,
+	int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_x1r5g5b5[0] & 0x1f;
+		uint8 g = (src_x1r5g5b5[0] >> 5) | ((src_x1r5g5b5[1] & 0x03) << 3);
+		uint8 r = (src_x1r5g5b5[1] & 0x7c) >> 2;
+		dst_argb[0] = (b << 3) | (b >> 2);
+		dst_argb[1] = (g << 3) | (g >> 2);
+		dst_argb[2] = (r << 3) | (r >> 2);
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_x1r5g5b5 += 2;
+	}
+}
+
+void A8R8G8B8ToARGBRow_C(const uint8* src_a8r8g8b8, uint8* dst_argb, int width) {
+	memcpy(dst_argb, src_a8r8g8b8, width * 4); // Cxbx pass-through
+}
+
+void X8R8G8B8ToARGBRow_C(const uint8* src_x8r8g8b8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_x8r8g8b8[0];
+		uint8 g = src_x8r8g8b8[1];
+		uint8 r = src_x8r8g8b8[2];
+		dst_rgb[0] = b;
+		dst_rgb[1] = g;
+		dst_rgb[2] = r;
+		dst_rgb[3] = 255u;
+		dst_rgb += 4;
+		src_x8r8g8b8 += 4;
+	}
+}
+
+void ____R8B8ToARGBRow_C(const uint8* src_r8b8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_r8b8[0];
+		uint8 r = src_r8b8[1];
+		dst_rgb[0] = b;
+		dst_rgb[1] = b;
+		dst_rgb[2] = r;
+		dst_rgb[3] = r;
+		dst_rgb += 4;
+		src_r8b8 += 2;
+	}
+}
+
+void ____G8B8ToARGBRow_C(const uint8* src_g8b8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_g8b8[0];
+		uint8 g = src_g8b8[1];
+		dst_rgb[0] = b;
+		dst_rgb[1] = g;
+		dst_rgb[2] = b;
+		dst_rgb[3] = g;
+		dst_rgb += 4;
+		src_g8b8 += 2;
+	}
+}
+
+void ______A8ToARGBRow_C(const uint8* src_a8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 a = src_a8[0];
+		dst_rgb[0] = 255u;
+		dst_rgb[1] = 255u;
+		dst_rgb[2] = 255u;
+		dst_rgb[3] = a;
+		dst_rgb += 4;
+		src_a8 += 1;
+	}
+}
+
+void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_r6g5b5[0] & 0x1f;
+		uint8 g = (src_r6g5b5[0] >> 5) | ((src_r6g5b5[1] & 0x03) << 3);
+		uint8 r = src_r6g5b5[1] >> 2;
+		dst_argb[0] = (b << 3) | (b >> 2);
+		dst_argb[1] = (g << 3) | (g >> 2);
+		dst_argb[2] = (r << 2) | (r >> 4);
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_r6g5b5 += 2;
+	}
+}
+
+void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 a = src_r5g5b5a1[0] & 1;
+		uint8 b = (src_r5g5b5a1[0] & 0x3e) >> 1;
+		uint8 g = (src_r5g5b5a1[0] >> 6) | ((src_r5g5b5a1[1] & 0x07) << 2);
+		uint8 r = (src_r5g5b5a1[1] & 0xf8) >> 3;
+		dst_argb[0] = (b << 3) | (b >> 2);
+		dst_argb[1] = (g << 3) | (g >> 2);
+		dst_argb[2] = (r << 3) | (r >> 2);
+		dst_argb[3] = -a;
+		dst_argb += 4;
+		src_r5g5b5a1 += 2;
+	}
+}
+
+void R4G4B4A4ToARGBRow_C(const uint8* src_r4g4b4a4, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 a = src_r4g4b4a4[0] & 0x0f;
+		uint8 b = src_r4g4b4a4[0] >> 4;
+		uint8 g = src_r4g4b4a4[1] & 0x0f;
+		uint8 r = src_r4g4b4a4[1] >> 4;
+		dst_argb[0] = (b << 4) | b;
+		dst_argb[1] = (g << 4) | g;
+		dst_argb[2] = (r << 4) | r;
+		dst_argb[3] = (a << 4) | a;
+		dst_argb += 4;
+		src_r4g4b4a4 += 2;
+	}
+}
+
+void A8B8G8R8ToARGBRow_C(const uint8* src_a8b8g8r8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 r = src_a8b8g8r8[0];
+		uint8 g = src_a8b8g8r8[1];
+		uint8 b = src_a8b8g8r8[3];
+		uint8 a = src_a8b8g8r8[4];
+		dst_rgb[0] = b;
+		dst_rgb[1] = g;
+		dst_rgb[2] = r;
+		dst_rgb[3] = a;
+		dst_rgb += 4;
+		src_a8b8g8r8 += 4;
+	}
+}
+
+void B8G8R8A8ToARGBRow_C(const uint8* src_b8g8r8a8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 a = src_b8g8r8a8[0];
+		uint8 r = src_b8g8r8a8[1];
+		uint8 g = src_b8g8r8a8[3];
+		uint8 b = src_b8g8r8a8[4];
+		dst_rgb[0] = b;
+		dst_rgb[1] = g;
+		dst_rgb[2] = r;
+		dst_rgb[3] = a;
+		dst_rgb += 4;
+		src_b8g8r8a8 += 4;
+	}
+}
+
+void R8G8B8A8ToARGBRow_C(const uint8* src_r8g8b8a8, uint8* dst_rgb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 a = src_r8g8b8a8[0];
+		uint8 b = src_r8g8b8a8[1];
+		uint8 g = src_r8g8b8a8[3];
+		uint8 r = src_r8g8b8a8[4];
+		dst_rgb[0] = b;
+		dst_rgb[1] = g;
+		dst_rgb[2] = r;
+		dst_rgb[3] = a;
+		dst_rgb += 4;
+		src_r8g8b8a8 += 4;
+	}
+}
+
+void ______L8ToARGBRow_C(const uint8* src_l8, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 l = src_l8[0];
+		dst_argb[0] = l;
+		dst_argb[1] = l;
+		dst_argb[2] = l;
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_l8 += 1;
+	}
+}
+
+void _____AL8ToARGBRow_C(const uint8* src_al8, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 l = src_al8[0];
+		dst_argb[0] = l;
+		dst_argb[1] = l;
+		dst_argb[2] = l;
+		dst_argb[3] = l;
+		dst_argb += 4;
+		src_al8 += 1;
+	}
+}
+
+void _____L16ToARGBRow_C(const uint8* src_l16, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 b = src_l16[0];
+		uint8 g = src_l16[1];
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = 255u;
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_l16 += 2;
+	}
+}
+
+void ____A8L8ToARGBRow_C(const uint8* src_a8l8, uint8* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 l = src_a8l8[0];
+		uint8 a = src_a8l8[1];
+		dst_argb[0] = l;
+		dst_argb[1] = l;
+		dst_argb[2] = l;
+		dst_argb[3] = a;
+		dst_argb += 4;
+		src_a8l8 += 2;
+	}
+}
+
+//		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+//			data += 8;
+
+typedef struct TRGB32
+{
+	unsigned char B;
+	unsigned char G;
+	unsigned char R;
+	unsigned char A;
+} TRGB32;
+
+// DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
+void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
+	int pitch = *(int*)dst_argb; // dirty hack to avoid another argument
+	int x;
+	for (x = 0; x < width; x+=4) {
+		// Read two 16-bit pixels
+		uint16 color_0 = (data[0] << 0) + (data[1] << 8);
+		uint16 color_1 = (data[2] << 0) + (data[3] << 8);
+
+		// Read 5+6+5 bit color channels
+		uint8 b0 = (color_0) & 0x1F;
+		uint8 g0 = (color_0 >> 5) & 0x3F;
+		uint8 r0 = (color_0 >> 11) & 0x1F;
+
+		uint8 b1 = (color_1) & 0x1F;
+		uint8 g1 = (color_1 >> 5) & 0x3F;
+		uint8 r1 = (color_1 >> 11) & 0x1F;
+
+		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
+		TRGB32 colormap[4];
+		colormap[0].B = (b0 << 3) | (b0 >> 2);
+		colormap[0].G = (g0 << 2) | (g0 >> 4);
+		colormap[0].R = (r0 << 3) | (r0 >> 2);
+		colormap[0].A = 255u;
+
+		colormap[1].B = (b1 << 3) | (b1 >> 2);
+		colormap[1].G = (g1 << 2) | (g1 >> 4);
+		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		colormap[1].A = 255u;
+
+		// Build second half of RGB32 color map :
+		if (color_0 > color_1)
+		{
+			// Make up new color : 2/3 A + 1/3 B :
+			colormap[2].B = (uint8)((colormap[0].B + colormap[0].B + colormap[1].B + 2) / 3);
+			colormap[2].G = (uint8)((colormap[0].G + colormap[0].G + colormap[1].G + 2) / 3);
+			colormap[2].R = (uint8)((colormap[0].R + colormap[0].R + colormap[1].R + 2) / 3);
+			colormap[2].A = 255u;
+			// Make up new color : 1/3 A + 2/3 B :
+			colormap[3].B = (uint8)((colormap[0].B + colormap[1].B + colormap[1].B + 2) / 3);
+			colormap[3].G = (uint8)((colormap[0].G + colormap[1].G + colormap[1].G + 2) / 3);
+			colormap[3].R = (uint8)((colormap[0].R + colormap[1].R + colormap[1].R + 2) / 3);
+			colormap[3].A = 255u;
+		}
+		else
+		{
+			// Make up one new color : 1/2 A + 1/2 B :
+			colormap[2].B = (uint8)((colormap[0].B + colormap[1].B) / 2);
+			colormap[2].G = (uint8)((colormap[0].G + colormap[1].G) / 2);
+			colormap[2].R = (uint8)((colormap[0].R + colormap[1].R) / 2);
+			colormap[2].A = 255u;
+
+			colormap[3].B = 0u;
+			colormap[3].G = 0u;
+			colormap[3].R = 0u;
+			colormap[3].A = 0u;
+		}
+
+		uint8 indices0 = data[4];
+		uint8 indices1 = data[5];
+		uint8 indices2 = data[6];
+		uint8 indices3 = data[7];
+
+		TRGB32 *dst_line0 = (TRGB32*)(dst_argb);
+		TRGB32 *dst_line1 = (TRGB32*)(dst_argb + pitch);
+		TRGB32 *dst_line2 = (TRGB32*)(dst_argb + pitch * 2);
+		TRGB32 *dst_line3 = (TRGB32*)(dst_argb + pitch * 3);
+
+		dst_line0[0] = colormap[(indices0 & 0x03)];
+		dst_line0[1] = colormap[(indices0 & 0x0C) >> 2];
+		dst_line0[2] = colormap[(indices0 & 0x30) >> 4];
+		dst_line0[3] = colormap[(indices0 & 0xC0) >> 6];
+
+		dst_line1[0] = colormap[(indices1 & 0x03)];
+		dst_line1[1] = colormap[(indices1 & 0x0C) >> 2];
+		dst_line1[2] = colormap[(indices1 & 0x30) >> 4];
+		dst_line1[3] = colormap[(indices1 & 0xC0) >> 6];
+
+		dst_line2[0] = colormap[(indices2 & 0x03)];
+		dst_line2[1] = colormap[(indices2 & 0x0C) >> 2];
+		dst_line2[2] = colormap[(indices2 & 0x30) >> 4];
+		dst_line2[3] = colormap[(indices2 & 0xC0) >> 6];
+
+		dst_line3[0] = colormap[(indices3 & 0x03)];
+		dst_line3[1] = colormap[(indices3 & 0x0C) >> 2];
+		dst_line3[2] = colormap[(indices3 & 0x30) >> 4];
+		dst_line3[3] = colormap[(indices3 & 0xC0) >> 6];
+
+		data += 8;
+		dst_argb += 16;
+	}
+}
+
+static const XTL::FormatToARGBRow ComponentConverters[] = {
+	nullptr, // NoCmpnts,
+	ARGB1555ToARGBRow_C, // A1R5G5B5,
+	X1R5G5B5ToARGBRow_C, // X1R5G5B5, // Test : Convert X into 255
+	ARGB4444ToARGBRow_C, // A4R4G4B4,
+	  RGB565ToARGBRow_C, // __R5G6B5, // NOTE : A=255
+	A8R8G8B8ToARGBRow_C, // A8R8G8B8,
+	X8R8G8B8ToARGBRow_C, // X8R8G8B8, // Test : Convert X into 255
+	____R8B8ToARGBRow_C, // ____R8B8, // NOTE : A takes R, G takes B
+	____G8B8ToARGBRow_C, // ____G8B8, // NOTE : A takes G, R takes B
+	______A8ToARGBRow_C, // ______A8,
+	__R6G5B5ToARGBRow_C, // __R6G5B5,
+	R5G5B5A1ToARGBRow_C, // R5G5B5A1,
+	R4G4B4A4ToARGBRow_C, // R4G4B4A4,
+	A8B8G8R8ToARGBRow_C, // A8B8G8R8,
+	B8G8R8A8ToARGBRow_C, // B8G8R8A8,
+	R8G8B8A8ToARGBRow_C, // R8G8B8A8,
+	______L8ToARGBRow_C, // ______L8, // NOTE : A=255, R=G=B= L
+	_____AL8ToARGBRow_C, // _____AL8, // NOTE : A=R=G=B= L
+	_____L16ToARGBRow_C, // _____L16, // NOTE : Actually G8B8, with A=R=255
+	____A8L8ToARGBRow_C, // ____A8L8, // NOTE : R=G=B= L
+	____DXT1ToARGBRow_C, // ____DXT1
+	____DXT1ToARGBRow_C, // ____DXT3 TODO
+	____DXT1ToARGBRow_C, // ____DXT5 TODO
+
 };
 
 enum _FormatStorage {
@@ -148,10 +562,10 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x09 undefined             */ {},
 	/* 0x0A undefined             */ {},
 	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, NoCmpnts, XTL::D3DFMT_P8        }, // 8-bit palletized
-	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, NoCmpnts, XTL::D3DFMT_DXT1      }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
+	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, ____DXT1, XTL::D3DFMT_DXT1      }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
 	/* 0x0D undefined             */ {},
-	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, NoCmpnts, XTL::D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
-	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, NoCmpnts, XTL::D3DFMT_DXT5      }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
+	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, ____DXT3, XTL::D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
+	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, ____DXT5, XTL::D3DFMT_DXT5      }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
 	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { 16, Linear, A1R5G5B5, XTL::D3DFMT_A1R5G5B5  },
 	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, XTL::D3DFMT_R5G6B5    , RenderTarget },
 	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, XTL::D3DFMT_A8R8G8B8  , RenderTarget },
@@ -209,6 +623,7 @@ static const FormatInfo FormatInfos[] = {
 #endif
 };
 
+#ifdef OLD_COLOR_CONVERSION
 XTL::D3DCOLOR XTL::DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value)
 {
 	return D3DCOLOR_ARGB(
@@ -227,10 +642,24 @@ const XTL::ComponentEncodingInfo *XTL::EmuXBFormatComponentEncodingInfo(X_D3DFOR
 
 	return nullptr;
 }
+#endif // !OLD_COLOR_CONVERSION
+
+const XTL::FormatToARGBRow XTL::EmuXBFormatComponentConverter(X_D3DFORMAT Format)
+{
+	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
+		if (FormatInfos[Format].components != NoCmpnts)
+			return ComponentConverters[FormatInfos[Format].components];
+
+	return nullptr;
+}
 
 bool XTL::EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format)
 {
+#ifdef OLD_COLOR_CONVERSION
 	const ComponentEncodingInfo *info = EmuXBFormatComponentEncodingInfo(Format);
+#else // !OLD_COLOR_CONVERSION
+	const FormatToARGBRow info = EmuXBFormatComponentConverter(Format);
+#endif // !OLD_COLOR_CONVERSION
 	// Conversion is required if there's ARGB conversion info present, and the format has a warning message
 	if (info != nullptr)
 		if (FormatInfos[Format].warning != nullptr)
@@ -933,3 +1362,205 @@ Direct3D9 states unused :
 */
 
 }; // end of namespace XTL 
+
+#if 0
+/* Generic swizzle function, usable for both x and y dimensions.
+When passing x, Max should be 2*height, and Shift should be 0
+When passing y, Max should be width, and Shift should be 1 */
+uint32 Swizzle(uint32 value, uint32 max, uint32 shift)
+{
+	uint32 result;
+
+	if (value < max)
+		result = value;
+	else
+		result = value % max;
+
+	// The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+	// --------------------------------11111111111111111111111111111111
+	result = (result | (result << 8)) & 0x00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
+	result = (result | (result << 4)) & 0x0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111
+	result = (result | (result << 2)) & 0x33333333; // 0011001100110011001100110011001100110011001100110011001100110011
+	result = (result | (result << 1)) & 0x55555555; // 0101010101010101010101010101010101010101010101010101010101010101
+
+	result = result << shift; // y counts twice :      1010101010101010101010101010101010101010101010101010101010101010
+
+	if (value >= max)
+		result += (value / max) * max * max >> (1 - shift);  // x halves this
+
+	return result;
+}
+
+
+typedef uint16 TRGB16;
+
+using namespace XTL; // for X_D3DFMT_*
+
+// test-case: Frogger, Turok, Crazy Taxi 3 and many more
+bool WndMain::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
+{
+	uint16 color[3];
+	TRGB32 color32b[4];
+	uint32 r, g, b, r1, g1, b1, pixelmap, j;
+	int k, p, x, y;
+
+	r = g = b = r1 = g1 = b1 = pixelmap = 0;
+	j = k = p = x = y = 0;
+
+	// sanity checks
+	if (format != X_D3DFMT_DXT1 && format != X_D3DFMT_DXT3 && format != X_D3DFMT_DXT5)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	while (j < dataSize) {
+
+		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+			j += 8;
+
+		// Read two 16-bit pixels
+		color[0] = (data[j + 0] << 0) + (data[j + 1] << 8);
+		color[1] = (data[j + 2] << 0) + (data[j + 3] << 8);
+
+		// Read 5+6+5 bit color channels and convert them to 8+8+8 bit :
+		r = ((color[0] >> 11) & 31) * 255 / 31;
+		g = ((color[0] >> 5) & 63) * 255 / 63;
+		b = ((color[0]) & 31) * 255 / 31;
+
+		r1 = ((color[1] >> 11) & 31) * 255 / 31;
+		g1 = ((color[1] >> 5) & 63) * 255 / 63;
+		b1 = ((color[1]) & 31) * 255 / 31;
+
+		// Build first half of RGB32 color map :
+		color32b[0].R = (unsigned char)r;
+		color32b[0].G = (unsigned char)g;
+		color32b[0].B = (unsigned char)b;
+
+		color32b[1].R = (unsigned char)r1;
+		color32b[1].G = (unsigned char)g1;
+		color32b[1].B = (unsigned char)b1;
+
+		// Build second half of RGB32 color map :
+		if (color[0] > color[1])
+		{
+			// Make up 2 new colors, 1/3 A + 2/3 B and 2/3 A + 1/3 B :
+			color32b[2].R = (unsigned char)((r + r + r1 + 2) / 3);
+			color32b[2].G = (unsigned char)((g + g + g1 + 2) / 3);
+			color32b[2].B = (unsigned char)((b + b + b1 + 2) / 3);
+
+			color32b[3].R = (unsigned char)((r + r1 + r1 + 2) / 3);
+			color32b[3].G = (unsigned char)((g + g1 + g1 + 2) / 3);
+			color32b[3].B = (unsigned char)((b + b1 + b1 + 2) / 3);
+		}
+		else
+		{
+			// Make up one new color : 1/2 A + 1/2 B :
+			color32b[2].R = (unsigned char)((r + r1) / 2);
+			color32b[2].G = (unsigned char)((g + g1) / 2);
+			color32b[2].B = (unsigned char)((b + b1) / 2);
+
+			color32b[3].R = (unsigned char)0;
+			color32b[3].G = (unsigned char)0;
+			color32b[3].B = (unsigned char)0;
+		}
+
+		x = (k / 2) % width;
+		y = (k / 2) / width * 4;
+
+		// Forza Motorsport needs this safety measure, as it has dataSize=147456, while we need 16384 bytes :
+		if (y >= height)
+			break;
+
+		pixelmap = (data[j + 4] << 0)
+			+ (data[j + 5] << 8)
+			+ (data[j + 6] << 16)
+			+ (data[j + 7] << 24);
+
+		for (p = 0; p < 16; p++)
+		{
+			((TRGB32*)bitmap)[x + (p & 3) + (pitch / sizeof(TRGB32) * (y + (p >> 2)))] = color32b[pixelmap & 3];
+			pixelmap >>= 2;
+		};
+
+		j += 8;
+		k += 8;
+
+	}
+	return true;
+}
+
+// test-case: Baku Baku 2 (Homebrew)
+bool WndMain::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
+{
+	uint32* xSwizzle;
+	int x, y;
+	uint32	ySwizzle;
+	TRGB32* yscanline;
+
+	// sanity checks
+	if (format != X_D3DFMT_A8R8G8B8 && format != X_D3DFMT_X8R8G8B8)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
+	if (xSwizzle == NULL)
+		return false;
+
+	for (x = 0; x < width; x++)
+		xSwizzle[x] = Swizzle(x, (height * 2), 0);
+
+	// Loop over all lines :
+	for (y = 0; y < height; y++)
+	{
+		// Calculate y-swizzle :
+		ySwizzle = Swizzle(y, width, 1);
+
+		// Copy whole line in one go (using pre-calculated x-swizzle) :
+		yscanline = &((TRGB32*)bitmap)[y*(pitch / sizeof(TRGB32))];
+
+		for (x = 0; x < width; x++)
+			yscanline[x] = ((TRGB32*)data)[xSwizzle[x] + ySwizzle];
+	}
+
+	free(xSwizzle);
+	return true;
+}
+
+// UNTESTED - Need test-case! (Sorry I wasn't able to find a game using this format)
+bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
+{
+	uint32* xSwizzle;
+	int x, y;
+	uint32	ySwizzle;
+	TRGB16* yscanline;
+
+	// sanity checks
+	if (format != X_D3DFMT_R5G6B5)
+		return false;
+	if (!(width > 0) || !(height > 0))
+		return false;
+
+	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
+	if (xSwizzle == NULL)
+		return false;
+
+	for (x = 0; x < width; x++)
+		xSwizzle[x] = Swizzle(x, (height * 2), 0);
+
+	// Loop over all lines :
+	for (y = 0; y < height; y++)
+	{
+		// Calculate y-swizzle :
+		ySwizzle = Swizzle(y, width, 1);
+
+		// Copy whole line in one go (using pre-calculated x-swizzle) :
+		yscanline = &((TRGB16*)bitmap)[y*(pitch / sizeof(TRGB16))];
+		for (x = 0; x < width; x++)
+			yscanline[x] = ((TRGB16*)data)[xSwizzle[x] + ySwizzle];
+	}
+
+	free(xSwizzle);
+	return true;
+}
+#endif

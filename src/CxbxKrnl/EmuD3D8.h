@@ -57,6 +57,12 @@ extern VOID CxbxSetPixelContainerHeader
 	UINT				Pitch
 );
 
+extern uint8 *ConvertD3DTextureToARGB(
+	XTL::X_D3DPixelContainer *pXboxPixelContainer,
+	uint8 *pSrc,
+	int *pWidth, int *pHeight
+);
+
 // initialize direct3d
 extern VOID EmuD3DInit();
 

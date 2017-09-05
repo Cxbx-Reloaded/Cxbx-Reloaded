@@ -1301,13 +1301,21 @@ void WndMain::LoadLogo()
 // load game logo bitmap
 void WndMain::LoadGameLogo()
 {
-	void* bitmapData;
-	int bit;
+	// Export Game Logo bitmap (XTIMAG or XSIMAG)
+	struct Xbe::XprImage *m_xprImage = (struct Xbe::XprImage*)m_Xbe->FindSection("$$XTIMAG"); // Check for XTIMAGE
+	if (!m_xprImage) {
+		m_xprImage = (struct Xbe::XprImage*)m_Xbe->FindSection("$$XSIMAG"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		if (!m_xprImage) {
+			return;
+		}
+	}
+
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;	
-	bool result = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight, &bit);
-	
-	if (!result) // no game logo found
+
+	XTL::X_D3DPixelContainer *pXboxPixelContainer = (XTL::X_D3DPixelContainer*)(&(m_xprImage->xprImageHeader.d3dTexture));
+	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, (uint8*)&m_xprImage->pBits, &gameLogoWidth, &gameLogoHeight);
+	if (!bitmapData) // no game logo found
 		return;
 
 	HDC hDC = GetDC(m_hwnd);
@@ -1321,7 +1329,7 @@ void WndMain::LoadGameLogo()
 		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
 		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
 		BmpInfo.bmiHeader.biPlanes = 1;
-		BmpInfo.bmiHeader.biBitCount = bit;
+		BmpInfo.bmiHeader.biBitCount = 32;
 		BmpInfo.bmiHeader.biCompression = BI_RGB;
 		BmpInfo.bmiHeader.biSizeImage = 0;
 		BmpInfo.bmiHeader.biXPelsPerMeter = 0;
