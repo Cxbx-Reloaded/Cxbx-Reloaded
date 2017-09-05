@@ -589,18 +589,29 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                 //HLE Database v2
                 if (notFoundHLEDB) {
-                    for (uint32 v = 0; v < pXbeHeader->dwSections; v++) {
-                        SectionName.assign((char*)pSectionHeaders[v].dwSectionNameAddr, (char*)pSectionHeaders[v].dwSectionNameAddr + 8);
-                        if (strcmp(SectionName.c_str(), Lib_DSOUND) == 0) {
-                            pSectionScan = pSectionHeaders + v;
-                            break;
-                        }
-                    }
+                    //Initialize library scan against HLE database we want to search for address of patches and xreferences.
                     for (uint32 d2 = 0; d2 < HLEDataBaseCountV2; d2++) {
-                        if (strcmp(LibraryName.c_str(), HLEDataBaseV2[d2].Library) == 0 && pSectionScan != nullptr) {
-                            if (g_bPrintfOn) printf("Found\n");
-                            EmuInstallPatchesV2(HLEDataBaseV2[d2].OovpaTable, HLEDataBaseV2[d2].OovpaTableSize, pSectionScan, OrigBuildVersion);
-                            notFoundHLEDB = false;
+                        if (strcmp(LibraryName.c_str(), HLEDataBaseV2[d2].LibSec.library) == 0) {
+                            bool bPrintOn = g_bPrintfOn;
+                            for (uint32 v = 0; v < pXbeHeader->dwSections; v++) {
+                                SectionName.assign((char*)pSectionHeaders[v].dwSectionNameAddr, (char*)pSectionHeaders[v].dwSectionNameAddr + 8);
+
+                                //Initialize a matching specific section is currently pair with library in order to scan specific section only.
+                                //By doing this method will reduce false detection dramatically. If it had happened before.
+                                for (uint32 d3 = 0; d3 < PAIRSCANSEC_MAX; d3++) {
+                                    if (HLEDataBaseV2[d2].LibSec.section[d3] != NULL && strcmp(SectionName.c_str(), HLEDataBaseV2[d2].LibSec.section[d3]) == 0) {
+                                        pSectionScan = pSectionHeaders + v;
+
+                                        if (g_bPrintfOn) printf("Found\n");
+                                        g_bPrintfOn = false;
+
+                                        EmuInstallPatchesV2(HLEDataBaseV2[d2].OovpaTable, HLEDataBaseV2[d2].OovpaTableSize, pSectionScan, OrigBuildVersion);
+                                        notFoundHLEDB = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            g_bPrintfOn = bPrintOn;
                             break;
                         }
                     }
