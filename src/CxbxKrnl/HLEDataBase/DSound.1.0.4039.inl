@@ -120,33 +120,33 @@ OOVPA_XREF(CDirectSound_CreateSoundBuffer, 4039, 15,
 OOVPA_END;
 
 // ******************************************************************
-// * DirectSoundDoWorkA
+// * CDirectSound_DoWork
 // ******************************************************************
-OOVPA_XREF(DirectSoundDoWorkA, 4039, 13,
+OOVPA_XREF(CDirectSound_DoWork, 4039, 13,
 
     XREF_DSDOWORKA,
     XRefZero)
 
-        // DirectSoundDoWorkA+0x0D : mov esi, eax
+        // CDirectSound_DoWork+0x0D : mov esi, eax
         { 0x0D, 0x8B },
         { 0x0E, 0xF0 },
 
-        // DirectSoundDoWorkA+0x0F : jnz +0x0C
+        // CDirectSound_DoWork+0x0F : jnz +0x0C
         { 0x0F, 0x75 },
         { 0x10, 0x0C },
 
-        // DirectSoundDoWorkA+0x11 : mov eax, [esp+4+arg_0]
+        // CDirectSound_DoWork+0x11 : mov eax, [esp+4+arg_0]
         { 0x11, 0x8B },
         { 0x12, 0x44 },
         { 0x13, 0x24 },
         { 0x14, 0x08 },
 
-        // DirectSoundDoWorkA+0x15 : mov ecx, [eax+0Ch]
+        // CDirectSound_DoWork+0x15 : mov ecx, [eax+0Ch]
         { 0x15, 0x8B },
         { 0x16, 0x48 },
         { 0x17, 0x0C },
 
-        // DirectSoundDoWorkA+0x24 : retn 0x04
+        // CDirectSound_DoWork+0x24 : retn 0x04
         { 0x2D, 0xC2 },
         { 0x2E, 0x04 },
 OOVPA_END;

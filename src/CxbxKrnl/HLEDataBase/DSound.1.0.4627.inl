@@ -190,24 +190,24 @@ OOVPA_XREF(CDirectSound_SetAllParameters, 4831, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * CDirectSound::SetPositionA
+// * CDirectSound_SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetPositionA, 4627, 11,
+OOVPA_XREF(CDirectSound_SetPosition, 4627, 11,
 
     XREF_DSSETPOSITIONA,
     XRefZero)
 
-        // CDirectSound_SetPositionA+0x2B : mov ecx, [ebp+0x08]
+        // CDirectSound_SetPosition+0x2B : mov ecx, [ebp+0x08]
         { 0x2B, 0x8B },
         { 0x2C, 0x4D },
         { 0x2D, 0x08 },
 
-        // CDirectSound_SetPositionA+0x3F : mov [edx+0x3C], edi
+        // CDirectSound_SetPosition+0x3F : mov [edx+0x3C], edi
         { 0x3F, 0x89 },
         { 0x40, 0x7A },
         { 0x41, 0x3C },
 
-        // CDirectSound_SetPositionA+0x4C : or word ptr [eax+0xA4], 0x01FF
+        // CDirectSound_SetPosition+0x4C : or word ptr [eax+0xA4], 0x01FF
         { 0x4C, 0x66 },
         { 0x4D, 0x81 },
         { 0x4E, 0x88 },
@@ -1493,8 +1493,8 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4134, PATCH),
-	REGISTER_OOVPA(CDirectSound_SetPositionA, 4627, XREF),
-	REGISTER_OOVPA(CDirectSound_SetPositionA, 4134, XREF), // TODO: Find a cure for laziness...
+	REGISTER_OOVPA(CDirectSound_SetPosition, 4627, XREF),
+	REGISTER_OOVPA(CDirectSound_SetPosition, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
 	REGISTER_OOVPA(DirectSoundCreateBuffer, 4242, PATCH),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
@@ -1507,7 +1507,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetVolume, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_LockA, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundBuffer_Lock, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
