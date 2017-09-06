@@ -3865,13 +3865,15 @@ OOVPA_NO_XREF(CDirectSoundStream_Pause, 3936, 6)
         { 0x11, 0x08 },
 OOVPA_END;
 
-//TODO: Need another OOVPA reference since Halo has a match for CDirectSoundStream_SetConeOrientation signature.
 // ******************************************************************
 // * CDirectSoundBuffer::SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 3936, 10,
+OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 3936, 11,
+
     XREF_DSBUFFERSETCONEORIENTATION,
-    XRefZero)
+    XRefOne)
+
+        XREF_ENTRY( 0x21, XREF_DSSTREAMSETCONEORIENTATION1B ),
 
         // CDirectSoundBuffer_SetConeOrientation+0x1A : fstp [esp+8h]
         { 0x0C, 0xD9 },
