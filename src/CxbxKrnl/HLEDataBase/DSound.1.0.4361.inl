@@ -768,7 +768,7 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 4361, PATCH),

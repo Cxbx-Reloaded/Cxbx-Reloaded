@@ -1230,7 +1230,7 @@ OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 5558, 7,
         { 0x40, 0xF8 },
         { 0x4E, 0x8B },
 OOVPA_END;
-
+#if 0 //Replaced with generic 3911
 // ******************************************************************
 // * IDirectSoundBuffer_GetCurrentPosition@12
 // ******************************************************************
@@ -1250,7 +1250,7 @@ OOVPA_XREF(IDirectSoundBuffer_GetCurrentPosition, 5558, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetMixBins
 // ******************************************************************
@@ -1711,7 +1711,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 5558, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetStatus, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 3911, PATCH),
 	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
 	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFormat, 5558, XREF),
@@ -1748,7 +1748,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetHeadroom, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 5558, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 5558, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBins, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetMixBinHeadroom, 5558, XREF),
