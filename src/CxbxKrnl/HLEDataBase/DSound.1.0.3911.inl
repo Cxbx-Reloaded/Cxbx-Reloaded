@@ -276,3 +276,170 @@ OOVPA_XREF(IDirectSoundBuffer_Play, 3911, 16,
         { 0x21, 0xC2 },
         { 0x22, 0x10 },
 OOVPA_END;
+
+// ******************************************************************
+// * CMcpxBuffer_GetCurrentPosition
+// ******************************************************************
+OOVPA_XREF(CMcpxBuffer_GetCurrentPosition, 3911, 11,
+
+    XREF_CMcpxBuffer_GetCurrentPosition,
+    XRefZero)
+
+        // CMcpxBuffer_GetCurrentPosition+0x12 : mov eax, [esi+0x18]
+        { 0x12, 0x8B },
+        { 0x13, 0x46 },
+        { 0x14, 0x18 },
+
+        // CMcpxBuffer_GetCurrentPosition+0x1A : jnz +0x79
+        { 0x1A, 0x75 },
+        { 0x1B, 0x79 },
+
+        // CMcpxBuffer_GetCurrentPosition+0x8E : div dword ptr [ecx+0x4C]
+        { 0x8E, 0xF7 },
+        { 0x8F, 0x71 },
+        { 0x90, 0x4C },
+
+        // CMcpxBuffer_GetCurrentPosition+0xC8 : retn 0x08
+        { 0xC8, 0xC2 },
+        { 0xC9, 0x08 },
+        { 0xCA, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer_GetCurrentPosition
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 3911, 9,
+
+    XREF_CDirectSoundBuffer_GetCurrentPosition,
+    XRefOne)
+
+        // CDirectSoundBuffer_GetCurrentPosition+0x19 : call [CMcpxBuffer::GetCurrentPosition]
+        XREF_ENTRY( 0x19, XREF_CMcpxBuffer_GetCurrentPosition), 
+
+        // CDirectSoundBuffer_GetCurrentPosition+0x0D : mov eax, [esp+0x10]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x44 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x10 },
+
+        // CDirectSoundBuffer_GetCurrentPosition+0x21 : jz +0x0B
+        { 0x21, 0x74 },
+        { 0x22, 0x0B },
+
+        // CDirectSoundBuffer_GetCurrentPosition+0x32 : retn 0x0C
+        { 0x32, 0xC2 },
+        { 0x33, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_GetCurrentPosition
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer.
+OOVPA_XREF(IDirectSoundBuffer_GetCurrentPosition, 3911, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_GetCurrentPosition+0x19 : call [CDirectSoundBuffer::GetCurrentPosition]
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_GetCurrentPosition), 
+
+        // IDirectSoundBuffer_GetCurrentPosition+0x0E : add eax, 0xFFFFFFE4
+        { 0x0E, 0x83 },
+        { 0x0F, 0xC0 },
+        { 0x10, 0xE4 },
+
+        // IDirectSoundBuffer_GetCurrentPosition+0x13 : sbb ecx, ecx
+        { 0x13, 0x1B },
+        { 0x14, 0xC9 },
+
+        // IDirectSoundBuffer_GetCurrentPosition+0x15 : and ecx, eax
+        { 0x15, 0x23 },
+        { 0x16, 0xC8 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxBuffer_GetStatus
+// ******************************************************************
+OOVPA_XREF(CMcpxBuffer_GetStatus, 3911, 13,
+
+	XREF_CMcpxBuffer_GetStatus,
+    XRefZero)
+
+        // CMcpxBuffer_GetStatus+0x10 : mov eax, [ebp+0x08]
+        { 0x10, 0x8B },
+        { 0x11, 0x45 },
+        { 0x12, 0x08 },
+
+        // CMcpxBuffer_GetStatus+0x16 : xor ecx, ecx; inc ecx
+        { 0x16, 0x33 },
+        { 0x17, 0xC9 },
+        { 0x18, 0x41 },
+
+        // CMcpxBuffer_GetStatus+0x1C : jz +0x17
+        { 0x1C, 0x74 },
+        { 0x1D, 0x17 },
+
+        // CMcpxBuffer_GetStatus+0x2F : mov [eax], 5
+        { 0x2F, 0xC7 },
+        { 0x30, 0x00 },
+        { 0x31, 0x05 },
+
+        // CMcpxBuffer_GetStatus+0x48 : retn 0x04
+        { 0x48, 0xC2 },
+        { 0x49, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer_GetStatus
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_GetStatus, 3911, 10,
+
+    XREF_CDirectSoundBuffer_GetStatus,
+    XRefOne)
+
+        // CDirectSoundBuffer_GetStatus+0x14 : call [CMcpxBuffer::GetStatus]
+        XREF_ENTRY( 0x15, XREF_CMcpxBuffer_GetStatus),
+
+        // CDirectSoundBuffer_GetStatus+0x07 : push [esp+0x10]
+        { 0x07, 0xFF },
+        { 0x08, 0x74 },
+        { 0x09, 0x24 },
+        { 0x0A, 0x10 },
+
+        // CDirectSoundBuffer_GetStatus+0x11 : mov ecx, [eax+0x20]
+        { 0x11, 0x8B },
+        { 0x12, 0x48 },
+        { 0x13, 0x20 },
+
+        // CDirectSoundBuffer_GetStatus+0x2E : retn 0x08
+        { 0x2E, 0xC2 },
+        { 0x2F, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_GetStatus
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer.
+OOVPA_XREF(IDirectSoundBuffer_GetStatus, 3911, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_GetStatus+0x15 : call [CDirectSoundBuffer::GetStatus]
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_GetStatus ),
+
+        // IDirectSoundBuffer_GetStatus+0x04 : push [esp+0x08]
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // IDirectSoundBuffer_GetStatus+0x0A : add eax, 0xFFFFFFE4
+        { 0x0A, 0x83 },
+        { 0x0B, 0xC0 },
+        { 0x0C, 0xE4 },
+
+        // IDirectSoundBuffer_GetStatus+0x19 : retn 0x08
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
