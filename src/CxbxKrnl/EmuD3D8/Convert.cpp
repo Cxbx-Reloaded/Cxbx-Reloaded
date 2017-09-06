@@ -386,9 +386,6 @@ void ____A8L8ToARGBRow_C(const uint8* src_a8l8, uint8* dst_argb, int width) {
 	}
 }
 
-//		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
-//			data += 8;
-
 typedef struct TRGB32
 {
 	unsigned char B;
@@ -398,22 +395,23 @@ typedef struct TRGB32
 } TRGB32;
 
 // DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147243(v=vs.85).aspx
 void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 	int pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x+=4) {
 		// Read two 16-bit pixels
-		uint16 color_0 = (data[0] << 0) + (data[1] << 8);
-		uint16 color_1 = (data[2] << 0) + (data[3] << 8);
+		uint16 color_0 = data[0] | (data[1] << 8);
+		uint16 color_1 = data[2] | (data[3] << 8);
 
 		// Read 5+6+5 bit color channels
-		uint8 b0 = (color_0) & 0x1F;
-		uint8 g0 = (color_0 >> 5) & 0x3F;
-		uint8 r0 = (color_0 >> 11) & 0x1F;
+		uint8 b0 = color_0 & 0x1f;
+		uint8 g0 = (color_0 >> 5) & 0x3f;
+		uint8 r0 = color_0 >> 11;
 
-		uint8 b1 = (color_1) & 0x1F;
-		uint8 g1 = (color_1 >> 5) & 0x3F;
-		uint8 r1 = (color_1 >> 11) & 0x1F;
+		uint8 b1 = color_1 & 0x1f;
+		uint8 g1 = (color_1 >> 5) & 0x3f;
+		uint8 r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
@@ -431,22 +429,22 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 		if (color_0 > color_1)
 		{
 			// Make up new color : 2/3 A + 1/3 B :
-			colormap[2].B = (uint8)((colormap[0].B + colormap[0].B + colormap[1].B + 2) / 3);
-			colormap[2].G = (uint8)((colormap[0].G + colormap[0].G + colormap[1].G + 2) / 3);
-			colormap[2].R = (uint8)((colormap[0].R + colormap[0].R + colormap[1].R + 2) / 3);
+			colormap[2].B = (uint8)((2 * colormap[0].B + colormap[1].B + 2) / 3);
+			colormap[2].G = (uint8)((2 * colormap[0].G + colormap[1].G + 2) / 3);
+			colormap[2].R = (uint8)((2 * colormap[0].R + colormap[1].R + 2) / 3);
 			colormap[2].A = 255u;
 			// Make up new color : 1/3 A + 2/3 B :
-			colormap[3].B = (uint8)((colormap[0].B + colormap[1].B + colormap[1].B + 2) / 3);
-			colormap[3].G = (uint8)((colormap[0].G + colormap[1].G + colormap[1].G + 2) / 3);
-			colormap[3].R = (uint8)((colormap[0].R + colormap[1].R + colormap[1].R + 2) / 3);
+			colormap[3].B = 255u - colormap[2].B;
+			colormap[3].G = 255u - colormap[2].G;
+			colormap[3].R = 255u - colormap[2].R;
 			colormap[3].A = 255u;
 		}
 		else
 		{
 			// Make up one new color : 1/2 A + 1/2 B :
-			colormap[2].B = (uint8)((colormap[0].B + colormap[1].B) / 2);
-			colormap[2].G = (uint8)((colormap[0].G + colormap[1].G) / 2);
-			colormap[2].R = (uint8)((colormap[0].R + colormap[1].R) / 2);
+			colormap[2].B = (uint8)((colormap[0].B + colormap[1].B + 1) / 2);
+			colormap[2].G = (uint8)((colormap[0].G + colormap[1].G + 1) / 2);
+			colormap[2].R = (uint8)((colormap[0].R + colormap[1].R + 1) / 2);
 			colormap[2].A = 255u;
 
 			colormap[3].B = 0u;
@@ -465,27 +463,127 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 		TRGB32 *dst_line2 = (TRGB32*)(dst_argb + pitch * 2);
 		TRGB32 *dst_line3 = (TRGB32*)(dst_argb + pitch * 3);
 
-		dst_line0[0] = colormap[(indices0 & 0x03)];
-		dst_line0[1] = colormap[(indices0 & 0x0C) >> 2];
+		dst_line0[0] = colormap[indices0 & 0x03];
+		dst_line0[1] = colormap[(indices0 & 0x0c) >> 2];
 		dst_line0[2] = colormap[(indices0 & 0x30) >> 4];
-		dst_line0[3] = colormap[(indices0 & 0xC0) >> 6];
+		dst_line0[3] = colormap[indices0 >> 6];
 
-		dst_line1[0] = colormap[(indices1 & 0x03)];
-		dst_line1[1] = colormap[(indices1 & 0x0C) >> 2];
+		dst_line1[0] = colormap[indices1 & 0x03];
+		dst_line1[1] = colormap[(indices1 & 0x0c) >> 2];
 		dst_line1[2] = colormap[(indices1 & 0x30) >> 4];
-		dst_line1[3] = colormap[(indices1 & 0xC0) >> 6];
+		dst_line1[3] = colormap[indices1 >> 6];
 
-		dst_line2[0] = colormap[(indices2 & 0x03)];
-		dst_line2[1] = colormap[(indices2 & 0x0C) >> 2];
-		dst_line2[2] = colormap[(indices2 & 0x30) >> 4];
-		dst_line2[3] = colormap[(indices2 & 0xC0) >> 6];
+		dst_line2[0] = colormap[indices2 & 0x03];
+		dst_line2[1] = colormap[(indices2 & 0x0c) >> 2];
+		dst_line2[2] = colormap[(indices2 & 0x30) >> 4]
 
-		dst_line3[0] = colormap[(indices3 & 0x03)];
-		dst_line3[1] = colormap[(indices3 & 0x0C) >> 2];
+		dst_line2[3] = colormap[indices2 >> 6];
+
+		dst_line3[0] = colormap[indices3 & 0x03];
+		dst_line3[1] = colormap[(indices3 & 0x0c) >> 2];
 		dst_line3[2] = colormap[(indices3 & 0x30) >> 4];
-		dst_line3[3] = colormap[(indices3 & 0xC0) >> 6];
+		dst_line3[3] = colormap[indices3 >> 6];
 
 		data += 8;
+		dst_argb += 16;
+	}
+}
+
+// DXT3 info : https://en.wikipedia.org/wiki/S3_Texture_Compression#DXT2_and_DXT3
+void ____DXT3ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
+	int pitch = *(int*)dst_argb; // dirty hack to avoid another argument
+	int x;
+	for (x = 0; x < width; x += 4) {
+		// Read 16 pixels of 4-bit alpha channel data
+		uint8 alpha0 = data[0];
+		uint8 alpha1 = data[1];
+		uint8 alpha2 = data[2];
+		uint8 alpha3 = data[3];
+		uint8 alpha4 = data[4];
+		uint8 alpha5 = data[5];
+		uint8 alpha6 = data[6];
+		uint8 alpha7 = data[7];
+
+		// Read two 16-bit pixels
+		uint16 color_0 = data[8] | (data[9] << 8);
+		uint16 color_1 = data[10] | (data[11] << 8);
+
+		// Read 5+6+5 bit color channels
+		uint8 b0 = color_0 & 0x1f;
+		uint8 g0 = (color_0 >> 5) & 0x3f;
+		uint8 r0 = color_0 >> 11;
+
+		uint8 b1 = color_1 & 0x1f;
+		uint8 g1 = (color_1 >> 5) & 0x3f;
+		uint8 r1 = color_1 >> 11;
+
+		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
+		TRGB32 colormap[4];
+		colormap[0].B = (b0 << 3) | (b0 >> 2);
+		colormap[0].G = (g0 << 2) | (g0 >> 4);
+		colormap[0].R = (r0 << 3) | (r0 >> 2);
+
+		colormap[1].B = (b1 << 3) | (b1 >> 2);
+		colormap[1].G = (g1 << 2) | (g1 >> 4);
+		colormap[1].R = (r1 << 3) | (r1 >> 2);
+
+		// Build second half of RGB32 color map :
+		// Make up new color : 2/3 A + 1/3 B :
+		colormap[2].B = (uint8)((2 * colormap[0].B + colormap[1].B + 2) / 3);
+		colormap[2].G = (uint8)((2 * colormap[0].G + colormap[1].G + 2) / 3);
+		colormap[2].R = (uint8)((2 * colormap[0].R + colormap[1].R + 2) / 3);
+		// Make up new color : 1/3 A + 2/3 B :
+		colormap[3].B = 255u - colormap[2].B;
+		colormap[3].G = 255u - colormap[2].G;
+		colormap[3].R = 255u - colormap[2].R;
+
+		uint8 indices0 = data[12];
+		uint8 indices1 = data[13];
+		uint8 indices2 = data[14];
+		uint8 indices3 = data[15];
+
+		TRGB32 *dst_line0 = (TRGB32*)(dst_argb);
+		TRGB32 *dst_line1 = (TRGB32*)(dst_argb + pitch);
+		TRGB32 *dst_line2 = (TRGB32*)(dst_argb + pitch * 2);
+		TRGB32 *dst_line3 = (TRGB32*)(dst_argb + pitch * 3);
+
+		dst_line0[0] = colormap[indices0 & 0x03];
+		dst_line0[0].A = (alpha0 & 0x0f) | (alpha0 << 4);
+		dst_line0[1] = colormap[(indices0 & 0x0c) >> 2];
+		dst_line0[1].A = (alpha0 & 0xf0) | (alpha0 >> 4);
+		dst_line0[2] = colormap[(indices0 & 0x30) >> 4];
+		dst_line0[2].A = (alpha1 & 0x0f) | (alpha1 << 4);
+		dst_line0[3] = colormap[indices0 >> 6];
+		dst_line0[3].A = (alpha1 & 0xf0) | (alpha1 >> 4);
+
+		dst_line1[0] = colormap[indices1 & 0x03];
+		dst_line1[0].A = (alpha2 & 0x0f) | (alpha2 << 4);
+		dst_line1[1] = colormap[(indices1 & 0x0c) >> 2];
+		dst_line1[1].A = (alpha2 & 0xf0) | (alpha2 >> 4);
+		dst_line1[2] = colormap[(indices1 & 0x30) >> 4];
+		dst_line1[2].A = (alpha3 & 0x0f) | (alpha3 << 4);
+		dst_line1[3] = colormap[indices1 >> 6];
+		dst_line1[3].A = (alpha3 & 0xf0) | (alpha3 >> 4);
+
+		dst_line2[0] = colormap[indices2 & 0x03];
+		dst_line2[0].A = (alpha4 & 0x0f) | (alpha4 << 4);
+		dst_line2[1] = colormap[(indices2 & 0x0c) >> 2];
+		dst_line2[1].A = (alpha4 & 0xf0) | (alpha4 >> 4);
+		dst_line2[2] = colormap[(indices2 & 0x30) >> 4];
+		dst_line2[2].A = (alpha5 & 0x0f) | (alpha5 << 4);
+		dst_line2[3] = colormap[indices2 >> 6];
+		dst_line2[3].A = (alpha5 & 0xf0) | (alpha5 >> 4);
+
+		dst_line3[0] = colormap[indices3 & 0x03];
+		dst_line3[0].A = (alpha6 & 0x0f) | (alpha6 << 4);
+		dst_line3[1] = colormap[(indices3 & 0x0c) >> 2];
+		dst_line3[1].A = (alpha6 & 0xf0) | (alpha6 >> 4);
+		dst_line3[2] = colormap[(indices3 & 0x30) >> 4];
+		dst_line3[2].A = (alpha7 & 0x0f) | (alpha7 << 4);
+		dst_line3[3] = colormap[indices3 >> 6];
+		dst_line3[3].A = (alpha7 & 0xf0) | (alpha7 >> 4);
+
+		data += 16;
 		dst_argb += 16;
 	}
 }
@@ -512,8 +610,8 @@ static const XTL::FormatToARGBRow ComponentConverters[] = {
 	_____L16ToARGBRow_C, // _____L16, // NOTE : Actually G8B8, with A=R=255
 	____A8L8ToARGBRow_C, // ____A8L8, // NOTE : R=G=B= L
 	____DXT1ToARGBRow_C, // ____DXT1
-	____DXT1ToARGBRow_C, // ____DXT3 TODO
-	____DXT1ToARGBRow_C, // ____DXT5 TODO
+	____DXT3ToARGBRow_C, // ____DXT3
+	____DXT3ToARGBRow_C, // ____DXT5 TODO
 
 };
 
