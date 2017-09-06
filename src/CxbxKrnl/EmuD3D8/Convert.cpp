@@ -434,9 +434,9 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 			colormap[2].R = (uint8)((2 * colormap[0].R + colormap[1].R + 2) / 3);
 			colormap[2].A = 255u;
 			// Make up new color : 1/3 A + 2/3 B :
-			colormap[3].B = 255u - colormap[2].B;
-			colormap[3].G = 255u - colormap[2].G;
-			colormap[3].R = 255u - colormap[2].R;
+			colormap[3].B = (uint8)((2 * colormap[1].B + colormap[0].B + 2) / 3);
+			colormap[3].G = (uint8)((2 * colormap[1].G + colormap[0].G + 2) / 3);
+			colormap[3].R = (uint8)((2 * colormap[1].R + colormap[0].R + 2) / 3);
 			colormap[3].A = 255u;
 		}
 		else
@@ -533,9 +533,9 @@ void ____DXT3ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 		colormap[2].G = (uint8)((2 * colormap[0].G + colormap[1].G + 2) / 3);
 		colormap[2].R = (uint8)((2 * colormap[0].R + colormap[1].R + 2) / 3);
 		// Make up new color : 1/3 A + 2/3 B :
-		colormap[3].B = 255u - colormap[2].B;
-		colormap[3].G = 255u - colormap[2].G;
-		colormap[3].R = 255u - colormap[2].R;
+		colormap[3].B = (uint8)((colormap[0].B + 2 * colormap[1].B + 2) / 3);
+		colormap[3].G = (uint8)((colormap[0].G + 2 * colormap[1].G + 2) / 3);
+		colormap[3].R = (uint8)((colormap[0].R + 2 * colormap[1].R + 2) / 3);
 
 		uint8 indices0 = data[12];
 		uint8 indices1 = data[13];
