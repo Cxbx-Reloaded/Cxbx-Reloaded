@@ -475,7 +475,7 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 
 		dst_line2[0] = colormap[indices2 & 0x03];
 		dst_line2[1] = colormap[(indices2 & 0x0c) >> 2];
-		dst_line2[2] = colormap[(indices2 & 0x30) >> 4]
+		dst_line2[2] = colormap[(indices2 & 0x30) >> 4];
 
 		dst_line2[3] = colormap[indices2 >> 6];
 

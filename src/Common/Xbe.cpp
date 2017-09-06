@@ -994,22 +994,13 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
 
 void *Xbe::FindSection(char *zsSectionName)
 {
-	uint32 dwOffs = 0;
-	uint32 dwLength = 0;
-	int sectionIndex = -1;
-
-	for (uint32 v = 0; v < m_Header.dwSections; v++)				
-	{
+	for (uint32 v = 0; v < m_Header.dwSections; v++) {
 		if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
-			dwOffs = m_SectionHeader[v].dwVirtualAddr;
-			dwLength = m_SectionHeader[v].dwVirtualSize;
-			sectionIndex = v;
-			break;
+			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
+				return m_bzSection[v];
+			}
 		}
 	}
 
-	if (sectionIndex == -1 || dwOffs == 0 || dwLength == 0)
-		return NULL;
-
-	return m_bzSection[sectionIndex];
+	return NULL;
 }

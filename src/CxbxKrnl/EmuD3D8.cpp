@@ -993,11 +993,11 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 	int *pWidth, int *pHeight
 )
 {
-	XTL::X_D3DFORMAT X_Format = (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-	// TODO : Use XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
+	XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxPixelContainer);
+	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	if (ConvertRowToARGB == nullptr)
+		return nullptr; // Unhandled conversion
 
-	//	*pWidth = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-	//	*pHeight = 1 << ((m_xprImage->xprImageHeader.d3dTexture.Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
 	uint SrcPitch, SrcSize;
 	CxbxGetPixelContainerMeasures(
 		pXboxPixelContainer,
@@ -1008,35 +1008,30 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 		&SrcSize
 	);
 
-	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
-	if (ConvertRowToARGB == nullptr)
-		return nullptr; // Unhandled conversion
-
 	int DestPitch = *pWidth * sizeof(DWORD);
 	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
 
 	// TODO : Fix DXT1 pitch determination in CxbxGetPixelContainerMeasures
-	if (X_Format == XTL::X_D3DFMT_DXT1) {
+	if (EmuXBFormatIsCompressed(X_Format)) {
 		SrcPitch *= 2;
 	}
 
 	uint8 *unswizleBuffer = nullptr;
 	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8*)malloc(SrcPitch * *pHeight);
+		unswizleBuffer = (uint8*)malloc(SrcPitch * *pHeight); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
-		XTL::EmuUnswizzleRect
-		(
+		XTL::EmuUnswizzleRect(
 			pSrc, *pWidth, *pHeight, 1, unswizleBuffer,
-			SrcPitch, {}, {}, 4 // TODO : Pass real BPP
+			SrcPitch, {}, {}, EmuXBFormatBytesPerPixel(X_Format)
 		);
-		
+		// Convert colors from the unswizzled buffer
 		pSrc = unswizleBuffer;
 	}
 
 	DWORD SrcRowOff = 0;
 	uint8 *pDestRow = pDest;
-
-	if (X_Format == XTL::X_D3DFMT_DXT1) {
+	if (EmuXBFormatIsCompressed(X_Format)) {
+		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
 		for (int y = 0; y < *pHeight; y+=4) {
 			*(int*)pDestRow = DestPitch; // Dirty hack, to avoid an extra parameter to all conversion callbacks
 			ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, *pWidth);

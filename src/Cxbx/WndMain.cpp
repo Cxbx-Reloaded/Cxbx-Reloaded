@@ -1327,7 +1327,7 @@ void WndMain::LoadGameLogo()
 
 		BmpInfo.bmiHeader.biSize = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
 		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
-		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
+		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight; //  If biHeight is negative, the bitmap is a top-down DIB and its origin is the upper-left corner.
 		BmpInfo.bmiHeader.biPlanes = 1;
 		BmpInfo.bmiHeader.biBitCount = 32;
 		BmpInfo.bmiHeader.biCompression = BI_RGB;
