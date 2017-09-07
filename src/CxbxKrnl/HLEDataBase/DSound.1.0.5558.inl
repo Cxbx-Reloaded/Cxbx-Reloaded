@@ -1680,7 +1680,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3911, PATCH),
 	REGISTER_OOVPA(CFullHRTFSource_GetCenterVolume, 5558, XREF),
 	REGISTER_OOVPA(CHRTFSource_SetFullHRTF5Channel, 5558, XREF),
 	REGISTER_OOVPA(DirectSoundUseFullHRTF, 5558, PATCH),
@@ -1789,6 +1789,8 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 3936, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 };
 
 // ******************************************************************
