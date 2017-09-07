@@ -922,7 +922,7 @@ OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 4134, 10,
         { 0x41, 0x74 },
         { 0x42, 0x0B },
 
-        // CDirectSoundBuffer_GetCurrentPosition+0x3D : retn 0x08
+        // CDirectSoundBuffer_GetCurrentPosition+0x52 : retn 0x08
         { 0x52, 0xC2 },
         { 0x53, 0x0C },
 OOVPA_END;
@@ -2204,7 +2204,7 @@ OOVPA_XREF(CDirectSoundStream_SetAllParameters, 4134, 9,
         { 0x44, 0x68 },
         { 0x4F, 0x8B },
 OOVPA_END;
-
+#if 0 //Replaced by generic 3911
 // ******************************************************************
 // * IDirectSoundBuffer_GetStatus
 // ******************************************************************
@@ -2230,7 +2230,7 @@ OOVPA_XREF(IDirectSoundBuffer_GetStatus, 4134, 9,
         { 0x11, 0x23 },
         { 0x12, 0xC8 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetMode
 // ******************************************************************
@@ -2924,7 +2924,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
@@ -2981,13 +2981,13 @@ OOVPATable DSound_4134[] = {
     REGISTER_OOVPA(CMcpxBuffer_Stop, 4134, XREF),
     REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
-	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3911, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetAllParameters, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetAllParameters, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4134, PATCH), // Use that for now. Okay, it's your call pal...
 	REGISTER_OOVPA(CDirectSoundStream_SetAllParameters, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 4134, PATCH),
@@ -3008,7 +3008,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetEffectData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetEffectData, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 };
 
 // ******************************************************************

@@ -919,10 +919,10 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetStatus, 4831, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetStatus, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetStatus, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_GetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4831, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 4361, PATCH),
@@ -962,7 +962,7 @@ OOVPATable DSound_5344[] = {
     REGISTER_OOVPA(CMcpxBuffer_Stop, 4242, XREF),
     REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFormat, 4721, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4242, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4242, PATCH),
@@ -1042,9 +1042,10 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 };
 
 // ******************************************************************
