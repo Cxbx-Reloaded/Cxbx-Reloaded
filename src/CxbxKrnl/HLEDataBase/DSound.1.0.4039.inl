@@ -1057,6 +1057,52 @@ OOVPA_XREF(CDirectSoundBuffer_SetFilter, 4039, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * IDirectSoundBuffer_SetFilter
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetFilter, 4039, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_SetFilter+0x15 : call [CDirectSoundBuffer_SetFilter]
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetFilter),
+
+        // IDirectSoundBuffer_SetFilter+0x04 : push [esp+0x08]
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // IDirectSoundBuffer_SetFilter+0x0A : add eax, 0xFFFFFFE4
+        { 0x0A, 0x83 },
+        { 0x0B, 0xC0 },
+        { 0x0C, 0xE4 },
+
+        // IDirectSoundBuffer_SetFilter+0x19 : retn 0x08
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream::SetFilter
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetFilter, 4039, 8,
+
+    XREF_CDirectSoundStream_SetFilter,
+    XRefOne)
+
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetFilter ),
+
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x35, 0xE8 },
+        { 0x40, 0x68 },
+        { 0x4B, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
 // * CDirectSoundVoiceSettings::SetMixBins
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4039, 13,
@@ -1445,6 +1491,46 @@ OOVPA_XREF(CDirectSoundBuffer_SetLFO, 4039, 18,
 OOVPA_END;
 
 // ******************************************************************
+// * IDirectSoundBuffer_SetLFO
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetLFO, 4039, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetLFO ),
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0x83 },
+        { 0x0E, 0xD9 },
+        { 0x12, 0xC8 },
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream::SetLFO
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetLFO, 4039, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetLFO ),
+
+        { 0x0C, 0x00 },
+        { 0x0F, 0xF0 },
+        { 0x12, 0x85 },
+        { 0x15, 0x0B },
+        { 0x3A, 0x85 },
+        { 0x3D, 0xF8 },
+        { 0x40, 0x68 },
+        { 0x4F, 0xC2 },
+        { 0x50, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * CMcpxVoiceClient::SetEG
 // ******************************************************************
 // Similar pattern of version 3911
@@ -1524,6 +1610,44 @@ OOVPA_XREF(CDirectSoundBuffer_SetEG, 4039, 18,
         // CDirectSoundBuffer_SetEG+0x4A : retn 0x08
         { 0x4A, 0xC2 },
         { 0x4B, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetEG
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetEG, 4039, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetEG ),
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0x83 },
+        { 0x0E, 0xD9 },
+        { 0x12, 0xC8 },
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream::SetEG
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetEG, 4039, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetEG ),
+
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x35, 0xE8 },
+        { 0x40, 0x68 },
+        { 0x4B, 0x8B },
 OOVPA_END;
 
 // ******************************************************************

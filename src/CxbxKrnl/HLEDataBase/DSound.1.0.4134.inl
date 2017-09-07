@@ -2364,6 +2364,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetFilter, 4134, 8,
         { 0x47, 0x8B },
 OOVPA_END;
 
+#if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetFilter
 // ******************************************************************
@@ -2382,6 +2383,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetFilter, 4134, 8,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSound::SetVelocity
@@ -2876,7 +2878,7 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4134, 13,
 OOVPA_END;
 
 // ******************************************************************
-// * Direct, 4134
+// * DSound_4134
 // ******************************************************************
 OOVPATable DSound_4134[] = {
 
@@ -2995,7 +2997,8 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CMcpxVoiceClient_SetFilter, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFilter, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFilter, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetFilter, 4134, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetFilter, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetFilter, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4134, XREF),
