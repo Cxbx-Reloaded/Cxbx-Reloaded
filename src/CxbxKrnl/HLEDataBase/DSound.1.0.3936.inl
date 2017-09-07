@@ -262,7 +262,7 @@ OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 10,
         { 0x21, 0xC2 },
         { 0x22, 0x10 },
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_Release
 // ******************************************************************
@@ -284,7 +284,7 @@ OOVPA_NO_XREF(IDirectSoundBuffer_Release, 3936, 10)
         { 0x11, 0x51 },
         { 0x12, 0x08 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CMcpxVoiceClient_SetPitch
 // ******************************************************************
@@ -367,7 +367,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetPitch, 3936, 10,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CMcpxBuffer::GetStatus
 // ******************************************************************
@@ -400,7 +400,7 @@ OOVPA_XREF(CMcpxBuffer_GetStatus, 3936, 13,
         { 0x49, 0x04 },
 OOVPA_END;
 #endif
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundBuffer::GetStatus
 // ******************************************************************
@@ -428,7 +428,7 @@ OOVPA_XREF(CDirectSoundBuffer_GetStatus, 3936, 10,
         { 0x2F, 0x08 },
 OOVPA_END;
 #endif
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_GetStatus
 // ******************************************************************
@@ -953,7 +953,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 3936, 8,
         { 0x11, 0x23 },
         { 0x12, 0xC8 },
 OOVPA_END;
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CMcpxBuffer_GetCurrentPosition
 // ******************************************************************
@@ -982,7 +982,7 @@ OOVPA_XREF(CMcpxBuffer_GetCurrentPosition, 3936, 11,
         { 0xCA, 0x00 },
 OOVPA_END;
 #endif
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
@@ -1009,7 +1009,7 @@ OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 3936, 9,
         { 0x33, 0x0C },
 OOVPA_END;
 #endif
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
@@ -1035,7 +1035,7 @@ OOVPA_XREF(IDirectSoundBuffer_GetCurrentPosition, 3936, 8,
         { 0x16, 0xC8 },
 OOVPA_END;
 #endif
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundBuffer::Play
 // ******************************************************************
@@ -3066,7 +3066,7 @@ OOVPA_XREF(CDirectSoundStream_SetMode, 3936, 7,
         { 0x15, 0xC2 },
         { 0x16, 0x0C },
 OOVPA_END;
-#if 0 //Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(unsigned long)
 // ******************************************************************
@@ -3308,7 +3308,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetConeAngles, 3936, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
-
+#if 0  // Moved to 3911
 // ******************************************************************
 // * DirectSoundEnterCriticalSection
 // ******************************************************************
@@ -3325,7 +3325,7 @@ OOVPA_XREF(DirectSoundEnterCriticalSection, 3936, 7,
         { 0x1A, 0x33 },
         { 0x1B, 0xC0 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundBuffer::PlayEx
 // ******************************************************************
@@ -3345,7 +3345,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 3936, 9,
         { 0x30, 0xFF },
         { 0x36, 0x8B },
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_PlayEx
 // ******************************************************************
@@ -3364,7 +3364,7 @@ OOVPA_XREF(IDirectSoundBuffer_PlayEx, 3936, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * IDirectSound_AddRef
 // ******************************************************************
@@ -3405,7 +3405,7 @@ OOVPA_NO_XREF(DirectSoundGetSampleTime, 3936, 6)
         { 0x04, 0xFE },
         { 0x05, 0xC3 },
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_AddRef
 // ******************************************************************
@@ -3427,7 +3427,7 @@ OOVPA_NO_XREF(IDirectSoundBuffer_AddRef, 3936, 10)
         { 0x11, 0x51 },
         { 0x12, 0x04 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundBuffer::SetMinDistance
 // ******************************************************************
@@ -3949,21 +3949,6 @@ OOVPA_XREF(IDirectSoundBuffer_SetConeOutsideVolume, 3936, 9,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSoundBuffer_Unlock
-// ******************************************************************
-OOVPA_NO_XREF(IDirectSoundBuffer_Unlock, 3936, 5)
-
-    // IDirectSoundBuffer_Unlock+0x00 : xor eax, eax
-    { 0x00, 0x33 },
-    { 0x01, 0xC0 },
-
-    // IDirectSoundBuffer_Unlock+0x02 : ret 14h
-    { 0x02, 0xC2 },
-    { 0x03, 0x14 },
-    { 0x04, 0x00 }
-OOVPA_END;
-
-// ******************************************************************
 // * DSound_3936
 // ******************************************************************
 OOVPATable DSound_3936[] = {
@@ -3976,7 +3961,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundBuffer, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetPitch, 3936, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 3936, PATCH),
@@ -4084,12 +4069,12 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 3936, PATCH),
-	REGISTER_OOVPA(DirectSoundEnterCriticalSection, 3936, XREF),
+	REGISTER_OOVPA(DirectSoundEnterCriticalSection, 3911, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_PlayEx, 3936, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
 	REGISTER_OOVPA(DirectSoundGetSampleTime, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMaxDistance, 3936, XREF),
@@ -4113,7 +4098,7 @@ OOVPATable DSound_3936[] = {
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
     REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 3936, XREF),
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 3936, PATCH),
-    REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3936, PATCH),
+    REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
     REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH), // TODO: Add CDirectSoundBuffer_SetLoopRegion before 3935-ish
 };
 
