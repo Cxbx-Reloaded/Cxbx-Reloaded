@@ -297,7 +297,7 @@ OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4134, 11,
 	{ 0x54, 0x51 },
 	{ 0x55, 0x24 },
 OOVPA_END;
-
+#if 0 // Moved to 4039
 // ******************************************************************
 // * CDirectSoundVoice::SetMixBins
 // ******************************************************************
@@ -335,7 +335,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMixBins, 4134, 17,
         { 0x1A, 0xC2 },
         { 0x1B, 0x08 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundBuffer::SetMixBins
 // ******************************************************************
@@ -1171,7 +1171,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMaxDistance, 4134, 12,
 
-    XREF_DSVOICESETMAXDISTANCE,
+    XREF_CDirectSoundVoice_SetMaxDistance,
     XRefZero)
 
         // CDirectSoundVoice_SetMaxDistance+0x0D : mov edx, [esp+arg_4]
@@ -1203,7 +1203,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 4134, 10,
     XRefOne)
 
         // CDirectSoundBuffer_SetMaxDistance+0x39 : call [CDirectSoundVoice::SetMaxDistance]
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETMAXDISTANCE ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetMaxDistance ),
 
         // CDirectSoundBuffer_SetMaxDistance+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -1221,6 +1221,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 4134, 10,
         { 0x55, 0x00 }
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3936 version
 // ******************************************************************
 // * IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
@@ -1247,7 +1248,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 4134, 10,
         { 0x22, 0x0C },
         { 0x23, 0x00 }
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundStream_SetMaxDistance
 // ******************************************************************
@@ -1256,7 +1257,7 @@ OOVPA_XREF(CDirectSoundStream_SetMaxDistance, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3E, XREF_DSVOICESETMAXDISTANCE ),
+        XREF_ENTRY( 0x3E, XREF_CDirectSoundVoice_SetMaxDistance ),
 
         { 0x00, 0x56 },
         { 0x0C, 0x00 },
@@ -1322,7 +1323,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 4134, 10,
         { 0x54, 0x0C },
         { 0x55, 0x00 }
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 3936 version
 // ******************************************************************
 // * IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
@@ -1349,6 +1350,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 4134, 10,
         { 0x22, 0x0C },
         { 0x23, 0x00 }
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSoundStream_SetMinDistance
@@ -2323,6 +2325,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetFilter, 4134, 8,
         { 0xFE, 0xB7 },
 OOVPA_END;
 
+#if 0 // Moved to 4039
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFilter
 // ******************************************************************
@@ -2340,6 +2343,7 @@ OOVPA_XREF(CDirectSoundVoice_SetFilter, 4134, 7,
         { 0x10, 0xC2 },
         { 0x11, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetFilter
@@ -2612,6 +2616,7 @@ OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, 10,
         { 0x23, 0x04 },
 OOVPA_END;
 
+#if 0 // Moved to 4039
 // ******************************************************************
 // * CDirectSoundVoice::SetMixBinVolumes
 // ******************************************************************
@@ -2649,6 +2654,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 4134, 17,
         { 0x1A, 0xC2 },
         { 0x1B, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSoundBuffer::SetMixBinVolumes
@@ -2685,7 +2691,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMixBinVolumes, 4134, 17,
         { 0x4B, 0xC2 },
         { 0x4C, 0x08 },
 OOVPA_END;
-
+#if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetMixBinVolumes2
 // ******************************************************************
@@ -2716,7 +2722,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes2, 4134, 12,
         { 0x11, 0x23 },
         { 0x12, 0xC8 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundStream_SetMixBinVolumes2
 // ******************************************************************
@@ -2890,7 +2896,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetAllParameters, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBins, 4134, XREF),
-	REGISTER_OOVPA(CDirectSoundVoice_SetMixBins, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetMixBins, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 4134, XREF), // TODO: Find a cure for laziness...
@@ -2933,11 +2939,11 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMaxDistance, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMaxDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMaxDistance, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMinDistance, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMinDistance, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffFactor, 4134, XREF), // s+
 	REGISTER_OOVPA(CDirectSoundBuffer_SetRolloffFactor, 4134, XREF),
@@ -2987,7 +2993,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMode, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetFilter, 4134, XREF),
-	REGISTER_OOVPA(CDirectSoundVoice_SetFilter, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetFilter, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFilter, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFilter, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 4134, XREF),
@@ -2996,9 +3002,9 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 3936, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4134, XREF),
+	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetEffectData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetEffectData, 4134, PATCH),
