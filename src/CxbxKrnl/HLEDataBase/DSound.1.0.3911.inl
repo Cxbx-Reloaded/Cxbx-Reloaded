@@ -870,10 +870,10 @@ OOVPA_XREF(IDirectSoundBuffer_SetEG, 3911, 8,
         { 0x1A, 0x08 },
 OOVPA_END;
 
-//Generic OOVPA as of 3911 and newer
 // ******************************************************************
 // * IDirectSoundBuffer_SetOutputBuffer
 // ******************************************************************
+//Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetOutputBuffer, 3911, 8,
 
     XRefNoSaveIndex,
