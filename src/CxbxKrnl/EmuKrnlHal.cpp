@@ -54,6 +54,9 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
+#include <locale>
+#include <codecvt>
+
 // prevent name collisions
 namespace NtDll
 {
@@ -434,19 +437,48 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 			// (Note : XWriteTitleInfoNoReboot does this too)
 			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
 
-			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
+			std::string TitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
 			char szXbePath[MAX_PATH];
 			char szWorkingDirectoy[MAX_PATH];
 
+			// If the title path starts with a semicolon, remove it
+			if (TitlePath.length() > 0 && TitlePath[0] == ';') {
+				TitlePath.erase(0, 1);
+			}
+
+			// If the title path was an empty string, we need to launch the dashboard
+			if (TitlePath.length() == 0) {
+				TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+			}
+
+			std::string XbePath = TitlePath;
 			// Convert Xbox XBE Path to Windows Path
 			{
-				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
-				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+				HANDLE rootDirectoryHandle;
+				std::wstring wXbePath;
+				// We pretend to come from NtCreateFile to force symbolic link resolution
+				CxbxConvertFilePath(TitlePath, wXbePath, &rootDirectoryHandle, "NtCreateFile");
+
+				// Convert Wide String as returned by above to a string, for XbePath
+				XbePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wXbePath);
+
+				// If the rootDirectoryHandle is not null, we have a relative path
+				// We need to prepend the path of the root directory to get a full DOS path
+				if (rootDirectoryHandle != nullptr) {
+					char directoryPathBuffer[MAX_PATH];
+					GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
+					XbePath = directoryPathBuffer + std::string("\\") + XbePath;
+
+					// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
+					// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
+					// Without exception
+					XbePath.erase(0, 4);
+				}
 			}
 
 			// Determine Working Directory
 			{
-				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				strncpy_s(szWorkingDirectoy, XbePath.c_str(), MAX_PATH);
 				PathRemoveFileSpec(szWorkingDirectoy);
 			}
 
@@ -454,9 +486,9 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 			{
 				char szArgsBuffer[4096];
 
-				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
 				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
-					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 			}
 		}
 		break;

@@ -189,7 +189,7 @@ void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING 
 	memcpy(dest->Buffer, src.c_str(), dest->Length);
 }
 
-NTSTATUS _CxbxConvertFilePath(
+NTSTATUS CxbxConvertFilePath(
 	std::string RelativeXboxPath, 
 	OUT std::wstring &RelativeHostPath, 
 	OUT NtDll::HANDLE *RootDirectory,
@@ -346,7 +346,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	if (aFileAPIName.size() > 0)
 	{
 		// Then interpret the ObjectName as a filename, and update it to host relative :
-		NTSTATUS result = _CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
+		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
 		if (FAILED(result))
 			return result;
 	}
@@ -441,6 +441,13 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	NTSTATUS result = STATUS_OBJECT_NAME_INVALID;
 	int i = 0;
 	int DeviceIndex = 0;
+
+	// If aFullPath is an empty string, set it to the CD-ROM drive
+	// This should work for all titles, as CD-ROM is mapped to the current working directory
+	// This fixes the issue where titles crash after being launched from the update.xbe
+	if (aFullPath.length() == 0) {
+		aFullPath = DeviceCdrom0;
+	}
 
 	DriveLetter = SymbolicLinkToDriveLetter(aSymbolicLinkName);
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
@@ -603,7 +610,7 @@ NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xboxkrnl::FILE_LINK_INFORMATION
 	std::string originalFileName(xboxLinkInfo->FileName, xboxLinkInfo->FileNameLength);
 	std::wstring convertedFileName;
 	NtDll::HANDLE RootDirectory;
-	NTSTATUS res = _CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
+	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
 	// TODO : handle if(FAILED(res))
 
 	// Build the native FILE_LINK_INFORMATION struct
@@ -623,7 +630,7 @@ NtDll::FILE_RENAME_INFORMATION * _XboxToNTRenameInfo(xboxkrnl::FILE_RENAME_INFOR
 	std::string originalFileName(xboxRenameInfo->FileName.Buffer, xboxRenameInfo->FileName.Length);
 	std::wstring convertedFileName;
 	NtDll::HANDLE RootDirectory;
-	NTSTATUS res = _CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
+	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
 	// TODO : handle if(FAILED(res))
 
 	// Build the native FILE_RENAME_INFORMATION struct
