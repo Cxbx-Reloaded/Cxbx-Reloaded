@@ -93,6 +93,7 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static BOOL                         g_bSupportsP8   = FALSE;// Does device support palette textures?
+static BOOL                         g_bDeviceSupportsFormat[XTL::D3DFMT_INDEX32 + 1] = { FALSE };// Does device support texture format?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -1655,12 +1656,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
 
-				// Does this device support paletized textures?
-				g_bSupportsP8 = g_pD3D8->CheckDeviceFormat(
-					g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-					(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
-					XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_P8) == D3D_OK;
-
 	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 #ifdef _DEBUG
@@ -1681,6 +1676,18 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 if(FAILED(g_EmuCDPD.hRet))
                     CxbxKrnlCleanup("IDirect3D8::CreateDevice failed");
+
+				// Determine which formats this device supports
+				for (int PCFormat = XTL::D3DFMT_UNKNOWN; PCFormat <= XTL::D3DFMT_INDEX32; PCFormat++) {
+					g_bDeviceSupportsFormat[PCFormat] = g_pD3D8->CheckDeviceFormat(
+						g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+						(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+						XTL::D3DRTYPE_TEXTURE, (XTL::D3DFORMAT)PCFormat) == D3D_OK;
+				}
+
+				// TODO : Remove these :
+				g_bSupportsP8 = g_bDeviceSupportsFormat[XTL::D3DFMT_P8];
+				g_bSupportsYUY2 = g_bDeviceSupportsFormat[XTL::D3DFMT_YUY2];
 
                 // cache device pointer
                 g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
@@ -1725,7 +1732,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
                     lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-                    g_bSupportsYUY2 = false;
+                    //g_bSupportsYUY2 = false;
                     for(DWORD v=0;v<dwCodes;v++)
                     {
                         if(lpCodes[v] == MAKEFOURCC('Y','U','Y','2'))
