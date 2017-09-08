@@ -977,7 +977,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	// Note : This can be tested using "Innocent tears",
 	// which relaunches different xbes between scenes;
