@@ -94,7 +94,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetLFO, XREF, 3911, 4039, 4242),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetPitch, XREF, 3936),
-    REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3936, 4039, 4134),
+    REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBins, XREF, 4039, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBinVolumes, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_CommitDeferredSettings, XREF, 5558),
@@ -114,7 +114,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundVoice_SetMaxDistance, XREF, 3936, 4039, 4134, 4361, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMinDistance, XREF, 3936, 4039, 4134, 4361, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMixBins, XREF, 3936, 4039, 5558),
-    REGISTER_OOVPAS(CDirectSoundVoice_SetMixBinVolumes, XREF, 3936, 4039),
+    REGISTER_OOVPAS(CDirectSoundVoice_SetMixBinVolumes, XREF, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundVoice_SetMode, XREF, 3936, 4039, 4134, 5233, 5344),
     REGISTER_OOVPAS(CDirectSoundVoice_SetOutputBuffer, XREF, 4039),
     REGISTER_OOVPAS(CDirectSoundVoice_SetPitch, XREF, 3936, 4039),
@@ -179,8 +179,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetMaxDistance, PATCH, 3936, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMinDistance, PATCH, 3936, 4134, 5344),
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3936, 4627, 5233, 5558),
-    REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes, PATCH, 3936), //TODO: What's the difference from this and below?
-    REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes2, PATCH, 4134, 5788), //TODO: What's the difference from this and above?
+    REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
+    REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3936, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetOutputBuffer, PATCH, 4627),
     REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 4134),
@@ -236,8 +236,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMaxDistance, PATCH, 3936, 5344, 5788),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMinDistance, PATCH, 3936, 5558, 5788),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBins, PATCH, 3936, 4134, 5558),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes, PATCH, 3936), //TODO: What's the difference from this and below?
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes2, PATCH, 4039), //TODO: What's the difference from this and above?
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMode, PATCH, 3936, 4134, 5233),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetNotificationPositions, PATCH, 3936, 4627),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetOutputBuffer, PATCH, 3911),

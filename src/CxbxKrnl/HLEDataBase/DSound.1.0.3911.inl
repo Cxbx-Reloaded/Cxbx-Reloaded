@@ -168,12 +168,41 @@ OOVPA_NO_XREF(IDirectSound_SetCooperativeLevel, 3911, 5)
 OOVPA_END;
 #endif
 // ******************************************************************
+// * CMcpxVoiceClient_SetVolume
+// ******************************************************************
+OOVPA_XREF(CMcpxVoiceClient_SetVolume, 3911, 11,
+
+    XREF_CMcpxVoiceClient_SetVolume,
+    XRefZero)
+
+        // CMcpxVoiceClient_SetVolume+0x26 : mov ecx, [esi+0xE0]
+        { 0x26, 0x8B },
+        { 0x27, 0x8E },
+        { 0x28, 0xE0 },
+        { 0x29, 0x00 },
+
+        // CMcpxVoiceClient_SetVolume+0x2F : movzx ecx, word ptr [ecx+2]
+        { 0x2F, 0x0F },
+        { 0x30, 0xB7 },
+        { 0x31, 0x49 },
+        { 0x32, 0x02 },
+
+        // CMcpxVoiceClient_SetVolume+0x35 : dec ecx; sar ecx, 1
+        { 0x35, 0x49 },
+        { 0x36, 0xD1 },
+        { 0x37, 0xF9 },
+OOVPA_END;
+
+// ******************************************************************
 // * CDirectSoundVoice_SetVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetVolume, 3911, 10,
+OOVPA_XREF(CDirectSoundVoice_SetVolume, 3911, 11,
 
     XREF_CDirectSoundVoice_SetVolume,
-    XRefZero)
+    XRefOne)
+
+        XREF_ENTRY( 0x1E, XREF_CMcpxVoiceClient_SetVolume ),
+
         //CDirectSoundVoice_SetVolume+0x00 : push esi
         { 0x00, 0x56 },
 
@@ -888,4 +917,63 @@ OOVPA_XREF(IDirectSoundBuffer_SetOutputBuffer, 3911, 8,
         { 0x12, 0xC8 },
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetMixBinVolumes
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 3911, 8,
+
+    XREF_CDirectSoundVoice_SetMixBinVolumes,
+    XRefOne)
+
+        XREF_ENTRY( 0x54, XREF_CMcpxVoiceClient_SetVolume ),
+
+        { 0x0D, 0x65 },
+        { 0x1C, 0x53 },
+        { 0x2B, 0xC0 },
+        { 0x3A, 0xC7 },
+        { 0x49, 0xFC },
+        { 0x58, 0x83 },
+        { 0x67, 0x15 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetMixBinVolumes_12
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes_12, 3911, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x19, XREF_CDirectSoundVoice_SetMixBinVolumes ),
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream::SetMixBinVolumes
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_12, 3911, 9,
+
+    XREF_CDirectSoundStream_SetMixBinVolumes,
+    XRefOne)
+
+        XREF_ENTRY( 0x11, XREF_CDirectSoundVoice_SetMixBinVolumes ),
+
+        { 0x01, 0x74 },
+        { 0x04, 0x8B },
+        { 0x07, 0x08 },
+        { 0x0A, 0x24 },
+        { 0x0D, 0xC0 },
+        { 0x10, 0xE8 },
+        { 0x15, 0xC2 },
+        { 0x16, 0x0C },
 OOVPA_END;

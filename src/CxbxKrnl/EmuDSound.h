@@ -584,9 +584,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -594,9 +594,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins    // TODO: fill this out
@@ -1407,9 +1407,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
 DWORD WINAPI EMUPATCH(DirectSoundGetSampleTime)();
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes
+// * patch: CDirectSoundStream_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
+HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*    pThis,
     DWORD                    dwMixBinMask,
@@ -1417,9 +1417,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 );
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes2
+// * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
+HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*    pThis,
     LPVOID                    pMixBins
