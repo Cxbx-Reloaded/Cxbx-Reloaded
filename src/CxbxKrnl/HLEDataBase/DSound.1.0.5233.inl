@@ -265,7 +265,7 @@ OOVPA_XREF(CDirectSoundVoice_SetVolume, 5233, 8,
     XREF_CDirectSoundVoice_SetVolume,
     XRefOne)
 
-        XREF_ENTRY( 0x15, XREF_DSSTREAMSETVOLUME ),
+        XREF_ENTRY( 0x15, XREF_CMcpxVoiceClient_SetVolume ),
 
         { 0x02, 0x24 },
         { 0x06, 0x10 },
@@ -504,7 +504,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetOutputLevels, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 4627, PATCH),

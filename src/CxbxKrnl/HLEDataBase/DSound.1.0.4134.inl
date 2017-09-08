@@ -560,9 +560,10 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient_SetVolume
 // ******************************************************************
+// Generic OOVPA as of 4134 and newer.
 OOVPA_XREF(CMcpxVoiceClient_SetVolume, 4134, 13,
 
-    XREF_DSSTREAMSETVOLUME,
+    XREF_CMcpxVoiceClient_SetVolume,
     XRefZero)
 
         // CMcpxVoiceClient_SetVolume+0x2A : lea eax, [ecx+ecx*2]
@@ -590,13 +591,14 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetVolume
 // ******************************************************************
+// Generic OOVPA as of 4134 and newer.
 OOVPA_XREF(CDirectSoundVoice_SetVolume, 4134, 11,
 
     XREF_CDirectSoundVoice_SetVolume,
     XRefOne)
 
         // CDirectSoundVoice_SetVolume+0x15 : call [CMcpxVoiceClient::SetVolume]
-        XREF_ENTRY( 0x15, XREF_DSSTREAMSETVOLUME ), 
+        XREF_ENTRY( 0x15, XREF_CMcpxVoiceClient_SetVolume ), 
 
         // CDirectSoundVoice_SetVolume+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B },
@@ -2594,9 +2596,10 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoiceSettings::SetMixBinVolumes
 // ******************************************************************
+// Generic OOVPA as of 4134 and newer.
 OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, 10,
 
-    XREF_DSSETMIXBINVOLUMESC,
+    XREF_CDirectSoundVoiceSettings_SetMixBinVolumes,
     XRefZero)
 
         // CDirectSoundVoiceSettings_SetMixBinVolumes+0x09 : jbe +0x16
@@ -2624,11 +2627,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 4134, 17,
 
-    XREF_DSSETMIXBINVOLUMESB,
+    XREF_CDirectSoundVoice_SetMixBinVolumes,
     XRefOne)
 
         // CDirectSoundVoice_SetMixBinVolumes+0x0D : call [CDirectSoundVoiceSettings::SetMixBinVolumes]
-        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINVOLUMESC ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoiceSettings_SetMixBinVolumes ),
 
         // CDirectSoundVoice_SetMixBinVolumes+0x01 : mov esi, [esp+8]
         { 0x01, 0x8B },
@@ -2661,13 +2664,14 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetMixBinVolumes
 // ******************************************************************
+//Generic OOVPA as of 4134 and newer
 OOVPA_XREF(CDirectSoundBuffer_SetMixBinVolumes, 4134, 17,
 
-    XREF_DSSETMIXBINVOLUMESA,
+    XREF_CDirectSoundBuffer_SetMixBinVolumes,
     XRefOne)
 
         // CDirectSoundBuffer_SetMixBinVolumes+0x32 : call [CDirectSoundVoice::SetMixBinVolumes]
-        XREF_ENTRY( 0x32, XREF_DSSETMIXBINVOLUMESB ),
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetMixBinVolumes ),
 
         // CDirectSoundBuffer_SetMixBinVolumes+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 },
@@ -2695,45 +2699,46 @@ OOVPA_XREF(CDirectSoundBuffer_SetMixBinVolumes, 4134, 17,
 OOVPA_END;
 #if 0 // Moved to 4039
 // ******************************************************************
-// * IDirectSoundBuffer_SetMixBinVolumes2
+// * IDirectSoundBuffer_SetMixBinVolumes_8
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes2, 4134, 12,
+OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes_8, 4134, 12,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        // IDirectSoundBuffer_SetMixBinVolumes2+0x15 : call [CDirectSoundBuffer::SetMixBinVolumes]
-        XREF_ENTRY( 0x15, XREF_DSSETMIXBINVOLUMESA ),
+        // IDirectSoundBuffer_SetMixBinVolumes_8+0x15 : call [CDirectSoundBuffer::SetMixBinVolumes]
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetMixBinVolumes ),
 
-        // IDirectSoundBuffer_SetMixBinVolumes2+0x04 : push [esp+0x08]
+        // IDirectSoundBuffer_SetMixBinVolumes_8+0x04 : push [esp+0x08]
         { 0x04, 0xFF },
         { 0x05, 0x74 },
         { 0x06, 0x24 },
         { 0x07, 0x08 },
 
-        // IDirectSoundBuffer_SetMixBinVolumes2+0x0A : add eax, 0xFFFFFFE4
+        // IDirectSoundBuffer_SetMixBinVolumes_8+0x0A : add eax, 0xFFFFFFE4
         { 0x0A, 0x83 },
         { 0x0B, 0xC0 },
         { 0x0C, 0xE4 },
 
-        // IDirectSoundBuffer_SetMixBinVolumes2+0x0F : sbb ecx, ecx
+        // IDirectSoundBuffer_SetMixBinVolumes_8+0x0F : sbb ecx, ecx
         { 0x0F, 0x1B },
         { 0x10, 0xC9 },
 
-        // IDirectSoundBuffer_SetMixBinVolumes2+0x11 : and ecx, eax
+        // IDirectSoundBuffer_SetMixBinVolumes_8+0x11 : and ecx, eax
         { 0x11, 0x23 },
         { 0x12, 0xC8 },
 OOVPA_END;
 #endif
+#if 0 // Moved to 4039
 // ******************************************************************
-// * CDirectSoundStream_SetMixBinVolumes2
+// * CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes2, 4134, 12,
+OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_8, 4134, 12,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSSETMIXBINVOLUMESB ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetMixBinVolumes ),
 
         { 0x0D, 0x0F },
         { 0x0E, 0xB6 },
@@ -2747,7 +2752,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes2, 4134, 12,
         { 0x50, 0x08 },
         { 0x51, 0x00 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSound_SetEffectData
 // ******************************************************************
@@ -3007,8 +3012,8 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
-	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetEffectData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetEffectData, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),

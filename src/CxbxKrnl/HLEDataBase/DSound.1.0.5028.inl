@@ -80,8 +80,8 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
-	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 4627, XREF),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),

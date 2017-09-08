@@ -582,7 +582,7 @@ OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 4627, 9,
 	XREF_CDirectSoundVoice_SetHeadroom,
 	XRefOne) // Note : This was -1, which is used nowhere else and probably an error.
 
-		XREF_ENTRY( 0x1B, XREF_DSSTREAMSETVOLUME ),
+		XREF_ENTRY( 0x1B, XREF_CMcpxVoiceClient_SetVolume ),
 
 		{ 0x0A, 0x56 },
 		{ 0x0F, 0x2B },
@@ -1017,7 +1017,7 @@ OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 4627, 8,
     XRefOne)
 
 	// CDirectSoundVoice_SetHeadroom+0x1B : call [CMcpxVoiceClient::SetVolume]
-        XREF_ENTRY( 0x1B, XREF_DSSTREAMSETVOLUME ),
+        XREF_ENTRY( 0x1B, XREF_CMcpxVoiceClient_SetVolume ),
 
         { 0x03, 0x04 },
         { 0x08, 0x48 },
@@ -1504,7 +1504,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 4627, XREF),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 4134, XREF), // TODO: Find a cure for laziness...
 	REGISTER_OOVPA(IDirectSound_SetPosition, 3936, PATCH),
@@ -1602,7 +1602,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetFormat, 4242, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4242, PATCH),
-	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes2, 4134, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_EnableHeadphones, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
