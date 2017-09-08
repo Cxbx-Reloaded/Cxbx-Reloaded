@@ -435,10 +435,10 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		{
 			// Save the launch data page to disk for later.
 			// (Note : XWriteTitleInfoNoReboot does this too)
-			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+			// Commented out because XLaunchNewImage is disabled!
+			// MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
 
 			std::string TitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
-			char szXbePath[MAX_PATH];
 			char szWorkingDirectoy[MAX_PATH];
 
 			// If the title path starts with a semicolon, remove it
