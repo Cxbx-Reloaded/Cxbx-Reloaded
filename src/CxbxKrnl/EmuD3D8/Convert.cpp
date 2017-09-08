@@ -73,6 +73,7 @@ enum _ComponentEncoding {
 	____DXT1,
 	____DXT3,
 	____DXT5,
+	______P8,
 };
 
 #ifdef OLD_COLOR_CONVERSION
@@ -178,61 +179,61 @@ void X1R5G5B5ToARGBRow_C(const uint8* src_x1r5g5b5, uint8* dst_argb,
 }
 
 void A8R8G8B8ToARGBRow_C(const uint8* src_a8r8g8b8, uint8* dst_argb, int width) {
-	memcpy(dst_argb, src_a8r8g8b8, width * 4); // Cxbx pass-through
+	memcpy(dst_argb, src_a8r8g8b8, width * sizeof(XTL::D3DCOLOR)); // Cxbx pass-through
 }
 
-void X8R8G8B8ToARGBRow_C(const uint8* src_x8r8g8b8, uint8* dst_rgb, int width) {
+void X8R8G8B8ToARGBRow_C(const uint8* src_x8r8g8b8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 b = src_x8r8g8b8[0];
 		uint8 g = src_x8r8g8b8[1];
 		uint8 r = src_x8r8g8b8[2];
-		dst_rgb[0] = b;
-		dst_rgb[1] = g;
-		dst_rgb[2] = r;
-		dst_rgb[3] = 255u;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = r;
+		dst_argb[3] = 255u;
+		dst_argb += 4;
 		src_x8r8g8b8 += 4;
 	}
 }
 
-void ____R8B8ToARGBRow_C(const uint8* src_r8b8, uint8* dst_rgb, int width) {
+void ____R8B8ToARGBRow_C(const uint8* src_r8b8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 b = src_r8b8[0];
 		uint8 r = src_r8b8[1];
-		dst_rgb[0] = b;
-		dst_rgb[1] = b;
-		dst_rgb[2] = r;
-		dst_rgb[3] = r;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = b;
+		dst_argb[2] = r;
+		dst_argb[3] = r;
+		dst_argb += 4;
 		src_r8b8 += 2;
 	}
 }
 
-void ____G8B8ToARGBRow_C(const uint8* src_g8b8, uint8* dst_rgb, int width) {
+void ____G8B8ToARGBRow_C(const uint8* src_g8b8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 b = src_g8b8[0];
 		uint8 g = src_g8b8[1];
-		dst_rgb[0] = b;
-		dst_rgb[1] = g;
-		dst_rgb[2] = b;
-		dst_rgb[3] = g;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = b;
+		dst_argb[3] = g;
+		dst_argb += 4;
 		src_g8b8 += 2;
 	}
 }
 
-void ______A8ToARGBRow_C(const uint8* src_a8, uint8* dst_rgb, int width) {
+void ______A8ToARGBRow_C(const uint8* src_a8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 a = src_a8[0];
-		dst_rgb[0] = 255u;
-		dst_rgb[1] = 255u;
-		dst_rgb[2] = 255u;
-		dst_rgb[3] = a;
-		dst_rgb += 4;
+		dst_argb[0] = 255u;
+		dst_argb[1] = 255u;
+		dst_argb[2] = 255u;
+		dst_argb[3] = a;
+		dst_argb += 4;
 		src_a8 += 1;
 	}
 }
@@ -284,50 +285,50 @@ void R4G4B4A4ToARGBRow_C(const uint8* src_r4g4b4a4, uint8* dst_argb, int width) 
 	}
 }
 
-void A8B8G8R8ToARGBRow_C(const uint8* src_a8b8g8r8, uint8* dst_rgb, int width) {
+void A8B8G8R8ToARGBRow_C(const uint8* src_a8b8g8r8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 r = src_a8b8g8r8[0];
 		uint8 g = src_a8b8g8r8[1];
 		uint8 b = src_a8b8g8r8[3];
 		uint8 a = src_a8b8g8r8[4];
-		dst_rgb[0] = b;
-		dst_rgb[1] = g;
-		dst_rgb[2] = r;
-		dst_rgb[3] = a;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = r;
+		dst_argb[3] = a;
+		dst_argb += 4;
 		src_a8b8g8r8 += 4;
 	}
 }
 
-void B8G8R8A8ToARGBRow_C(const uint8* src_b8g8r8a8, uint8* dst_rgb, int width) {
+void B8G8R8A8ToARGBRow_C(const uint8* src_b8g8r8a8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 a = src_b8g8r8a8[0];
 		uint8 r = src_b8g8r8a8[1];
 		uint8 g = src_b8g8r8a8[3];
 		uint8 b = src_b8g8r8a8[4];
-		dst_rgb[0] = b;
-		dst_rgb[1] = g;
-		dst_rgb[2] = r;
-		dst_rgb[3] = a;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = r;
+		dst_argb[3] = a;
+		dst_argb += 4;
 		src_b8g8r8a8 += 4;
 	}
 }
 
-void R8G8B8A8ToARGBRow_C(const uint8* src_r8g8b8a8, uint8* dst_rgb, int width) {
+void R8G8B8A8ToARGBRow_C(const uint8* src_r8g8b8a8, uint8* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
 		uint8 a = src_r8g8b8a8[0];
 		uint8 b = src_r8g8b8a8[1];
 		uint8 g = src_r8g8b8a8[3];
 		uint8 r = src_r8g8b8a8[4];
-		dst_rgb[0] = b;
-		dst_rgb[1] = g;
-		dst_rgb[2] = r;
-		dst_rgb[3] = a;
-		dst_rgb += 4;
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = r;
+		dst_argb[3] = a;
+		dst_argb += 4;
 		src_r8g8b8a8 += 4;
 	}
 }
@@ -710,6 +711,16 @@ void ____DXT5ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 	}
 }
 
+void ______P8ToARGBRow_C(const uint8* src_p8, uint8* dst_argb, int width) {
+	TRGB32 *pTexturePalette = *(TRGB32 **)dst_argb; // dirty hack to avoid another argument
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8 p = src_p8[x];
+		TRGB32 color = pTexturePalette[p];
+		((TRGB32 *)dst_argb)[x] = color;
+	}
+}
+
 static const XTL::FormatToARGBRow ComponentConverters[] = {
 	nullptr, // NoCmpnts,
 	ARGB1555ToARGBRow_C, // A1R5G5B5,
@@ -734,7 +745,7 @@ static const XTL::FormatToARGBRow ComponentConverters[] = {
 	____DXT1ToARGBRow_C, // ____DXT1
 	____DXT3ToARGBRow_C, // ____DXT3
 	____DXT5ToARGBRow_C, // ____DXT5
-
+	______P8ToARGBRow_C, // ______P8
 };
 
 enum _FormatStorage {
@@ -781,7 +792,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x08 undefined             */ {},
 	/* 0x09 undefined             */ {},
 	/* 0x0A undefined             */ {},
-	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, NoCmpnts, XTL::D3DFMT_P8        }, // 8-bit palletized
+	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, ______P8, XTL::D3DFMT_P8        }, // 8-bit palletized
 	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, ____DXT1, XTL::D3DFMT_DXT1      }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
 	/* 0x0D undefined             */ {},
 	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, ____DXT3, XTL::D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
@@ -857,7 +868,7 @@ XTL::D3DCOLOR XTL::DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, c
 const XTL::ComponentEncodingInfo *XTL::EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format)
 {
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8)
-		if (FormatInfos[Format].components != NoCmpnts)
+		if (FormatInfos[Format].components > NoCmpnts && FormatInfos[Format].components < ____DXT1)
 			return &(ComponentEncodingInfos[FormatInfos[Format].components]);
 
 	return nullptr;
