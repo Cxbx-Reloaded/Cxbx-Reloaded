@@ -130,7 +130,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		EEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
 		EEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 		EEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		EEPROM->FactorySettings.AVRegion = 0x01; // = NTSC_M
+		EEPROM->FactorySettings.AVRegion = 0x0100; // = NTSC_M
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
 
