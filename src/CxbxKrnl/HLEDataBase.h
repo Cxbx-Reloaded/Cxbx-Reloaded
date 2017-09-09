@@ -90,6 +90,11 @@
 #include "HLEDataBase/XOnline.1.0.5788.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
+#include "HLEDataBase/XactEng.1.0.4928.h"
+#include "HLEDataBase/XactEng.1.0.5233.h"
+#include "HLEDataBase/XactEng.1.0.5344.h"
+#include "HLEDataBase/XactEng.1.0.5558.h"
+#include "HLEDataBase/XactEng.1.0.5788.h"
 #include "HLEDataBase/XactEng.1.0.5849.h"
 
 // ******************************************************************

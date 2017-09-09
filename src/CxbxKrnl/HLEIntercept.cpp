@@ -363,6 +363,16 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if (OrigBuildVersion == 4531)
 						BuildVersion = 4361;
 				}
+				if (strcmp(LibraryName.c_str(), Lib_XACTENG) == 0)
+				{
+					// Skip scanning for XACTENG symbols when LLE APU is selected
+					if (bLLE_APU)
+						continue;
+
+					// Change a few XACTENG versions to similar counterparts
+					if (OrigBuildVersion == 4928 || BuildVersion == 5028)
+						BuildVersion = 4928;
+				}
 
 				if(bXRefFirstPass)
                 {
