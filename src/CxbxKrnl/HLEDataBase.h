@@ -90,6 +90,11 @@
 #include "HLEDataBase/XOnline.1.0.5788.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
+#include "HLEDataBase/XactEng.1.0.4928.h"
+#include "HLEDataBase/XactEng.1.0.5233.h"
+#include "HLEDataBase/XactEng.1.0.5344.h"
+#include "HLEDataBase/XactEng.1.0.5558.h"
+#include "HLEDataBase/XactEng.1.0.5788.h"
 #include "HLEDataBase/XactEng.1.0.5849.h"
 
 // ******************************************************************
@@ -351,6 +356,7 @@ enum XRefDataBaseOffset
 	XREF_XACT_CEngine_DownloadEffectsImage,
 	XREF_XACT_CEngine_CreateSoundSource,
 	XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName,
+	XREF_XACT_CSoundBank_Play,
 	XREF_XACT_CEngine_RegisterNotification,
 	XREF_XACT_CEngine_GetNotification,
 	XREF_XACT_CEngine_UnRegisterWaveBank,

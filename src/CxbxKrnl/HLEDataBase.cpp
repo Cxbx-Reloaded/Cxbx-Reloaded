@@ -52,6 +52,7 @@ const char *Sec_D3DX = "D3DX";
 const char *Lib_DSOUND = "DSOUND";
 const char *Sec_DSOUND = Lib_DSOUND;
 const char *Lib_XACTENG = "XACTENG";
+const char *Sec_XACTENG = Lib_XACTENG;
 const char *Lib_XAPILIB = "XAPILIB";
 const char *Sec_XPP = "XPP";
 const char *Lib_XGRAPHC = "XGRAPHC";
@@ -112,8 +113,7 @@ const char *Sec_XNET = "XNET";
 #include "HLEDataBase/XOnline.1.0.5558.inl"
 #include "HLEDataBase/XOnline.1.0.5788.inl"
 #include "HLEDataBase/XOnline.1.0.5849.inl"
-#include "HLEDataBase/XactEng.1.0.4627.inl"
-#include "HLEDataBase/XactEng.1.0.5849.inl"
+#include "HLEDataBase/XactEng.OOVPA.inl"
 
 
 // ******************************************************************
@@ -165,6 +165,15 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_DSOUND, DSound, 5788),
 	HLE_ENTRY(Lib_DSOUND, DSound, 5849),
 #endif
+#if ENABLE_LEGACY_XACTENG_DB
+	HLE_ENTRY(Lib_XACTENG, XactEng, 4627),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 4928),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5233),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5344),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5558),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5788),
+	HLE_ENTRY(Lib_XACTENG, XactEng, 5849),
+#endif
 	HLE_ENTRY(Lib_XGRAPHC, XG, 3911),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4034),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4361),
@@ -190,9 +199,6 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5788),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
-
-	HLE_ENTRY(Lib_XACTENG, XactEng, 4627),
-	HLE_ENTRY(Lib_XACTENG, XactEng, 5849),
 };
 
 const HLEDataV2 HLEDataBaseV2[] = {
@@ -214,7 +220,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     // I have not seen which header section it supposed to go with...
     //{ Lib_XACTENG, { Sec_???? }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
-    //
+    // test case: Power Drome (Unluckily, use LTCG.)
     //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
     //

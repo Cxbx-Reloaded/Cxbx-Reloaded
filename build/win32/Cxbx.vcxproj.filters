@@ -246,9 +246,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h">
-      <Filter>HLEDatabase</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h">
       <Filter>HLEDatabase</Filter>
     </ClInclude>
@@ -477,6 +474,27 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h">
       <Filter>HLEDatabase\DSound</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5233.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5344.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5788.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.h">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h">
       <Filter>HLEDatabase\Xapi</Filter>
     </ClInclude>
@@ -578,9 +596,6 @@
     <None Include="..\..\resource\Splash.jpg">
       <Filter>GUI</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl">
-      <Filter>HLEDatabase</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl">
       <Filter>HLEDatabase</Filter>
     </None>
@@ -673,6 +688,30 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl">
       <Filter>HLEDatabase\DSound</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5233.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5344.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5788.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.OOVPA.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl">
       <Filter>HLEDatabase\Xapi</Filter>
@@ -786,6 +825,9 @@
     </Filter>
     <Filter Include="HLEDatabase\DSound">
       <UniqueIdentifier>{a942f43a-b405-4c5d-85cd-ffc84b66ad3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HLEDatabase\XactEng">
+      <UniqueIdentifier>{d63c05a9-f8e1-4ad1-88fb-3f5b97a21063}</UniqueIdentifier>
     </Filter>
     <Filter Include="HLEDatabase\Xapi">
       <UniqueIdentifier>{736110f8-9b79-47db-86f5-250d1d4d8b9a}</UniqueIdentifier>
