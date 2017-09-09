@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5849.inl
+// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5558.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,42 +26,42 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
-// *****************************************************************
-// * XACTEngineCreate
 // ******************************************************************
-OOVPA_NO_XREF(XACTEngineCreate, 5849, 11)
-		// XACTEngineCreate+0x09 : movzx ebx, al
-		{ 0x09, 0x0F },
-		{ 0x0A, 0xB6 },
-		{ 0x0B, 0xD8 },
+// * XACT::CSoundBank::Play
+// ******************************************************************
+OOVPA_XREF(XACT_CSoundBank_Play, 5558, 12,
 
-        // XACTEngineCreate+0x2B : push edi
-		{ 0x2B, 0x57 },
+    XREF_XACT_CSoundBank_Play,
+    XRefZero)
 
-		// XACTEngineCreate+0x31 : push 0x168
-		{ 0x31, 0x68 },
-		{ 0x32, 0x68 },
-		{ 0x33, 0x01 },
-		{ 0x34, 0x00 },
-		{ 0x35, 0x00 },
+        { 0x06, 0x8B },
 
-		// XACTEngineCreate+0xA2 : retn 0x8
-		{ 0xA2, 0xC2 },
-		{ 0xA3, 0x08 },
+        { 0x10, 0x75 },
+        { 0x11, 0x0C },
+        { 0x12, 0x8B },
+        { 0x13, 0x5E },
+        { 0x14, 0x04 },
+        { 0x15, 0x8B },
+        { 0x16, 0x46 },
+        { 0x17, 0x08 },
+
+        { 0x27, 0x85 },
+        { 0x3B, 0xE9 },
+        { 0x55, 0x35 },
 OOVPA_END;
 
 // ******************************************************************
-// * XactEng_5849
+// * XactEng_5558
 // ******************************************************************
-OOVPATable XactEng_5849[] = {
+OOVPATable XactEng_5558[] = {
 
-	REGISTER_OOVPA(XACTEngineCreate, 5849, PATCH),
+	REGISTER_OOVPA(XACTEngineCreate, 5120, PATCH),
 	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
 	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 5233, XREF),
 	REGISTER_OOVPA(IXACTEngine_RegisterStreamedWaveBank, 4928, PATCH),
@@ -85,7 +85,7 @@ OOVPATable XactEng_5849[] = {
 	REGISTER_OOVPA(IXACTSoundBank_PlayEx, 5344, XREF), // Not Implemented yet.
 
 	// ******************************************************************
-	// Provisional registration functions in XDK 5849
+	// Provisional registration functions in XDK 5558
 	// TODO: Need test cases
 	// ******************************************************************
 	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
@@ -93,6 +93,6 @@ OOVPATable XactEng_5849[] = {
 };
 
 // ******************************************************************
-// * XACTENG_5849_SIZE
+// * XACTENG_5558_SIZE
 // ******************************************************************
-uint32 XactEng_5849_SIZE = sizeof(XactEng_5849);
+uint32 XactEng_5558_SIZE = sizeof(XactEng_5558);
