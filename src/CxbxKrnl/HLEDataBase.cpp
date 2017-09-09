@@ -211,8 +211,8 @@ const HLEDataV2 HLEDataBaseV2[] = {
     // DSOUNDH is just meant to define hot fix, there is no seperate section
     //{ Lib_DSOUNDH,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 },
 
-    // I have not seen which header section it supposed to go with...
-    //{ Lib_XACTENG, { Sec_???? }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
+    //
+    //{ Lib_XACTENG, { Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
     //
     //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
