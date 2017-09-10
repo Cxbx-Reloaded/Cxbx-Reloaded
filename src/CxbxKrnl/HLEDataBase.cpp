@@ -220,7 +220,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //
     //{ Lib_XACTENG, { Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
-    // test case: Power Drome (Unluckily, use LTCG.)
+    // test case: Power Drome (Unluckily, it use LTCG version of the library.)
     //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
     //
