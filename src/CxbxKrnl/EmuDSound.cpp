@@ -615,9 +615,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
+// This revision API was used in XDK 3911 until API had changed in XDK 4039.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -644,9 +645,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+// This revision is only used in XDK 4039 and higher.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins)
@@ -3070,9 +3072,10 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes
+// * patch: CDirectSoundStream_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
+// This revision API is only used in XDK 4039 and higher.
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*   pThis,
     DWORD                   dwMixBinMask,
@@ -3099,9 +3102,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes2
+// * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
+// This revision API was used in XDK 3911 until API had changed in XDK 4039.
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*   pThis,
     LPVOID                  pMixBins)

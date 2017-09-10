@@ -1011,7 +1011,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBinVolumes, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes2, 4039, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_StopEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetOutputLevels, 4627, XREF),
