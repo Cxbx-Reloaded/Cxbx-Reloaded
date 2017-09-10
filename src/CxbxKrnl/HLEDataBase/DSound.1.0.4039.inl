@@ -1086,20 +1086,22 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetFilter
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetFilter, 4039, 8,
+OOVPA_XREF(CDirectSoundStream_SetFilter, 4039, 9,
 
     XREF_CDirectSoundStream_SetFilter,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetFilter ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetFilter ),
 
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x35, 0xE8 },
-        { 0x40, 0x68 },
-        { 0x4B, 0x8B },
+        { 0x00, 0x56 }, //Prevent incorrect offset difference from 4134 and later revision.
+
+        { 0x0B, 0x00 },
+        { 0x13, 0x74 },
+        { 0x20, 0xB8 },
+        { 0x29, 0x24 },
+        { 0x34, 0xE8 },
+        { 0x3F, 0x68 },
+        { 0x4A, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
@@ -1538,22 +1540,24 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetLFO
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetLFO, 4039, 10,
+OOVPA_XREF(CDirectSoundStream_SetLFO, 4039, 11,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetLFO ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetLFO ),
 
-        { 0x0C, 0x00 },
-        { 0x0F, 0xF0 },
-        { 0x12, 0x85 },
-        { 0x15, 0x0B },
-        { 0x3A, 0x85 },
-        { 0x3D, 0xF8 },
-        { 0x40, 0x68 },
-        { 0x4F, 0xC2 },
-        { 0x50, 0x08 },
+        { 0x00, 0x56 }, //Prevent incorrect offset difference from 4134 and later revision.
+
+        { 0x0B, 0x00 },
+        { 0x0E, 0xF0 },
+        { 0x11, 0x85 },
+        { 0x14, 0x0B },
+        { 0x39, 0x85 },
+        { 0x3C, 0xF8 },
+        { 0x3F, 0x68 },
+        { 0x4E, 0xC2 },
+        { 0x4F, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1660,20 +1664,22 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetEG
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetEG, 4039, 8,
+OOVPA_XREF(CDirectSoundStream_SetEG, 4039, 9,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetEG ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetEG ),
 
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x35, 0xE8 },
-        { 0x40, 0x68 },
-        { 0x4B, 0x8B },
+        { 0x00, 0x56 }, //Prevent incorrect offset difference from 4134 and later revision.
+
+        { 0x0B, 0x00 },
+        { 0x13, 0x74 },
+        { 0x20, 0xB8 },
+        { 0x29, 0x24 },
+        { 0x34, 0xE8 },
+        { 0x3F, 0x68 },
+        { 0x4A, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
