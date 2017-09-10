@@ -120,7 +120,6 @@ void *GetEmuPatchAddr(std::string aFunctionName)
 
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
-    Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
     printf("\n");
@@ -380,6 +379,16 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						BuildVersion = 3911;
 					if (OrigBuildVersion == 4531)
 						BuildVersion = 4361;
+				}
+				if (strcmp(LibraryName.c_str(), Lib_XACTENG) == 0)
+				{
+					// Skip scanning for XACTENG symbols when LLE APU is selected
+					if (bLLE_APU)
+						continue;
+
+					// Change a few XACTENG versions to similar counterparts
+					if (OrigBuildVersion == 4928 || BuildVersion == 5028)
+						BuildVersion = 4928;
 				}
 
 				if(bXRefFirstPass)
@@ -641,15 +650,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	// Write the Certificate Details to the cache file
 	char tAsciiTitle[40] = "Unknown";
 	setlocale(LC_ALL, "English");
-	wcstombs(tAsciiTitle, pCertificate->wszTitleName, sizeof(tAsciiTitle));
+	wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
 	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
 
 	std::stringstream titleId;
-	titleId << std::hex << pCertificate->dwTitleId;
+	titleId << std::hex << g_pCertificate->dwTitleId;
 	WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
 
 	std::stringstream region;
-	region << std::hex << pCertificate->dwGameRegion;
+	region << std::hex << g_pCertificate->dwGameRegion;
 	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
 
 	// Write Library Details

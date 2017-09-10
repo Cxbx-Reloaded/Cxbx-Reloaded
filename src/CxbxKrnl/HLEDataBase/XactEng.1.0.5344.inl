@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5849.inl
+// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5344.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,36 +32,60 @@
 // *
 // ******************************************************************
 
-// *****************************************************************
-// * XACTEngineCreate
 // ******************************************************************
-OOVPA_NO_XREF(XACTEngineCreate, 5849, 11)
-		// XACTEngineCreate+0x09 : movzx ebx, al
-		{ 0x09, 0x0F },
-		{ 0x0A, 0xB6 },
-		{ 0x0B, 0xD8 },
+// * XACT::CEngine::DownloadEffectsImage
+// ******************************************************************
+OOVPA_XREF(XACT_CEngine_DownloadEffectsImage, 5344, 12,
 
-        // XACTEngineCreate+0x2B : push edi
-		{ 0x2B, 0x57 },
+    XREF_XACT_CEngine_DownloadEffectsImage,
+    XRefZero)
 
-		// XACTEngineCreate+0x31 : push 0x168
-		{ 0x31, 0x68 },
-		{ 0x32, 0x68 },
-		{ 0x33, 0x01 },
-		{ 0x34, 0x00 },
-		{ 0x35, 0x00 },
+        { 0x02, 0xEC },
 
-		// XACTEngineCreate+0xA2 : retn 0x8
-		{ 0xA2, 0xC2 },
-		{ 0xA3, 0x08 },
+        { 0x08, 0x46 },
+        { 0x09, 0x10 },
+        { 0x0A, 0x57 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x7D },
+        { 0x0D, 0x18 },
+        { 0x0E, 0x57 },
+        { 0x0F, 0xFF },
+
+        { 0x1E, 0x85 },
+        { 0x2A, 0xC2 },
+        { 0x2B, 0x14 },
 OOVPA_END;
 
 // ******************************************************************
-// * XactEng_5849
+// * IXACTEngine_DownloadEffectsImage
 // ******************************************************************
-OOVPATable XactEng_5849[] = {
+OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 5344, 11,
 
-	REGISTER_OOVPA(XACTEngineCreate, 5849, PATCH),
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x29, XREF_XACT_CEngine_DownloadEffectsImage ),
+
+        { 0x05, 0xE8 },
+
+        { 0x19, 0x8B },
+        { 0x1A, 0xC8 },
+        { 0x1B, 0xFF },
+        { 0x1C, 0x75 },
+        { 0x1D, 0x0C },
+        { 0x1E, 0x83 },
+        { 0x1F, 0xC0 },
+
+        { 0x43, 0xC2 },
+        { 0x44, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * XactEng_5344
+// ******************************************************************
+OOVPATable XactEng_5344[] = {
+
+	REGISTER_OOVPA(XACTEngineCreate, 5120, PATCH),
 	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
 	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 5233, XREF),
 	REGISTER_OOVPA(IXACTEngine_RegisterStreamedWaveBank, 4928, PATCH),
@@ -84,6 +108,6 @@ OOVPATable XactEng_5849[] = {
 };
 
 // ******************************************************************
-// * XACTENG_5849_SIZE
+// * XACTENG_5344_SIZE
 // ******************************************************************
-uint32 XactEng_5849_SIZE = sizeof(XactEng_5849);
+uint32 XactEng_5344_SIZE = sizeof(XactEng_5344);
