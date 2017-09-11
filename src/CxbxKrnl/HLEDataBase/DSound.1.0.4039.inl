@@ -707,7 +707,10 @@ OOVPA_END;
 // * CDirectSound::CommitDeferredSettings
 // ******************************************************************
 // Verified with Agent Under Fire.
-OOVPA_NO_XREF(CDirectSound_CommitDeferredSettings, 4039, 14)
+OOVPA_XREF(CDirectSound_CommitDeferredSettings, 4039, 14,
+
+    XREF_CDirectSound_CommitDeferredSettings,
+    XRefZero)
 
         // CDirectSound_CommitDeferredSettings+0x00 : push    ebp
         { 0x00, 0x55 },
@@ -2133,4 +2136,29 @@ OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 4039, 10,
         // CDirectSoundBuffer_SetConeOrientation+0x63 : retn 14h
         { 0x63, 0xC2 },
         { 0x64, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_SetOrientation
+// ******************************************************************
+OOVPA_XREF(CDirectSound_SetOrientation, 4039, 13,
+
+    XREF_CDirectSound_SetOrientation,
+    XRefZero)
+
+        // CDirectSound_SetOrientation+0x00 : push ebp
+        { 0x00 , 0x55 },
+
+        { 0x30 , 0x8B },
+        { 0x32 , 0x0C },
+        { 0x39 , 0x8B },
+        { 0x3B , 0x10 },
+        { 0x42 , 0x8B },
+        { 0x44 , 0x14 },
+        { 0x4B , 0x8B },
+        { 0x4D , 0x18 },
+        { 0x54 , 0x8B },
+        { 0x56 , 0x1C },
+        { 0x5D , 0x8B },
+        { 0x5F , 0x20 },
 OOVPA_END;

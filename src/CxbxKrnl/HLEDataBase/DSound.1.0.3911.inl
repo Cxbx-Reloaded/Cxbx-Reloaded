@@ -977,3 +977,201 @@ OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_12, 3911, 9,
         { 0x15, 0xC2 },
         { 0x16, 0x0C },
 OOVPA_END;
+
+// ******************************************************************
+// * CMcpxAPU_Commit3dSettings
+// ******************************************************************
+OOVPA_XREF(CMcpxAPU_Commit3dSettings, 3911, 11,
+
+    XREF_CMcpxAPU_Commit3dSettings,
+    XRefZero)
+
+        // CMcpxAPU_Commit3dSettings+0x56 : fld dword ptr [eax+0x174]
+        { 0x56, 0xD9 },
+        { 0x57, 0x80 },
+        { 0x58, 0x74 },
+        { 0x59, 0x01 },
+        { 0x5A, 0x00 },
+        { 0x5B, 0x00 },
+
+        // CMcpxAPU_Commit3dSettings+0xA8 : fsubp st(1), st
+        { 0xA8, 0xDE },
+        { 0xA9, 0xE9 },
+
+        // CMcpxAPU_Commit3dSettings+0xD4 : mov esi, 0x118
+        { 0xD4, 0xBE },
+        { 0xD5, 0x18 },
+        { 0xD6, 0x01 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_CommitDeferredSettings
+// ******************************************************************
+OOVPA_XREF(CDirectSound_CommitDeferredSettings, 3911, 10,
+
+    XREF_CDirectSound_CommitDeferredSettings,
+    XRefOne)
+
+        // CDirectSound_CommitDeferredSettings+0x12 : call [CMcpxAPU_Commit3dSettings]
+        XREF_ENTRY( 0x12, XREF_CMcpxAPU_Commit3dSettings ),
+
+        // CDirectSound_CommitDeferredSettings+0x0C : mov ecx, [eax+0x0C]
+        { 0x0C, 0x8B },
+        { 0x0D, 0x48 },
+        { 0x0E, 0x0C },
+
+        // CDirectSound_CommitDeferredSettings+0x0F : push 0
+        { 0x0F, 0x6A },
+        { 0x10, 0x00 },
+
+        // CDirectSound_CommitDeferredSettings+0x19 : jz +0x0B
+        { 0x19, 0x74 },
+        { 0x1A, 0x0B },
+
+        // CDirectSound_CommitDeferredSettings+0x28 : retn 0x04
+        { 0x28, 0xC2 },
+        { 0x29, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_CommitDeferredSettings
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer
+OOVPA_XREF(IDirectSound_CommitDeferredSettings, 3911, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSound_CommitDeferredSettings+0x11 : call [CDirectSound_CommitDeferredSettings]
+        XREF_ENTRY( 0x11, XREF_CDirectSound_CommitDeferredSettings ), 
+
+        // IDirectSound_CommitDeferredSettings+0x06 : and eax, 0xFFFFFFF8
+        { 0x06, 0x83 },
+        { 0x07, 0xC0 },
+        { 0x08, 0xF8 },
+
+        // IDirectSound_CommitDeferredSettings+0x09 : neg ecx
+        { 0x09, 0xF7 },
+        { 0x0A, 0xD9 },
+
+        // IDirectSound_CommitDeferredSettings+0x15 : retn 0x04
+        { 0x15, 0xC2 },
+        { 0x16, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_SetOrientation
+// ******************************************************************
+OOVPA_XREF(CDirectSound_SetOrientation, 3911, 13,
+
+    XREF_CDirectSound_SetOrientation,
+    XRefZero)
+
+        // CDirectSound_SetOrientation+0x00 : push ebp
+        { 0x00 , 0x55 },
+
+        { 0x0F , 0x8B },
+        { 0x11 , 0x0C },
+        { 0x15 , 0x8B },
+        { 0x17 , 0x10 },
+        { 0x1B , 0x8B },
+        { 0x1D , 0x14 },
+        { 0x21 , 0x8B },
+        { 0x23 , 0x18 },
+        { 0x27 , 0x8B },
+        { 0x29 , 0x1C },
+        { 0x2D , 0x8B },
+        { 0x2F , 0x20 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_SetOrientation
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer
+OOVPA_XREF(IDirectSound_SetOrientation, 3911, 15,
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSound_CommitDeferredSettings+0x11 : call [CDirectSound_CommitDeferredSettings]
+        XREF_ENTRY( 0x42, XREF_CDirectSound_SetOrientation ), 
+
+        // IDirectSound_SetOrientation+0x00 : push ebp
+        { 0x00 , 0x55 },
+
+        // IDirectSound_SetOrientation+0x06 : fld [ebp+0x20]
+        { 0x06, 0xD9 },
+        { 0x07, 0x45 },
+        { 0x08, 0x20 },
+
+        // IDirectSound_SetOrientation+0x0C : sub esp, 0x18
+        { 0x0C, 0x83 },
+        { 0x0D, 0xEC },
+        { 0x0E, 0x18 },
+
+        // IDirectSound_SetOrientation+0x18 : add eax, 0xFFFFFFF8
+        { 0x18, 0x83 },
+        { 0x19, 0xC0 },
+        { 0x1A, 0xF8 },
+
+        // IDirectSound_SetOrientation+0x1F : neg ecx
+        { 0x1F, 0xF7 },
+        { 0x20, 0xD9 },
+
+        // IDirectSound_SetOrientation+0x47 : retn 0x20
+        { 0x47, 0xC2 },
+        { 0x48, 0x20 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_AddRef
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer
+OOVPA_NO_XREF(IDirectSound_AddRef, 3911, 12)
+
+        // IDirectSound_AddRef+0x04 : lea ecx, [eax-8]
+        { 0x04, 0x8D },
+        { 0x05, 0x48 },
+        { 0x06, 0xF8 },
+
+        // IDirectSound_AddRef+0x07 : neg eax
+        { 0x07, 0xF7 },
+        { 0x08, 0xD8 },
+
+        // IDirectSound_AddRef+0x09 : sbb eax, eax
+        { 0x09, 0x1B },
+        { 0x0A, 0xC0 },
+
+        // IDirectSound_AddRef+0x0D : mov ecx, [eax]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x08 },
+
+        // IDirectSound_AddRef+0x10 : call dword ptr [ecx+4]
+        { 0x10, 0xFF },
+        { 0x11, 0x51 },
+        { 0x12, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_Release
+// ******************************************************************
+//Generic OOVPA as of 3911 and newer
+OOVPA_NO_XREF(IDirectSound_Release, 3911, 10)
+
+        // IDirectSound_Release+0x04 : lea ecx, [eax-8]
+        { 0x04, 0x8D },
+        { 0x05, 0x48 },
+        { 0x06, 0xF8 },
+
+        // IDirectSound_Release+0x07 : neg eax
+        { 0x07, 0xF7 },
+        { 0x08, 0xD8 },
+
+        // IDirectSound_Release+0x10 : call dword ptr [ecx+8]
+        { 0x10, 0xFF },
+        { 0x11, 0x51 },
+        { 0x12, 0x08 },
+
+        // IDirectSound_Release+0x13 : retn 0x04
+        { 0x13, 0xC2 },
+        { 0x14, 0x04 },
+OOVPA_END;

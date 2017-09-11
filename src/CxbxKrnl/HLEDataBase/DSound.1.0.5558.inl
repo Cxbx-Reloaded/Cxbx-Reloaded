@@ -51,7 +51,10 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::CommitDeferredSettings
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSound_CommitDeferredSettings, 5558, 11)
+OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5558, 11,
+
+    XREF_CDirectSound_CommitDeferredSettings,
+    XRefZero)
 
         // CDirectSound_CommitDeferredSettings+0x10 : movzx eax, al
         { 0x10, 0x0F },
@@ -1639,7 +1642,8 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBinVolumes, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
-	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 5558, PATCH),
+	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 5558, XREF),
+    REGISTER_OOVPA(IDirectSound_CommitDeferredSettings, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetRolloffFactor, 5558, XREF),
@@ -1655,9 +1659,10 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CMcpxVoiceClient_SetVolume, 4134, XREF),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_Release, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_SetOrientation, 4134, XREF),
+	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetOutputBuffer, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetOutputBuffer, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetOutputBuffer, 3911, PATCH),
@@ -1769,7 +1774,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetEG, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetEG, 4242, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetEG, 4039, PATCH),
-	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetAllParameters, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetAllParameters, 3936, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetFilter, 5558, XREF),

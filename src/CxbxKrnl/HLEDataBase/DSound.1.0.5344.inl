@@ -569,7 +569,10 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::CommitDeferredSettings
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSound_CommitDeferredSettings, 5344, 11)
+OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5344, 11,
+
+    XREF_CDirectSound_CommitDeferredSettings,
+    XRefZero)
 
         // CDirectSound_CommitDeferredSettings+0x11 : movzx eax, al
         { 0x11, 0x0F },
@@ -913,7 +916,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_Release, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetBufferData, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetBufferData, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 4134, PATCH),
@@ -931,7 +934,8 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSound_EnableHeadphones, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_SetOrientation, 4134, XREF),
+	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetDistanceFactor, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDistanceFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 4134, PATCH),
@@ -942,7 +946,8 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDopplerFactor, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 3936, PATCH),
-	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 5344, PATCH),
+	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 5344, XREF),
+    REGISTER_OOVPA(IDirectSound_CommitDeferredSettings, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMaxDistance, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMaxDistance, 5344, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 5344, PATCH),
@@ -972,7 +977,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffCurve, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetRolloffCurve, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetRolloffCurve, 4627, PATCH),
-	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 5344, XREF),
 	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffFactor, 5344, XREF),
