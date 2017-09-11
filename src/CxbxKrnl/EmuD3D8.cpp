@@ -93,7 +93,7 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static BOOL                         g_bSupportsP8   = FALSE;// Does device support palette textures?
-static bool                         g_bSupportsTextureFormat[XTL::D3DFMT_INDEX32 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsTextureFormat[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -1719,29 +1719,24 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 if(FAILED(g_EmuCDPD.hRet))
                     CxbxKrnlCleanup("IDirect3D8::CreateDevice failed");
 
-				// Determine which formats this device supports
-				for (int PCFormat = XTL::D3DFMT_UNKNOWN; PCFormat <= XTL::D3DFMT_INDEX32; PCFormat++) {
-					g_bSupportsTextureFormat[PCFormat] = g_pD3D8->CheckDeviceFormat(
-						g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-						(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
-						XTL::D3DRTYPE_TEXTURE, (XTL::D3DFORMAT)PCFormat) == D3D_OK;
+				// cache device pointer
+				g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
+
+				// Which texture formats does this device support?
+				for (int X_Format = XTL::X_D3DFMT_L8; X_Format <= XTL::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
+					// Only process Xbox formats that are directly mappable to host
+					if (!XTL::EmuXBFormatRequiresConversionToARGB((XTL::X_D3DFORMAT)X_Format)) {
+						// Convert the Xbox format into host format (without warning, thanks to the above restriction)
+						XTL::D3DFORMAT PCFormat = XTL::EmuXB2PC_D3DFormat((XTL::X_D3DFORMAT)X_Format);
+						// Index g_bSupportsTextureFormat with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
+						g_bSupportsTextureFormat[X_Format] = (PCFormat != XTL::D3DFMT_UNKNOWN) &&
+							// Ask the Direct3D device if this format is supported (for textures, that is)
+							(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+								(XTL::D3DFORMAT)g_EmuCDPD.pPresentationParameters->BackBufferFormat, 0,
+								XTL::D3DRTYPE_TEXTURE, PCFormat));
+					}
 				}
-
-				// TODO : Remove these :
-				g_bSupportsP8 = g_bSupportsTextureFormat[XTL::D3DFMT_P8];
-				g_bSupportsYUY2 = false; // g_bSupportsTextureFormat[XTL::D3DFMT_YUY2];
-/* TODO : The following Direct3D8 formats are too big to fit in a table - check if the Xbox counterparts (before XTL::EmuXB2PC_D3DFormat is called) could serve as an index instead
-				D3DFMT_UYVY = MAKEFOURCC('U', 'Y', 'V', 'Y'),
-				D3DFMT_YUY2 = MAKEFOURCC('Y', 'U', 'Y', '2'),
-				D3DFMT_DXT1 = MAKEFOURCC('D', 'X', 'T', '1'),
-				D3DFMT_DXT2 = MAKEFOURCC('D', 'X', 'T', '2'),
-				D3DFMT_DXT3 = MAKEFOURCC('D', 'X', 'T', '3'),
-				D3DFMT_DXT4 = MAKEFOURCC('D', 'X', 'T', '4'),
-				D3DFMT_DXT5 = MAKEFOURCC('D', 'X', 'T', '5'),
-*/
-
-                // cache device pointer
-                g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
 
                 // default NULL guid
                 ZeroMemory(&g_ddguid, sizeof(GUID));
@@ -1775,10 +1770,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         CxbxKrnlCleanup("Could not set cooperative level");
                 }
 
-                // check for YUY2 overlay support TODO: accept other overlay types
-                {
+				// Dump all supported DirectDraw FourCC format codes
+				{
                     DWORD  dwCodes = 0;
-                    DWORD *lpCodes = 0;
+                    DWORD *lpCodes = nullptr;
 
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
                     lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
@@ -1786,12 +1781,45 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     for(DWORD v=0;v<dwCodes;v++)
                     {
 						DbgPrintf("EmuD3D8: FourCC[%d] = %.4s\n", v, (char *)&(lpCodes[v]));
-						if(lpCodes[v] == MAKEFOURCC('Y','U','Y','2')) {
-                            g_bSupportsYUY2 = true;
-                        }
+						// Map known FourCC codes to Xbox Format
+						int X_Format;
+						switch (lpCodes[v]) {
+						case MAKEFOURCC('Y', 'U', 'Y', '2'):
+							X_Format = XTL::X_D3DFMT_YUY2;
+							break;
+						case MAKEFOURCC('U', 'Y', 'V', 'Y'):
+							X_Format = XTL::X_D3DFMT_UYVY;
+							break;
+						case MAKEFOURCC('D', 'X', 'T', '1'):
+							X_Format = XTL::X_D3DFMT_DXT1;
+							break;
+						case MAKEFOURCC('D', 'X', 'T', '3'):
+							X_Format = XTL::X_D3DFMT_DXT3;
+							break;
+						case MAKEFOURCC('D', 'X', 'T', '5'):
+							X_Format = XTL::X_D3DFMT_DXT5;
+							break;
+						default:
+							continue;
+						}
+
+						// Warn if CheckDeviceFormat didn't report this format
+						if (!g_bSupportsTextureFormat[X_Format]) {
+							EmuWarning("EmuD3D8: FourCC format %.4s not previously detected via CheckDeviceFormat()! Enabling it.", (char *)&(lpCodes[v]));
+							// TODO : If this warning never shows, detecting FourCC's could be removed entirely. For now, enable the format :
+							g_bSupportsTextureFormat[X_Format] = true;
+						}
                     }
 
                     free(lpCodes);						
+				}
+
+				// TODO : Remove these :
+				g_bSupportsP8 = g_bSupportsTextureFormat[XTL::X_D3DFMT_P8];
+				g_bSupportsYUY2 = g_bSupportsTextureFormat[XTL::X_D3DFMT_YUY2];
+
+				// check for YUY2 overlay support TODO: accept other overlay types
+				{
                     if(!g_bSupportsYUY2)
                         EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
 					else
