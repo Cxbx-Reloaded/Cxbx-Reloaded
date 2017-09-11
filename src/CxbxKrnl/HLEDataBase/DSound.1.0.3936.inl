@@ -2397,7 +2397,7 @@ OOVPA_XREF(CDirectSoundStream_SetHeadroom, 3936, 10,
         { 0x11, 0xC2 },
         { 0x12, 0x08 },
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSound_SetOrientation
 // ******************************************************************
@@ -2426,13 +2426,14 @@ OOVPA_NO_XREF(IDirectSound_SetOrientation, 3936, 13)
         { 0x47, 0xC2 },
         { 0x48, 0x20 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CMcpxAPU_Commit3dSettings
 // ******************************************************************
 OOVPA_XREF(CMcpxAPU_Commit3dSettings, 3936, 11,
 
-    XREF_COMMITDEFERREDSETTINGSB,
+    XREF_CMcpxAPU_Commit3dSettings,
     XRefZero)
 
         // CMcpxAPU_Commit3dSettings+0x56 : fld dword ptr [eax+0x174]
@@ -2452,17 +2453,18 @@ OOVPA_XREF(CMcpxAPU_Commit3dSettings, 3936, 11,
         { 0xD5, 0x18 },
         { 0xD6, 0x01 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSound_CommitDeferredSettings
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CommitDeferredSettings, 3936, 10,
 
-    XREF_COMMITDEFERREDSETTINGSA,
+    XREF_CDirectSound_CommitDeferredSettings,
     XRefOne)
 
         // CDirectSound_CommitDeferredSettings+0x12 : call [CMcpxAPU_Commit3dSettings]
-        XREF_ENTRY( 0x12, XREF_COMMITDEFERREDSETTINGSB ),
+        XREF_ENTRY( 0x12, XREF_CMcpxAPU_Commit3dSettings ),
 
         // CDirectSound_CommitDeferredSettings+0x0C : mov ecx, [eax+0x0C]
         { 0x0C, 0x8B },
@@ -2481,7 +2483,8 @@ OOVPA_XREF(CDirectSound_CommitDeferredSettings, 3936, 10,
         { 0x28, 0xC2 },
         { 0x29, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSound_CommitDeferredSettings
 // ******************************************************************
@@ -2491,7 +2494,7 @@ OOVPA_XREF(IDirectSound_CommitDeferredSettings, 3936, 8,
     XRefOne)
 
         // IDirectSound_CommitDeferredSettings+0x11 : call [CDirectSound_CommitDeferredSettings]
-        XREF_ENTRY( 0x11, XREF_COMMITDEFERREDSETTINGSA ), 
+        XREF_ENTRY( 0x11, XREF_CDirectSound_CommitDeferredSettings ), 
 
         // IDirectSound_CommitDeferredSettings+0x06 : and eax, 0xFFFFFFF8
         { 0x06, 0x83 },
@@ -2506,7 +2509,8 @@ OOVPA_XREF(IDirectSound_CommitDeferredSettings, 3936, 8,
         { 0x15, 0xC2 },
         { 0x16, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSound_Release
 // ******************************************************************
@@ -2530,7 +2534,7 @@ OOVPA_NO_XREF(IDirectSound_Release, 3936, 10)
         { 0x13, 0xC2 },
         { 0x14, 0x04 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CMcpxAPU_Set3dDistanceFactor
 // ******************************************************************
@@ -3366,6 +3370,7 @@ OOVPA_XREF(IDirectSoundBuffer_PlayEx, 3936, 8,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSound_AddRef
 // ******************************************************************
@@ -3393,7 +3398,7 @@ OOVPA_NO_XREF(IDirectSound_AddRef, 3936, 12)
         { 0x11, 0x51 },
         { 0x12, 0x04 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DirectSoundGetSampleTime
 // ******************************************************************
@@ -4036,11 +4041,11 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMode, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetHeadroom, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_SetOrientation, 3936, PATCH),
-	REGISTER_OOVPA(CMcpxAPU_Commit3dSettings, 3936, XREF),
-	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_CommitDeferredSettings, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
+	REGISTER_OOVPA(CMcpxAPU_Commit3dSettings, 3911, XREF),
+	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 3911, XREF),
+	REGISTER_OOVPA(IDirectSound_CommitDeferredSettings, 3911, PATCH),
+	REGISTER_OOVPA(IDirectSound_Release, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxAPU_Set3dDistanceFactor, 3936, XREF),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 3936, PATCH),
@@ -4074,7 +4079,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(DirectSoundEnterCriticalSection, 3911, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_PlayEx, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 3911, PATCH),
-	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(DirectSoundGetSampleTime, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 3936, XREF),
