@@ -1148,8 +1148,6 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 // window message processing thread
 static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 {
-    char AsciiTitle[MAX_PATH];
-
     // register window class
     {
         LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
@@ -1170,27 +1168,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         };
 
         RegisterClassEx(&wc);
-    }
-
-    // retrieve Xbe title (if possible)
-    {
-        char tAsciiTitle[40] = "Unknown";
-
-        uint32 CertAddr = g_XbeHeader->dwCertificateAddr - g_XbeHeader->dwBaseAddr;
-
-#define CertTitleNameLength 40
-
-		// Does the title fall entirely inside the read XbeHeader?
-        if(CertAddr + offsetof(Xbe::Certificate, wszTitleName) + CertTitleNameLength < g_XbeHeaderSize)
-        {
-            Xbe::Certificate *XbeCert = (Xbe::Certificate*)((uint32)g_XbeHeader + CertAddr);
-
-            setlocale( LC_ALL, "English" );
-
-            wcstombs(tAsciiTitle, XbeCert->wszTitleName, CertTitleNameLength);
-        }
-
-		sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, tAsciiTitle);
     }
 
     // create the window
@@ -1223,7 +1200,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
         g_hEmuWindow = CreateWindow
         (
-            "CxbxRender", AsciiTitle,
+            "CxbxRender", "Cxbx-Reloaded",
             dwStyle, x, y, nWidth, nHeight,
             hwndParent, NULL, GetModuleHandle(NULL), NULL
         );
