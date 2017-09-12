@@ -911,6 +911,39 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// SUB Destination with src 
+	uint32_t result = dest - src;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, result);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
+	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
 bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
@@ -1145,6 +1178,10 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			if (EmuX86_Opcode_OUT(e, info))
 				break;
 
+			goto unimplemented_opcode;
+		case I_SUB:
+			if (EmuX86_Opcode_SUB(e, info))
+				break;
 			goto unimplemented_opcode;
 		case I_TEST:
 			if (EmuX86_Opcode_TEST(e, info))
