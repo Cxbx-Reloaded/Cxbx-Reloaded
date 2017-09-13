@@ -1299,6 +1299,7 @@ void WndMain::LoadLogo()
 }
 
 // TODO : Move these types to a more appropriate place
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943984(v=vs.85).aspx
 struct DDS_PIXELFORMAT {
 	DWORD dwSize;
 	DWORD dwFlags;
@@ -1310,6 +1311,7 @@ struct DDS_PIXELFORMAT {
 	DWORD dwABitMask;
 };
 
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943982(v=vs.85).aspx
 typedef struct {
 	DWORD           dwSize;
 	DWORD           dwFlags;
@@ -1342,7 +1344,10 @@ void WndMain::LoadGameLogo()
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;	
 
-	void *bitmapData;
+	uint8 *ImageData = NULL;
+	XTL::X_D3DPixelContainer XboxPixelContainer = {};
+	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
+
 	switch (*(DWORD*)pSection) {
 	case MAKEFOURCC('D', 'D', 'S', ' '): {
 		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
@@ -1361,14 +1366,11 @@ void WndMain::LoadGameLogo()
 		if (Format == XTL::D3DFMT_UNKNOWN)
 			return;
 
-		uint8 *DDSData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
+		ImageData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
 		//gameLogoHeight = pDDSHeader->dwHeight;
 		//gameLogoWidth = pDDSHeader->dwWidth;
 		
 		// TODO : Use PixelCopy code here to decode. For now, fake it :
-
-		XTL::X_D3DPixelContainer XboxPixelContainer = {};
-
 		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
 			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
 			(XTL::UINT)pDDSHeader->dwWidth,
@@ -1377,21 +1379,20 @@ void WndMain::LoadGameLogo()
 			XTL::EmuPC2XB_D3DFormat(Format),
 			2,
 			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
-
-		bitmapData = XTL::ConvertD3DTextureToARGB(&XboxPixelContainer, DDSData, &gameLogoWidth, &gameLogoHeight);
-		if (!bitmapData)
-			return;
-
 		break;
 	}
 	case MAKEFOURCC('X', 'P', 'R', '0'):
 	case MAKEFOURCC('X', 'P', 'R', '1'): {
-		struct Xbe::XprImage *m_xprImage = (struct Xbe::XprImage*)pSection;
+		struct Xbe::XprHeader *pXprHeader = (struct Xbe::XprHeader*)pSection;
 
-		XTL::X_D3DPixelContainer *pXboxPixelContainer = (XTL::X_D3DPixelContainer*)(&(m_xprImage->xprImageHeader.d3dTexture));
-		bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, (uint8*)&m_xprImage->pBits, &gameLogoWidth, &gameLogoHeight);
-		if (!bitmapData) // no game logo found
-			return;
+		uint SizeOfResourceHeaders = pXprHeader->dwXprHeaderSize - sizeof(Xbe::XprHeader);
+		uint SizeOfResourceData = pXprHeader->dwXprTotalSize - pXprHeader->dwXprHeaderSize;
+
+		uint8 *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
+		uint8 *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
+
+		pXboxPixelContainer = (XTL::X_D3DPixelContainer*)ResourceHeaders;
+		ImageData = ResourceData;
 
 		break;
 	}
@@ -1399,6 +1400,10 @@ void WndMain::LoadGameLogo()
 		return;
 	}
 	}
+
+	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, ImageData, &gameLogoWidth, &gameLogoHeight);
+	if (!bitmapData)
+		return;
 
 	HDC hDC = GetDC(m_hwnd);
 	m_GameLogoBMP = CreateCompatibleBitmap(hDC, gameLogoWidth, gameLogoHeight);
