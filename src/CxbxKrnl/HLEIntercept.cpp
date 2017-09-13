@@ -963,7 +963,7 @@ void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
     output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << pFunc
         << " -> " << OopvaTable->szFuncName << " " << std::dec << OopvaTable->Version;
 
-    bool IsXRef = (OopvaTable->Flags & Flag_XRef) > 0;
+    bool IsXRef = OopvaTable->Oovpa->XRefSaveIndex != XRefNoSaveIndex;
     if (IsXRef) {
         output << "\t(XREF)";
 
