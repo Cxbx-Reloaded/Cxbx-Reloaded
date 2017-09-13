@@ -124,7 +124,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_DoWork, 4039, 13,
 
-    XREF_DSDOWORKA,
+    XREF_CDirectSound_DoWork,
     XRefZero)
 
         // CDirectSound_DoWork+0x0D : mov esi, eax
