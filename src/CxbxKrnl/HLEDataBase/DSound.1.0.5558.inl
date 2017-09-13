@@ -1458,7 +1458,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundStream, 5558, 7,
 
-    XREF_DSCREATESOUNDSTREAM,
+    XREF_CDirectSound_CreateSoundStream,
     XRefZero)
 
         { 0x11, 0xD8 },
@@ -1469,7 +1469,7 @@ OOVPA_XREF(CDirectSound_CreateSoundStream, 5558, 7,
         { 0x70, 0x85 },
         { 0x83, 0xFF },
 OOVPA_END;
-
+#if 0 //Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_CreateSoundStream
 // ******************************************************************
@@ -1478,7 +1478,7 @@ OOVPA_XREF(IDirectSound_CreateSoundStream, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSCREATESOUNDSTREAM ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSound_CreateSoundStream ),
 
         { 0x03, 0x10 },
         { 0x08, 0xFF },
@@ -1488,7 +1488,7 @@ OOVPA_XREF(IDirectSound_CreateSoundStream, 5558, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetRolloffCurve
 // ******************************************************************
@@ -1768,7 +1768,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 5558, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetEG, 4242, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetEG, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_SetEG, 4134, PATCH),

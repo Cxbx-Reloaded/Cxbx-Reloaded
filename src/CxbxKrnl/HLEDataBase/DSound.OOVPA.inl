@@ -56,7 +56,7 @@
 // ******************************************************************
 OOVPATable DSound_OOVPAV2[] = {
 
-    REGISTER_OOVPAS(XAudioCalculatePitch, XREF, 3936),
+    REGISTER_OOVPAS(XAudioCalculatePitch, XREF, 3911),
     REGISTER_OOVPAS(DirectSoundEnterCriticalSection, XREF, 3911),
     REGISTER_OOVPAS(CMcpxAPU_Commit3dSettings, XREF, 3911),
     REGISTER_OOVPAS(CMcpxAPU_ServiceDeferredCommandsLow, XREF, 3936),
@@ -78,7 +78,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 4361, 4831, 5788),
-    REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3925, 3936),
+    REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
+    REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Commit3dSettings, XREF, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dConeOrientation, XREF, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dConeOutsideVolume, XREF, 3936),
@@ -191,8 +192,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetVolume, PATCH, 3936, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Use3DVoiceData, XREF, 5558),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettings, XREF, 3911, 4039, 4134, 5344, 5558, 5788),
-    REGISTER_OOVPAS(CDirectSound_CreateSoundBuffer, XREF, 3936, 4039, 4134),
-    REGISTER_OOVPAS(CDirectSound_CreateSoundStream, XREF, 3936, 4039, 4134, 5558),
+    REGISTER_OOVPAS(CDirectSound_CreateSoundBuffer, XREF, 3911, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSound_CreateSoundStream, XREF, 3911, 4039, 4134, 5558),
     REGISTER_OOVPAS(CDirectSound_DoWork, XREF, 3936, 4039),
     REGISTER_OOVPAS(CDirectSound_EnableHeadphones, XREF, 3936, 4627, 5233, 5344, 5558),
     REGISTER_OOVPAS(CDirectSound_GetCaps, XREF, 3936, 4361),
@@ -255,6 +256,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_Use3DVoiceData, PATCH, 5558),
     REGISTER_OOVPAS(IDirectSoundStream_FlushEx, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOrientation, PATCH, 3936),
+    //REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911), //TODO: IDirectSoundStream_SetEG and CDirectSoundStream_SetEG has 2 seperate functions. Except has the same asm codes.
     REGISTER_OOVPAS(IDirectSoundStream_SetMaxDistance, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSoundStream_SetPosition, PATCH, 3936),
@@ -262,7 +264,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitDeferredSettings, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CreateSoundBuffer, PATCH, 3911 /*3936, 4134, 4361*/),
-    REGISTER_OOVPAS(IDirectSound_CreateSoundStream, PATCH, 3936, 5558),
+    REGISTER_OOVPAS(IDirectSound_CreateSoundStream, PATCH, 3911 /*5558*/),
     REGISTER_OOVPAS(IDirectSound_DownloadEffectsImage, PATCH, 3936),
     REGISTER_OOVPAS(IDirectSound_EnableHeadphones, PATCH, 3936, 4627, 5233, 5558),
     REGISTER_OOVPAS(IDirectSound_GetCaps, PATCH, 3936),
@@ -284,8 +286,9 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 4039, 4242),
     REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3936, 4134, 5558),
-    REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3936, 4361),
-    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3925, 5558),
+    REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
+    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 5558),
+    REGISTER_OOVPAS(DirectSoundUseLightHRTF, PATCH, 3911),
 
 
 
