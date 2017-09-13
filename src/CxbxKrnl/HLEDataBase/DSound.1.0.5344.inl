@@ -1034,7 +1034,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 3936, PATCH),
 	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
 	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),
-	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeAngles, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4134, PATCH),

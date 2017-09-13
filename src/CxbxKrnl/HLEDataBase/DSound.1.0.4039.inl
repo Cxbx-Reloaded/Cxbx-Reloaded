@@ -65,7 +65,7 @@ OOVPA_XREF(DirectSoundCreateBuffer, 4039, 11,
            XRefOne)
 
     // DirectSoundCreateBuffer+0x2B : call [CDirectSound::CreateSoundBuffer]
-    XREF_ENTRY(0x2C, XREF_DSCREATESOUNDBUFFER),
+    XREF_ENTRY(0x2C, XREF_CDirectSound_CreateSoundBuffer),
 
     // DirectSoundCreateBuffer+0x04 : and [ebp-0x04], 0
     { 0x04, 0x83 },
@@ -91,7 +91,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundBuffer, 4039, 15,
 
-           XREF_DSCREATESOUNDBUFFER,
+           XREF_CDirectSound_CreateSoundBuffer,
            XRefZero)
     // CDirectSound_CreateSoundBuffer+0x00 : push ebp
     { 0x00, 0x55 },
@@ -1382,7 +1382,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundStream, 4039, 15,
 
-    XREF_DSCREATESOUNDSTREAM,
+    XREF_CDirectSound_CreateSoundStream,
     XRefZero)
 
         // CDirectSound_CreateSoundStream+0x25 : mov eax, 0x80004005

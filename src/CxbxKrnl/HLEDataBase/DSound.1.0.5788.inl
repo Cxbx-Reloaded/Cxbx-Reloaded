@@ -439,7 +439,7 @@ OOVPA_XREF(DirectSoundCreateStream, 5788, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x2F, XREF_DSCREATESOUNDSTREAM ),
+        XREF_ENTRY( 0x2F, XREF_CDirectSound_CreateSoundStream ),
 
         { 0x09, 0x56 },
         { 0x14, 0x45 },
@@ -697,7 +697,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4242, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetHeadroom, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 5558, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play2, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 5558, PATCH),

@@ -99,7 +99,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_Lock, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3911, PATCH),
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 4361, XREF),
 	REGISTER_OOVPA(CMcpxStream_Pause, 4831, XREF),
