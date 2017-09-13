@@ -51,10 +51,16 @@ extern VOID CxbxSetPixelContainerHeader
 	DWORD           	Common,
 	UINT				Width,
 	UINT				Height,
-	XTL::X_D3DFORMAT	Format,
 	UINT				Levels,
+	XTL::X_D3DFORMAT	Format,
 	UINT				Dimensions,
 	UINT				Pitch
+);
+
+extern uint8 *ConvertD3DTextureToARGB(
+	XTL::X_D3DPixelContainer *pXboxPixelContainer,
+	uint8 *pSrc,
+	int *pWidth, int *pHeight
 );
 
 // initialize direct3d

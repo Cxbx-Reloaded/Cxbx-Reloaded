@@ -1298,16 +1298,111 @@ void WndMain::LoadLogo()
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
+// TODO : Move these types to a more appropriate place
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943984(v=vs.85).aspx
+struct DDS_PIXELFORMAT {
+	DWORD dwSize;
+	DWORD dwFlags;
+	DWORD dwFourCC;
+	DWORD dwRGBBitCount;
+	DWORD dwRBitMask;
+	DWORD dwGBitMask;
+	DWORD dwBBitMask;
+	DWORD dwABitMask;
+};
+
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943982(v=vs.85).aspx
+typedef struct {
+	DWORD           dwSize;
+	DWORD           dwFlags;
+	DWORD           dwHeight;
+	DWORD           dwWidth;
+	DWORD           dwPitchOrLinearSize;
+	DWORD           dwDepth;
+	DWORD           dwMipMapCount;
+	DWORD           dwReserved1[11];
+	DDS_PIXELFORMAT ddspf;
+	DWORD           dwCaps;
+	DWORD           dwCaps2;
+	DWORD           dwCaps3;
+	DWORD           dwCaps4;
+	DWORD           dwReserved2;
+} DDS_HEADER;
+
 // load game logo bitmap
 void WndMain::LoadGameLogo()
 {
-	void* bitmapData;
-	int bit;
+	// Export Game Logo bitmap (XTIMAG or XSIMAG)
+	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAG"); // Check for XTIMAGE
+	if (!pSection) {
+		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAG"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		if (!pSection) {
+			return;
+		}
+	}
+
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;	
-	bool result = m_Xbe->ExportGameLogoBitmap(bitmapData, &gameLogoWidth, &gameLogoHeight, &bit);
-	
-	if (!result) // no game logo found
+
+	uint8 *ImageData = NULL;
+	XTL::X_D3DPixelContainer XboxPixelContainer = {};
+	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
+
+	switch (*(DWORD*)pSection) {
+	case MAKEFOURCC('D', 'D', 'S', ' '): {
+		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
+		XTL::D3DFORMAT Format = XTL::D3DFMT_UNKNOWN;
+		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
+			switch (pDDSHeader->ddspf.dwFourCC) {
+			case MAKEFOURCC('D', 'X', 'T', '1'): Format = XTL::D3DFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): Format = XTL::D3DFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): Format = XTL::D3DFMT_DXT5; break;
+			}
+		}
+		else {
+			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
+		}
+
+		if (Format == XTL::D3DFMT_UNKNOWN)
+			return;
+
+		ImageData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
+		//gameLogoHeight = pDDSHeader->dwHeight;
+		//gameLogoWidth = pDDSHeader->dwWidth;
+		
+		// TODO : Use PixelCopy code here to decode. For now, fake it :
+		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
+			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
+			(XTL::UINT)pDDSHeader->dwWidth,
+			(XTL::UINT)pDDSHeader->dwHeight,
+			1,
+			XTL::EmuPC2XB_D3DFormat(Format),
+			2,
+			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
+		break;
+	}
+	case MAKEFOURCC('X', 'P', 'R', '0'):
+	case MAKEFOURCC('X', 'P', 'R', '1'): {
+		struct Xbe::XprHeader *pXprHeader = (struct Xbe::XprHeader*)pSection;
+
+		uint SizeOfResourceHeaders = pXprHeader->dwXprHeaderSize - sizeof(Xbe::XprHeader);
+		uint SizeOfResourceData = pXprHeader->dwXprTotalSize - pXprHeader->dwXprHeaderSize;
+
+		uint8 *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
+		uint8 *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
+
+		pXboxPixelContainer = (XTL::X_D3DPixelContainer*)ResourceHeaders;
+		ImageData = ResourceData;
+
+		break;
+	}
+	default: {
+		return;
+	}
+	}
+
+	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, ImageData, &gameLogoWidth, &gameLogoHeight);
+	if (!bitmapData)
 		return;
 
 	HDC hDC = GetDC(m_hwnd);
@@ -1319,9 +1414,9 @@ void WndMain::LoadGameLogo()
 
 		BmpInfo.bmiHeader.biSize = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
 		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
-		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight;
+		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight; //  If biHeight is negative, the bitmap is a top-down DIB and its origin is the upper-left corner.
 		BmpInfo.bmiHeader.biPlanes = 1;
-		BmpInfo.bmiHeader.biBitCount = bit;
+		BmpInfo.bmiHeader.biBitCount = 32;
 		BmpInfo.bmiHeader.biCompression = BI_RGB;
 		BmpInfo.bmiHeader.biSizeImage = 0;
 		BmpInfo.bmiHeader.biXPelsPerMeter = 0;

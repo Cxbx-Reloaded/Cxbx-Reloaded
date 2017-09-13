@@ -56,6 +56,9 @@ class Xbe : public Error
         // deconstructor
        ~Xbe();
 
+	   // find an image by name
+	   void *FindSection(char *zsSectionName);
+
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
@@ -67,9 +70,6 @@ class Xbe : public Error
 
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
-
-		// Export Game Logo bitmap (XTIMAG or XSIMAG)
-		bool ExportGameLogoBitmap(void*& bitmapData, int *width, int *height, int *bit);
 
         // Xbe header
         #include "AlignPrefix1.h"
@@ -268,6 +268,7 @@ class Xbe : public Error
             m_Sixteen;
         };
 
+	public:
 		// used to decode game logo bitmap data
 		#include "AlignPrefix1.h"
 		struct X_D3DResourceLoc
@@ -282,9 +283,17 @@ class Xbe : public Error
 		;
 
 		#include "AlignPrefix1.h"
+		// XPR structures
+
+		// Purpose:
+		//   The XPR file format allows multiple graphics resources to be pre-defined
+		//   and bundled together into one file.  These resources can be copied into
+		//   memory and then immediately used in-place as D3D objects such as textures
+		//   and vertex buffers.  The structure below defines the XPR header and the
+		//   unique identifier for this file type.
 		struct XprHeader
 		{
-			uint32 dwXprMagic;
+			uint32 dwXprMagic; // 'XPR0' or 'XPR1'
 			uint32 dwXprTotalSize;
 			uint32 dwXprHeaderSize;
 		}
@@ -292,11 +301,15 @@ class Xbe : public Error
 		*m_xprHeader;
 
 		#include "AlignPrefix1.h"
+		// Layout of SaveImage.xbx saved game image file
+		//
+		// File is XPR0 format. Since the XPR will always contain only a single
+		// 256x256 DXT1 image, we know exactly what the header portion will look like
 		struct XprImageHeader
 		{
-			XprHeader xprHeader;
-			X_D3DResourceLoc d3dTexture;
-			uint32 dwEndOfHeader;
+			XprHeader xprHeader; // Standard XPR struct
+			X_D3DResourceLoc d3dTexture; // Standard D3D texture struct
+			uint32 dwEndOfHeader; // $FFFFFFFF
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImageHeader;
@@ -311,28 +324,6 @@ class Xbe : public Error
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImage;
-
-		#include "AlignPrefix1.h"
-		struct TRGB32
-		{
-			unsigned char B;
-			unsigned char G;
-			unsigned char R;
-			unsigned char A;
-		}
-		#include "AlignPosfix1.h"
-		;
-
-		typedef uint16 TRGB16;
-
-		bool Xbe::ReadD3DTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
-		bool Xbe::ReadD3D16bitTextureFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
-
-		bool Xbe::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
-		bool Xbe::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
-		bool Xbe::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap);
-
-		uint32 Xbe::Swizzle(uint32 value, uint32 max, uint32 shift); // Generic swizzle function, usable for both x and y dimensions.
 };
 
 // debug/retail XOR keys
