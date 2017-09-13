@@ -644,15 +644,24 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxBuffer_GetCurrentPosition
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_GetCurrentPosition, 3911, 11,
+OOVPA_XREF(CMcpxBuffer_GetCurrentPosition, 3911, 15,
 
     XREF_CMcpxBuffer_GetCurrentPosition,
     XRefZero)
 
-        // CMcpxBuffer_GetCurrentPosition+0x12 : mov eax, [esi+0x18]
+        // CMcpxBuffer_GetCurrentPosition+0x12 : mov eax, [esi+XX]
         { 0x12, 0x8B },
         { 0x13, 0x46 },
-        { 0x14, 0x18 },
+        //{ 0x14, 0x18 }, //3911 has 0x18 while 3936 has 0x08
+
+        // CMcpxBuffer_GetCurrentPosition+0x15 : and eax, 3
+        { 0x15, 0x83 },
+        { 0x16, 0xE0 },
+        { 0x17, 0x03 },
+
+        // CMcpxBuffer_GetCurrentPosition+0x18 : cmp al, 3
+        { 0x18, 0x3C },
+        { 0x19, 0x03 },
 
         // CMcpxBuffer_GetCurrentPosition+0x1A : jnz +0x79
         { 0x1A, 0x75 },
