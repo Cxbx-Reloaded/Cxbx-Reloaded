@@ -812,7 +812,7 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// SUB Destination with src (cmp internally is a discarded subtract)
-	uint32_t result = dest - src;
+	uint64_t result = dest - src;
 
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
@@ -923,7 +923,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// SUB Destination with src 
-	uint32_t result = dest - src;
+	uint64_t result = dest - src;
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, result);
