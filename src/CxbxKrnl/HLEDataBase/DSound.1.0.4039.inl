@@ -508,7 +508,7 @@ OOVPA_END;
 // Same as 4134
 OOVPA_XREF(CDirectSoundVoice_SetPitch, 4039, 6,
 
-    XREF_DSBUFFERSETPITCHB,
+    XREF_CDirectSoundVoice_SetPitch,
     XRefZero)
 
         { 0x02, 0x24 },
@@ -524,11 +524,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPitch, 4039, 13,
 
-    XREF_DSBUFFERSETPITCHA,
+    XREF_CDirectSoundBuffer_SetPitch,
     XRefOne)
 
-        // CDirectSoundBuffer_SetPitch+0x31 : call [CDirectSoundVoice::SetFrequency]
-        XREF_ENTRY( 0x31, XREF_DSBUFFERSETPITCHB ), // Was 4134 Offset -0x01h
+        // CDirectSoundBuffer_SetPitch+0x31 : call [CDirectSoundVoice::SetPitch]
+        XREF_ENTRY( 0x31, XREF_CDirectSoundVoice_SetPitch ), // Was 4134 Offset -0x01h
 
         // CDirectSoundBuffer_SetPitch+0x00 : push esi
         { 0x00, 0x56 },
@@ -549,6 +549,33 @@ OOVPA_XREF(CDirectSoundBuffer_SetPitch, 4039, 13,
         // CDirectSoundBuffer_SetPitch+0x4A : retn 0x08
         { 0x4A, 0xC2 },
         { 0x4B, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetPitch
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetPitch, 4039, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_SetPitch+0x15 : call [CDirectSoundBuffer_SetPitch]
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetPitch ),
+
+        // IDirectSoundBuffer_SetPitch+0x04 : push [esp+0x08]
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // IDirectSoundBuffer_SetPitch+0x0A : add eax, 0xFFFFFFE4
+        { 0x0A, 0x83 },
+        { 0x0B, 0xC0 },
+        { 0x0C, 0xE4 },
+
+        // IDirectSoundBuffer_SetPitch+0x19 : retn 0x08
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
 OOVPA_END;
 
 // ******************************************************************

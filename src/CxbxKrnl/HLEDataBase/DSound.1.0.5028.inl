@@ -227,7 +227,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetPitch, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPitch, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 3936, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetPitch, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_SetHeadroom, 4627, PATCH),
