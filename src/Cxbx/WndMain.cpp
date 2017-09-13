@@ -1298,14 +1298,43 @@ void WndMain::LoadLogo()
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
+// TODO : Move these types to a more appropriate place
+struct DDS_PIXELFORMAT {
+	DWORD dwSize;
+	DWORD dwFlags;
+	DWORD dwFourCC;
+	DWORD dwRGBBitCount;
+	DWORD dwRBitMask;
+	DWORD dwGBitMask;
+	DWORD dwBBitMask;
+	DWORD dwABitMask;
+};
+
+typedef struct {
+	DWORD           dwSize;
+	DWORD           dwFlags;
+	DWORD           dwHeight;
+	DWORD           dwWidth;
+	DWORD           dwPitchOrLinearSize;
+	DWORD           dwDepth;
+	DWORD           dwMipMapCount;
+	DWORD           dwReserved1[11];
+	DDS_PIXELFORMAT ddspf;
+	DWORD           dwCaps;
+	DWORD           dwCaps2;
+	DWORD           dwCaps3;
+	DWORD           dwCaps4;
+	DWORD           dwReserved2;
+} DDS_HEADER;
+
 // load game logo bitmap
 void WndMain::LoadGameLogo()
 {
 	// Export Game Logo bitmap (XTIMAG or XSIMAG)
-	struct Xbe::XprImage *m_xprImage = (struct Xbe::XprImage*)m_Xbe->FindSection("$$XTIMAG"); // Check for XTIMAGE
-	if (!m_xprImage) {
-		m_xprImage = (struct Xbe::XprImage*)m_Xbe->FindSection("$$XSIMAG"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
-		if (!m_xprImage) {
+	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAG"); // Check for XTIMAGE
+	if (!pSection) {
+		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAG"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		if (!pSection) {
 			return;
 		}
 	}
@@ -1313,10 +1342,63 @@ void WndMain::LoadGameLogo()
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;	
 
-	XTL::X_D3DPixelContainer *pXboxPixelContainer = (XTL::X_D3DPixelContainer*)(&(m_xprImage->xprImageHeader.d3dTexture));
-	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, (uint8*)&m_xprImage->pBits, &gameLogoWidth, &gameLogoHeight);
-	if (!bitmapData) // no game logo found
+	void *bitmapData;
+	switch (*(DWORD*)pSection) {
+	case MAKEFOURCC('D', 'D', 'S', ' '): {
+		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
+		XTL::D3DFORMAT Format = XTL::D3DFMT_UNKNOWN;
+		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
+			switch (pDDSHeader->ddspf.dwFourCC) {
+			case MAKEFOURCC('D', 'X', 'T', '1'): Format = XTL::D3DFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): Format = XTL::D3DFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): Format = XTL::D3DFMT_DXT5; break;
+			}
+		}
+		else {
+			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
+		}
+
+		if (Format == XTL::D3DFMT_UNKNOWN)
+			return;
+
+		uint8 *DDSData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
+		//gameLogoHeight = pDDSHeader->dwHeight;
+		//gameLogoWidth = pDDSHeader->dwWidth;
+		
+		// TODO : Use PixelCopy code here to decode. For now, fake it :
+
+		XTL::X_D3DPixelContainer XboxPixelContainer = {};
+
+		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
+			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
+			(XTL::UINT)pDDSHeader->dwWidth,
+			(XTL::UINT)pDDSHeader->dwHeight,
+			1,
+			XTL::EmuPC2XB_D3DFormat(Format),
+			2,
+			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
+
+		bitmapData = XTL::ConvertD3DTextureToARGB(&XboxPixelContainer, DDSData, &gameLogoWidth, &gameLogoHeight);
+		if (!bitmapData)
+			return;
+
+		break;
+	}
+	case MAKEFOURCC('X', 'P', 'R', '0'):
+	case MAKEFOURCC('X', 'P', 'R', '1'): {
+		struct Xbe::XprImage *m_xprImage = (struct Xbe::XprImage*)pSection;
+
+		XTL::X_D3DPixelContainer *pXboxPixelContainer = (XTL::X_D3DPixelContainer*)(&(m_xprImage->xprImageHeader.d3dTexture));
+		bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, (uint8*)&m_xprImage->pBits, &gameLogoWidth, &gameLogoHeight);
+		if (!bitmapData) // no game logo found
+			return;
+
+		break;
+	}
+	default: {
 		return;
+	}
+	}
 
 	HDC hDC = GetDC(m_hwnd);
 	m_GameLogoBMP = CreateCompatibleBitmap(hDC, gameLogoWidth, gameLogoHeight);

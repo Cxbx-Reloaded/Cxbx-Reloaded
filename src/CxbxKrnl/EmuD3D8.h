@@ -51,8 +51,8 @@ extern VOID CxbxSetPixelContainerHeader
 	DWORD           	Common,
 	UINT				Width,
 	UINT				Height,
-	XTL::X_D3DFORMAT	Format,
 	UINT				Levels,
+	XTL::X_D3DFORMAT	Format,
 	UINT				Dimensions,
 	UINT				Pitch
 );

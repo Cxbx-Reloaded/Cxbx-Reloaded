@@ -909,7 +909,7 @@ XTL::X_D3DPalette *EmuNewD3DPalette()
 	return result;
 }
 
-VOID CxbxSetPixelContainerHeader
+VOID XTL::CxbxSetPixelContainerHeader
 (
 	XTL::X_D3DPixelContainer* pPixelContainer,
 	DWORD				Common,
@@ -966,6 +966,7 @@ VOID CxbxGetPixelContainerMeasures
 )
 {
 	DWORD Size = pPixelContainer->Size;
+	XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 
 	if (Size != 0)
 	{
@@ -977,14 +978,18 @@ VOID CxbxGetPixelContainerMeasures
 	{
 		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
 		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
-		DWORD dwBPP = EmuXBFormatBytesPerPixel(GetXboxPixelContainerFormat(pPixelContainer));
+		DWORD dwBPP = EmuXBFormatBitsPerPixel(X_Format);
 
 		*pHeight = 1 << l2h;
 		*pWidth = 1 << l2w;
-		*pPitch = *pWidth * dwBPP;
+		*pPitch = *pWidth * dwBPP / 8;
 	}
 
 	*pSize = *pHeight * *pPitch;
+
+	if (EmuXBFormatIsCompressed(X_Format)) {
+		*pPitch *= 4;
+	}
 }
 
 uint8 *XTL::ConvertD3DTextureToARGB(
@@ -1010,11 +1015,6 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 
 	int DestPitch = *pWidth * sizeof(DWORD);
 	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
-
-	// TODO : Fix DXT1 pitch determination in CxbxGetPixelContainerMeasures
-	if (EmuXBFormatIsCompressed(X_Format)) {
-		SrcPitch *= 2;
-	}
 
 	uint8 *unswizleBuffer = nullptr;
 	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
