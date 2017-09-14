@@ -237,7 +237,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 {
 	// First, try to open an existing memory.bin file :
 	HANDLE hFile = CreateFile(szFilePath_memory_bin,
-		GENERIC_READ | GENERIC_WRITE,
+		GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE, 
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		/* lpSecurityAttributes */nullptr,
 		OPEN_EXISTING,
@@ -249,7 +249,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	{
 		// If the memory.bin file doesn't exist yet, create it :
 		hFile = CreateFile(szFilePath_memory_bin,
-			GENERIC_READ | GENERIC_WRITE,
+			GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			/* lpSecurityAttributes */nullptr,
 			OPEN_ALWAYS,
@@ -267,7 +267,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
-		PAGE_READWRITE,
+		PAGE_EXECUTE_READWRITE,
 		/* dwMaximumSizeHigh */0,
 		/* dwMaximumSizeLow */CONTIGUOUS_MEMORY_SIZE,
 		/**/nullptr);
@@ -280,7 +280,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	// Map memory.bin contents into memory :
 	void *memory = (void *)MapViewOfFileEx(
 		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE,
+		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
 		CONTIGUOUS_MEMORY_SIZE,
@@ -302,7 +302,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	// Map memory.bin contents into tiled memory too :
 	void *tiled_memory = (void *)MapViewOfFileEx(
 		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE,
+		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
 		CONTIGUOUS_MEMORY_SIZE,
