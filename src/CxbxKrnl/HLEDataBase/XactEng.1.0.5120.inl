@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5233.inl
+// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5120.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-#if 0 // Moved to 5120
 // *****************************************************************
 // * XACTEngineCreate
 // ******************************************************************
@@ -53,32 +52,7 @@ OOVPA_NO_XREF(XACTEngineCreate, 5120, 12)
         { 0xA2, 0xC2 },
         { 0xA3, 0x08 },
 OOVPA_END;
-#endif
 
-// ******************************************************************
-// * XACT::CEngine::RegisterStreamedWaveBank
-// ******************************************************************
-OOVPA_XREF(XACT_CEngine_RegisterStreamedWaveBank, 5233, 11,
-
-    XREF_XACT_CEngine_RegisterStreamedWaveBank,
-    XRefZero)
-
-        { 0x04, 0x10 }, //RegisterStreamedWaveBank 0x10 vs RegisterWaveBank 0x14
-        { 0x25, 0x8B },
-
-        { 0x3A, 0x2E }, //RegisterStreamedWaveBank 0x2E vs RegisterWaveBank 0x32
-        { 0x3B, 0xFF },
-        { 0x3C, 0x74 },
-        { 0x3D, 0x24 },
-        { 0x3E, 0x14 },
-        { 0x3F, 0x8B },
-        { 0x40, 0xCE },
-        { 0x41, 0xE8 },
-
-        { 0x67, 0xEB },
-OOVPA_END;
-
-#if 0 // Moved to 5120
 // ******************************************************************
 // * XACT::CEngine::UnRegisterWaveBank
 // ******************************************************************
@@ -104,8 +78,7 @@ OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank, 5120, 13,
         { 0x45, 0xF6 },
         { 0x62, 0xC2 },
 OOVPA_END;
-#endif
-#if 0 // Moved to 5120
+
 // ******************************************************************
 // * XACT::CEngine::RegisterWaveBank
 // ******************************************************************
@@ -129,33 +102,7 @@ OOVPA_XREF(XACT_CEngine_RegisterWaveBank, 5120, 12,
         { 0x79, 0xC2 },
         { 0x7A, 0x10 },
 OOVPA_END;
-#endif
 
-// ******************************************************************
-// * XACT::CEngine::RegisterWaveBank
-// ******************************************************************
-OOVPA_XREF(XACT_CEngine_RegisterWaveBank, 5233, 12,
-
-    XREF_XACT_CEngine_RegisterWaveBank,
-    XRefZero)
-
-        { 0x04, 0x14 }, //RegisterStreamedWaveBank 0x10 vs RegisterWaveBank 0x14
-        { 0x1A, 0x3B },
-
-        { 0x3A, 0x32 },
-        { 0x3B, 0xFF },
-        { 0x3C, 0x74 },
-        { 0x3D, 0x24 },
-        { 0x3E, 0x18 },
-        { 0x3F, 0x8B },
-        { 0x40, 0xCE },
-        { 0x41, 0xFF },
-
-        { 0x7C, 0xC2 },
-        { 0x7D, 0x10 },
-OOVPA_END;
-
-#if 0 // Moved to 5120
 // ******************************************************************
 // * IXACTEngine_RegisterWaveBank
 // ******************************************************************
@@ -181,45 +128,3 @@ OOVPA_XREF(IXACTEngine_RegisterWaveBank, 5120, 10,
         { 0x40, 0xC2 },
         { 0x41, 0x10 },
 OOVPA_END;
-#endif
-
-// ******************************************************************
-// * XactEng_5233
-// ******************************************************************
-OOVPATable XactEng_5233[] = {
-
-	REGISTER_OOVPA(XACTEngineCreate, 5120, PATCH),
-	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 4928, XREF), // For 5120
-	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 5233, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterStreamedWaveBank, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_CreateSoundBank, 4928, XREF),
-	REGISTER_OOVPA(IXACTEngine_CreateSoundBank, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_UnRegisterWaveBank, 5120, XREF),
-	REGISTER_OOVPA(IXACTEngine_UnRegisterWaveBank, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_GetNotification, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_GetNotification, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterWaveBank, 5120, XREF),
-	REGISTER_OOVPA(XACT_CEngine_RegisterWaveBank, 5233, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterWaveBank, 5120, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterNotification, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterNotification, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_CreateSoundSource, 4928, XREF),
-	REGISTER_OOVPA(IXACTEngine_CreateSoundSource, 4928, PATCH),
-
-	// ******************************************************************
-	// Provisional registration functions in XDK 5233
-	// TODO: Need test cases
-	// ******************************************************************
-	REGISTER_OOVPA(XACT_CSoundBank_GetSoundCueIndexFromFriendlyName, 4928, XREF),
-	REGISTER_OOVPA(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4928, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_DownloadEffectsImage, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_DownloadEffectsImage, 4627, PATCH),
-	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
-	// ******************************************************************
-};
-
-// ******************************************************************
-// * XACTENG_5233_SIZE
-// ******************************************************************
-uint32 XactEng_5233_SIZE = sizeof(XactEng_5233);

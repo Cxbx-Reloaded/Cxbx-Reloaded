@@ -38,6 +38,7 @@
 
 #include "HLEDataBase/XactEng.1.0.4627.inl"
 #include "HLEDataBase/XactEng.1.0.4928.inl"
+#include "HLEDataBase/XactEng.1.0.5120.inl"
 #include "HLEDataBase/XactEng.1.0.5233.inl"
 #include "HLEDataBase/XactEng.1.0.5344.inl"
 #include "HLEDataBase/XactEng.1.0.5558.inl"
