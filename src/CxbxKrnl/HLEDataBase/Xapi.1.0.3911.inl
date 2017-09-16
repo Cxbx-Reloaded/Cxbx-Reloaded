@@ -1020,13 +1020,32 @@ OOVPA_END;
 // ******************************************************************
 // * XAutoPowerDownResetTimer
 // ******************************************************************
-OOVPA_NO_XREF(XAutoPowerDownResetTimer, 3911, 6)
+// Assembly line at 0x00 and 0x09 are unique. It will prevent any false detection it might find in the future.
+OOVPA_NO_XREF(XAutoPowerDownResetTimer, 3911, 12)
 
+        //XAutoPowerDownResetTimer+0x00 : push 0FFFFFFCDh
+        { 0x00, 0x6A },
+        { 0x01, 0xCD },
+
+        //XAutoPowerDownResetTimer+0x02 : pop ecx
         { 0x02, 0x59 },
+
+        //XAutoPowerDownResetTimer+0x08 : push ecx
         { 0x08, 0x51 },
+
+        //XAutoPowerDownResetTimer+0x09 : mov eax, 0B5659000h
+        { 0x09, 0xB8 },
         { 0x0A, 0x00 },
+        { 0x0B, 0x90 },
+        { 0x0C, 0x65 },
+        { 0x0D, 0xB5 },
+
+        //XAutoPowerDownResetTimer+0x0E : push eax
         { 0x0E, 0x50 },
+
         { 0x14, 0xFF },
+
+        //XAutoPowerDownResetTimer+0x1A : ret
         { 0x1A, 0xC3 },
 OOVPA_END;
 
