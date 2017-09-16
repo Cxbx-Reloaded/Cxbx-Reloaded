@@ -36,6 +36,13 @@
 
 #include "Cxbx.h"
 
+// http://stackoverflow.com/questions/5134523/msvc-doesnt-expand-va-args-correctly
+// MSVC_EXPAND works around a Visual C++ problem, expanding __VA_ARGS__ incorrectly:
+#define MSVC_EXPAND(x) x
+
+#define STRINGIZEX(x) #x
+#define STRINGIZE(x) STRINGIZEX(x)
+
 #pragma pack(1)
 
 // ******************************************************************
@@ -172,8 +179,23 @@ const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patc
 
 //Below this is a revise version 2 to improve OOPVA scan as possible.
 
+/* Use XREF define to knowledge it is reference purpose only.*/
+#define REGISTER_OOVPA_V2_XREF(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version, 0)
+
+/* Use PATCH define only for functions with FUNC_EXPORTS included.*/
+#define REGISTER_OOVPA_V2_PATCH(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version, 0)
+
+/* DISABLED define will perform scan and append "_DISABLED" only.
+ * This is only effective for functions with "FUNC_EXPORTS" bypass purpose.
+ * XREF remain unaffected and will perform task normally.
+ * NOTICE: Do not use DISABLED on XREF OOVPA! Or developers will be confused. */
+#define REGISTER_OOVPA_V2_DISABLED(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, STRINGIZEX(Symbol## _ ##TYPE), Version, 0)
+
 #define REGISTER_OOVPA_V2(Symbol, TYPE, Version) \
-    MSVC_EXPAND(REGISTER_OOVPA_##TYPE(Symbol, Version))
+    MSVC_EXPAND(REGISTER_OOVPA_V2_##TYPE(Symbol, TYPE, Version))
 //	{ &(Symbol ## _ ## Version).Header, #Symbol, Version, Flags }
 
 // ******************************************************************
@@ -184,10 +206,6 @@ struct OOVPATableV2 {
     uint16_t Version;
     OOVPA *pOovpa;
 };
-
-// http://stackoverflow.com/questions/5134523/msvc-doesnt-expand-va-args-correctly
-// MSVC_EXPAND works around a Visual C++ problem, expanding __VA_ARGS__ incorrectly:
-#define MSVC_EXPAND(x) x
 
 // Based on https://codecraft.co/2014/11/25/variadic-macros-tricks/
 // and https://groups.google.com/d/msg/comp.std.c/d-6Mj5Lko_s/jqonQLK20HcJ
