@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // No longer used, replaced by generic 5120 version
 // *****************************************************************
 // * XACTEngineCreate
 // ******************************************************************
@@ -55,13 +56,14 @@ OOVPA_NO_XREF(XACTEngineCreate, 5849, 11)
 		{ 0xA2, 0xC2 },
 		{ 0xA3, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XactEng_5849
 // ******************************************************************
 OOVPATable XactEng_5849[] = {
 
-	REGISTER_OOVPA(XACTEngineCreate, 5849, PATCH),
+	REGISTER_OOVPA(XACTEngineCreate, 5120, PATCH),
 	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
 	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 5233, XREF),
 	REGISTER_OOVPA(IXACTEngine_RegisterStreamedWaveBank, 4928, PATCH),
