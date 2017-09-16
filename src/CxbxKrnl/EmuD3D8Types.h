@@ -188,6 +188,8 @@ X_D3DFORMAT, *PX_D3DFORMAT;
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
 {
+    X_D3DPT_NONE = 0, // Dxbx addition
+
     X_D3DPT_POINTLIST             = 1,
     X_D3DPT_LINELIST              = 2,
     X_D3DPT_LINELOOP              = 3,    // Xbox only
@@ -207,13 +209,13 @@ X_D3DPRIMITIVETYPE;
 typedef enum _X_D3DRESOURCETYPE
 {
     X_D3DRTYPE_NONE               =  0,
-    X_D3DRTYPE_SURFACE            =  1,
-    X_D3DRTYPE_VOLUME             =  2,
-    X_D3DRTYPE_TEXTURE            =  3,
-    X_D3DRTYPE_VOLUMETEXTURE      =  4,
-    X_D3DRTYPE_CUBETEXTURE        =  5,
-    X_D3DRTYPE_VERTEXBUFFER       =  6,
-    X_D3DRTYPE_INDEXBUFFER        =  7,
+    X_D3DRTYPE_SURFACE            =  1, // = D3DRESOURCETYPE.D3DRTYPE_SURFACE
+    X_D3DRTYPE_VOLUME             =  2, // = D3DRESOURCETYPE.D3DRTYPE_VOLUME
+    X_D3DRTYPE_TEXTURE            =  3, // = D3DRESOURCETYPE.D3DRTYPE_TEXTURE
+    X_D3DRTYPE_VOLUMETEXTURE      =  4, // = D3DRESOURCETYPE.D3DRTYPE_VOLUMETEXTURE
+    X_D3DRTYPE_CUBETEXTURE        =  5, // = D3DRESOURCETYPE.D3DRTYPE_CUBETEXTURE
+    X_D3DRTYPE_VERTEXBUFFER       =  6, // = D3DRESOURCETYPE.D3DRTYPE_VERTEXBUFFER
+    X_D3DRTYPE_INDEXBUFFER        =  7, // = D3DRESOURCETYPE.D3DRTYPE_INDEXBUFFER
     X_D3DRTYPE_PUSHBUFFER         =  8,
     X_D3DRTYPE_PALETTE            =  9,
     X_D3DRTYPE_FIXUP              =  10,
@@ -222,16 +224,20 @@ typedef enum _X_D3DRESOURCETYPE
 }
 X_D3DRESOURCETYPE;
 
+// D3DUSAGE values (all but the Xbox extensions match the PC versions) :
 #define X_D3DUSAGE_RENDERTARGET           0x00000001
 #define X_D3DUSAGE_DEPTHSTENCIL           0x00000002
+// for Vertex/Index buffers
 #define X_D3DUSAGE_WRITEONLY              0x00000008
 #define X_D3DUSAGE_POINTS                 0x00000040
 #define X_D3DUSAGE_RTPATCHES              0x00000080
 #define X_D3DUSAGE_DYNAMIC                0x00000200
+// for CreateVertexShader
 #define X_D3DUSAGE_PERSISTENTDIFFUSE      0x00000400L   // Xbox-only
 #define X_D3DUSAGE_PERSISTENTSPECULAR     0x00000800L   // Xbox-only
 #define X_D3DUSAGE_PERSISTENTBACKDIFFUSE  0x00001000L   // Xbox-only
 #define X_D3DUSAGE_PERSISTENTBACKSPECULAR 0x00002000L   // Xbox-only
+// for CreateTexture/CreateImageSurface
 #define X_D3DUSAGE_BORDERSOURCE_COLOR     0x00000000L   // Xbox-only
 #define X_D3DUSAGE_BORDERSOURCE_TEXTURE   0x00010000L   // Xbox-only
 
@@ -296,15 +302,21 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     UINT                BackBufferHeight;
     X_D3DFORMAT         BackBufferFormat;
     UINT                BackBufferCount;
+
     D3DMULTISAMPLE_TYPE MultiSampleType;
+
     D3DSWAPEFFECT       SwapEffect;
     HWND                hDeviceWindow;
     BOOL                Windowed;
     BOOL                EnableAutoDepthStencil;
     X_D3DFORMAT         AutoDepthStencilFormat;
     DWORD               Flags;
+
     UINT                FullScreen_RefreshRateInHz;
     UINT                FullScreen_PresentationInterval;
+    // The Windows DirectX8 variant ends here
+    // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
+    // assert(offsetof(X_D3DPRESENT_PARAMETERS, BufferSurfaces) == sizeof(_D3DPRESENT_PARAMETERS_));
     IDirect3DSurface8  *BufferSurfaces[3];
     IDirect3DSurface8  *DepthStencilSurface;
 }
@@ -335,21 +347,24 @@ struct X_D3DVertexShader
 
 typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
 {
-   DWORD    PSAlphaInputs[8];          // Alpha inputs for each stage
-   DWORD    PSFinalCombinerInputsABCD; // Final combiner inputs
-   DWORD    PSFinalCombinerInputsEFG;  // Final combiner inputs (continued)
-   DWORD    PSConstant0[8];            // C0 for each stage
-   DWORD    PSConstant1[8];            // C1 for each stage
-   DWORD    PSAlphaOutputs[8];         // Alpha output for each stage
-   DWORD    PSRGBInputs[8];            // RGB inputs for each stage
-   DWORD    PSCompareMode;             // Compare modes for clipplane texture mode
-   DWORD    PSFinalCombinerConstant0;  // C0 in final combiner
-   DWORD    PSFinalCombinerConstant1;  // C1 in final combiner
-   DWORD    PSRGBOutputs[8];           // Stage 0 RGB outputs
-   DWORD    PSCombinerCount;           // Active combiner count (Stages 0-7)
-   DWORD    PSTextureModes;            // Texture addressing modes
-   DWORD    PSDotMapping;              // Input mapping for dot product modes
-   DWORD    PSInputTexture;            // Texture source for some texture modes
+   DWORD    PSAlphaInputs[8];          // X_D3DRS_PSALPHAINPUTS0..X_D3DRS_PSALPHAINPUTS7 : Alpha inputs for each stage
+   DWORD    PSFinalCombinerInputsABCD; // X_D3DRS_PSFINALCOMBINERINPUTSABCD : Final combiner inputs
+   DWORD    PSFinalCombinerInputsEFG;  // X_D3DRS_PSFINALCOMBINERINPUTSEFG : Final combiner inputs (continued)
+   DWORD    PSConstant0[8];            // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7 : C0 for each stage
+   DWORD    PSConstant1[8];            // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7 : C1 for each stage
+   DWORD    PSAlphaOutputs[8];         // X_D3DRS_PSALPHAOUTPUTS0..X_D3DRS_PSALPHAOUTPUTS7 : Alpha output for each stage
+   DWORD    PSRGBInputs[8];            // X_D3DRS_PSRGBINPUTS0..X_D3DRS_PSRGBINPUTS7 : RGB inputs for each stage
+   DWORD    PSCompareMode;             // X_D3DRS_PSCOMPAREMODE : Compare modes for clipplane texture mode
+   DWORD    PSFinalCombinerConstant0;  // X_D3DRS_PSFINALCOMBINERCONSTANT0 : C0 in final combiner
+   DWORD    PSFinalCombinerConstant1;  // X_D3DRS_PSFINALCOMBINERCONSTANT1 : C1 in final combiner
+   DWORD    PSRGBOutputs[8];           // X_D3DRS_PSRGBOUTPUTS0..X_D3DRS_PSRGBOUTPUTS7 : Stage 0 RGB outputs
+   DWORD    PSCombinerCount;           // X_D3DRS_PSCOMBINERCOUNT : Active combiner count (Stages 0-7)
+   DWORD    PSTextureModes;            // X_D3DRS_PSTEXTUREMODES: Texture addressing modes
+   DWORD    PSDotMapping;              // X_D3DRS_PSDOTMAPPING : Input mapping for dot product modes
+   DWORD    PSInputTexture;            // X_D3DRS_PSINPUTTEXTURE : Texture source for some texture modes
+
+    // These last three DWORDs are used to define how Direct3D8 pixel shader constants map to the constant
+    // registers in each combiner stage. They are used by the Direct3D run-time software but not by the hardware.
    DWORD    PSC0Mapping;               // Mapping of c0 regs to D3D constants
    DWORD    PSC1Mapping;               // Mapping of c1 regs to D3D constants
    DWORD    PSFinalCombinerConstants;  // Final combiner constant mapping
@@ -384,7 +399,7 @@ PIXEL_SHADER;
 
 typedef struct _STREAM_DYNAMIC_PATCH_
 {
-    BOOL  NeedPatch;       // This is to know whether is data which must be patched
+    BOOL  NeedPatch;       // This is to know whether it's data which must be patched
     DWORD ConvertedStride;
     DWORD NbrTypes;        // Number of the stream data types
     UINT  *pTypes;         // The stream data types (xbox)
@@ -404,7 +419,7 @@ typedef struct _VERTEX_SHADER
     DWORD Handle;
 
     // These are the parameters given by the XBE,
-    // we save them to be be able to return them when necassary.
+    // we save them to be able to return them when necessary.
     UINT                  Size;
     DWORD                *pDeclaration;
     DWORD                 DeclarationSize;
@@ -425,7 +440,7 @@ struct X_D3DResource
 	DWORD Lock;
 };
 
-// d3d resource "common" masks
+// D3D resource "common" masks
 #define X_D3DCOMMON_REFCOUNT_MASK      0x0000FFFF
 #define X_D3DCOMMON_TYPE_MASK          0x00070000
 #define X_D3DCOMMON_TYPE_SHIFT         16
@@ -434,10 +449,12 @@ struct X_D3DResource
 #define X_D3DCOMMON_TYPE_PUSHBUFFER    0x00020000
 #define X_D3DCOMMON_TYPE_PALETTE       0x00030000
 #define X_D3DCOMMON_TYPE_TEXTURE       0x00040000
-#define X_D3DCOMMON_TYPE_SURFACE       0x00050000
+#define X_D3DCOMMON_TYPE_SURFACE       0x00050000 // Also covers Volume resources
 #define X_D3DCOMMON_TYPE_FIXUP         0x00060000
 #define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
 #define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
+#define X_D3DCOMMON_INTREFCOUNT_1      (1 << X_D3DCOMMON_INTREFCOUNT_SHIFT) // Dxbx addition
+#define X_D3DCOMMON_VIDEOMEMORY        0x00800000 // Not used.
 #define X_D3DCOMMON_D3DCREATED         0x01000000
 #define X_D3DCOMMON_ISLOCKED           0x02000010 // Surface is currently locked (potential unswizzle candidate)
 #define X_D3DCOMMON_UNUSED_MASK        0xFE000000
@@ -517,18 +534,9 @@ X_D3DPALETTESIZE;
 
 struct X_D3DPixelContainer : public X_D3DResource
 {
-    DWORD		Format;
-    DWORD       Size;
+    DWORD		Format; // Format information about the texture.
+    DWORD       Size; // Size of a non power-of-2 texture, must be zero otherwise
 };
-
-// Clear flags
-#define X_D3DCLEAR_ZBUFFER  0x00000001
-#define X_D3DCLEAR_STENCIL  0x00000002
-#define X_D3DCLEAR_TARGET_R 0x00000010
-#define X_D3DCLEAR_TARGET_G 0x00000020
-#define X_D3DCLEAR_TARGET_B 0x00000040
-#define X_D3DCLEAR_TARGET_A 0x00000080
-#define X_D3DCLEAR_TARGET   (X_D3DCLEAR_TARGET_R | X_D3DCLEAR_TARGET_G | X_D3DCLEAR_TARGET_B | X_D3DCLEAR_TARGET_A)
 
 // pixel container "format" masks
 #define X_D3DFORMAT_RESERVED1_MASK        0x00000003      // Must be zero
@@ -536,23 +544,30 @@ struct X_D3DPixelContainer : public X_D3DResource
 #define X_D3DFORMAT_DMACHANNEL_A          0x00000001      // DMA channel A - the default for all system memory
 #define X_D3DFORMAT_DMACHANNEL_B          0x00000002      // DMA channel B - unused
 #define X_D3DFORMAT_CUBEMAP               0x00000004      // Set if the texture if a cube map
-#define X_D3DFORMAT_BORDERSOURCE_COLOR    0x00000008
-#define X_D3DFORMAT_DIMENSION_MASK        0x000000F0      // # of dimensions
+#define X_D3DFORMAT_BORDERSOURCE_COLOR    0x00000008      // If set, uses D3DTSS_BORDERCOLOR as a border
+#define X_D3DFORMAT_DIMENSION_MASK        0x000000F0      // # of dimensions, must be 2 or 3
 #define X_D3DFORMAT_DIMENSION_SHIFT       4
-#define X_D3DFORMAT_FORMAT_MASK           0x0000FF00
+#define X_D3DFORMAT_FORMAT_MASK           0x0000FF00      // D3DFORMAT - See X_D3DFMT_* above
 #define X_D3DFORMAT_FORMAT_SHIFT          8
-#define X_D3DFORMAT_MIPMAP_MASK           0x000F0000
+#define X_D3DFORMAT_MIPMAP_MASK           0x000F0000      // # mipmap levels (always 1 for surfaces)
 #define X_D3DFORMAT_MIPMAP_SHIFT          16
-#define X_D3DFORMAT_USIZE_MASK            0x00F00000      // Log 2 of the U size of the base texture
+#define X_D3DFORMAT_USIZE_MASK            0x00F00000      // Log 2 of the U size of the base texture (only set for swizzled or compressed)
 #define X_D3DFORMAT_USIZE_SHIFT           20
-#define X_D3DFORMAT_VSIZE_MASK            0x0F000000      // Log 2 of the V size of the base texture
+#define X_D3DFORMAT_VSIZE_MASK            0x0F000000      // Log 2 of the V size of the base texture (only set for swizzled or compressed)
 #define X_D3DFORMAT_VSIZE_SHIFT           24
-#define X_D3DFORMAT_PSIZE_MASK            0xF0000000      // Log 2 of the P size of the base texture
+#define X_D3DFORMAT_PSIZE_MASK            0xF0000000      // Log 2 of the P size of the base texture (only set for swizzled or compressed)
 #define X_D3DFORMAT_PSIZE_SHIFT           28
 
 // pixel container "size" masks
-#define X_D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
-#define X_D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
+// The layout of the size field, used for non swizzled or compressed textures.
+//
+// The Size field of a container will be zero if the texture is swizzled or compressed.
+// It is guarenteed to be non-zero otherwise because either the height/width will be
+// greater than one or the pitch adjust will be nonzero because the minimum texture
+// pitch is 8 bytes.
+#define X_D3DSIZE_WIDTH_MASK              0x00000FFF   // Width of the texture - 1, in texels
+//#define X_D3DSIZE_WIDTH_SHIFT           0
+#define X_D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height of the texture - 1, in texels
 #define X_D3DSIZE_HEIGHT_SHIFT            12
 #define X_D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
 #define X_D3DSIZE_PITCH_SHIFT             24
@@ -642,35 +657,6 @@ typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
 
 // D3DCALLBACK
 typedef void (__cdecl * D3DCALLBACK)(DWORD Context);
-
-// X_D3DTEXTUREOP values :
-
-#define X_D3DTOP_DISABLE 1
-#define X_D3DTOP_SELECTARG1 2
-#define X_D3DTOP_SELECTARG2 3
-#define X_D3DTOP_MODULATE  4
-#define X_D3DTOP_MODULATE2X  5
-#define X_D3DTOP_MODULATE4X  6
-#define X_D3DTOP_ADD  7
-#define X_D3DTOP_ADDSIGNED  8
-#define X_D3DTOP_ADDSIGNED2X  9
-#define X_D3DTOP_SUBTRACT  10
-#define X_D3DTOP_ADDSMOOTH  11
-#define X_D3DTOP_BLENDDIFFUSEALPHA  12
-#define X_D3DTOP_BLENDCURRENTALPHA  13
-#define X_D3DTOP_BLENDTEXTUREALPHA  14
-#define X_D3DTOP_BLENDFACTORALPHA  15
-#define X_D3DTOP_BLENDTEXTUREALPHAPM  16
-#define X_D3DTOP_PREMODULATE  17
-#define X_D3DTOP_MODULATEALPHA_ADDCOLOR  18
-#define X_D3DTOP_MODULATECOLOR_ADDALPHA  19
-#define X_D3DTOP_MODULATEINVALPHA_ADDCOLOR  20
-#define X_D3DTOP_MODULATEINVCOLOR_ADDALPHA  21
-#define X_D3DTOP_DOTPRODUCT3  22
-#define X_D3DTOP_MULTIPLYADD  23
-#define X_D3DTOP_LERP  24
-#define X_D3DTOP_BUMPENVMAP  25
-#define X_D3DTOP_BUMPENVMAPLUMINANCE  26
 
 // X_D3DRENDERSTATETYPE values
 typedef enum _X_D3DRENDERSTATETYPE {
@@ -880,15 +866,129 @@ typedef enum _X_D3DRENDERSTATETYPE {
 #define X_D3DRS_FIRST X_D3DRS_PS_FIRST
 #define X_D3DRS_LAST X_D3DRS_COMPLEX_LAST
 
+// X_D3DWRAP values :
+constexpr DWORD X_D3DWRAP_U = 0x00000010;
+constexpr DWORD X_D3DWRAP_V = 0x00001000;
+constexpr DWORD X_D3DWRAP_W = 0x00100000;
+
+// X_D3DTEXTURESTAGESTATETYPE values :
+// Dxbx note : See DxbxFromOldVersion_D3DTSS(), as these might need correction for older SDK versions!
+// The set starts out with "deferred" texture states :
+constexpr DWORD X_D3DTSS_ADDRESSU = 0;
+constexpr DWORD X_D3DTSS_ADDRESSV = 1;
+constexpr DWORD X_D3DTSS_ADDRESSW = 2;
+constexpr DWORD X_D3DTSS_MAGFILTER = 3;
+constexpr DWORD X_D3DTSS_MINFILTER = 4;
+constexpr DWORD X_D3DTSS_MIPFILTER = 5;
+constexpr DWORD X_D3DTSS_MIPMAPLODBIAS = 6;
+constexpr DWORD X_D3DTSS_MAXMIPLEVEL = 7;
+constexpr DWORD X_D3DTSS_MAXANISOTROPY = 8;
+constexpr DWORD X_D3DTSS_COLORKEYOP = 9; // Xbox ext.
+constexpr DWORD X_D3DTSS_COLORSIGN = 10; // Xbox ext.
+constexpr DWORD X_D3DTSS_ALPHAKILL = 11; // Xbox ext.
+constexpr DWORD X_D3DTSS_COLOROP = 12;
+constexpr DWORD X_D3DTSS_COLORARG0 = 13;
+constexpr DWORD X_D3DTSS_COLORARG1 = 14;
+constexpr DWORD X_D3DTSS_COLORARG2 = 15;
+constexpr DWORD X_D3DTSS_ALPHAOP = 16;
+constexpr DWORD X_D3DTSS_ALPHAARG0 = 17;
+constexpr DWORD X_D3DTSS_ALPHAARG1 = 18;
+constexpr DWORD X_D3DTSS_ALPHAARG2 = 19;
+constexpr DWORD X_D3DTSS_RESULTARG = 20;
+constexpr DWORD X_D3DTSS_TEXTURETRANSFORMFLAGS = 21;
+// End of "deferred" texture states, continuing with the rest :
+constexpr DWORD X_D3DTSS_BUMPENVMAT00 = 22;
+constexpr DWORD X_D3DTSS_BUMPENVMAT01 = 23;
+constexpr DWORD X_D3DTSS_BUMPENVMAT11 = 24;
+constexpr DWORD X_D3DTSS_BUMPENVMAT10 = 25;
+constexpr DWORD X_D3DTSS_BUMPENVLSCALE = 26;
+constexpr DWORD X_D3DTSS_BUMPENVLOFFSET = 27;
+constexpr DWORD X_D3DTSS_TEXCOORDINDEX = 28;
+constexpr DWORD X_D3DTSS_BORDERCOLOR = 29;
+constexpr DWORD X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
+constexpr DWORD X_D3DTSS_UNSUPPORTED = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
+// End of texture states.
+
+// Texture state boundaries :
+
+constexpr DWORD X_D3DTSS_DEFERRED_FIRST = X_D3DTSS_ADDRESSU;
+constexpr DWORD X_D3DTSS_DEFERRED_LAST = X_D3DTSS_TEXTURETRANSFORMFLAGS;
+
+constexpr DWORD X_D3DTSS_FIRST = X_D3DTSS_ADDRESSU;
+constexpr DWORD X_D3DTSS_LAST = X_D3DTSS_COLORKEYCOLOR;
+
+constexpr DWORD X_D3DTS_STAGECOUNT = 4; // Dxbx addition
+constexpr DWORD X_D3DTS_STAGESIZE = 32; // Dxbx addition
+
+constexpr DWORD X_PSH_COMBINECOUNT = 8; // Dxbx addition
+constexpr DWORD X_PSH_CONSTANTCOUNT = 8; // Dxbx addition
+
+// X_D3DTEXTUREOP values :
+constexpr DWORD X_D3DTOP_DISABLE = 1;
+constexpr DWORD X_D3DTOP_SELECTARG1 = 2;
+constexpr DWORD X_D3DTOP_SELECTARG2 = 3;
+constexpr DWORD X_D3DTOP_MODULATE = 4;
+constexpr DWORD X_D3DTOP_MODULATE2X = 5;
+constexpr DWORD X_D3DTOP_MODULATE4X = 6;
+constexpr DWORD X_D3DTOP_ADD = 7;
+constexpr DWORD X_D3DTOP_ADDSIGNED = 8;
+constexpr DWORD X_D3DTOP_ADDSIGNED2X = 9;
+constexpr DWORD X_D3DTOP_SUBTRACT = 10;
+constexpr DWORD X_D3DTOP_ADDSMOOTH = 11;
+constexpr DWORD X_D3DTOP_BLENDDIFFUSEALPHA = 12;
+constexpr DWORD X_D3DTOP_BLENDCURRENTALPHA = 13;
+constexpr DWORD X_D3DTOP_BLENDTEXTUREALPHA = 14;
+constexpr DWORD X_D3DTOP_BLENDFACTORALPHA = 15;
+constexpr DWORD X_D3DTOP_BLENDTEXTUREALPHAPM = 16;
+constexpr DWORD X_D3DTOP_PREMODULATE = 17;
+constexpr DWORD X_D3DTOP_MODULATEALPHA_ADDCOLOR = 18;
+constexpr DWORD X_D3DTOP_MODULATECOLOR_ADDALPHA = 19;
+constexpr DWORD X_D3DTOP_MODULATEINVALPHA_ADDCOLOR = 20;
+constexpr DWORD X_D3DTOP_MODULATEINVCOLOR_ADDALPHA = 21;
+constexpr DWORD X_D3DTOP_DOTPRODUCT3 = 22;
+constexpr DWORD X_D3DTOP_MULTIPLYADD = 23;
+constexpr DWORD X_D3DTOP_LERP = 24;
+constexpr DWORD X_D3DTOP_BUMPENVMAP = 25;
+constexpr DWORD X_D3DTOP_BUMPENVMAPLUMINANCE = 26;
+
+// X_D3DTEXTUREADDRESS values :
+constexpr DWORD X_D3DTADDRESS_WRAP = 1;
+constexpr DWORD X_D3DTADDRESS_MIRROR = 2;
+constexpr DWORD X_D3DTADDRESS_CLAMP = 3;
+constexpr DWORD X_D3DTADDRESS_BORDER = 4;
+constexpr DWORD X_D3DTADDRESS_CLAMPTOEDGE = 5;
+
+// X_D3DCLEAR values :
+constexpr DWORD X_D3DCLEAR_ZBUFFER = 0x00000001;
+constexpr DWORD X_D3DCLEAR_STENCIL = 0x00000002;
+constexpr DWORD X_D3DCLEAR_TARGET_R = 0x00000010;  // Clear target surface R component (Xbox ext.)
+constexpr DWORD X_D3DCLEAR_TARGET_G = 0x00000020;  // Clear target surface G component (Xbox ext.)
+constexpr DWORD X_D3DCLEAR_TARGET_B = 0x00000040;  // Clear target surface B component (Xbox ext.)
+constexpr DWORD X_D3DCLEAR_TARGET_A = 0x00000080;  // Clear target surface A component (Xbox ext.)
+constexpr DWORD X_D3DCLEAR_TARGET = X_D3DCLEAR_TARGET_R | X_D3DCLEAR_TARGET_G | X_D3DCLEAR_TARGET_B | X_D3DCLEAR_TARGET_A;
+
+// X_D3DCOLORWRITEENABLE values :
+constexpr DWORD X_D3DCOLORWRITEENABLE_RED = (1 << 16);
+constexpr DWORD X_D3DCOLORWRITEENABLE_GREEN = (1 << 8);
+constexpr DWORD X_D3DCOLORWRITEENABLE_BLUE = (1 << 0);
+constexpr DWORD X_D3DCOLORWRITEENABLE_ALPHA = (1 << 24);
+constexpr DWORD X_D3DCOLORWRITEENABLE_ALL = 0x01010101; // Xbox ext.
+
 // deferred texture stage state "unknown" flag
 #define X_D3DTSS_UNK 0x7fffffff
 
 typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 
-#define X_VSCM_96                     0
-#define X_VSCM_192                    1
-#define X_VSCM_192FIXEDPIPELINE       2
-#define X_VSCM_NONERESERVED          16
+#define X_D3DSCM_96CONSTANTS                  0x00 // Enables constants 0..95
+#define X_D3DSCM_192CONSTANTS                 0x01 // Enables constants -96..-1 on top of 0..95
+#define X_D3DSCM_192CONSTANTSANDFIXEDPIPELINE 0x02 // Unsupported?
+#define X_D3DSCM_NORESERVEDCONSTANTS          0x10  // Do not reserve constant -38 and -37
+
+#define X_D3DSCM_RESERVED_CONSTANT1 -38 // Becomes 58 after correction, contains Scale v
+#define X_D3DSCM_RESERVED_CONSTANT2 -37 // Becomes 59 after correction, contains Offset
+
+#define X_D3DSCM_CORRECTION 96 // Add 96 to arrive at the range 0..191 (instead of 96..95)
+#define X_D3DVS_CONSTREG_COUNT 192
 
 // Vertex shader types
 #define X_VST_NORMAL                  1

@@ -157,7 +157,7 @@ static DWORD                        g_VertexShaderSlots[136];
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 
-static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
+static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
@@ -3313,7 +3313,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
         hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
-                                            g_VertexShaderConstantMode == X_VSCM_NONERESERVED,
+                                            g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
 											&bUseDeclarationOnly);
         if(SUCCEEDED(hRet))
         {
@@ -7767,7 +7767,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
     // Store viewport offset and scale in constant registers 58 (c-38) and
     // 59 (c-37) used for screen space transformation.
-    if(g_VertexShaderConstantMode != X_VSCM_NONERESERVED)
+    if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
     {
         // TODO: Proper solution.
         static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
