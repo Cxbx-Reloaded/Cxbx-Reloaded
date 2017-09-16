@@ -349,6 +349,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5120.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.inl" />
