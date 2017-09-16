@@ -1,8 +1,8 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;"````"    `;;;,  .,;;  ;;;"";;"   `;;;,  .,;;
-// *  [[[             "[[,,[["   [[[__[[\.    "[[,,[["
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
 // *  $$$              Y$$$P     $$""""Y$$     Y$$$P
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
@@ -130,7 +130,7 @@ enum PS_TEXTUREMODES
 // Mappings:
 // ZERO_TO_ONE         :rgb->(r,g,b): 0x0=>0.0, 0xff=>1.0
 // MINUS1_TO_1_D3D     :rgb->(r,g,b): 0x0=>-128/127, 0x01=>-1.0, 0x80=>0.0, 0xff=>1.0
-// MINUS1_TO_1_GL      :rgb->(r,g,b): 0x80=>-1.0, 0x7f=>1.0
+// MINUS1_TO_1_GL      :rgb->(r,g,b): 0x80=>-1.0, 0x0=>0.0, 0x7f=>1.0
 // MINUS1_TO_1         :rgb->(r,g,b): 0x80=>-128/127, 0x81=>-1.0, 0x0=>0.0, 0x7f=>1.0
 // HILO_1              :HL->(H,L,1.0): 0x0000=>0.0, 0xffff=>1.0
 // HILO_HEMISPHERE     :HL->(H,L,sqrt(1-H*H-L*L)): 0x8001=>-1.0, 0x0=>0.0, 0x7fff=>1.0, 0x8000=>-32768/32767
@@ -268,10 +268,34 @@ enum PS_COMBINERCOUNTFLAGS
 // For all other inputs,
 //     a,b,c,d each contain a value from PS_REGISTER, PS_CHANNEL, and PS_INPUTMAPPING
 
+// The input can have the following mappings applied :
+//
+// PS_INPUTMAPPING_UNSIGNED_IDENTITY : y = max(0,x)       =  1*max(0,x) + 0.0
+// PS_INPUTMAPPING_UNSIGNED_INVERT   : y = 1 - max(0,x)   = -1*max(0,x) + 1.0
+// PS_INPUTMAPPING_EXPAND_NORMAL     : y = 2*max(0,x) - 1 =  2*max(0,x) - 1.0
+// PS_INPUTMAPPING_EXPAND_NEGATE     : y = 1 - 2*max(0,x) = -2*max(0,x) + 1.0
+// PS_INPUTMAPPING_HALFBIAS_NORMAL   : y = max(0,x) - 1/2 =  1*max(0,x) - 0.5
+// PS_INPUTMAPPING_HALFBIAS_NEGATE   : y = 1/2 - max(0,x) = -1*max(0,x) + 0.5
+// PS_INPUTMAPPING_SIGNED_IDENTITY   : y = x              =  1*      x  + 0.0
+// PS_INPUTMAPPING_SIGNED_NEGATE     : y = -x             = -1*      x  + 0.0
+//
+// (Note : I don't know for sure if the max() operation mentioned above is indeed what happens,
+// as there's no further documentation available on this. Native Direct3D can clamp with the
+// '_sat' instruction modifier, but that's not really the same as these Xbox1 input mappings.)
+//
+// When the input register is PS_ZERO, the above mappings result in the following constants:
+//
+// PS_REGISTER_NEGATIVE_ONE      (PS_INPUTMAPPING_EXPAND_NORMAL on zero)   : y = -1.0
+// PS_REGISTER_NEGATIVE_ONE_HALF (PS_INPUTMAPPING_HALFBIAS_NORMAL on zero) : y = -0.5
+// PS_REGISTER_ZERO itself                                                 : y =  0.0
+// PS_REGISTER_ONE_HALF          (PS_INPUTMAPPING_HALFBIAS_NEGATE on zero) : y =  0.5
+// PS_REGISTER_ONE               (PS_INPUTMAPPING_UNSIGNED_INVERT on zero) : y =  1.0
+// (Note : It has no define, but PS_INPUTMAPPING_EXPAND_NEGATE on zero results in ONE too!)
+
 enum PS_INPUTMAPPING
 {
-    PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, // max(0,x)         OK for final combiner
-    PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, // 1 - max(0,x)     OK for final combiner
+    PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, // max(0,x)         OK for final combiner: y = abs(x)
+    PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, // 1 - max(0,x)     OK for final combiner: y = 1 - x
     PS_INPUTMAPPING_EXPAND_NORMAL=     0x40L, // 2*max(0,x) - 1   invalid for final combiner
     PS_INPUTMAPPING_EXPAND_NEGATE=     0x60L, // 1 - 2*max(0,x)   invalid for final combiner
     PS_INPUTMAPPING_HALFBIAS_NORMAL=   0x80L, // max(0,x) - 1/2   invalid for final combiner
@@ -316,14 +340,16 @@ enum PS_CHANNEL
     PS_CHANNEL_ALPHA= 0x10, // used as RGB or ALPHA source
 };
 
+constexpr DWORD PS_ChannelMask = (DWORD)PS_CHANNEL_ALPHA;
+constexpr DWORD PS_NoChannelMask = (DWORD)(~PS_ChannelMask);
+constexpr DWORD PS_AlphaChannelsMask = (DWORD)(PS_ChannelMask | (PS_ChannelMask << 8) | (PS_ChannelMask << 16) | (PS_ChannelMask << 24));
+constexpr DWORD PS_NoChannelsMask = (DWORD)(~PS_AlphaChannelsMask);
 
 enum PS_FINALCOMBINERSETTING
 {
     PS_FINALCOMBINERSETTING_CLAMP_SUM=     0x80, // V1+R0 sum clamped to [0,1]
-
-    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= 0x40, // unsigned invert mapping
-
-    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= 0x20, // unsigned invert mapping
+    PS_FINALCOMBINERSETTING_COMPLEMENT_V1= 0x40, // unsigned invert mapping  (1 - v1) is used as an input to the sum rather than v1
+    PS_FINALCOMBINERSETTING_COMPLEMENT_R0= 0x20, // unsigned invert mapping  (1 - r0) is used as an input to the sum rather than r0
 };
 
 // =========================================================================================================
@@ -350,7 +376,9 @@ enum PS_COMBINEROUTPUT
     PS_COMBINEROUTPUT_SHIFTLEFT_1=         0x10L, // y = x*2
     PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS=    0x18L, // y = (x - 0.5)*2
     PS_COMBINEROUTPUT_SHIFTLEFT_2=         0x20L, // y = x*4
+    // 0x28 ?
     PS_COMBINEROUTPUT_SHIFTRIGHT_1=        0x30L, // y = x/2
+    // 0x38 ?
 
     PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA=    0x80L, // RGB only
 
@@ -419,8 +447,6 @@ enum PS_GLOBALFLAGS
     PS_GLOBALFLAGS_TEXMODE_ADJUST=        0x0001L, // adjust texture modes according to set texture
 };
 
-#if 0 // Dxbx translation
-
 enum PSH_OPCODE
 {
 	PO_COMMENT,
@@ -467,52 +493,6 @@ enum PSH_OPCODE
 	PO_XFC
 };
 
-const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_OPCODE*/] = {
-	// Pixel shader header opcodes (must be specified in this order) :
-	{/* PO_COMMENT */  /*mn:*/";", /*_Out: */ 0, /*_In: */ 0, /*note:*/""}, //
-	{/* PO_PS */  /*mn:*/"ps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/""}, // Must occur once, Xbox needs an x prefix {xps}, Native needs a 1.3 suffix {ps.1.3}
-	{/* PO_DEF */ /*mn:*/"def",  /*_Out: */ 1, /*_In: */ 4, /*note:*/""}, // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-#ifdef CXBX_USE_PS_2_0
-	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/""},
-#endif
-	{/* PO_TEX */ /*mn:*/"tex",  /*_Out: */ 1, /*_In: */ 0, /*note:*/""},
-	{/* PO_TEXBEM */ /*mn:*/"texbem",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXBEML */ /*mn:*/"texbeml",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXBRDF */ /*mn:*/"texbrdf",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""}, // /*note: */ Not supported by Direct3D8 ?
-	{/* PO_TEXCOORD */ /*mn:*/"texcoord",  /*_Out: */ 1, /*_In: */ 0, /*note:*/""},
-	{/* PO_TEXKILL */ /*mn:*/"texkill",  /*_Out: */ 1, /*_In: */ 0, /*note:*/""},
-	{/* PO_TEXDP3 */ /*mn:*/"texdp3",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXDP3TEX */ /*mn:*/"texdp3tex",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X2TEX */ /*mn:*/"texm3x2tex",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X2DEPTH */ /*mn:*/"texm3x2depth",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""}, // /*note: */ requires ps.1.3 and a preceding texm3x2pad
-	{/* PO_TEXM3X3DIFF */ /*mn:*/"texm3x3diff",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""}, // /*note: */ Not supported by Direct3D8 ?
-	{/* PO_TEXM3X3VSPEC */ /*mn:*/"texm3x3vspec",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X3TEX */ /*mn:*/"texm3x3tex",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""}, // /*note: */ Uses a cube texture
-	{/* PO_TEXREG2AR */ /*mn:*/"texreg2ar",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXREG2GB */ /*mn:*/"texreg2gb",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X2PAD */ /*mn:*/"texm3x2pad",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X3PAD */ /*mn:*/"texm3x3pad",  /*_Out: */ 1, /*_In: */ 1, /*note:*/""},
-	{/* PO_TEXM3X3SPEC */ /*mn:*/"texm3x3spec",  /*_Out: */ 1, /*_In: */ 2, /*note:*/""},
-	// Arithmetic opcodes :
-	{/* PO_ADD */ /*mn:*/"add",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0+s1"},
-	{/* PO_CMP */ /*mn:*/"cmp",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0={s0>=0?s1:s2}"},
-	{/* PO_CND */ /*mn:*/"cnd",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d1={s0.a>0.5?s1:s2}"}, // 1st input must be "r0.a"
-	{/* PO_DP3 */ /*mn:*/"dp3",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0 dot3 s1"},
-	{/* PO_DP4 */ /*mn:*/"dp4",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0 dot4 s1"},
-	{/* PO_LRP */ /*mn:*/"lrp",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0=s0*s1+{1-s0}*s2=s0*{s1-s2}+s2"},
-	{/* PO_MAD */ /*mn:*/"mad",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0=s0*s1+s2"},
-	{/* PO_MOV */ /*mn:*/"mov",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"d0=s0"},
-	{/* PO_MUL */ /*mn:*/"mul",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0*s1"},
-	{/* PO_NOP */ /*mn:*/"nop",  /*_Out: */ 0, /*_In: */ 0, /*note:*/""},
-	{/* PO_SUB */ /*mn:*/"sub",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0-s1"},
-	// Xbox-only {NV2A} opcodes :
-	{/* PO_XMMA */  /*mn:*/"xmma", /*_Out: */ 3, /*_In: */ 4, /*note:*/"d0=s0*s1, d1=s2*s3, d2={s0*s1}+{s2*s3}"},
-	{/* PO_XMMC */  /*mn:*/"xmmc", /*_Out: */ 3, /*_In: */ 4, /*note:*/"d0=s0*s1, d1=s2*s3, d2={r0.a>0.5}?{s0*s1}:{s2*s3}"},
-	{/* PO_XDM */ /*mn:*/"xdm",  /*_Out: */ 2, /*_In: */ 4, /*note:*/"d0=s0 dot s1, d1=s2*s3"},
-	{/* PO_XDD */ /*mn:*/"xdd",  /*_Out: */ 2, /*_In: */ 4, /*note:*/"d0=s0 dot s1, d1=s2 dot s3"},
-	{/* PO_XFC */ /*mn:*/"xfc",  /*_Out: */ 0, /*_In: */ 7, /*note:*/"r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1"}
-};
-
 enum PSH_ARGUMENT_TYPE
 {
 	PARAM_VALUE,      // Xbox only; Numberic constants used in Xbox-only opcodes
@@ -526,59 +506,43 @@ enum PSH_ARGUMENT_TYPE
 	PARAM_C           // Constant registers, set by def opcodes or SetPixelShaderConstant
 };
 
-const char *PSH_ARGUMENT_TYPE_Str[/*PSH_ARGUMENT_TYPE*/] = {
-	//  Prefix        #  r/w   Input?  Output?  Note
-	"",        // *  r     No      No       Used for numeric constants like -1, 0, 1
-	"discard", // *  w     No      Yes      Only for xbox opcodes (native opcodes have single output - discards must be removed)
-	"fog",     // 1  r     Yes     No       Only for final combiner parameter
-	"sum",     // 1  r     Yes     No       Only for final combiner parameter
-	"prod",    // 1  r     Yes     No       Only for final combiner parameter
-	"r",       // 2  r/w   Yes     Yes      We fake a few extra registers and resolve them in FixupPixelShader
-	"t",       // 4  r/w   Yes     Yes      D3D9 cannot write to these!
-	"v",       // 2  r     Yes     Yes
-	"c"        // 16 r     Yes     No       Xbox has 8*c0,c1=16, while PC D3D8 has only 8, we try to reduce that in FixupPixelShader
-};
+constexpr int FakeRegNr_Sum = 2;
+constexpr int FakeRegNr_Prod = 3;
+constexpr int FakeRegNr_Xmm1 = 4;
+constexpr int FakeRegNr_Xmm2 = 5;
 
-const
-int FakeRegNr_Sum = 2;
-int FakeRegNr_Prod = 3;
-int FakeRegNr_Xmm1 = 4;
-int FakeRegNr_Xmm2 = 5;
+constexpr int XFC_COMBINERSTAGENR = X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
 
-// TODO : Translate From Dxbx :
-//const
-//int XFC_COMBINERSTAGENR = X_PSH_COMBINECOUNT; // Always call XFC "stage 9", 1 after the 8th combiner
-
-int PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
-int PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
-int PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
-int PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
+constexpr int PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
+constexpr int PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
+constexpr int PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
+constexpr int PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
 // Extra constants to support features not present in Native D3D :
-int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
-int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
-int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
-int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
+constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
+constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
+constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
 
 #ifdef CXBX_USE_PS_3_0
-int PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
-int PSH_PC_MAX_R_REGISTER_COUNT = 32; // ps 3.0
-int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 3.0
-int PSH_PC_MAX_V_REGISTER_COUNT = 10; // ps 3.0
-int PSH_PC_MAX_REGISTER_COUNT = 224;
+constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
+constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 32; // ps 3.0
+constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 3.0
+constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 10; // ps 3.0
+constexpr int PSH_PC_MAX_REGISTER_COUNT = 224;
 #else
 #ifdef CXBX_USE_PS_2_0
-int PSH_PC_MAX_C_REGISTER_COUNT = 32; // ps 2.0
-int PSH_PC_MAX_R_REGISTER_COUNT = 12; // ps 2.0
-int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 2.0
-int PSH_PC_MAX_T_REGISTER_COUNT = 8; // ps 2.0
-int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 2.0
-int PSH_PC_MAX_REGISTER_COUNT = 32;
+constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 32; // ps 2.0
+constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 12; // ps 2.0
+constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 2.0
+constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 8; // ps 2.0
+constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 2.0
+constexpr int PSH_PC_MAX_REGISTER_COUNT = 32;
 #else // CXBX_USE_PS_1_3
-int PSH_PC_MAX_C_REGISTER_COUNT = 8; // ps 1.3
-int PSH_PC_MAX_R_REGISTER_COUNT = 2; // ps 1.3
-int PSH_PC_MAX_T_REGISTER_COUNT = 4; // ps 1.3
-int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 1.3
-int PSH_PC_MAX_REGISTER_COUNT = 8;
+constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 8; // ps 1.3
+constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 2; // ps 1.3
+constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 4; // ps 1.3
+constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 1.3
+constexpr int PSH_PC_MAX_REGISTER_COUNT = 8;
 #endif
 #endif
 
@@ -590,16 +554,6 @@ enum PSH_INST_MODIFIER {
 	INSMOD_X4,   // y =  x        *   4
 	INSMOD_D2,   // y =  x        * 0.5
 	INSMOD_SAT   // Xbox doesn"t support this, but has ARGMOD_SATURATE instead
-};
-
-const char *PSH_INST_MODIFIER_Str[/*PSH_INST_MODIFIER*/] = {
-	"",
-	"_bias",
-	"_x2",
-	"_bx2",
-	"_x4",
-	"_d2",
-	"_sat"
 };
 
 // Four argument modifiers (applied in this order) :
@@ -627,27 +581,6 @@ enum PSH_ARG_MODIFIER {
 };
 // TODO : Translate From Dxbx :
 // PSH_ARG_MODIFIERs = set of PSH_ARG_MODIFIER;
-
-const char *PSH_ARG_MODIFIER_Str[/*PSH_ARG_MODIFIER*/] = {
-	"%s",
-
-	"1-%s",
-	"-%s",
-
-	"%s_bias",
-
-	"%s_x2",
-	"%s_bx2",
-	"%s_x4",
-	"%s_d2",
-
-	"%s_sat",
-
-	"%s", // .a is added via Mask
-	"%s"  // .b idem
-};
-
-#endif // 0 Dxbx translation
 
 // dump pixel shader definition to file
 void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
