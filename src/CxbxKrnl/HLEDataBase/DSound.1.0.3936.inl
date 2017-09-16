@@ -741,7 +741,7 @@ OOVPA_XREF(IDirectSoundBuffer_Lock, 3936, 9,
         { 0x2D, 0xC2 },
         { 0x2E, 0x20 },
 OOVPA_END;
-
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundVoice_SetHeadroom
 // ******************************************************************
@@ -774,7 +774,8 @@ OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 3936, 12,
         { 0x3C, 0xC2 },
         { 0x3D, 0x08 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
@@ -801,6 +802,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 3936, 10,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundBuffer_SetBufferData
@@ -3856,6 +3858,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions, 3936, 9,
         { 0x1E, 0x0C },
 OOVPA_END;
 #endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundStream::Pause
 // ******************************************************************
@@ -3868,7 +3871,7 @@ OOVPA_NO_XREF(CDirectSoundStream_Pause, 3936, 6)
         { 0x10, 0xC2 },
         { 0x11, 0x08 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundBuffer::SetConeOrientation
 // ******************************************************************
@@ -4005,8 +4008,8 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_Lock, 3936, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
-	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 3936, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 3911, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetBufferData, 3911, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetMixBins, 3911, XREF),
@@ -4120,7 +4123,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes_12, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 3911, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3911, PATCH),
-	REGISTER_OOVPA(CDirectSoundStream_Pause, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_Pause, 3911, PATCH),
     REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 3936, XREF),
     REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
     REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 3936, XREF),
