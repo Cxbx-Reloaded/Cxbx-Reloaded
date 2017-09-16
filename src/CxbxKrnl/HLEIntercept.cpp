@@ -949,27 +949,27 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 	}
 }
 
-void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
+void EmuRegisterSymbol(OOVPATable *OovpaTable, xbaddr pFunc)
 {
     // Ignore registered symbol in current database.
-    uint32_t hasSymbol = g_SymbolAddresses[OopvaTable->szFuncName];
+    uint32_t hasSymbol = g_SymbolAddresses[OovpaTable->szFuncName];
     if (hasSymbol != 0)
         return;
 
     // Now that we found the address, store it (regardless if we patch it or not)
-    g_SymbolAddresses[OopvaTable->szFuncName] = (uint32_t)pFunc;
+    g_SymbolAddresses[OovpaTable->szFuncName] = (uint32_t)pFunc;
 
     // Output some details
     std::stringstream output;
     output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << pFunc
-        << " -> " << OopvaTable->szFuncName << " " << std::dec << OopvaTable->Version;
+        << " -> " << OovpaTable->szFuncName << " " << std::dec << OovpaTable->Version;
 
-    bool IsXRef = OopvaTable->Oovpa->XRefSaveIndex != XRefNoSaveIndex;
+    bool IsXRef = OovpaTable->Oovpa->XRefSaveIndex != XRefNoSaveIndex;
     if (IsXRef) {
         output << "\t(XREF)";
 
         // do we need to save the found address?
-        OOVPA* Oovpa = OopvaTable->Oovpa;
+        OOVPA* Oovpa = OovpaTable->Oovpa;
         if (Oovpa->XRefSaveIndex != XRefNoSaveIndex) {
             // is the XRef not saved yet?
             switch (XRefDataBase[Oovpa->XRefSaveIndex]) {
@@ -992,9 +992,9 @@ void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
                 }
                 default:
                 {
-                    if (XRefDataBase[OopvaTable->Oovpa->XRefSaveIndex] != pFunc) {
+                    if (XRefDataBase[OovpaTable->Oovpa->XRefSaveIndex] != pFunc) {
                         EmuWarning("Found OOVPA on other address than in XRefDataBase!");
-                        EmuWarning("%s: %4d - pFunc: %08X, stored: %08X", OopvaTable->szFuncName, Oovpa->XRefSaveIndex, pFunc, XRefDataBase[Oovpa->XRefSaveIndex]);
+                        EmuWarning("%s: %4d - pFunc: %08X, stored: %08X", OovpaTable->szFuncName, Oovpa->XRefSaveIndex, pFunc, XRefDataBase[Oovpa->XRefSaveIndex]);
                     }
                     break;
                 }
@@ -1003,22 +1003,25 @@ void EmuRegisterSymbol(OOVPATable *OopvaTable, xbaddr pFunc)
     }
 
     // Retrieve the associated patch, if any is available
-    void* addr = GetEmuPatchAddr(std::string(OopvaTable->szFuncName));
-    bool DontPatch = (OopvaTable->Flags & Flag_DontPatch) > 0;
-    if (DontPatch) {
-        // Mention if there's an unused patch
-        if (addr != nullptr)
-            output << "\t*PATCH UNUSED!*";
-        else
-            output << "\t*DISABLED*";
+    void* addr = GetEmuPatchAddr(std::string(OovpaTable->szFuncName));
+
+    if (addr != nullptr) {
+        EmuInstallPatch(OovpaTable->szFuncName, pFunc, addr);
+        output << "\t*PATCHED*";
     } else {
-        if (addr != nullptr) {
-            EmuInstallPatch(OopvaTable->szFuncName, pFunc, addr);
-            output << "\t*PATCHED*";
-        } else {
-            // Mention there's no patch available, if it was to be applied
-            if (!IsXRef) // TODO : Remove this restriction once we patch xrefs regularly
-                output << "\t*NO PATCH AVAILABLE!*";
+        const char* checkDisableStr = nullptr;
+        size_t getFuncStrLength = strlen(OovpaTable->szFuncName);
+
+        if (getFuncStrLength > 9) {
+            checkDisableStr = &OovpaTable->szFuncName[getFuncStrLength - 9];
+        }
+
+        if (checkDisableStr != nullptr && strcmp(checkDisableStr, "_DISABLED") == 0) {
+            output << "\t*DISABLED*";
+
+        // Mention there's no patch available, if it was to be applied
+        } else if (!IsXRef) {
+            output << "\t*NO PATCH AVAILABLE!*";
         }
     }
 
@@ -1136,11 +1139,6 @@ static void EmuInstallPatchesV2(OOVPATable *OovpaTable, uint32 OovpaTableSize, X
                 pLastKnownFunc = 0;
             }
         }
-
-        // Never used : skip scans when so configured
-        bool DontScan = (pLoop->Flags & Flag_DontScan) > 0;
-        if (DontScan)
-            continue;
 
         // Skip higher build version
         if (buildVersion < pLoop->Version)
