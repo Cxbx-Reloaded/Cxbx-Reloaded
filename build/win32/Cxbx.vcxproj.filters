@@ -695,6 +695,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5120.inl">
+      <Filter>HLEDatabase\XactEng</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5233.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
