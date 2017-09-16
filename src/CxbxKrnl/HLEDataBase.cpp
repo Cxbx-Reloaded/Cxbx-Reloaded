@@ -55,6 +55,7 @@ const char *Lib_XACTENG = "XACTENG";
 const char *Sec_XACTENG = Lib_XACTENG;
 const char *Lib_XAPILIB = "XAPILIB";
 const char *Sec_XPP = "XPP";
+const char *Sec_text = ".text";
 const char *Lib_XGRAPHC = "XGRAPHC";
 const char *Sec_XGRPH = "XGRPH";
 const char *Lib_XNETS = "XNETS";
@@ -66,19 +67,7 @@ const char *Sec_XNET = "XNET";
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "HLEDataBase.h"
-#include "HLEDataBase/Xapi.1.0.3911.inl"
-#include "HLEDataBase/Xapi.1.0.4034.inl"
-#include "HLEDataBase/Xapi.1.0.4134.inl"
-#include "HLEDataBase/Xapi.1.0.4361.inl"
-#include "HLEDataBase/Xapi.1.0.4432.inl"
-#include "HLEDataBase/Xapi.1.0.4627.inl"
-#include "HLEDataBase/Xapi.1.0.4721.inl"
-#include "HLEDataBase/Xapi.1.0.5028.inl"
-#include "HLEDataBase/Xapi.1.0.5233.inl"
-#include "HLEDataBase/Xapi.1.0.5344.inl"
-#include "HLEDataBase/Xapi.1.0.5558.inl"
-#include "HLEDataBase/Xapi.1.0.5788.inl"
-#include "HLEDataBase/Xapi.1.0.5849.inl"
+#include "HLEDataBase/Xapi.OOVPA.inl"
 #include "HLEDataBase/D3D8.1.0.3925.inl"
 #include "HLEDataBase/D3D8.1.0.4034.inl"
 #include "HLEDataBase/D3D8.1.0.4134.inl"
@@ -126,6 +115,7 @@ const char *Sec_XNET = "XNET";
 
 const HLEData HLEDataBase[] =
 {
+#if ENABLE_LEGACY_XAPI_DB
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 3911),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4034),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 4134),
@@ -139,7 +129,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5558),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5788),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5849),
-
+#endif
 	HLE_ENTRY(Lib_D3D8, D3D8, 3925),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4034),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4134),
@@ -224,7 +214,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_SIZEV2 },
 
     //
-    //{ Lib_XAPILIB,{ Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_SIZEV2 },
+    { Lib_XAPILIB,{ Sec_text, Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_SIZEV2 },
 
     //
     //{ Lib_XGRAPHC,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
