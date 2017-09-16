@@ -50,7 +50,7 @@
 // ******************************************************************
 OOVPATable XACTENG_OOVPAV2[] = {
 
-	REGISTER_OOVPAS(XACTEngineCreate, PATCH, 4627, 4928, 5120, 5849),
+	REGISTER_OOVPAS(XACTEngineCreate, PATCH, 4627, 4928, 5120),
 	REGISTER_OOVPAS(XACTEngineDoWork, PATCH, 4627),
 	REGISTER_OOVPAS(XACT_CEngine_CreateSoundBank, XREF, 4627, 4928),
 	REGISTER_OOVPAS(XACT_CEngine_CreateSoundSource, XREF, 4627, 4928),
