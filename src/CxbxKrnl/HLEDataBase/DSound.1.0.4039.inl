@@ -1984,7 +1984,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMode, 4039, 12,
 
-    XREF_DSBUFFERSETMODEB,
+    XREF_CDirectSoundVoice_SetMode,
     XRefZero)
 
         { 0x00, 0xF6 },
@@ -2007,11 +2007,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMode, 4039, 12,
 
-    XREF_DSBUFFERSETMODEA,
+    XREF_CDirectSoundBuffer_SetMode,
     XRefOne)
 
         // CDirectSoundBuffer_SetMode+0x35 : call [CDirectSoundVoice::SetMode]
-        XREF_ENTRY( 0x35, XREF_DSBUFFERSETMODEB ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetMode ),
 
         // CDirectSoundBuffer_SetMode+0x00 : push esi
         { 0x00, 0x56 },
@@ -2062,7 +2062,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPosition, 4039, 10,
 
-    XREF_DSBUFFERSETPOSITION,
+    XREF_CDirectSoundBuffer_SetPosition,
     XRefOne)
 
         // CDirectSoundBuffer_SetPosition+0x49 : call [CDirectSoundVoice::SetPosition]
@@ -2084,6 +2084,34 @@ OOVPA_XREF(CDirectSoundBuffer_SetPosition, 4039, 10,
         // CDirectSoundBuffer_SetPosition+0x63 : retn 14h
         { 0x63, 0xC2 },
         { 0x64, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetMode
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer.
+OOVPA_XREF(IDirectSoundBuffer_SetMode, 4039, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_SetMode+0x18 : call [CDirectSoundBuffer::SetPosition]
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetMode ),
+
+        // IDirectSoundBuffer_SetMode+0x04 : push [esp+0x0C]
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x0C },
+
+        // IDirectSoundBuffer_SetMode+0x0E : add eax, 0xFFFFFFE4
+        { 0x0E, 0x83 },
+        { 0x0F, 0xC0 },
+        { 0x10, 0xE4 },
+
+        // IDirectSoundBuffer_SetMode+0x1D : retn 0x0C
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
 OOVPA_END;
 
 // ******************************************************************

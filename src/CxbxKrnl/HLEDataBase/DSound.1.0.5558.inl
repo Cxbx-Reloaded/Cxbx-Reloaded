@@ -825,7 +825,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPosition, 5558, 9,
 
-    XREF_DSBUFFERSETPOSITION,
+    XREF_CDirectSoundBuffer_SetPosition,
     XRefOne)
 
         XREF_ENTRY( 0x4A, XREF_DSVOICESETPOSITION ),
@@ -848,7 +848,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetPosition, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x2D, XREF_DSBUFFERSETPOSITION ),
+        XREF_ENTRY( 0x2D, XREF_CDirectSoundBuffer_SetPosition ),
 
         { 0x05, 0x18 },
         { 0x0C, 0x83 },
@@ -1397,7 +1397,7 @@ OOVPA_XREF(CDirectSound_SetPosition, 5558, 7,
         { 0x58, 0xE8 },
         { 0x67, 0x15 },
 OOVPA_END;
-
+#if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_SetPosition
 // ******************************************************************
@@ -1416,7 +1416,7 @@ OOVPA_XREF(IDirectSound_SetPosition, 5558, 8,
         { 0x28, 0xD9 },
         { 0x31, 0x5D },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * DirectSound::CDirectSound::SetVelocity
 // ******************************************************************
@@ -1764,7 +1764,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 5558, PATCH),
 	REGISTER_OOVPA(XAudioDownloadEffectsImage, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetPosition, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound_SetPosition, 5558, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetPosition, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 5558, XREF),
