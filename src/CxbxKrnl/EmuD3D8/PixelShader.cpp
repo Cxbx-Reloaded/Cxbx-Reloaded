@@ -871,7 +871,7 @@ struct PSH_XBOX_SHADER {
 	RPSCombinerStage Combiners[XTL::X_PSH_COMBINECOUNT];
 	int NumberOfCombiners;
 	DWORD CombinerCountFlags; // For PS_COMBINERCOUNTFLAGS
-							  // Read from CombinerCountFlags :
+	// Read from CombinerCountFlags :
 	bool CombinerMuxesOnMsb;
 	bool CombinerHasUniqueC0;
 	bool CombinerHasUniqueC1;
@@ -1011,8 +1011,8 @@ char* PS_CombinerCountFlags[/*PS_COMBINERCOUNTFLAGS*/] =
 // PS InputMapping
 std::string PS_InputMappingStr[/*PS_INPUTMAPPING*/] =
 {
-	"PS_INPUTMAPPING_UNSIGNED_IDENTITY",	// 0x00L, // max(0,x)         OK for final combiner
-	"PS_INPUTMAPPING_UNSIGNED_INVERT",		// 0x20L, // 1 - max(0,x)     OK for final combiner
+	"PS_INPUTMAPPING_UNSIGNED_IDENTITY",	// 0x00L, // max(0,x)         OK for final combiner: y = abs(x)
+	"PS_INPUTMAPPING_UNSIGNED_INVERT",		// 0x20L, // 1 - max(0,x)     OK for final combiner: y = 1 - x
 	"PS_INPUTMAPPING_EXPAND_NORMAL",		// 0x40L, // 2*max(0,x) - 1   invalid for final combiner
 	"PS_INPUTMAPPING_EXPAND_NEGATE",		// 0x60L, // 1 - 2*max(0,x)   invalid for final combiner
 	"PS_INPUTMAPPING_HALFBIAS_NORMAL",		// 0x80L, // max(0,x) - 1/2   invalid for final combiner
@@ -1070,9 +1070,9 @@ char* PS_CombineOutputStr[/*PS_COMBINEROUTPUT*/] =
 	"PS_COMBINEROUTPUT_IDENTITY",			// 0x00L, // y = x
 	"PS_COMBINEROUTPUT_BIAS",				// 0x08L, // y = x - 0.5
 	"PS_COMBINEROUTPUT_SHIFTLEFT_1",		// 0x10L, // y = x*2
-	"PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS",	// 0x18L, // y = (x - 0.5)*2
+	"PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS",	// 0x18L, // y = (x - 0.5)*2 = x*2 - 1.0
 	"PS_COMBINEROUTPUT_SHIFTLEFT_2",		// 0x20L, // y = x*4
-	"PS_COMBINEROUTPUT_SHIFTRIGHT_1",		// 0x30L, // y = x/2
+	"PS_COMBINEROUTPUT_SHIFTRIGHT_1",		// 0x30L, // y = x/2 = x*0.5
 
 	"PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA",	// 0x80L, // RGB only
 
@@ -1100,6 +1100,8 @@ const int CONST_NEG_HALF = -1;
 const int CONST_ZERO = 0;
 const int CONST_POS_HALF = 1; // Note : Instead of 0.5 we use 1 (so we can keep using integers)
 const int CONST_POS_ONE = 2;
+
+///
 
 std::string PSCombinerOutputFlagsToStr(const DWORD dwFlags, bool IsAlpha = false)
 {
@@ -1150,31 +1152,31 @@ void PSH_IMD_ARGUMENT::SetConstValue(float Value)
 float PSH_IMD_ARGUMENT::GetConstValue()
 {
   if (Type != PARAM_VALUE) {
-    // Anything other than a value-parameter returns a value never checked for (:
+    // Anything other than a value-parameter returns a value never checked for :
     return INFINITY;
   }
 
   float Result = Multiplier;
 
-  // y == 1-x     -> 0..1 >    1..0
+  // y = 1-x     -> 0..1 >    1..0
   if ((Modifiers & ARGMOD_INVERT) > 0)    Result = 1.0f-Result;
 
-  // y == -x      -> 0..1 >    0..-1
+  // y = -x      -> 0..1 >    0..-1
   if ((Modifiers & ARGMOD_NEGATE) > 0)    Result = -Result;
 
-  // y ==  x-0.5  -> 0..1 > -0.5..0.5
+  // y =  x-0.5  -> 0..1 > -0.5..0.5
   if ((Modifiers & ARGMOD_BIAS) > 0)      Result = Result-0.5f;
 
-  // y ==  x*2    -> 0..1 >    0..2
+  // y =  x*2    -> 0..1 >    0..2
   if ((Modifiers & ARGMOD_SCALE_X2) > 0)  Result = Result*2.0f;
 
-  // y == (x*2)-1 -> 0..1 >   -1..1
+  // y = (x*2)-1 -> 0..1 >   -1..1
   if ((Modifiers & ARGMOD_SCALE_BX2) > 0) Result = (Result*2.0f)-1.0f;
 
-  // y ==  x*4    -> 0..1 >    0..4
+  // y =  x*4    -> 0..1 >    0..4
   if ((Modifiers & ARGMOD_SCALE_X4) > 0)  Result = Result*4.0f;
 
-  // y ==  x/2    -> 0..1 >    0..0.5
+  // y =  x/2    -> 0..1 >    0..0.5
   if ((Modifiers & ARGMOD_SCALE_D2) > 0)  Result = Result/2.0f;
 
   return Result;
@@ -1255,18 +1257,18 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
   Modifiers = ARGMOD_IDENTITY;
   Multiplier = 1.0;
 
-  // Determine PS_REGISTER for (this argument type :
+  // Determine PS_REGISTER for this argument type :
   {
     Reg = (PS_REGISTER)(Value & 0xF);
     if (ArgumentType == atOutput)
     {
-      // Output arguments may not write to C0 | C1, prevent that :
+      // Output arguments may not write to C0 or C1, prevent that :
       if ((Reg == PS_REGISTER_C0) || (Reg == PS_REGISTER_C1))
         Reg = PS_REGISTER_CXBX_PROD; // unhandled case - will reach "invalid" else-block
     }
     else
     {
-      // Input arguments (normal | final combiners) can use the extended PS_REGISTER values :
+      // Input arguments (normal or final combiners) can use the extended PS_REGISTER values :
       if (Reg == PS_REGISTER_ZERO)
         Reg = (PS_REGISTER)(Value & 0xE0);
 
@@ -1286,7 +1288,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
     {
       if (ArgumentType == atOutput)
       {
-        // Mark output arguments as 'discard' & return that fact :
+        // Mark output arguments as 'discard' and return that fact :
         Type = PARAM_DISCARD;
         Result = false;
       }
@@ -1390,8 +1392,8 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
     Result = false;
   }
 
-  // We're done if (this decoding is meant for (output parameters,
-  // | when the input is a value-parameter (already read above) :
+  // We're done if this decoding is meant for output parameters,
+  // or when the input is a value-parameter (already read above) :
   if ((ArgumentType == atOutput)
   || (Type == PARAM_VALUE) )
     return Result;
@@ -1400,14 +1402,14 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
   {
     Channel = (PS_CHANNEL)(Value & PS_CHANNEL_ALPHA);
     if (Channel == PS_CHANNEL_ALPHA)
-      // Input comes from alpha portion of input register (valid for (both RGB & alpha portions) :
+      // Input comes from alpha portion of input register (valid for both RGB and alpha portions) :
       Mask = MASK_A;
-    else // == PS_CHANNEL_BLUE (for (Alpha step) == PS_CHANNEL_BLUE (for (RGB step) :
+    else // = PS_CHANNEL_BLUE (for Alpha step) = PS_CHANNEL_BLUE (for RGB step) :
       if (aMask == MASK_A)
-        // Input comes from b portion of input register (valid for (alpha portion only) :
+        // Input comes from b portion of input register (valid for alpha portion only) :
         Mask = MASK_B; // Note : This is not the same as ARGMOD_BLUE_REPLICATE!
       else
-        // Input comes from the RGB portion of the input register (valid for (RGB portion only) :
+        // Input comes from the RGB portion of the input register (valid for RGB portion only) :
         Mask = aMask; // Note : Is already put here, but makes this code clearer
   }
 
@@ -1516,7 +1518,7 @@ std::string PSH_INTERMEDIATE_FORMAT::ToString()
     SeparatorChar = ',';
   }
 
-  // if (this opcode has both output & input, put a space between them :
+  // If this opcode has both output and input, put a space between them :
   if ((PSH_OPCODE_DEFS[Opcode]._Out > 0) && (PSH_OPCODE_DEFS[Opcode]._In > 0))
   {
     Result = Result + ",";
@@ -1593,7 +1595,7 @@ bool PSH_INTERMEDIATE_FORMAT::ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int 
   // Check all parameters :
   for (i = 0; i < PSH_OPCODE_DEFS[Opcode]._In; i++)
   {
-    // Check if (one of them reads from the given register :
+    // Check if one of them reads from the given register :
     Result = Parameters[i].IsRegister(aRegType, aAddress);
     if (Result) 
       return true;
@@ -1610,7 +1612,7 @@ bool PSH_INTERMEDIATE_FORMAT::ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int 
   // Check all parameters :
   for (i = 0; i < PSH_OPCODE_DEFS[Opcode]._In; i++)
   {
-    // Check if (one of them reads from the given register :
+    // Check if one of them reads from the given register :
     Result = Parameters[i].IsRegister(aRegType, aAddress, aMask);
     if (Result)
       return true;
@@ -1627,7 +1629,7 @@ bool PSH_INTERMEDIATE_FORMAT::WritesToRegister(PSH_ARGUMENT_TYPE aRegType, int a
   // Check the output :
   for (i = 0; i < PSH_OPCODE_DEFS[Opcode]._Out; i++)
   {
-    // Check if (one of them writes to the given register :
+    // Check if one of them writes to the given register :
     Result = Output[i].IsRegister(aRegType, aAddress);
     if (Result)
       return true;
@@ -1644,7 +1646,7 @@ bool PSH_INTERMEDIATE_FORMAT::WritesToRegister(PSH_ARGUMENT_TYPE aRegType, int a
   // Check the output :
   for (i = 0; i < PSH_OPCODE_DEFS[Opcode]._Out; i++)
   {
-    // Check if (one of them writes to the given register :
+    // Check if one of them writes to the given register :
     Result = Output[i].IsRegister(aRegType, aAddress, aMask);
     if (Result)
       return true;
@@ -1673,7 +1675,7 @@ void PSH_INTERMEDIATE_FORMAT::XSwapOutput()
   Output[0] = Output[1];
   Output[1] = TmpOutput;
 
-  // Swap parameters 0 with 2 & & 1 with 3 :
+  // Swap parameters 0 with 2 and 1 with 3 :
   SwapParameter(0, 2);
   SwapParameter(1, 3);
 }
@@ -1697,7 +1699,7 @@ bool PSH_INTERMEDIATE_FORMAT::XMoveNonRegisterOutputsRight()
 {
   bool Result = false;
 
-  // First, check if (the left output is discarded, while the second isn't :
+  // First, check if the left output is discarded, while the second isn't :
   if ( (!Output[0].UsesRegister())
   && (Output[1].UsesRegister())) 
   {
@@ -1710,7 +1712,7 @@ bool PSH_INTERMEDIATE_FORMAT::XMoveNonRegisterOutputsRight()
   if (MoveRemovableParametersRight(0, 1))
     Result = true;
 
-  // Idem for (the parameters to second operation :
+  // Idem for the parameters to second operation :
   if (MoveRemovableParametersRight(2, 3))
     Result = true;
   return Result;
@@ -1755,7 +1757,7 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
     else
       Opcode = PO_XDM;
 
-    // Note : All arguments are already in-place for (these two opcodes.
+    // Note : All arguments are already in-place for these two opcodes.
 
     // No 3rd output; Assert that (PSOutputs >> 8) & 0xF == PS_REGISTER_DISCARD ?
   }
@@ -1763,7 +1765,7 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
   if ((CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0) // false=Multiply, true=DotProduct
   {
     // The first operation is a multiply, but the second is a dot-product;
-    // There's no opcode for (that, but we can reverse the two & still use XDM :
+    // There's no opcode for that, but we can reverse the two and still use XDM :
     Opcode = PO_XDM;
     XSwapOutput();
 
@@ -1796,17 +1798,17 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
     if ((CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0) // false=Alpha-to-Alpha, true=Blue-to-Alpha
     {
       // Note : The effect of this flag is not entirely clear - blue to alpha itself is an easy to understand operation,
-      // but on what output does it operate? AB? Or the mux_sum destination register (which doesn't occur when a dot
-      // operation is executed)? What if (AB is discarded, but AB+CD is registered? Also, what happens to the other
-      // color channels (R,G & A) in that register? The docs seem to imply that AB itself is not changed (as they
+      // but on what output does it operate? AB? or the mux_sum destination register (which doesn't occur when a dot
+      // operation is executed)? What if AB is discarded, but AB+CD is registered? Also, what happens to the other
+      // color channels (R,G and A) in that register? The docs seem to imply that AB itself is not changed (as they
       // state that the alpha portion is not necessarily discarded), which would mean that only the mux_sum output
-      // is influenced, but that would imply that this flag has no effect for dot-products (XDD | XDM)...
-      // and if this is true, how ) the blue-to-alpha flags behave if present on both AB & CD?
+      // is influenced, but that would imply that this flag has no effect for dot-products (XDD or XDM)...
+      // And if this is true, how do the blue-to-alpha flags behave if present on both AB and CD?
 
-      // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect & not allowed)
+      // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect and not allowed)
       Output[0].Modifiers = Output[0].Modifiers | ARGMOD_BLUE_REPLICATE;
       Output[0].Mask = MASK_B;
-      // TODO Handle blue-to-alpha flag (only valid for (RGB)
+      // TODO Handle blue-to-alpha flag (only valid for RGB)
       // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
       // Note 2: Pixel shader 1.1-1.3 'blue replicate' on source, uses an alpha destination write mask.
     }
@@ -1831,16 +1833,16 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
 
 //  The final combiner performs the following operations :
 //
-//    prod register == E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
+//    prod register = E*F                // PS_REGISTER_EF_PROD, useable in A,B,C,D,G
 //
-//    rgbout        == A*B + (1-A)*C + D  // lrp tmp.rgb, A, B, C       // Note : tmp can be r0 if ([A,B,C,D] * r0 == []
-//                                       // add r0.rgb, tmp.rgb, D.rgb // Otherwise use a writable register from A;B | C
+//    rgbout        = A*B + (1-A)*C + D  // lrp tmp.rgb, A, B, C       // Note : tmp can be r0 if [A,B,C,D] * r0 = []
+//                                       // add r0.rgb, tmp.rgb, D.rgb // Otherwise use a writable register from A;B or C
 //
-//    alphaout      == G.a                // mov r0.a, G.a              // Not necessary if (G == r0
+//    alphaout      = G.a                // mov r0.a, G.a              // Not necessary if G = r0
 //
 //    (also the final combiner can read PS_REGISTER_V1R0_SUM, which is equal to v1 + r0)
-//  Normal optimizations apply, like when A == PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
-//  Also, if (D == PS_REGISTER_ZERO, the add can be changed into a mov (if (the result isn't already in r0.rgb)
+//  Normal optimizations apply, like when A = PS_REGISTER_ZERO, all we have left is C + D (add r0.rgb, C.rgb, D.rgb)
+//  Also, if D = PS_REGISTER_ZERO, the add can be changed into a mov (if the result isn't already in r0.rgb)
 
   // Note : Previously, XSokoban lost it's font rendering when the final combiner was emitted,
   // when disabled, the font reappeared (in various colors). This was because constants where
@@ -1849,11 +1851,11 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
   Opcode = PO_XFC;
   CombinerStageNr = XFC_COMBINERSTAGENR;
 
-  // Decode A,B,C & D :
+  // Decode A,B,C and D :
   for (i = 0; i < 4; i++)
     Parameters[i].Decode((aPSFinalCombinerInputsABCD >> ((3-i) * 8)) & 0xFF, MASK_RGB/*?*/, atFinalCombiner);
 
-  // Decode E,F & G :
+  // Decode E,F and G :
   for (i = 0; i < 3; i++)
     Parameters[4+i].Decode((aPSFinalCombinerInputsEFG >> ((3-i) * 8)) & 0xFF, MASK_RGB/*?*/, atFinalCombiner);
 
@@ -1868,10 +1870,10 @@ std::string PSH_XBOX_SHADER::ToString()
   std::string Result;
 
   // First things first, set the pixel shader version
-  // 1.1 allows reading from 2 textures (which we use in 'cnd') & reading from the .b (blue) channel
+  // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
-  // 2.0 allows up to r12, c32, t8 & s16 (requires Direct3D9)
-  // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 & vFace (which can ) two-sided lighting)
+  // 2.0 allows up to r12, c32, t8 and s16 (requires Direct3D9)
+  // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 and vFace (which can do two-sided lighting)
 #ifdef CXBX_USE_PS_3_0
   Result = "ps_3_0\n";
 #else
@@ -1985,7 +1987,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   PSH_RECOMPILED_SHADER Result = {};
   Result.PSDef = *pPSDef;
 
-  /* Azurik likes to create & destroy the same shader every frame! O_o
+  /* Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags = lfUnit;
   if (IsRunning(TITLEID_AZURIK))
     LogFlags = LogFlags | lfExtreme;*/
@@ -2005,8 +2007,8 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   PSInputTexture[0] = -1; // Stage 0 has no predecessors
   PSInputTexture[1] = 0; // Stage 1 can only use stage 0
-  PSInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 | 1
-  PSInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 | 2
+  PSInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
+  PSInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
 
   NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
   CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
@@ -2015,7 +2017,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   CombinerHasUniqueC0 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
   CombinerHasUniqueC1 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) > 0;
 
-  // Backwards compatible decoding (purely for (logging) :
+  // Backwards compatible decoding (purely for logging) :
   {
     for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++)
     {
@@ -2028,22 +2030,22 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   for (i = 0; i < NumberOfCombiners; i++)
   {
-    // Check that the RGB & Alpha inputs ) the same operation :
+    // Check that the RGB and Alpha inputs do the same operation :
     if ( ((pPSDef->PSRGBInputs[i] & PS_NoChannelsMask) == (pPSDef->PSAlphaInputs[i] & PS_NoChannelsMask))
-    // Check if (all RGB channels are set to read from PS_CHANNEL_RGB :
+    // Check if all RGB channels are set to read from PS_CHANNEL_RGB :
     && ((pPSDef->PSRGBInputs[i] & PS_AlphaChannelsMask) == 0)
-    // Check if (all Alpha channels are set to read from PS_CHANNEL_ALPHA :
+    // Check if all Alpha channels are set to read from PS_CHANNEL_ALPHA :
     && ((pPSDef->PSAlphaInputs[i] & PS_AlphaChannelsMask) == PS_AlphaChannelsMask)
-    // Check that RGB & Alpha output to the same register(s) :
+    // Check that RGB and Alpha output to the same register(s) :
     && (pPSDef->PSRGBOutputs[i] == pPSDef->PSAlphaOutputs[i]))
     {
-      // In this case, we can convert RGB & Alpha together :
+      // In this case, we can convert RGB and Alpha together :
       if (!NewIntermediate()->Decode(i, pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i], MASK_RGBA))
         DeleteLastIntermediate();
     }
     else
     {
-      // Otherwise, we need to convert RGB & Alpha separately :
+      // Otherwise, we need to convert RGB and Alpha separately :
       if (!NewIntermediate()->Decode(i, pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i], MASK_RGB))
         DeleteLastIntermediate();
 
