@@ -2168,7 +2168,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 4039, 10,
 
-    XREF_DSBUFFERSETCONEORIENTATION,
+    XREF_CDirectSoundBuffer_SetConeOrientation,
     XRefOne)
 
         // CDirectSoundBuffer_SetConeOrientation+0x49 : call [CDirectSoundVoice::SetConeOrientation]

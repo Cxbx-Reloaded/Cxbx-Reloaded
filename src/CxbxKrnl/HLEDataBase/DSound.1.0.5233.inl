@@ -526,7 +526,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 	REGISTER_OOVPA(XAudioDownloadEffectsImage, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),

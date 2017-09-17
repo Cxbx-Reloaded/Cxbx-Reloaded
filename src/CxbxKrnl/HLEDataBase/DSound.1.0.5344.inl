@@ -795,7 +795,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeAngles, 5344, 9,
 
-    XREF_DSVOICESETCONEANGLES,
+    XREF_CDirectSoundVoice_SetConeAngles,
     XRefZero)
 
         // CDirectSoundVoice_SetConeAngles+0x0D : mov edx, [esp+arg_4]
@@ -1043,7 +1043,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(XAudioDownloadEffectsImage, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOrientation, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),

@@ -2669,3 +2669,360 @@ OOVPA_XREF(CDirectSoundStream_SetConeOutsideVolume, 3911, 10,
         { 0x15, 0xC2 },
         { 0x16, 0x0C },
 OOVPA_END;
+
+// ******************************************************************
+// * CMcpxVoiceClient::Commit3dSettings
+// ******************************************************************
+OOVPA_XREF(CMcpxVoiceClient_Commit3dSettings, 3911, 10,
+
+    XREF_CMcpxVoiceClient_Commit3dSettings,
+    XRefZero)
+
+	// CMcpxVoiceClient::Commit3dSettings+0x17 : or [eax+0x80], ecx
+	{ 0x17, 0x09 },
+	{ 0x18, 0x88 },
+	{ 0x19, 0x80 },
+	{ 0x1A, 0x00 },
+	// CMcpxVoiceClient::Commit3dSettings+0x2B : add eax, 0x80
+	{ 0x2B, 0x05 },
+	{ 0x2C, 0x80 },
+	{ 0x2D, 0x00 },
+	// CMcpxVoiceClient::Commit3dSettings+0x3D : cmpxchg [ecx], edx
+	{ 0x3D, 0x0F },
+	{ 0x3E, 0xB1 },
+	{ 0x3F, 0x11 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxVoiceClient_Set3dParameters
+// ******************************************************************
+OOVPA_XREF(CMcpxVoiceClient_Set3dParameters, 3911, 12,
+
+    XREF_CMcpxVoiceClient_Set3dParameters,
+    XRefOne)
+
+        XREF_ENTRY( 0x25, XREF_CMcpxVoiceClient_Commit3dSettings ),
+
+        { 0x02, 0x74 },
+        { 0x08, 0x6A },
+        { 0x09, 0x10 },
+        { 0x0A, 0x59 },
+        { 0x0B, 0x8D },
+        { 0x0C, 0x78 },
+        { 0x0D, 0x1C },
+        { 0x0E, 0xF3 },
+        { 0x14, 0x00 },
+        { 0x18, 0x7C },
+        { 0x1F, 0x09 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice_SetAllParameters
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetAllParameters, 3911, 12,
+
+    XREF_CDirectSoundVoice_SetAllParameters,
+    XRefOne)
+
+    // TODO: re-use for CDirectSoundBuffer_SetAllParametersA!?
+
+        // CDirectSoundVoice_SetAllParameters+0x25 : call [CMcpxVoiceClient_Set3dParameters]
+        XREF_ENTRY( 0x1F, XREF_CMcpxVoiceClient_Set3dParameters ),
+
+        // CDirectSoundVoice_SetAllParameters+0x09 : mov eax, [esp+0x14]
+        { 0x09, 0x8B },
+        { 0x0A, 0x44 },
+        { 0x0B, 0x24 },
+        { 0x0C, 0x14 },
+
+        // CDirectSoundVoice_SetAllParameters+0x0D : not eax; and eax, 1
+        { 0x0D, 0xF7 },
+        { 0x0E, 0xD0 },
+        { 0x0F, 0x83 },
+        { 0x10, 0xE0 },
+        { 0x11, 0x01 },
+
+        // CDirectSoundVoice_SetAllParameters+0x38 : retn 0x0C
+        { 0x38, 0xC2 },
+        { 0x39, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_SetAllParameters
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetAllParameters, 3911, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // CDirectSoundStream_SetAllParameters+0x11 : call [CDirectSoundVoice_SetAllParameters]
+        XREF_ENTRY( 0x11, XREF_CDirectSoundVoice_SetAllParameters ),
+
+        // CDirectSoundStream_SetAllParameters+0x04 : push eax, [esp+0x08]
+        { 0x04, 0x8B },
+        { 0x05, 0x44 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // CDirectSoundStream_SetAllParameters+0x0C : add eax, 0x04
+        { 0x0C, 0x83 },
+        { 0x0D, 0xC0 },
+        { 0x0E, 0x04 },
+
+        // CDirectSoundStream_SetAllParameters+0x15 : retn 0x0C
+        { 0x15, 0xC2 },
+        { 0x16, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetAllParameters
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetAllParameters, 3911, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x19, XREF_CDirectSoundVoice_SetAllParameters ),
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetConeAngles
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetConeAngles, 3911, 8,
+
+    XREF_CDirectSoundVoice_SetConeAngles,
+    XRefZero)
+
+        { 0x07, 0x8B },
+        { 0x0E, 0xD0 },
+        { 0x16, 0x18 },
+        { 0x1E, 0x18 },
+        { 0x27, 0x85 },
+        { 0x32, 0xFF },
+        { 0x38, 0x8B },
+        { 0x3E, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetConeAngles
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetConeAngles, 3911, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundVoice_SetConeAngles ),
+
+        { 0x03, 0x10 },
+        { 0x08, 0xFF },
+        { 0x0D, 0xC8 },
+        { 0x12, 0x83 },
+        { 0x17, 0x1B },
+        { 0x1C, 0xE8 },
+        { 0x21, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeAngles
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetConeAngles, 3911, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // CDirectSoundStream_SetConeAngles+0x15 : call [CDirectSoundVoice_SetConeAngles]
+        XREF_ENTRY( 0x15, XREF_CDirectSoundVoice_SetConeAngles ),
+
+        // CDirectSoundStream_SetConeAngles+0x04 : mov eax, [esp+0x08]
+        { 0x04, 0x8B },
+        { 0x05, 0x44 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // CDirectSoundStream_SetConeAngles+0x0C : add eax, 0x04
+        { 0x0C, 0x83 },
+        { 0x0D, 0xC0 },
+        { 0x0E, 0x04 },
+
+        // CDirectSoundStream_SetConeAngles+0x19 : retn 0x10
+        { 0x19, 0xC2 },
+        { 0x1A, 0x10 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxVoiceClient_Set3dConeOrientation
+// ******************************************************************
+OOVPA_XREF(CMcpxVoiceClient_Set3dConeOrientation, 3911, 11,
+
+    XREF_CMcpxVoiceClient_Set3dConeOrientation,
+    XRefZero)
+
+        // CMcpxVoiceClient_Set3dConeOrientation+0x0C : or byte ptr [ecx+0x80], 0x18
+        { 0x0C, 0x83 },
+        { 0x0D, 0x89 },
+        { 0x0E, 0x80 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x00 },
+        { 0x11, 0x00 },
+        { 0x12, 0x18 },
+
+        // CMcpxVoiceClient_Set3dConeOrientation+0x1A : jz +0x07
+        { 0x1A, 0x74 },
+        { 0x1B, 0x07 },
+
+        // CMcpxVoiceClient_Set3dConeOrientation+0x25 : retn 0x08
+        { 0x25, 0xC2 },
+        { 0x26, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice_SetConeOrientation
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetConeOrientation, 3911, 14,
+
+    XREF_CDirectSoundVoice_SetConeOrientation,
+    XRefOne)
+
+        // CDirectSoundVoice_SetConeOrientation+0x34 : call [CMcpxVoiceClient_Set3dConeOrientation]
+        XREF_ENTRY( 0x35, XREF_CMcpxVoiceClient_Set3dConeOrientation ),
+
+        // CDirectSoundVoice_SetConeOrientation+0x21 : mov eax, [ebp+0x18]
+        { 0x21, 0x8B },
+        { 0x22, 0x45 },
+        { 0x23, 0x18 },
+
+        // CDirectSoundVoice_SetConeOrientation+0x24 : not eax
+        { 0x24, 0xF7 },
+        { 0x25, 0xD0 },
+
+        // CDirectSoundVoice_SetConeOrientation+0x26 : and eax, 1
+        { 0x26, 0x83 },
+        { 0x27, 0xE0 },
+        { 0x28, 0x01 },
+
+        // CDirectSoundVoice_SetConeOrientation+0x31 : mov ecx, [eax+0x14]
+        { 0x31, 0x8B },
+        { 0x32, 0x48 },
+        { 0x33, 0x14 },
+
+        // CDirectSoundVoice_SetConeOrientation+0x4F : retn 0x14
+        { 0x4F, 0xC2 },
+        { 0x50, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer::SetConeOrientation
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 3911, 11,
+
+    XREF_CDirectSoundBuffer_SetConeOrientation,
+    XRefOne)
+
+        XREF_ENTRY( 0x21, XREF_CDirectSoundVoice_SetConeOrientation ),
+
+        // CDirectSoundBuffer_SetConeOrientation+0x1A : fstp [esp+8h]
+        { 0x0C, 0xD9 },
+        { 0x0D, 0x5C },
+        { 0x0E, 0x24 },
+        { 0x0F, 0x08 },
+
+        // CDirectSoundBuffer_SetConeOrientation+0x1A : fstp [esp]
+        { 0x1A, 0xD9 },
+        { 0x1B, 0x1C },
+        { 0x1C, 0x24 },
+
+        // CDirectSoundBuffer_SetConeOrientation+0x26 : ret 14h
+        { 0x26, 0xC2 },
+        { 0x27, 0x14 },
+        { 0x28, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetConeOrientation
+// ******************************************************************
+// Generic OOVPA as of 3911 and newer.
+OOVPA_XREF(IDirectSoundBuffer_SetConeOrientation, 3911, 9,
+
+           XRefNoSaveIndex,
+           XRefOne)
+
+    // IDirectSoundBuffer_SetConeOrientation+0x2C : call [CDirectSoundBuffer::SetConeOrientation]
+    XREF_ENTRY(0x2D, XREF_CDirectSoundBuffer_SetConeOrientation),
+
+    // IDirectSoundBuffer_SetConeOrientation+0x06 : fld [ebp+arg_C]
+    { 0x06, 0xD9 },
+    { 0x07, 0x45 },
+    { 0x08, 0x14 },
+
+    // IDirectSoundBuffer_SetConeOrientation+0x28 : fstp [esp+10h+var_10]
+    { 0x28, 0xD9 },
+    { 0x29, 0x1C },
+    { 0x2A, 0x24 },
+
+    // IDirectSoundBuffer_SetConeOrientation+0x32 : retn 14h
+    { 0x33, 0x14 },
+    { 0x34, 0x00 }
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeOrientation
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetConeOrientation, 3911, 9,
+
+    XREF_CDirectSoundStream_SetConeOrientation,
+    XRefOne)
+
+    // TODO: re-use for CDirectSoundBuffer_SetConeOrientationA!?
+
+        // CDirectSoundStream_SetConeOrientation+0x25 : call [CDirectSoundVoice_SetConeOrientation]
+        XREF_ENTRY( 0x25, XREF_CDirectSoundVoice_SetConeOrientation ),
+
+        // CDirectSoundStream_SetConeOrientation+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 },
+        { 0x07, 0x45 },
+        { 0x08, 0x14 },
+
+        // CDirectSoundStream_SetConeOrientation+0x0C : sub esp, 0x0C
+        { 0x0C, 0x83 },
+        { 0x0D, 0xEC },
+        { 0x0E, 0x0C },
+
+        // CDirectSoundStream_SetConeOrientation+0x2A : retn 0x14
+        { 0x2A, 0xC2 },
+        { 0x2B, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_SetConeOrientation
+// ******************************************************************
+OOVPA_XREF(IDirectSoundStream_SetConeOrientation, 3911, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_SetConeOrientation+0x21 : call [CDirectSoundStream_SetConeOrientation]
+        XREF_ENTRY( 0x21, XREF_CDirectSoundStream_SetConeOrientation ),
+
+        // IDirectSoundStream_SetConeOrientation+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 },
+        { 0x07, 0x45 },
+        { 0x08, 0x14 },
+
+        // IDirectSoundStream_SetConeOrientation+0x1A : fstp [esp]
+        { 0x1A, 0xD9 },
+        { 0x1B, 0x1C },
+        { 0x1C, 0x24 },
+
+        // IDirectSoundStream_SetConeOrientation+0x26 : retn 0x14
+        { 0x26, 0xC2 },
+        { 0x27, 0x14 },
+OOVPA_END;

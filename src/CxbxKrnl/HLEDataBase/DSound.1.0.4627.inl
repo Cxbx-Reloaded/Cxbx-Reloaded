@@ -1579,7 +1579,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOrientation, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOutsideVolume, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 4039, PATCH),
