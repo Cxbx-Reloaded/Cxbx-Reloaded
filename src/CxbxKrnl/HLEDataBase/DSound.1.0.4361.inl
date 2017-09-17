@@ -605,7 +605,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMinDistance, 4361, 12,
 
-    XREF_DSVOICESETMINDISTANCE,
+    XREF_CDirectSoundVoice_SetMinDistance,
     XRefZero)
 
         // CDirectSoundVoice_SetMinDistance+0x0D : mov edx, [esp+arg_4]
@@ -689,7 +689,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeOutsideVolume, 4361, 12,
 
-    XREF_DSVOICESETCONEOUTSIDEVOLUME,
+    XREF_CDirectSoundVoice_SetConeOutsideVolume,
     XRefZero)
 
         // CDirectSoundVoice_SetConeOutsideVolume+0x0D : mov edx, [esp+arg_4]

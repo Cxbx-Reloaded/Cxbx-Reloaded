@@ -209,7 +209,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 5788, 8,
 
-    XREF_DSBUFFERSETMAXDISTANCE,
+    XREF_CDirectSoundBuffer_SetMaxDistance,
     XRefOne)
 
         XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetMaxDistance ),
@@ -228,10 +228,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 5788, 8,
 
-    XREF_DSBUFFERSETMINDISTANCE,
+    XREF_CDirectSoundBuffer_SetMinDistance,
     XRefOne)
 
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETMINDISTANCE ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetMinDistance ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -241,7 +241,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 5788, 8,
         { 0x40, 0x8B },
         { 0x4F, 0x8B },
 OOVPA_END;
-
+#if 0 // Duplicate OOVPA, replacing with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
@@ -250,7 +250,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 5788, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMAXDISTANCE ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetMaxDistance ),
 
         { 0x03, 0x0C },
         { 0x08, 0x8B },
@@ -260,7 +260,8 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 5788, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
-
+#endif
+#if 0 // Duplicate OOVPA, replacing with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
@@ -269,7 +270,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 5788, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMINDISTANCE ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetMinDistance ),
 
         { 0x03, 0x0C },
         { 0x08, 0x8B },
@@ -279,6 +280,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 5788, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
+#endif
 #if 0 // Not 5788
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetVolume
@@ -586,10 +588,10 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMaxDistance, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMaxDistance, 5788, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 5788, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMinDistance, 5344, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 5788, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 5788, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4361, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_Stop2, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_StopEx, 4361, XREF),

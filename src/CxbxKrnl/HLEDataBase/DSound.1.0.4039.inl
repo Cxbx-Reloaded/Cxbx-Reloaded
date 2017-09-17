@@ -1773,7 +1773,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeOutsideVolume, 4039, 15,
 
-    XREF_DSVOICESETCONEOUTSIDEVOLUME,
+    XREF_CDirectSoundVoice_SetConeOutsideVolume,
     XRefZero)
 
         // CDirectSoundVoice_SetConeOutsideVolume+0x07 : mov edx, [esp+arg_4]
@@ -1804,11 +1804,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetConeOutsideVolume, 4039, 12,
 
-    XREF_DSBUFFERSETCONEOUTSIDEVOLUME,
+    XREF_CDirectSoundBuffer_SetConeOutsideVolume,
     XRefOne)
 
         // CDirectSoundBuffer_SetConeOutsideVolume+0x35 : call [CDirectSoundVoice::SetConeOutsideVolume]
-        XREF_ENTRY( 0x35, XREF_DSVOICESETCONEOUTSIDEVOLUME ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetConeOutsideVolume ),
 
         // CDirectSoundBuffer_SetConeOutsideVolume+0x00 : push esi
         { 0x00, 0x56 },
@@ -1828,6 +1828,33 @@ OOVPA_XREF(CDirectSoundBuffer_SetConeOutsideVolume, 4039, 12,
         // CDirectSoundBuffer_SetConeOutsideVolume+0x4E : retn 0Ch
         { 0x4E, 0xC2 },
         { 0x4F, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetConeOutsideVolume
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer.
+OOVPA_XREF(IDirectSoundBuffer_SetConeOutsideVolume, 4039, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_SetConeOutsideVolume+0x18 : call [CDirectSoundBuffer_SetConeOutsideVolume]
+        XREF_ENTRY(0x19, XREF_CDirectSoundBuffer_SetConeOutsideVolume ),
+
+        // IDirectSoundBuffer_SetConeOutsideVolume+0x0A : push [esp+4+arg_4]
+        { 0x0A, 0xFF },
+        { 0x0B, 0x74 },
+        { 0x0C, 0x24 },
+        { 0x0D, 0x0C },
+
+        // IDirectSoundBuffer_SetConeOutsideVolume+0x15 : and ecx, eax
+        { 0x15, 0x23 },
+        { 0x16, 0xC8 },
+
+        // IDirectSoundBuffer_SetConeOutsideVolume+0x1D : retn 0Ch
+        { 0x1E, 0x0C },
+        { 0x1F, 0x00 }
 OOVPA_END;
 
 // ******************************************************************

@@ -1204,7 +1204,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 4134, 10,
 
-    XREF_DSBUFFERSETMAXDISTANCE,
+    XREF_CDirectSoundBuffer_SetMaxDistance,
     XRefOne)
 
         // CDirectSoundBuffer_SetMaxDistance+0x39 : call [CDirectSoundVoice::SetMaxDistance]
@@ -1236,7 +1236,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 4134, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetMaxDistance+0x1C : call [CDirectSoundBuffer::SetMaxDistance]
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMAXDISTANCE ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetMaxDistance ),
 
         // IDirectSoundBuffer_SetMaxDistance+0x04 : fld [esp+4+arg_4]
         { 0x04, 0xD9 },
@@ -1279,7 +1279,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMinDistance, 4134, 12,
 
-    XREF_DSVOICESETMINDISTANCE,
+    XREF_CDirectSoundVoice_SetMinDistance,
     XRefZero)
 
         // CDirectSoundVoice_SetMinDistance+0x0D : mov edx, [esp+arg_4]
@@ -1307,11 +1307,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 4134, 10,
 
-    XREF_DSBUFFERSETMINDISTANCE,
+    XREF_CDirectSoundBuffer_SetMinDistance,
     XRefOne)
 
         // CDirectSoundBuffer_SetMinDistance+0x39 : call [CDirectSoundVoice::SetMinDistance]
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETMINDISTANCE ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetMinDistance ),
 
         // CDirectSoundBuffer_SetMinDistance+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -1338,7 +1338,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 4134, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetMinDistance+0x1C : call [CDirectSoundBuffer::SetMinDistance]
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMINDISTANCE ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetMinDistance ),
 
         // IDirectSoundBuffer_SetMinDistance+0x04 : fld [esp+4+arg_4]
         { 0x04, 0xD9 },
@@ -1365,7 +1365,7 @@ OOVPA_XREF(CDirectSoundStream_SetMinDistance, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3E, XREF_DSVOICESETMINDISTANCE ),
+        XREF_ENTRY( 0x3E, XREF_CDirectSoundVoice_SetMinDistance ),
 
         { 0x00, 0x56 },
         { 0x0C, 0x00 },
@@ -1714,7 +1714,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeOutsideVolume, 4134, 12,
 
-    XREF_DSVOICESETCONEOUTSIDEVOLUME,
+    XREF_CDirectSoundVoice_SetConeOutsideVolume,
     XRefZero)
 
         // CDirectSoundVoice_SetConeOutsideVolume+0x0D : mov edx, [esp+arg_4]
@@ -1742,11 +1742,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetConeOutsideVolume, 4134, 11,
 
-    XREF_DSBUFFERSETCONEOUTSIDEVOLUME,
+    XREF_CDirectSoundBuffer_SetConeOutsideVolume,
     XRefOne)
 
         // CDirectSoundBuffer_SetConeOutsideVolume+0x35 : call [CDirectSoundVoice::SetConeOutsideVolume]
-        XREF_ENTRY( 0x36, XREF_DSVOICESETCONEOUTSIDEVOLUME ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetConeOutsideVolume ),
 
         // CDirectSoundBuffer_SetConeOutsideVolume+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -1773,7 +1773,7 @@ OOVPA_XREF(CDirectSoundStream_SetConeOutsideVolume, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETCONEOUTSIDEVOLUME ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetConeOutsideVolume ),
 
         { 0x00, 0x56 },
         { 0x0C, 0x00 },
@@ -3040,11 +3040,11 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMaxDistance, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMaxDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMaxDistance, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMinDistance, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMinDistance, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffFactor, 4134, XREF), // s+
 	REGISTER_OOVPA(CDirectSoundBuffer_SetRolloffFactor, 4134, XREF),
@@ -3062,7 +3062,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOutsideVolume, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOutsideVolume, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOutsideVolume, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOutsideVolume, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetPosition, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPosition, 4134, XREF),
