@@ -699,7 +699,6 @@ enum PSH_ARG_MODIFIER {
 	ARGMOD_BLUE_REPLICATE   // PS1.1-PS1.3 only allow this if destination writemask = .a
 };
 
-// TODO : Translate From Dxbx :
 typedef DWORD PSH_ARG_MODIFIERs; // = set of PSH_ARG_MODIFIER;
 
 const char *PSH_ARG_MODIFIER_Str[/*PSH_ARG_MODIFIER*/] = {
@@ -866,7 +865,7 @@ struct PSH_XBOX_SHADER {
 	int PSInputTexture[XTL::X_D3DTS_STAGECOUNT];
 
 	PS_FINALCOMBINERSETTING FinalCombinerFlags;
-	// Note : The following constants are only needed for PSH_XBOX_SHADER.DecodedToString,
+	// Note : The following constants are only needed for PSH_XBOX_SHADER::DecodedToString,
 	// they are not involved in the actual pixel shader recompilation anymore :
 	RPSFinalCombiner FinalCombiner;
 	RPSCombinerStage Combiners[XTL::X_PSH_COMBINECOUNT];
@@ -878,7 +877,7 @@ struct PSH_XBOX_SHADER {
 	bool CombinerHasUniqueC1;
 
 	std::string ToString();
-	void Log(const std::string PhaseStr);
+	void Log(const char *PhaseStr);
 	PPSH_INTERMEDIATE_FORMAT NewIntermediate();
 	void InsertIntermediate(PPSH_INTERMEDIATE_FORMAT pIntermediate, int Index);
 	void DeleteIntermediate(int Index);
@@ -886,6 +885,7 @@ struct PSH_XBOX_SHADER {
 	std::string OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	PSH_RECOMPILED_SHADER Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
@@ -1008,9 +1008,8 @@ char* PS_CombinerCountFlags[/*PS_COMBINERCOUNTFLAGS*/] =
 };
 #endif
 
-#if 0 // array unusable for bitflags
 // PS InputMapping
-char* PS_InputMapping[/*PS_INPUTMAPPING*/] =
+std::string PS_InputMappingStr[/*PS_INPUTMAPPING*/] =
 {
 	"PS_INPUTMAPPING_UNSIGNED_IDENTITY",	// 0x00L, // max(0,x)         OK for final combiner
 	"PS_INPUTMAPPING_UNSIGNED_INVERT",		// 0x20L, // 1 - max(0,x)     OK for final combiner
@@ -1021,11 +1020,9 @@ char* PS_InputMapping[/*PS_INPUTMAPPING*/] =
 	"PS_INPUTMAPPING_SIGNED_IDENTITY",		// 0xc0L, // x                invalid for final combiner
 	"PS_INPUTMAPPING_SIGNED_NEGATE",		// 0xe0L, // -x               invalid for final combiner
 };
-#endif
 
-#if 1 // array unfit for bitflags
 // PS Register (note, a few have one space, to line up the output a little)
-char *PS_RegisterStr[/*PS_REGISTER*/] =
+std::string PS_RegisterStr[/*PS_REGISTER*/] =
 {
 	"PS_REGISTER_ZERO",      // 0x00L, // r
 	"PS_REGISTER_DISCARD",   // 0x00L, // w
@@ -1050,7 +1047,6 @@ char *PS_RegisterStr[/*PS_REGISTER*/] =
 	"PS_REGISTER_ONE_HALF",          // PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NEGATE, // invalid for final combiner
 	"PS_REGISTER_NEGATIVE_ONE_HALF"  // PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NORMAL, // invalid for final combiner
 };
-#endif
 
 // PS Channel
 char* PS_ChannelStr[/*PS_CHANNEL*/] =
@@ -1683,7 +1679,7 @@ void PSH_INTERMEDIATE_FORMAT::XSwapOutput()
 }
 
 bool PSH_INTERMEDIATE_FORMAT::MoveRemovableParametersRight(const int Index1, const int Index2)
-// Swaps discarded (& const) parameters to the right position, to ease later conversions.
+// Swaps discarded (and const) parameters to the right position, to ease later conversions.
 {
   bool Result = false;
 
@@ -1697,7 +1693,7 @@ bool PSH_INTERMEDIATE_FORMAT::MoveRemovableParametersRight(const int Index1, con
 }
 
 bool PSH_INTERMEDIATE_FORMAT::XMoveNonRegisterOutputsRight()
-// Swap discards & constants to the right position, to ease later conversions. Applies only to Xbox opcodes.
+// Swap discards and constants to the right position, to ease later conversions. Applies only to Xbox opcodes.
 {
   bool Result = false;
 
@@ -1748,10 +1744,10 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
   CombinerOutputFlags = (PS_COMBINEROUTPUT)(PSOutputs >> 12);
 
   // Use that to choose between the four possible operations :
-  // - xdd (dot/dot/discard) > calculating AB=A.B & CD=C.D
-  // - xdm (dot/mul/discard) > calculating AB=A.B & CD=C*D
-  // - xmmc (mul/mul/mux)    > calculating AB=A*B & CD=C*D & Mux=AB?CD
-  // - xmma (mul/mul/sum)    > calculating AB=A*B & CD=C*D & Sum=AB+CD
+  // - xdd (dot/dot/discard) > calculating AB=A.B and CD=C.D
+  // - xdm (dot/mul/discard) > calculating AB=A.B and CD=C*D
+  // - xmmc (mul/mul/mux)    > calculating AB=A*B and CD=C*D and Mux=AB?CD
+  // - xmma (mul/mul/sum)    > calculating AB=A*B and CD=C*D and Sum=AB+CD
   if ((CombinerOutputFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0) // false=Multiply, true=DotProduct
   {
     if ((CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0) // false=Multiply, true=DotProduct
@@ -1800,12 +1796,12 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
     if ((CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0) // false=Alpha-to-Alpha, true=Blue-to-Alpha
     {
       // Note : The effect of this flag is not entirely clear - blue to alpha itself is an easy to understand operation,
-      // but on what output does it operate? AB? | the mux_sum destination register (which doesn't occur when a dot
+      // but on what output does it operate? AB? Or the mux_sum destination register (which doesn't occur when a dot
       // operation is executed)? What if (AB is discarded, but AB+CD is registered? Also, what happens to the other
       // color channels (R,G & A) in that register? The docs seem to imply that AB itself is not changed (as they
       // state that the alpha portion is not necessarily discarded), which would mean that only the mux_sum output
-      // is influenced, but that would imply that this flag has no effect for (dot-products (XDD | XDM)...
-      // & if (this is true, how ) the blue-to-alpha flags behave if (present on both AB & CD?
+      // is influenced, but that would imply that this flag has no effect for dot-products (XDD | XDM)...
+      // and if this is true, how ) the blue-to-alpha flags behave if present on both AB & CD?
 
       // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect & not allowed)
       Output[0].Modifiers = Output[0].Modifiers | ARGMOD_BLUE_REPLICATE;
@@ -1864,541 +1860,548 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
   return true;
 }
 
-#if 0 // Dxbx
+/* PSH_XBOX_SHADER */
 
-{ PSH_XBOX_SHADER }
-
-function PSH_XBOX_SHADER.ToString: std::string;
-var
-  i: int;
+std::string PSH_XBOX_SHADER::ToString()
 {
+  int i;
+  std::string Result;
+
   // First things first, set the pixel shader version
   // 1.1 allows reading from 2 textures (which we use in 'cnd') & reading from the .b (blue) channel
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
   // 2.0 allows up to r12, c32, t8 & s16 (requires Direct3D9)
   // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 & vFace (which can ) two-sided lighting)
-{$IFDEF DXBX_USE_PS_3_0}
-  Result == 'ps_3_0'#13#10;
-{$ELSE}
- {$IFDEF DXBX_USE_PS_2_0}
-  Result == 'ps_2_0'#13#10;
- {$ELSE}
-  Result == 'ps.1.3'#13#10;
- {$ENDIF}
-{$ENDIF}
-  for (i == 0 to IntermediateCount-1 )
-    Result == Result + Intermediate[i].ToString + #13#10;
+#ifdef CXBX_USE_PS_3_0
+  Result = "ps_3_0\n";
+#else
+  #ifdef CXBX_USE_PS_2_0
+  Result = "ps_2_0\n";
+  #else
+  Result = "ps.1.3\n";
+  #endif
+#endif
+  for (i = 0; i < IntermediateCount; i++)
+    Result = Result + Intermediate[i].ToString() + "\n";
+  return Result;
 }
 
-void PSH_XBOX_SHADER.Log(const PhaseStr: std::string);
+void PSH_XBOX_SHADER::Log(const char *PhaseStr)
 {
-  if (MayLog(lfUnit) 
+  //if (MayLog(lfUnit))
   {
-    DbgPrintf('New decoding - %s :', [PhaseStr]);
-    DbgPrintf(ToString);
+    DbgPrintf("New decoding - %s :", PhaseStr);
+	DbgPrintf("%s", ToString().c_str());
   }
 }
 
-function PSH_XBOX_SHADER.NewIntermediate(): PPSH_INTERMEDIATE_FORMAT;
+PPSH_INTERMEDIATE_FORMAT PSH_XBOX_SHADER::NewIntermediate()
 {
-  Result == &Intermediate[IntermediateCount];
-  Result.Initialize(PO_COMMENT);
-  ++(IntermediateCount);
+  PPSH_INTERMEDIATE_FORMAT Result = &Intermediate[IntermediateCount];
+  Result->Initialize(PO_COMMENT);
+  ++IntermediateCount;
+  return Result;
 }
 
-void PSH_XBOX_SHADER.InsertIntermediate(pIntermediate: PPSH_INTERMEDIATE_FORMAT; Index: int);
-var
-  i: int;
+void PSH_XBOX_SHADER::InsertIntermediate(PPSH_INTERMEDIATE_FORMAT pIntermediate, int Index)
 {
-  i == IntermediateCount - 1;
-  while i >= Index )
+  int i;
+  i = IntermediateCount - 1;
+  while (i >= Index)
   {
-    Intermediate[i + 1] == Intermediate[i];
-    --(i);
+    Intermediate[i + 1] = Intermediate[i];
+    --i;
   }
 
-  Intermediate[Index] == pIntermediate^;
-  ++(IntermediateCount);
+  Intermediate[Index] = *pIntermediate;
+  ++IntermediateCount;
 }
 
-void PSH_XBOX_SHADER.DeleteIntermediate(Index: int);
-var
-  i: int;
+void PSH_XBOX_SHADER::DeleteIntermediate(int Index)
 {
-  for (i == Index to IntermediateCount - 2 )
-    Intermediate[i] == Intermediate[i + 1];
+  int i;
+  for (i = Index; i < IntermediateCount - 1; i++)
+    Intermediate[i] = Intermediate[i + 1];
 
-  --(IntermediateCount);
+  --IntermediateCount;
 }
 
-void PSH_XBOX_SHADER.DeleteLastIntermediate;
+void PSH_XBOX_SHADER::DeleteLastIntermediate()
 {
-  if (IntermediateCount > 0 
+  if (IntermediateCount > 0)
     DeleteIntermediate(IntermediateCount - 1);
 }
 
-function PSH_XBOX_SHADER.OriginalToString(pPSDef: PX_D3DPIXELSHADERDEF): std::string;
+std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-  Result =Format('PSAphaInputs[8]              == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSFinalCombinerInputsABCD    == 0x%.08X'#13#10 +
-                  'PSFinalCombinerInputsEFG     == 0x%.08X'#13#10 +
-                  'PSConstant0[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSConstant1[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSAlphaOutputs[8]            == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSRGBInputs[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSCompareMode                == 0x%.08X'#13#10 +
-                  'PSFinalCombinerConstant0     == 0x%.08X'#13#10 +
-                  'PSFinalCombinerConstant1     == 0x%.08X'#13#10 +
-                  'PSRGBOutputs[8]              == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X'#13#10 +
-                  'PSCombinerCount              == 0x%.08X'#13#10 +
-                  'PSTextureModes               == 0x%.08X'#13#10 +
-                  'PSDotMapping                 == 0x%.08X'#13#10 +
-                  'PSInputTexture               == 0x%.08X'#13#10 +
-                  'PSC0Mapping                  == 0x%.08X'#13#10 +
-                  'PSC1Mapping                  == 0x%.08X'#13#10 +
-                  'PSFinalCombinerConstants     == 0x%.08X'#13#10,
-                  [pPSDef.PSAlphaInputs[0], pPSDef.PSAlphaInputs[1], pPSDef.PSAlphaInputs[2], pPSDef.PSAlphaInputs[3],
-                  pPSDef.PSAlphaInputs[4], pPSDef.PSAlphaInputs[5], pPSDef.PSAlphaInputs[6], pPSDef.PSAlphaInputs[7],
-                  pPSDef.PSFinalCombinerInputsABCD,
-                  pPSDef.PSFinalCombinerInputsEFG,
-                  pPSDef.PSConstant0[0], pPSDef.PSConstant0[1], pPSDef.PSConstant0[2], pPSDef.PSConstant0[3],
-                  pPSDef.PSConstant0[4], pPSDef.PSConstant0[5], pPSDef.PSConstant0[6], pPSDef.PSConstant0[7],
-                  pPSDef.PSConstant1[0], pPSDef.PSConstant1[1], pPSDef.PSConstant1[2], pPSDef.PSConstant1[3],
-                  pPSDef.PSConstant1[4], pPSDef.PSConstant1[5], pPSDef.PSConstant1[6], pPSDef.PSConstant1[7],
-                  pPSDef.PSAlphaOutputs[0], pPSDef.PSAlphaOutputs[1], pPSDef.PSAlphaOutputs[2], pPSDef.PSAlphaOutputs[3],
-                  pPSDef.PSAlphaOutputs[4], pPSDef.PSAlphaOutputs[5], pPSDef.PSAlphaOutputs[6], pPSDef.PSAlphaOutputs[7],
-                  pPSDef.PSRGBInputs[0], pPSDef.PSRGBInputs[1], pPSDef.PSRGBInputs[2], pPSDef.PSRGBInputs[3],
-                  pPSDef.PSRGBInputs[4], pPSDef.PSRGBInputs[5], pPSDef.PSRGBInputs[6], pPSDef.PSRGBInputs[7],
-                  pPSDef.PSCompareMode,
-                  pPSDef.PSFinalCombinerConstant0,
-                  pPSDef.PSFinalCombinerConstant1,
-                  pPSDef.PSRGBOutputs[0], pPSDef.PSRGBOutputs[1], pPSDef.PSRGBOutputs[2], pPSDef.PSRGBOutputs[3],
-                  pPSDef.PSRGBOutputs[4], pPSDef.PSRGBOutputs[5], pPSDef.PSRGBOutputs[6], pPSDef.PSRGBOutputs[7],
-                  pPSDef.PSCombinerCount,
-                  pPSDef.PSTextureModes,
-                  pPSDef.PSDotMapping,
-                  pPSDef.PSInputTexture,
-                  pPSDef.PSC0Mapping,
-                  pPSDef.PSC1Mapping,
-                  pPSDef.PSFinalCombinerConstants]);
+  char buffer[4096];
+  return std::string(buffer, sprintf(buffer, "PSAphaInputs[8]              == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSFinalCombinerInputsABCD    == 0x%.08X\n"
+                  "PSFinalCombinerInputsEFG     == 0x%.08X\n"
+                  "PSConstant0[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSConstant1[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSAlphaOutputs[8]            == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSRGBInputs[8]               == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSCompareMode                == 0x%.08X\n"
+                  "PSFinalCombinerConstant0     == 0x%.08X\n"
+                  "PSFinalCombinerConstant1     == 0x%.08X\n"
+                  "PSRGBOutputs[8]              == 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
+                  "PSCombinerCount              == 0x%.08X\n"
+                  "PSTextureModes               == 0x%.08X\n"
+                  "PSDotMapping                 == 0x%.08X\n"
+                  "PSInputTexture               == 0x%.08X\n"
+                  "PSC0Mapping                  == 0x%.08X\n"
+                  "PSC1Mapping                  == 0x%.08X\n"
+                  "PSFinalCombinerConstants     == 0x%.08X\n",
+                  pPSDef->PSAlphaInputs[0], pPSDef->PSAlphaInputs[1], pPSDef->PSAlphaInputs[2], pPSDef->PSAlphaInputs[3],
+                  pPSDef->PSAlphaInputs[4], pPSDef->PSAlphaInputs[5], pPSDef->PSAlphaInputs[6], pPSDef->PSAlphaInputs[7],
+                  pPSDef->PSFinalCombinerInputsABCD,
+                  pPSDef->PSFinalCombinerInputsEFG,
+                  pPSDef->PSConstant0[0], pPSDef->PSConstant0[1], pPSDef->PSConstant0[2], pPSDef->PSConstant0[3],
+                  pPSDef->PSConstant0[4], pPSDef->PSConstant0[5], pPSDef->PSConstant0[6], pPSDef->PSConstant0[7],
+                  pPSDef->PSConstant1[0], pPSDef->PSConstant1[1], pPSDef->PSConstant1[2], pPSDef->PSConstant1[3],
+                  pPSDef->PSConstant1[4], pPSDef->PSConstant1[5], pPSDef->PSConstant1[6], pPSDef->PSConstant1[7],
+                  pPSDef->PSAlphaOutputs[0], pPSDef->PSAlphaOutputs[1], pPSDef->PSAlphaOutputs[2], pPSDef->PSAlphaOutputs[3],
+                  pPSDef->PSAlphaOutputs[4], pPSDef->PSAlphaOutputs[5], pPSDef->PSAlphaOutputs[6], pPSDef->PSAlphaOutputs[7],
+                  pPSDef->PSRGBInputs[0], pPSDef->PSRGBInputs[1], pPSDef->PSRGBInputs[2], pPSDef->PSRGBInputs[3],
+                  pPSDef->PSRGBInputs[4], pPSDef->PSRGBInputs[5], pPSDef->PSRGBInputs[6], pPSDef->PSRGBInputs[7],
+                  pPSDef->PSCompareMode,
+                  pPSDef->PSFinalCombinerConstant0,
+                  pPSDef->PSFinalCombinerConstant1,
+                  pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3],
+                  pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7],
+                  pPSDef->PSCombinerCount,
+                  pPSDef->PSTextureModes,
+                  pPSDef->PSDotMapping,
+                  pPSDef->PSInputTexture,
+                  pPSDef->PSC0Mapping,
+                  pPSDef->PSC1Mapping,
+                  pPSDef->PSFinalCombinerConstants));
 }
 
-function PSH_XBOX_SHADER.Decode(pPSDef: PX_D3DPIXELSHADERDEF): PSH_RECOMPILED_SHADER;
-var
-  i: int;
+PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-  ZeroMemory(&Result, sizeof(Result));
-  Result.PSDef == pPSDef^;
+  int i;
+  PSH_RECOMPILED_SHADER Result = {};
+  Result.PSDef = *pPSDef;
 
-  // Azurik likes to create & destroy the same shader every frame! O_o
-  LogFlags == lfUnit;
-  if (IsRunning(TITLEID_AZURIK) 
-    LogFlags == LogFlags | lfExtreme;
+  /* Azurik likes to create & destroy the same shader every frame! O_o
+  LogFlags = lfUnit;
+  if (IsRunning(TITLEID_AZURIK))
+    LogFlags = LogFlags | lfExtreme;*/
 
-  ZeroMemory(&Self, sizeof(Self));
+  ZeroMemory(this, sizeof(PSH_XBOX_SHADER)); // TODO : Use constructor (to prevent memory leaks)
 
-  for (i == 0 to X_D3DTS_STAGECOUNT-1 )
+  for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
   {
-    PSTextureModes[i] == PS_TEXTUREMODES((pPSDef.PSTextureModes >> (i*5)) & 0x1F);
-    PSCompareMode[i] == (pPSDef.PSCompareMode >> (i*4)) & 0xF;
+    PSTextureModes[i] = (PS_TEXTUREMODES)((pPSDef->PSTextureModes >> (i*5)) & 0x1F);
+    PSCompareMode[i] = (pPSDef->PSCompareMode >> (i*4)) & 0xF;
   }
 
-  PSDotMapping[0] == PS_DOTMAPPING(0);
-  PSDotMapping[1] == PS_DOTMAPPING((pPSDef.PSDotMapping >> 0) & 0x7);
-  PSDotMapping[2] == PS_DOTMAPPING((pPSDef.PSDotMapping >> 4) & 0x7);
-  PSDotMapping[3] == PS_DOTMAPPING((pPSDef.PSDotMapping >> 8) & 0x7);
+  PSDotMapping[0] = (PS_DOTMAPPING)(0);
+  PSDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
+  PSDotMapping[2] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 4) & 0x7);
+  PSDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
 
-  PSInputTexture[0] == -1; // Stage 0 has no predecessors
-  PSInputTexture[1] == 0; // Stage 1 can only use stage 0
-  PSInputTexture[2] == (pPSDef.PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 | 1
-  PSInputTexture[3] == (pPSDef.PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 | 2
+  PSInputTexture[0] = -1; // Stage 0 has no predecessors
+  PSInputTexture[1] = 0; // Stage 1 can only use stage 0
+  PSInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 | 1
+  PSInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 | 2
 
-  NumberOfCombiners == (pPSDef.PSCombinerCount >> 0) & 0xF;
-  CombinerCountFlags == (pPSDef.PSCombinerCount >> 8);
+  NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
+  CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
 
-  CombinerMuxesOnMsb == (CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) > 0;
-  CombinerHasUniqueC0 == (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
-  CombinerHasUniqueC1 == (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) > 0;
+  CombinerMuxesOnMsb = (CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) > 0;
+  CombinerHasUniqueC0 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
+  CombinerHasUniqueC1 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) > 0;
 
   // Backwards compatible decoding (purely for (logging) :
   {
-    for (i == 0 to X_PSH_COMBINECOUNT - 1 )
+    for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++)
     {
-      Combiners[i].RGB.Decode(pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i]);
-      Combiners[i].Alpha.Decode(pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], {IsAlpha=}true);
+      Combiners[i].RGB.Decode(pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i]);
+      Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*IsAlpha=*/true);
     }
 
-    FinalCombiner.Decode(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG, pPSDef.PSFinalCombinerConstants);
+    FinalCombiner.Decode(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG, pPSDef->PSFinalCombinerConstants);
   }
 
-  for (i == 0 to NumberOfCombiners - 1 )
+  for (i = 0; i < NumberOfCombiners; i++)
   {
     // Check that the RGB & Alpha inputs ) the same operation :
-    if ( ((pPSDef.PSRGBInputs[i] & PS_NoChannelsMask) == (pPSDef.PSAlphaInputs[i] & PS_NoChannelsMask))
+    if ( ((pPSDef->PSRGBInputs[i] & PS_NoChannelsMask) == (pPSDef->PSAlphaInputs[i] & PS_NoChannelsMask))
     // Check if (all RGB channels are set to read from PS_CHANNEL_RGB :
-    & ((pPSDef.PSRGBInputs[i] & PS_AlphaChannelsMask) == 0)
+    && ((pPSDef->PSRGBInputs[i] & PS_AlphaChannelsMask) == 0)
     // Check if (all Alpha channels are set to read from PS_CHANNEL_ALPHA :
-    & ((pPSDef.PSAlphaInputs[i] & PS_AlphaChannelsMask) == PS_AlphaChannelsMask)
+    && ((pPSDef->PSAlphaInputs[i] & PS_AlphaChannelsMask) == PS_AlphaChannelsMask)
     // Check that RGB & Alpha output to the same register(s) :
-    & (pPSDef.PSRGBOutputs[i] == pPSDef.PSAlphaOutputs[i]) 
+    && (pPSDef->PSRGBOutputs[i] == pPSDef->PSAlphaOutputs[i]))
     {
       // In this case, we can convert RGB & Alpha together :
-      if (not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGBA) 
-        DeleteLastIntermediate;
+      if (!NewIntermediate()->Decode(i, pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i], MASK_RGBA))
+        DeleteLastIntermediate();
     }
     else
     {
       // Otherwise, we need to convert RGB & Alpha separately :
-      if (not NewIntermediate.Decode(i, pPSDef.PSRGBInputs[i], pPSDef.PSRGBOutputs[i], MASK_RGB) 
-        DeleteLastIntermediate;
+      if (!NewIntermediate()->Decode(i, pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i], MASK_RGB))
+        DeleteLastIntermediate();
 
-      if (not NewIntermediate.Decode(i, pPSDef.PSAlphaInputs[i], pPSDef.PSAlphaOutputs[i], MASK_A) 
-        DeleteLastIntermediate;
+      if (!NewIntermediate()->Decode(i, pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], MASK_A))
+        DeleteLastIntermediate();
     }
   }
 
-  if ((pPSDef.PSFinalCombinerInputsABCD > 0)
-  | (pPSDef.PSFinalCombinerInputsEFG > 0) 
-    if (NewIntermediate.DecodeFinalCombiner(pPSDef.PSFinalCombinerInputsABCD, pPSDef.PSFinalCombinerInputsEFG) 
+  if ((pPSDef->PSFinalCombinerInputsABCD > 0)
+  || (pPSDef->PSFinalCombinerInputsEFG > 0)) {
+    if (NewIntermediate()->DecodeFinalCombiner(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG))
     {
-      FinalCombinerFlags == PS_FINALCOMBINERSETTING((pPSDef.PSFinalCombinerInputsEFG >> 0) & 0xFF);
-//    dwPS_GLOBALFLAGS == (pPSDef.PSFinalCombinerConstants >> 8) & 0x1;
+      FinalCombinerFlags = (PS_FINALCOMBINERSETTING)((pPSDef->PSFinalCombinerInputsEFG >> 0) & 0xFF);
+//    dwPS_GLOBALFLAGS = (pPSDef->PSFinalCombinerConstants >> 8) & 0x1;
     }
     else
-      DeleteLastIntermediate;
-
+      DeleteLastIntermediate();
+  }
   // Dump the contents of the PixelShader def
-  if (MayLog(LogFlags) 
+  //if (MayLog(LogFlags))
     // dump pixel shader definition to std::string
-    XTL_DumpPixelShaderToFile(pPSDef);
+    // TODO : Reinstate : XTL_DumpPixelShaderToFile(pPSDef);
 
-  if (MayLog(LogFlags) 
+  //if (MayLog(LogFlags))
   {
     // print relevant contents to the debug console
-    DbgPrintf(DecodedToString(pPSDef));
+    DbgPrintf("%s", DecodedToString(pPSDef).c_str());
   }
 
   // TODO:
   // - Insert tex* & def instructions
 
-  Log('Parse result');
+  Log("Parse result");
 
-  if (MoveRemovableParametersRight 
-    Log('MoveRemovableParametersRight');
+  if (MoveRemovableParametersRight())
+    Log("MoveRemovableParametersRight");
 
-  if (RemoveNops() 
-    Log('RemoveNops');
+  if (RemoveNops())
+    Log("RemoveNops");
 
-  if (RemoveUselessWrites 
-    Log('RemoveUselessWrites');
+  if (RemoveUselessWrites())
+    Log("RemoveUselessWrites");
 
-  if (ConvertConstantsToNative(pPSDef, {Recompiled=}Result) 
-    Log('ConvertConstantsToNative');
+  if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Result))
+    Log("ConvertConstantsToNative");
 
   ConvertXboxOpcodesToNative(pPSDef);
-  Log('ConvertXboxOpcodesToNative');
+  Log("ConvertXboxOpcodesToNative");
 
-  if (RemoveUselessWrites  // twice!
-    Log('RemoveUselessWrites');
+  if (RemoveUselessWrites()) // twice!
+    Log("RemoveUselessWrites");
 
   // Resolve all differences :
-  if (FixupPixelShader 
-    Log('FixupPixelShader');
+  if (FixupPixelShader())
+    Log("FixupPixelShader");
 
   // Handle Texture declarations :
-  if (DecodeTextureModes(pPSDef) 
-    Log('DecodeTextureModes');
+  if (DecodeTextureModes(pPSDef))
+    Log("DecodeTextureModes");
 
-  if (FixInvalidSrcSwizzle 
-    Log('FixInvalidSrcSwizzle');
+  if (FixInvalidSrcSwizzle())
+    Log("FixInvalidSrcSwizzle");
 
-  if (FixMissingR0a 
-    Log('FixMissingR0a');
+  if (FixMissingR0a())
+    Log("FixMissingR0a");
 
-  if (FixCoIssuedOpcodes 
-    Log('FixCoIssuedOpcodes');
+  if (FixCoIssuedOpcodes())
+    Log("FixCoIssuedOpcodes");
 
-  Log('} result');
+  Log("} result");
 
-  Result.NewShaderStr == ToString;
+  Result.NewShaderStr = ToString();
+  return Result;
 }
 
-function PSH_XBOX_SHADER.DecodedToString(pPSDef: PX_D3DPIXELSHADERDEF): std::string;
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
+#if 0 // TODO
+std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 // print relevant contents to the debug console
 
-  void _AddStr(const aStr: std::string); overload;
-  {
-    Result == Result + aStr + #13#10;
-  }
+  #define _AddStr(aStr) \
+  \
+    Result = Result + aStr + "\n";
 
-  void _AddStr(const aStr: std::string; Args of const); overload;
-  {
-    _AddStr(DxbxFormat(aStr, Args));
+  #define _AddStr(aStr, ...) \
+  {\
+    _AddStr(DxbxFormat(aStr, Args)); \
   }
-
-var
-  i: int;
 {
-  Result == '';
+  int i;
+
+  std::string Result = "";
   // Show the contents to the user
-  _AddStr(#13#10'-----PixelShader Definition Contents-----');
+  _AddStr("\n-----PixelShader Definition Contents-----");
   _AddStr(OriginalToString(pPSDef));
 
-  if ((pPSDef.PSTextureModes > 0) 
+  if (pPSDef->PSTextureModes > 0) 
   {
-    _AddStr(#13#10'PSTextureModes ->'); // Texture addressing modes
-    _AddStr('Stage 0: %s', [PS_TextureModesStr[PSTextureModes[0]]]);
-    _AddStr('Stage 1: %s', [PS_TextureModesStr[PSTextureModes[1]]]);
-    _AddStr('Stage 2: %s', [PS_TextureModesStr[PSTextureModes[2]]]);
-    _AddStr('Stage 3: %s', [PS_TextureModesStr[PSTextureModes[3]]]);
+    _AddStr("\nPSTextureModes ->"); // Texture addressing modes
+    _AddStr("Stage 0: %s", PS_TextureModesStr[PSTextureModes[0]]);
+    _AddStr("Stage 1: %s", PS_TextureModesStr[PSTextureModes[1]]);
+    _AddStr("Stage 2: %s", PS_TextureModesStr[PSTextureModes[2]]);
+    _AddStr("Stage 3: %s", PS_TextureModesStr[PSTextureModes[3]]);
   }
 
-  if ((pPSDef.PSDotMapping > 0)  // Input mapping for (dot product modes
+  if (pPSDEF->PSDotMapping > 0)  // Input mapping for dot product modes
   {
-    _AddStr(#13#10'PSDotMapping ->');
-    _AddStr('Stage 1: %s', [PS_DotMappingStr[PSDotMapping[1]]]);
-    _AddStr('Stage 2: %s', [PS_DotMappingStr[PSDotMapping[2]]]);
-    _AddStr('Stage 3: %s', [PS_DotMappingStr[PSDotMapping[3]]]);
+    _AddStr("\nPSDotMapping ->");
+    _AddStr("Stage 1: %s", PS_DotMappingStr[PSDotMapping[1]]);
+    _AddStr("Stage 2: %s", PS_DotMappingStr[PSDotMapping[2]]);
+    _AddStr("Stage 3: %s", PS_DotMappingStr[PSDotMapping[3]]);
   }
 
-  if ((pPSDef.PSCompareMode > 0)  // Compare modes for (clipplane texture mode
+  if (pPSDEF->PSCompareMode > 0)  // Compare modes for clipplane texture mode
   {
-    _AddStr(#13#10'PSCompareMode ->');
-    _AddStr('Stage 0: %s', [PS_CompareModeStr[iif(PSCompareMode[0] == 0, 0, 1)]]);
-    _AddStr('Stage 1: %s', [PS_CompareModeStr[iif(PSCompareMode[1] == 0, 2, 3)]]);
-    _AddStr('Stage 2: %s', [PS_CompareModeStr[iif(PSCompareMode[2] == 0, 4, 5)]]);
-    _AddStr('Stage 3: %s', [PS_CompareModeStr[iif(PSCompareMode[3] == 0, 6, 7)]]);
+    _AddStr("\nPSCompareMode ->");
+    _AddStr("Stage 0: %s", PS_CompareModeStr[(PSCompareMode[0] == 0) ? 0 : 1]);
+    _AddStr("Stage 1: %s", PS_CompareModeStr[(PSCompareMode[1] == 0) ? 2 : 3]);
+    _AddStr("Stage 2: %s", PS_CompareModeStr[(PSCompareMode[2] == 0) ? 4 : 5]);
+    _AddStr("Stage 3: %s", PS_CompareModeStr[(PSCompareMode[3] == 0) ? 6 : 7]);
   }
 
-  if ((pPSDef.PSInputTexture > 0)  // Texture source for (some texture modes
+  if (pPSDEF->PSInputTexture > 0)  // Texture source for some texture modes
   {
-    _AddStr(#13#10'PSInputTexture ->');
-    _AddStr('Stage 1: %d', [PSInputTexture[1]]);
-    _AddStr('Stage 2: %d', [PSInputTexture[2]]);
-    _AddStr('Stage 3: %d', [PSInputTexture[3]]);
+    _AddStr("\nPSInputTexture ->");
+    _AddStr("Stage 1: %d", PSInputTexture[1]);
+    _AddStr("Stage 2: %d", PSInputTexture[2]);
+    _AddStr("Stage 3: %d", PSInputTexture[3]);
   }
 
-  if ((pPSDef.PSCombinerCount > 0)  // Active combiner count (Stages 0-7)
+  if (pPSDEF->PSCombinerCount > 0)  // Active combiner count (Stages 0-7)
   {
-    _AddStr(#13#10'PSCombinerCount ->');
-    _AddStr('Combiners: %d', [NumberOfCombiners]);
-    _AddStr('Mux:       %s', [PS_CombinerCountFlagsStr[iif(CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB == 0, 0, 1)]]);
-    _AddStr('C0:        %s', [PS_CombinerCountFlagsStr[iif(CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0 == 0, 2, 3)]]);
-    _AddStr('C1:        %s', [PS_CombinerCountFlagsStr[iif(CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1 == 0, 4, 5)]]);
+    _AddStr("\nPSCombinerCount ->");
+    _AddStr("Combiners: %d", NumberOfCombiners);
+    _AddStr("Mux:       %s", PS_CombinerCountFlagsStr[(CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) == 0 ? 0 : 1]);
+    _AddStr("C0:        %s", PS_CombinerCountFlagsStr[(CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) == 0 ? 2 : 3]);
+    _AddStr("C1:        %s", PS_CombinerCountFlagsStr[(CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) == 0 ? 4 : 5]);
   }
 
   // Dxbx additions from here onwards :
 
-  if (NumberOfCombiners > 0 
-  for (i == 0 to NumberOfCombiners-1 ) // Loop over all combiner stages
+  for (i = 0; i < NumberOfCombiners; i++) // Loop over all combiner stages
   {
-    _AddStr(#13#10);
+    _AddStr("\n");
 
-    _AddStr('PSRGBOutputs[%d] AB: %s', [i, Combiners[i].RGB.OutputSUM.OutputAB.DecodedToString()]);
-    _AddStr('PSRGBOutputs[%d] CD: %s', [i, Combiners[i].RGB.OutputSUM.OutputCD.DecodedToString()]);
-    _AddStr('PSRGBOutputs[%d] SUM: %s', [i, Combiners[i].RGB.OutputSUM.DecodedToString()]);
-    _AddStr('PSRGBOutputs[%d] flags: %s', [i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, {IsAlpha=}false)]);
+    _AddStr("PSRGBOutputs[%d] AB: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.DecodedToString());
+    _AddStr("PSRGBOutputs[%d] CD: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.DecodedToString());
+    _AddStr("PSRGBOutputs[%d] SUM: %s", i, Combiners[i].RGB.OutputSUM.DecodedToString());
+    _AddStr("PSRGBOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, /*IsAlpha=*/false));
 
-    _AddStr(#13#10);
-    _AddStr('PSRGBInputs[%d] A: %s', [i, Combiners[i].RGB.OutputSUM.OutputAB.Input1.DecodedToString()]);
-    _AddStr('PSRGBInputs[%d] B: %s', [i, Combiners[i].RGB.OutputSUM.OutputAB.Input2.DecodedToString()]);
-    _AddStr('PSRGBInputs[%d] C: %s', [i, Combiners[i].RGB.OutputSUM.OutputCD.Input1.DecodedToString()]);
-    _AddStr('PSRGBInputs[%d] D: %s', [i, Combiners[i].RGB.OutputSUM.OutputCD.Input2.DecodedToString()]);
+	_AddStr("\n");
+    _AddStr("PSRGBInputs[%d] A: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input1.DecodedToString());
+    _AddStr("PSRGBInputs[%d] B: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input2.DecodedToString());
+    _AddStr("PSRGBInputs[%d] C: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input1.DecodedToString());
+    _AddStr("PSRGBInputs[%d] D: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input2.DecodedToString());
 
-    _AddStr(#13#10);
-    _AddStr('PSAlphaOutputs[%d] AB: %s', [i, Combiners[i].Alpha.OutputSUM.OutputAB.DecodedToString()]);
-    _AddStr('PSAlphaOutputs[%d] CD: %s', [i, Combiners[i].Alpha.OutputSUM.OutputCD.DecodedToString()]);
-    _AddStr('PSAlphaOutputs[%d] SUM: %s', [i, Combiners[i].Alpha.OutputSUM.DecodedToString()]);
-    _AddStr('PSAlphaOutputs[%d] flags: %s', [i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, {IsAlpha=}true)]);
+	_AddStr("\n");
+    _AddStr("PSAlphaOutputs[%d] AB: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.DecodedToString());
+    _AddStr("PSAlphaOutputs[%d] CD: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.DecodedToString());
+    _AddStr("PSAlphaOutputs[%d] SUM: %s", i, Combiners[i].Alpha.OutputSUM.DecodedToString());
+    _AddStr("PSAlphaOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, /*IsAlpha=*/true));
 
-    _AddStr(#13#10);
-    _AddStr('PSAlphaInputs[%d] A: %s', [i, Combiners[i].Alpha.OutputSUM.OutputAB.Input1.DecodedToString()]);
-    _AddStr('PSAlphaInputs[%d] B: %s', [i, Combiners[i].Alpha.OutputSUM.OutputAB.Input2.DecodedToString()]);
-    _AddStr('PSAlphaInputs[%d] C: %s', [i, Combiners[i].Alpha.OutputSUM.OutputCD.Input1.DecodedToString()]);
-    _AddStr('PSAlphaInputs[%d] D: %s', [i, Combiners[i].Alpha.OutputSUM.OutputCD.Input2.DecodedToString()]);
+	_AddStr("\n");
+    _AddStr("PSAlphaInputs[%d] A: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input1.DecodedToString());
+    _AddStr("PSAlphaInputs[%d] B: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input2.DecodedToString());
+    _AddStr("PSAlphaInputs[%d] C: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input1.DecodedToString());
+    _AddStr("PSAlphaInputs[%d] D: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input2.DecodedToString());
 
-    _AddStr(#13#10);
-    _AddStr('PSConstant0[%d] : %x', [i, pPSDef.PSConstant0[i]]); // C0 for (each stage
-    _AddStr('PSConstant1[%d] : %x', [i, pPSDef.PSConstant1[i]]); // C1 for (each stage
+	_AddStr("\n");
+    _AddStr("PSConstant0[%d] : %x", i, pPSDEF->PSConstant0[i]); // C0 for (each stage
+    _AddStr("PSConstant1[%d] : %x", i, pPSDEF->PSConstant1[i]); // C1 for (each stage
   }
 
-  if ((pPSDef.PSFinalCombinerInputsABCD > 0)
-  | (pPSDef.PSFinalCombinerInputsEFG  > 0)  // Final combiner inputs
+  if ((pPSDef->PSFinalCombinerInputsABCD > 0)
+  || (pPSDef->PSFinalCombinerInputsEFG  > 0))  // Final combiner inputs
   {
-    _AddStr(#13#10'PSFinalCombinerConstant0 : %x', [pPSDef.PSFinalCombinerConstant0]); // C0 in final combiner
-    _AddStr('PSFinalCombinerConstant1 : %x', [pPSDef.PSFinalCombinerConstant1]); // C1 in final combiner
+    _AddStr("\nPSFinalCombinerConstant0 : %x", pPSDef->PSFinalCombinerConstant0); // C0 in final combiner
+    _AddStr("PSFinalCombinerConstant1 : %x", pPSDef->PSFinalCombinerConstant1); // C1 in final combiner
 
-    _AddStr(#13#10'PSFinalCombinerInputsABCD ->');
-    _AddStr('Input A: %s', [FinalCombiner.InputA.DecodedToString()]);
-    _AddStr('Input B: %s', [FinalCombiner.InputB.DecodedToString()]);
-    _AddStr('Input C: %s', [FinalCombiner.InputC.DecodedToString()]);
-    _AddStr('Input D: %s', [FinalCombiner.InputD.DecodedToString()]);
+    _AddStr("\nPSFinalCombinerInputsABCD ->");
+    _AddStr("Input A: %s", FinalCombiner.InputA.DecodedToString());
+    _AddStr("Input B: %s", FinalCombiner.InputB.DecodedToString());
+    _AddStr("Input C: %s", FinalCombiner.InputC.DecodedToString());
+    _AddStr("Input D: %s", FinalCombiner.InputD.DecodedToString());
 
-    _AddStr(#13#10'PSFinalCombinerInputsEFG ->');
-    _AddStr('Input E: %s', [FinalCombiner.InputE.DecodedToString()]);
-    _AddStr('Input F: %s', [FinalCombiner.InputF.DecodedToString()]);
-    _AddStr('Input G: %s', [FinalCombiner.InputG.DecodedToString()]);
-    _AddStr('Final combiner setting: %s', [PSFinalCombinerSettingToStr(Ord(FinalCombiner.FinalCombinerFlags))]);
+    _AddStr("\nPSFinalCombinerInputsEFG ->");
+    _AddStr("Input E: %s", FinalCombiner.InputE.DecodedToString());
+    _AddStr("Input F: %s", FinalCombiner.InputF.DecodedToString());
+    _AddStr("Input G: %s", FinalCombiner.InputG.DecodedToString());
+    _AddStr("Final combiner setting: %s", PSFinalCombinerSettingToStr(Ord(FinalCombiner.FinalCombinerFlags)));
 
-    _AddStr(#13#10'PSFinalCombinerConstants ->'); // Final combiner constant mapping
-    _AddStr('Offset of D3D constant for (C0: %d', [FinalCombiner.FinalCombinerC0Mapping]);
-    _AddStr('Offset of D3D constant for (C1: %d', [FinalCombiner.FinalCombinerC1Mapping]);
-    _AddStr('Adjust texture flag: %s', [PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]]);
+    _AddStr("\nPSFinalCombinerConstants ->"); // Final combiner constant mapping
+    _AddStr("Offset of D3D constant for (C0: %d", FinalCombiner.FinalCombinerC0Mapping);
+    _AddStr("Offset of D3D constant for (C1: %d", FinalCombiner.FinalCombinerC1Mapping);
+    _AddStr("Adjust texture flag: %s", PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]);
   }
 
-  _AddStr(#13#10);
+  _AddStr("\n");
 }
+#endif
 
-function PSH_XBOX_SHADER.DecodeTextureModes(pPSDef: PX_D3DPIXELSHADERDEF): bool;
-
-  function _NextIs2D(Stage: int): bool;
+  bool PSH_XBOX_SHADER::_NextIs2D(int Stage)
   {
-    if (Stage < X_D3DTS_STAGECOUNT-1 
-      Result == PSTextureModes[Stage + 1] in [PS_TEXTUREMODES_DOT_ST, PS_TEXTUREMODES_DOT_ZW]
+    if (Stage < XTL::X_D3DTS_STAGECOUNT-1)
+      return (PSTextureModes[Stage + 1] & (PS_TEXTUREMODES_DOT_ST | PS_TEXTUREMODES_DOT_ZW)) > 0;
     else
-      Result == false;
+      return false;
   }
 
-var
-  InsertPos: int;
-  Ins: PSH_INTERMEDIATE_FORMAT;
-  Stage: int;
+bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-  Result == false;
+  int InsertPos;
+  PSH_INTERMEDIATE_FORMAT Ins;
+  int Stage;
 
-  InsertPos == -1;
-  repeat
-    ++(InsertPos);
-  until Intermediate[InsertPos].Opcode != PO_DEF;
+  bool Result = false;
 
-{$IFDEF DXBX_USE_PS_2_0}
+  InsertPos = -1;
+  do {
+	  ++InsertPos;
+  } while (Intermediate[InsertPos].Opcode == PO_DEF);
+
+#ifdef CXBX_USE_PS_2_0
   Ins.Initialize(PO_DCL);
-  for (Stage == 0 to X_D3DTS_STAGECOUNT-1 )
+  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
   {
-    if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE 
+    if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
     {
       Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
       InsertIntermediate(&Ins, InsertPos);
-      ++(InsertPos);
-      Result == true;
+      ++InsertPos;
+      Result = true;
     }
   }
-{$ENDIF}
+#endif
 
   Ins.Initialize(PO_TEX);
-  for (Stage == 0 to X_D3DTS_STAGECOUNT-1 )
+  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
   {
     // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
 
     // Convert the texture mode to a texture addressing instruction :
-    case PSTextureModes[Stage] of // input == q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-{$IFNDEF DXBX_USE_PS_2_0}
-      PS_TEXTUREMODES_PROJECT2D: Ins.Opcode == PO_TEX; // argb == texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
-      PS_TEXTUREMODES_PROJECT3D: Ins.Opcode == PO_TEX; // argb == texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-      PS_TEXTUREMODES_CUBEMAP: Ins.Opcode == PO_TEX; // argb == cubemap(r/q, s/q, t/q)
-{$ENDIF}
-      PS_TEXTUREMODES_PASSTHRU: Ins.Opcode == PO_TEXCOORD;
-      PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode == PO_TEXKILL;
-      PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode == PO_TEXBEM;
-      PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode == PO_TEXBEML;
-//    PS_TEXTUREMODES_BRDF: Ins.Opcode == PO_TEXBRDF; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_ST: Ins.Opcode == PO_TEXM3X2TEX;
-      PS_TEXTUREMODES_DOT_ZW: Ins.Opcode == PO_TEXM3X2DEPTH; // Note : requires ps.1.3 & a preceding texm3x2pad
-//    PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode == PO_TEXM3X3DIFF; // Note : Not supported by Direct3D8 ?
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode == PO_TEXM3X3VSPEC;
-      PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode == PO_TEXM3X3TEX; // Note : Uses a 3d texture
-      PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode == PO_TEXM3X3TEX; // Note : Uses a cube texture
-      PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode == PO_TEXREG2AR;
-      PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode == PO_TEXREG2GB;
-      PS_TEXTUREMODES_DOTPRODUCT:
-        if (_NextIs2D(Stage) 
-          Ins.Opcode == PO_TEXM3X2PAD
+    switch (PSTextureModes[Stage]) { // input == q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
+#ifndef CXBX_USE_PS_2_0
+      case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb == texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+	  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb == texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+	  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb == cubemap(r/q, s/q, t/q)
+#endif
+	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
+	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
+	  case PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode = PO_TEXBEM; break;
+	  case PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode = PO_TEXBEML; break;
+//    case PS_TEXTUREMODES_BRDF: Ins.Opcode = PO_TEXBRDF; break; // Note : Not supported by Direct3D8 ?
+	  case PS_TEXTUREMODES_DOT_ST: Ins.Opcode = PO_TEXM3X2TEX; break;
+	  case PS_TEXTUREMODES_DOT_ZW: Ins.Opcode = PO_TEXM3X2DEPTH; break; // Note : requires ps.1.3 & a preceding texm3x2pad
+//    case PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode = PO_TEXM3X3DIFF; break; // Note : Not supported by Direct3D8 ?
+	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode = PO_TEXM3X3VSPEC; break;
+	  case PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode = PO_TEXM3X3TEX; break; // Note : Uses a 3d texture
+	  case PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode = PO_TEXM3X3TEX; break; // Note : Uses a cube texture
+	  case PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode = PO_TEXREG2AR; break;
+	  case PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode = PO_TEXREG2GB; break;
+	  case PS_TEXTUREMODES_DOTPRODUCT:
+        if (_NextIs2D(Stage))
+          Ins.Opcode = PO_TEXM3X2PAD;
         else
-          Ins.Opcode == PO_TEXM3X3PAD;
-      PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode == PO_TEXM3X3SPEC; // Note : Needs 3 arguments!
-    else
+          Ins.Opcode = PO_TEXM3X3PAD;
+		break;
+	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode = PO_TEXM3X3SPEC; break; // Note : Needs 3 arguments!
+    default:
       continue;
     }
 
     Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
 
     // for (those texture modes that need it, add the source stage as argument :
-    if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1 
+    if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1)
     {
       Ins.Parameters[0].SetRegister(PARAM_T, PSInputTexture[Stage], 0);
 
-      case PSDotMapping[Stage] of
-        PS_DOTMAPPING_MINUS1_TO_1_D3D:
-          Ins.Parameters[0].Modifiers == [ARGMOD_SCALE_BX2];
+      switch (PSDotMapping[Stage]) {
+        case PS_DOTMAPPING_MINUS1_TO_1_D3D:
+          Ins.Parameters[0].Modifiers = ARGMOD_SCALE_BX2;
+		  break;
       }
     }
 
-    if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2 
+    if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2)
     {
       // Add the third argument :
-      case PSTextureModes[Stage] of
-        PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
+      switch (PSTextureModes[Stage]) {
+        case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
         {
           Ins.Parameters[1].SetRegister(PARAM_C, 0, 0);
-          Ins.CommentString == 'Dxbx guess'; // TODO : Where ) we get the 3rd argument to this?
+          Ins.CommentString = "Dxbx guess"; // TODO : Where ) we get the 3rd argument to this?
+		  break;
         }
       }
     }
 
 //    // Warn about unprocessed flag :
-//    if ((dwPS_GLOBALFLAGS & Ord(PS_GLOBALFLAGS_TEXMODE_ADJUST)) > 0 
-//      Ins.CommentString == Ins.CommentString + ' PS_GLOBALFLAGS_TEXMODE_ADJUST unhandled!';
+//    if ((dwPS_GLOBALFLAGS & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0)
+//      Ins.CommentString = Ins.CommentString + " PS_GLOBALFLAGS_TEXMODE_ADJUST unhandled!";
 
     InsertIntermediate(&Ins, InsertPos);
-    ++(InsertPos);
-    Result == true;
+    ++InsertPos;
+    Result = true;
   }
+  return Result;
 }
 
-function PSH_XBOX_SHADER.MoveRemovableParametersRight: bool;
-var
-  i: int;
+bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
 {
-  Result == false;
+  int i;
 
-  // for (all opcodes, try to put constant & discarded arguments in the rightmost slot, to ease following analysis :
-  i == IntermediateCount;
-  while i > 0 )
+  bool Result = false;
+
+  // for (all opcodes, try to put constant and discarded arguments in the rightmost slot, to ease following analysis :
+  i = IntermediateCount;
+  while (i > 0)
   {
-    --(i);
+    --i;
 
-    case Intermediate[i].Opcode of
-//      PO_SUB // 1-x is not the same as x-1, but can still be reduced - see SimplifySUB
-      PO_ADD,
-      PO_DP3,
-      PO_DP4,
-      PO_MUL: // All these opcodes have two swappable parameters, so try that :
-        if (Intermediate[i].MoveRemovableParametersRight(0, 1) 
-          Result == true;
+    switch (Intermediate[i].Opcode) {
+//      case PO_SUB: // 1-x is not the same as x-1, but can still be reduced - see SimplifySUB
+      case PO_ADD:
+	  case PO_DP3:
+	  case PO_DP4:
+	  case PO_MUL: // All these opcodes have two swappable parameters, so try that :
+        if (Intermediate[i].MoveRemovableParametersRight(0, 1))
+          Result = true;
+		break;
 
-      PO_XMMA,
-      PO_XMMC,
-      PO_XDD:
-        if (Intermediate[i].XMoveNonRegisterOutputsRight() 
-          Result == true;
+	  case PO_XMMA:
+	  case PO_XMMC:
+	  case PO_XDD:
+        if (Intermediate[i].XMoveNonRegisterOutputsRight())
+          Result = true;
+		break;
 
-      PO_XDM:
+      case PO_XDM:
       {
         // Parameters may be swapped for (both dot & mul,
         // but the opcodes themselves may not, as we handle
         // both XDM operations separately below :
-        if (Intermediate[i].MoveRemovableParametersRight(0, 1) 
-          Result == true;
+        if (Intermediate[i].MoveRemovableParametersRight(0, 1))
+          Result = true;
 
-        if (Intermediate[i].MoveRemovableParametersRight(2, 3) 
-          Result == true;
-      }
+        if (Intermediate[i].MoveRemovableParametersRight(2, 3))
+          Result = true;
+		break;
+	  }
     }
   }
+  return Result;
 } // MoveRemovableParametersRight
 
-function PSH_XBOX_SHADER.ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF; var Recompiled: PSH_RECOMPILED_SHADER): bool;
+#if 0 // Dxbx
+
+function PSH_XBOX_SHADER::ConvertConstantsToNative(pPSDef: PX_D3DPIXELSHADERDEF; var Recompiled: PSH_RECOMPILED_SHADER): bool;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -2473,11 +2476,11 @@ var
   Result == false;
 
   // Note : Recompiled.ConstMapping & Recompiled.ConstInUse[i] are still empty here.
-  for (i == 0 to PSH_PC_MAX_C_REGISTER_COUNT - 1 )
+  for (i = 0; i < PSH_PC_MAX_C_REGISTER_COUNT - 1 )
     NativeConstInUse[i] == false;
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 & C1 in each combiner) :
-  for (i == 0 to IntermediateCount - 1 )
+  for (i = 0; i < IntermediateCount - 1 )
   {
     // Loop over this opcodes' input arguments :
     Cur == &(Intermediate[i]);
@@ -2573,7 +2576,7 @@ var
   } // for (opcodes
 } // ConvertConstantsToNative
 
-function PSH_XBOX_SHADER.RemoveUselessWrites: bool;
+function PSH_XBOX_SHADER::RemoveUselessWrites: bool;
 // Note : Xbox allows writing to V0 (diffuse color) & V1 (specular color), but native ps.1.3 doesn't!
 // Some examples of this behaviour can be seen when running RayMan Arena.
 var
@@ -2585,10 +2588,10 @@ var
   // TODO : In Polynomial Texture Maps, one extra opcode could be deleted (sub r1.rgb, v0,v0), why doesn't it?
   Result == false;
 
-  // Mark only R0 (& discard) as initially 'read', as these may not result in a removal :
+  // Mark only R0 (and discard) as initially 'read', as these may not result in a removal :
   ZeroMemory(&RegUsage, sizeof(RegUsage));
   RegUsage[PARAM_R, 0] == MASK_RGBA;
-  for (i == 0 to High(RegUsage[PARAM_DISCARD]) )
+  for (i = 0; i < High(RegUsage[PARAM_DISCARD]) )
     RegUsage[PARAM_DISCARD, i] == MASK_RGBA;
 
   i == IntermediateCount;
@@ -2634,7 +2637,7 @@ var
   }
 } // RemoveUselessWrites
 
-void PSH_XBOX_SHADER.ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
+void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(pPSDef: PX_D3DPIXELSHADERDEF);
 var
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -2665,7 +2668,7 @@ var
   }
 } // ConvertXboxOpcodesToNative
 
-function PSH_XBOX_SHADER.ConvertXMMToNative_Except3RdOutput(i: int): bool;
+function PSH_XBOX_SHADER::ConvertXMMToNative_Except3RdOutput(i: int): bool;
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   InsertPos: int;
@@ -2737,7 +2740,7 @@ var
   // opcode(s) will probably require the initial opcode's removal!
 } // ConvertXMMToNative_Except3RdOutput
 
-void PSH_XBOX_SHADER.ConvertXMMAToNative(i: int);
+void PSH_XBOX_SHADER::ConvertXMMAToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 {
@@ -2754,7 +2757,7 @@ var
   }
 }
 
-void PSH_XBOX_SHADER.ConvertXMMCToNative(i: int);
+void PSH_XBOX_SHADER::ConvertXMMCToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 {
@@ -2778,7 +2781,7 @@ var
   }
 }
 
-void PSH_XBOX_SHADER.ConvertXDMToNative(i: int);
+void PSH_XBOX_SHADER::ConvertXDMToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   Ins: PSH_INTERMEDIATE_FORMAT;
@@ -2802,7 +2805,7 @@ var
     Cur.Opcode == PO_DP3;
 }
 
-void PSH_XBOX_SHADER.ConvertXDDToNative(i: int);
+void PSH_XBOX_SHADER::ConvertXDDToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   Ins: PSH_INTERMEDIATE_FORMAT;
@@ -2823,7 +2826,7 @@ var
   }
 }
 
-void PSH_XBOX_SHADER.ConvertXFCToNative(i: int);
+void PSH_XBOX_SHADER::ConvertXFCToNative(i: int);
 var
   Cur: PSH_INTERMEDIATE_FORMAT;
   InsertPos: int;
@@ -2841,7 +2844,7 @@ var
   // See if (the final combiner uses the prod | sum input parameters :
   NeedsProd == false;
   NeedsSum == false;
-  for (i == 0 to PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 )
+  for (i = 0; i < PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 )
   {
     CurArg == &(Cur.Parameters[i]);
 
@@ -2945,7 +2948,7 @@ var
   }
 }
 
-function PSH_XBOX_SHADER.RemoveNops(): bool;
+function PSH_XBOX_SHADER::RemoveNops(): bool;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -2984,7 +2987,7 @@ var
   }
 }
 
-function PSH_XBOX_SHADER.IsRegisterFreeFromIndexOnwards(aIndex: int; aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): bool;
+function PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(aIndex: int; aRegType: PSH_ARGUMENT_TYPE; aAddress: Int16): bool;
 var
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -3004,7 +3007,7 @@ var
   Result == true;
 }
 
-void PSH_XBOX_SHADER.ReplaceRegisterFromIndexOnwards(aIndex: int;
+void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(aIndex: int;
   aSrcRegType: PSH_ARGUMENT_TYPE; aSrcAddress: Int16;
   aDstRegType: PSH_ARGUMENT_TYPE; aDstAddress: Int16);
 var
@@ -3026,7 +3029,7 @@ var
   }
 }
 
-function PSH_XBOX_SHADER.CombineInstructions(): bool;
+function PSH_XBOX_SHADER::CombineInstructions(): bool;
 
   function _CanLerp(Mul1, Mul2, AddOpcode: PPSH_INTERMEDIATE_FORMAT; Left, Right: int): bool;
   var
@@ -3315,7 +3318,7 @@ var
   } // while
 } // CombineInstructions
 
-function PSH_XBOX_SHADER.SimplifyMOV(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifyMOV(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 var
   CanSimplify: bool;
   Factor: float;
@@ -3395,7 +3398,7 @@ var
   }
 }
 
-function PSH_XBOX_SHADER.SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 {
   Result == false;
 
@@ -3410,7 +3413,7 @@ function PSH_XBOX_SHADER.SimplifyADD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   }
 }
 
-function PSH_XBOX_SHADER.SimplifyMAD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifyMAD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 {
   Result == false;
 
@@ -3449,7 +3452,7 @@ function PSH_XBOX_SHADER.SimplifyMAD(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   }
 }
 
-function PSH_XBOX_SHADER.SimplifySUB(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifySUB(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 {
   Result == false;
 
@@ -3464,7 +3467,7 @@ function PSH_XBOX_SHADER.SimplifySUB(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   }
 }
 
-function PSH_XBOX_SHADER.SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 {
   Result == false;
 
@@ -3491,7 +3494,7 @@ function PSH_XBOX_SHADER.SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   }
 } // SimplifyMUL
 
-function PSH_XBOX_SHADER.SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
+function PSH_XBOX_SHADER::SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
 {
   Result == false;
 
@@ -3532,7 +3535,7 @@ function PSH_XBOX_SHADER.SimplifyLRP(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   }
 } // SimplifyLRP
 
-function PSH_XBOX_SHADER.FixupPixelShader(): bool;
+function PSH_XBOX_SHADER::FixupPixelShader(): bool;
 var
   i: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
@@ -3595,14 +3598,14 @@ var
   }
 } // FixupPixelShader
 
-function PSH_XBOX_SHADER.FixInvalidSrcSwizzle(): bool;
+function PSH_XBOX_SHADER::FixInvalidSrcSwizzle(): bool;
 var
   i, j: int;
   Cur: PPSH_INTERMEDIATE_FORMAT;
   CurArg: PPSH_IMD_ARGUMENT;
 {
   Result == false;
-  for (i == 0 to IntermediateCount - 1 )
+  for (i = 0; i < IntermediateCount - 1 )
   {
     Cur == &(Intermediate[i]);
     // Is this an arithmetic opcode?
@@ -3624,223 +3627,233 @@ var
   }
 }
 
-function PSH_XBOX_SHADER.FixMissingR0a(): bool;
+#endif // Dxbx
+
+bool PSH_XBOX_SHADER::FixMissingR0a()
 // On the Xbox, the alpha portion of the R0 register is initialized to
 // the alpha component of texture 0 if (texturing is enabled for (texture 0 :
-var
-  R0aDefaultInsertPos: int;
-  i: int;
-  Cur: PPSH_INTERMEDIATE_FORMAT;
-  NewIns: PSH_INTERMEDIATE_FORMAT;
 {
-  Result == false;
+  int R0aDefaultInsertPos;
+  int i;
+  PPSH_INTERMEDIATE_FORMAT Cur;
+  PSH_INTERMEDIATE_FORMAT NewIns;
+
+  bool Result = false;
 
   // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
-  R0aDefaultInsertPos == -1;
-  for (i == 0 to IntermediateCount - 1 )
+  R0aDefaultInsertPos = -1;
+  for (i = 0; i < IntermediateCount; i++)
   {
-    Cur == &(Intermediate[i]);
-    if (not Cur.IsArithmetic 
+    Cur = &(Intermediate[i]);
+    if (!Cur->IsArithmetic())
       continue;
 
     // Make sure if (we insert at all, it'll be after the DEF's :
-    if (R0aDefaultInsertPos < 0 
-      R0aDefaultInsertPos == i;
+    if (R0aDefaultInsertPos < 0) 
+      R0aDefaultInsertPos = i;
 
     // First, check if (r0.a is read by this opcode :
-    if (Cur.ReadsFromRegister(PARAM_R, 0, MASK_A) 
+    if (Cur->ReadsFromRegister(PARAM_R, 0, MASK_A))
     {
-      R0aDefaultInsertPos == i;
+      R0aDefaultInsertPos = i;
       break;
     }
 
     // if (this opcode writes to r0.a, we're done :
-    if (Cur.WritesToRegister(PARAM_R, 0, MASK_A) 
-      return;
+    if (Cur->WritesToRegister(PARAM_R, 0, MASK_A))
+      return Result;
   }
 
-  if (R0aDefaultInsertPos >= 0 
+  if (R0aDefaultInsertPos >= 0)
   {
     // Insert a new opcode : MOV r0.a, t0.a
     NewIns.Initialize(PO_MOV);
     NewIns.Output[0].SetRegister(PARAM_R, 0, MASK_A);
-    NewIns.Parameters[0] == NewIns.Output[0];
-    NewIns.Parameters[0].Type == PARAM_T;
-    NewIns.CommentString == 'Inserted r0.a default';
+    NewIns.Parameters[0] = NewIns.Output[0];
+    NewIns.Parameters[0].Type = PARAM_T;
+    NewIns.CommentString = "Inserted r0.a default";
     InsertIntermediate(&NewIns, R0aDefaultInsertPos);
-    Result == true;
+    Result = true;
   }
+  return Result;
 } // FixMissingR0a
 
-function PSH_XBOX_SHADER.FixCoIssuedOpcodes(): bool;
-var
-  PrevMask: DWORD;
-  PrevOpcode: PSH_OPCODE;
-  i: int;
-  Cur: PPSH_INTERMEDIATE_FORMAT;
-//  j: int;
-  NewIsCombined: bool;
+bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
 {
-  Result == false;
+  DWORD PrevMask;
+  PSH_OPCODE PrevOpcode;
+  int i;
+  PPSH_INTERMEDIATE_FORMAT Cur;
+//  int j;
+  bool NewIsCombined;
 
-(*
+  bool Result = false;
+
+/*
   // TODO : Shift independent .a instructions up | down so the alpha write combiner can be used more often :
-  for (i == 0 to IntermediateCount - 1 )
+  for (i = 0; i < IntermediateCount; i++)
   {
-    Cur == &(Intermediate[i]);
+    Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur.Opcode > PO_TEX 
+    if (Cur->Opcode > PO_TEX)
     {
       // Does this instruction write solely to Alpha?
-      if ((Cur.Output[0].Mask == MASK_A) 
+      if (Cur->Output[0].Mask == MASK_A) 
       {
         // Look at prior instructions :
-        for (j == i - 1 downto 0 )
+        for (j = i - 1; j > 0; j--)
         {
           // Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it :
-          if ((Intermediate[j].Opcode == PO_DP3) 
+          if (Intermediate[j].Opcode == PO_DP3) 
             break;
 
           // TODO : Test that none of the inputs of 'Cur' are written to (break otherwise)
 
           // Does a prior instruction skip alpha?
-          if ((Intermediate[j].Output[0].Mask & MASK_A) == 0 
+          if ((Intermediate[j].Output[0].Mask & MASK_A) == 0)
           {
             // TODO : Move instruction up to right below j
-            // Result == true;
+            // Result = true;
             // break;
           }
         }
       }
     }
   }
-*)
+*/
 
   // Update IsCombined flags :
   // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
-  PrevMask == MASK_A;
-  PrevOpcode == PO_COMMENT;
-  for (i == 0 to IntermediateCount - 1 )
+  PrevMask = MASK_A;
+  PrevOpcode = PO_COMMENT;
+  for (i = 0; i < IntermediateCount; i++)
   {
-    Cur == &(Intermediate[i]);
+    Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur.Opcode > PO_TEX 
+    if (Cur->Opcode > PO_TEX)
     {
       // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
-      NewIsCombined == (PrevOpcode != PO_DP3)
-                   & ((PrevMask & MASK_A) == 0)
-                   & (Cur.Output[0].Mask == MASK_A);
+      NewIsCombined = (PrevOpcode != PO_DP3)
+                   && ((PrevMask & MASK_A) == 0)
+                   && (Cur->Output[0].Mask == MASK_A);
 
-      if (Cur.IsCombined != NewIsCombined 
+      if (Cur->IsCombined != NewIsCombined)
       {
-        Cur.IsCombined == NewIsCombined;
-        Result == true;
+        Cur->IsCombined = NewIsCombined;
+        Result = true;
       }
 
-      PrevMask == Cur.Output[0].Mask;
-      PrevOpcode == Cur.Opcode;
+      PrevMask = Cur->Output[0].Mask;
+      PrevOpcode = Cur->Opcode;
     }
   }
+  return Result;
 }
 
 // TODO : FocusBlur sample needs a zero in 'cnd' opcode
 
-{ RPSRegisterObject }
+/* RPSRegisterObject */
 
-void RPSRegisterObject.Decode(Value: Byte; aIsAlpha: bool);
+void RPSRegisterObject::Decode(uint8 Value, bool aIsAlpha)
 {
-  IsAlpha == aIsAlpha;
-  Reg == PS_REGISTER(Value);
+  IsAlpha = aIsAlpha;
+  Reg = (PS_REGISTER)(Value);
 }
 
-function RPSRegisterObject.DecodedToString(): std::string;
+std::string RPSRegisterObject::DecodedToString()
 {
-  Assert((PS_REGISTER_DISCARD <= Reg) & (Reg <= PS_REGISTER_EF_PROD));
+  assert((PS_REGISTER_DISCARD <= Reg) && (Reg <= PS_REGISTER_EF_PROD));
 
-  Result == PS_RegisterStr[Ord(Reg) + 1];
+  return PS_RegisterStr[Reg + 1];
 }
 
-{ RPSInputRegister }
+/* RPSInputRegister */
 
-void RPSInputRegister.Decode(Value: Byte; aIsAlpha: bool);
+void RPSInputRegister::Decode(uint8 Value, bool aIsAlpha)
 {
-  inherited Decode(Value & PS_NoChannelMask, aIsAlpha);
+  RPSRegisterObject::Decode(Value & PS_NoChannelMask, aIsAlpha);
 
-  Channel == PS_CHANNEL(Value & Ord(PS_CHANNEL_ALPHA));
-  InputMapping == PS_INPUTMAPPING(Value & 0xe0);
+  Channel = (PS_CHANNEL)(Value & PS_CHANNEL_ALPHA);
+  InputMapping = (PS_INPUTMAPPING)(Value & 0xe0);
 
   // Remove the above flags from the register :
-  Reg == PS_REGISTER(Ord(Reg) & 0xf);
+  Reg = (PS_REGISTER)(Reg & 0xf);
 
   // Check if (the input Register is ZERO, in which case we want to allow the extended registers :
-  if ((Reg == PS_REGISTER_ZERO) 
+  if (Reg == PS_REGISTER_ZERO) 
   {
-    case PS_REGISTER(InputMapping) of
-      PS_REGISTER_ONE, PS_REGISTER_NEGATIVE_ONE, PS_REGISTER_ONE_HALF, PS_REGISTER_NEGATIVE_ONE_HALF:
+    switch (InputMapping) {
+      case PS_REGISTER_ONE: case PS_REGISTER_NEGATIVE_ONE: case PS_REGISTER_ONE_HALF: case PS_REGISTER_NEGATIVE_ONE_HALF:
         // These input mapping have their own register - keep these in 'Reg', so we can check for (them :
-        Reg == PS_REGISTER(InputMapping);
+        Reg = (PS_REGISTER)(InputMapping);
+		break;
 
-      PS_REGISTER(PS_INPUTMAPPING_EXPAND_NEGATE):
+      case PS_INPUTMAPPING_EXPAND_NEGATE:
         // This case has no separate PS_REGISTER define, but when applied to zero, also results in one :
-        Reg == PS_REGISTER_ONE;
-    }
+        Reg = PS_REGISTER_ONE;
+		break;
+	}
   }
 }
 
-function RPSInputRegister.DecodedToString(): std::string;
-var
-  InputMappingStr: std::string;
+std::string RPSInputRegister::DecodedToString()
 {
-  InputMappingStr == '';
-  case Reg of
-    PS_REGISTER_ZERO:
+  std::string InputMappingStr = "";
+  std::string Result;
+  switch (Reg) {
+    case PS_REGISTER_ZERO:
     {
-      Result == PS_RegisterStr[0];
-      return;
+      Result = PS_RegisterStr[0];
+      return Result;
     }
-    PS_REGISTER_ONE:
-      Result == PS_RegisterStr[$11];
-    PS_REGISTER_NEGATIVE_ONE:
-      Result == PS_RegisterStr[$12];
-    PS_REGISTER_ONE_HALF:
-      Result == PS_RegisterStr[$13];
-    PS_REGISTER_NEGATIVE_ONE_HALF:
-      Result == PS_RegisterStr[$14];
-  else
-    Result == inherited DecodedToString();
-    InputMappingStr == ' | ' + PS_InputMappingStr[(Ord(InputMapping) >> 5) & 7];
+	case PS_REGISTER_ONE:
+      Result = PS_RegisterStr[0x11];
+	  break;
+	case PS_REGISTER_NEGATIVE_ONE:
+      Result = PS_RegisterStr[0x12];
+	  break;
+	case PS_REGISTER_ONE_HALF:
+      Result = PS_RegisterStr[0x13];
+	  break;
+	case PS_REGISTER_NEGATIVE_ONE_HALF:
+      Result = PS_RegisterStr[0x14];
+	  break;
+	default:
+    Result = RPSRegisterObject::DecodedToString();
+    InputMappingStr = " | " + PS_InputMappingStr[(InputMapping >> 5) & 7];
   }
 
-  // Render the channel as a std::string :
-  Result == Result + ' | ' + PS_ChannelStr[iif(Ord(Channel) > 0, {Alpha}2, iif(IsAlpha, {Blue}1, {RGB}0))] + InputMappingStr;
+  // Render the channel as a string :
+  Result = Result + " | " + PS_ChannelStr[(Channel > 0) ? /*Alpha*/2 : (IsAlpha ? /*Blue*/1 : /*RGB*/0)] + InputMappingStr;
+  return Result;
 }
 
-{ RPSCombinerOutput }
+/* RPSCombinerOutput */
 
-void RPSCombinerOutput.Decode(Value: Byte; PSInputs: DWORD; aIsAlpha: bool);
+void RPSCombinerOutput::Decode(uint8 Value, DWORD PSInputs, bool aIsAlpha)
 {
-  inherited Decode(Value, aIsAlpha);
+  RPSRegisterObject::Decode(Value, aIsAlpha);
 
   // Decode PSAlphaInputs / PSRGBInputs :
   Input1.Decode((PSInputs >>  8) & 0xFF, IsAlpha);
   Input2.Decode((PSInputs >>  0) & 0xFF, IsAlpha);
 }
 
-{ RPSCombinerStageChannel }
+/* RPSCombinerStageChannel */
 
-void RPSCombinerStageChannel.Decode(PSInputs, PSOutputs: DWORD; IsAlpha: bool == false);
+void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlpha/* = false*/)
 {
   // Get the combiner output flags :
-  CombinerOutputFlags == PS_COMBINEROUTPUT(PSOutputs >> 12);
+  CombinerOutputFlags = (PS_COMBINEROUTPUT)(PSOutputs >> 12);
 
   // Decompose the combiner output flags :
-  OutputSUM.OutputAB.DotProduct == (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
-  OutputSUM.OutputCD.DotProduct == (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
+  OutputSUM.OutputAB.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
+  OutputSUM.OutputCD.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
 
-  if (not IsAlpha 
+  if (!IsAlpha)
   {
-    OutputSUM.OutputAB.BlueToAlpha == (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
-    OutputSUM.OutputCD.BlueToAlpha == (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
+    OutputSUM.OutputAB.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
+    OutputSUM.OutputCD.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
   }
 
   // Decode PSAlphaOutputs / PSRGBOutputs & PSAlphaInputs / PSRGBInputs :
@@ -3848,7 +3861,7 @@ void RPSCombinerStageChannel.Decode(PSInputs, PSOutputs: DWORD; IsAlpha: bool ==
   OutputSUM.OutputCD.Decode((PSOutputs >> 0) & 0xF, (PSInputs >>  0) & 0xFFFF, IsAlpha);
   OutputSUM.Decode((PSOutputs >> 8) & 0xF, IsAlpha);
 
-  AB_CD_SUM == (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_CD_MUX) == 0; // true=AB+CD, false=MUX(AB,CD) based on R0.a
+  AB_CD_SUM = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_CD_MUX) == 0; // true=AB+CD, false=MUX(AB,CD) based on R0.a
 }
 
 // Note : On a hardware level, there are only 4 pixel shaders instructions present in the Nvidia NV2A GPU :
@@ -3883,53 +3896,52 @@ void RPSCombinerStageChannel.Decode(PSInputs, PSOutputs: DWORD; IsAlpha: bool ==
 // "-C0_bias_x2" shifts range from [ 0..1] to [-1..1]
 // "-V0_bias_d2" shifts range from [-1..1] to [ 0..1]
 
-{ RPSFinalCombiner }
+/* RPSFinalCombiner */
 
-void RPSFinalCombiner.Decode(const PSFinalCombinerInputsABCD, PSFinalCombinerInputsEFG, PSFinalCombinerConstants: DWORD);
+void RPSFinalCombiner::Decode(const DWORD PSFinalCombinerInputsABCD, const DWORD PSFinalCombinerInputsEFG, const DWORD PSFinalCombinerConstants)
 {
-  InputA.Decode((PSFinalCombinerInputsABCD >> 24) & 0xFF, {IsAlpha=}false);
-  InputB.Decode((PSFinalCombinerInputsABCD >> 16) & 0xFF, {IsAlpha=}false);
-  InputC.Decode((PSFinalCombinerInputsABCD >>  8) & 0xFF, {IsAlpha=}false);
-  InputD.Decode((PSFinalCombinerInputsABCD >>  0) & 0xFF, {IsAlpha=}false);
+  InputA.Decode((PSFinalCombinerInputsABCD >> 24) & 0xFF, /*IsAlpha=*/false);
+  InputB.Decode((PSFinalCombinerInputsABCD >> 16) & 0xFF, /*IsAlpha=*/false);
+  InputC.Decode((PSFinalCombinerInputsABCD >>  8) & 0xFF, /*IsAlpha=*/false);
+  InputD.Decode((PSFinalCombinerInputsABCD >>  0) & 0xFF, /*IsAlpha=*/false);
 
-  InputE.Decode((PSFinalCombinerInputsEFG  >> 24) & 0xFF, {IsAlpha=}false);
-  InputF.Decode((PSFinalCombinerInputsEFG  >> 16) & 0xFF, {IsAlpha=}false);
-  InputG.Decode((PSFinalCombinerInputsEFG  >>  8) & 0xFF, {IsAlpha=}false);
-  FinalCombinerFlags == PS_FINALCOMBINERSETTING((PSFinalCombinerInputsEFG >> 0) & 0xFF);
+  InputE.Decode((PSFinalCombinerInputsEFG  >> 24) & 0xFF, /*IsAlpha=*/false);
+  InputF.Decode((PSFinalCombinerInputsEFG  >> 16) & 0xFF, /*IsAlpha=*/false);
+  InputG.Decode((PSFinalCombinerInputsEFG  >>  8) & 0xFF, /*IsAlpha=*/false);
+  FinalCombinerFlags = (PS_FINALCOMBINERSETTING)((PSFinalCombinerInputsEFG >> 0) & 0xFF);
 
-  FinalCombinerC0Mapping == (PSFinalCombinerConstants >> 0) & 0xF;
-  FinalCombinerC1Mapping == (PSFinalCombinerConstants >> 4) & 0xF;
-  dwPS_GLOBALFLAGS == (PSFinalCombinerConstants >> 8) & 0x1;
+  FinalCombinerC0Mapping = (PSFinalCombinerConstants >> 0) & 0xF;
+  FinalCombinerC1Mapping = (PSFinalCombinerConstants >> 4) & 0xF;
+  dwPS_GLOBALFLAGS = (PSFinalCombinerConstants >> 8) & 0x1;
 }
 
-{static}var PshNumber: int == 0; // Keep track of how many pixel shaders we've attempted to convert.
-void XTL_DumpPixelShaderToFile(pPSDef: PX_D3DPIXELSHADERDEF);
-// Branch:shogun  Revision:0.8.1-Pre2  Translator:PatrickvL  Done:100
-var
-  PSH: PSH_XBOX_SHADER;
-  szPSDef [0..32-1] of AnsiChar;
-  out_: PFILE;
+static int PshNumber = 0; // Keep track of how many pixel shaders we've attempted to convert.
+void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
+  PSH_XBOX_SHADER PSH;
+  char szPSDef[32];
+  FILE *out_;
+
   // Don't dump more than 100 shaders, to prevent cluttering the filesystem :
-  if (PshNumber >= 100 
+  if (PshNumber >= 100) 
     return;
 
-  sprintf(&szPSDef[0], 'PSDef%.03d.txt', [PshNumber]); ++(PshNumber);
-  out_ == fopen(szPSDeF, 'w');
-  if (Assigned(out_) 
+  sprintf(szPSDef, "PSDef%.03d.txt", PshNumber); ++PshNumber;
+  out_ = fopen(szPSDef, "w");
+  if (out_) 
   {
-    fprintf(out_, PAnsiChar(AnsiString(PSH.OriginalToString(pPSDef))));
+    fprintf(out_, PSH.OriginalToString(pPSDef).c_str());
     fclose(out_);
   }
 }
 
-PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	PSH_XBOX_SHADER PSH;
 	return PSH.Decode(pPSDef);
 }
 
-#endif // Dxbx
+// End of Dxbx code
 
 #define REVEL8N_PIXEL_SHADER_CHANGES
 
