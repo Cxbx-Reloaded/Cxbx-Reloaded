@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XInputOpen
 // ******************************************************************
-OOVPA_NO_XREF(XInputOpen, 4361, 12)
+OOVPA_NO_XREF(XInputOpen, 4242, 12)
 
         // XInputOpen+0x14 : push 0x57
         { 0x14, 0x6A },
@@ -65,7 +65,7 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice, 4361, 11,
+OOVPA_XREF(XID_fCloseDevice, 4242, 11,
 
     XREF_FCLOSEDEVICE,
     XRefZero)
@@ -93,7 +93,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities, 4361, 14)
+OOVPA_NO_XREF(XInputGetCapabilities, 4242, 14)
 
         // XInputGetCapabilities+0x03 : sub esp, 0x48
         { 0x03, 0x83 },
@@ -123,7 +123,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetState, 4361, 12)
+OOVPA_NO_XREF(XInputGetState, 4242, 12)
 
         // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
         { 0x0E, 0x8B },
@@ -151,7 +151,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputSetState
 // ******************************************************************
-OOVPA_NO_XREF(XInputSetState, 4361, 12)
+OOVPA_NO_XREF(XInputSetState, 4242, 12)
 
         // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
         { 0x04, 0x8D },
@@ -384,12 +384,12 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
-	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
-	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
+	REGISTER_OOVPA(XInputOpen, 4242, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 4242, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
-	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
-	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 4242, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4242, PATCH),
+	REGISTER_OOVPA(XInputSetState, 4242, PATCH),
     // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4134, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
