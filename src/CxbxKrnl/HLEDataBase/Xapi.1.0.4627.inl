@@ -330,7 +330,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_4627[] = {
 
-	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4242, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
@@ -377,8 +377,8 @@ OOVPATable XAPI_4627[] = {
 	//REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH), // NOT XInputGetDeviceDescription
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
 	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),
-	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
-	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4242, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4242, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 

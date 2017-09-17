@@ -322,7 +322,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMUA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMUA, 4361, 8) // generic version
+OOVPA_NO_XREF(XMountMUA, 4242, 8) // generic version
 
         { 0x22, 0x8A },
         { 0x3E, 0x89 },
@@ -337,7 +337,7 @@ OOVPA_END;
 // ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
-OOVPA_NO_XREF(XFormatUtilityDrive, 4361, 12)
+OOVPA_NO_XREF(XFormatUtilityDrive, 4242, 12)
 
         { 0x02, 0xEC },
         { 0x10, 0x50 },
@@ -358,7 +358,7 @@ OOVPA_END;
 // ******************************************************************
 // * XMountMURootA
 // ******************************************************************
-OOVPA_NO_XREF(XMountMURootA, 4361, 12)
+OOVPA_NO_XREF(XMountMURootA, 4242, 12)
 
         { 0x16, 0xBF },
         { 0x22, 0x8A },
@@ -403,17 +403,17 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
-	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4242, PATCH),
 	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
 	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
-	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4242, PATCH),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 3911, PATCH),
-	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4242, PATCH),
 	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),

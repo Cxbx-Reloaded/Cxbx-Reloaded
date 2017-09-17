@@ -39,7 +39,7 @@
 // * NOTE: We are actually intercepting USBD_Init, because
 // *       XInitDevices Simply redirects to that function
 // ******************************************************************
-OOVPA_NO_XREF(XInitDevices, 5233, 7)
+OOVPA_NO_XREF(XInitDevices, 5120, 7)
 
         { 0x0E, 0x75 },
         { 0x20, 0xBE },
@@ -105,7 +105,7 @@ OOVPATable XAPI_5233[] = {
 	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
-	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
+	REGISTER_OOVPA(XInitDevices, 5120, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 5233, PATCH),
 	REGISTER_OOVPA(XInputOpen, 4242, PATCH),
@@ -124,10 +124,10 @@ OOVPATable XAPI_5233[] = {
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 5028, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
-	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4242, PATCH),
 	REGISTER_OOVPA(XLaunchNewImageA, 4721, PATCH),
 	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
-	REGISTER_OOVPA(XFormatUtilityDrive, 4361, PATCH),
+	REGISTER_OOVPA(XFormatUtilityDrive, 4242, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
 	REGISTER_OOVPA(RaiseException, 3911, PATCH),
@@ -137,7 +137,7 @@ OOVPATable XAPI_5233[] = {
 	// Provisional registration functions in XDK 5233
 	// TODO: Need test cases
 	// ******************************************************************
-	REGISTER_OOVPA(XMountMURootA, 4361, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 4242, PATCH),
 	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
 	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	// ******************************************************************
