@@ -63,7 +63,7 @@ OOVPA_NO_XREF(XInputGetState, 5455, 7)
         { 0x67, 0x15 },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
@@ -78,7 +78,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5558, 8)
         { 0xDE, 0x6A },
         { 0xFE, 0x02 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 5659
 // ******************************************************************
 // * XapiInitProcess
