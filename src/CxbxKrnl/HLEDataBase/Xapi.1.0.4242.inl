@@ -232,3 +232,24 @@ OOVPA_NO_XREF(XMountMURootA, 4242, 12)
 
         { 0x72, 0xE8 },
 OOVPA_END;
+
+// ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+OOVPA_NO_XREF(XapiInitProcess, 4242, 7)
+
+        // XapiInitProcess+0x03 : sub esp, 30h
+        { 0x05, 0x30 },
+
+        // XapiInitProcess+0x0F : push 0x0C
+        { 0x0F, 0x6A },
+        { 0x10, 0x0C },
+
+        // XapiInitProcess+0x17 : repe stosd
+        { 0x17, 0xF3 },
+        { 0x18, 0xAB },
+
+        // XapiInitProcess+0x42 : jnz +0x0B
+        { 0x42, 0x75 },
+        { 0x43, 0x0B },
+OOVPA_END;
