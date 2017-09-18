@@ -37,17 +37,23 @@
 #include "../OOVPA.h"
 
 #include "Xapi.1.0.3911.inl"
+#include "Xapi.1.0.3950.inl"
 #include "Xapi.1.0.4034.inl"
 #include "Xapi.1.0.4134.inl"
+#include "Xapi.1.0.4242.inl"
 #include "Xapi.1.0.4361.inl"
 #include "Xapi.1.0.4432.inl"
 #include "Xapi.1.0.4627.inl"
 #include "Xapi.1.0.4721.inl"
+#include "Xapi.1.0.4831.inl"
 #include "Xapi.1.0.5028.inl"
+#include "Xapi.1.0.5120.inl"
 #include "Xapi.1.0.5233.inl"
 #include "Xapi.1.0.5344.inl"
+#include "Xapi.1.0.5455.inl"
 #include "Xapi.1.0.5558.inl"
 #include "Xapi.1.0.5788.inl"
+#include "Xapi.1.0.5659.inl"
 #include "Xapi.1.0.5849.inl"
 
 // ******************************************************************
@@ -105,15 +111,15 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(XGetDeviceEnumerationStatus, PATCH, 4831),
 	REGISTER_OOVPAS(XGetDevices, PATCH, 3911),
 	REGISTER_OOVPAS(XGetLaunchInfo, DISABLED, 3911),
-	REGISTER_OOVPAS(XID_fCloseDevice, XREF, 3911, 4242, 4627, 4928, 5455),
+	REGISTER_OOVPAS(XID_fCloseDevice, XREF, 3911, 4242, 4627, 4831, 5455),
 	REGISTER_OOVPAS(XInitDevices, PATCH, 3911, 5120),
 	REGISTER_OOVPAS(XInputClose, PATCH, 3911, 5455),
 	REGISTER_OOVPAS(XInputGetCapabilities, PATCH, 3911, 4242, 4831, 5233, 5455),
 	REGISTER_OOVPAS(XInputGetDeviceDescription, PATCH, 5344),
-	REGISTER_OOVPAS(XInputGetState, PATCH, 3911, 4134, 4242, 4928, 5455),
+	REGISTER_OOVPAS(XInputGetState, PATCH, 3911, 4134, 4242, 4831, 5455),
 	REGISTER_OOVPAS(XInputOpen, PATCH, 3911, 4134, 4242),
 	REGISTER_OOVPAS(XInputPoll, PATCH, 3911),
-	REGISTER_OOVPAS(XInputSetState, PATCH, 3911, 4242, 4928, 5233),
+	REGISTER_OOVPAS(XInputSetState, PATCH, 3911, 4242, 4831, 5233),
 	REGISTER_OOVPAS(XLaunchNewImageA, PATCH, 3911, 4721, 5344, 5558),
 	REGISTER_OOVPAS(XMountAlternateTitleA, PATCH, 3911, 5028, 5455),
 	REGISTER_OOVPAS(XMountMUA, PATCH, 3911, 4242),
@@ -124,7 +130,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(XUnmountAlternateTitleA, PATCH, 3911),
 	REGISTER_OOVPAS(XapiFiberStartup, DISABLED, 5558),
 	REGISTER_OOVPAS(timeKillEvent, PATCH, 3911, 5849),
-	REGISTER_OOVPAS(timeSetEvent, PATCH, 3911, 5849),
+	REGISTER_OOVPAS(timeSetEvent, PATCH, 3911, 5455),
 };
 
 // ******************************************************************
