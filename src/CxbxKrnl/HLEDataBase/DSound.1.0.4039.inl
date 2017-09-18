@@ -923,7 +923,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_Lock, 4039, 13,
 
-    XREF_DSBUFFERLOCKA,
+    XREF_CDirectSoundBuffer_Lock,
     XRefZero)
 
         // CDirectSoundBuffer_Lock+0x34 : test [ebp+0x24], 1
@@ -951,7 +951,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4039, 13,
 
-    XREF_DSBUFFERSETPLAYREGIONA,
+    XREF_CDirectSoundBuffer_SetPlayRegion,
     XRefZero)
 
         { 0x00, 0x55 },
@@ -969,6 +969,34 @@ OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4039, 13,
 
         { 0x7C, 0xC2 },
         { 0x7D, 0x0C },
+OOVPA_END;
+
+// TODO: Is there IDirectSoundBuffer_SetPlayRegion in 3936? Revision 3925 doesn't have one.
+// ******************************************************************
+// * IDirectSoundBuffer_SetPlayRegion
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer_SetPlayRegion, 4039, 10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer_SetPlayRegion+0x19 : call [CDirectSoundBuffer_SetPlayRegion]
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetPlayRegion ),
+
+        // IDirectSoundBuffer_SetPlayRegion+0x04 : push [esp+0x0C]
+        { 0x04, 0xFF },
+        { 0x05, 0x74 },
+        { 0x06, 0x24 },
+        { 0x07, 0x0C },
+
+        // IDirectSoundBuffer_SetPlayRegion+0x0E : add eax, 0xFFFFFFE4
+        { 0x0E, 0x83 },
+        { 0x0F, 0xC0 },
+        { 0x10, 0xE4 },
+
+        // IDirectSoundBuffer_SetPlayRegion+0x1D : retn 0x0C
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -2143,7 +2171,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetVelocity, 4039, 10,
 
-    XREF_DSBUFFERSETVELOCITY,
+    XREF_CDirectSoundBuffer_SetVelocity,
     XRefOne)
 
         // CDirectSoundBuffer_SetVelocity+0x49 : call [CDirectSoundVoice::SetVelocity]

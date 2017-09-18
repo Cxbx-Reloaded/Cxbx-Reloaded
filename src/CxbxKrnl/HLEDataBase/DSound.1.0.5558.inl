@@ -458,7 +458,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 5558, 8,
 
-    XREF_DSBUFFERSETPLAYREGIONA,
+    XREF_CDirectSoundBuffer_SetPlayRegion,
     XRefZero)
 
         { 0x0F, 0x00 },
@@ -881,7 +881,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetVelocity, 5558, 9,
 
-    XREF_DSBUFFERSETVELOCITY,
+    XREF_CDirectSoundBuffer_SetVelocity,
     XRefOne)
 
         XREF_ENTRY( 0x4A, XREF_DSVOICESETVELOCITY ),
@@ -903,7 +903,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetVelocity, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x2D, XREF_DSBUFFERSETVELOCITY ),
+        XREF_ENTRY( 0x2D, XREF_CDirectSoundBuffer_SetVelocity ),
 
         { 0x05, 0x18 },
         { 0x0C, 0x83 },
@@ -1386,7 +1386,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetPosition, 5558, 7,
 
-    XREF_DSSETPOSITIONA,
+    XREF_CDirectSound_SetPosition,
     XRefZero)
 
         { 0x0F, 0x00 },
@@ -1406,7 +1406,7 @@ OOVPA_XREF(IDirectSound_SetPosition, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x2D, XREF_DSSETPOSITIONA ),
+        XREF_ENTRY( 0x2D, XREF_CDirectSound_SetPosition ),
 
         { 0x05, 0x18 },
         { 0x0C, 0x83 },
