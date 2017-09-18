@@ -216,7 +216,7 @@ enum XRefDataBaseOffset
     XREF_DSSETALLPARAMETERSA,
     XREF_DSSETALLPARAMETERSB,
     XREF_DSSETHEADROOMA,
-    XREF_DSENABLEHEADPHONES,
+    XREF_CDirectSound_EnableHeadphones,
     XREF_DSSYNCHPLAYBACKA,
     XREF_DSSYNCHPLAYBACKB,
     XREF_DSSETI3DL2SOURCE1A,
@@ -312,7 +312,6 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundBuffer_SetConeAngles,
     XREF_CDirectSoundVoice_CommitDeferredSettings,
     XREF_CDirectSoundBuffer_SetAllParameters,
-	XREF_CDirectSound_EnableHeadphones,
 	XREF_CDirectSoundVoice_SetHeadroom,
 	XREF_CDirectSoundBuffer_SetHeadroom,
 	XREF_CDirectSound_GetOutputLevels,
@@ -347,6 +346,9 @@ enum XRefDataBaseOffset
 	XREF_CDirectSoundVoice_Use3DVoiceData,
 	XREF_CDirectSoundBuffer_Use3DVoiceData,
 	XREF_CDirectSound_SetEffectData,
+    XREF_CDirectSound_GetSpeakerConfig,
+    XREF_CDirectSound_DownloadEffectsImage,
+    XREF_CDirectSound_CommitEffectData,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

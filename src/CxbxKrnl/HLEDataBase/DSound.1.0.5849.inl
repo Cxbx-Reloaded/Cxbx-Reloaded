@@ -122,7 +122,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH),
 	REGISTER_OOVPA(IDirectSound_Release, 3911, PATCH),
-	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetOrientation, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMaxDistance, 5344, XREF),
@@ -201,7 +201,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSound_SynchPlayback, 5558, PATCH),
 	REGISTER_OOVPA(XAudioDownloadEffectsImage, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetEffectData, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetEffectData, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetEffectData, 3911, PATCH),
 	REGISTER_OOVPA(CMemoryManager_PoolAlloc, 5788, XREF),
 	REGISTER_OOVPA(XFileCreateMediaObjectAsync, 5788, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetFormat, 4242, PATCH),
@@ -243,7 +243,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 5233, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
-	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3911, PATCH),
 };
 
 // ******************************************************************

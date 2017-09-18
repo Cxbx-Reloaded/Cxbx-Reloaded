@@ -37,7 +37,7 @@
 // ******************************************************************
 OOVPA_XREF(CDirectSound_EnableHeadphones, 5233, 8,
 
-    XREF_DSENABLEHEADPHONES,
+    XREF_CDirectSound_EnableHeadphones,
     XRefZero)
 
         { 0x16, 0x45 },
@@ -49,7 +49,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 5233, 8,
         { 0x74, 0xA4 },
         { 0x99, 0x08 },
 OOVPA_END;
-
+#if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
 // ******************************************************************
@@ -58,7 +58,7 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 5233, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x15, XREF_DSENABLEHEADPHONES ),
+        XREF_ENTRY( 0x15, XREF_CDirectSound_EnableHeadphones ),
 
         // IDirectSound_EnableHeadphones+0x0A : add eax, 0xFFFFFFF8
         { 0x0A, 0x83 },
@@ -73,7 +73,7 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 5233, 8,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CDirectSoundStream_FlushEx
 // ******************************************************************
@@ -421,8 +421,8 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(CDirectSoundStream_FlushEx, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundStream_FlushEx, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSound_EnableHeadphones, 5233, XREF),
-	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 5233, PATCH),
-	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 3911, PATCH),
+	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetOrientation, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4627, XREF),
@@ -532,7 +532,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
-	REGISTER_OOVPA(IDirectSound_GetCaps, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_GetCaps, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 };
 
