@@ -882,13 +882,16 @@ struct PSH_XBOX_SHADER {
 	void InsertIntermediate(PPSH_INTERMEDIATE_FORMAT pIntermediate, int Index);
 	void DeleteIntermediate(int Index);
 	void DeleteLastIntermediate();
-	std::string OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	std::string static OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	PSH_RECOMPILED_SHADER Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor);
+	int _MapConstant(int ConstNr, bool *NativeConstInUse);
+	int _HandleConst(int XboxConst, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled, bool *NativeConstInUse, bool *EmittedNewConstant);
 	bool ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled);
 	bool RemoveUselessWrites();
 	bool IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
@@ -1209,7 +1212,7 @@ void PSH_IMD_ARGUMENT::SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, D
 
 std::string PSH_IMD_ARGUMENT::ToString()
 {
-	std::string Result;
+  std::string Result;
 
   if (Type == PARAM_VALUE)
   {
@@ -1247,11 +1250,11 @@ std::string PSH_IMD_ARGUMENT::ToString()
 
 bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType ArgumentType)
 {
-	PS_REGISTER Reg;
-	PS_INPUTMAPPING InputMapping;
-	PS_CHANNEL Channel;
+  PS_REGISTER Reg;
+  PS_INPUTMAPPING InputMapping;
+  PS_CHANNEL Channel;
 
-	bool Result = true;
+  bool Result = true;
   Address = 0;
   Mask = aMask;
   Modifiers = ARGMOD_IDENTITY;
@@ -1493,9 +1496,9 @@ void PSH_INTERMEDIATE_FORMAT::Initialize(const PSH_OPCODE aOpcode)
 
 std::string PSH_INTERMEDIATE_FORMAT::ToString()
 {
+  std::string Result;
   int i;
   char SeparatorChar;
-  std::string Result;
 
   if (Opcode == PO_COMMENT)
   {
@@ -1866,8 +1869,8 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
 
 std::string PSH_XBOX_SHADER::ToString()
 {
-  int i;
   std::string Result;
+  int i;
 
   // First things first, set the pixel shader version
   // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
@@ -1934,7 +1937,7 @@ void PSH_XBOX_SHADER::DeleteLastIntermediate()
     DeleteIntermediate(IntermediateCount - 1);
 }
 
-std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) // static
 {
   char buffer[4096];
   return std::string(buffer, sprintf(buffer, "PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
@@ -2241,9 +2244,9 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr("Offset of D3D constant for (C1: %d", FinalCombiner.FinalCombinerC1Mapping);
     _AddStr("Adjust texture flag: %s", PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]);
   }
+#endif
 
   _AddStr("\n");
-#endif
   return Result;
 }
 
@@ -2402,26 +2405,16 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
   return Result;
 } // MoveRemovableParametersRight
 
-bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
-{
-  bool Result;
-#if 0 // Dxbx
-  int i, j;
-  PPSH_INTERMEDIATE_FORMAT Cur;
-  PPSH_IMD_ARGUMENT CurArg;
-  bool NativeConstInUse[PSH_PC_MAX_C_REGISTER_COUNT];
-  int16 OriginalConstantNr;
-  bool EmittedNewConstant;
-  PSH_INTERMEDIATE_FORMAT NewIns;
+//bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
 
-  void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLOR ConstColor)
+  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor)
   {
-    D3DCOLORVALUE XColor;
+    XTL::D3DXCOLOR XColor;
 
     // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
     // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
     // that reads from these constants).
-    XColor = D3DXColorFromDWord(ConstColor);
+    XColor = ConstColor;
     NewIns.Parameters[0].SetConstValue(XColor.r);
     NewIns.Parameters[1].SetConstValue(XColor.g);
     NewIns.Parameters[2].SetConstValue(XColor.b);
@@ -2429,7 +2422,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   }
 
   // Try to fixup constants above the limit (c7 for PS.1.3) :
-  int _MapConstant(int ConstNr)
+  int PSH_XBOX_SHADER::_MapConstant(int ConstNr, bool *NativeConstInUse)
   {
     // 1-to-1 mapping for constants that can be supported native (if not used already) :
     if ((ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) && (!NativeConstInUse[ConstNr]))
@@ -2455,27 +2448,36 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
 	return Result;
   }
 
-  int _HandleConst(int XboxConst)
+  int PSH_XBOX_SHADER::_HandleConst(int XboxConst, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled, bool *NativeConstInUse, bool *EmittedNewConstant)
   {
     int NativeConst;
 
-    if (!Recompiled.ConstInUse[XboxConst])
+    if (!Recompiled->ConstInUse[XboxConst])
     {
       // Determine and remember a new mapping to native :
-      NativeConst = _MapConstant(XboxConst);
+      NativeConst = _MapConstant(XboxConst, NativeConstInUse);
       NativeConstInUse[NativeConst] = true;
-      Recompiled.ConstMapping[XboxConst] = NativeConst;
-      Recompiled.ConstInUse[XboxConst] = true;
+      Recompiled->ConstMapping[XboxConst] = NativeConst;
+      Recompiled->ConstInUse[XboxConst] = true;
       // Make sure we can check this is a new constant (so we can emit a constant declaration
       // for any final combiner constants - because those cannot be set via SetPixelShaderConstant) :
-      EmittedNewConstant = true;
+      *EmittedNewConstant = true;
     }
 
     // Return the (previously) determined mapping :
-    return Recompiled.ConstMapping[XboxConst];
+    return Recompiled->ConstMapping[XboxConst];
   }
 
+bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
 {
+  int i, j;
+  PPSH_INTERMEDIATE_FORMAT Cur;
+  PPSH_IMD_ARGUMENT CurArg;
+  bool NativeConstInUse[PSH_PC_MAX_C_REGISTER_COUNT] = {};
+  int16 OriginalConstantNr;
+  bool EmittedNewConstant = false;
+  PSH_INTERMEDIATE_FORMAT NewIns;
+
   bool Result = false;
 
   // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
@@ -2499,7 +2501,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         if (CurArg->Mask != MASK_A) 
         {
           CurArg->Type = PARAM_C;
-          CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FOG);
+          CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FOG, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
           CurArg->Mask = CurArg->Mask & (!MASK_A);
         }
         else
@@ -2529,16 +2531,16 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         {
           // The final combiner has a separate C0 constant :
           if (Cur->CombinerStageNr == XFC_COMBINERSTAGENR)
-            CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FC0)
+            CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FC0, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
           else
           {
             // See if C0 has a unique index per combiner stage :
             if (CombinerHasUniqueC0)
               // C0 actually ranges from c0 to c7, one for each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
-              CurArg->Address = _HandleConst(Cur->CombinerStageNr);
+              CurArg->Address = _HandleConst(Cur->CombinerStageNr, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
             else
               // Non-unique just reads the same C0 in every stage :
-              CurArg->Address = _HandleConst(0);
+              CurArg->Address = _HandleConst(0, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
           }
 		  break;
         }
@@ -2547,16 +2549,16 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         {
           // The final combiner has a separate C1 constant :
           if (Cur->CombinerStageNr == XFC_COMBINERSTAGENR)
-            CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FC1);
+            CurArg->Address = _HandleConst(PSH_XBOX_CONSTANT_FC1, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
           else
           {
             // See if C1 has a unique index per combiner stage :
             if (CombinerHasUniqueC1)
               // C1 actually ranges from c8 to c15, one for each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
-              CurArg->Address = _HandleConst(Cur->CombinerStageNr + 8);
+              CurArg->Address = _HandleConst(Cur->CombinerStageNr + 8, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
             else
               // Non-unique just reads the same C1 in every stage :
-              CurArg->Address = _HandleConst(1);
+              CurArg->Address = _HandleConst(1, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
           }
 		  break;
         }
@@ -2571,15 +2573,15 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         NewIns.Initialize(PO_DEF);
         NewIns.Output[0].SetRegister(PARAM_C, CurArg->Address, MASK_RGBA);
         if (OriginalConstantNr == 0)
-          _SetColor(NewIns, pPSDef.PSFinalCombinerConstant0);
+          _SetColor(NewIns, pPSDef->PSFinalCombinerConstant0);
         else
-          _SetColor(NewIns, pPSDef.PSFinalCombinerConstant1);
+          _SetColor(NewIns, pPSDef->PSFinalCombinerConstant1);
 
         InsertIntermediate(&NewIns, 0);
       }
     } // for arguments
   } // for opcodes
-#endif // Dxbx
+
   return Result;
 } // ConvertConstantsToNative
 
@@ -3537,6 +3539,7 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
 {
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
+
   bool Result = RemoveNops();
 
   // TODO : Fixup writes to read-only registers (V0, V1) via another free register (if possible)
@@ -3787,39 +3790,39 @@ void RPSInputRegister::Decode(uint8 Value, bool aIsAlpha)
       case PS_REGISTER_ONE: case PS_REGISTER_NEGATIVE_ONE: case PS_REGISTER_ONE_HALF: case PS_REGISTER_NEGATIVE_ONE_HALF:
         // These input mapping have their own register - keep these in 'Reg', so we can check for them :
         Reg = (PS_REGISTER)(InputMapping);
-		break;
+        break;
 
       case PS_INPUTMAPPING_EXPAND_NEGATE:
         // This case has no separate PS_REGISTER define, but when applied to zero, also results in one :
         Reg = PS_REGISTER_ONE;
-		break;
-	}
+        break;
+    }
   }
 }
 
 std::string RPSInputRegister::DecodedToString()
 {
-  std::string InputMappingStr = "";
   std::string Result;
+  std::string InputMappingStr = "";
   switch (Reg) {
     case PS_REGISTER_ZERO:
     {
       Result = PS_RegisterStr[0];
       return Result;
     }
-	case PS_REGISTER_ONE:
+    case PS_REGISTER_ONE:
       Result = PS_RegisterStr[0x11];
-	  break;
-	case PS_REGISTER_NEGATIVE_ONE:
+      break;
+    case PS_REGISTER_NEGATIVE_ONE:
       Result = PS_RegisterStr[0x12];
-	  break;
-	case PS_REGISTER_ONE_HALF:
+      break;
+    case PS_REGISTER_ONE_HALF:
       Result = PS_RegisterStr[0x13];
-	  break;
-	case PS_REGISTER_NEGATIVE_ONE_HALF:
+      break;
+    case PS_REGISTER_NEGATIVE_ONE_HALF:
       Result = PS_RegisterStr[0x14];
-	  break;
-	default:
+      break;
+    default:
     Result = RPSRegisterObject::DecodedToString();
     InputMappingStr = " | " + PS_InputMappingStr[(InputMapping >> 5) & 7];
   }
@@ -3916,23 +3919,21 @@ void RPSFinalCombiner::Decode(const DWORD PSFinalCombinerInputsABCD, const DWORD
   dwPS_GLOBALFLAGS = (PSFinalCombinerConstants >> 8) & 0x1;
 }
 
-static int PshNumber = 0; // Keep track of how many pixel shaders we've attempted to convert.
 void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-  PSH_XBOX_SHADER PSH;
-  char szPSDef[32];
-  FILE *out_;
-
+  static int PshNumber = 0; // Keep track of how many pixel shaders we've attempted to convert.
   // Don't dump more than 100 shaders, to prevent cluttering the filesystem :
   if (PshNumber >= 100) 
     return;
 
-  sprintf(szPSDef, "PSDef%.03d.txt", PshNumber); ++PshNumber;
-  out_ = fopen(szPSDef, "w");
-  if (out_) 
+  char szPSDef[32];
+
+  sprintf(szPSDef, "PSDef%.03d.txt", PshNumber++);
+  FILE* out = fopen(szPSDef, "w");
+  if (out) 
   {
-    fprintf(out_, PSH.OriginalToString(pPSDef).c_str());
-    fclose(out_);
+    fprintf(out, PSH_XBOX_SHADER::OriginalToString(pPSDef).c_str());
+    fclose(out);
   }
 }
 
