@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 
-
+#if 0 // Moved to 5120
 // ******************************************************************
 // * XInitDevices
 // ******************************************************************
@@ -49,6 +49,7 @@ OOVPA_NO_XREF(XInitDevices, 5120, 7)
         { 0x5F, 0xE8 },
         { 0x70, 0x5F },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XInputGetCapabilities
@@ -109,9 +110,9 @@ OOVPATable XAPI_5233[] = {
 	REGISTER_OOVPA(XGetDeviceChanges, 5233, PATCH),
 	REGISTER_OOVPA(XInputOpen, 4242, PATCH),
 	REGISTER_OOVPA(XInputGetCapabilities, 5233, PATCH),
-	REGISTER_OOVPA(XID_fCloseDevice, 4928, XREF),
+	REGISTER_OOVPA(XID_fCloseDevice, 4831, XREF),
 	REGISTER_OOVPA(XInputClose, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetState, 4928, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4831, PATCH),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
