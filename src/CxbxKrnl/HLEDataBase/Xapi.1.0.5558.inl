@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // Moved to 5455
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
@@ -46,7 +47,8 @@ OOVPA_NO_XREF(XInputGetCapabilities, 5455, 8)
         { 0xD7, 0x8D },
         { 0xF6, 0x46 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 5455
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
@@ -60,6 +62,7 @@ OOVPA_NO_XREF(XInputGetState, 5455, 7)
         { 0x58, 0xF3 },
         { 0x67, 0x15 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XapiInitProcess
@@ -76,6 +79,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5558, 8)
         { 0xFE, 0x02 },
 OOVPA_END;
 
+#if 0 // Moved to 5659
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
@@ -90,6 +94,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5659, 8)
         { 0xDE, 0x6A },
         { 0xFE, 0x02 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XLaunchNewImageA
@@ -119,6 +124,7 @@ OOVPA_NO_XREF(XapiFiberStartup, 5558, 7)
         { 0x3D, 0x00 },
 OOVPA_END;
 
+#if 0 // Moved to 5455
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
@@ -135,7 +141,8 @@ OOVPA_XREF(XID_fCloseDevice, 5455, 7,
         { 0x70, 0xFF },
         { 0x84, 0x89 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 5455
 // ******************************************************************
 // * XInputClose
 // ******************************************************************
@@ -155,7 +162,8 @@ OOVPA_XREF(XInputClose, 5455, 9,
         { 0x0A, 0x04 },
         { 0x0B, 0x00 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 5455
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
@@ -175,6 +183,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 5455, 11)
         { 0xC1, 0x83 },
         { 0xD0, 0x15 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XAPI_5558
@@ -214,7 +223,7 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XMountMURootA, 4242, PATCH),
 	REGISTER_OOVPA(XInputPoll, 3911, PATCH),
-	REGISTER_OOVPA(timeSetEvent, 3911, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 5455, PATCH),
 	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(XFormatUtilityDrive, 4242, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
