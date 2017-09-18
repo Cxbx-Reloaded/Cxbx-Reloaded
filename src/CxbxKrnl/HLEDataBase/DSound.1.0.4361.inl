@@ -136,7 +136,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4361, 10,
 
-    XREF_DSBUFFERSETPLAYREGIONA,
+    XREF_CDirectSoundBuffer_SetPlayRegion,
     XRefZero)
 
         // CDirectSoundBuffer_SetPlayRegion+0x10 : movzx edi, al
@@ -164,7 +164,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetPlayRegion, 4361, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x19, XREF_DSBUFFERSETPLAYREGIONA ),
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetPlayRegion ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },

@@ -194,7 +194,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetPosition, 4627, 11,
 
-    XREF_DSSETPOSITIONA,
+    XREF_CDirectSound_SetPosition,
     XRefZero)
 
         // CDirectSound_SetPosition+0x2B : mov ecx, [ebp+0x08]
@@ -1520,7 +1520,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetVolume, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_Lock, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_Lock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_CreateSoundStream, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3911, PATCH),
 	REGISTER_OOVPA(DirectSoundCreateStream, 4134, PATCH),
@@ -1588,7 +1588,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPosition, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetVelocity, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetVelocity, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetVelocity, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetVelocity, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetDopplerFactor, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetDopplerFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
