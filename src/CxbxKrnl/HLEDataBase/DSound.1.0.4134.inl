@@ -2778,7 +2778,7 @@ OOVPA_XREF(CDirectSound_SetEffectData, 4134, 13, // Also for 5849
         { 0x44, 0xE8 },
         { 0x60, 0x18 },
 OOVPA_END;
-
+#if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_SetEffectData
 // ******************************************************************
@@ -2802,7 +2802,7 @@ OOVPA_XREF(IDirectSound_SetEffectData, 4134, 13,
         { 0x26, 0x5D },
         { 0x28, 0x18 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * CMcpxBuffer_Stop
 // ******************************************************************
@@ -3028,7 +3028,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Play, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_Release, 3911, PATCH),
-	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetOrientation, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4134, XREF),
@@ -3109,7 +3109,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetMixBinVolumes_8, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetEffectData, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetEffectData, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetEffectData, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 };
 
