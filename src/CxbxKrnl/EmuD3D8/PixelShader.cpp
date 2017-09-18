@@ -2066,7 +2066,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   }
   // Dump the contents of the PixelShader def
   //if (MayLog(LogFlags))
-    // dump pixel shader definition to std::string
+    // dump pixel shader definition to string
     // TODO : Reinstate : XTL_DumpPixelShaderToFile(pPSDef);
 
   //if (MayLog(LogFlags))
@@ -2214,8 +2214,8 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr("PSAlphaInputs[%d] D: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input2.DecodedToString());
 
 	_AddStr("\n");
-    _AddStr("PSConstant0[%d] : %x", i, pPSDEF->PSConstant0[i]); // C0 for (each stage
-    _AddStr("PSConstant1[%d] : %x", i, pPSDEF->PSConstant1[i]); // C1 for (each stage
+    _AddStr("PSConstant0[%d] : %x", i, pPSDEF->PSConstant0[i]); // C0 for each stage
+    _AddStr("PSConstant1[%d] : %x", i, pPSDEF->PSConstant1[i]); // C1 for each stage
   }
 
   if ((pPSDef->PSFinalCombinerInputsABCD > 0)
@@ -2287,11 +2287,11 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
 
     // Convert the texture mode to a texture addressing instruction :
-    switch (PSTextureModes[Stage]) { // input == q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
+    switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
 #ifndef CXBX_USE_PS_2_0
-      case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb == texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
-	  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb == texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-	  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb == cubemap(r/q, s/q, t/q)
+      case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+	  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+	  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb = cubemap(r/q, s/q, t/q)
 #endif
 	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
 	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
@@ -2319,7 +2319,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
     Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
 
-    // for (those texture modes that need it, add the source stage as argument :
+    // For those texture modes that need it, add the source stage as argument :
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1)
     {
       Ins.Parameters[0].SetRegister(PARAM_T, PSInputTexture[Stage], 0);
@@ -2338,7 +2338,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
         case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
         {
           Ins.Parameters[1].SetRegister(PARAM_C, 0, 0);
-          Ins.CommentString = "Dxbx guess"; // TODO : Where ) we get the 3rd argument to this?
+          Ins.CommentString = "Dxbx guess"; // TODO : Where do we get the 3rd argument to this?
 		  break;
         }
       }
@@ -2361,7 +2361,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
 
   bool Result = false;
 
-  // for (all opcodes, try to put constant and discarded arguments in the rightmost slot, to ease following analysis :
+  // For all opcodes, try to put constant and discarded arguments in the rightmost slot, to ease following analysis :
   i = IntermediateCount;
   while (i > 0)
   {
@@ -2386,7 +2386,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
 
       case PO_XDM:
       {
-        // Parameters may be swapped for (both dot & mul,
+        // Parameters may be swapped for both dot and mul,
         // but the opcodes themselves may not, as we handle
         // both XDM operations separately below :
         if (Intermediate[i].MoveRemovableParametersRight(0, 1))
@@ -2417,7 +2417,7 @@ var
   var
     XColor: D3DCOLORVALUE;
   {
-    // Colors are defined in RGBA format, & range 0.0 - 1.0 (negative values
+    // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
     // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
     // that reads from these constants).
     XColor == D3DXColorFromDWord(ConstColor);
@@ -2427,10 +2427,10 @@ var
     NewIns.Parameters[3].SetConstValue(XColor.a);
   }
 
-  // Try to fixup constants above the limit (c7 for (PS.1.3) :
+  // Try to fixup constants above the limit (c7 for PS.1.3) :
   function _MapConstant(ConstNr: int): int;
   {
-    // 1-to-1 mapping for (constants that can be supported native (if (not used already) :
+    // 1-to-1 mapping for constants that can be supported native (if not used already) :
     if ((ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) & (not NativeConstInUse[ConstNr]) 
     {
       Result == ConstNr;
@@ -2460,13 +2460,13 @@ var
   {
     if (not Recompiled.ConstInUse[XboxConst] 
     {
-      // Determine & remember a new mapping to native :
+      // Determine and remember a new mapping to native :
       NativeConst == _MapConstant(XboxConst);
       NativeConstInUse[NativeConst] == true;
       Recompiled.ConstMapping[XboxConst] == NativeConst;
       Recompiled.ConstInUse[XboxConst] == true;
       // Make sure we can check this is a new constant (so we can emit a constant declaration
-      // for (any final combiner constants - because those cannot be set via SetPixelShaderConstant) :
+      // for any final combiner constants - because those cannot be set via SetPixelShaderConstant) :
       EmittedNewConstant == true;
     }
 
@@ -2477,11 +2477,11 @@ var
 {
   Result == false;
 
-  // Note : Recompiled.ConstMapping & Recompiled.ConstInUse[i] are still empty here.
+  // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
   for (i = 0; i < PSH_PC_MAX_C_REGISTER_COUNT - 1 )
     NativeConstInUse[i] == false;
 
-  // Loop over all opcodes to update the constant-indexes (Xbox uses C0 & C1 in each combiner) :
+  // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   for (i = 0; i < IntermediateCount - 1 )
   {
     // Loop over this opcodes' input arguments :
@@ -2492,7 +2492,7 @@ var
       CurArg == &(Cur.Parameters[j]);
 
       // The Fog register is not supported on PC so we convert it to a constant too :
-      // (But only if (the MASK is not solely accessing the alpha-channel - we don't support that)
+      // (But only if the MASK is not solely accessing the alpha-channel - we don't support that)
       if ((CurArg.Type == PARAM_FOG) 
       {
         if ((CurArg.Mask != MASK_A) 
@@ -2505,7 +2505,7 @@ var
         {
           // Until we can get Alpha fog from the vertex shader somehow,
           // set it to a constant value, so these shaders (like appearing
-          // in Dolphin samples) still compile & give reasonable output :
+          // in Dolphin samples) still compile and give reasonable output :
           CurArg.SetConstValue(1.0);
           Cur.CommentString == 'FOG.a not emulated, using 1.';
         }
@@ -2516,13 +2516,13 @@ var
       if (CurArg.Type != PARAM_C 
         continue;
 
-      // Make sure we can detect new constants (& if (it was C0 | C1),
-      // as we need this for (fixing up final combiner constants :
+      // Make sure we can detect new constants (and if it was C0 or C1),
+      // as we need this for fixing up final combiner constants :
       EmittedNewConstant == false;
       OriginalConstantNr == CurArg.Address;
 
-      // for (each constant being addressed, we find out which Xbox constant it is,
-      // & map it to a native constant (as far as we have space for (them) :
+      // For each constant being addressed, we find out which Xbox constant it is,
+      // and map it to a native constant (as far as we have space for them) :
       case CurArg.Address of
         0: // Handle C0 (if (present) :
         {
@@ -2531,9 +2531,9 @@ var
             CurArg.Address == _HandleConst(PSH_XBOX_CONSTANT_FC0)
           else
           {
-            // See if (C0 has a unique index per combiner stage :
+            // See if C0 has a unique index per combiner stage :
             if (CombinerHasUniqueC0 
-              // C0 actually ranges from c0 to c7, one for (each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
+              // C0 actually ranges from c0 to c7, one for each possible combiner stage (X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7) :
               CurArg.Address == _HandleConst(Cur.CombinerStageNr)
             else
               // Non-unique just reads the same C0 in every stage :
@@ -2541,16 +2541,16 @@ var
           }
         }
 
-        1: // Handle C1 (if (present) :
+        1: // Handle C1 (if present) :
         {
           // The final combiner has a separate C1 constant :
           if (Cur.CombinerStageNr == XFC_COMBINERSTAGENR 
             CurArg.Address == _HandleConst(PSH_XBOX_CONSTANT_FC1)
           else
           {
-            // See if (C1 has a unique index per combiner stage :
+            // See if C1 has a unique index per combiner stage :
             if (CombinerHasUniqueC1 
-              // C1 actually ranges from c8 to c15, one for (each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
+              // C1 actually ranges from c8 to c15, one for each possible combiner stage (X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
               CurArg.Address == _HandleConst(Cur.CombinerStageNr + 8)
             else
               // Non-unique just reads the same C1 in every stage :
@@ -2559,7 +2559,7 @@ var
         }
       } // case
 
-      // New constants solely used for (the final combiner must be DEFined separately,
+      // New constants solely used for the final combiner must be DEFined separately,
       // as there's no other way to set these (SetPixelShaderConstant can only write
       // to the 16 slots X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7) :
       if ((Cur.CombinerStageNr == XFC_COMBINERSTAGENR) & EmittedNewConstant 
@@ -2579,7 +2579,7 @@ var
 } // ConvertConstantsToNative
 
 function PSH_XBOX_SHADER::RemoveUselessWrites: bool;
-// Note : Xbox allows writing to V0 (diffuse color) & V1 (specular color), but native ps.1.3 doesn't!
+// Note : Xbox allows writing to V0 (diffuse color) and V1 (specular color), but native ps.1.3 doesn't!
 // Some examples of this behaviour can be seen when running RayMan Arena.
 var
   i, j: int;
@@ -2645,7 +2645,7 @@ var
   Cur: PPSH_INTERMEDIATE_FORMAT;
   NewIns: PSH_INTERMEDIATE_FORMAT;
 {
-  // ) a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
+  // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
   i == IntermediateCount;
   while i > 0 )
   {
@@ -2680,37 +2680,37 @@ var
   Cur == &(Intermediate[i]);
   InsertPos == i;
 
-  // This block is meant for (cases where XMMA/XMMC discards the 3rd output :
+  // This block is meant for cases where XMMA/XMMC discards the 3rd output :
   if (Cur.Output[2].Type == PARAM_DISCARD 
   {
     // Mark that this XMMA/XMMC opcode is already handled here :
     Result == true;
 
-    // The opcode must unconditionally change into a MUL (| two) :
+    // The opcode must unconditionally change into a MUL (or two) :
     Cur.Opcode == PO_MUL;
 
     // Is the second output ignored?
     if (Cur.Output[1].Type == PARAM_DISCARD 
     {
-      // if (the first output is also ignored :
+      // If the first output is also ignored :
       if (Cur.Output[0].Type == PARAM_DISCARD 
         // The complete opcode can already be removed early on :
         DeleteIntermediate(i)
       else
-        ;// The first output is just a MUL, it's output (& first two parameters) are already in-place, so we're done
+        ;// The first output is just a MUL, it's output (and first two parameters) are already in-place, so we're done
 
       return;
     }
     ++(InsertPos);
 
-    // Create a second MUL opcode for (the second result :
+    // Create a second MUL opcode for the second result :
     Ins == Cur^;
     Ins.XCopySecondOpcodeToFirst(PO_MUL);
     InsertIntermediate(&Ins, InsertPos);
     return;
   }
 
-  // The third output is needed, but what about the first & second output ?
+  // The third output is needed, but what about the first and second output ?
 
   if ((Cur.Output[0].Type == PARAM_DISCARD) 
   {
@@ -2724,20 +2724,20 @@ var
     Cur.Output[1].Address == FakeRegNr_Xmm2;
   }
 
-  // Generate a MUL for (the 1st output :
+  // Generate a MUL for the 1st output :
   Ins == Cur^;
   Ins.Opcode == PO_MUL;
   InsertIntermediate(&Ins, InsertPos);
   ++(InsertPos);
 
-  // Generate a MUL for (the 2nd output :
+  // Generate a MUL for the 2nd output :
   Ins == Cur^;
   Ins.XCopySecondOpcodeToFirst(PO_MUL);
   InsertIntermediate(&Ins, InsertPos);
 
-  // Note : if (XMMA | XMMC writes to the third argument, we now have
-  // the first & second stored already (if (they where not ignored).
-  // if (one (| both) are ignored, the intermediate result might be
+  // Note : If XMMA or XMMC writes to the third argument, we now have
+  // the first and second stored already (if they where not ignored).
+  // IF one (or both) are ignored, the intermediate result might be
   // needed, but let XMMA/XMMC figure that out first - the resulting
   // opcode(s) will probably require the initial opcode's removal!
 } // ConvertXMMToNative_Except3RdOutput
@@ -2746,7 +2746,7 @@ void PSH_XBOX_SHADER::ConvertXMMAToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 {
-  // Handle the generic case of XMM, & check if (the 3rd (Add) argument is ignored :
+  // Handle the generic case of XMM, and check if the 3rd (Add) argument is ignored :
   if (not ConvertXMMToNative_Except3RdOutput(i) 
   {
     // Add needs to be stored, we already have 2 MULs, so change the XMMA into an ADD :
@@ -2763,22 +2763,22 @@ void PSH_XBOX_SHADER::ConvertXMMCToNative(i: int);
 var
   Cur: PPSH_INTERMEDIATE_FORMAT;
 {
-  // Handle the generic case of XMM, & check if (the 3rd (Compare) argument is ignored :
+  // Handle the generic case of XMM, and check if the 3rd (Compare) argument is ignored :
   if (not ConvertXMMToNative_Except3RdOutput(i) 
   {
     // Add needs to be stored, we already have 2 MULs, so change the XMMC into an CND :
     Cur == &(Intermediate[i+2]);
-    // TODO : if (CombinerMuxesOnMsb is false, we should compare to the LeastSignificantBit of r0.a - but how?
+    // TODO : If CombinerMuxesOnMsb is False, we should compare to the LeastSignificantBit of r0.a - but how?
     Cur.Opcode == PO_CND;
     Cur.Modifier == INSMOD_NONE;
-    // { the input of CND with the required r0.a parameter :
+    // Begin the input of CND with the required r0.a parameter :
     Cur.Parameters[0].SetRegister(PARAM_R, 0, MASK_A);
     Cur.Parameters[0].Modifiers == [ARGMOD_IDENTITY];
     Cur.Parameters[0].Multiplier == 1.0;
     // Follow that with the 2 selection registers :
     Cur.Parameters[1] == Cur.Output[0];
     Cur.Parameters[2] == Cur.Output[1];
-    // & put the result it in the final register :
+    // And put the result it in the final register :
     Cur.Output[0] == Cur.Output[2];
   }
 }
@@ -2800,7 +2800,7 @@ var
     InsertIntermediate(&Ins, i+1);
   }
 
-  // & a dot product :
+  // and a dot product :
   if (Cur.Output[0].Type == PARAM_DISCARD 
     DeleteIntermediate(i)
   else
@@ -2819,7 +2819,7 @@ var
   // ...a dot product :
   Cur.Opcode == PO_DP3;
 
-  // & another dot product :
+  // and another dot product :
   if (Cur.Output[1].Type != PARAM_DISCARD 
   {
     Ins == Cur^;
@@ -2837,20 +2837,20 @@ var
   CurArg: PPSH_IMD_ARGUMENT;
   Ins: PSH_INTERMEDIATE_FORMAT;
 {
-  // Get a copy of XFC & remove it already, new instructions will replace it :
+  // Get a copy of XFC and remove it already, new instructions will replace it :
   Cur == Intermediate[i];
   DeleteIntermediate(i);
   InsertPos == i;
-  // 'final combiner - r0 == A*B + (1-A)*C + D';
+  // 'final combiner - r0 = A*B + (1-A)*C + D';
 
-  // See if (the final combiner uses the prod | sum input parameters :
+  // See if the final combiner uses the prod or sum input parameters :
   NeedsProd == false;
   NeedsSum == false;
   for (i = 0; i < PSH_OPCODE_DEFS[Cur.Opcode]._In - 1 )
   {
     CurArg == &(Cur.Parameters[i]);
 
-    // Check for (the three final-combiner-specific argument types :
+    // Check for the three final-combiner-specific argument types :
     case CurArg.Type of
       PARAM_V1R0_SUM:
       {
@@ -2872,10 +2872,10 @@ var
       {
         // Change FOG into a constant of 1.0, as we can't simulate it otherwise :
 //        CurArg.SetConstValue(1.0);
-//        Cur.CommentString == 'final combiner - FOG not emulated, using 1.';
+//        Cur.CommentString = "final combiner - FOG not emulated, using 1.";
       }
     }
-  } // for (input
+  } // for input
 
   if (NeedsSum 
   {
@@ -2912,12 +2912,12 @@ var
   }
 
   // The final combiner calculates : r0.rgb=s0*s1 + (1-s0)*s2 + s3
-  // Change that into a LRP + ADD, & let the optimizer reduce it;
+  // Change that into a LRP + ADD, and let the optimizer reduce it;
 
   // Add a new opcode that calculates r0.rgb=s0*s1 + (1-s0)*s2 via a LRP :
   // Set the output to r0.rgb (as r0.a is determined via s6.a) :
 
-  // Watch out! if (s3=r0.rgb,  the LRP cannot use r0, but must use r1 as temp!
+  // Watch out! If s3=r0.rgb, then the LRP cannot use r0, but must use r1 as temp!
   if (Cur.Parameters[3].IsRegister(PARAM_R, 0, 0) 
     Cur.Output[0].SetRegister(PARAM_R, 1, MASK_RGB)
   else
@@ -2938,7 +2938,7 @@ var
   InsertIntermediate(&Ins, InsertPos);
   ++(InsertPos);
 
-  // See if (s6 is something else than 'r0.a' :
+  // See if s6 is something else than 'r0.a' :
   if (Cur.Parameters[6].ToString != 'r0.a' 
   {
     // Add a new opcode that moves s6 over to r0.a :
@@ -2946,7 +2946,7 @@ var
     Ins.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     Ins.Parameters[0] == Cur.Parameters[6];
     InsertIntermediate(&Ins, InsertPos);
-//    ++(InsertPos);
+//    ++InsertPos;
   }
 }
 
@@ -2967,7 +2967,7 @@ var
     if (Cur.Opcode in [PO_COMMENT, PO_XFC] 
       continue;
 
-    // See if (this opcode writes to any of it's outputs :
+    // See if this opcode writes to any of it's outputs :
     {
       HasOutput == false;
       for (j == 0 to PSH_OPCODE_DEFS[Cur.Opcode]._Out - 1 )
@@ -2980,7 +2980,7 @@ var
       if (not HasOutput 
       {
         // Remove the opcode (as it doesn't change anything) :
-        // This applies to PO_NOP & opcodes that discard all their results :
+        // This applies to PO_NOP and opcodes that discard all their results :
         DeleteIntermediate(i);
         Result == true;
         continue;
@@ -2997,7 +2997,7 @@ var
   for (i == aIndex to IntermediateCount - 1 )
   {
     Cur == &(Intermediate[i]);
-    // Detect a write | read :
+    // Detect a write or read :
     if (Cur.WritesToRegister(aRegType, aAddress)
     | Cur.ReadsFromRegister(aRegType, aAddress) 
     {
@@ -3037,7 +3037,7 @@ function PSH_XBOX_SHADER::CombineInstructions(): bool;
   var
     ParamLeft, ParamRight: PPSH_IMD_ARGUMENT;
   {
-    // Check if (Left & Right are the same register :
+    // Check if Left and Right are the same register :
     Result == false;
     ParamLeft == &Mul1.Parameters[Left];
     ParamRight == &Mul2.Parameters[Right];
@@ -3046,7 +3046,7 @@ function PSH_XBOX_SHADER::CombineInstructions(): bool;
     | (ParamLeft.Mask != ParamRight.Mask) 
       return;
 
-    // Is the left argument inverted & the right not (| the other way around) ?
+    // Is the left argument inverted and the right not (or the other way around) ?
     if ((ParamLeft.Modifiers * [ARGMOD_INVERT]) != (ParamRight.Modifiers * [ARGMOD_INVERT]) 
     {
       // In that case, already move the arguments over to AddOpcode so we create a LRP :
@@ -3059,7 +3059,7 @@ function PSH_XBOX_SHADER::CombineInstructions(): bool;
 
   function _CanMad(ConstOne: int; Mul1, Mul2, AddOpcode: PPSH_INTERMEDIATE_FORMAT): bool;
   {
-    // Check if (the given parameter is 1 :
+    // Check if the given parameter is 1 :
     Result == Mul1.Parameters[ConstOne].GetConstValue == 1.0;
     if (Result 
     {
@@ -3089,8 +3089,8 @@ var
     Op1 == &(Intermediate[i+1]);
     Op2 == &(Intermediate[i+2]);
 
-    // Check if (there are two consecutive opcodes reading from a fake R register;
-    // We outputted these ourselves, in order to ease the conversion & profit
+    // Check if there are two consecutive opcodes reading from a fake R register;
+    // We outputted these ourselves, in order to ease the conversion and profit
     // from having generic optimizations in one place :
     if ( (Op0.Output[0].Type == PARAM_R)
     & (Op0.Output[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT)
@@ -3122,14 +3122,14 @@ var
         & (Op1.Opcode == Op0.Opcode)
         & (Op1.Modifier == Op0.Modifier) 
         {
-          // Check if (we can lerp - we just need the same register on both sides that's inverted on the other :
+          // Check if we can lerp - we just need the same register on both sides that's inverted on the other :
           if (_CanLerp(Op0, Op1, Op2, 0, 2)
           | _CanLerp(Op0, Op1, Op2, 1, 2)
           | _CanLerp(Op0, Op1, Op2, 0, 3)
           | _CanLerp(Op0, Op1, Op2, 1, 3) 
           {
-            // The lerp can be done, & the correct parameters are already set to Op2,
-            // so all we need to ) now, it fixup the rest & remove the two MOV's :
+            // The lerp can be done, and the correct parameters are already set to Op2,
+            // so all we need to do now, it fixup the rest and remove the two MOV's :
             Op2.Opcode == PO_LRP;
             Op2.Modifier == Op0.Modifier;
             DeleteIntermediate(i);
@@ -3139,14 +3139,14 @@ var
             continue;
           }
 
-          // Check if (we can mad - we just need a constant 1 in one argument :
+          // Check if we can mad - we just need a constant 1 in one argument :
           if (_CanMad(0, Op0, Op1, Op2)
           | _CanMad(1, Op0, Op1, Op2)
           | _CanMad(0, Op1, Op0, Op2)
           | _CanMad(1, Op1, Op0, Op2) 
           {
-            // The mad can be done, & the correct parameters are already set to Op2,
-            // so all we need to ) now, it fixup the rest & remove the two MOV's :
+            // The mad can be done, and the correct parameters are already set to Op2,
+            // so all we need to do now, it fixup the rest and remove the two MOV's :
             Op2.Opcode == PO_MAD;
             Op2.Modifier == Op0.Modifier;
             DeleteIntermediate(i);
@@ -3177,7 +3177,7 @@ var
         & (Op0.Parameters[1].GetConstValue == 1.0)
         & (Op1.Parameters[1].GetConstValue == 1.0) 
         {
-          // Remove the two MOV's & fold their arguments into a MUL :
+          // Remove the two MOV's and fold their arguments into a MUL :
           Op2.Opcode == PO_MUL;
           Op2.Parameters[0] == Op0.Parameters[0];
           Op2.Parameters[1] == Op1.Parameters[0];
@@ -3190,7 +3190,7 @@ var
       }
     }
 
-    // ) two neighbouring opcodes output to the same register (without a modifier) ?
+    // Do two neighbouring opcodes output to the same register (without a modifier) ?
     if ( (Op0.Output[0].ToString == Op1.Output[0].ToString)
     & (Op0.Modifier == INSMOD_NONE)
     & (Op1.Modifier == INSMOD_NONE) 
@@ -3203,7 +3203,7 @@ var
         if ( (Op0.Output[0].Type == Op1.Parameters[0].Type)
         & (Op0.Output[0].Address == Op1.Parameters[0].Address)
         & (Op0.Output[0].Modifiers == Op1.Parameters[0].Modifiers) 
-        // Mask & Multiplier are not important here
+        // Mask and Multiplier are not important here
         {
           Op0.Opcode == PO_MAD;
           Op0.Parameters[2] == Op1.Parameters[1];
@@ -3215,19 +3215,19 @@ var
       }
     }
 
-(*
-    // Combinations that can be made if (their intermediate result is not read again | overwritten later:
+/*
+    // Combinations that can be made if their intermediate result is not read again or overwritten later:
 
-    MOV+ADD > ADD (if (MOV.Output[0] was only read by ADD.Parameter[0] | ADD.Parameter[1])
-    MOV+SUB > SUB (if (MOV.Output[0] was only read by SUB.Parameter[0] | SUB.Parameter[1])
-    MOV+MUL > MUL (if (MOV.Output[0] was only read by MOV.Parameter[0] | MOV.Parameter[1])
+    MOV+ADD > ADD (if MOV.Output[0] was only read by ADD.Parameter[0] or ADD.Parameter[1])
+    MOV+SUB > SUB (if MOV.Output[0] was only read by SUB.Parameter[0] or SUB.Parameter[1])
+    MOV+MUL > MUL (if MOV.Output[0] was only read by MOV.Parameter[0] or MOV.Parameter[1])
 
-    MUL+MOV > MUL (if (MUL.Output[0] was only read by MOV.Parameter[0])
-    MUL+ADD > MAD (if (MUL.Output[0] was only read by ADD.Parameter[0] | ADD.Parameter[1])
-    MUL+SUB > MAD (if (MUL.Output[0] was only read by SUB.Parameter[0] - ) invert MAD.Parameter[2])
-*)
+    MUL+MOV > MUL (if MUL.Output[0] was only read by MOV.Parameter[0])
+    MUL+ADD > MAD (if MUL.Output[0] was only read by ADD.Parameter[0] or ADD.Parameter[1])
+    MUL+SUB > MAD (if MUL.Output[0] was only read by SUB.Parameter[0] - Do invert MAD.Parameter[2])
+*/
 
-    // We can remove a MOV entirely if (the input is not changed while
+    // We can remove a MOV entirely if the input is not changed while
     // the output is read, up until the output is re-written; We can change all
     // these occurances into a read from the input of this MOV instead :
     // This fixes some shaders in Turok, that are reduced to 8 instead of 9 opcodes.
@@ -3239,15 +3239,15 @@ var
       j == i + 1;
       while j < IntermediateCount )
       {
-        // Don't optimize if (the output is needed for (CND | CMP (which must read from r0) :
-        // This fixes : "(Validation Error) First source for (cnd instruction must be 'r0.a'" in Modify Pixel Shader XDK sample.
+        // Don't optimize if the output is needed for CND or CMP (which must read from r0) :
+        // This fixes : "(Validation Error) First source for cnd instruction must be 'r0.a'" in Modify Pixel Shader XDK sample.
         if ( (Intermediate[j].Opcode in [PO_CND, PO_CMP])
         & (Op0.Output[0].IsRegister(PARAM_R, 0)) 
           break;
 
-        // TODO : Add other prevention rules here (like too many texture-reads, & other scases)
+        // TODO : Add other prevention rules here (like too many texture-reads, and other scases)
 
-        // We can optimize if (the MOV-output is written to again before the } of the shader :
+        // We can optimize if the MOV-output is written to again before the end of the shader :
         CanOptimize == true;
         if (Intermediate[j].WritesToRegister(Op0.Output[0].Type, Op0.Output[0].Address, MASK_RGBA) 
           break;
@@ -3258,11 +3258,11 @@ var
 
       if (CanOptimize 
       {
-        // Loop over all instructions in between, & try to replace reads :
+        // Loop over all instructions in between, and try to replace reads :
         CanOptimize == false;
         while j > i )
         {
-          // for (Intermediate[j].Parameters, change all occurrances of Op0.Output[0] into Op0.Parameters[0] :
+          // For Intermediate[j].Parameters, change all occurrances of Op0.Output[0] into Op0.Parameters[0] :
           for (k == 0 to PSH_OPCODE_DEFS[Intermediate[j].Opcode]._In - 1 )
             if ( (Intermediate[j].Parameters[k].Type == Op0.Output[0].Type)
             & (Intermediate[j].Parameters[k].Address == Op0.Output[0].Address) 
@@ -3340,17 +3340,17 @@ var
 
     if (CanSimplify 
     {
-      Cur.Opcode == PO_NOP; // This nop will be removed in a recursive fixup
+      Cur.Opcode = PO_NOP; // This nop will be removed in a recursive fixup
       DbgPrintf('; Changed MOV into a NOP');
-      Result == true;
-      return;
+      Result = true;
+      return Result;
     }
   }
 
   // Does this MOV put a 0 (zero) in the output?
   if (Cur.Parameters[0].GetConstValue == 0.0 
   {
-    // TODO : Find a constant with the value 0, & use that if (present.
+    // TODO : Find a constant with the value 0, and use that if present.
     // Simulate 0 by subtracting a (guaranteed) register from itself :
     // Fixup via "sub d0=v0,v0" :
     Cur.Opcode == PO_SUB;
@@ -3359,13 +3359,13 @@ var
     Cur.Parameters[0].Modifiers == [];
     Cur.Parameters[1] == Cur.Parameters[0];
     DbgPrintf('; Changed MOV 0 into a SUB v0,v0');
-    return;
+    return Result;
   }
 
   // Does this MOV put a constant in the output?
   if (Cur.Parameters[0].Type == PARAM_VALUE 
   {
-    // TODO : if (there's a constant equal to GetConstValue(), use that.
+    // TODO : If there's a constant equal to GetConstValue(), use that.
     Factor == Cur.Parameters[0].GetConstValue();
 
     // Fixup via a SUB (which can calculate a constant value) :
@@ -3376,7 +3376,7 @@ var
     if (Factor < 0.0 
     {
       // Simulate -1 by calculating it via a (guaranteed) register :
-      // We follow this : (-v0) - (1-v0) == -v0 - 1 + v0 == -1
+      // We follow this : (-v0) - (1-v0) = -v0 - 1 + v0 = -1
       Cur.Parameters[0].Modifiers == [ARGMOD_NEGATE];
       Cur.Parameters[1] == Cur.Parameters[0];
       Cur.Parameters[1].Modifiers == [ARGMOD_INVERT];
@@ -3386,13 +3386,13 @@ var
     else
     {
       // Simulate 1 by calculating it via a (guaranteed) register :
-      // We follow this : (1-v0) - (-v0) == (1-v0) + v0 == 1
+      // We follow this : (1-v0) - (-v0) = (1-v0) + v0 = 1
       Cur.Parameters[0].Modifiers == [ARGMOD_INVERT];
       Cur.Parameters[1] == Cur.Parameters[0];
       Cur.Parameters[1].Modifiers == [ARGMOD_NEGATE];
     }
 
-    // Try to simulate all factors (0.5, 1.0 & 2.0) using an output modifier :
+    // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
     Cur.ScaleOutput(Factor);
 
     DbgPrintf('; Changed MOV {const} into a SUB_factor 1-v0,-v0');
@@ -3487,7 +3487,7 @@ function PSH_XBOX_SHADER::SimplifyMUL(Cur: PPSH_INTERMEDIATE_FORMAT): bool;
   // Is this a multiply-by-const ?
   if ((Cur.Parameters[1].Type == PARAM_VALUE) 
   {
-    // Change it into a simple MOV & scale the output instead :
+    // Change it into a simple MOV and scale the output instead :
     Cur.Opcode == PO_MOV;
     Cur.ScaleOutput(Cur.Parameters[1].GetConstValue());
     Result == true;
@@ -3544,9 +3544,9 @@ var
 {
   Result == RemoveNops();
 
-  // TODO : Fixup writes to read-only registers (V0, V1) via another free register (if (possible)
-  // TODO : Fixup the usage of non-existent register numbers (like FakeRegNr_Sum & FakeRegNr_Prod)
-  // TODO : Fixup the usage of the unsupported INSMOD_BIAS & INSMOD_BX2 instruction modifiers
+  // TODO : Fixup writes to read-only registers (V0, V1) via another free register (if possible)
+  // TODO : Fixup the usage of non-existent register numbers (like FakeRegNr_Sum and FakeRegNr_Prod)
+  // TODO : Fixup the usage of the unsupported INSMOD_BIAS and INSMOD_BX2 instruction modifiers
   // TODO : Use the INSMOD_SAT instruction modifier instead of the ARGMOD_SATURATE argument modifier
   // TODO : Condense constants registers, to avoid the non-existant C8-C15 (requires a mapping in SetPixelShaderConstant too...)
   // TODO : Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
@@ -3592,7 +3592,7 @@ var
     } // case
   } // for
 
-  // if (the above code made any alteration, repeat it as some changes require a followup (like MUL>MOV>NOP) :
+  // If the above code made any alteration, repeat it as some changes require a followup (like MUL>MOV>NOP) :
   if (Result 
   {
     Log('Fixup intermediate result');
@@ -3633,7 +3633,7 @@ var
 
 bool PSH_XBOX_SHADER::FixMissingR0a()
 // On the Xbox, the alpha portion of the R0 register is initialized to
-// the alpha component of texture 0 if (texturing is enabled for (texture 0 :
+// the alpha component of texture 0 if texturing is enabled for texture 0 :
 {
   int R0aDefaultInsertPos;
   int i;
@@ -3650,18 +3650,18 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
     if (!Cur->IsArithmetic())
       continue;
 
-    // Make sure if (we insert at all, it'll be after the DEF's :
+    // Make sure if we insert at all, it'll be after the DEF's :
     if (R0aDefaultInsertPos < 0) 
       R0aDefaultInsertPos = i;
 
-    // First, check if (r0.a is read by this opcode :
+    // First, check if r0.a is read by this opcode :
     if (Cur->ReadsFromRegister(PARAM_R, 0, MASK_A))
     {
       R0aDefaultInsertPos = i;
       break;
     }
 
-    // if (this opcode writes to r0.a, we're done :
+    // If this opcode writes to r0.a, we're done :
     if (Cur->WritesToRegister(PARAM_R, 0, MASK_A))
       return Result;
   }
@@ -3692,7 +3692,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   bool Result = false;
 
 /*
-  // TODO : Shift independent .a instructions up | down so the alpha write combiner can be used more often :
+  // TODO : Shift independent .a instructions up or down so the alpha write combiner can be used more often :
   for (i = 0; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
@@ -3781,12 +3781,12 @@ void RPSInputRegister::Decode(uint8 Value, bool aIsAlpha)
   // Remove the above flags from the register :
   Reg = (PS_REGISTER)(Reg & 0xf);
 
-  // Check if (the input Register is ZERO, in which case we want to allow the extended registers :
+  // Check if the input Register is ZERO, in which case we want to allow the extended registers :
   if (Reg == PS_REGISTER_ZERO) 
   {
     switch (InputMapping) {
       case PS_REGISTER_ONE: case PS_REGISTER_NEGATIVE_ONE: case PS_REGISTER_ONE_HALF: case PS_REGISTER_NEGATIVE_ONE_HALF:
-        // These input mapping have their own register - keep these in 'Reg', so we can check for (them :
+        // These input mapping have their own register - keep these in 'Reg', so we can check for them :
         Reg = (PS_REGISTER)(InputMapping);
 		break;
 
@@ -3858,7 +3858,7 @@ void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlp
     OutputSUM.OutputCD.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
   }
 
-  // Decode PSAlphaOutputs / PSRGBOutputs & PSAlphaInputs / PSRGBInputs :
+  // Decode PSAlphaOutputs / PSRGBOutputs and PSAlphaInputs / PSRGBInputs :
   OutputSUM.OutputAB.Decode((PSOutputs >> 4) & 0xF, (PSInputs >> 16) & 0xFFFF, IsAlpha);
   OutputSUM.OutputCD.Decode((PSOutputs >> 0) & 0xF, (PSInputs >>  0) & 0xFFFF, IsAlpha);
   OutputSUM.Decode((PSOutputs >> 8) & 0xF, IsAlpha);
@@ -3867,26 +3867,26 @@ void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlp
 }
 
 // Note : On a hardware level, there are only 4 pixel shaders instructions present in the Nvidia NV2A GPU :
-// - xdd (dot/dot/discard) > calculating AB=A.B & CD=C.D
-// - xdm (dot/mul/discard) > calculating AB=A.B & CD=C*D
-// - xmmc (mul/mul/mux)    > calculating AB=A*B & CD=C*D & Mux=AB?CD
-// - xmma (mul/mul/sum)    > calculating AB=A*B & CD=C*D & Sum=AB+CD
-// (One of the implications is, that once a dot-product is issued, no Sum | Mux operation is possible.)
+// - xdd (dot/dot/discard) > calculating AB=A.B and CD=C.D
+// - xdm (dot/mul/discard) > calculating AB=A.B and CD=C*D
+// - xmmc (mul/mul/mux)    > calculating AB=A*B and CD=C*D and Mux=AB?CD
+// - xmma (mul/mul/sum)    > calculating AB=A*B and CD=C*D and Sum=AB+CD
+// (One of the implications is, that once a dot-product is issued, no Sum or Mux operation is possible.)
 // All other instructions (mov, add, sub, mul, lrp, dp3) are compiled into one of these 4 using varying arguments.
-// All 4 instruction specify up to three output registers, all of which must be unique (| be discarded).
+// All 4 instruction specify up to three output registers, all of which must be unique (or be discarded).
 //
-// Apart from the r0,r1 & t0-t3 registers, the NV2A allows writing to the v0,v1 (this conflicts with PS.1.3!)
+// Apart from the r0,r1 and t0-t3 registers, the NV2A allows writing to the v0,v1 (this conflicts with PS.1.3!)
 //
-// The precision of registers is also different; On the Xbox, all 4 color components (RGBA) for (constant registers
-// range from 0.0 to 1.0 (with 8 bits of precision), while all other registers (r, t & v) range from -1.0 to 1.0.
+// The precision of registers is also different; On the Xbox, all 4 color components (RGBA) for constant registers
+// range from 0.0 to 1.0 (with 8 bits of precision), while all other registers (r, t and v) range from -1.0 to 1.0.
 //
 // This is different from native PS.1.3 in which constant registers suddenly have a range -1.0 to 1.0, but vertex
-// registers (v0 & v1) range from 0.0 to 1.0 instead, & the temporary & texture registers have a range
+// registers (v0 and v1) range from 0.0 to 1.0 instead, and the temporary and texture registers have a range
 // from negative 'MaxPixelShaderValue' to positive 'MaxPixelShaderValue', which value must at least be 1.0
 // (but depending on hardware capabilities can be higher).
 //
 // TODO : Correct emulation should correct these differences; The range of constant-registers must be converted
-// from 0.0-1.0 to -1.0-1.0, & vertex-registers must be converted from -1.0..1.0 to 0.0..1.0 (if (anything like
+// from 0.0-1.0 to -1.0-1.0, and vertex-registers must be converted from -1.0..1.0 to 0.0..1.0 (if anything like
 // that is at all possible!)
 //
 // register | Xbox range | Native range | Xbox      | Native    |
