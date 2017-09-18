@@ -77,6 +77,8 @@
 
 //#include <CxbxKrnl/EmuD3D8Types.h> // X_PSH_COMBINECOUNT
 
+#include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlCleanup()
+
 typedef uint8_t uint8; // TODO : Remove
 
 #include <assert.h> // assert()
@@ -3941,6 +3943,267 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	PSH_XBOX_SHADER PSH;
 	return PSH.Decode(pPSDef);
+}
+
+// From Dxbx uState.pas :
+
+PSH_RECOMPILED_SHADER DxbxRecompilePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+{
+static const
+  char *szDiffusePixelShader =
+    "ps.1.0\n" 
+    "tex t0\n" 
+	"mov r0, t0\n";
+  std::string ConvertedPixelShaderStr;
+  DWORD hRet;
+  XTL::LPD3DXBUFFER pShader;
+  XTL::LPD3DXBUFFER pErrors;
+  DWORD *pFunction;
+
+  // Attempt to recompile PixelShader
+  PSH_RECOMPILED_SHADER Result = XTL_EmuRecompilePshDef(pPSDef);
+  ConvertedPixelShaderStr = Result.NewShaderStr;
+
+  // assemble the shader
+  pShader = nullptr;
+  pErrors = nullptr;
+  hRet = D3DXAssembleShader(
+    ConvertedPixelShaderStr.c_str(),
+    ConvertedPixelShaderStr.length(),
+#ifdef CXBX_USE_D3D9
+    /*pDefines=*/nullptr,
+    /*pInclude=*/nullptr,
+    /*Flags=*/0,
+#else
+    /*Flags=*/0,
+    /*ppConstants=*/NULL,
+#endif
+    /*ppCompiledShader=*/&pShader,
+    /*ppCompilationErrors*/&pErrors);
+
+  if (pShader == nullptr)
+  {
+    EmuWarning("Could not create pixel shader");
+    // TODO EmuWarning(string(AnsiString(PAnsiChar(LPD3DXBUFFER(pErrors).GetBufferPointer())))); // Dxbx addition
+
+    hRet = D3DXAssembleShader(
+      szDiffusePixelShader,
+      strlen(szDiffusePixelShader),
+#ifdef CXBX_USE_D3D9
+    /*pDefines=*/nullptr,
+    /*pInclude=*/nullptr,
+    /*Flags=*/0,
+#else
+    /*Flags=*/0,
+    /*ppConstants=*/NULL,
+#endif
+    /*ppCompiledShader=*/&pShader,
+    /*ppCompilationErrors*/&pErrors);
+
+    if (pShader == nullptr)
+      XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+
+    EmuWarning("We're lying about the creation of a pixel shader!");
+  }
+
+  if (pShader)
+  {
+    pFunction = (DWORD*)(pShader->GetBufferPointer());
+
+    if (hRet == D3D_OK)
+      // redirect to windows d3d
+      /*hRet = */g_pD3DDevice8->CreatePixelShader
+      (
+        pFunction,
+#ifdef CXBX_USE_D3D9
+        PIDirect3DPixelShader9(&(Result.ConvertedHandle)) {$MESSAGE 'fixme'}
+#else
+        /*out*/&(Result.ConvertedHandle)
+#endif
+      );
+
+    // Dxbx note : We must release pShader here, else we would have a resource leak!
+	pShader->Release();
+    pShader = nullptr;
+  }
+
+  // Dxbx addition : We release pErrors here (or it would become a resource leak!)
+  if (pErrors)
+  {
+    pErrors->Release();
+    pErrors = nullptr;
+  }
+  return Result;
+} // DxbxRecompilePixelShader
+
+// TODO : Initialize this :
+DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
+
+PPSH_RECOMPILED_SHADER RecompiledShaders_Head = nullptr;
+
+HRESULT XTL::DxbxUpdateActivePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef, DWORD *pHandle) // NOPATCH
+{
+// REENABLE TODO  XTL::X_D3DPIXELSHADERDEF *pPSDef;
+  PPSH_RECOMPILED_SHADER RecompiledPixelShader;
+  DWORD ConvertedPixelShaderHandle;
+  DWORD CurrentPixelShader;
+  int i;
+  DWORD Register_;
+  XTL::D3DCOLOR dwColor;
+  XTL::D3DXCOLOR fColor;
+
+  HRESULT Result = D3D_OK;
+// TODO : Do Dxbx post-translation on these two declarations :
+bool g_EmuD3DActivePixelShader = (pPSDef != NULL);
+
+  // Our SetPixelShader patch remembered the latest set pixel shader, see if it's assigned :
+  if (g_EmuD3DActivePixelShader)
+  {
+/* TODO : Do Dxbx post-translation on this code :
+	DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
+
+    // We could read g_EmuD3DActivePixelShader.PshDef, but since this is copied into
+    // D3D__RenderState (which contents might have been changed after the call to
+    // SetPixelShader), we use the address of XTL_D3D__RenderState as the real pixel
+    // shader definition :
+    pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState); 
+    if (pPSDef == NULL)
+      // If we haven't found the symbol, then we can fall back to the given definition :
+      pPSDef = g_EmuD3DActivePixelShader.PshDef;
+*/
+    // Now, see if we already have a shader compiled for this declaration :
+    RecompiledPixelShader = RecompiledShaders_Head;
+    while (RecompiledPixelShader)
+	{
+      // Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
+      if ((memcmp(&(RecompiledPixelShader->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8+2)*sizeof(DWORD)) == 0)
+      && (memcmp(&(RecompiledPixelShader->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8+8+3+8+4)* sizeof(DWORD)) == 0))
+        break;
+
+      RecompiledPixelShader = RecompiledPixelShader->Next;
+    }
+
+    // If none was found, recompile this shader and remember it :
+    if (RecompiledPixelShader == nullptr)
+	{
+      // Recompile this pixel shader :
+      RecompiledPixelShader = new PSH_RECOMPILED_SHADER;
+      *RecompiledPixelShader = DxbxRecompilePixelShader(pPSDef);
+      // Add this shader to the chain :
+      RecompiledPixelShader->Next = RecompiledShaders_Head;
+      RecompiledShaders_Head = RecompiledPixelShader;
+    }
+
+    // Switch to the converted pixel shader (if it's any different from our currently active
+    // pixel shader, to avoid many unnecessary state changes on the local side).
+    ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
+
+#ifdef CXBX_USE_D3D9
+    g_pD3DDevice.GetPixelShader(/*out*/PIDirect3DPixelShader9(&CurrentPixelShader));
+#else
+    g_pD3DDevice8->GetPixelShader(/*out*/&CurrentPixelShader);
+#endif
+    if (CurrentPixelShader != ConvertedPixelShaderHandle)
+#ifdef CXBX_USE_D3D9
+		g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+#else
+		g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+#endif
+
+    // Note : We set the constants /after/ setting the shader, so that any
+    // constants in the shader declaration can be overwritten (this will be
+    // needed for the final combiner constants at least)!
+
+/* This must be done once we somehow forward the vertex-shader oFog output to the pixel shader FOG input register :
+   We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
+    // Disable native fog if pixel shader is said to handle it :
+    if ((RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
+    || (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0))
+    {
+      g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+    }
+*/
+    // Set constants, not based on g_PixelShaderConstants, but based on
+    // the render state slots containing the pixel shader constants,
+    // as these could have been updated via SetRenderState or otherwise :
+    for (i = 0; i < PSH_XBOX_CONSTANT_MAX; i++)
+	{
+      if (RecompiledPixelShader->ConstInUse[i])
+	  {
+        // Read the color from the corresponding render state slot :
+        switch (i) {
+          case PSH_XBOX_CONSTANT_FOG:
+            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
+            // Note : FOG.RGB is correct like this, but FOG.a should be coming
+            // from the vertex shader (oFog) - however, D3D8 does not forward this...
+			break;
+		  case PSH_XBOX_CONSTANT_FC0:
+            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+			break;
+		  case PSH_XBOX_CONSTANT_FC1:
+            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+			break;
+	    default:
+            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+        }
+
+        // Convert it back to 4 floats  :
+        fColor = dwColor;
+        // Read the register we can use on PC :
+        Register_ = RecompiledPixelShader->ConstMapping[i];
+        // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
+        // Set the value locally in this register :
+#ifdef CXBX_USE_D3D9
+        g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(&fColor), 1);
+#else
+		g_pD3DDevice8->SetPixelShaderConstant(Register_, &fColor, 1);
+#endif
+      }
+    }
+  }
+  else
+  {
+    ConvertedPixelShaderHandle = 0;
+#ifdef CXBX_USE_D3D9
+	g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+#else
+	g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+#endif
+  }
+
+  if (g_bFakePixelShaderLoaded)
+  {
+    g_pD3DDevice8->SetRenderState(XTL::D3DRS_FOGENABLE, FALSE);
+
+    // programmable pipeline
+    /* Dxbx note : If the following is enabled, Sokoban loses it's textures, so disable it for now :
+    for (v := 0; i < X_D3DTS_STAGECOUNT; i++)
+    {
+      g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
+      g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+    }
+    */
+
+    // fixed pipeline
+    /* Cxbx has this disabled :
+    for (v := 0; v < X_D3DTS_STAGECOUNT; v++)
+    {
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+    }
+
+    g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
+    g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,BOOL_TRUE);
+    g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
+    */
+  }
+  *pHandle = ConvertedPixelShaderHandle; // TODO : Do Dxbx post-translation on this
+  return Result;
 }
 
 // End of Dxbx code
