@@ -86,7 +86,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	// REGISTER_OOVPAS(XCalculateSignatureUpdate, PATCH, 4627),
 	// REGISTER_OOVPAS(XInputGetDeviceDescription, PATCH, 4831), // NOT XInputGetDeviceDescription (from 4627, 5028's comment)
 	// REGISTER_OOVPAS(XapiBootDash, PATCH, 3911), // obsolete (from 4721's comment)
-	// REGISTER_OOVPAS(XapiInitProcess, PATCH, 4361), // obsolete, Too High Level (from 4721's comment)
+	REGISTER_OOVPAS(XapiInitProcess, DISABLED, 3911, 3950, 4242, 4831, 5028), // obsolete, Too High Level (from 4721's comment)
 	// REGISTER_OOVPAS(XapiThreadStartup, PATCH, 4361), // obsolete (from 4721's comment)
 	// REGISTER_OOVPAS(XapiThreadStartup, PATCH, 4361), // obsolete? (from 4627, 5028, 5558, 5788, 5849's comment)
 	// REGISTER_OOVPAS(lstrcmpiW, PATCH, 3911),
