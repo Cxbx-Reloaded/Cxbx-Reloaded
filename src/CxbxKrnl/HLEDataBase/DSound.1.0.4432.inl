@@ -147,7 +147,7 @@ OOVPATable DSound_4432[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMinDistance, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBins, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMixBins, 4134, XREF),

@@ -180,8 +180,8 @@ enum XRefDataBaseOffset
     XREF_RECORDSTATEBLOCK,
     XREF_CDirectSound_SetDistanceFactor,
     XREF_CMcpxAPU_Set3dDistanceFactor,
-    XREF_SETROLLOFFFACTORA,
-    XREF_SETROLLOFFFACTORB,
+    XREF_CDirectSound_SetRolloffFactor,
+    XREF_CMcpxAPU_Set3dRolloffFactor,
     XREF_CDirectSound_SetDopplerFactor,
     XREF_SETBUFFERDATA,
 	XREF_CMcpxBuffer_SetCurrentPosition,
@@ -198,7 +198,7 @@ enum XRefDataBaseOffset
     XREF_CDirectSound_CreateSoundBuffer,
     XREF_CDirectSound_CreateSoundStream,
     XREF_DSSTREAMPAUSE,
-    XREF_DSSETI3DL2LISTENER,
+    XREF_CDirectSound_SetI3DL2Listener,
     XREF_CDirectSound_SetMixBinHeadroom,
     XREF_CMcpxAPU_SetMixBinHeadroom,
     XREF_DSSETMIXBINSA,
@@ -349,6 +349,8 @@ enum XRefDataBaseOffset
     XREF_CDirectSound_GetSpeakerConfig,
     XREF_CDirectSound_DownloadEffectsImage,
     XREF_CDirectSound_CommitEffectData,
+    XREF_CDirectSound_GetTime,
+    XREF_CMcpxAPU_SetI3DL2Listener,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

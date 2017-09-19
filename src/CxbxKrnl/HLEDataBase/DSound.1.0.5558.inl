@@ -117,7 +117,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetRolloffFactor, 5558, 17,
 
-    XREF_SETROLLOFFFACTORA,
+    XREF_CDirectSound_SetRolloffFactor,
     XRefZero)
 
         // CDirectSound_SetRolloffFactor+0x21 : mov eax, 0x80004005
@@ -204,7 +204,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetI3DL2Listener, 5558, 8,
 
-    XREF_DSSETI3DL2LISTENER,
+    XREF_CDirectSound_SetI3DL2Listener,
     XRefZero)
 
         { 0x1D, 0xFF },
@@ -1684,7 +1684,7 @@ OOVPATable DSound_5558[] = {
     REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3911, PATCH),
 	REGISTER_OOVPA(CFullHRTFSource_GetCenterVolume, 5558, XREF),
 	REGISTER_OOVPA(CHRTFSource_SetFullHRTF5Channel, 5558, XREF),

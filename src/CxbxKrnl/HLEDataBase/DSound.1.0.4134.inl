@@ -155,7 +155,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetI3DL2Listener, 4134, 11,
 
-    XREF_DSSETI3DL2LISTENER,
+    XREF_CDirectSound_SetI3DL2Listener,
     XRefZero)
 
         // CDirectSound_SetI3DL2Listener+0x3A : mov edi, 0x88780032
@@ -175,7 +175,7 @@ OOVPA_XREF(CDirectSound_SetI3DL2Listener, 4134, 11,
         { 0xA9, 0x41 },
         { 0xAA, 0x24 },
 OOVPA_END;
-
+#if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_SetI3DL2Listener
 // ******************************************************************
@@ -185,7 +185,7 @@ OOVPA_XREF(IDirectSound_SetI3DL2Listener, 4134, 12,
 	XRefOne)
 
 	// IDirectSound_SetI3DL2Listener+0x19 : call [CDirectSound::SetI3DL2Listener]
-	XREF_ENTRY(0x19, XREF_DSSETI3DL2LISTENER),
+	XREF_ENTRY(0x19, XREF_CDirectSound_SetI3DL2Listener),
 
 											   // IDirectSound_SetI3DL2Listener+0x04 : push [esp+0x0C]
 	{ 0x04, 0xFF },
@@ -206,8 +206,7 @@ OOVPA_XREF(IDirectSound_SetI3DL2Listener, 4134, 12,
 	{ 0x15, 0x23 },
 	{ 0x16, 0xC8 },
 	OOVPA_END;
-
-
+#endif
 // ******************************************************************
 // * CDirectSoundVoice_SetHeadroom
 // ******************************************************************
@@ -1021,7 +1020,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetRolloffFactor, 4134, 17,
 
-    XREF_SETROLLOFFFACTORA,
+    XREF_CDirectSound_SetRolloffFactor,
     XRefZero)
 
         // CDirectSound_SetRolloffFactor+0x21 : mov eax, 0x80004005
@@ -1061,7 +1060,7 @@ OOVPA_XREF(IDirectSound_SetRolloffFactor, 4134, 11,
     XRefOne)
 
         // IDirectSound_SetRolloffFactor+0x1D : call [CDirectSound::SetRolloffFactor]
-        XREF_ENTRY( 0x1D, XREF_SETROLLOFFFACTORA ), 
+        XREF_ENTRY( 0x1D, XREF_CDirectSound_SetRolloffFactor ), 
 
         // IDirectSound_SetRolloffFactor+0x04 : fld [esp+0x0C]
         { 0x04, 0xD9 },
@@ -2989,11 +2988,11 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetI3DL2Listener, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetHeadroom, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetHeadroom, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSound_SetVelocity, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetVelocity, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetAllParameters, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoiceSettings_SetMixBins, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMixBins, 4039, XREF),
