@@ -69,7 +69,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 4242, 11,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         // XID_fCloseDevice+0x1B : mov eax, [esi+0x00A3]

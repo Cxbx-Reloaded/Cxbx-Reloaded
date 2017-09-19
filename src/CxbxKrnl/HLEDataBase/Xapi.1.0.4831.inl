@@ -67,7 +67,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 4831, 11,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         { 0x13, 0x8B },

@@ -411,7 +411,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 3911, 10,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         // XID_fCloseDevice+0x19 : jz +0x5C
@@ -442,7 +442,7 @@ OOVPA_XREF(XInputClose, 3911, 8,
     XRefOne)
 
         // XInputClose+0x05 : call [fCloseDevice]
-        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ), 
+        XREF_ENTRY( 0x05, XREF_XID_fCloseDevice ),
 
         // XInputClose+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B },

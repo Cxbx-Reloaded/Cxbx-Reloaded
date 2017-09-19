@@ -175,7 +175,7 @@ enum XRefDataBaseOffset
 	XREF_D3D_KickOff,
 	XREF_D3DPalette_Lock2,
     XREF_XNINIT,
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XREF_CLEARSTATEBLOCKFLAGS,
     XREF_RECORDSTATEBLOCK,
     XREF_CDirectSound_SetDistanceFactor,
