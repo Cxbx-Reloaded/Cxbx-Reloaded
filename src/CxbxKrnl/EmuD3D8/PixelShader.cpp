@@ -2138,7 +2138,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr(DxbxFormat(aStr, Args)); \
   }
 {
-  int i;
+//  int i;
 
   std::string Result = "";
   // Show the contents to the user
