@@ -229,7 +229,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetRolloffFactor, 4039, 17,
 
-    XREF_SETROLLOFFFACTORA,
+    XREF_CDirectSound_SetRolloffFactor,
     XRefZero)
 
         // CDirectSound_SetRolloffFactor+0x20 : mov eax, 0x80004005
