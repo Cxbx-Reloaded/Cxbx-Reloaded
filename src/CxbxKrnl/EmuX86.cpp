@@ -876,6 +876,60 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// ADD Destination to src 
+	uint64_t result = dest - 1;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, result);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
+	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
+bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// ADD Destination to src 
+	uint64_t result = dest + 1;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, result);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
+	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & dest;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	return true;
+}
+
 bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -1152,10 +1206,19 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		case I_CPUID:
 			EmuX86_Opcode_CPUID(e, info);
 			break;
+		case I_DEC:
+			if (EmuX86_Opcode_DEC(e, info))
+				break;
+
+			goto unimplemented_opcode;
 		case I_IN:
 			if (EmuX86_Opcode_IN(e, info))
 				break;
 
+			goto unimplemented_opcode;
+		case I_INC:
+			if (EmuX86_Opcode_INC(e, info))
+				break;
 			goto unimplemented_opcode;
 		case I_INVD: // Flush internal caches; initiate flushing of external caches.
 			 // We can safely ignore this
