@@ -3634,22 +3634,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
-	DWORD* pFunction = NULL;
-	LPD3DXBUFFER pRecompiledBuffer = NULL;
-	// DWORD Handle = 0;
-
-#if 1 // PatrickvL Dxbx pixel shader translation
-	pFunction = (DWORD*)pPSDef;
+#if 0 // PatrickvL Dxbx pixel shader translation
 
 	// Attempt to recompile PixelShader
 	hRet = DxbxUpdateActivePixelShader(pPSDef, pHandle);
-
 	// redirect to windows d3d
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
-
 #endif
+#if 1 // Kingofc's pixel shader translation
+	DWORD* pFunction = NULL;
+	LPD3DXBUFFER pRecompiledBuffer = NULL;
 
-#if 0 // Kingofc's pixel shader translation
 	hRet = CreatePixelShaderFunction(pPSDef, &pRecompiledBuffer);
 	DEBUG_D3DRESULT(hRet, "CreatePixelShaderFunction");
 
@@ -3680,14 +3675,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
+	DWORD Handle = 0; // ??
 	pPixelShader->Handle = Handle;
 	pPixelShader->dwStatus = hRet;
 	*pHandle = (DWORD)pPixelShader;
 	*/
 #endif
-
 #if 0 // Older Cxbx pixel shader translation
-    // ================================================================
+	DWORD* pFunction = NULL;
+
 	pFunction = (DWORD*) pPSDef;
 
 	// Attempt to recompile PixelShader
@@ -3700,8 +3696,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
         pHandle
     );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
-
-    // ================================================================
 #endif
 
     if(FAILED(hRet))
