@@ -158,7 +158,7 @@ static DWORD                        g_VertexShaderSlots[136];
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 
-static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
+static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
@@ -3402,7 +3402,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
         hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
-                                            g_VertexShaderConstantMode == X_VSCM_NONERESERVED,
+                                            g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
 											&bUseDeclarationOnly);
         if(SUCCEEDED(hRet))
         {
@@ -3723,9 +3723,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
+#if 0 // PatrickvL Dxbx pixel shader translation
+
+	// Attempt to recompile PixelShader
+	hRet = DxbxUpdateActivePixelShader(pPSDef, pHandle);
+	// redirect to windows d3d
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
+#endif
+#if 1 // Kingofc's pixel shader translation
 	DWORD* pFunction = NULL;
 	LPD3DXBUFFER pRecompiledBuffer = NULL;
-	// DWORD Handle = 0;
 
 	hRet = CreatePixelShaderFunction(pPSDef, &pRecompiledBuffer);
 	DEBUG_D3DRESULT(hRet, "CreatePixelShaderFunction");
@@ -3757,13 +3764,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
+	DWORD Handle = 0; // ??
 	pPixelShader->Handle = Handle;
 	pPixelShader->dwStatus = hRet;
 	*pHandle = (DWORD)pPixelShader;
 	*/
+#endif
+#if 0 // Older Cxbx pixel shader translation
+	DWORD* pFunction = NULL;
 
-#if 0
-    // ================================================================
 	pFunction = (DWORD*) pPSDef;
 
 	// Attempt to recompile PixelShader
@@ -3776,8 +3785,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
         pHandle
     );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
-
-    // ================================================================
 #endif
 
     if(FAILED(hRet))
@@ -7888,7 +7895,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
     // Store viewport offset and scale in constant registers 58 (c-38) and
     // 59 (c-37) used for screen space transformation.
-    if(g_VertexShaderConstantMode != X_VSCM_NONERESERVED)
+    if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
     {
         // TODO: Proper solution.
         static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
