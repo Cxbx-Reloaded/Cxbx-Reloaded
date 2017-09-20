@@ -186,12 +186,7 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 	return os << "\"";
 }
 
-LOGRENDER_HEADER_BY_REF(PULONG)
+LOGRENDER_HEADER_BY_REF(PVOID)
 {
-	os << hex4((uint32_t)value);
-	if (value != nullptr)
-		os << " (*value: " << hex4(*value) << ")";
-
-	return os;
+	return os << hex4((uint32_t)value);
 }
-

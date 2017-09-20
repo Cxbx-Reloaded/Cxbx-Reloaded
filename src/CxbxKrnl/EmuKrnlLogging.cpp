@@ -73,6 +73,15 @@ LOGRENDER_HEADER_BY_REF(PBYTE)
 	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
 }
 
+LOGRENDER_HEADER_BY_REF(PULONG)
+{
+	os << "(PULONG)" << hex4((uint32_t)value);
+	if (value != nullptr)
+		os << " (*value: " << hex4(*value) << ")";
+
+	return os;
+}
+
 //
 // Xbox (Enum)Type-ToString conversions :
 //

@@ -2240,7 +2240,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(hFocusWindow)
-		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(BehaviorFlags) // Xbox BehaviorFlags are ignored
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
@@ -7960,7 +7960,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PrimitiveType)
-		LOG_FUNC_ARG(VertexCount)
+		LOG_FUNC_ARG(StartVertex)
 		LOG_FUNC_ARG(VertexCount)
 		LOG_FUNC_END;
 
