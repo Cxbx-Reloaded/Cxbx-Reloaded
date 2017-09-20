@@ -2429,7 +2429,7 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PARAMETERS *pParameters)
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pParameters);
 
@@ -2484,7 +2484,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus)
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pFieldStatus);
 
@@ -4535,7 +4535,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayMode)
     OUT X_D3DDISPLAYMODE         *pMode
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG_OUT(pMode);
 
@@ -6078,7 +6078,7 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
     X_D3DSURFACE_DESC   *pDesc
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPixelContainer)
@@ -6114,7 +6114,7 @@ VOID WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
     X_D3DSURFACE_DESC  *pDesc
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
