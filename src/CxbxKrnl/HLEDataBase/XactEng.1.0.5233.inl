@@ -215,7 +215,7 @@ OOVPATable XactEng_5233[] = {
 	REGISTER_OOVPA(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4928, PATCH),
 	REGISTER_OOVPA(XACT_CEngine_DownloadEffectsImage, 4627, XREF),
 	REGISTER_OOVPA(IXACTEngine_DownloadEffectsImage, 4627, PATCH),
-	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
+	REGISTER_OOVPA(IXACTSoundBank_Play, 4627, PATCH),
 	// ******************************************************************
 };
 

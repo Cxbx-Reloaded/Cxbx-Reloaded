@@ -88,7 +88,7 @@ OOVPATable XactEng_5558[] = {
 	// Provisional registration functions in XDK 5558
 	// TODO: Need test cases
 	// ******************************************************************
-	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
+	REGISTER_OOVPA(IXACTSoundBank_Play, 4627, PATCH),
 	// ******************************************************************
 };
 
