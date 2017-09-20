@@ -533,13 +533,13 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(MemoryStatistics);
 
-	MEMORYSTATUS MemoryStatus;
+	MEMORYSTATUSEX MemoryStatus;
 	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
-		GlobalMemoryStatus(&MemoryStatus);
+		GlobalMemoryStatusEx(&MemoryStatus);
 		GetSystemInfo(&SysInfo);
 
 		/**
@@ -547,12 +547,12 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 		* are setup correctly below, these two lines become redundant
 		*/
 		ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
-		MemoryStatistics->Length = sizeof(MM_STATISTICS);
+		//MemoryStatistics->Length = sizeof(MM_STATISTICS);
 
-		MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalPhys / SysInfo.dwPageSize;
-		MemoryStatistics->AvailablePages = MemoryStatus.dwAvailPhys / SysInfo.dwPageSize;
-		MemoryStatistics->VirtualMemoryBytesCommitted = MemoryStatus.dwTotalVirtual - MemoryStatus.dwAvailVirtual;
-		MemoryStatistics->VirtualMemoryBytesReserved = MemoryStatus.dwAvailVirtual;
+		MemoryStatistics->TotalPhysicalPages = (ULONG)(MemoryStatus.ullTotalPhys / SysInfo.dwPageSize);
+		MemoryStatistics->AvailablePages = (ULONG)(MemoryStatus.ullAvailPhys / SysInfo.dwPageSize);
+		MemoryStatistics->VirtualMemoryBytesCommitted = (ULONG)(MemoryStatus.ullTotalVirtual - MemoryStatus.ullAvailVirtual);
+		MemoryStatistics->VirtualMemoryBytesReserved = (ULONG)(MemoryStatus.ullAvailVirtual);
 		// MemoryStatistics->CachePagesCommitted = [ ];
 		// MemoryStatistics->PoolPagesCommitted = [ ];
 		// MemoryStatistics->StackPagesCommitted = [ ];
