@@ -4871,7 +4871,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_End)()
 {
-	//FUNC_EXPORTS
+	FUNC_EXPORTS
 
 	LOG_FUNC();
 

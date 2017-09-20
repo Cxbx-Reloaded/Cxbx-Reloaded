@@ -71,6 +71,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuKrnl.h"
 #include "EmuNV2A.h"
+#include "HLEIntercept.h"
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
 
 #include <gl\glew.h>
@@ -3749,5 +3750,8 @@ void EmuNV2A_Init()
 
 	pfifo.puller_thread = std::thread(pfifo_puller_thread);
 	
-	vblank_thread = std::thread(nv2a_vblank_thread);;
+	// Only spawn VBlank thread when LLE is enabled
+	if (bLLE_GPU) {
+		vblank_thread = std::thread(nv2a_vblank_thread);;
+	}
 }
