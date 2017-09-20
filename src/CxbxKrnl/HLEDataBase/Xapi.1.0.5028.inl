@@ -98,7 +98,7 @@ OOVPATable XAPI_5028[] = {
 	REGISTER_OOVPA(XInputGetCapabilities, 4831, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4831, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
-	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
+	// REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH), // obsolete?
 	// REGISTER_OOVPA(XCalculateSignatureBeginEx, 4627, PATCH), // +s, not necessary?
 	// REGISTER_OOVPA(XCalculateSignatureBegin, 4627, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureUpdate, 4627, PATCH),
@@ -121,7 +121,7 @@ OOVPATable XAPI_5028[] = {
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
 	// REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH), // Was NOT XInputGetDeviceDescription
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
-	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),
+	// REGISTER_OOVPA(MoveFileA, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 4242, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 

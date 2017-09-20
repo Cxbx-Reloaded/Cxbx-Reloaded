@@ -32,10 +32,11 @@
 // *
 // ******************************************************************
 
+#if 0 // Moved to 4831
 // ******************************************************************
 // * XInputGetDeviceDescription
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetDeviceDescription, 5344, 15)
+OOVPA_NO_XREF(XInputGetDeviceDescription, 5344, 14)
 
         { 0x04, 0xEC },
         { 0x0B, 0x15 },
@@ -53,8 +54,9 @@ OOVPA_NO_XREF(XInputGetDeviceDescription, 5344, 15)
         { 0x1D, 0x84 },
 
         { 0x30, 0x45 },
-        { 0x31, 0xF8 },
+        //{ 0x31, 0xF8 }, // 4831 0xF4 vs 5344 0xF8
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XLaunchNewImageA
@@ -116,7 +118,7 @@ OOVPATable XAPI_5344[] = {
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
 	REGISTER_OOVPA(RaiseException, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetDeviceDescription, 5344, PATCH),
+	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 

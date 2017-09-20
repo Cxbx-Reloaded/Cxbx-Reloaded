@@ -169,3 +169,45 @@ OOVPA_NO_XREF(XapiInitProcess, 4831, 12)
         { 0x1D, 0x8D },
         { 0x1E, 0x45 },
 OOVPA_END;
+
+// ******************************************************************
+// * XInputGetDeviceDescription
+// ******************************************************************
+OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 14)
+
+        { 0x04, 0xEC },
+        { 0x0B, 0x15 },
+
+        { 0x13, 0x45 },
+        { 0x14, 0x08 },
+        { 0x15, 0x8B },
+        { 0x16, 0x30 },
+        { 0x17, 0x3B },
+        { 0x18, 0xF3 },
+        { 0x19, 0x88 },
+        { 0x1A, 0x4D },
+        { 0x1B, 0xFF },
+        { 0x1C, 0x0F },
+        { 0x1D, 0x84 },
+
+        { 0x30, 0x45 },
+        //{ 0x31, 0xF8 }, // 4831 0xF4 vs 5344 0xF8
+OOVPA_END;
+
+#if 0 // No longer used, this was _XInputGetCapabilities@8
+// ******************************************************************
+// * XInputGetDeviceDescription
+// ******************************************************************
+OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 9)
+
+		{ 0x03, 0x83 },
+		{ 0x04, 0xEC },
+		{ 0x05, 0x48 },
+		{ 0x06, 0x83 },
+		{ 0x07, 0x65 },
+		{ 0x08, 0xF8 },
+		{ 0x09, 0x00 },
+		{ 0x34, 0x6A },
+		{ 0x35, 0x06 },
+OOVPA_END;
+#endif
