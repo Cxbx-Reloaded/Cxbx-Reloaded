@@ -405,7 +405,7 @@ OOVPATable XactEng_4928[] = {
 	REGISTER_OOVPA(IXACTEngine_DownloadEffectsImage, 4627, PATCH),
 	REGISTER_OOVPA(XACT_CEngine_RegisterWaveBank, 4627, XREF),
 	REGISTER_OOVPA(IXACTEngine_RegisterWaveBank, 4627, PATCH),
-	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
+	REGISTER_OOVPA(IXACTSoundBank_Play, 4627, PATCH),
 	// ******************************************************************
 };
 

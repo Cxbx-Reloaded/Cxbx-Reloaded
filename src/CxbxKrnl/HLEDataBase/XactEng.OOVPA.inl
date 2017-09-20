@@ -31,6 +31,20 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+// TODO: Known XactEng OOVPA issue list
+// * 4627 and 5028 are not verified each OOVPA. (Last known revision found is 4928. revision 5028 is obscure)
+// * Following OOVPA revision are not verified
+//   * XACT_CEngine_CreateSoundSource (5455)
+//   * XACT_CEngine_DownloadEffectsImage (5455)
+//   * XACT_CSoundBank_GetSoundCueIndexFromFriendlyName (5455)
+//   * XACT_CSoundBank_Play (5455)
+//   * IXACTEngine_CreateSoundSource (5455)
+//   * IXACTEngine_DownloadEffectsImage (5455)
+//   * IXACTEngine_RegisterWaveBank (5455)
+//   * IXACTSoundBank_GetSoundCueIndexFromFriendlyName (5455)
+//   * IXACTSoundBank_Play (4928 to 5849)
+
 #ifndef XACTENG_OOVPA_INL
 #define XACTENG_OOVPA_INL
 
