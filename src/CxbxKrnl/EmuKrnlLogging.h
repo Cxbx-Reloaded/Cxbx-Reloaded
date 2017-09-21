@@ -82,6 +82,7 @@ ENUM2STR_HEADER(XC_VALUE_INDEX)
 // Headers for rendering Xbox kernel types without pointer-to-type :
 LOGRENDER_HEADER_BY_REF(BOOLEAN);
 LOGRENDER_HEADER_BY_REF(PBYTE);
+LOGRENDER_HEADER_BY_REF(PULONG);
 
 // Headers for rendering functions of Xbox kernel type and pointer-to-type :
 

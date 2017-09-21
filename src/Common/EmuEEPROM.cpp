@@ -63,7 +63,7 @@ const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 
 xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 {
-	xboxkrnl::XBOX_EEPROM *EEPROM;
+	xboxkrnl::XBOX_EEPROM *pEEPROM;
 
 	// First, try to open an existing EEPROM.bin file :
 	HANDLE hFileEEPROM = CreateFile(szFilePath_EEPROM_bin,
@@ -108,29 +108,31 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	}
 
 	// Map EEPROM.bin contents into memory :
-	EEPROM = (xboxkrnl::XBOX_EEPROM *)MapViewOfFile(
+	pEEPROM = (xboxkrnl::XBOX_EEPROM *)MapViewOfFile(
 		hFileMappingEEPROM,
 		FILE_MAP_READ | FILE_MAP_WRITE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
-	if (EEPROM == NULL)
+	if (pEEPROM == nullptr) {
 		DbgPrintf("CxbxRestoreEEPROM : Couldn't map EEPROM.bin into memory!\n");
+		return nullptr;
+	}
 
 	// TODO : Verify checksums
 
 	if (NeedsInitialization)
 	{
-		memset(EEPROM, 0, EEPROM_SIZE);
+		memset(pEEPROM, 0, EEPROM_SIZE);
 
 		// TODO: Make these configurable or autodetect of some sort :
-		EEPROM->UserSettings.Language = 0x01;  // = English
-		EEPROM->UserSettings.VideoFlags = 0x10;  // = Letterbox
-		EEPROM->UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
-		EEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-		EEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
-		EEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		EEPROM->FactorySettings.AVRegion = 0x0100; // = NTSC_M
+		pEEPROM->UserSettings.Language = 0x01;  // = English
+		pEEPROM->UserSettings.VideoFlags = 0x10;  // = Letterbox
+		pEEPROM->UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
+		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
+		pEEPROM->FactorySettings.AVRegion = 0x0100; // = NTSC_M
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
 
@@ -139,5 +141,5 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	else
 		DbgPrintf("EmuMain: Loaded EEPROM.bin\n");
 
-	return EEPROM;
+	return pEEPROM;
 }
