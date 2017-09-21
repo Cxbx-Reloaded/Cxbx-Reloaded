@@ -60,6 +60,8 @@ namespace NtDll
 
 #include <chrono>
 #include <thread>
+#include <windows.h>
+#include <map>
 
 // Copied over from Dxbx. 
 // TODO : Move towards thread-simulation based Dpc emulation
@@ -72,6 +74,8 @@ typedef struct _DpcData {
 } DpcData;
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
+
+std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
@@ -666,10 +670,19 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 		LOG_FUNC_ARG(SignalState)
 		LOG_FUNC_END;
 
+	// Setup the Xbox event struct
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
-	InitializeListHead(&(Event->Header.WaitListHead));
+	InitializeListHead(&(Event->Header.WaitListHead)); 
+
+
+	// Create a Windows event, to be used in KeWaitForObject
+	// TODO: This doesn't check for events that are already initialized
+	// This shouldn't happen, except on shoddily coded titles so we
+	// ignore it for now
+	HANDLE hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
+	g_KeEventHandles[Event] = hostEvent;
 }
 
 // ******************************************************************
@@ -997,6 +1010,14 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KePulseEvent called on a non-existant event!");
+	}
+	else {
+		PulseEvent(g_KeEventHandles[Event]);
+	}
+
 	LOG_UNIMPLEMENTED();
 
 	RETURN(0);
@@ -1295,6 +1316,15 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 	LONG ret = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KeResetEvent called on a non-existant event!");
+	}
+	else {
+		ResetEvent(g_KeEventHandles[Event]);
+	}
+
+
 	return ret;
 }
 
@@ -1421,6 +1451,15 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	// TODO : Untested & incomplete
 	LONG ret = Event->Header.SignalState;
 	Event->Header.SignalState = TRUE;
+
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KeSetEvent called on a non-existant event. Creating it!");
+		// TODO: Find out why some XDKs do not call KeInitializeEvent first
+		KeInitializeEvent(Event, NotificationEvent, TRUE);
+	} else {
+		SetEvent(g_KeEventHandles[Event]);
+	}
 
 	RETURN(ret);
 }
@@ -1683,24 +1722,41 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
+	// Take the input and build two arrays: One of handles created by our kernel and one for not
+	// Handles created by our kernel need to be forwarded to WaitForMultipleObjects while handles
+	// created by Windows need to be forwarded to NtDll::KeWaitForMultipleObjects
+	std::vector<HANDLE> nativeObjects;
+	std::vector<HANDLE> ntdllObjects;
+
 	for (uint i = 0; i < Count; i++) {
 		DbgPrintf("Object: 0x%08X\n", Object[i]);
-		if (IsEmuHandle(Object[i]))	{
-			ret = WAIT_FAILED;
-			EmuWarning("WaitFor EmuHandle not supported!");
-			break;
+		if (g_KeEventHandles.find((PKEVENT)Object[i]) == g_KeEventHandles.end()) {
+			ntdllObjects.push_back(Object[i]);
+		} else {
+			nativeObjects.push_back(g_KeEventHandles[(PRKEVENT)Object[i]]);
 		}
 	}
 
-	if (ret == STATUS_SUCCESS)
-	{
+	if (ntdllObjects.size() > 0) {
 		// TODO : What should we do with the (currently ignored)
 		//        WaitReason, WaitMode, WaitBlockArray?
 
 		// Unused arguments : WaitReason, WaitMode, WaitBlockArray
 		ret = NtDll::NtWaitForMultipleObjects(
-			Count,
-			Object,
+			ntdllObjects.size(),
+			&ntdllObjects[0],
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
+
+		if (FAILED(ret))
+			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+	}
+	
+	if (nativeObjects.size() > 0) {
+		ret = NtDll::NtWaitForMultipleObjects(
+			nativeObjects.size(),
+			&nativeObjects[0],
 			(NtDll::OBJECT_WAIT_TYPE)WaitType,
 			Alertable,
 			(NtDll::PLARGE_INTEGER)Timeout);
