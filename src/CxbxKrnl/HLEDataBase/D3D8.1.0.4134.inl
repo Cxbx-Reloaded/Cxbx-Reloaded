@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // Moved to 403‚S
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
@@ -60,6 +61,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4134, 1+10,
         { 0xB5, 0xE2 },
         { 0xB6, 0x04 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetTransform
@@ -2584,7 +2586,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(Direct3D_CreateDevice, 3911, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(MakeRequestedSpace, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTransform, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FogColor, 4134, PATCH),

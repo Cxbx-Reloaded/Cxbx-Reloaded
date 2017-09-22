@@ -36,7 +36,9 @@
 
 #include "OOVPA.h"
 
+#if 0 // Moved to 4034
 extern LOOVPA<1+10> D3DDevice_SetTextureState_TexCoordIndex_4134;
+#endif
 
 extern OOVPATable D3D8_4134[];
 extern uint32     D3D8_4134_SIZE;
