@@ -105,6 +105,7 @@ OOVPA_NO_XREF(XGetDeviceEnumerationStatus, 5788, 7)
 OOVPA_END;
 #endif
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * SwitchToThread
 // ******************************************************************
@@ -117,6 +118,7 @@ OOVPA_NO_XREF(SwitchToThread, 5788, 6)
         { 0x0D, 0x0F },
         { 0x10, 0x8B },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XAPI_5788
@@ -131,7 +133,7 @@ OOVPATable XAPI_5788[] = {
 	REGISTER_OOVPA(XInputGetCapabilities, 5455, PATCH),
 	REGISTER_OOVPA(XInputGetState, 5455, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 5233, PATCH), // Was PATCH
-    // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
+    // REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH), // obsolete?
 	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
@@ -145,7 +147,7 @@ OOVPATable XAPI_5788[] = {
 	REGISTER_OOVPA(XLaunchNewImageA, 5558, PATCH),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
-	// REGISTER_OOVPA(SwitchToThread, 5788, PATCH),
+	// REGISTER_OOVPA(SwitchToThread, 3911, PATCH),
 	REGISTER_OOVPA(XFormatUtilityDrive, 4242, PATCH),
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
 	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
@@ -164,7 +166,7 @@ OOVPATable XAPI_5788[] = {
 	REGISTER_OOVPA(timeKillEvent, 3911, PATCH),
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
-	REGISTER_OOVPA(XInputGetDeviceDescription, 5344, PATCH),
+	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
 };
 
 // ******************************************************************

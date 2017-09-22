@@ -53,7 +53,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 4627, 7,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         { 0x13, 0x1E },
@@ -71,7 +71,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 4831, 11,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         { 0x13, 0x8B },
@@ -274,6 +274,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 4928, 7)
         { 0xDE, 0x45 },
 OOVPA_END;
 #endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * MoveFileA
 // ******************************************************************
@@ -287,7 +288,8 @@ OOVPA_NO_XREF(MoveFileA, 4627, 7)
         { 0x74, 0xFF },
         { 0x83, 0x33 },
 OOVPA_END;
-#if 0 // No longer used, this was _XInputGetCapabilities@8
+#endif
+#if 0 // No longer used, this was _XInputGetCapabilities@8. Moved to 4831
 // ******************************************************************
 // * XInputGetDeviceDescription
 // ******************************************************************
@@ -355,7 +357,7 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(XInputSetState, 4242, PATCH),
 	// REGISTER_OOVPA(XInputSetState, 4831, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
-	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
+	// REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH), // obsolete?
 	// REGISTER_OOVPA(XInputGetCapabilities, 4831, PATCH),
 	// REGISTER_OOVPA(XCalculateSignatureBeginEx, 4627, PATCH), // +s, not necessary?
 	// REGISTER_OOVPA(XCalculateSignatureBegin, 4627, PATCH),
@@ -379,9 +381,9 @@ OOVPATable XAPI_4627[] = {
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
-	//REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH), // NOT XInputGetDeviceDescription
+	// REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
-	// REGISTER_OOVPA(MoveFileA, 4627, PATCH),
+	// REGISTER_OOVPA(MoveFileA, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 4242, PATCH),
 	REGISTER_OOVPA(XMountMURootA, 4242, PATCH),
 	// REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),

@@ -69,7 +69,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 4242, 11,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         // XID_fCloseDevice+0x1B : mov eax, [esi+0x00A3]
@@ -276,6 +276,7 @@ OOVPA_NO_XREF(XapiInitProcess, 4361, 7)
         { 0x43, 0x0B },
 OOVPA_END;
 #endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XapiThreadStartup
 // ******************************************************************
@@ -301,7 +302,7 @@ OOVPA_NO_XREF(XapiThreadStartup, 4361, 10)
         // XapiThreadStartup+0x86 : retn
         { 0x86, 0xC3 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * XapiSetupPerTitleDriveLetters
 // ******************************************************************
@@ -401,7 +402,7 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(XInputGetCapabilities, 4242, PATCH),
 	REGISTER_OOVPA(XInputGetState, 4242, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4242, PATCH),
-    // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH),
+    // REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4134, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
 	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
 	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),

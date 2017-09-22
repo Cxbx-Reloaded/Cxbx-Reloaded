@@ -69,7 +69,7 @@ OOVPATable XAPI_4432[] = {
 	REGISTER_OOVPA(XInputGetState, 4242, PATCH),
 	REGISTER_OOVPA(XInputSetState, 4242, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
-    // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH),
+    // REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
