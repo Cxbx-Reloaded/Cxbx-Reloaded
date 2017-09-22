@@ -725,6 +725,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4039.inl">
+      <Filter>HLEDatabase\Xapi</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>

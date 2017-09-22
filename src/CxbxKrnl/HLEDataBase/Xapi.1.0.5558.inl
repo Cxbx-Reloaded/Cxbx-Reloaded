@@ -109,7 +109,7 @@ OOVPA_NO_XREF(XLaunchNewImageA, 5558, 7)
         { 0x34, 0x6A },
         { 0x3D, 0x10 },
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XapiFiberStartup
 // ******************************************************************
@@ -123,14 +123,14 @@ OOVPA_NO_XREF(XapiFiberStartup, 5558, 7)
         { 0x34, 0xC3 },
         { 0x3D, 0x00 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 5455
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 5455, 7,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         { 0x11, 0x45 },
@@ -151,7 +151,7 @@ OOVPA_XREF(XInputClose, 5455, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ),
+        XREF_ENTRY( 0x05, XREF_XID_fCloseDevice ),
 
         { 0x00, 0x8B },
         { 0x01, 0x4C },
@@ -200,7 +200,7 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(XInputGetCapabilities, 5455, PATCH),
 	REGISTER_OOVPA(XInputGetState, 5455, PATCH),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
-	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
+	// REGISTER_OOVPA(XapiThreadStartup, 3911, PATCH), // obsolete?
 	REGISTER_OOVPA(XLaunchNewImageA, 5558, PATCH),
 	REGISTER_OOVPA(XGetLaunchInfo, 3911, DISABLED),
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
@@ -212,7 +212,7 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
-	REGISTER_OOVPA(XapiFiberStartup, 5558, DISABLED),
+	REGISTER_OOVPA(XapiFiberStartup, 3911, DISABLED),
 	REGISTER_OOVPA(XID_fCloseDevice, 5455, XREF),
 	REGISTER_OOVPA(XInputClose, 5455, PATCH),
 	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
@@ -228,7 +228,7 @@ OOVPATable XAPI_5558[] = {
 	REGISTER_OOVPA(GetOverlappedResult, 3911, PATCH),
 	REGISTER_OOVPA(XSetProcessQuantumLength, 4134, PATCH),
 	REGISTER_OOVPA(RaiseException, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetDeviceDescription, 5344, PATCH),
+	REGISTER_OOVPA(XInputGetDeviceDescription, 4831, PATCH),
 	REGISTER_OOVPA(XGetDeviceEnumerationStatus, 4831, PATCH),
 };
 

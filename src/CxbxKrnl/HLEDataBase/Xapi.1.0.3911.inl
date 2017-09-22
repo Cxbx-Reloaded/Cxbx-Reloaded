@@ -114,6 +114,36 @@ OOVPA_END;
 // ******************************************************************
 // * CreateThread
 // ******************************************************************
+OOVPA_NO_XREF(CreateThread, 3911, 21)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x8B },
+        { 0x04, 0x45 },
+        { 0x05, 0x0C },
+        { 0x06, 0x85 },
+        { 0x07, 0xC0 },
+        { 0x08, 0x75 },
+        { 0x09, 0x05 },
+        { 0x0A, 0xA1 },
+        { 0x0B, 0x30 },
+        { 0x0C, 0x01 },
+        { 0x0D, 0x01 },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x8B },
+        { 0x10, 0x4D },
+        { 0x11, 0x18 },
+        { 0x12, 0x68 },
+
+        { 0x32, 0x50 },
+        { 0x33, 0x6A },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * CreateThread
+// ******************************************************************
 OOVPA_NO_XREF(CreateThread, 3911, 8)
 
         // CreateThread+0x0A : mov eax, ds:10130h
@@ -130,6 +160,7 @@ OOVPA_NO_XREF(CreateThread, 3911, 8)
         { 0x51, 0xC2 },
         { 0x52, 0x18 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * SetThreadPriority
@@ -301,7 +332,7 @@ OOVPA_NO_XREF(GetTimeZoneInformation, 3911, 7)
         { 0xF7, 0x99 },
 OOVPA_END;
 
-/* not necessary?
+// not necessary?
 // ******************************************************************
 // * XCalculateSignatureBegin
 // ******************************************************************
@@ -325,7 +356,6 @@ OOVPA_NO_XREF(XCalculateSignatureBegin, 3911, 10)
         { 0x3B, 0xC2 },
         { 0x3C, 0x04 },
 OOVPA_END;
-*/
 
 // ******************************************************************
 // * XGetDevices
@@ -411,7 +441,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 3911, 10,
 
-    XREF_FCLOSEDEVICE,
+    XREF_XID_fCloseDevice,
     XRefZero)
 
         // XID_fCloseDevice+0x19 : jz +0x5C
@@ -442,7 +472,7 @@ OOVPA_XREF(XInputClose, 3911, 8,
     XRefOne)
 
         // XInputClose+0x05 : call [fCloseDevice]
-        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ), 
+        XREF_ENTRY( 0x05, XREF_XID_fCloseDevice ), 
 
         // XInputClose+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B },
@@ -903,6 +933,25 @@ OOVPA_NO_XREF(CloseHandle, 3911, 8)
         { 0x1A, 0xC0 },
 OOVPA_END;
 
+// Generic OOVPA as of 3911 and newer.
+// ******************************************************************
+// * ExitThread
+// ******************************************************************
+OOVPA_NO_XREF(ExitThread, 3911, 10)
+
+        { 0x00, 0x6A },
+        { 0x01, 0x00 },
+        { 0x02, 0xE8 },
+        { 0x07, 0xFF },
+        { 0x08, 0x74 },
+        { 0x09, 0x24 },
+        { 0x0A, 0x04 },
+        { 0x0B, 0xFF },
+        { 0x0C, 0x15 },
+        { 0x11, 0xCC },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * ExitThread
 // ******************************************************************
@@ -914,6 +963,7 @@ OOVPA_NO_XREF(ExitThread, 3911, 5)
         { 0x0A, 0x04 },
         { 0x11, 0xCC },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XLaunchNewImageA
@@ -1229,6 +1279,101 @@ OOVPA_NO_XREF(RaiseException, 3911, 7)
         { 0x35, 0x89 },
         { 0x40, 0x5F },
         { 0x4B, 0xFF },
+OOVPA_END;
+
+// Generic OOVPA as of 3911 and newer.
+// ******************************************************************
+// * SwitchToThread
+// ******************************************************************
+OOVPA_NO_XREF(SwitchToThread, 3911, 15)
+
+        { 0x00, 0xFF },
+        { 0x01, 0x15 },
+        { 0x06, 0x33 },
+        { 0x07, 0xC9 },
+        { 0x08, 0x3D },
+        { 0x09, 0x24 },
+        { 0x0A, 0x00 },
+        { 0x0B, 0x00 },
+        { 0x0C, 0x40 },
+        { 0x0D, 0x0F },
+        { 0x0E, 0x95 },
+        { 0x0F, 0xC1 },
+        { 0x10, 0x8B },
+        { 0x11, 0xC1 },
+        { 0x12, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * XapiThreadStartup
+// ******************************************************************
+// Generic OOVPA as of 3911 and newer.
+OOVPA_NO_XREF(XapiThreadStartup, 3911, 17)
+
+        { 0x00, 0x6A },
+        { 0x01, 0x18 },
+        { 0x02, 0x68 },
+        { 0x07, 0xE8 },
+        { 0x0C, 0x83 },
+        { 0x0D, 0x65 },
+        { 0x0E, 0xFC },
+        { 0x0F, 0x00 },
+        { 0x10, 0x64 },
+        { 0x11, 0xA1 },
+        { 0x12, 0x28 },
+        { 0x13, 0x00 },
+        { 0x14, 0x00 },
+        { 0x15, 0x00 },
+        { 0x16, 0x89 },
+        { 0x17, 0x45 },
+        // { 0x18, 0xE4 }, 3911 0xE4 vs 5558 0xE0
+        
+        { 0x1F, 0x89 },
+OOVPA_END;
+
+// Generic OOVPA as of 3911 and newer.
+// ******************************************************************
+// * MoveFileA
+// ******************************************************************
+OOVPA_NO_XREF(MoveFileA, 3911, 12)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x2C },
+        { 0x06, 0x56 },
+        { 0x07, 0x8B },
+        { 0x08, 0x35 },
+
+        { 0x1F, 0x8D },
+        { 0x93, 0xC2 },
+        { 0x94, 0x08 },
+OOVPA_END;
+
+// Generic OOVPA as of 3911 and newer.
+// ******************************************************************
+// * XapiFiberStartup
+// ******************************************************************
+OOVPA_NO_XREF(XapiFiberStartup, 3911, 14)
+
+        { 0x00, 0x6A },
+        { 0x01, 0x08 },
+
+        { 0x25, 0xFF },
+        { 0x26, 0x30 },
+        { 0x27, 0xFF },
+        { 0x28, 0x55 },
+        { 0x29, 0x08 },
+        { 0x2A, 0xEB },
+        { 0x2B, 0x0C },
+        { 0x2C, 0xFF },
+        { 0x2D, 0x75 },
+        { 0x2E, 0xEC },
+        { 0x2F, 0xE8 },
+
+        { 0x44, 0xCC },
 OOVPA_END;
 
 // ******************************************************************
