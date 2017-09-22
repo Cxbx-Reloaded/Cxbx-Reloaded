@@ -116,7 +116,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	// REGISTER_OOVPAS(ReadFileEx, DISABLED, 3911),// Has exact asm codes _WriteFileEx@20
 	// REGISTER_OOVPAS(WriteFileEx, DISABLED, 3911), // Has exact asm codes _ReadFileEx@20
 	// REGISTER_OOVPAS(lstrcmpiW, DISABLED, 3911), // TODO: necessary XREF _xCompareStringW@20
-	REGISTER_OOVPAS(CloseHandle, DISABLED, 3911),
+	// REGISTER_OOVPAS(CloseHandle, DISABLED, 3911),// Has exact same asm codes as _ResetEvent@4
 	REGISTER_OOVPAS(CreateMutex, DISABLED, 3911), // Too High Level (from 3911's comment)
 	REGISTER_OOVPAS(CreateThread, DISABLED, 3911), // Too High Level (from 3911's comment)
 	REGISTER_OOVPAS(ExitThread, DISABLED, 3911),//
