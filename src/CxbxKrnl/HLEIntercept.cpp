@@ -411,9 +411,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
                     else if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0 &&
-                        (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
-                      || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
-                      || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
+                        (BuildVersion == 3925 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
+                      || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233
+                      || BuildVersion == 5344 || BuildVersion == 5558 || BuildVersion == 5788 || BuildVersion == 5849))
                     {
 						// Save D3D8 build version
 						g_BuildVersion = BuildVersion;
@@ -446,12 +446,13 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x25);
 									Decrement = 0x1FC;  // TODO: Clean up (?)
 									Increment = 82 * 4;
-									patchOffset = 105 * 4; // TODO: Verify
+									patchOffset = 140 * 4; // Verified 3925 and 3948
 
 									//Decrement = 0x19F;  // TODO: Clean up (?)
 									//Increment = 72 * 4;
 									//patchOffset = 142*4; // TODO: Verify
 								}
+#if 0 // Same as 4134
 								else if (BuildVersion == 4034)
 								{
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
@@ -459,7 +460,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									Increment = 82 * 4;
 									patchOffset = 142 * 4;
 								}
-								else if (BuildVersion == 4134 || BuildVersion == 4361)
+#endif
+								else if (BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361)
 								{
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
 									Decrement = 0x200;
@@ -539,8 +541,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             if(BuildVersion == 3925)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3925, lower, upper);
 							// TODO : What about 4034? Use it once it's offset to XREF_D3DTSS_TEXCOORDINDEX is verified
-                            else if(BuildVersion == 4134)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4134, lower, upper);
+                            else if(BuildVersion == 4034 || BuildVersion == 4134)
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4034, lower, upper);
                             else if(BuildVersion == 4361 || BuildVersion == 4432)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4361, lower, upper);
                             else if(BuildVersion == 4627 || BuildVersion == 5028 || BuildVersion == 5233 || BuildVersion == 5344
@@ -556,7 +558,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								{
 									if (BuildVersion == 3925) // 0x18F180
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x11);
-									else if (BuildVersion == 4134)
+									else if (BuildVersion == 4034 || BuildVersion == 4134)
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x18);
 									else
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x19);

@@ -978,7 +978,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4034, 1+10,
 	XRefNoSaveIndex,
 	XRefOne)
 
-		XREF_ENTRY(0x11, XREF_D3DTSS_TEXCOORDINDEX), // Derived - TODO : Verify 0x11 (could be 0x18 or 0x19)
+		XREF_ENTRY(0x18, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x13 : shl eax, 0x07
         { 0x13, 0xC1 },
