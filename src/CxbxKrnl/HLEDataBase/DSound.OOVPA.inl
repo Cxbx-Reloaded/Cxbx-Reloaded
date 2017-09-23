@@ -288,7 +288,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSound_GetEffectData, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_GetOutputLevels, PATCH, 4627, 5558),
     REGISTER_OOVPAS(IDirectSound_GetSpeakerConfig, PATCH, 3911),
-    REGISTER_OOVPAS(IDirectSound_GetTime, DISABLED, 3911),
+    REGISTER_OOVPAS(IDirectSound_GetTime, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSound_Release, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_SetAllParameters, PATCH, 3911),
     //REGISTER_OOVPAS(IDirectSound_SetAllParameters, XREF, 3911), //Cannot be used since this OOVPA does produce false detection.
