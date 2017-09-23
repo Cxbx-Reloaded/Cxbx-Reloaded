@@ -755,7 +755,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 3936, 12,
 
-    XREF_DSBUFFERSETHEADROOMA,
+    XREF_CDirectSoundVoice_SetHeadroom,
     XRefOne)
 
     // WARNING: I am unsure if this is SetHeadroom
@@ -793,7 +793,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 3936, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetHeadroom+0x15 : call [CDirectSoundVoice_SetHeadroom]
-        XREF_ENTRY( 0x15, XREF_DSBUFFERSETHEADROOMA ),
+        XREF_ENTRY( 0x15, XREF_CDirectSoundVoice_SetHeadroom ),
 
         // IDirectSoundBuffer_SetHeadroom+0x04 : push [esp+0x08]
         { 0x04, 0xFF },
@@ -870,7 +870,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxVoiceClient_SetMixBins, 3936, 15,
 
-    XREF_DSSETMIXBINSB,
+    XREF_CMcpxVoiceClient_SetMixBins,
     XRefZero)
 
         // CMcpxVoiceClient_SetMixBins+0x1C : lea eax, [esi+0x84]
@@ -907,11 +907,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMixBins, 3936, 9,
 
-    XREF_DSSETMIXBINSA,
+    XREF_CDirectSoundVoice_SetMixBins,
     XRefOne)
 
         // CDirectSoundVoice_SetMixBins+0x28 : call [CMcpxVoiceClient::SetMixBins]
-        XREF_ENTRY( 0x29, XREF_DSSETMIXBINSB ),
+        XREF_ENTRY( 0x29, XREF_CMcpxVoiceClient_SetMixBins),
 
         // CDirectSoundVoice_SetMixBins+0x11 : mov ecx, [esi+0x18]
         { 0x11, 0x8B },
@@ -937,7 +937,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBins, 3936, 10,
     XRefOne)
 
         // IDirectSoundStream_SetFrequency+0x0C : call [CDirectSoundVoice::SetMixBins]
-        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSA ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoice_SetMixBins),
 
         // CDirectSoundStream_SetMixBins+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B },
@@ -964,7 +964,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 3936, 8,
     XRefOne)
 
         // IDirectSoundBuffer_SetMixBins+0x14 : call [CDirectSoundVoice::SetMixBins]
-        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ), 
+        XREF_ENTRY( 0x15, XREF_CDirectSoundVoice_SetMixBins),
 
         // IDirectSoundBuffer_SetMixBins+0x0A : add eax, 0xFFFFFFE4
         { 0x0A, 0x83 },
@@ -2197,7 +2197,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetFrequency, 3936, 9,
 
-    XREF_DSSTREAMSETFREQUENCY1A,
+    XREF_CDirectSoundVoice_SetFrequency,
     XRefOne)
 
         // CDirectSoundVoice_SetFrequency+0x1F : call [XAudioCalculatePitch]
@@ -2227,7 +2227,7 @@ OOVPA_XREF(CDirectSoundStream_SetFrequency, 3936, 10,
     XRefOne)
 
         // CDirectSoundStream_SetFrequency+0x0D : call [CDirectSoundVoice_SetFrequency]
-        XREF_ENTRY( 0x0D, XREF_DSSTREAMSETFREQUENCY1A ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoice_SetFrequency ),
 
         // CDirectSoundStream_SetFrequency+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B },
@@ -2254,7 +2254,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 3936, 8,
     XRefOne)
 
         // IDirectSoundBuffer_SetFrequency+0x15 : call [CDirectSoundVoice_SetFrequency]
-        XREF_ENTRY( 0x15, XREF_DSSTREAMSETFREQUENCY1A ), 
+        XREF_ENTRY( 0x15, XREF_CDirectSoundVoice_SetFrequency ), 
 
         // IDirectSoundBuffer_SetFrequency+0x0A : add eax, 0xFFFFFFE4
         { 0x0A, 0x83 },
@@ -2413,7 +2413,7 @@ OOVPA_XREF(CDirectSoundStream_SetHeadroom, 3936, 10,
     XRefOne)
 
         // CDirectSoundStream_SetHeadroom+0x0D : call [DirectSound_CDirectSoundVoice_SetHeadroom]
-        XREF_ENTRY( 0x0D, XREF_DSBUFFERSETHEADROOMA ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoice_SetHeadroom ),
 
         // CDirectSoundStream_SetHeadroom+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B },

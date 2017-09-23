@@ -384,7 +384,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 5558, 7,
 
-    XREF_DSSETMIXBINSC,
+    XREF_CDirectSoundVoiceSettings_SetMixBins,
     XRefZero)
 
         { 0x1B, 0xEB },
@@ -401,10 +401,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMixBins, 5558, 8,
 
-    XREF_DSSETMIXBINSB,
+    XREF_CDirectSoundVoice_SetMixBins,
     XRefOne)
 
-        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSC ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoiceSettings_SetMixBins ),
 
         { 0x02, 0x74 },
         { 0x06, 0x74 },
@@ -420,10 +420,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMixBins, 5558, 8,
 
-    XREF_DSSETMIXBINSA,
+    XREF_CDirectSoundBuffer_SetMixBins,
     XRefOne)
 
-        XREF_ENTRY( 0x32, XREF_DSSETMIXBINSB ),
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetMixBins ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -442,7 +442,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ),
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetMixBins ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -1262,7 +1262,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBins, 5558, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSSETMIXBINSB ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetMixBins ),
 
         { 0x00, 0x56 },
         { 0x0C, 0x00 },

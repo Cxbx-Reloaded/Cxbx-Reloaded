@@ -26,11 +26,25 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 RadWolfie
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
+
+// TODO: Known DSound OOVPA issue list
+// * 3911 to 4039(?): Following separater functions has exact asm codes as whole function are...
+//   * IDirectSoundStream_SetVolume     & CDirectSoundStream_SetVolume
+//   * IDirectSoundStream_SetPitch      & CDirectSoundStream_SetPitch
+//   * IDirectSoundStream_SetLFO        & CDirectSoundStream_SetLFO
+//   * IDirectSoundStream_SetEG         & CDirectSoundStream_SetEG
+//   * IDirectSoundStream_SetFilter     & CDirectSoundStream_SetFilter
+//   * IDirectSoundStream_SetHeadroom   & CDirectSoundStream_SetHeadroom
+//   * IDirectSoundStream_SetFrequency  & CDirectSoundStream_SetFrequency
+//   * IDirectSoundStream_SetMixBins    & CDirectSoundStream_SetMixBins
+// * Need to include patch, func export, support for IDirectSoundStream_Setxxxxx from above.
+
 #ifndef DSOUND_OOVPA_INL
 #define DSOUND_OOVPA_INL
 
@@ -182,26 +196,26 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetConeAngles, PATCH, 3911),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeOrientation, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeOutsideVolume, PATCH, 3911, 4134),
-    REGISTER_OOVPAS(CDirectSoundStream_SetEG, PATCH, 4039, 4134),
-    REGISTER_OOVPAS(CDirectSoundStream_SetFilter, PATCH, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetEG, PATCH, 3911, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetFilter, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetFormat, PATCH, 4242),
-    REGISTER_OOVPAS(CDirectSoundStream_SetFrequency, PATCH, 3936, 5233),
-    REGISTER_OOVPAS(CDirectSoundStream_SetHeadroom, PATCH, 3936, 4627, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_SetFrequency, PATCH, 3911, 3936, 5233),
+    REGISTER_OOVPAS(CDirectSoundStream_SetHeadroom, PATCH, 3911, 3936, 4627, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetI3DL2Source, PATCH, 3911, 4134),
-    REGISTER_OOVPAS(CDirectSoundStream_SetLFO, PATCH, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetLFO, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMaxDistance, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMinDistance, PATCH, 3911, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3936, 4627, 5233, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3911, 3936, 4627, 5233, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetOutputBuffer, PATCH, 3911, 4627),
-    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetPosition, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetRolloffCurve, XREF, 4627, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetRolloffFactor, PATCH, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetVelocity, PATCH, 3911, 4134),
-    REGISTER_OOVPAS(CDirectSoundStream_SetVolume, PATCH, 3936, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetVolume, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Use3DVoiceData, XREF, 5558),
     REGISTER_OOVPAS(CDirectSound_CommitDeferredSettings, XREF, 3911, 4039, 4134, 5344, 5558, 5788),
     REGISTER_OOVPAS(CDirectSound_CommitEffectData, XREF, 3911),
@@ -253,7 +267,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetLoopRegion, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMaxDistance, PATCH, 3911 /*,5344, 5788*/),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMinDistance, PATCH, 3911 /*, 5558, 5788*/),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBins, PATCH, 3911, 4134, 5558),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBins, PATCH, 3911, 4039, 4134, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMode, PATCH, 3911, 4039),
@@ -272,11 +286,18 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_Use3DVoiceData, PATCH, 5558),
     REGISTER_OOVPAS(IDirectSoundStream_FlushEx, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOrientation, UNPATCHED, 3911),
-    //REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911), //TODO: IDirectSoundStream_SetEG and CDirectSoundStream_SetEG has 2 seperate functions. Except has the same asm codes.
+    REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetLFO, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetFilter, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetFrequency, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetHeadroom, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMaxDistance, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, UNPATCHED, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetPitch, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetPosition, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetVelocity, UNPATCHED, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetVolume, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitDeferredSettings, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitEffectData, PATCH, 3911),
