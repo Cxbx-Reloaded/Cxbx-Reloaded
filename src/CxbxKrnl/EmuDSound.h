@@ -211,6 +211,12 @@ struct X_DSCAPS
     DWORD dwMemoryAllocated;
 };
 
+#define X_DSSPEAKER_STEREO          0x00000000
+#define X_DSSPEAKER_MONO            0x00000001
+#define X_DSSPEAKER_SURROUND        0x00000002
+#define X_DSSPEAKER_ENABLE_AC3      0x00010000
+#define X_DSSPEAKER_ENABLE_DTS      0x00020000
+
 
 
 typedef struct IDirectSoundStream IDirectSoundStream;
@@ -1227,6 +1233,14 @@ STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
 );
 
 // ******************************************************************
+// * patch: DirectSoundUseLightHRTF
+// ******************************************************************
+STDAPI_(void) EMUPATCH(DirectSoundUseLightHRTF)
+(
+    void
+);
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
@@ -1623,5 +1637,23 @@ ULONG WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis);
+
+// ******************************************************************
+// * patch: IDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_GetSpeakerConfig)
+    (X_CDirectSound* pThis, OUT LPDWORD* pdwSpeakerConfig);
+
+// ******************************************************************
+// * patch: IDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_CommitDeferredSettings)
+    (X_CDirectSound* pThis);
+
+// ******************************************************************
+// * patch: IDirectSound_CommitEffectData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_CommitEffectData)
+    (X_CDirectSound* pThis);
 
 #endif

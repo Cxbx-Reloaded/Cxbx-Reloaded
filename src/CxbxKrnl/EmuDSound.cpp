@@ -2505,6 +2505,24 @@ STDAPI_(void) XTL::EMUPATCH(DirectSoundUseFullHRTF)
 }
 
 // ******************************************************************
+// * patch: DirectSoundUseLightHRTF
+// ******************************************************************
+STDAPI_(void) XTL::EMUPATCH(DirectSoundUseLightHRTF)
+(
+    void)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+	LOG_FUNC();
+
+    LOG_UNIMPLEMENTED_DSOUND();
+
+    leaveCriticalSection;
+}
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillators
@@ -3694,6 +3712,75 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 	LOG_FUNC_ONE_ARG(pThis);
 
 	LOG_UNIMPLEMENTED_DSOUND();
+
+    leaveCriticalSection;
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetSpeakerConfig)
+(
+    X_CDirectSound*     pThis,
+    OUT LPDWORD*        pdwSpeakerConfig)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG_OUT(pdwSpeakerConfig)
+    LOG_FUNC_END;
+
+    //For now, let's set it to stereo.
+    *pdwSpeakerConfig = X_DSSPEAKER_STEREO;
+
+    leaveCriticalSection;
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitDeferredSettings)
+(
+    X_CDirectSound*     pThis)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_ONE_ARG(pThis);
+
+    HRESULT hRet = DS_OK;
+    if (g_pDSoundPrimary3DListener8 != nullptr) {
+        hRet = g_pDSoundPrimary3DListener8->CommitDeferredSettings();
+    }
+
+    leaveCriticalSection;
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_CommitEffectData
+// ******************************************************************
+// This API is used relative with DSP effect.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
+(
+    X_CDirectSound*     pThis)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_ONE_ARG(pThis);
+
+    LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
 

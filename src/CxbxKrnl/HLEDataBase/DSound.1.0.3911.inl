@@ -2638,7 +2638,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetConeOutsideVolume, 3911, 2,
 
-    XRefNoSaveIndex,
+    XREF_CDirectSoundBuffer_SetConeOutsideVolume,
     XRefOne)
 
         // CDirectSoundBuffer_SetConeOutsideVolume+0x00 : jmp CDirectSoundVoice_SetConeOutsideVolume
