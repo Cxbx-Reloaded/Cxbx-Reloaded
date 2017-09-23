@@ -3391,6 +3391,7 @@ OOVPA_XREF(DirectSoundEnterCriticalSection, 3936, 7,
         { 0x1B, 0xC0 },
 OOVPA_END;
 #endif
+#if 0 // Replaced with 3911 revision
 // ******************************************************************
 // * CDirectSoundBuffer::PlayEx
 // ******************************************************************
@@ -3410,6 +3411,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 3936, 9,
         { 0x30, 0xFF },
         { 0x36, 0x8B },
 OOVPA_END;
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_PlayEx
