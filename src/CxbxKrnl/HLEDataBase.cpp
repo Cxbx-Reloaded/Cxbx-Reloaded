@@ -68,18 +68,7 @@ const char *Sec_XNET = "XNET";
 #include "EmuXTL.h"
 #include "HLEDataBase.h"
 #include "HLEDataBase/Xapi.OOVPA.inl"
-#include "HLEDataBase/D3D8.1.0.3925.inl"
-#include "HLEDataBase/D3D8.1.0.4034.inl"
-#include "HLEDataBase/D3D8.1.0.4134.inl"
-#include "HLEDataBase/D3D8.1.0.4361.inl"
-#include "HLEDataBase/D3D8.1.0.4432.inl"
-#include "HLEDataBase/D3D8.1.0.4627.inl"
-#include "HLEDataBase/D3D8.1.0.5028.inl"
-#include "HLEDataBase/D3D8.1.0.5233.inl"
-#include "HLEDataBase/D3D8.1.0.5344.inl"
-#include "HLEDataBase/D3D8.1.0.5558.inl"
-#include "HLEDataBase/D3D8.1.0.5788.inl"
-#include "HLEDataBase/D3D8.1.0.5849.inl"
+#include "HLEDataBase/D3D8.OOVPA.inl"
 #include "HLEDataBase/DSound.OOVPA.inl"
 #include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4034.inl"
@@ -130,6 +119,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5788),
 	HLE_ENTRY(Lib_XAPILIB, XAPI, 5849),
 #endif
+#if ENABLE_LEGACY_D3D8_DB
 	HLE_ENTRY(Lib_D3D8, D3D8, 3925),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4034),
 	HLE_ENTRY(Lib_D3D8, D3D8, 4134),
@@ -142,6 +132,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5788),
 	HLE_ENTRY(Lib_D3D8, D3D8, 5849),
+#endif
 #if ENABLE_LEGACY_DSOUND_DB
 	HLE_ENTRY(Lib_DSOUND, DSound, 3936),
 	HLE_ENTRY(Lib_DSOUND, DSound, 4134),
@@ -193,7 +184,7 @@ const HLEData HLEDataBase[] =
 
 const HLEDataV2 HLEDataBaseV2[] = {
     //
-    //{ Lib_D3D8,{ Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
+    { Lib_D3D8,{ Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
 
     // Cannot support LTCG in HLE
     //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_SIZEV2 },
