@@ -4111,7 +4111,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 3911, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 3911, PATCH),
 	REGISTER_OOVPA(DirectSoundEnterCriticalSection, 3911, XREF),
-	REGISTER_OOVPA(CDirectSoundBuffer_PlayEx, 3936, XREF),
+	REGISTER_OOVPA(CDirectSoundBuffer_PlayEx, 3911, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_PlayEx, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSound_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(DirectSoundGetSampleTime, 3911, PATCH),
