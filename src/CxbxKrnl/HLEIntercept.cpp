@@ -1013,8 +1013,8 @@ void EmuRegisterSymbol(OOVPATable *OovpaTable, xbaddr pFunc)
         const char* checkDisableStr = nullptr;
         size_t getFuncStrLength = strlen(OovpaTable->szFuncName);
 
-        if (getFuncStrLength > 9) {
-            checkDisableStr = &OovpaTable->szFuncName[getFuncStrLength - 9];
+        if (getFuncStrLength > 10) {
+            checkDisableStr = &OovpaTable->szFuncName[getFuncStrLength - 10];
         }
 
         if (checkDisableStr != nullptr && strcmp(checkDisableStr, "_UNPATCHED") == 0) {
