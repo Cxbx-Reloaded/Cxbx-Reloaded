@@ -224,7 +224,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor, PATCH, 3925, 4034, 4361),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BumpEnv, PATCH, 3925, 4039),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor, PATCH, 3925, 4034, 4134),
-	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 3925, 4034, 4361, 4627),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 3925, 4034, 4242, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetTile, PATCH, 3925, 4039, 4134, 4627, 5028, 5558, 5788),
 	REGISTER_OOVPAS(D3DDevice_SetTransform, PATCH, 3925, 4034, 4134, 5344, 5558), // Was 4134 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2f, PATCH, 3925, 4039), // Was 4627 (from 5344's comment)
