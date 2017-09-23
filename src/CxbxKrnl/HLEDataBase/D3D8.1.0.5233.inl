@@ -123,7 +123,7 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 5233, 12)
         { 0xB2, 0xC2 },
         { 0xB3, 0x1C },
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
@@ -156,6 +156,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
         { 0x55, 0x04 },
         { 0x56, 0x04 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetTexture
@@ -662,7 +663,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_NormalizeNormals, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3925, PATCH),
