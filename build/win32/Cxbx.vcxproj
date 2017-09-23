@@ -337,6 +337,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl" />
