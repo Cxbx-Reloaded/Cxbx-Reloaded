@@ -36,7 +36,9 @@
 
 #include "OOVPA.h"
 
+#if 0 // No longer used, replaced by generic 4034 version
 extern LOOVPA<2+13> D3DDevice_SetRenderState_CullMode_5233;
+#endif
 
 extern OOVPATable D3D8_5233[];
 extern uint32     D3D8_5233_SIZE;

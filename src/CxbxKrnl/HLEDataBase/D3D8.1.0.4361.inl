@@ -595,7 +595,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4361, 1+10,
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
 
 	XRefNoSaveIndex,
 	XRefOne)
@@ -1242,7 +1242,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4242, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_CullMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 4134, PATCH),
