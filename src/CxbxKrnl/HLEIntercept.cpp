@@ -1017,8 +1017,8 @@ void EmuRegisterSymbol(OOVPATable *OovpaTable, xbaddr pFunc)
             checkDisableStr = &OovpaTable->szFuncName[getFuncStrLength - 9];
         }
 
-        if (checkDisableStr != nullptr && strcmp(checkDisableStr, "_DISABLED") == 0) {
-            output << "\t*DISABLED*";
+        if (checkDisableStr != nullptr && strcmp(checkDisableStr, "_UNPATCHED") == 0) {
+            output << "\t*UNPATCHED*";
 
         // Mention there's no patch available, if it was to be applied
         } else if (!IsXRef) {

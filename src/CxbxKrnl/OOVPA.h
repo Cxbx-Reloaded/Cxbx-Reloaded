@@ -179,6 +179,9 @@ const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patc
 
 //Below this is a revise version 2 to improve OOPVA scan as possible.
 
+#define UNPATCHED UNPATCHED/* registration is remain unpatched,
+                                can be activate via HLE Cache file by removing _UNPATCHED at the end. */
+
 /* Use XREF define to knowledge it is reference purpose only.*/
 #define REGISTER_OOVPA_V2_XREF(Symbol, TYPE, Version) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version, 0)
@@ -191,7 +194,7 @@ const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patc
  * This is only effective for functions with "FUNC_EXPORTS" bypass purpose.
  * XREF remain unaffected and will perform task normally.
  * NOTICE: Do not use DISABLED on XREF OOVPA! Or developers will be confused. */
-#define REGISTER_OOVPA_V2_DISABLED(Symbol, TYPE, Version) \
+#define REGISTER_OOVPA_V2_UNPATCHED(Symbol, TYPE, Version) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, STRINGIZEX(Symbol## _ ##TYPE), Version, 0)
 
 #define REGISTER_OOVPA_V2(Symbol, TYPE, Version) \
