@@ -611,6 +611,9 @@
     <None Include="..\..\CONTRIBUTORS" />
     <None Include="..\..\COPYING" />
     <None Include="..\..\README.md" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
