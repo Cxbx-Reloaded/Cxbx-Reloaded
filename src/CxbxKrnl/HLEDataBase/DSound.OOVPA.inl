@@ -135,7 +135,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_Lock, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_Pause, XREF, 4928),
     REGISTER_OOVPAS(CDirectSoundBuffer_Play, XREF, 3911, 4039, 4134, 4361, 5558, 5788),
-    REGISTER_OOVPAS(CDirectSoundBuffer_PlayEx, XREF, 3911, 3936, 4361, 5788),
+    REGISTER_OOVPAS(CDirectSoundBuffer_PlayEx, XREF, 3911, 4361, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetAllParameters, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetBufferData, XREF, 3911, 4039, 4134, 5558, 5788),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetConeAngles, XREF, 4134, 5558),
