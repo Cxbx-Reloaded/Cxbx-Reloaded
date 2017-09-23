@@ -463,7 +463,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 5344, 7,
 
-    XREF_DSSETMIXBINSC,
+    XREF_CDirectSoundVoiceSettings_SetMixBins,
     XRefZero)
 
         { 0x10, 0x10 },

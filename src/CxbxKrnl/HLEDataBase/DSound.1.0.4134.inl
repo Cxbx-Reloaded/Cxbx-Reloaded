@@ -274,7 +274,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4134, 11,
 
-	XREF_DSSETMIXBINSC,
+	XREF_CDirectSoundVoiceSettings_SetMixBins,
 	XRefZero)
 
 	// CDirectSoundVoiceSettings_SetMixBins+0x06 : jnz +0x1A
@@ -302,11 +302,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetMixBins, 4134, 17,
 
-    XREF_DSSETMIXBINSB,
+    XREF_CDirectSoundVoice_SetMixBins,
     XRefOne)
 
         // CDirectSoundVoice_SetMixBins+0x0D : call [CDirectSoundVoiceSettings::SetMixBins]
-        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSC ),
+        XREF_ENTRY( 0x0D, XREF_CDirectSoundVoiceSettings_SetMixBins ),
 
         // CDirectSoundVoice_SetMixBins+0x01 : mov esi, [esp+8]
         { 0x01, 0x8B },
@@ -340,11 +340,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMixBins, 4134, 17,
 
-    XREF_DSSETMIXBINSA,
+    XREF_CDirectSoundBuffer_SetMixBins,
     XRefOne)
 
         // CDirectSoundBuffer_SetMixBins+0x32 : call [CDirectSoundVoice::SetMixBins]
-        XREF_ENTRY( 0x32, XREF_DSSETMIXBINSB ),
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetMixBins ),
 
         // CDirectSoundBuffer_SetMixBins+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 },
@@ -380,7 +380,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 4134, 12,
     XRefOne)
 
         // IDirectSoundBuffer_SetMixBins+0x15 : call [CDirectSoundBuffer::SetMixBins]
-        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ),
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetMixBins ),
 
         // IDirectSoundBuffer_SetMixBins+0x04 : push [esp+0x08]
         { 0x04, 0xFF },
@@ -492,7 +492,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetFrequency, 4134, 17,
 
-    XREF_DSBUFFERSETFREQUENCYA,
+    XREF_CDirectSoundBuffer_SetFrequency,
     XRefOne)
 
         // CDirectSoundBuffer_SetFrequency+0x32 : call [CDirectSoundVoice::SetFrequency]
@@ -533,7 +533,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 4134, 12,
     XRefOne)
 
         // IDirectSoundBuffer_SetFrequency+0x15 : call [CDirectSound::SetFrequency]
-        XREF_ENTRY( 0x15, XREF_DSBUFFERSETFREQUENCYA ),
+        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_SetFrequency ),
 
         // IDirectSoundBuffer_SetFrequency+0x04 : push [esp+0x08]
         { 0x04, 0xFF },

@@ -331,7 +331,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBins, 5233, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSSETMIXBINSB ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetMixBins ),
 
         { 0x0E, 0xB6 },
         { 0x15, 0x0B },
