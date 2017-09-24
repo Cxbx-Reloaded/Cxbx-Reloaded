@@ -158,6 +158,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
 OOVPA_END;
 #endif
 
+#if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
@@ -174,6 +175,7 @@ OOVPA_NO_XREF(D3DDevice_SetTexture, 5233, 10)
         { 0xDE, 0xFF },
         { 0xFE, 0xE2 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_Swap
@@ -191,6 +193,27 @@ OOVPA_NO_XREF(D3DDevice_Swap, 5233, 9)
         { 0xA6, 0xE8 },
 OOVPA_END;
 
+// ******************************************************************
+// * D3DDevice_UpdateOverlay
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 5233, 12) // Up to 5849
+
+        { 0x00, 0x83 },
+        { 0x13, 0x89 },
+        { 0x14, 0x88 },
+        { 0x74, 0x4F },
+
+        { 0x80, 0xE1 },
+        { 0x81, 0xFE },
+        { 0x82, 0x0F },
+        { 0x83, 0xAF },
+        { 0x84, 0xCA },
+        { 0x85, 0x25 },
+        { 0x86, 0xFF },
+        { 0x87, 0xFF },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 5233 version
 // ******************************************************************
 // * D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -213,7 +236,7 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 5233, 11)
         { 0xB2, 0x30 },
         { 0xB3, 0x89 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetOverlayUpdateStatus
@@ -286,7 +309,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CopyRects
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CopyRects, 5233, 8)
+OOVPA_NO_XREF(D3DDevice_CopyRects, 5120, 8)
 
         { 0x1E, 0xE1 },
         { 0x42, 0x84 },
@@ -401,6 +424,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 5233, 8,
         { 0xFF, 0x75 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3925 version
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
@@ -417,6 +441,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 6,
         { 0x06, 0x50 },
         { 0x0D, 0x04 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetPalette
@@ -606,6 +631,22 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 5233, 9)
         { 0x68, 0x2D },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4134 version
+// ******************************************************************
+// * D3DDevice_EndPushBuffer
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_EndPushBuffer, 5233, 7)
+
+        { 0x11, 0x8D },
+        { 0x22, 0x50 },
+        { 0x34, 0x0C },
+        { 0x46, 0x08 },
+        { 0x58, 0x00 },
+        { 0x6D, 0x8B },
+        { 0x7C, 0x88 },
+OOVPA_END;
+#endif
+
 // ******************************************************************
 // * D3D8_5233
 // ******************************************************************
@@ -619,10 +660,10 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 5233, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
-	REGISTER_OOVPA(D3DDevice_CopyRects, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_CopyRects, 5120, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4928, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5028, PATCH),
@@ -648,7 +689,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetIndices, 5028, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetTexture, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTexture, 4831, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_Begin, 4039, PATCH),
@@ -721,7 +762,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShader, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5028, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShaderDirect, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 5028, PATCH),
@@ -731,7 +772,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_InsertFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 5028, PATCH),
 	REGISTER_OOVPA(D3D_BlockOnTime, 5028, XREF),
-	REGISTER_OOVPA(D3DDevice_BlockOnFence, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_BlockOnFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPalette, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
@@ -756,9 +797,9 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DResource_BlockUntilNotBusy, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 5120, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPushBuffer, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndPushBuffer, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndPushBuffer, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetScissors, 3911, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetStreamSource2, 4627, PATCH),
@@ -772,7 +813,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4034, PATCH),
 	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3925, PATCH),// Just calls Lock3DSurface
 	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_PersistDisplay, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_PersistDisplay, 4831, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVerticesUP, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 4361, PATCH),

@@ -174,6 +174,8 @@ enum XRefDataBaseOffset
 	XREF_D3D_MakeRequestedSpace,
 	XREF_D3D_KickOff,
 	XREF_D3DPalette_Lock2,
+	XREF_D3DTexture_GetSurfaceLevel2,
+	XREF_D3DDevice_CreatePalette2,
     XREF_XNINIT,
     XREF_XID_fCloseDevice,
     XREF_CLEARSTATEBLOCKFLAGS,
