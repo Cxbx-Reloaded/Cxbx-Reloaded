@@ -183,8 +183,8 @@ const HLEData HLEDataBase[] =
 };
 
 const HLEDataV2 HLEDataBaseV2[] = {
-    //
-    { Lib_D3D8,{ Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
+    // Support inline functions in .text section
+    { Lib_D3D8,{ Sec_text, Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
 
     // Cannot support LTCG in HLE
     //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_SIZEV2 },
