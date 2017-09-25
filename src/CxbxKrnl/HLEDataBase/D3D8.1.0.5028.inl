@@ -665,6 +665,30 @@ OOVPA_NO_XREF(D3DDevice_GetPixelShader, 5028, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3D::CommonSetRenderTarget
+// ******************************************************************
+OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 12,
+
+    XREF_COMMONSETRENDERTARGET,
+    XRefZero)
+
+        { 0x02, 0x1C },
+        { 0x1A, 0x15 },
+
+        { 0x3D, 0x28 },
+        { 0x3E, 0x05 },
+        { 0x3F, 0x00 },
+        { 0x40, 0x00 },
+        { 0x41, 0x89 },
+        { 0x42, 0x4C },
+        { 0x43, 0x24 },
+        { 0x44, 0x24 },
+
+        { 0x7E, 0xD8 },
+        { 0x7F, 0x05 },
+OOVPA_END;
+#if 0 // No longer used, replaced by generic 5028 version
+// ******************************************************************
 // * D3D_CommonSetRenderTarget
 // ******************************************************************
 OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 10,
@@ -683,7 +707,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 10,
         { 0x57, 0x10 },
         { 0x67, 0x00 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_PersistDisplay
@@ -1099,7 +1123,6 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 5120, 13)
         { 0x95, 0x8B },
 OOVPA_END;
 
-
 // ******************************************************************
 // * Rollback support signature(s)
 // ******************************************************************
@@ -1126,7 +1149,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_BeginPush, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndPush, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5028, PATCH),
 	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5028, XREF),

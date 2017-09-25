@@ -209,6 +209,30 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateVertexBuffer2
 // ******************************************************************
+OOVPA_NO_XREF(D3DDevice_CreateVertexBuffer2, 5455, 14)
+
+        { 0x00, 0x56 },
+        { 0x08, 0xE8 },
+
+        { 0x16, 0x08 },
+        { 0x17, 0x68 },
+        { 0x18, 0x00 },
+        { 0x19, 0x00 },
+        { 0x1A, 0x80 },
+        { 0x1B, 0xB2 },
+        { 0x1C, 0x50 },
+        { 0x1D, 0xE8 },
+
+        { 0x26, 0x68 },
+        { 0x31, 0x33 },
+        { 0x3A, 0xFF },
+        { 0x44, 0x01 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 5455 version
+// ******************************************************************
+// * D3DDevice_CreateVertexBuffer2
+// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_CreateVertexBuffer2, 5558, 7)
 
         { 0x08, 0xE8 },
@@ -219,7 +243,7 @@ OOVPA_NO_XREF(D3DDevice_CreateVertexBuffer2, 5558, 7)
         { 0x3A, 0xFF },
         { 0x44, 0x01 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 5233 version
 // ******************************************************************
 // * D3DDevice_UpdateOverlay
@@ -2018,7 +2042,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 4627, ALIAS, D3DDevice_SetVertexShaderConstant1Fast),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 4627, ALIAS, D3DDevice_SetVertexShaderConstantNotInlineFast),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5558, DISABLED),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5455, DISABLED),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetOverlayUpdateStatus, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 5028, PATCH),
@@ -2110,7 +2134,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TextureFactor, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4134, PATCH),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),

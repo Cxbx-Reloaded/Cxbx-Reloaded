@@ -937,7 +937,7 @@ OOVPA_NO_XREF(D3DDevice_GetBackMaterial, 5788, 8)
         { 0x16, 0xF3 },
         { 0x1A, 0xC2 },
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 3925 version
 // ******************************************************************
 // * D3DDevice_DeleteStateBlock
 // ******************************************************************
@@ -958,7 +958,7 @@ OOVPA_NO_XREF(D3DDevice_DeleteStateBlock, 5788, 9)
         { 0x3D, 0x6F },
         { 0x3E, 0x08 },
 OOVPA_END;
-
+#endif
 #if 0 // Used 3925 instead in 5788, 5849
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
@@ -1131,7 +1131,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_SetLight, 5558, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
 	REGISTER_OOVPA(D3DTexture_LockRect, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5558, DISABLED),
+	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer2, 5455, DISABLED),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock, 5788, PATCH),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock2, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5344, PATCH),
@@ -1163,7 +1163,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTile, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5659, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilFail, 4134, PATCH),
@@ -1217,7 +1217,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 5455, PATCH),
-	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 5788, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilCullEnable, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
