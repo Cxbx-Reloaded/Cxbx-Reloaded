@@ -2328,6 +2328,30 @@ OOVPA_NO_XREF(D3DDevice_GetViewport, 3925, 10)
         { 0x1B, 0x04 },
 OOVPA_END;
 
+
+// ******************************************************************
+// * D3DDevice_GetGammaRamp
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetGammaRamp, 3911, 13) // Up to 5849
+
+        { 0x05, 0x8B },
+
+        { 0x0A, 0x00 },
+        { 0x0B, 0x56 },
+        { 0x0C, 0x8D },
+        { 0x0D, 0x0C },
+        { 0x0E, 0x49 },
+        { 0x0F, 0xC1 },
+        { 0x10, 0xE1 },
+        { 0x11, 0x08 },
+
+        { 0x16, 0x0C },
+        { 0x1C, 0x00 },
+        { 0x22, 0x00 },
+        { 0x27, 0xC2 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetGammaRamp
 // ******************************************************************
@@ -2341,6 +2365,7 @@ OOVPA_NO_XREF(D3DDevice_GetGammaRamp, 3925, 7)
         { 0x22, 0x00 },
         { 0x28, 0x04 },
 OOVPA_END;
+#endif
 // ******************************************************************
 // * D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
@@ -4651,7 +4676,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleAntiAlias, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 3925, PATCH),

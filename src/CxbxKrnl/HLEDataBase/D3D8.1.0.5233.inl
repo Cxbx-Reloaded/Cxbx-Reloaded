@@ -405,7 +405,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 8,
         { 0x2C, 0xE8 },
         { 0x32, 0x04 },
 OOVPA_END;
-
+#if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * D3D::CommonSetRenderTarget
 // ******************************************************************
@@ -423,7 +423,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 5233, 8,
         { 0xDC, 0xD9 },
         { 0xFF, 0x75 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 3925 version
 // ******************************************************************
 // * D3DDevice_BlockOnFence
@@ -662,13 +662,13 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5120, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5233, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5028, PATCH),
-	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5233, XREF),
+	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5028, XREF),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 4039, PATCH),

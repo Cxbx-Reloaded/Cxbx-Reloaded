@@ -103,6 +103,7 @@ OOVPA_NO_XREF(CMiniport_CreateCtxDmaObject, 4034, 32) // Also for 4361, 4627, 53
 		{ 0x1F, 0x3A },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetGammaRamp
 // ******************************************************************
@@ -115,7 +116,7 @@ OOVPA_NO_XREF(D3DDevice_GetGammaRamp, 4034, 7)
         { 0x22, 0x00 },
         { 0x28, 0x04 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * D3DDevice_GetCreationParameters
@@ -2362,7 +2363,7 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_Release, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 4034, PATCH),

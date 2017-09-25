@@ -167,7 +167,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 4361, 12)
+OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 4242, 12)
 
         // D3DDevice_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -193,7 +193,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetSwapCallback
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 4361, 12)
+OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 4242, 12)
 
         // D3DDevice_SetSwapCallback+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -359,7 +359,7 @@ OOVPA_NO_XREF(D3DDevice_CaptureStateBlock, 4361, 9)
         { 0xAC, 0x00 },
 OOVPA_END;
 #endif
-#if 1 //same as 3925
+#if 0 //same as 3925
 // ******************************************************************
 // * D3DDevice_DeleteStateBlock
 // ******************************************************************
@@ -1219,7 +1219,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3D_RecordStateBlock, 3911, XREF),
 	REGISTER_OOVPA(D3DDevice_BeginStateBlock, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CaptureStateBlock, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndStateBlock, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 3925, PATCH),
@@ -1323,11 +1323,11 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3D_SetFence, 4134, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LineWidth, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 4242, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTile, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTile, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4361, PATCH),
@@ -1340,7 +1340,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_EndPush, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_Begin, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_End, 4039, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 4242, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4ub, 4134, PATCH),

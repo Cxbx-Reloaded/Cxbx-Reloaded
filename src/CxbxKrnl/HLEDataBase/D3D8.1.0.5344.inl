@@ -1139,7 +1139,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5120, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5344, PATCH), // Was 5233
-	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5028, PATCH),
@@ -1337,7 +1337,7 @@ OOVPATable D3D8_5344[] = {
 	// Unused functions in XDK 5344
 	// TODO: Remove
 	// ******************************************************************
-	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5233, XREF), // Used between 4627 to 5233
+	REGISTER_OOVPA(D3D_CommonSetRenderTarget, 5028, XREF), // Used between 4627 to 5233
 	// ******************************************************************
 };
 
