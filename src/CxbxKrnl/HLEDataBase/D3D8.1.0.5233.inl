@@ -842,7 +842,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderDeclaration, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderFunction, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetPixelShader, 5028, PATCH),
-	REGISTER_OOVPA(MakeRequestedSpace, 5028, PATCH),
+	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_LazySetStateVB, 5028, XREF),
 	REGISTER_OOVPA(D3DDevice_GetPushBufferOffset, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 4627, PATCH),

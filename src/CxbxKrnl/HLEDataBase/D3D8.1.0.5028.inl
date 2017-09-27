@@ -1063,9 +1063,9 @@ OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 5028, 17) // Also for 5120, 5233
 OOVPA_END;
 
 // ******************************************************************
-// * MakeRequestedSpace
+// * D3D_MakeRequestedSpace
 // ******************************************************************
-OOVPA_XREF(MakeRequestedSpace, 5028, 28, // Also for 5344
+OOVPA_XREF(D3D_MakeRequestedSpace, 5028, 28, // Also for 5344
 
 	XREF_D3D_MakeRequestedSpace,
 	XRefZero)
@@ -1137,7 +1137,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(CMiniport_InitHardware, 4627, XREF),
 	REGISTER_OOVPA(CMiniport_CreateCtxDmaObject, 4034, XREF),
 	REGISTER_OOVPA(D3D_CMiniport_GetDisplayCapabilities, 3911, XREF),
-	REGISTER_OOVPA(MakeRequestedSpace, 5028, PATCH),
+	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5028, PATCH),
 
 	REGISTER_OOVPA(Direct3D_CreateDevice, 5028, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
