@@ -1100,7 +1100,7 @@ OOVPA_XREF(MakeRequestedSpace, 5028, 28, // Also for 5344
 		{ 0x1E, 0x50 },
 		{ 0x1F, 0x03 },
 OOVPA_END;
-
+#if 0 // Moved to 5120
 // ******************************************************************
 // * D3DDevice_RunPushBuffer
 // ******************************************************************
@@ -1122,7 +1122,7 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 5120, 13)
         { 0x94, 0x2C },
         { 0x95, 0x8B },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * Rollback support signature(s)
 // ******************************************************************
@@ -1131,6 +1131,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D8_5028
 // ******************************************************************
+// No longer supported XDK 5120 by HLEDB_v1
 OOVPATable D3D8_5028[] = {
 
 	REGISTER_OOVPA(CMiniport_InitHardware, 4627, XREF),
@@ -1344,7 +1345,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_DeleteStateBlock, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPushBuffer, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndPushBuffer, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 5120, PATCH),
+	// REGISTER_OOVPA(D3DDevice_RunPushBuffer, 5120, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetPushBufferOffset, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateImageSurface, 4627, PATCH),
 	// ******************************************************************

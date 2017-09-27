@@ -164,6 +164,7 @@ OOVPA_XREF(MakeRequestedSpace, 4361, 28, // Also for 4627
 		{ 0x1F, 0x03 },
 OOVPA_END;
 #endif
+#if 0 // Moved to 4242
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
 // ******************************************************************
@@ -189,7 +190,8 @@ OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 4242, 12)
         { 0x10, 0xC2 },
         { 0x11, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4242
 // ******************************************************************
 // * D3DDevice_SetSwapCallback
 // ******************************************************************
@@ -215,7 +217,7 @@ OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 4242, 12)
         { 0x10, 0xC2 },
         { 0x11, 0x04 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * D3D_GetAdapterDisplayMode
 // ******************************************************************
@@ -242,7 +244,7 @@ OOVPA_NO_XREF(D3D_GetAdapterDisplayMode, 4361, 13)
         { 0xBD, 0xC2 },
         { 0xBE, 0x08 },
 OOVPA_END;
-
+#if 0 // Moved to 4242
 // ******************************************************************
 // * D3DDevice_AddRef
 // ******************************************************************
@@ -266,6 +268,7 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 4242, 10)
         { 0x0E, 0x40 },
         { 0x0F, 0x04 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 4134
 // ******************************************************************
 // * D3D_ClearStateBlockFlags
@@ -598,15 +601,16 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 4361, 11)
         { 0x23, 0xC3 },
 OOVPA_END;
 
+#if 0 // Moved to 4242
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
 OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
+        XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
         { 0x0D, 0xC1 },
@@ -626,7 +630,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
         { 0xB4, 0xE2 },
         { 0xB5, 0x04 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * D3DResource_Release
 // ******************************************************************

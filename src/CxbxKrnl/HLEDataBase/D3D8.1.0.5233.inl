@@ -305,7 +305,7 @@ OOVPA_NO_XREF(D3DDevice_Release, 5233, 8)
         { 0x36, 0xC3 },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 5120
 // ******************************************************************
 // * D3DDevice_CopyRects
 // ******************************************************************
@@ -320,6 +320,7 @@ OOVPA_NO_XREF(D3DDevice_CopyRects, 5120, 8)
         { 0xDE, 0xBD },
         { 0xFE, 0x4C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetScissors

@@ -97,16 +97,25 @@
 
 #include "../OOVPA.h"
 
+#include "HLEDataBase/D3D8.1.0.3911.inl"
 #include "HLEDataBase/D3D8.1.0.3925.inl"
+#include "HLEDataBase/D3D8.1.0.3948.inl"
 #include "HLEDataBase/D3D8.1.0.4034.inl"
 #include "HLEDataBase/D3D8.1.0.4134.inl"
+#include "HLEDataBase/D3D8.1.0.4242.inl"
 #include "HLEDataBase/D3D8.1.0.4361.inl"
 #include "HLEDataBase/D3D8.1.0.4432.inl"
+#include "HLEDataBase/D3D8.1.0.4531.inl"
 #include "HLEDataBase/D3D8.1.0.4627.inl"
+#include "HLEDataBase/D3D8.1.0.4831.inl"
+#include "HLEDataBase/D3D8.1.0.4928.inl"
 #include "HLEDataBase/D3D8.1.0.5028.inl"
+#include "HLEDataBase/D3D8.1.0.5120.inl"
 #include "HLEDataBase/D3D8.1.0.5233.inl"
 #include "HLEDataBase/D3D8.1.0.5344.inl"
+#include "HLEDataBase/D3D8.1.0.5455.inl"
 #include "HLEDataBase/D3D8.1.0.5558.inl"
+#include "HLEDataBase/D3D8.1.0.5659.inl"
 #include "HLEDataBase/D3D8.1.0.5788.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
 
@@ -284,7 +293,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor, PATCH, 3925, 4034, 4361),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BumpEnv, PATCH, 3925, 4039),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor, PATCH, 3925, 4034, 4134),
-	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 3925, 4034, 4242, 4627),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 3911, 4034, 4242, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetTile, PATCH, 3925, 4039, 4134, 4627, 5028, 5455/*, 5788*/), // Then it has changed calls ?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z in XDK 4627 and higher.
 	REGISTER_OOVPAS(D3DDevice_SetTransform, PATCH, 3925, 4034, 4134, 5344, 5558), // Was 4134 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2f, PATCH, 3925, 4039), // Was 4627 (from 5344's comment)

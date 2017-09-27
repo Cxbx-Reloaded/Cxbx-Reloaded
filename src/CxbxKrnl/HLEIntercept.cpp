@@ -418,8 +418,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 						xbaddr pFunc = (xbaddr)nullptr;
 
-                        if(OrigBuildVersion >= 3925 && OrigBuildVersion < 4034)
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3925, lower, upper);
+                        if(OrigBuildVersion >= 3911 && OrigBuildVersion < 4034)
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3911, lower, upper);
                         else
                             pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
 
@@ -435,7 +435,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							// Read address of D3DRS_CULLMODE from D3DDevice_SetRenderState_CullMode
 							// TODO : Simplify this when XREF_D3DRS_CULLMODE derivation is deemed stable
 							{
-								if (OrigBuildVersion >= 3925 && OrigBuildVersion < 4034)
+								if (OrigBuildVersion >= 3911 && OrigBuildVersion < 4034)
 								{
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x25);
 									Decrement = 0x1FC;  // TODO: Clean up (?)
@@ -521,8 +521,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         {
                             pFunc = (xbaddr)nullptr;
 
-                            if(OrigBuildVersion >= 3925 && OrigBuildVersion < 4034)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3925, lower, upper);
+                            if(OrigBuildVersion >= 3911 && OrigBuildVersion < 4034)
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3911, lower, upper);
                             else if(OrigBuildVersion >= 4034 && OrigBuildVersion < 4242)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4034, lower, upper);
                             else if(OrigBuildVersion >= 4242 && OrigBuildVersion < 4627)
@@ -537,7 +537,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 								// TODO : Remove this when XREF_D3DTSS_TEXCOORDINDEX derivation is deemed stable
 								{
-									if (OrigBuildVersion >= 3925 && OrigBuildVersion < 4034) // 0x18F180
+									if (OrigBuildVersion >= 3911 && OrigBuildVersion < 4034) // 0x18F180
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x11);
 									else if (OrigBuildVersion >= 4034 && OrigBuildVersion < 4242)
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x18);
