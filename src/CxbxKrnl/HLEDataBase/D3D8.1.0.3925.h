@@ -36,8 +36,10 @@
 
 #include "OOVPA.h"
 
+#if 0 // Moved to 3911
 extern LOOVPA<1+11> D3DDevice_SetTextureState_TexCoordIndex_3925;
 extern LOOVPA<2+15> D3DDevice_SetRenderState_CullMode_3925;
+#endif
 
 extern OOVPATable D3D8_3925[];
 extern uint32     D3D8_3925_SIZE;

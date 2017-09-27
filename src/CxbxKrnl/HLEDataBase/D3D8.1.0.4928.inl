@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4361.h
+// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4928.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,21 +26,21 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_4361_H
-#define D3D8_4361_H
 
-#include "OOVPA.h"
+// ******************************************************************
+// * D3DDevice_GetPersistedSurface2
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetPersistedSurface2, 4928, 6) // For only on Unreal Championship
 
-#if 0 // Moved to 4242
-extern LOOVPA<1+10> D3DDevice_SetTextureState_TexCoordIndex_4242;
-#endif
-
-extern OOVPATable D3D8_4361[];
-extern uint32     D3D8_4361_SIZE;
-
-#endif
+        { 0x00, 0xFF },
+        { 0x01, 0x25 },
+        { 0x02, 0x04 },
+        { 0x03, 0xC1 },
+        { 0x04, 0x3A },
+        { 0x05, 0x00 },
+OOVPA_END;

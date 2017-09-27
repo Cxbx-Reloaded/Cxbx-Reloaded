@@ -405,6 +405,9 @@
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3911.h">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
@@ -412,6 +415,9 @@
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4242.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h">
@@ -614,7 +620,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3911.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3948.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl">
@@ -623,16 +635,31 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4242.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4531.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4831.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4928.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5028.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5120.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl">
@@ -641,7 +668,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5344.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5455.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl">
+      <Filter>HLEDatabase\D3D8</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5659.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl">
