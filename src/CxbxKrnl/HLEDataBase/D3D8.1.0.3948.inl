@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4361.h
+// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.3948.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,21 +26,31 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_4361_H
-#define D3D8_4361_H
 
-#include "OOVPA.h"
 
-#if 0 // Moved to 4242
-extern LOOVPA<1+10> D3DDevice_SetTextureState_TexCoordIndex_4242;
-#endif
+// ******************************************************************
+// * D3DDevice_SetRenderTarget
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 3948, 8)
 
-extern OOVPATable D3D8_4361[];
-extern uint32     D3D8_4361_SIZE;
+        // D3DDevice_SetRenderTarget+0x00 : sub esp, 0x30
+        { 0x00, 0x83 },
+        { 0x01, 0xEC },
+        { 0x02, 0x30 },
 
-#endif
+        // D3DDevice_SetRenderTarget+0x32 : and ecx, 0x0F
+        { 0x32, 0x83 },
+        { 0x33, 0xE1 },
+        { 0x34, 0x0F },
+
+        // D3DDevice_SetRenderTarget+0x69 : push ebx
+        { 0x69, 0x53 },
+
+        // D3DDevice_SetRenderTarget+0xDA : push edx
+        { 0xDA, 0x52 },
+OOVPA_END;

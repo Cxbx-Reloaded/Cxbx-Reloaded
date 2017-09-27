@@ -265,7 +265,7 @@ OOVPA_NO_XREF(D3DDevice_Swap, 4432, 11)
         { 0xAF, 0x04 },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 4531
 // ******************************************************************
 // * D3DDevice_Swap
 // ******************************************************************
@@ -290,6 +290,7 @@ OOVPA_NO_XREF(D3DDevice_Swap, 4531, 11)
         { 0xB9, 0xC2 },
         { 0xBA, 0x04 },
 OOVPA_END;
+#endif
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_UpdateOverlay
@@ -391,23 +392,23 @@ OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 4432, 12)
         { 0x10, 0xC2 },
         { 0x11, 0x04 },
 OOVPA_END;
-
+#if 0 // Moved to 4531
 // ******************************************************************
 // * D3DDevice_SetRenderState_BackFillMode
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 4531, 9)
 
         { 0x04, 0x56 },
-	{ 0x10, 0x8B },
-	{ 0x11, 0x06 },
-	{ 0x12, 0x3B },
-	{ 0x13, 0x46 },
-	{ 0x14, 0x04 },
-	{ 0x41, 0x83 },
-	{ 0x42, 0xC0 },
-	{ 0x43, 0x0C },
+        { 0x10, 0x8B },
+        { 0x11, 0x06 },
+        { 0x12, 0x3B },
+        { 0x13, 0x46 },
+        { 0x14, 0x04 },
+        { 0x41, 0x83 },
+        { 0x42, 0xC0 },
+        { 0x43, 0x0C },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
@@ -552,6 +553,7 @@ OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 4432, 12)
         { 0x4F, 0x04 },
 OOVPA_END;
 #endif
+#if 0 // Moved to 4531
 // ******************************************************************
 // * D3DVertexBuffer_Lock
 // ******************************************************************
@@ -576,7 +578,7 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock, 4531, 11)
         { 0x54, 0xC2 },
         { 0x55, 0x14 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * D3DDevice_GetProjectionViewportMatrix
 // ******************************************************************
@@ -643,6 +645,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D8_4432
 // ******************************************************************
+// No longer supported XDK 4531 by HLEDB_v1
 OOVPATable D3D8_4432[]  {
 
 	REGISTER_OOVPA(CMiniport_InitHardware, 4361, PATCH),
@@ -709,7 +712,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetPalette, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_Swap, 4531, PATCH),
+	// REGISTER_OOVPA(D3DDevice_Swap, 4531, PATCH),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 4432, PATCH),
@@ -736,7 +739,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4531, PATCH),
+	// REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4531, PATCH),
 	REGISTER_OOVPA(D3DSurface_GetDesc, 3925, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 4039, PATCH),
@@ -748,7 +751,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateVertexBuffer, 3925, DISABLED),
 	REGISTER_OOVPA(D3DVertexBuffer_Lock, 4034, PATCH),
-	REGISTER_OOVPA(D3DVertexBuffer_Lock, 4531, PATCH),
+	// REGISTER_OOVPA(D3DVertexBuffer_Lock, 4531, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
