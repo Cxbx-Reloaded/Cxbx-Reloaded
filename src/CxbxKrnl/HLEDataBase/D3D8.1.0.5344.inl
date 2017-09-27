@@ -64,9 +64,9 @@ OOVPA_END;
 #endif
 #if 0 // Moved to 5028
 // ******************************************************************
-// * MakeRequestedSpace
+// * D3D_MakeRequestedSpace
 // ******************************************************************
-OOVPA_XREF(MakeRequestedSpace, 5344, 28,
+OOVPA_XREF(D3D_MakeRequestedSpace, 5344, 28,
 
 	XREF_D3D_MakeRequestedSpace,
 	XRefZero)
@@ -1134,7 +1134,7 @@ OOVPATable D3D8_5344[] = {
 
 	REGISTER_OOVPA(Direct3D_CreateDevice, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 5233, PATCH),
-	REGISTER_OOVPA(MakeRequestedSpace, 5028, PATCH),
+	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5028, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 5120, PATCH),

@@ -126,9 +126,9 @@ OOVPA_END;
 #endif
 #if 0 // Moved to 4134
 // ******************************************************************
-// * MakeRequestedSpace
+// * D3D_MakeRequestedSpace
 // ******************************************************************
-OOVPA_XREF(MakeRequestedSpace, 4361, 28, // Also for 4627
+OOVPA_XREF(D3D_MakeRequestedSpace, 4361, 28, // Also for 4627
 
 	XREF_D3D_MakeRequestedSpace,
 	XRefZero)
@@ -1213,7 +1213,7 @@ OOVPATable D3D8_4361[] = {
 	
 	REGISTER_OOVPA(Direct3D_CreateDevice, 3911, PATCH),
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
-	REGISTER_OOVPA(MakeRequestedSpace, 4134, PATCH),
+	REGISTER_OOVPA(D3D_MakeRequestedSpace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4134, PATCH),
