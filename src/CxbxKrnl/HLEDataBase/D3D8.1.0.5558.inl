@@ -1170,7 +1170,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::MakeRequestedSpace
 // ******************************************************************
-OOVPA_XREF(MakeRequestedSpace, 5558, 26, // Also for 5659
+OOVPA_XREF(D3D_MakeRequestedSpace, 5558, 26, // Also for 5659
 
 	XREF_D3D_MakeRequestedSpace,
 	XRefZero)
@@ -2194,7 +2194,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3925, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5558, PATCH),
-	REGISTER_OOVPA(MakeRequestedSpace, 5558, PATCH),
+	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_MakeSpace, 5558, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5558, PATCH),

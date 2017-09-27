@@ -2488,7 +2488,7 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderType, 3925, PATCH),
 //	REGISTER_OOVPA(D3DDevice_GetVertexShaderDeclaration, 4134, PATCH),
 //	REGISTER_OOVPA(D3DDevice_GetVertexShaderFunction, 4134, PATCH),
-//	REGISTER_OOVPA(MakeRequestedSpace, 4134, PATCH),
+//	REGISTER_OOVPA(D3D_MakeRequestedSpace, 4134, PATCH),
 //	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_UpdateOverlay, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetPushBufferOffset, 3925, PATCH),
