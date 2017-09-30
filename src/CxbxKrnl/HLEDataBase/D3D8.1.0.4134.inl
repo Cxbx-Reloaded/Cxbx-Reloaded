@@ -1042,7 +1042,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_FrontFace, 4134, 11,
     XRefOne)
 
         // D3DDevice_SetRenderState_FrontFace+0x36 : jmp D3DDevice_SetRenderState_CullMode
-        XREF_ENTRY( 0x36, XREF_SETRENDERSTATE_CULLMODE),
+        XREF_ENTRY( 0x36, XREF_D3DDevice_SetRenderState_CullMode),
 
         // D3DDevice_SetRenderState_FrontFace+0x09 : cmp eax, [esi+4]
         { 0x09, 0x3B },
@@ -1431,7 +1431,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_SetFence, 4134, 12,
 
-    XREF_D3D_SETFENCE,
+    XREF_D3D_SetFence,
     XRefZero)
 
         { 0x0D, 0x72 },
@@ -2504,7 +2504,7 @@ OOVPA_XREF(D3DDevice_BeginStateBlock, 4134, 6,
     XRefOne)
 
         // D3DDevice_BeginStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_CLEARSTATEBLOCKFLAGS ),
+        XREF_ENTRY( 0x0A, XREF_D3D_ClearStateBlockFlags ),
 
         // D3DDevice_BeginStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -2521,7 +2521,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_ClearStateBlockFlags, 4134, 9,//OK
 
-    XREF_CLEARSTATEBLOCKFLAGS,
+    XREF_D3D_ClearStateBlockFlags,
     XRefZero)
 
         // D3D_ClearStateBlockFlags+0x0A : movzx ecx, 0x82
@@ -2550,7 +2550,7 @@ OOVPA_XREF(D3DDevice_EndStateBlock, 4134, 6,
     XRefOne)
 
         // D3DDevice_EndStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_RECORDSTATEBLOCK ),
+        XREF_ENTRY( 0x0A, XREF_D3D_RecordStateBlock ),
 
         // D3DDevice_EndStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
