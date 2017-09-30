@@ -254,7 +254,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 12,
 
-    XREF_COMMONSETRENDERTARGET,
+    XREF_D3D_CommonSetRenderTarget,
     XRefZero)
 
         // D3D_CommonSetRenderTarget+0x00 : sub esp, 0x20
@@ -283,7 +283,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 11,
 
-    XREF_COMMONSETRENDERTARGET,
+    XREF_D3D_CommonSetRenderTarget,
     XRefZero)
 
         // D3D_CommonSetRenderTargetB+0x00 : sub esp, 0x24
@@ -315,7 +315,7 @@ OOVPA_XREF(D3DDevice_SetRenderTarget, 4627, 13,
     XRefOne)
 
         // D3DDevice_SetRenderTarget+0x10 : call [D3D_CommonSetRenderTarget]
-        XREF_ENTRY( 0x10, XREF_COMMONSETRENDERTARGET ),
+        XREF_ENTRY( 0x10, XREF_D3D_CommonSetRenderTarget ),
 
         // D3DDevice_SetRenderTarget+0x00 : mov eax, [esp+0x08]
         { 0x00, 0x8B },
@@ -2814,7 +2814,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_BlockOnTime, 4627, 6,
 
-    XREF_D3D_BLOCKONTIME,
+    XREF_D3D_BlockOnTime,
     XRefZero)
 
         { 0x09, 0x34 },
@@ -2833,7 +2833,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-	XREF_ENTRY( 0x08, XREF_D3D_BLOCKONTIME ),
+	XREF_ENTRY( 0x08, XREF_D3D_BlockOnTime ),
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },

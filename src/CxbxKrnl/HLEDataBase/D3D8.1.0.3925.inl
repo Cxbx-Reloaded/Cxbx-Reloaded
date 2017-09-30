@@ -3533,7 +3533,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_SetFence, 3925, 11,
 
-    XREF_D3D_SETFENCE,
+    XREF_D3D_SetFence,
     XRefZero)
 
 		// D3D::SetFence+0x0F : mov edi, [esi+0x1C]
@@ -3564,7 +3564,7 @@ OOVPA_XREF(D3DDevice_InsertFence, 3925, 5,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x03, XREF_D3D_SETFENCE ),
+        XREF_ENTRY( 0x03, XREF_D3D_SetFence ),
 
         { 0x00, 0x6A },
         { 0x01, 0x00 },
@@ -3636,7 +3636,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 3925, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x08, XREF_D3D_BLOCKONTIME ),
+        XREF_ENTRY( 0x08, XREF_D3D_BlockOnTime ),
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },
@@ -3755,7 +3755,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_BlockOnTime, 3925, 10,
 
-    XREF_D3D_BLOCKONTIME,
+    XREF_D3D_BlockOnTime,
     XRefZero)
 
         // D3D::BlockOnFence+0x00 : push ebp
@@ -3814,7 +3814,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_ClearStateBlockFlags, 3911, 13,
 
-    XREF_CLEARSTATEBLOCKFLAGS,
+    XREF_D3D_ClearStateBlockFlags,
     XRefZero)
 
         { 0x01, 0x15 },
@@ -3844,7 +3844,7 @@ OOVPA_XREF(D3DDevice_BeginStateBlock, 3911, 7,
     XRefOne)
 
         // D3DDevice_BeginStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_CLEARSTATEBLOCKFLAGS ),
+        XREF_ENTRY( 0x0A, XREF_D3D_ClearStateBlockFlags ),
 
         // D3DDevice_BeginStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -3877,7 +3877,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_RecordStateBlock, 3911, 19,
 
-    XREF_RECORDSTATEBLOCK,
+    XREF_D3D_RecordStateBlock,
     XRefZero)
 
         { 0x00, 0x55 },
@@ -3913,7 +3913,7 @@ OOVPA_XREF(D3DDevice_EndStateBlock, 3911, 6,
     XRefOne)
 
         // D3DDevice_EndStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_RECORDSTATEBLOCK ),
+        XREF_ENTRY( 0x0A, XREF_D3D_RecordStateBlock ),
 
         // D3DDevice_EndStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },

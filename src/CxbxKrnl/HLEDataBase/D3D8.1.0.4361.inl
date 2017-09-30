@@ -275,7 +275,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_ClearStateBlockFlags, 4361, 9,
 
-    XREF_CLEARSTATEBLOCKFLAGS,
+    XREF_D3D_ClearStateBlockFlags,
     XRefZero)
 
         // D3D_ClearStateBlockFlags+0x0A : movzx ecx, 0x82
@@ -300,7 +300,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_RecordStateBlock, 4361, 10,
 
-    XREF_RECORDSTATEBLOCK,
+    XREF_D3D_RecordStateBlock,
     XRefZero)
 
         // D3D_RecordStateBlock+0x0F : mov eax, [edi+0x0390]
@@ -330,7 +330,7 @@ OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 6,
     XRefOne)
 
         // D3DDevice_BeginStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_CLEARSTATEBLOCKFLAGS ),
+        XREF_ENTRY( 0x0A, XREF_D3D_ClearStateBlockFlags ),
 
         // D3DDevice_BeginStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -411,7 +411,7 @@ OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 6,
     XRefOne)
 
         // D3DDevice_EndStateBlock+0x0F : call [ClearStateBlockFlags]
-        XREF_ENTRY( 0x0A, XREF_RECORDSTATEBLOCK ),
+        XREF_ENTRY( 0x0A, XREF_D3D_RecordStateBlock ),
 
         // D3DDevice_EndStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -1135,7 +1135,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_BlockOnTime, 4361, 13,
 
-    XREF_D3D_BLOCKONTIME,
+    XREF_D3D_BlockOnTime,
     XRefZero)
 
         { 0x07, 0x3D },

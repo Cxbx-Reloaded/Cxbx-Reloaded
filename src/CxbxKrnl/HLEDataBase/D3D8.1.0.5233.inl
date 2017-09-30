@@ -129,7 +129,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
 
-    XREF_SETRENDERSTATE_CULLMODE,
+    XREF_D3DDevice_SetRenderState_CullMode,
 	XRefTwo)
 
 		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
@@ -412,7 +412,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_CommonSetRenderTarget, 5233, 8,
 
-    XREF_COMMONSETRENDERTARGET,
+    XREF_D3D_CommonSetRenderTarget,
     XRefZero)
 
         { 0x02, 0x1C },
@@ -434,7 +434,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 6,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x08, XREF_D3D_BLOCKONTIME ),
+        XREF_ENTRY( 0x08, XREF_D3D_BlockOnTime ),
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },
