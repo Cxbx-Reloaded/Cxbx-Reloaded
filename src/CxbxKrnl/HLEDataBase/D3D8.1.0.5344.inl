@@ -1041,20 +1041,20 @@ OOVPA_XREF(D3DDevice_BeginPush, 5344, 10,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x09, XREF_D3DDevice_LazySetStateVB ), // 1
+        XREF_ENTRY( 0x09, XREF_D3DDevice_LazySetStateVB ),
 
-        { 0x00, 0x8B }, // 2
-        { 0x01, 0x0D }, // 3
+        { 0x00, 0x8B },
+        { 0x01, 0x0D },
 
-        { 0x06, 0x6A }, // 4
-        { 0x07, 0x00 }, // 5
+        { 0x06, 0x6A },
+        { 0x07, 0x00 },
 
-        { 0x11, 0x40 }, // 6
+        { 0x11, 0x40 },
 
-        { 0x12, 0x89 }, // 7
-        { 0x13, 0x44 }, // 8
-        { 0x14, 0x24 }, // 9
-        { 0x15, 0x04 }, // 10
+        { 0x12, 0x89 },
+        { 0x13, 0x44 },
+        { 0x14, 0x24 },
+        { 0x15, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
