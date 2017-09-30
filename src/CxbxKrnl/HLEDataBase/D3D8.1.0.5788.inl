@@ -1151,7 +1151,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 4627, ALIAS, D3DDevice_SetVertexShaderConstantNotInlineFast),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 5788, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5788, PATCH),

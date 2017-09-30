@@ -815,6 +815,7 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5558, 9)
         { 0xC6, 0x80 },
 OOVPA_END;
 
+#if 0 // Was _IDirect3DDevice8_CreateIndexBuffer@24, replaced by D3DDevice_CreateIndexBuffer 4627 version
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer
 // ******************************************************************
@@ -831,6 +832,7 @@ OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer, 5558, 10)
         { 0x1A, 0x8B },
         { 0x1E, 0x00 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
@@ -1220,7 +1222,7 @@ OOVPA_NO_XREF(D3DDevice_MakeSpace, 5558, 7)
         { 0x09, 0xE8 },
         { 0x0E, 0xC3 },
 OOVPA_END;
-
+#if 0 // Moved to 5455
 // ******************************************************************
 // * D3DDevice_SetRenderTarget@8
 // ******************************************************************
@@ -1235,6 +1237,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5558, 8)
         { 0xDE, 0x8B },
         { 0xFE, 0x8B },
 OOVPA_END;
+#endif
 #if 0 // Used 3925
 // ******************************************************************
 // * D3DTexture_LockRect
@@ -2164,7 +2167,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_GetTransform, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTransform, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 5344, DISABLED),
-	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 5558, DISABLED),
+	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSwapCallback, 5455, PATCH),
@@ -2196,7 +2199,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5558, PATCH),
 	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_MakeSpace, 5558, DISABLED),
-	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5558, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4134, PATCH),
