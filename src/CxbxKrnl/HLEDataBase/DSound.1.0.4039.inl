@@ -2297,3 +2297,77 @@ OOVPA_XREF(CDirectSound_SetOrientation, 4039, 13,
         { 0x5D , 0x8B },
         { 0x5F , 0x20 },
 OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_GetStatus
+// ******************************************************************
+OOVPA_NO_XREF(CDirectSoundStream_GetStatus, 4039, 14)
+
+        { 0x00, 0x56 },
+
+        { 0x27, 0x8B },
+        { 0x2A, 0x08 },
+
+        { 0x2B, 0x8B },
+        { 0x2D, 0x24 },
+
+        { 0x33, 0x8B },
+        { 0x36, 0x0C },
+
+        { 0x37, 0xF7 },
+        { 0x39, 0x1B },
+        { 0x3B, 0xF7 },
+
+        //CDirectSoundStream_GetStatus+0x20 : mov dword ptr [ecx], eax
+        { 0x3F, 0x89 },
+        { 0x40, 0x01 },
+
+        { 0x51, 0xC2 },
+        { 0x52, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_DownloadEffectsImage
+// ******************************************************************
+OOVPA_XREF(CDirectSound_DownloadEffectsImage, 4039, 18,
+
+    XREF_CDirectSound_DownloadEffectsImage,
+    XRefZero)
+
+        // CDirectSound_DownloadEffectsImage+0x00 : push ebp
+        { 0x00, 0x55 },
+
+        // CDirectSound_DownloadEffectsImage+0x2B : mov esi,dword ptr [ebp+8]
+        { 0x2B, 0x8B },
+        { 0x2C, 0x75 },
+        { 0x2D, 0x08 },
+
+        // CDirectSound_DownloadEffectsImage+0x2E : push dword ptr [ebp+14h]
+        { 0x2E, 0xFF },
+        { 0x2F, 0x75 },
+        { 0x30, 0x14 },
+
+        // CDirectSound_DownloadEffectsImage+0x31 : mov ecx,dword ptr [esi+8]
+        { 0x31, 0x8B },
+        { 0x32, 0x4E },
+        { 0x33, 0x08 },
+
+        // CDirectSound_DownloadEffectsImage+0x39 :  push dword ptr [ebp+18h]
+        { 0x39, 0xFF },
+        //{ 0x3A, 0x75 },
+        { 0x3B, 0x18 },
+
+        // CDirectSound_DownloadEffectsImage+0x3F : push dword ptr [ebp+10h]
+        { 0x3F, 0xFF },
+        //{ 0x40, 0x75 },
+        { 0x41, 0x10 },
+
+        // CDirectSound_DownloadEffectsImage+0x42 : push dword ptr [ebp+0Ch]
+        { 0x42, 0xFF },
+        //{ 0x43, 0x75 },
+        { 0x44, 0x0C },
+
+        // CDirectSound_DownloadEffectsImage+0x60 : ret 14h
+        { 0x60, 0xC2 },
+        { 0x61, 0x14 },
+OOVPA_END;

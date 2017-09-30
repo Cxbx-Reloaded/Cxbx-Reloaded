@@ -2086,7 +2086,9 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_GetStatus
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSoundStream_GetStatus, 3911, 13)
+OOVPA_NO_XREF(CDirectSoundStream_GetStatus, 3911, 14)
+
+        { 0x00, 0x56 }, //Prevent false detection & check if is at beginning of function.
 
         { 0x08, 0x8B },
         { 0x0B, 0x08 },
