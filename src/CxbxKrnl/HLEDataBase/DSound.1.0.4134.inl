@@ -2975,6 +2975,52 @@ OOVPA_XREF(CDirectSound_SetOrientation, 4134, 13,
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSound_DownloadEffectsImage
+// ******************************************************************
+OOVPA_XREF(CDirectSound_DownloadEffectsImage, 4134, 18,
+
+    XREF_CDirectSound_DownloadEffectsImage,
+    XRefZero)
+
+        // CDirectSound_DownloadEffectsImage+0x00 : push ebp
+        { 0x00, 0x55 },
+
+        // CDirectSound_DownloadEffectsImage+0x2C : mov esi,dword ptr [ebp+8]
+        { 0x2C, 0x8B },
+        { 0x2D, 0x75 },
+        { 0x2E, 0x08 },
+
+        // CDirectSound_DownloadEffectsImage+0x2F : push dword ptr [ebp+14h]
+        { 0x2F, 0xFF },
+        { 0x30, 0x75 },
+        { 0x31, 0x14 },
+
+        // CDirectSound_DownloadEffectsImage+0x32 : mov ecx,dword ptr [esi+8]
+        { 0x32, 0x8B },
+        { 0x33, 0x4E },
+        { 0x34, 0x08 },
+
+        // CDirectSound_DownloadEffectsImage+0x3A :  push dword ptr [ebp+18h]
+        { 0x3A, 0xFF },
+        //{ 0x3B, 0x75 },
+        { 0x3C, 0x18 },
+
+        // CDirectSound_DownloadEffectsImage+0x40 : push dword ptr [ebp+10h]
+        { 0x40, 0xFF },
+        //{ 0x41, 0x75 },
+        { 0x42, 0x10 },
+
+        // CDirectSound_DownloadEffectsImage+0x43 : push dword ptr [ebp+0Ch]
+        { 0x43, 0xFF },
+        //{ 0x44, 0x75 },
+        { 0x45, 0x0C },
+
+        // CDirectSound_DownloadEffectsImage+0x61 : ret 14h
+        { 0x61, 0xC2 },
+        { 0x62, 0x14 },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_4134
 // ******************************************************************
 OOVPATable DSound_4134[] = {
