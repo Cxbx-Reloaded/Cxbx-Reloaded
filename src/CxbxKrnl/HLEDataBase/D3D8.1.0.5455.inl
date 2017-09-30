@@ -561,3 +561,19 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShaderDeclaration, 5455, 14)
         { 0x54, 0x07 },
         { 0x55, 0x01 },
 OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetRenderTarget
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5455, 9)
+
+        { 0x00, 0x83 },
+        { 0x1E, 0x44 },
+        { 0x3E, 0x2C },
+        { 0x5E, 0x8B },
+        { 0x7E, 0xDE },
+        { 0xA0, 0x89 },
+        { 0xBE, 0x09 },
+        { 0xDE, 0x8B },
+        { 0xFE, 0x8B },
+OOVPA_END;

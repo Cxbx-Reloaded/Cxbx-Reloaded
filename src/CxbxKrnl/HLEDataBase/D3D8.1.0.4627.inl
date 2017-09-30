@@ -620,7 +620,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer2, 4627, 7)
+OOVPA_XREF(D3DDevice_CreateIndexBuffer2, 4627, 7,
+
+    XREF_D3DDevice_CreateIndexBuffer2,
+    XRefZero)
 
         { 0x05, 0xC0 },
         { 0x0F, 0x85 },
@@ -629,6 +632,30 @@ OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer2, 4627, 7)
         { 0x21, 0x08 },
         { 0x28, 0x00 },
         { 0x2F, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_CreateIndexBuffer
+// ******************************************************************
+OOVPA_XREF(D3DDevice_CreateIndexBuffer, 4627, 11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x06, XREF_D3DDevice_CreateIndexBuffer2 ),
+
+        { 0x00, 0x8B },
+
+        { 0x0A, 0x8B },
+        { 0x0B, 0x4C },
+        { 0x0C, 0x24 },
+        { 0x0D, 0x14 },
+        { 0x0E, 0x33 },
+        { 0x0F, 0xD2 },
+        { 0x10, 0x85 },
+        { 0x11, 0xC0 },
+
+        { 0x1F, 0xC2 },
 OOVPA_END;
 
 #if 0 // Moved to 4831
