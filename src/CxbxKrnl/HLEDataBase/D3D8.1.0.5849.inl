@@ -51,27 +51,35 @@ OOVPA_END;
 // * D3D::SetFence
 // * SOURCE: Spiderman 2
 // ******************************************************************
-OOVPA_XREF(D3D_SetFence, 5849, 7, XREF_D3D_SETFENCE, XRefZero)
-	{ 0x0E, 0x05 },
-	{ 0x17, 0xC7 },
-	{ 0x3E, 0x40 },
-	{ 0x5E, 0x00 },
-	{ 0x87, 0x4E },
-	{ 0x98, 0x83 },
-	{ 0xA8, 0x75 },
+OOVPA_XREF(D3D_SetFence, 5849, 7,
+
+    XREF_D3D_SetFence,
+    XRefZero)
+
+        { 0x0E, 0x05 },
+        { 0x17, 0xC7 },
+        { 0x3E, 0x40 },
+        { 0x5E, 0x00 },
+        { 0x87, 0x4E },
+        { 0x98, 0x83 },
+        { 0xA8, 0x75 },
 OOVPA_END;
 
 // ******************************************************************
 // * D3D::BlockOnTime
 // * Source: Spiderman 2
 // ******************************************************************
-OOVPA_XREF(D3D_BlockOnTime, 5849, 6, XREF_D3D_BLOCKONTIME, XRefZero)
-	{ 0x09, 0x30 },
-	{ 0x27, 0x07 },
-	{ 0x7E, 0x2B },
-	{ 0xA5, 0x20 },
-	{ 0xD9, 0x56 },
-	{ 0xF8, 0x47 },
+OOVPA_XREF(D3D_BlockOnTime, 5849, 6,
+
+    XREF_D3D_BlockOnTime,
+    XRefZero)
+
+        { 0x09, 0x30 },
+        { 0x27, 0x07 },
+        { 0x7E, 0x2B },
+        { 0xA5, 0x20 },
+        { 0xD9, 0x56 },
+        { 0xF8, 0x47 },
 OOVPA_END;
 
 // ******************************************************************

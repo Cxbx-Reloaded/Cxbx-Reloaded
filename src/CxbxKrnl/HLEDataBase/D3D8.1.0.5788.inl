@@ -747,7 +747,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_ClearStateBlockFlags, 5788, 9,
 
-    XREF_CLEARSTATEBLOCKFLAGS,
+    XREF_D3D_ClearStateBlockFlags,
     XRefZero)
 
         // D3D_ClearStateBlockFlags+0x0A : mov ecx, 0x87
@@ -771,7 +771,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_RecordStateBlock, 5788, 10,
 
-    XREF_RECORDSTATEBLOCK,
+    XREF_D3D_RecordStateBlock,
     XRefZero)
 
         // D3D_RecordStateBlock+0x0F : mov eax, [edi+0x07A4]
