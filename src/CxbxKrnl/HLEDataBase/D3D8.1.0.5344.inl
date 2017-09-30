@@ -548,8 +548,9 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5344, 8)
+OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5344, 9)
 
+        { 0x00, 0x83 },
         { 0x08, 0x56 },
         { 0x09, 0x33 },
         { 0x0A, 0xF6 },
@@ -959,7 +960,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateIndexBuffer2, 5344, 7)
+OOVPA_XREF(D3DDevice_CreateIndexBuffer2, 5344, 7,
+
+    XREF_D3DDevice_CreateIndexBuffer2,
+    XRefZero)
 
         { 0x05, 0x00 },
         { 0x0C, 0x50 },
@@ -1068,7 +1072,7 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 5344, 10)
         // D3DDevice_AddRef+0x05 : mov ecx, [eax+0x0520]
         { 0x05, 0x8B },
         { 0x06, 0x88 },
-        { 0x07, 0x02 },
+        { 0x07, 0x20 },
         { 0x08, 0x05 },
 
         // D3DDevice_AddRef+0x0B : inc ecx
@@ -1077,7 +1081,7 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 5344, 10)
         // D3DDevice_AddRef+0x0C : mov [eax+0x0520], ecx
         { 0x0C, 0x89 },
         { 0x0D, 0x88 },
-        { 0x0E, 0x02 },
+        { 0x0E, 0x20 },
         { 0x0F, 0x05 },
 OOVPA_END;
 
