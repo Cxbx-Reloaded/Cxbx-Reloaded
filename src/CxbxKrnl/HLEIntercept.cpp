@@ -62,7 +62,7 @@ std::map<std::string, xbaddr> g_SymbolAddresses;
 std::unordered_map<std::string, subhook::Hook> g_FunctionHooks;
 bool g_HLECacheUsed = false;
 
-uint32 g_BuildVersion;
+uint32 g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
@@ -410,6 +410,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 #ifndef ENABLE_LEGACY_D3D8_DB
                     else if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0)
                     {
+                        // Save D3D8 build version
+                        g_BuildVersion = OrigBuildVersion;
+
 						xbaddr lower = pXbeHeader->dwBaseAddr;
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 						xbaddr pFunc = (xbaddr)nullptr;
