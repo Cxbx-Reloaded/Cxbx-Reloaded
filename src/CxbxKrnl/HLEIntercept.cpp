@@ -580,12 +580,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 						xbaddr pFunc = (xbaddr)nullptr;
 
-                        if(BuildVersion == 3925)
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3925, lower, upper);
-                        else if(BuildVersion < 5233)
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
+                        if(BuildVersion < 4034)
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3911, lower, upper);
                         else
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_5233, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
 
                         // locate D3DDeferredRenderState
                         if(pFunc != (xbaddr)nullptr)
@@ -696,8 +694,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         {
                             pFunc = (xbaddr)nullptr;
 
-                            if(BuildVersion == 3925)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3925, lower, upper);
+                            if(BuildVersion < 4034)
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3911, lower, upper);
 							// TODO : What about 4034? Use it once it's offset to XREF_D3DTSS_TEXCOORDINDEX is verified
                             else if(BuildVersion == 4034 || BuildVersion == 4134)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4034, lower, upper);
