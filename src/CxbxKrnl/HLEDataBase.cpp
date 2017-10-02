@@ -70,17 +70,7 @@ const char *Sec_XNET = "XNET";
 #include "HLEDataBase/Xapi.OOVPA.inl"
 #include "HLEDataBase/D3D8.OOVPA.inl"
 #include "HLEDataBase/DSound.OOVPA.inl"
-#include "HLEDataBase/XG.1.0.3911.inl"
-#include "HLEDataBase/XG.1.0.4034.inl"
-#include "HLEDataBase/XG.1.0.4361.inl"
-#include "HLEDataBase/XG.1.0.4432.inl"
-#include "HLEDataBase/XG.1.0.4627.inl"
-#include "HLEDataBase/XG.1.0.5028.inl"
-#include "HLEDataBase/XG.1.0.5233.inl"
-#include "HLEDataBase/XG.1.0.5344.inl"
-#include "HLEDataBase/XG.1.0.5558.inl"
-#include "HLEDataBase/XG.1.0.5788.inl"
-#include "HLEDataBase/XG.1.0.5849.inl"
+#include "HLEDataBase/XG.OOVPA.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XNet.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
@@ -155,6 +145,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XACTENG, XactEng, 5788),
 	HLE_ENTRY(Lib_XACTENG, XactEng, 5849),
 #endif
+#if ENABLE_LEGACY_XGRAPHC_DB
 	HLE_ENTRY(Lib_XGRAPHC, XG, 3911),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4034),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 4361),
@@ -166,7 +157,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5558),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5788),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5849),
-
+#endif
 	HLE_ENTRY(Lib_XNETS, XNet, 3911),
 	HLE_ENTRY(Lib_XNETS, XNet, 4627),
 
@@ -207,8 +198,8 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //
     { Lib_XAPILIB,{ Sec_text, Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_SIZEV2 },
 
-    //
-    //{ Lib_XGRAPHC,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
+    // Support inline functions in .text section
+    { Lib_XGRAPHC,{ Sec_text, Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
 
     //
     //{ Lib_XONLINE,{ Sec_XONLINE }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
