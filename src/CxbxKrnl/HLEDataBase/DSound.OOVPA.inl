@@ -68,6 +68,12 @@
 //   * IDirectSoundStream_SetFormat
 //   * IDirectSoundStream_SetRolloffCurve
 //   * IDirectSoundStream_SetRolloffFactor
+//   * DirectSoundDumpMemoryUsage
+//   * DirectSoundGetSampleTime
+//   * DirectSoundOverrideSpeakerConfig
+//   * XAudioDownloadEffectsImage
+//   * XAudioGetSpeakerConfig
+//   * XAudioSetEffectData
 // * 3911 to 4039(?): Following separater functions has exact asm codes as whole function are...
 //   * IDirectSoundStream_SetVolume     & CDirectSoundStream_SetVolume
 //   * IDirectSoundStream_SetPitch      & CDirectSoundStream_SetPitch
