@@ -816,7 +816,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+    }
 
     leaveCriticalSection;
 
