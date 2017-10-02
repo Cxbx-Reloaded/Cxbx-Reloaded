@@ -45,6 +45,7 @@
 //   * IDirectSoundStream_SetMixBins    & CDirectSoundStream_SetMixBins
 // * Need to include patch, func export, support for IDirectSoundStream_Setxxxxx from above.
 
+
 #ifndef DSOUND_OOVPA_INL
 #define DSOUND_OOVPA_INL
 
@@ -285,15 +286,23 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_Unlock, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_Use3DVoiceData, PATCH, 5558),
     REGISTER_OOVPAS(IDirectSoundStream_FlushEx, PATCH, 4627),
+    REGISTER_OOVPAS(IDirectSoundStream_Pause, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
+    REGISTER_OOVPAS(IDirectSoundStream_SetAllParameters, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
+    REGISTER_OOVPAS(IDirectSoundStream_SetConeAngles, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOrientation, UNPATCHED, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetConeOutsideVolume, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetLFO, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetFilter, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetFrequency, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetHeadroom, PATCH, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetI3DL2Source, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetMaxDistance, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, UNPATCHED, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_12, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, see more note for CDirectSoundStream_SetMixBinVolumes_12
+    REGISTER_OOVPAS(IDirectSoundStream_SetMode, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
+    REGISTER_OOVPAS(IDirectSoundStream_SetOutputBuffer, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetPitch, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetPosition, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetVelocity, UNPATCHED, 3911),

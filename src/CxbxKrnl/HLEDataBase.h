@@ -355,6 +355,13 @@ enum XRefDataBaseOffset
     XREF_CDirectSound_CommitEffectData,
     XREF_CDirectSound_GetTime,
     XREF_CMcpxAPU_SetI3DL2Listener,
+    XREF_CDirectSoundStream_SetOutputBuffer,
+    XREF_CDirectSoundStream_SetAllParameters,
+    XREF_CDirectSoundStream_SetConeAngles,
+    XREF_CDirectSoundStream_SetConeOutsideVolume,
+    XREF_CDirectSoundStream_SetMode,
+    XREF_CDirectSoundStream_SetI3DL2Source,
+    XREF_CDirectSoundStream_Pause,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,
