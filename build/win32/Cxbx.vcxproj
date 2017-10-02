@@ -349,7 +349,9 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4039.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl" />
@@ -358,7 +360,9 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.OOVPA.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5120.inl" />
@@ -398,6 +402,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl" />
@@ -407,6 +412,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
   </ItemGroup>
   <ItemGroup>
