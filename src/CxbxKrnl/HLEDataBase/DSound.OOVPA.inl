@@ -33,7 +33,41 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full libary
+//   [revi] Title Name          |  Verify   |   Comments
+//-------------------------------------------------------------------
+// * [3925] Cel Damage          |   100%    | None
+// * [3936] Silent Hill 2       |   100%    | Need verify non-exist function is there or not
+// * [4039] Nightcaster         |    ??%    | Need to create bunch of OOVPAs...
+
 // TODO: Known DSound OOVPA issue list
+// * 3911 to 5933: Cannot make OOVPAs
+//   * IDirectSound_SetCooperativeLevel     (Xbox doesn't use it)
+//   * IDirectSound_Compact                 (Xbox doesn't use it)
+//   * IDirectSoundBuffer_Restore           (Xbox doesn't use it)
+//   * IDirectSoundBuffer_Unlock            (Xbox doesn't use it, however can make OOVPA; NOTE: OOVPA is registered for it)
+//   * IDirectSoundStream_AddRef            (Using IUnknown_AddRef)
+//   * IDirectSoundStream_Release           (Using IUnknown_Release)
+// * 3911 to ????: These functions does not exist until newer XDK revision
+//   * IDirectSound_GetOutputLevels
+//   * IDirectSound_SynchPlayback
+//   * IDirectSoundBuffer_GetVoiceProperties
+//   * IDirectSoundBuffer_SetFormat
+//   * IDirectSoundBuffer_SetDistanceFactor
+//   * IDirectSoundBuffer_SetDopplerFactor
+//   * IDirectSoundBuffer_SetRolloffFactor
+//   * IDirectSoundBuffer_SetRolloffCurve
+//   * IDirectSoundBuffer_Pause
+//   * IDirectSoundBuffer_PauseEx
+//   * IDirectSoundBuffer_SetPlayRegion         (last seen is 4039?)
+//   * IDirectSoundStream_FlushEx
+//   * IDirectSoundStream_GetVoiceProperties
+//   * IDirectSoundStream_PauseEx
+//   * IDirectSoundStream_SetDistanceFactor
+//   * IDirectSoundStream_SetDopplerFactor
+//   * IDirectSoundStream_SetFormat
+//   * IDirectSoundStream_SetRolloffCurve
+//   * IDirectSoundStream_SetRolloffFactor
 // * 3911 to 4039(?): Following separater functions has exact asm codes as whole function are...
 //   * IDirectSoundStream_SetVolume     & CDirectSoundStream_SetVolume
 //   * IDirectSoundStream_SetPitch      & CDirectSoundStream_SetPitch
