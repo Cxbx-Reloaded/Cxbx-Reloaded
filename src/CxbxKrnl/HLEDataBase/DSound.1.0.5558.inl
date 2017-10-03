@@ -1422,7 +1422,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetVelocity, 5558, 7,
 
-    XREF_DSSETVELOCITYA,
+    XREF_CDirectSound_SetVelocity,
     XRefZero)
 
         { 0x0F, 0x00 },
@@ -1442,7 +1442,7 @@ OOVPA_XREF(IDirectSound_SetVelocity, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x2D, XREF_DSSETVELOCITYA ),
+        XREF_ENTRY( 0x2D, XREF_CDirectSound_SetVelocity ),
 
         { 0x05, 0x18 },
         { 0x0C, 0x83 },

@@ -432,7 +432,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetVelocity, 5344, 14,
 
-    XREF_DSSETVELOCITYA,
+    XREF_CDirectSound_SetVelocity,
     XRefZero)
 
         // CDirectSound_SetVelocity+0x24 : mov eax, 0x80004005
