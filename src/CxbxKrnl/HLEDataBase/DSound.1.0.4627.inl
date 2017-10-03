@@ -450,7 +450,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetPosition, 4627, 8,
 
-    XREF_DSVOICESETPOSITION,
+    XREF_CDirectSoundVoice_SetPosition,
     XRefZero)
 
         // CDirectSoundVoice_SetPosition+0x0F : mov edx, [ebp+arg_4]
@@ -1576,7 +1576,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeAngles, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOrientation, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
@@ -1612,7 +1612,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetAllParameters, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetAllParameters, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4134, PATCH), // Use that for now. Okay, it's your call pal...
+	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4039, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Pause, 4831, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Pause, 4928, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_Pause, 4928, PATCH),

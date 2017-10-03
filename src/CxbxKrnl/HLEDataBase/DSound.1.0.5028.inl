@@ -155,7 +155,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDistanceFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeAngles, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeAngles, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetConeAngles, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetConeOrientation, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetConeOrientation, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
@@ -193,7 +193,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetAllParameters, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetAllParameters, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4134, PATCH), // Use that for now. Okay, it's your call pal...
+	REGISTER_OOVPA(IDirectSoundBuffer_SetAllParameters, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetAllParameters, 4134, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Pause, 4831, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Pause, 4928, XREF),
