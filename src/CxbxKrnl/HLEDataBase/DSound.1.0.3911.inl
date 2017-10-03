@@ -3404,6 +3404,7 @@ OOVPA_XREF(IDirectSound_SetPosition, 3911, 11,
         { 0x32, 0xC2 },
         { 0x33, 0x14 },
 OOVPA_END;
+
 // ******************************************************************
 // * CMcpxVoiceClient_Set3dVelocity
 // ******************************************************************
@@ -4676,7 +4677,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxAPU_Set3dVelocity, 3911, 12,
 
-    XREF_DSSETVELOCITYB,
+    XREF_CMcpxAPU_Set3dVelocity,
     XRefZero)
 
         // CMcpxAPU_Set3dVelocity+0x0C : movsd; movsd; movsd
@@ -4703,11 +4704,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetVelocity, 3911, 10,
 
-    XREF_DSSETVELOCITYA,
+    XREF_CDirectSound_SetVelocity,
     XRefOne)
 
         // CDirectSound_SetVelocity+0x35 : call [CMcpxAPU_Set3dVelocity]
-        XREF_ENTRY( 0x35, XREF_DSSETVELOCITYB ),
+        XREF_ENTRY( 0x35, XREF_CMcpxAPU_Set3dVelocity ),
 
         // CDirectSound_SetVelocity+0x06 : push esi; push edi
         { 0x06, 0x56 },
@@ -4735,7 +4736,7 @@ OOVPA_XREF(IDirectSound_SetVelocity, 3911, 11,
     XRefOne)
 
         // IDirectSound_SetVelocity+0x2D : call [CDirectSound_SetVelocity]
-        XREF_ENTRY( 0x2D, XREF_DSSETVELOCITYA ), 
+        XREF_ENTRY( 0x2D, XREF_CDirectSound_SetVelocity ), 
 
         // IDirectSound_SetVelocity+0x06 : fld [ebp+0x14]
         { 0x06, 0xD9 },

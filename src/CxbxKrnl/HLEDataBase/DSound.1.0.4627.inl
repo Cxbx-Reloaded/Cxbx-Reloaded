@@ -100,7 +100,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetVelocity, 4627, 15,
 
-    XREF_DSSETVELOCITYA,
+    XREF_CDirectSound_SetVelocity,
     XRefZero)
 
         // CDirectSound_SetVelocity+0x24 : mov eax, 0x80004005
@@ -1489,7 +1489,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(CDirectSound_SetMixBinHeadroom, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_SetMixBinHeadroom, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetHeadroom, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetHeadroom, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetVelocity, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_SetVelocity, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetAllParametersA, 4627, XREF),
