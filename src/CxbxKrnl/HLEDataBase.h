@@ -340,6 +340,7 @@ enum XRefDataBaseOffset
 	XREF_CXo_XOnlineLogon,
 
     // XAPI
+	XREF_XAPI_GetTypeInformation,
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

@@ -194,6 +194,36 @@ OOVPA_NO_XREF(XSetProcessQuantumLength, 4134, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * XSetProcessQuantumLength
+// ******************************************************************
+OOVPA_XREF(GetTypeInformation, 4134, 24, XREF_XAPI_GetTypeInformation, XRefZero)
+		{ 0x00, 0xB8 },
+		{ 0x05, 0x56 },
+		{ 0x06, 0x8B },
+		{ 0x07, 0xD0 },
+		{ 0x08, 0xBE },
+		{ 0x0D, 0x3B },
+		{ 0x0E, 0xD6 },
+		{ 0x0F, 0x73 },
+		{ 0x10, 0x12 },
+		{ 0x11, 0x8B },
+		{ 0x12, 0x10 },
+		{ 0x13, 0x85 },
+		{ 0x14, 0xD2 },
+		{ 0x15, 0x74 },
+		{ 0x16, 0x05 },
+		{ 0x17, 0x39 },
+		{ 0x18, 0x4A },
+		{ 0x19, 0x04 },
+		{ 0x1A, 0x74 },
+		{ 0x1B, 0x0B },
+		{ 0x1C, 0x83 },
+		{ 0x1D, 0xC0 },
+		{ 0x1E, 0x04 },
+		{ 0x1F, 0x3B }
+OOVPA_END;
+
+// ******************************************************************
 // * XAPI_4134
 // ******************************************************************
 OOVPATable XAPI_4134[] = {
@@ -211,6 +241,7 @@ OOVPATable XAPI_4134[] = {
 	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
 	REGISTER_OOVPA(XID_fCloseDevice, 3911, XREF),

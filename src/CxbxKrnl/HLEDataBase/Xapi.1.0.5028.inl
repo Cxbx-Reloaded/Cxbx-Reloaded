@@ -65,6 +65,7 @@ OOVPATable XAPI_5028[] = {
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
