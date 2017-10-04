@@ -194,6 +194,10 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 
 // ******************************************************************
 // * patch: XGetDevices
+// * Note: This could be unpatched however,
+// * XInitDevices is required to be unpatched first.
+// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * patched with a stub, so this patch is still ennabled for now
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 (
@@ -204,19 +208,23 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-	if (DeviceType->CurrentConnected == 0) {
-		DeviceType->CurrentConnected = 1;
-	}
-		
-    DWORD ret = DeviceType->CurrentConnected;
+	DWORD oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+
+	DWORD ret  = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
+
+	xboxkrnl::KfLowerIrql(oldIrql);
 
 	RETURN(ret);
 }
 
 // ******************************************************************
 // * patch: XGetDeviceChanges
+// * Note: This could be unpatched however,
+// * XInitDevices is required to be unpatched first.
+// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * patched with a stub, so this patch is still ennabled for now
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 (
@@ -235,29 +243,6 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 	BOOL ret = FALSE;
 	
-	// JSRF Hack: Always return no device changes
-	// Without this, JSRF hard crashes sometime after calling this function
-	// I HATE game specific hacks, but I've wasted three weeks trying to solve this already
-	// TitleID 0x49470018 = JSRF NTSC-U
-	// TitleID 0x5345000A = JSRF PAL, NTSC-J
-	// TitleID 0x53450016 = JSRF NTSC-J (Demo)
-	// ~Luke Usher
-	if (g_pCertificate->dwTitleId == 0x49470018 || g_pCertificate->dwTitleId == 0x5345000A || g_pCertificate->dwTitleId == 0x53450016) {
-		RETURN(ret);
-	}
-
-	// If we have no connected devices, report one insertion
-	if (DeviceType->CurrentConnected == 0) {
-		*pdwInsertions = 1;
-		ret = TRUE;
-	} else	{
-		// Otherwise, report no changes
-		*pdwInsertions = 0;
-	}
-
-	*pdwRemovals = 0;  
-
-/*
     if(!DeviceType->ChangeConnected)
     {
         *pdwInsertions = 0;
@@ -265,6 +250,8 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
+		DWORD oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
         *pdwRemovals = (DeviceType->PreviousConnected & ~DeviceType->CurrentConnected);
         ULONG RemoveInsert = DeviceType->ChangeConnected &
@@ -275,8 +262,10 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         DeviceType->ChangeConnected = 0;
         DeviceType->PreviousConnected = DeviceType->CurrentConnected;
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
+
+		xboxkrnl::KfLowerIrql(oldIrql);
     }
-*/
+
 	RETURN(ret);
 }
 
