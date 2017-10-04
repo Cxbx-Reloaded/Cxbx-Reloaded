@@ -395,6 +395,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.OOVPA.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4134.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />

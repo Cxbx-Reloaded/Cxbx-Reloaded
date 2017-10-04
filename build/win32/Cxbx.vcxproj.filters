@@ -821,6 +821,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4134.inl">
+      <Filter>HLEDatabase\XG</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>

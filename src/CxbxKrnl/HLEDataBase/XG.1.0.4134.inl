@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XG.1.0.5028.cpp
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4134.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,36 +26,56 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
 // ******************************************************************
-// * XG_5028
+// * XGSetVertexBufferHeader
 // ******************************************************************
-OOVPATable XG_5028[] = {
+//Generic OOVPA as of 4134 and newer.
+OOVPA_NO_XREF(XGSetVertexBufferHeader, 4134, 15)
 
-	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
-	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
-	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x07, 0x18 },
+        { 0x0A, 0x08 },
 
-	// ******************************************************************
-	// Provisional registration functions in XDK 5028
-	// TODO: Need test cases
-	// ******************************************************************
-	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
-	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
-	// ******************************************************************
-};
+        { 0x0C, 0xC7 },
+        { 0x0D, 0x00 },
+        { 0x0E, 0x01 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x00 }, // XGSetVertexBufferHeader 0x00 vs XGSetIndexBufferHeader 0x01
+        { 0x11, 0x00 },
+        { 0x12, 0x89 },
+        { 0x13, 0x48 },
+        { 0x14, 0x04 },
+        { 0x15, 0xC2 },
+        { 0x16, 0x18 },
+OOVPA_END;
+
 // ******************************************************************
-// * XG_5028_SIZE
+// * XGSetIndexBufferHeader
 // ******************************************************************
-uint32 XG_5028_SIZE = sizeof(XG_5028);
+//Generic OOVPA as of 4134 and newer.
+OOVPA_NO_XREF(XGSetIndexBufferHeader, 4134, 15)
+
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x07, 0x18 },
+        { 0x0A, 0x08 },
+
+        { 0x0C, 0xC7 },
+        { 0x0D, 0x00 },
+        { 0x0E, 0x01 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x01 }, // XGSetVertexBufferHeader 0x00 vs XGSetIndexBufferHeader 0x01
+        { 0x11, 0x00 },
+        { 0x12, 0x89 },
+        { 0x13, 0x48 },
+        { 0x14, 0x04 },
+        { 0x15, 0xC2 },
+        { 0x16, 0x18 },
+OOVPA_END;

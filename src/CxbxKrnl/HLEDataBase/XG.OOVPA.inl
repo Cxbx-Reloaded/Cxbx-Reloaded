@@ -32,6 +32,18 @@
 // *
 // ******************************************************************
 
+// TODO: Known Xgraphics OOVPA issue list
+// * 4034 is not verified each OOVPA.
+// * Following OOVPA revision are not verified
+//   * XGCompressRect (4242, 4721, 5028, 5120)
+//   * XGSetIndexBufferHeader (4039)
+//   * XGSetVertexBufferHeader (4039)
+//   * XGSwizzleBox (4242)
+//   * XGUnswizzleBox (4039)
+//   * XGWriteSurfaceOrTextureToXPR (4242, 5028)
+// NOTE: Known Xgraphics OOVPA not included in initial revision.
+//   * XFONT_OpenBitmapFontFromMemory (4361)
+
 #ifndef XGRAPHC_OOVPA_INL
 #define XGRAPHC_OOVPA_INL
 
@@ -39,6 +51,7 @@
 
 #include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4034.inl"
+#include "HLEDataBase/XG.1.0.4134.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4432.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
@@ -57,13 +70,13 @@ OOVPATable XGRAPHC_OOVPAV2[] = {
 	REGISTER_OOVPAS(XFONT_OpenBitmapFontFromMemory, XREF, 4361),
 	REGISTER_OOVPAS(XGCompressRect, XREF, 3911),
 	REGISTER_OOVPAS(XGIsSwizzledFormat, PATCH, 3911),
-	REGISTER_OOVPAS(XGSetIndexBufferHeader, XREF, 3911, 4361),
+	REGISTER_OOVPAS(XGSetIndexBufferHeader, XREF, 3911, 4134/*4361*/),
 	REGISTER_OOVPAS(XGSetTextureHeader, PATCH, 3911),
-	REGISTER_OOVPAS(XGSetVertexBufferHeader, XREF, 3911, 4361),
+	REGISTER_OOVPAS(XGSetVertexBufferHeader, XREF, 3911, 4134/*4361*/),
 	REGISTER_OOVPAS(XGSwizzleBox, PATCH, 3911),
-	// REGISTER_OOVPAS(XGSwizzleRect, UNPATCHED, 3911), // TODO : Uncomment
+	REGISTER_OOVPAS(XGSwizzleRect, UNPATCHED, 3911),
 	REGISTER_OOVPAS(XGUnswizzleBox, UNPATCHED, 3911),
-	// REGISTER_OOVPAS(XGUnswizzleRect, UNPATCHED, 3911), // TODO : Uncomment
+	REGISTER_OOVPAS(XGUnswizzleRect, UNPATCHED, 3911),
 	REGISTER_OOVPAS(XGWriteSurfaceOrTextureToXPR, PATCH, 3911),
 };
 
