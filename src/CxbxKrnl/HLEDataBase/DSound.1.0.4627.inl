@@ -1088,7 +1088,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_SetOutputBuffer, 4627, 8,
 
-    XRefNoSaveIndex,
+    XREF_CDirectSoundStream_SetOutputBuffer,
     XRefOne)
 
         XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetOutputBuffer ),

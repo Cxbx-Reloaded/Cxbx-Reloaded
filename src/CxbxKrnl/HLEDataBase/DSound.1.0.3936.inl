@@ -2218,6 +2218,7 @@ OOVPA_XREF(CDirectSoundVoice_SetFrequency, 3936, 9,
         { 0x41, 0x08 },
 OOVPA_END;
 #endif
+#if 0 // Moved to 3911
 // ******************************************************************
 // * CDirectSoundStream_SetFrequency
 // ******************************************************************
@@ -2244,6 +2245,7 @@ OOVPA_XREF(CDirectSoundStream_SetFrequency, 3936, 10,
         { 0x11, 0xC2 },
         { 0x12, 0x08 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetFrequency
@@ -4069,7 +4071,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPosition, 3911, PATCH),
 	REGISTER_OOVPA(XAudioCalculatePitch, 3911, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetFrequency, 3911, XREF),
-	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSoundStream_SetFrequency, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFrequency, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_Set3dMode, 3911, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 3911, XREF),

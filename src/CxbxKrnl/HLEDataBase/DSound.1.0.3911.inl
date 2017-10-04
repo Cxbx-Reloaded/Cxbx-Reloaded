@@ -5486,7 +5486,7 @@ OOVPA_XREF(IDirectSoundStream_SetConeOutsideVolume, 3911, 2,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSoundStream_SetConeOutsideVolume
+// * IDirectSoundStream_SetMode
 // ******************************************************************
 OOVPA_XREF(IDirectSoundStream_SetMode, 3911, 2,
 
