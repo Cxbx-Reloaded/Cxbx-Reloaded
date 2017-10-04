@@ -61,6 +61,8 @@ extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
 bool g_bXInputOpenCalled = false;
 
+XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
+
 bool CxbxMountUtilityDrive(bool formatClean);
 
 // ******************************************************************
@@ -135,6 +137,47 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(dwPreallocTypeCount)
 		LOG_FUNC_ARG(PreallocTypes)
 		LOG_FUNC_END;
+
+
+	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
+	if (gDeviceType_Gamepad == nullptr) {
+		// First, attempt to find GetTypeInformation
+		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
+		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != (xbaddr)nullptr) {
+			DbgPrintf("Deriving XDEVICE_TYPE_GAMEPAD from GetTypeInformation");
+			// Read the offset values of the device table structure from GetTypeInformation
+			uint32_t deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
+			uint32_t deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
+
+			// Calculate the number of device entires in the table
+			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
+			
+			// Iterate through the table until we find gamepad
+			PXID_TYPE_INFORMATION* deviceTable = (PXID_TYPE_INFORMATION*)(deviceTableStartOffset);
+			for (int i = 0; i < deviceTableEntryCount; i++) {
+				// If we found the gamepad structure (type 1), use it and exit the loop
+				if (deviceTable[i]->ucType == 1) {
+					gDeviceType_Gamepad = deviceTable[i]->XppType;
+					break;
+				}
+			}
+		} else {
+			// XDKs without GetTypeInformation have the GamePad address hardcoded in XInputOpen
+			// Only the earliest XDKs use this code path, and the offset never changed between them
+			// so this works well for us.
+			DbgPrintf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen");
+			void* XInputOpenAddr = (VOID*)g_SymbolAddresses["XInputOpen"];
+			gDeviceType_Gamepad = *(PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+		}
+
+		if (gDeviceType_Gamepad == nullptr) {
+			CxbxKrnlCleanup("XAPI: XDEVICE_TYPE_GAMEPAD was not found");
+		}
+
+		DbgPrintf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X", gDeviceType_Gamepad);
+		// Set the device as connected
+		gDeviceType_Gamepad->CurrentConnected = 1;
+	}
 
     for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {

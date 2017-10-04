@@ -149,6 +149,17 @@ typedef struct _XPP_DEVICE_TYPE
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
 // ******************************************************************
+// * XID_TYPE_INFORMATION
+// ******************************************************************
+typedef struct _XID_TYPE_INFORMATION
+{
+	UCHAR				ucType;
+	UCHAR				ucUnknown[3];
+	PXPP_DEVICE_TYPE    XppType;
+	DWORD				dwUnknown[5];
+} XID_TYPE_INFORMATION, *PXID_TYPE_INFORMATION;
+
+// ******************************************************************
 // * XDEVICE_PREALLOC_TYPE
 // ******************************************************************
 typedef struct _XDEVICE_PREALLOC_TYPE 
