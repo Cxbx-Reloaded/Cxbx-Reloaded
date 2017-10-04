@@ -201,6 +201,9 @@ const HLEDataV2 HLEDataBaseV2[] = {
     // Support inline functions in .text section
     { Lib_XGRAPHC,{ Sec_text, Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
 
+    // Cannot support LTCG in HLE
+    //{ Lib_XGRAPHCL,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
+
     //
     //{ Lib_XONLINE,{ Sec_XONLINE }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
