@@ -43,6 +43,7 @@ OOVPATable XAPI_4721[] = {
 	// REGISTER_OOVPA(RtlFreeHeap, 4627, PATCH), // obsolete 
 	// REGISTER_OOVPA(RtlSizeHeap, 4627, PATCH), // obsolete 
 	// REGISTER_OOVPA(RtlDestroyHeap, 4627, PATCH), // obsolete 
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
 	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
 	REGISTER_OOVPA(XGetDevices, 3911, PATCH),

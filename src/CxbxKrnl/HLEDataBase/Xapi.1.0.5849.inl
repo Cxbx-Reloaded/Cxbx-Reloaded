@@ -108,6 +108,7 @@ OOVPATable XAPI_5849[] = {
 	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete?
 	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 5788, PATCH),
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 5788, PATCH),
 	// REGISTER_OOVPA(GetThreadPriorityBoost, 5849, PATCH),
 	REGISTER_OOVPA(timeSetEvent, 5849, PATCH),

@@ -398,6 +398,7 @@ OOVPATable XAPI_4361[] = {
 	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
 	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
 	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
