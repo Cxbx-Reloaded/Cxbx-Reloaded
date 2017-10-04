@@ -146,15 +146,15 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != (xbaddr)nullptr) {
 			DbgPrintf("Deriving XDEVICE_TYPE_GAMEPAD from GetTypeInformation");
 			// Read the offset values of the device table structure from GetTypeInformation
-			uint32_t deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
-			uint32_t deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
+			xbaddr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
+			xbaddr deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
 
 			// Calculate the number of device entires in the table
 			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
 			
 			// Iterate through the table until we find gamepad
 			PXID_TYPE_INFORMATION* deviceTable = (PXID_TYPE_INFORMATION*)(deviceTableStartOffset);
-			for (int i = 0; i < deviceTableEntryCount; i++) {
+			for (unsigned int i = 0; i < deviceTableEntryCount; i++) {
 				// If we found the gamepad structure (type 1), use it and exit the loop
 				if (deviceTable[i]->ucType == 1) {
 					gDeviceType_Gamepad = deviceTable[i]->XppType;
@@ -208,7 +208,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-	DWORD oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
 	DWORD ret  = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
@@ -250,7 +250,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
-		DWORD oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+		UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
         *pdwRemovals = (DeviceType->PreviousConnected & ~DeviceType->CurrentConnected);
