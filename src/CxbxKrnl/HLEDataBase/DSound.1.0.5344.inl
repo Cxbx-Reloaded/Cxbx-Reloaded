@@ -857,7 +857,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeOrientation, 5344, 8,
 
-    XREF_DSVOICESETCONEORIENTATION,
+    XREF_CDirectSoundVoice_SetConeOrientation,
     XRefZero)
 
         // CDirectSoundVoice_SetConeOrientation+0x0F : mov edx, [ebp+arg_4]
