@@ -149,7 +149,12 @@ void SetupXboxDeviceTypes()
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
 
 		// Set the device as connected
+		// We need to set the ChangeConnected attribute so that titles calling
+		// XGetDeviceChanges before calling XGetDevices work as expected
+		// This fixes input in Far Cry Instincts.
 		gDeviceType_Gamepad->CurrentConnected = 1;
+		gDeviceType_Gamepad->ChangeConnected = 1;
+		gDeviceType_Gamepad->PreviousConnected = 0;
 	}
 }
 
