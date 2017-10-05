@@ -33,6 +33,7 @@
 // ******************************************************************
 
 // TODO: Known Xgraphics OOVPA issue list
+// * 3922 XGCompressRect is XREF in v1 database, any reason for this?
 // * 4034 is not verified each OOVPA.
 // * Following OOVPA revision are not verified
 //   * XGCompressRect (4242, 4721, 5028, 5120)
@@ -68,7 +69,7 @@
 OOVPATable XGRAPHC_OOVPAV2[] = {
 
 	REGISTER_OOVPAS(XFONT_OpenBitmapFontFromMemory, XREF, 4361),
-	REGISTER_OOVPAS(XGCompressRect, XREF, 3911),
+	REGISTER_OOVPAS(XGCompressRect, UNPATCHED, 3911), // TODO: Do we need to patch this?
 	REGISTER_OOVPAS(XGIsSwizzledFormat, PATCH, 3911),
 	REGISTER_OOVPAS(XGSetIndexBufferHeader, XREF, 3911, 4134/*4361*/),
 	REGISTER_OOVPAS(XGSetTextureHeader, PATCH, 3911),
