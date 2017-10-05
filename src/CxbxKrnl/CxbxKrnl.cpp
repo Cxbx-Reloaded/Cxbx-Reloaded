@@ -101,6 +101,9 @@ DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
 
+// Define function located in EmuXApi so we can call it from here
+void SetupXboxDeviceTypes();
+
 // ported from Dxbx's XbeExplorer
 XbeType GetXbeType(Xbe::Header *pXbeHeader)
 {
@@ -879,6 +882,7 @@ void CxbxKrnlInit
     XTL::CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
+	SetupXboxDeviceTypes();
 
 	// Always initialise NV2A: We may need it for disabled HLE patches too!
 	EmuNV2A_Init();

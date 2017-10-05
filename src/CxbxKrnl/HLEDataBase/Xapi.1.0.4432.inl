@@ -86,6 +86,7 @@ OOVPATable XAPI_4432[] = {
 	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
 	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(GetTypeInformation, 4134, XREF),
 	REGISTER_OOVPA(XMountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XUnmountAlternateTitleA, 3911, PATCH),
 	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
