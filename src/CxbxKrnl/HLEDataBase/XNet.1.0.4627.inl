@@ -71,6 +71,7 @@ OOVPA_XREF(XnInit, 4627, 18,
         { 0x0205, 0x00 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic XNet 4361 version
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
@@ -99,7 +100,8 @@ OOVPA_XREF(XNetStartup, 4627, 8,
         { 0x14, 0xC2 },
         { 0x15, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic XNet 4361 version
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
@@ -123,6 +125,7 @@ OOVPA_XREF(WSAStartup, 4627, 9,
         { 0x06, 0x24 },
         { 0x07, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CXnSock::socket
@@ -417,8 +420,8 @@ OOVPA_END;
 OOVPATable XNet_4627[] = {
 
 	REGISTER_OOVPA(XnInit, 4627, XREF),
-	REGISTER_OOVPA(XNetStartup, 4627, PATCH), // same as xonline 4361
-	REGISTER_OOVPA(WSAStartup, 4627, PATCH), // same as xonline 4361
+	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
+	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(socket, 4627, PATCH),
 	REGISTER_OOVPA(bind, 4627, PATCH),
 	REGISTER_OOVPA(listen, 4627, PATCH),

@@ -33,7 +33,7 @@
 // ******************************************************************
 
 // TODO: Known XNET OOVPA issue list
-// * Verified each OOVPA only with 3911, 4039.
+// * Verified each OOVPA with 3911, 4039, 4361, 4627.
 // * XnInit is for only XNETS library. XNET library is different one.
 // * Following OOVPA revision are not verified
 //   * listen (4039)
@@ -44,6 +44,7 @@
 #include "../OOVPA.h"
 
 #include "HLEDataBase/XNet.1.0.3911.inl"
+#include "HLEDataBase/XNet.1.0.4361.inl"
 #include "HLEDataBase/XNet.1.0.4627.inl"
 
 // ******************************************************************
@@ -51,10 +52,10 @@
 // ******************************************************************
 OOVPATable XNET_OOVPAV2[] = {
 
-	REGISTER_OOVPAS(XnInit, XREF, 3911, 4627), // For only XNETS library, XNET library is different OOVPA.
-	REGISTER_OOVPAS(WSAStartup, PATCH, 3911, 4627), // same as xonline 4361 (from 4627's comment)
-	REGISTER_OOVPAS(XNetStartup, PATCH, 3911, 4627), // same as xonline 4361 (from 4627's comment)
-	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911),
+	REGISTER_OOVPAS(XnInit, XREF, 3911, 4361/*, 4627*/), // 3911 is only XNETS library, XNET library is different OOVPA.
+	REGISTER_OOVPAS(WSAStartup, PATCH, 3911, 4361/*, 4627*/),
+	REGISTER_OOVPAS(XNetStartup, PATCH, 3911, 4361/*, 4627*/),
+	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911, 4361),
 	REGISTER_OOVPAS(bind, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(connect, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(ioctlsocket, PATCH, 3911, 4627),

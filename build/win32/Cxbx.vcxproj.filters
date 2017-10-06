@@ -244,10 +244,10 @@
       <Filter>EmuD3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h">
-      <Filter>HLEDatabase</Filter>
+      <Filter>HLEDatabase\XNet</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h">
-      <Filter>HLEDatabase</Filter>
+      <Filter>HLEDatabase\XNet</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
@@ -603,13 +603,16 @@
       <Filter>GUI</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.OOVPA.inl">
-      <Filter>HLEDatabase</Filter>
+      <Filter>HLEDatabase\XNet</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl">
-      <Filter>HLEDatabase</Filter>
+      <Filter>HLEDatabase\XNet</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4361.inl">
+      <Filter>HLEDatabase\XNet</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl">
-      <Filter>HLEDatabase</Filter>
+      <Filter>HLEDatabase\XNet</Filter>
     </None>
     <None Include="..\..\resource\Cxbx.ico">
       <Filter>Shared</Filter>
@@ -903,6 +906,9 @@
     </Filter>
     <Filter Include="Shared">
       <UniqueIdentifier>{d8ef7ef5-cbb9-4dba-9cab-585519a9756b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HLEDatabase\XNet">
+      <UniqueIdentifier>{b36ac8b9-077a-4ffc-bff9-3f2c0be74924}</UniqueIdentifier>
     </Filter>
     <Filter Include="HLEDatabase\D3D8">
       <UniqueIdentifier>{e78a3cc3-abce-4577-90aa-b7535bb09768}</UniqueIdentifier>
