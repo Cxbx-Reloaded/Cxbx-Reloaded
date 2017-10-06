@@ -87,6 +87,7 @@ OOVPA_END;
 // ******************************************************************
 // * XnInit
 // ******************************************************************
+// For only XNETS library, XNET library is different OOVPA.
 OOVPA_XREF(XnInit, 3911, 11,
 
     XREF_XnInit,
