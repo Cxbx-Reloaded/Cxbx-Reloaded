@@ -37,7 +37,7 @@
 // ******************************************************************
 //OOVPA_XREF(XnInit, 4627, 12,
 //
-//    XREF_XNINIT,
+//    XREF_XnInit,
 //    XRefZero)
 //
 //        // XnInit+0x03 : sub esp, 0x0218

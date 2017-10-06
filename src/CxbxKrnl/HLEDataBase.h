@@ -179,7 +179,7 @@ enum XRefDataBaseOffset
 	XREF_D3DTexture_GetSurfaceLevel2,
 	XREF_D3DDevice_CreatePalette2,
     XREF_D3DDevice_CreateIndexBuffer2,
-    XREF_XNINIT,
+    XREF_XnInit,
     XREF_XID_fCloseDevice,
     XREF_D3D_ClearStateBlockFlags,
     XREF_D3D_RecordStateBlock,

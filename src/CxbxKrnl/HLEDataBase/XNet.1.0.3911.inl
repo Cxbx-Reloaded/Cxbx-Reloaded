@@ -41,7 +41,7 @@ OOVPA_XREF(XNetStartup, 3911, 9,
     XRefOne)
 
         // XNetStartup+0x07 : call [XnInit]
-        XREF_ENTRY( 0x07, XREF_XNINIT ), 
+        XREF_ENTRY( 0x07, XREF_XnInit ),
 
         // XNetStartup+0x00 : push 0
         { 0x00, 0x6A },
@@ -67,7 +67,7 @@ OOVPA_XREF(WSAStartup, 3911, 11,
     XRefOne)
 
         // WSAStartup+0x07 : call [XnInit]
-        XREF_ENTRY( 0x07, XREF_XNINIT ), 
+        XREF_ENTRY( 0x07, XREF_XnInit ),
 
         // WSAStartup+0x01 : push 1; xor ebx, ebx
         { 0x01, 0x6A },
@@ -89,7 +89,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(XnInit, 3911, 11,
 
-    XREF_XNINIT,
+    XREF_XnInit,
     XRefZero)
 
         // XnInit+0x31 : push 0x3554454E
