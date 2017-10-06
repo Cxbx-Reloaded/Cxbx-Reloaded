@@ -80,7 +80,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Pause, 4361, 11,
 
-    XREF_DSSTREAMPAUSE,
+    XREF_CMcpxStream_Pause,
     XRefZero)
 
         // CMcpxStream_Pause+0x1E : or eax, 4
@@ -112,7 +112,7 @@ OOVPA_XREF(CDirectSoundStream_Pause, 4361, 11,
     XRefOne)
 
         // CDirectSoundStream_Pause+0x35 : call [CMcpxStream::Pause]
-        XREF_ENTRY( 0x35, XREF_DSSTREAMPAUSE ),
+        XREF_ENTRY( 0x35, XREF_CMcpxStream_Pause ),
 
         // CDirectSoundStream_Pause+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 },

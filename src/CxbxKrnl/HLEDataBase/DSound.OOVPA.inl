@@ -74,7 +74,7 @@
 //   * XAudioDownloadEffectsImage
 //   * XAudioGetSpeakerConfig
 //   * XAudioSetEffectData
-// * 3911 to 4039(?): Following separater functions has exact asm codes as whole function are...
+// * 3911 to 3936: Following separater functions has exact asm codes as whole function are...
 //   * IDirectSoundStream_SetVolume     & CDirectSoundStream_SetVolume
 //   * IDirectSoundStream_SetPitch      & CDirectSoundStream_SetPitch
 //   * IDirectSoundStream_SetLFO        & CDirectSoundStream_SetLFO
@@ -84,6 +84,9 @@
 //   * IDirectSoundStream_SetFrequency  & CDirectSoundStream_SetFrequency
 //   * IDirectSoundStream_SetMixBins    & CDirectSoundStream_SetMixBins
 // * Need to include patch, func export, support for IDirectSoundStream_Setxxxxx from above.
+// * 4039 OOVPA messed up?
+//   * IDirectSoundStream_SetMixBins should be IDirectSoundStream_SetHeadroom?
+//     * Need to dig deeper...
 
 
 #ifndef DSOUND_OOVPA_INL
@@ -135,7 +138,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911),
     REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911),
-    REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 4361, 4831, 5788),
+    REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4361, 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Commit3dSettings, XREF, 3911),
@@ -230,7 +233,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_FlushEx, XREF, 4627, 5233, 5788),
     REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911),
     REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4361, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4361, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911),
     REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911),
     REGISTER_OOVPAS(CDirectSoundStream_SetAllParameters, PATCH, 3911, 4039, 4134),
@@ -241,7 +244,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetFilter, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetFormat, PATCH, 4242),
     REGISTER_OOVPAS(CDirectSoundStream_SetFrequency, PATCH, 3911, 4039, 5233),
-    REGISTER_OOVPAS(CDirectSoundStream_SetHeadroom, PATCH, 3911, 3936, 4627, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_SetHeadroom, PATCH, 3911, 4627, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetI3DL2Source, PATCH, 3911, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetLFO, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMaxDistance, PATCH, 3911, 4039, 4134),
@@ -251,7 +254,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetOutputBuffer, PATCH, 3911, 4039, 4627),
-    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 3911, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_SetPitch, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetPosition, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetRolloffCurve, XREF, 4627, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetRolloffFactor, PATCH, 4134),
@@ -331,9 +334,9 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundStream_SetConeAngles, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOrientation, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOutsideVolume, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
-    REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetLFO, PATCH, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetFilter, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetLFO, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetFilter, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundStream_SetFrequency, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundStream_SetHeadroom, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetI3DL2Source, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
@@ -341,12 +344,13 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_12, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, see more note for CDirectSoundStream_SetMixBinVolumes_12
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_8, UNPATCHED, 4039), //NOTE: 4039 and newer only perform a jmp.
     REGISTER_OOVPAS(IDirectSoundStream_SetMode, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetOutputBuffer, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
-    REGISTER_OOVPAS(IDirectSoundStream_SetPitch, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetPitch, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundStream_SetPosition, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetVelocity, UNPATCHED, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetVolume, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetVolume, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitDeferredSettings, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitEffectData, PATCH, 3911),
@@ -361,7 +365,6 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSound_GetTime, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSound_Release, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_SetAllParameters, PATCH, 3911),
-    //REGISTER_OOVPAS(IDirectSound_SetAllParameters, XREF, 3911), //Cannot be used since this OOVPA does produce false detection.
     REGISTER_OOVPAS(IDirectSound_SetDistanceFactor, PATCH, 3911 /*, 4134*/),
     REGISTER_OOVPAS(IDirectSound_SetDopplerFactor, PATCH, 3911 /*, 4134*/),
     REGISTER_OOVPAS(IDirectSound_SetEffectData, PATCH, 3911 /*, 4134, 5344*/),

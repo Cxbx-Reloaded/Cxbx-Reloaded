@@ -1281,7 +1281,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_12, 3911, 9,
 
-    XREF_CDirectSoundStream_SetMixBinVolumes,
+    XREF_CDirectSoundStream_SetMixBinVolumes_12,
     XRefOne)
 
         XREF_ENTRY( 0x11, XREF_CDirectSoundVoice_SetMixBinVolumes ),
@@ -2039,14 +2039,15 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 3911, 10,
         { 0x1A, 0x08 },
 OOVPA_END;
 
-//TODO: Need to create XREF to CMcpxStream_Pause in order strengthen OOVPA chain.
 // ******************************************************************
 // * CDirectSoundStream_Pause
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_Pause, 3911, 6,
+OOVPA_XREF(CDirectSoundStream_Pause, 3911, 7,
 
     XREF_CDirectSoundStream_Pause,
-    XRefZero)
+    XRefOne)
+
+        XREF_ENTRY(0x0C, XREF_CMcpxStream_Pause ),
 
         { 0x01, 0x44 },
         { 0x04, 0xFF },
@@ -5434,7 +5435,7 @@ OOVPA_XREF(IDirectSoundStream_SetMixBinVolumes_12, 3911, 2,
     XRefOne)
 
         // IDirectSoundStream_SetMixBinVolumes_12+0x00 : jmp [CDirectSoundStream_SetMixBinVolumes_12]
-        XREF_ENTRY(0x01, XREF_CDirectSoundStream_SetMixBinVolumes),
+        XREF_ENTRY(0x01, XREF_CDirectSoundStream_SetMixBinVolumes_12),
 
         // IDirectSoundStream_SetMixBinVolumes_12+0x00 : jmp 0x........
         { 0x00, 0xE9 },
@@ -5518,6 +5519,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_Pause
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundStream_Pause, 3911, 2,
 
     XRefNoSaveIndex,
@@ -5528,4 +5530,31 @@ OOVPA_XREF(IDirectSoundStream_Pause, 3911, 2,
 
         // IDirectSoundStream_Pause+0x00 : jmp 0x........
         { 0x00, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxStream_Pause
+// ******************************************************************
+OOVPA_XREF(CMcpxStream_Pause, 3911, 12,
+
+    XREF_CMcpxStream_Pause,
+    XRefZero)
+
+        { 0x00, 0x55 },
+
+        { 0x16, 0x8B },
+        { 0x17, 0x46 },
+
+        { 0x19, 0x83 },
+        { 0x1A, 0xC8 },
+        { 0x1B, 0x04 },
+
+        { 0x27, 0x83 },
+        { 0x28, 0xE0 },
+        { 0x29, 0xFB },
+
+        { 0x44, 0xC9 },
+
+        { 0x45, 0xC2 },
+        { 0x46, 0x04 },
 OOVPA_END;
