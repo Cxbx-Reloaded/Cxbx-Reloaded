@@ -3110,3 +3110,209 @@ OOVPA_XREF(CDirectSoundStream_Pause, 4039, 11,
         { 0x4D, 0xC2 },
         { 0x4E, 0x08 },
 OOVPA_END;
+
+// ******************************************************************
+// * DS_CRefCount_AddRef
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer
+OOVPA_XREF(DS_CRefCount_AddRef, 4039, 12,
+
+    XREF_DS_CRefCount_AddRef,
+    XRefZero)
+
+        // DS_CRefCount_AddRef+0x00 : mov eax,dword ptr [esp+4]
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
+
+
+        // DS_CRefCount_AddRef+0x04 : inc dword ptr [eax+4]
+        { 0x04, 0xFF },
+        { 0x05, 0x40 },
+        { 0x06, 0x04 },
+
+        // DS_CRefCount_AddRef+0x07 : mov eax, dword ptr [eax+4]
+        { 0x07, 0x8B },
+        { 0x08, 0x40 },
+        { 0x09, 0x04 },
+
+        // DS_CRefCount_AddRef+0x0A : retn 0x04
+        { 0x0A, 0xC2 },
+        { 0x0B, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * DS_CRefCount_Release
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer
+OOVPA_XREF(DS_CRefCount_Release, 4039, 10,
+
+    XREF_DS_CRefCount_Release,
+    XRefZero)
+
+        { 0x00, 0x8B },
+
+        // DS_CRefCount_Release+0x0B : dec eax
+        { 0x0B, 0x48 },
+
+        // DS_CRefCount_Release+0x0E : mov dword ptr [ecx+4], eax
+        { 0x0E, 0x89 },
+        { 0x0F, 0x41 },
+        { 0x10, 0x04 },
+
+        // DS_CRefCount_Release+0x1D : mov, dword ptr [ecx+4]
+        { 0x1D, 0x8B },
+        { 0x1E, 0x41 },
+        { 0x1F, 0x04 },
+
+        // DS_CRefCount_Release+0x20 : retn 0x04
+        { 0x20, 0xC2 },
+        { 0x21, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream::Release
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_Release, 4039, 12,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x31, XREF_DS_CRefCount_Release ),
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+        { 0x13, 0x74 },
+        { 0x20, 0xB8 },
+
+        { 0x2C, 0x83 },
+        { 0x2D, 0xC0 },
+        { 0x2E, 0x04 },
+
+        { 0x46, 0x8B },
+
+        { 0x4A, 0xC2 },
+        { 0x4B, 0x04 },
+        { 0x4C, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CFullHRTFSource::GetCenterVolume
+// ******************************************************************
+OOVPA_XREF(CFullHRTFSource_GetCenterVolume, 4039, 9,
+
+    XREF_CFullHRTFSource_GetCenterVolume,
+    XRefZero)
+
+        { 0x00, 0x55 },
+
+        { 0x22, 0xD9 },
+        { 0x63, 0xDF },
+
+        { 0xCB, 0xF0 },
+        { 0xCC, 0xD8 },
+        { 0xCD, 0xFF },
+        { 0xCE, 0xFF },
+
+        { 0xD1, 0xC2 },
+        { 0xD2, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CHRTFSource::SetFullHRTF5Channel
+// ******************************************************************
+OOVPA_XREF(CHRTFSource_SetFullHRTF5Channel, 4039, 9,
+
+    XREF_CHRTFSource_SetFullHRTF5Channel,
+    XRefOne)
+
+        XREF_ENTRY( 0x38, XREF_CFullHRTFSource_GetCenterVolume ),
+
+        { 0x00, 0xC7 },
+
+        { 0x14, 0xC7 },
+        { 0x1E, 0xC7 },
+        { 0x28, 0xC7 },
+        { 0x32, 0xC7 },
+        { 0x3C, 0xC7 },
+        { 0x46, 0xC7 },
+        { 0x50, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSoundUseFullHRTF
+// ******************************************************************
+OOVPA_XREF(DirectSoundUseFullHRTF, 4039, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x09, XREF_CHRTFSource_SetFullHRTF5Channel ),
+
+        { 0x06, 0x8B },
+        { 0x07, 0xF0 },
+        { 0x0D, 0x85 },
+        { 0x0E, 0xF6 },
+        { 0x11, 0x0B },
+        { 0x17, 0xFF },
+        { 0x1D, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * XAudioCalculatePitch
+// ******************************************************************
+OOVPA_XREF(XAudioCalculatePitch, 4039, 11,
+
+    XREF_XAudioCalculatePitch,
+    XRefZero)
+
+        // XAudioCalculatePitch+0x10 : cmp eax, 0xBB80
+        { 0x10, 0x3D },
+        { 0x11, 0x80 },
+        { 0x12, 0xBB },
+        { 0x13, 0x00 },
+
+        // XAudioCalculatePitch+0x19 : jmp +0x21
+        { 0x19, 0xEB },
+        { 0x1A, 0x21 },
+
+        // XAudioCalculatePitch+0x3C : lea ecx, [ebp-04]
+        { 0x3C, 0x8D },
+        { 0x3D, 0x4D },
+        { 0x3E, 0xFC },
+
+        // XAudioCalculatePitch+0x48 : retn 0x08
+        { 0x48, 0xC2 },
+        { 0x49, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound::EnableHeadphones
+// ******************************************************************
+OOVPA_XREF(CDirectSound_EnableHeadphones, 4039, 16,
+
+    XREF_CDirectSound_EnableHeadphones,
+    XRefZero)
+
+        { 0x00, 0x55 },
+
+        { 0x42, 0x0f },
+        { 0x43, 0x95 },
+        { 0x44, 0xC3 },
+
+        { 0x4F, 0x0D },
+        { 0x50, 0x00 },
+        { 0x51, 0x00 },
+        { 0x52, 0x00 },
+        { 0x53, 0x80 },
+
+        { 0x56, 0x25 },
+        { 0x57, 0xFF },
+        { 0x58, 0xFF },
+        { 0x59, 0xFF },
+        { 0x5A, 0x7F },
+
+        { 0x7F, 0xC2 },
+        { 0x80, 0x08 },
+OOVPA_END;

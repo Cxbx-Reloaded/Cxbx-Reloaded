@@ -4312,6 +4312,38 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::EnableHeadphones
 // ******************************************************************
+OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 18,
+
+    XREF_CDirectSound_EnableHeadphones,
+    XRefZero)
+
+        { 0x00, 0x55 },
+
+        { 0x25, 0x0F },
+        { 0x26, 0x95 },
+        { 0x27, 0xC2 },
+
+        { 0x38, 0x81 },
+        { 0x39, 0xCB },
+        { 0x3A, 0x00 },
+        { 0x3B, 0x00 },
+        { 0x3C, 0x00 },
+        { 0x3D, 0x80 },
+
+        { 0x40, 0x81 },
+        { 0x41, 0xE3 },
+        { 0x42, 0xFF },
+        { 0x43, 0xFF },
+        { 0x44, 0xFF },
+        { 0x45, 0x7F },
+
+        { 0xCB, 0xC2 },
+        { 0xCC, 0x08 },
+OOVPA_END;
+#if 0 // Replaced with better OOVPA 3911 (See above)
+// ******************************************************************
+// * CDirectSound::EnableHeadphones
+// ******************************************************************
 OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 7,
 
     XREF_CDirectSound_EnableHeadphones,
@@ -4324,7 +4356,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 7,
         { 0x9A, 0x76 },
         { 0xB4, 0x5B },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
 // ******************************************************************
@@ -5504,6 +5536,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetI3DL2Source
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundStream_SetI3DL2Source, 3911, 2,
 
     XRefNoSaveIndex,
