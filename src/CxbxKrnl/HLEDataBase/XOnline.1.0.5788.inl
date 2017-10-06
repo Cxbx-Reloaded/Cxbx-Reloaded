@@ -37,7 +37,7 @@
 // ******************************************************************
 OOVPA_XREF(XnInit, 5788, 8,
 
-    XREF_XNINIT,
+    XREF_XnInit,
     XRefZero)
 
         { 0x1E, 0x3B },
