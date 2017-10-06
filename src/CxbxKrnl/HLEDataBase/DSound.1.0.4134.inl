@@ -3049,6 +3049,32 @@ OOVPA_XREF(CDirectSound_DownloadEffectsImage, 4134, 18,
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSoundStream::Release
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_Release, 4134, 12,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x32, XREF_DS_CRefCount_Release ),
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+
+        { 0x2D, 0x83 },
+        { 0x2E, 0xC0 },
+        { 0x2F, 0x04 },
+
+        { 0x47, 0x8B },
+
+        { 0x4B, 0xC2 },
+        { 0x4C, 0x04 },
+        { 0x4D, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_4134
 // ******************************************************************
 OOVPATable DSound_4134[] = {

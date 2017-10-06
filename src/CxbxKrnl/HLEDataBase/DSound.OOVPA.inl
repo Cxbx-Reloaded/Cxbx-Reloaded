@@ -36,15 +36,17 @@
 // Titles which did compiled with full libary
 //   [revi] Title Name          |  Verify   |   Comments
 //-------------------------------------------------------------------
-// * [3925] Cel Damage          |   100%    | None
+// * [3925] Cel Damage          |   100%    | Need to add 3 missing OOVPAs, see TODO issue list.
 // * [3936] Silent Hill 2       |   100%    | Need verify non-exist function is there or not
 // * [4039] Nightcaster         |    ??%    | Need to create bunch of OOVPAs...
+// * [4134] RaceX (Demo)        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
+// * [4134] Blood Omen 2        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
 
 // TODO: Known DSound OOVPA issue list
 // * 3911 to 5933: Cannot make OOVPAs
-//   * IDirectSound_SetCooperativeLevel     (Xbox doesn't use it)
-//   * IDirectSound_Compact                 (Xbox doesn't use it)
-//   * IDirectSoundBuffer_Restore           (Xbox doesn't use it)
+//   * IDirectSound_SetCooperativeLevel     (Xbox doesn't use it, can't make OOVPA for it)
+//   * IDirectSound_Compact                 (Xbox doesn't use it, can't make OOVPA for it)
+//   * IDirectSoundBuffer_Restore           (Xbox doesn't use it, can't make OOVPA for it)
 //   * IDirectSoundBuffer_Unlock            (Xbox doesn't use it, however can make OOVPA; NOTE: OOVPA is registered for it)
 //   * IDirectSoundStream_AddRef            (Using IUnknown_AddRef)
 //   * IDirectSoundStream_Release           (Using IUnknown_Release)
@@ -74,6 +76,8 @@
 //   * XAudioDownloadEffectsImage
 //   * XAudioGetSpeakerConfig
 //   * XAudioSetEffectData
+//   * DirectSoundUseFullHRTF4Channel
+//   * DirectSoundUseLightHRTF4Channel
 // * 3911 to 3936: Following separater functions has exact asm codes as whole function are...
 //   * IDirectSoundStream_SetVolume     & CDirectSoundStream_SetVolume
 //   * IDirectSoundStream_SetPitch      & CDirectSoundStream_SetPitch
@@ -87,6 +91,23 @@
 // * 4039 OOVPA messed up?
 //   * IDirectSoundStream_SetMixBins should be IDirectSoundStream_SetHeadroom?
 //     * Need to dig deeper...
+// * 3911 - Need to add:
+//   * XAudioCreateAdpcmFormat
+//   * XAudioCreatePcmFormat
+//   * IsValidFormat
+//   Not part of API, yet is a non-member function : (might be useful)
+//   * GetFormatSize
+//   * CopyFormat
+//   * CompareFormats
+//   * CalculateXboxAdpcmAlignment
+//   * IsValidPcmFormat
+//   * IsValidXboxAdpcmFormat
+//   * CopyFormatAlloc
+// * List of internal functions are not register:
+//   * CDirectSoundBuffer_Release   (Is unique, however need multiple OOVPAs to register all revisions)
+//     * Using XREF_DS_CRefCount_Release
+//   * CDirectSound_Release         (Is unique, however need multiple OOVPAs to register all revisions)
+//     * Using XREF_DS_CRefCount_Release
 
 
 #ifndef DSOUND_OOVPA_INL
@@ -114,7 +135,7 @@
 // ******************************************************************
 OOVPATable DSound_OOVPAV2[] = {
 
-    REGISTER_OOVPAS(XAudioCalculatePitch, XREF, 3911),
+    REGISTER_OOVPAS(XAudioCalculatePitch, XREF, 3911, 4039),
     REGISTER_OOVPAS(DirectSoundEnterCriticalSection, XREF, 3911),
     REGISTER_OOVPAS(CMcpxAPU_Commit3dSettings, XREF, 3911),
     REGISTER_OOVPAS(CMcpxAPU_ServiceDeferredCommandsLow, XREF, 3911),
@@ -157,8 +178,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetPitch, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3911, 4039, 4134),
-    REGISTER_OOVPAS(DS_CRefCount_AddRef, XREF, 3911),
-    REGISTER_OOVPAS(DS_CRefCount_Release, XREF, 3911),
+    REGISTER_OOVPAS(DS_CRefCount_AddRef, XREF, 3911, 4039),
+    REGISTER_OOVPAS(DS_CRefCount_Release, XREF, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBins, XREF, 4039, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBinVolumes, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundVoice_CommitDeferredSettings, XREF, 5558),
@@ -235,7 +256,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4361, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911),
-    REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911),
+    REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetAllParameters, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeAngles, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeOrientation, PATCH, 3911, 4039, 4134),
@@ -267,7 +288,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_CreateSoundStream, XREF, 3911, 4039, 4134, 5558),
     REGISTER_OOVPAS(CDirectSound_DownloadEffectsImage, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSound_DoWork, XREF, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSound_EnableHeadphones, XREF, 3911, 4627, 5233, 5344, 5558),
+    REGISTER_OOVPAS(CDirectSound_EnableHeadphones, XREF, 3911, 4039, 4627, 5233, 5344, 5558),
     REGISTER_OOVPAS(CDirectSound_GetCaps, XREF, 3911, 4361),
     REGISTER_OOVPAS(CDirectSound_GetEffectData, XREF, 3911),
     REGISTER_OOVPAS(CDirectSound_GetOutputLevels, XREF, 4627, 5558),
@@ -380,13 +401,13 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3911, 4134, 5558),
     REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
-    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 5558),
+    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 5558),
     REGISTER_OOVPAS(DirectSoundUseLightHRTF, PATCH, 3911),
 
 
 
-    REGISTER_OOVPAS(CFullHRTFSource_GetCenterVolume, XREF, 5558),
-    REGISTER_OOVPAS(CHRTFSource_SetFullHRTF5Channel, XREF, 5558),
+    REGISTER_OOVPAS(CFullHRTFSource_GetCenterVolume, XREF, 4039, 5558),
+    REGISTER_OOVPAS(CHRTFSource_SetFullHRTF5Channel, XREF, 4039, 5558),
 
 
     REGISTER_OOVPAS(WaveFormat_CreateXboxAdpcmFormat, XREF, 5344),
