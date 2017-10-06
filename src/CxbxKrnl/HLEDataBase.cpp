@@ -71,8 +71,7 @@ const char *Sec_XNET = "XNET";
 #include "HLEDataBase/D3D8.OOVPA.inl"
 #include "HLEDataBase/DSound.OOVPA.inl"
 #include "HLEDataBase/XG.OOVPA.inl"
-#include "HLEDataBase/XNet.1.0.3911.inl"
-#include "HLEDataBase/XNet.1.0.4627.inl"
+#include "HLEDataBase/XNET.OOVPA.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.5028.inl"
@@ -158,8 +157,10 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5788),
 	HLE_ENTRY(Lib_XGRAPHC, XG, 5849),
 #endif
+#if ENABLE_LEGACY_XNETS_DB
 	HLE_ENTRY(Lib_XNETS, XNet, 3911),
 	HLE_ENTRY(Lib_XNETS, XNet, 4627),
+#endif
 
 	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
 
@@ -211,7 +212,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //{ Lib_XONLINES,{ Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
     // XNETS only has XNET, might be true.
-    //{ Lib_XNETS,{ Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+    { Lib_XNETS,{ Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
 };
 
 // ******************************************************************

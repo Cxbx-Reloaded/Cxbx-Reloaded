@@ -602,6 +602,9 @@
     <None Include="..\..\resource\Splash.jpg">
       <Filter>GUI</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.OOVPA.inl">
+      <Filter>HLEDatabase</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl">
       <Filter>HLEDatabase</Filter>
     </None>
