@@ -491,7 +491,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Pause, 4831, 11,
 
-    XREF_DSSTREAMPAUSE,
+    XREF_CMcpxStream_Pause,
     XRefZero)
 
         // CMcpxStream_Pause+0x17 : and ax, 0xFFDF

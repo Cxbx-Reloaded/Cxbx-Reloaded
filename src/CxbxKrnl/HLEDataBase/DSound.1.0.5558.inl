@@ -940,7 +940,7 @@ OOVPA_XREF(CDirectSoundStream_Pause, 5558, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x35, XREF_DSSTREAMPAUSE ),
+        XREF_ENTRY( 0x35, XREF_CMcpxStream_Pause ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
