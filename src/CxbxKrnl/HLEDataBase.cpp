@@ -212,7 +212,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //{ Lib_XONLINES,{ Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
     // XNETS only has XNET, might be true.
-    { Lib_XNETS,{ Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
+    { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
 };
 
 // ******************************************************************
