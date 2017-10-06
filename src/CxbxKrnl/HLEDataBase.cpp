@@ -72,14 +72,7 @@ const char *Sec_XNET = "XNET";
 #include "HLEDataBase/DSound.OOVPA.inl"
 #include "HLEDataBase/XG.OOVPA.inl"
 #include "HLEDataBase/XNET.OOVPA.inl"
-#include "HLEDataBase/XOnline.1.0.4361.inl"
-#include "HLEDataBase/XOnline.1.0.4627.inl"
-#include "HLEDataBase/XOnline.1.0.5028.inl"
-#include "HLEDataBase/XOnline.1.0.5233.inl"
-#include "HLEDataBase/XOnline.1.0.5344.inl"
-#include "HLEDataBase/XOnline.1.0.5558.inl"
-#include "HLEDataBase/XOnline.1.0.5788.inl"
-#include "HLEDataBase/XOnline.1.0.5849.inl"
+#include "HLEDataBase/XOnline.OOVPA.inl"
 #include "HLEDataBase/XactEng.OOVPA.inl"
 
 
@@ -164,6 +157,7 @@ const HLEData HLEDataBase[] =
 
 	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
 
+#if ENABLE_LEGACY_XONLINES_DB
 	// TODO: Verify differences between XONLINE and XONLINES (if any)
 	HLE_ENTRY(Lib_XONLINES, XOnline, 4627),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5028),
@@ -172,6 +166,7 @@ const HLEData HLEDataBase[] =
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5788),
 	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
+#endif
 };
 
 const HLEDataV2 HLEDataBaseV2[] = {
@@ -209,7 +204,7 @@ const HLEDataV2 HLEDataBaseV2[] = {
     //{ Lib_XONLINE,{ Sec_XONLINE }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
     // Fun fact, XONLINES are split into 2 header sections.
-    //{ Lib_XONLINES,{ Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+    { Lib_XONLINES,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
     // XNETS only has XNET, might be true.
     { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },

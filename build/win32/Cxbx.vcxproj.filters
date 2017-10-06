@@ -881,6 +881,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.OOVPA.inl">
+      <Filter>HLEDatabase\XOnline</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">
