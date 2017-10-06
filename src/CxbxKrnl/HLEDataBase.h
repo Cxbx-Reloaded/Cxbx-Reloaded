@@ -129,7 +129,7 @@ extern const struct HLEData
 }
 HLEDataBase[];
 
-#define PAIRSCANSEC_MAX 2
+#define PAIRSCANSEC_MAX 3
 
 const struct PairScanLibSec {
     const char *library;
