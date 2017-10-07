@@ -58,6 +58,7 @@ const char *Sec_XPP = "XPP";
 const char *Sec_text = ".text";
 const char *Lib_XGRAPHC = "XGRAPHC";
 const char *Sec_XGRPH = "XGRPH";
+const char *Lib_XNETN = "XNETN";
 const char *Lib_XNETS = "XNETS";
 const char *Lib_XONLINE = "XONLINE"; // TODO : Typo for XONLINES?
 const char *Sec_XONLINE = Lib_XONLINE;
@@ -208,6 +209,9 @@ const HLEDataV2 HLEDataBaseV2[] = {
 
     // XNETS only has XNET, might be true.
     { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
+
+    // test case: Stake
+    { Lib_XNETN,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
 };
 
 // ******************************************************************
