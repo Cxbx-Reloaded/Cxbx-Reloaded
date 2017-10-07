@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5344.inl
+// *   Cxbx->Win32->CxbxKrnl->XNet.1.0.5455.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,34 +26,27 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
 // ******************************************************************
-// * XOnline_5344
+// * CXnSock::socket
 // ******************************************************************
-OOVPATable XOnline_5344[] = {
+//Generic OOVPA as of 5455 and newer.
+OOVPA_NO_XREF(socket, 5455, 10)
 
-	REGISTER_OOVPA(XnInit, 4361, XREF),
-	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
-	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
-	REGISTER_OOVPA(socket, 4627, PATCH),
-	REGISTER_OOVPA(bind, 4627, PATCH),
-	REGISTER_OOVPA(listen, 4627, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
-	REGISTER_OOVPA(connect, 5120, PATCH),
-	REGISTER_OOVPA(send, 3911, PATCH),
-	REGISTER_OOVPA(recv, 3911, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 4627, XREF),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 5233, XREF),
-	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
-};
+        { 0x00, 0x51 },
+        { 0x0A, 0xB9 },
 
-// ******************************************************************
-// * XOnline_5344_SIZE
-// ******************************************************************
-uint32 XOnline_5344_SIZE = sizeof(XOnline_5344);
+        { 0xB8, 0x83 },
+        { 0xB9, 0xC8 },
+        { 0xBA, 0xFF },
+        { 0xBB, 0xEB },
+        { 0xBC, 0x73 },
+        { 0xBD, 0x53 },
+        { 0xBE, 0xFF },
+        { 0xBF, 0x15 },
+OOVPA_END;
