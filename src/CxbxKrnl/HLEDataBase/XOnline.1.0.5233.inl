@@ -66,6 +66,7 @@ OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
         { 0xDE, 0xF9 },
         { 0xFE, 0x33 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * XOnlineLogon
