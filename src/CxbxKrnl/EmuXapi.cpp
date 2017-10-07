@@ -132,18 +132,20 @@ void SetupXboxDeviceTypes()
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			// XDKs without GetTypeInformation have the GamePad address hardcoded in XInputOpen
 			// Only the earliest XDKs use this code path, and the offset never changed between them
 			// so this works well for us.
 			void* XInputOpenAddr = (void*)g_SymbolAddresses["XInputOpen"];
-			printf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)\n", XInputOpenAddr);
-			gDeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+			if (XInputOpenAddr != nullptr) {
+				printf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)\n", XInputOpenAddr);
+				gDeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+			}
 		}
 
 		if (gDeviceType_Gamepad == nullptr) {
-			CxbxKrnlCleanup("XAPI: XDEVICE_TYPE_GAMEPAD was not found");
+			EmuWarning("XAPI: XDEVICE_TYPE_GAMEPAD was not found");
+			return;
 		}
 
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
