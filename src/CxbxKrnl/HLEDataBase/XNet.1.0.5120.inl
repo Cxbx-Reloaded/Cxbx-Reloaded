@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5344.inl
+// *   Cxbx->Win32->CxbxKrnl->XNet.1.0.5120.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,34 +26,30 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
 // ******************************************************************
-// * XOnline_5344
+// * CXnSock::connect
 // ******************************************************************
-OOVPATable XOnline_5344[] = {
+//Generic OOVPA as of 5120 and newer.
+OOVPA_NO_XREF(connect, 5120, 12)
 
-	REGISTER_OOVPA(XnInit, 4361, XREF),
-	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
-	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
-	REGISTER_OOVPA(socket, 4627, PATCH),
-	REGISTER_OOVPA(bind, 4627, PATCH),
-	REGISTER_OOVPA(listen, 4627, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
-	REGISTER_OOVPA(connect, 5120, PATCH),
-	REGISTER_OOVPA(send, 3911, PATCH),
-	REGISTER_OOVPA(recv, 3911, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 4627, XREF),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 5233, XREF),
-	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
-};
+        { 0x00, 0x55 },
+        { 0x19, 0xE8 },
 
-// ******************************************************************
-// * XOnline_5344_SIZE
-// ******************************************************************
-uint32 XOnline_5344_SIZE = sizeof(XOnline_5344);
+        { 0x30, 0xF0 },
+        { 0x31, 0x85 },
+        { 0x32, 0xF6 },
+        { 0x33, 0x75 },
+        { 0x34, 0x08 },
+        { 0x35, 0x83 },
+        { 0x36, 0xC8 },
+        { 0x37, 0xFF },
+        { 0x38, 0xE9 },
+
+        { 0x61, 0xE8 },
+OOVPA_END;
