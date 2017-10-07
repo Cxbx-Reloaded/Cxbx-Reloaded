@@ -614,6 +614,12 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl">
       <Filter>HLEDatabase\XNet</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.5120.inl">
+      <Filter>HLEDatabase\XNet</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.5455.inl">
+      <Filter>HLEDatabase\XNet</Filter>
+    </None>
     <None Include="..\..\resource\Cxbx.ico">
       <Filter>Shared</Filter>
     </None>
@@ -866,6 +872,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4831.inl">
+      <Filter>HLEDatabase\XOnline</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
@@ -875,7 +884,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5455.inl">
+      <Filter>HLEDatabase\XOnline</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl">
+      <Filter>HLEDatabase\XOnline</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5659.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.inl">

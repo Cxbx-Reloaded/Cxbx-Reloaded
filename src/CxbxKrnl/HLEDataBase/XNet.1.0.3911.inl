@@ -114,6 +114,31 @@ OOVPA_END;
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 14)
+
+        { 0x00, 0x56 },
+        { 0x01, 0x33 },
+        { 0x02, 0xF6 },
+        { 0x03, 0xB8 },
+        { 0x04, 0x00 },
+        { 0x05, 0x00 },
+        { 0x06, 0x00 },
+        { 0x07, 0x00 },
+        { 0x08, 0xB9 },
+
+        { 0x0D, 0xBA },
+        { 0x1A, 0xE8 },
+
+        { 0x27, 0x75 },
+        { 0x2C, 0x15 },
+
+        { 0x3F, 0xC3 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * XNetGetEthernetLinkStatus
+// ******************************************************************
 OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
 
         // XNetGetEthernetLinkStatus+0x12 : cmpxchg [ecx], edx
@@ -132,7 +157,7 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
         // XNetStartup+0x3F : retn
         { 0x3F, 0xC3 },
 OOVPA_END;
-
+#endif
 
 // ******************************************************************
 // * CXnSock::socket
@@ -229,7 +254,8 @@ OOVPA_END;
 // ******************************************************************
 // * CXnSock::send
 // ******************************************************************
-OOVPA_NO_XREF(send, 3911, 14) // Up to 5849
+//Generic OOVPA as of 3911 and newer.
+OOVPA_NO_XREF(send, 3911, 14)
 
         { 0x00, 0x55 },
         { 0x01, 0x8B },
@@ -273,7 +299,8 @@ OOVPA_END;
 // ******************************************************************
 // * CXnSock::recv
 // ******************************************************************
-OOVPA_NO_XREF(recv, 3911, 14) // Up to 5849
+//Generic OOVPA as of 3911 and newer.
+OOVPA_NO_XREF(recv, 3911, 14)
 
         { 0x00, 0x55 },
         { 0x01, 0x8B },

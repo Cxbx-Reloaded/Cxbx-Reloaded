@@ -42,6 +42,7 @@ OOVPA_XREF(XnInit, 4361, 15,
     XRefZero)
 
         { 0x00, 0x55 },
+        { 0x0F, 0xB9 },
 
         { 0x14, 0xBA },
         { 0x15, 0x01 },
@@ -52,12 +53,13 @@ OOVPA_XREF(XnInit, 4361, 15,
         { 0x1A, 0xB1 },
         { 0x1B, 0x11 },
         { 0x1C, 0x33 },
-        { 0x1D, 0xF6 },
+        //{ 0x1D, 0xF6 },
         { 0x1E, 0x3B },
-        { 0x1F, 0xC6 },
+        //{ 0x1F, 0xC6 },
 
-        { 0x3C, 0x68 },
-        { 0x3D, 0x4E },
+        { 0x23, 0xE8 },
+        { 0x28, 0xEB },
+        { 0x3F, 0x54 },
 OOVPA_END;
 
 // ******************************************************************
@@ -113,6 +115,7 @@ OOVPA_XREF(XNetStartup, 4361, 8,
         { 0x15, 0x04 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
@@ -120,7 +123,7 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
 
         { 0x00, 0x56 },
         { 0x01, 0x33 },
-        { 0x02, 0xF3 },
+        { 0x02, 0xF6 },
         { 0x03, 0xB8 },
         { 0x04, 0x00 },
         { 0x05, 0x00 },
@@ -134,3 +137,4 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
         { 0x27, 0x75 },
         { 0x2C, 0x15 },
 OOVPA_END;
+#endif

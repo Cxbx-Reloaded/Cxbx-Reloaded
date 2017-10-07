@@ -32,6 +32,27 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full library
+//   [revi] Title Name                        | Verify  |  Comments
+//-------------------------------------------------------------------
+// * [4831] NBA2K3                            |  100%   | None
+// * [4928] Unreal Championship               |  100%   | None
+// * [5028] Capcom vs. SNK 2 EO               |  100%   | None
+// * [5120] Muzzle Flash                      |  11/14  | Need verify non-exist function is there or not
+// * [5233] MotoGP 2                          |  11/14  | Need verify non-exist function is there or not
+// * [5344] Burnout 2                         |  11/14  | Check the Dxbx Patterns
+// * [5455] Ghost Recon Island Thunder        |  100%   | None
+// * [5558] XIII                              |  100%   | None
+// * [5659] Plus Plum 2                       |  100%   | None
+// * [5788] All-Star Baseball '05             |  100%   | None
+// * [5849] Kingdom Under Fire: The Crusaders |  100%   | None
+
+// TODO: Known XOnlines OOVPA issue list
+// * Following OOVPA revision are not verified
+//   * listen (5120, 5233)
+//   * recv (5120, 5233)
+//   * send (5120, 5233)
+
 #ifndef XONLINES_OOVPA_INL
 #define XONLINES_OOVPA_INL
 
@@ -39,10 +60,13 @@
 
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
+#include "HLEDataBase/XOnline.1.0.4831.inl"
 #include "HLEDataBase/XOnline.1.0.5028.inl"
 #include "HLEDataBase/XOnline.1.0.5233.inl"
 #include "HLEDataBase/XOnline.1.0.5344.inl"
+#include "HLEDataBase/XOnline.1.0.5455.inl"
 #include "HLEDataBase/XOnline.1.0.5558.inl"
+#include "HLEDataBase/XOnline.1.0.5659.inl"
 #include "HLEDataBase/XOnline.1.0.5788.inl"
 #include "HLEDataBase/XOnline.1.0.5849.inl"
 
@@ -51,20 +75,20 @@
 // ******************************************************************
 OOVPATable XONLINES_OOVPAV2[] = {
 
-	REGISTER_OOVPAS(XnInit, XREF, 4361, 4627, 5788),
-	REGISTER_OOVPAS(WSAStartup, PATCH, 4361, 5558),
-	REGISTER_OOVPAS(XNetStartup, PATCH, 4361, 5233),
-	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 4361, 4627),
+	REGISTER_OOVPAS(CXo_XOnlineLogon, XREF, 4361, 4627, 4831/*, 5028*/, 5233, 5455, 5558, 5849),
+	REGISTER_OOVPAS(XOnlineLogon, PATCH, 4361),
+	REGISTER_OOVPAS(XoUpdateLaunchNewImageInternal, XREF, 4627, 5659, 5788),
+	REGISTER_OOVPAS(XnInit, XREF, 4361/*, 4627, 5788*/),
+	REGISTER_OOVPAS(WSAStartup, PATCH, 4361/*, 5558*/),
+	REGISTER_OOVPAS(XNetStartup, PATCH, 4361/*, 5233*/),
+	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911/*, 4361*/, 4627),
 	REGISTER_OOVPAS(bind, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(connect, PATCH, 3911, 5233),
+	REGISTER_OOVPAS(connect, PATCH, 3911, 5120/*, 5233*/),
 	REGISTER_OOVPAS(ioctlsocket, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(listen, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(recv, PATCH, 3911),
 	REGISTER_OOVPAS(send, PATCH, 3911),
-	REGISTER_OOVPAS(socket, PATCH, 3911, 4627, 5558),
-	REGISTER_OOVPAS(CXo_XOnlineLogon, XREF, 4361, 4627, 5028, 5233, 5558, 5849),
-	REGISTER_OOVPAS(XOnlineLogon, PATCH, 4361),
-	REGISTER_OOVPAS(XoUpdateLaunchNewImageInternal, XREF, 4627, 5788),
+	REGISTER_OOVPAS(socket, PATCH, 3911, 4627, 5455/*, 5558*/),
 };
 
 // ******************************************************************

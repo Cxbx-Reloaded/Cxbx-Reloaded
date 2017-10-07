@@ -32,11 +32,22 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full library
+//   [revi] Title Name                        | Verify  |  Comments
+//-------------------------------------------------------------------
+// * [3911] Halo                              |  100%   | None
+// * [4039] Tony Hawk's Pro Skater 3          |  10/11  | Need verify non-exist function is there or not
+// * [4361] MotoGP                            |  100%   | None
+// * [4721] TimeSplitters 2                   |   8/11  | Need verify too
+// * [5344] Stake                             |  10/11  | Use XNETN library. Need verify too
+
 // TODO: Known XNET OOVPA issue list
-// * Verified each OOVPA with 3911, 4039, 4361, 4627.
-// * XnInit is for only XNETS library. XNET library is different one.
+// * XnInit 3911 is for only XNETS library. XNET library is different one.
 // * Following OOVPA revision are not verified
-//   * listen (4039)
+//   * connect (4721)
+//   * listen (4039, 4721)
+//   * send (4721)
+//   * XNetGetEthernetLinkStatus (5344)
 
 #ifndef XNET_OOVPA_INL
 #define XNET_OOVPA_INL
@@ -46,6 +57,8 @@
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XNet.1.0.4361.inl"
 #include "HLEDataBase/XNet.1.0.4627.inl"
+#include "HLEDataBase/XNet.1.0.5120.inl"
+#include "HLEDataBase/XNet.1.0.5455.inl"
 
 // ******************************************************************
 // * XNET_OOVPA
@@ -55,14 +68,14 @@ OOVPATable XNET_OOVPAV2[] = {
 	REGISTER_OOVPAS(XnInit, XREF, 3911, 4361/*, 4627*/), // 3911 is only XNETS library, XNET library is different OOVPA.
 	REGISTER_OOVPAS(WSAStartup, PATCH, 3911, 4361/*, 4627*/),
 	REGISTER_OOVPAS(XNetStartup, PATCH, 3911, 4361/*, 4627*/),
-	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911, 4361),
+	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911/*, 4361*/, 4627),
 	REGISTER_OOVPAS(bind, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(connect, PATCH, 3911, 4627),
+	REGISTER_OOVPAS(connect, PATCH, 3911/*, 4627*/, 5120),
 	REGISTER_OOVPAS(ioctlsocket, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(listen, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(recv, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(send, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(socket, PATCH, 3911, 4627),
+	REGISTER_OOVPAS(recv, PATCH, 3911/*, 4627*/),
+	REGISTER_OOVPAS(send, PATCH, 3911/*, 4627*/),
+	REGISTER_OOVPAS(socket, PATCH, 3911, 4627, 5455),
 };
 
 // ******************************************************************
