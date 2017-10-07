@@ -58,6 +58,7 @@ OOVPA_XREF(CXo_XOnlineLogon, 5558, 14,
         { 0x31, 0x80 },
         { 0x32, 0xE9 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic XNet 4361 version
 // ******************************************************************
 // * WSAStartup
