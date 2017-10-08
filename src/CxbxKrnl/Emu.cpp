@@ -114,13 +114,18 @@ void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
 std::string EIPToString(xbaddr EIP)
 {
-	int symbolOffset = 0;
-	std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
-
 	char buffer[256];
-	sprintf(buffer, "0x%.08X(=%s+0x%x)", EIP, symbolName.c_str(), symbolOffset);
-
+	
+	if (EIP < XBOX_MEMORY_SIZE) {
+		int symbolOffset = 0;
+		std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
+		sprintf(buffer, "0x%.08X(=%s+0x%x)", EIP, symbolName.c_str(), symbolOffset);
+	} else {
+		sprintf(buffer, "0x%.08X", EIP);
+	}
+	
 	std::string result = buffer;
+
 	return result;
 }
 
