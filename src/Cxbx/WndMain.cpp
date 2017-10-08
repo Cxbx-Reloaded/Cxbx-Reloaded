@@ -53,8 +53,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-typedef BOOL (WINAPI *ChangeWindowMessageFilterType)(UINT, DWORD); // for GetProcAddress()
-
 static int gameLogoWidth, gameLogoHeight;
 
 void ClearHLECache()
@@ -233,18 +231,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
         }
     }
 
-	// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
-
-	HMODULE hUser32 = LoadLibrary("User32.dll");
-	ChangeWindowMessageFilterType pChangeWindowMessageFilter = (ChangeWindowMessageFilterType)GetProcAddress(hUser32, "ChangeWindowMessageFilter");
-	if(pChangeWindowMessageFilter)
-	{
-		ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
-		ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
-		ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
-	}
-	FreeLibrary(hUser32);
-
     return;
 }
 
@@ -404,6 +390,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
 			DragAcceptFiles(hwnd, TRUE);
 
+			// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
+
+			ChangeWindowMessageFilterEx(hwnd, WM_DROPFILES, MSGFLT_ALLOW, nullptr);
+			ChangeWindowMessageFilterEx(hwnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
+			ChangeWindowMessageFilterEx(hwnd, 0x0049, MSGFLT_ALLOW, nullptr);
+
             m_bCreated = true;
         }
         break;
@@ -423,6 +415,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
 						UpdateCaption();
 						RefreshMenus();
+					}
+					else
+					{
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
                 }
                 break;
