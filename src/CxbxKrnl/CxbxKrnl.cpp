@@ -489,6 +489,11 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_EmuShared->SetXbePath(xbePath.c_str());
 		CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
+		if (CxbxKrnl_Xbe->HasFatalError()) {
+			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
+			return;
+		}
+
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
