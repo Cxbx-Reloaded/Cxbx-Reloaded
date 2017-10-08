@@ -153,10 +153,21 @@ void SetupXboxDeviceTypes()
 		// Set the device as connected
 		// We need to set the ChangeConnected attribute so that titles calling
 		// XGetDeviceChanges before calling XGetDevices work as expected
-		// This fixes input in Far Cry Instincts.
+		// This fixes input in Far Cry Instincts
 		gDeviceType_Gamepad->CurrentConnected = 1;
 		gDeviceType_Gamepad->ChangeConnected = 1;
 		gDeviceType_Gamepad->PreviousConnected = 0;
+
+		// JSRF Hack: Don't set the ChangeConnected flag. 
+		// Without this, JSRF hard crashes 
+		// TODO: Why is this still needed? 
+		// TODO: Perhaps we should implement LLE for OHCI/USB much sooner than planned
+		// TitleID 0x49470018 = JSRF NTSC-U
+		// TitleID 0x5345000A = JSRF PAL, NTSC-J
+		// TitleID 0x53450016 = JSRF NTSC-J (Demo)
+		if (g_pCertificate->dwTitleId == 0x49470018 || g_pCertificate->dwTitleId == 0x5345000A || g_pCertificate->dwTitleId == 0x53450016) {
+			gDeviceType_Gamepad->ChangeConnected = 0;
+		}
 	}
 }
 
