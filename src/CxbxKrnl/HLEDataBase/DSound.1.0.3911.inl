@@ -1962,6 +1962,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
+//Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions, 3911, 9,
 
     XRefNoSaveIndex,

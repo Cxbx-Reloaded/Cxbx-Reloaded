@@ -2921,6 +2921,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetFrequency
 // ******************************************************************
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetFrequency, 4039, 2,
 
     XRefNoSaveIndex,
@@ -2936,7 +2937,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetVolume
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetVolume, 4039, 2,
 
     XRefNoSaveIndex,
@@ -2975,7 +2976,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetPitch
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetPitch, 4039, 2,
 
     XRefNoSaveIndex,
@@ -2991,7 +2992,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetLFO
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetLFO, 4039, 2,
 
     XRefNoSaveIndex,
@@ -3007,7 +3008,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetEG
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetEG, 4039, 2,
 
     XRefNoSaveIndex,
@@ -3023,7 +3024,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetFilter
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetFilter, 4039, 2,
 
     XRefNoSaveIndex,
@@ -3039,7 +3040,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetMixBinVolumes
 // ******************************************************************
-//Generic OOVPA as of 4039 and newer
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundStream_SetMixBinVolumes_8, 4039, 2,
 
     XRefNoSaveIndex,
@@ -3174,6 +3175,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::Release
 // ******************************************************************
+// NOTE: Has identical function to DirectSound::CAc97MediaObject::Release
 OOVPA_XREF(CDirectSoundStream_Release, 4039, 12,
 
     XRefNoSaveIndex,
@@ -3315,4 +3317,235 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 4039, 16,
 
         { 0x7F, 0xC2 },
         { 0x80, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_Process
+// ******************************************************************
+OOVPA_NO_XREF(CDirectSoundStream_Process, 4039, 17)
+
+        { 0x00, 0x57 },
+
+        { 0x28, 0x8B },
+        { 0x2B, 0x0C },
+
+        { 0x2C, 0x8B },
+        { 0x2E, 0x24 },
+
+        { 0x34, 0x85 },
+        { 0x35, 0xC0 },
+
+        //CDirectSoundStream_Process+0x39 : mov eax, 88780032h
+        { 0x39, 0x32 },
+        { 0x3A, 0x00 },
+        { 0x3B, 0x78 },
+        { 0x3C, 0x88 },
+
+        { 0x3F, 0xFF },
+        { 0x42, 0x10 },
+
+        { 0x43, 0x8B },
+        { 0x45, 0x24 },
+
+        { 0x60, 0xC2 },
+        { 0x61, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxStream_Flush
+// ******************************************************************
+OOVPA_XREF(CMcpxStream_Flush, 4039, 10,
+    XREF_CMcpxStream_Flush,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+
+        { 0x09, 0x33 },
+
+        { 0x32, 0x83 },
+        { 0x33, 0xFF },
+        { 0x34, 0x03 },
+
+        { 0x4A, 0xE8 },
+
+        { 0x58, 0xE8 },
+
+
+        { 0x98, 0xC9 },
+        { 0x99, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_Flush
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_Flush, 4039, 9,
+    XRefNoSaveIndex,
+    XRefOne)
+
+        //CDirectSoundStream_Flush+0x2F : call [CMcpxStream_Flush]
+        XREF_ENTRY( 0x30, XREF_CMcpxStream_Flush ),
+
+        { 0x00, 0x56 },
+
+        { 0x27, 0x8B },
+        { 0x2A, 0x08 },
+
+        { 0x2B, 0x8B },
+        { 0x2D, 0x24 },
+
+        { 0x2F, 0xE8 },
+
+        //CDirectSoundStream_Flush+0x49 : ret 4
+        { 0x49, 0xC2 },
+        { 0x4A, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_AddRef
+// ******************************************************************
+// NOTE: Has identical function to DirectSound::CAc97MediaObject::AddRef
+OOVPA_XREF(CDirectSoundStream_AddRef, 4039, 11,
+    XRefNoSaveIndex,
+    XRefZero)
+
+        { 0x00, 0xE8 },
+
+        { 0x24, 0x8B },
+        { 0x25, 0x4C },
+
+        { 0x28, 0xFF },
+        { 0x29, 0x41 },
+        { 0x2A, 0x08 },
+
+        { 0x2E, 0x8B },
+        { 0x2F, 0x71 },
+        { 0x30, 0x08 },
+
+        //CDirectSoundStream_AddRef+0x41 : ret 4
+        { 0x41, 0xC2 },
+        { 0x42, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_GetInfo
+// ******************************************************************
+OOVPA_NO_XREF(CDirectSoundStream_GetInfo, 4039, 17)
+
+        //CDirectSoundStream_GetInfo+0x00 : push ebx
+        { 0x00, 0x53 },
+
+        //CDirectSoundStream_GetInfo+0x2D : mov edi, dword ptr [esp + 10h]
+        { 0x2D, 0x8B },
+        { 0x2E, 0x7C },
+        { 0x2F, 0x24 },
+        { 0x30, 0x10 },
+
+        //CDirectSoundStream_GetInfo+0x37 : mov, dword ptr [edi + 24h]
+        { 0x37, 0x8B },
+        { 0x38, 0x4F },
+        { 0x39, 0x24 },
+
+        //CDirectSoundStream_GetInfo+0x42 : mov eax, dword ptr [edi + 20h]
+        { 0x42, 0x8B },
+        { 0x43, 0x47 },
+        { 0x44, 0x20 },
+
+        //CDirectSoundStream_GetInfo+0x48 : and dword ptr [esi + 8], 0
+        { 0x48, 0x83 },
+        { 0x49, 0x66 },
+        { 0x4A, 0x08 },
+        { 0x4B, 0x00 },
+
+        //CDirectSoundStream_GetInfo+0x63 : ret 8
+        { 0x63, 0xC2 },
+        { 0x64, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxStream_Discontinuity
+// ******************************************************************
+OOVPA_XREF(CMcpxStream_Discontinuity, 4039, 7,
+    XREF_CMcpxStream_Discontinuity,
+    XRefOne)
+
+        //CMcpxStream_Discontinuity+0x17 : call [CMcpxStream_Flush]
+        XREF_ENTRY ( 0x18, XREF_CMcpxStream_Flush ),
+
+        { 0x00, 0x56 },
+
+        { 0x01, 0x8B },
+
+        { 0x15, 0x8B },
+
+        { 0x17, 0xE8 },
+
+        { 0x1E, 0x5E },
+
+        { 0x1F, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundStream_Discontinuity
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_Discontinuity, 4039, 9,
+    XRefNoSaveIndex,
+    XRefOne)
+
+        //CDirectSoundStream_Discontinuity+0x2F : call [CMcpxStream_Discontinuity]
+        XREF_ENTRY( 0x30, XREF_CMcpxStream_Discontinuity ),
+
+        { 0x00, 0x56 },
+
+        { 0x27, 0x8B },
+        { 0x2A, 0x08 },
+
+        { 0x2B, 0x8B },
+        { 0x2D, 0x24 },
+
+        { 0x2F, 0xE8 },
+
+        //CDirectSoundStream_Discontinuity+0x49 : ret 4
+        { 0x49, 0xC2 },
+        { 0x4A, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetMixBins
+// ******************************************************************
+OOVPA_XREF(CDirectSoundStream_SetMixBins, 4039, 10,
+
+    XREF_CDirectSoundStream_SetMixBins,
+    XRefOne)
+
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetMixBins ),
+
+        { 0x00, 0x56 },
+
+        { 0x0C, 0x00 },
+
+        { 0x13, 0x74 },
+        { 0x20, 0xB8 },
+        { 0x29, 0x24 },
+        { 0x34, 0xE8 },
+        { 0x3F, 0x68 },
+
+        { 0x4E, 0xC2 },
+        { 0x4F, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_SetMixBins
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer
+OOVPA_XREF(IDirectSoundStream_SetMixBins, 4039, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_SetMixBins+0x00 : jmp [CDirectSoundStream_SetMixBins]
+        XREF_ENTRY( 0x01, XREF_CDirectSoundStream_SetMixBins ),
+
+        // IDirectSoundStream_SetMixBins+0x00 : jmp 0x........
+        { 0x00, 0xE9 },
 OOVPA_END;

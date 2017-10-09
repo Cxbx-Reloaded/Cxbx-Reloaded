@@ -242,7 +242,7 @@ OOVPATable DSound_5028[] = {
 	REGISTER_OOVPA(XFileCreateMediaObjectEx, 5028, PATCH),
 	REGISTER_OOVPA(XWaveFileCreateMediaObject, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetLFO, 4242, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetLFO, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLFO, 4242, XREF),
