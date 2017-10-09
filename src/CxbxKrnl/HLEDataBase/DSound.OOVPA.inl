@@ -36,9 +36,9 @@
 // Titles which did compiled with full libary
 //   [revi] Title Name          |  Verify   |   Comments
 //-------------------------------------------------------------------
-// * [3925] Cel Damage          |   100%    | Need to add 3 missing OOVPAs, see TODO issue list.
-// * [3936] Silent Hill 2       |   100%    | Need verify non-exist function is there or not
-// * [4039] Nightcaster         |    ??%    | Need to create bunch of OOVPAs...
+// * [3925] Cel Damage          |   100%    | Contain full library. Need to add 3 missing OOVPAs, see TODO issue list.
+// * [3936] Silent Hill 2       |    80%    | Need verify non-exist function is there or not, re-check missing detection.
+// * [4039] Nightcaster         |   100%    | Only has 90% of the library compiled with xbe build.
 // * [4134] RaceX (Demo)        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
 // * [4134] Blood Omen 2        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
 
@@ -87,10 +87,7 @@
 //   * IDirectSoundStream_SetHeadroom   & CDirectSoundStream_SetHeadroom
 //   * IDirectSoundStream_SetFrequency  & CDirectSoundStream_SetFrequency
 //   * IDirectSoundStream_SetMixBins    & CDirectSoundStream_SetMixBins
-// * Need to include patch, func export, support for IDirectSoundStream_Setxxxxx from above.
-// * 4039 OOVPA messed up?
-//   * IDirectSoundStream_SetMixBins should be IDirectSoundStream_SetHeadroom?
-//     * Need to dig deeper...
+// * Need to include func export support for IDirectSoundStream_Setxxxxx from above.
 // * 3911 - Need to add:
 //   * XAudioCreateAdpcmFormat
 //   * XAudioCreatePcmFormat
@@ -103,11 +100,39 @@
 //   * IsValidPcmFormat
 //   * IsValidXboxAdpcmFormat
 //   * CopyFormatAlloc
+// * List of functions might need to be register:
+//   * IDirectSoundBuffer_QueryInterface
+//   * IDirectSoundBuffer_QueryInterfaceC
 // * List of internal functions are not register:
 //   * CDirectSoundBuffer_Release   (Is unique, however need multiple OOVPAs to register all revisions)
 //     * Using XREF_DS_CRefCount_Release
 //   * CDirectSound_Release         (Is unique, however need multiple OOVPAs to register all revisions)
 //     * Using XREF_DS_CRefCount_Release
+// * 3936 verification needed:
+//   * CDirectSoundBuffer_SetVolume
+//   * IDirectSoundBuffer_SetVolume
+//   * What else? Need to re-check the list again...
+// * 4039 verification needed:
+//   * DirectSoundCreateBuffer
+//   * DirectSoundCreateStream
+//   * DirectSoundUseLightHRTF
+//   * IDirectSound_CommitEffectData
+//   * IDirectSound_GetCaps
+//   * IDirectSound_GetEffectData
+//   * IDirectSound_GetSpeakerConfig
+//   * IDirectSound_GetTime
+//   * IDirectSound_SetAllParameters
+//   * IDirectSound_SetEffectData
+//   * IDirectSound_SetMixBinHeadroom
+//   * IDirectSoundBuffer_PlayEx
+//   * IDirectSoundBuffer_SetI3DL2Source
+//   * IDirectSoundBuffer_SetNotificationPositions
+//   * CDirectSoundStream_SetFormat
+//   * CDirectSoundStream_SetHeadroom
+//   * CDirectSoundStream_SetI3DL2Source
+//   * CDirectSoundStream_SetRolloffCurve
+//   * CDirectSoundStream_SetRolloffFactor
+//   * IDirectSoundStream_SetHeadroom
 
 
 #ifndef DSOUND_OOVPA_INL
@@ -157,8 +182,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_SetCurrentPosition, XREF, 3911, 4039, 4134, 5558, 5788),
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
-    REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911),
-    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911),
+    REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039),
+    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 4039),
     REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4361, 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911),
@@ -248,14 +273,14 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_Stop, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_StopEx, XREF, 3911, 4039, 4361),
     REGISTER_OOVPAS(CDirectSoundBuffer_Use3DVoiceData, XREF, 5558),
-    REGISTER_OOVPAS(CDirectSoundStream_AddRef, PATCH, 3911),
-    REGISTER_OOVPAS(CDirectSoundStream_Discontinuity, PATCH, 3911),
-    REGISTER_OOVPAS(CDirectSoundStream_Flush, PATCH, 3911),
+    REGISTER_OOVPAS(CDirectSoundStream_AddRef, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(CDirectSoundStream_Discontinuity, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(CDirectSoundStream_Flush, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_FlushEx, XREF, 4627, 5233, 5788),
-    REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911),
+    REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4361, 5558),
-    REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911),
+    REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetAllParameters, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeAngles, PATCH, 3911, 4039),
@@ -270,7 +295,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetLFO, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMaxDistance, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMinDistance, PATCH, 3911, 4039, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3911, 3936, 4627, 5233, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3911, 4039, 4627, 5233, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3911, 4039, 4134),
@@ -336,7 +361,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMode, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetNotificationPositions, PATCH, 3911, 4627),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetNotificationPositions, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetOutputBuffer, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetPitch, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetPlayRegion, PATCH, 4039, 4361),
@@ -344,7 +369,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetRolloffCurve, PATCH, 4627),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetRolloffFactor, PATCH, 4134, 5788),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetVelocity, PATCH, 3911, 5558),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetVolume, PATCH, 3911, 3936, 4039),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetVolume, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundBuffer_Stop, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_StopEx, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_Unlock, PATCH, 3911),
@@ -363,7 +388,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundStream_SetI3DL2Source, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetMaxDistance, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, UNPATCHED, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911),
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911, 4039),
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_12, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, see more note for CDirectSoundStream_SetMixBinVolumes_12
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_8, UNPATCHED, 4039), //NOTE: 4039 and newer only perform a jmp.
     REGISTER_OOVPAS(IDirectSoundStream_SetMode, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?

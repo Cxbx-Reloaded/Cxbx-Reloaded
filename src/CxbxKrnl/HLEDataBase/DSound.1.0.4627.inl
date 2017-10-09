@@ -1270,7 +1270,7 @@ OOVPA_NO_XREF(XFileCreateMediaObjectEx, 4627, 7)
         { 0x46, 0x4C },
         { 0x52, 0xFF },
 OOVPA_END;
-
+#if 0 // Duplicate OOVPA from 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
@@ -1290,6 +1290,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions, 4627, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
+#endif
 #if 0 // Moved to 4242
 // ******************************************************************
 // * CMcpxVoiceClient::SetLFO
@@ -1658,7 +1659,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(XFileCreateMediaObjectEx, 4627, PATCH),
 	REGISTER_OOVPA(XWaveFileCreateMediaObject, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF), // Uncommenting these fixes dashboard 4920
-	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxVoiceClient_SetLFO, 4242, XREF),
 	REGISTER_OOVPA(CDirectSoundVoice_SetLFO, 4039, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLFO, 4242, XREF),

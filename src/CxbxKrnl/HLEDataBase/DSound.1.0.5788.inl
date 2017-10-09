@@ -724,7 +724,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Use3DVoiceData, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_Use3DVoiceData, 5558, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3911, PATCH),

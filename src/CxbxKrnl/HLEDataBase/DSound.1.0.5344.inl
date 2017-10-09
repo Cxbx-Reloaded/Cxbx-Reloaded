@@ -1046,7 +1046,7 @@ OOVPATable DSound_5344[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetConeOrientation, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetConeOrientation, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetNotificationPositions, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 4627, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetNotificationPositions, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3911, PATCH),
