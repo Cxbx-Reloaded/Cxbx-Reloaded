@@ -1973,15 +1973,13 @@ void WndMain::CrashMonitor()
 		CloseHandle(hCrashMutex);
 		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
 		{
-			HWND hwnd = GetHwnd();
-			KillTimer(hwnd, TIMERID_FPS);
-			//KillTimer(hwnd, 2); for the LED
+			KillTimer(m_hwnd, TIMERID_FPS);
+			//KillTimer(m_hwnd, 2); for the LED
 			//DrawDefaultLedBitmap(hwnd); for the LED
 			m_hwndChild = NULL;
 			m_bIsStarted = false;
 			UpdateCaption();
 			RefreshMenus();
-			MessageBox(NULL, "Hard crash detected", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
 		}
 		return;
 	}
