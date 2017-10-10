@@ -406,6 +406,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
+					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
 						float fps = 0;
 						float mspf = 0;
@@ -1941,4 +1942,53 @@ void WndMain::StopEmulation()
 
 	UpdateCaption();
     RefreshMenus();
+}
+
+
+// wrapper function to call CrashMonitor
+DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
+{
+	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+	return 0;
+}
+
+// monitor for crashes
+void WndMain::CrashMonitor()
+{
+	bool bMultiXbe;
+	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
+
+	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
+
+	g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+
+	if (state == WAIT_OBJECT_0) // StopEmulation
+	{
+		CloseHandle(hCrashMutex);
+		return;
+	}
+
+	if (state == WAIT_ABANDONED && !bMultiXbe) // that's a crash
+	{
+		CloseHandle(hCrashMutex);
+		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
+		{
+			KillTimer(m_hwnd, TIMERID_FPS);
+			//KillTimer(m_hwnd, 2); for the LED
+			//DrawDefaultLedBitmap(hwnd); for the LED
+			m_hwndChild = NULL;
+			m_bIsStarted = false;
+			UpdateCaption();
+			RefreshMenus();
+		}
+		return;
+	}
+
+	// multi-xbe
+	// destroy this thread and start a new one
+	CloseHandle(hCrashMutex);
+	bMultiXbe = false;
+	g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+
+	return;
 }

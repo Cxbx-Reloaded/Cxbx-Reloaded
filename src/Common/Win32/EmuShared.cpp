@@ -137,6 +137,7 @@ void EmuShared::Cleanup()
 EmuShared::EmuShared()
 {
 	Load();
+	m_bMultiXbe = false;
 }
 
 // ******************************************************************
