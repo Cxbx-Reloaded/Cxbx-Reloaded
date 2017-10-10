@@ -116,6 +116,12 @@ class EmuShared : public Mutex
 		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
+		// ******************************************************************
+		// * MultiXbe flag Accessors
+		// ******************************************************************
+		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbe; Unlock(); }
+		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
+
 
 	private:
 		// ******************************************************************
@@ -135,6 +141,7 @@ class EmuShared : public Mutex
 		int			 m_XInputEnabled;
 		float		 m_MSpF;
 		float        m_FPS;
+		bool		 m_bMultiXbe;
 };
 
 // ******************************************************************

@@ -483,6 +483,9 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 			// Relaunch Cxbx, to load another Xbe
 			{
+				bool bMultiXbe = true;
+				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+
 				char szArgsBuffer[4096];
 
 				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
