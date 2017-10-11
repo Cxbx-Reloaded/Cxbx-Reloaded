@@ -1662,21 +1662,21 @@ OOVPA_XREF(CSensaura3d_GetLiteHRTFFilterPair, 3911, 10,
     XREF_CSensaura3d_GetLiteHRTFFilterPair,
     XRefZero)
 
-        //CSensaura3d_GetLightHRTFFilterPair+0x00 : push ebp
+        //CSensaura3d_GetLiteHRTFFilterPair+0x00 : push ebp
         { 0x00, 0x55 },
 
-        //CSensaura3d_GetLightHRTFFilterPair+0x14 : push ecx
+        //CSensaura3d_GetLiteHRTFFilterPair+0x14 : push ecx
         { 0x15, 0x51 },
 
-        //CSensaura3d_GetLightHRTFFilterPair+0x22 : push 3
+        //CSensaura3d_GetLiteHRTFFilterPair+0x22 : push 3
         { 0x1F, 0x6A },
         { 0x20, 0x03 },
 
-        //CSensaura3d_GetLightHRTFFilterPair+0x22 : idiv eax, ecx
+        //CSensaura3d_GetLiteHRTFFilterPair+0x22 : idiv eax, ecx
         { 0x22, 0xF7 },
         { 0x23, 0xF9 },
 
-        //CSensaura3d_GetLightHRTFFilterPair+0x24 : cmp dword ptr [ebp+10h], 0
+        //CSensaura3d_GetLiteHRTFFilterPair+0x24 : cmp dword ptr [ebp+10h], 0
         { 0x24, 0x83 },
         { 0x25, 0x7D },
         { 0x26, 0x10 },
@@ -2119,7 +2119,7 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
-OOVPA_XREF(CMcpxStream_Flush, 3911, 11,
+OOVPA_XREF(CMcpxStream_Flush, 3911, 15,
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -2134,6 +2134,12 @@ OOVPA_XREF(CMcpxStream_Flush, 3911, 11,
         { 0x2F, 0x03 },
 
         { 0x4B, 0xE8 },
+
+        //CMcpxStream_Flush+0x57  : e__,0x80004004 (unique value)
+        { 0x58, 0x04 },
+        { 0x59, 0x40 },
+        { 0x5A, 0x00 },
+        { 0x5B, 0x80 },
 
         { 0x62, 0xE8 },
 
@@ -5591,4 +5597,77 @@ OOVPA_XREF(CMcpxStream_Pause, 3911, 12,
 
         { 0x45, 0xC2 },
         { 0x46, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * XAudioCreatePcmFormat
+// ******************************************************************
+OOVPA_NO_XREF(XAudioCreatePcmFormat, 3911, 11)
+
+        { 0x00, 0x8B },
+
+        { 0x11, 0x02 },
+        { 0x18, 0x0E },
+        { 0x2E, 0x10 },
+
+
+        //XAudioCreatePcmFormat+0x10 : mov word ptr [ecx],1
+        { 0x34, 0x66 },
+        { 0x35, 0xC7 },
+        { 0x36, 0x01 },
+        { 0x37, 0x01 },
+        { 0x38, 0x00 },
+
+        { 0x47, 0xC2 },
+        { 0x48, 0x10 },
+OOVPA_END;
+
+// ******************************************************************
+// * XAudioCreateAdpcmFormat
+// ******************************************************************
+OOVPA_NO_XREF(XAudioCreateAdpcmFormat, 3911, 14)
+
+        { 0x00, 0x8B },
+        { 0x04, 0x8B },
+        { 0x09, 0x8B },
+
+        //XAudioCreateAdpcmFormat+0x10 : mov word ptr [edx],69h
+        { 0x10, 0x66 },
+        { 0x11, 0xC7 },
+        { 0x12, 0x02 },
+        { 0x13, 0x69 },
+        { 0x14, 0x00 },
+
+        { 0x20, 0x04 },
+
+        { 0x22, 0xE8 },
+
+        { 0x38, 0x02 },
+
+        { 0x3E, 0x40 },
+
+        { 0x41, 0xC2 },
+        { 0x42, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * IsValidFormat
+// ******************************************************************
+OOVPA_NO_XREF(IsValidFormat, 3911, 10)
+
+        { 0x00, 0x8B },
+        { 0x04, 0x0F },
+        { 0x07, 0x48 },
+
+        //IsValidFormat+0x10 : sub eax,68h
+        { 0x0A, 0x83 },
+        { 0x0B, 0xE8 },
+        { 0x0C, 0x68 },
+
+        { 0x14, 0xE8 },
+
+        { 0x1C, 0xE8 },
+
+        { 0x21, 0xC2 },
+        { 0x22, 0x04 },
 OOVPA_END;
