@@ -144,7 +144,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
 	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
-	setlocale(LC_ALL, "");
 
 	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
@@ -593,7 +592,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
 
 	// Write the Certificate Details to the cache file
-	setlocale(LC_ALL, "English");
 	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
 
 	std::stringstream titleId;
