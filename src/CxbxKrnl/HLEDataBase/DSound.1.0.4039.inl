@@ -971,7 +971,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4039, 13,
         { 0x7D, 0x0C },
 OOVPA_END;
 
-// TODO: Is there IDirectSoundBuffer_SetPlayRegion in 3936? Revision 3925 doesn't have one.
+
 // ******************************************************************
 // * IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************

@@ -33,11 +33,11 @@
 // *
 // ******************************************************************
 
-// Titles which did compiled with full libary
-//   [revi] Title Name          |  Verify   |   Comments
+// Titles which did compiled with full libary version
+//   [LibV] Title Name          |  Verify   |   Comments
 //-------------------------------------------------------------------
-// * [3925] Cel Damage          |   100%    | Contain full library. Need to add 3 missing OOVPAs, see TODO issue list.
-// * [3936] Silent Hill 2       |    80%    | Need verify non-exist function is there or not, re-check missing detection.
+// * [3925] Cel Damage          |   100%    | Contain full library.
+// * [3936] Silent Hill 2       |   100%    | Contain full library.
 // * [4039] Nightcaster         |   100%    | Only has 90% of the library compiled with xbe build.
 // * [4134] RaceX (Demo)        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
 // * [4134] Blood Omen 2        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
@@ -61,7 +61,7 @@
 //   * IDirectSoundBuffer_SetRolloffCurve
 //   * IDirectSoundBuffer_Pause
 //   * IDirectSoundBuffer_PauseEx
-//   * IDirectSoundBuffer_SetPlayRegion         (last seen is 4039?)
+//   * IDirectSoundBuffer_SetPlayRegion         (Introduce in 4039, last known earliest revision)
 //   * IDirectSoundStream_FlushEx
 //   * IDirectSoundStream_GetVoiceProperties
 //   * IDirectSoundStream_PauseEx
@@ -88,11 +88,7 @@
 //   * IDirectSoundStream_SetFrequency  & CDirectSoundStream_SetFrequency
 //   * IDirectSoundStream_SetMixBins    & CDirectSoundStream_SetMixBins
 // * Need to include func export support for IDirectSoundStream_Setxxxxx from above.
-// * 3911 - Need to add:
-//   * XAudioCreateAdpcmFormat
-//   * XAudioCreatePcmFormat
-//   * IsValidFormat
-//   Not part of API, yet is a non-member function : (might be useful)
+// * 3911 - Not part of API, yet is a non-member function : (might be useful)
 //   * GetFormatSize
 //   * CopyFormat
 //   * CompareFormats
@@ -108,10 +104,6 @@
 //     * Using XREF_DS_CRefCount_Release
 //   * CDirectSound_Release         (Is unique, however need multiple OOVPAs to register all revisions)
 //     * Using XREF_DS_CRefCount_Release
-// * 3936 verification needed:
-//   * CDirectSoundBuffer_SetVolume
-//   * IDirectSoundBuffer_SetVolume
-//   * What else? Need to re-check the list again...
 // * 4039 verification needed:
 //   * DirectSoundCreateBuffer
 //   * DirectSoundCreateStream
@@ -120,7 +112,7 @@
 //   * IDirectSound_GetCaps
 //   * IDirectSound_GetEffectData
 //   * IDirectSound_GetSpeakerConfig
-//   * IDirectSound_GetTime
+//   * IDirectSound_GetTime (It is generic)
 //   * IDirectSound_SetAllParameters
 //   * IDirectSound_SetEffectData
 //   * IDirectSound_SetMixBinHeadroom
@@ -183,10 +175,10 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039),
-    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 4039),
+    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039),
     REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4361, 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
-    REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911),
+    REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_Commit3dSettings, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dConeOrientation, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dConeOutsideVolume, XREF, 3911),
@@ -437,7 +429,9 @@ OOVPATable DSound_OOVPAV2[] = {
 
     REGISTER_OOVPAS(WaveFormat_CreateXboxAdpcmFormat, XREF, 5344),
     REGISTER_OOVPAS(XAudioDownloadEffectsImage, PATCH, 4627, 5558, 5788),
-    REGISTER_OOVPAS(XAudioCreateAdpcmFormat, PATCH, 5344),
+    REGISTER_OOVPAS(IsValidFormat, UNPATCHED, 3911),
+    REGISTER_OOVPAS(XAudioCreatePcmFormat, UNPATCHED, 3911),
+    REGISTER_OOVPAS(XAudioCreateAdpcmFormat, PATCH, 3911, 5344),
     REGISTER_OOVPAS(XFileCreateMediaObjectAsync, PATCH, 5788),
     REGISTER_OOVPAS(XFileCreateMediaObjectEx, PATCH, 4627, 5028),
     REGISTER_OOVPAS(XWaveFileCreateMediaObject, PATCH, 4627),
