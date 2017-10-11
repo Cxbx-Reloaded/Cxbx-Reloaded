@@ -79,11 +79,12 @@ OOVPATable XONLINES_OOVPAV2[] = {
 	REGISTER_OOVPAS(CXo_XOnlineLogon, XREF, 4361, 4627, 4831/*, 5028*/, 5233, 5455, 5558, 5849),
 	REGISTER_OOVPAS(XOnlineLogon, PATCH, 4361),
 	REGISTER_OOVPAS(XoUpdateLaunchNewImageInternal, XREF, 4627, 5659, 5788),
+	
 	// XNet section
 	REGISTER_OOVPAS(XnInit, XREF, 4361/*, 4627, 5788*/),
 	REGISTER_OOVPAS(WSAStartup, PATCH, 4361/*, 5558*/),
 	REGISTER_OOVPAS(XNetStartup, PATCH, 4361/*, 5233*/),
-	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911/*, 4361*/, 4627),
+	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911/*, 4361*/, 4627), //NOTE: Found in .text section, confirmed it is correct.
 	REGISTER_OOVPAS(bind, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(connect, PATCH, 3911, 5120/*, 5233*/),
 	REGISTER_OOVPAS(ioctlsocket, PATCH, 3911, 4627),
