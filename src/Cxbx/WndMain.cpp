@@ -1010,7 +1010,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
 				std::stringstream sstream;
-				sstream << cacheDir << std::hex << uiHash << ".ini";
+				std::string szTitleName(m_Xbe->m_szAsciiTitle);
+				m_Xbe->PurgeBadChar(szTitleName);
+				sstream << cacheDir << szTitleName << "-" << std::hex << uiHash << ".ini";
 				std::string fullpath = sstream.str();
 
 				if (DeleteFile(fullpath.c_str())) {

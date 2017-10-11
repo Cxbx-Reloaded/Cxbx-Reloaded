@@ -71,6 +71,9 @@ class Xbe : public Error
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
 
+		// purge illegal characters in Windows filenames or other OS's
+		void PurgeBadChar(std::string &s, const std::string &illegalChars = "\\/:?\"<>|");
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
