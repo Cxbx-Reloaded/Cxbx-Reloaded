@@ -1004,3 +1004,12 @@ void *Xbe::FindSection(char *zsSectionName)
 
 	return NULL;
 }
+
+void Xbe::PurgeBadChar(std::string &s, const std::string &illegalChars)
+{
+	for (auto it = s.begin(); it < s.end(); ++it)
+	{
+		bool found = illegalChars.find(*it) != std::string::npos;
+		if (found) { *it = '_'; }
+	}
+}

@@ -137,7 +137,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	// Hash the loaded XBE's header, use it as a filename
 	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
 	std::stringstream sstream;
-	sstream << cachePath << std::hex << uiHash << ".ini";
+	char tAsciiTitle[40] = "Unknown";
+	setlocale(LC_ALL, "English");
+	wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
+	std::string szTitleName(tAsciiTitle);
+	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
+	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
 
 	if (PathFileExists(filename.c_str())) {
@@ -587,9 +592,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
 
 	// Write the Certificate Details to the cache file
-	char tAsciiTitle[40] = "Unknown";
-	setlocale(LC_ALL, "English");
-	wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
 	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
 
 	std::stringstream titleId;
