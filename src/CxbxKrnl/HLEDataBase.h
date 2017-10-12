@@ -232,8 +232,6 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundBuffer_SetPitch,
     XREF_CDirectSoundStream_SetPitch,
     XREF_CMcpxVoiceClient_SetVolume,
-    XREF_DSBUFFERSETCURRENTPOSITIONA,
-    XREF_DSBUFFERSETCURRENTPOSITIONB,
     XREF_DSBUFFERSETLOOPREGIONA,
     XREF_CDirectSoundBuffer_SetPlayRegion,
     XREF_CDirectSoundBuffer_Lock,

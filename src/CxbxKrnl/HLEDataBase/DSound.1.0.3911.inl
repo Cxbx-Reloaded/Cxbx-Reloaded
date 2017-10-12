@@ -3799,6 +3799,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetCurrentPosition, 3911, 10,
 
     XRefNoSaveIndex,
