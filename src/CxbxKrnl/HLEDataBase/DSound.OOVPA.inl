@@ -125,6 +125,9 @@
 //   * CDirectSoundStream_SetRolloffCurve
 //   * CDirectSoundStream_SetRolloffFactor
 //   * IDirectSoundStream_SetHeadroom
+// * 4134 verification needed: (it will grow over time until verifying with Blood Omen 2 title is done)
+//   * CDirectSoundBuffer_SetEG
+//   * IDirectSoundBuffer_SetEG
 
 
 #ifndef DSOUND_OOVPA_INL
@@ -176,7 +179,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039),
     REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039),
-    REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4361, 4831, 5788),
+    REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4134, /*4361,*/ 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CMcpxVoiceClient_Commit3dSettings, XREF, 3911),
@@ -188,8 +191,8 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dParameters, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dPosition, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_Set3dVelocity, XREF, 3911),
-    REGISTER_OOVPAS(CMcpxVoiceClient_SetEG, XREF, 3911, 4039, 4242),
-    REGISTER_OOVPAS(CMcpxVoiceClient_SetFilter, XREF, 3911, 4039, 4134, 5344, 5558),
+    REGISTER_OOVPAS(CMcpxVoiceClient_SetEG, XREF, 3911, 4039, 4134, 4242),
+    REGISTER_OOVPAS(CMcpxVoiceClient_SetFilter, XREF, 3911, 4039, 4134 /*, 5344, 5558*/),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetI3DL2Source, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetLFO, XREF, 3911, 4039, 4242),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3911),
@@ -271,7 +274,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_FlushEx, XREF, 4627, 5233, 5788),
     REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4361, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4134 /*, 4361, 5558*/),
     REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911, 4039),
     REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetAllParameters, PATCH, 3911, 4039, 4134),
@@ -287,7 +290,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_SetLFO, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMaxDistance, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMinDistance, PATCH, 3911, 4039, 4134, 5344),
-    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3911, 4039, 4627, 5233, 5558),
+    REGISTER_OOVPAS(CDirectSoundStream_SetMixBins, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(CDirectSoundStream_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(CDirectSoundStream_SetMode, PATCH, 3911, 4039, 4134),
@@ -336,7 +339,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetConeAngles, PATCH, 3911, 4039, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetConeOrientation, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetConeOutsideVolume, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetCurrentPosition, PATCH, 3911, 4134, 5558, 5788),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetCurrentPosition, PATCH, 3911 /*, 4134, 5558, 5788*/),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetDistanceFactor, PATCH, 4134, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetDopplerFactor, PATCH, 4134, 5558),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetEG, PATCH, 3911, 4039),
@@ -349,7 +352,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundBuffer_SetLoopRegion, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMaxDistance, PATCH, 3911 /*,5344, 5788*/),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMinDistance, PATCH, 3911 /*, 5558, 5788*/),
-    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBins, PATCH, 3911, 4039, 4134, 5558),
+    REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBins, PATCH, 3911, 4039 /*, 4134, 5558*/),
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_12, PATCH, 3911), //This revision is only used in XDK 3911 to 3936.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMixBinVolumes_8, PATCH, 4039), //Then it has changed in XDK 4039 and higher.
     REGISTER_OOVPAS(IDirectSoundBuffer_SetMode, PATCH, 3911, 4039),
@@ -418,12 +421,12 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3911, 4134, 5558),
     REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
-    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 5558),
+    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(DirectSoundUseLightHRTF, PATCH, 3911),
 
 
 
-    REGISTER_OOVPAS(CFullHRTFSource_GetCenterVolume, XREF, 4039, 5558),
+    REGISTER_OOVPAS(CFullHRTFSource_GetCenterVolume, XREF, 4039, 4134, 5558),
     REGISTER_OOVPAS(CHRTFSource_SetFullHRTF5Channel, XREF, 4039, 5558),
 
 

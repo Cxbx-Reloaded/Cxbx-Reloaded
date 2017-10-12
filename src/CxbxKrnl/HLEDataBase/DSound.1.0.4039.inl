@@ -1274,6 +1274,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMixBins
 // ******************************************************************
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 4039, 8,
 
     XRefNoSaveIndex,
@@ -3087,13 +3088,16 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_Pause
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_Pause, 4039, 11,
+OOVPA_XREF(CDirectSoundStream_Pause, 4039, 12,
 
     XREF_CDirectSoundStream_Pause,
     XRefOne)
 
         // CDirectSoundStream_Pause+0x33 : call [CMcpxStream::Pause]
         XREF_ENTRY( 0x34, XREF_CMcpxStream_Pause ),
+
+        // CDirectSoundStream_Pause+0x00 : push esi
+        { 0x00, 0x56 },
 
         // CDirectSoundStream_Pause+0x20 : mov eax, 0x80004005
         { 0x20, 0xB8 },
