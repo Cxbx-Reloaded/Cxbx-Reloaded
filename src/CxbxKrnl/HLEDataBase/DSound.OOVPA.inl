@@ -40,7 +40,7 @@
 // * [3936] Silent Hill 2       |   100%    | Contain full library.
 // * [4039] Nightcaster         |   100%    | Only has 90% of the library compiled with xbe build.
 // * [4134] RaceX (Demo)        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
-// * [4134] Blood Omen 2        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
+// * [4134] Blood Omen 2        |    80%    | Does not have full library.
 
 // TODO: Known DSound OOVPA issue list
 // * 3911 to 5933: Cannot make OOVPAs
@@ -109,7 +109,6 @@
 //   * DirectSoundCreateStream
 //   * DirectSoundUseLightHRTF
 //   * IDirectSound_CommitEffectData
-//   * IDirectSound_GetCaps
 //   * IDirectSound_GetEffectData
 //   * IDirectSound_GetSpeakerConfig
 //   * IDirectSound_GetTime (It is generic)
@@ -117,7 +116,6 @@
 //   * IDirectSound_SetEffectData
 //   * IDirectSound_SetMixBinHeadroom
 //   * IDirectSoundBuffer_PlayEx
-//   * IDirectSoundBuffer_SetI3DL2Source
 //   * IDirectSoundBuffer_SetNotificationPositions
 //   * CDirectSoundStream_SetFormat
 //   * CDirectSoundStream_SetHeadroom
@@ -125,9 +123,57 @@
 //   * CDirectSoundStream_SetRolloffCurve
 //   * CDirectSoundStream_SetRolloffFactor
 //   * IDirectSoundStream_SetHeadroom
-// * 4134 verification needed: (it will grow over time until verifying with Blood Omen 2 title is done)
+// * 4134 verification needed: (Verifying with Blood Omen 2 title is done, need different title to find the remaining...)
 //   * CDirectSoundBuffer_SetEG
 //   * IDirectSoundBuffer_SetEG
+//   * CMcpxVoiceClient_SetLFO
+//   * CDirectSoundStream_SetAllParameters
+//   * CDirectSoundStream_SetConeAngles
+//   * CDirectSoundStream_SetConeOrientation
+//   * CDirectSoundStream_SetConeOutsideVolume
+//   * CDirectSoundStream_SetFilter
+//   * CDirectSoundStream_SetFrequency
+//   * CDirectSoundStream_SetHeadroom
+//   * CDirectSoundStream_SetLFO
+//   * CDirectSoundStream_SetMaxDistance
+//   * CDirectSoundStream_SetMinDistance
+//   * CDirectSoundStream_SetMixBinVolumes_8
+//   * CDirectSoundStream_SetMixBins
+//   * CDirectSoundStream_SetMode
+//   * CDirectSoundStream_SetOutputBuffer
+//   * CDirectSoundStream_SetPitch
+//   * CDirectSoundStream_SetVelocity
+//   * CDirectSoundBuffer_PlayEx
+//   * CDirectSoundBuffer_SetConeOutsideVolume
+//   * CDirectSoundBuffer_SetCurrentPosition
+//   * CDirectSoundBuffer_SetMaxDistance
+//   * CDirectSoundBuffer_SetMinDistance
+//   * CDirectSoundBuffer_SetNotificationPositions
+//   * CDirectSoundBuffer_SetVelocity
+//   * CDirectSoundBuffer_StopEx
+//   * CDirectSound_CommitEffectData
+//   * CDirectSound_EnableHeadphones
+//   * CDirectSound_GetCaps
+//   * CDirectSound_GetEffectData
+//   * CDirectSound_GetSpeakerConfig
+//   * CDirectSound_SetDistanceFactor
+//   * CDirectSound_SetDopplerFactor
+//   * CDirectSound_SetEffectData
+//   * CDirectSound_SetMixBinHeadroom
+//   * CDirectSound_SetOrientation
+//   * CDirectSound_SetPosition
+//   * CDirectSound_SetRolloffFactor
+//   * CDirectSound_SetVelocity
+//   * DirectSoundCreateBuffer
+//   * DirectSoundUseLightHRTF
+//   * DirectSoundGetSampleTime
+//   * IsValidFormat
+//   * XAudioCreateAdpcmFormat
+//   * XAudioCreatePcmFormat
+//   * IDirectSound_CreateSoundStream (CDirectSound_CreateSoundStream is found btw)
+// * CDirectSound_SetAllParameters and CDirectSound_SetAllParametersA currently separated
+//   * Need to review what's the difference and why is it necessary to be separated.
+//   * It also have various revisions, we should be able to narrow it down to remove duplicates.
 
 
 #ifndef DSOUND_OOVPA_INL
@@ -177,8 +223,9 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_SetCurrentPosition, XREF, 3911, 4039, 4134, 5558, 5788),
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
-    REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039),
-    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039),
+    REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039, 4134),
+    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039, 4134),
+    REGISTER_OOVPAS(CMcpxStream_GetStatus, XREF, 4134),
     REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4134, /*4361,*/ 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),
     REGISTER_OOVPAS(CSensaura3d_GetLiteHRTFFilterPair, XREF, 3911, 3936),
@@ -269,13 +316,13 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_StopEx, XREF, 3911, 4039, 4361),
     REGISTER_OOVPAS(CDirectSoundBuffer_Use3DVoiceData, XREF, 5558),
     REGISTER_OOVPAS(CDirectSoundStream_AddRef, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSoundStream_Discontinuity, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSoundStream_Flush, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(CDirectSoundStream_Discontinuity, PATCH, 3911, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_Flush, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_FlushEx, XREF, 4627, 5233, 5788),
-    REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911, 4039),
-    REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911, 4039, 4134),
+    REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Pause, PATCH, 3911, 4039, 4134 /*, 4361, 5558*/),
-    REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911, 4039),
+    REGISTER_OOVPAS(CDirectSoundStream_Process, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Release, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetAllParameters, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_SetConeAngles, PATCH, 3911, 4039),
@@ -314,7 +361,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_GetOutputLevels, XREF, 4627, 5558),
     REGISTER_OOVPAS(CDirectSound_GetSpeakerConfig, PATCH, 3911, 4627),
     REGISTER_OOVPAS(CDirectSound_GetTime, XREF, 3911),
-    REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3911, 4831, 5558),
+    REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3911, 4134, 4831, 5558),
     REGISTER_OOVPAS(CDirectSound_SetAllParametersA, XREF, 4627, 4721, 4831),
     REGISTER_OOVPAS(CDirectSound_SetDistanceFactor, XREF, 3911, 4039, 4134, 4627, 5344, 5558),
     REGISTER_OOVPAS(CDirectSound_SetDopplerFactor, XREF, 3911, 4039, 4134, 4627, 5344, 5558, 5788),
@@ -416,19 +463,17 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSound_SetRolloffFactor, PATCH, 3911, 4134/*, 5344*/),
     REGISTER_OOVPAS(IDirectSound_SetVelocity, PATCH, 3911 /*, 5558*/),
     REGISTER_OOVPAS(IDirectSound_SynchPlayback, PATCH, 5233),
-    REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3911, 4039, 4134),
-    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 3911, 4039, 4242),
-    REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4134, 5788),
-    REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3911, 4134, 5558),
-    REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
-    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 4134),
-    REGISTER_OOVPAS(DirectSoundUseLightHRTF, PATCH, 3911),
-
-
 
     REGISTER_OOVPAS(CFullHRTFSource_GetCenterVolume, XREF, 4039, 4134, 5558),
     REGISTER_OOVPAS(CHRTFSource_SetFullHRTF5Channel, XREF, 4039, 5558),
 
+    REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3911, 4039, 4134),
+    REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 3911, 4039, 4242),
+    REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4134, 5788),
+    REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3911, 4134),
+    REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
+    REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 4134),
+    REGISTER_OOVPAS(DirectSoundUseLightHRTF, PATCH, 3911),
 
     REGISTER_OOVPAS(WaveFormat_CreateXboxAdpcmFormat, XREF, 5344),
     REGISTER_OOVPAS(XAudioDownloadEffectsImage, PATCH, 4627, 5558, 5788),
@@ -439,8 +484,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(XFileCreateMediaObjectEx, PATCH, 4627, 5028),
     REGISTER_OOVPAS(XWaveFileCreateMediaObject, PATCH, 4627),
 
-
-    REGISTER_OOVPAS(CMemoryManager_PoolAlloc, XREF, 5788), //TODO: Why is this in here?
+    REGISTER_OOVPAS(DS_CMemoryManager_PoolAlloc, XREF, 4134, 5788), // For reference purpose only, does not have XREF value.
 };
 
 // ******************************************************************
