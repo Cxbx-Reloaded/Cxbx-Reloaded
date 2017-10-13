@@ -3669,3 +3669,33 @@ OOVPA_XREF(CDirectSound_GetCaps, 4039, 12,
         { 0x6C, 0xC2 },
         { 0x6D, 0x08 },
 OOVPA_END;
+
+// ******************************************************************
+// * DirectSoundCreateStream
+// ******************************************************************
+OOVPA_XREF(DirectSoundCreateStream, 4039, 11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // DirectSoundCreateStream+0x2B : call [CDirectSound::CreateSoundStream]
+        XREF_ENTRY( 0x2C, XREF_CDirectSound_CreateSoundStream ),
+
+        // DirectSoundCreateStream+0x04 : and [ebp-0x04], 0
+        { 0x04, 0x83 },
+        { 0x05, 0x65 },
+        { 0x06, 0xFC },
+
+        // DirectSoundCreateStream+0x08 : push esi; push edi
+        { 0x08, 0x56 },
+        { 0x09, 0x57 },
+
+        // DirectSoundCreateStream+0x32 : lea eax,[ebp-04]
+        { 0x32, 0x8D },
+        { 0x33, 0x45 },
+        { 0x34, 0xFC },
+
+        // DirectSoundCreateStream+0x4F : retn 0x08
+        { 0x4F, 0xC2 },
+        { 0x50, 0x08 },
+OOVPA_END;

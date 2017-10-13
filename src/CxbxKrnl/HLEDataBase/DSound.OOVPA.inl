@@ -470,7 +470,7 @@ OOVPATable DSound_OOVPAV2[] = {
 
     REGISTER_OOVPAS(DirectSoundCreate, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(DirectSoundCreateBuffer, PATCH, 3911, 4039, 4242),
-    REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4134, 5788),
+    REGISTER_OOVPAS(DirectSoundCreateStream, PATCH, 3911, 4039, 4134, 5788),
     REGISTER_OOVPAS(DirectSoundDoWork, PATCH, 3911, 4134),
     REGISTER_OOVPAS(DirectSoundGetSampleTime, PATCH, 3911, 4361),
     REGISTER_OOVPAS(DirectSoundUseFullHRTF, PATCH, 3911, 4039, 4134),
