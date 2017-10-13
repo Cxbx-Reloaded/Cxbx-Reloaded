@@ -3375,7 +3375,6 @@ OOVPA_XREF(CMcpxStream_Flush, 4039, 10,
 
         { 0x58, 0xE8 },
 
-
         { 0x98, 0xC9 },
         { 0x99, 0xC3 },
 OOVPA_END;
@@ -3559,7 +3558,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 4039, 18,
 
-    XREF_DSVOICESETI3DL2SOURCE,
+    XREF_CDirectSoundVoice_SetI3DL2Source,
     XRefZero)
 
         // CDirectSoundVoice_SetI3DL2Source+0x00 : mov edx, [esp+arg_0]
@@ -3594,11 +3593,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetI3DL2Source, 4039, 12,
 
-    XREF_DSBUFFERSETI3DL2SOURCE,
+    XREF_CDirectSoundBuffer_SetI3DL2Source,
     XRefOne)
 
         // CDirectSoundBuffer_SetI3DL2Source+0x35 : call [CDirectSoundVoice::SetI3DL2Source]
-        XREF_ENTRY( 0x35, XREF_DSVOICESETI3DL2SOURCE ),
+        XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_SetI3DL2Source ),
 
         // CDirectSoundBuffer_SetI3DL2Source+0x00 : push esi
         { 0x00, 0x56 },
@@ -3629,7 +3628,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 4039, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetI3DL2Source+0x18 : call [CDirectSoundBuffer::SetI3DL2Source]
-        XREF_ENTRY( 0x19, XREF_DSBUFFERSETI3DL2SOURCE ),
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetI3DL2Source ),
 
         // IDirectSoundBuffer_SetI3DL2Source+0x04 : push [esp+arg_8]
         { 0x04, 0xFF },

@@ -275,6 +275,7 @@ OOVPA_XREF(DirectSoundUseFullHRTF, 5558, 8,
 OOVPA_END;
 #endif
 
+#if 0 // Duplicate OOVPA found in 4134
 // ******************************************************************
 // * DirectSoundDoWork
 // ******************************************************************
@@ -288,6 +289,7 @@ OOVPA_NO_XREF(DirectSoundDoWork, 5558, 7)
         { 0x22, 0xFF },
         { 0x28, 0xC3 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetBufferData
@@ -1077,7 +1079,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 5558, 7,
 
-    XREF_DSVOICESETI3DL2SOURCE,
+    XREF_CDirectSoundVoice_SetI3DL2Source,
     XRefZero)
 
         { 0x18, 0x00 },
@@ -1094,10 +1096,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetI3DL2Source, 5558, 8,
 
-    XREF_DSBUFFERSETI3DL2SOURCE,
+    XREF_CDirectSoundBuffer_SetI3DL2Source,
     XRefOne)
 
-        XREF_ENTRY( 0x36, XREF_DSVOICESETI3DL2SOURCE ),
+        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetI3DL2Source ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -1116,7 +1118,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 5558, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x19, XREF_DSBUFFERSETI3DL2SOURCE ),
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetI3DL2Source ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -1701,7 +1703,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(CFullHRTFSource_GetCenterVolume, 5558, XREF),
 	REGISTER_OOVPA(CHRTFSource_SetFullHRTF5Channel, 5558, XREF),
 	REGISTER_OOVPA(DirectSoundUseFullHRTF, 4134, PATCH),
-	REGISTER_OOVPA(DirectSoundDoWork, 5558, PATCH),
+	REGISTER_OOVPA(DirectSoundDoWork, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetBufferData, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 5558, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 5558, XREF),

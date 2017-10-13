@@ -512,8 +512,9 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CMemoryManager::PoolAlloc
 // ******************************************************************
-OOVPA_NO_XREF(CMemoryManager_PoolAlloc, 5788, 10)
+OOVPA_NO_XREF(DS_CMemoryManager_PoolAlloc, 5788, 11)
 
+	{ 0x00, 0x56 },
 	{ 0x24, 0x83 },
 	{ 0x25, 0x7C },
 	{ 0x26, 0x24 },
@@ -685,7 +686,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSoundStream_Pause, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_FlushEx, 5788, XREF),
 	REGISTER_OOVPA(IDirectSoundStream_FlushEx, 4627, PATCH),
-	REGISTER_OOVPA(DirectSoundDoWork, 5558, PATCH),
+	REGISTER_OOVPA(DirectSoundDoWork, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSound_SynchPlayback, 5558, PATCH),
 	REGISTER_OOVPA(CDirectSound_EnableHeadphones, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 3911, PATCH),
@@ -694,7 +695,7 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSound_GetOutputLevels, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound_GetOutputLevels, 5558, PATCH),
 	REGISTER_OOVPA(IDirectSound_SetEffectData, 3911, PATCH),
-	REGISTER_OOVPA(CMemoryManager_PoolAlloc, 5788, XREF),
+	REGISTER_OOVPA(DS_CMemoryManager_PoolAlloc, 5788, XREF),
 	REGISTER_OOVPA(XFileCreateMediaObjectAsync, 5788, PATCH),
 	REGISTER_OOVPA(WaveFormat_CreateXboxAdpcmFormat, 5344, XREF),
 	REGISTER_OOVPA(XAudioCreateAdpcmFormat, 5344, PATCH),

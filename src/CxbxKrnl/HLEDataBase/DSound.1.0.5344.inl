@@ -544,7 +544,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 5344, 10,
 
-    XREF_DSVOICESETI3DL2SOURCE,
+    XREF_CDirectSoundVoice_SetI3DL2Source,
     XRefZero)
 
         // CDirectSoundVoice_SetI3DL2Source+0x12 : mov esi, [ecx]
