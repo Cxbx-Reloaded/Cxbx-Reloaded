@@ -39,8 +39,9 @@
 // * [3925] Cel Damage          |   100%    | Contain full library.
 // * [3936] Silent Hill 2       |   100%    | Contain full library.
 // * [4039] Nightcaster         |   100%    | Only has 90% of the library compiled with xbe build.
-// * [4134] RaceX (Demo)        |     1%    | Does not have full library? Need to create bunch of OOVPAs...
+// * [4134] RaceX (Demo)        |     -%    | Only has a few library.
 // * [4134] Blood Omen 2        |    80%    | Does not have full library.
+// * [4134] JSRF                |     1%    | Does not have Stream class. DS and Buffer might be full.
 
 // TODO: Known DSound OOVPA issue list
 // * 3911 to 5933: Cannot make OOVPAs
