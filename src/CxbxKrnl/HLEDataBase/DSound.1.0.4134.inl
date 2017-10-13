@@ -2059,13 +2059,16 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetI3DL2Source
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetI3DL2Source, 4134, 11,
+OOVPA_XREF(CDirectSoundBuffer_SetI3DL2Source, 4134, 12,
 
     XREF_DSBUFFERSETI3DL2SOURCE,
     XRefOne)
 
         // CDirectSoundBuffer_SetI3DL2Source+0x35 : call [CDirectSoundVoice::SetI3DL2Source]
         XREF_ENTRY( 0x36, XREF_DSVOICESETI3DL2SOURCE ),
+
+        // CDirectSoundBuffer_SetI3DL2Source+0x00 : push esi
+        { 0x00, 0x56 },
 
         // CDirectSoundBuffer_SetI3DL2Source+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -2084,6 +2087,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetI3DL2Source, 4134, 11,
         { 0x51, 0x00 }
 OOVPA_END;
 
+#if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
@@ -2110,6 +2114,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 4134, 10,
         { 0x1E, 0x0C },
         { 0x1F, 0x00 }
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSoundStream_SetI3DL2Source
@@ -3366,7 +3371,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetDopplerFactor, 4134, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetI3DL2Source, 4134, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetI3DL2Source, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetI3DL2Source, 4134, PATCH),
     REGISTER_OOVPA(CMcpxBuffer_Stop, 4134, XREF),
     REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),
