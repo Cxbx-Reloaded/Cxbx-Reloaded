@@ -106,8 +106,6 @@
 //   * CDirectSound_Release         (Is unique, however need multiple OOVPAs to register all revisions)
 //     * Using XREF_DS_CRefCount_Release
 // * 4039 verification needed:
-//   * DirectSoundCreateBuffer
-//   * DirectSoundCreateStream
 //   * DirectSoundUseLightHRTF
 //   * IDirectSound_CommitEffectData
 //   * IDirectSound_GetEffectData
