@@ -506,6 +506,7 @@ OOVPA_END;
 // ******************************************************************
 // Verified with Agent Under Fire.
 // Same as 4134
+// TOOD: CDirectSoundVoice_SetPitch need to be strengthen by using XREF to CMcpxVoiceClient_SetPitch function.
 OOVPA_XREF(CDirectSoundVoice_SetPitch, 4039, 6,
 
     XREF_CDirectSoundVoice_SetPitch,

@@ -126,53 +126,29 @@
 //   * CDirectSoundBuffer_SetEG
 //   * IDirectSoundBuffer_SetEG
 //   * CMcpxVoiceClient_SetLFO
-//   * CDirectSoundStream_SetAllParameters
 //   * CDirectSoundStream_SetConeAngles
-//   * CDirectSoundStream_SetConeOrientation
-//   * CDirectSoundStream_SetConeOutsideVolume
-//   * CDirectSoundStream_SetFilter
 //   * CDirectSoundStream_SetFrequency
 //   * CDirectSoundStream_SetHeadroom
 //   * CDirectSoundStream_SetLFO
-//   * CDirectSoundStream_SetMaxDistance
-//   * CDirectSoundStream_SetMinDistance
 //   * CDirectSoundStream_SetMixBinVolumes_8
-//   * CDirectSoundStream_SetMixBins
-//   * CDirectSoundStream_SetMode
 //   * CDirectSoundStream_SetOutputBuffer
-//   * CDirectSoundStream_SetPitch
-//   * CDirectSoundStream_SetVelocity
 //   * CDirectSoundBuffer_PlayEx
-//   * CDirectSoundBuffer_SetConeOutsideVolume
-//   * CDirectSoundBuffer_SetCurrentPosition
-//   * CDirectSoundBuffer_SetMaxDistance
-//   * CDirectSoundBuffer_SetMinDistance
 //   * CDirectSoundBuffer_SetNotificationPositions
-//   * CDirectSoundBuffer_SetVelocity
 //   * CDirectSoundBuffer_StopEx
 //   * CDirectSound_CommitEffectData
 //   * CDirectSound_EnableHeadphones
 //   * CDirectSound_GetCaps
 //   * CDirectSound_GetEffectData
-//   * CDirectSound_GetSpeakerConfig
-//   * CDirectSound_SetDistanceFactor
-//   * CDirectSound_SetDopplerFactor
-//   * CDirectSound_SetEffectData
 //   * CDirectSound_SetMixBinHeadroom
-//   * CDirectSound_SetOrientation
-//   * CDirectSound_SetPosition
-//   * CDirectSound_SetRolloffFactor
-//   * CDirectSound_SetVelocity
 //   * DirectSoundCreateBuffer
 //   * DirectSoundUseLightHRTF
-//   * DirectSoundGetSampleTime
 //   * IsValidFormat
 //   * XAudioCreateAdpcmFormat
 //   * XAudioCreatePcmFormat
-//   * IDirectSound_CreateSoundStream (CDirectSound_CreateSoundStream is found btw)
 // * CDirectSound_SetAllParameters and CDirectSound_SetAllParametersA currently separated
 //   * Need to review what's the difference and why is it necessary to be separated.
 //   * It also have various revisions, we should be able to narrow it down to remove duplicates.
+// * 4039 CDirectSoundVoice_SetPitch need to be strengthen by using XREF to CMcpxVoiceClient_SetPitch function.
 
 
 #ifndef DSOUND_OOVPA_INL
