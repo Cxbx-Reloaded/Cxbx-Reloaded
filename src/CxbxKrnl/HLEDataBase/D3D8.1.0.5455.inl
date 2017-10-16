@@ -577,3 +577,17 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5455, 9)
         { 0xDE, 0x8B },
         { 0xFE, 0x8B },
 OOVPA_END;
+
+// ******************************************************************
+// * D3D_AllocContiguousMemory
+// ******************************************************************
+OOVPA_NO_XREF(D3D_AllocContiguousMemory, 5455, 7)
+
+        { 0x05, 0x10 },
+        { 0x0C, 0x00 },
+        { 0x13, 0x00 },
+        { 0x1A, 0x08 },
+        { 0x21, 0xBC },
+        { 0x28, 0x0D },
+        { 0x2F, 0x24 },
+OOVPA_END;

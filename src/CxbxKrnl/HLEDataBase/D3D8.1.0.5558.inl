@@ -1208,6 +1208,7 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 5558, 26, // Also for 5659
 		{ 0x1F, 0x00 },
 OOVPA_END;
 
+#if 0 // Moved to 4134
 // ******************************************************************
 // * D3DDevice_MakeSpace
 // ******************************************************************
@@ -1222,6 +1223,7 @@ OOVPA_NO_XREF(D3DDevice_MakeSpace, 5558, 7)
         { 0x09, 0xE8 },
         { 0x0E, 0xC3 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 5455
 // ******************************************************************
 // * D3DDevice_SetRenderTarget@8
@@ -1635,6 +1637,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5455, 9)
         { 0x26, 0x00 },
 OOVPA_END;
 #endif
+#if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
@@ -1650,6 +1653,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5558, 9)
         { 0x24, 0xC2 },
         { 0x26, 0x00 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_Dxt1NoiseEnable
@@ -2093,7 +2097,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_End, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_End, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4361, PATCH),
@@ -2198,7 +2202,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5558, PATCH),
 	REGISTER_OOVPA(D3D_MakeRequestedSpace, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_MakeSpace, 5558, DISABLED),
+	REGISTER_OOVPA(D3DDevice_MakeSpace, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 5455, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderConstant, 5558, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3911, PATCH),
@@ -2232,8 +2236,8 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMask, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMode, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleMode, 5455, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5455, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_StencilCullEnable, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4134, PATCH),
@@ -2254,7 +2258,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_GetScissors, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 5344, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_Release, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetStreamSource2, 4627, PATCH),

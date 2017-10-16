@@ -101,6 +101,7 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4627, 11)
         { 0x26, 0x0C },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
@@ -128,6 +129,7 @@ OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4627, 12)
         { 0x14, 0x07 },
         { 0x15, 0x80 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3D_GetAdapterDisplayMode
@@ -3436,7 +3438,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3D_MakeRequestedSpace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3911, PATCH),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 4627, PATCH),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle2, 4627, PATCH),
@@ -3482,7 +3484,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_Begin, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexData4f, 4039, PATCH),
-	REGISTER_OOVPA(D3DDevice_End, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_End, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),

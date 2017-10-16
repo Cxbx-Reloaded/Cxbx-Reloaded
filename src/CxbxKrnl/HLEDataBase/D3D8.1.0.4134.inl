@@ -2699,6 +2699,25 @@ OOVPA_NO_XREF(D3DDevice_SetBackBufferScale, 4134, 16)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_MakeSpace
+// ******************************************************************
+OOVPA_XREF(D3DDevice_MakeSpace, 4134, 8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x0A, XREF_D3D_MakeRequestedSpace ),
+
+        { 0x00, 0xA1 },
+        { 0x05, 0x50 },
+        { 0x06, 0xD1 },
+        { 0x07, 0xE8 },
+        { 0x08, 0x50 },
+        { 0x09, 0xE8 },
+        { 0x0E, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
 // * Rollback support signature(s)
 // ******************************************************************
 #define D3DDevice_BeginVisibilityTest_4134 D3DDevice_BeginVisibilityTest_3925
@@ -2723,7 +2742,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_Swap, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3911, DISABLED),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 4034, PATCH),
