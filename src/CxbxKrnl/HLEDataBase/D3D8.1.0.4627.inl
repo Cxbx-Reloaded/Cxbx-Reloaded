@@ -132,6 +132,30 @@ OOVPA_END;
 // ******************************************************************
 // * D3D_GetAdapterDisplayMode
 // ******************************************************************
+// Generic OOVPA as of 4627 and newer.
+OOVPA_NO_XREF(D3D_GetAdapterDisplayMode, 4627, 13)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+
+        { 0x0A, 0x08 },
+        { 0x0B, 0x76 },
+        { 0x0C, 0x88 },
+        { 0x0D, 0xC2 },
+        { 0x0E, 0x08 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x56 },
+        { 0x11, 0x8B },
+        { 0x12, 0x35 },
+
+        { 0x30, 0xC2 },
+        { 0x31, 0x08 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4627 version
+// ******************************************************************
+// * D3D_GetAdapterDisplayMode
+// ******************************************************************
 OOVPA_NO_XREF(D3D_GetAdapterDisplayMode, 4627, 13)
 
         // D3D_GetAdapterDisplayMode+0x08 : mov eax, 0x8876086C
@@ -155,6 +179,7 @@ OOVPA_NO_XREF(D3D_GetAdapterDisplayMode, 4627, 13)
         { 0xB6, 0xC2 },
         { 0xB7, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3D_KickOffAndWaitForIdle
