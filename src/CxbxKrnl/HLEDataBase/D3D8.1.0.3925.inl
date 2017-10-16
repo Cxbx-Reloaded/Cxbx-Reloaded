@@ -3774,7 +3774,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 3925, 8,
         { 0x0E, 0x00 },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D_EnumAdapterModes
 // ******************************************************************
@@ -3789,7 +3789,8 @@ OOVPA_NO_XREF(D3D_EnumAdapterModes, 3925, 8)
         { 0xE2, 0x89 },
         { 0xFE, 0x5D },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D_GetAdapterModeCount
 // ******************************************************************
@@ -3804,7 +3805,7 @@ OOVPA_NO_XREF(D3D_GetAdapterModeCount, 3925, 8)
         { 0x8A, 0x3B },
         { 0x9E, 0x00 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * D3DDevice_Reset

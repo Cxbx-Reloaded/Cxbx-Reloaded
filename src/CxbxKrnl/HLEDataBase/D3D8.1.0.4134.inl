@@ -112,6 +112,7 @@ OOVPA_NO_XREF(D3D_CheckDeviceFormat, 4134, 8)
         { 0x62, 0x18 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D_GetAdapterModeCount
 // ******************************************************************
@@ -137,7 +138,8 @@ OOVPA_NO_XREF(D3D_GetAdapterModeCount, 4134, 12)
         { 0x9A, 0xC4 },
         { 0x9B, 0x08 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D_EnumAdapterModes
 // ******************************************************************
@@ -159,6 +161,7 @@ OOVPA_NO_XREF(D3D_EnumAdapterModes, 4134, 10)
         { 0xF7, 0x10 },
         { 0xF8, 0x1E },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_FogColor
