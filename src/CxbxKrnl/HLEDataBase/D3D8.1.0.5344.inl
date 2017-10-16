@@ -672,6 +672,32 @@ OOVPA_NO_XREF(D3DDevice_SetVertexDataColor, 5344, 8)
         { 0x1C, 0x19 },
 OOVPA_END;
 #endif
+
+// ******************************************************************
+// * D3DDevice_End
+// ******************************************************************
+//Generic OOVPA as of 5344 and newer.
+OOVPA_NO_XREF(D3DDevice_End, 5344, 14)
+
+        { 0x08, 0x06 },
+        { 0x0A, 0x46 },
+        { 0x0E, 0xE8 },
+        { 0x15, 0xFC },
+        { 0x17, 0x04 },
+
+        { 0x34, 0x4E },
+        { 0x35, 0x08 },
+        { 0x36, 0x5E },
+        { 0x37, 0x74 },
+        { 0x38, 0x07 },
+        { 0x39, 0x6A },
+        { 0x3A, 0x01 },
+        { 0x3B, 0xE8 },
+
+        { 0x40, 0xC3 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
@@ -687,6 +713,7 @@ OOVPA_NO_XREF(D3DDevice_End, 5344, 9)
         { 0x1B, 0x04 },
         { 0x40, 0xC3 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_CreatePixelShader
@@ -1274,7 +1301,7 @@ OOVPATable D3D8_5344[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 5344, PATCH),

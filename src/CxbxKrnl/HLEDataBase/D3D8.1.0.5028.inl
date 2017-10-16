@@ -794,7 +794,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_End, 5028, 12)
+OOVPA_NO_XREF(D3DDevice_End, 5028, 13)
+
+        // D3DDevice_End+0x00 : push esi
+        { 0x00, 0x56 },
 
         // D3DDevice_End+0x13 : mov dword ptr [eax], 0x417FC
         { 0x13, 0xC7 },
@@ -1143,7 +1146,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3D_CheckDeviceFormat, 4134, DISABLED),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3911, PATCH),
 	REGISTER_OOVPA(D3D_KickOffAndWaitForIdle, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_LazySetStateVB, 5028, XREF),
@@ -1181,7 +1184,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_Begin, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginStateBig, 5028, XREF), 
 	REGISTER_OOVPA(D3DDevice_SetVertexData2f, 4039, PATCH),
-	REGISTER_OOVPA(D3DDevice_End, 5028, PATCH),
+	REGISTER_OOVPA(D3DDevice_End, 4039, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_Swap, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4134, PATCH),

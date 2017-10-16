@@ -1334,7 +1334,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4361, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4134, PATCH),

@@ -159,7 +159,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_CreateVertexBuffer2, UNPATCHED, 4627, 5344, 5455),
 	REGISTER_OOVPAS(D3DDevice_CreateVertexShader, PATCH, 3911),
 	REGISTER_OOVPAS(D3DDevice_CreateVolumeTexture, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(D3DDevice_DeletePatch, UNPATCHED, 4034), // (TODO) (from 4034's comment)
+	REGISTER_OOVPAS(D3DDevice_DeletePatch, UNPATCHED, 3911/*, 4039*/), // (TODO) (from 4034's comment)
 	REGISTER_OOVPAS(D3DDevice_DeletePixelShader, PATCH, 3911, 5344),
 	REGISTER_OOVPAS(D3DDevice_DeleteStateBlock, PATCH, 3911/*, 4361, 5788*/),
 	REGISTER_OOVPAS(D3DDevice_DeleteVertexShader, PATCH, 3911, 5344),
@@ -170,11 +170,11 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_DrawVertices, PATCH, 3911, 4034, 5028),
 	REGISTER_OOVPAS(D3DDevice_DrawVerticesUP, PATCH, 3911, 4039, 4134, 4627, 5344, 5558, 5788),
 	REGISTER_OOVPAS(D3DDevice_EnableOverlay, PATCH, 3911, 4134),
-	REGISTER_OOVPAS(D3DDevice_End, PATCH, 3911, 4039, 4627, 5028, 5344, 5558),
+	REGISTER_OOVPAS(D3DDevice_End, PATCH, 3911, 4039/*, 4627, 5028/*, 5344/*, 5558*/),
 	REGISTER_OOVPAS(D3DDevice_EndPush, PATCH, 4134/*, 4627*/), // Was 4627 (from 5233's comment)
 	REGISTER_OOVPAS(D3DDevice_EndPushBuffer, PATCH, 3911, 4134), // Not implemented yet. (from 5788's comment)
 	REGISTER_OOVPAS(D3DDevice_EndStateBlock, PATCH, 3911, 4134),
-	REGISTER_OOVPAS(D3DDevice_EndVisibilityTest, PATCH, 3911, 4034, 4361, 4627, 5788),
+	REGISTER_OOVPAS(D3DDevice_EndVisibilityTest, PATCH, 3911/*, 4034, 4361, 4627, 5788*/),
 	REGISTER_OOVPAS(D3DDevice_FlushVertexCache, PATCH, 3911, 4134),
 	REGISTER_OOVPAS(D3DDevice_GetBackBuffer, PATCH, 3911, 4034, 4134, 4627, 5558), // Called D3DDevice_GetBackBuffer2 (from 4627's comment) NOTE: Use D3DDevice_GetBackBuffer2 for 4627 and above
 	REGISTER_OOVPAS(D3DDevice_GetBackBuffer2, PATCH, 4627, 5028, 5344, 5455, 5558, 5788), // 5233 (from 5344's comment)
@@ -223,7 +223,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_LightEnable, PATCH, 3911, 5028, 5344), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_LoadVertexShader, PATCH, 3911, 4034, 4627, 5028),
 	REGISTER_OOVPAS(D3DDevice_LoadVertexShaderProgram, PATCH, 3911, 4134, 4627, 5558),
-	REGISTER_OOVPAS(D3DDevice_MakeSpace, UNPATCHED, 5558),
+	REGISTER_OOVPAS(D3DDevice_MakeSpace, UNPATCHED, 4134),
 	REGISTER_OOVPAS(D3DDevice_PersistDisplay, PATCH, 3911, 4039, 4627, 4831, 5455, 5558),
 	REGISTER_OOVPAS(D3DDevice_Present, PATCH, 3911),
 	REGISTER_OOVPAS(D3DDevice_PrimeVertexCache, PATCH, 3911, 4134, 4361, 4627),
@@ -260,7 +260,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleAntiAlias, PATCH, 3911, 4034, 4134, 4432, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMask, PATCH, 3911, 4034, 4134, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMode, PATCH, 3925, 4034, 4134, 4627, 5233, 5455, 5558, 5788),
-	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034, 4134, 4627, 5233, 5344, 5455, 5558, 5788), // Was 5233 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034, 4134, 4627, 5233, 5344/*, 5455, 5558, 5788*/), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_NormalizeNormals, PATCH, 3911, 4034, 4134),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_OcclusionCullEnable, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_PSTextureModes, PATCH, 3911, 4034),
@@ -330,10 +330,10 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DTexture_GetSurfaceLevel2, PATCH, 4627),
 	REGISTER_OOVPAS(D3DTexture_LockRect, PATCH, 3911),
 	REGISTER_OOVPAS(D3DVertexBuffer_GetDesc, UNPATCHED, 3911),
-	REGISTER_OOVPAS(D3DVertexBuffer_Lock, PATCH, 3911, 4034, 4531, 4627, 5788),
-	REGISTER_OOVPAS(D3DVertexBuffer_Lock2, PATCH, 4627, 5788),
+	REGISTER_OOVPAS(D3DVertexBuffer_Lock, PATCH, 3911, 4034, 4531, 4627/*, 5788*/),
+	REGISTER_OOVPAS(D3DVertexBuffer_Lock2, PATCH, 4627/*, 5788*/),
 	REGISTER_OOVPAS(D3DVolumeTexture_LockBox, PATCH, 3911), // Just calls Lock3DSurface (from 4134, 4432's comment)
-	REGISTER_OOVPAS(D3D_AllocContiguousMemory, UNPATCHED, 3911, 5788), // Just calls MmAllocateContiguousMemory. Was PATCH (from 3925, 5788's comment)
+	REGISTER_OOVPAS(D3D_AllocContiguousMemory, UNPATCHED, 3911, 5455/*, 5788*/), // Just calls MmAllocateContiguousMemory. Was PATCH (from 3925, 5788's comment)
 	REGISTER_OOVPAS(D3D_BlockOnResource, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3D_BlockOnTime, PATCH, 3911, 4039, 4361, 4627, 5028, 5558, 5849),
 	REGISTER_OOVPAS(D3D_CMiniport_GetDisplayCapabilities, PATCH, 3911),
@@ -355,7 +355,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3D_SetCommonDebugRegisters, PATCH, 3911),
 	REGISTER_OOVPAS(D3D_SetFence, XREF, 3911, 4039, 4134, 5028, 5558),
 	REGISTER_OOVPAS(D3D_SetPushBufferSize, UNPATCHED, 3911),
-	REGISTER_OOVPAS(D3D_Unknown, XREF, 5788),
+	// REGISTER_OOVPAS(D3D_Unknown, XREF, 5788), // This one D3DDevice_MakeSpace
 	REGISTER_OOVPAS(Direct3D_CheckDeviceMultiSampleType, UNPATCHED, 3911),
 	REGISTER_OOVPAS(Direct3D_CreateDevice, PATCH, 3911, 5028),
 	REGISTER_OOVPAS(Get2DSurfaceDesc, PATCH, 3911, 4034, 4134, 4627, 5028, 5344, 5558, 5788, 5849), // Was 5233 (from 5344's comment)

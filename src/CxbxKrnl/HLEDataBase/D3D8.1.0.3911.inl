@@ -1158,6 +1158,38 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
+//Generic OOVPA as of 3911 and newer.
+OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 3911, 21)
+
+        { 0x00, 0x8B },
+        { 0x06, 0xE8 },
+
+        { 0x0B, 0x8B },
+        { 0x0C, 0xF0 },
+        { 0x0D, 0x85 },
+        { 0x0E, 0xF6 },
+        { 0x0F, 0x75 },
+        { 0x10, 0x09 },
+        { 0x11, 0xB8 },
+        { 0x12, 0x0E },
+        { 0x13, 0x00 },
+        { 0x14, 0x07 },
+        { 0x15, 0x80 },
+        { 0x16, 0x5E },
+        { 0x17, 0xC2 },
+        { 0x18, 0x04 },
+        { 0x19, 0x00 },
+        { 0x1A, 0x57 },
+        { 0x1B, 0x8B },
+        { 0x1C, 0x3D },
+
+        { 0x37, 0x00 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * D3DDevice_EndVisibilityTest
+// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 3911, 13)
 
         // D3DDevice_EndVisibilityTest+0x11 : mov eax, 0x8007000E
@@ -1179,6 +1211,7 @@ OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 3911, 13)
         { 0x44, 0xC0 },
         { 0x45, 0x0C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_GetVisibilityTestResult
@@ -1713,7 +1746,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_End, 3911, 12)
+OOVPA_NO_XREF(D3DDevice_End, 3911, 13)
+
+        // D3DDevice_End+0x00 : push esi
+        { 0x00, 0x56 },
 
         // D3DDevice_End+0x17 : mov dword ptr [eax], 0x417FC
         { 0x17, 0xC7 },
@@ -3422,6 +3458,28 @@ OOVPA_END;
 // ******************************************************************
 // * D3D_AllocContiguousMemory
 // ******************************************************************
+OOVPA_NO_XREF(D3D_AllocContiguousMemory, 3911, 14)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x08 },
+        { 0x04, 0x8B },
+        { 0x05, 0x4C },
+        { 0x06, 0x24 },
+        { 0x07, 0x04 },
+        { 0x08, 0x68 },
+        { 0x09, 0x04 },
+        { 0x0A, 0x04 },
+        { 0x0B, 0x00 },
+        { 0x0C, 0x00 },
+        { 0x0D, 0x50 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * D3D_AllocContiguousMemory
+// ******************************************************************
 OOVPA_NO_XREF(D3D_AllocContiguousMemory, 3911, 6)
 
         { 0x02, 0x24 },
@@ -3431,6 +3489,7 @@ OOVPA_NO_XREF(D3D_AllocContiguousMemory, 3911, 6)
         { 0x16, 0xC2 },
         { 0x17, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetRenderState_Deferred
@@ -4470,4 +4529,33 @@ OOVPA_NO_XREF(D3D_GetAdapterModeCount, 3911, 20)
 
         { 0x40, 0x14 },
         { 0x41, 0xEB },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_DeletePatch
+// ******************************************************************
+// Generic OOVPA as of 3911 and newer.
+OOVPA_NO_XREF(D3DDevice_DeletePatch, 3911, 19)
+
+        { 0x00, 0x8B },
+        { 0x05, 0x0D },
+        { 0x0C, 0xA1 },
+
+        { 0x11, 0x56 },
+        { 0x12, 0x8B },
+        { 0x13, 0x34 },
+        { 0x14, 0x88 },
+        { 0x15, 0x85 },
+        { 0x16, 0xF6 },
+        { 0x17, 0x74 },
+        { 0x18, 0x17 },
+        { 0x19, 0x8B },
+        { 0x1A, 0x4E },
+        { 0x1B, 0x04 },
+        { 0x1C, 0xC7 },
+        { 0x1D, 0x04 },
+        { 0x1E, 0x88 },
+        { 0x1F, 0x00 },
+
+        { 0x25, 0xE8 },
 OOVPA_END;

@@ -258,6 +258,7 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4034, 7)
         { 0x28, 0x06 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
@@ -271,6 +272,7 @@ OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4034, 7)
         { 0x46, 0x89 },
         { 0x55, 0x5F },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_CopyRects
@@ -287,6 +289,7 @@ OOVPA_NO_XREF(D3DDevice_CopyRects, 4034, 8)
         { 0xFE, 0x14 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_DeletePatch
 // ******************************************************************
@@ -300,6 +303,7 @@ OOVPA_NO_XREF(D3DDevice_DeletePatch, 4034, 7)
         { 0x2A, 0x56 },
         { 0x30, 0x5E },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_DrawIndexedVertices
@@ -1477,6 +1481,32 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
+OOVPA_NO_XREF(D3DDevice_End, 4039, 16) // Up to 5233
+
+        { 0x01, 0x8B },
+        { 0x07, 0x8B },
+        { 0x0E, 0xE8 },
+        { 0x16, 0x17 },
+        { 0x1E, 0x00 },
+
+        { 0x22, 0x08 },
+        { 0x23, 0x89 },
+        { 0x24, 0x06 },
+        { 0x25, 0x8B },
+        { 0x26, 0x46 },
+        { 0x27, 0x08 },
+        { 0x28, 0xF6 },
+        { 0x29, 0xC4 },
+
+        { 0x2E, 0x01 },
+        { 0x36, 0x08 },
+        { 0x3C, 0xC3 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4039 version
+// ******************************************************************
+// * D3DDevice_End
+// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_End, 4039, 7)
 	{ 0x07, 0x8B },
 	{ 0x0E, 0xE8 },
@@ -1486,7 +1516,7 @@ OOVPA_NO_XREF(D3DDevice_End, 4039, 7)
 	{ 0x2E, 0x01 },
 	{ 0x36, 0x08 },
 OOVPA_END;
-
+#endif
 
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
@@ -2398,9 +2428,9 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawIndexedVertices, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginVisibilityTest, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_CopyRects, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_DeletePatch, 4034, DISABLED), // (TODO)
+	REGISTER_OOVPA(D3DDevice_DeletePatch, 3911, DISABLED), // (TODO)
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4034, PATCH),
