@@ -1793,7 +1793,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetOutputBuffer, 4039, 18,
     XREF_CDirectSoundBuffer_SetOutputBuffer,
     XRefOne)
 
-        // CDirectSoundBuffer_SetOutputBuffer+0x31 : call [XREF_CDirectSoundVoice_SetOutputBuffer]
+        // CDirectSoundBuffer_SetOutputBuffer+0x30 : call [XREF_CDirectSoundVoice_SetOutputBuffer]
         XREF_ENTRY( 0x31, XREF_CDirectSoundVoice_SetOutputBuffer),
 
         // CDirectSoundBuffer_SetOutputBuffer+0x00 : push esi

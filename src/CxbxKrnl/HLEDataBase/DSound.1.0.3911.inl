@@ -4910,6 +4910,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetRolloffFactor
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSound_SetRolloffFactor, 3911, 11,
 
     XRefNoSaveIndex,

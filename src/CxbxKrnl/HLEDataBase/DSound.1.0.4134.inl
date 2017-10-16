@@ -1065,6 +1065,7 @@ OOVPA_XREF(CDirectSound_SetRolloffFactor, 4134, 17,
         { 0x50, 0x0B },
 OOVPA_END;
 
+#if 0 // Duplicate OOVPA, using 3911 OOVPA instead
 // ******************************************************************
 // * IDirectSound_SetRolloffFactor
 // ******************************************************************
@@ -1094,6 +1095,7 @@ OOVPA_XREF(IDirectSound_SetRolloffFactor, 4134, 11,
         { 0x21, 0xC2 },
         { 0x22, 0x0C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSound::SetDopplerFactor
@@ -3542,6 +3544,95 @@ OOVPA_NO_XREF(DS_CMemoryManager_PoolAlloc, 4134, 11)
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSoundStream_AddRef
+// ******************************************************************
+// NOTE: Has identical function to DirectSound::CAc97MediaObject::AddRef
+OOVPA_XREF(CDirectSoundStream_AddRef, 4134, 11,
+    XRefNoSaveIndex,
+    XRefZero)
+
+        { 0x00, 0xE8 },
+
+        { 0x27, 0x8B },
+        { 0x28, 0x44 },
+
+        { 0x2B, 0xFF },
+        { 0x2C, 0x40 },
+        { 0x2D, 0x08 },
+
+        { 0x31, 0x8B },
+        { 0x32, 0x70 },
+        { 0x33, 0x08 },
+
+        //CDirectSoundStream_AddRef+0x44 : ret 4
+        { 0x44, 0xC2 },
+        { 0x45, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound::GetCaps
+// ******************************************************************
+OOVPA_XREF(CDirectSound_GetCaps, 4134, 12,
+
+    XREF_CDirectSound_GetCaps,
+    XRefZero)
+
+        { 0x00, 0x57 },
+        { 0x16, 0x68 },
+
+        { 0x37, 0x44 },
+        { 0x38, 0x24 },
+        { 0x39, 0x18 },
+        { 0x3A, 0x8B },
+        { 0x3B, 0x48 },
+        { 0x3C, 0x0C },
+        { 0x3D, 0x56 },
+        { 0x3E, 0xE8 },
+
+        { 0x6D, 0xC2 },
+        { 0x6E, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer_SetOutputBuffer
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetOutputBuffer, 4134, 18,
+
+    XREF_CDirectSoundBuffer_SetOutputBuffer,
+    XRefOne)
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x31 : call [XREF_CDirectSoundVoice_SetOutputBuffer]
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetOutputBuffer),
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x00 : push esi
+        { 0x00, 0x56 },
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x21 : mov eax, 0x80004005
+        { 0x21, 0xB8 },
+        { 0x22, 0x05 },
+        { 0x23, 0x40 },
+        { 0x24, 0x00 },
+        { 0x25, 0x80 },
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x29 : push [esp+0x10]; push [esp+0x10]
+        { 0x29, 0xFF },
+        { 0x2A, 0x74 },
+        { 0x2B, 0x24 },
+        { 0x2C, 0x10 },
+        { 0x2D, 0xFF },
+        { 0x2E, 0x74 },
+        { 0x2F, 0x24 },
+        { 0x30, 0x10 },
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x49 : pop edi
+        { 0x49, 0x5F },
+
+        // CDirectSoundBuffer_SetOutputBuffer+0x4B : retn 0x08
+        { 0x4B, 0xC2 },
+        { 0x4C, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_4134
 // ******************************************************************
 OOVPATable DSound_4134[] = {
@@ -3600,7 +3691,7 @@ OOVPATable DSound_4134[] = {
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetRolloffFactor, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound_SetRolloffFactor, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDopplerFactor, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_SetDopplerFactor, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_CommitDeferredSettings, 4134, XREF),
