@@ -891,11 +891,10 @@ OOVPA_NO_XREF(Direct3D_CheckDeviceMultiSampleType, 3911, 7)
         { 0x6E, 0x03 },
 OOVPA_END;
 
-
 // ******************************************************************
 // * D3DDevice_GetOverlayUpdateStatus
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 3911, 15) // Also for 4134, 4361, 4627, 5344, 5558, 5788, 5849
+OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 3911, 16) // Also for 4134, 4361, 4627, 5344, 5558, 5788, 5849
 
         { 0x00, 0xA1 },
 
@@ -912,12 +911,14 @@ OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 3911, 15) // Also for 4134, 4361
         { 0x12, 0x33 },
         { 0x13, 0xD2 },
         { 0x14, 0x3B },
-        { 0x15, 0xCE },
+//      { 0x15, 0xCE }, // F1 vs CE
+
         { 0x16, 0x0F },
         { 0x17, 0x95 },
         { 0x18, 0xC2 },
         { 0x19, 0x5E },
-
+        { 0x1A, 0x8B },
+        { 0x1B, 0xC2 },
         { 0x1C, 0xC3 },
 OOVPA_END;
 
@@ -1048,4 +1049,25 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 3911, 2+15,
         { 0x4E, 0xC2 },
         { 0x4F, 0x04 },
         { 0x50, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_RunPushBuffer
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 3911, 12)
+
+        { 0x00, 0x83 },
+        { 0x05, 0x1D },
+
+        { 0x0A, 0x55 },
+        { 0x0B, 0x56 },
+        { 0x0C, 0x57 },
+        { 0x0D, 0x6A },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x8B },
+        { 0x10, 0xCB },
+        { 0x11, 0xE8 },
+
+        { 0x1A, 0x83 },
+        { 0x23, 0x8B },
 OOVPA_END;

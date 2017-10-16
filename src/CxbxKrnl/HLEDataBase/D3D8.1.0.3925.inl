@@ -3601,6 +3601,7 @@ OOVPA_NO_XREF(D3DDevice_DeleteVertexShader, 3925, 6)
         { 0x17, 0x04 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_RunPushBuffer
 // ******************************************************************
@@ -3627,6 +3628,7 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 3925, 15)
 		{ 0xF6, 0x04 },
 		{ 0xF7, 0x00 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_BlockOnFence
@@ -4772,7 +4774,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_InsertFence, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShaderProgram, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_RunPushBuffer, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetPushBufferOffset, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Reset, 3925, PATCH),
 	REGISTER_OOVPA(D3D_GetAdapterIdentifier, 3925, DISABLED),
