@@ -159,6 +159,7 @@
 #include "DSound.1.0.3936.inl"
 #include "DSound.1.0.4039.inl"
 #include "DSound.1.0.4134.inl"
+#include "DSound.1.0.4242.inl"
 #include "DSound.1.0.4361.inl"
 #include "DSound.1.0.4432.inl"
 #include "DSound.1.0.4627.inl"
@@ -198,7 +199,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039, 4134),
-    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039, 4134),
+    REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039, 4134, 4242),
     REGISTER_OOVPAS(CMcpxStream_GetStatus, XREF, 4134),
     REGISTER_OOVPAS(CMcpxStream_Pause, XREF, 3911, 4039, 4134, /*4361,*/ 4831, 5788),
     REGISTER_OOVPAS(CSensaura3d_GetFullHRTFFilterPair, XREF, 3911, 3936),

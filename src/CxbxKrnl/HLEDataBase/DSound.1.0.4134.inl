@@ -2900,31 +2900,6 @@ OOVPA_XREF(CMcpxBuffer_Stop, 4134, 9,
 OOVPA_END;
 
 // ******************************************************************
-// * CMcpxBuffer_Stop
-// ******************************************************************
-//Generic OOVPA as of 4242 and newer.
-OOVPA_XREF(CMcpxBuffer_Stop, 4242, 9,
-
-	XREF_CMcpxBuffer_Stop,
-    XRefZero)
-
-        // CMcpxBuffer_Stop+0x0E : cmp al, 3
-        { 0x0E, 0x3C },
-        { 0x0F, 0x03 },
-
-        // CMcpxBuffer_Stop+0x17 : jne +0x2A
-        { 0x17, 0x74 },
-        { 0x18, 0x2A },
-
-        // CMcpxBuffer_Stop+0x19 : test [esp+10h], 2
-        { 0x19, 0xF6 },
-        { 0x1A, 0x44 },
-        { 0x1B, 0x24 },
-        { 0x1C, 0x10 },
-        { 0x1D, 0x02 },
-OOVPA_END;
-
-// ******************************************************************
 // * CDirectSoundBuffer_Stop
 // ******************************************************************
 //Generic OOVPA as of 4134 and newer.
@@ -3396,6 +3371,11 @@ OOVPA_XREF(CMcpxStream_GetStatus, 4134, 14,
         { 0x00, 0x55 },
         { 0x01, 0x8B },
 
+        // Added 2 OVs to enable support 4242 titles and later (if any has occurred).
+        { 0x2F, 0x03 },
+        { 0x32, 0x03 },
+
+        // Just a note, this asm code is unique
         { 0x3D, 0x80 },
         { 0x3E, 0x48 },
         { 0x3F, 0x02 },
@@ -3408,8 +3388,9 @@ OOVPA_XREF(CMcpxStream_GetStatus, 4134, 14,
         { 0x4F, 0x04 },
         { 0x50, 0x00 },
 
-        { 0x65, 0xC2 },
-        { 0x66, 0x04 },
+        // Removed due to 4242 has a return asm code at offset 0x75.
+        //{ 0x65, 0xC2 },
+        //{ 0x66, 0x04 },
 OOVPA_END;
 
 // ******************************************************************

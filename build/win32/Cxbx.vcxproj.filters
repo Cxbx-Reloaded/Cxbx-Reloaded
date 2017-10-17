@@ -710,6 +710,9 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4242.inl">
+      <Filter>HLEDatabase\DSound</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
