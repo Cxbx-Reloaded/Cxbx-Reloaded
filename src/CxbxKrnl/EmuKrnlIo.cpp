@@ -260,6 +260,8 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	NativeObjectAttributes nativeObjectAttributes;
 
 	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
+	// Force ShareAccess to all 
+	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
 	if (!FAILED(ret))
 		// redirect to NtCreateFile
