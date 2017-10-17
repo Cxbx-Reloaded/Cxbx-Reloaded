@@ -260,6 +260,12 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	NativeObjectAttributes nativeObjectAttributes;
 
 	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
+	// When a Synchronous CreateOption is specified, DesiredAccess must have SYNCHRONIZE set
+	if ((CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT) != 0 ||
+		(CreateOptions & FILE_SYNCHRONOUS_IO_ALERT) != 0) {
+		DesiredAccess |= SYNCHRONIZE;
+	}
+
 	// Force ShareAccess to all 
 	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
