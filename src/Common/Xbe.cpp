@@ -144,7 +144,7 @@ Xbe::Xbe(const char *x_szFilename)
 			char Dir[_MAX_DIR];
 			char Filename[_MAX_FNAME];
 			_splitpath(x_szFilename, nullptr, Dir, Filename, nullptr);
-			if (stricmp(Filename, "default") != 0) {
+			if (_stricmp(Filename, "default") != 0) {
 				strcpy(m_szAsciiTitle, Filename);
 			}
 			else {
