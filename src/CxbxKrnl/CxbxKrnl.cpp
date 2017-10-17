@@ -177,7 +177,6 @@ void CxbxLaunchXbe(void(*Entry)())
 	__try
 	{
 		Entry();
-		
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
@@ -503,27 +502,16 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Determine memory size accordingly :
 		SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
 
-		// Copy over loaded Xbe Header to specified base address
+		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
-		// Copy over the certificate
 		memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
-		// Copy over the library versions
-		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
-		// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does - see _ReadXbeBlock()
 
-		// Verify no section would load outside virtual_memory_placeholder (which would overwrite Cxbx code)
+		// Load all sections marked as preload using the in-memory copy of the xbe header
+		xboxkrnl::PXBEIMAGE_SECTION sectionHeaders = (xboxkrnl::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
 		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
-			xbaddr section_end = CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr + CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw;
-			if (section_end >= XBE_MAX_VA)
-			{
-				CxbxPopupMessage("Couldn't load XBE section - please report this!");
-				return; // TODO : Halt(0); 
+			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
+				xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 			}
-		}
-
-		// Load all sections to their requested Virtual Address :
-		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
-			memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
 		}
 
 		// We need to remember a few XbeHeader fields, so we can switch between a valid ExeHeader and XbeHeader :

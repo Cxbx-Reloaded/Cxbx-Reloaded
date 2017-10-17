@@ -43,6 +43,7 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For XeImageFileName, etc.
 };
 
+#include "CxbxKrnl.h" // For CxbxKrnl_Xbe
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "Emu.h" // For EmuWarning()
@@ -76,12 +77,24 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = STATUS_INVALID_HANDLE;
 
-	if (Section->SectionReferenceCount++ == 0) {
-		LOG_INCOMPLETE(); // TODO : Load section - probably lock this too
+	void* sectionData = CxbxKrnl_Xbe->FindSection((char*)std::string(Section->SectionName, 9).c_str());
+	if (sectionData != nullptr) {
+		// If the reference count was zero, load the section
+		if (Section->SectionReferenceCount == 0) {
+			// Clear the memory the section requires
+			memset(Section->VirtualAddress, 0, Section->VirtualSize);
+			// Copy the section data
+			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
+		}
+
+		// Increment the reference count
+		Section->SectionReferenceCount++;
+
+		ret = STATUS_SUCCESS;
 	}
-
+	
 	RETURN(ret);
 }
 
@@ -101,15 +114,18 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = STATUS_INVALID_PARAMETER;
 
+	// If the section was loaded, process it
 	if (Section->SectionReferenceCount > 0) {
-		if (--Section->SectionReferenceCount == 0) {
-			LOG_INCOMPLETE(); // TODO : Unload section - probably lock this too
+		// Decrement the reference count
+		Section->SectionReferenceCount -= 1;
+
+		// Free the section if necessary
+		if (Section->SectionReferenceCount == 0) {
+			memset(Section->VirtualAddress, 0, Section->VirtualSize);
 		}
 	}
-	else
-		ret = STATUS_INVALID_PARAMETER;
 
 	RETURN(ret);
 }
