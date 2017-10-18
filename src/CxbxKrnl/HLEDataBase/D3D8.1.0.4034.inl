@@ -750,6 +750,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_VertexBlend, 4034, 7)
         { 0x34, 0x08 },
         { 0x3D, 0x5E },
 OOVPA_END;
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * D3D_CheckDeviceFormat

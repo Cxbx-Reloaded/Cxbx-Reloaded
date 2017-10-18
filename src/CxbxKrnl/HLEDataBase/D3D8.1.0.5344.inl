@@ -479,6 +479,7 @@ OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 5344, 12)
         { 0x40, 0x04 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_SetViewport
 // ******************************************************************
@@ -836,6 +837,7 @@ OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5344, 11)
         { 0x45, 0xC2 },
         { 0x46, 0x08 },
 OOVPA_END;
+
 #if 0 // Moved to 5233
 // ******************************************************************
 // * D3DDevice_SetPixelShaderConstant

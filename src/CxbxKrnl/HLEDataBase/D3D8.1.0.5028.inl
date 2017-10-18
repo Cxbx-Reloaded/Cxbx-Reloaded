@@ -766,6 +766,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 12,
         { 0x7E, 0xD8 },
         { 0x7F, 0x05 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * D3D_CommonSetRenderTarget
@@ -960,6 +961,7 @@ OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 5028, 12)
         { 0x1C, 0xC3 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
@@ -1183,6 +1185,7 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 5028, 28, // Also for 5344
 		{ 0x1E, 0x50 },
 		{ 0x1F, 0x03 },
 OOVPA_END;
+
 #if 0 // Moved to 5120
 // ******************************************************************
 // * D3DDevice_RunPushBuffer

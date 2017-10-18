@@ -419,6 +419,7 @@ OOVPA_NO_XREF(D3DDevice_SetVerticalBlankCallback, 4432, 12)
         { 0x10, 0xC2 },
         { 0x11, 0x04 },
 OOVPA_END;
+
 #if 0 // Moved to 4531
 // ******************************************************************
 // * D3DDevice_SetRenderState_BackFillMode
