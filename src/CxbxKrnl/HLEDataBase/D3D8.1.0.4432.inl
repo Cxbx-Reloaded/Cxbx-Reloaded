@@ -55,7 +55,7 @@ OOVPA_NO_XREF(Direct3D_CreateDevice, 4432, 8)
         { 0xA1, 0x18 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4134 version
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_GetRenderTarget
 // ******************************************************************
@@ -115,7 +115,7 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface, 4432, 11)
         { 0x26, 0x04 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4039 version
+#if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
@@ -190,7 +190,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 4432, 13)
         { 0x8D, 0x04 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4034 version
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
@@ -241,7 +241,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LineWidth, 4432, 10)
         { 0x63, 0x04 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4034 version
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
@@ -436,7 +436,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 4531, 9)
         { 0x43, 0x0C },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4134 version
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
@@ -469,7 +469,7 @@ OOVPA_NO_XREF(D3DDevice_Release, 4432, 11)
 	{ 0x1F, 0x00 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DTexture_GetSurfaceLevel
 // ******************************************************************
@@ -504,7 +504,7 @@ OOVPA_NO_XREF(D3DTexture_GetSurfaceLevel, 4432, 14)
         { 0x4D, 0x0C },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4039 version
+#if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_GetDisplayMode
 // ******************************************************************
@@ -608,7 +608,7 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock, 4531, 11)
         { 0x55, 0x14 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4134 version
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_GetProjectionViewportMatrix
 // ******************************************************************
@@ -638,7 +638,7 @@ OOVPA_NO_XREF(D3DDevice_SetModelView, 4432, 7)
         { 0x9F, 0x75 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetDisplayFieldStatus
 // ******************************************************************

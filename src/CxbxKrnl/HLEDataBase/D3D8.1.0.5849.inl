@@ -65,7 +65,7 @@ OOVPA_XREF(D3D_SetFence, 5849, 7,
         { 0xA8, 0x75 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 5558 version
+#if 0 // No longer used, replaced by generic 5558 version
 // ******************************************************************
 // * D3D::BlockOnTime
 // * Source: Spiderman 2
@@ -83,7 +83,7 @@ OOVPA_XREF(D3D_BlockOnTime, 5849, 6,
         { 0xF8, 0x47 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4034 version
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * Get2DSurfaceDesc
 // ******************************************************************
@@ -128,7 +128,7 @@ OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5849, 8)
 	{ 0x47, 0x08 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 4432 version
+#if 0 // No longer used, replaced by generic 4432 version
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes
 // ******************************************************************

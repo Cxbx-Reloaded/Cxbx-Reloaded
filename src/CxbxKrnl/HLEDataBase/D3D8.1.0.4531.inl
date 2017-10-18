@@ -58,7 +58,7 @@ OOVPA_NO_XREF(D3DDevice_Swap, 4531, 11)
         { 0xBA, 0x04 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 4134 version
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_BackFillMode
 // ******************************************************************

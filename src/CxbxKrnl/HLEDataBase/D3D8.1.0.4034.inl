@@ -132,7 +132,7 @@ OOVPA_NO_XREF(D3DDevice_GetCreationParameters, 4034, 7)
         { 0x36, 0xC9 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetViewport
 // ******************************************************************
@@ -391,7 +391,7 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_ColorKeyColor, 4034, 8)
         { 0x36, 0xC2 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_DrawVertices
 // ******************************************************************
@@ -537,7 +537,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FillMode, 4034, 8)
         { 0x40, 0x5E },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_BackFillMode
 // ******************************************************************
@@ -983,7 +983,7 @@ OOVPA_NO_XREF(D3DDevice_Clear, 4034, 9)
         { 0x039A, 0x18 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
@@ -1840,7 +1840,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4034, 12)
         { 0x2B, 0x04 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_IsBusy
 // ******************************************************************
@@ -1881,7 +1881,7 @@ OOVPA_NO_XREF(D3DDevice_GetRenderTarget, 4039, 11)
         { 0x1E, 0x04 },
 OOVPA_END;
 
-#if 1 // Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
@@ -2184,7 +2184,7 @@ OOVPA_NO_XREF(D3DDevice_KickOff, 4039, 15)
         { 0x87, 0xB8 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetScissors
 // ******************************************************************
@@ -2208,7 +2208,7 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 4039, 10)
         { 0x1C, 0x95 },
 OOVPA_END;
 #endif
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetPixelShaderConstant
 // ******************************************************************
@@ -2278,7 +2278,7 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 4039, 8)
         { 0xFE, 0x24 },
 OOVPA_END;
 
-#if 1 // Moved to 3911
+#if 0 // Moved to 3911
 // ******************************************************************
 // * D3DDevice_Reset
 // ******************************************************************
@@ -2326,7 +2326,7 @@ OOVPA_XREF(D3D_BlockOnTime, 4039, 10,
         { 0x2F, 0x53 },
 OOVPA_END;
 
-#if 1 // No longer used, replaced by generic 3911 version
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
