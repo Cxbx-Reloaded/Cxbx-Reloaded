@@ -510,7 +510,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 		xboxkrnl::PXBEIMAGE_SECTION sectionHeaders = (xboxkrnl::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
 		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
-				xboxkrnl::XeLoadSection(&sectionHeaders[i]);
+				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
+				if (FAILED(result)) {
+					CxbxKrnlCleanup("Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+				}
 			}
 		}
 
