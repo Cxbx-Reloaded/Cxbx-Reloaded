@@ -220,6 +220,7 @@ OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 4242, 12)
         { 0x11, 0x04 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3D_GetAdapterDisplayMode
 // ******************************************************************
@@ -246,6 +247,7 @@ OOVPA_NO_XREF(D3D_GetAdapterDisplayMode, 4361, 13)
         { 0xBD, 0xC2 },
         { 0xBE, 0x08 },
 OOVPA_END;
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * D3DDevice_AddRef
@@ -1115,7 +1117,6 @@ OOVPA_XREF(D3DDevice_SetTexture, 4361, 1+28,
 
 		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
 #endif
-
 OOVPA_NO_XREF(D3DDevice_SetTexture, 4361, 28)
 
 		{ 0x00, 0x83 },

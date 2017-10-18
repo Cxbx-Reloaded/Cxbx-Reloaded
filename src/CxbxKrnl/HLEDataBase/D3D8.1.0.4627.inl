@@ -758,6 +758,7 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 4831, 13)
         { 0xC2, 0x00 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstant
 // ******************************************************************
@@ -860,7 +861,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstantNotInline, 4627, 12) // (NOT 5344
         // D3DDevice_SetVertexShaderConstantNotInline+0x28 : call [abs]
         { 0x28, 0xE8 },
 OOVPA_END;
-
 
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstantNotInlineFast
@@ -1028,6 +1028,7 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 4627, 13)
         { 0xAE, 0xC2 },
         { 0xAF, 0x1C },
 OOVPA_END;
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * D3DDevice_CreateTexture2
@@ -1325,7 +1326,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2f, 4627, 14)
         { 0x3E, 0x0C },
 OOVPA_END;
 #endif
-
 #if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_SetVertexData4f
@@ -1662,7 +1662,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_NormalizeNormals, 4627, 8)
         { 0x40, 0x04 },
 OOVPA_END;
 #endif
-
 #if 0 // Used 4134 instead in 4627, 4721, 4831, 4928
 // ******************************************************************
 // * D3DDevice_SetRenderState_EdgeAntiAlias
@@ -1801,6 +1800,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 4627, 17)
         { 0x5C, 0x05 },
         { 0x5D, 0xE8 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
@@ -2403,7 +2403,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShader, 4627, 14)
         { 0xC6, 0x04 },
 OOVPA_END;
 #endif
-
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_Release
@@ -2458,6 +2457,7 @@ OOVPA_NO_XREF(D3DDevice_SetBackBufferScale, 4627, 6)
         { 0xDE, 0x8B },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * CMiniport_IsFlipPending
 // ******************************************************************
@@ -2697,6 +2697,7 @@ OOVPA_NO_XREF(D3DDevice_KickOff, 4531, 13)
         { 0xE2, 0xC3 }
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_KickPushBuffer
 // ******************************************************************
@@ -3081,6 +3082,7 @@ OOVPA_XREF(D3D_BlockOnTime, 4627, 6,
         { 0xE3, 0x80 },
         { 0xF5, 0x30 },
 OOVPA_END;
+
 #if 0 // Moved to 4039
 // ******************************************************************
 // * D3DDevice_BlockOnFence
@@ -3143,7 +3145,6 @@ OOVPA_NO_XREF(D3DDevice_CreateImageSurface, 4627, 9)
         { 0x28, 0x07 },
         { 0x2E, 0x00 },
 OOVPA_END;
-
 
 // ******************************************************************
 // * D3DCubeTexture_GetCubeMapSurface
@@ -3336,6 +3337,7 @@ OOVPA_NO_XREF(D3DDevice_EndPushBuffer, 4627, 7)
         { 0x7C, 0x88 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_GetPushBufferOffset
 // ******************************************************************
@@ -3352,6 +3354,7 @@ OOVPA_NO_XREF(D3DDevice_GetPushBufferOffset, 4627, 10)
         { 0x1E, 0x07 },
         { 0x1F, 0x03 },
 OOVPA_END;
+
 #if 0 // Moved to 4928
 // ******************************************************************
 // * D3DDevice_GetPersistedSurface2
@@ -3366,6 +3369,7 @@ OOVPA_NO_XREF(D3DDevice_GetPersistedSurface2, 4928, 6) // For only on Unreal Cha
         { 0x05, 0x00 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_SetModelView
 // ******************************************************************
@@ -3434,6 +3438,7 @@ OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 4627, 7)
         { 0x8A, 0x00 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_GetMaterial
 // ******************************************************************
@@ -3633,6 +3638,7 @@ OOVPA_NO_XREF(D3DPalette_Lock, 4531, 17)
         { 0x22, 0x0C },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3D8_4627
 // ******************************************************************

@@ -298,6 +298,7 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer, 4134, 12)
         { 0x20, 0x7C },
         { 0x21, 0x20 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface
@@ -1514,6 +1515,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_PSTextureModes, 4134, 10)
 		{ 0x1F, 0xC2 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
@@ -1892,6 +1894,7 @@ OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 4134, 11)
         { 0x40, 0x04 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_SetSoftDisplayFilter
 // ******************************************************************
@@ -2033,7 +2036,6 @@ OOVPA_NO_XREF(D3DDevice_GetModelView, 4134, 7)
         { 0x28, 0xE0 },
 OOVPA_END;
 
-
 // ******************************************************************
 // * D3D_MakeRequestedSpace
 // ******************************************************************
@@ -2072,6 +2074,7 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 4134, 28, // Also for 4361, 4627
 		{ 0x1E, 0x54 },
 		{ 0x1F, 0x03 },
 OOVPA_END;
+
 #if 0 // Moved to 4039
 // ******************************************************************
 // * D3DDevice_RunPushBuffer
@@ -2596,6 +2599,7 @@ OOVPA_XREF(D3DDevice_BeginStateBlock, 4134, 6,
         { 0x07, 0x08 },
         { 0x08, 0x20 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D_ClearStateBlockFlags
@@ -2714,6 +2718,7 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 4134, 10)
         { 0x0E, 0x3C },
         { 0x0F, 0x04 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by another 4134 version
 // ******************************************************************
 // * D3DDevice_AddRef

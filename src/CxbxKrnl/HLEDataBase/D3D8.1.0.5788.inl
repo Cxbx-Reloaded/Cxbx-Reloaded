@@ -269,7 +269,6 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock2, 5788, 7)
         { 0x44, 0x00 },
 OOVPA_END;
 #endif
-
 #if 0 // Moved to 5455
 // ******************************************************************
 // * D3D_AllocContiguousMemory

@@ -159,7 +159,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
         { 0x56, 0x04 },
 OOVPA_END;
 #endif
-
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_SetTexture
@@ -267,6 +266,7 @@ OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 5233, 12)
         { 0x1C, 0xC3 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
