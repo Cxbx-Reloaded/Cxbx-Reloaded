@@ -222,8 +222,8 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_TLS;
 
-        // Xbe section names, each 8 bytes max and null terminated
-        char (*m_szSectionName)[9];
+        // Xbe section names, stored null terminated
+        char (*m_szSectionName)[10];
 
         // Xbe sections
         uint08 **m_bzSection;
@@ -360,4 +360,11 @@ const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK = 0x40000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE      = 0x80000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_MASK          = 0x00FFFFFF;
 
+// section type flags for Xbe
+const uint32 XBEIMAGE_SECTION_WRITEABLE				 = 0x00000001;
+const uint32 XBEIMAGE_SECTION_PRELOAD				 = 0x00000002;
+const uint32 XBEIMAGE_SECTION_EXECUTABLE			 = 0x00000004;
+const uint32 XBEIMAGE_SECTION_INSERTFILE			 = 0x00000008;
+const uint32 XBEIMAGE_SECTION_HEAD_PAGE_READONLY	 = 0x00000010;
+const uint32 XBEIMAGE_SECTION_TAIL_PAGE_READONLY	 = 0x00000020;
 #endif

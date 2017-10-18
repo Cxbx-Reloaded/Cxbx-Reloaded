@@ -193,7 +193,8 @@ NTSTATUS CxbxConvertFilePath(
 	std::string RelativeXboxPath, 
 	OUT std::wstring &RelativeHostPath, 
 	OUT NtDll::HANDLE *RootDirectory,
-	std::string aFileAPIName)
+	std::string aFileAPIName,
+	bool partitionHeader)
 {
 	std::string OriginalPath = RelativeXboxPath;
 	std::string RelativePath = RelativeXboxPath;
@@ -278,7 +279,15 @@ NTSTATUS CxbxConvertFilePath(
 			}
 
 			XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
-			*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
+
+			// If directly accessing a partition header, redirect to the partitionX.bin file
+			if (partitionHeader) {
+				RelativePath = DrivePrefix + HostPath.substr(0, HostPath.length()) + ".bin";
+			} else {
+				// If accessing a partition as a directly, set the root directory handle and keep relative path as is
+				*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
+			}
+			
 		}
 
 		// Check for special case : Partition0
@@ -317,7 +326,8 @@ NTSTATUS CxbxConvertFilePath(
 NTSTATUS CxbxObjectAttributesToNT(
 	xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, 
 	OUT NativeObjectAttributes& nativeObjectAttributes, 
-	const std::string aFileAPIName)
+	const std::string aFileAPIName,
+	bool partitionHeader)
 {
 	if (ObjectAttributes == NULL)
 	{
@@ -346,7 +356,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	if (aFileAPIName.size() > 0)
 	{
 		// Then interpret the ObjectName as a filename, and update it to host relative :
-		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
+		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName, partitionHeader);
 		if (FAILED(result))
 			return result;
 	}
@@ -400,6 +410,18 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 	}
 	else
 	{
+		// All HDD partitions have a .bin file to allow direct file io on the partition info
+		if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+			std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
+			if (!PathFileExists(partitionHeaderPath.c_str())) {
+				HANDLE hf = CreateFile(partitionHeaderPath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+
+				SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
+				SetEndOfFile(hf);
+				CloseHandle(hf);
+			}
+		}
+
 		int status = SHCreateDirectoryEx(NULL, HostDevicePath.c_str(), NULL);
 		if (status == STATUS_SUCCESS || status == ERROR_ALREADY_EXISTS)
 		{

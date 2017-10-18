@@ -259,7 +259,23 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	NativeObjectAttributes nativeObjectAttributes;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
+	// If we are NOT accessing a directory, and we match a partition path, we need to redirect to a partition.bin file
+	bool isDirectPartitionAccess = false;
+	std::string objectName = std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
+	if ((CreateOptions & FILE_DIRECTORY_FILE) == 0 && _strnicmp(objectName.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+		isDirectPartitionAccess = true;
+	}
+
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile", isDirectPartitionAccess);
+
+	// When a Synchronous CreateOption is specified, DesiredAccess must have SYNCHRONIZE set
+	if ((CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT) != 0 ||
+		(CreateOptions & FILE_SYNCHRONOUS_IO_ALERT) != 0) {
+		DesiredAccess |= SYNCHRONIZE;
+	}
+
+	// Force ShareAccess to all 
+	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
 	if (!FAILED(ret))
 		// redirect to NtCreateFile

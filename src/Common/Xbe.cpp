@@ -144,7 +144,7 @@ Xbe::Xbe(const char *x_szFilename)
 			char Dir[_MAX_DIR];
 			char Filename[_MAX_FNAME];
 			_splitpath(x_szFilename, nullptr, Dir, Filename, nullptr);
-			if (stricmp(Filename, "default") != 0) {
+			if (_stricmp(Filename, "default") != 0) {
 				strcpy(m_szAsciiTitle, Filename);
 			}
 			else {
@@ -187,18 +187,18 @@ Xbe::Xbe(const char *x_szFilename)
     {
         printf("Xbe::Xbe: Reading Section Names...\n");
 
-        m_szSectionName = new char[m_Header.dwSections][9];
+        m_szSectionName = new char[m_Header.dwSections][10];
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Xbe: Reading Section Name 0x%.04X...", v);
 
             uint08 *sn = GetAddr(m_SectionHeader[v].dwSectionNameAddr);
 
-            memset(m_szSectionName[v], 0, 9);
+            memset(m_szSectionName[v], 0, 10);
 
             if(sn != 0)
             {
-                for(int b=0;b<8;b++)
+                for(int b=0;b<9;b++)
                 {
                     m_szSectionName[v][b] = sn[b];
 

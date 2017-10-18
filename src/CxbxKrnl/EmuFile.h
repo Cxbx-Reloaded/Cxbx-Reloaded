@@ -165,8 +165,8 @@ struct NativeObjectAttributes {
 	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
 };
 
-NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "");
-NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &RelativeHostPath, OUT NtDll::HANDLE *RootDirectory, std::string aFileAPIName = "");
+NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "", bool partitionHeader = false);
+NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &RelativeHostPath, OUT NtDll::HANDLE *RootDirectory, std::string aFileAPIName = "", bool partitionHeader = false);
 
 // ******************************************************************
 // * Wrapper of a handle object
