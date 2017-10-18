@@ -149,6 +149,32 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
+OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5028, 11)
+
+        // D3DDevice_BlockUntilVerticalBlank+0x05 : push 0; push 0; push 1
+        { 0x05, 0x6A },
+        { 0x06, 0x00 },
+        { 0x07, 0x6A },
+        { 0x08, 0x00 },
+        { 0x09, 0x6A },
+        { 0x0A, 0x01 },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x17 : add eax, 0x1954
+        { 0x17, 0x05 },
+        { 0x18, 0x54 },
+        { 0x19, 0x19 },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x1D : call [KrnlImport]
+        { 0x1D, 0xFF },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x23 : retn
+        { 0x23, 0xC3 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by another 5028 version
+// ******************************************************************
+// * D3DDevice_BlockUntilVerticalBlank
+// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5028, 7)
 
         { 0x05, 0x6A },
@@ -159,7 +185,7 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5028, 7)
         { 0x1C, 0x50 },
         { 0x23, 0xC3 },
 OOVPA_END;
-
+#endif
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
 // ******************************************************************
@@ -485,14 +511,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::SetFence
 // ******************************************************************
-OOVPA_XREF(D3D_SetFence, 5028, 7,
+OOVPA_XREF(D3D_SetFence, 5028, 14,
 
     XREF_D3D_SetFence,
     XRefZero)
 
         { 0x0E, 0x05 },
         { 0x18, 0xC9 },
+
+        { 0x28, 0xBA },
+        { 0x29, 0x90 },
+        { 0x2A, 0x1D },
+        { 0x2B, 0x04 },
+        { 0x2C, 0x00 },
+
+        { 0x3C, 0x83 },
+        { 0x3D, 0xE1 },
         { 0x3E, 0x3F },
+
         { 0x5E, 0x28 },
         { 0x86, 0x5D },
         { 0x98, 0xE8 },
@@ -624,14 +660,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShader, 5028, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShader, 5028, 16)
+
+        { 0x00, 0xA1 },
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
         { 0x07, 0x80 },
+        { 0x08, 0x03 },
+        { 0x09, 0x00 },
         { 0x0A, 0x00 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x54 },
         { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
         { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
         { 0x13, 0x00 },
 OOVPA_END;
 
@@ -653,14 +699,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetPixelShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetPixelShader, 5028, 7)
+OOVPA_NO_XREF(D3DDevice_GetPixelShader, 5028, 16)
+
+        { 0x00, 0xA1 },
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
         { 0x07, 0x6C },
+        { 0x08, 0x03 },
+        { 0x09, 0x00 },
         { 0x0A, 0x00 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x54 },
         { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
         { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
         { 0x13, 0x00 },
 OOVPA_END;
 
@@ -1126,6 +1182,31 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 5120, 13)
         { 0x95, 0x8B },
 OOVPA_END;
 #endif
+
+// ******************************************************************
+// * D3DDevice_GetShaderConstantMode
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 5028, 16)
+
+        { 0x00, 0xA1 },
+
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0xD8 },
+        { 0x08, 0x14 },
+        { 0x09, 0x00 },
+        { 0x0A, 0x00 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x54 },
+        { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
+        { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
+        { 0x13, 0x00 },
+OOVPA_END;
+
 // ******************************************************************
 // * Rollback support signature(s)
 // ******************************************************************

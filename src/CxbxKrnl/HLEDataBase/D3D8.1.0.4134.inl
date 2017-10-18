@@ -2053,6 +2053,25 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
+OOVPA_NO_XREF(D3DDevice_BeginPush, 4134, 10)
+
+        { 0x00, 0x56 },
+        { 0x07, 0x6A },
+
+        { 0x10, 0x8B },
+        { 0x11, 0x44 },
+        { 0x12, 0x24 },
+        { 0x13, 0x08 },
+        { 0x14, 0x40 },
+        { 0x15, 0x50 },
+        { 0x16, 0x56 },
+        { 0x17, 0xE8 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4134 version
+// ******************************************************************
+// * D3DDevice_BeginPush
+// ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BeginPush, 4134, 7)
 
         { 0x07, 0x6A },
@@ -2063,6 +2082,7 @@ OOVPA_NO_XREF(D3DDevice_BeginPush, 4134, 7)
         { 0x1C, 0x8B },
         { 0x21, 0x01 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DDevice_EndPush
@@ -2290,17 +2310,24 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetShaderConstantMode
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 4134, 10)
+OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 4134, 16)
 
         { 0x00, 0xA1 },
+
         { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0x18 },
         { 0x08, 0x20 },
         { 0x09, 0x00 },
         { 0x0A, 0x00 },
         { 0x0B, 0x8B },
         { 0x0C, 0x54 },
         { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
         { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
         { 0x13, 0x00 },
 OOVPA_END;
 
@@ -2384,12 +2411,14 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetProjectionViewportMatrix
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetProjectionViewportMatrix, 4134, 14)
+OOVPA_NO_XREF(D3DDevice_GetProjectionViewportMatrix, 4134, 16) // Up to 4531
 
         { 0x02, 0x35 },
 
         { 0x07, 0x57 },
 
+        { 0x0E, 0x70 }, // 4361 0x7004
+        { 0x0F, 0x04 },
         { 0x10, 0x00 },
         { 0x11, 0x00 },
         { 0x12, 0xB9 },
@@ -2568,28 +2597,48 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4134, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4134, 16)
+
+        { 0x00, 0xA1 },
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
         { 0x07, 0x84 },
+        { 0x08, 0x03 },
+        { 0x09, 0x00 },
         { 0x0A, 0x00 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x54 },
         { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
         { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
         { 0x13, 0x00 },
 OOVPA_END;
 
 // ******************************************************************
 // * D3DDevice_GetPixelShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetPixelShader, 4134, 7)
+OOVPA_NO_XREF(D3DDevice_GetPixelShader, 4134, 16)
+
+        { 0x00, 0xA1 },
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
         { 0x07, 0x70 },
+        { 0x08, 0x03 },
+        { 0x09, 0x00 },
         { 0x0A, 0x00 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x54 },
         { 0x0D, 0x24 },
+        { 0x0E, 0x04 },
+        { 0x0F, 0x89 },
         { 0x10, 0x0A },
+        { 0x11, 0xC2 },
+        { 0x12, 0x04 },
         { 0x13, 0x00 },
 OOVPA_END;
 
