@@ -125,6 +125,8 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		if (Section->SectionReferenceCount == 0) {
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
 		}
+
+		ret = STATUS_SUCCESS;
 	}
 
 	RETURN(ret);
