@@ -965,7 +965,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_KickOff, 5028, 8)
+OOVPA_XREF(D3DDevice_KickOff, 5028, 8,
+
+    XREF_D3D_CDevice_KickOff,
+    XRefZero)
 
         { 0x07, 0x08 },
         { 0x17, 0xC4 },
@@ -1268,10 +1271,12 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderTarget, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_AddRef, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetGammaRamp, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetRenderTarget2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetTile, 3911, PATCH),
+	REGISTER_OOVPA(D3D_SetTileNoWait, 4627, XREF),
+	REGISTER_OOVPA(D3D_SetTileNoWait, 4627, XREF),
 	REGISTER_OOVPA(D3DDevice_SetTile, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateIndexBuffer2, 4627, DISABLED),
 	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3911, PATCH),
@@ -1303,7 +1308,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetVerticalBlankCallback, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 4627, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BorderColor, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_ColorKeyColor, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_VertexBlend, 4034, PATCH),
@@ -1313,8 +1318,8 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_ZBias, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_EdgeAntiAlias, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FillMode, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4134, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4134, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_BackFillMode, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FogColor, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Dxt1NoiseEnable, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_Simple, 4034, PATCH),
@@ -1327,7 +1332,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SwitchTexture, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_YuvEnable, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTransform, 4034, PATCH),
-	REGISTER_OOVPA(D3DDevice_GetTransform, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetTransform, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetStreamSource2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetStreamSource, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVerticesUP, 4039, PATCH),
@@ -1350,7 +1355,6 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DBaseTexture_GetLevelCount, 3911, PATCH),
 	REGISTER_OOVPA(D3DTexture_GetSurfaceLevel2, 4627, PATCH),
 	REGISTER_OOVPA(D3DTexture_LockRect, 3911, PATCH),
-	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3911, PATCH),	// Just calls Lock3DSurface
 	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_DeleteVertexShader, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShaderDirect, 4361, PATCH),
@@ -1362,7 +1366,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_RunVertexStateShader, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShaderProgram, 3911, PATCH),
-	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderSize, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderType, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShaderDeclaration, 3911, PATCH),
@@ -1376,7 +1380,7 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_SetBackBufferScale, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayFieldStatus, 3911, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 4039, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_InsertCallback, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetProjectionViewportMatrix, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDeviceCaps, 3911, DISABLED),
@@ -1406,7 +1410,9 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3D_BlockOnTime, 5028, XREF),
 	REGISTER_OOVPA(D3DDevice_BlockOnFence, 3911, PATCH),
 	REGISTER_OOVPA(Lock3DSurface, 3911, PATCH),
+	REGISTER_OOVPA(D3DVolumeTexture_LockBox, 3911, PATCH),	// Just calls Lock3DSurface
 	REGISTER_OOVPA(Lock2DSurface, 3911, PATCH),
+	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3911, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 4134, PATCH),
@@ -1414,9 +1420,9 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_CreatePalette2, 4627, PATCH),
 	REGISTER_OOVPA(D3DPalette_Lock2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetModelView, 4627, PATCH),
-	REGISTER_OOVPA(D3D_LazySetPointParams, 4039, PATCH),
+	REGISTER_OOVPA(D3D_LazySetPointParams, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 4432, PATCH),
-	REGISTER_OOVPA(D3DDevice_KickPushBuffer, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_KickPushBuffer, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
@@ -1437,7 +1443,6 @@ OOVPATable D3D8_5028[] = {
 	REGISTER_OOVPA(D3DDevice_GetScissors, 3911, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsBusy, 5028, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4627, PATCH),
-	REGISTER_OOVPA(D3DCubeTexture_LockRect, 3911, PATCH),
 
 	// ******************************************************************
 	// Provisional registration functions in XDK 5028

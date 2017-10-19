@@ -71,7 +71,7 @@ OOVPA_XREF(D3DDevice_GetTexture2, 3911, 1 + 21, // Also for 4361
 
     XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
 #endif
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 3911, 21) // Also for 4361
+OOVPA_NO_XREF(D3DDevice_GetTexture2, 3911, 23) // Also for 3948
 
         { 0x00, 0x8B },
         { 0x01, 0x44 },
@@ -84,7 +84,8 @@ OOVPA_NO_XREF(D3DDevice_GetTexture2, 3911, 21) // Also for 4361
         { 0x0B, 0x8D },
         { 0x0C, 0xB4 },
         { 0x0D, 0x81 },
-
+        { 0x0E, 0xA0 }, // GetTexture A00B vs GetPalette B00B
+        { 0x0F, 0x0B },
         { 0x10, 0x00 },
         { 0x11, 0x00 },
         { 0x12, 0x8B },
@@ -803,7 +804,10 @@ OOVPA_END;
 // ******************************************************************
 // * Lock3DSurface
 // ******************************************************************
-OOVPA_NO_XREF(Lock3DSurface, 3911, 11)
+OOVPA_XREF(Lock3DSurface, 3911, 11,
+
+    XREF_Lock3DSurface,
+    XRefZero)
 
         // D3D::PixelJar::Lock3DSurface + 0x08: test bl, 0x20
         { 0x08, 0xF6 },
@@ -1260,7 +1264,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_KickOff, 3911, 10)
+OOVPA_XREF(D3DDevice_KickOff, 3911, 10,
+
+    XREF_D3D_CDevice_KickOff,
+    XRefZero)
 
         { 0x01, 0xA1 },
 
@@ -2701,6 +2708,20 @@ OOVPA_END;
 // ******************************************************************
 // * D3DVolumeTexture_LockBox
 // ******************************************************************
+OOVPA_XREF(D3DVolumeTexture_LockBox, 3911, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x01, XREF_Lock3DSurface ),
+
+        { 0x00, 0xE9 },
+OOVPA_END;
+
+#if 0 // only perform a jmp to Lock3DSurface
+// ******************************************************************
+// * D3DVolumeTexture_LockBox
+// ******************************************************************
 OOVPA_NO_XREF(D3DVolumeTexture_LockBox, 3911, 11)
 
         // D3DVolumeTexture_LockBox+0x08 : test bl, 0x20
@@ -2722,7 +2743,22 @@ OOVPA_NO_XREF(D3DVolumeTexture_LockBox, 3911, 11)
         { 0x99, 0xC2 },
         { 0x9A, 0x14 },
 OOVPA_END;
+#endif
 
+// ******************************************************************
+// * D3DCubeTexture_LockRect
+// ******************************************************************
+OOVPA_XREF(D3DCubeTexture_LockRect, 3911, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x01, XREF_Lock2DSurface ),
+
+        { 0x00, 0xE9 },
+OOVPA_END;
+
+#if 0 // only perform a jmp to Lock2DSurface
 // ******************************************************************
 // * D3DCubeTexture_LockRect
 // ******************************************************************
@@ -2747,6 +2783,7 @@ OOVPA_NO_XREF(D3DCubeTexture_LockRect, 3911, 11)
         { 0x98, 0xC2 },
         { 0x99, 0x18 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * D3DTexture_GetSurfaceLevel
@@ -2784,7 +2821,10 @@ OOVPA_END;
 // ******************************************************************
 // * Lock2DSurface
 // ******************************************************************
-OOVPA_NO_XREF(Lock2DSurface, 3911, 11)
+OOVPA_XREF(Lock2DSurface, 3911, 11,
+
+    XREF_Lock2DSurface,
+    XRefZero)
 
         { 0x06, 0xF6 },
         { 0x07, 0xC3 },
@@ -4455,7 +4495,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTile, 3911, 9)
+OOVPA_NO_XREF(D3DDevice_SetTile, 3911, 13)
 
         // D3DDevice_SetTile+0x06 : sub esp, 0x18
         { 0x06, 0x83 },
@@ -4471,6 +4511,12 @@ OOVPA_NO_XREF(D3DDevice_SetTile, 3911, 9)
         { 0x7E, 0x83 },
         { 0x7F, 0xC4 },
         { 0x80, 0x18 },
+
+        // D3DDevice_SetTile+0x7E : mov ecx, [esi+21D0h]
+        { 0x8E, 0x8B },
+        { 0x8F, 0x8E },
+        { 0x90, 0xD0 },
+        { 0x91, 0x21 },
 OOVPA_END;
 
 // ******************************************************************
@@ -4925,4 +4971,40 @@ OOVPA_NO_XREF(D3DDevice_DeletePatch, 3911, 19)
         { 0x1F, 0x00 },
 
         { 0x25, 0xE8 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_KickPushBuffer
+// ******************************************************************
+OOVPA_XREF(D3DDevice_KickPushBuffer, 3911, 4,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+	XREF_ENTRY( 0x07, XREF_D3D_CDevice_KickOff ),
+
+        { 0x00, 0x8B },
+        { 0x01, 0x0D },
+        { 0x06, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMiniport_IsFlipPending
+// ******************************************************************
+OOVPA_NO_XREF(CMiniport_IsFlipPending, 3911, 14)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x81 },
+        { 0x02, 0xDC },
+        { 0x03, 0x01 },
+        { 0x04, 0x00 },
+        { 0x05, 0x00 },
+        { 0x06, 0x8B },
+        { 0x07, 0x84 },
+        { 0x08, 0xC1 },
+        { 0x09, 0xB4 },
+        { 0x0A, 0x01 },
+        { 0x0B, 0x00 },
+        { 0x0C, 0x00 },
+        { 0x0D, 0xC3 },
 OOVPA_END;

@@ -136,3 +136,52 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
         { 0xB4, 0xE2 },
         { 0xB5, 0x04 },
 OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_BlockUntilVerticalBlank
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 4242, 11)
+
+        // D3DDevice_BlockUntilVerticalBlank+0x05 : push 0; push 0; push 1
+        { 0x05, 0x6A },
+        { 0x06, 0x00 },
+        { 0x07, 0x6A },
+        { 0x08, 0x00 },
+        { 0x09, 0x6A },
+        { 0x0A, 0x01 },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x17 : add eax, 0x2434
+        { 0x17, 0x05 },
+        { 0x18, 0x34 },
+        { 0x19, 0x24 },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x1D : call [KrnlImport]
+        { 0x1D, 0xFF },
+
+        // D3DDevice_BlockUntilVerticalBlank+0x23 : retn
+        { 0x23, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMiniport_IsFlipPending
+// ******************************************************************
+OOVPA_NO_XREF(CMiniport_IsFlipPending, 4242, 17)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x81 },
+        { 0x02, 0xF4 },
+        { 0x03, 0x01 },
+        { 0x04, 0x00 },
+        { 0x05, 0x00 },
+        { 0x06, 0x83 },
+        { 0x07, 0xE0 },
+        { 0x08, 0x01 },
+        { 0x09, 0x8B },
+        { 0x0A, 0x84 },
+        { 0x0B, 0xC1 },
+        { 0x0C, 0xB4 },
+        { 0x0D, 0x01 },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x00 },
+        { 0x10, 0xC3 },
+OOVPA_END;
