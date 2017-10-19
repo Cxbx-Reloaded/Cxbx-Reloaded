@@ -71,7 +71,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateVertexBuffer2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateVertexBuffer2, 5455, 14)
+OOVPA_XREF(D3DDevice_CreateVertexBuffer2, 5455, 14,
+
+    XREF_D3DDevice_CreateVertexBuffer2,
+    XRefZero)
 
         { 0x00, 0x56 },
         { 0x08, 0xE8 },
@@ -421,10 +424,12 @@ OOVPA_END;
 #endif
 
 // ******************************************************************
-// * D3DDevice_SetTile
+// * D3D_SetTileNoWait
 // ******************************************************************
-// Accurately this one ?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z
-OOVPA_NO_XREF(D3DDevice_SetTile, 5455, 16)
+OOVPA_XREF(D3D_SetTileNoWait, 5455, 16,
+
+    XREF_D3D_SetTileNoWait,
+    XRefZero)
 
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -520,7 +525,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_KickOff, 5455, 15)
+OOVPA_XREF(D3DDevice_KickOff, 5455, 15,
+
+    XREF_D3D_CDevice_KickOff,
+    XRefZero)
 
         { 0x06, 0xA8 },
         { 0x07, 0x04 },

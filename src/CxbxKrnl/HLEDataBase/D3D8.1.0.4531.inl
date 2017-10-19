@@ -122,7 +122,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_KickOff, 4531, 13)
+OOVPA_XREF(D3DDevice_KickOff, 4531, 13,
+
+    XREF_D3D_CDevice_KickOff,
+    XRefZero)
 
         // D3D::CDevice::KickOff+0x0B : mov edx, [ecx+0x35C]
         { 0x0B, 0x8B },
