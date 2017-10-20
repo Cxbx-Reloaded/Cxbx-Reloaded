@@ -46,9 +46,11 @@
 #include "HLEDataBase/Xapi.1.0.5558.h"
 #include "HLEDataBase/Xapi.1.0.5788.h"
 #include "HLEDataBase/Xapi.1.0.5849.h"
+#include "HLEDataBase/D3D8.1.0.3911.h"
 #include "HLEDataBase/D3D8.1.0.3925.h"
 #include "HLEDataBase/D3D8.1.0.4034.h"
 #include "HLEDataBase/D3D8.1.0.4134.h"
+#include "HLEDataBase/D3D8.1.0.4242.h"
 #include "HLEDataBase/D3D8.1.0.4361.h"
 #include "HLEDataBase/D3D8.1.0.4432.h"
 #include "HLEDataBase/D3D8.1.0.4627.h"
@@ -90,6 +92,11 @@
 #include "HLEDataBase/XOnline.1.0.5788.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
+#include "HLEDataBase/XactEng.1.0.4928.h"
+#include "HLEDataBase/XactEng.1.0.5233.h"
+#include "HLEDataBase/XactEng.1.0.5344.h"
+#include "HLEDataBase/XactEng.1.0.5558.h"
+#include "HLEDataBase/XactEng.1.0.5788.h"
 #include "HLEDataBase/XactEng.1.0.5849.h"
 
 // ******************************************************************
@@ -97,6 +104,7 @@
 // ******************************************************************
 extern "C" const char *szHLELastCompileTime;
 
+//TODO: Need to remove these externs as v2 is no longer require it.
 extern const char *Lib_D3D8;
 extern const char *Lib_D3D8LTCG;
 extern const char *Lib_D3DX8;
@@ -105,7 +113,7 @@ extern const char *Lib_XACTENG;
 extern const char *Lib_XAPILIB;
 extern const char *Lib_XGRAPHC;
 extern const char *Lib_XNETS;
-extern const char *Lib_XONLINE; // TODO : Typo for XONLINES?
+extern const char *Lib_XONLINE; //Is not a typo issue
 extern const char *Lib_XONLINES;
 
 // ******************************************************************
@@ -121,10 +129,28 @@ extern const struct HLEData
 }
 HLEDataBase[];
 
+#define PAIRSCANSEC_MAX 3
+
+const struct PairScanLibSec {
+    const char *library;
+    const char *section[PAIRSCANSEC_MAX];
+};
+
+extern const struct HLEDataV2
+{
+    const PairScanLibSec LibSec;
+
+    OOVPATable  *OovpaTable;
+    uint32          OovpaTableSize;
+}
+HLEDataBaseV2[];
+
 // ******************************************************************
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
+
+extern const uint32 HLEDataBaseCountV2;
 
 // ******************************************************************
 // * XRefDataBaseOffset
@@ -132,7 +158,7 @@ extern const uint32 HLEDataBaseCount;
 enum XRefDataBaseOffset
 {
     XREF_D3DDEVICE=0,
-    XREF_SETRENDERSTATE_CULLMODE,
+    XREF_D3DDevice_SetRenderState_CullMode,
 	XREF_D3DRS_CULLMODE,
 	XREF_D3DTSS_TEXCOORDINDEX,
     XREF_D3DRS_MULTISAMPLEMODE,
@@ -141,24 +167,36 @@ enum XRefDataBaseOffset
     XREF_D3DRS_ROPZREAD,
     XREF_D3DRS_DONOTCULLUNCOMPRESSED,
     XREF_D3DRS_STENCILCULLENABLE,
-    XREF_D3DCD_LAZYSETSTATEVB,
+    XREF_D3DDevice_LazySetStateVB,
     XREF_D3D_BlockOnResource,
-    XREF_D3D_BLOCKONTIME,
+    XREF_D3D_BlockOnTime,
     XREF_D3D_CreateStandAloneSurface,
-    XREF_D3D_SETFENCE,
+    XREF_D3D_SetFence,
+    XREF_D3D_SetTileNoWait,
 	XREF_D3D_KickOffAndWaitForIdle,
 	XREF_D3D_MakeRequestedSpace,
-	XREF_D3D_KickOff,
+	XREF_D3D_CDevice_KickOff,
 	XREF_D3DPalette_Lock2,
-    XREF_XNINIT,
-    XREF_FCLOSEDEVICE,
-    XREF_CLEARSTATEBLOCKFLAGS,
-    XREF_RECORDSTATEBLOCK,
-    XREF_SETDISTANCEFACTORA,
-    XREF_SETDISTANCEFACTORB,
-    XREF_SETROLLOFFFACTORA,
-    XREF_SETROLLOFFFACTORB,
-    XREF_SETDOPPLERFACTOR,
+	XREF_D3DTexture_GetSurfaceLevel2,
+	XREF_D3DDevice_CreatePalette2,
+    XREF_D3DDevice_CreateIndexBuffer2,
+    XREF_D3DDevice_CreateVertexBuffer2,
+    XREF_D3DDevice_GetBackBuffer2,
+    XREF_D3DDevice_GetDepthStencilSurface2,
+    XREF_D3DDevice_GetRenderTarget2,
+    XREF_D3DResource_AddRef,
+    XREF_D3DVertexBuffer_Lock2,
+    XREF_XnInit,
+    XREF_XID_fCloseDevice,
+    XREF_D3D_ClearStateBlockFlags,
+    XREF_D3D_RecordStateBlock,
+    XREF_Lock2DSurface,
+    XREF_Lock3DSurface,
+    XREF_CDirectSound_SetDistanceFactor,
+    XREF_CMcpxAPU_Set3dDistanceFactor,
+    XREF_CDirectSound_SetRolloffFactor,
+    XREF_CMcpxAPU_Set3dRolloffFactor,
+    XREF_CDirectSound_SetDopplerFactor,
     XREF_SETBUFFERDATA,
 	XREF_CMcpxBuffer_SetCurrentPosition,
 	XREF_CDirectSoundBuffer_SetCurrentPosition,
@@ -171,103 +209,103 @@ enum XRefDataBaseOffset
 	XREF_DSSETBUFFERDATA,
 	XREF_CMcpxBuffer_SetBufferData,
 	XREF_CDirectSoundBuffer_SetBufferData,
-    XREF_DSCREATESOUNDBUFFER,
-    XREF_DSCREATESOUNDSTREAM,
-    XREF_DSSTREAMPAUSE,
-    XREF_DSSTREAMSETVOLUME,
-    XREF_DSSETI3DL2LISTENER,
-    XREF_DSSETMIXBINHEADROOMA,
-    XREF_DSSETMIXBINHEADROOMB,
-    XREF_DSSETMIXBINSA,
-    XREF_DSSETMIXBINSB,
-    XREF_DSSETMIXBINSC,
-    XREF_DSSETMIXBINVOLUMESA,
-    XREF_DSSETMIXBINVOLUMESB,
-    XREF_DSSETMIXBINVOLUMESC,
-    XREF_DSSETPOSITIONA,
-    XREF_DSSETPOSITIONB,
-    XREF_DSSETVELOCITYA,
-    XREF_DSSETVELOCITYB,
-    XREF_DSDOWORKA,
-    XREF_DSDOWORKB,
-    XREF_DSSETALLPARAMETERSA,
-    XREF_DSSETALLPARAMETERSB,
+    XREF_CDirectSound_CreateSoundBuffer,
+    XREF_CDirectSound_CreateSoundStream,
+    XREF_CMcpxStream_Pause,
+    XREF_CDirectSound_SetI3DL2Listener,
+    XREF_CDirectSound_SetMixBinHeadroom,
+    XREF_CMcpxAPU_SetMixBinHeadroom,
+    XREF_CDirectSoundVoiceSettings_SetMixBins,
+    XREF_CMcpxVoiceClient_SetMixBins,
+    XREF_CDirectSoundVoice_SetMixBins,
+    XREF_CDirectSoundBuffer_SetMixBins,
+    XREF_CDirectSoundBuffer_SetMixBinVolumes,
+    XREF_CDirectSoundVoice_SetMixBinVolumes,
+    XREF_CDirectSoundVoiceSettings_SetMixBinVolumes,
+    XREF_CDirectSound_SetPosition,
+    XREF_CMcpxAPU_Set3dPosition,
+    XREF_CDirectSound_SetVelocity,
+    XREF_CMcpxAPU_Set3dVelocity,
+    XREF_CDirectSound_DoWork,
+    XREF_CMcpxAPU_ServiceDeferredCommandsLow,
+    XREF_CDirectSound_SetAllParameters,
+    XREF_CMcpxAPU_Set3dParameters,
     XREF_DSSETHEADROOMA,
-    XREF_DSENABLEHEADPHONES,
+    XREF_CDirectSound_EnableHeadphones,
     XREF_DSSYNCHPLAYBACKA,
     XREF_DSSYNCHPLAYBACKB,
     XREF_DSSETI3DL2SOURCE1A,
     XREF_DSSETI3DL2SOURCE2A,
-    XREF_DSBUFFERSETPITCHA,
-    XREF_DSBUFFERSETPITCHB,
-    XREF_DSBUFFERSETVOLUMEA,
-    XREF_DSBUFFERSETVOLUMEB,
-    XREF_DSBUFFERSETCURRENTPOSITIONA,
-    XREF_DSBUFFERSETCURRENTPOSITIONB,
+    XREF_CMcpxVoiceClient_SetPitch,
+    XREF_CDirectSoundVoice_SetPitch,
+    XREF_CDirectSoundBuffer_SetPitch,
+    XREF_CDirectSoundStream_SetPitch,
+    XREF_CMcpxVoiceClient_SetVolume,
     XREF_DSBUFFERSETLOOPREGIONA,
-    XREF_DSBUFFERSETPLAYREGIONA,
-    XREF_DSBUFFERLOCKA,
-    XREF_DSBUFFERSETHEADROOMA,
-    XREF_DSBUFFERSETFREQUENCYA,
-    XREF_DSBUFFERSETFREQUENCYB,
-    XREF_DSSTREAMSETMAXDISTANCE1A,
-    XREF_DSSTREAMSETMAXDISTANCE1B,
-    XREF_DSSTREAMSETMAXDISTANCE1C,
-    XREF_DSSTREAMSETMINDISTANCE1A,
-    XREF_DSSTREAMSETMINDISTANCE1B,
-    XREF_DSSTREAMSETMINDISTANCE1C,
-    XREF_DSSTREAMSETCONEANGLES1A,
-    XREF_DSSTREAMSETCONEANGLES1B,
-    XREF_DSSTREAMSETCONEOUTSIDEVOLUME1A,
-    XREF_DSSTREAMSETCONEOUTSIDEVOLUME1B,
-    XREF_DSSTREAMSETALLPARAMETERS1A,
-    XREF_DSSTREAMSETALLPARAMETERS1B,
+    XREF_CDirectSoundBuffer_SetPlayRegion,
+    XREF_CDirectSoundBuffer_Lock,
+    XREF_CDirectSoundVoice_SetHeadroom,
+	XREF_CDirectSoundBuffer_SetHeadroom,
+    XREF_CDirectSoundStream_SetFrequency,
+    XREF_CDirectSoundBuffer_SetFrequency,
+    XREF_CDirectSoundVoice_SetFrequency,
+    XREF_CMcpxVoiceClient_Set3dMaxDistance,
+    XREF_CDirectSoundVoice_SetMaxDistance,
+    XREF_CDirectSoundStream_SetMaxDistance,
+    XREF_CDirectSoundStream_SetMinDistance,
+    XREF_CDirectSoundVoice_SetMinDistance,
+    XREF_CMcpxVoiceClient_Set3dMinDistance,
+    XREF_CDirectSoundVoice_SetConeOutsideVolume,
+    XREF_CMcpxVoiceClient_Set3dConeOutsideVolume,
+    XREF_CDirectSoundVoice_SetAllParameters,
+    XREF_CMcpxVoiceClient_Set3dParameters,
     XREF_DSSTREAMSETALLPARAMETERS1C,
-    XREF_DSSTREAMSETVELOCITY1A,
-    XREF_DSSTREAMSETVELOCITY1B,
-    XREF_DSSTREAMSETVELOCITY1C,
-    XREF_DSSTREAMSETCONEORIENTATION1A,
-    XREF_DSSTREAMSETCONEORIENTATION1B,
-    XREF_DSSTREAMSETCONEORIENTATION1C,
-    XREF_DSSTREAMSETPOSITION1A,
-    XREF_DSSTREAMSETPOSITION1B,
-    XREF_DSSTREAMSETPOSITION1C,
-    XREF_DSSTREAMSETFREQUENCY1A,
-    XREF_DSSTREAMSETFREQUENCY1B,
+    XREF_CDirectSoundStream_SetVelocity,
+    XREF_CDirectSoundVoice_SetVelocity,
+    XREF_CMcpxVoiceClient_Set3dVelocity,
+    XREF_CDirectSoundStream_SetConeOrientation,
+    XREF_CDirectSoundVoice_SetConeOrientation,
+    XREF_CMcpxVoiceClient_Set3dConeOrientation,
+    XREF_CDirectSoundStream_SetPosition,
+    XREF_CDirectSoundVoice_SetPosition,
+    XREF_CMcpxVoiceClient_Set3dPosition,
+    XREF_CMcpxStream_Flush,
+    XREF_CMcpxStream_Discontinuity,
+    XREF_XAudioCalculatePitch,
     XREF_DSSTREAMSETROLLOFFFACTOR1A,
     XREF_DSSTREAMSETROLLOFFFACTOR1B,
     XREF_GET2DSURFACEDESCB,
-    XREF_COMMONSETRENDERTARGET,
-    XREF_COMMITDEFERREDSETTINGSA,
-    XREF_COMMITDEFERREDSETTINGSB,
+    XREF_D3D_CommonSetRenderTarget,
+    XREF_CDirectSound_CommitDeferredSettings,
+    XREF_CMcpxAPU_Commit3dSettings,
+    XREF_CDirectSound_SetOrientation,
+    XREF_IDirectSound_CreateSoundBuffer,
+    XREF_IDirectSound_CreateSoundStream,
     // s+
     // DSOUND
+    XREF_DS_CRefCount_AddRef,
+    XREF_DS_CRefCount_Release,
     XREF_DSVOICESETMAXDISTANCE,
-    XREF_DSVOICESETMINDISTANCE,
     XREF_DSVOICESETROLLOFFCURVE,
     XREF_DSVOICESETROLLOFFFACTOR,
     XREF_DSVOICESETDISTANCEFACTOR,
-    XREF_DSVOICESETCONEANGLES,
-    XREF_DSVOICESETCONEORIENTATION,
-    XREF_DSVOICESETCONEOUTSIDEVOLUME,
-    XREF_DSVOICESETPOSITION,
-    XREF_DSVOICESETVELOCITY,
+    XREF_CDirectSoundVoice_SetConeAngles,
 	XREF_CDirectSoundVoice_SetDopplerFactor,
-    XREF_DSVOICESETI3DL2SOURCE,
-    XREF_DSBUFFERSETMODEA,
-    XREF_DSBUFFERSETMODEB,
-    XREF_DSBUFFERSETMAXDISTANCE,
-    XREF_DSBUFFERSETMINDISTANCE,
+    XREF_CMcpxVoiceClient_Set3dMode,
+    XREF_CDirectSoundVoice_SetMode,
+    XREF_CDirectSoundBuffer_SetMode,
+    XREF_CDirectSoundBuffer_SetMaxDistance,
+    XREF_CDirectSoundBuffer_SetMinDistance,
     XREF_DSBUFFERSETROLLOFFCURVE,
     XREF_DSBUFFERSETROLLOFFFACTOR,
     XREF_DSBUFFERSETDISTANCEFACTOR,
-    XREF_DSBUFFERSETCONEANGLES,
-    XREF_DSBUFFERSETCONEORIENTATION,
-    XREF_DSBUFFERSETCONEOUTSIDEVOLUME,
-    XREF_DSBUFFERSETPOSITION,
-    XREF_DSBUFFERSETVELOCITY,
+    XREF_CDirectSoundBuffer_SetConeAngles,
+    XREF_CDirectSoundBuffer_SetConeOrientation,
+    XREF_CDirectSoundBuffer_SetConeOutsideVolume,
+    XREF_CDirectSoundBuffer_SetPosition,
+    XREF_CDirectSoundBuffer_SetVelocity,
     XREF_DSBUFFERSETDOPPLERFACTOR,
-    XREF_DSBUFFERSETI3DL2SOURCE,
+    XREF_CDirectSoundBuffer_SetI3DL2Source,
     XREF_CDirectSoundVoice_SetFormat,
     XREF_CDirectSoundBuffer_SetFormat,
     XREF_CFullHRTFSource_GetCenterVolume,
@@ -275,25 +313,23 @@ enum XRefDataBaseOffset
     XREF_CMcpxVoiceClient_SetLFO,
     XREF_CDirectSoundVoice_SetLFO,
     XREF_CDirectSoundBuffer_SetLFO,
+    XREF_CDirectSoundStream_SetLFO,
     XREF_CDirectSoundVoice_SetVolume,
     XREF_CDirectSoundBuffer_SetVolume,
+    XREF_CDirectSoundStream_SetVolume,
     XREF_CDirectSoundBuffer_SetLoopRegion,
     XREF_CMcpxBuffer_Play,
     XREF_CDirectSoundBuffer_PlayEx,
     XREF_WaveFormat_CreateXboxAdpcmFormat,
-    XREF_CDirectSoundVoice_SetConeAngles,
-    XREF_CDirectSoundBuffer_SetConeAngles,
     XREF_CDirectSoundVoice_CommitDeferredSettings,
-    XREF_CDirectSoundVoice_SetAllParameters,
     XREF_CDirectSoundBuffer_SetAllParameters,
-	XREF_CDirectSound_EnableHeadphones,
-	XREF_CDirectSoundVoice_SetHeadroom,
-	XREF_CDirectSoundBuffer_SetHeadroom,
 	XREF_CDirectSound_GetOutputLevels,
 	XREF_CMcpxBuffer_Pause,
 	XREF_CDirectSoundBuffer_Pause,
 	XREF_CMcpxBuffer_GetStatus,
 	XREF_CDirectSoundBuffer_GetStatus,
+    XREF_CMcpxStream_GetStatus,
+    XREF_CDirectSoundStream_SetEG,
 	XREF_CDirectSoundVoice_SetEG,
 	XREF_CMcpxVoiceClient_SetEG,
 	XREF_CMcpxVoiceClient_SetFilter,
@@ -304,16 +340,15 @@ enum XRefDataBaseOffset
 	XREF_CMcpxBuffer_Stop2,
 	XREF_CMcpxAPU_Set3dDopplerFactor,
 	XREF_CSensaura3d_GetFullHRTFFilterPair,
+	XREF_CSensaura3d_GetLiteHRTFFilterPair,
 	XREF_CDirectSound_GetCaps,
-	XREF_CDirectSoundVoice_SetPitch,
 	XREF_DirectSoundEnterCriticalSection,
-	XREF_CDirectSoundBuffer_SetMinDistance,
-	XREF_CDirectSoundBuffer_SetMaxDistance,
 	XREF_CMcpxVoiceClient_Commit3dSettings,
 	XREF_CMcpxVoiceClient_SetI3DL2Source,
 	XREF_CDirectSoundVoice_SetI3DL2Source,
-	XREF_CDirectSoundVoice_SetMixBinVolumes,
-	XREF_CDirectSoundStream_SetMixBinVolumes,
+	XREF_CDirectSoundStream_SetMixBinVolumes_12,
+	XREF_CDirectSoundStream_SetMixBinVolumes_8,
+    XREF_CDirectSoundStream_SetMixBins,
 	XREF_CDirectSoundStream_SetHeadroom,
 	XREF_CDirectSoundVoice_SetOutputBuffer,
 	XREF_CDirectSoundBuffer_SetOutputBuffer,
@@ -323,6 +358,19 @@ enum XRefDataBaseOffset
 	XREF_CMcpxBuffer_Play2,
 	XREF_CDirectSoundVoice_Use3DVoiceData,
 	XREF_CDirectSoundBuffer_Use3DVoiceData,
+	XREF_CDirectSound_SetEffectData,
+    XREF_CDirectSound_GetSpeakerConfig,
+    XREF_CDirectSound_DownloadEffectsImage,
+    XREF_CDirectSound_CommitEffectData,
+    XREF_CDirectSound_GetTime,
+    XREF_CMcpxAPU_SetI3DL2Listener,
+    XREF_CDirectSoundStream_SetOutputBuffer,
+    XREF_CDirectSoundStream_SetAllParameters,
+    XREF_CDirectSoundStream_SetConeAngles,
+    XREF_CDirectSoundStream_SetConeOutsideVolume,
+    XREF_CDirectSoundStream_SetMode,
+    XREF_CDirectSoundStream_SetI3DL2Source,
+    XREF_CDirectSoundStream_Pause,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,
@@ -331,6 +379,7 @@ enum XRefDataBaseOffset
 	XREF_XACT_CEngine_DownloadEffectsImage,
 	XREF_XACT_CEngine_CreateSoundSource,
 	XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName,
+	XREF_XACT_CSoundBank_Play,
 	XREF_XACT_CEngine_RegisterNotification,
 	XREF_XACT_CEngine_GetNotification,
 	XREF_XACT_CEngine_UnRegisterWaveBank,

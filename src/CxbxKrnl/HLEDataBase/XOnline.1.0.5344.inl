@@ -37,14 +37,14 @@
 // ******************************************************************
 OOVPATable XOnline_5344[] = {
 
-	REGISTER_OOVPA(XnInit, 4627, XREF),
-	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
+	REGISTER_OOVPA(XnInit, 4361, XREF),
+	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(socket, 4627, PATCH),
 	REGISTER_OOVPA(bind, 4627, PATCH),
 	REGISTER_OOVPA(listen, 4627, PATCH),
 	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
-	REGISTER_OOVPA(connect, 5233, PATCH),
+	REGISTER_OOVPA(connect, 5120, PATCH),
 	REGISTER_OOVPA(send, 3911, PATCH),
 	REGISTER_OOVPA(recv, 3911, PATCH),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),

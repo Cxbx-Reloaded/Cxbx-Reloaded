@@ -211,6 +211,12 @@ struct X_DSCAPS
     DWORD dwMemoryAllocated;
 };
 
+#define X_DSSPEAKER_STEREO          0x00000000
+#define X_DSSPEAKER_MONO            0x00000001
+#define X_DSSPEAKER_SURROUND        0x00000002
+#define X_DSSPEAKER_ENABLE_AC3      0x00010000
+#define X_DSSPEAKER_ENABLE_DTS      0x00020000
+
 
 
 typedef struct IDirectSoundStream IDirectSoundStream;
@@ -490,15 +496,6 @@ HRESULT WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_EnableHeadphones
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_EnableHeadphones)
-(
-    LPDIRECTSOUND8          pThis,
-    BOOL                    fEnabled
-);
-
-// ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSound_SynchPlayback)
@@ -593,9 +590,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -603,9 +600,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 );
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins    // TODO: fill this out
@@ -674,17 +671,6 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateBuffer)
 );
 
 // ******************************************************************
-// * patch: IDirectSound_CreateBuffer
-// ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound_CreateBuffer)
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC*         pdssd,
-    X_CDirectSoundBuffer**  ppBuffer,
-    PVOID                   pUnknown
-);
-
-// ******************************************************************
 // * patch: IDirectSoundBuffer_SetBufferData
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
@@ -718,6 +704,17 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Lock)
     LPDWORD                 pdwAudioBytes2,
     DWORD                   dwFlags
 );
+// ******************************************************************
+// * patch: IDirectSoundBuffer_Unlock
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Unlock)
+(
+    X_CDirectSoundBuffer*   pThis,
+    LPVOID                  ppvAudioPtr1,
+    DWORD                   pdwAudioBytes1,
+    LPVOID                  ppvAudioPtr2,
+    DWORD                   pdwAudioBytes2
+    );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetHeadroom
@@ -1236,6 +1233,14 @@ STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
 );
 
 // ******************************************************************
+// * patch: DirectSoundUseLightHRTF
+// ******************************************************************
+STDAPI_(void) EMUPATCH(DirectSoundUseLightHRTF)
+(
+    void
+);
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
@@ -1416,9 +1421,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
 DWORD WINAPI EMUPATCH(DirectSoundGetSampleTime)();
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes
+// * patch: CDirectSoundStream_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
+HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*    pThis,
     DWORD                    dwMixBinMask,
@@ -1426,9 +1431,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 );
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes2
+// * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
+HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*    pThis,
     LPVOID                    pMixBins
@@ -1632,5 +1637,23 @@ ULONG WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis);
+
+// ******************************************************************
+// * patch: IDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_GetSpeakerConfig)
+    (X_CDirectSound* pThis, OUT LPDWORD* pdwSpeakerConfig);
+
+// ******************************************************************
+// * patch: IDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_CommitDeferredSettings)
+    (X_CDirectSound* pThis);
+
+// ******************************************************************
+// * patch: IDirectSound_CommitEffectData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSound_CommitEffectData)
+    (X_CDirectSound* pThis);
 
 #endif

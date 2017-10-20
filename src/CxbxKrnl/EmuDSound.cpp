@@ -339,30 +339,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_EnableHeadphones
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_EnableHeadphones)
-(
-    LPDIRECTSOUND8          pThis,
-    BOOL                    fEnabled)
-{
-    FUNC_EXPORTS;
-
-    enterCriticalSection;
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(fEnabled)
-		LOG_FUNC_END;
-
-    EmuWarning("EmuIDirectSound8_EnableHeadphones ignored");
-
-    leaveCriticalSection;
-
-    return S_OK;
-}
-
-// ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
@@ -639,9 +615,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
+// This revision API was used in XDK 3911 until API had changed in XDK 4039.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -668,9 +645,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: IDirectSoundBuffer_SetMixBinVolumes
+// * patch: IDirectSoundBuffer_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes2)
+// This revision is only used in XDK 4039 and higher.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins)
@@ -895,30 +873,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 }
 
 // ******************************************************************
-// * patch: IDirectSound_CreateBuffer
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateBuffer)
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC*         pdssd,
-    OUT X_CDirectSoundBuffer**  ppBuffer,
-    PVOID                   pUnknown)
-{
-    FUNC_EXPORTS;
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pdssd)
-		LOG_FUNC_ARG_OUT(ppBuffer)
-		LOG_FUNC_ARG(pUnknown)
-		LOG_FUNC_END;
-
-    EMUPATCH(DirectSoundCreateBuffer)(pdssd, ppBuffer);
-
-    return DS_OK;
-}
-
-// ******************************************************************
 // * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundBuffer)
@@ -1080,6 +1034,45 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
     leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundBuffer_Unlock
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Unlock)
+(
+    X_CDirectSoundBuffer*   pThis,
+    LPVOID                  ppvAudioPtr1,
+    DWORD                   pdwAudioBytes1,
+    LPVOID                  ppvAudioPtr2,
+    DWORD                   pdwAudioBytes2
+    )
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(ppvAudioPtr1)
+        LOG_FUNC_ARG(pdwAudioBytes1)
+        LOG_FUNC_ARG(ppvAudioPtr2)
+        LOG_FUNC_ARG(pdwAudioBytes2)
+        LOG_FUNC_END;
+
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->EmuLockOffset,
+                        pThis->EmuLockPtr1,
+                        pThis->EmuLockBytes1,
+                        pThis->EmuLockPtr2,
+                        pThis->EmuLockBytes2,
+                        pThis->EmuLockFlags);
+
+    leaveCriticalSection;
+
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -2512,6 +2505,24 @@ STDAPI_(void) XTL::EMUPATCH(DirectSoundUseFullHRTF)
 }
 
 // ******************************************************************
+// * patch: DirectSoundUseLightHRTF
+// ******************************************************************
+STDAPI_(void) XTL::EMUPATCH(DirectSoundUseLightHRTF)
+(
+    void)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+	LOG_FUNC();
+
+    LOG_UNIMPLEMENTED_DSOUND();
+
+    leaveCriticalSection;
+}
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillators
@@ -2656,7 +2667,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED_DSOUND();
+    //Windows Vista and later does not set speaker configuration from SetSpeakerConfig function.
+    EmuWarning("EmuIDirectSound_EnableHeadphones ignored");
 
 	leaveCriticalSection;
 
@@ -3078,9 +3090,10 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes
+// * patch: CDirectSoundStream_SetMixBinVolumes_12
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
+// This revision API is only used in XDK 4039 and higher.
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*   pThis,
     DWORD                   dwMixBinMask,
@@ -3107,9 +3120,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_SetMixBinVolumes2
+// * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
+// This revision API was used in XDK 3911 until API had changed in XDK 4039.
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*   pThis,
     LPVOID                  pMixBins)
@@ -3698,6 +3712,75 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 	LOG_FUNC_ONE_ARG(pThis);
 
 	LOG_UNIMPLEMENTED_DSOUND();
+
+    leaveCriticalSection;
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetSpeakerConfig)
+(
+    X_CDirectSound*     pThis,
+    OUT LPDWORD*        pdwSpeakerConfig)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG_OUT(pdwSpeakerConfig)
+    LOG_FUNC_END;
+
+    //For now, let's set it to stereo.
+    *pdwSpeakerConfig = X_DSSPEAKER_STEREO;
+
+    leaveCriticalSection;
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitDeferredSettings)
+(
+    X_CDirectSound*     pThis)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_ONE_ARG(pThis);
+
+    HRESULT hRet = DS_OK;
+    if (g_pDSoundPrimary3DListener8 != nullptr) {
+        hRet = g_pDSoundPrimary3DListener8->CommitDeferredSettings();
+    }
+
+    leaveCriticalSection;
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: IDirectSound_CommitEffectData
+// ******************************************************************
+// This API is used relative with DSP effect.
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
+(
+    X_CDirectSound*     pThis)
+{
+    FUNC_EXPORTS;
+
+    enterCriticalSection;
+
+    LOG_FUNC_ONE_ARG(pThis);
+
+    LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
 

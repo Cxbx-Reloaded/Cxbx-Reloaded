@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // Moved to XNet 4361
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
@@ -41,7 +42,7 @@ OOVPA_XREF(XNetStartup, 4361, 8,
     XRefOne)
 
         // XNetStartup+0x0F : call [XnInit]
-        XREF_ENTRY( 0x10, XREF_XNINIT ), 
+        XREF_ENTRY( 0x10, XREF_XnInit ),
 
         // XNetStartup+0x00 : xor eax, eax
         { 0x00, 0x33 },
@@ -60,7 +61,8 @@ OOVPA_XREF(XNetStartup, 4361, 8,
         { 0x14, 0xC2 },
         { 0x15, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to XNet 4361
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
@@ -70,7 +72,7 @@ OOVPA_XREF(WSAStartup, 4361, 9,
     XRefOne)
 
         // WSAStartup+0x0F : call [XnInit]
-        XREF_ENTRY( 0x14, XREF_XNINIT ), 
+        XREF_ENTRY( 0x14, XREF_XnInit ),
 
         // WSAStartup+0x00 : push [esp+0x08]
         { 0x00, 0xFF },
@@ -84,13 +86,14 @@ OOVPA_XREF(WSAStartup, 4361, 9,
         { 0x06, 0x24 },
         { 0x07, 0x08 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic XNet 4361 version
 // ******************************************************************
 // * XnInit
 // ******************************************************************
 OOVPA_XREF(XnInit, 4361, 10,
 
-    XREF_XNINIT,
+    XREF_XnInit,
     XRefZero)
 
         // XnInit+0x03 : sub esp, 0x0214
@@ -109,6 +112,7 @@ OOVPA_XREF(XnInit, 4361, 10,
         { 0xBD, 0xEC },
         { 0xBE, 0x01 },
 OOVPA_END;
+#endif
 #if 0 // Moved to XNet 3911
 // ******************************************************************
 // * CXnSock::socket
@@ -205,6 +209,7 @@ OOVPA_NO_XREF(ioctlsocket, 4361, 10)
         { 0xC6, 0x0C },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
@@ -245,6 +250,7 @@ OOVPA_XREF(XOnlineLogon, 4361, 5,
         { 0x0A, 0xE9 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic XNet 3911 version
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
@@ -266,6 +272,7 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
         { 0x27, 0x75 },
         { 0x2C, 0x15 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XOnline_4361
@@ -277,7 +284,7 @@ OOVPATable XOnline_4361[] = {
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(CXo_XOnlineLogon, 4361, XREF),
 	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4361, PATCH),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
 	REGISTER_OOVPA(socket, 3911, PATCH),
 	REGISTER_OOVPA(bind, 3911, PATCH),
 	REGISTER_OOVPA(listen, 3911, PATCH),

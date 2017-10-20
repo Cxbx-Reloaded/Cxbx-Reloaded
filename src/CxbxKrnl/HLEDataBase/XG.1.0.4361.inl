@@ -86,6 +86,7 @@ OOVPA_NO_XREF(XGSwizzleRect, 4361, 10)
         { 0xED, 0x0B },
 OOVPA_END;
 #endif
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * XGSetVertexBufferHeader
 // ******************************************************************
@@ -100,6 +101,7 @@ OOVPA_NO_XREF(XGSetVertexBufferHeader, 4361, 8) // 4134
         { 0x13, 0x48 },
         { 0x16, 0x18 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 3911
 // ******************************************************************
 // * XGCompressRect
@@ -116,7 +118,7 @@ OOVPA_NO_XREF(XGCompressRect, 4361, 8)
         { 0xFE, 0x8B },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 4134
 // ******************************************************************
 // * XGSetIndexBufferHeader
 // ******************************************************************
@@ -138,6 +140,7 @@ OOVPA_NO_XREF(XGSetIndexBufferHeader, 4361, 13)
 
         { 0x16, 0x18 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XFONT_OpenBitmapFontFromMemory
@@ -165,8 +168,8 @@ OOVPATable XG_4361[] = {
 	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
 	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
 	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
+	REGISTER_OOVPA(XGSetVertexBufferHeader, 4134, XREF),
+	REGISTER_OOVPA(XGSetIndexBufferHeader, 4134, XREF),
 	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
 	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
 	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),

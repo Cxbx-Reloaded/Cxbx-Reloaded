@@ -64,7 +64,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5028[] ={
 
-	REGISTER_OOVPA(XnInit, 4627, XREF),
+	REGISTER_OOVPA(XnInit, 4361, XREF),
 	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
 	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
 	REGISTER_OOVPA(socket, 4627, PATCH),
@@ -76,7 +76,7 @@ OOVPATable XOnline_5028[] ={
 	REGISTER_OOVPA(recv, 3911, PATCH),
 	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
 	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 4627, XREF),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 5028, XREF),
+	REGISTER_OOVPA(CXo_XOnlineLogon, 4831, XREF),
 	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
 };
 
