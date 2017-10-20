@@ -1332,9 +1332,9 @@ typedef struct {
 void WndMain::LoadGameLogo()
 {
 	// Export Game Logo bitmap (XTIMAG or XSIMAG)
-	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAG"); // Check for XTIMAGE
+	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAGE"); // Check for XTIMAGE
 	if (!pSection) {
-		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAG"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAGE"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
 		if (!pSection) {
 			return;
 		}
