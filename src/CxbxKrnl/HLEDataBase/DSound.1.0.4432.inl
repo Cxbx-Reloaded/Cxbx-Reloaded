@@ -159,7 +159,7 @@ OOVPATable DSound_4432[] = {
 	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4039, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Unlock, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSound_GetCaps, 4361, XREF),
 	REGISTER_OOVPA(IDirectSound_GetCaps, 3911, PATCH),

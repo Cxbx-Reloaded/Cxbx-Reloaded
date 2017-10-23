@@ -160,6 +160,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4361, 10,
         { 0x4A, 0x88 },
 OOVPA_END;
 
+#if 0 // Replaced with generic OOVPA 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************
@@ -179,6 +180,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetPlayRegion, 4361, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(unsigned long)
@@ -209,33 +211,7 @@ OOVPA_XREF(CMcpxBuffer_Play, 4361, 11,
         { 0x73, 0x18 },
 OOVPA_END;
 
-// ******************************************************************
-// * CDirectSoundBuffer_Play
-// ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_Play, 4361, 10,
-
-    XREF_CDirectSoundBuffer_Play,
-    XRefOne)
-
-        // CDirectSoundBuffer_Play+0x35 : call [CMcpxBuffer::Play]
-        XREF_ENTRY( 0x35, XREF_CMcpxBuffer_Play ), 
-
-        // CDirectSoundBuffer_Play+0x21 : mov eax, 0x80004005
-        { 0x21, 0xB8 },
-        { 0x22, 0x05 },
-        { 0x23, 0x40 },
-        { 0x24, 0x00 },
-        { 0x25, 0x80 },
-
-        // CDirectSoundBuffer_Play+0x3D : jz +0x0B
-        { 0x3D, 0x74 },
-        { 0x3E, 0x0B },
-
-        // CDirectSoundBuffer_Play+0x4E : retn 0x10
-        { 0x4E, 0xC2 },
-        { 0x4F, 0x10 },
-OOVPA_END;
-
+#if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSoundBuffer_Play
 // ******************************************************************
@@ -261,6 +237,8 @@ OOVPA_XREF(IDirectSoundBuffer_Play, 4361, 9,
         { 0x19, 0x23 },
         { 0x1A, 0xC8 },
 OOVPA_END;
+#endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * CMcpxBuffer_Stop
@@ -670,6 +648,31 @@ OOVPA_XREF(CDirectSoundVoice_SetDopplerFactor, 4361, 12,
 OOVPA_END;
 
 // ******************************************************************
+// * CMcpxStream_Flush
+// ******************************************************************
+OOVPA_XREF(CMcpxStream_Flush, 4361, 10,
+    XREF_CMcpxStream_Flush,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+
+        { 0x12, 0x33 },
+
+        { 0x3D, 0x83 },
+        { 0x3E, 0xFE },
+        { 0x3F, 0x06 }, //4242 only has 0x05
+
+        { 0x56, 0xE8 },
+
+        { 0x67, 0xE8 },
+
+        // Might not be a requirement? Aka comment this out might will enable support detection later XDK revisions.
+        { 0xD1, 0xC9 },
+        { 0xD2, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
 // * DSound_4361
 // ******************************************************************
 OOVPATable DSound_4361[] = {
@@ -686,7 +689,7 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(CDirectSound_CreateSoundBuffer, 4134, XREF),
 	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 3911, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4039, PATCH),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 3911, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetVolume, 4039, PATCH),
@@ -700,8 +703,8 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(CDirectSoundBuffer_GetCurrentPosition, 4134, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_GetCurrentPosition, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Play, 4361, XREF),
-	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Play, 4361, PATCH),
+	REGISTER_OOVPA(CDirectSoundBuffer_Play, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer_Play, 3911, PATCH),
 	REGISTER_OOVPA(CMcpxBuffer_Stop, 4242, XREF),
 	REGISTER_OOVPA(CMcpxBuffer_Stop2, 4361, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_Stop, 4134, XREF),

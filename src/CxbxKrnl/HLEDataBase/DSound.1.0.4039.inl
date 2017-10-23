@@ -976,6 +976,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetPlayRegion, 4039, 10,
 
     XRefNoSaveIndex,
@@ -3699,4 +3700,20 @@ OOVPA_XREF(DirectSoundCreateStream, 4039, 11,
         // DirectSoundCreateStream+0x4F : retn 0x08
         { 0x4F, 0xC2 },
         { 0x50, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_SetHeadroom
+// ******************************************************************
+// Generic OOVPA as of 4039 and newer
+OOVPA_XREF(IDirectSoundStream_SetHeadroom, 4039, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_SetHeadroom+0x00 : jmp [CDirectSoundStream_SetHeadroom]
+        XREF_ENTRY(0x01, XREF_CDirectSoundStream_SetHeadroom ),
+
+        // IDirectSoundStream_SetHeadroom+0x00 : jmp 0x........
+        { 0x00, 0xE9 },
 OOVPA_END;

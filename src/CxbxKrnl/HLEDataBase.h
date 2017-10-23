@@ -308,6 +308,7 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundBuffer_SetI3DL2Source,
     XREF_CDirectSoundVoice_SetFormat,
     XREF_CDirectSoundBuffer_SetFormat,
+    XREF_CDirectSoundStream_SetFormat,
     XREF_CFullHRTFSource_GetCenterVolume,
     XREF_CHRTFSource_SetFullHRTF5Channel,
     XREF_CMcpxVoiceClient_SetLFO,
