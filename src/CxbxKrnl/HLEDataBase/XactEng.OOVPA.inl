@@ -65,8 +65,8 @@
 // ******************************************************************
 OOVPATable XACTENG_OOVPAV2[] = {
 
-	REGISTER_OOVPAS(XACTEngineCreate, PATCH, 4627, 4928, 5120),
-	REGISTER_OOVPAS(XACTEngineDoWork, PATCH, 4627),
+	REGISTER_OOVPAS(XACTEngineCreate, UNPATCHED, 4627, 4928, 5120),
+	REGISTER_OOVPAS(XACTEngineDoWork, UNPATCHED, 4627),
 	REGISTER_OOVPAS(XACT_CEngine_CreateSoundBank, XREF, 4627, 4928),
 	REGISTER_OOVPAS(XACT_CEngine_CreateSoundSource, XREF, 4627, 4928),
 	REGISTER_OOVPAS(XACT_CEngine_DownloadEffectsImage, XREF, 4627, 5344),
@@ -77,17 +77,17 @@ OOVPATable XACTENG_OOVPAV2[] = {
 	REGISTER_OOVPAS(XACT_CEngine_UnRegisterWaveBank, XREF, 4627, 4928, 5120),
 	REGISTER_OOVPAS(XACT_CSoundBank_GetSoundCueIndexFromFriendlyName, XREF, 4627, 4928),
 	REGISTER_OOVPAS(XACT_CSoundBank_Play, XREF, 5344, 5558),
-	REGISTER_OOVPAS(IXACTEngine_CreateSoundBank, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTEngine_CreateSoundSource, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTEngine_DownloadEffectsImage, PATCH, 4627, 5344),
-	REGISTER_OOVPAS(IXACTEngine_GetNotification, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTEngine_RegisterNotification, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTEngine_RegisterStreamedWaveBank, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTEngine_RegisterWaveBank, PATCH, 4627, 5120),
-	REGISTER_OOVPAS(IXACTEngine_UnRegisterWaveBank, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, PATCH, 4627, 4928),
-	REGISTER_OOVPAS(IXACTSoundBank_Play, PATCH, 4627),
-	REGISTER_OOVPAS(IXACTSoundBank_PlayEx, XREF, 5344), // Not Implemented yet.
+	REGISTER_OOVPAS(IXACTEngine_CreateSoundBank, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTEngine_CreateSoundSource, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTEngine_DownloadEffectsImage, UNPATCHED, 4627, 5344),
+	REGISTER_OOVPAS(IXACTEngine_GetNotification, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTEngine_RegisterNotification, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTEngine_RegisterStreamedWaveBank, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTEngine_RegisterWaveBank, UNPATCHED, 4627, 5120),
+	REGISTER_OOVPAS(IXACTEngine_UnRegisterWaveBank, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, UNPATCHED, 4627, 4928),
+	REGISTER_OOVPAS(IXACTSoundBank_Play, UNPATCHED, 4627),
+	REGISTER_OOVPAS(IXACTSoundBank_PlayEx, UNPATCHED, 5344), // Not Implemented yet.
 };
 
 // ******************************************************************
