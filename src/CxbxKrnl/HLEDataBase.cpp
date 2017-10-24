@@ -89,17 +89,6 @@ const HLEData HLEDataBase[] =
 {
 
 	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
-
-#if ENABLE_LEGACY_XONLINES_DB
-	// TODO: Verify differences between XONLINE and XONLINES (if any)
-	HLE_ENTRY(Lib_XONLINES, XOnline, 4627),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5028),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5233),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5344),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5788),
-	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
-#endif
 };
 
 const HLEDataV2 HLEDataBaseV2[] = {

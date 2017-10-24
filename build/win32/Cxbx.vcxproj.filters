@@ -399,30 +399,6 @@
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
