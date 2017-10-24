@@ -50,18 +50,18 @@
 
 #include "../OOVPA.h"
 
-#include "HLEDataBase/XG.1.0.3911.inl"
-#include "HLEDataBase/XG.1.0.4034.inl"
-#include "HLEDataBase/XG.1.0.4134.inl"
-#include "HLEDataBase/XG.1.0.4361.inl"
-#include "HLEDataBase/XG.1.0.4432.inl"
-#include "HLEDataBase/XG.1.0.4627.inl"
-#include "HLEDataBase/XG.1.0.5028.inl"
-#include "HLEDataBase/XG.1.0.5233.inl"
-#include "HLEDataBase/XG.1.0.5344.inl"
-#include "HLEDataBase/XG.1.0.5558.inl"
-#include "HLEDataBase/XG.1.0.5788.inl"
-#include "HLEDataBase/XG.1.0.5849.inl"
+#include "XG.1.0.3911.inl"
+#include "XG.1.0.4034.inl"
+#include "XG.1.0.4134.inl"
+#include "XG.1.0.4361.inl"
+#include "XG.1.0.4432.inl"
+#include "XG.1.0.4627.inl"
+#include "XG.1.0.5028.inl"
+#include "XG.1.0.5233.inl"
+#include "XG.1.0.5344.inl"
+#include "XG.1.0.5558.inl"
+#include "XG.1.0.5788.inl"
+#include "XG.1.0.5849.inl"
 
 // ******************************************************************
 // * XGRAPHC_OOVPA
