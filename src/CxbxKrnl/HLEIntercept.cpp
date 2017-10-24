@@ -352,13 +352,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
 					if (bLLE_GPU)
 						continue;
-
-#if ENABLE_LEGACY_XGRAPHC_DB
-					if (BuildVersion == 3944)
-						BuildVersion = 3911;
-					if (OrigBuildVersion == 4531)
-						BuildVersion = 4361;
-#endif
 				}
 				if (strcmp(LibraryName.c_str(), Lib_XACTENG) == 0)
 				{

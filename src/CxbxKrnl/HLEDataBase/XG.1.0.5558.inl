@@ -62,25 +62,3 @@ OOVPA_NO_XREF(XGUnswizzleBox, 5558, 8)
         { 0xFE, 0x20 },
 OOVPA_END;
 #endif
-// ******************************************************************
-// * XG_5558
-// ******************************************************************
-OOVPATable XG_5558[] = {
-
-	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
-	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
-	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
-	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
-	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
-};
-
-// ******************************************************************
-// * XG_5558_SIZE
-// ******************************************************************
-uint32 XG_5558_SIZE = sizeof(XG_5558);

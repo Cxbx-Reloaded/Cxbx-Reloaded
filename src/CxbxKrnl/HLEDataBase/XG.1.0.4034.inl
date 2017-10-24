@@ -32,24 +32,3 @@
 // *
 // ******************************************************************
 
-// ******************************************************************
-// * XG_4034
-// ******************************************************************
-OOVPATable XG_4034[] = {
-
-	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
-	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
-	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 3911, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 3911, XREF),
-	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
-	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
-};
-
-// ******************************************************************
-// * XG_4034_SIZE
-// ******************************************************************
-uint32 XG_4034_SIZE = sizeof(XG_4034);
