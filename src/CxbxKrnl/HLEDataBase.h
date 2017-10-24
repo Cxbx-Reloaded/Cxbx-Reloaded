@@ -34,70 +34,7 @@
 #ifndef HLEDATABASE_H
 #define HLEDATABASE_H
 
-#include "HLEDataBase/Xapi.1.0.3911.h"
-#include "HLEDataBase/Xapi.1.0.4034.h"
-#include "HLEDataBase/Xapi.1.0.4134.h"
-#include "HLEDataBase/Xapi.1.0.4361.h"
-#include "HLEDataBase/Xapi.1.0.4432.h"
-#include "HLEDataBase/Xapi.1.0.4627.h"
-#include "HLEDataBase/Xapi.1.0.5028.h"
-#include "HLEDataBase/Xapi.1.0.5233.h"
-#include "HLEDataBase/Xapi.1.0.5344.h"
-#include "HLEDataBase/Xapi.1.0.5558.h"
-#include "HLEDataBase/Xapi.1.0.5788.h"
-#include "HLEDataBase/Xapi.1.0.5849.h"
-#include "HLEDataBase/D3D8.1.0.3911.h"
-#include "HLEDataBase/D3D8.1.0.3925.h"
-#include "HLEDataBase/D3D8.1.0.4034.h"
-#include "HLEDataBase/D3D8.1.0.4134.h"
-#include "HLEDataBase/D3D8.1.0.4242.h"
-#include "HLEDataBase/D3D8.1.0.4361.h"
-#include "HLEDataBase/D3D8.1.0.4432.h"
-#include "HLEDataBase/D3D8.1.0.4627.h"
-#include "HLEDataBase/D3D8.1.0.5028.h"
-#include "HLEDataBase/D3D8.1.0.5233.h"
-#include "HLEDataBase/D3D8.1.0.5344.h"
-#include "HLEDataBase/D3D8.1.0.5558.h"
-#include "HLEDataBase/D3D8.1.0.5788.h"
-#include "HLEDataBase/D3D8.1.0.5849.h"
-#include "HLEDataBase/DSound.1.0.3936.h"
-#include "HLEDataBase/DSound.1.0.4134.h"
-#include "HLEDataBase/DSound.1.0.4361.h"
-#include "HLEDataBase/DSound.1.0.4432.h"
-#include "HLEDataBase/DSound.1.0.4627.h"
-#include "HLEDataBase/DSound.1.0.5028.h"
-#include "HLEDataBase/DSound.1.0.5233.h"
-#include "HLEDataBase/DSound.1.0.5344.h"
-#include "HLEDataBase/DSound.1.0.5558.h"
-#include "HLEDataBase/DSound.1.0.5788.h"
-#include "HLEDataBase/DSound.1.0.5849.h"
-#include "HLEDataBase/XG.1.0.3911.h"
-#include "HLEDataBase/XG.1.0.4034.h"
-#include "HLEDataBase/XG.1.0.4361.h"
-#include "HLEDataBase/XG.1.0.4432.h"
-#include "HLEDataBase/XG.1.0.4627.h"
-#include "HLEDataBase/XG.1.0.5028.h"
-#include "HLEDataBase/XG.1.0.5233.h"
-#include "HLEDataBase/XG.1.0.5344.h"
-#include "HLEDataBase/XG.1.0.5558.h"
-#include "HLEDataBase/XG.1.0.5788.h"
-#include "HLEDataBase/XG.1.0.5849.h"
-#include "HLEDataBase/XNet.1.0.3911.h"
-#include "HLEDataBase/XOnline.1.0.4361.h"
-#include "HLEDataBase/XOnline.1.0.4627.h"
-#include "HLEDataBase/XOnline.1.0.5028.h"
-#include "HLEDataBase/XOnline.1.0.5233.h"
-#include "HLEDataBase/XOnline.1.0.5344.h"
-#include "HLEDataBase/XOnline.1.0.5558.h"
-#include "HLEDataBase/XOnline.1.0.5788.h"
-#include "HLEDataBase/XOnline.1.0.5849.h"
-#include "HLEDataBase/XactEng.1.0.4627.h"
-#include "HLEDataBase/XactEng.1.0.4928.h"
-#include "HLEDataBase/XactEng.1.0.5233.h"
-#include "HLEDataBase/XactEng.1.0.5344.h"
-#include "HLEDataBase/XactEng.1.0.5558.h"
-#include "HLEDataBase/XactEng.1.0.5788.h"
-#include "HLEDataBase/XactEng.1.0.5849.h"
+#include "HLEDataBase\D3D8.OOVPA.h"
 
 // ******************************************************************
 // * szHLELastCompileTime
@@ -119,15 +56,6 @@ extern const char *Lib_XONLINES;
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
-extern const struct HLEData
-{
-    const char *Library;
-
-    uint16      BuildVersion;
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
 
 #define PAIRSCANSEC_MAX 3
 
@@ -136,21 +64,19 @@ const struct PairScanLibSec {
     const char *section[PAIRSCANSEC_MAX];
 };
 
-extern const struct HLEDataV2
+extern const struct HLEData
 {
     const PairScanLibSec LibSec;
 
-    OOVPATable  *OovpaTable;
+    OOVPATable     *OovpaTable;
     uint32          OovpaTableSize;
 }
-HLEDataBaseV2[];
+HLEDataBase[];
 
 // ******************************************************************
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
-
-extern const uint32 HLEDataBaseCountV2;
 
 // ******************************************************************
 // * XRefDataBaseOffset
@@ -308,6 +234,7 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundBuffer_SetI3DL2Source,
     XREF_CDirectSoundVoice_SetFormat,
     XREF_CDirectSoundBuffer_SetFormat,
+    XREF_CDirectSoundStream_SetFormat,
     XREF_CFullHRTFSource_GetCenterVolume,
     XREF_CHRTFSource_SetFullHRTF5Channel,
     XREF_CMcpxVoiceClient_SetLFO,

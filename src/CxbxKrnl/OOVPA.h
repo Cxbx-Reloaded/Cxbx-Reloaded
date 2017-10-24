@@ -141,41 +141,19 @@ struct OOVPATable
 {
 	OOVPA *Oovpa;
 	char  *szFuncName;
-	uint16_t Version : 13; // 2^13 = 8192, enough to store lowest and higest possible Library Version number in
-	uint16_t Flags : 3;
+    uint16_t Version;// : 13; // 2^13 = 8192, enough to store lowest and higest possible Library Version number in
 };
 
-const uint16_t Flag_DontScan = 1; // Indicates an entry that's currently disabled and thus shouldn't be searched for
-const uint16_t Flag_XRef = 2;	  // Indicates that an entry is an X-Ref
-const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patched (even when it's found)
-
-#define OOVPA_TABLE_ENTRY_FULL(Oovpa, DebugName, Version, Flags) \
-	{ & Oovpa ## _ ## Version.Header, DebugName, Version, Flags }
-
-// REGISTER_OOVPA is the ONLY allowed macro for registrations.
-// Registrations MUST stay sorted to prevent duplicates and maintain overview.
-// The TYPE argument MUST be PATCH, XREF, ALIAS, EMUTHIS, LTCG or DISABLED (see below).
-// ONLY use ALIAS when absolutely required (when OOVPA identifier cannot follow Patch)
-// ONLY use LTCG for LTCG OOVPA's (HLE support for these is flacky at best)
-// DO NOT comment out registrations, but use TYPE DISABLED instead.
-#define REGISTER_OOVPA(Symbol, Version, TYPE, ...) \
-	REGISTER_OOVPA_##TYPE(Symbol, Version, __VA_ARGS__)
+#define OOVPA_TABLE_ENTRY_FULL(Oovpa, DebugName, Version) \
+	{ & Oovpa ## _ ## Version.Header, DebugName, Version }
 
 #define PATCH PATCH/* most common registration, Symbol indicates both an OOVPA and Patch */
-#define REGISTER_OOVPA_PATCH(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, 0)
 
 #define XREF XREF/* registration of an XRef-only OOVPA, for which no Patch is present */
-#define REGISTER_OOVPA_XREF(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_XRef)
 
 #define ALIAS ALIAS/* registration of a Patch using an alternatively named OOVPA */
-#define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
-	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, #Symbol ##, Version, 0)
 
 #define DISABLED DISABLED/* registration is (temporarily) disabled by a flag */
-#define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol ##, Version, Flag_DontPatch)
 
 //Below this is a revise version 2 to improve OOPVA scan as possible.
 
@@ -183,55 +161,46 @@ const uint16_t Flag_DontPatch = 4;// Indicates an entry that's shouldn't be patc
                                 can be activate via HLE Cache file by removing _UNPATCHED at the end. */
 
 /* Use XREF define to knowledge it is reference purpose only.*/
-#define REGISTER_OOVPA_V2_XREF(Symbol, TYPE, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version, 0)
+#define REGISTER_OOVPA_XREF(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version)
 
 /* Use PATCH define only for functions with FUNC_EXPORTS included.*/
-#define REGISTER_OOVPA_V2_PATCH(Symbol, TYPE, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version, 0)
+#define REGISTER_OOVPA_PATCH(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, #Symbol, Version)
 
 /* DISABLED define will perform scan and append "_DISABLED" only.
  * This is only effective for functions with "FUNC_EXPORTS" bypass purpose.
  * XREF remain unaffected and will perform task normally.
  * NOTICE: Do not use DISABLED on XREF OOVPA! Or developers will be confused. */
-#define REGISTER_OOVPA_V2_UNPATCHED(Symbol, TYPE, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, STRINGIZEX(Symbol## _ ##TYPE), Version, 0)
+#define REGISTER_OOVPA_UNPATCHED(Symbol, TYPE, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, STRINGIZEX(Symbol## _ ##TYPE), Version)
 
-#define REGISTER_OOVPA_V2(Symbol, TYPE, Version) \
-    MSVC_EXPAND(REGISTER_OOVPA_V2_##TYPE(Symbol, TYPE, Version))
+#define REGISTER_OOVPA(Symbol, TYPE, Version) \
+    MSVC_EXPAND(REGISTER_OOVPA_##TYPE(Symbol, TYPE, Version))
 //	{ &(Symbol ## _ ## Version).Header, #Symbol, Version, Flags }
-
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATableV2 {
-    char  *szSymbolName;
-    uint16_t Version;
-    OOVPA *pOovpa;
-};
 
 // Based on https://codecraft.co/2014/11/25/variadic-macros-tricks/
 // and https://groups.google.com/d/msg/comp.std.c/d-6Mj5Lko_s/jqonQLK20HcJ
 #define REGISTER_OOVPA_0(...)
- #define REGISTER_OOVPA_1(Symbol, TYPE, Version) REGISTER_OOVPA_V2(Symbol, TYPE, Version)
- #define REGISTER_OOVPA_2(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_1(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_3(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_2(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_4(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_3(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_5(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_4(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_6(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_5(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_7(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_6(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_8(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_7(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_9(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_8(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_10(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_9(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_11(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_10(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_12(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_11(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_13(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_12(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_14(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_13(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_15(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_14(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_16(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_15(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_17(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_16(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_18(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_17(Symbol, TYPE, __VA_ARGS__))
- #define REGISTER_OOVPA_19(Symbol, TYPE, Version, ...) REGISTER_OOVPA_V2(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_18(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_1(Symbol, TYPE, Version) REGISTER_OOVPA(Symbol, TYPE, Version)
+ #define REGISTER_OOVPA_2(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_1(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_3(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_2(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_4(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_3(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_5(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_4(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_6(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_5(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_7(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_6(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_8(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_7(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_9(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_8(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_10(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_9(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_11(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_10(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_12(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_11(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_13(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_12(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_14(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_13(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_15(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_14(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_16(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_15(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_17(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_16(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_18(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_17(Symbol, TYPE, __VA_ARGS__))
+ #define REGISTER_OOVPA_19(Symbol, TYPE, Version, ...) REGISTER_OOVPA(Symbol, TYPE, Version), MSVC_EXPAND(REGISTER_OOVPA_18(Symbol, TYPE, __VA_ARGS__))
 
 // Accept any number of args >= N, but expand to just the Nth one. In this case,
 // we have settled on 20 as N. We could pick a different number by adjusting

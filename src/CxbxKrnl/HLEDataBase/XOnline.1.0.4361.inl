@@ -273,28 +273,3 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
         { 0x2C, 0x15 },
 OOVPA_END;
 #endif
-
-// ******************************************************************
-// * XOnline_4361
-// ******************************************************************
-OOVPATable XOnline_4361[] = {
-
-	REGISTER_OOVPA(XnInit, 4361, XREF),
-	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
-	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 4361, XREF),
-	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
-	REGISTER_OOVPA(socket, 3911, PATCH),
-	REGISTER_OOVPA(bind, 3911, PATCH),
-	REGISTER_OOVPA(listen, 3911, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 3911, PATCH),
-	REGISTER_OOVPA(connect, 3911, PATCH),
-	REGISTER_OOVPA(send, 3911, PATCH),
-	REGISTER_OOVPA(recv, 3911, PATCH),
-};
-
-// ******************************************************************
-// * XOnline_4361_SIZE
-// ******************************************************************
-uint32 XOnline_4361_SIZE = sizeof(XOnline_4361);

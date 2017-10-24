@@ -72,25 +72,3 @@ OOVPA_NO_XREF(XGWriteSurfaceOrTextureToXPR, 4627, 7)
         { 0xE2, 0x8B },
 OOVPA_END;
 #endif
-// ******************************************************************
-// * XG_4627
-// ******************************************************************
-OOVPATable XG_4627[] = {
-
-	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 3911, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
-	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
-	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 4134, XREF),
-	REGISTER_OOVPA(XGCompressRect, 3911, XREF),
-	REGISTER_OOVPA(XGUnswizzleBox, 3911, DISABLED),
-	REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 4361, XREF),
-};
-
-// ******************************************************************
-// * XG_4627_SIZE
-// ******************************************************************
-uint32 XG_4627_SIZE = sizeof(XG_4627);

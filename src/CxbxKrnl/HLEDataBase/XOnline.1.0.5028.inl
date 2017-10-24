@@ -58,29 +58,3 @@ OOVPA_XREF(CXo_XOnlineLogon, 5028, 15,
         { 0x2B, 0x80 },
         { 0x2C, 0xE9 },
 OOVPA_END;
-
-// ******************************************************************
-// * XOnline_5028
-// ******************************************************************
-OOVPATable XOnline_5028[] ={
-
-	REGISTER_OOVPA(XnInit, 4361, XREF),
-	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
-	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
-	REGISTER_OOVPA(socket, 4627, PATCH),
-	REGISTER_OOVPA(bind, 4627, PATCH),
-	REGISTER_OOVPA(listen, 4627, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4627, PATCH),
-	REGISTER_OOVPA(connect, 3911, PATCH),
-	REGISTER_OOVPA(send, 3911, PATCH),
-	REGISTER_OOVPA(recv, 3911, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-	REGISTER_OOVPA(XoUpdateLaunchNewImageInternal, 4627, XREF),
-	REGISTER_OOVPA(CXo_XOnlineLogon, 4831, XREF),
-	REGISTER_OOVPA(XOnlineLogon, 4361, PATCH),
-};
-
-// ******************************************************************
-// * XOnline_5028_SIZE
-// ******************************************************************
-uint32 XOnline_5028_SIZE = sizeof(XOnline_5028);

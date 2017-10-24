@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5028.h
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8.OOVPA.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,16 +27,25 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 jarupxx
+// *  (c) 2017 RadWolfie
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XAPI_5028_H
-#define XAPI_5028_H
+#ifndef D3D8_OOVPA_H
+#define D3D8_OOVPA_H
 
-#include "OOVPA.h"
+#include "../OOVPA.h"
 
-extern OOVPATable XAPI_5028[];
-extern uint32     XAPI_5028_SIZE;
+extern LOOVPA<1 + 11> D3DDevice_SetTextureState_TexCoordIndex_3911;
+extern LOOVPA<2 + 15> D3DDevice_SetRenderState_CullMode_3911;
+
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4034;
+extern LOOVPA<2 + 14> D3DDevice_SetRenderState_CullMode_4034;
+
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4242;
+
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4627;
 
 #endif

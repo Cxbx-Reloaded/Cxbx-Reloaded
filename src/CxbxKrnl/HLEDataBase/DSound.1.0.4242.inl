@@ -94,7 +94,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_SetFormat, 4242, 9,
 
-    XRefNoSaveIndex,
+    XREF_CDirectSoundStream_SetFormat,
     XRefOne)
 
         XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetFormat ),
@@ -231,4 +231,20 @@ OOVPA_XREF(CMcpxStream_Flush, 4242, 10,
         // Might not be a requirement? Aka comment this out might will enable support detection later XDK revisions.
         { 0xD1, 0xC9 },
         { 0xD2, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_SetFormat
+// ******************************************************************
+// Generic OOVPA as of 4___ and newer
+OOVPA_XREF(IDirectSoundStream_SetFormat, 4242, 2,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_SetFormat+0x00 : jmp [CDirectSoundStream_SetFormat]
+        XREF_ENTRY(0x01, XREF_CDirectSoundStream_SetFormat ),
+
+        // IDirectSoundStream_SetFormat+0x00 : jmp 0x........
+        { 0x00, 0xE9 },
 OOVPA_END;

@@ -767,6 +767,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_Play
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer.
 OOVPA_XREF(IDirectSoundBuffer_Play, 3911, 16,
 
     XRefNoSaveIndex,
