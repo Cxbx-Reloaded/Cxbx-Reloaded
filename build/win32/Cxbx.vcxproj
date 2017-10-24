@@ -231,6 +231,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\MemoryManager.h" />

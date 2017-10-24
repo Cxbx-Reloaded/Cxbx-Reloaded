@@ -81,18 +81,8 @@ const char *Sec_XNET = "XNET";
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
-#define HLE_ENTRY(Lib, DB, Version) \
-	{Lib, Version, DB##_##Version, DB##_##Version##_SIZE }
-//  For example, HLE_ENTRY(Lib_XAPILIB, XAPI, 3911) results in:
-//  {Lib_XAPILIB, 3911, XAPI_3911, XAPI_3911_SIZE }
 
-const HLEData HLEDataBase[] =
-{
-
-	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
-};
-
-const HLEDataV2 HLEDataBaseV2[] = {
+const HLEData HLEDataBase[] = {
     // Support inline functions in .text section
     { Lib_D3D8,{ Sec_text, Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_SIZEV2 },
 
@@ -145,8 +135,6 @@ const HLEDataV2 HLEDataBaseV2[] = {
 // * HLEDataBaseCount
 // ******************************************************************
 const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
-
-const uint32 HLEDataBaseCountV2 = sizeof(HLEDataBaseV2) / sizeof(HLEDataV2);
 
 // ******************************************************************
 // * XRefDataBase

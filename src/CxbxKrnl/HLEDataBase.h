@@ -34,6 +34,8 @@
 #ifndef HLEDATABASE_H
 #define HLEDATABASE_H
 
+#include "HLEDataBase\D3D8.OOVPA.h"
+
 // ******************************************************************
 // * szHLELastCompileTime
 // ******************************************************************
@@ -54,15 +56,6 @@ extern const char *Lib_XONLINES;
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
-extern const struct HLEData
-{
-    const char *Library;
-
-    uint16      BuildVersion;
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
 
 #define PAIRSCANSEC_MAX 3
 
@@ -71,21 +64,19 @@ const struct PairScanLibSec {
     const char *section[PAIRSCANSEC_MAX];
 };
 
-extern const struct HLEDataV2
+extern const struct HLEData
 {
     const PairScanLibSec LibSec;
 
-    OOVPATable  *OovpaTable;
+    OOVPATable     *OovpaTable;
     uint32          OovpaTableSize;
 }
-HLEDataBaseV2[];
+HLEDataBase[];
 
 // ******************************************************************
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
-
-extern const uint32 HLEDataBaseCountV2;
 
 // ******************************************************************
 // * XRefDataBaseOffset
