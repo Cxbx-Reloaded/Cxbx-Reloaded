@@ -856,208 +856,217 @@ void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Secti
 #ifdef _DEBUG_TRACE
 
 struct HLEVerifyContext {
-	const HLEData *main_data;
-	OOVPA *oovpa, *against;
-	const HLEData *against_data;
-	uint32 main_index, against_index;
+    const HLEData *main_data;
+    OOVPA *oovpa, *against;
+    const HLEData *against_data;
+    uint32 main_index, against_index;
 };
 
-std::string HLEErrorString(const HLEData *data, uint32 index)
+std::string HLEErrorString(const HLEData *data, uint16_t buildVersion, uint32 index)
 {
-	std::string result = 
-		"OOVPATable " + (std::string)(data->Library) + "_" + std::to_string(data->BuildVersion)
-		+ "[" + std::to_string(index) + "] " 
-		+ (std::string)(data->OovpaTable[index].szFuncName);
+    std::string result =
+        "OOVPATable " + (std::string)(data->LibSec.library) + "_" + std::to_string(buildVersion)
+        + "[" + std::to_string(index) + "] "
+        + (std::string)(data->OovpaTable[index].szFuncName);
 
-	return result;
+    return result;
 }
 
-void HLEError(HLEVerifyContext *context, char *format, ...)
+void HLEError(HLEVerifyContext *context, uint16_t buildVersion, char *format, ...)
 {
-	std::string output = "HLE Error ";
-	if (context->main_data != nullptr)
-		output += "in " + HLEErrorString(context->main_data, context->main_index);
+    std::string output = "HLE Error ";
+    if (context->main_data != nullptr) {
+        output += "in " + HLEErrorString(context->main_data, buildVersion, context->main_index);
+    }
 
-	if (context->against != nullptr && context->against_data != nullptr)
-		output += ", comparing against " + HLEErrorString(context->against_data, context->against_index);
+    if (context->against != nullptr && context->against_data != nullptr) {
+        output += ", comparing against " + HLEErrorString(context->against_data, buildVersion, context->against_index);
+    }
 
-	// format specific error message
-	char buffer[200];
-	va_list args;
-	va_start(args, format);
-	vsprintf(buffer, format, args);
-	va_end(args);
+    // format specific error message
+    char buffer[200];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
 
-	output += " : " + (std::string)buffer + (std::string)"\n";
-	printf(output.c_str());
+    output += " : " + (std::string)buffer + (std::string)"\n";
+    printf(output.c_str());
 }
 
 void VerifyHLEDataBaseAgainst(HLEVerifyContext *context); // forward
 
-void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
+void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oovpa)
 {
-	if (context->against == nullptr) {
-		// TODO : verify XRefSaveIndex and XRef's (how?)
+    if (context->against == nullptr) {
+        // TODO : verify XRefSaveIndex and XRef's (how?)
 
-		// verify offsets are in increasing order
-		uint32 prev_offset;
-		uint08 dummy_value;
-		GetOovpaEntry(oovpa, oovpa->XRefCount, prev_offset, dummy_value);
-		for (int p = oovpa->XRefCount + 1; p < oovpa->Count; p++) {
-			uint32 curr_offset;
-			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
-			if (!(curr_offset > prev_offset)) {
-				HLEError(context, "Lovp[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
-					p, curr_offset, prev_offset);
-			}
-		}
+        // verify offsets are in increasing order
+        uint32 prev_offset;
+        uint08 dummy_value;
+        GetOovpaEntry(oovpa, oovpa->XRefCount, prev_offset, dummy_value);
+        for (int p = oovpa->XRefCount + 1; p < oovpa->Count; p++) {
+            uint32 curr_offset;
+            GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
+            if (!(curr_offset > prev_offset)) {
+                HLEError(context, buildVersion, "Lovp[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
+                         p, curr_offset, prev_offset);
+            }
+        }
 
-		// find duplicate OOVPA's across all other data-table-oovpa's
-		context->oovpa = oovpa;
-		context->against = oovpa;
-		VerifyHLEDataBaseAgainst(context);
-		context->against = nullptr; // reset scanning state
-		return;
-	}
+        // find duplicate OOVPA's across all other data-table-oovpa's
+        context->oovpa = oovpa;
+        context->against = oovpa;
+        VerifyHLEDataBaseAgainst(context);
+        context->against = nullptr; // reset scanning state
+        return;
+    }
 
-	// prevent checking an oovpa against itself
-	if (context->against == oovpa)
-		return;
+    // prevent checking an oovpa against itself
+    if (context->against == oovpa) {
+        return;
+    }
 
-	// compare {Offset, Value}-pairs between two OOVPA's
-	OOVPA *left = context->against, *right = oovpa;
-	int l = 0, r = 0;
-	uint32 left_offset, right_offset;
-	uint08 left_value, right_value;
-	GetOovpaEntry(left, l, left_offset, left_value);
-	GetOovpaEntry(right, r, right_offset, right_value);
-	int unique_offset_left = 0;
-	int unique_offset_right = 0;
-	int equal_offset_value = 0;
-	int equal_offset_different_value = 0;
-	while (true) {
-		bool left_next = true;
-		bool right_next = true;
+    // compare {Offset, Value}-pairs between two OOVPA's
+    OOVPA *left = context->against, *right = oovpa;
+    int l = 0, r = 0;
+    uint32 left_offset, right_offset;
+    uint08 left_value, right_value;
+    GetOovpaEntry(left, l, left_offset, left_value);
+    GetOovpaEntry(right, r, right_offset, right_value);
+    int unique_offset_left = 0;
+    int unique_offset_right = 0;
+    int equal_offset_value = 0;
+    int equal_offset_different_value = 0;
+    while (true) {
+        bool left_next = true;
+        bool right_next = true;
 
-		if (left_offset < right_offset) {
-			unique_offset_left++;
-			right_next = false;
-		}
-		else if (left_offset > right_offset) {
-			unique_offset_right++;
-			left_next = false;
-		}
-		else if (left_value == right_value) {
-			equal_offset_value++;
-		}
-		else {
-			equal_offset_different_value++;
-		}
+        if (left_offset < right_offset) {
+            unique_offset_left++;
+            right_next = false;
+        } else if (left_offset > right_offset) {
+            unique_offset_right++;
+            left_next = false;
+        } else if (left_value == right_value) {
+            equal_offset_value++;
+        } else {
+            equal_offset_different_value++;
+        }
 
-		// increment r before use (in left_next)
-		if (right_next)
-			r++;
+        // increment r before use (in left_next)
+        if (right_next) {
+            r++;
+        }
 
-		if (left_next) {
-			l++;
-			if (l >= left->Count) {
-				unique_offset_right += right->Count - r;
-				break;
-			}
+        if (left_next) {
+            l++;
+            if (l >= left->Count) {
+                unique_offset_right += right->Count - r;
+                break;
+            }
 
-			GetOovpaEntry(left, l, left_offset, left_value);
-		}
+            GetOovpaEntry(left, l, left_offset, left_value);
+        }
 
-		if (right_next) {
-			if (r >= right->Count) {
-				unique_offset_left += left->Count - l;
-				break;
-			}
+        if (right_next) {
+            if (r >= right->Count) {
+                unique_offset_left += left->Count - l;
+                break;
+            }
 
-			GetOovpaEntry(right, r, right_offset, right_value);
-		}
-	}
+            GetOovpaEntry(right, r, right_offset, right_value);
+        }
+    }
 
-	// no mismatching values on identical offsets?
-	if (equal_offset_different_value == 0)
-		// enough matching OV-pairs?
-		if (equal_offset_value > 4)
-		{
-			// no unique OV-pairs on either side?
-			if (unique_offset_left + unique_offset_right == 0)
-				HLEError(context, "OOVPA's are identical",
-					unique_offset_left,
-					unique_offset_right);
-			else
-				// not too many new OV-pairs on the left side?
-				if (unique_offset_left < 6)
-					// not too many new OV-parirs on the right side?
-					if (unique_offset_right < 6)
-						HLEError(context, "OOVPA's are expanded (left +%d, right +%d)",
-							unique_offset_left,
-							unique_offset_right);
-		}
+    // no mismatching values on identical offsets?
+    if (equal_offset_different_value == 0) {
+        // enough matching OV-pairs?
+        if (equal_offset_value > 4) {
+            // no unique OV-pairs on either side?
+            if (unique_offset_left + unique_offset_right == 0) {
+                HLEError(context, buildVersion, "OOVPA's are identical",
+                         unique_offset_left,
+                         unique_offset_right);
+            } else {
+                // not too many new OV-pairs on the left side?
+                if (unique_offset_left < 6) {
+                    // not too many new OV-parirs on the right side?
+                    if (unique_offset_right < 6) {
+                        HLEError(context, buildVersion, "OOVPA's are expanded (left +%d, right +%d)",
+                                 unique_offset_left,
+                                 unique_offset_right);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
 {
-	if (context->against == nullptr) {
-		context->main_index = index;
-	} else {
-		context->against_index = index;
-	}
+    if (context->against == nullptr) {
+        context->main_index = index;
+    } else {
+        context->against_index = index;
+    }
 
-	if (context->against == nullptr) {
-		if (table[index].Flags & Flag_DontPatch)
-		{
-			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
-			{
-				HLEError(context, "OOVPA registration DISABLED while a patch exists!");
-			}
-		}
-		else
-		if (table[index].Flags & Flag_XRef)
-		{
-			if (GetEmuPatchAddr((std::string)table[index].szFuncName))
-			{
-				HLEError(context, "OOVPA registration XREF while a patch exists!");
-			}
-		}
-	}
+    if (context->against == nullptr) {
+        const char* checkDisableStr = nullptr;
+        size_t getFuncStrLength = strlen(table[index].szFuncName);
 
-	// verify the OOVPA of this entry
-	if (table[index].Oovpa != nullptr)
-		VerifyHLEOOVPA(context, table[index].Oovpa);
+        if (getFuncStrLength > 10) {
+            checkDisableStr = &table[index].szFuncName[getFuncStrLength - 10];
+        }
+
+        if (checkDisableStr != nullptr && strcmp(checkDisableStr, "_UNPATCHED") == 0) {
+            if (GetEmuPatchAddr((std::string)table[index].szFuncName)) {
+                HLEError(context, table[index].Version, "OOVPA registration UNPATCHED while a patch exists!");
+            }
+        } else if (table[index].Oovpa->XRefSaveIndex != XRefNoSaveIndex) {
+            if (GetEmuPatchAddr((std::string)table[index].szFuncName)) {
+                HLEError(context, table[index].Version, "OOVPA registration XREF while a patch exists!");
+            }
+        }
+    }
+
+    // verify the OOVPA of this entry
+    if (table[index].Oovpa != nullptr) {
+        VerifyHLEOOVPA(context, table[index].Version, table[index].Oovpa);
+    }
 }
 
 void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
 {
-	if (context->against == nullptr) {
-		context->main_data = data;
-	} else {
-		context->against_data = data;
-	}
+    if (context->against == nullptr) {
+        context->main_data = data;
+    } else {
+        context->against_data = data;
+    }
 
-	// Don't check a database against itself :
-	if (context->main_data == context->against_data)
-		return;
+    // Don't check a database against itself :
+    if (context->main_data == context->against_data) {
+        return;
+    }
 
-	// verify each entry in this HLEData
-	uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
-	for (uint32 e = 0; e < count; e++)
-		VerifyHLEDataEntry(context, data->OovpaTable, e, count);
+    // verify each entry in this HLEData
+    uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
+    for (uint32 e = 0; e < count; e++) {
+        VerifyHLEDataEntry(context, data->OovpaTable, e, count);
+    }
 }
 
 void VerifyHLEDataBaseAgainst(HLEVerifyContext *context)
 {
-	// verify all HLEData's
-	for (uint32 d = 0; d < HLEDataBaseCount; d++)
-		VerifyHLEData(context, &HLEDataBase[d]);
+    // verify all HLEData's
+    for (uint32 d = 0; d < HLEDataBaseCount; d++) {
+        VerifyHLEData(context, &HLEDataBase[d]);
+    }
 }
 
 void VerifyHLEDataBase()
 {
-	HLEVerifyContext context = { 0 };
-	VerifyHLEDataBaseAgainst(&context);
+    HLEVerifyContext context = { 0 };
+    VerifyHLEDataBaseAgainst(&context);
 }
 #endif // _DEBUG_TRACE
