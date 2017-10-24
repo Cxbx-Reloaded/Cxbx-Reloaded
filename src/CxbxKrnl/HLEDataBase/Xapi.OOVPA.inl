@@ -32,23 +32,60 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full library
+//   [LibV] Title Name                       |  Verify   |  Comments
+//-------------------------------------------------------------------
+// * [3911] Cel Damage                       |   100%    | have 38/45 library.
+// * [3950] Shikigami no Shiro               |   100%    | have 35/45 library.
+// * [4034] Dark Summit                      |   100%    | have 21/45 library.
+// * [4039] New Legends                      |   100%    | have 30/45 library.
+// * [4134] Double-S.T.E.A.L                 |   100%    | have 39/47 library.
+// * [4242] NFL Blitz 2002                   |   100%    | have 46/48 library.
+// * [4361] ESPN NBA 2Night 2002             |   100%    | have 33/48 library.
+// * [4432] RedCard 2003                     |   100%    | have 46/48 library.
+// * [4531] NHL HITZ 2003                    |   100%    | have 41/48 library.
+// * [4627] MLB SlugFest 2003                |   100%    | have 46/48 library.
+// * [4721] Terminator - Dawn of Fate        |   100%    | have 41/48 library.
+// * [4831] Whacked                          |   100%    | have 42/50 library.
+// * [4928] Drihoo                           |   100%    | have 42/50 library.
+// * [5028] Shikigami no Shiro Evolution     |   100%    | have 39/50 library.
+// * [5120] N.U.D.E.@                        |   100%    | have 40/50 library.
+// * [5233] Evil Dead                        |   100%    | have 39/50 library.
+// * [5344] Starsky & Hutch                  |   100%    | have 43/50 library.
+// * [5455] NCAA Football 2004               |   100%    | have 44/50 library.
+// * [5558] XIII                             |   100%    | have 42/50 library.
+// * [5659] LMA Manager 2004                 |   100%    | have 42/50 library.
+// * [5788] All-Star Baseball 2005           |   100%    | have 42/50 library.
+// * [5849] Nickelodeon Tak 2                |   100%    | have 40/50 library.
+
 // TODO: Known Xapi OOVPA issue list
-// * 4034 is not verified each OOVPA.
-// * Following OOVPA revision are not verified
-//   * XMountMUA (3950)
-//   * XMountMURootA (3950, 4039, 5028, 5120, 5233)
-//   * timeKillEvent (3950, 5028, 5233)
-//   * timeSetEvent (5233)
-//   * SignalObjectAndWait (4039)
-//   * QueueUserAPC (4039)
-//   * XMountAlternateTitleA (4039)
-//   * XInputPoll (4039)
+// * Verification needed: Function Name ( Revision )
+//   * ConvertThreadToFiber (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
+//   * CreateFiber (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
+//   * DeleteFiber (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
+//   * ExitThread (4034)
+//   * GetExitCodeThread (4034)
+//   * GetOverlappedResult (4034)
+//   * GetThreadPriority (4034)
+//   * GetTimeZoneInformation (4034)
+//   * GetTypeInformation (4134)
+//   * MoveFileA (4034)
+//   * QueueUserAPC (4034)
+//   * SetThreadPriority (4034)
+//   * SetThreadPriorityBoost (4034)
+//   * SignalObjectAndWait (4034)
+//   * SwitchToFiber (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
+//   * SwitchToThread (4034)
+//   * XCalculateSignatureBegin (4034)
+//   * XGetDeviceChanges (4034)
+//   * XInputGetCapabilities (4034)
 //   * XInputGetDeviceDescription (4928, 5028, 5120, 5233, 5455)
-//   * ConvertThreadToFiber (4039, 4134, 4531, 4721, 5028, 5455)
-//   * CreateFiber (4039, 4134, 4531, 4721, 5028, 5455)
-//   * DeleteFiber (4039, 4134, 4531, 4721, 5028, 5455)
-//   * SwitchToFiber (4039, 4134, 4531, 4721, 5028, 5455)
-//   * XapiFiberStartup (4039, 4134, 4531, 4721, 5028, 5455)
+//   * XInputPoll (4034)
+//   * XMountAlternateTitleA (4034)
+//   * XMountMURootA (3950, 4034, 4039, 4134, 5028, 5120, 5233)
+//   * XapiFiberStartup (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
+//   * timeKillEvent (3950, 4034, 5028, 5233)
+//   * timeSetEvent (4034, 5233)
 // * Following OOVPA are invalid
 //   * ReadFileEx (3911) // Has exact asm codes _WriteFileEx@20
 //   * WriteFileEx (3911) // Has exact asm codes _ReadFileEx@20

@@ -33,7 +33,7 @@
 // *
 // ******************************************************************
 
-// Titles which did compiled with full libary version
+// Titles which did compiled with full library version
 //   [LibV] Title Name          |  Verify   |   Comments
 //-------------------------------------------------------------------
 // * [3925] Cel Damage          |   100%    | Contain full library.

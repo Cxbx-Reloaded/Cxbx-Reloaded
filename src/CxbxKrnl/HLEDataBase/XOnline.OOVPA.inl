@@ -32,20 +32,20 @@
 // *
 // ******************************************************************
 
-// Titles which did compiled with full library
-//   [revi] Title Name                        | Verify  |  Comments
+// Titles which did compiled with full library version
+//   [LibV] Title Name                        | Verify  |   Comments
 //-------------------------------------------------------------------
-// * [4831] NBA2K3                            |  100%   | None
-// * [4928] Unreal Championship               |  100%   | None
-// * [5028] Capcom vs. SNK 2 EO               |  100%   | None
-// * [5120] Muzzle Flash                      |  11/14  | Need verify non-exist function is there or not
-// * [5233] MotoGP 2                          |  11/14  | Need verify non-exist function is there or not
-// * [5344] Burnout 2                         |  11/14  | Check the Dxbx Patterns
-// * [5455] Ghost Recon Island Thunder        |  100%   | None
-// * [5558] XIII                              |  100%   | None
-// * [5659] Plus Plum 2                       |  100%   | None
-// * [5788] All-Star Baseball '05             |  100%   | None
-// * [5849] Kingdom Under Fire: The Crusaders |  100%   | None
+// * [4831] NBA2K3                            |  100%   | Contain full library.
+// * [4928] Unreal Championship               |  100%   | Contain full library.
+// * [5028] Capcom vs. SNK 2 EO               |  100%   | Contain full library.
+// * [5120] Muzzle Flash                      |  100%   | have 11/14 library.
+// * [5233] MotoGP 2                          |  100%   | have 11/14 library.
+// * [5344] Burnout 2                         |  100%   | have 11/14 library.
+// * [5455] Ghost Recon Island Thunder        |  100%   | Contain full library.
+// * [5558] XIII                              |  100%   | Contain full library.
+// * [5659] Plus Plum 2                       |  100%   | Contain full library.
+// * [5788] All-Star Baseball '05             |  100%   | Contain full library.
+// * [5849] Kingdom Under Fire: The Crusaders |  100%   | Contain full library.
 
 // TODO: Known XOnlines OOVPA issue list
 // * Following OOVPA revision are not verified

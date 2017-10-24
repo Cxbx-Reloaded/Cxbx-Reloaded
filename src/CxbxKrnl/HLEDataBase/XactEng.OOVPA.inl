@@ -32,17 +32,33 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full library version
+//   [LibV] Title Name                       |  Verify   |   Comments
+//-----------------------------------------------------------------------
+// * [4928] Lord of the Rings The Two Towers |   100%    | have 16/21 library.
+// * [5028] ???                              |     0%    | revision 5028 is obscure.
+// * [5120] Super Bubble Pop                 |   100%    | have 14/21 library.
+// * [5233] Cyber Attack Team                |   100%    | have 16/21 library.
+// * [5344] Syberia                          |   100%    | have 20/23 library.
+// * [5455] IndyCar Series                   |   100%    | have 12/23 library.
+// * [5558] Top Spin                         |   100%    | have 20/24 library.
+// * [5659] Ghoulies Demo                    |   100%    | have 18/24 library.
+// * [5788] Steel Battalion                  |   100%    | have 20/24 library.
+// * [5849] Forza Motorsport                 |   100%    | have 20/24 library.
+
 // TODO: Known XactEng OOVPA issue list
 // * 4627 and 5028 are not verified each OOVPA. (Last known revision found is 4928. revision 5028 is obscure)
-// * Following OOVPA revision are not verified
+// * Verification needed: Function Name ( Revision )
 //   * XACT_CEngine_CreateSoundSource (5455)
-//   * XACT_CEngine_DownloadEffectsImage (5455)
+//   * XACT_CEngine_DownloadEffectsImage (4928, 5120, 5233, 5455)
+//   * XACT_CEngine_RegisterWaveBank (4928, 5455)
 //   * XACT_CSoundBank_GetSoundCueIndexFromFriendlyName (5455)
 //   * XACT_CSoundBank_Play (5455)
 //   * IXACTEngine_CreateSoundSource (5455)
-//   * IXACTEngine_DownloadEffectsImage (5455)
-//   * IXACTEngine_RegisterWaveBank (5455)
+//   * IXACTEngine_DownloadEffectsImage (4928, 5120, 5233, 5455)
+//   * IXACTEngine_RegisterWaveBank (4928, 5455)
 //   * IXACTSoundBank_GetSoundCueIndexFromFriendlyName (5455)
+//   * IXACTSoundBank_PlayEx (5455)
 //   * IXACTSoundBank_Play (4928 to 5849)
 
 #ifndef XACTENG_OOVPA_INL
