@@ -351,19 +351,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Skip scanning for DSOUND symbols when LLE APU is selected
 					if (bLLE_APU)
 						continue;
-
-#if ENABLE_LEGACY_DSOUND_DB
-                    // Several 3911 titles has different DSound builds.
-                    if (BuildVersion < 4034) {
-                        BuildVersion = 3936;
-                    }
-
-                    // Redirect other highly similar DSOUND library versions
-                    if (BuildVersion == 4361 || BuildVersion == 4400 || BuildVersion == 4432 ||
-                        BuildVersion == 4531)
-                        BuildVersion = 4627;
-#endif
-
                 }
 				if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0)
 				{
