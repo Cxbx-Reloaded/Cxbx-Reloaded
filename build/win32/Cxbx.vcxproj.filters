@@ -243,12 +243,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h">
       <Filter>EmuD3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h">
-      <Filter>HLEDatabase\XNet</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h">
-      <Filter>HLEDatabase\XNet</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
     </ClInclude>

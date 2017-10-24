@@ -318,26 +318,3 @@ OOVPA_NO_XREF(recv, 3911, 14)
         { 0x12, 0x00 },
         { 0x1A, 0x00 },
 OOVPA_END;
-
-// ******************************************************************
-// * XNet_3911
-// ******************************************************************
-OOVPATable XNet_3911[] = {
-
-	REGISTER_OOVPA(XnInit, 3911, XREF),
-	REGISTER_OOVPA(XNetStartup, 3911, PATCH),
-	REGISTER_OOVPA(WSAStartup, 3911, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
-	REGISTER_OOVPA(socket, 3911, PATCH),
-	REGISTER_OOVPA(bind, 3911, PATCH),
-	REGISTER_OOVPA(listen, 3911, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 3911, PATCH),
-	REGISTER_OOVPA(connect, 3911, PATCH),
-	REGISTER_OOVPA(send, 3911, PATCH),
-	REGISTER_OOVPA(recv, 3911, PATCH),
-};
-
-// ******************************************************************
-// * XNet_3911_SIZE
-// ******************************************************************
-uint32 XNet_3911_SIZE = sizeof(XNet_3911);

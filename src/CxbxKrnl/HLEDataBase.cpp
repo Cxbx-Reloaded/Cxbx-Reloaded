@@ -87,10 +87,6 @@ const char *Sec_XNET = "XNET";
 
 const HLEData HLEDataBase[] =
 {
-#if ENABLE_LEGACY_XNETS_DB
-	HLE_ENTRY(Lib_XNETS, XNet, 3911),
-	HLE_ENTRY(Lib_XNETS, XNet, 4627),
-#endif
 
 	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
 
