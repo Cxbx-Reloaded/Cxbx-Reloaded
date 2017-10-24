@@ -58,6 +58,7 @@ const char *Sec_XPP = "XPP";
 const char *Sec_text = ".text";
 const char *Lib_XGRAPHC = "XGRAPHC";
 const char *Sec_XGRPH = "XGRPH";
+const char *Lib_XNET = "XNET";
 const char *Lib_XNETN = "XNETN";
 const char *Lib_XNETS = "XNETS";
 const char *Lib_XONLINE = "XONLINE"; // TODO : Typo for XONLINES?
@@ -122,11 +123,16 @@ const HLEDataV2 HLEDataBaseV2[] = {
     // Cannot support LTCG in HLE
     //{ Lib_XGRAPHCL,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_SIZEV2 },
 
-    //
-    //{ Lib_XONLINE,{ Sec_XONLINE }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+    // Added Sec_text and Sec_XNET just in case.
+    // TODO: Need to find out which function is only part of XOnlines.
+    { Lib_XONLINE,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
 
     // Fun fact, XONLINES are split into 2 header sections.
     { Lib_XONLINES,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_SIZEV2 },
+
+    // Added Sec_text just in case.
+    // TODO: Need to find out which function is only part of XNets.
+    { Lib_XNET,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
 
     // XNETS only has XNET, might be true.
     { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_SIZEV2 },
