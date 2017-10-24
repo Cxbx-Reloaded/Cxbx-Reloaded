@@ -405,45 +405,6 @@
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5028.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.h">
       <Filter>HLEDatabase\XG</Filter>
     </ClInclude>

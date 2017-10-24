@@ -347,18 +347,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if (bLLE_APU)
 						continue;
                 }
-				if (strcmp(LibraryName.c_str(), Lib_XAPILIB) == 0)
-				{
-#if ENABLE_LEGACY_XAPI_DB
-					// Change a few XAPILIB versions to similar counterparts
-					if(BuildVersion == 3944)
-						BuildVersion = 3911;
-					if(BuildVersion == 3950)
-						BuildVersion = 3911;
-					if(OrigBuildVersion == 4531)
-						BuildVersion = 4627;
-#endif
-				}
 				if (strcmp(LibraryName.c_str(), Lib_XGRAPHC) == 0)
 				{
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
