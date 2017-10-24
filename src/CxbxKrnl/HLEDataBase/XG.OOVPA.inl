@@ -32,16 +32,43 @@
 // *
 // ******************************************************************
 
+// Titles which did compiled with full library
+//   [LibV] Title Name                       |  Verify   |  Comments
+//-------------------------------------------------------------------
+// * [3911] Cel Damage                       |   100%    | Contain full library.
+// * [4034] Dark Summit                      |   100%    | have 3/10 library.
+// * [4039] New Legends                      |   100%    | have 6/10 library.
+// * [4134] Double-S.T.E.A.L                 |   100%    | have 9/10 library.
+// * [4242] Legends of Wrestling             |   100%    | have 4/10 library.
+// * [4361] Umezawa Yukari no Igo Seminar    |   100%    | have 6/11 library.
+// * [4432] Sega Soccer Slam                 |   100%    | have 9/11 library.
+// * [4531] NHL HITZ 2003                    |   100%    | have 9/11 library.
+// * [4627] Rayman Arena                     |   100%    | have 6/11 library.
+// * [4721] Terminator - Dawn of Fate        |   100%    | have 10/11 library.
+// * [4831] Whacked                          |   100%    | have 9/11 library.
+// * [4928] Drihoo                           |   100%    | have 8/11 library.
+// * [5028] Shikigami no Shiro Evolution     |   100%    | have 5/11 library.
+// * [5120] N.U.D.E.@                        |   100%    | have 8/11 library.
+// * [5233] Rayman 3                         |   100%    | have 8/11 library.
+// * [5344] Starsky & Hutch                  |   100%    | have 8/11 library.
+// * [5455] Dinosaur Hunting                 |   100%    | have 10/11 library.
+// * [5558] XIII                             |   100%    | have 9/11 library.
+// * [5659] LMA Manager 2004                 |   100%    | have 9/11 library.
+// * [5788] All-Star Baseball 2005           |   100%    | have 9/11 library.
+// * [5849] Nickelodeon Tak 2                |   100%    | have 9/11 library.
+
 // TODO: Known Xgraphics OOVPA issue list
-// * 3922 XGCompressRect is XREF in v1 database, any reason for this?
-// * 4034 is not verified each OOVPA.
-// * Following OOVPA revision are not verified
-//   * XGCompressRect (4242, 4721, 5028, 5120)
-//   * XGSetIndexBufferHeader (4039)
-//   * XGSetVertexBufferHeader (4039)
+// * 3911 XGCompressRect is XREF in v1 database, any reason for this?
+// * Verification needed: Function Name ( Revision )
+//   * XFONT_OpenBitmapFontFromMemory (4432, 4531, 4831, 5120)
+//   * XGCompressRect (4034, 4242, 4721, 5028, 5120)
+//   * XGIsSwizzledFormat (4034)
+//   * XGSetIndexBufferHeader (4034)
+//   * XGSetTextureHeader (4034)
+//   * XGSetVertexBufferHeader (4034)
 //   * XGSwizzleBox (4242)
-//   * XGUnswizzleBox (4039)
-//   * XGWriteSurfaceOrTextureToXPR (4242, 5028)
+//   * XGUnswizzleBox (4034, 4134, 4242)
+//   * XGWriteSurfaceOrTextureToXPR (4034, 4242, 5028)
 // NOTE: Known Xgraphics OOVPA not included in initial revision.
 //   * XFONT_OpenBitmapFontFromMemory (4361)
 

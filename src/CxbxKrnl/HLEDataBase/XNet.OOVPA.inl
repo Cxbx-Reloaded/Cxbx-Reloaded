@@ -32,18 +32,18 @@
 // *
 // ******************************************************************
 
-// Titles which did compiled with full library
-//   [revi] Title Name                        | Verify  |  Comments
+// Titles which did compiled with full library version
+//   [LibV] Title Name                        | Verify  |  Comments
 //-------------------------------------------------------------------
-// * [3911] Halo                              |  100%   | None
-// * [4039] Tony Hawk's Pro Skater 3          |  10/11  | Need verify non-exist function is there or not
-// * [4361] MotoGP                            |  100%   | None
-// * [4721] TimeSplitters 2                   |   8/11  | Need verify too
-// * [5344] Stake                             |  10/11  | Use XNETN library. Need verify too
+// * [3911] Halo                              |  100%   | Contain full library.
+// * [4039] Tony Hawk's Pro Skater 3          |  100%   | have 10/11 library.
+// * [4361] MotoGP                            |  100%   | Contain full library.
+// * [4721] TimeSplitters 2                   |  100%   | have 8/11 library.
+// * [5344] Stake                             |  100%   | have 10/11 XNETN library.
 
 // TODO: Known XNET OOVPA issue list
 // * XnInit 3911 is for only XNETS library. XNET library is different one.
-// * Following OOVPA revision are not verified
+// * Verification needed: Function Name ( Revision )
 //   * connect (4721)
 //   * listen (4039, 4721)
 //   * send (4721)
