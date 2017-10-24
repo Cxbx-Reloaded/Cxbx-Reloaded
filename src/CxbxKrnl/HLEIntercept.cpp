@@ -377,12 +377,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Skip scanning for XACTENG symbols when LLE APU is selected
 					if (bLLE_APU)
 						continue;
-
-#if ENABLE_LEGACY_XACTENG_DB
-					// Change a few XACTENG versions to similar counterparts
-					if (OrigBuildVersion == 4928 || BuildVersion == 5028)
-						BuildVersion = 4928;
-#endif
 				}
 
 				if(bXRefFirstPass)

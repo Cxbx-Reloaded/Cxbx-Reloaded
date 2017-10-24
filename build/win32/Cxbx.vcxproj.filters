@@ -405,27 +405,6 @@
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4928.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5233.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5344.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5788.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.h">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h">
       <Filter>HLEDatabase\Xapi</Filter>
     </ClInclude>
@@ -681,9 +660,6 @@
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.inl">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5788.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.inl">

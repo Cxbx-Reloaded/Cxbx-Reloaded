@@ -415,36 +415,3 @@ OOVPA_XREF(IXACTEngine_UnRegisterWaveBank, 4627, 8,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
-
-// ******************************************************************
-// * XactEng_4627
-// ******************************************************************
-OOVPATable XactEng_4627[] = {
-
-	REGISTER_OOVPA(XACTEngineCreate, 4627, PATCH),
-	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterWaveBank, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterWaveBank, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterStreamedWaveBank, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterStreamedWaveBank, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_CreateSoundBank, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_CreateSoundBank, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_DownloadEffectsImage, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_DownloadEffectsImage, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_CreateSoundSource, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_CreateSoundSource, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CSoundBank_GetSoundCueIndexFromFriendlyName, 4627, XREF),
-	REGISTER_OOVPA(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4627, PATCH),
-	REGISTER_OOVPA(IXACTSoundBank_Play, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_RegisterNotification, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_RegisterNotification, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_GetNotification, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_GetNotification, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_UnRegisterWaveBank, 4627, XREF),
-	REGISTER_OOVPA(IXACTEngine_UnRegisterWaveBank, 4627, PATCH),
-};
-
-// ******************************************************************
-// * XACTENG_4627_SIZE
-// ******************************************************************
-uint32 XactEng_4627_SIZE = sizeof(XactEng_4627);
