@@ -104,12 +104,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 };
 
 
-/* TODO Task list:
- * * Need implement support for DirectSound3DListener in primary buffer
- * ** Need proper DirectSoundBuffer created after DirectSoundCreate function
- * ** etc...
- * * Need to extract whole DSound lib section out of xbe and start matching all functions including one missings.
- * ** Do this with 3+ xbe files with same versioning on DSound only
+/* NOTE: SUCCEEDED define is only checking for is equal or greater than zero value.
+    And FAILED check for less than zero value. Since DS_OK is only 0 base on DirectSound documentation,
+    there is chance of failure which contain value greater than 0.
  */
 
 
