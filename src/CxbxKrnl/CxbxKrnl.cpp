@@ -746,7 +746,7 @@ void CxbxKrnlInit
 	{
 		int XInputEnabled;
 		g_EmuShared->GetXInputEnabled(&XInputEnabled);
-		g_XInputEnabled = XInputEnabled;
+		g_XInputEnabled = !!XInputEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
