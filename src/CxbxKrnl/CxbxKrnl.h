@@ -62,6 +62,9 @@ extern "C" {
 /*! xbaddr is the type of a physical address */
 typedef uint32 xbaddr;
 
+/*! xbnullptr is the type of null pointer address*/
+#define xbnullptr nullptr
+
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 

@@ -104,12 +104,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 };
 
 
-/* TODO Task list:
- * * Need implement support for DirectSound3DListener in primary buffer
- * ** Need proper DirectSoundBuffer created after DirectSoundCreate function
- * ** etc...
- * * Need to extract whole DSound lib section out of xbe and start matching all functions including one missings.
- * ** Do this with 3+ xbe files with same versioning on DSound only
+/* NOTE: SUCCEEDED define is only checking for is equal or greater than zero value.
+    And FAILED check for less than zero value. Since DS_OK is only 0 base on DirectSound documentation,
+    there is chance of failure which contain value greater than 0.
  */
 
 
@@ -193,7 +190,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     if (!initialized || !g_pDSound8) {
         hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), ppDirectSound, NULL);
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
         }
 
@@ -201,7 +198,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
         }
 
@@ -235,7 +232,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
         hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, NULL);
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("Creating primary buffer for DirectSound Failed!");
         }
 
@@ -248,7 +245,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
         hRet = g_pDSoundPrimaryBuffer->QueryInterface(IID_IDirectSound3DListener8, (LPVOID*)&g_pDSoundPrimary3DListener8);
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("Creating primary 3D Listener for DirectSound Failed!");
         }
 
@@ -787,6 +784,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 {
     FUNC_EXPORTS;
 
+    // Research reveal DirectSound creation check is part of the requirement.
+    if (!g_pDSound8 && !g_bDSoundCreateCalled) {
+        HRESULT hRet;
+
+        hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
+        if (hRet != DS_OK) {
+            CxbxKrnlCleanup("Unable to initialize DirectSound!");
+        }
+    }
+
     enterCriticalSection;
 
 	LOG_FUNC_BEGIN
@@ -831,20 +838,20 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     LPDIRECTSOUNDBUFFER pTempBuffer;
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer Failed!");
         (*ppBuffer)->EmuDirectSoundBuffer8 = NULL;
     } else {
         hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSoundBuffer8));
         pTempBuffer->Release();
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("CreateSoundBuffer8 Failed!");
         }
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
 
             HRESULT hRet3D = (*ppBuffer)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer8));
-            if (FAILED(hRet3D)) {
+            if (hRet != DS_OK) {
                 EmuWarning("CreateSound3DBuffer8 Failed!");
                 (*ppBuffer)->EmuDirectSound3DBuffer8 = NULL;
             }
@@ -1021,7 +1028,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
 
     hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("DirectSoundBuffer Lock Failed!");
     }
     pThis->EmuLockOffset = dwOffset;
@@ -1241,7 +1248,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         EmuWarning("SetCurrentPosition Failed!");
     }
 
@@ -1418,13 +1425,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 {
     FUNC_EXPORTS;
 
+    // Research reveal DirectSound creation check is part of the requirement.
     if (!g_pDSound8 && !g_bDSoundCreateCalled) {
         HRESULT hRet;
 
-        EmuWarning("Initializing DirectSound pointer since it DirectSoundCreate was not called!");
-
         hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("Unable to initialize DirectSound!");
         }
     }
@@ -1473,14 +1479,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     LPDIRECTSOUNDBUFFER pTempBuffer;
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer Failed!");
         (*ppStream)->EmuDirectSoundBuffer8 = NULL;
     } else {
         hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&((*ppStream)->EmuDirectSoundBuffer8));
         pTempBuffer->Release();
 
-        if (FAILED(hRet)) {
+        if (hRet != DS_OK) {
             CxbxKrnlCleanup("CreateSoundBuffer8 Failed!");
         }
 
@@ -1490,7 +1496,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
 
             HRESULT hRet3D = (*ppStream)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer8));
-            if (FAILED(hRet3D)) {
+            if (hRet != DS_OK) {
                 EmuWarning("CreateSound3DBuffer Failed!");
                 (*ppStream)->EmuDirectSound3DBuffer8 = NULL;
             }
@@ -1765,7 +1771,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         } else {
             hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-            if (SUCCEEDED(hRet)) {
+            if (hRet == DS_OK) {
 
                 if (pAudioPtr != 0) {
                     memcpy(pAudioPtr, pThis->EmuBuffer, dwAudioBytes);
@@ -3019,7 +3025,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
     ZeroMemory(&DSCapsPC, sizeof(DSCAPS));
 
     HRESULT hRet = g_pDSound8->GetCaps(&DSCapsPC);
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         EmuWarning("Failed to get PC DirectSound caps!");
     }
 
@@ -3397,9 +3403,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
     if (pThis) {
         if (pThis->EmuDirectSoundBuffer8) {
             hRet = pThis->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSoundNotify8, (LPVOID*)&pNotify);
-            if (SUCCEEDED(hRet) && pNotify != nullptr) {
+            if (hRet == DS_OK) {
                 hRet = pNotify->SetNotificationPositions(dwNotifyCount, paNotifies);
-                if (FAILED(hRet)) {
+                if (hRet != DS_OK) {
                     EmuWarning("Could not set notification position(s)!");
                 }
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.5344.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->XactEng.1.0.5344.inl
 // *
 // *  This file is part of the Cxbx project.
 // *

@@ -101,7 +101,7 @@ void DSoundBufferXboxAdpcmDecoder(
     if (isLock == false) {
         hr = pDSBuffer->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
     }
-    if (SUCCEEDED(hr)) {
+    if (hr == DS_OK) {
         // Write the converted PCM buffer bytes
 
         if (isLock == false) {
@@ -386,22 +386,22 @@ inline void ResizeIDirectSoundBuffer(
     pDSBuffer->GetFrequency(&dwFrequency);
     pDSBuffer->GetPan(&lPan);
 
-    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
+    if (pDS3DBuffer != xbnullptr && pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
         pDS3DBuffer->GetAllParameters(&ds3dBuffer);
     }
 
     HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
     }
     hRet = pDSBuffer->GetStatus(&dwStatus);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
     }
 
-    if (pDS3DBuffer != NULL) {
+    if (pDS3DBuffer != xbnullptr) {
         pDS3DBuffer->Release();
     }
     // release old buffer
@@ -415,25 +415,25 @@ inline void ResizeIDirectSoundBuffer(
     LPDIRECTSOUNDBUFFER pTempBuffer;
     hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer Failed!");
-        pDSBufferDesc = NULL;
+        pDSBufferDesc = xbnullptr;
     } else {
         hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
     }
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
     }
     if (refCount) {
         while (pDSBuffer->AddRef() < refCount);
     }
-    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-        HRESULT hRet3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
-        if (FAILED(hRet3D)) {
+    if (pDS3DBuffer != xbnullptr && pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
+        hRet = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
+        if (hRet != DS_OK) {
             EmuWarning("CreateSound3DBuffer Failed!");
-            pDS3DBuffer = NULL;
+            pDS3DBuffer = xbnullptr;
         } else {
             pDS3DBuffer->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
         }
@@ -484,7 +484,7 @@ inline void DSoundBufferUpdate(
             } else {
                 HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
-                if (SUCCEEDED(hRet)) {
+                if (hRet == DS_OK) {
                     if (pAudioPtr != nullptr) {
                         memcpy(pAudioPtr, pBuffer, dwAudioBytes);
                     }
@@ -591,7 +591,7 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
 
     HRESULT hRet = pDSBuffer->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
-    if (FAILED(hRet)) {
+    if (hRet != DS_OK) {
         EmuWarning("GetCurrentPosition Failed!");
     }
     if (pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0) {
@@ -715,7 +715,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
     }
     // rewind buffer
     if ((dwFlags & X_DSBPLAY_FROMSTART)) {
-        if (FAILED(pDSBuffer->SetCurrentPosition(0))) {
+        if (pDSBuffer->SetCurrentPosition(0) != DS_OK) {
             EmuWarning("Rewinding buffer failed!");
         }
 
@@ -816,7 +816,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+    }
 
     leaveCriticalSection;
 

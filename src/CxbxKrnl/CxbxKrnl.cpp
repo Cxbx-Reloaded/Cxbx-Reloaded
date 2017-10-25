@@ -641,7 +641,12 @@ void CxbxKrnlInit
 	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 	CxbxKrnl_DebugMode = DbgMode;
 	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
-	g_pCertificate = (Xbe::Certificate *)(CxbxKrnl_XbeHeader->dwCertificateAddr);
+
+	// A patch to dwCertificateAddr is a requirement due to Windows TLS is overwriting dwGameRegion data address.
+	// By using unalternated certificate data, it should no longer cause any problem with titles running and Cxbx's log as well.
+	CxbxKrnl_XbeHeader->dwCertificateAddr = (uint32)&CxbxKrnl_Xbe->m_Certificate;
+	g_pCertificate = &CxbxKrnl_Xbe->m_Certificate;
+
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 	g_CurrentProcessHandle = GetCurrentProcess();
@@ -746,7 +751,7 @@ void CxbxKrnlInit
 	{
 		int XInputEnabled;
 		g_EmuShared->GetXInputEnabled(&XInputEnabled);
-		g_XInputEnabled = XInputEnabled;
+		g_XInputEnabled = !!XInputEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
