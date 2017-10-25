@@ -821,14 +821,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 
-    (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
-    (*ppBuffer)->EmuDirectSound3DBuffer8 = 0;
-    (*ppBuffer)->EmuBuffer = 0;
+    (*ppBuffer)->EmuDirectSoundBuffer8 = nullptr;
+    (*ppBuffer)->EmuDirectSound3DBuffer8 = nullptr;
+    (*ppBuffer)->EmuBuffer = xbnullptr;
     (*ppBuffer)->EmuBufferDesc = pDSBufferDesc;
     (*ppBuffer)->EmuLockOffset = 0;
-    (*ppBuffer)->EmuLockPtr1 = 0;
+    (*ppBuffer)->EmuLockPtr1 = xbnullptr;
     (*ppBuffer)->EmuLockBytes1 = 0;
-    (*ppBuffer)->EmuLockPtr2 = 0;
+    (*ppBuffer)->EmuLockPtr2 = xbnullptr;
     (*ppBuffer)->EmuLockBytes2 = 0;
     (*ppBuffer)->EmuFlags = dwEmuFlags;
 
@@ -840,7 +840,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     if (hRet != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer Failed!");
-        (*ppBuffer)->EmuDirectSoundBuffer8 = NULL;
+        (*ppBuffer)->EmuDirectSoundBuffer8 = nullptr;
     } else {
         hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSoundBuffer8));
         pTempBuffer->Release();
@@ -853,7 +853,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
             HRESULT hRet3D = (*ppBuffer)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer8));
             if (hRet3D != DS_OK) {
                 EmuWarning("CreateSound3DBuffer8 Failed!");
-                (*ppBuffer)->EmuDirectSound3DBuffer8 = NULL;
+                (*ppBuffer)->EmuDirectSound3DBuffer8 = nullptr;
             }
 
         }
@@ -1462,13 +1462,13 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, dwEmuFlags);
 
-    (*ppStream)->EmuDirectSoundBuffer8 = 0;
-    (*ppStream)->EmuDirectSound3DBuffer8 = 0;
-    (*ppStream)->EmuBuffer = 0;
+    (*ppStream)->EmuDirectSoundBuffer8 = nullptr;
+    (*ppStream)->EmuDirectSound3DBuffer8 = nullptr;
+    (*ppStream)->EmuBuffer = xbnullptr;
     (*ppStream)->EmuBufferDesc = pDSBufferDesc;
-    (*ppStream)->EmuLockPtr1 = 0;
+    (*ppStream)->EmuLockPtr1 = xbnullptr;
     (*ppStream)->EmuLockBytes1 = 0;
-    (*ppStream)->EmuLockPtr2 = 0;
+    (*ppStream)->EmuLockPtr2 = xbnullptr;
     (*ppStream)->EmuLockBytes2 = 0;
     (*ppStream)->EmuFlags = dwEmuFlags;
     (*ppStream)->EmuPlayFlags = DSBPLAY_LOOPING;
@@ -1481,7 +1481,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     if (hRet != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer Failed!");
-        (*ppStream)->EmuDirectSoundBuffer8 = NULL;
+        (*ppStream)->EmuDirectSoundBuffer8 = nullptr;
     } else {
         hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&((*ppStream)->EmuDirectSoundBuffer8));
         pTempBuffer->Release();
@@ -1498,7 +1498,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
             HRESULT hRet3D = (*ppStream)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer8));
             if (hRet3D != DS_OK) {
                 EmuWarning("CreateSound3DBuffer Failed!");
-                (*ppStream)->EmuDirectSound3DBuffer8 = NULL;
+                (*ppStream)->EmuDirectSound3DBuffer8 = nullptr;
             }
         }
     }

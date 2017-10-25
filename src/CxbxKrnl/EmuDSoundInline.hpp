@@ -82,7 +82,7 @@ void DSoundBufferXboxAdpcmDecoder(
 
     // Allocate some temp buffers
     uint8_t* buffer1 = (uint8_t*)malloc(dwDecodedAudioBytes);
-    uint8_t* buffer2 = NULL;
+    uint8_t* buffer2 = nullptr;
 
     if (dwAudioBytes2 != 0) {
         buffer2 = (uint8_t*)malloc(dwDecodedAudioBytes2);
@@ -94,7 +94,7 @@ void DSoundBufferXboxAdpcmDecoder(
         TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr2, dwAudioBytes2, &buffer2[0], pDSBufferDesc->lpwfxFormat->nChannels);
     }
     // Lock this Xbox ADPCM buffer
-    void* pPtrX = NULL, *pPtrX2 = NULL;
+    void* pPtrX = xbnullptr, *pPtrX2 = xbnullptr;
     DWORD dwBytesX = 0, dwBytesX2 = 0;
 
     HRESULT hr = DS_OK;
@@ -109,7 +109,7 @@ void DSoundBufferXboxAdpcmDecoder(
             if (dwDecodedAudioBytes > dwBytesX) dwDecodedAudioBytes = dwBytesX;
             memcpy(pPtrX, buffer1, dwDecodedAudioBytes);
 
-            if (pPtrX2 != NULL) {
+            if (pPtrX2 != xbnullptr) {
                 if (dwDecodedAudioBytes2 > dwBytesX2) dwDecodedAudioBytes2 = dwBytesX2;
                 memcpy(pPtrX2, buffer2, dwDecodedAudioBytes2);
             }
@@ -121,7 +121,7 @@ void DSoundBufferXboxAdpcmDecoder(
             if (dwDecodedAudioBytes > dwAudioBytes) dwDecodedAudioBytes = dwAudioBytes;
             memcpy(pAudioPtr, buffer1, dwDecodedAudioBytes);
 
-            if (pAudioPtr2 != NULL) {
+            if (pAudioPtr2 != xbnullptr) {
                 if (dwDecodedAudioBytes2 > dwAudioBytes2) dwDecodedAudioBytes2 = dwAudioBytes2;
                 memcpy(pAudioPtr2, buffer2, dwDecodedAudioBytes2);
             }
@@ -219,7 +219,7 @@ inline void GeneratePCMFormat(
         }
         pDSBufferDesc->dwReserved = 0;
 
-        if (lpwfxFormat != NULL) {
+        if (lpwfxFormat != xbnullptr) {
 
             //TODO: RadWolfie - Need implement support for WAVEFORMATEXTENSIBLE as stated in CDirectSoundStream_SetFormat function note below
             // Do we need to convert it? Or just only do the WAVEFORMATEX only?
@@ -260,7 +260,7 @@ inline void GeneratePCMFormat(
             bIsSpecial = true;
             dwEmuFlags |= DSB_FLAG_RECIEVEDATA;
 
-            EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = NULL)...");
+            EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = xbnullptr)...");
 
             // HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
             // It's supposed to recieve data rather than generate it.  Buffers created
@@ -313,7 +313,7 @@ inline void GeneratePCMFormat(
     }
 
     //TODO: is this needed?
-    if (pDSBufferDesc->lpwfxFormat != NULL) {
+    if (pDSBufferDesc->lpwfxFormat != nullptr) {
         // we only support 2 channels right now
         if (pDSBufferDesc->lpwfxFormat->nChannels > 2) {
             pDSBufferDesc->lpwfxFormat->nChannels = 2;
