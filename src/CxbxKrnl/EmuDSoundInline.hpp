@@ -818,7 +818,12 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
-        hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+        // Test case: Turok Evolution, Jet Set Radio Future, ?
+        if (x == 0.0f && y == 0.0f && z == 0.0f) {
+            printf("WARNING: SetConeOrientation was called with x = 0, y = 0, and z = 0. Current action is ignore call to PC.\n");
+        } else {
+            hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+        }
     }
 
     leaveCriticalSection;
