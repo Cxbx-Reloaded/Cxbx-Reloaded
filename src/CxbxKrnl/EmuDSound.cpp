@@ -851,7 +851,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
 
             HRESULT hRet3D = (*ppBuffer)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppBuffer)->EmuDirectSound3DBuffer8));
-            if (hRet != DS_OK) {
+            if (hRet3D != DS_OK) {
                 EmuWarning("CreateSound3DBuffer8 Failed!");
                 (*ppBuffer)->EmuDirectSound3DBuffer8 = NULL;
             }
@@ -1496,7 +1496,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
 
             HRESULT hRet3D = (*ppStream)->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSound3DBuffer8, (LPVOID*)&((*ppStream)->EmuDirectSound3DBuffer8));
-            if (hRet != DS_OK) {
+            if (hRet3D != DS_OK) {
                 EmuWarning("CreateSound3DBuffer Failed!");
                 (*ppStream)->EmuDirectSound3DBuffer8 = NULL;
             }

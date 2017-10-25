@@ -430,8 +430,8 @@ inline void ResizeIDirectSoundBuffer(
         while (pDSBuffer->AddRef() < refCount);
     }
     if (pDS3DBuffer != xbnullptr && pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-        hRet = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
-        if (hRet != DS_OK) {
+        HRESULT hRet3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
+        if (hRet3D != DS_OK) {
             EmuWarning("CreateSound3DBuffer Failed!");
             pDS3DBuffer = xbnullptr;
         } else {
