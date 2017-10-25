@@ -787,6 +787,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 {
     FUNC_EXPORTS;
 
+    // Research reveal DirectSound creation check is part of the requirement.
+    if (!g_pDSound8 && !g_bDSoundCreateCalled) {
+        HRESULT hRet;
+
+        hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
+        if (hRet != DS_OK) {
+            CxbxKrnlCleanup("Unable to initialize DirectSound!");
+        }
+    }
+
     enterCriticalSection;
 
 	LOG_FUNC_BEGIN
@@ -1418,10 +1428,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 {
     FUNC_EXPORTS;
 
+    // Research reveal DirectSound creation check is part of the requirement.
     if (!g_pDSound8 && !g_bDSoundCreateCalled) {
         HRESULT hRet;
-
-        EmuWarning("Initializing DirectSound pointer since it DirectSoundCreate was not called!");
 
         hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
         if (hRet != DS_OK) {
