@@ -207,7 +207,7 @@ struct OOVPATable
      _9,  _8,  _7,  _6,  _5,  _4,  _3,  _2,  _1,  _0, \
     N, ...) N
 
-// PatrickvL, TYPE argument is meant for research documentation (reminder)
+// NOTE: A reminder for all of developers, TYPE argument is meant for research documentation.
 // (eventually UNPATCHED will be replace back to PATCH once LLE is fully supportive in the future)
 #define REGISTER_OOVPAS(Symbol, TYPE, ...) MSVC_EXPAND(_GET_NTH_ARG("ignored", __VA_ARGS__, \
     REGISTER_OOVPA_19, REGISTER_OOVPA_18, REGISTER_OOVPA_17, REGISTER_OOVPA_16, REGISTER_OOVPA_15, \
