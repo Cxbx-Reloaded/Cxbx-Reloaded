@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.5028.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8.1.0.5028.inl
 // *
 // *  This file is part of the Cxbx project.
 // *

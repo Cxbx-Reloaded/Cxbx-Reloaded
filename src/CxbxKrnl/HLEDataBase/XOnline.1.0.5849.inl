@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5849.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->XOnline.1.0.5849.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
