@@ -1139,8 +1139,7 @@ inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
 
     return DS_OK;
 }
-
-//TODO: PC DirectSound does not have SetPitch method function.
+*/
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetPitch(
@@ -1148,12 +1147,29 @@ inline HRESULT HybridDirectSoundBuffer_SetPitch(
     LONG                lPitch)
 {
 
-    // TODO: Translate params, then make the PC DirectSound call
+    // Convert pitch back to frequency
+    if (lPitch == 0) {
+        lPitch = 48000; // NOTE: pitch = 0 is equal to 48 KHz.
+    } else {
+        lPitch = static_cast<LONG>(exp((lPitch / 4096.0f) * log(2)) * 48000.0f);
+    }
 
-    return DS_OK;
+    /* For research purpose of how to convert frequency to pitch and back to frequency.
+    // Edit hertz variable to see the result.
+    float hertz = 12000.0f;
+
+    float hertzRatio = 48000.0f;
+    float pitchRatio = 4096.0f;
+
+    // Convert hertz to pitch
+    float pitch = log2(hertz / hertzRatio) * pitchRatio;
+
+    // Convert pitch to hertz
+    hertz = exp((pitch / pitchRatio) * log(2)) * hertzRatio;*/
+
+    RETURN_RESULT_CHECK(pDSBuffer->SetFrequency(lPitch));
 }
-
-//TODO: PC DirectSound does not have SetPitch method function.
+/*
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetPlayRegion(

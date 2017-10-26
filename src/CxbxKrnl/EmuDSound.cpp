@@ -1195,20 +1195,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lPitch)
 		LOG_FUNC_END;
 
-    // TODO: Translate params, then make the PC DirectSound call
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return DS_OK;
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
 }
 
 // ******************************************************************
@@ -3043,20 +3035,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(lPitch)
         LOG_FUNC_END;
 
-    HRESULT hRet = S_OK;
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return hRet;
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
 }
 
 // ******************************************************************
