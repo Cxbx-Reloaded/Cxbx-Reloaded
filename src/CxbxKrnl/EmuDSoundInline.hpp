@@ -759,14 +759,42 @@ inline HRESULT HybridDirectSoundBuffer_Restore(
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
     LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
-    LPCDS3DBUFFER           pDS3DBufferParams,
+    XTL::X_DS3DBUFFER*      pDS3DBufferParams,
     DWORD                   dwApply)
 {
     enterCriticalSection;
 
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
-        hRet = pDS3DBuffer->SetAllParameters(pDS3DBufferParams, dwApply);
+
+        DS3DBUFFER pDS3DBufferParamsTemp;
+        pDS3DBufferParamsTemp.dwSize = sizeof(DS3DBUFFER);
+        pDS3DBufferParamsTemp.vPosition = pDS3DBufferParams->vPosition;
+        pDS3DBufferParamsTemp.vVelocity = pDS3DBufferParams->vVelocity;
+        pDS3DBufferParamsTemp.dwInsideConeAngle = pDS3DBufferParams->dwInsideConeAngle;
+        pDS3DBufferParamsTemp.dwOutsideConeAngle = pDS3DBufferParams->dwOutsideConeAngle;
+        pDS3DBufferParamsTemp.vConeOrientation = pDS3DBufferParams->vConeOrientation;
+        pDS3DBufferParamsTemp.lConeOutsideVolume = pDS3DBufferParams->lConeOutsideVolume;
+        pDS3DBufferParamsTemp.flMinDistance = pDS3DBufferParams->flMinDistance;
+        pDS3DBufferParamsTemp.flMaxDistance = pDS3DBufferParams->flMaxDistance;
+        pDS3DBufferParamsTemp.dwMode = pDS3DBufferParams->dwMode;
+
+        hRet = pDS3DBuffer->SetAllParameters(&pDS3DBufferParamsTemp, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetDistanceFactor(pDS3DBufferParams->flDistanceFactor, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetRolloffFactor(pDS3DBufferParams->flRolloffFactor, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetDopplerFactor(pDS3DBufferParams->flDopplerFactor, dwApply);
     }
 
     leaveCriticalSection;

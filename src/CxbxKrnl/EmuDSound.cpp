@@ -539,7 +539,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDopplerFactor)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
-    PVOID                   pDummy, // TODO: fill this out
+    X_DSI3DL2LISTENER      *pds3dl,
     DWORD                   dwApply)
 {
     FUNC_EXPORTS;
@@ -548,7 +548,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pDummy)
+		LOG_FUNC_ARG(pds3dl)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
@@ -731,6 +731,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetVelocity)
 // ******************************************************************
 // * patch: IDirectSound_SetAllParameters
 // ******************************************************************
+// NOTE: No conversion requirement for XB to PC.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
@@ -1982,7 +1983,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
     X_CDirectSoundStream*   pThis,
-    LPCDS3DBUFFER           pc3DBufferParameters,
+    X_DS3DBUFFER*           pc3DBufferParameters,
     DWORD                   dwApply)
 {
     FUNC_EXPORTS;
@@ -2131,25 +2132,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetI3DL2Source)
 (
-    PVOID   pThis,
-    PVOID   pds3db,
-    DWORD   dwApply)
+    X_CDirectSoundStream*   pThis,
+    X_DSI3DL2BUFFER*        pds3db,
+    DWORD                   dwApply)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pds3db)
-		LOG_FUNC_ARG(dwApply)
-		LOG_FUNC_END;
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)(pThis, pds3db, dwApply);
 }
 
 // ******************************************************************
@@ -2433,7 +2422,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
     X_CDirectSoundBuffer*   pThis,
-    LPCDSI3DL2BUFFER        pds3db,
+    X_DSI3DL2BUFFER*        pds3db,
     DWORD                   dwApply)
 {
     FUNC_EXPORTS;
@@ -2446,6 +2435,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
+    // NOTE: SetI3DL2Source is using DSFXI3DL2Reverb structure, aka different interface.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
@@ -3158,7 +3148,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
-    PVOID                   pds3db,
+    X_DSI3DL2BUFFER*        pds3db,
     DWORD                   dwApply)
 {
     FUNC_EXPORTS;
@@ -3171,6 +3161,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
+    // NOTE: SetI3DL2Source is using DSFXI3DL2Reverb structure, aka different interface.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
@@ -3184,7 +3175,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
     X_CDirectSoundBuffer*    pThis,
-    LPCDS3DBUFFER            pc3DBufferParameters,
+    X_DS3DBUFFER*            pc3DBufferParameters,
     DWORD                    dwApply)
 {
     FUNC_EXPORTS;
