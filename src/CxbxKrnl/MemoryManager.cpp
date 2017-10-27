@@ -54,21 +54,20 @@ MemoryManager::~MemoryManager()
 	DeleteCriticalSection(&m_CriticalSection);
 }
 
+// Acquire m_CriticalSection before calling FindContainingTypedMemoryBlock!
 TypedMemoryBlock *MemoryManager::FindContainingTypedMemoryBlock(void* addr)
 {
-	if (m_MemoryBlockInfo.empty())
-		return nullptr;
-
-	// Find the first block whose address is not less than the requested address
+	// Find the first block whose key (upper_bound) is not less than the requested address (thus: upper_bound >= addr)
 	auto low = m_MemoryBlockInfo.lower_bound(addr);
 	if (low == m_MemoryBlockInfo.end())
-		// If there's no such block, it might fall into the last block
-		low = --m_MemoryBlockInfo.end();
+		return nullptr;
 
 	// Check if the requested address lies inside this block
 	TypedMemoryBlock *info = &(low->second);
-	if ((size_t)addr >= ((size_t)info->block.addr + info->block.size))
+	if (addr < info->block.addr)
 		return nullptr;
+
+	assert((uintptr_t)addr <= ((uintptr_t)info->block.upper_bound));
 
 	return info;
 }
@@ -85,11 +84,10 @@ void* MemoryManager::Allocate(size_t size)
 		TypedMemoryBlock info;
 
 		info.type = MemoryType::STANDARD;
-		info.block.addr = addr;
-		info.block.size = size;
+		info.block.init(addr, size);
 
 		EnterCriticalSection(&m_CriticalSection);
-		m_MemoryBlockInfo[addr] = info;
+		m_MemoryBlockInfo[info.block.upper_bound] = info;
 		LeaveCriticalSection(&m_CriticalSection);
 	} else	{
 #if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)
@@ -115,11 +113,10 @@ void* MemoryManager::AllocateAligned(size_t size, size_t alignment)
 		TypedMemoryBlock info;
 
 		info.type = MemoryType::ALIGNED;
-		info.block.addr = addr;
-		info.block.size = size;
+		info.block.init(addr, size);
 
 		EnterCriticalSection(&m_CriticalSection);
-		m_MemoryBlockInfo[addr] = info;
+		m_MemoryBlockInfo[info.block.upper_bound] = info;
 		LeaveCriticalSection(&m_CriticalSection);
 	}
 
@@ -143,7 +140,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 
 	EnterCriticalSection(&m_CriticalSection);
 	// Is the contiguous allocation table empty?
-	if (m_ContiguousMemoryBlocks.size() == 0) {
+	if (m_ContiguousMemoryBlocks.empty()) {
 		// Start allocating Contiguous Memory after the Kernel image header to prevent overwriting our dummy Kernel
 		addr = XBOX_KERNEL_BASE + sizeof(DUMMY_KERNEL);
 		addr = (addr + alignMask) & ~alignMask;
@@ -153,7 +150,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 		// in order to reduce memory fragmentation.
 		for (auto it = m_ContiguousMemoryBlocks.begin(); it != m_ContiguousMemoryBlocks.end(); ++it) {
 			MemoryBlock current = it->second;
-			xbaddr after_current = (xbaddr)current.addr + current.size;
+			xbaddr after_current = (xbaddr)current.upper_bound + 1;
 			after_current = (after_current + alignMask) & ~alignMask;
 
 			// Is this the last entry?
@@ -183,8 +180,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 	if (addr != NULL) {
 		MemoryBlock block;
 
-		block.addr = (void *)addr;
-		block.size = size;
+		block.init((void *)addr, size);
 		m_ContiguousMemoryBlocks[(void *)addr] = block;
 
 		TypedMemoryBlock info;
@@ -192,7 +188,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 		info.type = MemoryType::CONTIGUOUS;
 		info.block = block;
 
-		m_MemoryBlockInfo[(void *)addr] = info;
+		m_MemoryBlockInfo[info.block.upper_bound] = info;
 	}
 	
 	LeaveCriticalSection(&m_CriticalSection);
@@ -238,20 +234,19 @@ void MemoryManager::Free(void* addr)
 			switch (info->type) {
 			case MemoryType::ALIGNED:
 				_aligned_free((void*)info->block.addr);
-				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			case MemoryType::STANDARD:
 				free((void*)info->block.addr);
-				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			case MemoryType::CONTIGUOUS:
 				m_ContiguousMemoryBlocks.erase(info->block.addr);
-				m_MemoryBlockInfo.erase(info->block.addr);
 				break;
 			default:
 				CxbxKrnlCleanup("Fatal: MemoryManager attempted to free memory of an unknown type");
 				break;
 			}
+
+			m_MemoryBlockInfo.erase(info->block.upper_bound);
 		}
 		else {
 			__debugbreak();
@@ -274,8 +269,8 @@ size_t MemoryManager::QueryAllocationSize(void* addr)
 	EnterCriticalSection(&m_CriticalSection);
 	TypedMemoryBlock *info = FindContainingTypedMemoryBlock(addr);
 	if (info != nullptr) {
-		// Return the total size in this block		
-		ret = info->block.size - ((size_t)addr - (size_t)info->block.addr);
+		// Return the available size in this block
+		ret = (uintptr_t)info->block.upper_bound - (uintptr_t)addr + 1;
 	}
 	else {
 #if 1 // TODO : Only log this in DEBUG builds (as a failure is already indicated by a null result)?

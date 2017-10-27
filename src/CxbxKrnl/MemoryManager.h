@@ -44,7 +44,8 @@
 
 typedef struct {
 	void *addr;
-	size_t size;
+	void *upper_bound;
+	void init(void * base, size_t size) { addr = base; upper_bound = (void *)((uintptr_t)base + size - 1); }
 } MemoryBlock;
 
 enum struct MemoryType {
