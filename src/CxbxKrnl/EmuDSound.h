@@ -67,6 +67,11 @@ void CxbxInitAudio();
 #define X_DSSPAUSE_SYNCHPLAYBACK      0x00000002
 #define X_DSSPAUSE_PAUSENOACTIVATE    0x00000003
 
+// EmuIDirectSoundBuffer_StopEx flags
+#define X_DSBSTOPEX_IMMEDIATE         0x00000000
+#define X_DSBSTOPEX_ENVELOPE          0x00000001
+#define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
+
 
 // ******************************************************************
 // * X_DSBUFFERDESC
@@ -280,6 +285,12 @@ struct X_CDirectSound
     // TODO: Fill this in?
 };
 
+enum X_DSB_TOGGLE {
+    X_DSB_TOGGLE_DEFAULT = 0,
+    X_DSB_TOGGLE_PLAY,
+    X_DSB_TOGGLE_LOOP
+};
+
 // ******************************************************************
 // * X_CDirectSoundBuffer
 // ******************************************************************
@@ -305,6 +316,14 @@ struct X_CDirectSoundBuffer
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
     DWORD                   EmuLockOffset;
     DWORD                   EmuLockFlags;
+    // Play/Loop Region Section
+    X_DSB_TOGGLE            EmuBufferToggle;
+    DWORD                   EmuRegionLoopStartOffset;
+    DWORD                   EmuRegionLoopLength;
+    DWORD                   EmuRegionPlayStartOffset;
+    DWORD                   EmuRegionPlayLength;
+    LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
+    LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069

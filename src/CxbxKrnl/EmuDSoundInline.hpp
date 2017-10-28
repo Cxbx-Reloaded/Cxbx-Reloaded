@@ -231,8 +231,9 @@ inline void GeneratePCMFormat(
             if (lpwfxFormat->cbSize > 22) {
                 EmuWarning("WAVEFORMATEXTENSIBLE is detected!");
             }
-
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            if (pDSBufferDesc->lpwfxFormat == nullptr) {
+                pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            }
             memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
 
             dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
@@ -269,7 +270,7 @@ inline void GeneratePCMFormat(
 
             // TODO: A better response to this scenario if possible.
 
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
 
             //memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
             //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
@@ -285,7 +286,7 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
             pDSBufferDesc->dwBufferBytes = 3 * pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;
 
-            //        pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)g_MemoryManager.Allocate(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
+            //        pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
 
             ////    pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
             //        pDSBufferDesc->lpwfxFormat->nChannels = 1;
@@ -364,6 +365,173 @@ inline void DSoundGenericUnlock(
 
 }
 
+#define DSoundBufferSelectionT(pThis) \
+    ((pThis->EmuDirectSoundBuffer8Region != nullptr) ? pThis->EmuDirectSoundBuffer8Region : pThis->EmuDirectSoundBuffer8)
+
+#define DSound3DBufferSelectionT(pThis) \
+    ((pThis->EmuDirectSoundBuffer8Region != nullptr) ? pThis->EmuDirectSound3DBuffer8Region : pThis->EmuDirectSound3DBuffer8)
+
+//Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
+inline void DSoundBufferCreate(LPDSBUFFERDESC &pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
+{
+    LPDIRECTSOUNDBUFFER pTempBuffer;
+    HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
+    if (hRetDS != DS_OK) {
+        CxbxKrnlCleanup("CreateSoundBuffer Failed!");
+        pDSBufferDesc = xbnullptr;
+    } else {
+        hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
+        pTempBuffer->Release();
+        if (hRetDS != DS_OK) {
+            CxbxKrnlCleanup("Create IDirectSoundBuffer8 Failed!");
+        }
+    }
+}
+inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer) {
+    HRESULT hRetDS3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
+    if (hRetDS3D != DS_OK) {
+        EmuWarning("CreateSound3DBuffer Failed!");
+        pDS3DBuffer = nullptr;
+    }
+}
+
+#define DSoundBufferSetDefault(pThis, pdsd, dwEmuFlags, dwEmuPlayFlags) \
+    pThis->EmuDirectSoundBuffer8 = nullptr; \
+    pThis->EmuDirectSound3DBuffer8 = nullptr; \
+    pThis->EmuBuffer = xbnullptr; \
+    pThis->EmuBufferDesc = pdsd; \
+    pThis->EmuLockPtr1 = xbnullptr; \
+    pThis->EmuLockBytes1 = 0; \
+    pThis->EmuLockPtr2 = xbnullptr; \
+    pThis->EmuLockBytes2 = 0; \
+    pThis->EmuFlags = dwEmuFlags; \
+    pThis->EmuPlayFlags = dwEmuPlayFlags;
+
+inline void DSoundBufferRegionSetDefault(XTL::X_CDirectSoundBuffer *pThis) {
+    pThis->EmuBufferToggle = XTL::X_DSB_TOGGLE_DEFAULT;
+    pThis->EmuRegionLoopStartOffset = 0;
+    pThis->EmuRegionLoopLength = 0;
+    pThis->EmuRegionPlayStartOffset = 0;
+    pThis->EmuRegionPlayLength = 0;
+    pThis->EmuDirectSoundBuffer8Region = nullptr;
+    pThis->EmuDirectSound3DBuffer8Region = nullptr;
+
+}
+
+inline void DSoundBufferRegionRelease(XTL::X_CDirectSoundBuffer *pThis)
+{
+    if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
+        pThis->EmuDirectSoundBuffer8Region->Release();
+
+        if (pThis->EmuDirectSound3DBuffer8Region != nullptr) {
+            pThis->EmuDirectSound3DBuffer8Region->Release();
+        }
+    }
+
+    DSoundBufferRegionSetDefault(pThis);
+}
+
+inline void DSoundBufferTransfer(
+    LPDIRECTSOUNDBUFFER8       &pDSBufferOld,
+    LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferOld,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew)
+{
+    DWORD dwFrequency;
+    LONG lVolume, lPan;
+    DS3DBUFFER ds3dBuffer;
+
+    pDSBufferOld->GetVolume(&lVolume);
+    pDSBufferOld->GetFrequency(&dwFrequency);
+    pDSBufferOld->GetPan(&lPan);
+
+    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
+        pDS3DBufferOld->GetAllParameters(&ds3dBuffer);
+    }
+
+    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
+        HRESULT hRet3D = pDSBufferOld->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBufferOld));
+        if (hRet3D != DS_OK) {
+            EmuWarning("CreateSound3DBuffer Failed!");
+            pDS3DBufferOld = nullptr;
+        } else {
+            pDS3DBufferNew->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
+        }
+    }
+
+    pDSBufferNew->SetPan(lPan);
+    pDSBufferNew->SetFrequency(dwFrequency);
+    pDSBufferNew->SetVolume(lVolume);
+}
+
+inline void DSoundBufferReplace(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    LPDSBUFFERDESC              pDSBufferDesc,
+    DWORD                       PlayFlags,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
+{
+    DWORD refCount, dwPlayCursor, dwWriteCursor, dwStatus;
+    LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
+    LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
+
+    DSoundBufferCreate(pDSBufferDesc, pDSBufferNew);
+
+    if (pDS3DBuffer != nullptr) {
+        DSound3DBufferCreate(pDSBuffer, pDS3DBufferNew);
+    }
+
+    DSoundBufferTransfer(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
+
+    if (pDS3DBuffer != nullptr) {
+        pDS3DBuffer->Release();
+    }
+
+    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
+    }
+    hRet = pDSBuffer->GetStatus(&dwStatus);
+
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
+    }
+
+    pDSBuffer->Stop();
+
+    // TODO: Untested if transfer buffer to new audio buffer is necessary.
+    PVOID pLockPtr1Old, pLockPtr1New;
+    DWORD dwLockBytes1Old, dwLockBytes1New;
+    pDSBuffer->Lock(0, 0, &pLockPtr1Old, &dwLockBytes1Old, nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    pDSBufferNew->Lock(0, 0, &pLockPtr1New, &dwLockBytes1New, nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    if (dwLockBytes1Old > dwLockBytes1New) {
+        memcpy_s(pLockPtr1New, dwLockBytes1New, pLockPtr1Old, dwLockBytes1New);
+    } else {
+        memcpy_s(pLockPtr1New, dwLockBytes1Old, pLockPtr1Old, dwLockBytes1Old);
+    }
+    pDSBuffer->Unlock(pLockPtr1Old, dwLockBytes1Old, nullptr, 0);
+    pDSBufferNew->Unlock(pLockPtr1New, dwLockBytes1New, nullptr, 0);
+
+    pDSBufferNew->SetCurrentPosition(dwPlayCursor);
+
+    if (dwStatus & DSBSTATUS_PLAYING) {
+        pDSBufferNew->Play(0, 0, PlayFlags);
+    }
+
+    // release old buffer
+    refCount = pDSBuffer->Release();
+    if (refCount) {
+        while (pDSBuffer->Release() > 0) {}
+    }
+
+    pDSBuffer = pDSBufferNew;
+    pDS3DBuffer = pDS3DBufferNew;
+
+    if (refCount) {
+        while (pDSBuffer->AddRef() < refCount);
+    }
+}
+
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
@@ -378,75 +546,9 @@ inline void ResizeIDirectSoundBuffer(
     }
     DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, dwBytes);
 
-    DWORD dwPlayCursor, dwWriteCursor, dwStatus, refCount, dwFrequency;
-    LONG lVolume, lPan;
-    DS3DBUFFER ds3dBuffer;
-
-    pDSBuffer->GetVolume(&lVolume);
-    pDSBuffer->GetFrequency(&dwFrequency);
-    pDSBuffer->GetPan(&lPan);
-
-    if (pDS3DBuffer != xbnullptr && pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-        pDS3DBuffer->GetAllParameters(&ds3dBuffer);
-    }
-
-    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
-
-    if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
-    }
-    hRet = pDSBuffer->GetStatus(&dwStatus);
-
-    if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
-    }
-
-    if (pDS3DBuffer != xbnullptr) {
-        pDS3DBuffer->Release();
-    }
-    // release old buffer
-    refCount = pDSBuffer->Release();
-    if (refCount) {
-        while (pDSBuffer->Release() > 0) {}
-    }
     pDSBufferDesc->dwBufferBytes = dwBytes;
 
-    //Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
-    LPDIRECTSOUNDBUFFER pTempBuffer;
-    hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
-
-    if (hRet != DS_OK) {
-        CxbxKrnlCleanup("CreateSoundBuffer Failed!");
-        pDSBufferDesc = xbnullptr;
-    } else {
-        hRet = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
-        pTempBuffer->Release();
-    }
-
-    if (hRet != DS_OK) {
-        CxbxKrnlCleanup("IDirectSoundBuffer8 resize Failed!");
-    }
-    if (refCount) {
-        while (pDSBuffer->AddRef() < refCount);
-    }
-    if (pDS3DBuffer != xbnullptr && pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-        HRESULT hRet3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
-        if (hRet3D != DS_OK) {
-            EmuWarning("CreateSound3DBuffer Failed!");
-            pDS3DBuffer = xbnullptr;
-        } else {
-            pDS3DBuffer->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
-        }
-    }
-
-    pDSBuffer->SetPan(lPan);
-    pDSBuffer->SetFrequency(dwFrequency);
-    pDSBuffer->SetVolume(lVolume);
-    pDSBuffer->SetCurrentPosition(dwPlayCursor);
-
-    if (dwStatus & DSBSTATUS_PLAYING) {
-        pDSBuffer->Play(0, 0, PlayFlags);
-    }
+    DSoundBufferReplace(pDSBuffer, pDSBufferDesc, PlayFlags, pDS3DBuffer);
 }
 
 inline void DSoundBufferUpdate(
@@ -701,7 +803,7 @@ inline HRESULT HybridDirectSoundBuffer_Process(
 
     return DS_OK;
 }*/
-
+/* PlayEx is now calling to Play function instead of this hybrid function.
 //Both Play(Ex) only has one function, aka this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Play(
@@ -735,6 +837,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
 
     RETURN_RESULT_CHECK(hRet);
 }
+*/
 /*
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_PlayEx(
@@ -950,10 +1053,12 @@ inline HRESULT HybridDirectSoundBuffer_SetFilter(
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetFormat(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    LPCWAVEFORMATEX     pwfxFormat,
-    LPDSBUFFERDESC      pBufferDesc,
-    DWORD              &dwEmuFlags)
+    LPDIRECTSOUNDBUFFER8   &pDSBuffer,
+    LPCWAVEFORMATEX         pwfxFormat,
+    LPDSBUFFERDESC          pBufferDesc,
+    DWORD                  &dwEmuFlags,
+    DWORD                  &dwPlayFlags,
+    LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer)
 {
 
     enterCriticalSection;
@@ -964,7 +1069,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
         hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);
     } else {
-        //TODO: RadWolfie - Need to create a new buffer in order for this to work base on MSDN document.
+        DSoundBufferReplace(pDSBuffer, pBufferDesc, dwPlayFlags, pDS3DBuffer);
     }
 
     leaveCriticalSection;
