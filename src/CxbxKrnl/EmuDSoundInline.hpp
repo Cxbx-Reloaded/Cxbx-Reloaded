@@ -465,7 +465,7 @@ inline void DSoundBufferReplace(
     DWORD                       PlayFlags,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
 {
-    DWORD refCount, dwPlayCursor, dwWriteCursor, dwStatus;
+    DWORD refCount, dwPlayCursor, dwStatus;
     LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
     LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
 
@@ -481,19 +481,19 @@ inline void DSoundBufferReplace(
     if (pDS3DBuffer != nullptr) {
         pDS3DBuffer->Release();
     }
-
-    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
-
-    if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current position for resize reallocation!");
-    }
-    hRet = pDSBuffer->GetStatus(&dwStatus);
+    HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current status for resize reallocation!");
+        CxbxKrnlCleanup("Unable to retrieve current status for replace DS buffer!");
     }
 
     pDSBuffer->Stop();
+
+    hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, nullptr);
+
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to retrieve current position for replace DS buffer!");
+    }
 
     // TODO: Untested if transfer buffer to new audio buffer is necessary.
     PVOID pLockPtr1Old, pLockPtr1New;
