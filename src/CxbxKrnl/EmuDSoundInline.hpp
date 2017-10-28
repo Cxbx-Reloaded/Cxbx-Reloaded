@@ -420,6 +420,8 @@ inline void DSoundBufferRegionSetDefault(XTL::X_CDirectSoundBuffer *pThis) {
 
 inline void DSoundBufferRegionRelease(XTL::X_CDirectSoundBuffer *pThis)
 {
+    // NOTE: DSB Buffer8Region and 3DBuffer8Region are set
+    // to nullptr inside DSoundBufferRegionSetDefault function.
     if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
         pThis->EmuDirectSoundBuffer8Region->Release();
 
@@ -474,6 +476,7 @@ inline void DSoundBufferReplace(
 
     DSoundBufferTransfer(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
 
+    // NOTE: pDS3DBuffer will be set from almost the end of the function with pDS3DBufferNew.
     if (pDS3DBuffer != nullptr) {
         pDS3DBuffer->Release();
     }
@@ -513,6 +516,9 @@ inline void DSoundBufferReplace(
     // release old buffer
     refCount = pDSBuffer->Release();
     if (refCount) {
+        // NOTE: This is base on AddRef call, so this is a requirement.
+        // The reason is to have ability "transfer" ref count is due to some titles doesn't care about ref count.
+        // If AddRef was called, then it will "internally" increment the ref count, not the return value check.
         while (pDSBuffer->Release() > 0) {}
     }
 
