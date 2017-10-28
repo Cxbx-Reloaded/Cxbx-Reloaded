@@ -445,23 +445,15 @@ inline void DSoundBufferTransfer(
     pDSBufferOld->GetFrequency(&dwFrequency);
     pDSBufferOld->GetPan(&lPan);
 
-    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
-        pDS3DBufferOld->GetAllParameters(&ds3dBuffer);
-    }
-
-    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
-        HRESULT hRet3D = pDSBufferOld->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBufferOld));
-        if (hRet3D != DS_OK) {
-            EmuWarning("CreateSound3DBuffer Failed!");
-            pDS3DBufferOld = nullptr;
-        } else {
-            pDS3DBufferNew->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
-        }
-    }
-
     pDSBufferNew->SetPan(lPan);
     pDSBufferNew->SetFrequency(dwFrequency);
     pDSBufferNew->SetVolume(lVolume);
+
+    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
+        pDS3DBufferOld->GetAllParameters(&ds3dBuffer);
+
+        pDS3DBufferNew->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
+    }
 }
 
 inline void DSoundBufferReplace(
