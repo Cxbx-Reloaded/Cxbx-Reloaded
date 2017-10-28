@@ -331,12 +331,12 @@ inline void DSoundGenericUnlock(
     DWORD                   dwOffset,
     LPVOID                 &pLockPtr1,
     DWORD                   dwLockBytes1,
-    LPVOID                  pLockPtr2,
+    LPVOID                 &pLockPtr2,
     DWORD                   dwLockBytes2,
     DWORD                   dwLockFlags)
 {
     // close any existing locks
-    if (pLockPtr1 != nullptr) {
+    if (pLockPtr1 != xbnullptr) {
         if (dwEmuFlags & DSB_FLAG_XADPCM) {
 
             //Since it is already locked, don't even need this.
@@ -360,7 +360,8 @@ inline void DSoundGenericUnlock(
             pDSBuffer->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
         }
 
-        pLockPtr1 = 0;
+        pLockPtr1 = xbnullptr;
+        pLockPtr2 = xbnullptr;
     }
 
 }
