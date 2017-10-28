@@ -433,7 +433,7 @@ inline void DSoundBufferRegionRelease(XTL::X_CDirectSoundBuffer *pThis)
     DSoundBufferRegionSetDefault(pThis);
 }
 
-inline void DSoundBufferTransfer(
+inline void DSoundBufferTransferSettings(
     LPDIRECTSOUNDBUFFER8       &pDSBufferOld,
     LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBufferOld,
@@ -474,7 +474,7 @@ inline void DSoundBufferReplace(
         DSound3DBufferCreate(pDSBuffer, pDS3DBufferNew);
     }
 
-    DSoundBufferTransfer(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
+    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
 
     // NOTE: pDS3DBuffer will be set from almost the end of the function with pDS3DBufferNew.
     if (pDS3DBuffer != nullptr) {

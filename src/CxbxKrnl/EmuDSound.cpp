@@ -1351,7 +1351,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
         if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
             DSound3DBufferCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8Region);
         }
-        DSoundBufferTransfer(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSoundBuffer8Region,
+        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSoundBuffer8Region,
                              pThis->EmuDirectSound3DBuffer8, pThis->EmuDirectSound3DBuffer8Region);
 
         hRet = pThis->EmuDirectSoundBuffer8Region->Lock(0, 0, &pThis->EmuLockPtr1, &pThis->EmuLockBytes1, nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
@@ -1453,7 +1453,7 @@ extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
                 if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
                     pThis->EmuDirectSoundBuffer8Region->GetStatus(&dwStatus);
 
-                    DSoundBufferTransfer(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8,
+                    DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8,
                                          pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
 
                     hRet = pThis->EmuDirectSoundBuffer8Region->Stop();
