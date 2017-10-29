@@ -61,7 +61,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginPush, 5558, 10,
+OOVPA_XREF(D3DDevice_BeginPush, 5558, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)

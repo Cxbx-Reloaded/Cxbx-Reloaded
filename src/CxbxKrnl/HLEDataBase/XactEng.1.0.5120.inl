@@ -106,7 +106,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_RegisterWaveBank
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_RegisterWaveBank, 5120, 10,
+OOVPA_XREF(IXACTEngine_RegisterWaveBank, 5120, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)

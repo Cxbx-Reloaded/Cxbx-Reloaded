@@ -59,7 +59,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_DownloadEffectsImage
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 5344, 11,
+OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 5344, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -107,7 +107,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTSoundBank_PlayEx
 // ******************************************************************
-OOVPA_XREF(IXACTSoundBank_PlayEx, 5344, 11,
+OOVPA_XREF(IXACTSoundBank_PlayEx, 5344, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)

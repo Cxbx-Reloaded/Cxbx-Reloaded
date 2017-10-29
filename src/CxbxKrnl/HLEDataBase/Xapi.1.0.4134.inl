@@ -194,9 +194,13 @@ OOVPA_NO_XREF(XSetProcessQuantumLength, 4134, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * XSetProcessQuantumLength
+// * GetTypeInformation
 // ******************************************************************
-OOVPA_XREF(GetTypeInformation, 4134, 24, XREF_XAPI_GetTypeInformation, XRefZero)
+OOVPA_XREF(GetTypeInformation, 4134, 24,
+
+    XREF_XAPI_GetTypeInformation,
+    XRefZero)
+
 		{ 0x00, 0xB8 },
 		{ 0x05, 0x56 },
 		{ 0x06, 0x8B },

@@ -36,7 +36,7 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup, 4361, 8,
+OOVPA_XREF(XNetStartup, 4361, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -66,7 +66,7 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup, 4361, 9,
+OOVPA_XREF(WSAStartup, 4361, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -237,7 +237,7 @@ OOVPA_END;
 // ******************************************************************
 // * XOnlineLogon
 // ******************************************************************
-OOVPA_XREF(XOnlineLogon, 4361, 5,
+OOVPA_XREF(XOnlineLogon, 4361, 1+4,
 
     XRefNoSaveIndex,
     XRefOne)

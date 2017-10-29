@@ -67,7 +67,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetPitch
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetPitch, 5849, 12,
+OOVPA_XREF(CDirectSoundStream_SetPitch, 5849, 1+11,
 
     XRefNoSaveIndex,
     XRefOne)

@@ -77,7 +77,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_RegisterWaveBank
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_RegisterWaveBank, 4627, 8,
+OOVPA_XREF(IXACTEngine_RegisterWaveBank, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -128,7 +128,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_RegisterStreamedWaveBank
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_RegisterStreamedWaveBank, 4627, 9,
+OOVPA_XREF(IXACTEngine_RegisterStreamedWaveBank, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -166,7 +166,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_CreateSoundBank
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_CreateSoundBank, 4627, 8,
+OOVPA_XREF(IXACTEngine_CreateSoundBank, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -201,7 +201,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_DownloadEffectsImage
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 4627, 9,
+OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -238,7 +238,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_CreateSoundSource
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_CreateSoundSource, 4627, 9,
+OOVPA_XREF(IXACTEngine_CreateSoundSource, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -274,7 +274,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTSoundBank_GetSoundCueIndexFromFriendlyName
 // ******************************************************************
-OOVPA_XREF(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4627, 9,
+OOVPA_XREF(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -325,7 +325,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_RegisterNotification
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_RegisterNotification, 4627, 8,
+OOVPA_XREF(IXACTEngine_RegisterNotification, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -362,7 +362,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_GetNotification
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_GetNotification, 4627, 9,
+OOVPA_XREF(IXACTEngine_GetNotification, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -400,7 +400,7 @@ OOVPA_END;
 // ******************************************************************
 // * IXACTEngine_UnRegisterWaveBank
 // ******************************************************************
-OOVPA_XREF(IXACTEngine_UnRegisterWaveBank, 4627, 8,
+OOVPA_XREF(IXACTEngine_UnRegisterWaveBank, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)

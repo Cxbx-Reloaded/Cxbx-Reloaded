@@ -54,7 +54,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetFormat
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetFormat, 4242, 8,
+OOVPA_XREF(CDirectSoundBuffer_SetFormat, 4242, 1+7,
 
     XREF_CDirectSoundBuffer_SetFormat,
     XRefOne)
@@ -73,7 +73,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetFormat
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetFormat, 4242, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetFormat, 4242, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -92,7 +92,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetFormat
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetFormat, 4242, 9,
+OOVPA_XREF(CDirectSoundStream_SetFormat, 4242, 1+8,
 
     XREF_CDirectSoundStream_SetFormat,
     XRefOne)
@@ -130,7 +130,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetLFO
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetLFO, 4242, 8,
+OOVPA_XREF(CDirectSoundBuffer_SetLFO, 4242, 1+7,
 
     XREF_CDirectSoundBuffer_SetLFO,
     XRefOne)
@@ -167,7 +167,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetEG
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetEG, 4242, 8,
+OOVPA_XREF(CDirectSoundBuffer_SetEG, 4242, 1+7,
 
     XREF_CDirectSoundBuffer_SetEG,
     XRefOne)
@@ -237,7 +237,7 @@ OOVPA_END;
 // * IDirectSoundStream_SetFormat
 // ******************************************************************
 // Generic OOVPA as of 4___ and newer
-OOVPA_XREF(IDirectSoundStream_SetFormat, 4242, 2,
+OOVPA_XREF(IDirectSoundStream_SetFormat, 4242, 1+1,
 
     XRefNoSaveIndex,
     XRefOne)

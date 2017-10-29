@@ -328,7 +328,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 6,
+OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -410,7 +410,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 6,
+OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -619,7 +619,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY(0x19, XREF_D3DTSS_TEXCOORDINDEX), // Derived
+        XREF_ENTRY(0x19, XREF_D3D_TextureState_TexCoordIndex), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
         { 0x0D, 0xC1 },

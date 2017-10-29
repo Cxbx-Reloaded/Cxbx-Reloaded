@@ -278,8 +278,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		// Request a few fundamental XRefs to be derived instead of checked
 		XRefDataBase[XREF_D3DDEVICE] = XREF_ADDR_DERIVE;
-		XRefDataBase[XREF_D3DRS_CULLMODE] = XREF_ADDR_DERIVE;
-		XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = XREF_ADDR_DERIVE;
+		XRefDataBase[XREF_D3D_RenderState_CullMode] = XREF_ADDR_DERIVE;
+		XRefDataBase[XREF_D3D_TextureState_TexCoordIndex] = XREF_ADDR_DERIVE;
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
@@ -368,7 +368,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             int patchOffset = 0; // TODO : Rename into something understandable
 
 							// Read address of D3DRS_CULLMODE from D3DDevice_SetRenderState_CullMode
-							// TODO : Simplify this when XREF_D3DRS_CULLMODE derivation is deemed stable
+							// TODO : Simplify this when XREF_D3D_RenderState_CullMode derivation is deemed stable
 							{
 								if (BuildVersion >= 3911 && BuildVersion < 4034) {
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x25);
@@ -407,12 +407,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 								g_SymbolAddresses["D3DDEVICE"] = DerivedAddr_D3DDevice;
 
-								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
-								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE) {
-									if (XRefDataBase[XREF_D3DRS_CULLMODE] != XREF_ADDR_DERIVE)
-										CxbxPopupMessage("Second derived XREF_D3DRS_CULLMODE differs from first!");
+								// Temporary verification - is XREF_D3D_RenderState_CullMode derived correctly?
+								if (XRefDataBase[XREF_D3D_RenderState_CullMode] != DerivedAddr_D3DRS_CULLMODE) {
+									if (XRefDataBase[XREF_D3D_RenderState_CullMode] != XREF_ADDR_DERIVE)
+										CxbxPopupMessage("Second derived XREF_D3D_RenderState_CullMode differs from first!");
 
-									XRefDataBase[XREF_D3DRS_CULLMODE] = DerivedAddr_D3DRS_CULLMODE;
+									XRefDataBase[XREF_D3D_RenderState_CullMode] = DerivedAddr_D3DRS_CULLMODE;
 								}
 							}
 
@@ -421,12 +421,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							patchOffset -= Increment;
 
 							// Derive address of a few other deferred render state slots (to help xref-based function location)
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
-                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
-                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
-                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
-                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
+                            XRefDataBase[XREF_D3D_RenderState_MultiSampleMode]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
+                            XRefDataBase[XREF_D3D_RenderState_MultiSampleRenderTargetMode] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
+                            XRefDataBase[XREF_D3D_RenderState_StencilCullEnable]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
+                            XRefDataBase[XREF_D3D_RenderState_RopZCmpAlwaysRead]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
+                            XRefDataBase[XREF_D3D_RenderState_RopZRead]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
+                            XRefDataBase[XREF_D3D_RenderState_DoNotCullUncompressed] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
 
                             for(int v=0;v<44;v++) {
                                 XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
@@ -434,7 +434,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 							g_SymbolAddresses["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
 							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
-							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
+							//DbgPrintf("HLE: 0x%.08X -> XREF_D3D_RenderState_RopZCmpAlwaysRead\n", XRefDataBase[XREF_D3D_RenderState_RopZCmpAlwaysRead] );
                         } else {
                             XTL::EmuD3DDeferredRenderState = nullptr;
                             CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
@@ -457,7 +457,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								xbaddr DerivedAddr_D3DTSS_TEXCOORDINDEX = NULL;
 								int Decrement = 0x70; // TODO : Rename into something understandable
 
-								// TODO : Remove this when XREF_D3DTSS_TEXCOORDINDEX derivation is deemed stable
+								// TODO : Remove this when XREF_D3D_TextureState_TexCoordIndex derivation is deemed stable
 								{
 									if (BuildVersion >= 3911 && BuildVersion < 4034) // 0x18F180
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x11);
@@ -466,13 +466,13 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									else
 										DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x19);
 
-									// Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
-									if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != DerivedAddr_D3DTSS_TEXCOORDINDEX) {
-                                        if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != XREF_ADDR_DERIVE) {
-                                            CxbxPopupMessage("Second derived XREF_D3DTSS_TEXCOORDINDEX differs from first!");
+									// Temporary verification - is XREF_D3D_TextureState_TexCoordIndex derived correctly?
+									if (XRefDataBase[XREF_D3D_TextureState_TexCoordIndex] != DerivedAddr_D3DTSS_TEXCOORDINDEX) {
+                                        if (XRefDataBase[XREF_D3D_TextureState_TexCoordIndex] != XREF_ADDR_DERIVE) {
+                                            CxbxPopupMessage("Second derived XREF_D3D_TextureState_TexCoordIndex differs from first!");
                                         }
 
-										XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = DerivedAddr_D3DTSS_TEXCOORDINDEX;
+										XRefDataBase[XREF_D3D_TextureState_TexCoordIndex] = DerivedAddr_D3DTSS_TEXCOORDINDEX;
 									}
 								}
 

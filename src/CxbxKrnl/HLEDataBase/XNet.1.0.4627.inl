@@ -76,7 +76,7 @@ OOVPA_END;
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup, 4627, 8,
+OOVPA_XREF(XNetStartup, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -106,7 +106,7 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup, 4627, 9,
+OOVPA_XREF(WSAStartup, 4627, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)

@@ -835,7 +835,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginPush, 5028, 10,
+OOVPA_XREF(D3DDevice_BeginPush, 5028, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -904,7 +904,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_IsFencePending
 // ******************************************************************
-OOVPA_XREF(D3DDevice_IsFencePending, 5028, 6,
+OOVPA_XREF(D3DDevice_IsFencePending, 5028, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

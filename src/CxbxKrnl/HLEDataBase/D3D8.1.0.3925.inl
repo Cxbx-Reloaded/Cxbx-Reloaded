@@ -646,7 +646,7 @@ OOVPA_END;
 // * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
 #if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
-OOVPA_XREF(D3DDevice_GetTexture2, 3911, 1 + 21, // Also for 4361
+OOVPA_XREF(D3DDevice_GetTexture2, 3911, 1+21, // Also for 4361
 
 	XRefNoSaveIndex,
 	XRefOne)
@@ -1349,7 +1349,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 3925, 1+11,
 	XRefNoSaveIndex,
 	XRefOne)
 
-		XREF_ENTRY(0x11, XREF_D3DTSS_TEXCOORDINDEX), // Derived
+		XREF_ENTRY(0x11, XREF_D3D_TextureState_TexCoordIndex), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x0B : shl eax, 0x07
         { 0x0B, 0xC1 },
@@ -1455,7 +1455,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 3925, 2+15,
     XRefTwo)
 
         XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
-        XREF_ENTRY(0x25, XREF_D3DRS_CULLMODE), // Derived
+        XREF_ENTRY(0x25, XREF_D3D_RenderState_CullMode), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x42 : mov dword ptr [eax+8], 0x4039C
         { 0x42, 0xC7 },
@@ -2877,12 +2877,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilCullEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 3925, 8,
+OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 3925, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x0D, XREF_D3DRS_STENCILCULLENABLE ),
+        XREF_ENTRY( 0x0D, XREF_D3D_RenderState_StencilCullEnable ),
 
         { 0x0B, 0x56 },
         { 0x16, 0x8B },
@@ -3133,13 +3133,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_LightEnable, 3911, 1 + 24,// valid upto at least 4627, next known difference is from 5028 onwards
+OOVPA_XREF(D3DDevice_LightEnable, 3911, 2+24,// valid upto at least 4627, next known difference is from 5028 onwards
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 	XREF_ENTRY(0x0B, XREF_D3DDEVICE),
-	//XREF_ENTRY(0x67, XREF_D3DDEVICE_SETLIGHT),
+	XREF_ENTRY(0x67, XREF_D3DDevice_SetLight),
 
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },
@@ -3544,13 +3544,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, 9,
+OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ),
+        XREF_ENTRY( 0x05, XREF_D3D_RenderState_RopZCmpAlwaysRead ),
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -3571,13 +3571,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZRead
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_RopZRead, 3925, 9,
+OOVPA_XREF(D3DDevice_SetRenderState_RopZRead, 3925, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZREAD ),
+        XREF_ENTRY( 0x05, XREF_D3D_RenderState_RopZRead ),
 
         // D3DDevice_SetRenderState_RopZRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -3598,13 +3598,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_DoNotCullUncompressed
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_DoNotCullUncompressed, 3925, 9,
+OOVPA_XREF(D3DDevice_SetRenderState_DoNotCullUncompressed, 3925, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        XREF_ENTRY( 0x05, XREF_D3DRS_DONOTCULLUNCOMPRESSED ),
+        XREF_ENTRY( 0x05, XREF_D3D_RenderState_DoNotCullUncompressed ),
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -3680,7 +3680,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_InsertFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_InsertFence, 3925, 5,
+OOVPA_XREF(D3DDevice_InsertFence, 3925, 1+4,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3756,7 +3756,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 3925, 8,
+OOVPA_XREF(D3DDevice_BlockOnFence, 3925, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3934,7 +3934,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DResource_BlockUntilNotBusy
 // ******************************************************************
-OOVPA_XREF(D3DResource_BlockUntilNotBusy, 3925, 2,
+OOVPA_XREF(D3DResource_BlockUntilNotBusy, 3925, 1+1,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3974,7 +3974,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginStateBlock, 3911, 7,
+OOVPA_XREF(D3DDevice_BeginStateBlock, 3911, 1+6,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -4043,7 +4043,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_EndStateBlock, 3911, 6,
+OOVPA_XREF(D3DDevice_EndStateBlock, 3911, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

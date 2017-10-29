@@ -135,7 +135,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
 	XRefTwo)
 
 		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
-		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3D_RenderState_CullMode), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308
         { 0x19, 0xC7 },
@@ -397,12 +397,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 8,
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ),
+        XREF_ENTRY( 0x0B, XREF_D3D_RenderState_MultiSampleRenderTargetMode ),
 
         { 0x03, 0x04 },
         { 0x0F, 0x8B },
@@ -436,7 +436,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 6,
+OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

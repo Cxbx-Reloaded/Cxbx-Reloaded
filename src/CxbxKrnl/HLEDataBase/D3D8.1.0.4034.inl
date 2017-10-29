@@ -218,7 +218,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 2+14,
 	XRefTwo)
 
 		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
-		XREF_ENTRY(0x2B, XREF_D3DRS_CULLMODE), // Derived
+		XREF_ENTRY(0x2B, XREF_D3D_RenderState_CullMode), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x00 : push esi
         { 0x00, 0x56 },
@@ -1144,7 +1144,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4034, 1+10,
 	XRefNoSaveIndex,
 	XRefOne)
 
-		XREF_ENTRY(0x18, XREF_D3DTSS_TEXCOORDINDEX), // Derived
+		XREF_ENTRY(0x18, XREF_D3D_TextureState_TexCoordIndex), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x13 : shl eax, 0x07
         { 0x13, 0xC1 },
@@ -1329,7 +1329,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateImageSurface
 // ******************************************************************
-OOVPA_XREF(D3DDevice_CreateImageSurface, 4034, 2,
+OOVPA_XREF(D3DDevice_CreateImageSurface, 4034, 1+1,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2049,13 +2049,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilCullEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4034, 13,
+OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4034, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x0C : D3D__RenderState[D3DRS_STENCILCULLENABLE]
-        XREF_ENTRY( 0x0C, XREF_D3DRS_STENCILCULLENABLE ),
+        XREF_ENTRY( 0x0C, XREF_D3D_RenderState_StencilCullEnable ),
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x15 : jb +0x05
         { 0x15, 0x72 },
@@ -2400,7 +2400,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 4039, 8,
+OOVPA_XREF(D3DDevice_BlockOnFence, 4039, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2526,7 +2526,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_IsFencePending
 // ******************************************************************
-OOVPA_XREF(D3DDevice_IsFencePending, 4039, 6,
+OOVPA_XREF(D3DDevice_IsFencePending, 4039, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)
