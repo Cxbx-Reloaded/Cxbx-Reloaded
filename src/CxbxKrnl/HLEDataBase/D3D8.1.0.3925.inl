@@ -3133,13 +3133,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_LightEnable, 3911, 1+24,// valid upto at least 4627, next known difference is from 5028 onwards
+OOVPA_XREF(D3DDevice_LightEnable, 3911, 2+24,// valid upto at least 4627, next known difference is from 5028 onwards
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 	XREF_ENTRY(0x0B, XREF_D3DDEVICE),
-	//XREF_ENTRY(0x67, XREF_D3DDEVICE_SETLIGHT),
+	XREF_ENTRY(0x67, XREF_D3DDevice_SetLight),
 
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },

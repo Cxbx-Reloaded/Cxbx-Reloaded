@@ -131,7 +131,10 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetLight, 5344, 15)
+OOVPA_XREF(D3DDevice_SetLight, 5344, 15,
+
+    XREF_D3DDevice_SetLight,
+    XRefZero)
 
         // D3DDevice_SetLight+0x1f : add REG, 0x10
         { 0x1F, 0x83 },
@@ -274,13 +277,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_LightEnable, 5344, 1+24,
+OOVPA_XREF(D3DDevice_LightEnable, 5344, 2+24,
 
 	XRefNoSaveIndex,
-	XRefOne)
+	XRefTwo)
 
 	XREF_ENTRY(0x0B, XREF_D3DDEVICE),
-	//XREF_ENTRY(0x67, XREF_D3DDEVICE_SETLIGHT),
+	XREF_ENTRY(0x67, XREF_D3DDevice_SetLight),
 
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },

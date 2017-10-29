@@ -93,6 +93,7 @@ enum XRefDataBaseOffset
     XREF_D3DRS_ROPZREAD,
     XREF_D3DRS_DONOTCULLUNCOMPRESSED,
     XREF_D3DRS_STENCILCULLENABLE,
+    XREF_D3DDevice_SetLight,
     XREF_D3DDevice_LazySetStateVB,
     XREF_D3D_BlockOnResource,
     XREF_D3D_BlockOnTime,
