@@ -993,7 +993,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 1+6,
     XRefNoSaveIndex,
     XRefOne)
 
-	XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ),
+	XREF_ENTRY( 0x05, XREF_D3D_RenderState_RopZCmpAlwaysRead ),
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },
