@@ -1329,7 +1329,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateImageSurface
 // ******************************************************************
-OOVPA_XREF(D3DDevice_CreateImageSurface, 4034, 2,
+OOVPA_XREF(D3DDevice_CreateImageSurface, 4034, 1+1,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2049,7 +2049,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilCullEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4034, 13,
+OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4034, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2400,7 +2400,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 4039, 8,
+OOVPA_XREF(D3DDevice_BlockOnFence, 4039, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2526,7 +2526,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_IsFencePending
 // ******************************************************************
-OOVPA_XREF(D3DDevice_IsFencePending, 4039, 6,
+OOVPA_XREF(D3DDevice_IsFencePending, 4039, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

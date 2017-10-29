@@ -338,7 +338,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderTarget, 4627, 13,
+OOVPA_XREF(D3DDevice_SetRenderTarget, 4627, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -462,7 +462,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetBackBuffer
 // ******************************************************************
-OOVPA_XREF(D3DDevice_GetBackBuffer, 4627, 11,
+OOVPA_XREF(D3DDevice_GetBackBuffer, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -516,7 +516,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetRenderTarget
 // ******************************************************************
-OOVPA_XREF(D3DDevice_GetRenderTarget, 4627, 13,
+OOVPA_XREF(D3DDevice_GetRenderTarget, 4627, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -541,7 +541,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetRenderTarget2
 // ******************************************************************
-OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 9,
+OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 1+8,
 
     XREF_D3DDevice_GetRenderTarget2,
     XRefOne)
@@ -574,7 +574,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface
 // ******************************************************************
-OOVPA_XREF(D3DDevice_GetDepthStencilSurface, 4627, 11,
+OOVPA_XREF(D3DDevice_GetDepthStencilSurface, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -715,7 +715,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTile
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetTile, 4627, 3,
+OOVPA_XREF(D3DDevice_SetTile, 4627, 1+2,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -746,7 +746,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateIndexBuffer
 // ******************************************************************
-OOVPA_XREF(D3DDevice_CreateIndexBuffer, 4627, 11,
+OOVPA_XREF(D3DDevice_CreateIndexBuffer, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1476,7 +1476,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreateVertexBuffer
 // ******************************************************************
-OOVPA_XREF(D3DDevice_CreateVertexBuffer, 4627, 13,
+OOVPA_XREF(D3DDevice_CreateVertexBuffer, 4627, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2007,7 +2007,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DVertexBuffer_Lock
 // ******************************************************************
-OOVPA_XREF(D3DVertexBuffer_Lock, 4627, 26,
+OOVPA_XREF(D3DVertexBuffer_Lock, 4627, 1+25,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2208,7 +2208,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DTexture_GetSurfaceLevel
 // ******************************************************************
-OOVPA_XREF(D3DTexture_GetSurfaceLevel, 4627, 13,
+OOVPA_XREF(D3DTexture_GetSurfaceLevel, 4627, 1+12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2351,7 +2351,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndPush
 // ******************************************************************
-OOVPA_XREF(D3DDevice_EndPush, 4627, 12,
+OOVPA_XREF(D3DDevice_EndPush, 4627, 1+11,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2777,7 +2777,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_KickPushBuffer
 // ******************************************************************
-OOVPA_XREF(D3DDevice_KickPushBuffer, 4627, 4,
+OOVPA_XREF(D3DDevice_KickPushBuffer, 4627, 1+3,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3048,7 +3048,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4627, 11,
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3166,7 +3166,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 4627, 8,
+OOVPA_XREF(D3DDevice_BlockOnFence, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3315,7 +3315,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_CreatePalette
 // ******************************************************************
-OOVPA_XREF(D3DDevice_CreatePalette, 4627, 11,
+OOVPA_XREF(D3DDevice_CreatePalette, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3355,7 +3355,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DPalette_Lock
 // ******************************************************************
-OOVPA_XREF(D3DPalette_Lock, 4627, 8,
+OOVPA_XREF(D3DPalette_Lock, 4627, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3721,7 +3721,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3DVertexBuffer8_Lock
 // ******************************************************************
-OOVPA_XREF(IDirect3DVertexBuffer8_Lock, 4627, 11,
+OOVPA_XREF(IDirect3DVertexBuffer8_Lock, 4627, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)

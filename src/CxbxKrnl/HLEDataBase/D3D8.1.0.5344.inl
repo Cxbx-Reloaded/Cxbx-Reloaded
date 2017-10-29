@@ -181,7 +181,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 8,
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1250,7 +1250,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginPush, 5344, 10,
+OOVPA_XREF(D3DDevice_BeginPush, 5344, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)

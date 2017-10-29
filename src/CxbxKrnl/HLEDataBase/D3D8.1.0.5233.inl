@@ -397,7 +397,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 8,
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -436,7 +436,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 6,
+OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

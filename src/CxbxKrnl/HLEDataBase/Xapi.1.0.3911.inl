@@ -466,7 +466,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputClose
 // ******************************************************************
-OOVPA_XREF(XInputClose, 3911, 8,
+OOVPA_XREF(XInputClose, 3911, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)

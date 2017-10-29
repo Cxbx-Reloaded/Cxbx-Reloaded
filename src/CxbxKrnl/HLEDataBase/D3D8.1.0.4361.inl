@@ -328,7 +328,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 6,
+OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -410,7 +410,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndStateBlock
 // ******************************************************************
-OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 6,
+OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)

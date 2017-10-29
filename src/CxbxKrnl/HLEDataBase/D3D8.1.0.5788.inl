@@ -435,7 +435,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 7,
+OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 1+6,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -729,7 +729,7 @@ OOVPA_END;
 // ******************************************************************
 // * FOR DEBUGGING ONLY!
 // ******************************************************************
-OOVPA_XREF(D3D_Unknown, 5788, 6,
+OOVPA_XREF(D3D_Unknown, 5788, 1+5,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -988,7 +988,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 7,
+OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 1+6,
 
     XRefNoSaveIndex,
     XRefOne)

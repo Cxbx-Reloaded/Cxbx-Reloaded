@@ -87,7 +87,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_DoWork
 // ******************************************************************
-OOVPA_XREF(CDirectSound_DoWork, 3936, 9,
+OOVPA_XREF(CDirectSound_DoWork, 3936, 1+8,
 
     XREF_CDirectSound_DoWork,
     XRefOne)
@@ -114,7 +114,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSoundDoWork
 // ******************************************************************
-OOVPA_XREF(DirectSoundDoWork, 3936, 9,
+OOVPA_XREF(DirectSoundDoWork, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -175,7 +175,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_CreateSoundStream
 // ******************************************************************
-OOVPA_XREF(IDirectSound_CreateSoundStream, 3936, 10,
+OOVPA_XREF(IDirectSound_CreateSoundStream, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -244,7 +244,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_CreateSoundBuffer
 // ******************************************************************
-OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 10,
+OOVPA_XREF(IDirectSound_CreateSoundBuffer, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -323,7 +323,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetPitch
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetPitch, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetPitch, 3936, 1+11,
 
     XREF_DSBUFFERSETPITCHA,
     XRefOne)
@@ -355,7 +355,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetPitch
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetPitch, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetPitch, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -416,7 +416,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::GetStatus
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_GetStatus, 3936, 10,
+OOVPA_XREF(CDirectSoundBuffer_GetStatus, 3936, 1+9,
 
     XREF_CDirectSoundBuffer_GetStatus,
     XRefOne)
@@ -444,7 +444,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_GetStatus
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_GetStatus, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_GetStatus, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -499,7 +499,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetVolume, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetVolume, 3936, 1+11,
 
     XREF_CDirectSoundVoice_SetVolume,
     XRefOne)
@@ -531,7 +531,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetVolume
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetVolume, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetVolume, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -586,7 +586,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetCurrentPosition, 3936, 12,
+OOVPA_XREF(CDirectSoundBuffer_SetCurrentPosition, 3936, 1+11,
 
     XREF_CDirectSoundBuffer_SetCurrentPosition,
     XRefOne)
@@ -618,7 +618,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetCurrentPosition, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetCurrentPosition, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -675,7 +675,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetLoopRegion, 3925, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetLoopRegion, 3925, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -729,7 +729,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_Lock
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_Lock, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_Lock, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -756,7 +756,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetHeadroom
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 3936, 1+11,
 
     XREF_CDirectSoundVoice_SetHeadroom,
     XRefOne)
@@ -790,7 +790,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -843,7 +843,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetBufferData
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -908,7 +908,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetMixBins
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetMixBins, 3936, 9,
+OOVPA_XREF(CDirectSoundVoice_SetMixBins, 3936, 1+8,
 
     XREF_CDirectSoundVoice_SetMixBins,
     XRefOne)
@@ -935,7 +935,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetMixBins
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMixBins, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetMixBins, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -963,7 +963,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMixBins
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1018,7 +1018,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_GetCurrentPosition,
     XRefOne)
@@ -1045,7 +1045,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_GetCurrentPosition, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_GetCurrentPosition, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1089,7 +1089,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_Play
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_Play, 3936, 16,
+OOVPA_XREF(IDirectSoundBuffer_Play, 3936, 1+15,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1127,7 +1127,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_Play
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_Play, 3936, 12,
+OOVPA_XREF(IDirectSoundBuffer_Play, 3936, 1+11,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1189,7 +1189,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetVolume, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetVolume, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1239,7 +1239,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetAllParameters
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetAllParameters, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetAllParameters, 3936, 1+11,
 
     XREF_CDirectSoundVoice_SetAllParameters,
     XRefOne)
@@ -1269,7 +1269,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetAllParameters
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetAllParameters, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetAllParameters, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1325,7 +1325,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetConeAngles
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetConeAngles, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetConeAngles, 3936, 1+11,
 
     XREF_CDirectSoundVoice_SetConeAngles,
     XRefOne)
@@ -1355,7 +1355,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetConeAngles
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetConeAngles, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetConeAngles, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1411,7 +1411,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetConeOutsideVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetConeOutsideVolume, 3936, 12,
+OOVPA_XREF(CDirectSoundVoice_SetConeOutsideVolume, 3936, 1+11,
 
     XREF_CDirectSoundVoice_SetConeOutsideVolume,
     XRefOne)
@@ -1441,7 +1441,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetConeOutsideVolume
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetConeOutsideVolume, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetConeOutsideVolume, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1497,7 +1497,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetMaxDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetMaxDistance, 3936, 15,
+OOVPA_XREF(CDirectSoundVoice_SetMaxDistance, 3936, 1+14,
 
     XREF_CDirectSoundVoice_SetMaxDistance,
     XRefOne)
@@ -1534,7 +1534,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetMaxDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMaxDistance, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetMaxDistance, 3936, 1+9,
 
     XREF_CDirectSoundStream_SetMaxDistance,
     XRefOne)
@@ -1562,7 +1562,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetMaxDistance
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetMaxDistance, 3936, 11,
+OOVPA_XREF(IDirectSoundStream_SetMaxDistance, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1619,7 +1619,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetMinDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetMinDistance, 3936, 15,
+OOVPA_XREF(CDirectSoundVoice_SetMinDistance, 3936, 1+14,
 
     XREF_CDirectSoundVoice_SetMinDistance,
     XRefOne)
@@ -1656,7 +1656,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetMinDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMinDistance, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetMinDistance, 3936, 1+9,
 
     XREF_CDirectSoundStream_SetMinDistance,
     XRefOne)
@@ -1684,7 +1684,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetMinDistance
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetMinDistance, 3936, 11,
+OOVPA_XREF(IDirectSoundStream_SetMinDistance, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1741,7 +1741,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetVelocity
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetVelocity, 3936, 14,
+OOVPA_XREF(CDirectSoundVoice_SetVelocity, 3936, 1+13,
 
     XREF_CDirectSoundVoice_SetVelocity,
     XRefOne)
@@ -1776,7 +1776,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetVelocity
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetVelocity, 3936, 9,
+OOVPA_XREF(CDirectSoundStream_SetVelocity, 3936, 1+8,
 
     XREF_CDirectSoundStream_SetVelocity,
     XRefOne)
@@ -1803,7 +1803,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetVelocity
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetVelocity, 3936, 9,
+OOVPA_XREF(IDirectSoundStream_SetVelocity, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1830,7 +1830,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetVelocity
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetVelocity, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_SetVelocity, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_SetVelocity,
     XRefOne)
@@ -1857,7 +1857,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetVelocity
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetVelocity, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetVelocity, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1911,7 +1911,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetConeOrientation, 3936, 14,
+OOVPA_XREF(CDirectSoundVoice_SetConeOrientation, 3936, 1+13,
 
     XREF_CDirectSoundVoice_SetConeOrientation,
     XRefOne)
@@ -1947,7 +1947,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetConeOrientation, 3936, 9,
+OOVPA_XREF(CDirectSoundStream_SetConeOrientation, 3936, 1+8,
 
     XREF_CDirectSoundStream_SetConeOrientation,
     XRefOne)
@@ -1974,7 +1974,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetConeOrientation, 3936, 9,
+OOVPA_XREF(IDirectSoundStream_SetConeOrientation, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2028,7 +2028,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetPosition, 3936, 14,
+OOVPA_XREF(CDirectSoundVoice_SetPosition, 3936, 1+13,
 
     XREF_CDirectSoundVoice_SetPosition,
     XRefOne)
@@ -2064,7 +2064,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetPosition, 3936, 9,
+OOVPA_XREF(CDirectSoundStream_SetPosition, 3936, 1+8,
 
     XREF_CDirectSoundStream_SetPosition,
     XRefOne)
@@ -2091,7 +2091,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundStream_SetPosition
 // ******************************************************************
-OOVPA_XREF(IDirectSoundStream_SetPosition, 3936, 9,
+OOVPA_XREF(IDirectSoundStream_SetPosition, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2118,7 +2118,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetPosition, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_SetPosition, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_SetPosition,
     XRefOne)
@@ -2145,7 +2145,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetPosition
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetPosition, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetPosition, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2201,7 +2201,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice_SetFrequency
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetFrequency, 3936, 9,
+OOVPA_XREF(CDirectSoundVoice_SetFrequency, 3936, 1+8,
 
     XREF_CDirectSoundVoice_SetFrequency,
     XRefOne)
@@ -2228,7 +2228,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetFrequency
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetFrequency, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetFrequency, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2256,7 +2256,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetFrequency
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetFrequency, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2310,7 +2310,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetMode
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetMode, 3936, 10,
+OOVPA_XREF(CDirectSoundVoice_SetMode, 3936, 1+9,
 
     XREF_CDirectSoundVoice_SetMode,
     XRefOne)
@@ -2338,7 +2338,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMode
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMode, 3936, 10,
+OOVPA_XREF(IDirectSoundBuffer_SetMode, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2366,7 +2366,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetRolloffFactor
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetRolloffFactor, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetRolloffFactor, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2415,7 +2415,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetHeadroom
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetHeadroom, 3936, 10,
+OOVPA_XREF(CDirectSoundStream_SetHeadroom, 3936, 1+9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2500,7 +2500,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_CommitDeferredSettings
 // ******************************************************************
-OOVPA_XREF(CDirectSound_CommitDeferredSettings, 3936, 10,
+OOVPA_XREF(CDirectSound_CommitDeferredSettings, 3936, 1+9,
 
     XREF_CDirectSound_CommitDeferredSettings,
     XRefOne)
@@ -2530,7 +2530,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_CommitDeferredSettings
 // ******************************************************************
-OOVPA_XREF(IDirectSound_CommitDeferredSettings, 3936, 8,
+OOVPA_XREF(IDirectSound_CommitDeferredSettings, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2610,7 +2610,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_SetDistanceFactor
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetDistanceFactor, 3936, 12,
+OOVPA_XREF(CDirectSound_SetDistanceFactor, 3936, 1+11,
 
     XREF_CDirectSound_SetDistanceFactor,
     XRefOne)
@@ -2640,7 +2640,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetDistanceFactor
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetDistanceFactor, 3936, 11,
+OOVPA_XREF(IDirectSound_SetDistanceFactor, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2702,7 +2702,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_SetRolloffFactor
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetRolloffFactor, 3936, 12,
+OOVPA_XREF(CDirectSound_SetRolloffFactor, 3936, 1+11,
 
     XREF_CDirectSound_SetRolloffFactor,
     XRefOne)
@@ -2732,7 +2732,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetRolloffFactor
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetRolloffFactor, 3936, 11,
+OOVPA_XREF(IDirectSound_SetRolloffFactor, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2793,7 +2793,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_SetMixBinHeadroom
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 3936, 9,
+OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 3936, 1+8,
 
     XREF_CDirectSound_SetMixBinHeadroom,
     XRefOne)
@@ -2820,7 +2820,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetMixBinHeadroom
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetMixBinHeadroom, 3936, 12,
+OOVPA_XREF(IDirectSound_SetMixBinHeadroom, 3936, 1+11,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2880,7 +2880,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_SetPosition
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetPosition, 3936, 10,
+OOVPA_XREF(CDirectSound_SetPosition, 3936, 1+9,
 
     XREF_CDirectSound_SetPosition,
     XRefOne)
@@ -2908,7 +2908,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetPosition
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetPosition, 3936, 11,
+OOVPA_XREF(IDirectSound_SetPosition, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2967,7 +2967,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_SetVelocity
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetVelocity, 3936, 10,
+OOVPA_XREF(CDirectSound_SetVelocity, 3936, 1+9,
 
     XREF_CDirectSound_SetVelocity,
     XRefOne)
@@ -2995,7 +2995,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetVelocity
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetVelocity, 3936, 11,
+OOVPA_XREF(IDirectSound_SetVelocity, 3936, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3055,7 +3055,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetAllParametersA
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetAllParametersA, 3936, 10,
+OOVPA_XREF(CDirectSound_SetAllParametersA, 3936, 1+9,
 
     XREF_CDirectSound_SetAllParameters,
     XRefOne)
@@ -3109,7 +3109,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_SetMode
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMode, 3936, 7,
+OOVPA_XREF(CDirectSoundStream_SetMode, 3936, 1+6,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3172,7 +3172,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetDopplerFactor
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetDopplerFactor, 3936, 9,
+OOVPA_XREF(CDirectSound_SetDopplerFactor, 3936, 1+8,
 
     XREF_CDirectSound_SetDopplerFactor,
     XRefOne)
@@ -3193,7 +3193,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetDopplerFactor
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetDopplerFactor, 3936, 8,
+OOVPA_XREF(IDirectSound_SetDopplerFactor, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3249,7 +3249,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSoundUseFullHRTF
 // ******************************************************************
-OOVPA_XREF(DirectSoundUseFullHRTF, 3925, 8,
+OOVPA_XREF(DirectSoundUseFullHRTF, 3925, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3288,7 +3288,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_GetCaps
 // ******************************************************************
-OOVPA_XREF(IDirectSound_GetCaps, 3936, 8,
+OOVPA_XREF(IDirectSound_GetCaps, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3327,7 +3327,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetPitch
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetPitch, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetPitch, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3366,7 +3366,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetConeAngles
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetConeAngles, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetConeAngles, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3404,7 +3404,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::PlayEx
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_PlayEx, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_PlayEx, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_PlayEx,
     XRefOne)
@@ -3425,7 +3425,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_PlayEx
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_PlayEx, 3936, 8,
+OOVPA_XREF(IDirectSoundBuffer_PlayEx, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3511,7 +3511,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetMinDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_SetMinDistance,
     XRefOne)
@@ -3532,7 +3532,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 3911, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 3911, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3552,7 +3552,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetMaxDistance
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 3936, 9,
+OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 3936, 1+8,
 
     XREF_CDirectSoundBuffer_SetMaxDistance,
     XRefOne)
@@ -3573,7 +3573,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 3911, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 3911, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3635,7 +3635,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetI3DL2Source
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 3936, 9,
+OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 3936, 1+8,
 
     XREF_CDirectSoundVoice_SetI3DL2Source,
     XRefOne)
@@ -3656,7 +3656,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3695,7 +3695,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes_12, 3911, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetMixBinVolumes_12, 3911, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3734,7 +3734,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetAllParameters
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetAllParameters, 3936, 9,
+OOVPA_XREF(CDirectSound_SetAllParameters, 3936, 1+8,
 
     XREF_CDirectSound_SetAllParameters,
     XRefOne)
@@ -3755,7 +3755,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetAllParameters
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetAllParameters, 3936, 9,
+OOVPA_XREF(IDirectSound_SetAllParameters, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3794,7 +3794,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_SetI3DL2Listener
 // ******************************************************************
-OOVPA_XREF(IDirectSound_SetI3DL2Listener, 3936, 9,
+OOVPA_XREF(IDirectSound_SetI3DL2Listener, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3832,7 +3832,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
 // ******************************************************************
-OOVPA_XREF(IDirectSound_EnableHeadphones, 3936, 8,
+OOVPA_XREF(IDirectSound_EnableHeadphones, 3936, 1+7,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3852,7 +3852,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetMixBinVolumes
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_12, 3936, 9,
+OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_12, 3936, 1+8,
 
     XREF_CDirectSoundStream_SetMixBinVolumes_12,
     XRefOne)
@@ -3873,7 +3873,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetI3DL2Source
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetI3DL2Source, 3936, 9,
+OOVPA_XREF(CDirectSoundStream_SetI3DL2Source, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3912,7 +3912,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions, 3936, 1+8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3947,7 +3947,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer::SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 3936, 11,
+OOVPA_XREF(CDirectSoundBuffer_SetConeOrientation, 3936, 1+10,
 
     XREF_CDirectSoundBuffer_SetConeOrientation,
     XRefOne)
@@ -3975,7 +3975,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetConeOrientation
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetConeOrientation, 3936, 9,
+OOVPA_XREF(IDirectSoundBuffer_SetConeOrientation, 3936, 1+8,
 
            XRefNoSaveIndex,
            XRefOne)
