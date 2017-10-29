@@ -124,7 +124,6 @@ enum XRefDataBaseOffset
     XREF_CDirectSound_SetRolloffFactor,
     XREF_CMcpxAPU_Set3dRolloffFactor,
     XREF_CDirectSound_SetDopplerFactor,
-    XREF_SETBUFFERDATA,
 	XREF_CMcpxBuffer_SetCurrentPosition,
 	XREF_CDirectSoundBuffer_SetCurrentPosition,
 	XREF_CMcpxBuffer_GetCurrentPosition,
@@ -159,14 +158,11 @@ enum XRefDataBaseOffset
     XREF_CDirectSound_EnableHeadphones,
     XREF_CDirectSound_SynchPlayback,
     XREF_CMcpxAPU_SynchPlayback,
-    XREF_DSSETI3DL2SOURCE1A,
-    XREF_DSSETI3DL2SOURCE2A,
     XREF_CMcpxVoiceClient_SetPitch,
     XREF_CDirectSoundVoice_SetPitch,
     XREF_CDirectSoundBuffer_SetPitch,
     XREF_CDirectSoundStream_SetPitch,
     XREF_CMcpxVoiceClient_SetVolume,
-    XREF_DSBUFFERSETLOOPREGIONA,
     XREF_CDirectSoundBuffer_SetPlayRegion,
     XREF_CDirectSoundBuffer_Lock,
     XREF_CDirectSoundVoice_SetHeadroom,
@@ -184,7 +180,6 @@ enum XRefDataBaseOffset
     XREF_CMcpxVoiceClient_Set3dConeOutsideVolume,
     XREF_CDirectSoundVoice_SetAllParameters,
     XREF_CMcpxVoiceClient_Set3dParameters,
-    XREF_DSSTREAMSETALLPARAMETERS1C,
     XREF_CDirectSoundStream_SetVelocity,
     XREF_CDirectSoundVoice_SetVelocity,
     XREF_CMcpxVoiceClient_Set3dVelocity,
@@ -197,9 +192,6 @@ enum XRefDataBaseOffset
     XREF_CMcpxStream_Flush,
     XREF_CMcpxStream_Discontinuity,
     XREF_XAudioCalculatePitch,
-    XREF_DSSTREAMSETROLLOFFFACTOR1A,
-    XREF_DSSTREAMSETROLLOFFFACTOR1B,
-    XREF_GET2DSURFACEDESCB,
     XREF_D3D_CommonSetRenderTarget,
     XREF_CDirectSound_CommitDeferredSettings,
     XREF_CMcpxAPU_Commit3dSettings,
@@ -210,7 +202,6 @@ enum XRefDataBaseOffset
     // DSOUND
     XREF_DS_CRefCount_AddRef,
     XREF_DS_CRefCount_Release,
-    XREF_DSVOICESETMAXDISTANCE,
     XREF_CDirectSoundVoice_SetRolloffCurve,
     XREF_CDirectSoundVoice_SetRolloffFactor,
     XREF_CDirectSoundVoice_SetDistanceFactor,
@@ -316,12 +307,6 @@ enum XRefDataBaseOffset
 
     // XAPI
 	XREF_XAPI_GetTypeInformation,
-    /* not necessary?
-    XREF_XAPIXCALCULATESIGNATUREBEGINEX
-    //*/
-    // +s
-//	XREF_XLoadSectionByHandle,
-//	XREF_XFreeSectionByHandle,
 
 	XREF_COUNT // XREF_COUNT must always be last.
 	// Also, if XREF_COUNT > sizeof(uint16), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
