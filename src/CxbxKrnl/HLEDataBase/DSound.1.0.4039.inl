@@ -1330,7 +1330,7 @@ OOVPA_END;
 // * CDirectSoundVoice::SetMixBinVolumes
 // ******************************************************************
 // Generic OOVPA as of 4039 and newer.
-OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 4039, 15,
+OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 4039, 2+13,
 
     XREF_CDirectSoundVoice_SetMixBinVolumes,
     XRefTwo)

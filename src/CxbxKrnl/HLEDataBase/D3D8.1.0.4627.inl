@@ -2794,7 +2794,7 @@ OOVPA_END;
 // * D3DDevice_GetTexture2
 // ******************************************************************
 #if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
-OOVPA_XREF(D3DDevice_GetTexture2, 4627, 1 + 21, // Also for 5344, 5558, 5659, 5788, 5849, 5933
+OOVPA_XREF(D3DDevice_GetTexture2, 4627, 1+21, // Also for 5344, 5558, 5659, 5788, 5849, 5933
 
 	XRefNoSaveIndex,
 	XRefOne)

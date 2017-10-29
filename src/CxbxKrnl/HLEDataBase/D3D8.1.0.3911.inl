@@ -64,7 +64,7 @@ OOVPA_END;
 // * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
 #if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
-OOVPA_XREF(D3DDevice_GetTexture2, 3911, 1 + 21, // Also for 4361
+OOVPA_XREF(D3DDevice_GetTexture2, 3911, 1+21, // Also for 4361
 
     XRefNoSaveIndex,
     XRefOne)
@@ -397,7 +397,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
-OOVPA_XREF(D3DDevice_LightEnable, 3911, 1 + 24,// valid upto at least 4627, next known difference is from 5344 onwards
+OOVPA_XREF(D3DDevice_LightEnable, 3911, 1+24,// valid upto at least 4627, next known difference is from 5344 onwards
 
     XRefNoSaveIndex,
     XRefOne)
