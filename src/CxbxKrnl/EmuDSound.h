@@ -37,6 +37,7 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 
 #include <dsound.h>
+#include <d3dx8math.h>
 #include "CxbxKrnl.h"
 #include "Emu.h"
 
@@ -65,6 +66,11 @@ void CxbxInitAudio();
 #define X_DSSPAUSE_PAUSE              0x00000001
 #define X_DSSPAUSE_SYNCHPLAYBACK      0x00000002
 #define X_DSSPAUSE_PAUSENOACTIVATE    0x00000003
+
+// EmuIDirectSoundBuffer_StopEx flags
+#define X_DSBSTOPEX_IMMEDIATE         0x00000000
+#define X_DSBSTOPEX_ENVELOPE          0x00000001
+#define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
 
 
 // ******************************************************************
@@ -217,7 +223,56 @@ struct X_DSCAPS
 #define X_DSSPEAKER_ENABLE_AC3      0x00010000
 #define X_DSSPEAKER_ENABLE_DTS      0x00020000
 
+struct X_DS3DBUFFER {
+    DWORD dwSize;
+    D3DXVECTOR3 vPosition;
+    D3DXVECTOR3 vVelocity;
+    DWORD dwInsideConeAngle;
+    DWORD  dwOutsideConeAngle;
+    D3DXVECTOR3 vConeOrientation;
+    LONG lConeOutsideVolume;
+    FLOAT flMinDistance;
+    FLOAT flMaxDistance;
+    DWORD dwMode;
+    FLOAT flDistanceFactor;
+    FLOAT flRolloffFactor;
+    FLOAT flDopplerFactor;
+};
 
+struct X_DSI3DL2LISTENER {
+    LONG lRoom;
+    LONG lRoomHF;
+    FLOAT flRoomRolloffFactor;
+    FLOAT flDecayTime;
+    FLOAT flDecayHFRatio;
+    LONG  lReflections;
+    FLOAT flReflectionsDelay;
+    LONG  lReverb;
+    FLOAT flReverbDelay;
+    FLOAT flDiffusion;
+    FLOAT flDensity;
+    FLOAT flHFReference;
+};
+
+struct X_DSI3DL2OBSTRUCTION {
+    LONG            lHFLevel;
+    FLOAT           flLFRatio;
+};
+
+struct X_DSI3DL2OCCLUSION {
+    LONG            lHFLevel;
+    FLOAT           flLFRatio;
+};
+
+struct X_DSI3DL2BUFFER {
+    LONG lDirect;
+    LONG lDirectHF;
+    LONG lRoom;
+    LONG lRoomHF;
+    FLOAT flRoomRolloffFactor;
+    X_DSI3DL2OBSTRUCTION Obstruction;
+    X_DSI3DL2OCCLUSION Occlusion;
+};
 
 typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
@@ -228,6 +283,12 @@ typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 struct X_CDirectSound
 {
     // TODO: Fill this in?
+};
+
+enum X_DSB_TOGGLE {
+    X_DSB_TOGGLE_DEFAULT = 0,
+    X_DSB_TOGGLE_PLAY,
+    X_DSB_TOGGLE_LOOP
 };
 
 // ******************************************************************
@@ -255,6 +316,14 @@ struct X_CDirectSoundBuffer
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
     DWORD                   EmuLockOffset;
     DWORD                   EmuLockFlags;
+    // Play/Loop Region Section
+    X_DSB_TOGGLE            EmuBufferToggle;
+    DWORD                   EmuRegionLoopStartOffset;
+    DWORD                   EmuRegionLoopLength;
+    DWORD                   EmuRegionPlayStartOffset;
+    DWORD                   EmuRegionPlayLength;
+    LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
+    LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
@@ -566,7 +635,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetDopplerFactor)
 HRESULT WINAPI EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
-    PVOID                   pDummy, // TODO: fill this out
+    X_DSI3DL2LISTENER      *pds3dl,
     DWORD                   dwApply
 );
 
@@ -966,7 +1035,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
     X_CDirectSoundStream*   pThis,
-    LPCDS3DBUFFER           pc3DBufferParameters,
+    X_DS3DBUFFER*           pc3DBufferParameters,
     DWORD                   dwApply
 );
 
@@ -1061,9 +1130,9 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetFrequency)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetI3DL2Source)
 (
-    PVOID   pThis,
-    PVOID   pds3db,
-    DWORD   dwApply
+    X_CDirectSoundStream*   pThis,
+    X_DSI3DL2BUFFER*        pds3db,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1192,15 +1261,13 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
     DWORD                   dwApply
 );
 
-typedef void* LPCDSI3DL2BUFFER;
-
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
     X_CDirectSoundBuffer*   pThis,
-    LPCDSI3DL2BUFFER        pds3db,
+    X_DSI3DL2BUFFER*        pds3db,
     DWORD                   dwApply
 );
 // +s
@@ -1445,8 +1512,8 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
-    PVOID   pds3db,
-    DWORD   dwApply
+    X_DSI3DL2BUFFER*        pds3db,
+    DWORD                   dwApply
 );
 
 // ******************************************************************
@@ -1455,7 +1522,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
     X_CDirectSoundBuffer*    pThis,
-    LPCDS3DBUFFER            pc3DBufferParameters,
+    X_DS3DBUFFER*            pc3DBufferParameters,
     DWORD                    dwApply
 );
 
