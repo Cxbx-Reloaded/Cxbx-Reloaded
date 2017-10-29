@@ -120,7 +120,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetDistanceFactor, 5344, 9,
 
-    XREF_DSVOICESETDISTANCEFACTOR,
+    XREF_CDirectSoundVoice_SetDistanceFactor,
     XRefZero)
 
         { 0x05, 0x41 },
@@ -139,10 +139,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetDistanceFactor, 5344, 1+7,
 
-    XREF_DSBUFFERSETDISTANCEFACTOR,
+    XREF_CDirectSoundBuffer_SetDistanceFactor,
     XRefOne)
 
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETDISTANCEFACTOR ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetDistanceFactor ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -161,7 +161,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetDistanceFactor, 5344, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETDISTANCEFACTOR ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetDistanceFactor ),
 
         { 0x03, 0x0C },
         { 0x08, 0x8B },
@@ -526,7 +526,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SynchPlayback, 5344, 8,
 
-    XREF_DSSYNCHPLAYBACKA,
+    XREF_CDirectSound_SynchPlayback,
     XRefZero)
 
         { 0x07, 0x3D },
@@ -721,7 +721,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetRolloffFactor, 5344, 12,
 
-    XREF_DSVOICESETROLLOFFFACTOR,
+    XREF_CDirectSoundVoice_SetRolloffFactor,
     XRefZero)
 
         // CDirectSoundVoice_SetRolloffFactor+0x0D : mov edx, [esp+arg_4]
@@ -749,7 +749,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 5344, 8,
 
-    XREF_DSVOICESETROLLOFFCURVE,
+    XREF_CDirectSoundVoice_SetRolloffCurve,
     XRefZero)
 
         { 0x07, 0x8B },

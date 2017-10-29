@@ -36,7 +36,7 @@
 // * CDirectSound::SynchPlayback
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SynchPlayback, 5558, 7,
-           XREF_DSSYNCHPLAYBACKA,
+           XREF_CDirectSound_SynchPlayback,
            XRefZero)
 
         { 0x0C, 0x00 },
@@ -707,7 +707,7 @@ OOVPA_XREF(CDirectSoundStream_SetMinDistance, 5558, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3E, XREF_DSVOICESETROLLOFFCURVE ),
+        XREF_ENTRY( 0x3E, XREF_CDirectSoundVoice_SetRolloffCurve ),
 
         { 0x0C, 0x00 },
         { 0x16, 0x68 },
@@ -968,7 +968,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetDistanceFactor, 5558, 12,
 
-    XREF_DSVOICESETDISTANCEFACTOR,
+    XREF_CDirectSoundVoice_SetDistanceFactor,
     XRefZero)
 
         { 0x05, 0x41 },
@@ -990,10 +990,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetDistanceFactor, 5558, 1+7,
 
-    XREF_DSBUFFERSETDISTANCEFACTOR,
+    XREF_CDirectSoundBuffer_SetDistanceFactor,
     XRefOne)
 
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETDISTANCEFACTOR ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetDistanceFactor ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -1012,7 +1012,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetDistanceFactor, 5558, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETDISTANCEFACTOR ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetDistanceFactor ),
 
         { 0x03, 0x0C },
         { 0x08, 0x8B },
@@ -1028,7 +1028,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetDopplerFactor, 5558, 1+7,
 
-    XREF_DSBUFFERSETDOPPLERFACTOR,
+    XREF_CDirectSoundBuffer_SetDopplerFactor,
     XRefOne)
 
         XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetDopplerFactor),
@@ -1050,7 +1050,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetDopplerFactor, 5558, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETDOPPLERFACTOR ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetDopplerFactor ),
 
         { 0x03, 0x0C },
         { 0x08, 0x8B },
@@ -1492,7 +1492,7 @@ OOVPA_XREF(CDirectSoundStream_SetRolloffCurve, 5558, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3E, XREF_DSVOICESETROLLOFFCURVE ),
+        XREF_ENTRY( 0x3E, XREF_CDirectSoundVoice_SetRolloffCurve ),
 
         { 0x0C, 0x00 },
         { 0x16, 0x68 },

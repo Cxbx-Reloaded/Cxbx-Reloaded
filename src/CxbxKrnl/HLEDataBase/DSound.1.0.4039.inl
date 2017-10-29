@@ -473,7 +473,7 @@ OOVPA_END;
 // Verified with Agent Under Fire.
 OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 4039, 16,
 
-    XREF_DSSETBUFFERDATA,
+    XREF_CDirectSoundBuffer_SetBufferData,
     XRefZero)
 
         // CDirectSoundBuffer_SetBufferData+0x3D : mov eax, 0x80004005

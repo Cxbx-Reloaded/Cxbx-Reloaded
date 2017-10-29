@@ -874,7 +874,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_FlushEx, 4627, 14,
 
-    XREF_DSFLUSHEX2,
+    XREF_CDirectSoundStream_FlushEx,
     XRefZero)
 
         { 0x0F, 0x00 },
@@ -901,7 +901,7 @@ OOVPA_XREF(IDirectSoundStream_FlushEx, 4627, 1+8,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x11, XREF_DSFLUSHEX2 ),
+        XREF_ENTRY( 0x11, XREF_CDirectSoundStream_FlushEx ),
 
         { 0x01, 0x74 },
         { 0x04, 0xFF },
@@ -1074,7 +1074,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 4627, 11,
 
-    XREF_DSVOICESETROLLOFFCURVE,
+    XREF_CDirectSoundVoice_SetRolloffCurve,
     XRefZero)
 
         { 0x07, 0x8B },
@@ -1095,10 +1095,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetRolloffCurve, 4627, 1+7,
 
-    XREF_DSBUFFERSETROLLOFFCURVE,
+    XREF_CDirectSoundBuffer_SetRolloffCurve,
     XRefOne)
 
-        XREF_ENTRY( 0x3A, XREF_DSVOICESETROLLOFFCURVE ),
+        XREF_ENTRY( 0x3A, XREF_CDirectSoundVoice_SetRolloffCurve ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -1117,7 +1117,7 @@ OOVPA_XREF(CDirectSoundStream_SetRolloffCurve, 4627, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x3E, XREF_DSVOICESETROLLOFFCURVE ),
+        XREF_ENTRY( 0x3E, XREF_CDirectSoundVoice_SetRolloffCurve ),
 
         { 0x0C, 0x00 },
         { 0x16, 0x68 },
@@ -1136,7 +1136,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetRolloffCurve, 4627, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETROLLOFFCURVE ),
+        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetRolloffCurve ),
 
         { 0x03, 0x10 },
         { 0x08, 0xFF },
@@ -1347,7 +1347,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetDistanceFactor, 4627, 12,
 
-    XREF_DSVOICESETDISTANCEFACTOR,
+    XREF_CDirectSoundVoice_SetDistanceFactor,
     XRefZero)
 
         // CDirectSoundVoice_SetDistanceFactor+0x0D : mov edx, [esp+arg_4]

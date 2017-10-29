@@ -1897,7 +1897,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 3911, 9,
 
-    XREF_DSSETBUFFERDATA,
+    XREF_CDirectSoundBuffer_SetBufferData,
     XRefZero)
 
         // CDirectSoundBuffer_SetBufferData+0x22 : cmp ecx, [eax+0x4C]
@@ -1925,7 +1925,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 3911, 1+9,
     XRefOne)
 
         // IDirectSoundBuffer_SetBufferData+0x18 : call [CDirectSoundBuffer_SetBufferData]
-        XREF_ENTRY( 0x19, XREF_DSSETBUFFERDATA ),
+        XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetBufferData ),
 
         // IDirectSoundBuffer_SetBufferData+0x04 : push [esp+0x0C]
         { 0x04, 0xFF },
