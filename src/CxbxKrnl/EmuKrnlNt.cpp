@@ -686,6 +686,17 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		Authentication->AuthenticationPage.Authentication = 1;
 		break;
 	}
+	case 0x70000: // IOCTL_DISK_GET_DRIVE_GEOMETRY
+	{
+		PDISK_GEOMETRY DiskGeometry = (PDISK_GEOMETRY)OutputBuffer;
+
+		DiskGeometry->MediaType = FixedMedia;
+		DiskGeometry->TracksPerCylinder = 1;
+		DiskGeometry->SectorsPerTrack = 1;
+		DiskGeometry->BytesPerSector = 512;
+		DiskGeometry->Cylinders.QuadPart = 0x1400000;	// Around 10GB, size of stock xbox HDD
+		break;
+	}
 	default:
 		LOG_UNIMPLEMENTED();
 	}
