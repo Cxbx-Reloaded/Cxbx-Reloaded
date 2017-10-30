@@ -439,6 +439,35 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
+OOVPA_XREF(XID_fCloseDevice, 3911, 16,
+
+    XREF_XID_fCloseDevice,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+        { 0x06, 0x53 },
+        { 0x07, 0x56 },
+        { 0x08, 0x8B },
+        { 0x09, 0xF1 },
+        { 0x0A, 0xFF },
+        { 0x0B, 0x15 },
+
+        { 0x3E, 0x8D },
+        { 0x3F, 0x45 },
+
+        { 0x44, 0x8D },
+        { 0x45, 0x45 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * XID_fCloseDevice
+// ******************************************************************
 OOVPA_XREF(XID_fCloseDevice, 3911, 10,
 
     XREF_XID_fCloseDevice,
@@ -462,6 +491,7 @@ OOVPA_XREF(XID_fCloseDevice, 3911, 10,
         { 0xA3, 0xC9 },
         { 0xA4, 0xC3 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XInputClose
@@ -472,7 +502,7 @@ OOVPA_XREF(XInputClose, 3911, 1+7,
     XRefOne)
 
         // XInputClose+0x05 : call [fCloseDevice]
-        XREF_ENTRY( 0x05, XREF_XID_fCloseDevice ), 
+        XREF_ENTRY( 0x05, XREF_XID_fCloseDevice ),
 
         // XInputClose+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B },
@@ -488,6 +518,28 @@ OOVPA_XREF(XInputClose, 3911, 1+7,
         { 0x0A, 0x04 },
 OOVPA_END;
 
+// ******************************************************************
+// * XInputGetCapabilities
+// ******************************************************************
+OOVPA_NO_XREF(XInputGetCapabilities, 3911, 13)
+
+        { 0x00, 0x55 },
+        { 0x0F, 0x15 },
+        { 0x1E, 0x0F },
+        { 0x1F, 0x84 },
+
+        { 0x36, 0x8B },
+        { 0x37, 0xFA },
+        { 0x38, 0xF3 },
+        { 0x39, 0xAB },
+        { 0x3A, 0xAA },
+        { 0x3B, 0x8A },
+        { 0x3C, 0x46 },
+        { 0x3D, 0x0B },
+        { 0x3E, 0x88 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
@@ -517,6 +569,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 3911, 14)
         { 0xFB, 0x39 },
         { 0xFC, 0x18 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XInputGetState
@@ -1118,6 +1171,41 @@ OOVPA_END;
 // ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
+OOVPA_NO_XREF(XMountUtilityDrive, 3911, 26)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+        { 0x06, 0x01 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+        { 0x09, 0x53 },
+        { 0x0A, 0x56 },
+        { 0x0B, 0x57 },
+        { 0x0C, 0x8D },
+        { 0x0D, 0x45 },
+        { 0x0E, 0xF4 },
+        { 0x0F, 0x50 },
+        { 0x10, 0x8D },
+        { 0x11, 0x45 },
+        { 0x12, 0xFC },
+        { 0x13, 0x50 },
+        { 0x14, 0xFF },
+        { 0x15, 0x75 },
+        { 0x16, 0x08 },
+        { 0x17, 0xE8 },
+
+        { 0x56, 0x83 },
+        { 0x57, 0xC4 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * XMountUtilityDrive
+// ******************************************************************
 OOVPA_NO_XREF(XMountUtilityDrive, 3911, 7)
 
         { 0x1C, 0x85 },
@@ -1128,6 +1216,7 @@ OOVPA_NO_XREF(XMountUtilityDrive, 3911, 7)
         { 0xB3, 0x8B },
         { 0xD0, 0xC0 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * ReadFileEx@20
@@ -1205,7 +1294,29 @@ OOVPA_END;
 // ******************************************************************
 // * timeSetEvent
 // ******************************************************************
-OOVPA_NO_XREF(timeSetEvent, 3911, 7) // generic version
+OOVPA_NO_XREF(timeSetEvent, 3911, 12)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+        { 0x06, 0x53 },
+        { 0x07, 0x68 },
+
+        { 0x1B, 0xCB },
+        { 0x1C, 0x75 },
+
+        { 0x2A, 0x45 },
+        { 0x55, 0x53 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 3911 version
+// ******************************************************************
+// * timeSetEvent
+// ******************************************************************
+OOVPA_NO_XREF(timeSetEvent, 3911, 7)
 
         { 0x1E, 0x8D },
         { 0x3E, 0x89 },
@@ -1215,6 +1326,7 @@ OOVPA_NO_XREF(timeSetEvent, 3911, 7) // generic version
         { 0xBE, 0x32 },
         { 0xDE, 0x89 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * timeKillEvent
@@ -1253,6 +1365,7 @@ OOVPA_NO_XREF(timeKillEvent, 3911, 8)
         { 0x6E, 0x00 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * GetOverlappedResult
 // ******************************************************************

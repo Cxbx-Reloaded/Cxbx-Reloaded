@@ -62,6 +62,7 @@ OOVPA_NO_XREF(XInputOpen, 4242, 12)
         { 0x54, 0x10 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
@@ -89,7 +90,8 @@ OOVPA_XREF(XID_fCloseDevice, 4242, 11,
         { 0x9F, 0xC9 },
         { 0xA0, 0xC3 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
@@ -119,7 +121,31 @@ OOVPA_NO_XREF(XInputGetCapabilities, 4242, 14)
         { 0xEE, 0x39 },
         { 0xEF, 0x18 },
 OOVPA_END;
+#endif
 
+// ******************************************************************
+// * XInputGetState
+// ******************************************************************
+OOVPA_NO_XREF(XInputGetState, 4242, 13)
+
+        { 0x00, 0x53 },
+        { 0x01, 0x56 },
+
+        { 0x0A, 0x8B },
+        { 0x0B, 0x54 },
+        { 0x0C, 0x24 },
+        { 0x0D, 0x0C },
+        { 0x0E, 0x8B },
+        { 0x0F, 0x8A },
+        { 0x10, 0xA3 },
+        { 0x11, 0x00 },
+        { 0x12, 0x00 },
+        { 0x13, 0x00 },
+
+        { 0x5B, 0xF3 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4242 version
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
@@ -147,6 +173,7 @@ OOVPA_NO_XREF(XInputGetState, 4242, 12)
         { 0x6C, 0xC2 },
         { 0x6D, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XInputSetState

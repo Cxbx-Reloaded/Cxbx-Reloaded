@@ -48,7 +48,7 @@ OOVPA_END;
 // ******************************************************************
 // * CMiniport_IsFlipPending
 // ******************************************************************
-OOVPA_NO_XREF(CMiniport_IsFlipPending, 4928, 18)
+OOVPA_NO_XREF(CMiniport_IsFlipPending, 4928, 17)
 
         { 0x00, 0x8B },
         { 0x01, 0x81 },

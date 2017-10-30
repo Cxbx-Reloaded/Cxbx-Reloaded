@@ -52,7 +52,7 @@ OOVPA_NO_XREF(timeSetEvent, 5849, 10)
 	{0x1A, 0x3B}
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 3911 version
 //; Xbe Explorer generated pattern, derived from address $002793A1 in "EA SPORTSÅERUGBY 2005" :
 //5657BF8015320057FF15........8B54240C8B0D........0FB7C24885C9743E 1D AD12 006F _timeKillEvent@4 ^ 000AD __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003DD __imp__KeCancelTimer@4 ^ 0046D _XapiMmTimerThreadState ^ 0056D __imp__KeSetEvent@12 ^ 0064D __imp__RtlLeaveCriticalSection@4
 OOVPA_NO_XREF(timeKillEvent, 5849, 10)
@@ -67,6 +67,7 @@ OOVPA_NO_XREF(timeKillEvent, 5849, 10)
 	{ 0x18, 0x0F },
 	{ 0x1F, 0x3E }
 OOVPA_END;
+#endif
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * XGetDeviceEnumerationStatus

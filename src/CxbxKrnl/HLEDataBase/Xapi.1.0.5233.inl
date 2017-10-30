@@ -50,7 +50,7 @@ OOVPA_NO_XREF(XInitDevices, 5120, 7)
         { 0x70, 0x5F },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
@@ -65,7 +65,8 @@ OOVPA_NO_XREF(XInputGetCapabilities, 5233, 8)
         { 0xDA, 0x8D },
         { 0xF9, 0x46 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
@@ -79,7 +80,8 @@ OOVPA_NO_XREF(XGetDeviceChanges, 5233, 7)
         { 0x52, 0xC8 },
         { 0x60, 0x5F },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * XInputSetState
 // ******************************************************************
@@ -93,3 +95,4 @@ OOVPA_NO_XREF(XInputSetState, 5233, 7)
         { 0x28, 0x88 },
         { 0x30, 0xC2 },
 OOVPA_END;
+#endif
