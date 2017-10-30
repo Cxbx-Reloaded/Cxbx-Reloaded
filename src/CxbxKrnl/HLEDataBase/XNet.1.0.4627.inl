@@ -332,8 +332,9 @@ OOVPA_END;
 // * CXnSock::ioctlsocket
 // ******************************************************************
 //Generic OOVPA as of 4627 and newer.
-OOVPA_NO_XREF(ioctlsocket, 4627, 12)
+OOVPA_NO_XREF(ioctlsocket, 4627, 13)
 
+        { 0x00, 0x55 },
         { 0x0C, 0x99 },
         { 0x1D, 0x83 },
 
@@ -402,8 +403,9 @@ OOVPA_END;
 // * CXnSock::listen
 // ******************************************************************
 //Generic OOVPA as of 4627 and newer.
-OOVPA_NO_XREF(listen, 4627, 12)
+OOVPA_NO_XREF(listen, 4627, 13)
 
+        { 0x00, 0x57 },
         { 0x09, 0xBF },
         { 0x1B, 0x83 },
 

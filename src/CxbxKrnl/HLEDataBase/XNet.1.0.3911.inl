@@ -207,7 +207,10 @@ OOVPA_END;
 // ******************************************************************
 // * CXnSock::listen
 // ******************************************************************
-OOVPA_NO_XREF(listen, 3911, 9)
+OOVPA_NO_XREF(listen, 3911, 10)
+
+        // listen+0x00 : push edi
+        { 0x00, 0x57 },
 
         // listen+0x10 : push 0x276D
         { 0x10, 0x68 },
@@ -230,7 +233,10 @@ OOVPA_END;
 // ******************************************************************
 // * CXnSock::ioctlsocket
 // ******************************************************************
-OOVPA_NO_XREF(ioctlsocket, 3911, 10)
+OOVPA_NO_XREF(ioctlsocket, 3911, 11)
+
+        // ioctlsocket+0x00 : push ebp
+        { 0x00, 0x55 },
 
         // ioctlsocket+0x12 : push 0x276D
         { 0x12, 0x68 },
