@@ -48,6 +48,7 @@ OOVPA_NO_XREF(XFormatUtilityDrive, 4627, 7)
 OOVPA_END;
 #endif
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
@@ -64,7 +65,7 @@ OOVPA_XREF(XID_fCloseDevice, 4627, 7,
         { 0x7C, 0x06 },
         { 0x91, 0x89 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XID_fCloseDevice

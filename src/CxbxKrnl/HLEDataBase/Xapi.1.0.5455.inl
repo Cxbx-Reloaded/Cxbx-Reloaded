@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 
-
+#if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
@@ -47,6 +47,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 5455, 8)
         { 0xD7, 0x8D },
         { 0xF6, 0x46 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XInputGetState
@@ -62,6 +63,7 @@ OOVPA_NO_XREF(XInputGetState, 5455, 7)
         { 0x67, 0x15 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
@@ -78,7 +80,8 @@ OOVPA_XREF(XID_fCloseDevice, 5455, 7,
         { 0x70, 0xFF },
         { 0x84, 0x89 },
 OOVPA_END;
-
+#endif
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XInputClose
 // ******************************************************************
@@ -98,6 +101,7 @@ OOVPA_XREF(XInputClose, 5455, 1+8,
         { 0x0A, 0x04 },
         { 0x0B, 0x00 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * XMountAlternateTitleA
@@ -119,6 +123,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 5455, 11)
         { 0xD0, 0x15 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * timeSetEvent
 // ******************************************************************
@@ -143,3 +148,4 @@ OOVPA_NO_XREF(timeSetEvent, 5455, 14)
         { 0x34, 0x88 },
         { 0x35, 0x5D },
 OOVPA_END;
+#endif

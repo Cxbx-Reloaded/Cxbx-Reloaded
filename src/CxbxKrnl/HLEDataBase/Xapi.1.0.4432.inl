@@ -35,6 +35,42 @@
 // ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
+OOVPA_NO_XREF(XMountUtilityDrive, 4432, 27)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+        { 0x06, 0x01 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+        { 0x09, 0x53 },
+        { 0x0A, 0x56 },
+        { 0x0B, 0x57 },
+        { 0x0C, 0x8D },
+        { 0x0D, 0x45 },
+        { 0x0E, 0xF4 },
+        { 0x0F, 0x50 },
+        { 0x10, 0x8D },
+        { 0x11, 0x45 },
+        { 0x12, 0xFC },
+        { 0x13, 0x50 },
+        { 0x14, 0xFF },
+        { 0x15, 0x75 },
+        { 0x16, 0x08 },
+        { 0x17, 0xE8 },
+
+        { 0x51, 0x68 },
+        { 0x52, 0x04 },
+        { 0x53, 0x01 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4432 version
+// ******************************************************************
+// * XMountUtilityDrive
+// ******************************************************************
 OOVPA_NO_XREF(XMountUtilityDrive, 4432, 8)
 
         // XapiUnknownBad1+0x51 : push 0x0104
@@ -53,3 +89,4 @@ OOVPA_NO_XREF(XMountUtilityDrive, 4432, 8)
 
         // TODO: Finish signature, toss out function call basically
 OOVPA_END;
+#endif

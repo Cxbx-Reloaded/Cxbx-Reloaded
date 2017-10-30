@@ -95,7 +95,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5659, 8)
         { 0xFE, 0x02 },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * XLaunchNewImageA
 // ******************************************************************
@@ -109,6 +109,7 @@ OOVPA_NO_XREF(XLaunchNewImageA, 5558, 7)
         { 0x34, 0x6A },
         { 0x3D, 0x10 },
 OOVPA_END;
+#endif
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XapiFiberStartup
