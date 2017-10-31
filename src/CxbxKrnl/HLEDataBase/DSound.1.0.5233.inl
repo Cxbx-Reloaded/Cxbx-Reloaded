@@ -78,10 +78,13 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_FlushEx
 // ******************************************************************
-OOVPA_XREF(CDirectSoundStream_FlushEx, 5233, 15,
+// Generic OOVPA as of 5233 and newer
+OOVPA_XREF(CDirectSoundStream_FlushEx, 5233, 16,
 
     XREF_CDirectSoundStream_FlushEx,
     XRefZero)
+
+        { 0x00, 0x55 },
 
         { 0x24, 0xB8 },
         { 0x25, 0x05 },

@@ -449,19 +449,25 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetFormat, 4721, 8,
+// Generic OOVPA as of 4721 and newer
+OOVPA_XREF(CDirectSoundVoice_SetFormat, 4721, 12,
 
     XREF_CDirectSoundVoice_SetFormat,
     XRefZero)
+
+        { 0x00, 0x56 },
 
         { 0x06, 0x4E },
         { 0x0E, 0xE8 },
         { 0x18, 0x4E },
         { 0x25, 0xFF },
         { 0x2E, 0x0C },
+        { 0x2F, 0xE8 }, // call CMcpxVoiceClient::SetMixBins
         { 0x34, 0x85 },
         { 0x38, 0x8B },
-        { 0x43, 0x00 },
+        { 0x3B, 0xE8 }, // call CMcpxVoiceClient::SetPitch
+        { 0x41, 0xC2 },
+        { 0x42, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -857,7 +863,8 @@ OOVPA_END;
 // ******************************************************************
 // * XAudioDownloadEffectsImage
 // ******************************************************************
-OOVPA_NO_XREF(XAudioDownloadEffectsImage, 4627, 8)
+// TODO: Need to evaluate with 5558 title, I believe it needs more OVs.
+OOVPA_NO_XREF(XAudioDownloadEffectsImage, 4361, 8)
 
         { 0x1E, 0xB6 },
         { 0x41, 0x83 },

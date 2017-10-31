@@ -1506,13 +1506,17 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetRolloffFactor
 // ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetRolloffFactor, 4134, 1+9,
+// Generic OOVPA as of 4134 and newer
+OOVPA_XREF(IDirectSoundBuffer_SetRolloffFactor, 4134, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
 
         // IDirectSoundBuffer_SetRolloffFactor+0x1C : call [CDirectSoundBuffer::SetRolloffFactor]
         XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetRolloffFactor ),
+
+        // IDirectSoundBuffer_SetRolloffFactor+0x00 : push dword ptr [esp+0Ch]
+        { 0x02, 0x24 },
 
         // IDirectSoundBuffer_SetRolloffFactor+0x04 : fld [esp+4+arg_4]
         { 0x04, 0xD9 },

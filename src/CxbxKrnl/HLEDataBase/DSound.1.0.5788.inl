@@ -290,42 +290,6 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 5788, 1+7,
 OOVPA_END;
 
 // ******************************************************************
-// * DirectSound::CDirectSoundVoice::SetRolloffFactor
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetRolloffFactor, 5788, 7,
-
-    XREF_CDirectSoundVoice_SetRolloffFactor,
-    XRefZero)
-
-        { 0x05, 0x41 },
-        { 0x0C, 0x00 },
-        { 0x13, 0x48 },
-        { 0x1A, 0x00 },
-        { 0x21, 0xF6 },
-        { 0x28, 0x51 },
-        { 0x2F, 0xC0 },
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSoundBuffer_SetRolloffFactor
-// ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_SetRolloffFactor, 5788, 1+7,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_SetRolloffFactor ),
-
-        { 0x03, 0x0C },
-        { 0x08, 0x8B },
-        { 0x0D, 0x8B },
-        { 0x12, 0x83 },
-        { 0x17, 0x1B },
-        { 0x1C, 0xE8 },
-        { 0x21, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
 // * IDirectSound_CreateSoundStream
 // ******************************************************************
 //OOVPA_XREF(IDirectSound_CreateSoundStream, 5788, 8,
@@ -386,23 +350,6 @@ OOVPA_END;
 #endif
 
 // ******************************************************************
-// * DirectSound::CDirectSoundStream::FlushEx
-// ******************************************************************
-OOVPA_XREF(CDirectSoundStream_FlushEx, 5788, 7,
-
-    XREF_CDirectSoundStream_FlushEx,
-    XRefZero)
-
-        { 0x0F, 0x00 },
-        { 0x1E, 0xFF },
-        { 0x28, 0x80 },
-        { 0x36, 0x74 },
-        { 0x46, 0x8B },
-        { 0x52, 0xFF },
-        { 0x62, 0x8B },
-OOVPA_END;
-
-// ******************************************************************
 // * DirectSound::CMemoryManager::PoolAlloc
 // ******************************************************************
 OOVPA_NO_XREF(DS_CMemoryManager_PoolAlloc, 5788, 11)
@@ -434,8 +381,3 @@ OOVPA_NO_XREF(XFileCreateMediaObjectAsync, 5788, 8)
         { 0x52, 0x06 },
         { 0x5E, 0x0C },
 OOVPA_END;
-
-// ******************************************************************
-// * Rollback support signature(s)
-// ******************************************************************
-#define XAudioDownloadEffectsImage_5788 XAudioDownloadEffectsImage_4627
