@@ -1378,7 +1378,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
         DSoundBufferCreate(emuBufferDescRegion, pThis->EmuDirectSoundBuffer8Region);
         if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-            DSound3DBufferCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8Region);
+            DSound3DBufferCreate(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSound3DBuffer8Region);
         }
         DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSoundBuffer8Region,
                              pThis->EmuDirectSound3DBuffer8, pThis->EmuDirectSound3DBuffer8Region);
@@ -1602,10 +1602,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, DSBPLAY_LOOPING);
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
-
-    //Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
-    LPDIRECTSOUNDBUFFER pTempBuffer;
-    HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
     DSoundBufferCreate(pDSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
     if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
