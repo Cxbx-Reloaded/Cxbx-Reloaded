@@ -3157,7 +3157,7 @@ OOVPA_XREF(CDirectSoundStream_Release, 4134, 1+11,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x32, XREF_DS_CRefCount_Release ),
+        XREF_ENTRY( 0x32, XREF_DSound_CRefCount_Release ),
 
         { 0x00, 0x56 },
         { 0x0C, 0x00 },
@@ -3589,7 +3589,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CMemoryManager::PoolAlloc
 // ******************************************************************
-OOVPA_NO_XREF(DS_CMemoryManager_PoolAlloc, 4134, 11)
+OOVPA_NO_XREF(DSound_CMemoryManager_PoolAlloc, 4134, 11)
 
         { 0x00, 0x56 },
 

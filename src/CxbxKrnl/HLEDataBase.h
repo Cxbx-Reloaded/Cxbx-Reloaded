@@ -200,8 +200,8 @@ enum XRefDataBaseOffset
     XREF_IDirectSound_CreateSoundStream,
     // s+
     // DSOUND
-    XREF_DS_CRefCount_AddRef,
-    XREF_DS_CRefCount_Release,
+    XREF_DSound_CRefCount_AddRef,
+    XREF_DSound_CRefCount_Release,
     XREF_CDirectSoundVoice_SetRolloffCurve,
     XREF_CDirectSoundVoice_SetRolloffFactor,
     XREF_CDirectSoundVoice_SetDistanceFactor,

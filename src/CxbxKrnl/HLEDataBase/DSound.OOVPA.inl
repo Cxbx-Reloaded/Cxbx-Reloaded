@@ -104,9 +104,9 @@
 //   * IDirectSoundBuffer_QueryInterfaceC
 // * List of internal functions are not register:
 //   * CDirectSoundBuffer_Release   (Is unique, however need multiple OOVPAs to register all revisions)
-//     * Using XREF_DS_CRefCount_Release
+//     * Using XREF_DSound_CRefCount_Release
 //   * CDirectSound_Release         (Is unique, however need multiple OOVPAs to register all revisions)
-//     * Using XREF_DS_CRefCount_Release
+//     * Using XREF_DSound_CRefCount_Release
 // * 4039 verification needed:
 //   * DirectSoundUseLightHRTF
 //   * IDirectSound_CommitEffectData
@@ -221,7 +221,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxBuffer_Pause, XREF, 4831),
     REGISTER_OOVPAS(CMcpxBuffer_Play, XREF, 3911, 4134, 4721, 4831), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Play2, XREF, 4361, 5558), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
-    REGISTER_OOVPAS(CMcpxBuffer_SetBufferData, XREF, 4134, 5788),
+    REGISTER_OOVPAS(CMcpxBuffer_SetBufferData, XREF, 4134, 5455),
     REGISTER_OOVPAS(CMcpxBuffer_SetCurrentPosition, XREF, 3911, 4039, 4134, 5558, 5788),
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4361), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
@@ -247,11 +247,11 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3911, 5344),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetPitch, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3911, 4039, 4134),
-    REGISTER_OOVPAS(DS_CRefCount_AddRef, XREF, 3911, 4039),
-    REGISTER_OOVPAS(DS_CRefCount_Release, XREF, 3911, 4039, 5455),
-    REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBins, XREF, 4039, 4134, 5344, 5558),
+    REGISTER_OOVPAS(DSound_CRefCount_AddRef, XREF, 3911, 4039),
+    REGISTER_OOVPAS(DSound_CRefCount_Release, XREF, 3911, 4039, 5455),
+    REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBins, XREF, 4039, 4134, 5344, 5455),
     REGISTER_OOVPAS(CDirectSoundVoiceSettings_SetMixBinVolumes, XREF, 4039, 4134),
-    REGISTER_OOVPAS(CDirectSoundVoice_CommitDeferredSettings, XREF, 5558),
+    REGISTER_OOVPAS(CDirectSoundVoice_CommitDeferredSettings, XREF, 5455),
     REGISTER_OOVPAS(CDirectSoundVoice_SetAllParameters, XREF, 3911, 4039, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetConeAngles, XREF, 3911, 4039, 4134, 5344, 5558),
     REGISTER_OOVPAS(CDirectSoundVoice_SetConeOrientation, XREF, 3911, 4039, 4134, 5344),
@@ -492,7 +492,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(XFileCreateMediaObjectEx, PATCH, 4627, 5028),
     REGISTER_OOVPAS(XWaveFileCreateMediaObject, PATCH, 4627),
 
-    REGISTER_OOVPAS(DS_CMemoryManager_PoolAlloc, XREF, 4134, 5788), // For reference purpose only, does not have XREF value.
+    REGISTER_OOVPAS(DSound_CMemoryManager_PoolAlloc, XREF, 4134, 5455), // For reference purpose only, does not have XREF value.
 };
 
 // ******************************************************************

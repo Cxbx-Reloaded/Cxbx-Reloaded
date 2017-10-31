@@ -32,31 +32,6 @@
 // *
 // ******************************************************************
 
-// ******************************************************************
-// * CMcpxBuffer_SetBufferData
-// ******************************************************************
-OOVPA_XREF(CMcpxBuffer_SetBufferData, 5788, 9,
-
-	XREF_CMcpxBuffer_SetBufferData,
-    XRefZero)
-
-        // CMcpxBuffer_SetBufferData+0x1E : cmp eax, ebx
-        { 0x1E, 0x3B },
-        { 0x1F, 0xC3 },
-
-        // CMcpxBuffer_SetBufferData+0x20 : jz +0x0C
-        { 0x20, 0x74 },
-        { 0x21, 0x0C },
-
-        // CMcpxBuffer_SetBufferData+0x45 : mov [esi+0xBC], ecx
-        { 0x45, 0x89 },
-        { 0x46, 0x8E },
-        { 0x47, 0xBC },
-
-        // CMcpxBuffer_SetBufferData+0x89 : retn 0x08
-        { 0x89, 0xC2 },
-        { 0x8A, 0x08 },
-OOVPA_END;
 #if 0 // Used CMcpxBuffer_Play 4831
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::Play
@@ -348,24 +323,6 @@ OOVPA_XREF(CMcpxStream_Pause, 5788, 7,
         { 0x7C, 0x00 },
 OOVPA_END;
 #endif
-
-// ******************************************************************
-// * DirectSound::CMemoryManager::PoolAlloc
-// ******************************************************************
-OOVPA_NO_XREF(DS_CMemoryManager_PoolAlloc, 5788, 11)
-
-	{ 0x00, 0x56 },
-	{ 0x24, 0x83 },
-	{ 0x25, 0x7C },
-	{ 0x26, 0x24 },
-	{ 0x27, 0x10 },
-	{ 0x28, 0x00 },
-	{ 0x37, 0xF3 },
-	{ 0x38, 0xAB },
-	{ 0x44, 0xC2 },
-	{ 0x45, 0x0C },
-	{ 0x46, 0x00 },
-OOVPA_END;
 
 // ******************************************************************
 // * XFileCreateMediaObjectAsync

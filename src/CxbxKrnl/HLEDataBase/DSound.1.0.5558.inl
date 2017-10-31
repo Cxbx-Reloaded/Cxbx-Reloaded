@@ -316,23 +316,6 @@ OOVPA_XREF(IDirectSoundBuffer_SetCurrentPosition, 5558, 1+7,
 OOVPA_END;
 #endif
 
-// ******************************************************************
-// * CDirectSoundVoiceSettings::SetMixBins
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 5558, 7,
-
-    XREF_CDirectSoundVoiceSettings_SetMixBins,
-    XRefZero)
-
-        { 0x1B, 0xEB },
-        { 0x32, 0x8B },
-        { 0x4C, 0x7C },
-        { 0x66, 0x00 },
-        { 0x84, 0xF6 },
-        { 0x9A, 0xB4 },
-        { 0xB4, 0x00 },
-OOVPA_END;
-
 #if 0 // Replaced with generic OOVPA 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetMixBins
@@ -527,21 +510,6 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 5558, 1+10,
         { 0x23, 0x00 }
 OOVPA_END;
 #endif
-// ******************************************************************
-// * CDirectSoundVoice::CommitDeferredSettings
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_CommitDeferredSettings, 5558, 6,
-
-    XREF_CDirectSoundVoice_CommitDeferredSettings,
-    XRefZero)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0xE8 },
-        { 0x0C, 0x33 },
-        { 0x0D, 0xC0 },
-        { 0x10, 0x00 },
-OOVPA_END;
 
 // ******************************************************************
 // * CDirectSoundVoice::SetDopplerFactor

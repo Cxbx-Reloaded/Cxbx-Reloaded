@@ -161,30 +161,30 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 5455, 17,
 OOVPA_END;
 
 // ******************************************************************
-// * DS_CRefCount_Release
+// * DSound_CRefCount_Release
 // ******************************************************************
 // Generic OOVPA as of 5455 and newer
-OOVPA_XREF(DS_CRefCount_Release, 5455, 10,
+OOVPA_XREF(DSound_CRefCount_Release, 5455, 10,
 
-    XREF_DS_CRefCount_Release,
+    XREF_DSound_CRefCount_Release,
     XRefZero)
 
         { 0x00, 0x8B },
 
-        // DS_CRefCount_Release+0x0B : dec eax
+        // DSound_CRefCount_Release+0x0B : dec eax
         { 0x0B, 0x48 },
 
-        // DS_CRefCount_Release+0x0E : mov dword ptr [ecx+4], eax
+        // DSound_CRefCount_Release+0x0E : mov dword ptr [ecx+4], eax
         { 0x0C, 0x89 },
         { 0x0D, 0x41 },
         { 0x0E, 0x04 },
 
-        // DS_CRefCount_Release+0x1D : mov, dword ptr [ecx+4]
+        // DSound_CRefCount_Release+0x1D : mov, dword ptr [ecx+4]
         { 0x1B, 0x8B },
         { 0x1C, 0x41 },
         { 0x1D, 0x04 },
 
-        // DS_CRefCount_Release+0x20 : retn 0x04
+        // DSound_CRefCount_Release+0x20 : retn 0x04
         { 0x1E, 0xC2 },
         { 0x1F, 0x04 },
 OOVPA_END;
@@ -286,4 +286,80 @@ OOVPA_XREF(CDirectSound_SetI3DL2Listener, 5455, 20,
         // CDirectSound_SetI3DL2Listener+0x105 : retn 0x0C
         { 0x105, 0xC2 },
         { 0x106, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoiceSettings::SetMixBins
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 5455, 7,
+
+    XREF_CDirectSoundVoiceSettings_SetMixBins,
+    XRefZero)
+
+        { 0x1B, 0xEB },
+        { 0x32, 0x8B },
+        { 0x4C, 0x7C },
+        { 0x66, 0x00 },
+        { 0x84, 0xF6 },
+        { 0x9A, 0xB4 },
+        { 0xB4, 0x00 },
+OOVPA_END;
+// ******************************************************************
+// * CDirectSoundVoice::CommitDeferredSettings
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_CommitDeferredSettings, 5455, 6,
+
+    XREF_CDirectSoundVoice_CommitDeferredSettings,
+    XRefZero)
+
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x07, 0xE8 },
+        { 0x0C, 0x33 },
+        { 0x0D, 0xC0 },
+        { 0x10, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CMcpxBuffer_SetBufferData
+// ******************************************************************
+OOVPA_XREF(CMcpxBuffer_SetBufferData, 5455, 9,
+
+	XREF_CMcpxBuffer_SetBufferData,
+    XRefZero)
+
+        // CMcpxBuffer_SetBufferData+0x1E : cmp eax, ebx
+        { 0x1E, 0x3B },
+        { 0x1F, 0xC3 },
+
+        // CMcpxBuffer_SetBufferData+0x20 : jz +0x0C
+        { 0x20, 0x74 },
+        { 0x21, 0x0C },
+
+        // CMcpxBuffer_SetBufferData+0x45 : mov [esi+0xBC], ecx
+        { 0x45, 0x89 },
+        { 0x46, 0x8E },
+        { 0x47, 0xBC },
+
+        // CMcpxBuffer_SetBufferData+0x89 : retn 0x08
+        { 0x89, 0xC2 },
+        { 0x8A, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CMemoryManager::PoolAlloc
+// ******************************************************************
+OOVPA_NO_XREF(DSound_CMemoryManager_PoolAlloc, 5455, 11)
+
+	{ 0x00, 0x56 },
+	{ 0x24, 0x83 },
+	{ 0x25, 0x7C },
+	{ 0x26, 0x24 },
+	{ 0x27, 0x10 },
+	{ 0x28, 0x00 },
+	{ 0x37, 0xF3 },
+	{ 0x38, 0xAB },
+	{ 0x44, 0xC2 },
+	{ 0x45, 0x0C },
+	{ 0x46, 0x00 },
 OOVPA_END;
