@@ -1920,6 +1920,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetBufferData
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 3911, 1+9,
 
     XRefNoSaveIndex,
@@ -3307,6 +3308,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetPosition
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetPosition, 3911, 1+8,
 
     XRefNoSaveIndex,
@@ -3718,6 +3720,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_Lock
 // ******************************************************************
+// Generic OOVPA as of 3911 and newer
 OOVPA_XREF(IDirectSoundBuffer_Lock, 3911, 1+8,
 
     XRefNoSaveIndex,

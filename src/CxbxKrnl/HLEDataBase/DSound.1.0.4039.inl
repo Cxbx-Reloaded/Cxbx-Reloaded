@@ -3624,6 +3624,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
+// Generic OOVPA as of 4039
 OOVPA_XREF(IDirectSoundBuffer_SetI3DL2Source, 4039, 1+9,
 
     XRefNoSaveIndex,

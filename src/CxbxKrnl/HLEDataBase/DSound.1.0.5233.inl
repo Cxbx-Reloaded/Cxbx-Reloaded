@@ -132,17 +132,24 @@ OOVPA_END;
 // ******************************************************************
 // CMcpxAPU::SynchPlayback
 // ******************************************************************
-OOVPA_XREF(CMcpxAPU_SynchPlayback, 5233, 8,
+// Generic OOVPA as of 5233 and newer
+OOVPA_XREF(CMcpxAPU_SynchPlayback, 5233, 9,
 
     XREF_CMcpxAPU_SynchPlayback,
     XRefZero)
+        { 0x00, 0x55 },
 
-        { 0x0C, 0x74 },
+        //{ 0x0C, 0x74 }, // vs 5344 0x3C
         { 0x1A, 0x1A },
         { 0x25, 0x53 },
         { 0x37, 0xF2 },
-        { 0x58, 0xBC },
+        //{ 0x58, 0xBC }, // vs 5344 0x84
+
+        { 0x7F, 0x47 },
+        { 0x80, 0x04 },
+
         { 0x84, 0x43 },
+
         { 0x9E, 0x64 },
         { 0xFF, 0x00 },
 OOVPA_END;
@@ -174,8 +181,9 @@ OOVPA_XREF(CDirectSound_SynchPlayback, 5233, 1+9,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound8::SynchPlayback
+// * IDirectSound::SynchPlayback
 // ******************************************************************
+// Generic OOVPA as of 5233 and newer
 OOVPA_XREF(IDirectSound_SynchPlayback, 5233, 1+7,
 
     XRefNoSaveIndex,
@@ -197,42 +205,6 @@ OOVPA_XREF(IDirectSound_SynchPlayback, 5233, 1+7,
         { 0x16, 0x04 },
 OOVPA_END;
 
-// ******************************************************************
-// CDirectSoundVoice::SetMode
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetMode, 5233, 8,
-
-    XREF_CDirectSoundVoice_SetMode,
-    XRefZero)
-
-        { 0x00, 0xF6 },
-        { 0x07, 0x24 },
-        { 0x0B, 0x10 },
-        { 0x0E, 0xB4 },
-        { 0x18, 0x3C },
-        { 0x1A, 0x06 },
-        { 0x21, 0x33 },
-        { 0x24, 0x0C },
-OOVPA_END;
-
-// ******************************************************************
-// CDirectSoundBuffer::SetMode
-// ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetMode, 5233, 1+7,
-
-    XREF_CDirectSoundBuffer_SetMode,
-    XRefOne)
-
-        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetMode ),
-
-        { 0x01, 0xE8 },
-        { 0x15, 0x0B },
-        { 0x22, 0x05 },
-        { 0x27, 0x26 },
-        { 0x34, 0x14 },
-        { 0x3F, 0x0B },
-        { 0x50, 0x0C },
-OOVPA_END;
 #if 0 // Duplicate OOVPA, replacing with generic 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetMode

@@ -554,50 +554,6 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 4627, 1+8,
 		{ 0x1B, 0x00 },
 OOVPA_END;
 #endif
-/*
-// ******************************************************************
-// * CDirectSoundVoice::SetHeadrom
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 4627, 1+8,
-
-	XREF_CDirectSoundVoice_SetHeadroom,
-	XRefOne) // Note : This was -1, which is used nowhere else and probably an error.
-
-		XREF_ENTRY( 0x1B, XREF_CMcpxVoiceClient_SetVolume ),
-
-		{ 0x0A, 0x56 },
-		{ 0x0F, 0x2B },
-		{ 0x10, 0xCE },
-		{ 0x17, 0x8B },
-		{ 0x18, 0x4A },
-		{ 0x19, 0x0C },
-		{ 0x20, 0xC2 },
-		{ 0x21, 0x08 },
-OOVPA_END;
-
-// ******************************************************************
-// * CDirectSoundStream::SetHeadroom
-// ******************************************************************
-OOVPA_NO_XREF(CDirectSoundStream_SetHeadroom, 4627, 12,
-
-	XRefNoSaveIndex,
-	XRefOne)
-
-		XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetHeadroom ),
-
-		{ 0x21, 0x8B },
-		{ 0x22, 0x05 },
-		{ 0x23, 0x40 },
-		{ 0x24, 0x00 },
-		{ 0x25, 0x80 },
-		{ 0x2C, 0x57 },
-		{ 0x31, 0x83 },
-		{ 0x32, 0xC0 },
-		{ 0x33, 0x04 },
-		{ 0x4F, 0xC2 },
-		{ 0x50, 0x08 },
-OOVPA_END;
-*/
 
 // ******************************************************************
 // * CDirectSound::SetAllParametersA
@@ -972,26 +928,6 @@ OOVPA_XREF(IDirectSoundBuffer_SetPitch, 4627, 1+7,
         { 0x1A, 0x08 },
 OOVPA_END;
 #endif
-
-// ******************************************************************
-// * DirectSound::CDirectSoundVoice::SetHeadroom
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetHeadroom, 4627, 1+7,
-
-    XREF_CDirectSoundVoice_SetHeadroom,
-    XRefOne)
-
-	// CDirectSoundVoice_SetHeadroom+0x1B : call [CMcpxVoiceClient::SetVolume]
-        XREF_ENTRY( 0x1B, XREF_CMcpxVoiceClient_SetVolume ),
-
-        { 0x03, 0x04 },
-        { 0x08, 0x48 },
-        { 0x0D, 0x24 },
-        { 0x12, 0x48 },
-        { 0x17, 0x8B },
-        { 0x1F, 0x5E },
-        { 0x21, 0x08 },
-OOVPA_END;
 
 #if 0 // Moved to 4039
 // ******************************************************************
