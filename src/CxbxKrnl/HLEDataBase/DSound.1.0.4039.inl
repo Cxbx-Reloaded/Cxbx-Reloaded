@@ -1199,6 +1199,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundVoice::SetMixBins
 // ******************************************************************
+// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(CDirectSoundVoice_SetMixBins, 4039, 1+16,
 
     XREF_CDirectSoundVoice_SetMixBins,
@@ -3152,7 +3153,6 @@ OOVPA_END;
 // ******************************************************************
 // * DS_CRefCount_Release
 // ******************************************************************
-// Generic OOVPA as of 4039 and newer
 OOVPA_XREF(DS_CRefCount_Release, 4039, 10,
 
     XREF_DS_CRefCount_Release,

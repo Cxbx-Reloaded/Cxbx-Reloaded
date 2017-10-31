@@ -495,12 +495,15 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
 // ******************************************************************
-OOVPA_XREF(CDirectSound_EnableHeadphones, 4627, 15,
+OOVPA_XREF(CDirectSound_EnableHeadphones, 4627, 16,
 
     XREF_CDirectSound_EnableHeadphones,
     XRefZero)
 
-		// CDirectSound_EnableHeadphones+0x12 : movzx eax, al
+        // CDirectSound_EnableHeadphones+0x00 : push ebp
+        { 0x00, 0x55 },
+
+        // CDirectSound_EnableHeadphones+0x12 : movzx eax, al
         { 0x12, 0x0F },
         { 0x13, 0xB6 },
         { 0x14, 0xC0 },
@@ -510,19 +513,19 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 4627, 15,
         { 0x2A, 0x05 },
         { 0x2B, 0x40 },
         { 0x2C, 0x00 },
-		{ 0x2D, 0x80 },
+        { 0x2D, 0x80 },
 
         // CDirectSound_EnableHeadphones+0x59 : and eax, 0x7FFFFFFF
         { 0x59, 0x25 },
         { 0x5A, 0xFF },
         { 0x5B, 0xFF },
-		{ 0x5C, 0xFF },
-		{ 0x5D, 0x7F },
+        { 0x5C, 0xFF },
+        { 0x5D, 0x7F },
 
         // CDirectSound_EnableHeadphones+0x97 : leave
         //{ 0x97, 0xC9 },
-		{ 0x98, 0xC2 },
-		{ 0x99, 0x08 },
+        { 0x98, 0xC2 },
+        { 0x99, 0x08 },
 OOVPA_END;
 #if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
@@ -710,24 +713,6 @@ OOVPA_XREF(IDirectSoundBuffer_Pause, 4928, 1+7,
         { 0x1A, 0x08 },
 OOVPA_END;
 
-// ******************************************************************
-// * DirectSound::CDirectSoundBuffer::GetStatus
-// ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_GetStatus, 4721, 1+7,
-
-    XREF_CDirectSoundBuffer_GetStatus,
-    XRefOne)
-
-        XREF_ENTRY( 0x35, XREF_CMcpxBuffer_GetStatus ),
-
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x39, 0x85 },
-        { 0x44, 0xFF },
-        { 0x4B, 0xC7 },
-OOVPA_END;
 #if 0 // Used 4134
 // ******************************************************************
 // * IDirectSoundBuffer_GetStatus

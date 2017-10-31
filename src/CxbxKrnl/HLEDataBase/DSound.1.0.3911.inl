@@ -1757,7 +1757,7 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient::SetMixBins
 // ******************************************************************
-OOVPA_XREF(CMcpxVoiceClient_SetMixBins, 3911, 15,
+OOVPA_XREF(CMcpxVoiceClient_SetMixBins, 3911, 16,
 
     XREF_CMcpxVoiceClient_SetMixBins,
     XRefZero)
@@ -1781,6 +1781,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetMixBins, 3911, 15,
         { 0x5B, 0xF8 },
         { 0x5C, 0x02 },
         { 0x5D, 0x82 },
+        { 0x5E, 0xFE },
 
         // CMcpxVoiceClient_SetMixBins+0xBF : jb +0x8C
         { 0xBF, 0x72 },

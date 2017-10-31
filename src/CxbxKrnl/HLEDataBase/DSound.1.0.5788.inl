@@ -94,6 +94,7 @@ OOVPA_XREF(CDirectSoundBuffer_Play, 5788, 9,
         { 0x4B, 0xC7 },
 OOVPA_END;
 
+#if 0 // Replaced with generic OOVPA 5455
 // ******************************************************************
 // * DirectSound::CDirectSound::CommitDeferredSettings
 // ******************************************************************
@@ -110,6 +111,7 @@ OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5788, 7,
         { 0x76, 0x89 },
         { 0x8E, 0xFF },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::SetCurrentPosition
@@ -475,6 +477,8 @@ OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_8, 5788, 1+8,
         { 0x4B, 0x8B },
 OOVPA_END;
 #endif
+
+#if 0 // Replaced with OOVPA 4831
 // ******************************************************************
 // * DirectSound::CMcpxStream::Pause
 // ******************************************************************
@@ -491,6 +495,7 @@ OOVPA_XREF(CMcpxStream_Pause, 5788, 7,
         { 0x6A, 0xBB },
         { 0x7C, 0x00 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::FlushEx
@@ -545,6 +550,4 @@ OOVPA_END;
 // ******************************************************************
 // * Rollback support signature(s)
 // ******************************************************************
-#define CDirectSoundBuffer_SetBufferData_5788 CDirectSoundBuffer_SetBufferData_4134
-#define IDirectSoundBuffer_SetBufferData_5788 IDirectSoundBuffer_SetBufferData_4134
 #define XAudioDownloadEffectsImage_5788 XAudioDownloadEffectsImage_4627

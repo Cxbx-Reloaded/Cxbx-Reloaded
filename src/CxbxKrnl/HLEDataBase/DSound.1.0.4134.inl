@@ -702,6 +702,7 @@ OOVPA_XREF(CMcpxBuffer_SetBufferData, 4134, 9,
         { 0x8A, 0x08 },
 OOVPA_END;
 
+#if 0 // Replaced with generic OOVPA 4134
 // ******************************************************************
 // * CDirectSoundBuffer_SetBufferData
 // ******************************************************************
@@ -728,10 +729,55 @@ OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 4134, 1+9,
         { 0xAB, 0xC2 },
         { 0xAC, 0x0C },
 OOVPA_END;
+#endif
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetBufferData
+// ******************************************************************
+// Generic OOVPA as of 4134 and newer
+OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 4134, 19,
+
+    XREF_CDirectSoundBuffer_SetBufferData,
+    XRefZero)
+
+        // CDirectSoundBuffer_SetBufferData+0x00 : push ebp
+        { 0x00, 0x55 },
+
+        // CDirectSoundBuffer_SetBufferData+0x0F : cmp dword ptr [ebp+10h],edi
+        { 0x0F, 0x39 },
+        { 0x10, 0x7D },
+        { 0x11, 0x10 },
+
+        // CDirectSoundBuffer_SetBufferData+0x12 : mov dword ptr [ebp+0Ch],edi
+        { 0x12, 0x89 },
+        { 0x13, 0x7D },
+        { 0x14, 0x0C },
+
+        // CDirectSoundBuffer_SetBufferData+0x4B : mov eax,dword ptr [esi+1Ch]
+        { 0x4B, 0x8B },
+        { 0x4C, 0x46 },
+        { 0x4D, 0x1C },
+
+        // CDirectSoundBuffer_SetBufferData+0x64 : mov ecx,dword ptr [esi+20h]
+        { 0x64, 0x8B },
+        { 0x65, 0x4E },
+        { 0x66, 0x20 },
+
+        // CDirectSoundBuffer_SetBufferData+0x8A : mov ecx,dword ptr [esi+20h]
+        { 0x8A, 0x8B },
+        { 0x8B, 0x4E },
+        { 0x8C, 0x20 },
+
+        // CDirectSoundBuffer_SetBufferData+0xAB : retn 0x0C
+        { 0xAB, 0xC2 },
+        { 0xAC, 0x0C },
+        { 0xAD, 0x00 },
+OOVPA_END;
 
 // ******************************************************************
 // * IDirectSoundBuffer_SetBufferData
 // ******************************************************************
+// Generic OOVPA as of 4134 and newer
 OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 4134, 1+7,
 
     XRefNoSaveIndex,
@@ -2055,7 +2101,7 @@ OOVPA_XREF(CDirectSoundVoice_SetI3DL2Source, 4134, 10,
         { 0x15, 0x72 },
         { 0x16, 0x4C },
 
-        // CDirectSoundVoice_SetI3DL2Source+0x44 : fld dword ptr [ecx+10h]
+        // CDirectSoundVoice_SetI3DL2Source+0x44 : fld dword ptr [ecx+10h] (not advise to use)
         { 0x44, 0xD9 },
         { 0x45, 0x41 },
         { 0x46, 0x10 },
@@ -3486,6 +3532,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream_Discontinuity
 // ******************************************************************
+// Generic OOVPA as of 4134 and newer
 OOVPA_XREF(CDirectSoundStream_Discontinuity, 4134, 1+8,
     XRefNoSaveIndex,
     XRefOne)
@@ -3621,7 +3668,8 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetMixBinHeadroom
 // ******************************************************************
-OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 4134, 16,
+// Generic OOVPA as of 4134? and newer
+OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 4134, 18,
 
     XREF_CDirectSound_SetMixBinHeadroom,
     XRefZero)
@@ -3642,11 +3690,16 @@ OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 4134, 16,
         { 0x36, 0x24 },
         { 0x37, 0x14 },
 
-        // CDirectSound_SetMixBinHeadroom+0x39 : mov [edx+ecx+0x14], bl
+        // CDirectSound_SetMixBinHeadroom+0x39 : mov [edx+ecx+0x__], bl
         { 0x39, 0x88 },
         { 0x3A, 0x5C },
         { 0x3B, 0x0A },
-        { 0x3C, 0x14 },
+        //{ 0x3C, 0x14 }, was changed to 0x10 for 5455 and later
+
+        // CDirectSound_SetMixBinHeadroom+0x3E : mov ecx, dword ptr [eax+0x0C]
+        { 0x3E, 0x8B },
+        { 0x3F, 0x48 },
+        { 0x40, 0x0C },
 
         // CDirectSound_SetMixBinHeadroom+0x5C : retn 0x0C
         { 0x5C, 0xC2 },
@@ -3757,7 +3810,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_SetHeadroom, 4134, 1+8,
 
-    XRefNoSaveIndex,
+    XREF_CDirectSoundStream_SetHeadroom,
     XRefOne)
 
         XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetHeadroom ),
