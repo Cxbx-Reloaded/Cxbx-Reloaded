@@ -635,9 +635,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4134.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
@@ -650,13 +647,7 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl">
@@ -684,9 +675,6 @@
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5455.inl">
