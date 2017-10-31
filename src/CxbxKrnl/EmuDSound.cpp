@@ -1347,16 +1347,28 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
         switch (pThis->EmuBufferToggle) {
             case X_DSB_TOGGLE_LOOP:
+                startOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
+
+                // Must check for zero length, then apply true length.
                 if (pThis->EmuRegionLoopLength == 0) {
-                    byteLength = pThis->EmuRegionPlayLength;
+                    if (pThis->EmuRegionPlayLength != 0) {
+                        byteLength = pThis->EmuRegionPlayLength;
+                    } else {
+                        byteLength = pThis->EmuBufferDesc->dwBufferBytes - startOffset;
+                    }
                 } else {
                     byteLength = pThis->EmuRegionLoopLength;
                 }
-                startOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
                 break;
             case X_DSB_TOGGLE_PLAY:
-                byteLength = pThis->EmuRegionPlayLength;
                 startOffset = pThis->EmuRegionPlayStartOffset;
+
+                // Must check for zero length, then apply true length.
+                if (pThis->EmuRegionPlayLength != 0) {
+                    byteLength = pThis->EmuRegionPlayLength;
+                } else {
+                    byteLength = pThis->EmuBufferDesc->dwBufferBytes - startOffset;
+                }
                 break;
             default:
                 free(emuBufferDescRegion);
