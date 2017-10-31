@@ -497,9 +497,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				printf("HLE: * Searching HLE database for %s version 1.0.%d... ", LibraryName.c_str(), BuildVersion);
 
                 //Initialize library scan against HLE database we want to search for address of patches and xreferences.
+                bool bPrintSkip = true;
                 for (uint32 d2 = 0; d2 < HLEDataBaseCount; d2++) {
                     if (strcmp(LibraryName.c_str(), HLEDataBase[d2].LibSec.library) == 0) {
-                        bool bPrintOn = g_bPrintfOn;
                         for (uint32 v = 0; v < pXbeHeader->dwSections; v++) {
                             SectionName.assign((char*)pSectionHeaders[v].dwSectionNameAddr, (char*)pSectionHeaders[v].dwSectionNameAddr + 8);
 
@@ -509,19 +509,18 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 if (HLEDataBase[d2].LibSec.section[d3] != NULL && strcmp(SectionName.c_str(), HLEDataBase[d2].LibSec.section[d3]) == 0) {
                                     pSectionScan = pSectionHeaders + v;
 
-                                    if (g_bPrintfOn) printf("Found\n");
-                                    g_bPrintfOn = false;
+                                    if (bPrintSkip) printf("Found\n");
+                                    bPrintSkip = false;
 
                                     EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableSize, pSectionScan, BuildVersion);
                                     break;
                                 }
                             }
                         }
-                        g_bPrintfOn = bPrintOn;
                         break;
                     }
                 }
-                if (g_bPrintfOn) printf("Skipped\n");
+                if (bPrintSkip) printf("Skipped\n");
 
                 if (v == dwLibraryVersions - 1 && bDSoundLibSection == false) {
                     LibraryName = Lib_DSOUND;
