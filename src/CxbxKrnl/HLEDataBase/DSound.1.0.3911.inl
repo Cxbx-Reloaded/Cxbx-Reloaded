@@ -3695,10 +3695,14 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer_Lock
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_Lock, 3911, 10,
+OOVPA_XREF(CDirectSoundBuffer_Lock, 3911, 1+11,
 
     XREF_CDirectSoundBuffer_Lock,
-    XRefZero)
+    XRefOne)
+
+        XREF_ENTRY( 0x23, XREF_CDirectSoundBuffer_GetCurrentPosition ),
+
+        { 0x00, 0x55 },
 
         // CDirectSoundBuffer_Lock+0x37 : mov eax, [eax+0x4C]
         { 0x37, 0x8B },

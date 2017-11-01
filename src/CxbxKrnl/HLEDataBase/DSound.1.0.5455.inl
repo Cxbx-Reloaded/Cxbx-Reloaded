@@ -189,6 +189,7 @@ OOVPA_XREF(DSound_CRefCount_Release, 5455, 10,
         { 0x1F, 0x04 },
 OOVPA_END;
 
+#if 0 // Replaced with generic OOVPA 5344
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
@@ -213,6 +214,7 @@ OOVPA_XREF(CMcpxStream_Flush, 5455, 11,
         { 0xD2, 0xC2 },
         { 0xD3, 0x04 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxStream_Discontinuity
@@ -362,4 +364,35 @@ OOVPA_NO_XREF(DSound_CMemoryManager_PoolAlloc, 5455, 11)
 	{ 0x44, 0xC2 },
 	{ 0x45, 0x0C },
 	{ 0x46, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_GetSpeakerConfig
+// ******************************************************************
+// Generic OOVPA as of 5455 and newer
+OOVPA_XREF(CDirectSound_GetSpeakerConfig, 5455, 14,
+
+    XREF_CDirectSound_GetSpeakerConfig,
+    XRefZero)
+
+        { 0x00, 0xE8 },
+
+        { 0x0B, 0x00 },
+        { 0x14, 0x0B },
+        { 0x20, 0xB8 },
+        { 0x30, 0x08 },
+
+        { 0x31, 0x81 },
+        //{ 0x32, 0xE1 }, (This value has changed, commented out for generic support.)
+        { 0x33, 0xFF },
+        { 0x34, 0xFF },
+        { 0x35, 0xFF },
+        { 0x36, 0x7F },
+
+        { 0x3C, 0x0B },
+
+        { 0x48, 0x33 },
+
+        { 0x4A, 0xC2 },
+        { 0x4B, 0x08 },
 OOVPA_END;

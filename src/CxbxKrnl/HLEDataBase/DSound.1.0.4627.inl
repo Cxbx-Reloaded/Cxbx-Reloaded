@@ -283,15 +283,30 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound_GetSpeakerConfig
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSound_GetSpeakerConfig, 4627, 7)
+OOVPA_XREF(CDirectSound_GetSpeakerConfig, 4627, 14,
+
+    XREF_CDirectSound_GetSpeakerConfig,
+    XRefZero)
+
+        { 0x00, 0xE8 },
 
         { 0x0B, 0x00 },
         { 0x14, 0x0B },
         { 0x20, 0xB8 },
         { 0x2A, 0x04 },
+
         { 0x35, 0x81 },
+        //{ 0x36, 0xE1 }, (This value has changed, commented out to expand support for later revisions.)
+        { 0x37, 0xFF },
+        { 0x38, 0xFF },
+        { 0x39, 0xFF },
+        { 0x3A, 0x7F },
+
         { 0x40, 0x0B },
         { 0x4C, 0x33 },
+
+        { 0x4A, 0xC2 },
+        { 0x4B, 0x08 },
 OOVPA_END;
 
 // ******************************************************************
@@ -640,12 +655,14 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::Pause
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_Pause, 4928, 1+7,
+OOVPA_XREF(CDirectSoundBuffer_Pause, 4928, 1+10,
 
     XREF_CDirectSoundBuffer_Pause,
     XRefOne)
 
         XREF_ENTRY( 0x35, XREF_CMcpxBuffer_Pause ),
+
+        { 0x00, 0x56 },
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
@@ -654,6 +671,8 @@ OOVPA_XREF(CDirectSoundBuffer_Pause, 4928, 1+7,
         { 0x39, 0x85 },
         { 0x44, 0xFF },
         { 0x4B, 0xC7 },
+        { 0x4E, 0xC2 },
+        { 0x4F, 0x08 },
 OOVPA_END;
 
 // ******************************************************************

@@ -922,10 +922,12 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundBuffer_Lock
 // ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_Lock, 4039, 13,
+OOVPA_XREF(CDirectSoundBuffer_Lock, 4039, 1+13,
 
     XREF_CDirectSoundBuffer_Lock,
-    XRefZero)
+    XRefOne)
+
+        XREF_ENTRY( 0x45, XREF_CDirectSoundBuffer_GetCurrentPosition ),
 
         // CDirectSoundBuffer_Lock+0x34 : test [ebp+0x24], 1
         { 0x34, 0xF6 },
