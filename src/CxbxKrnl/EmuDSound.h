@@ -869,7 +869,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_StopEx
 // ******************************************************************
-extern "C" HRESULT __stdcall EMUPATCH(IDirectSoundBuffer_StopEx)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     X_CDirectSoundBuffer *pBuffer,
     REFERENCE_TIME        rtTimeStamp,
@@ -890,7 +890,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Play)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PlayEx
 // ******************************************************************
-extern "C" HRESULT __stdcall EMUPATCH(IDirectSoundBuffer_PlayEx)
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
     X_CDirectSoundBuffer*   pBuffer,
     REFERENCE_TIME          rtTimeStamp,
@@ -1384,7 +1384,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Pause)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PauseEx
 // ******************************************************************
-extern "C" HRESULT __stdcall EmuIDirectSoundBuffer_PauseEx
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_PauseEx)
 (
     X_CDirectSoundBuffer*   pThis,
     REFERENCE_TIME          rtTimestamp,
@@ -1418,7 +1418,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_Flush)();
 // ******************************************************************
 // * patch: IDirectSoundStream_FlushEx
 // ******************************************************************
-extern "C" HRESULT WINAPI EMUPATCH(IDirectSoundStream_FlushEx)
+HRESULT WINAPI EMUPATCH(IDirectSoundStream_FlushEx)
 (
     X_CDirectSoundStream*   pThis,
     REFERENCE_TIME          rtTimeStamp,
@@ -1723,4 +1723,21 @@ HRESULT WINAPI EMUPATCH(IDirectSound_CommitDeferredSettings)
 HRESULT WINAPI EMUPATCH(IDirectSound_CommitEffectData)
     (X_CDirectSound* pThis);
 
+// ******************************************************************
+// * patch: CDirectSoundStream_PauseEx
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(CDirectSoundStream_PauseEx)
+(
+    X_CDirectSoundStream   *pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause);
+
+// ******************************************************************
+// * patch: IDirectSoundStream_PauseEx
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundStream_PauseEx)
+(
+    X_CDirectSoundStream   *pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause);
 #endif

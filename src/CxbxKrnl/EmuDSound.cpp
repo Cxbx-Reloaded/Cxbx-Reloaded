@@ -1449,7 +1449,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_StopEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     X_CDirectSoundBuffer*   pThis,
     REFERENCE_TIME          rtTimeStamp,
@@ -2834,48 +2834,34 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
     return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags);
 }
 
-//// ******************************************************************
-//// * patch: IDirectSoundBuffer_Pause
-//// ******************************************************************
-//extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer_PauseEx
-//(
-//    X_CDirectSoundBuffer   *pThis,
-//    REFERENCE_TIME            rtTimestamp,
-//    DWORD                    dwPause)
-//{
-//      FUNC_EXPORTS;
-//
-//		enterCriticalSection;
-//
-//    	LOG_FUNC_BEGIN
-//			LOG_FUNC_ARG(pThis)
-//			LOG_FUNC_ARG(rtTimestamp)
-//			LOG_FUNC_ARG(dwPause)
-//			LOG_FUNC_END;
-//    
-//    // This function wasn't part of the XDK until 4721.
-//    // TODO: Implement time stamp feature (a thread maybe?)
-//    LOG_UNIMPLEMENTED_DSOUND();    
-//
-//    HRESULT ret;
-//
-//    if(pThis != NULL) {
-//        if(pThis->EmuDirectSoundBuffer8) {
-//            if(dwPause == X_DSBPAUSE_PAUSE)
-//                ret = pThis->EmuDirectSoundBuffer8->Stop();
-//            if(dwPause == X_DSBPAUSE_RESUME) {
-//                DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
-//                ret = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
-//            }
-//            if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
-//                EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
-//        }
-//    }
-//
-//     leaveCriticalSection;   
-//
-//    return ret;
-//}
+// ******************************************************************
+// * patch: IDirectSoundBuffer_PauseEx
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
+(
+    X_CDirectSoundBuffer   *pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause)
+{
+      FUNC_EXPORTS;
+
+        enterCriticalSection;
+
+        LOG_FUNC_BEGIN
+            LOG_FUNC_ARG(pThis)
+            LOG_FUNC_ARG(rtTimestamp)
+            LOG_FUNC_ARG(dwPause)
+            LOG_FUNC_END;
+
+    // This function wasn't part of the XDK until 4721.
+    // TODO: Implement time stamp feature (a thread maybe?)
+
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags);
+
+    leaveCriticalSection;
+
+    return hRet;
+}
 
 // ******************************************************************
 // * patch: IDirectSound_GetOutputLevels
@@ -2949,7 +2935,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Flush)()
 // ******************************************************************
 // * patch: IDirectSoundStream_FlushEx
 // ******************************************************************
-extern "C" HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_FlushEx)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_FlushEx)
 (
     X_CDirectSoundStream*   pThis,
     REFERENCE_TIME          rtTimeStamp,
@@ -3072,7 +3058,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PlayEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
     X_CDirectSoundBuffer* pThis,
     REFERENCE_TIME        rtTimeStamp,
@@ -3883,4 +3869,53 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
     leaveCriticalSection;
 
     return DS_OK;
+}
+
+// ******************************************************************
+// * patch: CDirectSoundStream_PauseEx
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
+(
+    X_CDirectSoundStream   *pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause)
+{
+      FUNC_EXPORTS;
+
+        enterCriticalSection;
+
+        LOG_FUNC_BEGIN
+            LOG_FUNC_ARG(pThis)
+            LOG_FUNC_ARG(rtTimestamp)
+            LOG_FUNC_ARG(dwPause)
+            LOG_FUNC_END;
+
+    // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
+    // TODO: Implement time stamp feature (a thread maybe?)
+
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
+
+    leaveCriticalSection;
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_PauseEx
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_PauseEx)
+(
+    X_CDirectSoundStream   *pThis,
+    REFERENCE_TIME          rtTimestamp,
+    DWORD                   dwPause)
+{
+      FUNC_EXPORTS;
+
+        LOG_FUNC_BEGIN
+            LOG_FUNC_ARG(pThis)
+            LOG_FUNC_ARG(rtTimestamp)
+            LOG_FUNC_ARG(dwPause)
+            LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_PauseEx)(pThis, rtTimestamp, dwPause);
 }

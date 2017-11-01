@@ -136,7 +136,6 @@ enum XRefDataBaseOffset
 	XREF_CDirectSoundBuffer_SetBufferData,
     XREF_CDirectSound_CreateSoundBuffer,
     XREF_CDirectSound_CreateSoundStream,
-    XREF_CMcpxStream_Pause,
     XREF_CDirectSound_SetI3DL2Listener,
     XREF_CDirectSound_SetMixBinHeadroom,
     XREF_CMcpxAPU_SetMixBinHeadroom,
@@ -246,6 +245,8 @@ enum XRefDataBaseOffset
 	XREF_CDirectSound_GetOutputLevels,
 	XREF_CMcpxBuffer_Pause,
 	XREF_CDirectSoundBuffer_Pause,
+    XREF_CMcpxBuffer_Pause_Ex,
+    XREF_CDirectSoundBuffer_PauseEx,
 	XREF_CMcpxBuffer_GetStatus,
 	XREF_CDirectSoundBuffer_GetStatus,
     XREF_CMcpxStream_GetStatus,
@@ -290,7 +291,10 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundStream_SetConeOutsideVolume,
     XREF_CDirectSoundStream_SetMode,
     XREF_CDirectSoundStream_SetI3DL2Source,
+    XREF_CMcpxStream_Pause,
     XREF_CDirectSoundStream_Pause,
+    XREF_CMcpxStream_Pause_Ex,
+    XREF_CDirectSoundStream_PauseEx,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,
