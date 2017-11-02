@@ -1730,6 +1730,159 @@ OOVPA_XREF(IDirectSound3DCalculator_Calculate3D, 5344, 1+1,
         { 0x00, 0xE9 },
 OOVPA_END;
 
+// ******************************************************************
+// * XAudioSetEffectData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(XAudioSetEffectData, 5344, 2+3,
+
+    XRefNoSaveIndex,
+    XRefTwo)
+
+        // XAudioSetEffectData+0x79 : call [CDirectSound_GetEffectData]
+        XREF_ENTRY(0x07A, XREF_CDirectSound_GetEffectData),
+
+        // XAudioSetEffectData+0xC1 : call [CDirectSound_SetEffectData]
+        XREF_ENTRY(0x0C2, XREF_CDirectSound_SetEffectData),
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x03, 0x81 },
+OOVPA_END;
+
+// ******************************************************************
+// * XWaveFileCreateMediaObjectEx
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(XWaveFileCreateMediaObjectEx, 5344, 10,
+
+    XRefNoSaveIndex,
+    XRefZero)
+
+        { 0x0D, 0x0B },
+        { 0x1C, 0xF7 },
+        { 0x2B, 0x07 },
+        { 0x2F, 0x83 },
+        { 0x41, 0x0A },
+        { 0x45, 0x10 },
+        { 0x58, 0x8B },
+        { 0x63, 0x07 },
+        { 0x6C, 0xC2 },
+        { 0x6D, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * XFileCreateMediaObject
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(XFileCreateMediaObject, 5344, 10,
+
+    XRefNoSaveIndex,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x03, 0x56 },
+
+        { 0x34, 0x18 },
+        { 0x37, 0x14 },
+        { 0x3A, 0x10 },
+        { 0x3D, 0x0C },
+        { 0x40, 0x08 },
+
+        { 0x67, 0xC2 },
+        { 0x68, 0x18 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_MapBufferData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(CDirectSound_MapBufferData, 5344, 10,
+
+    XREF_CDirectSound_MapBufferData,
+    XRefZero)
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+
+        { 0x2B, 0x08 },
+        { 0x2E, 0x0C },
+
+        { 0x34, 0x83 },
+        { 0x35, 0xC1 },
+        { 0x36, 0x60 },
+
+        { 0x47, 0x18 },
+
+        { 0x66, 0xC2 },
+        { 0x67, 0x10 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_MapBufferData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(IDirectSound_MapBufferData, 5344, 1+6,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSound_MapBufferData+0x1C : call [CDirectSound_MapBufferData]
+        XREF_ENTRY(0x01D, XREF_CDirectSound_MapBufferData),
+
+        { 0x00, 0xFF },
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x14, 0xF8 },
+        { 0x21, 0xC2 },
+        { 0x22, 0x10 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_UnmapBufferData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(CDirectSound_UnmapBufferData, 5344, 10,
+
+    XREF_CDirectSound_UnmapBufferData,
+    XRefZero)
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+
+        { 0x2B, 0x08 },
+        { 0x2E, 0x0C },
+        { 0x32, 0x0C },
+
+        { 0x33, 0x83 },
+        { 0x34, 0xC1 },
+        { 0x35, 0x60 },
+
+        { 0x4D, 0xC2 },
+        { 0x4E, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSound_UnmapBufferData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer
+OOVPA_XREF(IDirectSound_UnmapBufferData, 5344, 1+6,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSound_UmapBufferData+0x14 : call [CDirectSound_UnmapBufferData]
+        XREF_ENTRY(0x015, XREF_CDirectSound_UnmapBufferData),
+
+        { 0x00, 0x8B },
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0C, 0xF8 },
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+OOVPA_END;
+
 
 // ******************************************************************
 // * Rollback support signature(s)
