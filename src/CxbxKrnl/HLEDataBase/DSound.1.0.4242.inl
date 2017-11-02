@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 
-
+#if 0 // Moved to 4039
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
@@ -50,7 +50,8 @@ OOVPA_XREF(CDirectSoundVoice_SetFormat, 4242, 8,
         { 0x3F, 0x8B },
         { 0x46, 0x00 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetFormat
 // ******************************************************************
@@ -69,7 +70,8 @@ OOVPA_XREF(CDirectSoundBuffer_SetFormat, 4242, 1+7,
         { 0x3A, 0x74 },
         { 0x47, 0x8B },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetFormat
 // ******************************************************************
@@ -88,7 +90,8 @@ OOVPA_XREF(IDirectSoundBuffer_SetFormat, 4242, 1+7,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetFormat
 // ******************************************************************
@@ -108,6 +111,7 @@ OOVPA_XREF(CDirectSoundStream_SetFormat, 4242, 1+8,
         { 0x40, 0x68 },
         { 0x4B, 0x8B },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxVoiceClient::SetLFO
@@ -233,6 +237,7 @@ OOVPA_XREF(CMcpxStream_Flush, 4242, 10,
         { 0xD2, 0xC3 },
 OOVPA_END;
 
+#if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundStream_SetFormat
 // ******************************************************************
@@ -247,4 +252,31 @@ OOVPA_XREF(IDirectSoundStream_SetFormat, 4242, 1+1,
 
         // IDirectSoundStream_SetFormat+0x00 : jmp 0x........
         { 0x00, 0xE9 },
+OOVPA_END;
+#endif
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetNotificationPositions
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetNotificationPositions, 4242, 11,
+
+    XREF_CDirectSoundBuffer_SetNotificationPositions,
+    XRefZero)
+
+        // CDirectSoundBuffer_SetNotificationPositions+0x00 : push ebx
+        { 0x00, 0x53 },
+
+        { 0x0C, 0x00 },
+        { 0x1B, 0xFF },
+        { 0x25, 0x80 },
+
+        { 0x2C, 0x0C },
+        { 0x2D, 0x8B },
+        { 0x2E, 0x4E },
+        { 0x2F, 0x1C },
+
+        { 0x30, 0x57 },
+
+        { 0x47, 0xE8 },
+        { 0x5D, 0x8B },
 OOVPA_END;

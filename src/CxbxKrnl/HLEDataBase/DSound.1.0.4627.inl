@@ -186,6 +186,7 @@ OOVPA_XREF(CDirectSound_SetPosition, 4627, 11,
         { 0x53, 0xFF },
 OOVPA_END;
 
+#if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSoundCreateBuffer
 // ******************************************************************
@@ -216,6 +217,7 @@ OOVPA_XREF(DirectSoundCreateBuffer, 4242, 1+11,
         { 0x54, 0xC2 },
         { 0x55, 0x08 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxBuffer_GetStatus
@@ -835,6 +837,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetEG, 4627, 1+7,
 OOVPA_END;
 #endif
 
+#if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::FlushEx
 // ******************************************************************
@@ -843,7 +846,7 @@ OOVPA_XREF(CDirectSoundStream_FlushEx, 4627, 14,
     XREF_CDirectSoundStream_FlushEx,
     XRefZero)
 
-        { 0x0F, 0x00 },
+        { 0x00, 0x55 },
         { 0x18, 0x0B },
         { 0x24, 0xB8 },
         { 0x25, 0x05 },
@@ -858,7 +861,8 @@ OOVPA_XREF(CDirectSoundStream_FlushEx, 4627, 14,
         { 0x4D, 0x85 },
         { 0x59, 0x15 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4134
 // ******************************************************************
 // * IDirectSoundStream_FlushEx
 // ******************************************************************
@@ -878,7 +882,8 @@ OOVPA_XREF(IDirectSoundStream_FlushEx, 4627, 1+8,
         { 0x15, 0xC2 },
         { 0x16, 0x10 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4134
 // ******************************************************************
 // * XAudioDownloadEffectsImage
 // ******************************************************************
@@ -894,6 +899,7 @@ OOVPA_NO_XREF(XAudioDownloadEffectsImage, 4361, 8)
         { 0xDE, 0x07 },
         { 0xFE, 0xF7 },
 OOVPA_END;
+#endif
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetFilter
