@@ -298,6 +298,16 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundStream_Pause,
     XREF_CMcpxStream_Pause_Ex,
     XREF_CDirectSoundStream_PauseEx,
+    XREF_CDirectSoundVoice_GetVoiceProperties,
+    XREF_CMcpxVoiceClient_GetVoiceProperties,
+    XREF_CDirectSoundBuffer_GetVoiceProperties,
+    XREF_CDirectSoundStream_GetVoiceProperties,
+    XREF_CDirectSoundStream_Set3DVoiceData,
+    XREF_CDirectSoundStream_Use3DVoiceData,
+    XREF_CDirectSound3DCalculator_GetVoiceData,
+    XREF_CDirectSound3DCalculator_GetPanData,
+    XREF_CDirectSound3DCalculator_GetMixBinVolumes,
+    XREF_CDirectSound3DCalculator_Calculate3D,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

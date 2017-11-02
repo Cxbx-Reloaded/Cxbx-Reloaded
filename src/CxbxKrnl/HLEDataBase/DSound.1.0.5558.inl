@@ -625,7 +625,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_Use3DVoiceData, 5558, 1+8,
 
-    XRefNoSaveIndex,
+    XREF_CDirectSoundStream_Use3DVoiceData,
     XRefOne)
 
         XREF_ENTRY( 0x35, XREF_CDirectSoundVoice_Use3DVoiceData ),
@@ -638,4 +638,36 @@ OOVPA_XREF(CDirectSoundStream_Use3DVoiceData, 5558, 1+8,
         { 0x3F, 0x68 },
         { 0x4D, 0xC2 },
         { 0x4E, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_Set3DVoiceData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer (note: is not introduced in 5344)
+OOVPA_XREF(IDirectSoundStream_Set3DVoiceData, 5558, 1+1,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_Set3DVoiceData+0x00 : jmp [CDirectSoundStream_Set3DVoiceData]
+        XREF_ENTRY(0x01, XREF_CDirectSoundStream_Set3DVoiceData),
+
+        // IDirectSoundStream_Set3DVoiceData+0x00 : jmp 0x........
+        { 0x00, 0xE9 },
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundStream_Use3DVoiceData
+// ******************************************************************
+// Generic OOVPA as of ____? and newer (note: is not introduced in 5344)
+OOVPA_XREF(IDirectSoundStream_Use3DVoiceData, 5558, 1+1,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundStream_Use3DVoiceData+0x00 : jmp [CDirectSoundStream_Use3DVoiceData]
+        XREF_ENTRY(0x01, XREF_CDirectSoundStream_Use3DVoiceData),
+
+        // IDirectSoundStream_Use3DVoiceData+0x00 : jmp 0x........
+        { 0x00, 0xE9 },
 OOVPA_END;
