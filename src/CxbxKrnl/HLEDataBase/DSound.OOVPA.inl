@@ -44,7 +44,7 @@
 // * [4134] JSRF                |     1%    | Does not have Stream class. DS and Buffer might be full.
 // * [....]
 // * [5455] GR: Island Thunder  |   100%    | Only has 50%-ish of the library compiled with xbe build.
-// * [5558] Dino Crisis 3       |    80%    | Contain full library.
+// * [5558] Dino Crisis 3       |   100%    | Contain full library.
 
 // TODO: Known DSound OOVPA issue list
 // * 3911 to 5933: Cannot make OOVPAs
