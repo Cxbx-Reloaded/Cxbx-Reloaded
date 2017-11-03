@@ -3946,7 +3946,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObjectEx)
 
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pszFileName)
-        LOG_FUNC_ARG(ppwfxFormat)
+        LOG_FUNC_ARG(hFile)
         LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
