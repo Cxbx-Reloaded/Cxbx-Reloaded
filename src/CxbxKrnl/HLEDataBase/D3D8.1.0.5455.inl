@@ -129,6 +129,7 @@ OOVPA_NO_XREF(D3DDevice_SetMaterial, 5455, 11)
         { 0x2E, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_GetMaterial
@@ -297,6 +298,7 @@ OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 5455, 11)
         { 0x2E, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_GetBackMaterial
@@ -405,6 +407,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 5455, 9)
         { 0x26, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode

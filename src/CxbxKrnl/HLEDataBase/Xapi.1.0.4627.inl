@@ -66,6 +66,7 @@ OOVPA_XREF(XID_fCloseDevice, 4627, 7,
         { 0x91, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XID_fCloseDevice
@@ -91,6 +92,7 @@ OOVPA_XREF(XID_fCloseDevice, 4831, 11,
         { 0x96, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XInputGetState
@@ -115,6 +117,7 @@ OOVPA_NO_XREF(XInputGetState, 4831, 12)
         { 0x6A, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XInputGetCapabilities
@@ -133,6 +136,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 4831, 10)
         { 0x9A, 0xD0 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * GetOverlappedResult
@@ -175,6 +179,7 @@ OOVPA_NO_XREF(XLaunchNewImageA, 4721, 15)
         { 0xC1, 0x15 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4721 version
 // ******************************************************************
 // * XLaunchNewImageA
@@ -198,6 +203,7 @@ OOVPA_NO_XREF(XLaunchNewImageA, 4928, 12)
 		{ 0x44, 0x5C },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * XSetProcessQuantumLength
@@ -213,6 +219,7 @@ OOVPA_NO_XREF(XSetProcessQuantumLength, 4627, 7)
         { 0x13, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * timeSetEvent
@@ -228,6 +235,7 @@ OOVPA_NO_XREF(timeSetEvent, 4627, 7)
         { 0xDE, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * timeKillEvent
@@ -244,6 +252,7 @@ OOVPA_NO_XREF(timeKillEvent, 4627, 8)
         { 0x6E, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * RaiseException
@@ -275,6 +284,7 @@ OOVPA_NO_XREF(XMountAlternateTitleA, 4928, 7)
         { 0xDE, 0x45 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * MoveFileA
@@ -290,6 +300,7 @@ OOVPA_NO_XREF(MoveFileA, 4627, 7)
         { 0x83, 0x33 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, this was _XInputGetCapabilities@8. Moved to 4831
 // ******************************************************************
 // * XInputGetDeviceDescription
@@ -307,6 +318,7 @@ OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 9)
 		{ 0x35, 0x06 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XGetDeviceEnumerationStatus

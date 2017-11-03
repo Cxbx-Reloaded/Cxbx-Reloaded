@@ -47,6 +47,7 @@ OOVPA_NO_XREF(D3DDevice_GetDisplayFieldStatus, 5233, 7)
         { 0x36, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4627
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstantNotInlineFast
@@ -79,6 +80,7 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstantNotInlineFast, 5233, 13)
         { 0x43, 0x0F },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_SetPixelShader
@@ -94,6 +96,7 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 5233, 7)
         { 0xE1, 0xF6 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_CreateTexture2
@@ -125,6 +128,7 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 5233, 12)
         { 0xB3, 0x1C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
@@ -177,6 +181,7 @@ OOVPA_NO_XREF(D3DDevice_SetTexture, 5233, 10)
         { 0xFE, 0xE2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_Swap
@@ -239,6 +244,7 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 5233, 11)
         { 0xB3, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetOverlayUpdateStatus
@@ -308,6 +314,7 @@ OOVPA_NO_XREF(D3DDevice_Release, 5233, 8)
         { 0x36, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5120
 // ******************************************************************
 // * D3DDevice_CopyRects
@@ -324,6 +331,7 @@ OOVPA_NO_XREF(D3DDevice_CopyRects, 5120, 8)
         { 0xFE, 0x4C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetScissors
@@ -340,6 +348,7 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 5233, 8)
         { 0xFE, 0x4C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_SetScreenSpaceOffset
@@ -413,6 +422,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 1+7,
         { 0x32, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * D3D::CommonSetRenderTarget
@@ -432,6 +442,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 5233, 8,
         { 0xFF, 0x75 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_BlockOnFence
@@ -450,6 +461,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 5233, 1+5,
         { 0x0D, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetPalette
@@ -475,6 +487,7 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 5233, 12)
         { 0x8B, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
@@ -500,6 +513,7 @@ OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 5233, 12)
         { 0x40, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
@@ -640,6 +654,7 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 5233, 9)
         { 0x68, 0x2D },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_EndPushBuffer

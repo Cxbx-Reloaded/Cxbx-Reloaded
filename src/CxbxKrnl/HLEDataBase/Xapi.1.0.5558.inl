@@ -48,6 +48,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 5455, 8)
         { 0xF6, 0x46 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * XInputGetState
@@ -63,6 +64,7 @@ OOVPA_NO_XREF(XInputGetState, 5455, 7)
         { 0x67, 0x15 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * XapiInitProcess
@@ -79,6 +81,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5558, 8)
         { 0xFE, 0x02 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5659
 // ******************************************************************
 // * XapiInitProcess
@@ -95,6 +98,7 @@ OOVPA_NO_XREF(XapiInitProcess, 5659, 8)
         { 0xFE, 0x02 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * XLaunchNewImageA
@@ -110,6 +114,7 @@ OOVPA_NO_XREF(XLaunchNewImageA, 5558, 7)
         { 0x3D, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XapiFiberStartup
@@ -125,6 +130,7 @@ OOVPA_NO_XREF(XapiFiberStartup, 5558, 7)
         { 0x3D, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * XID_fCloseDevice
@@ -143,6 +149,7 @@ OOVPA_XREF(XID_fCloseDevice, 5455, 7,
         { 0x84, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * XInputClose
@@ -164,6 +171,7 @@ OOVPA_XREF(XInputClose, 5455, 1+8,
         { 0x0B, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * XMountAlternateTitleA

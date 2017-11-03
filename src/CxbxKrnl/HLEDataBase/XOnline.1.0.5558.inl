@@ -74,6 +74,7 @@ OOVPA_NO_XREF(WSAStartup, 5558, 7)
         { 0x1A, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 5455
 // ******************************************************************
 // * CXnSock::socket
@@ -93,6 +94,7 @@ OOVPA_NO_XREF(socket, 5558, 10) // Up to 5849
         { 0xBF, 0x15 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * XOnlineLogon

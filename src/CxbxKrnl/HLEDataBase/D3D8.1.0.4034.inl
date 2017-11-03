@@ -117,6 +117,7 @@ OOVPA_NO_XREF(D3DDevice_GetGammaRamp, 4034, 7)
         { 0x28, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * D3DDevice_GetCreationParameters
@@ -132,6 +133,7 @@ OOVPA_NO_XREF(D3DDevice_GetCreationParameters, 4034, 7)
         { 0x36, 0xC9 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetViewport
@@ -941,6 +943,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TextureFactor, 4034, 9)
         { 0x4F, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * Get2DSurfaceDesc
@@ -1011,6 +1014,7 @@ OOVPA_NO_XREF(D3DDevice_Clear, 4034, 9)
         { 0x039A, 0x18 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetLight
@@ -2278,6 +2282,7 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 4039, 10)
         { 0x1C, 0x95 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetPixelShaderConstant

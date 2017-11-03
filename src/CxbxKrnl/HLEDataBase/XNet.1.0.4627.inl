@@ -72,6 +72,7 @@ OOVPA_XREF(XnInit, 4627, 18,
         { 0x0205, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * XNetStartup
@@ -102,6 +103,7 @@ OOVPA_XREF(XNetStartup, 4627, 1+7,
         { 0x15, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * WSAStartup

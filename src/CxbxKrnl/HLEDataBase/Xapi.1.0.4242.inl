@@ -91,6 +91,7 @@ OOVPA_XREF(XID_fCloseDevice, 4242, 11,
         { 0xA0, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XInputGetCapabilities

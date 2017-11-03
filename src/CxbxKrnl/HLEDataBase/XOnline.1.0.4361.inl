@@ -62,6 +62,7 @@ OOVPA_XREF(XNetStartup, 4361, 1+7,
         { 0x15, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 4361
 // ******************************************************************
 // * WSAStartup
@@ -87,6 +88,7 @@ OOVPA_XREF(WSAStartup, 4361, 1+8,
         { 0x07, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic XNet 4361 version
 // ******************************************************************
 // * XnInit
@@ -113,6 +115,7 @@ OOVPA_XREF(XnInit, 4361, 10,
         { 0xBE, 0x01 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 3911
 // ******************************************************************
 // * CXnSock::socket
@@ -135,6 +138,7 @@ OOVPA_NO_XREF(socket, 4361, 9)
         { 0xDB, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 3911
 // ******************************************************************
 // * CXnSock::bind
@@ -160,6 +164,7 @@ OOVPA_NO_XREF(bind, 4361, 10)
         { 0x81, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 3911
 // ******************************************************************
 // * CXnSock::listen
@@ -184,6 +189,7 @@ OOVPA_NO_XREF(listen, 4361, 9)
         { 0x80, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 3911
 // ******************************************************************
 // * CXnSock::ioctlsocket

@@ -57,6 +57,7 @@ OOVPA_NO_XREF(XGSwizzleBox, 4627, 10)
         { 0xE3, 0xDB },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XGWriteSurfaceOrTextureToXPR

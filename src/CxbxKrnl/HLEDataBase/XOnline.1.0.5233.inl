@@ -48,6 +48,7 @@ OOVPA_NO_XREF(XNetStartup, 5233, 8)
         { 0x16, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * CXo::XOnlineLogon
@@ -67,6 +68,7 @@ OOVPA_XREF(CXo_XOnlineLogon, 5233, 8,
         { 0xFE, 0x33 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * XOnlineLogon
@@ -87,6 +89,7 @@ OOVPA_XREF(XOnlineLogon, 5233, 1+7,
         { 0x0A, 0xE9 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 5120
 // ******************************************************************
 // * CXnSock::connect

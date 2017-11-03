@@ -63,6 +63,7 @@ OOVPA_NO_XREF(XInputOpen, 4134, 12)
         { 0x73, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XInputGetState
@@ -134,6 +135,7 @@ OOVPA_NO_XREF(XInputPoll, 4134, 10)
         { 0x3C, 0x52 },
 OOVPA_END;
 #endif
+
 #if 0 // version 4361, Not 4134
 // ******************************************************************
 // * XMountMUA
@@ -150,6 +152,7 @@ OOVPA_NO_XREF(XMountMUA, 4134, 8)
         { 0xFE, 0x09 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * timeSetEvent
@@ -165,6 +168,7 @@ OOVPA_NO_XREF(timeSetEvent, 4134, 7)
         { 0xDE, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * timeKillEvent
