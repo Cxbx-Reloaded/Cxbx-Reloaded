@@ -158,6 +158,11 @@ XBSYSAPI EXPORTNUM(161) VOID FASTCALL KfLowerIrql
 // ******************************************************************
 XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 
+void KiLockDispatcherDatabase 
+(
+	OUT KIRQL* OldIrql
+);
+
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
