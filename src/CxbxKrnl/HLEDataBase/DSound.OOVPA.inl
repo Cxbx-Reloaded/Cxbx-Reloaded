@@ -113,10 +113,6 @@
 //   * CDirectSoundStream_SetRolloffCurve (IDirectSoundStream_SetRolloffCurve is a jmp)
 //   * CDirectSoundStream_SetRolloffFactor
 // * 4134 verification needed: (Verifying with Blood Omen 2 title is done, need different title to find the remaining...)
-//   * CDirectSoundBuffer_SetEG
-//   * IDirectSoundBuffer_SetEG
-//   * CMcpxVoiceClient_SetLFO
-//   * CDirectSoundStream_SetLFO
 //   * DirectSoundUseLightHRTF
 //   * XAudioCreateAdpcmFormat
 //   * XAudioCreatePcmFormat
@@ -226,7 +222,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxVoiceClient_SetEG, XREF, 3911, 4039, 4134, 4242),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetFilter, XREF, 3911, 4039, 4134 /*, 5344, 5558*/),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetI3DL2Source, XREF, 3911),
-    REGISTER_OOVPAS(CMcpxVoiceClient_SetLFO, XREF, 3911, 4039, 4242),
+    REGISTER_OOVPAS(CMcpxVoiceClient_SetLFO, XREF, 3911, 4039, 4134, 4242),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetMixBins, XREF, 3911, 5344),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetPitch, XREF, 3911),
     REGISTER_OOVPAS(CMcpxVoiceClient_SetVolume, XREF, 3911, 4039, 4134),
@@ -284,13 +280,13 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundBuffer_SetCurrentPosition, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetDistanceFactor, XREF, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetDopplerFactor, XREF, 4134),
-    REGISTER_OOVPAS(CDirectSoundBuffer_SetEG, XREF, 4039, 4242),
+    REGISTER_OOVPAS(CDirectSoundBuffer_SetEG, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetFilter, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetFormat, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetFrequency, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetHeadroom, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetI3DL2Source, XREF, 4039, 4134),
-    REGISTER_OOVPAS(CDirectSoundBuffer_SetLFO, XREF, 4039, 4242),
+    REGISTER_OOVPAS(CDirectSoundBuffer_SetLFO, XREF, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetLoopRegion, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetMaxDistance, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundBuffer_SetMinDistance, XREF, 3911, 4039, 4134),

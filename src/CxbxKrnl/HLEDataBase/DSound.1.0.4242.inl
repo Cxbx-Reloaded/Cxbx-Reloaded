@@ -131,6 +131,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetLFO, 4242, 8,
         { 0xFE, 0x6C },
 OOVPA_END;
 
+#if 0 // Moved to 4134
 // ******************************************************************
 // * CDirectSoundBuffer::SetLFO
 // ******************************************************************
@@ -149,6 +150,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetLFO, 4242, 1+7,
         { 0x3A, 0x74 },
         { 0x47, 0x8B },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxVoiceClient::SetEG
@@ -168,6 +170,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetEG, 4242, 8,
         { 0xFE, 0x1C },
 OOVPA_END;
 
+#if 0 // Moved to 4134
 // ******************************************************************
 // * CDirectSoundBuffer::SetEG
 // ******************************************************************
@@ -186,6 +189,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetEG, 4242, 1+7,
         { 0x3A, 0x74 },
         { 0x47, 0x8B },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxBuffer_Stop

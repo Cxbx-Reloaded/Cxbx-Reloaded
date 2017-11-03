@@ -3364,6 +3364,33 @@ OOVPA_XREF(CDirectSoundStream_Pause, 4134, 1+11,
 OOVPA_END;
 
 // ******************************************************************
+// * CMcpxVoiceClient::SetLFO
+// ******************************************************************
+OOVPA_XREF(CMcpxVoiceClient_SetLFO, 4134, 10,
+
+    XREF_CMcpxVoiceClient_SetLFO,
+    XRefZero)
+
+        // CMcpxVoiceClient_SetLFO+0x00 : push ebp
+        { 0x00, 0x55 },
+
+        // CMcpxVoiceClient_SetLFO+0x38 : jz +0x71
+        { 0x38, 0x74 },
+        { 0x39, 0x71 },
+
+        // CMcpxVoiceClient_SetLFO+0x3A : movzx ecx, byte ptr [esi+64h]
+        { 0x3A, 0x0F },
+        { 0x3B, 0xB6 },
+        { 0x3C, 0x4E },
+        { 0x3D, 0x64 },
+
+        // CMcpxVoiceClient_SetLFO+0x59 : movzx ecx, word ptr [eax]
+        { 0x59, 0x0F },
+        { 0x5A, 0xB7 },
+        { 0x5B, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * CMcpxVoiceClient::SetEG
 // ******************************************************************
 OOVPA_XREF(CMcpxVoiceClient_SetEG, 4134, 12,
@@ -3387,6 +3414,44 @@ OOVPA_XREF(CMcpxVoiceClient_SetEG, 4134, 12,
 
         { 0xC1, 0xC2 },
         { 0xC2, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer::SetEG
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetEG, 4134, 1+7,
+
+    XREF_CDirectSoundBuffer_SetEG,
+    XRefOne)
+
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetEG ),
+
+        { 0x0C, 0x00 },
+        { 0x12, 0x85 },
+        { 0x1C, 0x15 },
+        { 0x26, 0xEB },
+        { 0x30, 0x10 },
+        { 0x3A, 0x74 },
+        { 0x47, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer::SetLFO
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetLFO, 4134, 1+7,
+
+    XREF_CDirectSoundBuffer_SetLFO,
+    XRefOne)
+
+        XREF_ENTRY( 0x32, XREF_CDirectSoundVoice_SetLFO ),
+
+        { 0x0C, 0x00 },
+        { 0x12, 0x85 },
+        { 0x1C, 0x15 },
+        { 0x26, 0xEB },
+        { 0x30, 0x10 },
+        { 0x3A, 0x74 },
+        { 0x47, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
