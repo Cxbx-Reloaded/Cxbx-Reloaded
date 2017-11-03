@@ -87,7 +87,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 			/* hTemplateFile */nullptr);
 		if (hFileEEPROM == INVALID_HANDLE_VALUE)
 		{
-			DbgPrintf("CxbxRestoreEEPROM : Couldn't create EEPROM.bin file!\n");
+			DbgPrintf("INIT: Couldn't create EEPROM.bin file!\n");
 			return nullptr;
 		}
 	}
@@ -103,7 +103,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/**/nullptr);
 	if (hFileMappingEEPROM == NULL)
 	{
-		DbgPrintf("CxbxRestoreEEPROM : Couldn't create EEPROM.bin file mapping!\n");
+		DbgPrintf("INIT: Couldn't create EEPROM.bin file mapping!\n");
 		return nullptr;
 	}
 
@@ -115,7 +115,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
 	if (pEEPROM == nullptr) {
-		DbgPrintf("CxbxRestoreEEPROM : Couldn't map EEPROM.bin into memory!\n");
+		DbgPrintf("INIT: Couldn't map EEPROM.bin into memory!\n");
 		return nullptr;
 	}
 
@@ -127,19 +127,19 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 
 		// TODO: Make these configurable or autodetect of some sort :
 		pEEPROM->UserSettings.Language = 0x01;  // = English
-		pEEPROM->UserSettings.VideoFlags = 0x10;  // = Letterbox
+		pEEPROM->UserSettings.VideoFlags = (AV_FLAGS_LETTERBOX | AV_FLAGS_60Hz) >> AV_USER_FLAGS_SHIFT;  // = Letterbox
 		pEEPROM->UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
 		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		pEEPROM->FactorySettings.AVRegion = 0x0100; // = NTSC_M
+		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M; // = 0x100 = NTSC_M
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
 
-		DbgPrintf("EmuMain: Initialized default EEPROM\n");
+		DbgPrintf("INIT: Initialized default EEPROM\n");
 	}
 	else
-		DbgPrintf("EmuMain: Loaded EEPROM.bin\n");
+		DbgPrintf("INIT: Loaded EEPROM.bin\n");
 
 	return pEEPROM;
 }
