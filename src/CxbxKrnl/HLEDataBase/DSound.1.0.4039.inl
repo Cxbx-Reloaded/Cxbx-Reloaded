@@ -4109,3 +4109,73 @@ OOVPA_XREF(CDirectSoundStream_SetI3DL2Source, 4039, 1+8,
         { 0x43, 0x68 },
         { 0x4E, 0x8B },
 OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound::SetMixBinHeadroom
+// ******************************************************************
+OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 4039, 17,
+
+    XREF_CDirectSound_SetMixBinHeadroom,
+    XRefZero)
+
+        // CDirectSound_SetMixBinHeadroom+0x00 : push esi
+        { 0x00, 0x56 },
+
+        // CDirectSound_SetMixBinHeadroom+0x20 : mov eax, 0x80004005
+        { 0x20, 0xB8 },
+        { 0x21, 0x05 },
+        { 0x22, 0x40 },
+        { 0x23, 0x00 },
+        { 0x24, 0x80 },
+
+        // CDirectSound_SetMixBinHeadroom+0x37 : mov [edx+ecx*4+88h], edi
+        { 0x37, 0x89 },
+        { 0x38, 0xBC },
+        { 0x39, 0x8A },
+        { 0x3A, 0x88 },
+        { 0x3B, 0x00 },
+        { 0x3C, 0x00 },
+        { 0x3D, 0x00 },
+
+        // CDirectSound_SetMixBinHeadroom+0x3E : push ecx
+        { 0x3E, 0x51 },
+
+        // CDirectSound_SetMixBinHeadroom+0x3F : mov ecx, [eax+0Ch]
+        { 0x3F, 0x8B },
+
+        // CDirectSound_SetMixBinHeadroom+0x5C : retn 0x0C
+        { 0x5C, 0xC2 },
+        { 0x5D, 0x0C },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound::SetAllParameters
+// ******************************************************************
+OOVPA_XREF(CDirectSound_SetAllParameters, 4039, 15,
+
+    XREF_CDirectSound_SetAllParameters,
+    XRefZero)
+
+        // CDirectSound_SetAllParameters+0x00 : push ebx
+        { 0x00, 0x53 },
+
+        // CDirectSound_SetAllParameters+0x3F : or byte ptr [eax+84h], 0FFh
+        { 0x3F, 0x80 },
+        { 0x40, 0x88 },
+        { 0x41, 0x84 },
+        { 0x42, 0x00 },
+        { 0x43, 0x00 },
+        { 0x44, 0x00 },
+        { 0x45, 0xFF },
+
+        // CDirectSound_SetAllParameters+0x46 : test [esp+0Ch+arg_8], 1
+        { 0x46, 0xF6 },
+        { 0x47, 0x44 },
+        { 0x48, 0x24 },
+        { 0x49, 0x18 },
+        { 0x4A, 0x01 },
+
+        // CDirectSound_SetAllParameters+0x67 : retn 0Ch
+        { 0x67, 0xC2 },
+        { 0x68, 0x0C },
+OOVPA_END;

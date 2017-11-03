@@ -110,8 +110,6 @@
 //     * Using XREF_DSound_CRefCount_Release
 // * 4039 verification needed:
 //   * DirectSoundUseLightHRTF
-//   * IDirectSound_SetAllParameters
-//   * IDirectSound_SetMixBinHeadroom
 //   * CDirectSoundStream_SetRolloffCurve (IDirectSoundStream_SetRolloffCurve is a jmp)
 //   * CDirectSoundStream_SetRolloffFactor
 // * 4134 verification needed: (Verifying with Blood Omen 2 title is done, need different title to find the remaining...)
@@ -363,13 +361,13 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSound_GetSpeakerConfig, PATCH, 3911, 4627, 5455),
     REGISTER_OOVPAS(CDirectSound_GetTime, XREF, 3911),
     REGISTER_OOVPAS(CDirectSound_MapBufferData, XREF, 5344),
-    REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3911, 4134, 4831, 5558), //TODO: Need to improvise after 4134
+    REGISTER_OOVPAS(CDirectSound_SetAllParameters, XREF, 3911, 4039, 4134, 4831, 5558), //TODO: Need to improvise after 4134
     REGISTER_OOVPAS(CDirectSound_SetAllParametersA, XREF, 4627, 4721, 4831), //TODO: Need to improvise after 4134 then move in CDirectSound_SetAllParameters
     REGISTER_OOVPAS(CDirectSound_SetDistanceFactor, XREF, 3911, 4039, 4134, 4627, 5344),
     REGISTER_OOVPAS(CDirectSound_SetDopplerFactor, XREF, 3911, 4039, 4134, 4627, 5344),
     REGISTER_OOVPAS(CDirectSound_SetEffectData, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSound_SetI3DL2Listener, XREF, 3911, 4039, 4134, 5344, 5455),
-    REGISTER_OOVPAS(CDirectSound_SetMixBinHeadroom, XREF, 3911, 4134),
+    REGISTER_OOVPAS(CDirectSound_SetMixBinHeadroom, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSound_SetOrientation, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSound_SetPosition, XREF, 3911, 4039, 4134, 4627, 5344),
     REGISTER_OOVPAS(CDirectSound_SetRolloffFactor, XREF, 3911, 4039, 4134, 5344),

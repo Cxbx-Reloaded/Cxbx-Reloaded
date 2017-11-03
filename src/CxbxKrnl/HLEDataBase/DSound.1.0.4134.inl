@@ -3758,7 +3758,7 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSound::SetMixBinHeadroom
 // ******************************************************************
-// Generic OOVPA as of 4134? and newer
+// Generic OOVPA as of 4134 and newer
 OOVPA_XREF(CDirectSound_SetMixBinHeadroom, 4134, 18,
 
     XREF_CDirectSound_SetMixBinHeadroom,
