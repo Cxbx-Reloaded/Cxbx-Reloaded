@@ -3916,7 +3916,11 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
     enterCriticalSection;
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(hFile)
+		LOG_FUNC_ARG(pstrFileName)
+		LOG_FUNC_ARG(dwDesiredAccess)
+		LOG_FUNC_ARG(dwShareMode)
+		LOG_FUNC_ARG(dwCreationDisposition)
+		LOG_FUNC_ARG(dwFlagsAndAttributes)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
