@@ -113,7 +113,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 5788, 10)
+OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 5788, 1+10,
+	
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
 
         // D3DDevice_GetDepthStencilSurface2+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -462,7 +467,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 1+6,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         { 0x01, 0x44 },
         { 0x03, 0x04 },
@@ -688,7 +693,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5788, 7)
+OOVPA_XREF(D3DDevice_SetPalette, 5788, 1+7,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         { 0x10, 0x98 },
         { 0x22, 0x0F },
@@ -1039,7 +1049,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 1+6,
     XRefNoSaveIndex,
     XRefOne)
 
-	XREF_ENTRY( 0x05, XREF_D3D_RenderState_RopZCmpAlwaysRead ),
+		XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ),
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },
@@ -1155,11 +1165,14 @@ OOVPA_END;
 
 #if 0 // Moved to 5659
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 5788, 23) // Up to 5849
+OOVPA_XREF(D3DDevice_GetTexture2, 5788, 1+23, // Up to 5849
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },

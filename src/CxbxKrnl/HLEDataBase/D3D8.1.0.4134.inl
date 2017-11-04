@@ -41,7 +41,7 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4134, 1+10,
 	XRefNoSaveIndex,
 	XRefOne)
 
-		XREF_ENTRY(0x18, XREF_D3D_TextureState_TexCoordIndex), // Derived
+		XREF_ENTRY( 0x18, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x13 : shl eax, 0x07
         { 0x13, 0xC1 },
@@ -336,7 +336,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 4134, 9)
+OOVPA_XREF(D3DDevice_SetRenderTarget, 4134, 1+9,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x17, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
 
         // D3DDevice_SetRenderTarget+0x00 : sub esp, 0x3C
         { 0x00, 0x83 },
@@ -440,7 +445,7 @@ OOVPA_XREF(D3DDevice_CreateImageSurface, 4134, 1+1,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x01, XREF_D3D_CreateStandAloneSurface),
+        XREF_ENTRY( 0x01, XREF_D3D_CreateStandAloneSurface ),
 
         { 0x00, 0xE9 },
 OOVPA_END;
@@ -482,11 +487,17 @@ OOVPA_NO_XREF(D3DDevice_CreateImageSurface, 4134, 28)
 
 	OOVPA_END;
 #endif
-#if 0 // No longer used, replaced by generic 4039 version
+
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPixelShader, 4134, 10)
+OOVPA_XREF(D3DDevice_SetPixelShader, 4134, 1+10,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
 
         // D3DDevice_SetPixelShader+0x0E : mov esi, [ebx+0x0370]
         { 0x0E, 0x8B },
@@ -1095,7 +1106,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_FrontFace, 4134, 1+10,
     XRefOne)
 
         // D3DDevice_SetRenderState_FrontFace+0x36 : jmp D3DDevice_SetRenderState_CullMode
-        XREF_ENTRY( 0x36, XREF_D3DDevice_SetRenderState_CullMode),
+        XREF_ENTRY( 0x36, XREF_D3DDevice_SetRenderState_CullMode ),
 
         // D3DDevice_SetRenderState_FrontFace+0x09 : cmp eax, [esi+4]
         { 0x09, 0x3B },
@@ -1204,7 +1215,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4134, 1+12,
     XRefOne)
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x0C : D3D__RenderState[D3DRS_STENCILCULLENABLE]
-        XREF_ENTRY( 0x0C, XREF_D3D_RenderState_StencilCullEnable ),
+        XREF_ENTRY( 0x0C, XREF_D3DRS_STENCILCULLENABLE ),
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x15 : jb +0x05
         { 0x15, 0x72 },
@@ -1333,10 +1344,16 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 4134, 12)
         { 0x2B, 0x04 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4134, 12)
+OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4134, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
 
         // D3DDevice_SetRenderState_MultiSampleRenderTargetMode+0x0F : mov ecx, [eax+0x2070]
         { 0x0F, 0x8B },
@@ -1358,6 +1375,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4134, 12)
         { 0x2A, 0xC2 },
         { 0x2B, 0x04 },
 OOVPA_END;
+#endif
 
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
@@ -1748,10 +1766,16 @@ OOVPA_NO_XREF(D3DDevice_BlockOnFence, 4134, 7)
 OOVPA_END;
 #endif
 
+#if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetRenderTarget
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetRenderTarget, 4134, 11)
+OOVPA_XREF(D3DDevice_GetRenderTarget, 4134, 1+9,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x07, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 
         // D3DDevice_GetRenderTarget+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -1759,8 +1783,8 @@ OOVPA_NO_XREF(D3DDevice_GetRenderTarget, 4134, 11)
         // D3DDevice_GetRenderTarget+0x05 : mov eax, [eax + 0x2070]
         { 0x05, 0x8B },
         { 0x06, 0x80 },
-        { 0x07, 0x70 },
-        { 0x08, 0x20 },
+        // { 0x07, 0x70 }, // disabled. part of an offset
+        // { 0x08, 0x20 },
         { 0x09, 0x00 },
         { 0x0A, 0x00 },
 
@@ -1772,6 +1796,7 @@ OOVPA_NO_XREF(D3DDevice_GetRenderTarget, 4134, 11)
         { 0x1D, 0xC2 },
         { 0x1E, 0x04 },
 OOVPA_END;
+#endif
 
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
@@ -1981,7 +2006,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 4134, 12)
+OOVPA_XREF(D3DDevice_SetPalette, 4134, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         // D3DDevice_SetPalette+0x0D : mov eax, [edi+esi*4+0x0A88]
         { 0x0D, 0x8B },
@@ -2186,7 +2216,7 @@ OOVPA_XREF(D3DDevice_EndPush, 4134, 1+11,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         { 0x00, 0x8B },
         { 0x01, 0x44 },
@@ -2878,7 +2908,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 4134, 23) // Up to 4531
+OOVPA_XREF(D3DDevice_GetTexture2, 4134, 1+23, // Up to 4531
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
         { 0x00, 0x8B },
         { 0x01, 0x44 },

@@ -229,7 +229,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetRenderTarget2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetRenderTarget2, 5028, 6)
+OOVPA_XREF(D3DDevice_GetRenderTarget2, 5028, 1+6,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 
         { 0x05, 0x56 },
         { 0x06, 0x8B },
@@ -244,7 +249,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 5028, 7)
+OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 5028, 1+7,
+	
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
 
         { 0x05, 0x56 },
         { 0x06, 0x8B },
@@ -761,10 +771,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CommonSetRenderTarget
 // ******************************************************************
-OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 12,
+OOVPA_XREF(D3D_CommonSetRenderTarget, 5028, 1+12,
 
     XREF_D3D_CommonSetRenderTarget,
-    XRefZero)
+	XRefOne)
+
+		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
 
         { 0x02, 0x1C },
         { 0x1A, 0x15 },
@@ -926,7 +938,7 @@ OOVPA_XREF(D3DDevice_IsFencePending, 5028, 1+5,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x01, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x01, XREF_D3DDEVICE ), // Derived
 
         { 0x07, 0x30 },
         { 0x0A, 0x2C },
@@ -1007,7 +1019,7 @@ OOVPA_XREF(D3DDevice_GetLightEnable, 5028, 1+26,
 	XRefNoSaveIndex,
 	XRefOne)
 
-        XREF_ENTRY( 0x05, XREF_D3DDEVICE),
+        XREF_ENTRY( 0x05, XREF_D3DDEVICE ), // Derived
 
 		{ 0x00, 0x8B },
 		{ 0x01, 0x4C },

@@ -138,8 +138,9 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
     XREF_D3DDevice_SetRenderState_CullMode,
 	XRefTwo)
 
-		XREF_ENTRY(0x03, XREF_D3DDEVICE), // Derived
-		XREF_ENTRY(0x2B, XREF_D3D_RenderState_CullMode), // Derived
+		XREF_ENTRY( 0x03, XREF_D3DDEVICE ), // Derived
+
+		XREF_ENTRY( 0x2B, XREF_D3DRS_CULLMODE ), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308
         { 0x19, 0xC7 },
@@ -163,11 +164,17 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 5233, 2+13,
         { 0x56, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTexture, 5233, 10)
+OOVPA_XREF(D3DDevice_SetTexture, 5233, 1+10,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
         { 0x16, 0x00 },
         { 0x17, 0x85 },
@@ -411,7 +418,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5233, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x0B, XREF_D3D_RenderState_MultiSampleRenderTargetMode ),
+        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
 
         { 0x03, 0x04 },
         { 0x0F, 0x8B },
@@ -466,7 +473,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5233, 12)
+OOVPA_XREF(D3DDevice_SetPalette, 5233, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         // D3DDevice_SetPalette+0x0D : mov eax, [edi+esi*4+0x0A88]
         { 0x0D, 0x8B },
@@ -611,9 +623,55 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTargetFast
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5233, 8)
+OOVPA_XREF(D3DDevice_SetRenderTargetFast, 5233, 1+27,
+	
+	XRefNoSaveIndex,
+	XRefOne)
 
-        { 0x1D, 0xC9 },
+		XREF_ENTRY( 0x15, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+
+		// D3DDevice_SetRenderTargetFast+0x00 : push ebp
+		{ 0x00, 0x55 },
+
+		// D3DDevice_SetRenderTargetFast+0x01 : mov ebp, [esp+8]
+		{ 0x01, 0x8B },
+		{ 0x02, 0x6C },
+		{ 0x03, 0x24 },
+		{ 0x04, 0x08 },
+
+		// D3DDevice_SetRenderTargetFast+0x05 : push esi
+		{ 0x05, 0x56 },
+
+		// D3DDevice_SetRenderTargetFast+0x06 : push edi
+		{ 0x06, 0x57 },
+
+		// D3DDevice_SetRenderTargetFast+0x07 : mov edi, [ds:{addr}]
+		{ 0x07, 0x8B },
+		{ 0x08, 0x3D },
+
+		// D3DDevice_SetRenderTargetFast+0x0D : push ebp
+		{ 0x0D, 0x55 },
+
+		// D3DDevice_SetRenderTargetFast+0x0E : call {addr}
+		{ 0x0E, 0xE8 },
+
+		// D3DDevice_SetRenderTargetFast+0x13 : mov eax, [edi+{offset}]
+		{ 0x13, 0x8B },
+		{ 0x14, 0x87 },
+	
+		// D3DDevice_SetRenderTargetFast+0x19 : mov ecx, [eax+0x14]
+		{ 0x19, 0x8B },
+		{ 0x1A, 0x48 },
+		{ 0x1B, 0x14 },
+	
+		// D3DDevice_SetRenderTargetFast+0x1C : test ecx, ecx
+		{ 0x1C, 0x85 },
+		{ 0x1D, 0xC9 },
+
+		// D3DDevice_SetRenderTargetFast+0x1E : jz + 0x02
+		{ 0x1E, 0x74 },
+		{ 0x1F, 0x02 },
+	
         { 0x3C, 0x89 },
         { 0x5F, 0x8B },
         { 0x7A, 0x04 },

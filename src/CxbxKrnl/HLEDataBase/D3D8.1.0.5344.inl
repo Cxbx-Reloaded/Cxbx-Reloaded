@@ -191,7 +191,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x0B, XREF_D3D_RenderState_MultiSampleRenderTargetMode ),
+        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
 
         { 0x03, 0x04 },
         { 0x0F, 0x8B },
@@ -284,10 +284,10 @@ OOVPA_END;
 OOVPA_XREF(D3DDevice_LightEnable, 5344, 2+24,
 
 	XRefNoSaveIndex,
-	XRefTwo)
+	XRefTwo) // PatrickvL : Also for 5558, 5659, 5788, 5849, 5933
 
-	XREF_ENTRY(0x0B, XREF_D3DDEVICE),
-	XREF_ENTRY(0x67, XREF_D3DDevice_SetLight),
+	XREF_ENTRY( 0x0B, XREF_D3DDEVICE ), // Derived
+	XREF_ENTRY( 0x67, XREF_D3DDevice_SetLight ),
 
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },
@@ -331,9 +331,9 @@ OOVPA_END;
 OOVPA_XREF(D3DDevice_GetLightEnable, 5344, 1+26,
 
 	XRefNoSaveIndex,
-	XRefOne)
+	XRefOne) // PatrickvL : Also for 5558, 5659, 5788, 5849, 5933
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         { 0x00, 0x8B },
         { 0x01, 0x44 },
@@ -626,7 +626,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5344, 9)
+OOVPA_XREF(D3DDevice_SetRenderTarget, 5344, 1+9,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 
         { 0x00, 0x83 },
         { 0x08, 0x56 },
@@ -643,7 +648,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5344, 12)
+OOVPA_XREF(D3DDevice_SetPalette, 5344, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         // D3DDevice_SetPalette+0x0D : mov eax, [esi+edi*4+0B78h]
         { 0x0D, 0x8B },
@@ -1177,15 +1187,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
-#if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
 OOVPA_XREF(D3DDevice_SetTexture, 5344, 1+26, // Also for 5558, 5659, 5788, 5849, 5933
 
     XRefNoSaveIndex,
     XRefOne)
 
-		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
-#endif
-OOVPA_NO_XREF(D3DDevice_SetTexture, 5344, 26)
+		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },
@@ -1359,11 +1366,14 @@ OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 5344, 16)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 5344, 23) // Up to 5455
+OOVPA_XREF(D3DDevice_GetTexture2, 5344, 1+23, // Up to 5455
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },

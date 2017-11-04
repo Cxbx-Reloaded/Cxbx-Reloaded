@@ -40,9 +40,11 @@
 
 extern LOOVPA<1 + 11> D3DDevice_SetTextureState_TexCoordIndex_3911;
 extern LOOVPA<2 + 15> D3DDevice_SetRenderState_CullMode_3911;
+extern LOOVPA<1 + 12> D3DDevice_SetStreamSource_3911;
 
 extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4034;
 extern LOOVPA<2 + 14> D3DDevice_SetRenderState_CullMode_4034;
+extern LOOVPA<1 + 14> D3DDevice_SetStreamSource_4034;
 
 extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4242;
 

@@ -533,7 +533,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5558, 12)
+OOVPA_XREF(D3DDevice_SetPalette, 5558, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         // D3DDevice_SetPalette+0x0D : mov eax, [edi+esi*4+0x0A88]
         { 0x0D, 0x8B },
@@ -1013,7 +1018,7 @@ OOVPA_XREF(D3DDevice_GetViewport, 5455, 1+17,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x01, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x01, XREF_D3DDEVICE ), // Derived
 
         { 0x00, 0xA1 },
 
@@ -2153,7 +2158,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5659, 1+12,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         // D3DDevice_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -2230,11 +2235,14 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShader, 5558, 16)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 5558, 23) // Up to 5659
+OOVPA_XREF(D3DDevice_GetTexture2, 5558, 1+23, // Up to 5659
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },

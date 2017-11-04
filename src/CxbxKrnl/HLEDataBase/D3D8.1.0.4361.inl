@@ -445,7 +445,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetRenderTarget
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetRenderTarget, 4361, 9)
+OOVPA_XREF(D3DDevice_GetRenderTarget, 4361, 1+9,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x07, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 
         // D3DDevice_GetRenderTarget+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -632,12 +637,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
-OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4242, 1+10,
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4361, 1+10,
 
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY(0x19, XREF_D3D_TextureState_TexCoordIndex), // Derived
+        XREF_ENTRY( 0x19, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
         { 0x0D, 0xC1 },
@@ -1151,15 +1156,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
-#if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
-OOVPA_XREF(D3DDevice_SetTexture, 4361, 1+28,
+OOVPA_XREF(D3DDevice_SetTexture, 4361, 1+26,
 
     XRefNoSaveIndex,
     XRefOne)
 
-		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
-#endif
-OOVPA_NO_XREF(D3DDevice_SetTexture, 4361, 28)
+		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },
@@ -1177,8 +1179,8 @@ OOVPA_NO_XREF(D3DDevice_SetTexture, 4361, 28)
 		{ 0x10, 0x8B },
 		{ 0x11, 0x84 },
 		{ 0x12, 0xB7 },
-		{ 0x13, 0x78 },
-		{ 0x14, 0x0A },
+		//{ 0x13, 0x78 }, // disabled. part of an offset
+		//{ 0x14, 0x0A },
 		{ 0x15, 0x00 },
 		{ 0x16, 0x00 },
 		{ 0x17, 0x85 },

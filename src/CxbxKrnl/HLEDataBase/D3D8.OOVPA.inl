@@ -259,7 +259,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_GetPixelShader, PATCH, 3911, 4039, 4134, 5028, 5558, 5659/*, 5788*/),
 	REGISTER_OOVPAS(D3DDevice_GetProjectionViewportMatrix, PATCH, 3911, 4134/*, 4432*/, 4627, 5344, 5558), // For 5455 (from 5558's comment)
 	REGISTER_OOVPAS(D3DDevice_GetPushBufferOffset, PATCH, 3911, 4627),//TODO 4831 (from 4627's comment)
-	REGISTER_OOVPAS(D3DDevice_GetRenderTarget, PATCH, 3911, 4039, 4134/*, 4361, 4432*/, 4627), // Called D3DDevice_GetRenderTarget2 (from 4627's comment) NOTE: Use D3DDevice_GetRenderTarget2 for 4627 and above
+	REGISTER_OOVPAS(D3DDevice_GetRenderTarget, PATCH, 3911/*, 4039, 4134, 4361, 4432*/, 4627), // Called D3DDevice_GetRenderTarget2 (from 4627's comment) NOTE: Use D3DDevice_GetRenderTarget2 for 4627 and above
 	REGISTER_OOVPAS(D3DDevice_GetRenderTarget2, PATCH, 4627/*, 5028*/),
 	REGISTER_OOVPAS(D3DDevice_GetScissors, PATCH, 3911/*, 5788*/),
 	REGISTER_OOVPAS(D3DDevice_GetShaderConstantMode, PATCH, 3911, 4134, 4627, 5028, 5344, 5558, 5659/*, 5788*/),
@@ -324,7 +324,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleAntiAlias, PATCH, 3911, 4034/*, 4134, 4432*/, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMask, PATCH, 3911, 4034/*, 4134*/, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMode, PATCH, 3925, 4034, 4134, 4627, 5233/*, 5455, 5558, 5788*/),
-	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034, 4134, 4627/*, 5233*/, 5344/*, 5455, 5558, 5788*/), // Was 5233 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034/*, 4134*/, 4627/*, 5233*/, 5344/*, 5455, 5558, 5788*/), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_NormalizeNormals, PATCH, 3911, 4034/*, 4134*/),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_OcclusionCullEnable, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_PSTextureModes, PATCH, 3911, 4034),
@@ -353,7 +353,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetStipple, PATCH, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetStreamSource, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetSwapCallback, PATCH, 4134, 4242, 4432, 4627, 5028, 5233, 5344, 5455, 5558, 5659),
-	REGISTER_OOVPAS(D3DDevice_SetTexture, PATCH, 3911, 4034/*, 4627*/, 4831/*, 5344*/), // Was 4928 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_SetTexture, PATCH, 3911, 4034, 4361/*, 4627, 4831*/, 4928/*, 5233, 5344*/),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor, PATCH, 3911, 4034/*, 4361*/),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_BumpEnv, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor, PATCH, 3911, 4034/*, 4134*/),
