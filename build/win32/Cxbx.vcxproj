@@ -295,6 +295,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5455.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
@@ -329,14 +330,11 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.OOVPA.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4134.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5028.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
@@ -352,7 +350,6 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4831.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5344.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5455.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5659.inl" />

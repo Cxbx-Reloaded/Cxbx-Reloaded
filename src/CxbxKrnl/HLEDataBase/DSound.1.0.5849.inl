@@ -32,37 +32,6 @@
 // *
 // ******************************************************************
 
-// ******************************************************************
-// * DirectSound::CDirectSound::SetRolloffFactor
-// Xbe Explorer generated pattern, derived from address $00439F47 in "SpiderMan 2" :
-// 56E8........833DD4........0FB6F0741685F6740B68E03B4400FF15...... 00 0000 005F ? SetRolloffFactor@CDirectSound@DirectSound@@QAGJMK@Z ^ 0002R ? DirectSoundEnterCriticalSection@@YGHXZ ^0009D _g_fDirectSoundInFinalRelease ^ 001DD __imp__RtlLeaveCriticalSection@4 ^ 0046R ? CommitDeferredSettings@CDirectSound@DirectSound@@QAGJXZ ^ 0055D __imp__RtlLeaveCriticalSection@4
-// ******************************************************************
-OOVPA_XREF(CDirectSound_SetRolloffFactor, 5849, 20,
-
-    XREF_CDirectSound_SetRolloffFactor,
-    XRefZero)
-
-        { 0x00, 0x56 },
-        { 0x01, 0xE8 },
-        { 0x06, 0x83 },
-        { 0x07, 0x3D },
-        { 0x0D, 0x0F },
-        { 0x0E, 0xB6 },
-		{ 0x0F, 0xF0 },
-		{ 0x10, 0x74 },
-		{ 0x11, 0x16 },
-		{ 0x12, 0x85 },
-		{ 0x13, 0xF6 },
-		{ 0x14, 0x74 },
-		{ 0x15, 0x0B },
-		{ 0x16, 0x68 },
-		{ 0x1A, 0x00 },
-		{ 0x1B, 0xFF },
-		{ 0x1C, 0x15 },
-		{ 0x35, 0x6C },
-		{ 0x3C, 0x10 },
-		{ 0x5C, 0xC2 },
-OOVPA_END;
 #if 0 // Duplicate OOVPA base on 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetPitch

@@ -472,7 +472,7 @@ inline void DSoundBufferReplace(
     DSoundBufferCreate(pDSBufferDesc, pDSBufferNew);
 
     if (pDS3DBuffer != nullptr) {
-        DSound3DBufferCreate(pDSBuffer, pDS3DBufferNew);
+        DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
     }
 
     DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
