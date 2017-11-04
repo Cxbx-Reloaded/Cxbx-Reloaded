@@ -172,7 +172,7 @@ void* MemoryManager::AllocateContiguous(size_t size, size_t alignment)
 		}
 	}
 	
-	if (addr + size > MM_SYSTEM_PHYSICAL_MAP + CONTIGUOUS_MEMORY_SIZE)  {
+	if (addr + size > CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_SIZE)  {
 		EmuWarning("MemoryManager::AllocateContiguous exhausted it's allowed memory buffer");
 		addr = NULL;	
 	}
