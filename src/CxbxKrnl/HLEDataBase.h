@@ -312,6 +312,10 @@ enum XRefDataBaseOffset
     XREF_CDirectSound3DCalculator_Calculate3D,
     XREF_CDirectSound_UnmapBufferData,
     XREF_CDirectSound_MapBufferData,
+    XREF_CFullHrtfSource_GetHrtfFilterPair,
+    XREF_CHrtfSource_SetAlgorithm_FullHrtf,
+    XREF_CHrtfSource_SetAlgorithm_LightHrtf,
+    XREF_CLightHrtfSource_GetHrtfFilterPair,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

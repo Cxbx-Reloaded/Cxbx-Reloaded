@@ -396,3 +396,39 @@ OOVPA_XREF(CDirectSound_GetSpeakerConfig, 5455, 14,
         { 0x4A, 0xC2 },
         { 0x4B, 0x08 },
 OOVPA_END;
+
+// ******************************************************************
+// * CMcpxStream_Flush
+// ******************************************************************
+// Might not be ideal, however I had not see any changes from these
+// Offsets.
+OOVPA_XREF(CMcpxStream_Flush, 5455, 16,
+
+    XREF_CMcpxStream_Flush,
+    XRefZero)
+
+        // CMcpxStream_Flush+0x00 : push ebp; mov ebp, esp; sub esp, 10h
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x10 },
+
+        // Offset is unique for this asm code.
+        // CMcpxStream_Flush+0x0A : movzx eax,byte ptr fs:[24h]
+        { 0x0A, 0x64 },
+        { 0x0B, 0x0F },
+        { 0x0C, 0xB6 },
+        { 0x0D, 0x05 },
+        { 0x0E, 0x24 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x00 },
+        { 0x11, 0x00 },
+
+        // CMcpxStream_Flush+0x2F : mov
+        { 0x2F, 0x8B },
+
+        // CMcpxStream_Flush+0x6A : Call [CIrql_Lower]
+        { 0x6A, 0xE8 },
+OOVPA_END;

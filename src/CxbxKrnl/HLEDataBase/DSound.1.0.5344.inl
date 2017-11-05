@@ -624,36 +624,6 @@ OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 5344, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * WaveFormat::CreateXboxAdpcmFormat
-// ******************************************************************
-OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 5344, 7,
-
-    XREF_WaveFormat_CreateXboxAdpcmFormat,
-    XRefZero)
-
-        { 0x07, 0x08 },
-        { 0x10, 0xE9 },
-        { 0x19, 0x8D },
-        { 0x22, 0x66 },
-        { 0x2B, 0x04 },
-        { 0x34, 0x66 },
-        { 0x3D, 0x12 },
-OOVPA_END;
-
-// ******************************************************************
-// * XAudioCreateAdpcmFormat
-// ******************************************************************
-OOVPA_XREF(XAudioCreateAdpcmFormat, 5344, 1+1,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x01, XREF_WaveFormat_CreateXboxAdpcmFormat ),
-
-        { 0x00, 0xE9 },
-OOVPA_END;
-
-// ******************************************************************
 // * CDirectSoundVoice::SetConeAngles
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetConeAngles, 5344, 9,
@@ -756,32 +726,7 @@ OOVPA_XREF(CMcpxStream_Flush, 5344, 14,
         { 0x11, 0x00 },
 OOVPA_END;
 
-// ******************************************************************
-// * CDirectSoundStream_Flush
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(CDirectSoundStream_Flush, 5344, 1+8,
-    XRefNoSaveIndex,
-    XRefOne)
-
-        //CDirectSoundStream_Flush+0x31 : call [CMcpxStream_Flush]
-        XREF_ENTRY( 0x32, XREF_CMcpxStream_Flush ),
-
-        { 0x00, 0x56 },
-
-        { 0x28, 0x8B },
-        { 0x2B, 0x08 },
-
-        { 0x2C, 0x8B },
-        { 0x2E, 0x24 },
-
-        { 0x31, 0xE8 },
-
-        //CDirectSoundStream_Flush+0x48 : ret 4
-        { 0x48, 0xC2 },
-        { 0x49, 0x04 },
-OOVPA_END;
-
+#if 0 // Moved to 4531
 // ******************************************************************
 // * CMcpxStream_Discontinuity
 // ******************************************************************
@@ -806,6 +751,7 @@ OOVPA_XREF(CMcpxStream_Discontinuity, 5344, 9,
         { 0x2D, 0x5E },
         { 0x2E, 0xC3 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxVoiceClient::SetMixBins
@@ -1233,148 +1179,6 @@ OOVPA_XREF(DirectSoundUseLightHRTF4Channel, 5344, 1+7,
         { 0x12, 0x0B },
         { 0x18, 0xFF },
         { 0x1E, 0xC3 },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSound::CMcpxBuffer::Pause
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(CMcpxBuffer_Pause_Ex, 5344, 1+8,
-
-    XREF_CMcpxBuffer_Pause_Ex,
-    XRefOne)
-
-        XREF_ENTRY( 0x2B, XREF_CMcpxBuffer_Pause ),
-
-        { 0x00, 0x55 },
-
-        { 0x0D, 0x8B },
-
-        { 0x1C, 0x6A },
-        { 0x1D, 0x05 },
-
-        { 0x23, 0x75 },
-
-        { 0x2A, 0xE8 },
-
-        { 0x36, 0xC2 },
-        { 0x37, 0x0C },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSound::CDirectSoundBuffer::PauseEx
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(CDirectSoundBuffer_PauseEx, 5344, 1+10,
-
-    XREF_CDirectSoundBuffer_PauseEx,
-    XRefOne)
-
-        XREF_ENTRY( 0x3D, XREF_CMcpxBuffer_Pause_Ex ),
-
-        { 0x00, 0x56 },
-
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x41, 0x85 },
-        { 0x4C, 0xFF },
-        { 0x53, 0xC7 },
-
-        { 0x56, 0xC2 },
-        { 0x57, 0x10 },
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSoundBuffer_PauseEx
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(IDirectSoundBuffer_PauseEx, 5344, 1+7,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x1D, XREF_CDirectSoundBuffer_PauseEx ),
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x12, 0x83 },
-        { 0x16, 0xD9 },
-        { 0x1A, 0xC8 },
-        { 0x21, 0xC2 },
-        { 0x22, 0x10 },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSound::CMcpxStream::Pause2
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(CMcpxStream_Pause_Ex, 5344, 1+8,
-
-    XREF_CMcpxStream_Pause_Ex,
-    XRefOne)
-
-        XREF_ENTRY( 0x2B, XREF_CMcpxStream_Pause ),
-
-        { 0x00, 0x55 },
-
-        { 0x0D, 0x8B },
-
-        { 0x1C, 0x6A },
-        { 0x1D, 0x05 },
-
-        { 0x23, 0x75 },
-
-        { 0x2A, 0xE8 },
-
-        { 0x36, 0xC2 },
-        { 0x37, 0x0C },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSound::CDirectSoundStream::PauseEx
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(CDirectSoundStream_PauseEx, 5344, 1+10,
-
-    XREF_CDirectSoundStream_PauseEx,
-    XRefOne)
-
-        XREF_ENTRY( 0x3D, XREF_CMcpxStream_Pause_Ex ),
-
-        { 0x00, 0x56 },
-
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x41, 0x85 },
-        { 0x4C, 0xFF },
-        { 0x53, 0xC7 },
-
-        { 0x56, 0xC2 },
-        { 0x57, 0x10 },
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSoundStream_PauseEx
-// ******************************************************************
-// Generic OOVPA as of ____? and newer
-OOVPA_XREF(IDirectSoundStream_PauseEx, 5344, 1+7,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x11, XREF_CDirectSoundStream_PauseEx ),
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0x24 },
-        { 0x0E, 0x24 },
-        { 0x10, 0xE8 },
-        { 0x15, 0xC2 },
-        { 0x16, 0x10 },
 OOVPA_END;
 
 // ******************************************************************
