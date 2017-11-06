@@ -34,17 +34,34 @@
 // ******************************************************************
 
 // Titles which did compiled with full library version
-//   [LibV] Title Name          |  Verify   |   Comments
+//   [LibV] Title Name                       |  Verify   |   Comments
 //-------------------------------------------------------------------
-// * [3925] Cel Damage          |   100%    | Contain full library.
-// * [3936] Silent Hill 2       |   100%    | Contain full library.
-// * [4039] Nightcaster         |   100%    | Only has 90% of the library compiled with xbe build.
-// * [4134] RaceX (Demo)        |     -%    | Only has a few library.
-// * [4134] Blood Omen 2        |    80%    | Does not have full library.
-// * [4134] JSRF                |     1%    | Does not have Stream class. DS and Buffer might be full.
-// * [....]
-// * [5455] GR: Island Thunder  |   100%    | Only has 50%-ish of the library compiled with xbe build.
-// * [5558] Dino Crisis 3       |   100%    | Contain full library.
+// * [3925] Cel Damage                       |   100%    | Contain full library.
+// * [3936] Silent Hill 2                    |   100%    | Contain full library.
+// * [4039] Nightcaster                      |   100%    | Only has 90% of the library compiled with xbe build.
+// * [4039] Azurik PAL                       |   100%    | Contain full library.
+// * [4134] RaceX (Demo)                     |     -%    | Only has a few library.
+// * [4134] Blood Omen 2                     |    80%    | Does not have full library.
+// * [4134] JSRF                             |     1%    | Does not have Stream class. DS and Buffer might be full.
+// * [4134] Double-S.T.E.A.L                 |   100%    | Contain full library.
+// * [4242] NFL Blitz 2002                   |    20%    | Might be full library.
+// * [4361] Flight Academy                   |    20%    | Only has 50%-ish of the library compiled with xbe build.
+// * [4432] RedCard 2003                     |    20%    | Might be full library.
+// * [4627] MLB SlugFest 2003                |    20%    | Might be full library.
+// * [4721] Terminator Dawn of Fate          |    20%    | Might be full library.
+// * [4831] Whacked!                         |    20%    | Might be full library.
+// * [4928] Drihoo                           |    20%    | Might be full library.
+// * [5028] Shikigami no Shiro Evolution     |    20%    | Might be full library.
+// * [5120] N.U.D.E.@                        |    20%    | Might be full library.
+// * [5233] Evil Dead                        |    20%    | Might be full library.
+// * [5344] Gladius OXM Demo Disc 20         |    20%    | Might be full library.
+// * [5455] GR: Island Thunder               |   100%    | Only has 50%-ish of the library compiled with xbe build.
+// * [5455] Dinosaur Hunting                 |    20%    | Might be full library.
+// * [5558] Dino Crisis 3                    |   100%    | Contain full library.
+// * [5659] Midway Arcade Treasures Paperboy |    20%    | Might be full library.
+// * [5788] Digimon Battle Chronicle         |    20%    | Might be full library.
+// * [5849] Nickelodeon Tak 2                |    20%    | Might be full library.
+
 
 // TODO: Known DSound OOVPA issue list
 // * 3911 to 5933: Cannot make OOVPAs
@@ -140,17 +157,9 @@
 // * CDirectSoundVoice_SetMixBins need to use XREF_CMcpxVoiceClient_SetMixBins instead of XREF_CDirectSoundVoiceSettings_SetMixBins.
 //   * This way we can use less OOVPA revisions.
 // * Missing OOVPAs
-//   * CHRTFSource_SetFullHRTF5Channel (4242 - 5233) Maybe use instead of CHrtfSource_SetAlgorithm_FullHrtf.
-//   * CHRTFSource_SetLightHRTF5Channel (4242 - 5233) Maybe use instead of CHrtfSource_SetAlgorithm_LightHrtf.
-//   * CHRTFSource_SetFullHRTF4Channel (4242 - 5233)
-//   * CHRTFSource_SetLightHRTF4Channel (4242 - 5233)
 //   * DirectSoundUseLightHRTF (4928 - 5233) Maybe even lower too.
 //   * DirectSoundUseFullHRTF4Channel (4242 - 5233)
 //   * DirectSoundUseLightHRTF4Channel (4242 - 5233)
-//   * CFullHrtfSource_GetHrtfFilterPair (3911 - 4134, 5344 - 5849)
-//   * CLightHrtfSource_GetHrtfFilterPair (3911 - 4134, 5344 - 5849)
-//   * CHrtfSource_SetAlgorithm_FullHrtf (3911 - 4134, 5344 - 5849)
-//   * CHrtfSource_SetAlgorithm_LightHrtf (3911 - 4134, 5344 - 5849)
 
 
 #ifndef DSOUND_OOVPA_INL
