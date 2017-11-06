@@ -142,6 +142,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 4721, 10,
         { 0x89, 0x08 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSound::SetAllParameters
 // ******************************************************************
@@ -159,6 +160,7 @@ OOVPA_XREF(CDirectSound_SetAllParameters, 4831, 8,
         { 0xC9, 0x10 },
         { 0xE6, 0x0C },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSound_SetPosition
@@ -218,7 +220,7 @@ OOVPA_XREF(DirectSoundCreateBuffer, 4242, 1+11,
         { 0x55, 0x08 },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 4721 version
 // ******************************************************************
 // * CMcpxBuffer_GetStatus
 // ******************************************************************
@@ -254,6 +256,7 @@ OOVPA_XREF(CMcpxBuffer_GetStatus, 4721, 17,
 
 		{ 0x3D, 0x33 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxBuffer_GetStatus
@@ -515,6 +518,7 @@ OOVPA_XREF(CMcpxStream_Pause, 4831, 11,
         { 0x8C, 0x04 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
 // ******************************************************************
@@ -550,6 +554,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 4627, 16,
         { 0x98, 0xC2 },
         { 0x99, 0x08 },
 OOVPA_END;
+#endif
 #if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
@@ -652,48 +657,6 @@ OOVPA_XREF(CMcpxBuffer_Pause, 4831, 7,
         { 0x49, 0x7D },
         { 0x58, 0xEB },
         { 0x67, 0xE8 },
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSound::CDirectSoundBuffer::Pause
-// ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_Pause, 4928, 1+10,
-
-    XREF_CDirectSoundBuffer_Pause,
-    XRefOne)
-
-        XREF_ENTRY( 0x35, XREF_CMcpxBuffer_Pause ),
-
-        { 0x00, 0x56 },
-
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x39, 0x85 },
-        { 0x44, 0xFF },
-        { 0x4B, 0xC7 },
-        { 0x4E, 0xC2 },
-        { 0x4F, 0x08 },
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSoundBuffer_Pause
-// ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_Pause, 4928, 1+7,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x15, XREF_CDirectSoundBuffer_Pause ),
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0x83 },
-        { 0x0E, 0xD9 },
-        { 0x12, 0xC8 },
-        { 0x19, 0xC2 },
-        { 0x1A, 0x08 },
 OOVPA_END;
 
 #if 0 // Used 4134

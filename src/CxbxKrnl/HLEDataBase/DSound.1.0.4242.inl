@@ -216,6 +216,7 @@ OOVPA_XREF(CMcpxBuffer_Stop, 4242, 9,
         { 0x1D, 0x02 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
@@ -240,7 +241,7 @@ OOVPA_XREF(CMcpxStream_Flush, 4242, 10,
         { 0xD1, 0xC9 },
         { 0xD2, 0xC3 },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundStream_SetFormat
@@ -283,4 +284,196 @@ OOVPA_XREF(CDirectSoundBuffer_SetNotificationPositions, 4242, 11,
 
         { 0x47, 0xE8 },
         { 0x5D, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound_GetSpeakerConfig
+// ******************************************************************
+OOVPA_XREF(CDirectSound_GetSpeakerConfig, 4242, 12,
+
+    XREF_CDirectSound_GetSpeakerConfig,
+    XRefZero)
+
+        { 0x00, 0xE8 },
+        { 0x20, 0xB8 },
+
+        { 0x27, 0x8B },
+        { 0x28, 0x4C },
+        { 0x29, 0x24 },
+        { 0x2A, 0x04 },
+        { 0x2B, 0x8B },
+        { 0x2C, 0x49 },
+        { 0x2D, 0x08 },
+        { 0x2E, 0x8B },
+
+        { 0x4E, 0xC2 },
+        { 0x4F, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * CFullHrtfSource_GetHrtfFilterPair
+// ******************************************************************
+OOVPA_XREF(CFullHrtfSource_GetHrtfFilterPair, 4242, 15,
+
+    XREF_CFullHrtfSource_GetHrtfFilterPair,
+    XRefZero)
+
+        { 0x00, 0x56 },
+        { 0x01, 0x8B },
+        { 0x02, 0x74 },
+        { 0x03, 0x24 },
+        { 0x04, 0x08 },
+        { 0x05, 0xD9 },
+        { 0x06, 0x46 },
+        { 0x07, 0x14 },
+        { 0x08, 0x51 },
+        { 0x09, 0xD8 },
+        { 0x0A, 0x1D },
+
+        { 0x1A, 0x05 },
+        { 0x1F, 0xEB },
+
+        { 0x58, 0xD8 },
+        { 0x59, 0x05 },
+OOVPA_END;
+
+// ******************************************************************
+// * CHrtfSource_SetAlgorithm_FullHrtf
+// ******************************************************************
+OOVPA_XREF(CHrtfSource_SetAlgorithm_FullHrtf, 4242, 1+8,
+
+    XREF_CHrtfSource_SetAlgorithm_FullHrtf,
+    XRefOne)
+
+        XREF_ENTRY( 0x17, XREF_CFullHrtfSource_GetHrtfFilterPair ),
+
+        { 0x00, 0x83 },
+        { 0x01, 0x25 },
+        { 0x06, 0x00 },
+        { 0x07, 0xC7 },
+        { 0x08, 0x05 },
+        { 0x11, 0xC7 },
+        { 0x12, 0x05 },
+        { 0x1B, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSoundUseFullHRTF
+// ******************************************************************
+OOVPA_XREF(DirectSoundUseFullHRTF, 4242, 1+8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY(0x13, XREF_CHrtfSource_SetAlgorithm_FullHrtf ),
+
+        { 0x00, 0x56 },
+        { 0x01, 0xE8 },
+        { 0x06, 0x83 },
+        { 0x07, 0x3D },
+        { 0x0C, 0x02 },
+        { 0x1A, 0x74 },
+        { 0x1B, 0x0B },
+        { 0x1C, 0x68 },
+OOVPA_END;
+
+// ******************************************************************
+// * CLightHrtfSource_GetHrtfFilterPair
+// ******************************************************************
+OOVPA_XREF(CLightHrtfSource_GetHrtfFilterPair, 4242, 16,
+
+    XREF_CLightHrtfSource_GetHrtfFilterPair,
+    XRefZero)
+
+        { 0x00, 0x56 },
+        { 0x01, 0x8B },
+        { 0x02, 0x74 },
+        { 0x03, 0x24 },
+        { 0x04, 0x08 },
+        { 0x05, 0xD9 },
+        { 0x06, 0x46 },
+        { 0x07, 0x10 },
+        { 0x08, 0x51 },
+        { 0x09, 0xD9 },
+        { 0x0A, 0xE1 },
+        { 0x0B, 0xD8 },
+        { 0x0C, 0x05 },
+
+        { 0x19, 0x99 },
+        { 0x1A, 0x6A },
+
+        { 0x8B, 0x89 },
+OOVPA_END;
+
+// ******************************************************************
+// * CHrtfSource_SetAlgorithm_LightHrtf
+// ******************************************************************
+OOVPA_XREF(CHrtfSource_SetAlgorithm_LightHrtf, 4242, 1+11,
+
+    XREF_CHrtfSource_SetAlgorithm_LightHrtf,
+    XRefOne)
+
+        XREF_ENTRY(0x1A, XREF_CLightHrtfSource_GetHrtfFilterPair ),
+
+        { 0x00, 0xC7 },
+        { 0x01, 0x05 },
+        { 0x06, 0x01 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+        { 0x09, 0x00 },
+        { 0x0A, 0xC7 },
+        { 0x0B, 0x05 },
+        { 0x14, 0xC7 },
+        { 0x15, 0x05 },
+        { 0x1E, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSoundUseLightHRTF
+// ******************************************************************
+OOVPA_XREF(DirectSoundUseLightHRTF, 4242, 1+8,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY(0x13, XREF_CHrtfSource_SetAlgorithm_LightHrtf ),
+
+        { 0x00, 0x56 },
+        { 0x01, 0xE8 },
+        { 0x06, 0x83 },
+        { 0x07, 0x3D },
+        { 0x0C, 0x02 },
+        { 0x1A, 0x74 },
+        { 0x1B, 0x0B },
+        { 0x1C, 0x68 },
+OOVPA_END;
+
+// ******************************************************************
+// * WaveFormat::CreateXboxAdpcmFormat
+// ******************************************************************
+OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 4242, 7,
+
+    XREF_WaveFormat_CreateXboxAdpcmFormat,
+    XRefZero)
+
+        { 0x07, 0x08 },
+        { 0x10, 0xE9 },
+        { 0x19, 0x8D },
+        { 0x22, 0x66 },
+        { 0x2B, 0x04 },
+        { 0x34, 0x66 },
+        { 0x3D, 0x12 },
+OOVPA_END;
+
+// ******************************************************************
+// * XAudioCreateAdpcmFormat
+// ******************************************************************
+OOVPA_XREF(XAudioCreateAdpcmFormat, 4242, 1+1,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x01, XREF_WaveFormat_CreateXboxAdpcmFormat ),
+
+        { 0x00, 0xE9 },
 OOVPA_END;

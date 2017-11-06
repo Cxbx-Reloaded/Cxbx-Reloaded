@@ -524,7 +524,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4531.inl">
+      <Filter>HLEDatabase\DSound</Filter>
+    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl">
+      <Filter>HLEDatabase\DSound</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4721.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.inl">

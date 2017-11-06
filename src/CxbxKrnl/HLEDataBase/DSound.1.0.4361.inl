@@ -372,7 +372,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 4361, 1+7,
         { 0x52, 0x8B },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * CMcpxBuffer::Stop2
 // ******************************************************************
@@ -397,7 +397,7 @@ OOVPA_XREF(CMcpxBuffer_Stop2, 4361, 1+9,
         { 0x36, 0xC2 },
         { 0x37, 0x0C },
 OOVPA_END;
-
+#endif
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::StopEx
@@ -438,7 +438,7 @@ OOVPA_XREF(IDirectSoundBuffer_StopEx, 4361, 1+7,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
-
+#if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
 // ******************************************************************
@@ -456,7 +456,7 @@ OOVPA_XREF(CMcpxBuffer_Play2, 4361, 8,
         { 0x2F, 0x8B },
         { 0x36, 0xC2 },
 OOVPA_END;
-
+#endif
 #if 0 // For research purpose, need to strengthen it up.
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
@@ -616,4 +616,60 @@ OOVPA_XREF(CMcpxStream_Flush, 4361, 10,
         // Might not be a requirement? Aka comment this out might will enable support detection later XDK revisions.
         { 0xD1, 0xC9 },
         { 0xD2, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetDistanceFactor
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetDistanceFactor, 4361, 12,
+
+    XREF_CDirectSoundVoice_SetDistanceFactor,
+    XRefZero)
+
+        // CDirectSoundVoice_SetDistanceFactor+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // CDirectSoundVoice_SetDistanceFactor+0x11 : mov [eax+40h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x50 },
+        { 0x13, 0x40 },
+
+        { 0x14, 0x8B },
+        { 0x1D, 0x83 },
+        { 0x1F, 0x78 },
+
+        // CDirectSoundVoice_SetDistanceFactor+0x30 : retn 0Ch
+        { 0x31, 0x0C },
+        { 0x32, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetDopplerFactor
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetDopplerFactor, 4361, 12,
+
+	XREF_CDirectSoundVoice_SetDopplerFactor,
+    XRefZero)
+
+        // CDirectSoundVoice_SetDopplerFactor+0x0D : mov edx, [esp+arg_4]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x54 },
+        { 0x0F, 0x24 },
+        { 0x10, 0x08 },
+
+        // CDirectSoundVoice_SetDopplerFactor+0x12 : mov [eax+48h], edx
+        { 0x11, 0x89 },
+        { 0x12, 0x50 },
+        { 0x13, 0x48 },
+
+        { 0x14, 0x8B },
+        { 0x1D, 0x83 },
+        { 0x1F, 0x78 },
+
+        // CDirectSoundVoice_SetDopplerFactor+0x31 : retn 0Ch
+        { 0x31, 0x0C },
+        { 0x32, 0x00 }
 OOVPA_END;

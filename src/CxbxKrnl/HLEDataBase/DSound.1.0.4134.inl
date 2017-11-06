@@ -3259,7 +3259,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSoundUseFullHRTF
 // ******************************************************************
-// Generic OOVPA as of 4134 and newer.
+// Generic OOVPA as of 4134 plus 5344 and newer.
 OOVPA_XREF(DirectSoundUseFullHRTF, 4134, 1+7,
 
     XRefNoSaveIndex,
@@ -3523,6 +3523,44 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
+OOVPA_XREF(CMcpxStream_Flush, 4134, 18,
+
+    XREF_CMcpxStream_Flush,
+    XRefZero)
+
+        // CMcpxStream_Flush+0x00 : push ebp; mov ebp, esp; sub esp, 10h
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x10 },
+
+        // Offset is unique for this asm code.
+        // CMcpxStream_Flush+0x0A : movzx eax,byte ptr fs:[24h]
+        { 0x0A, 0x64 },
+        { 0x0B, 0x0F },
+        { 0x0C, 0xB6 },
+        { 0x0D, 0x05 },
+        { 0x0E, 0x24 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x00 },
+        { 0x11, 0x00 },
+
+        // Offset is not match for revision 5455.
+        // CMcpxStream_Flush+0x7F : lea eax, [???+XXXh]
+        { 0x7F, 0x8D },
+        { 0x83, 0x00 },
+        { 0x84, 0x00 },
+
+        // CMcpxStream_Flush+0x85 : push eax
+        { 0x85, 0x50 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4134 version
+// ******************************************************************
+// * CMcpxStream_Flush
+// ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 4134, 10,
     XREF_CMcpxStream_Flush,
     XRefZero)
@@ -3543,6 +3581,7 @@ OOVPA_XREF(CMcpxStream_Flush, 4134, 10,
         { 0xD0, 0xC9 },
         { 0xD1, 0xC3 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSoundStream_Flush
@@ -4314,8 +4353,10 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 4134, 12,
         { 0x52, 0x0D },
         { 0x53, 0x00 },
 
-        { 0x82, 0xC2 },
-        { 0x83, 0x08 },
+        { 0x63, 0x0C },
+        { 0x64, 0xE8 },
+        //{ 0x82, 0xC2 }, 4242 Different length
+        //{ 0x83, 0x08 },
 OOVPA_END;
 
 // ******************************************************************

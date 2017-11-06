@@ -751,3 +751,8 @@ OOVPA_XREF(IDirectSoundStream_Set3DVoiceData, 5558, 1+1,
         // IDirectSoundStream_Set3DVoiceData+0x00 : jmp 0x........
         { 0x00, 0xE9 },
 OOVPA_END;
+
+// ******************************************************************
+// * Rollback support signature(s)
+// ******************************************************************
+#define CMcpxStream_Flush_5558 CMcpxStream_Flush_4134
