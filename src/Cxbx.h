@@ -102,8 +102,8 @@ typedef u32              xbaddr;
 
 extern bool g_bIntegrityChecking;
 #ifdef _DEBUG
-extern void CxbxCheckIntegrity();
-#define CXBX_CHECK_INTEGRITY() CxbxCheckIntegrity()
+//extern void CxbxCheckIntegrity();
+#define CXBX_CHECK_INTEGRITY() //CxbxCheckIntegrity()
 #else
 #define CXBX_CHECK_INTEGRITY()
 #endif
@@ -131,7 +131,10 @@ extern volatile bool g_bPrintfOn;
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE
-	#define DbgPrintf(fmt, ...) do { CXBX_CHECK_INTEGRITY(); if(g_bPrintfOn) printf("[0x%.4X] "##fmt, GetCurrentThreadId(), ##__VA_ARGS__); } while (0)
+	#define DbgPrintf(fmt, ...) { \
+        CXBX_CHECK_INTEGRITY(); \
+        if(g_bPrintfOn) printf("[0x%.4X] "##fmt, GetCurrentThreadId(), ##__VA_ARGS__); \
+     }
 #else
 	inline void null_func(...) { }
 	#define DbgPrintf null_func
