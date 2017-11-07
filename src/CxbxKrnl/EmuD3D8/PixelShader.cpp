@@ -71,7 +71,6 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include <CxbxKrnl/MemoryManager.h>
 

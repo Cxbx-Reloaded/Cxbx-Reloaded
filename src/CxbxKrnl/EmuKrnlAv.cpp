@@ -56,7 +56,6 @@ namespace NtDll
 };
 
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;

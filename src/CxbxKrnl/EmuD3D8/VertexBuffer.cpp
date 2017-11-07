@@ -39,7 +39,6 @@
 
 #include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuAlloc.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 #include "CxbxKrnl/MemoryManager.h"

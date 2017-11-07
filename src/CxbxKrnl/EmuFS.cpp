@@ -46,7 +46,6 @@ namespace xboxkrnl
 
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
-#include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
 #include "MemoryManager.h"
 

@@ -58,7 +58,6 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values

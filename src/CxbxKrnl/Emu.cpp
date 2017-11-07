@@ -47,7 +47,6 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuFS.h"
-#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace NtDll

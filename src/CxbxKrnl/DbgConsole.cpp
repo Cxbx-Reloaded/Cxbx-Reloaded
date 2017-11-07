@@ -39,7 +39,6 @@
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
-#include "EmuAlloc.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
 #include "EmuXTL.h"

@@ -57,7 +57,6 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 #include "MemoryManager.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
