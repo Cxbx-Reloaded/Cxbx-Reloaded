@@ -411,28 +411,27 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 			}
 
 #ifdef _DEBUG_TRACE
-			// dump raw TLS data
-			if (pNewTLS == nullptr)
-				DbgPrintf("KRNL: TLS Non-Existant (OK)\n");
-			else
-			{
-				DbgPrintf("KRNL: TLS Data Dump...\n");
-				if (g_bPrintfOn)
-				{
-					for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
-					{
-						uint08 *bByte = (uint08*)pNewTLS + v;
+            // dump raw TLS data
+            if (pNewTLS == nullptr) {
+                DbgPrintf("KRNL: TLS Non-Existant (OK)\n");
+            } else {
+                DbgPrintf("KRNL: TLS Data Dump...\n");
+                if (g_bPrintfOn) {
+                    for (uint32 v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
 
-						if (v % 0x10 == 0)
-							DbgPrintf("KRNL: 0x%.8X:", (xbaddr)bByte);
+                        uint08 *bByte = (uint08*)pNewTLS + v;
 
-						// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
-						printf(" %.2X", *bByte);
-					}
+                        if (v % 0x10 == 0) {
+                            DbgPrintf("KRNL: 0x%.8X:", (xbaddr)bByte);
+                        }
 
-					printf("\n");
-				}
-			}
+                        // Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+                        printf(" %.2X", *bByte);
+                    }
+
+                    printf("\n");
+                }
+            }
 #endif
 		}
 
