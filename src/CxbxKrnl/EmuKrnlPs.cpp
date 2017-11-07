@@ -187,6 +187,9 @@ static unsigned int WINAPI PCSTProxy
 
 callComplete:
 
+    if (hStartedEvent != NULL) {
+        CloseHandle(hStartedEvent);
+    }
 	// This will also handle thread notification :
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 
