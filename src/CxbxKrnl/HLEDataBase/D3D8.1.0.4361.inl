@@ -1156,13 +1156,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_SetTexture, 4361, 28)
+#else
 OOVPA_XREF(D3DDevice_SetTexture, 4361, 1+26,
 
     XRefNoSaveIndex,
     XRefOne)
 
 		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
-
+#endif
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },
 		{ 0x02, 0x08 },
@@ -1179,8 +1182,10 @@ OOVPA_XREF(D3DDevice_SetTexture, 4361, 1+26,
 		{ 0x10, 0x8B },
 		{ 0x11, 0x84 },
 		{ 0x12, 0xB7 },
-		//{ 0x13, 0x78 }, // disabled. part of an offset
-		//{ 0x14, 0x0A },
+#ifndef WIP_LessVertexPatching
+		{ 0x13, 0x78 }, // disabled. part of an offset
+		{ 0x14, 0x0A },
+#endif
 		{ 0x15, 0x00 },
 		{ 0x16, 0x00 },
 		{ 0x17, 0x85 },

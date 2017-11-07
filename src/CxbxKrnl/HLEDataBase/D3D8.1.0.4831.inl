@@ -88,13 +88,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_SetTexture, 4928, 15)
+#else
 OOVPA_XREF(D3DDevice_SetTexture, 4928, 1+15,
 
     XRefNoSaveIndex,
     XRefOne)
 
 		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
-
+#endif
 #if 0 // PatrickvL preparations // 1+31,
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },

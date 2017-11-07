@@ -281,13 +281,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3D_CommonSetRenderTarget
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3D_CommonSetRenderTarget, 4627, 12)
+#else
 OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 1+12,
 
     XREF_D3D_CommonSetRenderTarget,
 	XRefOne)
 
 		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
-
+#endif
         // D3D_CommonSetRenderTarget+0x00 : sub esp, 0x20
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -312,13 +315,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3D_CommonSetRenderTargetB
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3D_CommonSetRenderTargetB, 4627, 11)
+#else
 OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 1+11,
 
     XREF_D3D_CommonSetRenderTarget,
 	XRefOne)
 
 		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
-
+#endif
         // D3D_CommonSetRenderTargetB+0x00 : sub esp, 0x24
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -554,15 +560,21 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetRenderTarget2
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 2+8,
+
+	XREF_D3DDevice_GetRenderTarget2,
+	XRefTwo)
+#else
 OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 3+8,
 
 	XREF_D3DDevice_GetRenderTarget2,
 	XRefThree)
-
+#endif
 		XREF_ENTRY( 0x01, XREF_D3DDEVICE ), // Derived
-
+#ifdef WIP_LessVertexPatching
 		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
-
+#endif
         XREF_ENTRY( 0x12, XREF_D3DResource_AddRef ),
 
         // D3DDevice_GetRenderTarget2+0x00 : mov eax, [addr]
@@ -614,13 +626,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 20)
+#else
 OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 1+20,
 
 	XREF_D3DDevice_GetDepthStencilSurface2,
 	XRefOne)
 
 		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
-
+#endif
         { 0x00, 0xA1 },
 
         { 0x05, 0x56 },
@@ -980,13 +995,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_SetPixelShader, 4627, 16)
+#else
 OOVPA_XREF(D3DDevice_SetPixelShader, 4627, 1+16,
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x0A, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
-
+#endif
         { 0x03, 0x1D },
 
         { 0x0C, 0x00 },
@@ -2883,13 +2901,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_GetTexture2, 4627, 23)
+#else
 OOVPA_XREF(D3DDevice_GetTexture2, 4627, 1+23, // Up to 5233. Also for 5344, 5558, 5659, 5788, 5849, 5933
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
-
+#endif
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },
 		{ 0x02, 0x24 },

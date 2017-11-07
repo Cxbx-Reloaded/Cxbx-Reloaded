@@ -336,13 +336,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 4134, 9)
+#else
 OOVPA_XREF(D3DDevice_SetRenderTarget, 4134, 1+9,
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x17, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
-
+#endif
         // D3DDevice_SetRenderTarget+0x00 : sub esp, 0x3C
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -2908,13 +2911,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_GetTexture2, 4134, 23) // Up to 4531
+#else
 OOVPA_XREF(D3DDevice_GetTexture2, 4134, 1+23, // Up to 4531
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
-
+#endif
         { 0x00, 0x8B },
         { 0x01, 0x44 },
         { 0x02, 0x24 },

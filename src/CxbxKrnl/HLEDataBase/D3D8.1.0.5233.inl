@@ -623,13 +623,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTargetFast
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5233, 27)
+#else
 OOVPA_XREF(D3DDevice_SetRenderTargetFast, 5233, 1+27,
 	
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x15, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
-
+#endif
 		// D3DDevice_SetRenderTargetFast+0x00 : push ebp
 		{ 0x00, 0x55 },
 
