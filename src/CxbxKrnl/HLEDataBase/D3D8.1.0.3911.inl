@@ -1487,16 +1487,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetStreamSource
 // ******************************************************************
-#ifndef WIP_LessVertexPatching
-OOVPA_NO_XREF(D3DDevice_SetStreamSource, 3911, 12)
-#else
 OOVPA_XREF(D3DDevice_SetStreamSource, 3911, 1+12,
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x23, XREF_G_STREAM ), // Derived
-#endif
+
         // D3DDevice_SetStreamSource+0x39 : add edx, 0xFFF80000
         { 0x39, 0x81 },
         { 0x3A, 0xC2 },

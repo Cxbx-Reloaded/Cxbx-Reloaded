@@ -120,6 +120,26 @@ void *GetEmuPatchAddr(std::string aFunctionName)
 	return addr;
 }
 
+bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
+{
+    // Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
+    // TODO : Remove this when XREF_D3DTSS_TEXCOORDINDEX derivation is deemed stable
+    xbaddr XRefAddr = XRefDataBase[XRef];
+    if (XRefAddr == Address)
+        return true;
+
+    if (XRefAddr == XREF_ADDR_DERIVE) {
+        printf("HLE: XRef #%d derived 0x%.08X -> %s\n", XRef, Address, SymbolName);
+        XRefDataBase[XRef] = Address;
+        return true;
+    }
+
+    // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
+    CxbxPopupMessage("Verification of %s failed : XREF was 0x%.8X while lookup gave 0x%.8X", SymbolName, XRefAddr, Address);
+    // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
+    return false;
+}
+
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
@@ -288,7 +308,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = XREF_ADDR_DERIVE;          //In use
 		XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = XREF_ADDR_DERIVE;              //In use
 		XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = XREF_ADDR_DERIVE;                 //In use
-		XRefDataBase[XREF_G_STREAM] = XREF_ADDR_DERIVE;
+		XRefDataBase[XREF_G_STREAM] = XREF_ADDR_DERIVE;                             //In use
 		XRefDataBase[XREF_OFFSET_D3DDEVICE_M_PIXELSHADER] = XREF_ADDR_DERIVE;
 		XRefDataBase[XREF_OFFSET_D3DDEVICE_M_TEXTURES] = XREF_ADDR_DERIVE;
 		XRefDataBase[XREF_OFFSET_D3DDEVICE_M_PALETTES] = XREF_ADDR_DERIVE;
@@ -502,6 +522,39 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             } else {
                                 XTL::EmuD3DDeferredTextureState = nullptr;
                                 CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+                            }
+                        }
+
+                        // Locate Xbox symbol "g_Stream" and store it's address
+                        {
+                            xbaddr pFunc = NULL;
+                            int OOVPA_version;
+                            int iCodeOffsetFor_g_Stream = 0x22; // verified for 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
+
+                            if (BuildVersion >= 4034) {
+                                OOVPA_version = 4034;
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4034, lower, upper);
+                            } else {
+                                OOVPA_version = 3911;
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_3911, lower, upper);
+                                iCodeOffsetFor_g_Stream = 0x23; // verified for 3911
+                            }
+
+                            if (pFunc != NULL) {
+                                printf("HLE: Located 0x%.08X -> D3DDevice_SetStreamSource_%d\n", pFunc, OOVPA_version);
+
+                                // Read address of Xbox_g_Stream from D3DDevice_SetStreamSource
+                                xbaddr Derived_g_Stream = *((xbaddr*)(pFunc + iCodeOffsetFor_g_Stream));
+
+                                // Temporary verification - is XREF_G_STREAM derived correctly?
+                                // TODO : Remove this when XREF_G_STREAM derivation is deemed stable
+                                VerifySymbolAddressAgainstXRef("g_Stream", Derived_g_Stream, XREF_G_STREAM);
+
+                                // Now that both Derived XREF and OOVPA-based function-contents match,
+                                // correct base-address (because "g_Stream" is actually "g_Stream"+8") :
+                                Derived_g_Stream -= offsetof(XTL::X_Stream, pVertexBuffer);
+                                g_SymbolAddresses["g_Stream"] = (xbaddr)Derived_g_Stream;
+                                printf("HLE: Derived 0x%.08X -> g_Stream\n", Derived_g_Stream);
                             }
                         }
                     }

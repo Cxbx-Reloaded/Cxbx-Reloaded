@@ -337,16 +337,13 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetStreamSource
 // ******************************************************************
-#ifndef WIP_LessVertexPatching
-OOVPA_NO_XREF(D3DDevice_SetStreamSource, 4034, 14) // 28
-#else
 OOVPA_XREF(D3DDevice_SetStreamSource, 4034, 1+14, // 1+28
 
 	XRefNoSaveIndex,
 	XRefOne)
 
 		XREF_ENTRY( 0x22, XREF_G_STREAM ), // Derived
-#endif
+
 #if 0
 		{ 0x00, 0x8B },
 		{ 0x01, 0x0D },
