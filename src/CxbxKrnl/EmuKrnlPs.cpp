@@ -151,7 +151,7 @@ static unsigned int WINAPI PCSTProxy
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(TRUE);
 		}
@@ -293,26 +293,50 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	//	else
 	//		KernelStackSize = round up;
 
-	static bool bFirstTime = false;
+    static bool bFirstTime = false;
 
-	// create thread, using our special proxy technique
-	{
-		DWORD dwThreadId;
+    // create thread, using our special proxy technique
+    {
+        DWORD dwThreadId = 0, dwThreadWait;
+        bool bWait = true;
 
-		// PCSTProxy is responsible for cleaning up this pointer
-		::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
+        // PCSTProxy is responsible for cleaning up this pointer
+        ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
 
-		iPCSTProxyParam->StartRoutine = StartRoutine;
-		iPCSTProxyParam->StartContext = StartContext;
-		iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
-		iPCSTProxyParam->StartSuspended = CreateSuspended;
-		iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        iPCSTProxyParam->StartRoutine = StartRoutine;
+        iPCSTProxyParam->StartContext = StartContext;
+        iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
+        iPCSTProxyParam->StartSuspended = CreateSuspended;
+        iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
 
-		*ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+        *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 
-		WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
+        DbgPrintf("KRNL: Waiting for Xbox proxy thread to start...\n");
 
-		DbgPrintf("EmuKrnl: ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", *ThreadHandle, dwThreadId);
+        while (bWait) {
+            dwThreadWait = WaitForSingleObject(*ThreadHandle, 300);
+            switch (dwThreadWait) {
+                // Thread is running
+                case WAIT_TIMEOUT:
+                // Thread is complete
+                case WAIT_OBJECT_0: {
+                    // if either of two above is true, don't need to wait.
+                    bWait = false;
+                    break;
+                }
+                // A problem has occurred, what should we do?
+                case WAIT_FAILED: {
+                    break;
+                }
+                // Unknown wait
+                default:
+                    bWait = false;
+                    break;
+            }
+        }
+
+		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
+		DbgPrintf("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
 		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
 		{
@@ -413,7 +437,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}
