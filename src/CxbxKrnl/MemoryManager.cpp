@@ -34,6 +34,8 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX "XMEM"
+
 #include <assert.h> // For assert()
 #include <malloc.h> // For _aligned_malloc()
 

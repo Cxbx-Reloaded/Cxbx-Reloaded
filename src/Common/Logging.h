@@ -139,8 +139,33 @@ LOG_SANITIZE(sanitized_wchar_pointer, wchar_t *);
 // Function (and argument) logging defines
 //
 
-#define LOG_ARG_START "\n   " << std::setw(20) << std::left 
-#define LOG_ARG_OUT_START "\n OUT " << std::setw(18) << std::left 
+constexpr const int str_length(const char* str) {
+	return str_end(str) - str;
+}
+
+constexpr const char* str_skip_prefix(const char* str, const char *prefix) {
+	return (*str == *prefix) ? str_skip_prefix(str + 1, prefix + 1) : str;
+}
+
+constexpr const char* remove_prefix(const char* str, const char *prefix) {
+	return (str_skip_prefix(str, prefix) == str + str_length(prefix)) ? str_skip_prefix(str, prefix) : str;
+}
+
+constexpr char* xtl_prefix = "XTL::";
+constexpr char* emupatch_prefix = "EmuPatch_"; // See #define EMUPATCH
+
+constexpr const char* remove_emupatch_prefix(const char* str) {
+	// return an empty string when str isn't given
+	// skip XTL:: and/or EmuPatch_ prefix if present
+	return remove_prefix(remove_prefix(str, xtl_prefix), emupatch_prefix);
+}
+
+#define LOG_ARG_START "\n   " << std::setfill(' ') << std::setw(20) << std::left 
+#define LOG_ARG_OUT_START "\n OUT " << std::setfill(' ') << std::setw(18) << std::left 
+
+#ifndef LOG_PREFIX
+#define LOG_PREFIX __FILENAME__
+#endif // LOG_PREFIX
 
 #ifdef _DEBUG_TRACE
 
@@ -151,7 +176,7 @@ extern thread_local std::string _logPrefix;
 #define LOG_THREAD_INIT \
 	if (_logPrefix.length() == 0) { \
 		std::stringstream tmp; \
-		tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] "; \
+		tmp << "[" << hexstring16 << GetCurrentThreadId() << "] "; \
 		_logPrefix = tmp.str(); \
     }
 
@@ -160,7 +185,7 @@ extern thread_local std::string _logPrefix;
 	static thread_local std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << _logPrefix << __FILENAME__ << " : " << (func != nullptr ? func : ""); \
+		tmp << _logPrefix << LOG_PREFIX << ": " << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
 		_logFuncPrefix = tmp.str(); \
 	}
 
@@ -278,6 +303,10 @@ extern thread_local std::string _logPrefix;
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
+#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
+
+#define LOG_XBOX_CALL(func) DbgPrintf("TRAC: Xbox " ## func ## "() call\n");
+#define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call\n");
 
 //
 // Headers for rendering enums, flags and (pointer-to-)types :
@@ -321,11 +350,34 @@ extern thread_local std::string _logPrefix;
 // Macro to ease declaration of two render functions, for type and pointer-to-type :
 #define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);
 
+// Traits to switch ostreams to our preferred rendering of hexadecimal values
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring8(std::basic_ostream<_CharT, _Traits>&os)
+{
+	// std::noshowbase is not neccessary to set (it's the default, and we never use std::showbase)
+	return os << "0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << std::uppercase;
+}
+
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring16(std::basic_ostream<_CharT, _Traits>&os)
+{
+	return os << "0x" << std::setfill('0') << std::setw(4) << std::right << std::hex << std::uppercase;
+}
+
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring32(std::basic_ostream<_CharT, _Traits>&os)
+{
+	return os << "0x" << std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase;
+}
+
 // Macro combining pointer-to-type implementation and type rendering header :
 #define LOGRENDER(Type)                                         \
 LOGRENDER_HEADER_BY_PTR(Type)                                   \
 {                                                               \
-	os << "0x" << std::hex << std::uppercase << (void*)(value); \
+	os << hexstring32 << (void*)(value);                        \
 	if (value)                                                  \
 		os << " -> "#Type"* {" << *value << "}";                \
                                                                 \

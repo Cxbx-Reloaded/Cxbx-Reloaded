@@ -91,7 +91,7 @@ void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
     va_list argp;
 
-    sprintf(szBuffer1, "[0x%X] EmuWarn: ", GetCurrentThreadId());
+    sprintf(szBuffer1, "[0x%.4X] WARN: ", GetCurrentThreadId());
 
     va_start(argp, szWarningMessage);
 
@@ -134,9 +134,9 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 	// print debug information
 	{
 		if (IsBreakpointException)
-			printf("[0x%X] EmuMain: Received Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+			printf("[0x%.4X] MAIN: Received Breakpoint Exception (int 3)\n", GetCurrentThreadId());
 		else
-			printf("[0x%X] EmuMain: Received Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+			printf("[0x%.4X] MAIN: Received Exception (Code := 0x%.8X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
 
 		printf("\n"
 			" EIP := %s\n"
@@ -162,7 +162,7 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 
 void EmuExceptionExitProcess()
 {
-	printf("[0x%X] EmuMain: Aborting Emulation\n", GetCurrentThreadId());
+	printf("[0x%.4X] MAIN: Aborting Emulation\n", GetCurrentThreadId());
 	fflush(stdout);
 
 	if (CxbxKrnl_hEmuParent != NULL)
@@ -192,7 +192,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 	}
 	else if (ret == IDIGNORE)
 	{
-		printf("[0x%X] EmuMain: Ignored Breakpoint Exception\n", GetCurrentThreadId());
+		printf("[0x%.4X] MAIN: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
 
 		e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip instruction size bytes
@@ -206,6 +206,9 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
+
+	int symbolOffset = 0;
+	std::string symbolName = GetDetectedSymbolName(e->ContextRecord->Eip, &symbolOffset);
 
 	char buffer[256];
 	sprintf(buffer,
@@ -260,9 +263,9 @@ int ExitException(LPEXCEPTION_POINTERS e)
     static int count = 0;
 
 	// debug information
-    printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-    printf("[0x%X] EmuMain: Received Exception [0x%.08X]@%s\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
-    printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("[0x%.4X] MAIN: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("[0x%.4X] MAIN: Received Exception [0x%.8X]@%s\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
+    printf("[0x%.4X] MAIN: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
 
@@ -330,29 +333,28 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 		std::string symbolName = "";
         DWORD64 dwDisplacement = 0;
 
-        if(fSymInitialized)
-        {
+		if (fSymInitialized)
+		{
 			PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)&symbol;
-            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
-            pSymbol->MaxNameLen = SYMBOL_MAXLEN;
+			pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
+			pSymbol->MaxNameLen = SYMBOL_MAXLEN;
 			if (SymFromAddr(g_CurrentProcessHandle, frame.AddrPC.Offset, &dwDisplacement, pSymbol))
 				symbolName = pSymbol->Name;
+		}
+
+		if (symbolName.empty()) {
+			// Try getting a symbol name from the HLE cache :
+			int symbolOffset = 0;
+
+			symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
+			if (symbolOffset < 1000)
+				dwDisplacement = (DWORD64)symbolOffset;
 			else
-			{
-				// Try getting a symbol name from the HLE cache :
-				int symbolOffset = 0;
-
-				symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
-
-				if (symbolOffset < 1000)
-					dwDisplacement = (DWORD64)symbolOffset;
-				else
-					symbolName = "";
-			}
+				symbolName = "";
         }
 
-        if(symbolName.length() > 0)
-            printf(" %s+0x%.04X\n", symbolName.c_str(), dwDisplacement);
+		if (!symbolName.empty())
+			printf(" %s+0x%.04X\n", symbolName.c_str(), dwDisplacement);
         else
             printf("\n");
     }

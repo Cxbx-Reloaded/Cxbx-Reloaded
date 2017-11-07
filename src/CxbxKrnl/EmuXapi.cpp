@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "XAPI"
+
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 /* prevent name collisions */
 namespace xboxkrnl
@@ -97,7 +99,7 @@ void SetupXboxDeviceTypes()
 	if (gDeviceType_Gamepad == nullptr) {
 		// First, attempt to find GetTypeInformation
 		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
-		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != (xbaddr)nullptr) {
+		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbnull) {
 			printf("Deriving XDEVICE_TYPE_GAMEPAD from DeviceTable (via GetTypeInformation)\n");
 			// Read the offset values of the device table structure from GetTypeInformation
 			xbaddr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
@@ -236,7 +238,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 // * Note: This could be unpatched however,
 // * XInitDevices is required to be unpatched first.
 // * This in turn requires USB LLE to be implemented, or USBD_Init 
-// * patched with a stub, so this patch is still ennabled for now
+// * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 (
@@ -249,7 +251,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
-	DWORD ret  = DeviceType->CurrentConnected;
+	DWORD ret = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
 
@@ -263,7 +265,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 // * Note: This could be unpatched however,
 // * XInitDevices is required to be unpatched first.
 // * This in turn requires USB LLE to be implemented, or USBD_Init 
-// * patched with a stub, so this patch is still ennabled for now
+// * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 (
@@ -281,7 +283,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	LOG_FUNC_END;
 
 	BOOL ret = FALSE;
-	
+
     if(!DeviceType->ChangeConnected)
     {
         *pdwInsertions = 0;
@@ -444,9 +446,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
         for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
         {
-            HANDLE hDevice = g_pXInputSetStateStatus[v].hDevice;
-
-            if(hDevice == 0)
+            if ((HANDLE)g_pXInputSetStateStatus[v].hDevice == 0)
                 continue;
 
             g_pXInputSetStateStatus[v].dwLatency = 0;
@@ -548,7 +548,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
         if((dwPort >= 0) && (dwPort <= 3))
         {
-			DbgPrintf( "EmuXInputGetState(): dwPort = %d\n", dwPort );
+			DbgPrintf("XAPI: EmuXInputGetState(): dwPort = %d\n", dwPort );
 
             if(dwPort == 0)
             {
@@ -563,7 +563,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
         }
     }
 	else
-		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
+		EmuWarning("EmuXInputGetState(): pph == NULL!");
 
 	RETURN(ret);
 }
@@ -848,7 +848,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 	if( !pFiber )
 		EmuWarning( "CreateFiber failed!" );
 	else
-		DbgPrintf("CreateFiber returned 0x%X\n", pFiber);
+		DbgPrintf("XAPI: CreateFiber returned 0x%X\n", pFiber);
 
 	// Add to list of queued fiber routines
 	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
@@ -871,7 +871,7 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuDeleteFiber\n"
+	DbgPrintf("XAPI: EmuDeleteFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
@@ -893,7 +893,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuSwitchToFiber\n"
+	DbgPrintf("XAPI: EmuSwitchToFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
@@ -911,7 +911,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 
 	g_FiberCount = 0;
 
-	DbgPrintf( "Finished executing fibers!\n" );
+	DbgPrintf("XAPI: Finished executing fibers!\n" );
 
 }
 #endif
@@ -927,7 +927,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuConvertThreadToFiber\n"
+	DbgPrintf("XAPI: EmuConvertThreadToFiber\n"
 			"(\n"
 			"	lpParameter        : 0x%.08X\n"
 			");\n",
@@ -935,7 +935,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 
 	LPVOID pRet = ConvertThreadToFiber( lpParameter );
 	
-	DbgPrintf( "EmuConvertThreadToFiber returned 0x%X\n", pRet );
+	DbgPrintf("XAPI: EmuConvertThreadToFiber returned 0x%X\n", pRet );
 
 
 	return pRet;
@@ -950,7 +950,7 @@ VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuXapiFiberStarup()\n"
+	DbgPrintf("XAPI: EmuXapiFiberStarup()\n"
 			"(\n"
 			"	dwDummy            : 0x%.08X\n"
 			");\n",
@@ -1130,11 +1130,13 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 )
 {
 	FUNC_EXPORTS
+
 	// TODO : This patch can be removed once we're sure all XAPI library
 	// functions indirectly reference our xboxkrnl::LaunchDataPage variable.
 	// For this, we need a test-case that hits this function, and run that
 	// with and without this patch enabled. Behavior should be identical.
 	// When this is verified, this patch can be removed.
+	LOG_TEST_CASE("Unpatching test needed");
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdwLaunchDataType)

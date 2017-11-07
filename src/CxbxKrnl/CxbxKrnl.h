@@ -59,12 +59,6 @@ extern "C" {
 #define TIB_ArbitraryDataSlot 0x14
 #define TIB_LinearSelfAddress 0x18
 
-/*! xbaddr is the type of a physical address */
-typedef uint32 xbaddr;
-
-/*! xbnullptr is the type of null pointer address*/
-#define xbnullptr nullptr
-
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 
@@ -72,12 +66,17 @@ typedef uint32 xbaddr;
 #define KSEG0_BASE                  0x80000000
 
 // Define virtual base addresses for physical memory windows.
-#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
+#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE // = 0x80000000
 #define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
 #define MM_64M_PHYSICAL_PAGE        0x04000
 #define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
 #define MM_INSTANCE_PAGE_COUNT      16
+#define CONTIGUOUS_MEMORY_BASE MM_SYSTEM_PHYSICAL_MAP // = 0x80000000
 #define CONTIGUOUS_MEMORY_SIZE (64 * ONE_MB)
+#define TILED_MEMORY_BASE 0xF0000000 // Tiled memory is a mirror of contiguous memory, residing at 0xF0000000
+#define TILED_MEMORY_SIZE CONTIGUOUS_MEMORY_SIZE
+#define NV2A_MEMORY_BASE 0xFD000000 // See NV2A_ADDR
+#define NV2A_MEMORY_SIZE 0x01000000 // See NV2A_SIZE
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
@@ -123,7 +122,13 @@ typedef uint32 xbaddr;
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
-void CxbxPopupMessage(char *message);
+void CxbxPopupMessage(const char *message, ...);
+
+#define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \
+    if (!bPopupShown) { bPopupShown = true; \
+    CxbxPopupMessage("Please report that %s shows this test-case: %s\nIn %s (%s line %d)", \
+    CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while(0)
+// was g_pCertificate->wszTitleName
 
 extern Xbe::Certificate *g_pCertificate;
 
@@ -134,10 +139,10 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+__declspec(noreturn) void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
-void CxbxKrnlCleanup(const char *szErrorMessage, ...);
+__declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...);
 
 /*! register a thread handle */
 void CxbxKrnlRegisterThread(HANDLE hThread);
@@ -149,7 +154,7 @@ void CxbxKrnlSuspend();
 void CxbxKrnlResume();
 
 /*! terminate the calling thread */
-void CxbxKrnlTerminateThread();
+__declspec(noreturn) void CxbxKrnlTerminateThread();
 
 /*! kernel panic (trap for unimplemented kernel functions) */
 void CxbxKrnlPanic();

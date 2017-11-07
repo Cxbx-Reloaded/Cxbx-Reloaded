@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "X86 " // Intentional extra space to align on 4 characters
+
 // Link the library into our project.
 #pragma comment(lib, "distorm.lib")
 
@@ -157,11 +159,11 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 		r = 0x90; // Luke's hardware revision 1.6 Xbox returns this (also since XboxKrnlVersion is set to 5838)
 		break;
 	default:
-		EmuWarning("EmuX86 Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
+		EmuWarning("Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
 		return -1;
 	}
 
-	DbgPrintf("EmuX86 Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
+	DbgPrintf("X86 : Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
 	return r;
 }
 
@@ -176,7 +178,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 	uint32_t value;
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
+		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
 	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
@@ -191,6 +193,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read32(addr);
 		}
+
 		DbgPrintf("EmuX86_Read32Aligned(0x%08X) = 0x%08X\n", addr, value);
 	}
 
@@ -231,7 +234,8 @@ uint16_t EmuX86_Read16(xbaddr addr)
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read16(addr);
 		}
-		DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X\n", addr, value);
+
+		DbgPrintf("X86 : Read16(0x%.8X) = 0x%.4X\n", addr, value);
 	}
 
 	return value;
@@ -258,7 +262,8 @@ uint8_t EmuX86_Read8(xbaddr addr)
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read8(addr);
 		}
-		DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X\n", addr, value);
+
+		DbgPrintf("X86 : Read8(0x%.8X) = 0x%.2X\n", addr, value);
 	}
 
 	return value;
@@ -269,7 +274,7 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 	assert((addr & 3) == 0);
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
+		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
 		EmuNV2A_Write(addr - NV2A_ADDR, value, 32);
 		// Note : EmuNV2A_Write32 does it's own logging
 		return;
@@ -291,7 +296,7 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 	}
 
 	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("EmuX86_Write32Aligned(0x%08X, 0x%08X)\n", addr, value);
+	DbgPrintf("X86 : Write32Aligned(0x%.8X, 0x%.8X)\n", addr, value);
 	EmuX86_Mem_Write32(addr, value);
 }
 
@@ -300,14 +305,15 @@ void EmuX86_Write32(xbaddr addr, uint32_t value)
 	if ((addr & 3) == 0) {
 		EmuX86_Write32Aligned(addr, value);
 	}
-	else
+	else {
 		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unaligned unimplemented]", addr, value);
+		// LOG_UNIMPLEMENTD();
+	}
 }
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-
 		// Access NV2A regardless weither HLE is disabled or not 
 		EmuNV2A_Write(addr - NV2A_ADDR, value, 16);
 		// Note : EmuNV2A_Write32 does it's own logging
@@ -330,7 +336,7 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 	}
 
 	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("EmuX86_Write16(0x%08X, 0x%04X)\n", addr, value);
+	DbgPrintf("X86 : Write16(0x%.8X, 0x%.4X)\n", addr, value);
 	EmuX86_Mem_Write16(addr, value);
 }
 
@@ -360,7 +366,7 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 	}
 
 	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("EmuX86_Write8(0x%08X, 0x%02X)\n", addr, value);
+	DbgPrintf("X86 : Write8(0x%.8X, 0x%.2X)\n", addr, value);
 	EmuX86_Mem_Write8(addr, value);
 }
 
@@ -538,7 +544,7 @@ xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, bo
 	case O_NONE:
 	{
 		// ignore operand
-		return (xbaddr)nullptr;
+		return xbnull;
 	}
 	case O_REG:
 		is_internal_addr = true;
@@ -586,10 +592,10 @@ xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, bo
 		return (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
 	}
 	default:
-		return (xbaddr)nullptr;
+		return xbnull;
 	}
 
-	return (xbaddr)nullptr;
+	return xbnull;
 }
 
 bool EmuX86_Addr_Read(xbaddr srcAddr, bool is_internal_addr, uint16_t size, OUT uint32_t *value)
@@ -668,7 +674,7 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 {
 	bool is_internal_addr;
 	xbaddr srcAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
-	if (srcAddr != (xbaddr)nullptr)
+	if (srcAddr != xbnull)
 		return EmuX86_Addr_Read(srcAddr, is_internal_addr, info.ops[operand].size, value);
 
 	return false;
@@ -678,7 +684,7 @@ bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uin
 {
 	bool is_internal_addr;
 	xbaddr destAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
-	if (destAddr != (xbaddr)nullptr)
+	if (destAddr != xbnull)
 		return EmuX86_Addr_Write(destAddr, is_internal_addr, info.ops[operand].size, value);
 
 	return false;
@@ -694,7 +700,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	// ADD reads and writes destination :
 	bool is_internal_addr;
 	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr);
-	if (addr == (xbaddr)nullptr)
+	if (addr == xbnull)
 		return false;
 
 	if (is_internal_addr)
@@ -1165,7 +1171,7 @@ int EmuX86_OpcodeSize(uint8_t *Eip)
 	if (EmuX86_DecodeOpcode((uint8_t*)Eip, info))
 		return info.size;
 
-	EmuWarning("EmuX86: Error decoding opcode size at 0x%.8X", Eip);
+	EmuWarning("Error decoding opcode size at 0x%.8X", Eip);
 	return 1;
 }
 
@@ -1180,7 +1186,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	_DInst info;
 	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info))
 	{
-		EmuWarning("EmuX86: Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
+		EmuWarning("Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 	}
 	else
 	{
@@ -1259,7 +1265,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			// Some titles attempt to manually set the TSC via this instruction
 			// This needs fixing eventually, but should be acceptible to ignore for now!
 			// Chase: Hollywood Stunt Driver hits this
-			EmuWarning("EmuX86: WRMSR instruction ignored");
+			EmuWarning("WRMSR instruction ignored");
 			break;
 		default:
 			goto unimplemented_opcode;
@@ -1271,7 +1277,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		return true;
 
 unimplemented_opcode:
-		EmuWarning("EmuX86: 0x%08X: Not Implemented\n", e->ContextRecord->Eip);	// TODO : format decodedInstructions[0]
+		EmuWarning("0x%08X: Not Implemented\n", e->ContextRecord->Eip);	// TODO : format decodedInstructions[0]
 		e->ContextRecord->Eip += info.size;
 	}
 	
@@ -1280,7 +1286,7 @@ unimplemented_opcode:
 
 void EmuX86_Init()
 {
-	DbgPrintf("EmuX86: Initializing distorm version %d\n", distorm_version());
+	DbgPrintf("X86 : Initializing distorm version %d\n", distorm_version());
 	EmuX86_InitContextRecordOffsetByRegisterType();
 }
 

@@ -35,6 +35,8 @@
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
 
+#define LOG_PREFIX "HLE " // Intentional extra space to align on 4 characters
+
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
 #include "CxbxKrnl.h"
@@ -61,6 +63,7 @@ std::map<std::string, xbaddr> g_SymbolAddresses;
 std::unordered_map<std::string, subhook::Hook> g_FunctionHooks;
 bool g_HLECacheUsed = false;
 
+// D3D build version
 uint32 g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE

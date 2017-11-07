@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "XONL"
+
 #include "Emu.h"
 #include "Logging.h"
 #include "EmuFS.h"

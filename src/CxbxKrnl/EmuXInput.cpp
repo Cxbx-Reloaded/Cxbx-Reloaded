@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "XINP"
+
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
