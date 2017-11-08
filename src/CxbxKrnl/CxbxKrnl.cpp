@@ -721,8 +721,11 @@ const char *GameRegionToString(DWORD aGameRegion)
 		"PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "ALL (DEBUG)"
 	};
 
-	if ((aGameRegion & ~XBEIMAGE_GAME_REGION_KNOWN) > 0)
-		DbgPrintf("REGION ERROR! (0x%X)\n", aGameRegion);
+    if ((aGameRegion & ~XBEIMAGE_GAME_REGION_KNOWN) > 0) {
+        // Just in case we need this if a certificate structure data is corrupted again.
+        DbgPrintf("REGION ERROR! (0x%X)\n", aGameRegion);
+        return "REGION ERROR";
+    }
 
 	DWORD index = (aGameRegion & 7) | (aGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING ? 8 : 0);
 	return Regions[index];
