@@ -1572,10 +1572,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 		(NtDll::LARGE_INTEGER*)ByteOffset,
 		/*Key=*/nullptr);
 
-	if (FAILED(ret))
-		EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
-	else
-		Sleep(10); // HACK : This prevents Turok from skipping it's intro-movie
+    if (FAILED(ret)) {
+        EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
+    }
 
 	RETURN(ret);
 }
