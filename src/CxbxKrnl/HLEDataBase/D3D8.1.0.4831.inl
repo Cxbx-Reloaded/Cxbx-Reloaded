@@ -89,9 +89,9 @@ OOVPA_END;
 // * D3DDevice_SetTexture
 // ******************************************************************
 #ifndef WIP_LessVertexPatching
-OOVPA_NO_XREF(D3DDevice_SetTexture, 4928, 15)
+OOVPA_NO_XREF(D3DDevice_SetTexture, 4831, 15)
 #else
-OOVPA_XREF(D3DDevice_SetTexture, 4928, 1+15,
+OOVPA_XREF(D3DDevice_SetTexture, 4831, 1+15,
 
     XRefNoSaveIndex,
     XRefOne)
