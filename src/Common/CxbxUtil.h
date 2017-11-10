@@ -41,7 +41,11 @@ static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
 {
     if(dwMult == 0) { return dwValue; }
 
-    return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
+	int remainder = dwValue % dwMult;
+	if (remainder == 0)
+		return dwValue;
+
+	return dwValue + dwMult - remainder;
 }
 
 #endif

@@ -42,6 +42,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "NV2A"
+
 #include <process.h> // For __beginthreadex(), etc.
 #include "vga.h"
 

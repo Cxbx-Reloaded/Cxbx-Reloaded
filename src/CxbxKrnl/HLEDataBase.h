@@ -83,16 +83,25 @@ extern const uint32 HLEDataBaseCount;
 // ******************************************************************
 enum XRefDataBaseOffset
 {
-    XREF_D3DDEVICE=0,
+    // D3D variable addresses
+    XREF_D3DDEVICE=0, // initially set to XREF_ADDR_DERIVE // TODO : Rename to XREF_GLOBAL_PDEVICE or something?
+	XREF_D3DRS_CULLMODE, // initially set to XREF_ADDR_DERIVE
+    //XREF_D3DRS_MULTISAMPLEMODE, // Avoid; It replaced to X_D3DRS_MULTISAMPLETYPE around XDK 4361
+    XREF_D3DRS_MULTISAMPLERENDERTARGETMODE, // initially set to XREF_ADDR_DERIVE
+    XREF_D3DRS_ROPZCMPALWAYSREAD, // initially set to XREF_ADDR_DERIVE
+    XREF_D3DRS_ROPZREAD, // initially set to XREF_ADDR_DERIVE
+    XREF_D3DRS_DONOTCULLUNCOMPRESSED, // initially set to XREF_ADDR_DERIVE
+    XREF_D3DRS_STENCILCULLENABLE, // initially set to XREF_ADDR_DERIVE
+	XREF_D3DTSS_TEXCOORDINDEX, // initially set to XREF_ADDR_DERIVE
+	XREF_G_STREAM, // initially set to XREF_ADDR_DERIVE
+	// Offsets :
+	XREF_OFFSET_D3DDEVICE_M_PIXELSHADER, // initially set to XREF_ADDR_DERIVE
+	XREF_OFFSET_D3DDEVICE_M_TEXTURES, // initially set to XREF_ADDR_DERIVE
+	XREF_OFFSET_D3DDEVICE_M_PALETTES, // initially set to XREF_ADDR_DERIVE
+	XREF_OFFSET_D3DDEVICE_M_RENDERTARGET, // initially set to XREF_ADDR_DERIVE
+	XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL, // initially set to XREF_ADDR_DERIVE
+	// Functions
     XREF_D3DDevice_SetRenderState_CullMode,
-    XREF_D3D_RenderState_CullMode,
-    XREF_D3D_TextureState_TexCoordIndex,
-    XREF_D3D_RenderState_MultiSampleMode,
-    XREF_D3D_RenderState_MultiSampleRenderTargetMode,
-    XREF_D3D_RenderState_RopZCmpAlwaysRead,
-    XREF_D3D_RenderState_RopZRead,
-    XREF_D3D_RenderState_DoNotCullUncompressed,
-    XREF_D3D_RenderState_StencilCullEnable,
     XREF_D3DDevice_SetLight,
     XREF_D3DDevice_LazySetStateVB,
     XREF_D3D_BlockOnResource,
@@ -348,5 +357,7 @@ enum XRefDataBaseOffset
 // * XRefDataBase
 // ******************************************************************
 extern xbaddr XRefDataBase[XREF_COUNT];
+
+inline bool XRefAddrFound(enum XRefDataBaseOffset XRef) { return XRefDataBase[XRef] > XREF_ADDR_DERIVE; }
 
 #endif /*HLEDATABASE_H*/

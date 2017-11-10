@@ -37,6 +37,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -63,6 +65,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
+static DWORD EmuSoftwareInterrupRequestRegister = 0;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 // ******************************************************************
@@ -107,7 +110,9 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 )
 {
 	LOG_FUNC_ONE_ARG(Request);
-	LOG_UNIMPLEMENTED();
+
+	// Mask out this interrupt request
+	EmuSoftwareInterrupRequestRegister &= ~(1 << Request);
 }
 
 // ******************************************************************
@@ -222,7 +227,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
-		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
+		DbgPrintf("KRNL: HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
 			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
@@ -406,7 +411,10 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 {
 	LOG_FUNC_ONE_ARG(Request);
 
-	LOG_UNIMPLEMENTED();
+	// Set this software interrupt request :
+	EmuSoftwareInterrupRequestRegister |= (1 << Request);
+
+	LOG_INCOMPLETE();
 }
 
 // ******************************************************************

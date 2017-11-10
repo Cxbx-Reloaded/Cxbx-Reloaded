@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -129,6 +131,23 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
 xboxkrnl::KPCR* KeGetPcr();
+
+// ******************************************************************
+// * KiLockDispatcherDatabase()
+// ******************************************************************
+// * Not exported in kernel thunk table
+// * NOTE: This is a macro on the Xbox, however we implement it 
+// * as a function because a macro doesn't compile this: *(&OldIrql)
+// ******************************************************************
+void xboxkrnl::KiLockDispatcherDatabase
+(
+	OUT KIRQL* OldIrql
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(OldIrql);
+
+	*(OldIrql) = KeRaiseIrqlToDpcLevel();
+}
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
@@ -280,27 +299,28 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql()
 // ******************************************************************
-// Raises the hardware priority (irql)
-// NewIrql = Irql to raise to
+// Raises the hardware priority (irq level)
+// NewIrql = Irq level to raise to
 // RETURN VALUE previous irq level
-XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 (
-    IN UCHAR NewIrql
+    IN KIRQL NewIrql
 )
 {
 	LOG_FUNC_ONE_ARG(NewIrql);
 
-	UCHAR OldIrql;
+	// Inlined KeGetCurrentIrql() :
+	PKPCR Pcr = KeGetPcr();
+	KIRQL OldIrql = (KIRQL)Pcr->Irql;
 
-	KPCR* Pcr = KeGetPcr();
-
-	if (NewIrql < Pcr->Irql)	{
+	if (NewIrql < OldIrql)	{
 		KeBugCheck(0x00000009); // IRQL_NOT_GREATER_OR_EQUAL
 	}
 	
-	OldIrql = Pcr->Irql;
 	Pcr->Irql = NewIrql;
-	
+
+	LOG_INCOMPLETE();
+
 	RETURN(OldIrql);
 }
 
@@ -311,7 +331,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
 // ARGUMENTS NewIrql = Irql to lower to
 XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 (
-    IN UCHAR NewIrql
+    IN KIRQL NewIrql
 )
 {
 	LOG_FUNC_ONE_ARG(NewIrql);
@@ -334,6 +354,8 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(162) xboxkrnl::ULONG_PTR xboxkrnl::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
+extern xboxkrnl::KPRCB *KeGetCurrentPrcb();
+
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
@@ -344,7 +366,12 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 {
 	LOG_FUNC_ONE_ARG(OldIrql);
 
-	LOG_UNIMPLEMENTED();
+	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) // Avoid KeIsExecutingDpc(), as that logs
+		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+
+	LOG_INCOMPLETE(); // TODO : Thread-switch?
+
+	KfLowerIrql(OldIrql);
 }
 
 // ******************************************************************
@@ -356,8 +383,10 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
+	
 	LOG_UNIMPLEMENTED();
-	return 0;
+	
+	return 0; // Was XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
 }
 
 // ******************************************************************

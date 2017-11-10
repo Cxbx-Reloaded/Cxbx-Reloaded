@@ -35,8 +35,16 @@
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
 OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 3948, 8)
+#else
+OOVPA_XREF(D3DDevice_SetRenderTarget, 3948, 1+8,
 
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x17, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
+#endif
         // D3DDevice_SetRenderTarget+0x00 : sub esp, 0x30
         { 0x00, 0x83 },
         { 0x01, 0xEC },

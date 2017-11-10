@@ -37,6 +37,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -56,7 +58,6 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values

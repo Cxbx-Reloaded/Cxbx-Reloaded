@@ -37,6 +37,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -48,8 +50,6 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
-#include "ResourceTracker.h" // For g_AlignCache
 #include "MemoryManager.h"
 
 // prevent name collisions
@@ -179,7 +179,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
 		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
 
-	DbgPrintf("MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
+	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
 
 #ifdef _DEBUG_TRACE
 	if (NumberOfBytes != MAXULONG_PTR)
@@ -286,7 +286,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
 	if (BaseAddress == &DefaultLaunchDataPage) {
-		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
+		DbgPrintf("KNRL: Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
 		LOG_IGNORED();
 		return;
 	}
@@ -453,17 +453,17 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
 			if (fp)
 			{
-				DbgPrintf("Persisting LaunchDataPage\n");
+				DbgPrintf("KNRL: Persisting LaunchDataPage\n");
 				fseek(fp, 0, SEEK_SET);
 				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
 				fclose(fp);
 			}
 			else
-				DbgPrintf("Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+				DbgPrintf("KNRL: Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
 		}
 		else
 		{
-			DbgPrintf("Forgetting LaunchDataPage\n");
+			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
 			remove(szFilePath_LaunchDataPage_bin);
 		}
 	}
@@ -572,7 +572,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	}
 	else
 	{
-		EmuWarning("EmuKrnl: MmQueryStatistics with unusual size -> 0x%.08X", MemoryStatistics->Length);
+		EmuWarning("KRNL: MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	if (!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
 		EmuWarning("VirtualProtect Failed!");
 
-	DbgPrintf("EmuKrnl: VirtualProtect was 0x%.08X -> 0x%.08X\n", dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+	DbgPrintf("KRNL: VirtualProtect was 0x%.8X -> 0x%.8X\n", dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
 }
 
 // ******************************************************************

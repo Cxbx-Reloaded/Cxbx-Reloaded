@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -44,7 +46,6 @@ namespace xboxkrnl
 
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
-#include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
 #include "MemoryManager.h"
 
@@ -213,6 +214,7 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 
 __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 {
+	// Note : Inlined KeGetCurrentIrql()
 	__asm
 	{
 		mov eax, fs : [TIB_ArbitraryDataSlot]
@@ -334,7 +336,7 @@ void EmuInitFS()
 	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs58 });					// mov eax, large fs:58
 	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Eax });					// mov large fs:0, eax
 
-	DbgPrintf("Patching FS Register Accesses\n");
+	DbgPrintf("INIT: Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
 
@@ -344,7 +346,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		DbgPrintf("Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		DbgPrintf("INIT: Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++)
@@ -361,7 +363,7 @@ void EmuInitFS()
 
 				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 				{
-					DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
+					DbgPrintf("INIT: Patching FS Instruction at 0x%.8X\n", addr);
 
 					// Write Call opcode
 					*(uint08*)addr = OPCODE_CALL_E8;
@@ -377,7 +379,7 @@ void EmuInitFS()
 		}
 	}
 	
-	DbgPrintf("Done\n");
+	DbgPrintf("INIT: Done patching FS Register Accesses\n");
 }
 
 // generate fs segment selector
@@ -409,34 +411,33 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 			}
 
 #ifdef _DEBUG_TRACE
-			// dump raw TLS data
-			if (pNewTLS == nullptr)
-				DbgPrintf("EmuFS: TLS Non-Existant (OK)\n");
-			else
-			{
-				DbgPrintf("EmuFS: TLS Data Dump...\n");
-				if (g_bPrintfOn)
-				{
-					for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
-					{
-						uint08 *bByte = (uint08*)pNewTLS + v;
+            // dump raw TLS data
+            if (pNewTLS == nullptr) {
+                DbgPrintf("KRNL: TLS Non-Existant (OK)\n");
+            } else {
+                DbgPrintf("KRNL: TLS Data Dump...\n");
+                if (g_bPrintfOn) {
+                    for (uint32 v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
 
-						if (v % 0x10 == 0)
-							DbgPrintf("EmuFS: 0x%.08X: ", (xbaddr)bByte);
+                        uint08 *bByte = (uint08*)pNewTLS + v;
 
-						// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
-						printf("%.01X", (uint32)(*bByte));
-					}
+                        if (v % 0x10 == 0) {
+                            DbgPrintf("KRNL: 0x%.8X:", (xbaddr)bByte);
+                        }
 
-					printf("\n");
-				}
-			}
+                        // Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+                        printf(" %.2X", *bByte);
+                    }
+
+                    printf("\n");
+                }
+            }
 #endif
 		}
 
 		// prepare TLS
 		{
-			*(xbaddr*)pTLS->dwTLSIndexAddr = (xbaddr)nullptr;
+			*(xbaddr*)pTLS->dwTLSIndexAddr = xbnull;
 
 			// dword @ pTLSData := pTLSData
 			if (pNewTLS != nullptr)
@@ -498,5 +499,5 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	// Make the KPCR struct available to KeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
-	DbgPrintf("EmuFS: Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.08X)\n", pTLS);
+	DbgPrintf("KRNL: Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)\n", pTLS);
 }

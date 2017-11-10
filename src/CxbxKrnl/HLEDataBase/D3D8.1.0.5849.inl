@@ -83,6 +83,7 @@ OOVPA_XREF(D3D_BlockOnTime, 5849, 6,
         { 0xF8, 0x47 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * Get2DSurfaceDesc
@@ -108,6 +109,7 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 5849, 10)
         { 0xAF, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5455 version
 // ******************************************************************
 // * D3DDevice_SetScreenSpaceOffset
@@ -128,6 +130,7 @@ OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5849, 8)
 	{ 0x47, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4432 version
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes

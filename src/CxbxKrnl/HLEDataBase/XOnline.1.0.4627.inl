@@ -60,6 +60,7 @@ OOVPA_XREF(XnInit, 4627, 12,
         { 0x40, 0x44 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to XNet 4627
 // ******************************************************************
 // * XNetGetEthernetLinkStatus

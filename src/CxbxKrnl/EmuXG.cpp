@@ -36,6 +36,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "XGRP"
+
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 

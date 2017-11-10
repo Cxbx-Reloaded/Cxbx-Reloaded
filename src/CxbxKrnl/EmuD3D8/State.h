@@ -39,6 +39,12 @@
 // XDK version independent renderstate table, containing pointers to the original locations.
 extern DWORD *EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
+struct X_Stream {
+    DWORD Stride;
+    DWORD Offset;
+    XTL::X_D3DVertexBuffer *pVertexBuffer;
+};
+
 // EmuD3DDeferredRenderState
 extern DWORD *EmuD3DDeferredRenderState;
 

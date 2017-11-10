@@ -47,6 +47,7 @@ OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 5788, 7)
         { 0x58, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5455 version
 // ******************************************************************
 // * D3DDevice_GetViewport
@@ -63,6 +64,7 @@ OOVPA_NO_XREF(D3DDevice_GetViewport, 5788, 8)
         { 0x31, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_SetBackBufferScale
@@ -78,6 +80,7 @@ OOVPA_NO_XREF(D3DDevice_SetBackBufferScale, 5788, 7)
         { 0xDE, 0xC0 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
@@ -105,11 +108,17 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 5788, 12)
         { 0x41, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 5788, 10)
+OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 5788, 1+10,
+	
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
 
         // D3DDevice_GetDepthStencilSurface2+0x00 : mov eax, [addr]
         { 0x00, 0xA1 },
@@ -134,6 +143,7 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 5788, 10)
         { 0x1D, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_CreatePixelShader
@@ -151,6 +161,7 @@ OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5788, 9)
         { 0x46, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_TextureFactor
@@ -166,6 +177,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TextureFactor, 5788, 7)
         { 0x4D, 0x5E },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
@@ -182,6 +194,7 @@ OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 5788, 8)
         { 0xFF, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_SetMaterial
@@ -199,6 +212,7 @@ OOVPA_NO_XREF(D3DDevice_SetMaterial, 5788, 9)
         { 0x2E, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_GetMaterial
@@ -215,6 +229,7 @@ OOVPA_NO_XREF(D3DDevice_GetMaterial, 5788, 8)
         { 0x1A, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5028
 // ******************************************************************
 // * D3DDevice_BeginStateBig
@@ -238,6 +253,7 @@ OOVPA_NO_XREF(D3DDevice_BeginStateBig, 5788, 15)
         { 0x40, 0x5E },
 OOVPA_END;
 #endif
+
 #if 0 // This one _IDirect3DVertexBuffer8_Lock@20, replaced by generic 4627 version
 // ******************************************************************
 // * D3DVertexBuffer8_Lock
@@ -254,6 +270,7 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock, 5788, 8)
         { 0x16, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DVertexBuffer_Lock2
@@ -269,6 +286,7 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock2, 5788, 7)
         { 0x44, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * D3D_AllocContiguousMemory
@@ -284,6 +302,7 @@ OOVPA_NO_XREF(D3D_AllocContiguousMemory, 5788, 7)
         { 0x2F, 0x24 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DTexture8_GetLevelDesc
@@ -310,6 +329,7 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 5788, 10)
         { 0xAF, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // Used 5028
 // ******************************************************************
 // * D3DDevice_CreateTexture2
@@ -329,6 +349,7 @@ OOVPA_XREF(D3DDevice_CreateTexture2, 5788, 8,
         { 0xAE, 0x1C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstant1
@@ -357,6 +378,7 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant1, 5788, 11)
         { 0x5E, 0xA2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_SetVertexData2f
@@ -373,6 +395,7 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2f, 5788, 8)
         { 0x35, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
@@ -389,6 +412,7 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5788, 8)
         { 0xFE, 0x7D },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_BeginPushBuffer
@@ -403,6 +427,7 @@ OOVPA_NO_XREF(D3DDevice_BeginPushBuffer, 5788, 6)
         { 0x63, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * D3DDevice_EndPushBuffer
@@ -417,6 +442,7 @@ OOVPA_NO_XREF(D3DDevice_EndPushBuffer, 5788, 6)
         { 0x8C, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5558
 // ******************************************************************
 // * D3DDevice_RunPushBuffer
@@ -431,6 +457,7 @@ OOVPA_NO_XREF(D3DDevice_RunPushBuffer, 5788, 6)
         { 0xF6, 0x41 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_SetVerticalBlankCallback
@@ -440,7 +467,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 1+6,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         { 0x01, 0x44 },
         { 0x03, 0x04 },
@@ -450,6 +477,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 1+6,
         { 0x11, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_BlockUntilVerticalBlank
@@ -465,6 +493,7 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5788, 7)
         { 0x23, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_SetBackMaterial
@@ -483,6 +512,7 @@ OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 5788, 10)
         { 0x2E, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * IDirectD3DDevice8_Release
@@ -537,6 +567,7 @@ OOVPA_NO_XREF(D3DDevice_SetTile, 5788, 10)
 	{ 0x4B, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_SetSwapCallback
@@ -552,6 +583,7 @@ OOVPA_NO_XREF(D3DDevice_SetSwapCallback, 5788, 7)
         { 0x10, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5849
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
@@ -568,6 +600,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 5788, 8)
         { 0x6E, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice8::SetRenderState_LineWidth
@@ -598,6 +631,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LineWidth, 5788, 13)
         { 0x43, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4432 version
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes
@@ -627,6 +661,7 @@ OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5788, 18)
         { 0x80, 0xE8 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5788 version
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes
@@ -653,11 +688,17 @@ OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5788, 13)
         { 0x17, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5788, 7)
+OOVPA_XREF(D3DDevice_SetPalette, 5788, 1+7,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         { 0x10, 0x98 },
         { 0x22, 0x0F },
@@ -668,6 +709,7 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 5788, 7)
         { 0x7C, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_GetPushBufferOffset
@@ -683,6 +725,7 @@ OOVPA_NO_XREF(D3DDevice_GetPushBufferOffset, 5788, 7)
         { 0x91, 0x5F },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5558 version
 // ******************************************************************
 // * D3D::MakeRequestedSpace
@@ -723,6 +766,7 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 5788, 28, // Also for 5849, 5933
 		{ 0x1F, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic D3DDevice_MakeSpace 4134 version
 // ******************************************************************
 // * D3D::Unknown (D3D::MakeSpace?)
@@ -743,6 +787,7 @@ OOVPA_XREF(D3D_Unknown, 5788, 1+5,
 	{ 0x0E, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_AddRef
@@ -758,6 +803,7 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 5788, 7)
         { 0x13, 0xC1 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3D::ClearStateBlockFlags
@@ -824,6 +870,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 5788, 7)
         { 0x4C, 0x5F },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5558
 // ******************************************************************
 // * D3DDevice_GetTile
@@ -839,6 +886,7 @@ OOVPA_NO_XREF(D3DDevice_GetTile, 5788, 7)
         { 0x36, 0x14 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5455 version
 // ******************************************************************
 // * D3D::CDevice::KickOff
@@ -867,6 +915,7 @@ OOVPA_NO_XREF(D3DDevice_KickOff, 5788, 13)
 	{ 0xAF, 0xC3 }
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5233 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleMode
@@ -884,6 +933,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 5788, 9)
         { 0x26, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
@@ -901,6 +951,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5788, 9)
         { 0x26, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
@@ -916,6 +967,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 5788, 7)
         { 0x6B, 0x5F },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetDisplayFieldStatus
@@ -931,6 +983,7 @@ OOVPA_NO_XREF(D3DDevice_GetDisplayFieldStatus, 5788, 7)
         { 0x36, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetScissors
@@ -946,6 +999,7 @@ OOVPA_NO_XREF(D3DDevice_GetScissors, 5788, 7)
         { 0x4B, 0xA4 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5659 version
 // ******************************************************************
 // * D3DDevice_GetBackMaterial
@@ -962,6 +1016,7 @@ OOVPA_NO_XREF(D3DDevice_GetBackMaterial, 5788, 8)
         { 0x1A, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3925 version
 // ******************************************************************
 // * D3DDevice_DeleteStateBlock
@@ -984,6 +1039,7 @@ OOVPA_NO_XREF(D3DDevice_DeleteStateBlock, 5788, 9)
         { 0x3E, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Used 3925 instead in 5788, 5849
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
@@ -993,7 +1049,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 1+6,
     XRefNoSaveIndex,
     XRefOne)
 
-	XREF_ENTRY( 0x05, XREF_D3D_RenderState_RopZCmpAlwaysRead ),
+		XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ),
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },
@@ -1003,6 +1059,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 1+6,
         { 0x10, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 //Used 3925
 // ******************************************************************
 // * D3DDevice_GetVertexShaderSize
@@ -1027,6 +1084,7 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShaderSize, 5788, 13)
         { 0x12, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5659
 // ******************************************************************
 // * D3DDevice_GetShaderConstantMode
@@ -1052,6 +1110,7 @@ OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 5788, 16)
         { 0x13, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5659
 // ******************************************************************
 // * D3DDevice_GetVertexShader
@@ -1077,6 +1136,7 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShader, 5788, 16)
         { 0x13, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5659
 // ******************************************************************
 // * D3DDevice_GetPixelShader
@@ -1102,13 +1162,17 @@ OOVPA_NO_XREF(D3DDevice_GetPixelShader, 5788, 16)
         { 0x13, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5659
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 5788, 23) // Up to 5849
+OOVPA_XREF(D3DDevice_GetTexture2, 5788, 1+23, // Up to 5849
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },

@@ -105,6 +105,7 @@ OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank, 5120, 13,
         { 0x62, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5120
 // ******************************************************************
 // * XACT::CEngine::RegisterWaveBank

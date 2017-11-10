@@ -44,6 +44,7 @@ class Mutex
 
         void Lock();
         void Unlock();
+		bool IsLocked() { return m_LockCount > 0; }
 
     private:
         LONG m_MutexLock;      // Mutex lock

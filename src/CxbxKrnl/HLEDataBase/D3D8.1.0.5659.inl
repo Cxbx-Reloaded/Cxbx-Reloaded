@@ -138,7 +138,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5659, 1+12,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         // D3DDevice_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B },
@@ -285,12 +285,18 @@ OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 5659, 16)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
 OOVPA_NO_XREF(D3DDevice_GetTexture2, 5659, 23) // Up to 5849
+#else
+OOVPA_XREF(D3DDevice_GetTexture2, 5659, 1+23, // Up to 5849
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
 
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
+#endif
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },
 		{ 0x02, 0x24 },

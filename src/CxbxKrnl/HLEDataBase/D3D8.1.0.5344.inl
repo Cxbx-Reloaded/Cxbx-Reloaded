@@ -62,6 +62,7 @@ OOVPA_NO_XREF(Direct3D_CreateDevice, 5344, 20) // ONLY for 5344, 5558 and later 
 		{ 0x1F, 0xC7 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5028
 // ******************************************************************
 // * D3D_MakeRequestedSpace
@@ -102,6 +103,7 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 5344, 28,
 		{ 0x1F, 0x03 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_SetRenderState_Dxt1NoiseEnable
@@ -189,7 +191,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 5344, 1+7,
     XRefNoSaveIndex,
     XRefOne)
 
-        XREF_ENTRY( 0x0B, XREF_D3D_RenderState_MultiSampleRenderTargetMode ),
+        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
 
         { 0x03, 0x04 },
         { 0x0F, 0x8B },
@@ -243,6 +245,7 @@ OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5344, 7)
         { 0x44, 0x06 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetViewport
@@ -258,6 +261,7 @@ OOVPA_NO_XREF(D3DDevice_GetViewport, 5344, 7)
         { 0x1A, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4627 version
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
@@ -280,10 +284,10 @@ OOVPA_END;
 OOVPA_XREF(D3DDevice_LightEnable, 5344, 2+24,
 
 	XRefNoSaveIndex,
-	XRefTwo)
+	XRefTwo) // PatrickvL : Also for 5558, 5659, 5788, 5849, 5933
 
-	XREF_ENTRY(0x0B, XREF_D3DDEVICE),
-	XREF_ENTRY(0x67, XREF_D3DDevice_SetLight),
+	XREF_ENTRY( 0x0B, XREF_D3DDEVICE ), // Derived
+	XREF_ENTRY( 0x67, XREF_D3DDevice_SetLight ),
 
 	{ 0x00, 0x83 },
 	{ 0x01, 0xEC },
@@ -327,9 +331,9 @@ OOVPA_END;
 OOVPA_XREF(D3DDevice_GetLightEnable, 5344, 1+26,
 
 	XRefNoSaveIndex,
-	XRefOne)
+	XRefOne) // PatrickvL : Also for 5558, 5659, 5788, 5849, 5933
 
-        XREF_ENTRY( 0x06, XREF_D3DDEVICE),
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // Derived
 
         { 0x00, 0x8B },
         { 0x01, 0x44 },
@@ -434,6 +438,7 @@ OOVPA_NO_XREF(D3DDevice_SetMaterial, 5344, 9)
         { 0x2E, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4034 version
 // ******************************************************************
 // * Get2DSurfaceDesc
@@ -457,6 +462,7 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 5344, 10)
         { 0xAF, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
@@ -599,6 +605,7 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 5344, 8)
         { 0xF6, 0xC5 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * D3DDevice_SelectVertexShader
@@ -619,8 +626,16 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
+#ifndef WIP_LessVertexPatching
 OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5344, 9)
+#else
+OOVPA_XREF(D3DDevice_SetRenderTarget, 5344, 1+9,
 
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+#endif
         { 0x00, 0x83 },
         { 0x08, 0x56 },
         { 0x09, 0x33 },
@@ -636,7 +651,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetPalette, 5344, 12)
+OOVPA_XREF(D3DDevice_SetPalette, 5344, 1+12,
+
+	XRefNoSaveIndex,
+	XRefOne)
+
+		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 
         // D3DDevice_SetPalette+0x0D : mov eax, [esi+edi*4+0B78h]
         { 0x0D, 0x8B },
@@ -657,6 +677,7 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 5344, 12)
         { 0x8B, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5028 version
 // ******************************************************************
 // * D3DDevice_IsBusy
@@ -760,6 +781,7 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5344, 10)
         { 0xC6, 0x80 },
 OOVPA_END;
 #endif
+
 #if 0 // Used 4361
 // ******************************************************************
 // * D3DDevice_SetVertexDataColor
@@ -861,6 +883,7 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 5344, 9)
         { 0x68, 0x2D },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetOverlayUpdateStatus
@@ -888,6 +911,7 @@ OOVPA_NO_XREF(D3DDevice_GetOverlayUpdateStatus, 5344, 12)
         { 0x1C, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5233 version
 // ******************************************************************
 // * D3DDevice_UpdateOverlay
@@ -906,6 +930,7 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 5344, 10)
         { 0x84, 0xCA },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * IDirectD3DDevice8_Release
@@ -922,6 +947,7 @@ OOVPA_NO_XREF(D3DDevice_Release, 5344, 8)
         { 0x36, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5233
 // ******************************************************************
 // * D3DDevice_GetVisibilityTestResult
@@ -937,6 +963,7 @@ OOVPA_NO_XREF(D3DDevice_GetVisibilityTestResult, 5344, 7)
         { 0x5F, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4831 version
 // ******************************************************************
 // * D3DDevice_PersistDisplay
@@ -1122,6 +1149,7 @@ OOVPA_NO_XREF(D3DDevice_GetProjectionViewportMatrix, 5344, 7)
         { 0x1A, 0x5E },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * D3DDevice_GetTile
@@ -1162,15 +1190,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
-#if 0 // Derived XREF_OFFSET_D3DDEVICE_M_TEXTURES is not Implemented yet.
 OOVPA_XREF(D3DDevice_SetTexture, 5344, 1+26, // Also for 5558, 5659, 5788, 5849, 5933
 
     XRefNoSaveIndex,
     XRefOne)
 
-		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
-#endif
-OOVPA_NO_XREF(D3DDevice_SetTexture, 5344, 26)
+		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },
@@ -1344,12 +1369,18 @@ OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 5344, 16)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_GetTexture2
+// * D3DDevice_GetTexture, named with 2 suffix to match EMUPATCH(D3DDevice_GetTexture2)
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_GetTexture2, 5344, 23) // Up to 5455
+#ifndef WIP_LessVertexPatching
+OOVPA_NO_XREF(D3DDevice_GetTexture2, 5344, 23)
+#else
+OOVPA_XREF(D3DDevice_GetTexture2, 5344, 1+23, // Up to 5455
 
-		// XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // derived
+	XRefNoSaveIndex,
+	XRefOne)
 
+		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
+#endif
 		{ 0x00, 0x8B },
 		{ 0x01, 0x44 },
 		{ 0x02, 0x24 },

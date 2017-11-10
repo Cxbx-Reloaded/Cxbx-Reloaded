@@ -37,6 +37,8 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX "KRNL"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -162,7 +164,7 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 
 // Forward KeRaiseIrql() to KfRaiseIrql()
 #define KeRaiseIrql(NewIrql, OldIrql) \
-	*OldIrql = KfRaiseIrql(NewIrql)
+	*(OldIrql) = KfRaiseIrql(NewIrql)
 
 ULONGLONG BootTickCount = 0;
 
@@ -174,7 +176,7 @@ DWORD CxbxXboxGetTickCount()
 	return (DWORD)(GetTickCount64() - BootTickCount);
 }
 
-DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
+DWORD ExecuteDpcQueue()
 {
 	xboxkrnl::PKDPC pkdpc;
 	DWORD dwWait;
@@ -182,16 +184,8 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
-	// since callbacks come from here
-	// Note : This function runs on the Xbox core to somewhat approximate
-	// CPU locking (the prevention of interrupts to avoid thread-switches)
-	// so that callbacks don't get preempted. This needs more work.
-	InitXboxThread(g_CPUXbox);
-
-	while (true)
-	{
-		// While we're working with the DpcQueue, we need to be thread-safe :
-		EnterCriticalSection(&(g_DpcData.Lock));
+	// While we're working with the DpcQueue, we need to be thread-safe :
+	EnterCriticalSection(&(g_DpcData.Lock));
 
 //    if (g_DpcData._fShutdown)
 //        break; // while 
@@ -201,18 +195,61 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 //    g_DpcData._dwDpcThreadId = g_DpcData._dwThreadId;
 //    Assert(g_DpcData._dwDpcThreadId != 0);
 
-		// Are there entries in the DpqQueue?
-		while (!IsListEmpty(&(g_DpcData.DpcQueue)))
+	// Are there entries in the DpqQueue?
+	while (!IsListEmpty(&(g_DpcData.DpcQueue)))
+	{
+		// Extract the head entry and retrieve the containing KDPC pointer for it:
+		pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
+		// Mark it as no longer linked into the DpcQueue
+		pkdpc->Inserted = FALSE;
+		// Set DpcRoutineActive to support KeIsExecutingDpc:
+		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+		DbgPrintf("KRNL: Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+		__try {
+			// Call the Deferred Procedure  :
+			pkdpc->DeferredRoutine(
+				pkdpc,
+				pkdpc->DeferredContext,
+				pkdpc->SystemArgument1,
+				pkdpc->SystemArgument2);
+		} __except (EmuException(GetExceptionInformation()))
 		{
-			// Extract the head entry and retrieve the containing KDPC pointer for it:
-			pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
-			// Mark it as no longer linked into the DpcQueue
-			pkdpc->Inserted = FALSE;
-			// Set DpcRoutineActive to support KeIsExecutingDpc:
-			KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+			EmuWarning("Problem with ExceptionFilter!");
+		}
 
+		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
+	}
+
+	dwWait = INFINITE;
+	if (!IsListEmpty(&(g_DpcData.TimerQueue)))
+	{
+		while (true)
+		{
+			dwNow = CxbxXboxGetTickCount();
+			dwWait = INFINITE;
+			pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
+			pkdpc = nullptr;
+			while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
+			{
+				lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
+				if (lWait <= 0)
+				{
+					pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
+					pkdpc = pktimer->Dpc;
+					break; // while
+				}
+
+				if (dwWait > (DWORD)lWait)
+					dwWait = (DWORD)lWait;
+
+				pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
+			}
+
+			if (pkdpc == nullptr)
+				break; // while
+
+			DbgPrintf("KRNL: Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 			__try {
-				// Call the Deferred Procedure  :
 				pkdpc->DeferredRoutine(
 					pkdpc,
 					pkdpc->DeferredContext,
@@ -222,55 +259,30 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 			{
 				EmuWarning("Problem with ExceptionFilter!");
 			}
-
-			KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 		}
-
-		dwWait = INFINITE;
-		if (!IsListEmpty(&(g_DpcData.TimerQueue)))
-		{
-			while (true)
-			{
-				dwNow = CxbxXboxGetTickCount();
-				dwWait = INFINITE;
-				pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
-				pkdpc = nullptr;
-				while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
-				{
-					lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
-					if (lWait <= 0) 
-					{
-						pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
-						pkdpc = pktimer->Dpc;
-						break; // while
-					}
-
-					if (dwWait > (DWORD)lWait)
-						dwWait = (DWORD)lWait;
-
-					pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
-				}
-
-				if (pkdpc == nullptr)
-					break; // while
-
-				__try {
-					pkdpc->DeferredRoutine(
-						pkdpc,
-						pkdpc->DeferredContext,
-						pkdpc->SystemArgument1,
-						pkdpc->SystemArgument2);
-				} __except (EmuException(GetExceptionInformation()))
-				{
-					EmuWarning("Problem with ExceptionFilter!");
-				}
-			}
-		}
+	}
 
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
 //    g_DpcData._dwDpcThreadId = 0;
-		LeaveCriticalSection(&(g_DpcData.Lock));
+	LeaveCriticalSection(&(g_DpcData.Lock));
+
+	return dwWait;
+}
+
+DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
+{
+	DbgPrintf("KRNL: DPC thread is running\n");
+
+	// Make sure DPC callbacks run on the same core as the one that runs Xbox1 code :
+	// Note : This function runs on the Xbox core to somewhat approximate
+	// CPU locking (the prevention of interrupts to avoid thread-switches)
+	// so that callbacks don't get preempted. This needs more work.
+	InitXboxThread(g_CPUXbox);
+
+	while (true)
+	{
+		DWORD dwWait = ExecuteDpcQueue();
 
 		// TODO : Wait for shutdown too here
 		WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
@@ -278,19 +290,24 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 		SwitchToThread();
 	} // while
 
+	DbgPrintf("KRNL: DPC thread is finished\n");
+
 	return S_OK;
 }
 
 void InitDpcAndTimerThread()
 {
-	DWORD dwThreadId;
+	DWORD dwThreadId = 0;
 
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
 	InitializeListHead(&(g_DpcData.TimerQueue));
+
+	DbgPrintf("INIT: Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
+
 	g_DpcData.DpcThread = CreateThread(/*lpThreadAttributes=*/nullptr, /*dwStackSize=*/0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, /*lpParameter=*/nullptr, /*dwCreationFlags=*/0, &dwThreadId);
-	SetThreadAffinityMask(g_DpcData.DpcThread, g_CPUXbox);
+	DbgPrintf("INIT: Created DPC thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", g_DpcData.DpcThread, dwThreadId);
 	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
 }
 
@@ -424,11 +441,11 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 
 	char buffer[1024];
 	sprintf(buffer, "The running software triggered KeBugCheck with the following information\n"
-		"BugCheckCode: 0x%08X\n"
-		"BugCheckParameter1: 0x%08X\n"
-		"BugCheckParameter2: 0x%08X\n"
-		"BugCheckParameter3: 0x%08X\n"
-		"BugCheckParameter4: 0x%08X\n"
+		"BugCheckCode: 0x%.8X\n"
+		"BugCheckParameter1: 0x%p\n"
+		"BugCheckParameter2: 0x%p\n"
+		"BugCheckParameter3: 0x%p\n"
+		"BugCheckParameter4: 0x%p\n"
 		"\nThis is the Xbox equivalent to a BSOD and would cause the console to automatically reboot\n"
 		"\nContinue Execution (Not Recommended)?\n",
 		BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
@@ -478,6 +495,9 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
 	BOOLEAN ret = FALSE;
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
 
 	// here we have to connect the interrupt object to the vector
 	if (!InterruptObject->Connected)
@@ -492,6 +512,8 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 		}
 	}
 	// else do nothing
+
+	KiUnlockDispatcherDatabase(OldIrql);
 
 	RETURN(ret);
 }
@@ -527,15 +549,19 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
+
 	// Do the reverse of KeConnectInterrupt
-	// Untested (no known test cases) and not thread safe :
-	if (InterruptObject->Connected)
-	{
+	if (InterruptObject->Connected) { // Text case : d3dbvt.xbe
 		// Mark InterruptObject as not connected anymore
 		HalDisableSystemInterrupt(InterruptObject->BusInterruptLevel);
 		EmuInterruptList[InterruptObject->BusInterruptLevel] = NULL;
 		InterruptObject->Connected = FALSE;
 	}
+
+	KiUnlockDispatcherDatabase(OldIrql);
 }
 
 // ******************************************************************
@@ -558,9 +584,10 @@ XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
 // ******************************************************************
 XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 {
-	LOG_FUNC();
+	LOG_FUNC(); // TODO : Remove nested logging on this somehow, so we can call this (instead of inlining)
 
-	KIRQL Irql = KeGetPcr()->Irql;
+	KPCR* Pcr = KeGetPcr();
+	KIRQL Irql = (KIRQL)Pcr->Irql;
 
 	RETURN(Irql);
 }
@@ -720,6 +747,7 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 	// Interrupt->DispatchCode = []?; //TODO : Populate this interrupt dispatch
 	// code block, patch it up so it works with the address of this Interrupt
 	// struct and calls the right dispatch routine (depending on InterruptMode). 
+	LOG_INCOMPLETE();
 }
 
 // ******************************************************************
@@ -951,7 +979,7 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 
 	// Thread-safety is no longer required anymore
 	LeaveCriticalSection(&(g_DpcData.Lock));
-	// TODO : Instead, enable interrupts - use KeLowerIrql(&OldIrql) ?
+	// TODO : Instead, enable interrupts - use KeLowerIrql(OldIrql) ?
 
 	RETURN(NeedsInsertion);
 }
@@ -1133,23 +1161,24 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FUNC();
 
-	if(KeGetCurrentIrql() > DISPATCH_LEVEL)
+	// Inlined KeGetCurrentIrql() :
+	KPCR* Pcr = KeGetPcr();
+	KIRQL OldIrql = (KIRQL)Pcr->Irql;
+
+	if(OldIrql > DISPATCH_LEVEL)
 		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
-	KIRQL kRet = NULL;
-
-	KPCR* Pcr = KeGetPcr();
 	Pcr->Irql = DISPATCH_LEVEL;
 
 #ifdef _DEBUG_TRACE
-	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
-	DbgPrintf("Old IRQL is %d.\n", kRet);
+	DbgPrintf("KRNL: Raised IRQL to DISPATCH_LEVEL (2).\n");
+	DbgPrintf("Old IRQL is %d.\n", OldIrql);
 #endif
 
-	// We reached the DISPATCH_LEVEL, so the queue can be processed now :
-	// TODO : ExecuteDpcQueue();
+	// We reached the DISPATCH_LEVEL, so the queue can be processed now
+	ExecuteDpcQueue();
 	
-	RETURN(kRet);
+	RETURN(OldIrql);
 }
 
 // ******************************************************************

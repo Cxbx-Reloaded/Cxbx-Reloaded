@@ -52,7 +52,6 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
-#include "EmuAlloc.h"
 #include "MemoryManager.h"
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
@@ -1837,20 +1836,18 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				g_bSupportsYUY2Overlay = g_bSupportsTextureFormat[XTL::X_D3DFMT_YUY2];
 
 				// check for YUY2 overlay support TODO: accept other overlay types
-				{
-                    if(!g_bSupportsYUY2Overlay)
+                {
+                    if (!g_bSupportsYUY2Overlay)
                         EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-					else
-					{
-						// Does the user want to use Hardware accelerated YUV surfaces?
-						if (g_XBVideo.GetHardwareYUV())
-							DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Enabled...\n");
-						else
-						{
-							g_bSupportsYUY2Overlay = false;
-							DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Disabled...\n");
-						}
-					}
+                    else {
+                        // Does the user want to use Hardware accelerated YUV surfaces?
+                        if (g_XBVideo.GetHardwareYUV()) {
+                            DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Enabled...\n");
+                        } else {
+                            g_bSupportsYUY2Overlay = false;
+                            DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Disabled...\n");
+                        }
+                    }
                 }
 
                 // initialize primary surface

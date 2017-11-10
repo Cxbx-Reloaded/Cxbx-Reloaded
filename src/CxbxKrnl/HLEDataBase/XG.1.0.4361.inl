@@ -61,6 +61,7 @@ OOVPA_NO_XREF(XGIsSwizzledFormat, 4361, 12)
         { 0x43, 0xE4 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XGSwizzleRect
@@ -86,6 +87,7 @@ OOVPA_NO_XREF(XGSwizzleRect, 4361, 10)
         { 0xED, 0x0B },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * XGSetVertexBufferHeader
@@ -102,6 +104,7 @@ OOVPA_NO_XREF(XGSetVertexBufferHeader, 4361, 8) // 4134
         { 0x16, 0x18 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * XGCompressRect
@@ -118,6 +121,7 @@ OOVPA_NO_XREF(XGCompressRect, 4361, 8)
         { 0xFE, 0x8B },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * XGSetIndexBufferHeader

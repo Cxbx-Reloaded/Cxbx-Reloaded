@@ -63,6 +63,7 @@ OOVPA_NO_XREF(XInputOpen, 4242, 12)
         { 0x54, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XID_fCloseDevice
@@ -92,6 +93,7 @@ OOVPA_XREF(XID_fCloseDevice, 4242, 11,
         { 0xA0, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XInputGetCapabilities
@@ -123,6 +125,7 @@ OOVPA_NO_XREF(XInputGetCapabilities, 4242, 14)
         { 0xEF, 0x18 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XInputGetState
@@ -152,6 +155,7 @@ OOVPA_NO_XREF(XInputGetState, 4242, 12)
         { 0x6D, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XInputSetState
@@ -181,6 +185,7 @@ OOVPA_NO_XREF(XInputSetState, 4242, 12)
         { 0x34, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * XInputSetState
@@ -276,6 +281,7 @@ OOVPA_NO_XREF(XapiInitProcess, 4361, 7)
         { 0x43, 0x0B },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * XapiThreadStartup
@@ -343,6 +349,7 @@ OOVPA_NO_XREF(XMountMUA, 4242, 8) // generic version
         { 0xFE, 0x09 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XFormatUtilityDrive
@@ -365,6 +372,7 @@ OOVPA_NO_XREF(XFormatUtilityDrive, 4242, 12)
         { 0x6D, 0x33 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4242
 // ******************************************************************
 // * XMountMURootA
