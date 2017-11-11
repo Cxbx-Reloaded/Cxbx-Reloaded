@@ -697,6 +697,34 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		DiskGeometry->Cylinders.QuadPart = 0x1400000;	// Around 10GB, size of stock xbox HDD
 		break;
 	}
+	case 0x74004: // IOCTL_DISK_GET_PARTITION_INFO 
+	{
+		PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
+
+		// Open Partition 0, and read Partition Table
+		FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
+		XboxPartitionTable* partitionTable = (XboxPartitionTable*)malloc(sizeof(XboxPartitionTable));
+		fread(partitionTable, sizeof(XboxPartitionTable), 1, fp);
+		fclose(fp);
+
+		// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+		// Partition access always ends in PartitionX.bin, so we can take the substring of the input filename 
+		// minus the length of X.bin
+		char buffer[MAX_PATH] = {0};
+		GetFinalPathNameByHandle(FileHandle, buffer, MAX_PATH, VOLUME_NAME_DOS);
+		std::string bufferString(buffer);
+		std::string partitionNumberString = bufferString.substr(bufferString.length() - 5, 1);
+		int partitionNumber = atoi(partitionNumberString.c_str());
+		
+		// Now we read from the partition table, to fill in the partitionInfo struct
+		partitioninfo->PartitionNumber = partitionNumber;
+		partitioninfo->StartingOffset.QuadPart = partitionTable->TableEntries[partitionNumber - 1].LBAStart * 512;
+		partitioninfo->PartitionLength.QuadPart = partitionTable->TableEntries[partitionNumber - 1].LBASize * 512;
+		partitioninfo->HiddenSectors = partitionTable->TableEntries[partitionNumber - 1].Reserved;
+		partitioninfo->RecognizedPartition = true;
+		free(partitionTable);
+		break;
+	}
 	default:
 		LOG_UNIMPLEMENTED();
 	}

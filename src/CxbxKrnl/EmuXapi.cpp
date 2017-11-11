@@ -178,7 +178,7 @@ void SetupXboxDeviceTypes()
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(XFormatUtilityDrive)()
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC();
 
@@ -195,7 +195,7 @@ BOOL WINAPI XTL::EMUPATCH(XMountUtilityDrive)
     BOOL    fFormatClean
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(fFormatClean);
 
