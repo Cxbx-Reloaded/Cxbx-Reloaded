@@ -286,4 +286,22 @@ NTSTATUS NTToXboxFileInformation
 	IN  ULONG FileInformationClass,
 	IN  ULONG Length
 );
+
+// Xbox Partition Information
+typedef struct
+{
+	UCHAR Name[16];
+	ULONG Flags;
+	ULONG LBAStart;
+	ULONG LBASize;
+	ULONG Reserved;
+} XboxPartitionTableEntry;
+
+typedef struct
+{
+	UCHAR	Magic[16];
+	char	Res0[32];
+	XboxPartitionTableEntry	TableEntries[14];
+} XboxPartitionTable;
+
 #endif

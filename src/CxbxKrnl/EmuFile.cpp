@@ -51,6 +51,40 @@
 #include "MemoryManager.h"
 //#include "Logging.h" // For hex4()
 
+// Default Xbox Partition Table
+#define PE_PARTFLAGS_IN_USE	0x80000000
+#define XBOX_SWAPPART1_LBA_START		0x400
+#define XBOX_SWAPPART_LBA_SIZE			0x177000
+#define XBOX_SWAPPART2_LBA_START		(XBOX_SWAPPART1_LBA_START + XBOX_SWAPPART_LBA_SIZE)
+#define XBOX_SWAPPART3_LBA_START		(XBOX_SWAPPART2_LBA_START + XBOX_SWAPPART_LBA_SIZE)
+
+#define XBOX_SYSPART_LBA_START			(XBOX_SWAPPART3_LBA_START + XBOX_SWAPPART_LBA_SIZE)
+#define XBOX_SYSPART_LBA_SIZE			0xfa000
+
+#define XBOX_MUSICPART_LBA_START		(XBOX_SYSPART_LBA_START + XBOX_SYSPART_LBA_SIZE)
+#define XBOX_MUSICPART_LBA_SIZE			0x9896b0
+
+XboxPartitionTable BackupPartTbl =
+{
+	{'*', '*', '*', '*', 'P', 'A', 'R', 'T', 'I', 'N', 'F', 'O', '*', '*', '*', '*'},
+	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+	{
+		{{'X', 'B', 'O', 'X', ' ', 'S', 'H', 'E', 'L', 'L', ' ', ' ', ' ', ' ', ' ', ' '}, PE_PARTFLAGS_IN_USE, XBOX_MUSICPART_LBA_START, XBOX_MUSICPART_LBA_SIZE, 0},
+		{{'X', 'B', 'O', 'X', ' ', 'D', 'A', 'T', 'A', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, PE_PARTFLAGS_IN_USE, XBOX_SYSPART_LBA_START, XBOX_SYSPART_LBA_SIZE, 0},
+		{{'X', 'B', 'O', 'X', ' ', 'G', 'A', 'M', 'E', ' ', 'S', 'W', 'A', 'P', ' ', '1'}, PE_PARTFLAGS_IN_USE, XBOX_SWAPPART1_LBA_START, XBOX_SWAPPART_LBA_SIZE, 0},
+		{{'X', 'B', 'O', 'X', ' ', 'G', 'A', 'M', 'E', ' ', 'S', 'W', 'A', 'P', ' ', '2'}, PE_PARTFLAGS_IN_USE, XBOX_SWAPPART2_LBA_START, XBOX_SWAPPART_LBA_SIZE, 0},
+		{{'X', 'B', 'O', 'X', ' ', 'G', 'A', 'M', 'E', ' ', 'S', 'W', 'A', 'P', ' ', '3'}, PE_PARTFLAGS_IN_USE, XBOX_SWAPPART3_LBA_START, XBOX_SWAPPART_LBA_SIZE, 0},
+		{{'X', 'B', 'O', 'X', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{'X', 'B', 'O', 'X', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+		{{' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 0, 0, 0, 0},
+	}
+};
 
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
@@ -208,98 +242,79 @@ NTSTATUS CxbxConvertFilePath(
 		RelativePath.erase(0, 4);
 
 	// Check if we where called from a File-handling API :
-	if (!aFileAPIName.empty())
-	{
-		// Check if the path starts with a volume indicator :
-		if ((RelativePath.length() >= 2) && (RelativePath[1] == ':'))
-		{
-			// Look up the symbolic link information using the drive letter :
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(RelativePath[0]);
-			RelativePath.erase(0, 2); // Remove 'C:'
+	if (!aFileAPIName.empty()) {
+		if (!partitionHeader) {
+			// Check if the path starts with a volume indicator :
+			if ((RelativePath.length() >= 2) && (RelativePath[1] == ':')) {
+				// Look up the symbolic link information using the drive letter :
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(RelativePath[0]);
+				RelativePath.erase(0, 2); // Remove 'C:'
 
-			// If the remaining path starts with a ':', remove it (to prevent errors) :
-			if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
-				RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
-		}
-		else if (RelativePath[0] == '$')
-		{
-			if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
+				// If the remaining path starts with a ':', remove it (to prevent errors) :
+				if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
+					RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
+			} else if (RelativePath[0] == '$') {
+				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
+				{
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+					RelativePath.erase(0, 5); // Remove '$HOME'
+				} else
+					CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+			}
+			// Check if the path starts with a relative path indicator :
+			else if (RelativePath[0] == '.') // "4x4 Evo 2" needs this
 			{
 				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-				RelativePath.erase(0, 5); // Remove '$HOME'
-			}
-			else
-				CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
-		}
-		// Check if the path starts with a relative path indicator :
-		else if (RelativePath[0] == '.') // "4x4 Evo 2" needs this
-		{
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-			RelativePath.erase(0, 1); // Remove the '.'
-		}
-		else
-		{
-			// TODO : How should we handle accesses to the serial: (?semi-)volume?
-			if (RelativePath.compare(0, 7, "serial:") == 0)
-				return STATUS_UNRECOGNIZED_VOLUME;
-
-			// The path seems to be a device path, look it up :
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
-			// Fixup RelativePath path here
-			if (NtSymbolicLinkObject != NULL)
-				RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
-			// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
-		}
-		if (NtSymbolicLinkObject == NULL) {
-			// Check if the path accesses a partition from Harddisk0 :
-			if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0)
-			{
-				XboxFullPath = RelativePath;
-				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-				// And set Root to the folder containing the partition-folders :
-				*RootDirectory = CxbxBasePathHandle;
-				HostPath = CxbxBasePath;
+				RelativePath.erase(0, 1); // Remove the '.'
 			} else {
-				// Finally, Assume relative to Xbe path
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-			}
-		}
+				// TODO : How should we handle accesses to the serial: (?semi-)volume?
+				if (RelativePath.compare(0, 7, "serial:") == 0)
+					return STATUS_UNRECOGNIZED_VOLUME;
 
-		if (NtSymbolicLinkObject != NULL)
-		{
-			HostPath = NtSymbolicLinkObject->HostSymbolicLinkPath;
-
-			// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
-			if ((RelativePath.length() > 0) && (RelativePath[0] == '\\'))
-			{
-				RelativePath.erase(0, 1);
-				// And if needed, add it to the host path instead :
-				if (HostPath.back() != '\\')
-					HostPath.append(1, '\\');
+				// The path seems to be a device path, look it up :
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
+				// Fixup RelativePath path here
+				if (NtSymbolicLinkObject != NULL)
+					RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
+				// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
 			}
 
-			XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
+			if (NtSymbolicLinkObject == NULL) {
+				// Check if the path accesses a partition from Harddisk0 :
+				if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+					XboxFullPath = RelativePath;
+					// Remove Harddisk0 prefix, in the hope that the remaining path might work :
+					RelativePath.erase(0, DeviceHarddisk0.length() + 1);
+					// And set Root to the folder containing the partition-folders :
+					*RootDirectory = CxbxBasePathHandle;
+					HostPath = CxbxBasePath;
+				} else {
+					// Finally, Assume relative to Xbe path
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				}
+			}
 
-			// If directly accessing a partition header, redirect to the partitionX.bin file
-			if (partitionHeader) {
-				RelativePath = DrivePrefix + HostPath.substr(0, HostPath.length()) + ".bin";
-			} else {
+			if (NtSymbolicLinkObject != NULL) {
+				HostPath = NtSymbolicLinkObject->HostSymbolicLinkPath;
+
+				XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
+
 				// If accessing a partition as a directly, set the root directory handle and keep relative path as is
 				*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
 			}
-			
+		} else {
+			*RootDirectory = CxbxBasePathHandle;
+			HostPath = CxbxBasePath;
+			RelativePath = RelativeXboxPath.substr(DeviceHarddisk0.length()) + ".bin";
 		}
 
-		// Check for special case : Partition0
-		/* TODO : Translate this Dxbx code :
-		if (StartsWithText(XboxFullPath, DeviceHarddisk0Partition0))
-		{
-		CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
-		// TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
-		// (This file probably needs to be pre-initialized somehow too).
+		// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
+		if ((RelativePath.length() > 0) && (RelativePath[0] == '\\')) {
+			RelativePath.erase(0, 1);
+			// And if needed, add it to the host path instead :
+			if (HostPath.back() != '\\')
+				HostPath.append(1, '\\');
 		}
-		*/
 
 		if (g_bPrintfOn) {
 			DbgPrintf("FILE: %s Corrected path...\n", aFileAPIName.c_str());
@@ -397,42 +412,40 @@ XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
 	int result = -1;
+	NTSTATUS status;
 
-	if (IsFile) {
-		if (!PathFileExists(HostDevicePath.c_str())) {
-			HANDLE hf = CreateFile(HostDevicePath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS,	0, 0);
+	XboxDevice newDevice;
+	newDevice.XboxDevicePath = XboxDevicePath;
+	newDevice.HostDevicePath = HostDevicePath;
 
+	// All HDD partitions have a .bin file to allow direct file io on the partition info
+	if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+		std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
+		if (!PathFileExists(partitionHeaderPath.c_str())) {
+			HANDLE hf = CreateFile(partitionHeaderPath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 			SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
 			SetEndOfFile(hf);
 			CloseHandle(hf);
-		}
-
-		// Actually, this is the Config sectors partition (partition0) registered as a file
-	}
-	else
-	{
-		// All HDD partitions have a .bin file to allow direct file io on the partition info
-		if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
-			std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
-			if (!PathFileExists(partitionHeaderPath.c_str())) {
-				HANDLE hf = CreateFile(partitionHeaderPath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-
-				SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
-				SetEndOfFile(hf);
-				CloseHandle(hf);
+			
+			// If this is partition 0, install the partiton table
+			if (XboxDevicePath == DeviceHarddisk0Partition0) {
+				FILE* fp = fopen((HostDevicePath + ".bin").c_str(), "w+");
+				fwrite((void*)&BackupPartTbl, sizeof(XboxPartitionTable), 1, fp);
+				fclose(fp);
 			}
 		}
 
-		int status = SHCreateDirectoryEx(NULL, HostDevicePath.c_str(), NULL);
-		if (status == STATUS_SUCCESS || status == ERROR_ALREADY_EXISTS)
-		{
-			XboxDevice newDevice;
+		status = STATUS_SUCCESS;
+	}
 
-			newDevice.XboxDevicePath = XboxDevicePath;
-			newDevice.HostDevicePath = HostDevicePath;
-			Devices.push_back(newDevice);
-			result = Devices.size() - 1;
-		}
+	// If this path is not a raw file partition, create the directory for it
+	if (!IsFile) {
+		status = SHCreateDirectoryEx(NULL, HostDevicePath.c_str(), NULL);
+	}
+
+	if (status == STATUS_SUCCESS || status == ERROR_ALREADY_EXISTS) {
+		Devices.push_back(newDevice);
+		result = Devices.size() - 1;
 	}
 
 	return result;
