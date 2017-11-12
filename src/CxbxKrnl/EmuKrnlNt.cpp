@@ -1491,11 +1491,11 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 
 		// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
 		if (superBlock.ClusterSize > 0) {
-			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize / XboxSizeInfo->BytesPerSector;
+			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
 		}
 
-		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * XboxSizeInfo->SectorsPerAllocationUnit;
-		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize  * XboxSizeInfo->SectorsPerAllocationUnit;
+		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * XboxSizeInfo->BytesPerSector;
+		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize  * XboxSizeInfo->BytesPerSector;
 
 		RETURN(STATUS_SUCCESS);
 	}
