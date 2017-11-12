@@ -304,4 +304,7 @@ typedef struct
 	XboxPartitionTableEntry	TableEntries[14];
 } XboxPartitionTable;
 
+XboxPartitionTable CxbxGetPartitionTable();
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
+
 #endif
