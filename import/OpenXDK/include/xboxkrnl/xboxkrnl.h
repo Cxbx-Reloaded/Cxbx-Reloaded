@@ -1585,6 +1585,7 @@ typedef enum _KOBJECTS
 	TimerSynchronizationObject = 9,
 	ApcObject = 0x12,
 	DpcObject = 0x13,
+	DeviceQueueObject = 0x14,
 }
 KOBJECTS, *PKOBJECTS;
 

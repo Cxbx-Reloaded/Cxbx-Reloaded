@@ -627,7 +627,12 @@ XBSYSAPI EXPORTNUM(106) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDeviceQueue
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(DeviceQueue);
-	LOG_UNIMPLEMENTED();
+
+	DeviceQueue->Type = DeviceQueueObject;
+	DeviceQueue->Size = sizeof(KDEVICE_QUEUE);
+	DeviceQueue->Busy = FALSE;
+
+	InitializeListHead(&DeviceQueue->DeviceListHead);
 }
 
 // ******************************************************************
