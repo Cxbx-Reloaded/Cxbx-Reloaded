@@ -131,8 +131,9 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 // ******************************************************************
 // * 0x0028 - HalDiskCachePartitionCount
 // ******************************************************************
-// This enables Partition3..7  Source:OpenXDK  TODO : Make this configurable
-XBSYSAPI EXPORTNUM(40) xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 4; // Was 3
+// This specifies the number of Cache partitions available for game data caching
+// On real hardware, there are three, generally known as X, Y and Z in homebrew
+XBSYSAPI EXPORTNUM(40) xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 3; 
 
 // ******************************************************************
 // * 0x0029 - HalDiskModelNumber
