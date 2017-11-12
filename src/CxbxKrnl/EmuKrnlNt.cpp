@@ -1481,9 +1481,19 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 
 		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
 		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-	
-		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+		FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
+
 		XboxSizeInfo->BytesPerSector = 512;
+
+		// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
+		// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
+		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+
+		// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
+		if (superBlock.ClusterSize > 0) {
+			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize / XboxSizeInfo->BytesPerSector;
+		}
+
 		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * XboxSizeInfo->SectorsPerAllocationUnit;
 		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize  * XboxSizeInfo->SectorsPerAllocationUnit;
 

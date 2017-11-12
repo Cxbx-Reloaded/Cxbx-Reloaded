@@ -304,7 +304,18 @@ typedef struct
 	XboxPartitionTableEntry	TableEntries[14];
 } XboxPartitionTable;
 
+typedef struct _FATX_SUPERBLOCK
+{
+	char	Tag[4];
+	unsigned int VolumeID;
+	unsigned int ClusterSize;
+	USHORT	FatCopies;
+	int		Resvd;
+	char	Unused[4078];
+} FATX_SUPERBLOCK;
+
 XboxPartitionTable CxbxGetPartitionTable();
+FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
 
 #endif

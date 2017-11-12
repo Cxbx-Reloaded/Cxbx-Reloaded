@@ -41,6 +41,7 @@
 #include "EmuFile.h"
 #include <vector>
 #include <string>
+#include <sstream>
 #include <cassert>
 #include <Shlobj.h>
 #include <Shlwapi.h>
@@ -96,7 +97,19 @@ XboxPartitionTable CxbxGetPartitionTable()
 	return table;
 }
 
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
+{
+	FATX_SUPERBLOCK superblock;
+	std::stringstream ss;
+
+	ss << CxbxBasePath << "Partition" << partitionNumber << ".bin";
+	FILE* fp = fopen(ss.str().c_str(), "rb");
+	fread(&superblock, sizeof(FATX_SUPERBLOCK), 1, fp);
+	fclose(fp);
+	return superblock;
+}
+
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile)	
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	char buffer[MAX_PATH] = {0};
