@@ -86,6 +86,27 @@ XboxPartitionTable BackupPartTbl =
 	}
 };
 
+XboxPartitionTable CxbxGetPartitionTable()
+{
+	XboxPartitionTable table;
+	FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
+	fread(&table, sizeof(XboxPartitionTable), 1, fp);
+	fclose(fp);
+
+	return table;
+}
+
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+{
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	char buffer[MAX_PATH] = {0};
+	GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS);
+	std::string bufferString(buffer);
+	std::string partitionString = "\\Partition";
+	std::string partitionNumberString = bufferString.substr(bufferString.find(partitionString) + partitionString.length(), 1);
+	return atoi(partitionNumberString.c_str());
+}
+
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
@@ -423,16 +444,15 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 		std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
 		if (!PathFileExists(partitionHeaderPath.c_str())) {
 			HANDLE hf = CreateFile(partitionHeaderPath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-			SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
-			SetEndOfFile(hf);
-			CloseHandle(hf);
 			
 			// If this is partition 0, install the partiton table
 			if (XboxDevicePath == DeviceHarddisk0Partition0) {
-				FILE* fp = fopen((HostDevicePath + ".bin").c_str(), "w+");
-				fwrite((void*)&BackupPartTbl, sizeof(XboxPartitionTable), 1, fp);
-				fclose(fp);
+				WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), NULL, 0);
 			}
+
+			SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
+			SetEndOfFile(hf);
+			CloseHandle(hf);
 		}
 
 		status = STATUS_SUCCESS;

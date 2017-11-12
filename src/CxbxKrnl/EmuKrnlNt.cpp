@@ -701,28 +701,15 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 	{
 		PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
 
-		// Open Partition 0, and read Partition Table
-		FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
-		XboxPartitionTable* partitionTable = (XboxPartitionTable*)malloc(sizeof(XboxPartitionTable));
-		fread(partitionTable, sizeof(XboxPartitionTable), 1, fp);
-		fclose(fp);
-
-		// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-		// Partition access always ends in PartitionX.bin, so we can take the substring of the input filename 
-		// minus the length of X.bin
-		char buffer[MAX_PATH] = {0};
-		GetFinalPathNameByHandle(FileHandle, buffer, MAX_PATH, VOLUME_NAME_DOS);
-		std::string bufferString(buffer);
-		std::string partitionNumberString = bufferString.substr(bufferString.length() - 5, 1);
-		int partitionNumber = atoi(partitionNumberString.c_str());
+		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
 		
 		// Now we read from the partition table, to fill in the partitionInfo struct
 		partitioninfo->PartitionNumber = partitionNumber;
-		partitioninfo->StartingOffset.QuadPart = partitionTable->TableEntries[partitionNumber - 1].LBAStart * 512;
-		partitioninfo->PartitionLength.QuadPart = partitionTable->TableEntries[partitionNumber - 1].LBASize * 512;
-		partitioninfo->HiddenSectors = partitionTable->TableEntries[partitionNumber - 1].Reserved;
+		partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
+		partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * 512;
+		partitioninfo->HiddenSectors = partitionTable.TableEntries[partitionNumber - 1].Reserved;
 		partitioninfo->RecognizedPartition = true;
-		free(partitionTable);
 		break;
 	}
 	default:
@@ -1488,6 +1475,21 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
+	// FileFsSizeInformation is a special case that should read from our emulated partition table
+	if ((DWORD)FileInformationClass == FileFsSizeInformation) {
+		PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
+
+		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+	
+		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+		XboxSizeInfo->BytesPerSector = 512;
+		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * XboxSizeInfo->SectorsPerAllocationUnit;
+		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize  * XboxSizeInfo->SectorsPerAllocationUnit;
+
+		RETURN(STATUS_SUCCESS);
+	}
+
 	// Get the required size for the host buffer
 	// This may differ than the xbox buffer size so we also need to handle conversions!
 	ULONG HostBufferSize = 0;
@@ -1499,9 +1501,6 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 			break;
 		case FileFsLabelInformation:
 			HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
-			break;
-		case FileFsSizeInformation:
-			HostBufferSize = sizeof(NtDll::FILE_FS_SIZE_INFORMATION);
 			break;
 		case FileFsDeviceInformation:
 			HostBufferSize = sizeof(NtDll::FILE_FS_DEVICE_INFORMATION);
@@ -1528,17 +1527,6 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	// Convert Xbox NativeFileInformation to FileInformation
 	if (ret == STATUS_SUCCESS) {
 		switch ((DWORD)FileInformationClass) {
-				case FileFsSizeInformation: {
-					PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
-					NtDll::PFILE_FS_SIZE_INFORMATION HostSizeInfo = (NtDll::PFILE_FS_SIZE_INFORMATION)NativeFileInformation;
-
-					// TODO: Convert Total/Available to 512/32 based amounts
-					XboxSizeInfo->TotalAllocationUnits.QuadPart = HostSizeInfo->TotalAllocationUnits.QuadPart;
-					XboxSizeInfo->AvailableAllocationUnits.QuadPart = HostSizeInfo->AvailableAllocationUnits.QuadPart;
-					XboxSizeInfo->SectorsPerAllocationUnit = 32;
-					XboxSizeInfo->BytesPerSector = 512;
-				}
-				break;
 				case FileFsVolumeInformation: {
 					PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
 					NtDll::PFILE_FS_VOLUME_INFORMATION HostVolumeInfo = (NtDll::PFILE_FS_VOLUME_INFORMATION)NativeFileInformation;
