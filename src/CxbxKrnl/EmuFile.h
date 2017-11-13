@@ -317,5 +317,7 @@ typedef struct _FATX_SUPERBLOCK
 XboxPartitionTable CxbxGetPartitionTable();
 FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
+std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
+void CxbxFormatPartitionByHandle(HANDLE hFile);
 
 #endif

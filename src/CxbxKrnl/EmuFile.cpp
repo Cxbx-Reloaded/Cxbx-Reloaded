@@ -50,6 +50,9 @@
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
 #include "MemoryManager.h"
+
+#include <experimental/filesystem>
+
 //#include "Logging.h" // For hex4()
 
 // Default Xbox Partition Table
@@ -118,6 +121,37 @@ int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 	std::string partitionString = "\\Partition";
 	std::string partitionNumberString = bufferString.substr(bufferString.find(partitionString) + partitionString.length(), 1);
 	return atoi(partitionNumberString.c_str());
+}
+
+std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
+{
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	char buffer[MAX_PATH] = {0};
+	GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS);
+	std::string bufferString(buffer);
+	std::string partitionString = "\\Partition";
+	std::string partitionPath = bufferString.substr(0, bufferString.find(partitionString) + partitionString.length() + 1);
+	return partitionPath;
+}
+
+void CxbxFormatPartitionByHandle(HANDLE hFile)
+{
+	std::string partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
+
+	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
+	if (partitionPath.find("Cxbx-Reloaded") == std::string::npos) {
+		EmuWarning("Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
+		return;
+	}
+
+	// Format the partition, by deleting it's folder and re-creating it
+	// In this case, experimental means that these functions work and are safe
+	// but not officially in the C++ standard yet
+	// Requires a compiler with C++17 support
+	std::experimental::filesystem::remove_all(partitionPath);
+	std::experimental::filesystem::create_directory(partitionPath);
+
+	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
 const std::string DrivePrefix = "\\??\\";

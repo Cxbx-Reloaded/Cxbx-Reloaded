@@ -855,18 +855,19 @@ XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtFsControlFile(
-		FileHandle,
-		Event,
-		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-		ApcContext,
-		(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-		FsControlCode,
-		InputBuffer,
-		InputBufferLength,
-		OutputBuffer,
-		OutputBufferLength);
+	NTSTATUS ret = STATUS_INVALID_PARAMETER;
 
+	switch (FsControlCode) {
+		case 0x00090020: // FSCTL_DISMOUNT_VOLUME 
+			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+			if (partitionNumber > 0) {
+				CxbxFormatPartitionByHandle(FileHandle);
+				ret = STATUS_SUCCESS;
+			}
+			break;
+	}
+
+	LOG_UNIMPLEMENTED();
 	RETURN(ret);
 }
 
