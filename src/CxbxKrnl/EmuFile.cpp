@@ -90,12 +90,36 @@ XboxPartitionTable BackupPartTbl =
 	}
 };
 
+void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false)
+{
+	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+
+	// If this is partition 0, install the partiton table
+	if (partition0) {
+		WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), NULL, 0);
+	}
+
+	SetFilePointer(hf, 512 * ONE_KB, 0, FILE_BEGIN);
+	SetEndOfFile(hf);
+	CloseHandle(hf);
+}
+
 XboxPartitionTable CxbxGetPartitionTable()
 {
 	XboxPartitionTable table;
 	FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
 	fread(&table, sizeof(XboxPartitionTable), 1, fp);
 	fclose(fp);
+
+	// If the partition table is not valid, format it
+	// This allows recovery from corrupted partition tables
+	// Or invalid partition tables left behind from previous versions
+	// of Cxbx-Reloaded
+	if (memcmp(table.Magic, BackupPartTbl.Magic, 16) != 0) {
+		DeleteFile((CxbxBasePath + "Partition0.bin").c_str());
+		CxbxCreatePartitionHeaderFile(CxbxBasePath + "Partition0.bin", true);
+		memcpy(&table, &BackupPartTbl, sizeof(XboxPartitionTable));
+	}
 
 	return table;
 }
@@ -490,16 +514,7 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 	if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
 		std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
 		if (!PathFileExists(partitionHeaderPath.c_str())) {
-			HANDLE hf = CreateFile(partitionHeaderPath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-			
-			// If this is partition 0, install the partiton table
-			if (XboxDevicePath == DeviceHarddisk0Partition0) {
-				WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), NULL, 0);
-			}
-
-			SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
-			SetEndOfFile(hf);
-			CloseHandle(hf);
+			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0);
 		}
 
 		status = STATUS_SUCCESS;
