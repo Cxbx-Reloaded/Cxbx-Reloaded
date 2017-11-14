@@ -240,8 +240,6 @@ void CleanupSymbolicLinks();
 
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
 NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
-bool CxbxMountUtilityDrive(bool formatClean);
-bool CxbxIsUtilityDrive(NtDll::HANDLE RootDirectory);
 
 std::wstring string_to_wstring(std::string const & src);
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);
