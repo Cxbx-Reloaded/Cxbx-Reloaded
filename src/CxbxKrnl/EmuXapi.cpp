@@ -65,8 +65,6 @@ bool g_bXInputOpenCalled = false;
 
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
-bool CxbxMountUtilityDrive(bool formatClean);
-
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -171,37 +169,6 @@ void SetupXboxDeviceTypes()
 			gDeviceType_Gamepad->ChangeConnected = 0;
 		}
 	}
-}
-
-// ******************************************************************
-// * patch: XFormatUtilityDrive
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(XFormatUtilityDrive)()
-{
-	//FUNC_EXPORTS
-
-	LOG_FUNC();
-
-    // TODO: yeah... we'll format... riiiiight
-
-	RETURN(TRUE);
-}
-
-// ******************************************************************
-// * patch: XMountUtilityDrive
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(XMountUtilityDrive)
-(
-    BOOL    fFormatClean
-)
-{
-	//FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(fFormatClean);
-
-	CxbxMountUtilityDrive(fFormatClean == TRUE);
-
-	RETURN(TRUE);
 }
 
 // ******************************************************************

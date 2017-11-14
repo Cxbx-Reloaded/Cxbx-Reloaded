@@ -285,15 +285,6 @@ HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
 	return (HANDLE)((uint32_t)emuHandle | 0x80000000);
 }
 
-bool CxbxIsUtilityDrive(NtDll::HANDLE RootDirectory)
-{
-	EmuNtSymbolicLinkObject* SymbolicLinkObject = FindNtSymbolicLinkObjectByName(DriveZ);
-	if (SymbolicLinkObject)
-		return (SymbolicLinkObject->RootDirectoryHandle == RootDirectory);
-	else
-		return false;
-}
-
 std::wstring string_to_wstring(std::string const & src)
 {
 	std::wstring result = std::wstring(src.length(), L' ');
@@ -636,19 +627,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
 		NtDll::NtClose(RootDirectoryHandle);
 	}
-}
-
-bool CxbxMountUtilityDrive(bool formatClean)
-{
-	NTSTATUS status;
-	
-	// TODO -oDxbx : Select the oldest cache partition somehow.
-	// For now, select partition6 as 'Utility data' drive, and link it to Z:
-	status = CxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6);
-
-	// TODO -oDxbx : Implement 'formatting' (cleaning) of the Utility drive
-	
-	return status == STATUS_SUCCESS;
 }
 
 char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
