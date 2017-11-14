@@ -93,6 +93,10 @@ XboxPartitionTable BackupPartTbl =
 void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false)
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+	if (!hf) {
+		CxbxKrnlCleanup("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename);
+		return;
+	}
 
 	// If this is partition 0, install the partiton table
 	if (partition0) {
@@ -108,6 +112,10 @@ XboxPartitionTable CxbxGetPartitionTable()
 {
 	XboxPartitionTable table;
 	FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
+	if (fp == nullptr) {
+		CxbxKrnlCleanup("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (CxbxBasePath + "Partition0.bin").c_str());
+	}
+
 	fread(&table, sizeof(XboxPartitionTable), 1, fp);
 	fclose(fp);
 
@@ -140,10 +148,15 @@ int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	char buffer[MAX_PATH] = {0};
-	GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS);
+	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
+		CxbxKrnlCleanup("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+	}
+
 	std::string bufferString(buffer);
 	std::string partitionString = "\\Partition";
 	std::string partitionNumberString = bufferString.substr(bufferString.find(partitionString) + partitionString.length(), 1);
+
+	// atoi returns 0 on non-numeric characters, so we don't need to error check here
 	return atoi(partitionNumberString.c_str());
 }
 
@@ -151,7 +164,10 @@ std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	char buffer[MAX_PATH] = {0};
-	GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS);
+	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
+		CxbxKrnlCleanup("CxbxGetPartitionDataPathFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+	}
+
 	std::string bufferString(buffer);
 	std::string partitionString = "\\Partition";
 	std::string partitionPath = bufferString.substr(0, bufferString.find(partitionString) + partitionString.length() + 1);
