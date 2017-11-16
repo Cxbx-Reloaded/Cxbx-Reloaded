@@ -768,7 +768,7 @@ bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 
 inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, unsigned flag, bool value)
 {
-	e->ContextRecord->EFlags ^= (!value ^ e->ContextRecord->EFlags) & (1 << flag);
+	e->ContextRecord->EFlags ^= (!static_cast<uint32_t>(value) ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
 bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
