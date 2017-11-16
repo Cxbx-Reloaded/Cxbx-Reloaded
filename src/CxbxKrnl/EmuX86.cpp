@@ -69,7 +69,7 @@ uint32_t EmuX86_IORead32(xbaddr addr)
 		// But this is enough to keep NXDK from hanging for now.
 		LARGE_INTEGER performanceCount;
 		QueryPerformanceCounter(&performanceCount);
-		return performanceCount.QuadPart;
+		return static_cast<uint32_t>(performanceCount.QuadPart);
 		break;
 	}
 
@@ -766,9 +766,9 @@ bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
+inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, unsigned flag, bool value)
 {
-	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
+	e->ContextRecord->EFlags ^= (!value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
 bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -892,7 +892,7 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint64_t result = dest - 1;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, result);
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
 	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
@@ -919,7 +919,7 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint64_t result = dest + 1;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, result);
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
 	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
@@ -986,7 +986,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint64_t result = dest - src;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, result);
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, (result >> 32) > 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, (result >> 31) != (dest >> 31));
