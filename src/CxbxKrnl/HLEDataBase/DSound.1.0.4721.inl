@@ -299,3 +299,52 @@ OOVPA_XREF(IDirectSoundBuffer_Pause, 4721, 1+7,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
+
+// ******************************************************************
+// * CDirectSound::SetAllParametersA
+// ******************************************************************
+OOVPA_XREF(CDirectSound_SetAllParametersA, 4721, 10,
+
+    XREF_CDirectSound_SetAllParameters,
+    XRefZero)
+
+        { 0x16, 0x68 },
+        { 0x17, 0xD8 },
+        { 0x18, 0x81 },
+        { 0x19, 0x15 },
+
+        { 0x2F, 0xD9 },
+        { 0x30, 0x41 },
+        { 0x31, 0x04 },
+
+        { 0x87, 0x8B },
+        { 0x88, 0x50 },
+        { 0x89, 0x08 },
+OOVPA_END;
+// ******************************************************************
+// * CMcpxBuffer_Play
+// ******************************************************************
+OOVPA_XREF(CMcpxBuffer_Play, 4721, 11,
+
+    XREF_CMcpxBuffer_Play,
+    XRefZero)
+
+        // CMcpxBuffer_Play+0x00 : push ebx
+        { 0x00, 0x53 },
+
+        // CMcpxBuffer_Play+0x2E : test byte ptr [eax+9], 20h
+        { 0x2E, 0xF6 },
+        { 0x2F, 0x40 },
+        { 0x30, 0x09 },
+        { 0x31, 0x20 },
+
+        // CMcpxBuffer_Play+0x44 : test byte ptr [esi+12h], 2h
+        { 0x44, 0xF6 },
+        { 0x45, 0x46 },
+        { 0x46, 0x12 },
+        { 0x47, 0x02 },
+
+        // CMcpxBuffer_Play+0x52 : xor eax, eax
+        { 0x52, 0x33 },
+        { 0x53, 0xC0 },
+OOVPA_END;

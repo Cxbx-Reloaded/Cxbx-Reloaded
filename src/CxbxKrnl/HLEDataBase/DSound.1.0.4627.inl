@@ -120,6 +120,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 4627, 10,
         { 0x89, 0x08 },
 OOVPA_END;
 
+#if 0 // Moved to 4721
 // ******************************************************************
 // * CDirectSound::SetAllParametersA
 // ******************************************************************
@@ -141,7 +142,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 4721, 10,
         { 0x88, 0x50 },
         { 0x89, 0x08 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSound::SetAllParameters
@@ -258,6 +259,7 @@ OOVPA_XREF(CMcpxBuffer_GetStatus, 4721, 17,
 OOVPA_END;
 #endif
 
+#if 0 // Moved to 4831
 // ******************************************************************
 // * CMcpxBuffer_GetStatus
 // ******************************************************************
@@ -284,6 +286,7 @@ OOVPA_XREF(CMcpxBuffer_GetStatus, 4831, 13,
         { 0x3F, 0xC2 },
         { 0x40, 0x04 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CDirectSound_GetSpeakerConfig
@@ -313,7 +316,7 @@ OOVPA_XREF(CDirectSound_GetSpeakerConfig, 4627, 14,
         { 0x4A, 0xC2 },
         { 0x4B, 0x08 },
 OOVPA_END;
-
+#if 0 // Moved to 4721
 // ******************************************************************
 // * CMcpxBuffer_Play
 // ******************************************************************
@@ -341,7 +344,8 @@ OOVPA_XREF(CMcpxBuffer_Play, 4721, 11,
         { 0x52, 0x33 },
         { 0x53, 0xC0 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4831
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(unsigned long)
 // ******************************************************************
@@ -370,6 +374,7 @@ OOVPA_XREF(CMcpxBuffer_Play, 4831, 11,
         { 0x71, 0x33 },
         { 0x72, 0xC0 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * CMcpxBuffer_Play2
@@ -491,6 +496,7 @@ OOVPA_XREF(CDirectSoundVoice_SetFormat, 4721, 12,
         { 0x42, 0x08 },
 OOVPA_END;
 
+#if 0 // Moved to 4831
 // ******************************************************************
 // * CMcpxStream_Pause
 // ******************************************************************
@@ -518,7 +524,7 @@ OOVPA_XREF(CMcpxStream_Pause, 4831, 11,
         { 0x8B, 0xC2 },
         { 0x8C, 0x04 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
@@ -583,7 +589,7 @@ OOVPA_XREF(IDirectSound_EnableHeadphones, 4627, 1+8,
 		{ 0x1B, 0x00 },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 4831
 // ******************************************************************
 // * CDirectSound::SetAllParametersA
 // ******************************************************************
@@ -605,7 +611,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 4831, 10,
         { 0x88, 0x50 },
         { 0x89, 0x08 },
 OOVPA_END;
-
+#endif
 #if 0 // No longer used, replaced by generic 4361 version
 // ******************************************************************
 // * DirectSound::CDirectSound::GetOutputLevels
@@ -645,7 +651,7 @@ OOVPA_XREF(IDirectSound_GetOutputLevels, 4627, 1+8,
         { 0x1E, 0x0C },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 4831
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::Pause
 // ******************************************************************
@@ -662,7 +668,7 @@ OOVPA_XREF(CMcpxBuffer_Pause, 4831, 7,
         { 0x58, 0xEB },
         { 0x67, 0xE8 },
 OOVPA_END;
-
+#endif
 #if 0 // Used 4134
 // ******************************************************************
 // * IDirectSoundBuffer_GetStatus
