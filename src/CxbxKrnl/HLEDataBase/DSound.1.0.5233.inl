@@ -100,7 +100,7 @@ OOVPA_XREF(IDirectSoundStream_FlushEx, 5233, 1+8,
         { 0x16, 0x10 },
 OOVPA_END;
 #endif
-
+#if 0 // Moved to 4831
 // ******************************************************************
 // CMcpxAPU::SynchPlayback
 // ******************************************************************
@@ -125,7 +125,8 @@ OOVPA_XREF(CMcpxAPU_SynchPlayback, 5233, 9,
         { 0x9E, 0x64 },
         { 0xFF, 0x00 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4831
 // ******************************************************************
 // * CDirectSound::SynchPlayback
 // ******************************************************************
@@ -151,7 +152,8 @@ OOVPA_XREF(CDirectSound_SynchPlayback, 5233, 1+9,
         { 0x0C, 0xC2 },
         { 0x0D, 0x04 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4831
 // ******************************************************************
 // * IDirectSound::SynchPlayback
 // ******************************************************************
@@ -176,7 +178,7 @@ OOVPA_XREF(IDirectSound_SynchPlayback, 5233, 1+7,
         { 0x15, 0xC2 },
         { 0x16, 0x04 },
 OOVPA_END;
-
+#endif
 #if 0 // Duplicate OOVPA, replacing with generic 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetMode

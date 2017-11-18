@@ -293,6 +293,7 @@ $(SOLUTIONDIR)Export.bat</Command>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4531.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4721.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4831.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5028.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5344.inl" />

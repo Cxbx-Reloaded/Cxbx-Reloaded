@@ -116,6 +116,32 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient::SetLFO
 // ******************************************************************
+// Generic OOVPA as of 4242 and newer
+OOVPA_XREF(CMcpxVoiceClient_SetLFO, 4242, 12,
+
+    XREF_CMcpxVoiceClient_SetLFO,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x14, 0x8B },
+
+        { 0x18, 0x08 },
+        { 0x19, 0x85 },
+        { 0x1A, 0xC9 },
+        { 0x1B, 0x75 },
+        { 0x1C, 0x4A },
+        { 0x1D, 0x39 },
+        { 0x1E, 0x48 },
+        { 0x1F, 0x04 },
+
+        { 0x50, 0x31 },
+        { 0x51, 0x4E },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4242 version
+// ******************************************************************
+// * CMcpxVoiceClient::SetLFO
+// ******************************************************************
 OOVPA_XREF(CMcpxVoiceClient_SetLFO, 4242, 8,
 
     XREF_CMcpxVoiceClient_SetLFO,
@@ -130,6 +156,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetLFO, 4242, 8,
         { 0xDE, 0x05 },
         { 0xFE, 0x6C },
 OOVPA_END;
+#endif
 
 #if 0 // Moved to 4134
 // ******************************************************************
@@ -155,6 +182,34 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient::SetEG
 // ******************************************************************
+// Generic OOVPA as of 4242 and newer
+OOVPA_XREF(CMcpxVoiceClient_SetEG, 4242, 14,
+
+    XREF_CMcpxVoiceClient_SetEG,
+    XRefZero)
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+
+        { 0x16, 0x8B },
+        { 0x17, 0x45 },
+        { 0x18, 0x08 },
+        { 0x19, 0x8B },
+        { 0x1A, 0x08 },
+        { 0x1B, 0x85 },
+        { 0x1C, 0xC9 },
+        { 0x1D, 0x75 },
+        { 0x1E, 0x75 },
+        { 0x1F, 0x8B },
+
+        { 0x50, 0x56 },
+        { 0x51, 0x24 },
+OOVPA_END;
+
+#if 0 // No longer used, replaced by generic 4242 version
+// ******************************************************************
+// * CMcpxVoiceClient::SetEG
+// ******************************************************************
 OOVPA_XREF(CMcpxVoiceClient_SetEG, 4242, 8,
 
     XREF_CMcpxVoiceClient_SetEG,
@@ -169,6 +224,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetEG, 4242, 8,
         { 0xDE, 0x1C },
         { 0xFE, 0x1C },
 OOVPA_END;
+#endif
 
 #if 0 // Moved to 4134
 // ******************************************************************
@@ -448,6 +504,7 @@ OOVPA_XREF(DirectSoundUseLightHRTF, 4242, 1+8,
         { 0x1C, 0x68 },
 OOVPA_END;
 
+#if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * WaveFormat::CreateXboxAdpcmFormat
 // ******************************************************************
@@ -464,7 +521,8 @@ OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 4242, 7,
         { 0x34, 0x66 },
         { 0x3D, 0x12 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4039
 // ******************************************************************
 // * XAudioCreateAdpcmFormat
 // ******************************************************************
@@ -477,3 +535,4 @@ OOVPA_XREF(XAudioCreateAdpcmFormat, 4242, 1+1,
 
         { 0x00, 0xE9 },
 OOVPA_END;
+#endif

@@ -213,6 +213,7 @@ enum XRefDataBaseOffset
     XREF_CDirectSoundVoice_SetRolloffCurve,
     XREF_CDirectSoundVoice_SetRolloffFactor,
     XREF_CDirectSoundBuffer_SetRolloffFactor,
+    XREF_CDirectSoundStream_SetRolloffCurve,
     XREF_CDirectSoundStream_SetRolloffFactor,
     XREF_CDirectSoundVoice_SetDistanceFactor,
     XREF_CDirectSoundBuffer_SetDistanceFactor,
