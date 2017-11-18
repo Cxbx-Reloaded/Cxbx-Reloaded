@@ -193,6 +193,7 @@ OOVPA_END;
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 5455, 11,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -219,6 +220,7 @@ OOVPA_END;
 // * CMcpxStream_Discontinuity
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Discontinuity, 5455, 9,
+
     XREF_CMcpxStream_Discontinuity,
     XRefZero)
 

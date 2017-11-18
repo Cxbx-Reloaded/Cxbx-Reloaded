@@ -100,6 +100,7 @@ OOVPA_XREF(CFullHRTFSource_GetCenterVolume, 5558, 7,
         { 0x91, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 5344 version
 // ******************************************************************
 // * DirectSound::CHRTFSource::SetFullHRTF5Channel
@@ -121,6 +122,7 @@ OOVPA_XREF(CHRTFSource_SetFullHRTF5Channel, 5558, 1+8,
         { 0x6E, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to generic OOVPA 4134
 // ******************************************************************
 // * DirectSoundUseFullHRTF
@@ -288,6 +290,7 @@ OOVPA_XREF(CDirectSoundStream_SetMinDistance, 5558, 1+7,
         { 0x46, 0x74 },
         { 0x53, 0x8B },
 OOVPA_END;
+
 #if 0 // Duplicate OOVPA, replacing with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetMinDistance
@@ -393,6 +396,7 @@ OOVPA_XREF(CDirectSoundStream_Pause, 5558, 1+7,
         { 0x4B, 0xC7 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetAllParameters
@@ -416,6 +420,7 @@ OOVPA_XREF(CDirectSoundVoice_SetAllParameters, 5558, 10,
         { 0xF6, 0x89 },
 OOVPA_END;
 #endif
+
 #if 0 //Replaced with generic 3911
 // ******************************************************************
 // * IDirectSoundBuffer_GetCurrentPosition@12
@@ -522,6 +527,7 @@ OOVPA_XREF(IDirectSound_CreateSoundStream, 5558, 1+7,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CDirectSound::SetAllParameters
@@ -680,6 +686,7 @@ OOVPA_XREF(CDirectSoundVoice_Set3DVoiceData, 5558, 9,
         { 0xCD, 0x40 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::Set3DVoiceData
@@ -701,6 +708,7 @@ OOVPA_XREF(CDirectSoundBuffer_Set3DVoiceData, 5558, 1+8,
         { 0x4C, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * IDirectSoundBuffer::Set3DVoiceData
@@ -722,6 +730,7 @@ OOVPA_XREF(IDirectSoundBuffer_Set3DVoiceData, 5558, 1+8,
         { 0x1A, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::Set3DVoiceData
@@ -743,6 +752,7 @@ OOVPA_XREF(CDirectSoundStream_Set3DVoiceData, 5558, 1+8,
         { 0x50, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 5455
 // ******************************************************************
 // * IDirectSoundStream_Set3DVoiceData

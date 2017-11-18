@@ -50,6 +50,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 5233, 9,
         { 0x74, 0xA4 },
         { 0x99, 0x08 },
 OOVPA_END;
+
 #if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
@@ -100,6 +101,7 @@ OOVPA_XREF(IDirectSoundStream_FlushEx, 5233, 1+8,
         { 0x16, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // CMcpxAPU::SynchPlayback
@@ -126,6 +128,7 @@ OOVPA_XREF(CMcpxAPU_SynchPlayback, 5233, 9,
         { 0xFF, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * CDirectSound::SynchPlayback
@@ -153,6 +156,7 @@ OOVPA_XREF(CDirectSound_SynchPlayback, 5233, 1+9,
         { 0x0D, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4831
 // ******************************************************************
 // * IDirectSound::SynchPlayback
@@ -179,6 +183,7 @@ OOVPA_XREF(IDirectSound_SynchPlayback, 5233, 1+7,
         { 0x16, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 // Duplicate OOVPA, replacing with generic 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetMode
@@ -245,12 +250,14 @@ OOVPA_XREF(CDirectSoundVoice_SetRolloffCurve, 5233, 8,
         { 0x3E, 0x33 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4721 version
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
 // Generic OOVPA as of 5233 and newer
 OOVPA_XREF(CMcpxStream_GetStatus, 5233, 14,
+
     XREF_CMcpxStream_GetStatus,
     XRefZero)
 
