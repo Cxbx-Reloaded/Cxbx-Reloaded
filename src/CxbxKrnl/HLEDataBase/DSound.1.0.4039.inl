@@ -809,27 +809,27 @@ OOVPA_END;
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Play2, 4039, 1+8,
+OOVPA_XREF(CMcpxBuffer_Play_Ex, 4039, 1+8,
 
-    XREF_CMcpxBuffer_Play2,
+    XREF_CMcpxBuffer_Play_Ex,
     XRefOne)
 
-        // CMcpxBuffer_Play2+0x2B : call [CMcpxBuffer::Play]
+        // CMcpxBuffer_Play_Ex+0x2B : call [CMcpxBuffer::Play]
         XREF_ENTRY( 0x2B, XREF_CMcpxBuffer_Play ),
 
-        // CMcpxBuffer_Play2+0x00 : push ebp
+        // CMcpxBuffer_Play_Ex+0x00 : push ebp
         { 0x00, 0x55 },
 
-        // CMcpxBuffer_Play2+0x11 : push [ebp+arg_8]
+        // CMcpxBuffer_Play_Ex+0x11 : push [ebp+arg_8]
         { 0x11, 0xFF },
         { 0x12, 0x75 },
         { 0x13, 0x10 },
 
-        // CMcpxBuffer_Play2+0x23 : jnz +0x0C
+        // CMcpxBuffer_Play_Ex+0x23 : jnz +0x0C
         { 0x23, 0x75 },
         { 0x24, 0x0C },
 
-        // CMcpxBuffer_Play2+0x36 : push esi
+        // CMcpxBuffer_Play_Ex+0x36 : push esi
         { 0x36, 0xC2 },
         { 0x37, 0x0C },
 OOVPA_END;
@@ -872,7 +872,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 4039, 1+7,
     XREF_CDirectSoundBuffer_PlayEx,
     XRefOne)
 
-        XREF_ENTRY( 0x3C, XREF_CMcpxBuffer_Play2),
+        XREF_ENTRY( 0x3C, XREF_CMcpxBuffer_Play_Ex),
 
         { 0x00, 0x56 },
         { 0x15, 0x68 },

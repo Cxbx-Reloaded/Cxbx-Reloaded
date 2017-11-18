@@ -432,7 +432,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 4361, 1+7,
     XREF_CDirectSoundBuffer_PlayEx,
     XRefOne)
 
-        XREF_ENTRY( 0x3D, XREF_CMcpxBuffer_Play2),
+        XREF_ENTRY( 0x3D, XREF_CMcpxBuffer_Play_Ex),
 
         { 0x0C, 0x00 },
         { 0x16, 0x68 },
@@ -447,24 +447,24 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxBuffer::Stop2
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Stop2, 4361, 1+9,
+OOVPA_XREF(CMcpxBuffer_Stop_Ex, 4361, 1+9,
 
-    XREF_CMcpxBuffer_Stop2,
+    XREF_CMcpxBuffer_Stop_Ex,
     XRefOne)
 
         XREF_ENTRY( 0x2B, XREF_CMcpxBuffer_Stop),
 
-        // CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
+        // CMcpxBuffer_Stop_Ex+0x03 : mov eax, [ebp+arg_0]
         { 0x03, 0x8B },
         { 0x04, 0x45 },
         { 0x05, 0x08 },
-        // CMcpxBuffer_Stop2+0x14 : mov eax, [esi]
+        // CMcpxBuffer_Stop_Ex+0x14 : mov eax, [esi]
         { 0x14, 0x8B },
         { 0x15, 0x06 },
-        // CMcpxBuffer_Stop2+0x25 : mov edi, eax
+        // CMcpxBuffer_Stop_Ex+0x25 : mov edi, eax
         { 0x2F, 0x8B },
         { 0x30, 0xF8 },
-        // CMcpxBuffer_Stop2+0x36 : retn 0xC
+        // CMcpxBuffer_Stop_Ex+0x36 : retn 0xC
         { 0x36, 0xC2 },
         { 0x37, 0x0C },
 OOVPA_END;
@@ -478,7 +478,7 @@ OOVPA_XREF(CDirectSoundBuffer_StopEx, 4361, 1+7,
     XREF_CDirectSoundBuffer_StopEx,
     XRefOne)
 
-        XREF_ENTRY( 0x3D, XREF_CMcpxBuffer_Stop2 ),
+        XREF_ENTRY( 0x3D, XREF_CMcpxBuffer_Stop_Ex ),
 
         { 0x0C, 0x00 },
         { 0x16, 0x68 },
@@ -513,9 +513,9 @@ OOVPA_END;
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Play2, 4361, 8,
+OOVPA_XREF(CMcpxBuffer_Play_Ex, 4361, 8,
 
-    XREF_CMcpxBuffer_Play2,
+    XREF_CMcpxBuffer_Play_Ex,
     XRefZero)
 
 		{ 0x06, 0x56 },
@@ -532,9 +532,9 @@ OOVPA_END;
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Play2, 5558, 12,
+OOVPA_XREF(CMcpxBuffer_Play_Ex, 5558, 12,
 
-    XREF_CMcpxBuffer_Play2,
+    XREF_CMcpxBuffer_Play_Ex,
     XRefZero)
 
         { 0x00, 0x55 },

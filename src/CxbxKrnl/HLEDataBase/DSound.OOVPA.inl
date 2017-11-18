@@ -204,14 +204,14 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CMcpxAPU_SynchPlayback, XREF, 4831),
     REGISTER_OOVPAS(CMcpxBuffer_GetCurrentPosition, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CMcpxBuffer_GetStatus, XREF, 3911, 4039, 4134, 4721, 4831),
-    REGISTER_OOVPAS(CMcpxBuffer_Pause, XREF, 4721, 4831),
-    REGISTER_OOVPAS(CMcpxBuffer_Pause_Ex, XREF, 4721),
+    REGISTER_OOVPAS(CMcpxBuffer_Pause, XREF, 4721, 4831), // NOTE: ?Pause@CMcpxBuffer@DirectSound@@QAEJK@Z
+    REGISTER_OOVPAS(CMcpxBuffer_Pause_Ex, XREF, 4721), // NOTE: ?Pause@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxBuffer_Play, XREF, 3911, 4039, 4134, 4721, 4831), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJK@Z
-    REGISTER_OOVPAS(CMcpxBuffer_Play2, XREF, 4039/*, 4361*/), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
+    REGISTER_OOVPAS(CMcpxBuffer_Play_Ex, XREF, 4039/*, 4361*/), // NOTE: ?Play@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxBuffer_SetBufferData, XREF, 4134, 5455),
     REGISTER_OOVPAS(CMcpxBuffer_SetCurrentPosition, XREF, 3911, 4039, 4134),
     REGISTER_OOVPAS(CMcpxBuffer_Stop, XREF, 3911, 4134, 4242), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJK@Z
-    REGISTER_OOVPAS(CMcpxBuffer_Stop2, XREF, 4134/*, 4361*/), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
+    REGISTER_OOVPAS(CMcpxBuffer_Stop_Ex, XREF, 4134/*, 4361*/), // NOTE: ?Stop@CMcpxBuffer@DirectSound@@QAEJ_JK@Z
     REGISTER_OOVPAS(CMcpxStream_Discontinuity, XREF, 3911, 4039, 4134, 4531/*, 5344*/, 5455),
     REGISTER_OOVPAS(CMcpxStream_Flush, XREF, 3911, 3936, 4039, 4134/*, 4242, 4361, 5344*/, 5455),
     REGISTER_OOVPAS(CMcpxStream_GetStatus, XREF, 4134, 4721/*, 5233*/),
