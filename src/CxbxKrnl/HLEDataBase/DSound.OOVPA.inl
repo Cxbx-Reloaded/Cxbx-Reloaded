@@ -44,23 +44,23 @@
 // * [4134] Blood Omen 2                     |    80%    | Does not have full library.
 // * [4134] JSRF                             |     1%    | Does not have Stream class. DS and Buffer might be full.
 // * [4134] Double-S.T.E.A.L                 |   100%    | Contain full library.
-// * [4242] NFL Blitz 2002                   |    20%    | Might be full library.
-// * [4361] Flight Academy                   |    20%    | Only has 50%-ish of the library compiled with xbe build.
-// * [4432] RedCard 2003                     |    20%    | Might be full library.
-// * [4627] MLB SlugFest 2003                |    20%    | Might be full library.
-// * [4721] Terminator Dawn of Fate          |    20%    | Might be full library.
-// * [4831] Whacked!                         |    20%    | Might be full library.
-// * [4928] Drihoo                           |    20%    | Might be full library.
-// * [5028] Shikigami no Shiro Evolution     |    20%    | Might be full library.
-// * [5120] N.U.D.E.@                        |    20%    | Might be full library.
-// * [5233] Evil Dead                        |    20%    | Might be full library.
-// * [5344] Gladius OXM Demo Disc 20         |    20%    | Might be full library.
+// * [4242] NFL Blitz 2002                   |   100%    | Contain full library.
+// * [4361] Flight Academy                   |   100%    | Only has 50%-ish of the library compiled with xbe build.
+// * [4432] RedCard 2003                     |   100%    | Contain full library.
+// * [4627] MLB SlugFest 2003                |   100%    | Contain full library.
+// * [4721] Terminator Dawn of Fate          |   100%    | Contain full library.
+// * [4831] Whacked!                         |   100%    | Contain full library.
+// * [4928] Drihoo                           |   100%    | Contain full library.
+// * [5028] Shikigami no Shiro Evolution     |   100%    | Contain full library.
+// * [5120] N.U.D.E.@                        |   100%    | Contain full library.
+// * [5233] Evil Dead                        |   100%    | Contain full library.
+// * [5344] Gladius OXM Demo Disc 20         |   100%    | Contain full library.
 // * [5455] GR: Island Thunder               |   100%    | Only has 50%-ish of the library compiled with xbe build.
-// * [5455] Dinosaur Hunting                 |    20%    | Might be full library.
+// * [5455] Dinosaur Hunting                 |   100%    | Contain full library.
 // * [5558] Dino Crisis 3                    |   100%    | Contain full library.
-// * [5659] Midway Arcade Treasures Paperboy |    20%    | Might be full library.
-// * [5788] Digimon Battle Chronicle         |    20%    | Might be full library.
-// * [5849] Nickelodeon Tak 2                |    20%    | Might be full library.
+// * [5659] Midway Arcade Treasures Paperboy |   100%    | Contain full library.
+// * [5788] Digimon Battle Chronicle         |   100%    | Contain full library.
+// * [5849] Nickelodeon Tak 2                |   100%    | Contain full library.
 
 
 // TODO: Known DSound OOVPA issue list
@@ -73,9 +73,9 @@
 //   * IDirectSoundStream_Release           (Using IUnknown_Release)
 // * 3911 to ????: These functions does not exist until newer XDK revision
 //   * IDirectSound_GetOutputLevels             (Lowest found was 4361)
-//   * IDirectSound_SynchPlayback               (Lowest found was 5344)
-//   * IDirectSoundBuffer_GetVoiceProperties    (Lowest found was 5344)
-//   * IDirectSoundBuffer_SetFormat             (Lowest found was 4242)
+//   * IDirectSound_SynchPlayback               (Lowest found was 4831)
+//   * IDirectSoundBuffer_GetVoiceProperties    (Lowest found was 5028)
+//   * IDirectSoundBuffer_SetFormat             (Lowest found was 4039)
 //   * IDirectSoundBuffer_SetDistanceFactor     (Lowest found was 4134)
 //   * IDirectSoundBuffer_SetDopplerFactor      (Lowest found was 4134)
 //   * IDirectSoundBuffer_SetRolloffFactor      (Lowest found was 4134)
@@ -83,20 +83,20 @@
 //   * IDirectSoundBuffer_Pause                 (Lowest found was 4721)
 //   * IDirectSoundBuffer_PauseEx               (Lowest found was 4721)
 //   * IDirectSoundBuffer_SetPlayRegion         (Introduce in 4039, last known earliest revision)
-//   * IDirectSoundStream_FlushEx               (Lowest found was 4361)
-//   * IDirectSoundStream_GetVoiceProperties    (Lowest found was 5344)
+//   * IDirectSoundStream_FlushEx               (Lowest found was 4134)
+//   * IDirectSoundStream_GetVoiceProperties    (Lowest found was 5028)
 //   * IDirectSoundStream_PauseEx               (Lowest found was 4361)
-//   * IDirectSoundStream_SetDistanceFactor     (Lowest found was 4361)
-//   * IDirectSoundStream_SetDopplerFactor      (Lowest found was 4361)
-//   * IDirectSoundStream_SetFormat             (Lowest found was 4361)
+//   * IDirectSoundStream_SetDistanceFactor     (Lowest found was 4134)
+//   * IDirectSoundStream_SetDopplerFactor      (Lowest found was 4134)
+//   * IDirectSoundStream_SetFormat             (Lowest found was 4039)
 //   * IDirectSoundStream_SetRolloffCurve       (Lowest found was 4361)
-//   * IDirectSoundStream_SetRolloffFactor      (Lowest found was 4361)
+//   * IDirectSoundStream_SetRolloffFactor      (Lowest found was 4134)
 //   * DirectSoundDumpMemoryUsage               (Lowest found was 4361)
 //   * DirectSoundGetSampleTime                 (Need verify between 4039 to 4361)
 //   * DirectSoundOverrideSpeakerConfig         (Lowest found was 4361)
-//   * XAudioDownloadEffectsImage               (Lowest found was 4361)
+//   * XAudioDownloadEffectsImage               (Lowest found was 4134)
 //   * XGetAudioFlags                           (Lowest found was 3911, XAudioGetSpeakerConfig introduced later as alias, is part of Xapi section)
-//   * XAudioSetEffectData                      (Lowest found was 5344?)
+//   * XAudioSetEffectData                      (Lowest found was 5344)
 //   * DirectSoundUseFullHRTF4Channel           (Lowest found was 5344)
 //   * DirectSoundUseLightHRTF4Channel          (Lowest found was 5344)
 // * 3911 to 3936: Following separater functions has exact asm codes as whole function are...
@@ -129,19 +129,14 @@
 //   * DirectSoundUseLightHRTF
 //   * CDirectSoundStream_SetRolloffCurve (IDirectSoundStream_SetRolloffCurve is a jmp)
 //   * CDirectSoundStream_SetRolloffFactor
-// * 4134 verification needed: (Verifying with Blood Omen 2 title is done, need different title to find the remaining...)
+// * 4134 verification needed: (Verifying with Double-S.T.E.A.L title is done, need different title to find the remaining...)
 //   * DirectSoundUseLightHRTF
 //   * XAudioCreateAdpcmFormat
-//   * XAudioCreatePcmFormat
 // * CDirectSound_SetAllParameters and CDirectSound_SetAllParametersA currently separated
 //   * Need to review what's the difference and why is it necessary to be separated.
 //   * It also have various revisions, we should be able to narrow it down to remove duplicates.
 // * 4039 CDirectSoundVoice_SetPitch need to be strengthen by using XREF to CMcpxVoiceClient_SetPitch function.
 // * List of OOVPAs may could be lower to include support older titles.
-//   * CDirectSoundStream_Flush (5344)
-//   * CMcpxStream_Flush (5344)
-//   * CMcpxStream_Discontinuity (5344)
-//   * CMcpxStream_GetStatus (4721)
 //   * CDirectSoundVoice_SetI3DL2Source (5344)
 //   * CDirectSound_SetDopplerFactor (5344)
 //   * CDirectSound_SetRolloffFactor (5344)
@@ -150,13 +145,13 @@
 //   * CMcpxBuffer_Pause_Ex (4721)
 //   * IDirectSoundBuffer_PauseEx (4721)
 //   * CDirectSoundBuffer_PauseEx (4721)
-//   * CMcpxStream_Pause_Ex (4721)
-//   * CDirectSoundStream_PauseEx (4721)
-//   * IDirectSoundStream_PauseEx (4721)
 // * Missing OOVPAs
-//   * DirectSoundUseLightHRTF (4928 - 5233) Maybe even lower too.
+//   * DirectSoundUseLightHRTF (4039 - 4134)
 //   * DirectSoundUseFullHRTF4Channel (4242 - 5233)
 //   * DirectSoundUseLightHRTF4Channel (4242 - 5233)
+//   * XAudioCreateAdpcmFormat (4039 - 4134)
+//   * XFileCreateMediaObject (4039 - 4242)
+//   * XWaveFileCreateMediaObject (4039 - 4242)
 
 
 #ifndef DSOUND_OOVPA_INL
