@@ -36,9 +36,9 @@
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::Play
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Play2, 5788, 7,
+OOVPA_XREF(CMcpxBuffer_Play_Ex, 5788, 7,
 
-    XREF_CMcpxBuffer_Play2,
+    XREF_CMcpxBuffer_Play_Ex,
     XRefZero)
 
 	{ 0x17, 0x43 },
