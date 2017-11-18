@@ -70,6 +70,7 @@ OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5788, 7,
 OOVPA_END;
 #endif
 
+#if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::SetCurrentPosition
 // ******************************************************************
@@ -86,6 +87,7 @@ OOVPA_XREF(CMcpxBuffer_SetCurrentPosition, 5788, 7,
         { 0xB8, 0x89 },
         { 0xDB, 0x5F },
 OOVPA_END;
+#endif
 
 #if 0 // Replaced with generic OOVPA 3911
 // ******************************************************************

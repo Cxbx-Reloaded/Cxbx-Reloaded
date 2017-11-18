@@ -32,6 +32,7 @@
 // *
 // ******************************************************************
 
+#if 0 // No longer used, replaced by generic 4361 version
 //TODO: Need further verification for 4361 titles, 4432 is last known lowest build match.
 //Test case for 4361: Burnout (found a match yet is called twice for every time joystick is moved. Is this normal?)
 // ******************************************************************
@@ -50,6 +51,7 @@ OOVPA_XREF(CDirectSound_GetCaps, 4361, 7,
         { 0x69, 0xC2 },
         { 0x6A, 0x08 },
 OOVPA_END;
+#endif
 
 #if 0 // Used 3936
 // ******************************************************************
@@ -80,9 +82,7 @@ OOVPA_NO_XREF(IDirectSound_Release, 4432, 12)
         { 0x12, 0x08 },
 OOVPA_END;
 #endif
-#if 0 // Used 4134
-// ******************************************************************
-
+#if 0 // No longer used, replaced by CMcpxVoiceClient_SetMixBins
 // ******************************************************************
 // * CDirectSoundVoiceSettings::SetMixBins
 // ******************************************************************
@@ -110,3 +110,24 @@ OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4432, 10,
         { 0xB3, 0x04 },
 OOVPA_END;
 #endif
+
+// ******************************************************************
+// * XFileCreateMediaObjectAsync
+// ******************************************************************
+OOVPA_NO_XREF(XFileCreateMediaObjectAsync, 4432, 12)
+
+        { 0x00, 0x56 },
+        { 0x1F, 0x1B },
+
+        { 0x2B, 0x07 },
+        { 0x2C, 0x80 },
+        { 0x2D, 0x78 },
+        { 0x2E, 0x20 },
+        { 0x2F, 0xFF },
+        { 0x30, 0x74 },
+        { 0x31, 0x24 },
+        { 0x32, 0x10 },
+
+        { 0x5D, 0xC2 },
+        { 0x5E, 0x0C },
+OOVPA_END;

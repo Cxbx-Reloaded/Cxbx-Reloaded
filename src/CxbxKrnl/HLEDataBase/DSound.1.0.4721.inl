@@ -182,6 +182,7 @@ OOVPA_XREF(CMcpxBuffer_Pause_Ex, 4721, 1+8,
         { 0x37, 0x0C },
 OOVPA_END;
 
+#if 0 // Moved to 4361
 // ******************************************************************
 // * DirectSound::CMcpxStream::Pause2
 // ******************************************************************
@@ -207,7 +208,9 @@ OOVPA_XREF(CMcpxStream_Pause_Ex, 4721, 1+8,
         { 0x36, 0xC2 },
         { 0x37, 0x0C },
 OOVPA_END;
+#endif
 
+#if 0 // Moved to 4361
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::PauseEx
 // ******************************************************************
@@ -232,7 +235,8 @@ OOVPA_XREF(CDirectSoundStream_PauseEx, 4721, 1+10,
         { 0x56, 0xC2 },
         { 0x57, 0x10 },
 OOVPA_END;
-
+#endif
+#if 0 // Moved to 4361
 // ******************************************************************
 // * IDirectSoundStream_PauseEx
 // ******************************************************************
@@ -252,6 +256,7 @@ OOVPA_XREF(IDirectSoundStream_PauseEx, 4721, 1+7,
         { 0x15, 0xC2 },
         { 0x16, 0x10 },
 OOVPA_END;
+#endif
 
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::Pause
