@@ -130,6 +130,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 5788, 1+7,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Duplicate OOVPA, replacing with generic OOVPA 3911
 // ******************************************************************
 // * IDirectSoundBuffer_SetMinDistance
@@ -150,6 +151,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 5788, 1+7,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Not 5788
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetVolume
@@ -168,6 +170,7 @@ OOVPA_XREF(CDirectSoundVoice_SetVolume, 5788, 7,
         { 0x1A, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Used 5233
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetVolume
@@ -188,6 +191,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetVolume, 5788, 1+7,
         { 0x47, 0x8B },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetVolume
 // ******************************************************************

@@ -236,7 +236,6 @@ OOVPA_XREF(CMcpxBuffer_Play, 4361, 11,
     XREF_CMcpxBuffer_Play,
     XRefZero)
 
-
         // CMcpxBuffer_Play+0x0E : cmp ebx, edi
         { 0x0E, 0x3B },
         { 0x0F, 0xDF },
@@ -311,6 +310,7 @@ OOVPA_XREF(CMcpxBuffer_Stop, 4361, 9,
         { 0x1D, 0x02 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * CDirectSoundBuffer_Stop
@@ -339,6 +339,7 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4361, 1+9,
         { 0x4D, 0x04 },
 OOVPA_END;
 #endif
+
 #if 0 //Using generic 3911
 // ******************************************************************
 // * IDirectSoundBuffer_Stop
@@ -365,6 +366,7 @@ OOVPA_XREF(IDirectSoundBuffer_Stop, 4361, 1+7,
         { 0x0E, 0xC8 },
 OOVPA_END;
 #endif
+
 #if 0 // Used 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundVoiceSettings::SetMixBinVolumes
@@ -383,6 +385,7 @@ OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBinVolumes, 4361, 7,
         { 0x21, 0x5E },
 OOVPA_END;
 #endif
+
 #if 0 // Used 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetMixBinVolumes
@@ -403,6 +406,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMixBinVolumes, 4361, 1+7,
         { 0x1A, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // Used 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetMixBinVolumes
@@ -423,6 +427,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMixBinVolumes, 4361, 1+7,
         { 0x47, 0x8B },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::PlayEx
@@ -443,6 +448,7 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 4361, 1+7,
         { 0x52, 0x8B },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4134 version
 // ******************************************************************
 // * CMcpxBuffer::Stop2
@@ -469,6 +475,7 @@ OOVPA_XREF(CMcpxBuffer_Stop_Ex, 4361, 1+9,
         { 0x37, 0x0C },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::StopEx
@@ -489,6 +496,7 @@ OOVPA_XREF(CDirectSoundBuffer_StopEx, 4361, 1+7,
         { 0x52, 0x8B },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 3911
 // ******************************************************************
 // * IDirectSoundBuffer_StopEx
@@ -509,6 +517,7 @@ OOVPA_XREF(IDirectSoundBuffer_StopEx, 4361, 1+7,
         { 0x21, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // No longer used, replaced by generic 4039 version
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
@@ -528,6 +537,7 @@ OOVPA_XREF(CMcpxBuffer_Play_Ex, 4361, 8,
         { 0x36, 0xC2 },
 OOVPA_END;
 #endif
+
 #if 0 // For research purpose, need to strengthen it up.
 // ******************************************************************
 // * public: long __thiscall DirectSound::CMcpxBuffer::Play(__int64,unsigned long)
@@ -668,6 +678,7 @@ OOVPA_END;
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 4361, 10,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 

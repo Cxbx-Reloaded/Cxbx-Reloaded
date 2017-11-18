@@ -51,6 +51,7 @@ OOVPA_XREF(CDirectSoundVoice_SetFormat, 4242, 8,
         { 0x46, 0x00 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetFormat
@@ -71,6 +72,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetFormat, 4242, 1+7,
         { 0x47, 0x8B },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundBuffer_SetFormat
@@ -91,6 +93,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetFormat, 4242, 1+7,
         { 0x1A, 0x08 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4134
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetFormat
@@ -277,6 +280,7 @@ OOVPA_END;
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 4242, 10,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -298,6 +302,7 @@ OOVPA_XREF(CMcpxStream_Flush, 4242, 10,
         { 0xD2, 0xC3 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4039
 // ******************************************************************
 // * IDirectSoundStream_SetFormat
@@ -522,6 +527,7 @@ OOVPA_XREF(WaveFormat_CreateXboxAdpcmFormat, 4242, 7,
         { 0x3D, 0x12 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4039
 // ******************************************************************
 // * XAudioCreateAdpcmFormat

@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-
 // ******************************************************************
 // * DirectSoundEnterCriticalSection
 // ******************************************************************
@@ -73,6 +72,7 @@ OOVPA_NO_XREF(DirectSoundCreate, 3911, 9)
         { 0x9B, 0xC2 },
         { 0x9C, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * CMcpxAPU_ServiceDeferredCommandsLow
 // ******************************************************************
@@ -408,6 +408,7 @@ OOVPA_NO_XREF(IDirectSoundBuffer_Unlock, 3911, 5)
     { 0x03, 0x14 },
     { 0x04, 0x00 }
 OOVPA_END;
+
 #if 0 // Cannot be used since this OOVPA does produce false detection. Use it only for as a model understanding.
 // ******************************************************************
 // * IDirectSound_SetCooperativeLevel
@@ -425,6 +426,7 @@ OOVPA_NO_XREF(IDirectSound_SetCooperativeLevel, 3911, 5)
     { 0x04, 0x00 }
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * CMcpxVoiceClient_SetVolume
 // ******************************************************************
@@ -550,7 +552,6 @@ OOVPA_XREF(CDirectSoundBuffer_StopEx, 3911, 1+10,
         { 0x0F, 0xA8 },
         { 0x10, 0x03 },
 
-
         // CDirectSoundBuffer_StopEx+0x15 : and eax, 1
         { 0x15, 0x83 },
         { 0x16, 0xE0 },
@@ -648,6 +649,7 @@ OOVPA_XREF(IDirectSoundBuffer_Stop, 3911, 1+11,
         { 0x16, 0x04 },
         { 0x17, 0x00 },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
@@ -739,7 +741,6 @@ OOVPA_XREF(CDirectSoundBuffer_PlayEx, 3911, 1+8,
 
         { 0x25, 0x85 },
         { 0x27, 0x8B },
-
 
         { 0x3A, 0xC2 },
         { 0x3B, 0x10 },
@@ -1197,6 +1198,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetEG, 3911, 1+7,
         { 0x19, 0xC2 },
         { 0x1A, 0x08 },
 OOVPA_END;
+
 #if 0 // Disabled due to both functions are not unique and unable to identify the difference.
 // ******************************************************************
 // * IDirectSoundStream_SetEG & CDirectSoundStream_SetEG
@@ -1218,6 +1220,7 @@ OOVPA_XREF(IDirectSoundStream_SetEG, 3911, 1+8,
         { 0x12, 0x08 },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * IDirectSoundBuffer_SetOutputBuffer
 // ******************************************************************
@@ -2123,6 +2126,7 @@ OOVPA_END;
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 3911, 15,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -2145,7 +2149,6 @@ OOVPA_XREF(CMcpxStream_Flush, 3911, 15,
         { 0x5B, 0x80 },
 
         { 0x62, 0xE8 },
-
 
         { 0x9D, 0xC9 },
         { 0x9E, 0xC3 },
@@ -2180,6 +2183,7 @@ OOVPA_END;
 // * CMcpxStream_Discontinuity
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Discontinuity, 3911, 1+11,
+
     XREF_CMcpxStream_Discontinuity,
     XRefOne)
 
@@ -2199,7 +2203,6 @@ OOVPA_XREF(CMcpxStream_Discontinuity, 3911, 1+11,
         { 0x64, 0x8B },
 
         { 0x66, 0xE8 },
-
 
         { 0x6E, 0xC9 },
         { 0x6F, 0xC3 },
@@ -2327,6 +2330,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMaxDistance, 3911, 1+14,
         { 0x3C, 0xC2 },
         { 0x3D, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundBuffer::SetMaxDistance
 // ******************************************************************
@@ -2366,6 +2370,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 3911, 1+7,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundStream_SetMaxDistance
 // ******************************************************************
@@ -3166,6 +3171,7 @@ OOVPA_XREF(CDirectSoundStream_SetMode, 3911, 1+6,
         { 0x15, 0xC2 },
         { 0x16, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * CMcpxVoiceClient_Set3dPosition
 // ******************************************************************
@@ -3844,7 +3850,6 @@ OOVPA_XREF(DSound_CRefCount_AddRef, 3911, 11,
         // DSound_CRefCount_AddRef+0x04 : add eax, 4
         { 0x00, 0x56 },
 
-
         // DSound_CRefCount_AddRef+0x0A : inc dword ptr [ecx+4]
         { 0x0A, 0xFF },
         { 0x0B, 0x41 },
@@ -3900,7 +3905,6 @@ OOVPA_XREF(DSound_CRefCount_Release, 3911, 11,
 
         // DSound_CRefCount_Release+0x04 : add eax, 4
         { 0x00, 0x56 },
-
 
         // DSound_CRefCount_Release+0x0A : dec dword ptr [ecx+4]
         { 0x0B, 0xFF },
@@ -4274,6 +4278,7 @@ OOVPA_END;
 // * CDirectSound_CommitEffectData
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CommitEffectData, 3911, 12,
+
     XREF_CDirectSound_CommitEffectData,
     XRefZero)
 
@@ -4357,6 +4362,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 18,
         { 0xCB, 0xC2 },
         { 0xCC, 0x08 },
 OOVPA_END;
+
 #if 0 // Replaced with better OOVPA 3911 (See above)
 // ******************************************************************
 // * CDirectSound::EnableHeadphones
@@ -4374,6 +4380,7 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 7,
         { 0xB4, 0x5B },
 OOVPA_END;
 #endif
+
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
 // ******************************************************************
@@ -4642,6 +4649,7 @@ OOVPA_XREF(IDirectSound_SetDistanceFactor, 3911, 1+10,
         { 0x21, 0xC2 },
         { 0x22, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * CMcpxAPU::Set3dDopplerFactor
 // ******************************************************************
@@ -5621,7 +5629,6 @@ OOVPA_NO_XREF(XAudioCreatePcmFormat, 3911, 11)
         { 0x18, 0x0E },
         { 0x2E, 0x10 },
 
-
         //XAudioCreatePcmFormat+0x10 : mov word ptr [ecx],1
         { 0x34, 0x66 },
         { 0x35, 0xC7 },
@@ -5682,6 +5689,7 @@ OOVPA_NO_XREF(IsValidFormat, 3911, 10)
         { 0x21, 0xC2 },
         { 0x22, 0x04 },
 OOVPA_END;
+
 // ******************************************************************
 // * XFileCreateMediaObject
 // ******************************************************************

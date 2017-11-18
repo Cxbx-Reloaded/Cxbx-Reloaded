@@ -236,6 +236,7 @@ OOVPA_XREF(CDirectSoundStream_PauseEx, 4721, 1+10,
         { 0x57, 0x10 },
 OOVPA_END;
 #endif
+
 #if 0 // Moved to 4361
 // ******************************************************************
 // * IDirectSoundStream_PauseEx
@@ -321,6 +322,7 @@ OOVPA_XREF(CDirectSound_SetAllParametersA, 4721, 10,
         { 0x88, 0x50 },
         { 0x89, 0x08 },
 OOVPA_END;
+
 // ******************************************************************
 // * CMcpxBuffer_Play
 // ******************************************************************

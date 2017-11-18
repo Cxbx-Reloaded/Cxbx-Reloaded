@@ -715,6 +715,7 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4039, 12,
         { 0x49, 0xC2 },
         { 0x4A, 0x04 },
 OOVPA_END;
+
 #if 0 // No longer used, replaced by generic 3911 version
 // ******************************************************************
 // * IDirectSoundBuffer_Stop
@@ -1068,7 +1069,6 @@ OOVPA_XREF(CDirectSoundBuffer_SetPlayRegion, 4039, 13,
         { 0x7C, 0xC2 },
         { 0x7D, 0x0C },
 OOVPA_END;
-
 
 // ******************************************************************
 // * IDirectSoundBuffer_SetPlayRegion
@@ -3305,7 +3305,6 @@ OOVPA_XREF(DSound_CRefCount_AddRef, 4039, 12,
         { 0x02, 0x24 },
         { 0x03, 0x04 },
 
-
         // DSound_CRefCount_AddRef+0x04 : inc dword ptr [eax+4]
         { 0x04, 0xFF },
         { 0x05, 0x40 },
@@ -3532,6 +3531,7 @@ OOVPA_END;
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 4039, 10,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -3642,6 +3642,7 @@ OOVPA_END;
 // * CMcpxStream_Discontinuity
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Discontinuity, 4039, 1+6,
+
     XREF_CMcpxStream_Discontinuity,
     XRefOne)
 

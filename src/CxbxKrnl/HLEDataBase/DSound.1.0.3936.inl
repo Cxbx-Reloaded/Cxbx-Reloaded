@@ -51,11 +51,11 @@ OOVPA_XREF(CSensaura3d_GetFullHRTFFilterPair, 3936, 9,
         { 0xAD, 0x05 },
 OOVPA_END;
 
-
 // ******************************************************************
 // * CMcpxStream_Flush
 // ******************************************************************
 OOVPA_XREF(CMcpxStream_Flush, 3936, 15,
+
     XREF_CMcpxStream_Flush,
     XRefZero)
 
@@ -78,7 +78,6 @@ OOVPA_XREF(CMcpxStream_Flush, 3936, 15,
         { 0x58, 0x80 },
 
         { 0x5F, 0xE8 },
-
 
         { 0xA1, 0xC9 },
         { 0xA2, 0xC3 },
