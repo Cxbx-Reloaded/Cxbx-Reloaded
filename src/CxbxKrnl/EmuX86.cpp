@@ -793,10 +793,12 @@ inline bool ComputeParityInParallel(uint8_t v)
 
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
+// TODO : Use templates for these, so 8 and 16 bit versions will look at the correct bits
 #define Calc_SF(result) (result >> 31) & 1
 #define Calc_ZF(result) result == 0
 #define Calc_AF(result) (result >> 3) & 1
 #define Calc_PF(result) ComputeParityInParallel(static_cast<uint8_t>(result))
+#define Calc_CF(result) (result >> 32) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of result xor dest xor src 
 
 bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 {
@@ -843,7 +845,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
 		/*EMUX86_EFLAG_AF*/Calc_AF(result),
 		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
 
 	return true;
 }
@@ -935,7 +937,7 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
 		/*EMUX86_EFLAG_AF*/Calc_AF(result),
 		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
 
 	return true;
 }
@@ -975,7 +977,7 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
 		/*EMUX86_EFLAG_AF*/Calc_AF(result),
 		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
 
 	return true;
 }
@@ -1082,7 +1084,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
 		/*EMUX86_EFLAG_AF*/Calc_AF(result),
 		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
 
 	return true;
 }
