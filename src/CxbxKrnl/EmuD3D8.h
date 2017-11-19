@@ -409,6 +409,15 @@ VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstant1Fast
+// ******************************************************************
+VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
+(
+    INT         Register,
+    CONST PVOID pConstantData
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant4
 // ******************************************************************
 VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant4)
