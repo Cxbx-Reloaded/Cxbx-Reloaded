@@ -718,6 +718,23 @@ inline void EmuX86_SetFlags(LPEXCEPTION_POINTERS e, DWORD mask, DWORD value)
 // TODO : Verify callers compile bool arguments into bit-operations;
 // If not, change these arugments back to unsigned int's and use only
 // the least significant bit.
+inline void EmuX86_SetFlags_OSZAPC
+(
+	LPEXCEPTION_POINTERS e,
+	const bool OF,
+	const bool SF,
+	const bool ZF,
+	const bool AF,
+	const bool PF,
+	const bool CF
+)
+{
+	EmuX86_SetFlags(e,
+		BITMASK(EMUX86_EFLAG_OF) | BITMASK(EMUX86_EFLAG_SF) | BITMASK(EMUX86_EFLAG_ZF) | BITMASK(EMUX86_EFLAG_AF) | BITMASK(EMUX86_EFLAG_PF) | BITMASK(EMUX86_EFLAG_CF),
+		BIT(EMUX86_EFLAG_OF, OF) | BIT(EMUX86_EFLAG_SF, SF) | BIT(EMUX86_EFLAG_ZF, ZF) | BIT(EMUX86_EFLAG_AF, AF) | BIT(EMUX86_EFLAG_PF, PF) | BIT(EMUX86_EFLAG_CF, CF)
+	);
+}
+
 inline void EmuX86_SetFlags_OSZPC
 (
 	LPEXCEPTION_POINTERS e,
@@ -731,6 +748,22 @@ inline void EmuX86_SetFlags_OSZPC
 	EmuX86_SetFlags(e,
 		BITMASK(EMUX86_EFLAG_OF) | BITMASK(EMUX86_EFLAG_SF) | BITMASK(EMUX86_EFLAG_ZF) | BITMASK(EMUX86_EFLAG_PF) | BITMASK(EMUX86_EFLAG_CF),
 		BIT(EMUX86_EFLAG_OF, OF) | BIT(EMUX86_EFLAG_SF, SF) | BIT(EMUX86_EFLAG_ZF, ZF) | BIT(EMUX86_EFLAG_PF, PF) | BIT(EMUX86_EFLAG_CF, CF)
+	);
+}
+
+inline void EmuX86_SetFlags_OSZAP
+(
+	LPEXCEPTION_POINTERS e,
+	const bool OF,
+	const bool SF,
+	const bool ZF,
+	const bool AF,
+	const bool PF
+)
+{
+	EmuX86_SetFlags(e,
+		BITMASK(EMUX86_EFLAG_OF) | BITMASK(EMUX86_EFLAG_SF) | BITMASK(EMUX86_EFLAG_ZF) | BITMASK(EMUX86_EFLAG_AF) | BITMASK(EMUX86_EFLAG_PF),
+		BIT(EMUX86_EFLAG_OF, OF) | BIT(EMUX86_EFLAG_SF, SF) | BIT(EMUX86_EFLAG_ZF, ZF) | BIT(EMUX86_EFLAG_AF, AF) | BIT(EMUX86_EFLAG_PF, PF)
 	);
 }
 
@@ -753,9 +786,8 @@ inline void EmuX86_SetFlags_OSZP
 // http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 inline bool ComputeParityInParallel(uint8_t v)
 {
-	//	v &= 255;
+	//	Note : If input isn't a byte, do : v &= 255;
 	v ^= v >> 4;
-	//v &= 0xf;
 	return (0x6996 >> (v & 0xf)) & 1;
 }
 
@@ -794,18 +826,19 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		addend = EmuX86_Read32(addr);
 		result = value + addend;
 		EmuX86_Write32(addr, static_cast<uint32_t>(result));
-	}
+	}	
 	default:
 		return false;
 	}
 
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (value >> 31), // TODO : Not entirely sure about this
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates) (possibly using templates)
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/((result ^ value) >> 31) & 1, // TODO : Not entirely sure about this
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(static_cast<uint8_t>(result)),
-		/*EMUX86_EFLAG_CF*/(result >> 32) > 0);
+		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
 
 	return true;
 }
@@ -860,14 +893,15 @@ bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Write back the result
 	if (!EmuX86_Operand_Write(e, info, 0, dest))
-		return false;
+		return false;	
 
 	// OF/CF are cleared
 	// SF, ZF, and PF are set according to the result
 	// AF is undefined, so has been left out
-	EmuX86_SetFlags_OSZPC(e, 
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
+	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0, 
-		/*EMUX86_EFLAG_SF*/(dest >> 31) > 0, 
+		/*EMUX86_EFLAG_SF*/(dest >> 31) & 1, 
 		/*EMUX86_EFLAG_ZF*/dest == 0, 
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest),
 		/*EMUX86_EFLAG_CF*/0);
@@ -889,13 +923,14 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	// SUB Destination with src (cmp internally is a discarded subtract)
 	uint64_t result = dest - src;
 
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZPC(e, 
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (dest >> 31),
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
+	EmuX86_SetFlags_OSZAPC(e, 
+		/*EMUX86_EFLAG_OF*/((result ^ dest ) >> 31) & 1,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest),
-		/*EMUX86_EFLAG_CF*/(result >> 32) > 0);
+		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
 
 	return true;
 }
@@ -927,14 +962,15 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Perform arithmatic operation for flag calculation
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
 	// CF, PF, AF, SF, and OF are set according to the result
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZPC(e, 
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (dest >> 31),
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	EmuX86_SetFlags_OSZAPC(e, 
+		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/src == dest,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(static_cast<uint8_t>(result)),
-		/*EMUX86_EFLAG_CF*/(result >> 32) > 0);
+		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
 
 	return true;
 }
@@ -945,17 +981,18 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	// ADD Destination to src 
+	// DEC Destination to src 
 	uint64_t result = dest - 1;
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZP(e, 
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (dest >> 31),
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
+	EmuX86_SetFlags_OSZAP(e, 
+		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest));
 
 	return true;
@@ -967,17 +1004,18 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	// ADD Destination to src 
+	// INC Destination to src 
 	uint64_t result = dest + 1;
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZP(e,
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (dest >> 31),
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
+	EmuX86_SetFlags_OSZAP(e,
+		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest));
 
 	return true;
@@ -1001,12 +1039,13 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Write(e, info, 0, dest))
 		return false;
 
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
 	// OF/CF are cleared
 	// SF, ZF, and PF are set according to the result
 	// AF is undefined, so has been left out
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/(dest >> 31) > 0,
+		/*EMUX86_EFLAG_SF*/(dest >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/dest == 0,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest),
 		/*EMUX86_EFLAG_CF*/0);
@@ -1031,13 +1070,14 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
-	// TODO: Figure out how to calculate this EmuX86_SetFlag(e, EMUX86_EFLAG_AF, 0);
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/(result >> 31) != (dest >> 31),
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
+		/*EMUX86_EFLAG_AF*/(result >> 3) & 1,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(dest),
-		/*EMUX86_EFLAG_CF*/(result >> 32) > 0);
+		/*EMUX86_EFLAG_CF*/(result >> 32) & 1);
 
 	return true;
 }
@@ -1058,10 +1098,11 @@ bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	result &= value;
 
 	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
+	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
 	// Set CF/OF to 0
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/(result >> 31) > 0,
+		/*EMUX86_EFLAG_SF*/(result >> 31) & 1,
 		/*EMUX86_EFLAG_ZF*/result == 0,
 		/*EMUX86_EFLAG_PF*/ComputeParityInParallel(result),
 		/*EMUX86_EFLAG_CF*/0);
