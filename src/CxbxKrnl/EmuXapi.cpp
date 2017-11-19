@@ -118,6 +118,11 @@ void SetupXboxDeviceTypes()
 			// Iterate through the table until we find gamepad
 			XTL::PXID_TYPE_INFORMATION* deviceTable = (XTL::PXID_TYPE_INFORMATION*)(deviceTableStartOffset);
 			for (unsigned int i = 0; i < deviceTableEntryCount; i++) {
+				// Skip empty table entries
+				if (deviceTable[i] == nullptr) {
+					continue;
+				}
+
 				printf("----------------------------------------\n");
 				printf("DeviceTable[%u]->ucType = %d\n", i, deviceTable[i]->ucType);
 				printf("DeviceTable[%u]->XppType = 0x%08X (", i, deviceTable[i]->XppType);
