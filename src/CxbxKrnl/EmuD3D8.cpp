@@ -3699,6 +3699,25 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstantNotInlineFast
+// ******************************************************************
+VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
+(
+    INT         Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
+
+	// Redirect to the standard version.
+
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
+}
+
+// ******************************************************************
 // * patch: D3DDevice_DeletePixelShader
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
