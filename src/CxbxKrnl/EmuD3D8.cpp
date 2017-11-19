@@ -3648,6 +3648,24 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstant1Fast
+// ******************************************************************
+VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
+(
+    INT         Register,
+    CONST PVOID pConstantData
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
+
+	// Redirect to the standard version.
+
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 1);
+}
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant4
 // ******************************************************************
 VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
