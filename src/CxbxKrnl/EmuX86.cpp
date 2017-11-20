@@ -829,7 +829,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
 	uint32_t src = 0;
@@ -858,7 +858,7 @@ bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
 	uint32_t src = 0;
@@ -884,7 +884,7 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
 	uint32_t src = 0;
@@ -922,7 +922,7 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-void  EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
+void EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// This CPUID emulation is based on :
 	// https://github.com/docbrown/vxb/wiki/Xbox-CPUID-Information
@@ -975,7 +975,7 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// DEC Destination to src 
-	uint64_t result = dest - 1;
+	uint64_t result = (uint64_t)dest - (uint64_t)1;
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
@@ -1029,7 +1029,7 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// INC Destination to src 
-	uint64_t result = dest + 1;
+	uint64_t result = (uint64_t)dest + (uint64_t)1;
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
@@ -1045,7 +1045,7 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// MOV reads value from source :
 	uint32_t value = 0;
@@ -1061,7 +1061,7 @@ bool  EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// MOVZX reads value from source :
 	uint32_t value = 0;
@@ -1079,7 +1079,7 @@ bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
 	uint32_t src = 0;
@@ -1108,7 +1108,7 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// OUT will address the first operand :
 	uint32_t addr;
@@ -1171,7 +1171,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
+bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
 	uint32_t src = 0;
