@@ -751,21 +751,6 @@ inline void EmuX86_SetFlags_OSZAP
 	);
 }
 
-inline void EmuX86_SetFlags_OSZP
-(
-	LPEXCEPTION_POINTERS e,
-	const bool OF,
-	const bool SF,
-	const bool ZF,
-	const bool PF
-)
-{
-	EmuX86_SetFlags(e,
-		BITMASK(EMUX86_EFLAG_OF) | BITMASK(EMUX86_EFLAG_SF) | BITMASK(EMUX86_EFLAG_ZF) | BITMASK(EMUX86_EFLAG_PF),
-		BIT(EMUX86_EFLAG_OF, OF) | BIT(EMUX86_EFLAG_SF, SF) | BIT(EMUX86_EFLAG_ZF, ZF) | BIT(EMUX86_EFLAG_PF, PF)
-	);
-}
-
 // Calculate Parity flag, based on "Compute parity in parallel" method from
 // http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 inline bool ComputeParityInParallel(uint8_t v)
@@ -789,6 +774,8 @@ inline bool ComputeParityInParallel(uint8_t v)
 #define AFCalc(r,s,d) ((r ^ s ^ d)>> 3) & 1
 #define PFCalc(result) (ComputeParityInParallel(static_cast<uint8_t>(result)))
 #define CFCalc(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
+
+// See http://x86.renejeschke.de/ for affected CPU flags per instruction
 
 // Keep opcode emulations alphabetically ordered :
 
@@ -830,6 +817,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 	}
 
+	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
 		/*EMUX86_EFLAG_OF*/OF_Add(result, src, dest),
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -859,9 +847,7 @@ bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Write(e, info, 0, result))
 		return false;	
 
-	// OF/CF are cleared
-	// SF, ZF, and PF are set according to the result
-	// AF is undefined, so has been left out
+	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0, 
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -886,6 +872,7 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	// CMP Destination with src (cmp internally is a discarded subtract)
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
+	// The CF, OF, SF, ZF, AF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e, 
 		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -896,7 +883,6 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	return true;
 }
-
 
 bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 {
@@ -994,6 +980,7 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
+	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAP(e, 
 		/*EMUX86_EFLAG_OF*/OF_Sub(result, 1, dest),
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -1046,7 +1033,8 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
-
+	
+	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the re
 	EmuX86_SetFlags_OSZAP(e,
 		/*EMUX86_EFLAG_OF*/OF_Add(result, 1, dest),
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -1109,9 +1097,7 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Write(e, info, 0, result))
 		return false;
 
-	// OF/CF are cleared
-	// SF, ZF, and PF are set according to the result
-	// AF is undefined, so has been left out
+	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -1173,6 +1159,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Write result back
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
+	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
 		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -1200,7 +1187,7 @@ bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint32_t result = src & dest;
 
 	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
-	// Set CF/OF to 0
+	// The OF and CF flags are set to 0. The SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
 		/*EMUX86_EFLAG_SF*/SFCalc(result),
@@ -1332,4 +1319,3 @@ void EmuX86_Init()
 	DbgPrintf("X86 : Initializing distorm version %d\n", distorm_version());
 	EmuX86_InitContextRecordOffsetByRegisterType();
 }
-
