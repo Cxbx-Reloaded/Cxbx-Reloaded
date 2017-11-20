@@ -777,14 +777,18 @@ inline bool ComputeParityInParallel(uint8_t v)
 
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
+// TODO : Review these CPU flag calculations, maybe peek at how MAME or Bochs does this.
+// see : https://github.com/mamedev/mame/blob/master/src/devices/cpu/i386/i386priv.h#L301
+
 #define BitSize (info.ops[0].size) // Note : Uses 'info' argument of functions using this macro
 // TODO : Use templates for these, so 8, 16 and 32 bit versions will compile into efficient bit manipulations
-#define Calc_OF(r,d,s) ((r ^ d ^ s) >> (BitSize-1)) & 1 // Result, Dest, Src
-#define Calc_SF(result) (result >> (BitSize-1)) & 1
-#define Calc_ZF(result) (result == 0)
-#define Calc_AF(result) (result >> 3) & 1
-#define Calc_PF(result) (ComputeParityInParallel(static_cast<uint8_t>(result)))
-#define Calc_CF(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
+#define OF_Add(r,s,d) (((r ^ s) & (r ^ d)) >> (BitSize-1)) & 1 // Result, Dest, Src
+#define OF_Sub(r,s,d) (((d ^ s) & (d ^ r)) >> (BitSize-1)) & 1 // Result, Dest, Src
+#define SFCalc(result) (result >> (BitSize-1)) & 1
+#define ZFCalc(result) (result == 0)
+#define AFCalc(r,s,d) ((r ^ s ^ d)>> 3) & 1
+#define PFCalc(result) (ComputeParityInParallel(static_cast<uint8_t>(result)))
+#define CFCalc(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
 
 // Keep opcode emulations alphabetically ordered :
 
@@ -827,12 +831,12 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	}
 
 	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+		/*EMUX86_EFLAG_OF*/OF_Add(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -860,9 +864,9 @@ bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	// AF is undefined, so has been left out
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0, 
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
 		/*EMUX86_EFLAG_CF*/0);
 
 	return true;
@@ -883,12 +887,12 @@ bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
 	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -922,12 +926,12 @@ bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// CF, PF, AF, SF, and OF are set according to the result
 	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -991,11 +995,11 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlags_OSZAP(e, 
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, 0), // TODO : Supply all three required arguments
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result));
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, 1, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, 1, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result));
 
 	return true;
 }
@@ -1044,11 +1048,11 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlags_OSZAP(e,
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, 0), // TODO : Supply all three required arguments
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result));
+		/*EMUX86_EFLAG_OF*/OF_Add(result, 1, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, 1, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result));
 
 	return true;
 }
@@ -1110,9 +1114,9 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	// AF is undefined, so has been left out
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
 		/*EMUX86_EFLAG_CF*/0);
 
 	return true;
@@ -1170,12 +1174,12 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
 
 	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -1199,9 +1203,9 @@ bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Set CF/OF to 0
 	EmuX86_SetFlags_OSZPC(e,
 		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
 		/*EMUX86_EFLAG_CF*/0);
 
 	// result is thrown away
