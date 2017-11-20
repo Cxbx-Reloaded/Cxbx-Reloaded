@@ -100,7 +100,8 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 
 	// If this is partition 0, install the partiton table
 	if (partition0) {
-		WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), NULL, 0);
+		DWORD NumberOfBytesWritten = 0;
+		WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), &NumberOfBytesWritten, 0);
 	}
 
 	SetFilePointer(hf, 512 * ONE_KB, 0, FILE_BEGIN);
