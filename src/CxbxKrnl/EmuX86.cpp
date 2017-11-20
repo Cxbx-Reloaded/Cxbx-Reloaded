@@ -690,22 +690,6 @@ bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uin
 	return false;
 }
 
-// See http://graphics.stanford.edu/~seander/bithacks.html#ConditionalSetOrClearBitsWithoutBranching
-inline void ConditionalSetOrClearBitsWithoutBranching
-(
-	const bool f,         // conditional flag
-	const unsigned int m, // the bit mask
-	DWORD &w        // the word to modify:  if (f) w |= m; else w &= ~m; 
-)
-{
-	w = (w & ~m) | (-static_cast<int>(f) & m); // By Marco Yu
-}
-
-inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, unsigned flag, bool value)
-{
-	ConditionalSetOrClearBitsWithoutBranching(value, (1 << flag), e->ContextRecord->EFlags);
-}
-
 inline void EmuX86_SetFlags(LPEXCEPTION_POINTERS e, DWORD mask, DWORD value)
 {
 	// By Ron Jeffery, see http://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
@@ -716,7 +700,7 @@ inline void EmuX86_SetFlags(LPEXCEPTION_POINTERS e, DWORD mask, DWORD value)
 #define BITMASK(flag) BIT(flag, 1)
 
 // TODO : Verify callers compile bool arguments into bit-operations;
-// If not, change these arugments back to unsigned int's and use only
+// If not, change these arguments back to unsigned int's and use only
 // the least significant bit.
 inline void EmuX86_SetFlags_OSZAPC
 (
@@ -793,18 +777,22 @@ inline bool ComputeParityInParallel(uint8_t v)
 
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
-// TODO : Use templates for these, so 8 and 16 bit versions will look at the correct bits
-#define Calc_SF(result) (result >> 31) & 1
-#define Calc_ZF(result) result == 0
+#define BitSize (info.ops[0].size) // Note : Uses 'info' argument of functions using this macro
+// TODO : Use templates for these, so 8, 16 and 32 bit versions will compile into efficient bit manipulations
+#define Calc_OF(r,d,s) ((r ^ d ^ s) >> (BitSize-1)) & 1 // Result, Dest, Src
+#define Calc_SF(result) (result >> (BitSize-1)) & 1
+#define Calc_ZF(result) (result == 0)
 #define Calc_AF(result) (result >> 3) & 1
-#define Calc_PF(result) ComputeParityInParallel(static_cast<uint8_t>(result))
-#define Calc_CF(result) (result >> 32) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of result xor dest xor src 
+#define Calc_PF(result) (ComputeParityInParallel(static_cast<uint8_t>(result)))
+#define Calc_CF(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
+
+// Keep opcode emulations alphabetically ordered :
 
 bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// ADD reads value from source :
-	uint32_t value;
-	if (!EmuX86_Operand_Read(e, info, 1, &value))
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &dest))
 		return false;
 
 	// ADD reads and writes destination :
@@ -816,36 +804,251 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (is_internal_addr)
 		return false;
 
-	uint64_t addend;
-	uint64_t result;
+	uint32_t src = 0;
+	uint64_t result = 0;
 	switch (info.ops[0].size) {
 	case 8: {
-		addend = EmuX86_Read8(addr);
-		result = value + addend;
+		src = EmuX86_Read8(addr);
+		result = (uint64_t)dest + (uint64_t)src;
 		EmuX86_Write8(addr, static_cast<uint8_t>(result));
 	}
 	case 16: {
-		addend = EmuX86_Read16(addr);
-		result = value + addend;
+		src = EmuX86_Read16(addr);
+		result = (uint64_t)dest + (uint64_t)src;
 		EmuX86_Write16(addr, static_cast<uint16_t>(result));
 	}
 	case 32: {
-		addend = EmuX86_Read32(addr);
-		result = value + addend;
+		src = EmuX86_Read32(addr);
+		result = (uint64_t)dest + (uint64_t)src;
 		EmuX86_Write32(addr, static_cast<uint32_t>(result));
 	}	
 	default:
 		return false;
 	}
 
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates) (possibly using templates)
 	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/((result ^ value) >> 31) & 1, // TODO : Not entirely sure about this
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
 		/*EMUX86_EFLAG_SF*/Calc_SF(result),
 		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
 		/*EMUX86_EFLAG_AF*/Calc_AF(result),
 		/*EMUX86_EFLAG_PF*/Calc_PF(result),
 		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+
+	return true;
+}
+
+bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// AND Destination with src
+	uint32_t result = dest & src;
+
+	// Write back the result
+	if (!EmuX86_Operand_Write(e, info, 0, result))
+		return false;	
+
+	// OF/CF are cleared
+	// SF, ZF, and PF are set according to the result
+	// AF is undefined, so has been left out
+	EmuX86_SetFlags_OSZPC(e,
+		/*EMUX86_EFLAG_OF*/0, 
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_CF*/0);
+
+	return true;
+}
+
+bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// CMP Destination with src (cmp internally is a discarded subtract)
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	EmuX86_SetFlags_OSZAPC(e, 
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_AF*/Calc_AF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+
+	return true;
+}
+
+
+bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	if (src == dest) {
+		// Write the source value to the destination operand
+		if (!EmuX86_Operand_Write(e, info, 0, src)) {
+			return false;
+		}
+	} else	{
+		// Write the dest value to the source operand
+		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
+			return false;
+		}
+	}
+
+	// Perform arithmatic operation for flag calculation
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	// CF, PF, AF, SF, and OF are set according to the result
+	EmuX86_SetFlags_OSZAPC(e, 
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_AF*/Calc_AF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+
+	return true;
+}
+
+void  EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// This CPUID emulation is based on :
+	// https://github.com/docbrown/vxb/wiki/Xbox-CPUID-Information
+	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information and
+	// http://www.sandpile.org/x86/cpuid.htm
+	switch (e->ContextRecord->Eax) { // simpler than EmuX86_GetRegisterValue32(e, R_EAX)
+	case 0: { // CPUID Function 0, return the maximum supported standard level and vendor ID string
+		// Maximum supported standard level
+		e->ContextRecord->Eax = 2;
+		// "GenuineIntel" Intel processor
+		e->ContextRecord->Ebx = (ULONG)'uneG';
+		e->ContextRecord->Edx = (ULONG)'Ieni';
+		e->ContextRecord->Ecx = (ULONG)'letn';
+		return;
+	}
+	case 1: { // CPUID Function 1, Return the processor type / family / model / stepping and feature flags
+		// Family 6, Model 8, Stepping 10
+		e->ContextRecord->Eax = 0x68a;
+		e->ContextRecord->Ebx = 0;
+		e->ContextRecord->Ecx = 0;
+		// Feature Flags 
+		e->ContextRecord->Edx = 0x383F9FF; // FPU, VME, DE, PSE, TSC, MSR, PAE, MCE, CX8, SEP, MTRR, PGE, MCA, CMOV, PAT, PSE36, MMX, FXSR, SSE
+		return;
+	}
+	case 2: { // CPUID Function 2, Return the processor configuration descriptors
+		// AL : 01 = number of times this level must be queried to obtain all configuration descriptors
+		// EAX nibble 1 = 01h : code TLB, 4K pages, 4 ways, 32 entries
+		// EAX nibble 2 = 02h : code TLB, 4M pages, fully, 2 entries
+		// EAX nibble 3 = 03h : data TLB, 4K pages, 4 ways, 64 entries
+		e->ContextRecord->Eax = 0x3020101;
+		// EBX and ECX nibbles = 00h : null descriptor (=unused descriptor)
+		e->ContextRecord->Ebx = 0;
+		e->ContextRecord->Ecx = 0;
+		// EDX nibble 0 = 41h : code and data L2 cache, 128 KB, 4 ways, 32 byte lines
+		// EDX nibble 1 = 08h : code L1 cache, 16 KB, 4 ways, 32 byte lines
+		// EDX nibble 2 = 04h : data TLB, 4M pages, 4 ways, 8 entries
+		// EDX nibble 3 = 0Ch : data L1 cache, 16 KB, 4 ways, 32 byte lines
+		e->ContextRecord->Edx = 0xC040841;
+		return;
+	}
+	}
+
+	// Note : CPUID instructions never update CPU flags
+}
+
+bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// DEC Destination to src 
+	uint64_t result = dest - 1;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+
+	EmuX86_SetFlags_OSZAP(e, 
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, 0), // TODO : Supply all three required arguments
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_AF*/Calc_AF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result));
+
+	return true;
+}
+
+bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t value = 0;
+	uint32_t addr;
+
+	if (!EmuX86_Operand_Read(e, info, 1, &addr))
+		return false;
+
+	switch (info.ops[0].size) {
+	case 8:
+		value = EmuX86_IORead8(addr);
+		break;
+	case 16:
+		value = EmuX86_IORead16(addr);
+		break;
+	case 32:
+		value = EmuX86_IORead32(addr);
+		break;
+	default:
+		return false;
+	}
+
+	if (!EmuX86_Operand_Write(e, info, 0, value)) {
+		return false;
+	}
+
+	// Note : IN instructions never update CPU flags
+
+	return true;
+}
+
+bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// INC Destination to src 
+	uint64_t result = dest + 1;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+
+	EmuX86_SetFlags_OSZAP(e,
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, 0), // TODO : Supply all three required arguments
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_AF*/Calc_AF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result));
 
 	return true;
 }
@@ -884,150 +1087,6 @@ bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool  EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// Read value from Source and Destination
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &src))
-		return false;
-
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	// AND Destination with src
-	uint32_t result = dest & src;
-
-	// Write back the result
-	if (!EmuX86_Operand_Write(e, info, 0, result))
-		return false;	
-
-	// OF/CF are cleared
-	// SF, ZF, and PF are set according to the result
-	// AF is undefined, so has been left out
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0, 
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/0);
-
-	return true;
-}
-
-bool  EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// Read value from Source and Destination
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &src))
-		return false;
-
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	// CMP Destination with src (cmp internally is a discarded subtract)
-	uint64_t result = dest - src;
-
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/((result ^ dest ^ src) >> 31) & 1,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
-
-	return true;
-}
-
-
-bool  EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// Read value from Source and Destination
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &src))
-		return false;
-
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	if (src == dest) {
-		// Write the source value to the destination operand
-		if (!EmuX86_Operand_Write(e, info, 0, src)) {
-			return false;
-		}
-	} else	{
-		// Write the dest value to the source operand
-		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
-			return false;
-		}
-	}
-
-	// Perform arithmatic operation for flag calculation
-	uint64_t result = (uint64_t)dest - (uint64_t)src;
-
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	// CF, PF, AF, SF, and OF are set according to the result
-	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
-
-	return true;
-}
-
-bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	// DEC Destination to src 
-	uint64_t result = dest - 1;
-
-	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
-
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	EmuX86_SetFlags_OSZAP(e, 
-		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result));
-
-	return true;
-}
-
-bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	// INC Destination to src 
-	uint64_t result = dest + 1;
-
-	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
-
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	EmuX86_SetFlags_OSZAP(e,
-		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result));
-
-	return true;
-}
-
 bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -1046,7 +1105,6 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Write(e, info, 0, result))
 		return false;
 
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
 	// OF/CF are cleared
 	// SF, ZF, and PF are set according to the result
 	// AF is undefined, so has been left out
@@ -1059,147 +1117,6 @@ bool  EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	return true;
 }
-
-bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// Read value from Source and Destination
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &src))
-		return false;
-
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
-		return false;
-
-	// SUB Destination with src 
-	uint64_t result = dest - src;
-
-	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
-
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/((result ^ dest) >> 31) & 1,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_AF*/Calc_AF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/Calc_CF(result));
-
-	return true;
-}
-
-bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// TEST reads first value :
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &src))
-		return false;
-
-	// TEST reads second value :
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &dest))
-		return false;
-
-	// TEST performs bitwise AND between first and second value :
-	uint32_t result = src & dest;
-
-	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
-	// TODO : Differentiate SetFlags for 8, 16 and 32 bit cases (possibly using templates)
-	// Set CF/OF to 0
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/Calc_SF(result),
-		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
-		/*EMUX86_EFLAG_PF*/Calc_PF(result),
-		/*EMUX86_EFLAG_CF*/0);
-
-	// result is thrown away
-
-	return true;
-}
-
-void  EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	// This CPUID emulation is based on :
-	// https://github.com/docbrown/vxb/wiki/Xbox-CPUID-Information
-	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information and
-	// http://www.sandpile.org/x86/cpuid.htm
-	switch (e->ContextRecord->Eax) // simpler than EmuX86_GetRegisterValue32(e, R_EAX)
-	{
-	case 0: // CPUID Function 0, return the maximum supported standard level and vendor ID string
-	{
-		// Maximum supported standard level
-		e->ContextRecord->Eax = 2;
-		// "GenuineIntel" Intel processor
-		e->ContextRecord->Ebx = (ULONG)'uneG';
-		e->ContextRecord->Edx = (ULONG)'Ieni';
-		e->ContextRecord->Ecx = (ULONG)'letn';
-		return;
-	}
-	case 1: // CPUID Function 1, Return the processor type / family / model / stepping and feature flags
-	{
-		// Family 6, Model 8, Stepping 10
-		e->ContextRecord->Eax = 0x68a;
-		e->ContextRecord->Ebx = 0;
-		e->ContextRecord->Ecx = 0;
-		// Feature Flags 
-		e->ContextRecord->Edx = 0x383F9FF; // FPU, VME, DE, PSE, TSC, MSR, PAE, MCE, CX8, SEP, MTRR, PGE, MCA, CMOV, PAT, PSE36, MMX, FXSR, SSE
-		return;
-	}
-	case 2: // CPUID Function 2, Return the processor configuration descriptors
-	{
-		// AL : 01 = number of times this level must be queried to obtain all configuration descriptors
-		// EAX nibble 1 = 01h : code TLB, 4K pages, 4 ways, 32 entries
-		// EAX nibble 2 = 02h : code TLB, 4M pages, fully, 2 entries
-		// EAX nibble 3 = 03h : data TLB, 4K pages, 4 ways, 64 entries
-		e->ContextRecord->Eax = 0x3020101;
-		// EBX and ECX nibbles = 00h : null descriptor (=unused descriptor)
-		e->ContextRecord->Ebx = 0;
-		e->ContextRecord->Ecx = 0;
-		// EDX nibble 0 = 41h : code and data L2 cache, 128 KB, 4 ways, 32 byte lines
-		// EDX nibble 1 = 08h : code L1 cache, 16 KB, 4 ways, 32 byte lines
-		// EDX nibble 2 = 04h : data TLB, 4M pages, 4 ways, 8 entries
-		// EDX nibble 3 = 0Ch : data L1 cache, 16 KB, 4 ways, 32 byte lines
-		e->ContextRecord->Edx = 0xC040841;
-		return;
-	}
-	}
-
-	// Note : CPUID instructions never update CPU flags
-}
-
-bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
-{
-	uint32_t value = 0;
-	uint32_t addr;
-
-	if (!EmuX86_Operand_Read(e, info, 1, &addr))
-		return false;
-	
-	switch (info.ops[0].size) {
-		case 8:
-			value = EmuX86_IORead8(addr);
-			break;
-		case 16:
-			value = EmuX86_IORead16(addr);
-			break;
-		case 32: 
-			value = EmuX86_IORead32(addr);
-			break;
-		default:
-			return false;
-	}
-
-	if (!EmuX86_Operand_Write(e, info, 0, value)) {
-		return false;
-	}
-
-	// Note : IN instructions never update CPU flags
-
-	return true;
-}
-
 
 bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 {
@@ -1233,6 +1150,63 @@ bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Note : OUT instructions never update CPU flags
 
 	return false;
+}
+
+bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+		return false;
+
+	// SUB Destination with src 
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	// Write result back
+	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/Calc_OF(result, dest, src),
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_AF*/Calc_AF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_CF*/Calc_CF(result));
+
+	return true;
+}
+
+bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// TEST reads first value :
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &src))
+		return false;
+
+	// TEST reads second value :
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &dest))
+		return false;
+
+	// TEST performs bitwise AND between first and second value :
+	uint32_t result = src & dest;
+
+	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
+	// Set CF/OF to 0
+	EmuX86_SetFlags_OSZPC(e,
+		/*EMUX86_EFLAG_OF*/0,
+		/*EMUX86_EFLAG_SF*/Calc_SF(result),
+		/*EMUX86_EFLAG_ZF*/Calc_ZF(result),
+		/*EMUX86_EFLAG_PF*/Calc_PF(result),
+		/*EMUX86_EFLAG_CF*/0);
+
+	// result is thrown away
+
+	return true;
 }
 
 bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
@@ -1273,82 +1247,57 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 
 	// Decoded instruction information.
 	_DInst info;
-	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info))
-	{
+	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 		EmuWarning("Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 	}
-	else
-	{
-		switch (info.opcode) // Keep these cases alphabetically ordered
-		{
+	else {
+		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 		case I_ADD:
-			if (EmuX86_Opcode_ADD(e, info))
-				break;
-
+			if (EmuX86_Opcode_ADD(e, info)) break;
 			goto unimplemented_opcode;
 		case I_AND:
-			if (EmuX86_Opcode_AND(e, info))
-				break;
+			if (EmuX86_Opcode_AND(e, info)) break;
 			goto unimplemented_opcode;
 		case I_CMP:
-			if (EmuX86_Opcode_CMP(e, info))
-				break;
+			if (EmuX86_Opcode_CMP(e, info)) break;
 			goto unimplemented_opcode;
 		case I_CMPXCHG:
-			if (EmuX86_Opcode_CMPXCHG(e, info))
-				break;
+			if (EmuX86_Opcode_CMPXCHG(e, info)) break;
 			goto unimplemented_opcode;
 		case I_CPUID:
 			EmuX86_Opcode_CPUID(e, info);
 			break;
 		case I_DEC:
-			if (EmuX86_Opcode_DEC(e, info))
-				break;
-
+			if (EmuX86_Opcode_DEC(e, info)) break;
 			goto unimplemented_opcode;
 		case I_IN:
-			if (EmuX86_Opcode_IN(e, info))
-				break;
-
+			if (EmuX86_Opcode_IN(e, info)) break;
 			goto unimplemented_opcode;
 		case I_INC:
-			if (EmuX86_Opcode_INC(e, info))
-				break;
+			if (EmuX86_Opcode_INC(e, info)) break;
 			goto unimplemented_opcode;
 		case I_INVD: // Flush internal caches; initiate flushing of external caches.
-			 // We can safely ignore this
-			break;
+			break; // We can safely ignore this
 		case I_MOV:
-			if (EmuX86_Opcode_MOV(e, info))
-				break;
-
+			if (EmuX86_Opcode_MOV(e, info)) break;
 			goto unimplemented_opcode;
 		case I_MOVZX:			
-			if (EmuX86_Opcode_MOVZX(e, info))
-				break;
-
+			if (EmuX86_Opcode_MOVZX(e, info)) break;
 			goto unimplemented_opcode;
 		case I_OR:
-			if (EmuX86_Opcode_OR(e, info))
-				break;
+			if (EmuX86_Opcode_OR(e, info)) break;
 			goto unimplemented_opcode;
 		case I_OUT:
-			if (EmuX86_Opcode_OUT(e, info))
-				break;
-
+			if (EmuX86_Opcode_OUT(e, info)) break;
 			goto unimplemented_opcode;
 		case I_SUB:
-			if (EmuX86_Opcode_SUB(e, info))
-				break;
+			if (EmuX86_Opcode_SUB(e, info)) break;
 			goto unimplemented_opcode;
 		case I_TEST:
-			if (EmuX86_Opcode_TEST(e, info))
-				break;
-
+			if (EmuX86_Opcode_TEST(e, info)) break;
 			goto unimplemented_opcode;
 		case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
-			// We can safely ignore this
-			break;
+			break; // We can safely ignore this
 		case I_WRMSR:
 			// We do not emulate processor specific registers just yet
 			// Some titles attempt to manually set the TSC via this instruction
@@ -1357,6 +1306,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			EmuWarning("WRMSR instruction ignored");
 			break;
 		default:
+			EmuWarning("Unhandled instruction : %u", info.opcode);
 			goto unimplemented_opcode;
 		}
 
