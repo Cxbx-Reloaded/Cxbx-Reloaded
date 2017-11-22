@@ -751,15 +751,6 @@ inline void EmuX86_SetFlags_OSZAP
 	);
 }
 
-// Calculate Parity flag, based on "Compute parity in parallel" method from
-// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-inline bool ComputeParityInParallel(uint8_t v)
-{
-	//	Note : If input isn't a byte, do : v &= 255;
-	v ^= v >> 4;
-	return (0x6996 >> (v & 0xf)) & 1;
-}
-
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
 // TODO : Review these CPU flag calculations, maybe peek at how MAME or Bochs does this.
@@ -767,13 +758,14 @@ inline bool ComputeParityInParallel(uint8_t v)
 
 #define BitSize (info.ops[0].size) // Note : Uses 'info' argument of functions using this macro
 // TODO : Use templates for these, so 8, 16 and 32 bit versions will compile into efficient bit manipulations
-#define OF_Add(r,s,d) (((r ^ s) & (r ^ d)) >> (BitSize-1)) & 1 // Result, Dest, Src
-#define OF_Sub(r,s,d) (((d ^ s) & (d ^ r)) >> (BitSize-1)) & 1 // Result, Dest, Src
+#define OF_Add(r,s,d) (((r ^ s) & (r ^ d)) >> (BitSize-1)) & 1 // Result, Src, Dest
+#define OF_Sub(r,s,d) (((d ^ s) & (r ^ d)) >> (BitSize-1)) & 1 // Result, Src, Dest
 #define SFCalc(result) (result >> (BitSize-1)) & 1
 #define ZFCalc(result) (result == 0)
-#define AFCalc(r,s,d) ((r ^ s ^ d)>> 3) & 1
-#define PFCalc(result) (ComputeParityInParallel(static_cast<uint8_t>(result)))
+#define AFCalc(r,s,d) ((r ^ s ^ d) >> 3) & 1 // Result, Src, Dest
+#define PFCalc(result) (0x6996 >> ((result ^ (result >> 4)) & 0xF)) & 1 // See http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 #define CFCalc(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
+// Flags calculated : Overflow (for addition or subtraction), Sign, Zero, Adjust, Parity and Carry
 
 // See http://x86.renejeschke.de/ for affected CPU flags per instruction
 
