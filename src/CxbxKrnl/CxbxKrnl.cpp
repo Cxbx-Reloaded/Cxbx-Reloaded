@@ -1003,8 +1003,16 @@ void CxbxInitFilePaths()
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS))
+	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
+	}
+
+	// Make sure the EmuDisk folder exists
+	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
+	result = SHCreateDirectoryEx(nullptr, emuDisk.c_str(), nullptr);
+	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
+	}
 
 	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
