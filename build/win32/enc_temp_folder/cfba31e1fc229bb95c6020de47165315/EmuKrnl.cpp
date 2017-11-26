@@ -431,8 +431,6 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
 
-	// UNTESTED. Possible test-case : debugchannel.xbe
-
 	va_list ap;
 	va_start(ap, format);
 	INT Result = snprintf(string, count, format, ap);
@@ -455,8 +453,6 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
@@ -483,8 +479,6 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
 
-	// UNTESTED. Possible test-case : debugchannel.xbe
-
 	va_list ap;
 	va_start(ap, format);
 	INT Result = vsnprintf(string, count, format, ap);
@@ -507,8 +501,6 @@ XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
