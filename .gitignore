@@ -55,6 +55,9 @@ Ankh.NoLoad
 # but keep track of directories ending in .cache
 !*.[Cc]ache/
 
+# Visual Studio 2015/2017 cache files
+.vs/
+
 # Backup & report files from converting an old project file
 # to a newer Visual Studio version. Backup files are not needed,
 # because we have git ;-)
@@ -103,3 +106,4 @@ src/Version.h
 *.xbe
 *.ipch
 *.db-shm
+*.db-wal
