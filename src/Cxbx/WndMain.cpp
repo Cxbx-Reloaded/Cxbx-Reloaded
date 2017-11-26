@@ -153,6 +153,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
+			if (m_CxbxDebug == DM_FILE)
 			{
 				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_CxbxDebugFilename) == 0)
 				{
@@ -182,7 +183,10 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 					free(CxbxDebugPath);
 					free(CxbxDebugName);
 				}
-				
+			}
+
+			if (m_KrnlDebug == DM_FILE)
+			{
 				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_KrnlDebugFilename) == 0)
 				{
 					m_KrnlDebug = DM_NONE;
