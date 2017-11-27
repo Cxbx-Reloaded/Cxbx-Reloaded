@@ -281,6 +281,15 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp">
+      <Filter>Kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -527,6 +536,9 @@
       <Filter>Hardware\Video</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h">
       <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h">
