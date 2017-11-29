@@ -2506,7 +2506,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 
 	// Get a function pointer to the unpatched xbox function D3DDevice_GetDisplayMode
 	typedef VOID(__stdcall *XB_D3DDevice_GetDisplayMode_t)(X_D3DDISPLAYMODE*);
-	XB_D3DDevice_GetDisplayMode_t XB_D3DDevice_GetDisplayMode = (XB_D3DDevice_GetDisplayMode_t)GetXboxFunctionPointer("D3DDevice_GetDisplayMode");
+	static XB_D3DDevice_GetDisplayMode_t XB_D3DDevice_GetDisplayMode = (XB_D3DDevice_GetDisplayMode_t)GetXboxFunctionPointer("D3DDevice_GetDisplayMode");
 	
 	// Check the function pointer for validity, if it is not valid, we must abort as we have a missing OOVPA
 	CxbxKrnlCleanup("D3DDevice_GetDisplayFieldStatus: Could not locate D3DDevice_GetDisplayMode");
