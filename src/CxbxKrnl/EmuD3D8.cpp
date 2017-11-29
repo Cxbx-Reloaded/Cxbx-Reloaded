@@ -2519,7 +2519,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 	pFieldStatus->VBlankCount = g_VBData.VBlank;
 
 	// If we are interlaced, return the current field, otherwise, return progressive scan
-	if (displayMode.Flags | X_D3DPRESENTFLAG_INTERLACED) {
+	if (displayMode.Flags & X_D3DPRESENTFLAG_INTERLACED) {
 		pFieldStatus->Field = (g_VBData.VBlank % 2 == 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
 	} else {
 		pFieldStatus->Field = X_D3DFIELD_PROGRESSIVE;
