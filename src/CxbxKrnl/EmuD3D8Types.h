@@ -260,6 +260,8 @@ typedef enum _X_D3DSET_DEPTH_CLIP_PLANES_FLAGS
 } 
 X_D3DSET_DEPTH_CLIP_PLANES_FLAGS;
 
+#define X_D3DPRESENTFLAG_INTERLACED               0x00000020
+
 typedef struct _X_D3DDISPLAYMODE
 {
     UINT        Width;
