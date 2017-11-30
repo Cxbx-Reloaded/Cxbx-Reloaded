@@ -127,6 +127,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	// resetting FactorySettings.AVRegion and setting user video flags to the default
 	// The user can then set their desired settings using the Xbox Dashboard
 	if (pEEPROM->FactorySettings.AVRegion == AV_STANDARD_NTSC_M) {
+		DbgPrintf("INIT: Repairing bad EEPROM (from previous Cxbx-Reloaded builds)\n");
 		pEEPROM->UserSettings.VideoFlags = 0;
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 	}
