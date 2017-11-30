@@ -79,6 +79,14 @@ void* GetXboxFunctionPointer(std::string functionName)
 		return g_FunctionHooks[functionName].GetTrampoline();
 	}
 
+	// If we got here, the function wasn't patched, so we can just look it up the HLE cache
+	// and return the correct offset
+	auto symbol = g_SymbolAddresses.find(functionName);
+	if (symbol != g_SymbolAddresses.end()) {
+		return (void*)symbol->second;
+	}
+
+	// Finally, if none of the above were matched, return nullptr
 	return nullptr;
 }
 

@@ -2494,18 +2494,38 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus)
 {
-	//FUNC_EXPORTS
+	// NOTE: This can be unpatched only when NV2A does it's own VBlank and HLE _Swap function is unpatched
+	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pFieldStatus);
 
-	// TODO: Read AV Flags to determine if Progressive or Interlaced
-#if 1
-    pFieldStatus->Field = (g_VBData.VBlank%2 == 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
-    pFieldStatus->VBlankCount = g_VBData.VBlank;
-#else
-	pFieldStatus->Field = X_D3DFIELD_PROGRESSIVE;
-	pFieldStatus->VBlankCount = 0;
-#endif
+	// Read AV Flags to determine if Progressive or Interlaced
+	// The xbox does this by reading from pDevice->m_Miniport.m_CurrentAvInfo
+	// but we don't have an OOVPA for that. Instead, we call the Xbox implementation of 
+	// D3DDevice_GetDisplayMode and read the result
+
+	// Get a function pointer to the unpatched xbox function D3DDevice_GetDisplayMode
+	typedef VOID(__stdcall *XB_D3DDevice_GetDisplayMode_t)(X_D3DDISPLAYMODE*);
+	static XB_D3DDevice_GetDisplayMode_t XB_D3DDevice_GetDisplayMode = (XB_D3DDevice_GetDisplayMode_t)GetXboxFunctionPointer("D3DDevice_GetDisplayMode");
+	
+	// Check the function pointer for validity, if it is not valid, we must abort as we have a missing OOVPA
+	if (XB_D3DDevice_GetDisplayMode == nullptr) {
+		CxbxKrnlCleanup("D3DDevice_GetDisplayFieldStatus: Could not locate D3DDevice_GetDisplayMode");
+	}
+	
+	// Call the Xbox GetDisplayMode function to retrieve flags for the active video mode
+	X_D3DDISPLAYMODE displayMode;
+	XB_D3DDevice_GetDisplayMode(&displayMode);
+
+	// Set the VBlank count
+	pFieldStatus->VBlankCount = g_VBData.VBlank;
+
+	// If we are interlaced, return the current field, otherwise, return progressive scan
+	if (displayMode.Flags & X_D3DPRESENTFLAG_INTERLACED) {
+		pFieldStatus->Field = (g_VBData.VBlank % 2 == 0) ? X_D3DFIELD_ODD : X_D3DFIELD_EVEN;
+	} else {
+		pFieldStatus->Field = X_D3DFIELD_PROGRESSIVE;
+	}
 }
 
 // ******************************************************************

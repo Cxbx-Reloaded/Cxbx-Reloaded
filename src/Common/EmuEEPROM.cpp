@@ -121,18 +121,29 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 
 	// TODO : Verify checksums
 
+	// Check for (and fix) invalid fields that were set by previous versions of Cxbx-Reloaded
+	// Without this, all users would have to delete their EEPROM.bin
+	// The issue was that the AV_FLAG_XXhz was set in the wrong field, we fix it by
+	// resetting FactorySettings.AVRegion and setting user video flags to the default
+	// The user can then set their desired settings using the Xbox Dashboard
+	if (pEEPROM->FactorySettings.AVRegion == AV_STANDARD_NTSC_M) {
+		DbgPrintf("INIT: Repairing bad EEPROM (from previous Cxbx-Reloaded builds)\n");
+		pEEPROM->UserSettings.VideoFlags = 0;
+		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	}
+
 	if (NeedsInitialization)
 	{
 		memset(pEEPROM, 0, EEPROM_SIZE);
 
 		// TODO: Make these configurable or autodetect of some sort :
 		pEEPROM->UserSettings.Language = 0x01;  // = English
-		pEEPROM->UserSettings.VideoFlags = (AV_FLAGS_LETTERBOX | AV_FLAGS_60Hz) >> AV_USER_FLAGS_SHIFT;  // = Letterbox
-		pEEPROM->UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
+		pEEPROM->UserSettings.VideoFlags = 0;   // = Use XDK defaults
+		pEEPROM->UserSettings.AudioFlags = 0;   // = Stereo, no AC3, no DTS
 		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M; // = 0x100 = NTSC_M
+		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
 
