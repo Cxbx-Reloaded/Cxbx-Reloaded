@@ -40,9 +40,10 @@ You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 We welcome contributions, large and small. If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes). Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
 ### Prerequisites 
-1. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2015 should work, but is not officially supported)
-2. Windows 8.1 SDK (Should be included with Visual Studio)
-3. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
+1. [Git for Windows](https://git-scm.com/)
+2. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2015 should work, but is not officially supported)
+3. Windows 8.1 SDK (Should be included with Visual Studio)
+4. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
 
 ### Fetching the code
 Run the following command on the command line.
