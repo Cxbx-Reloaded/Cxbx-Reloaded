@@ -39,6 +39,23 @@ You can find a screenshot gallery at [imgur](http://imgur.com/a/Bzvti).
 ## Contributing
 We welcome contributions, large and small. If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes). Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
+### Prerequisites 
+1. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2015 should work, but is not officially supported)
+2. Windows 8.1 SDK (Should be included with Visual Studio)
+3. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
+
+### Fetching the code
+Run the following command on the command line.
+`git clone --recursive https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/`
+
+Please note that `--recursive` paramater: This is required to fetch sub-modules Without this, Cxbx-Reloaded will fail to build.
+If Cxbx-Reloaded was previously checked out without the submodules, they can be updated/fetched with the following command
+`git submodule update --recursive`
+
+### Compiling
+Simply open `build/Win32/Cxbx.sln` within Visual Studio, select your configuration (Release or Debug) and hit Build.
+Please note that Debug builds are significantly slower, but do include much more detailed kernel logging, so these may help diagnose a problematic title.
+
 ## Support
 You can support Luke Usher (initiator of Cxbx-Reloaded) on [Patreon](https://www.patreon.com/LukeUsher).
 
