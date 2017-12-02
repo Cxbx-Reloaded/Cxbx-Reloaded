@@ -49,7 +49,7 @@ We welcome contributions, large and small. If you want to do some coding, be sur
 Run the following command on the command line.
 `git clone --recursive https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/`
 
-Please note that `--recursive` paramatar: This is required to fetch sub-modules Without this, Cxbx-Reloaded will fail to build.
+Please note that `--recursive` parameter: This is required to fetch sub-modules Without this, Cxbx-Reloaded will fail to build.
 If Cxbx-Reloaded was previously checked out without the submodules, they can be updated/fetched with the following command
 `git submodule update --recursive`
 
