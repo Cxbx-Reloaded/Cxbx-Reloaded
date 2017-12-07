@@ -15,7 +15,7 @@ build:
 after_build:
   - cmd: PackageBuild.bat %CONFIGURATION%
 artifacts:
-- path: export
+- path: export/*.zip
 install:
   # Git clone happens between init and install 
   - cmd: git submodule update --init --recursive
