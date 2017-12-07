@@ -13,7 +13,7 @@ build:
   parallel: true
   verbosity: minimal
 after_build:
-  - cmd: PackageBuild.bat "$env:configuration"
+  - cmd: PackageBuild.bat %CONFIGURATION%
 artifacts:
 - path: export
 install:
