@@ -13,10 +13,9 @@ build:
   parallel: true
   verbosity: minimal
 after_build:
-  - ps: .\AppveyorPackager.ps1
+  - cmd: PackageBuild.bat "$env:configuration"
 artifacts:
-- path: export\Release.zip
-- path: export\Debug.zip
+- path: export
 install:
   # Git clone happens between init and install 
   - cmd: git submodule update --init --recursive
