@@ -115,8 +115,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
-$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -177,8 +176,7 @@ $(SOLUTIONDIR)Export.bat</Command>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)
-$(SOLUTIONDIR)Export.bat</Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
