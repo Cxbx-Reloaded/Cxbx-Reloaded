@@ -107,3 +107,6 @@ src/Version.h
 *.ipch
 *.db-shm
 *.db-wal
+
+# Last known git hash
+LAST_GIT_VERSION
