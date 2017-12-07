@@ -12,6 +12,8 @@ build:
   project: build/win32/Cxbx.sln
   parallel: true
   verbosity: minimal
+after_build:
+  - ps: AppveyorPackager.ps1
 artifacts:
 - path: export\Release.zip
 - path: export\Debug.zip
