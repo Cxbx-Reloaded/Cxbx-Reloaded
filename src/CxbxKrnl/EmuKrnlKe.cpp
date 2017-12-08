@@ -863,9 +863,23 @@ XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
 		LOG_FUNC_ARG(DeviceQueueEntry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN Res = FALSE;
 
-	RETURN(STATUS_SUCCESS);
+	// We should lock the device queue here
+	
+	if (DeviceQueue->Busy == TRUE) {
+		InsertTailList(&DeviceQueue->DeviceListHead, &DeviceQueueEntry->DeviceListEntry);
+		Res = TRUE;
+	}
+	else {
+		DeviceQueue->Busy = TRUE;
+	}
+
+	DeviceQueueEntry->Inserted = Res;
+
+	// We should unlock the device queue here
+
+	RETURN(Res);
 }
 
 XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue
