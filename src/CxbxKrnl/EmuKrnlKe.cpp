@@ -852,6 +852,11 @@ XBSYSAPI EXPORTNUM(114) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertByKeyDeviceQue
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x0073 - KeInsertDeviceQueue()
+// * This implementation is inspired by ReactOS source code
+// * Ref: https://github.com/reactos/reactos/blob/master/ntoskrnl/ke/devqueue.c
+// ******************************************************************
 XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
