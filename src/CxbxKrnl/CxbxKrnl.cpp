@@ -63,6 +63,11 @@ namespace xboxkrnl
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
+#include "PCIBus.h"
+#include "SMBus.h"
+
+PCIBus* g_PCIBus;
+SMBus* g_SMBus;
 
 /* prevent name collisions */
 namespace NtDll
@@ -1002,6 +1007,11 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	EmuHLEIntercept(pXbeHeader);
 	SetupXboxDeviceTypes();
+
+	// Init Hardware
+	g_PCIBus = new PCIBus();
+	g_SMBus = new SMBus();
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
 
 	// Always initialise NV2A: We may need it for disabled HLE patches too!
 	EmuNV2A_Init();

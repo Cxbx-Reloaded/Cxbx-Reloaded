@@ -201,7 +201,6 @@
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\device.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h" />
@@ -234,9 +233,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\PCIBus.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\PCIDevice.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\SMBus.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\SMDevice.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
@@ -375,7 +378,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\device.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -516,12 +518,16 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\PCIBus.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\PCIDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\SMBus.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\SMDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
