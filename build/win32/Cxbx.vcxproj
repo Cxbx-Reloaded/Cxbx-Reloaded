@@ -231,11 +231,12 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\MemoryManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
@@ -530,13 +531,14 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\MemoryManager.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">

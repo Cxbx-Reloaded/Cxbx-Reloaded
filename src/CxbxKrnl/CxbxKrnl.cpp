@@ -55,7 +55,7 @@ namespace xboxkrnl
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -303,18 +303,25 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
-	// TODO : Make sure memory.bin is at least 64 MB in size - FileSeek(hFile, CONTIGUOUS_MEMORY_SIZE, soFromBeginning);
-
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
 		PAGE_EXECUTE_READWRITE,
 		/* dwMaximumSizeHigh */0,
-		/* dwMaximumSizeLow */CONTIGUOUS_MEMORY_SIZE,
+		/* dwMaximumSizeLow */CHIHIRO_MEMORY_SIZE,
 		/**/nullptr);
 	if (hFileMapping == NULL)
 	{
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory : Couldn't create contiguous memory.bin file mapping!\n");
+		return nullptr;
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFile, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != CHIHIRO_MEMORY_SIZE)
+	{
+		CxbxKrnlCleanup("CxbxRestoreContiguousMemory : memory.bin file is not 128 MiB large!\n");
 		return nullptr;
 	}
 
@@ -365,6 +372,9 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_SIZE - 1);
+	
+	// Initialize the virtual manager :
+	g_VMManager.Initialize(hFileMapping);
 
 	return memory;
 }
@@ -605,6 +615,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 
+		if (g_bIsChihiro)
+		{
+			// Initialize the Chihiro - specific memory ranges
+			g_VMManager.InitializeChihiro();
+		}
+
+		// This local variable is never used inside the function. Can it be removed?
 		// Determine memory size accordingly :
 		SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
 
@@ -887,7 +904,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_MemoryManager.Allocate(MAX_PATH);
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.MapMemoryBlock(MAX_PATH, 0, ULONG_MAX);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		printf("[0x%.4X] INIT: XeImageFileName = %s\n", GetCurrentThreadId(), xboxkrnl::XeImageFileName.Buffer);

@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "Emu.h" // For EmuWarning()
+#include "VMManager.h"
 
 // ******************************************************************
 // * 0x0146 - XeImageFileName
@@ -89,6 +90,8 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
 			// Copy the section data
 			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
+			// Make this loading consume physical memory as well
+			g_VMManager.MapMemoryBlock(Section->FileSize, 0, ULONG_MAX, (VAddr)Section->VirtualAddress);
 		}
 
 		// Increment the reference count
@@ -123,9 +126,10 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		// Decrement the reference count
 		Section->SectionReferenceCount -= 1;
 
-		// Free the section if necessary
+		// Free the section and the physical memory in use if necessary
 		if (Section->SectionReferenceCount == 0) {
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
+			g_VMManager.UnmapRange((VAddr)Section->VirtualAddress);
 		}
 
 		ret = STATUS_SUCCESS;

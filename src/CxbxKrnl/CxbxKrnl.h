@@ -77,11 +77,41 @@ extern "C" {
 #define TILED_MEMORY_SIZE CONTIGUOUS_MEMORY_SIZE
 #define NV2A_MEMORY_BASE 0xFD000000 // See NV2A_ADDR
 #define NV2A_MEMORY_SIZE 0x01000000 // See NV2A_SIZE
+#define NV2A_PRAMIN_ADDR 0xFD700000
+#define NV2A_PRAMIN_SIZE 0x100000
+#define NV2A_USER_ADDR 0xFD800000
+#define NV2A_USER_SIZE 0x800000
+#define APU_BASE 0xFE800000
+#define APU_SIZE 0x80000
+#define AC97_BASE 0xFEC00000
+#define AC97_SIZE 0x1000
+#define USB0_BASE 0xFED00000
+#define USB0_SIZE 0x1000
+#define USB1_BASE 0xFED08000
+#define USB1_SIZE 0x1000
+#define NVNet_BASE 0xFEF00000
+#define NVNet_SIZE 0x400
+#define BIOS_BASE 0xFF000000
+#define BIOS_XBOX_SIZE 0xFFFE00
+#define BIOS_CHIHIRO_SIZE 0x1000000
+#define MCPX_BASE 0xFFFFFE00
+#define MCPX_SIZE 0x200
+#define MAX_VIRTUAL_ADDRESS 0x100000000
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
 #define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
 #define XBE_IMAGE_BASE 0x00010000
+
+// Global memory constants
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1 << PAGE_SHIFT) // 4096
+#define PAGE_MASK PAGE_SIZE - 1
+#define MAX_NUM_OF_PAGES 1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT XBOX_MEMORY_SIZE - 32 * PAGE_SIZE // upper limit available for contiguous allocations (xbox)
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE // upper limit available for contiguous allocations (chihiro)
+#define ZERO_PAGE_ADDR 0
+#define FIRST_PAGE_ADDR PAGE_SIZE
 
 /*! base addresses of various components */
 #define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
