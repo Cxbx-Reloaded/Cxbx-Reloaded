@@ -328,59 +328,56 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
 	CfgBits.u.bits.Enable = 1;
 
-	// TODO: Verify this calculation is actually correct
-	size_t Size = Length / sizeof(ULONG);
-	ULONG RegisterByteOffset = 0;
+	UCHAR RegisterDataTypes[4][4] = {
+		{0, 1, 2, 2},
+		{1, 1, 1, 1},
+		{2, 1, 2, 2},
+		{1, 1, 1, 1}
+	};
 
 	while (Length > 0) {
-		switch (Size) {
-		case 4:
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+		int ByteOffset = RegisterNumber % sizeof(ULONG);
+		int Size = 0;
+		int Type = RegisterDataTypes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-			if (WritePCISpace) {
-				EmuX86_IOWrite32((xbaddr)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
-			}
-			else {
-				*((PULONG)Buffer) = EmuX86_IORead32((xbaddr)PCI_TYPE1_DATA_PORT);
-			}
-			break;
-		case 2:
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+		EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
 
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+		switch (Type) {
+			case 0:	// ULONG
+				if (WritePCISpace) {
+					EmuX86_IOWrite32(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer));
+				} else {
+					*((PULONG)Buffer) = (ULONG)EmuX86_IORead32(PCI_TYPE1_DATA_PORT);
+				}
 
-			if (WritePCISpace) {
-				EmuX86_IOWrite16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
-			}
-			else {
-				*((PUSHORT)Buffer) = EmuX86_IORead16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
-			}
-			break;
-		case 1: {
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+				Size = 4;
+				break;
+			case 1: // UCHAR
+				if (WritePCISpace) {
+					EmuX86_IOWrite8(PCI_TYPE1_DATA_PORT + ByteOffset, *((PUCHAR)Buffer));
+				} else {
+					*((PUCHAR)Buffer) = (UCHAR)EmuX86_IORead8(PCI_TYPE1_DATA_PORT + ByteOffset);
+				}
 
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+				Size = 1;
+				break;
+			case 2: // USHORT
+				if (WritePCISpace) {
+					EmuX86_IOWrite16(PCI_TYPE1_DATA_PORT + ByteOffset, *((PUSHORT)Buffer));
+				} else {
+					*((PUSHORT)Buffer) = (USHORT)EmuX86_IORead16(PCI_TYPE1_DATA_PORT + ByteOffset);
+				}
 
-			if (WritePCISpace) {
-				EmuX86_IOWrite8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
-			}
-			else {
-				*((PUCHAR)Buffer) = EmuX86_IORead8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
-			}
+				Size = 2;
+				break;
 		}
-			break;
-		}
-
+		
 		RegisterNumber += Size;
 		Buffer = (PUCHAR)Buffer + Size;
 		Length -= Size;
 	}
 
-	
-	// TODO: Enable Interrupt Processing1
+	// TODO: Enable Interrupt Processing
 }
 
 // ******************************************************************
