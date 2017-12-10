@@ -54,6 +54,7 @@
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
+#include "PCIBus.h"
 
 //
 // Read & write handlers handlers for I/O
@@ -62,17 +63,27 @@
 uint32_t EmuX86_IORead32(xbaddr addr)
 {
 	switch (addr) {
-	case 0x8008:	// TIMER
-		// HACK: This is very wrong.
-		// This timer should count at a specific frequency (3579.545 ticks per ms)
-		// But this is enough to keep NXDK from hanging for now.
-		LARGE_INTEGER performanceCount;
-		QueryPerformanceCounter(&performanceCount);
-		return static_cast<uint32_t>(performanceCount.QuadPart);
-		break;
-	}
+		case PORT_PCI_CONFIG_DATA:
+			return g_PCIBus->IOReadConfigData();
+		case 0x8008:	// TIMER
+			// HACK: This is very wrong.
+			// This timer should count at a specific frequency (3579.545 ticks per ms)
+			// But this is enough to keep NXDK from hanging for now.
+			LARGE_INTEGER performanceCount;
+			QueryPerformanceCounter(&performanceCount);
+			return static_cast<uint32_t>(performanceCount.QuadPart);
+			break;
+		default:
+			// Pass the IO Read to the PCI Bus, this will handle devices with BARs set to IO addresses
+			uint32_t value = 0;
+			if (g_PCIBus->IORead(addr, &value)) {
+				return value;
+			}
 
-	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
+			EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
+			break;
+	}
+	
 	return 0;
 }
 
@@ -99,7 +110,21 @@ uint8_t EmuX86_IORead8(xbaddr addr)
 
 void EmuX86_IOWrite32(xbaddr addr, uint32_t value)
 {
-	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	switch (addr) {
+		case PORT_PCI_CONFIG_ADDRESS:
+			g_PCIBus->IOWriteConfigAddress(value);
+			break;
+		case PORT_PCI_CONFIG_DATA:
+			g_PCIBus->IOWriteConfigData(value);
+			break;
+		default:
+			// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
+			if (g_PCIBus->IOWrite(addr, value)) {
+				return;
+			}
+
+			EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	}
 }
 
 void EmuX86_IOWrite16(xbaddr addr, uint16_t value)
@@ -185,6 +210,11 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
+		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+		if (g_PCIBus->MMIORead(addr, &value, sizeof(uint32_t))) {
+			return value;
+		}
+
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
 			value = 0;
@@ -226,6 +256,12 @@ uint16_t EmuX86_Read16(xbaddr addr)
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
+		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+		uint32_t tmpVal;
+		if (g_PCIBus->MMIORead(addr, &tmpVal, sizeof(uint16_t))) {
+			return tmpVal;
+		}
+
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
 			value = 0;
@@ -253,11 +289,16 @@ uint8_t EmuX86_Read8(xbaddr addr)
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
+		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+		uint32_t tmpVal;
+		if (g_PCIBus->MMIORead(addr, &tmpVal, sizeof(uint8_t))) {
+			return tmpVal;
+		}
+
 		if (g_bEmuException) {
 			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
 			value = 0;
-		}
-		else {
+		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
 			value = EmuX86_Mem_Read8(addr);
 		}
@@ -286,6 +327,11 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		return;
+	}
+
+	// Pass the Write to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+	if (g_PCIBus->MMIOWrite(addr, value, sizeof(uint32_t))) {
 		return;
 	}
 
@@ -329,6 +375,11 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 		return;
 	}
 
+	// Pass the Write to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+	if (g_PCIBus->MMIOWrite(addr, value, sizeof(uint16_t))) {
+		return;
+	}
+
 	if (g_bEmuException) {
 		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
 		return;
@@ -356,6 +407,11 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		EmuWarning("EmuX86_Write8(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		return;
+	}
+
+	// Pass the Write to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+	if (g_PCIBus->MMIOWrite(addr, value, sizeof(uint8_t))) {
 		return;
 	}
 
