@@ -51,8 +51,6 @@ enum class VMAType : u32
 	Allocated,
 	// vma represents allocated memory mapped outside the second file view (allocated by VirtualAlloc)
 	Fragmented,
-	// vma represents the xbe sections loaded at 0x10000 (it is counted as allocated memory)
-	Xbe,
 	// contiguous memory
 	MemContiguous,
 	// tiled memory
@@ -103,10 +101,11 @@ class VMManager : public PhysicalMemory
 {
 	public:
 		// constructor
-		VMManager() {};
+		VMManager() { InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400); };
 		// destructor
 		~VMManager()
 		{
+			DeleteCriticalSection(&m_CriticalSection);
 			UnmapViewOfFile((void*)m_Base);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
 			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
@@ -120,16 +119,20 @@ class VMManager : public PhysicalMemory
 		void InitializeChihiro();
 		// print virtual memory statistics
 		void VMStatistics() const;
-		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL);
-		// creates a vma representing the memory block to remove
-		void UnmapRange(VAddr target);
-		// changes access permissions for a range of vma's, splitting them if necessary
-		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
-		// checks if a VAddr is valid; returns false if not
-		bool IsValidVirtualAddress(const VAddr addr);
-		// translates a VAddr to its corresponding PAddr; it must be valid
-		PAddr TranslateVAddrToPAddr(const VAddr addr);
+		// allocates a block of memory
+		VAddr Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
+		// allocate stack memory
+		VAddr AllocateStack(size_t size);
+		// deallocate a block of memory
+		void Deallocate(VAddr addr);
+		// deallocate stack memory
+		void DeallocateStack(VAddr addr);
+		// changes the protections of a memory region
+		void Protect(VAddr target, size_t size, DWORD new_perms);
+		// query if a VAddr is valid
+		bool QueryVAddr(VAddr addr);
+		// translate a VAddr
+		PAddr TranslateVAddr(VAddr addr);
 	
 	
 	private:
@@ -141,7 +144,25 @@ class VMManager : public PhysicalMemory
 		VAddr m_Base = 0;
 		// handle of the second file view region
 		HANDLE m_hAliasedView = NULL;
+		// critical section lock to synchronize accesses
+		CRITICAL_SECTION m_CriticalSection;
+		// amount of image virtual memory in use
+		size_t ImageMemoryInUse = 0;
+		// amount of non - image virtual memory in use
+		size_t NonImageMemoryInUse = 0;
+		// amount of stack virtual memory in use
+		size_t StackMemoryInUse = 0;
 	
+		// creates a vma block to be mapped in memory at the specified VAddr, if requested
+		VAddr MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE);
+		// creates a vma representing the memory block to remove
+		void UnmapRange(VAddr target, bool StackFlag = false);
+		// changes access permissions for a range of vma's, splitting them if necessary
+		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
+		// checks if a VAddr is valid; returns false if not
+		bool IsValidVirtualAddress(const VAddr addr);
+		// translates a VAddr to its corresponding PAddr; it must be valid
+		PAddr TranslateVAddrToPAddr(const VAddr addr);
 		// maps a new allocation in the virtual address space
 		void MapMemoryRegion(VAddr base, size_t size, PAddr target);
 		// maps a special allocation outside the virtual address space of the second file view
@@ -166,6 +187,10 @@ class VMManager : public PhysicalMemory
 		VMAIter ReprotectVMA(VMAIter vma_handle, DWORD new_perms);
 		// updates the page table
 		void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
+		// acquires the critical section
+		void Lock();
+		// releases the critical section
+		void Unlock();
 };
 
 

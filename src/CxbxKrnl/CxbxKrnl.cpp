@@ -331,7 +331,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
-		CONTIGUOUS_MEMORY_SIZE,
+		CONTIGUOUS_MEMORY_CHIHIRO_SIZE,
 		(void *)CONTIGUOUS_MEMORY_BASE);
 	if (memory != (void *)CONTIGUOUS_MEMORY_BASE)
 	{
@@ -343,11 +343,11 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), CONTIGUOUS_MEMORY_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_SIZE - 1);
+		GetCurrentThreadId(), CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
 
 	if (NeedsInitialization)
 	{
-		memset(memory, 0, CONTIGUOUS_MEMORY_SIZE);
+		memset(memory, 0, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
 		printf("[0x%.4X] INIT: Initialized contiguous memory\n", GetCurrentThreadId());
 	}
 	else
@@ -359,7 +359,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
-		TILED_MEMORY_SIZE,
+		TILED_MEMORY_CHIHIRO_SIZE,
 		(void *)TILED_MEMORY_BASE);
 	if (tiled_memory != (void *)TILED_MEMORY_BASE)
 	{
@@ -369,10 +369,10 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!");
 		return nullptr;
 	}
-
-	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_SIZE - 1);
 	
+	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
+		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
+
 	// Initialize the virtual manager :
 	g_VMManager.Initialize(hFileMapping);
 
@@ -904,7 +904,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.MapMemoryBlock(MAX_PATH, 0, ULONG_MAX);
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.MapMemoryBlock(MAX_PATH, 0, MAXULONG_PTR);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		printf("[0x%.4X] INIT: XeImageFileName = %s\n", GetCurrentThreadId(), xboxkrnl::XeImageFileName.Buffer);

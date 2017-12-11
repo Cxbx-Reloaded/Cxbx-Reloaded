@@ -1005,7 +1005,7 @@ void *Xbe::FindSection(char *zsSectionName)
 	return NULL;
 }
 
-void Xbe::PurgeBadChar(std::string &s, const std::string &illegalChars)
+void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)
 {
 	for (auto it = s.begin(); it < s.end(); ++it)
 	{

@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// Copy the section data
 			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
 			// Make this loading consume physical memory as well
-			g_VMManager.MapMemoryBlock(Section->FileSize, 0, ULONG_MAX, (VAddr)Section->VirtualAddress);
+			g_VMManager.MapMemoryBlock(Section->FileSize, 0, MAXULONG_PTR, (VAddr)Section->VirtualAddress);
 		}
 
 		// Increment the reference count

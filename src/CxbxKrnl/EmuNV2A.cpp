@@ -2759,12 +2759,14 @@ DEVICE_WRITE32(PRMVIO)
 
 DEVICE_READ32(PFB)
 {
+	static unsigned int contiguous_memory_size = CONTIGUOUS_MEMORY_XBOX_SIZE;
+	if (g_bIsChihiro) { contiguous_memory_size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; }
 	DEVICE_READ32_SWITCH() {
 	case NV_PFB_CFG0:
 		result = 3; // = NV_PFB_CFG0_PART_4
 		break;
 	case NV_PFB_CSTATUS:
-		result = CONTIGUOUS_MEMORY_SIZE;
+		result = contiguous_memory_size;
 		break;
 	case NV_PFB_WBC:
 		result = 0; // = !NV_PFB_WBC_FLUSH
