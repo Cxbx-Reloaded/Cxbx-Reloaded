@@ -67,7 +67,7 @@ uint32_t PCIDevice::ReadConfigRegister(uint32_t reg)
 		case PCI_CONFIG_BAR_5:
 		{
 			int barIndex = (reg - PCI_CONFIG_BAR_0) / 4;
-			if (m_BAR.find(barIndex) != m_BAR.end()) {
+			if (m_BAR.find(barIndex) == m_BAR.end()) {
 				printf("PCIDevice::ReadConfigRegister: Trying to Read a BAR that does not exist (index: %d)\n", barIndex);
 				return 0xFFFFFFFF;
 			}
