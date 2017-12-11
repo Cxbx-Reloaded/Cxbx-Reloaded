@@ -15,7 +15,7 @@ bool PCIDevice::GetIOBar(uint32_t port, PCIBar* bar)
 bool PCIDevice::GetMMIOBar(uint32_t addr, PCIBar* bar)
 {
 	for (auto it = m_BAR.begin(); it != m_BAR.end(); ++it) {
-		if (it->second.reg.Raw.type == PCI_BAR_TYPE_IO && (addr >= it->second.reg.Memory.address) && (addr <= it->second.reg.Memory.address + it->second.size)) {
+		if (it->second.reg.Raw.type == PCI_BAR_TYPE_MEMORY && (addr >= it->second.reg.Memory.address) && (addr <= it->second.reg.Memory.address + it->second.size)) {
 			*bar = it->second;
 			return true;
 		}
@@ -67,6 +67,11 @@ uint32_t PCIDevice::ReadConfigRegister(uint32_t reg)
 		case PCI_CONFIG_BAR_5:
 		{
 			int barIndex = (reg - PCI_CONFIG_BAR_0) / 4;
+			if (m_BAR.find(barIndex) != m_BAR.end()) {
+				printf("PCIDevice::ReadConfigRegister: Trying to Read a BAR that does not exist (index: %d)\n", barIndex);
+				return 0xFFFFFFFF;
+			}
+
 			return m_BAR[barIndex].reg.value;
 		}
 		default:
