@@ -45,7 +45,7 @@ namespace xboxkrnl
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 
 #include "Cxbx.h" // For DbgPrintf
-#include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
+#include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos, EEPROMDevice
 
 xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
@@ -153,3 +153,20 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 
 	return pEEPROM;
 }
+
+// EEPROMDevice
+
+void EEPROMDevice::Init() {}
+
+void EEPROMDevice::Reset() {}
+
+void EEPROMDevice::QuickCommand(int read) {}
+uint8_t EEPROMDevice::ReceiveByte() { return 0;  }
+uint8_t EEPROMDevice::ReadByte(uint8_t command) { return *(((PBYTE)EEPROM) + command); }
+uint16_t EEPROMDevice::ReadWord(uint8_t command) { return *((PWORD)(((PBYTE)EEPROM) + command)); }
+int EEPROMDevice::ReadBlock(uint8_t command, uint8_t *data) { return 0; }
+
+void EEPROMDevice::SendByte(uint8_t data) {}
+void EEPROMDevice::WriteByte(uint8_t command, uint8_t value) { *((PWORD)(((PBYTE)EEPROM) + command)) = value; }
+void EEPROMDevice::WriteWord(uint8_t command, uint16_t value) { *((PWORD)(((PBYTE)EEPROM) + command)) = value; }
+void EEPROMDevice::WriteBlock(uint8_t command, uint8_t* data, int length) { memcpy(((PBYTE)EEPROM) + command, data, length); }
