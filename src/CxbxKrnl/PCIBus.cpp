@@ -87,7 +87,7 @@ bool PCIBus::MMIOWrite(uint32_t addr, uint32_t value, unsigned size)
 {
 	for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
 		PCIBar bar;
-		if (it->second->GetIOBar(addr, &bar)) {
+		if (it->second->GetMMIOBar(addr, &bar)) {
 			it->second->MMIOWrite(bar.index, addr - bar.reg.IO.address, value, size);
 			return true;
 		}
