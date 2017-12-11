@@ -64,13 +64,6 @@ typedef DWORD PTEflags;
 
 class PhysicalMemory
 {
-	public:
-		// retrieves the current error code of the PhysicalMemory class
-		PMEMORY_STATUS GetError() const;
-		// print physical memory statistics
-		void PMStatistics() const;
-	
-	
 	protected:
 		// if the block to allocate is smaller than AllocationThreshold, then it will be mapped starting from the bottom of the memory,
 		// otherwise it's mapped from the top. AllocationThreshold is 64KiB, the allocation granularity of the Xbox
@@ -106,6 +99,8 @@ class PhysicalMemory
 		void DeAllocatePhysicalMemory(PAddr addr);
 		// deallocates a block allocated with VirtualAlloc
 		void DeAllocateFragmented(VAddr addr);
+		// retrieves the current error code of the PhysicalMemory class
+		PMEMORY_STATUS GetError() const;
 		// sets the error code of the PhysicalMemory class
 		void SetError(PMEMORY_STATUS err);
 		// clears the error code of the PhysicalMemory class

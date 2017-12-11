@@ -37,7 +37,10 @@
 #ifndef VMMANAGER_H
 #define VMMANAGER_H
 
-
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h>
+}
 #include "PhysicalMemory.h"
 
 
@@ -117,8 +120,8 @@ class VMManager : public PhysicalMemory
 		void Initialize(HANDLE file_view);
 		// initialize chihiro - specifc memory ranges
 		void InitializeChihiro();
-		// print virtual memory statistics
-		void VMStatistics() const;
+		// retrieves memory statistics
+		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
 		VAddr Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
 		// allocate stack memory
@@ -147,11 +150,11 @@ class VMManager : public PhysicalMemory
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
 		// amount of image virtual memory in use
-		size_t ImageMemoryInUse = 0;
+		size_t m_ImageMemoryInUse = 0;
 		// amount of non - image virtual memory in use
-		size_t NonImageMemoryInUse = 0;
+		size_t m_NonImageMemoryInUse = 0;
 		// amount of stack virtual memory in use
-		size_t StackMemoryInUse = 0;
+		size_t m_StackMemoryInUse = 0;
 	
 		// creates a vma block to be mapped in memory at the specified VAddr, if requested
 		VAddr MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE);

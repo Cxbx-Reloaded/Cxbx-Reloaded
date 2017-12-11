@@ -42,26 +42,6 @@ PMEMORY_STATUS PhysicalMemory::GetError() const
 	return m_Status;
 }
 
-void PhysicalMemory::PMStatistics() const
-{
-	for (auto it = m_Mem_map.begin(); it != m_Mem_map.end(); ++it)
-	{
-		printf("PAddr is 0x%X\nsize: %u\n",
-			it->first,
-			it->second);
-	}
-	printf("Fragmented memory usage:\n");
-	for (auto it = m_Fragmented_mem_map.begin(); it != m_Fragmented_mem_map.end(); ++it)
-	{
-		printf("VirtualAlloc addr is 0x%X\nsize: %u\n",
-			it->first,
-			it->second);
-	}
-	printf("Physical memory\n\tin use: %u\n\tavailable: %u\n",
-		m_PhysicalMemoryInUse,
-		m_MaxContiguousAddress - m_PhysicalMemoryInUse);
-}
-
 PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
 {
 	PAddr addr = m_MaxContiguousAddress;

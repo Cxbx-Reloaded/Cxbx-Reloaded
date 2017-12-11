@@ -519,30 +519,11 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(MemoryStatistics);
 
-	MEMORYSTATUSEX MemoryStatus;
-	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
-		GlobalMemoryStatusEx(&MemoryStatus);
-		GetSystemInfo(&SysInfo);
-
-		/**
-		* When each of the PMM_STATISTICS MemoryStatistics elements
-		* are setup correctly below, these two lines become redundant
-		*/
-		ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
-		//MemoryStatistics->Length = sizeof(MM_STATISTICS);
-
-		MemoryStatistics->TotalPhysicalPages = (ULONG)(MemoryStatus.ullTotalPhys / SysInfo.dwPageSize);
-		MemoryStatistics->AvailablePages = (ULONG)(MemoryStatus.ullAvailPhys / SysInfo.dwPageSize);
-		MemoryStatistics->VirtualMemoryBytesCommitted = (ULONG)(MemoryStatus.ullTotalVirtual - MemoryStatus.ullAvailVirtual);
-		MemoryStatistics->VirtualMemoryBytesReserved = (ULONG)(MemoryStatus.ullAvailVirtual);
-		// MemoryStatistics->CachePagesCommitted = [ ];
-		// MemoryStatistics->PoolPagesCommitted = [ ];
-		// MemoryStatistics->StackPagesCommitted = [ ];
-		// MemoryStatistics->ImagePagesCommitted = [ ];
+		g_VMManager.MemoryStatistics(MemoryStatistics);
 
 		DbgPrintf("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
 		DbgPrintf("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
@@ -605,7 +586,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		// Don't free hardware devices (flash, NV2A, etc)
 	}
 	else {
-		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR);
+		g_VMManager.Deallocate((VAddr)BaseAddress);
 		LOG_INCOMPLETE();
 	}
 
