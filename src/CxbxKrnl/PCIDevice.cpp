@@ -15,7 +15,7 @@ bool PCIDevice::GetIOBar(uint32_t port, PCIBar* bar)
 bool PCIDevice::GetMMIOBar(uint32_t addr, PCIBar* bar)
 {
 	for (auto it = m_BAR.begin(); it != m_BAR.end(); ++it) {
-		if (it->second.reg.Raw.type == PCI_BAR_TYPE_MEMORY && (addr >= it->second.reg.Memory.address) && (addr < it->second.reg.Memory.address + it->second.size)) {
+		if (it->second.reg.Raw.type == PCI_BAR_TYPE_MEMORY && (addr >= (it->second.reg.Memory.address << 4)) && (addr < (it->second.reg.Memory.address << 4) + it->second.size)) {
 			*bar = it->second;
 			return true;
 		}
