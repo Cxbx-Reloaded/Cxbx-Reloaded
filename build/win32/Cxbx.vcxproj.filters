@@ -217,6 +217,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\SMDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -412,6 +415,9 @@
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\SMDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EEPROMDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
