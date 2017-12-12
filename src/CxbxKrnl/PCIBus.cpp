@@ -75,7 +75,7 @@ bool PCIBus::MMIORead(uint32_t addr, uint32_t* data, unsigned size)
 	for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
 		PCIBar bar;
 		if (it->second->GetMMIOBar(addr, &bar)) {
-			*data = it->second->MMIORead(bar.index, addr - bar.reg.Memory.address, size);
+			*data = it->second->MMIORead(bar.index, addr - (bar.reg.Memory.address << 4), size);
 			return true;
 		}
 	}
@@ -88,7 +88,7 @@ bool PCIBus::MMIOWrite(uint32_t addr, uint32_t value, unsigned size)
 	for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
 		PCIBar bar;
 		if (it->second->GetMMIOBar(addr, &bar)) {
-			it->second->MMIOWrite(bar.index, addr - bar.reg.IO.address, value, size);
+			it->second->MMIOWrite(bar.index, addr - (bar.reg.Memory.address << 4), value, size);
 			return true;
 		}
 	}
