@@ -138,6 +138,7 @@ EmuShared::EmuShared()
 {
 	Load();
 	m_bMultiXbe = false;
+	m_LaunchDataPAddress = NULL;
 }
 
 // ******************************************************************

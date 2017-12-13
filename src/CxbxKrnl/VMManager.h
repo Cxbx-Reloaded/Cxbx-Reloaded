@@ -136,6 +136,12 @@ class VMManager : public PhysicalMemory
 		bool QueryVAddr(VAddr addr);
 		// translate a VAddr
 		PAddr TranslateVAddr(VAddr addr);
+		// restores the launch data for the xbe
+		void RestoreLaunchDataPage(PAddr LaunchDataAddr);
+		// retrieves the protection status of an address
+		DWORD QueryProtection(VAddr addr);
+		// retrieves the size of an allocation
+		size_t QuerySize(VAddr addr);
 	
 	
 	private:

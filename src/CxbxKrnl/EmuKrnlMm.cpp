@@ -52,6 +52,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
+#include "EmuShared.h"
 
 // prevent name collisions
 namespace NtDll
@@ -265,11 +266,11 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	if (BaseAddress == &DefaultLaunchDataPage) {
+	/*if (BaseAddress == &DefaultLaunchDataPage) {
 		DbgPrintf("KNRL: Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
 		LOG_IGNORED();
 		return;
-	}
+	}*/
 	g_VMManager.Deallocate((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
@@ -436,21 +437,16 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 	{
 		if (Persist)
 		{
-			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
-			if (fp)
-			{
-				DbgPrintf("KNRL: Persisting LaunchDataPage\n");
-				fseek(fp, 0, SEEK_SET);
-				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
-				fclose(fp);
-			}
-			else
-				DbgPrintf("KNRL: Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+			PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
+
+			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
+
+			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
 		}
 		else
 		{
 			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
-			remove(szFilePath_LaunchDataPage_bin);
+			g_EmuShared->SetLaunchDataPAddress(NULL);
 		}
 	}
 	else
@@ -480,12 +476,7 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 {
 	LOG_FUNC_ONE_ARG(VirtualAddress);
 
-	// Assume read/write when page is allocated :
-	ULONG Result = PAGE_NOACCESS;
-
-	if (g_MemoryManager.IsAllocated(VirtualAddress)) {
-		Result = PAGE_READWRITE;
-	}
+	 ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
 
 	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
 	
@@ -504,7 +495,7 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 
 	LOG_INCOMPLETE(); // TODO : Free PAGE_WRITECOMBINE differently
 
-	ULONG uiSize = g_MemoryManager.QueryAllocationSize(BaseAddress);
+	ULONG uiSize = g_VMManager.QuerySize((VAddr)BaseAddress);
 
 	RETURN(uiSize);
 }

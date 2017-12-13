@@ -336,7 +336,7 @@ VAddr VMManager::AllocateStack(size_t size)
 		ReprotectVMARange(addr, PAGE_SIZE, PAGE_NOACCESS);
 		size_t aligned_size = (PAGE_MASK & size) ? ((size + PAGE_SIZE) & ~PAGE_MASK) : size;
 		addr = addr + PAGE_SIZE + aligned_size;
-		m_StackMemoryInUse += aligned_size;
+		m_StackMemoryInUse += PAGE_SIZE + aligned_size;
 	}
 	Unlock();
 	return addr;
@@ -378,6 +378,45 @@ PAddr VMManager::TranslateVAddr(VAddr addr)
 	PAddr p_addr = TranslateVAddrToPAddr(addr);
 	Unlock();
 	return p_addr;
+}
+
+void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
+{
+	xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)m_Base + LaunchDataAddr;
+
+	// Mark the launch page as allocated to prevent other allocations from overwriting it
+	Allocate(PAGE_SIZE, LaunchDataAddr, LaunchDataAddr + PAGE_SIZE);
+}
+
+DWORD VMManager::QueryProtection(VAddr addr)
+{
+	DWORD protect = PAGE_NOACCESS;
+
+	Lock();
+	auto it = m_Vma_map.lower_bound(addr);
+	if (it != m_Vma_map.end() || addr >= it->second.base)
+	{
+		assert(addr <= it->second.base + it->second.size - 1);
+		protect = it->second.permissions;
+	}
+	Unlock();
+
+	return protect;
+}
+
+size_t VMManager::QuerySize(VAddr addr)
+{
+	size_t size = 0;
+
+	Lock();
+	auto it = m_Vma_map.find(addr);
+	if (it != m_Vma_map.end())
+	{
+		size = it->second.size;
+	}
+	Unlock();
+
+	return size;
 }
 
 VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment)

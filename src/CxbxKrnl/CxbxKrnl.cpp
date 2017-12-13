@@ -89,7 +89,6 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
-char szFilePath_LaunchDataPage_bin[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
 
@@ -585,8 +584,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 
-	CxbxRestorePersistentMemoryRegions();
-
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
@@ -620,10 +617,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// Initialize the Chihiro - specific memory ranges
 			g_VMManager.InitializeChihiro();
 		}
-
-		// This local variable is never used inside the function. Can it be removed?
-		// Determine memory size accordingly :
-		SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+		
+		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -1031,43 +1026,21 @@ void CxbxInitFilePaths()
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
 	}
 
-	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
 
-// TODO : Is DefaultLaunchDataPage really necessary? (No-one assigns it yet to LaunchDataPage)
-xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
-{
-	{   // header
-		2,  // 2: dashboard, 0: title
-		0,
-		"D:\\default.xbe",
-		0
-	}
-};
-
 void CxbxRestoreLaunchDataPage()
 {
-	// If CxbxLaunchDataPage.bin exist, load it into "persistent" memory
-	FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "rb");
-	if (fp)
+	PAddr LaunchDataPAddr;
+	g_EmuShared->GetLaunchDataPAddress(&LaunchDataPAddr);
+
+	if (LaunchDataPAddr)
 	{
-		// Make sure LaunchDataPage is writeable  :
-		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
-			xboxkrnl::LaunchDataPage = NULL;
-
-		if (xboxkrnl::LaunchDataPage == NULL)
-			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
-
-		// Read in the contents.
-		fseek(fp, 0, SEEK_SET);
-		fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
-		fclose(fp);
-		// Delete the file once we're done.
-		remove(szFilePath_LaunchDataPage_bin);
+		g_VMManager.RestoreLaunchDataPage(LaunchDataPAddr);
+		g_EmuShared->SetLaunchDataPAddress(NULL);
 
 		DbgPrintf("INIT: Restored LaunchDataPage\n");
 	}
