@@ -72,7 +72,7 @@ class SMBus : public PCIDevice {
 
 		void ExecuteTransaction();
 
-		void QuickCommand(uint8_t addr, int read);
+		void QuickCommand(uint8_t addr, bool read);
 		uint8_t ReceiveByte(uint8_t addr);
 		uint8_t ReadByte(uint8_t addr, uint8_t command);
 		uint16_t ReadWord(uint8_t addr, uint8_t command);

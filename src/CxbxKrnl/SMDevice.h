@@ -8,7 +8,7 @@ class SMDevice {
 		virtual void Init() = 0;
 		virtual void Reset() = 0;
 
-		virtual void QuickCommand(int read) = 0;
+		virtual void QuickCommand(bool read) = 0;
 		virtual uint8_t ReceiveByte() = 0;
 		virtual uint8_t ReadByte(uint8_t command) = 0;
 		virtual uint16_t ReadWord(uint8_t command) = 0;

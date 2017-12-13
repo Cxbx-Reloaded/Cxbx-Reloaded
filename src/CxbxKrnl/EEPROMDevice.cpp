@@ -48,7 +48,7 @@ void EEPROMDevice::Reset()
 	// TODO
 }
 
-void EEPROMDevice::QuickCommand(int read)
+void EEPROMDevice::QuickCommand(bool read)
 {
 	// TODO
 }
