@@ -48,7 +48,7 @@ public:
 	void Init();
 	void Reset();
 
-	void QuickCommand(int read);
+	void QuickCommand(bool read);
 	uint8_t ReceiveByte();
 	uint8_t ReadByte(uint8_t command);
 	uint16_t ReadWord(uint8_t command);

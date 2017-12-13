@@ -37,7 +37,7 @@ void SMBus::ConnectDevice(uint8_t addr, SMDevice *pDevice)
 void SMBus::ExecuteTransaction()
 {
 	uint8_t prot = m_Control & GE_CYC_TYPE_MASK;
-	uint8_t read = m_Address & 0x01;
+	bool read = m_Address & 0x01;
 	uint8_t addr = (m_Address >> 1) & 0x7f;
 
 	switch (prot) {
@@ -83,7 +83,7 @@ void SMBus::ExecuteTransaction()
 	m_Status |= GS_HCYC_STS;
 }
 
-void SMBus::QuickCommand(uint8_t addr, int read)
+void SMBus::QuickCommand(uint8_t addr, bool read)
 {
 	auto it = m_Devices.find(addr);
 	if (it != m_Devices.end()) {
