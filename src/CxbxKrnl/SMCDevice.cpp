@@ -139,10 +139,19 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	//0x06	power fan speed(0..~50)
 	case SMC_COMMAND_LED_MODE: // 0x07 LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
 		switch (value) {
-		case 0: SetLEDSequence(0x0F); return; // Automatic; Solid green?
-		case 1: SetLEDSequence(buffer[SMC_COMMAND_LED_SEQUENCE]); // Custom sequence
-		}
+		case 0: SetLEDSequence(0x0F); return; // Automatic LED management: we set it to solid green
+		case 1: SetLEDSequence(buffer[SMC_COMMAND_LED_SEQUENCE]); return; // Custom sequence
+		default:
+		// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L572
+		//
+		// HalWriteSMBusValue(0x20, 0x08, false, x) and then HalWriteSMBusValue(0x20, 0x07, false, y > 1)
+		// will cause the led to be solid green, with the next pair of 
+		// HalWriteSMBusValue with arbitrary y will cause the led to assume the color of the sequence x
+		// and afterwards this will repeat with whatever y; ntstatus are always 0
+		//
+		// TODO : Implement the above, SMB_GLOBAL_STATUS should probably get the GS_PRERR_STS flag. But how?
 		return;
+		}
 	// #define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
 	//0x0C	tray eject(0 = eject; 1 = load)
 	//0x0E	another scratch register ? seems like an error code.
@@ -158,9 +167,13 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 
 void SMCDevice::WriteWord(uint8_t command, uint16_t value)
 {
-	// TODO : Is this needed and/or acceptable?
-	WriteByte(command, value >> 8);
-	WriteByte(command + 1, value & 0xFF);
+	// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L554 :
+	//
+	// [..] WriteWord [..] still sets the LED correctly but it errors
+	// with ntstatus STATUS_IO_DEVICE_ERROR and afterwards the LED cannot be set 
+	// any longer until restarting the console
+	//
+	// TODO : Implement the above, SMB_GLOBAL_STATUS should probably a flag (like GS_ABRT_STS or GS_PRERR_STS). But how?
 }
 
 void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
