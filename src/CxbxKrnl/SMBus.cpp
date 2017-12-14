@@ -39,40 +39,47 @@ void SMBus::ExecuteTransaction()
 	uint8_t prot = m_Control & GE_CYC_TYPE_MASK;
 	bool read = m_Address & 0x01;
 	uint8_t addr = (m_Address >> 1) & 0x7f;
+	auto it = m_Devices.find(addr);
+	if (it == m_Devices.end()) {
+		m_Status |= GS_PRERR_STS;
+		printf("SMBus::ExecuteTransaction: Invalid Device (Addr: 0x%X\t Read: %X\t Prot: 0x%X)\n", addr, read, prot);
+		return;
+	}
 
+	SMDevice *pDevice = it->second;
 	switch (prot) {
 		case AMD756_QUICK:
-			QuickCommand(addr, read);
+			pDevice->QuickCommand(read);
 			break;
 		case AMD756_BYTE:
 			if (read) {
-				m_Data0 = ReceiveByte(addr);
+				m_Data0 = pDevice->ReceiveByte();
 			} else {
-				SendByte(addr, m_Command);
+				pDevice->SendByte(m_Data0); // TODO : Was m_Command correct?
 			}
 			break;
 		case AMD756_BYTE_DATA:
 			if (read) {
-				m_Data0 = ReadByte(addr, m_Command);
+				m_Data0 = pDevice->ReadByte(m_Command);
 			} else {
-				WriteByte(addr, m_Command, m_Data0);
+				pDevice->WriteByte(m_Command, m_Data0);
 			}
 			break;
 		case AMD756_WORD_DATA:
 			if (read) {
 				uint16_t val;
-				val = ReadWord(addr, m_Command);
-				m_Data0 = val;
+				val = pDevice->ReadWord(m_Command);
+				m_Data0 = val & 0xFF;
 				m_Data1 = val >> 8;
 			} else {
-				WriteWord(addr, m_Command, m_Data0);
+				pDevice->WriteWord(m_Command, m_Data0);
 			}
 			break;
 		case AMD756_BLOCK_DATA:
 			if (read) {
-				m_Data0 = ReadBlock(addr, m_Command, m_Data);
+				m_Data0 = pDevice->ReadBlock(m_Command, m_Data);
 			} else {
-				WriteBlock(addr, m_Command, m_Data, m_Data0);
+				pDevice->WriteBlock(m_Command, m_Data, m_Data0);
 			}
 			break;
 		default:
@@ -83,99 +90,6 @@ void SMBus::ExecuteTransaction()
 	m_Status |= GS_HCYC_STS;
 }
 
-void SMBus::QuickCommand(uint8_t addr, bool read)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->QuickCommand(read);
-	}
-
-	printf("SMBus::QuickCommand: Invalid Device (Addr: 0x%X)\n", addr);
-}
-
-uint8_t SMBus::ReceiveByte(uint8_t addr)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->ReceiveByte();
-	}
-
-	printf("SMBus::ReceiveByte: Invalid Device (Addr: 0x%X)\n", addr);
-	return 0;
-}
-
-uint8_t SMBus::ReadByte(uint8_t addr, uint8_t command)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->ReadByte(command);
-	}
-
-	printf("SMBus::ReadByte: Invalid Device Read (Addr: 0x%X\t Command: %X)\n", addr, command);
-	return 0;
-}
-
-uint16_t SMBus::ReadWord(uint8_t addr, uint8_t command)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->ReadWord(command);
-	}
-
-	printf("SMBus::ReadWord: Invalid Device Read (Addr: 0x%X\t Command: %X)\n", addr, command);
-	return 0;
-}
-
-int SMBus::ReadBlock(uint8_t addr, uint8_t command, uint8_t *data)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->ReadBlock(command, data);
-	}
-
-	printf("SMBus::ReadBlock: Invalid Device Read (Addr: 0x%X\t Command: %X\t Data: 0x%X)\n", addr, command, data);
-	return 0;
-}
-
-void SMBus::SendByte(uint8_t addr, uint8_t data)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->SendByte(data);
-	}
-
-	printf("SMBus::SendByte: Invalid Device (Addr: 0x%X\t Data: 0x%02X)\n", addr, data);
-}
-
-void SMBus::WriteByte(uint8_t addr, uint8_t command, uint8_t value)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->WriteByte(command, value);
-	}
-
-	printf("SMBus::WriteByte: Invalid Device Write (Addr: 0x%X\t Command: %X\t Value: 0x%02X)\n", addr, command, value);
-}
-
-void SMBus::WriteWord(uint8_t addr, uint8_t command, uint16_t value)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->WriteWord(command, value);
-	}
-
-	printf("SMBus::WriteWord: Invalid Device Write (Addr: 0x%X\t Command: %X\t Value: 0x%04X)\n", addr, command, value);
-}
-
-void SMBus::WriteBlock(uint8_t addr, uint8_t command, uint8_t* data, int length)
-{
-	auto it = m_Devices.find(addr);
-	if (it != m_Devices.end()) {
-		return it->second->WriteBlock(command, data, length);
-	}
-
-	printf("SMBus::WriteBlock: Invalid Device Write (Addr: 0x%X\t Command: %X\t Data: 0x%X\t Length: %d)\n", addr, command, data, length);
-}
 
 uint32_t SMBus::IORead(int barIndex, uint32_t addr)
 {
