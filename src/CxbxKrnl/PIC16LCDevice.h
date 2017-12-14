@@ -37,7 +37,50 @@
 
 #include "SMDevice.h"
 
+// This https://upload.wikimedia.org/wikipedia/commons/9/94/Xbox-Motherboard-FR.jpg shows :
+// PIC16LC63A-04/SO
+// (M) 0123857
+//
+// Producer : http://www.microchip.com/wwwproducts/en/en010145
+// Datasheet : http://ww1.microchip.com/downloads/en/DeviceDoc/30605D.pdf
+
 #define SMBUS_SMC_SLAVE_ADDRESS 0x20 // = Write; Read = 0x21
+
+// Reading:
+
+// From https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC :
+// Command	Description
+#define SMC_COMMAND_VERSION 0x01	// PIC version string
+//0x03	tray state
+#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
+//0x09	CPU temperature(°C)
+//0x0A	board temperature(°C)
+//0x0F	reads scratch register written with 0x0E
+//0x10	current fan speed(0~50)
+//0x11	interrupt reason
+//0x18	reading this reg locks up xbox in "overheated" state
+#define SMC_COMMAND_SCRATCH 0x1B	// scratch register for the original kernel
+#define SMC_COMMAND_CHALLENGE_1C 0x1C	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1D 0x1D	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1E 0x1E	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1F 0x1F	// random number for boot challenge
+//
+// Writing:
+//
+//Command	Description
+//0x01	PIC version string counter reset
+//0x02	reset and power off control
+//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
+//0x06	power fan speed(0..~50)
+#define SMC_COMMAND_LED_MODE 0x07	// LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
+#define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
+//0x0C	tray eject(0 = eject; 1 = load)
+//0x0E	another scratch register ? seems like an error code.
+//0x19	reset on eject(0 = enable; 1 = disable)
+//0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
+//0x1B	scratch register for the original kernel
+//0x20	response to PIC challenge(written first)
+//0x21	response to PIC challenge(written second)
 
 class PIC16LCDevice : public SMDevice {
 public:
@@ -55,6 +98,9 @@ public:
 	void WriteByte(uint8_t command, uint8_t value);
 	void WriteWord(uint8_t command, uint16_t value);
 	void WriteBlock(uint8_t command, uint8_t* data, int length);
+private:
+	char* m_PICVersion;
+	uint8_t buffer[256] = {};
 };
 
 extern PIC16LCDevice* gPIC16LC;
