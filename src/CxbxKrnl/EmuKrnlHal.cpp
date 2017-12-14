@@ -53,6 +53,7 @@ namespace xboxkrnl
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "SMBus.h" // For g_SMBus
 #include "EmuEEPROM.h" // For EEPROM
+#include "PIC16LCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
@@ -729,14 +730,9 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 {
 	LOG_FUNC_ONE_ARG(ScratchRegister);
 
-	LOG_UNIMPLEMENTED();
+//	HalpSMCScratchRegister = ScratchRegister;
 
-/* TODO
-	HalpSMCScratchRegister = ScratchRegister;
+	NTSTATUS Res = HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
-	// TODO : Is this the way we need to set the value?
-	return HalWriteSMBusValue(SMBUS_SMC_ADDRESS, SMC_COMMAND_SCRATCH, WordFlag: False, ScratchRegister);
-*/
-	
-	RETURN(S_OK);
+	RETURN(Res);
 }
