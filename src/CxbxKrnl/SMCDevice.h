@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->PIC16LCDevice.h
+// *   src->CxbxKrnl->SMCDevice.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -43,6 +43,11 @@
 //
 // Producer : http://www.microchip.com/wwwproducts/en/en010145
 // Datasheet : http://ww1.microchip.com/downloads/en/DeviceDoc/30605D.pdf
+
+// NOTE : Instead of calling this device by it's real name ("PIC16LC63A-04/SO"),
+// we've decided to call this device "SMC", since we don't implementation
+// the low-level functionality of this PIC, but only the minimum set of
+// high-level commands that are sufficient for the Xbox.
 
 #define SMBUS_SMC_SLAVE_ADDRESS 0x20 // = Write; Read = 0x21
 
@@ -82,7 +87,7 @@
 //0x20	response to PIC challenge(written first)
 //0x21	response to PIC challenge(written second)
 
-class PIC16LCDevice : public SMDevice {
+class SMCDevice : public SMDevice {
 public:
 	// SMDevice functions
 	void Init();
@@ -103,4 +108,4 @@ private:
 	uint8_t buffer[256] = {};
 };
 
-extern PIC16LCDevice* gPIC16LC;
+extern SMCDevice* g_SMC;

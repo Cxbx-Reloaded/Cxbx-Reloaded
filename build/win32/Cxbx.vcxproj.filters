@@ -220,7 +220,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\PIC16LCDevice.cpp">
+    <ClCompile Include="..\..\src\CxbxKrnl\SMCDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
   </ItemGroup>
@@ -423,7 +423,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EEPROMDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\PIC16LCDevice.h">
+    <ClInclude Include="..\..\src\CxbxKrnl\SMCDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">

@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->PIC16LCDevice.cpp
+// *   src->CxbxKrnl->SMCDevice.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -36,7 +36,7 @@
 
 #include <cstring> // For memcpy
 
-#include "PIC16LCDevice.h" // For PIC16LCDevice
+#include "SMCDevice.h" // For SMCDevice
 
 void SetLEDSequence(uint8_t LEDSequence)
 {
@@ -49,7 +49,7 @@ const char *PICVersion_Retail_1_0 = "P01";
 const char *PICVersion_Retail_1_1 = "P05";
 const char *PICVersion_Debug_Kit = "DXB";
 
-void PIC16LCDevice::Init()
+void SMCDevice::Init()
 {
 	m_PICVersion = (char*)PICVersion_Retail_1_1; // TODO : Configurable selection
 
@@ -59,22 +59,22 @@ void PIC16LCDevice::Init()
 	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
 }
 
-void PIC16LCDevice::Reset()
+void SMCDevice::Reset()
 {
 	// TODO
 }
 
-void PIC16LCDevice::QuickCommand(bool read)
+void SMCDevice::QuickCommand(bool read)
 {
 	// TODO
 }
 
-uint8_t PIC16LCDevice::ReceiveByte()
+uint8_t SMCDevice::ReceiveByte()
 {
 	return 0; // TODO
 }
 
-uint8_t PIC16LCDevice::ReadByte(uint8_t command)
+uint8_t SMCDevice::ReadByte(uint8_t command)
 {
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
@@ -112,22 +112,22 @@ uint8_t PIC16LCDevice::ReadByte(uint8_t command)
 	return buffer[command];
 }
 
-uint16_t PIC16LCDevice::ReadWord(uint8_t command)
+uint16_t SMCDevice::ReadWord(uint8_t command)
 {
 	return 0; // TODO
 }
 
-int PIC16LCDevice::ReadBlock(uint8_t command, uint8_t *data)
+int SMCDevice::ReadBlock(uint8_t command, uint8_t *data)
 {
 	return 0; // TODO
 }
 
-void PIC16LCDevice::SendByte(uint8_t data)
+void SMCDevice::SendByte(uint8_t data)
 {
 	// TODO
 }
 
-void PIC16LCDevice::WriteByte(uint8_t command, uint8_t value)
+void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 {
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string counter reset
@@ -156,14 +156,14 @@ void PIC16LCDevice::WriteByte(uint8_t command, uint8_t value)
 	buffer[command] = value;
 }
 
-void PIC16LCDevice::WriteWord(uint8_t command, uint16_t value)
+void SMCDevice::WriteWord(uint8_t command, uint16_t value)
 {
 	// TODO : Is this needed and/or acceptable?
 	WriteByte(command, value >> 8);
 	WriteByte(command + 1, value & 0xFF);
 }
 
-void PIC16LCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
+void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
 {
 	// TODO
 }
