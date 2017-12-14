@@ -267,11 +267,15 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
 	// Note : GE_HOST_STC triggers ExecuteTransaction, which reads the command from the specified address
 
-	*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
-	if (ReadWord)
-		*DataValue |= g_SMBus->IORead(1, SMB_HOST_DATA + 1) << 8;
-
-	// TODO : Figure out the error status (Status = STATUS_UNSUCCESSFUL)
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
+	}
+	else {
+		*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
+		if (ReadWord)
+			*DataValue |= g_SMBus->IORead(1, SMB_HOST_DATA + 1) << 8;
+	}
 
 	// TODO : Reenable interrupts
 
@@ -539,8 +543,11 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
 		// Note : GE_HOST_STC triggers ExecuteTransaction, which writes the command to the specified address
 
-	// TODO : Figure out the error status (Status = STATUS_UNSUCCESSFUL)
-	g_SMBus->IORead(1, SMB_GLOBAL_ENABLE);
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
+	}
+
 	// TODO : Reenable interrupts
 
 	RETURN(Status);

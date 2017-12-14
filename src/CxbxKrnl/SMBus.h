@@ -29,6 +29,7 @@
 #define AMD756_PROCESS_CALL 0x04
 #define AMD756_BLOCK_DATA   0x05
 
+// SMB_GLOBAL_STATUS flags
 #define GS_ABRT_STS (1 << 0)
 #define GS_COL_STS  (1 << 1)
 #define GS_PRERR_STS    (1 << 2)
