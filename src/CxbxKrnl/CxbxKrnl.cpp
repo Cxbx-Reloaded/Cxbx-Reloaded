@@ -66,10 +66,12 @@ namespace xboxkrnl
 #include "PCIBus.h"
 #include "SMBus.h"
 #include "EEPROMDevice.h" // For EEPROMDevice
+#include "PIC16LCDevice.h" // For PIC16LCDevice
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
 EEPROMDevice* g_EEPROM;
+PIC16LCDevice* g_PIC16LC;
 
 /* prevent name collisions */
 namespace NtDll
@@ -1010,7 +1012,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuHLEIntercept(pXbeHeader);
 	SetupXboxDeviceTypes();
 
-#define SMBUS_SMC_SLAVE_ADDRESS 0x20 // = Write; Read = 0x21
 #define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
 #define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
 
@@ -1019,6 +1020,11 @@ __declspec(noreturn) void CxbxKrnlInit
 	g_SMBus = new SMBus();
 	g_EEPROM = new EEPROMDevice((uint8_t*)EEPROM);
 	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
+	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
+	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+	g_PIC16LC = new PIC16LCDevice();
+	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_PIC16LC);
+
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
