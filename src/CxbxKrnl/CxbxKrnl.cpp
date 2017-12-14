@@ -66,12 +66,12 @@ namespace xboxkrnl
 #include "PCIBus.h"
 #include "SMBus.h"
 #include "EEPROMDevice.h" // For EEPROMDevice
-#include "PIC16LCDevice.h" // For PIC16LCDevice
+#include "SMCDevice.h" // For SMCDevice
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
 EEPROMDevice* g_EEPROM;
-PIC16LCDevice* g_PIC16LC;
+SMCDevice* g_SMC;
 
 /* prevent name collisions */
 namespace NtDll
@@ -1022,8 +1022,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
 	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
 	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
-	g_PIC16LC = new PIC16LCDevice();
-	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_PIC16LC);
+	g_SMC = new SMCDevice();
+	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp

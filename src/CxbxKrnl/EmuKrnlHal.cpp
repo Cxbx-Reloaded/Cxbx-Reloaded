@@ -53,7 +53,7 @@ namespace xboxkrnl
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "SMBus.h" // For g_SMBus
 #include "EmuEEPROM.h" // For EEPROM
-#include "PIC16LCDevice.h" // For SMC_COMMAND_SCRATCH
+#include "SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
@@ -540,7 +540,7 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		// Note : GE_HOST_STC triggers ExecuteTransaction, which writes the command to the specified address
 
 	// TODO : Figure out the error status (Status = STATUS_UNSUCCESSFUL)
-
+	g_SMBus->IORead(1, SMB_GLOBAL_ENABLE);
 	// TODO : Reenable interrupts
 
 	RETURN(Status);

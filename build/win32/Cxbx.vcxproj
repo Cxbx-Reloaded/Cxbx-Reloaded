@@ -236,7 +236,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PCIBus.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PCIDevice.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\PIC16LCDevice.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\SMCDevice.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
@@ -523,7 +523,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PCIBus.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PCIDevice.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\PIC16LCDevice.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
