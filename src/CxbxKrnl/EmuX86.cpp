@@ -210,8 +210,6 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
 		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
@@ -256,8 +254,6 @@ uint16_t EmuX86_Read16(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not 
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 16);
 		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
@@ -289,8 +285,6 @@ uint8_t EmuX86_Read8(xbaddr addr)
 		// Access NV2A regardless weither HLE is disabled or not 
 		value = EmuNV2A_Read(addr - NV2A_ADDR, 8);
 		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
 	} else {
@@ -322,11 +316,6 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
 		EmuNV2A_Write(addr - NV2A_ADDR, value, 32);
 		// Note : EmuNV2A_Write32 does it's own logging
-		return;
-	}
-
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
 		return;
 	}
 
@@ -370,11 +359,6 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 		return;
 	}
 
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 16);
-		return;
-	}
-
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		EmuWarning("EmuX86_Write16(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
@@ -402,11 +386,6 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 		// Access NV2A regardless weither HLE is disabled or not 
 		EmuNV2A_Write(addr - NV2A_ADDR, value, 8);
 		// Note : EmuNV2A_Write32 does it's own logging
-		return;
-	}
-
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
 		return;
 	}
 
