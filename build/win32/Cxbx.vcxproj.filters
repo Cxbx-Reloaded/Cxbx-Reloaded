@@ -136,9 +136,6 @@
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -221,6 +218,9 @@
       <Filter>Hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\SMCDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
   </ItemGroup>
@@ -316,9 +316,6 @@
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h">
@@ -433,6 +430,9 @@
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\LED.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>
