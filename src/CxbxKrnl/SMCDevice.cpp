@@ -33,29 +33,29 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-
-#include <cstring> // For memcpy
+#define _XBOXKRNL_DEFEXTRN_
 
 #include "SMCDevice.h" // For SMCDevice
+#include "LED.h"
 
-void SetLEDSequence(uint8_t LEDSequence)
+/* prevent name collisions */
+namespace xboxkrnl
 {
-	// TODO : Move to best suited location & implement
-	// See http://xboxdevwiki.net/PIC#The_LED
-}
+#include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
+};
 
-// See http://xboxdevwiki.net/PIC#PIC_version_string
-const char *PICVersion_Retail_1_0 = "P01";
-const char *PICVersion_Retail_1_1 = "P05";
-const char *PICVersion_Debug_Kit = "DXB";
+/* SMCDevice */
+
+SMCDevice::SMCDevice(HardwareModel hardwareModel)
+{
+	m_HardwareModel = hardwareModel;
+}
 
 void SMCDevice::Init()
 {
-	m_PICVersion = (char*)PICVersion_Retail_1_1; // TODO : Configurable selection
-
-	buffer[SMC_COMMAND_VERSION] = m_PICVersion[2];
-	buffer[SMC_COMMAND_AV_PACK] = 2; // VGA, see http://xboxdevwiki.net/PIC#The_AV_Pack
-	buffer[SMC_COMMAND_LED_SEQUENCE] = 0x0F; // solid green
+	m_PICVersionStringIndex = 0;
+	buffer[SMC_COMMAND_AV_PACK] = AV_PACK_HDTV; // see http://xboxdevwiki.net/PIC#The_AV_Pack
+	buffer[SMC_COMMAND_LED_SEQUENCE] = LED::GREEN;
 	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
 }
 
@@ -78,14 +78,15 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 {
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
-		// See https://github.com/bji/libmame/blob/master/src/mame/drivers/chihiro.c#L977
-		if (buffer[0] == m_PICVersion[0])
-			buffer[0] = m_PICVersion[1];
-		else
-			if (buffer[0] == m_PICVersion[1])
-				buffer[0] = m_PICVersion[2];
-			else
-				buffer[0] = m_PICVersion[0];
+		// See http://xboxdevwiki.net/PIC#PIC_version_string
+		switch (m_HardwareModel) {
+		case Revision1_0: buffer[0] = "P01"[m_PICVersionStringIndex]; break;
+		case Revision1_1: buffer[0] = "P05"[m_PICVersionStringIndex]; break;
+		case DebugKit: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
+		// default: UNREACHABLE(hardwareModel);
+		}
+
+		m_PICVersionStringIndex = (m_PICVersionStringIndex + 1) % 3;
 		break;
 	//0x03	tray state
 	//#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
@@ -101,7 +102,7 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	case SMC_COMMAND_CHALLENGE_1D: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1E: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1F: // random number for boot challenge
-		if (m_PICVersion == PICVersion_Debug_Kit)
+		if (m_HardwareModel == DebugKit)
 			// See http://xboxdevwiki.net/PIC#PIC_Challenge_.28regs_0x1C.7E0x21.29
 			return 0;
 
@@ -132,15 +133,15 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string counter reset
 		if (value == 0) // Note : MAME Xbox/Chihiro driver doesn't check for zero
-			buffer[0] = m_PICVersion[2];
+			m_PICVersionStringIndex = 0;
 		return;
 	//0x02	reset and power off control
 	//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
 	//0x06	power fan speed(0..~50)
 	case SMC_COMMAND_LED_MODE: // 0x07 LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
 		switch (value) {
-		case 0: SetLEDSequence(0x0F); return; // Automatic LED management: we set it to solid green
-		case 1: SetLEDSequence(buffer[SMC_COMMAND_LED_SEQUENCE]); return; // Custom sequence
+		case 0: SetLEDSequence(LED::GREEN); return; // Automatic LED management: we set it to solid green
+		case 1: SetLEDSequence((LED::Sequence)buffer[SMC_COMMAND_LED_SEQUENCE]); return; // Custom sequence
 		default:
 		// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L572
 		//

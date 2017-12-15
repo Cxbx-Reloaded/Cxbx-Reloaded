@@ -87,8 +87,17 @@
 //0x20	response to PIC challenge(written first)
 //0x21	response to PIC challenge(written second)
 
+typedef enum { // TODO : Move to it's own file
+	Revision1_0,
+	Revision1_1,
+	DebugKit
+} HardwareModel;
+
 class SMCDevice : public SMDevice {
 public:
+	// constructor
+	SMCDevice(HardwareModel hardwareModel);
+
 	// SMDevice functions
 	void Init();
 	void Reset();
@@ -104,7 +113,8 @@ public:
 	void WriteWord(uint8_t command, uint16_t value);
 	void WriteBlock(uint8_t command, uint8_t* data, int length);
 private:
-	char* m_PICVersion;
+	HardwareModel m_HardwareModel;
+	int m_PICVersionStringIndex = 0;
 	uint8_t buffer[256] = {};
 };
 
