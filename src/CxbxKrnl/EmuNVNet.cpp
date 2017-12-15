@@ -516,15 +516,15 @@ void NVNetDevice::Init()
 {
 	PCIBarRegister r;
 
-	// Register IO bar :
-	r.Raw.type = PCI_BAR_TYPE_IO;
-	r.IO.address = 0xE000;
-	RegisterBAR(0, 8, r.value);
-
 	// Register Memory bar :
 	r.Raw.type = PCI_BAR_TYPE_MEMORY;
 	r.Memory.address = NVNET_ADDR >> 4;
-	RegisterBAR(1, NVNET_SIZE, r.value);
+	RegisterBAR(0, NVNET_SIZE, r.value);
+
+	// Register IO bar :
+	r.Raw.type = PCI_BAR_TYPE_IO;
+	r.IO.address = 0xE000;
+	RegisterBAR(1, 8, r.value);
 
 	m_DeviceId = 0x01C3;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
@@ -536,16 +536,24 @@ void NVNetDevice::Reset()
 
 uint32_t NVNetDevice::IORead(int barIndex, uint32_t port, unsigned size)
 {
+	if (barIndex != 1) {
+		return 0;
+	}
+
 	return 0;
 }
 
-void NVNetDevice::IOWrite(int BarIndex, uint32_t port, uint32_t value, unsigned size)
+void NVNetDevice::IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size)
 {
+	if (barIndex != 1) {
+		return;
+	}
+
 }
 
 uint32_t NVNetDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 { 
-	if (barIndex != 1) {
+	if (barIndex != 0) {
 		return 0;
 	}
 
@@ -554,7 +562,7 @@ uint32_t NVNetDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 
 void NVNetDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
 {
-	if (barIndex != 1) {
+	if (barIndex != 0) {
 		return;
 	}
 
