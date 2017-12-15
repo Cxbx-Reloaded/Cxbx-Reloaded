@@ -31,13 +31,22 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUNVNET_H
-#define EMUNVNET_H
+#pragma once
+
+#include "PCIDevice.h" // For PCIDevice
 
 #define NVNET_ADDR  0xFEF00000 
 #define NVNET_SIZE  0x00000400
 
-uint32_t EmuNVNet_Read(xbaddr addr, int size);
-void EmuNVNet_Write(xbaddr addr, uint32_t value, int size);
+class NVNetDevice : public PCIDevice {
+public:
+	// PCI Device functions
+	void Init();
+	void Reset();
+	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
+	void IOWrite(int BarIndex, uint32_t port, uint32_t value, unsigned size);
+	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
+	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
+};
 
-#endif
+extern NVNetDevice* g_NVNet;
