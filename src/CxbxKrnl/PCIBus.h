@@ -28,17 +28,19 @@ typedef struct {
 class PCIBus {
 public:
 	void ConnectDevice(uint32_t deviceId, PCIDevice *pDevice);
-	void IOWriteConfigAddress(uint32_t pData);
-	void IOWriteConfigData(uint32_t pData);
-	uint32_t IOReadConfigData();
 
-	bool IORead(uint32_t addr, uint32_t* value);
-	bool IOWrite(uint32_t addr, uint32_t value);
+	bool IORead(uint32_t addr, uint32_t* value, unsigned size);
+	bool IOWrite(uint32_t addr, uint32_t value, unsigned size);
+
 	bool MMIORead(uint32_t addr, uint32_t * data, unsigned size);
 	bool MMIOWrite(uint32_t addr, uint32_t value, unsigned size);
 
 	void Reset();
 private:
+	void IOWriteConfigAddress(uint32_t pData);
+	void IOWriteConfigData(uint32_t pData);
+	uint32_t IOReadConfigData();
+
 	std::map<uint32_t, PCIDevice*> m_Devices;
 	PCIConfigAddressRegister m_configAddressRegister;
 };

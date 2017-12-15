@@ -91,10 +91,15 @@ void SMBus::ExecuteTransaction()
 }
 
 
-uint32_t SMBus::IORead(int barIndex, uint32_t addr)
+uint32_t SMBus::IORead(int barIndex, uint32_t addr, unsigned size)
 {
 	if (barIndex != 1) {
 		return 0;
+	}
+
+	// For now, make SMBus only support byte-reads
+	if (size != 1) {
+		return 0; // TODO : Set GS_PRERR_STS in m_Status too?
 	}
 
 	uint32_t value;
@@ -133,10 +138,15 @@ uint32_t SMBus::IORead(int barIndex, uint32_t addr)
 	return value;
 }
 
-void SMBus::IOWrite(int barIndex, uint32_t addr, uint32_t value)
+void SMBus::IOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
 {
 	if (barIndex != 1) {
 		return;
+	}
+
+	// For now, make SMBus only support byte-reads
+	if (size != 1) {
+		return; // TODO : Set GS_PRERR_STS in m_Status too?
 	}
 
 	addr &= 0x3f;

@@ -44,26 +44,50 @@ void PCIBus::IOWriteConfigData(uint32_t pData) {
 		PCI_FUNC(m_configAddressRegister.deviceNumber));
 }
 
-bool PCIBus::IORead(uint32_t addr, uint32_t* data)
+bool PCIBus::IORead(uint32_t addr, uint32_t* data, unsigned size)
 {
-	for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
-		PCIBar bar;
-		if (it->second->GetIOBar(addr, &bar)) {
-			*data = it->second->IORead(bar.index, addr - bar.reg.IO.address);
+	switch (addr) {
+	case PORT_PCI_CONFIG_DATA:
+		if (size == sizeof(uint32_t)) {
+			*data = IOReadConfigData();
 			return true;
+		} // TODO : else log wrong size-access?
+		break;
+	default:
+		for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
+			PCIBar bar;
+			if (it->second->GetIOBar(addr, &bar)) {
+				*data = it->second->IORead(bar.index, addr - bar.reg.IO.address, size);
+				return true;
+			}
 		}
 	}
 
 	return false;
 }
 
-bool PCIBus::IOWrite(uint32_t addr, uint32_t value)
+bool PCIBus::IOWrite(uint32_t addr, uint32_t value, unsigned size)
 {
-	for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
-		PCIBar bar;
-		if (it->second->GetIOBar(addr, &bar)) {
-			it->second->IOWrite(bar.index, addr - bar.reg.IO.address, value);
+	switch (addr) {
+	case PORT_PCI_CONFIG_ADDRESS:
+		if (size == sizeof(uint32_t)) {
+			IOWriteConfigAddress(value);
 			return true;
+		} // TODO : else log wrong size-access?
+		break;
+	case PORT_PCI_CONFIG_DATA:
+		if (size == sizeof(uint32_t)) {
+			IOWriteConfigData(value);
+			return true; // TODO : Should IOWriteConfigData() success/failure be returned?
+		} // TODO : else log wrong size-access?
+		break;
+	default:
+		for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it) {
+			PCIBar bar;
+			if (it->second->GetIOBar(addr, &bar)) {
+				it->second->IOWrite(bar.index, addr - bar.reg.IO.address, value, size);
+				return true;
+			}
 		}
 	}
 

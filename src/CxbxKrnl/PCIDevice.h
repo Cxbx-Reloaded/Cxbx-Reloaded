@@ -67,8 +67,8 @@ class PCIDevice {
 public:
 	virtual void Init() = 0;
 	virtual void Reset() = 0;
-	virtual uint32_t IORead(int barIndex, uint32_t port) = 0;
-	virtual void IOWrite(int BarIndex, uint32_t port, uint32_t value) = 0;
+	virtual uint32_t IORead(int barIndex, uint32_t port, unsigned size) = 0;
+	virtual void IOWrite(int BarIndex, uint32_t port, uint32_t value, unsigned size) = 0;
 	virtual uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size) = 0;
 	virtual void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size) = 0;
 
