@@ -62,33 +62,33 @@
 
 uint32_t EmuX86_IORead32(xbaddr addr)
 {
-	switch (addr) {
-		case PORT_PCI_CONFIG_DATA:
-			return g_PCIBus->IOReadConfigData();
-		case 0x8008:	// TIMER
-			// HACK: This is very wrong.
-			// This timer should count at a specific frequency (3579.545 ticks per ms)
-			// But this is enough to keep NXDK from hanging for now.
-			LARGE_INTEGER performanceCount;
-			QueryPerformanceCounter(&performanceCount);
-			return static_cast<uint32_t>(performanceCount.QuadPart);
-			break;
-		default:
-			// Pass the IO Read to the PCI Bus, this will handle devices with BARs set to IO addresses
-			uint32_t value = 0;
-			if (g_PCIBus->IORead(addr, &value)) {
-				return value;
-			}
-
-			EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
-			break;
+	// TODO : Move 0x8008 TIMER to a device
+	if (addr == 0x8008) { // TIMER
+		// HACK: This is very wrong.
+		// This timer should count at a specific frequency (3579.545 ticks per ms)
+		// But this is enough to keep NXDK from hanging for now.
+		LARGE_INTEGER performanceCount;
+		QueryPerformanceCounter(&performanceCount);
+		return static_cast<uint32_t>(performanceCount.QuadPart);
 	}
-	
+
+	// Pass the IO Read to the PCI Bus, this will handle devices with BARs set to IO addresses
+	uint32_t value = 0;
+	if (g_PCIBus->IORead(addr, &value, sizeof(uint32_t))) {
+		return value;
+	}
+
+	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
 	return 0;
 }
 
 uint16_t EmuX86_IORead16(xbaddr addr)
 {
+	uint32_t value = 0;
+	if (g_PCIBus->IORead(addr, &value, sizeof(uint16_t))) {
+		return (uint16_t)value;
+	}
+
 	EmuWarning("EmuX86_IORead16(0x%08X) [Unknown address]", addr);
 	return 0;
 }
@@ -96,12 +96,16 @@ uint16_t EmuX86_IORead16(xbaddr addr)
 static int field_pin = 0;
 uint8_t EmuX86_IORead8(xbaddr addr)
 {
-	switch (addr) {
-		case 0x80C0:
-			// field pin from tv encoder?
-			field_pin = (field_pin + 1) & 1;
-			return field_pin << 5;
-			break;
+	// TODO : Move 0x80C0 TV encoder to a device
+	if (addr == 0x80C0) {
+		// field pin from tv encoder?
+		field_pin = (field_pin + 1) & 1;
+		return field_pin << 5;
+	}
+
+	uint32_t value = 0;
+	if (g_PCIBus->IORead(addr, &value, sizeof(uint8_t))) {
+		return (uint8_t)value;
 	}
 
 	EmuWarning("EmuX86_IORead8(0x%08X) [Unknown address]", addr);
@@ -110,30 +114,31 @@ uint8_t EmuX86_IORead8(xbaddr addr)
 
 void EmuX86_IOWrite32(xbaddr addr, uint32_t value)
 {
-	switch (addr) {
-		case PORT_PCI_CONFIG_ADDRESS:
-			g_PCIBus->IOWriteConfigAddress(value);
-			break;
-		case PORT_PCI_CONFIG_DATA:
-			g_PCIBus->IOWriteConfigData(value);
-			break;
-		default:
-			// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
-			if (g_PCIBus->IOWrite(addr, value)) {
-				return;
-			}
-
-			EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
+	if (g_PCIBus->IOWrite(addr, value, sizeof(uint32_t))) {
+		return;
 	}
+
+	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
 }
 
 void EmuX86_IOWrite16(xbaddr addr, uint16_t value)
 {
+	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
+	if (g_PCIBus->IOWrite(addr, (uint32_t)value, sizeof(uint16_t))) {
+		return;
+	}
+
 	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
 }
 
 void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
 {
+	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
+	if (g_PCIBus->IOWrite(addr, (uint32_t)value, sizeof(uint8_t))) {
+		return;
+	}
+
 	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
