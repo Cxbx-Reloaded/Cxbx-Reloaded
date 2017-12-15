@@ -84,10 +84,12 @@ protected:
 	std::map<int, PCIBar> m_BAR;
 	uint16_t m_DeviceId;
 	uint16_t m_VendorId;
+/* Unused?
 private:
 
 	static uint64_t MMIOBarRead(struct uc_struct* uc, void* pBar, uint64_t addr, unsigned size);
 	static void MMIOBarWrite(struct uc_struct* uc, void* pBar, uint64_t addr, uint64_t value, unsigned size);
+*/
 };
 
 #endif
