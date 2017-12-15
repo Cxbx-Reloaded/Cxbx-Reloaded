@@ -432,6 +432,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\LED.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
