@@ -67,7 +67,7 @@ extern "C" {
 
 // Define virtual base addresses for physical memory windows.
 #define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE // = 0x80000000
-#define	MM_XBOX_HIGHEST_PHYSICAL_PAGE		0x03FFF
+#define MM_XBOX_HIGHEST_PHYSICAL_PAGE	0x03FFF
 #define MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE    0x07FFF
 #define MM_64M_PHYSICAL_PAGE        0x04000
 #define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
@@ -105,16 +105,6 @@ extern "C" {
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
 #define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
 #define XBE_IMAGE_BASE 0x00010000
-
-// Global memory constants
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1 << PAGE_SHIFT) // 4096
-#define PAGE_MASK PAGE_SIZE - 1
-#define MAX_NUM_OF_PAGES 1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
-#define XBOX_CONTIGUOUS_MEMORY_LIMIT XBOX_MEMORY_SIZE - 32 * PAGE_SIZE // upper limit available for contiguous allocations (xbox)
-#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE // upper limit available for contiguous allocations (chihiro)
-#define ZERO_PAGE_ADDR 0
-#define FIRST_PAGE_ADDR PAGE_SIZE
 
 /*! base addresses of various components */
 #define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)

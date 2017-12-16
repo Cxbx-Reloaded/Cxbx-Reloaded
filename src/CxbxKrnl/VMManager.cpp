@@ -39,7 +39,9 @@
 // with some modest changes and adaptions to suit Cxbx-Reloaded and Xbox emulation.
 // Citra website: https://citra-emu.org/
 
+
 #include "VMManager.h"
+#include "Logging.h"
 #include <assert.h>
 #include <array>
 
@@ -83,7 +85,6 @@ void VMManager::Initialize(HANDLE file_view)
 	if (!addr)
 	{
 		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
-		return;
 	}
 	VAddr aligned_start = addr & ~(UINT_PTR)PAGE_MASK;
 	VirtualFree((void*)addr, 0, MEM_RELEASE);
@@ -97,7 +98,6 @@ void VMManager::Initialize(HANDLE file_view)
 	if (m_Base != aligned_start)
 	{
 		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
-		return;
 	}
 	m_hAliasedView = file_view;
 
@@ -121,40 +121,27 @@ void VMManager::Initialize(HANDLE file_view)
 	UpdatePageTableForVMA(first_page_vma);
 
 	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	VMAIter nv2a_pushbuffer_vma_handle = CarveVMA(m_Base, PAGE_SIZE);
-	VirtualMemoryArea& nv2a_pushbuffer_vma = nv2a_pushbuffer_vma_handle->second;
-	nv2a_pushbuffer_vma.type = VMAType::Allocated;
-	nv2a_pushbuffer_vma.permissions = PAGE_EXECUTE_READWRITE;
-	nv2a_pushbuffer_vma.backing_block = AllocatePhysicalMemoryRange(PAGE_SIZE, 0, PAGE_SIZE);
-	MergeAdjacentVMA(nv2a_pushbuffer_vma_handle);
-	UpdatePageTableForVMA(nv2a_pushbuffer_vma);
-	m_ImageMemoryInUse += PAGE_SIZE;
+	Allocate(PAGE_SIZE, 0, PAGE_SIZE);
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
+	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
+	// which is the case here, so we must call AllocatePhysicalMemoryRange directly to bypass the check
 	VMAIter upper_mem_vma_handle = CarveVMA(m_Base + m_MaxContiguousAddress, 32 * PAGE_SIZE);
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.type = VMAType::Allocated;
 	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
 	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(32 * PAGE_SIZE, m_MaxContiguousAddress, XBOX_MEMORY_SIZE);
-	MergeAdjacentVMA(upper_mem_vma_handle);
 	UpdatePageTableForVMA(upper_mem_vma);
 	m_ImageMemoryInUse += 32 * PAGE_SIZE;
 
 	// Allocate memory for the dummy kernel
-	VMAIter dummy_kernel_vma_handle = CarveVMA(m_Base + XBE_IMAGE_BASE, sizeof(DUMMY_KERNEL));
-	VirtualMemoryArea& dummy_kernel_vma = dummy_kernel_vma_handle->second;
-	dummy_kernel_vma.type = VMAType::Allocated;
-	dummy_kernel_vma.permissions = PAGE_EXECUTE_READWRITE;
-	dummy_kernel_vma.backing_block = AllocatePhysicalMemoryRange(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + sizeof(DUMMY_KERNEL));
-	MergeAdjacentVMA(dummy_kernel_vma_handle);
-	UpdatePageTableForVMA(dummy_kernel_vma);
-	m_ImageMemoryInUse += sizeof(DUMMY_KERNEL);
+	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
+	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE);
 
 	// Map the contiguous memory
 	VMAIter contiguous_memory_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_XBOX_SIZE);
 	VirtualMemoryArea& contiguous_memory_vma = contiguous_memory_vma_handle->second;
 	contiguous_memory_vma.type = VMAType::MemContiguous;
-	MergeAdjacentVMA(contiguous_memory_vma_handle);
 	UpdatePageTableForVMA(contiguous_memory_vma);
 	m_NonImageMemoryInUse += CONTIGUOUS_MEMORY_XBOX_SIZE;
 
@@ -162,7 +149,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE);
 	VirtualMemoryArea& tiled_memory_vma = tiled_memory_vma_handle->second;
 	tiled_memory_vma.type = VMAType::MemTiled;
-	MergeAdjacentVMA(tiled_memory_vma_handle);
 	UpdatePageTableForVMA(tiled_memory_vma);
 	m_NonImageMemoryInUse += TILED_MEMORY_XBOX_SIZE;
 
@@ -170,7 +156,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter nv2a_vma_handle = CarveVMA(NV2A_MEMORY_BASE, NV2A_PRAMIN_ADDR - NV2A_MEMORY_BASE);
 	VirtualMemoryArea& nv2a_vma = nv2a_vma_handle->second;
 	nv2a_vma.type = VMAType::IO_DeviceNV2A;
-	MergeAdjacentVMA(nv2a_vma_handle);
 	UpdatePageTableForVMA(nv2a_vma);
 	m_NonImageMemoryInUse += (NV2A_PRAMIN_ADDR - NV2A_MEMORY_BASE);
 
@@ -178,7 +163,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter nv2a_pramin_vma_handle = CarveVMA(NV2A_PRAMIN_ADDR, NV2A_PRAMIN_SIZE);
 	VirtualMemoryArea& nv2a_pramin_vma = nv2a_pramin_vma_handle->second;
 	nv2a_pramin_vma.type = VMAType::MemNV2A_PRAMIN;
-	MergeAdjacentVMA(nv2a_pramin_vma_handle);
 	UpdatePageTableForVMA(nv2a_pramin_vma);
 	m_NonImageMemoryInUse += NV2A_PRAMIN_SIZE;
 
@@ -186,7 +170,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter nv2a_user_vma_handle = CarveVMA(NV2A_USER_ADDR, NV2A_USER_SIZE);
 	VirtualMemoryArea& nv2a_user_vma = nv2a_user_vma_handle->second;
 	nv2a_user_vma.type = VMAType::IO_DeviceNV2A;
-	MergeAdjacentVMA(nv2a_user_vma_handle);
 	UpdatePageTableForVMA(nv2a_user_vma);
 	m_NonImageMemoryInUse += NV2A_USER_SIZE;
 
@@ -194,7 +177,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter apu_vma_handle = CarveVMA(APU_BASE, APU_SIZE);
 	VirtualMemoryArea& apu_vma = apu_vma_handle->second;
 	apu_vma.type = VMAType::IO_DeviceAPU;
-	MergeAdjacentVMA(apu_vma_handle);
 	UpdatePageTableForVMA(apu_vma);
 	m_NonImageMemoryInUse += APU_SIZE;
 
@@ -202,7 +184,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter ac97_vma_handle = CarveVMA(AC97_BASE, AC97_SIZE);
 	VirtualMemoryArea& ac97_vma = ac97_vma_handle->second;
 	ac97_vma.type = VMAType::IO_DeviceAC97;
-	MergeAdjacentVMA(ac97_vma_handle);
 	UpdatePageTableForVMA(ac97_vma);
 	m_NonImageMemoryInUse += AC97_SIZE;
 
@@ -210,7 +191,6 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter usb0_vma_handle = CarveVMA(USB0_BASE, USB0_SIZE);
 	VirtualMemoryArea& usb0_vma = usb0_vma_handle->second;
 	usb0_vma.type = VMAType::IO_DeviceUSB0;
-	MergeAdjacentVMA(usb0_vma_handle);
 	UpdatePageTableForVMA(usb0_vma);
 	m_NonImageMemoryInUse += USB0_SIZE;
 
@@ -218,35 +198,34 @@ void VMManager::Initialize(HANDLE file_view)
 	VMAIter usb1_vma_handle = CarveVMA(USB1_BASE, USB1_SIZE);
 	VirtualMemoryArea& usb1_vma = usb1_vma_handle->second;
 	usb1_vma.type = VMAType::IO_DeviceUSB1;
-	MergeAdjacentVMA(usb1_vma_handle);
 	UpdatePageTableForVMA(usb1_vma);
 	m_NonImageMemoryInUse += USB1_SIZE;
 
 	// Map NVNet
-	VMAIter NVNet_vma_handle = CarveVMA(NVNet_BASE, NVNet_SIZE);
+	// NOTE: I can't use NVNet_SIZE because it's not aligned
+	VMAIter NVNet_vma_handle = CarveVMA(NVNet_BASE, PAGE_SIZE);
 	VirtualMemoryArea& NVNet_vma = NVNet_vma_handle->second;
 	NVNet_vma.type = VMAType::IO_DeviceNVNet;
-	MergeAdjacentVMA(NVNet_vma_handle);
 	UpdatePageTableForVMA(NVNet_vma);
-	m_NonImageMemoryInUse += NVNet_SIZE;
+	m_NonImageMemoryInUse += PAGE_SIZE;
 
 	// Map the bios
-	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_XBOX_SIZE);
+	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_CHIHIRO_SIZE - PAGE_SIZE);
 	VirtualMemoryArea& bios_vma = bios_vma_handle->second;
 	bios_vma.type = VMAType::DeviceBIOS;
-	MergeAdjacentVMA(bios_vma_handle);
 	UpdatePageTableForVMA(bios_vma);
-	m_NonImageMemoryInUse += BIOS_XBOX_SIZE;
+	m_NonImageMemoryInUse += BIOS_CHIHIRO_SIZE;
 
 	// Map the mcpx
-	VMAIter mcpx_vma_handle = CarveVMA(MCPX_BASE, MCPX_SIZE);
+	// NOTE: Again, I can't use MCPX_BASE and MCPX_SIZE because those are not aligned
+	VMAIter mcpx_vma_handle = CarveVMA(MAX_VIRTUAL_ADDRESS - PAGE_SIZE, PAGE_SIZE);
 	VirtualMemoryArea& mcpx_vma = mcpx_vma_handle->second;
 	mcpx_vma.type = VMAType::DeviceMCPX;
 	MergeAdjacentVMA(mcpx_vma_handle);
 	UpdatePageTableForVMA(mcpx_vma);
-	m_NonImageMemoryInUse += MCPX_SIZE;
+	m_NonImageMemoryInUse += PAGE_SIZE;
 
-	printf("Page table initialized!");
+	printf("Page table initialized!\n");
 }
 
 void VMManager::InitializeChihiro()
@@ -305,38 +284,63 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->TotalPhysicalPages = m_MaxContiguousAddress / PAGE_SIZE;
 	memory_statistics->AvailablePages = (m_MaxContiguousAddress - m_PhysicalMemoryInUse) / PAGE_SIZE;
 	memory_statistics->VirtualMemoryBytesCommitted = m_ImageMemoryInUse + m_NonImageMemoryInUse;
-	memory_statistics->VirtualMemoryBytesReserved = MAX_VIRTUAL_ADDRESS - (m_ImageMemoryInUse + m_NonImageMemoryInUse);
+	memory_statistics->VirtualMemoryBytesReserved = (ULONG)(MAX_VIRTUAL_ADDRESS - (m_ImageMemoryInUse + m_NonImageMemoryInUse));
 	memory_statistics->CachePagesCommitted = 0; // not implemented
 	memory_statistics->PoolPagesCommitted = 0; // not implemented
 	memory_statistics->StackPagesCommitted = m_StackMemoryInUse;
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
-VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE)
+VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, DWORD protect)
 {
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(size);
+		LOG_FUNC_ARG(low_addr);
+		LOG_FUNC_ARG(high_addr);
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Alignment);
+		LOG_FUNC_ARG(protect);
+	LOG_FUNC_END;
+
 	Lock();
-	VAddr addr = MapMemoryBlock(size, low_addr, high_addr, addr, Alignment);
-	if (addr)
+	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
+	VAddr v_addr = MapMemoryBlock(aligned_size, low_addr, high_addr, addr, Alignment);
+	if (v_addr)
 	{
-		ReprotectVMARange(addr, size, protect);
-		size_t aligned_size = (PAGE_MASK & size) ? ((size + PAGE_SIZE) & ~PAGE_MASK) : size;
+		ReprotectVMARange(v_addr, aligned_size, protect);
 		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ? 
 			m_ImageMemoryInUse += aligned_size : m_NonImageMemoryInUse += aligned_size;
 	}
 	Unlock();
+	return v_addr;
+}
+
+VAddr VMManager::AllocateZeroed(size_t size)
+{
+	LOG_FORWARD(Allocate); // Log AllocateZeroed as the origin of the following RETURN log message
+
+	VAddr addr = Allocate(size);
+	if (addr)
+	{
+		size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
+		memset((void*)addr, 0, aligned_size);
+	}
+
 	return addr;
 }
 
 VAddr VMManager::AllocateStack(size_t size)
 {
+	LOG_FUNC_ONE_ARG(size);
+
 	Lock();
-	VAddr addr = MapMemoryBlock(size + PAGE_SIZE, 0, MAXULONG_PTR);
+	size_t aligned_size = (size + PAGE_SIZE + PAGE_MASK) & ~PAGE_MASK;
+	VAddr addr = MapMemoryBlock(aligned_size, 0, MAXULONG_PTR);
 	if (addr)
 	{
 		ReprotectVMARange(addr, PAGE_SIZE, PAGE_NOACCESS);
-		size_t aligned_size = (PAGE_MASK & size) ? ((size + PAGE_SIZE) & ~PAGE_MASK) : size;
-		addr = addr + PAGE_SIZE + aligned_size;
-		m_StackMemoryInUse += PAGE_SIZE + aligned_size;
+		addr += aligned_size;
+		m_StackMemoryInUse += aligned_size;
 	}
 	Unlock();
 	return addr;
@@ -344,6 +348,8 @@ VAddr VMManager::AllocateStack(size_t size)
 
 void VMManager::Deallocate(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	Lock();
 	UnmapRange(addr);
 	Unlock();
@@ -351,6 +357,8 @@ void VMManager::Deallocate(VAddr addr)
 
 void VMManager::DeallocateStack(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	Lock();
 	ReprotectVMARange(addr, PAGE_SIZE, PAGE_EXECUTE_READWRITE);
 	UnmapRange(addr, true);
@@ -359,6 +367,12 @@ void VMManager::DeallocateStack(VAddr addr)
 
 void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 {
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(target);
+		LOG_FUNC_ARG(size);
+		LOG_FUNC_ARG(new_perms);
+	LOG_FUNC_END;
+
 	Lock();
 	ReprotectVMARange(target, size, new_perms & (~PAGE_WRITECOMBINE));
 	Unlock();
@@ -366,14 +380,18 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 
 bool VMManager::QueryVAddr(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	Lock();
-	bool ret = IsValidVirtualAddress(addr);
+	bool bValid = IsValidVirtualAddress(addr);
 	Unlock();
-	return ret;
+	return bValid;
 }
 
 PAddr VMManager::TranslateVAddr(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	Lock();
 	PAddr p_addr = TranslateVAddrToPAddr(addr);
 	Unlock();
@@ -382,7 +400,7 @@ PAddr VMManager::TranslateVAddr(VAddr addr)
 
 void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
 {
-	xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)m_Base + LaunchDataAddr;
+	xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)m_Base + LaunchDataAddr;
 
 	// Mark the launch page as allocated to prevent other allocations from overwriting it
 	Allocate(PAGE_SIZE, LaunchDataAddr, LaunchDataAddr + PAGE_SIZE);
@@ -390,11 +408,13 @@ void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
 
 DWORD VMManager::QueryProtection(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	DWORD protect = PAGE_NOACCESS;
 
 	Lock();
 	auto it = m_Vma_map.lower_bound(addr);
-	if (it != m_Vma_map.end() || addr >= it->second.base)
+	if (it != m_Vma_map.end() && addr >= it->second.base)
 	{
 		assert(addr <= it->second.base + it->second.size - 1);
 		protect = it->second.permissions;
@@ -406,13 +426,23 @@ DWORD VMManager::QueryProtection(VAddr addr)
 
 size_t VMManager::QuerySize(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	size_t size = 0;
 
 	Lock();
-	auto it = m_Vma_map.find(addr);
-	if (it != m_Vma_map.end())
+	auto it = m_Vma_map.lower_bound(addr);
+	if (it != m_Vma_map.end() && it->second.base == addr)
 	{
+		// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
+		// we must check the corresponding physical allocation size
 		size = it->second.size;
+		auto next_it = std::next(it);
+		while (next_it != m_Vma_map.end() && it->second.backing_block == next_it->second.backing_block)
+		{
+			size += next_it->second.size;
+			++next_it;
+		}
 	}
 	Unlock();
 
@@ -421,9 +451,9 @@ size_t VMManager::QuerySize(VAddr addr)
 
 VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment)
 {
-	// Align the allocation size to the next page boundary and find a free memory block, if any
+	// Find a free memory block for the allocation, if any
 	u32 offset;
-	size_t aligned_size = (PAGE_MASK & size) ? ((size + PAGE_SIZE) & ~PAGE_MASK) : size;
+	size_t aligned_size = size;
 	if (high_addr == MAXULONG_PTR)
 	{
 		offset = AllocatePhysicalMemory(aligned_size);
@@ -444,9 +474,10 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 	{
 		case PMEMORY_SUCCESS:
 		{
-			if (!addr)
-			{
+			if (!addr) {
 				addr = m_Base + offset; // VAddr is simply the offset from the base address inside the second file view
+			} else {
+				addr &= ~PAGE_MASK;
 			}
 
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
@@ -464,9 +495,10 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 
 		case PMEMORY_ALLOCATE_FRAGMENTED:
 		{
-			if (!addr)
-			{
+			if (!addr) {
 				addr = offset; // VAddr is the aligned address returned by VirtualAlloc
+			} else {
+				addr &= ~PAGE_MASK;
 			}
 
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
@@ -488,10 +520,7 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 		}
 
 		default:
-		{
 			CxbxKrnlCleanup("Unknown error code in Physical Memory class.");
-			return;
-		}
 	}
 
 	return addr;
@@ -504,13 +533,11 @@ void VMManager::UnmapRange(VAddr target, bool StackFlag)
 	{
 		// This should also generate a STATUS_GUARD_PAGE_VIOLATION exception from Windows
 		CxbxKrnlCleanup("Access to guarded page 0x0 detected!\n");
-		return;
 	}
-	auto it = m_Vma_map.find(aligned_start);
-	if (it == m_Vma_map.end())
+	auto it = m_Vma_map.lower_bound(aligned_start);
+	if (it->second.base != target)
 	{
 		CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!");
-		return;
 	}
 	else
 	{
@@ -531,7 +558,6 @@ void VMManager::UnmapRange(VAddr target, bool StackFlag)
 			{
 				CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected! \
 The type was %u", it->second.type);
-				return;
 			}
 			default:
 			{
@@ -705,7 +731,7 @@ VMManager::VMAIter VMManager::CarveVMARange(VAddr base, size_t size)
 {
 	VAddr target_end = base + size;
 	assert(target_end >= base);
-	assert(target_end <= MAX_HIGHEST_PAGE_ADDRESS);
+	assert(target_end <= MAX_VIRTUAL_ADDRESS - PAGE_SIZE);
 	assert(size > 0);
 
 	VMAIter begin_vma = GetVMAIterator(base);
@@ -782,7 +808,6 @@ VMManager::VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 	if (!VirtualProtect((void*)vma.base, vma.size, new_perms, &dummy))
 	{
 		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma!");
-		return vma_handle;
 	}
 	UpdatePageTableForVMA(vma);
 
@@ -823,9 +848,6 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma)
 		break;
 
 		default:
-		{
 			CxbxKrnlCleanup("Unknown VMAType in UpdatePageTableForVMA");
-			return;
-		}	
 	}
 }

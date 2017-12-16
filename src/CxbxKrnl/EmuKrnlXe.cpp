@@ -90,8 +90,15 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
 			// Copy the section data
 			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
+
+			// ergo720: I have always to +/- PAGE_SIZE the section borders because the first/last pages of a adjacent section are
+			// shared and they will overlap, which is not currently supported by the virtual manager
+
 			// Make this loading consume physical memory as well
-			g_VMManager.MapMemoryBlock(Section->FileSize, 0, MAXULONG_PTR, (VAddr)Section->VirtualAddress);
+			g_VMManager.Allocate(Section->VirtualSize - PAGE_SIZE, 0, MAXULONG_PTR, (VAddr)Section->VirtualAddress + PAGE_SIZE);
+			// Increment the head/tail page reference counters
+			(*Section->HeadReferenceCount)++;
+			(*Section->TailReferenceCount)++;
 		}
 
 		// Increment the reference count
@@ -129,7 +136,11 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		// Free the section and the physical memory in use if necessary
 		if (Section->SectionReferenceCount == 0) {
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
-			g_VMManager.UnmapRange((VAddr)Section->VirtualAddress);
+
+			g_VMManager.Deallocate((VAddr)Section->VirtualAddress + PAGE_SIZE);
+			// Decrement the head/tail page reference counters
+			(*Section->HeadReferenceCount)--;
+			(*Section->TailReferenceCount)--;
 		}
 
 		ret = STATUS_SUCCESS;

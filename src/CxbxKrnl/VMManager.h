@@ -37,10 +37,7 @@
 #ifndef VMMANAGER_H
 #define VMMANAGER_H
 
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h>
-}
+
 #include "PhysicalMemory.h"
 
 
@@ -123,7 +120,9 @@ class VMManager : public PhysicalMemory
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
-		VAddr Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
+		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
+		// allocates a block of memory and zeros it
+		VAddr AllocateZeroed(size_t size);
 		// allocate stack memory
 		VAddr AllocateStack(size_t size);
 		// deallocate a block of memory

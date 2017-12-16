@@ -52,7 +52,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
-#include "MemoryManager.h"
+#include "VMManager.h"
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
 #include "Logging.h"
@@ -862,49 +862,49 @@ int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
 
 XTL::X_D3DSurface *EmuNewD3DSurface()
 {
-	XTL::X_D3DSurface *result = (XTL::X_D3DSurface *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DSurface));
+	XTL::X_D3DSurface *result = (XTL::X_D3DSurface *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DSurface));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_SURFACE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DTexture *EmuNewD3DTexture()
 {
-	XTL::X_D3DTexture *result = (XTL::X_D3DTexture *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DTexture));
+	XTL::X_D3DTexture *result = (XTL::X_D3DTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DVolumeTexture *EmuNewD3DVolumeTexture()
 {
-	XTL::X_D3DVolumeTexture *result = (XTL::X_D3DVolumeTexture *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DVolumeTexture));
+	XTL::X_D3DVolumeTexture *result = (XTL::X_D3DVolumeTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DVolumeTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DCubeTexture *EmuNewD3DCubeTexture()
 {
-	XTL::X_D3DCubeTexture *result = (XTL::X_D3DCubeTexture *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DCubeTexture));
+	XTL::X_D3DCubeTexture *result = (XTL::X_D3DCubeTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DCubeTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DIndexBuffer *EmuNewD3DIndexBuffer()
 {
-	XTL::X_D3DIndexBuffer *result = (XTL::X_D3DIndexBuffer *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DIndexBuffer));
+	XTL::X_D3DIndexBuffer *result = (XTL::X_D3DIndexBuffer *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DIndexBuffer));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_INDEXBUFFER | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DVertexBuffer *EmuNewD3DVertexBuffer()
 {
-	XTL::X_D3DVertexBuffer *result = (XTL::X_D3DVertexBuffer *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DVertexBuffer));
+	XTL::X_D3DVertexBuffer *result = (XTL::X_D3DVertexBuffer *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DVertexBuffer));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_VERTEXBUFFER | 1; // Set refcount to 1
 	return result;
 }
 
 XTL::X_D3DPalette *EmuNewD3DPalette()
 {
-	XTL::X_D3DPalette *result = (XTL::X_D3DPalette *)g_MemoryManager.AllocateZeroed(1, sizeof(XTL::X_D3DPalette));
+	XTL::X_D3DPalette *result = (XTL::X_D3DPalette *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DPalette));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1
 	return result;
 }
@@ -3397,8 +3397,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_END;
 
     // create emulated shader struct
-    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_MemoryManager.AllocateZeroed(1, sizeof(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)g_MemoryManager.AllocateZeroed(1, sizeof(VERTEX_SHADER));
+    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_VMManager.AllocateZeroed(sizeof(X_D3DVertexShader));
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)g_VMManager.AllocateZeroed(sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
 
@@ -3500,7 +3500,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     free(pRecompiledDeclaration);
 
-    pVertexShader->pDeclaration = (DWORD*)g_MemoryManager.Allocate(DeclarationSize);
+    pVertexShader->pDeclaration = (DWORD*)g_VMManager.Allocate(DeclarationSize);
     memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
 
     pVertexShader->FunctionSize = 0;
@@ -3513,7 +3513,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     {
         if(pFunction != NULL)
         {
-            pVertexShader->pFunction = (DWORD*)g_MemoryManager.Allocate(VertexShaderSize);
+            pVertexShader->pFunction = (DWORD*)g_VMManager.Allocate(VertexShaderSize);
             memcpy(pVertexShader->pFunction, pFunction, VertexShaderSize);
             pVertexShader->FunctionSize = VertexShaderSize;
         }
@@ -4034,7 +4034,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
 		// If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
         Texture_Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
-        pTexture->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+        pTexture->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
 
         g_pCachedYuvSurface = (X_D3DSurface*)pTexture;
 
@@ -4184,7 +4184,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
         (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
-        (*ppVolumeTexture)->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+        (*ppVolumeTexture)->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
 		(*ppVolumeTexture)->Format = Format << X_D3DFORMAT_FORMAT_SHIFT;
 
         (*ppVolumeTexture)->Size = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK)
@@ -4643,7 +4643,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Begin)
 
     if(g_IVBTable == nullptr)
     {
-        g_IVBTable = (struct XTL::_D3DIVB*)g_MemoryManager.Allocate(sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
+        g_IVBTable = (struct XTL::_D3DIVB*)g_VMManager.Allocate(sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
     }
 
     g_IVBTblOffs = 0;
@@ -4654,7 +4654,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Begin)
 
     if(g_pIVBVertexBuffer == nullptr)
     {
-        g_pIVBVertexBuffer = (DWORD*)g_MemoryManager.Allocate(IVB_BUFFER_SIZE);
+        g_pIVBVertexBuffer = (DWORD*)g_VMManager.Allocate(IVB_BUFFER_SIZE);
     }
 }
 
@@ -5208,7 +5208,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create vertex buffer
             {
-                DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
                 if(dwSize == -1)
                 {
@@ -5272,7 +5272,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create push buffer
             {
-                DWORD dwSize = g_MemoryManager.QueryAllocationSize(pBase);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
                 if(dwSize == -1)
                 {
@@ -5424,7 +5424,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
 				// Note : This is the only change to the pResource argument passed into D3DResource_Register !
                 pPixelContainer->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
-                pPixelContainer->Lock = (DWORD)g_MemoryManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+                pPixelContainer->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
             }
             else
             {
@@ -5954,7 +5954,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
                 g_pCachedYuvSurface = NULL;
 
             // free memory associated with this special resource handle
-            g_MemoryManager.Free((PVOID)pThis->Lock);
+			g_VMManager.Deallocate((VAddr)pThis->Lock);
         }
         
 		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
@@ -5969,7 +5969,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
         {
-            g_MemoryManager.Free((void*)pThis->Data);
+			g_VMManager.Deallocate((VAddr)pThis->Data);
             uRet = --pThis->Lock; // TODO : This makes no sense (as it mangles X_D3DRESOURCE_LOCK_PALETTE) but crashes otherwise?!
         }
         else if(pHostResource != nullptr)
@@ -8526,7 +8526,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
     X_D3DPalette *pPalette = EmuNewD3DPalette();
 
 	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
-    pPalette->Data = (DWORD)g_MemoryManager.AllocateContiguous(XboxD3DPaletteSizeToBytes(Size), PAGE_SIZE);
+    pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size));
     pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
@@ -8700,17 +8700,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
 
         RealHandle = pVertexShader->Handle;
-        g_MemoryManager.Free(pVertexShader->pDeclaration);
+		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
 
         if(pVertexShader->pFunction)
         {
-            g_MemoryManager.Free(pVertexShader->pFunction);
+			g_VMManager.Deallocate((VAddr)pVertexShader->pFunction);
         }
 
         FreeVertexDynamicPatch(pVertexShader);
 
-        g_MemoryManager.Free(pVertexShader);
-        g_MemoryManager.Free(pD3DVertexShader);
+		g_VMManager.Deallocate((VAddr)pVertexShader);
+        g_VMManager.Deallocate((VAddr)pD3DVertexShader);
     }
 
     HRESULT hRet = g_pD3DDevice8->DeleteVertexShader(RealHandle);

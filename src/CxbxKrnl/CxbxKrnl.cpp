@@ -899,7 +899,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.MapMemoryBlock(MAX_PATH, 0, MAXULONG_PTR);
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		printf("[0x%.4X] INIT: XeImageFileName = %s\n", GetCurrentThreadId(), xboxkrnl::XeImageFileName.Buffer);
@@ -1031,6 +1031,17 @@ void CxbxInitFilePaths()
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
+
+// REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
+/*xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
+{
+	{   // header
+		2,  // 2: dashboard, 0: title
+		0,
+		"D:\\default.xbe",
+		0
+	}
+};*/
 
 void CxbxRestoreLaunchDataPage()
 {

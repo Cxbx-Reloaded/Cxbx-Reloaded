@@ -37,6 +37,13 @@
 #ifndef PHYSICAL_MEMORY_H
 #define PHYSICAL_MEMORY_H
 
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_DEFEXTRN_
+
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h>
+};
 
 #include "Emu.h"
 #include "CxbxKrnl.h"

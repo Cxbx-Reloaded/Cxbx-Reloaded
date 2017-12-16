@@ -49,7 +49,6 @@ namespace xboxkrnl {
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "EmuXTL.h"
-#include "MemoryManager.h"
 #include "Logging.h"
 
 #include <mmreg.h>

@@ -86,14 +86,14 @@ PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
 					}
 				}
 
-				u32 offset = rit->first + rit->second;
-				if (rit == m_Mem_map.rbegin() && m_MaxContiguousAddress - offset >= size)
+				//u32 offset = std::next(rit)->first + std::next(rit)->second;
+				/*if (rit == max_contiguous_it && m_MaxContiguousAddress - offset >= size)
 				{
 					addr = m_MaxContiguousAddress - size;
 					m_Mem_map[addr] = size;
 					m_PhysicalMemoryInUse += size;
 					break;
-				}
+				}*/
 
 				if (rit->first - (std::next(rit)->first + std::next(rit)->second) >= size)
 				{
@@ -116,6 +116,7 @@ PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
 		else
 		{
 			// Allocate the block starting from the bottom of memory
+			auto max_contiguous_it = m_Mem_map.lower_bound(m_MaxContiguousAddress); // skip the nv2a/PFN allocation
 			for (auto it = m_Mem_map.begin(); ; ++it)
 			{
 				if (it == m_Mem_map.begin() && it->first >= size)
@@ -127,7 +128,7 @@ PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
 				}
 
 				u32 offset = it->first + it->second;
-				if (std::next(it) == m_Mem_map.end())
+				if (std::next(it) == max_contiguous_it)
 				{
 					if (m_MaxContiguousAddress - offset >= size)
 					{

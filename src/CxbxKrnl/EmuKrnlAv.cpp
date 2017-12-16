@@ -47,7 +47,6 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
