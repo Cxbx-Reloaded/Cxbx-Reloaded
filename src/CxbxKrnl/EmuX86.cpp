@@ -60,86 +60,50 @@
 // Read & write handlers handlers for I/O
 //
 
-uint32_t EmuX86_IORead32(xbaddr addr)
+static int field_pin = 0;
+
+uint32_t EmuX86_IORead(xbaddr addr, int size)
 {
-	// TODO : Move 0x8008 TIMER to a device
-	if (addr == 0x8008) { // TIMER
-		// HACK: This is very wrong.
-		// This timer should count at a specific frequency (3579.545 ticks per ms)
-		// But this is enough to keep NXDK from hanging for now.
-		LARGE_INTEGER performanceCount;
-		QueryPerformanceCounter(&performanceCount);
-		return static_cast<uint32_t>(performanceCount.QuadPart);
+	switch (addr) {
+	case 0x8008: { // TODO : Move 0x8008 TIMER to a device
+		if (size == sizeof(uint32_t)) {
+			// HACK: This is very wrong.
+			// This timer should count at a specific frequency (3579.545 ticks per ms)
+			// But this is enough to keep NXDK from hanging for now.
+			LARGE_INTEGER performanceCount;
+			QueryPerformanceCounter(&performanceCount);
+			return static_cast<uint32_t>(performanceCount.QuadPart);
+		}
+		break;
+	}
+	case 0x80C0: { // TODO : Move 0x80C0 TV encoder to a device
+		if (size == sizeof(uint8_t)) {
+			// field pin from tv encoder?
+			field_pin = (field_pin + 1) & 1;
+			return field_pin << 5;
+		}
+		break;
+	}
 	}
 
 	// Pass the IO Read to the PCI Bus, this will handle devices with BARs set to IO addresses
 	uint32_t value = 0;
-	if (g_PCIBus->IORead(addr, &value, sizeof(uint32_t))) {
+	if (g_PCIBus->IORead(addr, &value, size)) {
 		return value;
 	}
 
-	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
+	EmuWarning("EmuX86_IORead(0x%08X, %d) [Unknown address]", addr, size);
 	return 0;
 }
 
-uint16_t EmuX86_IORead16(xbaddr addr)
-{
-	uint32_t value = 0;
-	if (g_PCIBus->IORead(addr, &value, sizeof(uint16_t))) {
-		return (uint16_t)value;
-	}
-
-	EmuWarning("EmuX86_IORead16(0x%08X) [Unknown address]", addr);
-	return 0;
-}
-
-static int field_pin = 0;
-uint8_t EmuX86_IORead8(xbaddr addr)
-{
-	// TODO : Move 0x80C0 TV encoder to a device
-	if (addr == 0x80C0) {
-		// field pin from tv encoder?
-		field_pin = (field_pin + 1) & 1;
-		return field_pin << 5;
-	}
-
-	uint32_t value = 0;
-	if (g_PCIBus->IORead(addr, &value, sizeof(uint8_t))) {
-		return (uint8_t)value;
-	}
-
-	EmuWarning("EmuX86_IORead8(0x%08X) [Unknown address]", addr);
-	return 0;
-}
-
-void EmuX86_IOWrite32(xbaddr addr, uint32_t value)
+void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 {
 	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
-	if (g_PCIBus->IOWrite(addr, value, sizeof(uint32_t))) {
+	if (g_PCIBus->IOWrite(addr, value, size)) {
 		return;
 	}
 
-	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
-}
-
-void EmuX86_IOWrite16(xbaddr addr, uint16_t value)
-{
-	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
-	if (g_PCIBus->IOWrite(addr, (uint32_t)value, sizeof(uint16_t))) {
-		return;
-	}
-
-	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
-}
-
-void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
-{
-	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
-	if (g_PCIBus->IOWrite(addr, (uint32_t)value, sizeof(uint8_t))) {
-		return;
-	}
-
-	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+	EmuWarning("EmuX86_IOWrite(0x%08X, 0x%04X, %d) [Unknown address]", addr, value, size);
 }
 
 //
@@ -1024,26 +988,11 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	uint32_t value = 0;
 	uint32_t addr;
-
 	if (!EmuX86_Operand_Read(e, info, 1, &addr))
 		return false;
 
-	switch (info.ops[0].size) {
-	case 8:
-		value = EmuX86_IORead8(addr);
-		break;
-	case 16:
-		value = EmuX86_IORead16(addr);
-		break;
-	case 32:
-		value = EmuX86_IORead32(addr);
-		break;
-	default:
-		return false;
-	}
-
+	uint32_t value = EmuX86_IORead(addr, info.ops[0].size / 8); // Convert size in bits into bytes
 	if (!EmuX86_Operand_Write(e, info, 0, value)) {
 		return false;
 	}
@@ -1151,22 +1100,7 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// OUT does an I/O write on the address, using the value from the second operand :
-	switch (info.ops[1].size) {
-	case 8: {
-		EmuX86_IOWrite8(addr, (uint8_t)value);
-		return true;
-	}
-	case 16: {
-		EmuX86_IOWrite16(addr, (uint16_t)value);
-		return true;
-	}
-	case 32: {
-		EmuX86_IOWrite32(addr, value);
-		return true;
-	}
-	default:
-		return false;
-	}
+	EmuX86_IOWrite(addr, value, info.ops[1].size / 8); // Convert size in bits into bytes
 
 	// Note : OUT instructions never update CPU flags
 
