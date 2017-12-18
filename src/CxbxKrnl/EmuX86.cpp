@@ -172,6 +172,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 	if ((addr & (size - 1)) != 0) {
 		EmuWarning("EmuX86_Read(0x%08X, %d) [Unaligned unimplemented]", addr, size);
 		// LOG_UNIMPLEMENTD();
+		return 0;
 	}
 
 	uint32_t value;
@@ -207,6 +208,7 @@ bool EmuX86_Write(xbaddr addr, uint32_t value, int size)
 	if ((addr & (size - 1)) != 0) {
 		EmuWarning("EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
 		// LOG_UNIMPLEMENTD();
+		return false;
 	}
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
