@@ -2066,6 +2066,7 @@ static void EmuUnswizzleTextureStages()
 		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
 		if (pHostTexture != nullptr)
 		{
+			if (pHostTexture->GetType() == XTL::D3DRTYPE_CUBETEXTURE) continue; // Prevent exceptions - skip cubes for now
 			hRet = pHostTexture->UnlockRect(0); // remove old lock
 			DEBUG_D3DRESULT(hRet, "pHostTexture->UnlockRect");
 		}
