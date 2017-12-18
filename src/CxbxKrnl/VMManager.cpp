@@ -232,6 +232,7 @@ void VMManager::InitializeChihiro()
 {
 	UnmapRange(m_Base + m_MaxContiguousAddress);
 	m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
+	m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
 	VMAIter upper_mem_vma_handle = CarveVMA(m_Base + m_MaxContiguousAddress, 48 * PAGE_SIZE);
@@ -276,13 +277,13 @@ void VMManager::InitializeChihiro()
 	UpdatePageTableForVMA(bios_vma);
 	m_NonImageMemoryInUse += BIOS_CHIHIRO_SIZE;
 
-	printf("Page table for Chihiro initialized!");
+	printf("Page table for Chihiro initialized!\n");
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 {
-	memory_statistics->TotalPhysicalPages = m_MaxContiguousAddress / PAGE_SIZE;
-	memory_statistics->AvailablePages = (m_MaxContiguousAddress - m_PhysicalMemoryInUse) / PAGE_SIZE;
+	memory_statistics->TotalPhysicalPages = m_MaxPhysicalMemory / PAGE_SIZE;
+	memory_statistics->AvailablePages = (m_MaxPhysicalMemory - m_PhysicalMemoryInUse) / PAGE_SIZE;
 	memory_statistics->VirtualMemoryBytesCommitted = m_ImageMemoryInUse + m_NonImageMemoryInUse;
 	memory_statistics->VirtualMemoryBytesReserved = (ULONG)(MAX_VIRTUAL_ADDRESS - (m_ImageMemoryInUse + m_NonImageMemoryInUse));
 	memory_statistics->CachePagesCommitted = 0; // not implemented
@@ -302,12 +303,15 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr ad
 		LOG_FUNC_ARG(protect);
 	LOG_FUNC_END;
 
+	// PAGE_WRITECOMBINE is not allowed for shared memory, unless SEC_WRITECOMBINE flag was specified when calling the
+	// CreateFileMapping function. Considering that Cxbx doesn't emulate the caches, it's probably safe to ignore this flag
+
 	Lock();
 	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
 	VAddr v_addr = MapMemoryBlock(aligned_size, low_addr, high_addr, addr, Alignment);
 	if (v_addr)
 	{
-		ReprotectVMARange(v_addr, aligned_size, protect);
+		ReprotectVMARange(v_addr, aligned_size, protect & (~PAGE_WRITECOMBINE));
 		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ? 
 			m_ImageMemoryInUse += aligned_size : m_NonImageMemoryInUse += aligned_size;
 	}
@@ -346,6 +350,20 @@ VAddr VMManager::AllocateStack(size_t size)
 	return addr;
 }
 
+void VMManager::DeallocateOverlapped(VAddr addr)
+{
+	LOG_FUNC_ONE_ARG(addr);
+
+	Lock();
+	VAddr aligned_addr = addr & ~(UINT_PTR)PAGE_MASK;
+	auto it = m_Vma_map.lower_bound(aligned_addr);
+	if (it->first == aligned_addr && it->second.size == PAGE_SIZE)
+	{
+		UnmapRange(aligned_addr);
+	}
+	Unlock();
+}
+
 void VMManager::Deallocate(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
@@ -372,6 +390,9 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 		LOG_FUNC_ARG(size);
 		LOG_FUNC_ARG(new_perms);
 	LOG_FUNC_END;
+
+	// PAGE_WRITECOMBINE is not allowed for shared memory, unless SEC_WRITECOMBINE flag was specified when calling the
+	// CreateFileMapping function. Considering that Cxbx doesn't emulate the caches, it's probably safe to ignore this flag
 
 	Lock();
 	ReprotectVMARange(target, size, new_perms & (~PAGE_WRITECOMBINE));
@@ -428,7 +449,8 @@ size_t VMManager::QuerySize(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
-	size_t size = 0;
+	// The Xbox returns at least PAGE_SIZE even for invalid addresses
+	size_t size = PAGE_SIZE;
 
 	Lock();
 	auto it = m_Vma_map.lower_bound(addr);
@@ -461,7 +483,8 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 	else
 	{
 		PAddr aligned_low = low_addr & ~(UINT_PTR)(Alignment - 1);
-		PAddr aligned_high = high_addr & ~(UINT_PTR)(Alignment - 1);
+		// Increase high_addr of one page to handle the case when low/high addr are exactly at the boundary of the allocation
+		PAddr aligned_high = (high_addr + PAGE_SIZE) & ~(UINT_PTR)(Alignment - 1);
 		if (aligned_high > m_MaxContiguousAddress) { aligned_high = m_MaxContiguousAddress; }
 		if (aligned_low > aligned_high) { aligned_low = aligned_high - PAGE_SIZE; }
 
@@ -535,7 +558,7 @@ void VMManager::UnmapRange(VAddr target, bool StackFlag)
 		CxbxKrnlCleanup("Access to guarded page 0x0 detected!\n");
 	}
 	auto it = m_Vma_map.lower_bound(aligned_start);
-	if (it->second.base != target)
+	if (it->first != aligned_start)
 	{
 		CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!");
 	}
@@ -807,7 +830,7 @@ VMManager::VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 	vma.permissions = new_perms;
 	if (!VirtualProtect((void*)vma.base, vma.size, new_perms, &dummy))
 	{
-		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma!");
+		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma! The error code was %d", GetLastError());
 	}
 	UpdatePageTableForVMA(vma);
 

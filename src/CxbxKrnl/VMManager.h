@@ -123,12 +123,14 @@ class VMManager : public PhysicalMemory
 		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
-		// allocate stack memory
+		// allocates stack memory
 		VAddr AllocateStack(size_t size);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
 		// deallocate stack memory
 		void DeallocateStack(VAddr addr);
+		// checks if an overlapped memory block is present and, if so, deallocates it
+		void DeallocateOverlapped(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr target, size_t size, DWORD new_perms);
 		// query if a VAddr is valid

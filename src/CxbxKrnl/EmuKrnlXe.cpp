@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_INVALID_HANDLE;
+	NTSTATUS ret = STATUS_SUCCESS;
 
 	void* sectionData = CxbxKrnl_Xbe->FindSection((char*)std::string(Section->SectionName, 9).c_str());
 	if (sectionData != nullptr) {
@@ -91,11 +91,36 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// Copy the section data
 			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
 
-			// ergo720: I have always to +/- PAGE_SIZE the section borders because the first/last pages of a adjacent section are
-			// shared and they will overlap, which is not currently supported by the virtual manager
+			// ergo720: I can't just +/- PAGE_SIZE the VirtualAddress and the VirtualSize of a section because some titles have
+			// sections less than PAGE_SIZE, which will cause again an overlap with the next section since both will have the
+			// same aligned starting address. A possible solution to this is to use std::multimap, which allows duplicate keys
+			// but at this point I'm not sure if that will cause issues with the rest of the virtual memory manager code.
 
-			// Make this loading consume physical memory as well
-			g_VMManager.Allocate(Section->VirtualSize - PAGE_SIZE, 0, MAXULONG_PTR, (VAddr)Section->VirtualAddress + PAGE_SIZE);
+			// Test case: Dead or Alive 3, section XGRPH has a size of 764 bytes
+			// XGRPH										DSOUND
+			// 1F18A0 + 2FC -> aligned_start = 1F1000		1F1BA0 -> aligned_start = 1F1000 <- collision
+
+			VAddr BaseAddress = (VAddr)Section->VirtualAddress;
+			VAddr EndingAddress = (VAddr)Section->VirtualAddress + Section->VirtualSize;
+
+			if ((*Section->TailReferenceCount) != 0)
+			{
+				EndingAddress &= ~PAGE_MASK;
+			}
+
+			if ((*Section->HeadReferenceCount) != 0)
+			{
+				BaseAddress = (BaseAddress + PAGE_SIZE) & ~PAGE_MASK;
+			}
+
+			if (EndingAddress > BaseAddress)
+			{
+				// Make this loading consume physical memory as well
+				if (!g_VMManager.Allocate(EndingAddress - BaseAddress, 0, MAXULONG_PTR, BaseAddress))
+				{
+					ret = STATUS_NO_MEMORY;
+				}
+			}
 			// Increment the head/tail page reference counters
 			(*Section->HeadReferenceCount)++;
 			(*Section->TailReferenceCount)++;
@@ -103,8 +128,6 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 
 		// Increment the reference count
 		Section->SectionReferenceCount++;
-
-		ret = STATUS_SUCCESS;
 	}
 	
 	RETURN(ret);
@@ -137,10 +160,31 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		if (Section->SectionReferenceCount == 0) {
 			memset(Section->VirtualAddress, 0, Section->VirtualSize);
 
-			g_VMManager.Deallocate((VAddr)Section->VirtualAddress + PAGE_SIZE);
+			VAddr BaseAddress = (VAddr)Section->VirtualAddress;
+			VAddr EndingAddress = (VAddr)Section->VirtualAddress + Section->VirtualSize;
+
 			// Decrement the head/tail page reference counters
 			(*Section->HeadReferenceCount)--;
 			(*Section->TailReferenceCount)--;
+
+			if ((*Section->TailReferenceCount) != 0)
+			{
+				EndingAddress &= ~PAGE_MASK;
+			}
+
+			if ((*Section->HeadReferenceCount) != 0)
+			{
+				BaseAddress = (BaseAddress + PAGE_SIZE) & ~PAGE_MASK;
+			}
+
+			if (EndingAddress > BaseAddress)
+			{
+				g_VMManager.Deallocate(BaseAddress);
+			}
+			else
+			{
+				g_VMManager.DeallocateOverlapped((VAddr)Section->VirtualAddress);
+			}
 		}
 
 		ret = STATUS_SUCCESS;

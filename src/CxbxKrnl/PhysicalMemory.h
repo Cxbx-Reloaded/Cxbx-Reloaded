@@ -77,6 +77,8 @@ class PhysicalMemory
 		const unsigned int m_AllocationThreshold = 1024 * 64;
 		// amount of physical memory in use
 		size_t m_PhysicalMemoryInUse = 0;
+		// max physical memory available on the Xbox/Chihiro
+		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
 		// map tracking the physical memory currently in use
 		std::map<PAddr, size_t> m_Mem_map;
 		// map tracking the blocks allocated with VirtualAlloc
