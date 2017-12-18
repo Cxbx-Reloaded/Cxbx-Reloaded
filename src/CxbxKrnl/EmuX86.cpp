@@ -128,19 +128,22 @@ uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 	}
 }
 
-void EmuX86_Mem_Write32(xbaddr addr, uint32_t value)
+void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 {
-	*(uint32_t*)addr = value;
-}
-
-void EmuX86_Mem_Write16(xbaddr addr, uint16_t value)
-{
-	*(uint16_t*)addr = value;
-}
-
-void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
-{
-	*(uint8_t*)addr = value;
+	switch (size) {
+	case sizeof(uint32_t) :
+		*(uint32_t*)addr = value;
+		break;
+	case sizeof(uint16_t) :
+		*(uint32_t*)addr = (uint16_t)value;
+		break;
+	case sizeof(uint8_t) :
+		*(uint8_t*)addr = (uint8_t)value;
+		break;
+	default:
+		// UNREACHABLE(size);
+		return;
+	}
 }
 
 uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
@@ -300,7 +303,7 @@ void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
 
 	// Outside EmuException, pass the memory-access through to normal memory :
 	DbgPrintf("X86 : Write32Aligned(0x%.8X, 0x%.8X)\n", addr, value);
-	EmuX86_Mem_Write32(addr, value);
+	EmuX86_Mem_Write(addr, value, sizeof(uint32_t));
 }
 
 void EmuX86_Write32(xbaddr addr, uint32_t value)
@@ -340,7 +343,7 @@ void EmuX86_Write16(xbaddr addr, uint16_t value)
 
 	// Outside EmuException, pass the memory-access through to normal memory :
 	DbgPrintf("X86 : Write16(0x%.8X, 0x%.4X)\n", addr, value);
-	EmuX86_Mem_Write16(addr, value);
+	EmuX86_Mem_Write(addr, value, sizeof(uint16_t));
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
@@ -370,7 +373,7 @@ void EmuX86_Write8(xbaddr addr, uint8_t value)
 
 	// Outside EmuException, pass the memory-access through to normal memory :
 	DbgPrintf("X86 : Write8(0x%.8X, 0x%.2X)\n", addr, value);
-	EmuX86_Mem_Write8(addr, value);
+	EmuX86_Mem_Write(addr, value, sizeof(uint8_t));
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
