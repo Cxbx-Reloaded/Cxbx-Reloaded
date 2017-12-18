@@ -113,19 +113,19 @@ void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 // to prevent recursive exceptions when accessing unallocated memory.
 //
 
-uint32_t EmuX86_Mem_Read32(xbaddr addr)
+uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 {
-	return *(uint32_t*)addr;
-}
-
-uint16_t EmuX86_Mem_Read16(xbaddr addr)
-{
-	return *(uint16_t*)addr;
-}
-
-uint8_t EmuX86_Mem_Read8(xbaddr addr)
-{
-	return *(uint8_t*)addr;
+	switch (size) {
+	case sizeof(uint32_t) :
+		return *(uint32_t*)addr;
+	case sizeof(uint16_t) :
+		return *(uint16_t*)addr;
+	case sizeof(uint8_t) :
+		return *(uint8_t*)addr;
+	default:
+		// UNREACHABLE(size);
+		return 0;
+	}
 }
 
 void EmuX86_Mem_Write32(xbaddr addr, uint32_t value)
@@ -187,7 +187,7 @@ uint32_t EmuX86_Read32Aligned(xbaddr addr)
 			value = 0;
 		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read32(addr);
+			value = EmuX86_Mem_Read(addr, sizeof(uint32_t));
 		}
 
 		DbgPrintf("EmuX86_Read32Aligned(0x%08X) = 0x%08X\n", addr, value);
@@ -232,7 +232,7 @@ uint16_t EmuX86_Read16(xbaddr addr)
 			value = 0;
 		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read16(addr);
+			value = (uint16_t)EmuX86_Mem_Read(addr, sizeof(uint16_t));
 		}
 
 		DbgPrintf("X86 : Read16(0x%.8X) = 0x%.4X\n", addr, value);
@@ -263,7 +263,7 @@ uint8_t EmuX86_Read8(xbaddr addr)
 			value = 0;
 		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read8(addr);
+			value = (uint8_t)EmuX86_Mem_Read(addr, sizeof(uint8_t));
 		}
 
 		DbgPrintf("X86 : Read8(0x%.8X) = 0x%.2X\n", addr, value);
