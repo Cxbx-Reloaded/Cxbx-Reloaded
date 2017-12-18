@@ -178,7 +178,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		value = EmuNV2A_Read(addr - NV2A_ADDR, size * 8); // Tmp: Correct nr of bytes into nr of bits
+		value = EmuNV2A_Read(addr - NV2A_ADDR, size);
 		// Note : EmuNV2A_Read does it's own logging
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
@@ -211,7 +211,7 @@ bool EmuX86_Write(xbaddr addr, uint32_t value, int size)
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		EmuNV2A_Write(addr - NV2A_ADDR, value, size * 8); // Tmp: Correct nr of bytes into nr of bits
+		EmuNV2A_Write(addr - NV2A_ADDR, value, size);
 		// Note : EmuNV2A_Write does it's own logging
 		return true; // Assume successfull NV2A write
 	}
@@ -942,7 +942,7 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Note : OUT instructions never update CPU flags
 
-	return false;
+	return true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
