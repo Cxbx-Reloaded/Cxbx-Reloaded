@@ -342,7 +342,7 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	!BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];*/
 }
 
-inline void * EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
+inline void * EmuX86_GetRegisterPointer(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
 	int offset = ContextRecordOffsetByRegisterType[reg];
 	if (offset > 0)
@@ -352,7 +352,7 @@ inline void * EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
 	return nullptr;
 }
 
-inline uint32_t EmuX86_GetRegisterValue32(LPEXCEPTION_POINTERS e, uint8_t reg)
+inline uint32_t EmuX86_GetRegisterValue32(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
 	if (reg != R_NONE)
 	{
@@ -364,14 +364,14 @@ inline uint32_t EmuX86_GetRegisterValue32(LPEXCEPTION_POINTERS e, uint8_t reg)
 	return 0;
 }
 
-xbaddr EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_SMEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
 {
 	xbaddr base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	return base + (uint32_t)info.disp;
 }
 
-xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_MEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
 {
 	xbaddr base = EmuX86_GetRegisterValue32(e, info.base);
 
@@ -383,113 +383,130 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int opera
 		return base + index + (uint32_t)info.disp;
 }
 
-#define no_internal_addr 0
-#define internal_addr_read_only 1
-#define internal_addr_read_write 3
+typedef struct {
+	xbaddr addr;
+	bool is_internal_addr; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
+	int size; // Expressed in bytes, not bits!
+} OperandAddress;
 
-xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, int &is_internal_addr, int &size)
+bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
 {
-	size = info.ops[operand].size / 8; // Convert size in bits into bytes
+	opAddr.size = info.ops[operand].size / 8; // Convert size in bits into bytes
 	switch (info.ops[operand].type) {
 	case O_NONE:
 	{
 		// ignore operand
-		return xbnull;
+		return false;
 	}
 	case O_REG:
-		is_internal_addr = internal_addr_read_write;
-		return (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		return true;
 	{
 	}
 	case O_IMM:
 	{
-		is_internal_addr = internal_addr_read_only;
-		return (xbaddr)(&info.imm);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm);
+		return true;
 	}
 	case O_IMM1:
 	{
-		is_internal_addr = internal_addr_read_only;
-		return (xbaddr)(&info.imm.ex.i1);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm.ex.i1);
+		return true;
 	}
 	case O_IMM2:
 	{
-		is_internal_addr = internal_addr_read_only;
-		return (xbaddr)(&info.imm.ex.i2);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm.ex.i2);
+		return true;
 	}
 	case O_DISP:
 	{
-		is_internal_addr = no_internal_addr;
-		// TODO : Use info.dispSize instead?
-		return (xbaddr)info.disp;
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = (xbaddr)info.disp;
+		return true;
 	}
 	case O_SMEM:
 	{
-		is_internal_addr = no_internal_addr;
-		// TODO : Use info.dispSize instead?
-		return EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		return true;
 	}
 	case O_MEM:
 	{
-		is_internal_addr = no_internal_addr;
-		// TODO : Use info.dispSize instead?
-		return EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		return true;
 	}
 	case O_PC:
 	{
-		is_internal_addr = no_internal_addr;
-		return (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		opAddr.is_internal_addr = false;
+		opAddr.addr = (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		return true;
 	}
 	case O_PTR:
 	{
-		is_internal_addr = no_internal_addr;
-		return (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
+		opAddr.is_internal_addr = false;
+		opAddr.addr = (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
+		return true;
 	}
 	default:
-		return xbnull;
+		// UNREACHABLE(info.ops[operand].type);
+		return false;
 	}
 
-	return xbnull;
+	return false;
 }
 
-uint32_t EmuX86_Addr_Read(xbaddr srcAddr, int is_internal_addr, int size)
+bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
 {
-	assert(size == sizeof(uint8_t) || size == sizeof(uint16_t) || size == sizeof(uint32_t));
+	// Disallow write-access to immediate value adresses
+	switch (info.ops[operand].type) {
+	case O_IMM:
+	case O_IMM1:
+	case O_IMM2:
+		EmuWarning("Refused operand write-access to immedate value address!");
+		return false;
+	}
 
-	if (is_internal_addr) {
-		return EmuX86_Mem_Read(srcAddr, size);
+	// Except for the above restriction, writes may access the same operand addresses as reads :
+	return EmuX86_Operand_Addr_ForReadOnly(e, info, operand, opAddr);
+}
+
+uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
+{
+	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
+	if (opAddr.is_internal_addr) {
+		return EmuX86_Mem_Read(opAddr.addr, opAddr.size);
 	}
 	else {
-		return EmuX86_Read(srcAddr, size);
+		return EmuX86_Read(opAddr.addr, opAddr.size);
 	}
 }
 
-void EmuX86_Addr_Write(xbaddr destAddr, int is_internal_addr, int size, uint32_t value)
+void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 {
-	assert(size == sizeof(uint8_t) || size == sizeof(uint16_t) || size == sizeof(uint32_t));
+	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
-	if (is_internal_addr) {
-		if (is_internal_addr != internal_addr_read_write) {
-			EmuWarning("EmuX86_Addr_Write() : Useless (internal) write detected!");
-			assert(false); // This is the only reason to return a bool, but should never happen!
-			return;
-			// TODO : If it can be proven that writes to read-only internal addresses never happen,
-			// is_internal_addr can be made a bool again.
-		}
-
-		EmuX86_Mem_Write(destAddr, value, size);
+	if (opAddr.is_internal_addr) {
+		EmuX86_Mem_Write(opAddr.addr, value, opAddr.size);
 	}
 	else {
-		EmuX86_Write(destAddr, value, size);
+		EmuX86_Write(opAddr.addr, value, opAddr.size);
 	}
 }
 
-bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
+bool EmuX86_Operand_Read(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OUT uint32_t *value)
 {
-	int is_internal_addr;
-	int size;
-	xbaddr srcAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr, OUT size);
-	if (srcAddr != xbnull) {
-		*value = EmuX86_Addr_Read(srcAddr, is_internal_addr, size);
+	OperandAddress opAddr;
+	if (EmuX86_Operand_Addr_ForReadOnly(e, info, operand, OUT opAddr)) {
+		*value = EmuX86_Addr_Read(opAddr);
 		return true;
 	}
 
@@ -498,11 +515,9 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 
 bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
-	int is_internal_addr;
-	int size;
-	xbaddr destAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr, OUT size);
-	if (destAddr != xbnull) {
-		EmuX86_Addr_Write(destAddr, is_internal_addr, size, value);
+	OperandAddress opAddr;
+	if (EmuX86_Operand_Addr_ForReadWrite(e, info, operand, OUT opAddr)) {
+		EmuX86_Addr_Write(opAddr, value);
 		return true;
 	}
 
@@ -598,18 +613,16 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// ADD reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	const uint32_t src = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	const uint32_t src = EmuX86_Addr_Read(opAddr);
 
 	const uint64_t result = (uint64_t)dest + (uint64_t)src;
 
 	// Write back the result
-	EmuX86_Addr_Write(addr, is_internal_addr, static_cast<uint32_t>(result), size);
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
@@ -631,19 +644,17 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// AND reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// AND Destination with src
 	uint32_t result = dest & src;
 
 	// Write back the result
-	EmuX86_Addr_Write(addr, is_internal_addr, size, result);
+	EmuX86_Addr_Write(opAddr, result);
 
 	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
@@ -769,19 +780,17 @@ void EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// DEC reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// DEC Destination to src 
 	uint64_t result = (uint64_t)dest - (uint64_t)1;
 
 	// Write result back
-	EmuX86_Addr_Write(addr, is_internal_addr, size, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAP(e, 
@@ -815,19 +824,17 @@ bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
 bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// INC reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// INC Destination to src 
 	uint64_t result = (uint64_t)dest + (uint64_t)1;
 
 	// Write result back
-	EmuX86_Addr_Write(addr, is_internal_addr, size, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 	
 	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the re
 	EmuX86_SetFlags_OSZAP(e,
@@ -882,19 +889,17 @@ bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// OR reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// OR Destination with src
 	uint32_t result = dest | src;
 
 	// Write back the result
-	EmuX86_Addr_Write(addr, is_internal_addr, size, result);
+	EmuX86_Addr_Write(opAddr, result);
 
 	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
@@ -923,7 +928,7 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Note : OUT instructions never update CPU flags
 
-	return true;
+return true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -934,19 +939,17 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// SUB reads and writes the same operand :
-	int is_internal_addr;
-	int size;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr, OUT size);
-	if (addr == xbnull)
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// SUB Destination with src 
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
 	// Write result back
-	EmuX86_Addr_Write(addr, is_internal_addr, size, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
@@ -1031,10 +1034,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
-	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
+	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, OUT info)) {
 		EmuWarning("Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 		return false;
 	}
+
 	switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 	case I_ADD:
 		if (EmuX86_Opcode_ADD(e, info)) break;
