@@ -244,36 +244,28 @@ void VMManager::InitializeChihiro()
 	UpdatePageTableForVMA(upper_mem_vma);
 	m_ImageMemoryInUse += 16 * PAGE_SIZE;
 
-	m_Vma_map.erase(MCPX_BASE);
-	m_Vma_map.erase(BIOS_BASE);
-	m_NonImageMemoryInUse -= MCPX_SIZE;
-	m_NonImageMemoryInUse -= BIOS_XBOX_SIZE;
-
 	// Map the contiguous memory
-	m_Vma_map[CONTIGUOUS_MEMORY_BASE].type = VMAType::Free;
-	MergeAdjacentVMA(GetVMAIterator(CONTIGUOUS_MEMORY_BASE));
+	UnmapRange(CONTIGUOUS_MEMORY_BASE);
 	VMAIter contiguous_memory_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
 	VirtualMemoryArea& contiguous_memory_vma = contiguous_memory_vma_handle->second;
 	contiguous_memory_vma.type = VMAType::MemContiguous;
-	MergeAdjacentVMA(contiguous_memory_vma_handle);
 	UpdatePageTableForVMA(contiguous_memory_vma);
-	m_NonImageMemoryInUse += CONTIGUOUS_MEMORY_CHIHIRO_SIZE / 2;
+	m_NonImageMemoryInUse += CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 
 	// Map the tiled memory
-	m_Vma_map[TILED_MEMORY_BASE].type = VMAType::Free;
-	MergeAdjacentVMA(GetVMAIterator(TILED_MEMORY_BASE));
+	UnmapRange(TILED_MEMORY_BASE);
 	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_CHIHIRO_SIZE);
 	VirtualMemoryArea& tiled_memory_vma = tiled_memory_vma_handle->second;
 	tiled_memory_vma.type = VMAType::MemTiled;
-	MergeAdjacentVMA(tiled_memory_vma_handle);
 	UpdatePageTableForVMA(tiled_memory_vma);
-	m_NonImageMemoryInUse += TILED_MEMORY_CHIHIRO_SIZE / 2;
+	m_NonImageMemoryInUse += TILED_MEMORY_CHIHIRO_SIZE;
 
 	// Map the bios
+	UnmapRange(MAX_VIRTUAL_ADDRESS - PAGE_SIZE); // unmap the mcpx
+	UnmapRange(BIOS_BASE);
 	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_CHIHIRO_SIZE);
 	VirtualMemoryArea& bios_vma = bios_vma_handle->second;
 	bios_vma.type = VMAType::DeviceBIOS;
-	MergeAdjacentVMA(bios_vma_handle);
 	UpdatePageTableForVMA(bios_vma);
 	m_NonImageMemoryInUse += BIOS_CHIHIRO_SIZE;
 
@@ -316,7 +308,8 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr ad
 			m_ImageMemoryInUse += aligned_size : m_NonImageMemoryInUse += aligned_size;
 	}
 	Unlock();
-	return v_addr;
+
+	RETURN(v_addr);
 }
 
 VAddr VMManager::AllocateZeroed(size_t size)
@@ -347,7 +340,8 @@ VAddr VMManager::AllocateStack(size_t size)
 		m_StackMemoryInUse += aligned_size;
 	}
 	Unlock();
-	return addr;
+
+	RETURN(addr);
 }
 
 void VMManager::DeallocateOverlapped(VAddr addr)
@@ -357,7 +351,7 @@ void VMManager::DeallocateOverlapped(VAddr addr)
 	Lock();
 	VAddr aligned_addr = addr & ~(UINT_PTR)PAGE_MASK;
 	auto it = m_Vma_map.lower_bound(aligned_addr);
-	if (it->first == aligned_addr && it->second.size == PAGE_SIZE)
+	if (it->first == aligned_addr && it->second.type != VMAType::Free)
 	{
 		UnmapRange(aligned_addr);
 	}
@@ -406,7 +400,8 @@ bool VMManager::QueryVAddr(VAddr addr)
 	Lock();
 	bool bValid = IsValidVirtualAddress(addr);
 	Unlock();
-	return bValid;
+
+	RETURN(bValid);
 }
 
 PAddr VMManager::TranslateVAddr(VAddr addr)
@@ -416,7 +411,8 @@ PAddr VMManager::TranslateVAddr(VAddr addr)
 	Lock();
 	PAddr p_addr = TranslateVAddrToPAddr(addr);
 	Unlock();
-	return p_addr;
+
+	RETURN(p_addr);
 }
 
 void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
@@ -442,7 +438,7 @@ DWORD VMManager::QueryProtection(VAddr addr)
 	}
 	Unlock();
 
-	return protect;
+	RETURN(protect);
 }
 
 size_t VMManager::QuerySize(VAddr addr)
@@ -468,7 +464,7 @@ size_t VMManager::QuerySize(VAddr addr)
 	}
 	Unlock();
 
-	return size;
+	RETURN(size);
 }
 
 VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment)
