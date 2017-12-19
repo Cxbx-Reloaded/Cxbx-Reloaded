@@ -451,15 +451,15 @@ xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, in
 	return xbnull;
 }
 
-void EmuX86_Addr_Read(xbaddr srcAddr, int is_internal_addr, int size, OUT uint32_t *value)
+uint32_t EmuX86_Addr_Read(xbaddr srcAddr, int is_internal_addr, int size)
 {
 	assert(size == sizeof(uint8_t) || size == sizeof(uint16_t) || size == sizeof(uint32_t));
 
 	if (is_internal_addr) {
-		*value = EmuX86_Mem_Read(srcAddr, size);
+		return EmuX86_Mem_Read(srcAddr, size);
 	}
 	else {
-		*value = EmuX86_Read(srcAddr, size);
+		return EmuX86_Read(srcAddr, size);
 	}
 }
 
@@ -489,7 +489,7 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 	int size;
 	xbaddr srcAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr, OUT size);
 	if (srcAddr != xbnull) {
-		EmuX86_Addr_Read(srcAddr, is_internal_addr, size, value);
+		*value = EmuX86_Addr_Read(srcAddr, is_internal_addr, size);
 		return true;
 	}
 
@@ -604,15 +604,12 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	// TODO : Can destination be internal? Then remove this and use EmuX86_Addr_Read + EmuX86_Addr_Write below :
-	if (is_internal_addr)
-		return false;
+	const uint32_t src = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
-	const uint32_t src = EmuX86_Read(addr, size);
 	const uint64_t result = (uint64_t)dest + (uint64_t)src;
 
 	// Write back the result
-	EmuX86_Write(addr, static_cast<uint32_t>(result), size);
+	EmuX86_Addr_Write(addr, is_internal_addr, static_cast<uint32_t>(result), size);
 
 	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
@@ -640,8 +637,7 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	uint32_t dest = 0;
-	EmuX86_Addr_Read(addr, is_internal_addr, size, &dest);
+	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
 	// AND Destination with src
 	uint32_t result = dest & src;
@@ -779,8 +775,7 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	uint32_t dest = 0;
-	EmuX86_Addr_Read(addr, is_internal_addr, size, &dest);
+	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
 	// DEC Destination to src 
 	uint64_t result = (uint64_t)dest - (uint64_t)1;
@@ -826,8 +821,7 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	uint32_t dest = 0;
-	EmuX86_Addr_Read(addr, is_internal_addr, size, &dest);
+	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
 	// INC Destination to src 
 	uint64_t result = (uint64_t)dest + (uint64_t)1;
@@ -894,8 +888,7 @@ bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	uint32_t dest = 0;
-	EmuX86_Addr_Read(addr, is_internal_addr, size, &dest);
+	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
 	// OR Destination with src
 	uint32_t result = dest | src;
@@ -947,8 +940,7 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (addr == xbnull)
 		return false;
 
-	uint32_t dest = 0;
-	EmuX86_Addr_Read(addr, is_internal_addr, size, &dest);
+	uint32_t dest = EmuX86_Addr_Read(addr, is_internal_addr, size);
 
 	// SUB Destination with src 
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
