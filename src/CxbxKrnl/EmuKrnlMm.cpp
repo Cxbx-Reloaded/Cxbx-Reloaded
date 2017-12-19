@@ -430,18 +430,17 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 
 	if (BaseAddress == LaunchDataPage)
 	{
+		PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
 		if (Persist)
 		{
-			PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
-
 			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-
 			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
 		}
 		else
 		{
+			LaunchDataPAddr = NULL;
+			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
 			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
-			g_EmuShared->SetLaunchDataPAddress(NULL);
 		}
 	}
 	else

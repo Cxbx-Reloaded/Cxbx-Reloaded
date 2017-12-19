@@ -419,7 +419,7 @@ void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
 	xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)m_Base + LaunchDataAddr;
 
 	// Mark the launch page as allocated to prevent other allocations from overwriting it
-	Allocate(PAGE_SIZE, LaunchDataAddr, LaunchDataAddr + PAGE_SIZE);
+	Allocate(PAGE_SIZE, LaunchDataAddr, LaunchDataAddr + PAGE_SIZE - 1);
 }
 
 DWORD VMManager::QueryProtection(VAddr addr)

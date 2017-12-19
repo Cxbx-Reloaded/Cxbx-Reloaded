@@ -1051,7 +1051,8 @@ void CxbxRestoreLaunchDataPage()
 	if (LaunchDataPAddr)
 	{
 		g_VMManager.RestoreLaunchDataPage(LaunchDataPAddr);
-		g_EmuShared->SetLaunchDataPAddress(NULL);
+		LaunchDataPAddr = NULL;
+		g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
 
 		DbgPrintf("INIT: Restored LaunchDataPage\n");
 	}
