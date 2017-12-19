@@ -475,7 +475,7 @@ bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst
 	}
 
 	// Except for the above restriction, writes may access the same operand addresses as reads :
-	return EmuX86_Operand_Addr_ForReadOnly(e, info, operand, opAddr);
+	return EmuX86_Operand_Addr_ForReadOnly(e, info, operand, OUT opAddr);
 }
 
 uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
