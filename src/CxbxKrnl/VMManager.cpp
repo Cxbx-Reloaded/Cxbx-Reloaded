@@ -234,15 +234,14 @@ void VMManager::InitializeChihiro()
 	m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 	m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
 
-	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
+	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)	
 	VMAIter upper_mem_vma_handle = CarveVMA(m_Base + m_MaxContiguousAddress, 48 * PAGE_SIZE);
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.type = VMAType::Allocated;
 	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
 	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(48 * PAGE_SIZE, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
-	MergeAdjacentVMA(upper_mem_vma_handle);
 	UpdatePageTableForVMA(upper_mem_vma);
-	m_ImageMemoryInUse += 16 * PAGE_SIZE;
+	m_ImageMemoryInUse += 48 * PAGE_SIZE;
 
 	// Map the contiguous memory
 	UnmapRange(CONTIGUOUS_MEMORY_BASE);
