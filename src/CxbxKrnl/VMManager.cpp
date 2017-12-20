@@ -78,27 +78,6 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE file_view)
 {
-	// This reserves a large enough memory region to map the second physical memory file view, and aligns the start address.
-	// It must be page aligned otherwise the mapping/unmapping functions will produce incorrect results and on
-	// debug builds they will assert.
-	UINT_PTR addr = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE + PAGE_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	if (!addr)
-	{
-		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
-	}
-	VAddr aligned_start = addr & ~(UINT_PTR)PAGE_MASK;
-	VirtualFree((void*)addr, 0, MEM_RELEASE);
-	m_Base = (VAddr)MapViewOfFileEx(
-		file_view,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		0,
-		0,
-		CHIHIRO_MEMORY_SIZE,
-		(void*)aligned_start);
-	if (m_Base != aligned_start)
-	{
-		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
-	}
 	m_hAliasedView = file_view;
 
 	m_Vma_map.clear();
@@ -121,12 +100,12 @@ void VMManager::Initialize(HANDLE file_view)
 	UpdatePageTableForVMA(first_page_vma);
 
 	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	Allocate(PAGE_SIZE, 0, PAGE_SIZE);
+	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1);
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
 	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
 	// which is the case here, so we must call AllocatePhysicalMemoryRange directly to bypass the check
-	VMAIter upper_mem_vma_handle = CarveVMA(m_Base + m_MaxContiguousAddress, 32 * PAGE_SIZE);
+	VMAIter upper_mem_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress, 32 * PAGE_SIZE);
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.type = VMAType::Allocated;
 	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
@@ -136,14 +115,7 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE);
-
-	// Map the contiguous memory
-	VMAIter contiguous_memory_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_XBOX_SIZE);
-	VirtualMemoryArea& contiguous_memory_vma = contiguous_memory_vma_handle->second;
-	contiguous_memory_vma.type = VMAType::MemContiguous;
-	UpdatePageTableForVMA(contiguous_memory_vma);
-	m_NonImageMemoryInUse += CONTIGUOUS_MEMORY_XBOX_SIZE;
+	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1);
 
 	// Map the tiled memory
 	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE);
@@ -230,26 +202,18 @@ void VMManager::Initialize(HANDLE file_view)
 
 void VMManager::InitializeChihiro()
 {
-	UnmapRange(m_Base + m_MaxContiguousAddress);
+	UnmapRange(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress);
 	m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 	m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)	
-	VMAIter upper_mem_vma_handle = CarveVMA(m_Base + m_MaxContiguousAddress, 48 * PAGE_SIZE);
+	VMAIter upper_mem_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress, 48 * PAGE_SIZE);
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.type = VMAType::Allocated;
 	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
 	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(48 * PAGE_SIZE, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
 	UpdatePageTableForVMA(upper_mem_vma);
 	m_ImageMemoryInUse += 48 * PAGE_SIZE;
-
-	// Map the contiguous memory
-	UnmapRange(CONTIGUOUS_MEMORY_BASE);
-	VMAIter contiguous_memory_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
-	VirtualMemoryArea& contiguous_memory_vma = contiguous_memory_vma_handle->second;
-	contiguous_memory_vma.type = VMAType::MemContiguous;
-	UpdatePageTableForVMA(contiguous_memory_vma);
-	m_NonImageMemoryInUse += CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 
 	// Map the tiled memory
 	UnmapRange(TILED_MEMORY_BASE);
@@ -414,14 +378,6 @@ PAddr VMManager::TranslateVAddr(VAddr addr)
 	RETURN(p_addr);
 }
 
-void VMManager::RestoreLaunchDataPage(PAddr LaunchDataAddr)
-{
-	xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)m_Base + LaunchDataAddr;
-
-	// Mark the launch page as allocated to prevent other allocations from overwriting it
-	Allocate(PAGE_SIZE, LaunchDataAddr, LaunchDataAddr + PAGE_SIZE - 1);
-}
-
 DWORD VMManager::QueryProtection(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
@@ -493,7 +449,7 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 		case PMEMORY_SUCCESS:
 		{
 			if (!addr) {
-				addr = m_Base + offset; // VAddr is simply the offset from the base address inside the second file view
+				addr = CONTIGUOUS_MEMORY_BASE + offset; // VAddr is simply the offset from the base address inside the second file view
 			} else {
 				addr &= ~PAGE_MASK;
 			}
@@ -562,7 +518,6 @@ void VMManager::UnmapRange(VAddr target, bool StackFlag)
 		switch (it->second.type)
 		{
 			case VMAType::Free:
-			case VMAType::MemContiguous:
 			case VMAType::MemTiled:
 			case VMAType::IO_DeviceNV2A:
 			case VMAType::MemNV2A_PRAMIN:
@@ -837,7 +792,6 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma)
 	switch (vma.type)
 	{
 		case VMAType::Free:
-		case VMAType::MemContiguous:
 		case VMAType::MemTiled:
 		case VMAType::IO_DeviceNV2A:
 		case VMAType::MemNV2A_PRAMIN:

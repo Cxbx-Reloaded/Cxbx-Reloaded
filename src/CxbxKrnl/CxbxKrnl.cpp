@@ -1050,7 +1050,9 @@ void CxbxRestoreLaunchDataPage()
 
 	if (LaunchDataPAddr)
 	{
-		g_VMManager.RestoreLaunchDataPage(LaunchDataPAddr);
+		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr;
+		// Mark the launch page as allocated to prevent other allocations from overwriting it
+		xboxkrnl::MmAllocateContiguousMemoryEx(PAGE_SIZE, LaunchDataPAddr, LaunchDataPAddr + PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
 		LaunchDataPAddr = NULL;
 		g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
 

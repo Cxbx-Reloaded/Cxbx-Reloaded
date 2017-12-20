@@ -51,8 +51,6 @@ enum class VMAType : u32
 	Allocated,
 	// vma represents allocated memory mapped outside the second file view (allocated by VirtualAlloc)
 	Fragmented,
-	// contiguous memory
-	MemContiguous,
 	// tiled memory
 	MemTiled,
 	// nv2a
@@ -106,10 +104,9 @@ class VMManager : public PhysicalMemory
 		~VMManager()
 		{
 			DeleteCriticalSection(&m_CriticalSection);
-			UnmapViewOfFile((void*)m_Base);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
 			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
-			FlushViewOfFile((void*)m_Base, CHIHIRO_MEMORY_SIZE);
+			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hAliasedView);
 			CloseHandle(m_hAliasedView);
 		}
@@ -137,8 +134,6 @@ class VMManager : public PhysicalMemory
 		bool QueryVAddr(VAddr addr);
 		// translate a VAddr
 		PAddr TranslateVAddr(VAddr addr);
-		// restores the launch data for the xbe
-		void RestoreLaunchDataPage(PAddr LaunchDataAddr);
 		// retrieves the protection status of an address
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
@@ -150,8 +145,6 @@ class VMManager : public PhysicalMemory
 		typedef std::map<VAddr, VirtualMemoryArea>::iterator VMAIter;
 		// map covering the entire 32 bit virtual address space as seen by the guest
 		std::map<VAddr, VirtualMemoryArea> m_Vma_map;
-		// start address of the memory region to which map new allocations in the virtual space
-		VAddr m_Base = 0;
 		// handle of the second file view region
 		HANDLE m_hAliasedView = NULL;
 		// critical section lock to synchronize accesses

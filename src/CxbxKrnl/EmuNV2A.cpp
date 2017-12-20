@@ -82,8 +82,6 @@ namespace xboxkrnl
 #include <cassert>
 //#include <gl\glut.h>
 
-// global used in DEVICE_READ32(PFB)
-static unsigned int contiguous_memory_size = CONTIGUOUS_MEMORY_XBOX_SIZE;
 
 // Public Domain ffs Implementation
 // See: http://snipplr.com/view/22147/stringsh-implementation/
@@ -2767,8 +2765,11 @@ DEVICE_READ32(PFB)
 		result = 3; // = NV_PFB_CFG0_PART_4
 		break;
 	case NV_PFB_CSTATUS:
-		result = contiguous_memory_size;
-		break;
+	{
+		if (g_bIsChihiro) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
+		result = CONTIGUOUS_MEMORY_XBOX_SIZE;
+	}
+	break;
 	case NV_PFB_WBC:
 		result = 0; // = !NV_PFB_WBC_FLUSH
 		break;
@@ -3745,8 +3746,6 @@ void EmuNV2A_Init()
 {
 	// Allocate PRAMIN Region
 	VirtualAlloc((void*)(NV2A_ADDR + NV_PRAMIN_ADDR), NV_PRAMIN_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-
-	if (g_bIsChihiro) { contiguous_memory_size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; }
 
 	pcrtc.start = 0;
 
