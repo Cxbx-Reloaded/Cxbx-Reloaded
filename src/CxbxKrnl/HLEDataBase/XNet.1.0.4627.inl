@@ -32,104 +32,6 @@
 // *
 // ******************************************************************
 
-#if 0 // No longer used, replaced by generic 4361 version
-// ******************************************************************
-// * XnInit
-// ******************************************************************
-OOVPA_XREF(XnInit, 4627, 18, 
-
-    XREF_XnInit,
-	XRefZero)
-
-		// XnInit+0x0000 : push ebp
-        { 0x0000, 0x55 },
-
-        // XnInit+0x0003 : sub esp, 0x0218
-        { 0x0003, 0x81 },
-        { 0x0004, 0xEC },
-        { 0x0005, 0x18 },
-        { 0x0006, 0x02 },
-
-        // XnInit+0x0019 : cmpxchg [ecx], edx
-        { 0x0019, 0x0F },
-        { 0x001A, 0xB1 },
-        { 0x001B, 0x11 },
-
-        // XnInit+0x003C : push 0x4E455444
-        { 0x003C, 0x68 },
-        { 0x003D, 0x4E },
-        { 0x003E, 0x45 },
-
-		// XnInit+0x01FA : OR DWORD PTR SS:[EBP-4],FFFFFFFF
-        { 0x01FA, 0x83 },
-        { 0x01FB, 0x4D },
-        { 0x01FC, 0xFC },
-        { 0x01FD, 0xFF },
-
-		// XnInit+0x0203 : retn 18h
-        { 0x0203, 0xC2 },
-        { 0x0204, 0x18 },
-        { 0x0205, 0x00 },
-OOVPA_END;
-#endif
-
-#if 0 // No longer used, replaced by generic 4361 version
-// ******************************************************************
-// * XNetStartup
-// ******************************************************************
-OOVPA_XREF(XNetStartup, 4627, 1+7,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        // XNetStartup+0x0F : call [XnInit]
-        XREF_ENTRY( 0x10, XREF_XnInit ),
-
-        // XNetStartup+0x00 : xor eax, eax
-        { 0x00, 0x33 },
-        { 0x01, 0xC0 },
-
-        // XNetStartup+0x02 : push eax
-        { 0x02, 0x50 },
-
-        // XNetStartup+0x03 : push eax
-        { 0x03, 0x50 },
-
-        // XNetStartup+0x04 : push eax
-        { 0x04, 0x50 },
-
-        // XNetStartup+0x14 : retn 0x04
-        { 0x14, 0xC2 },
-        { 0x15, 0x04 },
-OOVPA_END;
-#endif
-
-#if 0 // No longer used, replaced by generic 4361 version
-// ******************************************************************
-// * WSAStartup
-// ******************************************************************
-OOVPA_XREF(WSAStartup, 4627, 1+8,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        // WSAStartup+0x0F : call [XnInit]
-        XREF_ENTRY( 0x14, XREF_XnInit ),
-
-        // WSAStartup+0x00 : push [esp+0x08]
-        { 0x00, 0xFF },
-        { 0x01, 0x74 },
-        { 0x02, 0x24 },
-        { 0x03, 0x08 },
-
-        // WSAStartup+0x04 : push [esp+0x08]
-        { 0x04, 0xFF },
-        { 0x05, 0x74 },
-        { 0x06, 0x24 },
-        { 0x07, 0x08 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * CXnSock::socket
 // ******************************************************************
@@ -151,46 +53,6 @@ OOVPA_NO_XREF(socket, 4627, 14) // Up to 5344
         { 0x1E, 0xC8 },
         { 0x1F, 0xFF },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4627 version
-// ******************************************************************
-// * socket
-// ******************************************************************
-OOVPA_NO_XREF(socket, 4627, 20)
-
-        // socket+0x13 : push 0x276D
-        { 0x0013, 0x68 },
-        { 0x0014, 0x6D },
-        { 0x0015, 0x27 },
-
-        // socket+0x69 : cmp edi, 0x11
-        { 0x0069, 0x83 },
-        { 0x006A, 0xFF },
-        { 0x006B, 0x11 },
-
-		// socket+0x8C : SETNE DL
-        { 0x008C, 0x0F },
-        { 0x008D, 0x95 },
-        { 0x008E, 0xC2 },
-
-		// socket+0xAE : MOV EAX,273B
-        { 0x00AE, 0xB8 },
-        { 0x00AF, 0x3B },
-        { 0x00B0, 0x27 },
-        { 0x00B1, 0x00 },
-        { 0x00B2, 0x00 },
-
-        // socket+0x0116 : mov [esi+4], ecx
-        { 0x0116, 0x89 },
-        { 0x0117, 0x4E },
-        { 0x0118, 0x04 },
-
-		// socket+0x012D : retn 0C
-        { 0x012D, 0xC2 },
-        { 0x012E, 0x0C },
-        { 0x012F, 0x00 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CXnSock::connect
@@ -352,32 +214,6 @@ OOVPA_NO_XREF(ioctlsocket, 4627, 13)
 
         { 0x57, 0x15 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4627 version
-// ******************************************************************
-// * ioctlsocket
-// ******************************************************************
-OOVPA_NO_XREF(ioctlsocket, 4627, 10)
-
-        // ioctlsocket+0x13 : push 0x276D
-        { 0x13, 0x68 },
-        { 0x14, 0x6D },
-        { 0x15, 0x27 },
-
-        // ioctlsocket+0x62 : lea edx, [esi+0x24]
-        { 0x62, 0x8D },
-        { 0x63, 0x56 },
-        { 0x64, 0x24 },
-
-        // ioctlsocket+0x81 : mov cl, al
-        { 0x81, 0x8A },
-        { 0x82, 0xC8 },
-
-        // ioctlsocket+0xC6 : retn 0x0C
-        { 0xC6, 0xC2 },
-        { 0xC7, 0x0C },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CXnSock::bind
