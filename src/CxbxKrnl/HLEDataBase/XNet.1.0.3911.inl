@@ -135,30 +135,6 @@ OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 14)
         { 0x3F, 0xC3 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 3911 version
-// ******************************************************************
-// * XNetGetEthernetLinkStatus
-// ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 3911, 8)
-
-        // XNetGetEthernetLinkStatus+0x12 : cmpxchg [ecx], edx
-        { 0x12, 0x0F },
-        { 0x13, 0xB1 },
-        { 0x14, 0x11 },
-
-        // XNetStartup+0x17 : jz +0x08
-        { 0x17, 0x74 },
-        { 0x18, 0x08 },
-
-        // XNetStartup+0x1F : jmp +0xE2
-        { 0x1F, 0xEB },
-        { 0x20, 0xE2 },
-
-        // XNetStartup+0x3F : retn
-        { 0x3F, 0xC3 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * CXnSock::socket
 // ******************************************************************

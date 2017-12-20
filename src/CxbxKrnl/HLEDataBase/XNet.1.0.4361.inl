@@ -114,27 +114,3 @@ OOVPA_XREF(XNetStartup, 4361, 1+7,
         { 0x14, 0xC2 },
         { 0x15, 0x04 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 3911 version
-// ******************************************************************
-// * XNetGetEthernetLinkStatus
-// ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus, 4361, 13)
-
-        { 0x00, 0x56 },
-        { 0x01, 0x33 },
-        { 0x02, 0xF6 },
-        { 0x03, 0xB8 },
-        { 0x04, 0x00 },
-        { 0x05, 0x00 },
-        { 0x06, 0x00 },
-        { 0x07, 0x00 },
-        { 0x08, 0xB9 },
-
-        { 0x0D, 0xBA },
-        { 0x1A, 0xE8 },
-
-        { 0x27, 0x75 },
-        { 0x2C, 0x15 },
-OOVPA_END;
-#endif
