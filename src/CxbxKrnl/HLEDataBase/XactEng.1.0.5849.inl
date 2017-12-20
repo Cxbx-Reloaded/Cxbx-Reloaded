@@ -32,28 +32,3 @@
 // *
 // ******************************************************************
 
-#if 0 // No longer used, replaced by generic 5120 version
-// *****************************************************************
-// * XACTEngineCreate
-// ******************************************************************
-OOVPA_NO_XREF(XACTEngineCreate, 5849, 11)
-		// XACTEngineCreate+0x09 : movzx ebx, al
-		{ 0x09, 0x0F },
-		{ 0x0A, 0xB6 },
-		{ 0x0B, 0xD8 },
-
-        // XACTEngineCreate+0x2B : push edi
-		{ 0x2B, 0x57 },
-
-		// XACTEngineCreate+0x31 : push 0x168
-		{ 0x31, 0x68 },
-		{ 0x32, 0x68 },
-		{ 0x33, 0x01 },
-		{ 0x34, 0x00 },
-		{ 0x35, 0x00 },
-
-		// XACTEngineCreate+0xA2 : retn 0x8
-		{ 0xA2, 0xC2 },
-		{ 0xA3, 0x08 },
-OOVPA_END;
-#endif
