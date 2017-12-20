@@ -62,68 +62,6 @@ OOVPA_NO_XREF(XInputOpen, 4242, 12)
         { 0x54, 0x10 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 3911 version
-// ******************************************************************
-// * XID_fCloseDevice
-// ******************************************************************
-OOVPA_XREF(XID_fCloseDevice, 4242, 11,
-
-    XREF_XID_fCloseDevice,
-    XRefZero)
-
-        // XID_fCloseDevice+0x1B : mov eax, [esi+0x00A3]
-        { 0x1B, 0x8B },
-        { 0x1C, 0x86 },
-        { 0x1D, 0xA3 },
-
-        // XID_fCloseDevice+0x91 : mov [esi+0x00A7], eax
-        { 0x91, 0x89 },
-        { 0x92, 0x86 },
-        { 0x93, 0xA7 },
-
-        // XID_fCloseDevice+0x91 : mov [esi+0x00A7], eax    // FIXME: Same instruction repeated.
-        { 0x91, 0x89 },
-        { 0x92, 0x86 },
-        { 0x93, 0xA7 },
-
-        // XID_fCloseDevice+0x9F : leave; retn
-        { 0x9F, 0xC9 },
-        { 0xA0, 0xC3 },
-OOVPA_END;
-#endif
-
-#if 0 // No longer used, replaced by generic 3911 version
-// ******************************************************************
-// * XInputGetCapabilities
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities, 4242, 14)
-
-        // XInputGetCapabilities+0x03 : sub esp, 0x48
-        { 0x03, 0x83 },
-        { 0x04, 0xEC },
-        { 0x05, 0x48 },
-
-        // XInputGetCapabilities+0x24 : test byte ptr [esi+4], 2
-        { 0x24, 0xF6 },
-        { 0x25, 0x46 },
-        { 0x26, 0x04 },
-        { 0x27, 0x02 },
-
-        // XInputGetCapabilities+0x3A : stosb
-        { 0x3A, 0xAA },
-
-        // XInputGetCapabilities+0x7D : mov [ebp+var_48], 0x30
-        { 0x7D, 0xC6 },
-        { 0x7E, 0x45 },
-        { 0x7F, 0xB8 },
-        { 0x80, 0x30 },
-
-        // XInputGetCapabilities+0xEE : cmp [eax], ebx
-        { 0xEE, 0x39 },
-        { 0xEF, 0x18 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
@@ -145,36 +83,6 @@ OOVPA_NO_XREF(XInputGetState, 4242, 13)
 
         { 0x5B, 0xF3 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4242 version
-// ******************************************************************
-// * XInputGetState
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetState, 4242, 12)
-
-        // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
-        { 0x0E, 0x8B },
-        { 0x0F, 0x8A },
-        { 0x10, 0xA3 },
-
-        // XInputGetState+0x1D : push 0x57
-        { 0x1D, 0x6A },
-        { 0x1E, 0x57 },
-
-        // XInputGetState+0x20 : jmp +0x3E
-        { 0x20, 0xEB },
-        { 0x21, 0x3E },
-
-        // XInputGetState+0x2E : mov ebx, 0x048F
-        { 0x2E, 0xBB },
-        { 0x2F, 0x8F },
-        { 0x30, 0x04 },
-
-        // XInputGetState+0x6C : retn 8
-        { 0x6C, 0xC2 },
-        { 0x6D, 0x08 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * XInputSetState

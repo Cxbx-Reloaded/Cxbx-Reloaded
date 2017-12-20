@@ -55,36 +55,6 @@ OOVPA_NO_XREF(XInputSetState, 4831, 14)
         { 0x31, 0x08 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 4831 version
-// ******************************************************************
-// * XInputSetState
-// ******************************************************************
-OOVPA_NO_XREF(XInputSetState, 4831, 12)
-
-        // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
-        { 0x04, 0x8D },
-        { 0x05, 0x81 },
-        { 0x06, 0xA3 },
-
-        // XInputSetState+0x12 : push 0x57
-        { 0x12, 0x6A },
-        { 0x13, 0x57 },
-
-        // XInputSetState+0x15 : jmp +0x19
-        { 0x15, 0xEB },
-        { 0x16, 0x19 },
-
-        // XInputSetState+0x28 : mov [edx+0x41], al
-        { 0x28, 0x88 },
-        { 0x29, 0x42 },
-        { 0x2A, 0x41 },
-
-        // XInputSetState+0x30 : retn 0x08
-        { 0x30, 0xC2 },
-        { 0x31, 0x08 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
@@ -112,32 +82,6 @@ OOVPA_XREF(XID_fCloseDevice, 4831, 16,
         { 0x38, 0x45 },
         { 0x39, 0xF4 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4831 version
-// ******************************************************************
-// * XID_fCloseDevice
-// ******************************************************************
-OOVPA_XREF(XID_fCloseDevice, 4831, 11,
-
-    XREF_XID_fCloseDevice,
-    XRefZero)
-
-        { 0x13, 0x8B },
-        { 0x14, 0x86 },
-        { 0x15, 0xA3 },
-
-        { 0x4C, 0x89 },
-        { 0x4D, 0x86 },
-        { 0x4E, 0x9E },
-
-        { 0x87, 0x89 },
-        { 0x88, 0x86 },
-        { 0x89, 0xA7 },
-
-        { 0x95, 0xC9 },
-        { 0x96, 0xC3 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * XInputGetState
@@ -183,25 +127,6 @@ OOVPA_NO_XREF(XInputGetCapabilities, 4831, 13)
         { 0x59, 0x0F },
         { 0x5A, 0xB6 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4831 version
-// ******************************************************************
-// * XInputGetCapabilities
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities, 4831, 10)
-
-        { 0x08, 0xF8 },
-        { 0x0C, 0x1D },
-        { 0x11, 0x56 },
-        { 0x1F, 0x0F },
-        { 0x95, 0x89 },
-        { 0x96, 0x7D },
-        { 0x97, 0xC0 },
-        { 0x98, 0x89 },
-        { 0x99, 0x55 },
-        { 0x9A, 0xD0 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * XGetDeviceEnumerationStatus
@@ -270,21 +195,3 @@ OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 14)
         { 0x30, 0x45 },
         //{ 0x31, 0xF8 }, // 4831 0xF4 vs 5344 0xF8
 OOVPA_END;
-
-#if 0 // No longer used, this was _XInputGetCapabilities@8
-// ******************************************************************
-// * XInputGetDeviceDescription
-// ******************************************************************
-OOVPA_NO_XREF(XInputGetDeviceDescription, 4831, 9)
-
-		{ 0x03, 0x83 },
-		{ 0x04, 0xEC },
-		{ 0x05, 0x48 },
-		{ 0x06, 0x83 },
-		{ 0x07, 0x65 },
-		{ 0x08, 0xF8 },
-		{ 0x09, 0x00 },
-		{ 0x34, 0x6A },
-		{ 0x35, 0x06 },
-OOVPA_END;
-#endif

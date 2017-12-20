@@ -86,21 +86,6 @@
 //   * XapiFiberStartup (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
 //   * timeKillEvent (3950, 4034, 5028, 5233)
 //   * timeSetEvent (4034, 5233)
-// * Following OOVPA are invalid
-//   * ReadFileEx (3911) // Has exact asm codes _WriteFileEx@20
-//   * WriteFileEx (3911) // Has exact asm codes _ReadFileEx@20
-//   * lstrcmpiW (3911) // Necessary XREF _xCompareStringW@20
-// * Following OOVPA are missing (Obsolete?)
-//   * GetThreadPriorityBoost
-//   * RtlAllocateHeap
-//   * RtlCreateHeap
-//   * RtlDestroyHeap
-//   * RtlFreeHeap
-//   * RtlReAllocateHeap
-//   * RtlSizeHeap
-//   * XCalculateSignatureBeginEx
-//   * XCalculateSignatureEnd
-//   * XCalculateSignatureUpdate
 // NOTE: Known Xapi OOVPA not included in initial revision.
 //   * XFormatUtilityDrive (4242)
 //   * XSetProcessQuantumLength (4134)
@@ -138,22 +123,6 @@
 // ******************************************************************
 OOVPATable XAPILIB_OOVPAV2[] = {
 
-	// REGISTER_OOVPAS(GetThreadPriorityBoost, PATCH, 5788),
-	// REGISTER_OOVPAS(GetThreadPriorityBoost, PATCH, 5849),
-	// REGISTER_OOVPAS(RtlAllocateHeap, PATCH, 3911), // obsolete (* unchanged since 1.0.4361 *) (* OR FARTHER *) (from 4721's comment)
-	// REGISTER_OOVPAS(RtlCreateHeap, PATCH, 3911), // obsolete, (* unchanged since 1.0.4361 *) (* OR FARTHER *) (from 4721's comment)
-	// REGISTER_OOVPAS(RtlDestroyHeap, PATCH, 4627), // obsolete (from 4721's comment)
-	// REGISTER_OOVPAS(RtlFreeHeap, PATCH, 4627), // obsolete (from 4721's comment)
-	// REGISTER_OOVPAS(RtlReAllocateHeap, PATCH, 4627),
-	// REGISTER_OOVPAS(RtlSizeHeap, PATCH, 4627), // obsolete (from 4721's comment)
-	// REGISTER_OOVPAS(XCalculateSignatureBegin, PATCH, 4627),
-	// REGISTER_OOVPAS(XCalculateSignatureBeginEx, PATCH, 4627), // +s, not necessary? (from 4627, 5028's comment)
-	// REGISTER_OOVPAS(XCalculateSignatureEnd, PATCH, 4627), // s+ (from 4627, 5028's comment)
-	// REGISTER_OOVPAS(XCalculateSignatureUpdate, PATCH, 4627),
-	// REGISTER_OOVPAS(ReadFileEx, UNPATCHED, 3911),// Has exact asm codes _WriteFileEx@20
-	// REGISTER_OOVPAS(WriteFileEx, UNPATCHED, 3911), // Has exact asm codes _ReadFileEx@20
-	// REGISTER_OOVPAS(lstrcmpiW, UNPATCHED, 3911), // TODO: need XREF _xCompareStringW@20 (Has exact asm codes as lstrcmpiW)
-	// REGISTER_OOVPAS(CloseHandle, UNPATCHED, 3911),// Has exact same asm codes as _ResetEvent@4
 	REGISTER_OOVPAS(CreateMutex, UNPATCHED, 3911), // Too High Level (from 3911's comment)
 	REGISTER_OOVPAS(CreateThread, UNPATCHED, 3911), // Too High Level (from 3911's comment)
 	REGISTER_OOVPAS(ExitThread, UNPATCHED, 3911),//
