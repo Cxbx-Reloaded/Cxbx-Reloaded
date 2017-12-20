@@ -66,27 +66,3 @@ OOVPA_NO_XREF(XMountUtilityDrive, 4432, 27)
         { 0x52, 0x04 },
         { 0x53, 0x01 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4432 version
-// ******************************************************************
-// * XMountUtilityDrive
-// ******************************************************************
-OOVPA_NO_XREF(XMountUtilityDrive, 4432, 8)
-
-        // XapiUnknownBad1+0x51 : push 0x0104
-        { 0x51, 0x68 },
-        { 0x52, 0x04 },
-        { 0x53, 0x01 },
-
-        // XapiUnknownBad1+0xB3 : jnz +0x1A
-        { 0xB3, 0x75 },
-        { 0xB4, 0x1A },
-
-        // XapiUnknownBad1+0xE8 : setnl al
-        { 0xE8, 0x0F },
-        { 0xE9, 0x9D },
-        { 0xEA, 0xC0 },
-
-        // TODO: Finish signature, toss out function call basically
-OOVPA_END;
-#endif
