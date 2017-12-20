@@ -57,24 +57,6 @@ OOVPA_NO_XREF(D3DDevice_Swap, 4531, 11)
         { 0xBA, 0x04 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 4134 version
-// ******************************************************************
-// * D3DDevice_SetRenderState_BackFillMode
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 4531, 9)
-
-        { 0x04, 0x56 },
-        { 0x10, 0x8B },
-        { 0x11, 0x06 },
-        { 0x12, 0x3B },
-        { 0x13, 0x46 },
-        { 0x14, 0x04 },
-        { 0x41, 0x83 },
-        { 0x42, 0xC0 },
-        { 0x43, 0x0C },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * D3DVertexBuffer_Lock
 // ******************************************************************

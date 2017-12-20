@@ -53,38 +53,6 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 4831, 12)
         { 0x52, 0xF7 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 4831 version
-// ******************************************************************
-// * D3DDevice_CreateTexture2
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateTexture2, 4831, 12)
-
-        // D3DDevice_CreateTexture2+0x02 : lea eax, [esp+0x20]
-        { 0x04, 0x8D },
-        { 0x07, 0x20 },
-
-        // D3DDevice_CreateTexture2+0x0E : setz dl
-        { 0x10, 0x0F },
-        { 0x11, 0x94 },
-        { 0x12, 0xC2 },
-
-        // D3DDevice_CreateTexture2+0x2A : push 0x00
-        { 0x2E, 0x6A },
-        { 0x2F, 0x00 },
-
-        // D3DDevice_CreateTexture2+0x53 : call [abs]
-        { 0x57, 0xE8 },
-
-        // D3DDevice_CreateTexture2+0x78 : jnz +0x0D
-        { 0x7C, 0x75 },
-        { 0x7D, 0x0D },
-
-        // D3DDevice_CreateTexture2+0xAE : retn 0x1C
-        { 0x88, 0xC2 },
-        { 0x89, 0x1C },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
