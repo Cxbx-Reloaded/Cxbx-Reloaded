@@ -32,27 +32,3 @@
 // *
 // ******************************************************************
 
-#if 0 // Duplicate OOVPA base on 4134
-// ******************************************************************
-// * DirectSound::CDirectSoundStream::SetPitch
-// ******************************************************************
-OOVPA_XREF(CDirectSoundStream_SetPitch, 5849, 1+11,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x36, XREF_CDirectSoundVoice_SetPitch ),
-
-        { 0x00, 0x56 },
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x35, 0xE8 },
-        { 0x40, 0x68 },
-        { 0x4B, 0x8B },
-	{ 0x4F, 0xC2 },
-	{ 0x50, 0x08 },
-	{ 0x51, 0x00 },
-OOVPA_END;
-#endif

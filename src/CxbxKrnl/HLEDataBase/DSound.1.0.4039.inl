@@ -716,33 +716,6 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4039, 12,
         { 0x4A, 0x04 },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by generic 3911 version
-// ******************************************************************
-// * IDirectSoundBuffer_Stop
-// ******************************************************************
-OOVPA_NO_XREF(IDirectSoundBuffer_Stop, 4039, 11)
-
-        // IDirectSoundBuffer_Stop+0x00 : mov eax, [esp+arg_0]
-        { 0x00, 0x8B },
-        { 0x01, 0x44 },
-        { 0x02, 0x24 },
-        { 0x03, 0x04 },
-
-        // IDirectSoundBuffer_Stop+0x04 : mov ecx, eax
-        { 0x04, 0x8B },
-        { 0x05, 0xC8 },
-
-        // IDirectSoundBuffer_Stop+0x06 : add eax, 0FFFFFFE4h
-        { 0x06, 0x83 },
-        { 0x07, 0xC0 },
-        { 0x08, 0xE4 },
-
-        // IDirectSoundBuffer_Stop+0x15 : retn 4
-        { 0x16, 0x04 },
-        { 0x17, 0x00 }
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * CDirectSound::CommitDeferredSettings
 // ******************************************************************
@@ -1260,40 +1233,6 @@ OOVPA_XREF(CDirectSoundStream_SetFilter, 4039, 1+8,
         { 0x3F, 0x68 },
         { 0x4A, 0x8B },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by CMcpxVoiceClient_SetMixBins
-// ******************************************************************
-// * CDirectSoundVoiceSettings::SetMixBins
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4039, 13,
-
-        XREF_CDirectSoundVoiceSettings_SetMixBins,
-        XRefZero)
-
-        // CDirectSoundVoiceSettings_SetMixBins+0x06 : jnz +0x19
-        { 0x06, 0x75 },
-        { 0x07, 0x19 },
-
-        // CDirectSoundVoiceSettings_SetMixBins+0x08 : test byte ptr [ecx+8], 0x10
-        { 0x08, 0xF6 },
-        { 0x09, 0x41 },
-        { 0x0A, 0x08 },
-        { 0x0B, 0x10 },
-
-        // CDirectSoundVoiceSettings_SetMixBins+0x18 : shr eax, 1
-        { 0x18, 0xD1 },
-        { 0x19, 0xE8 },
-
-        // CDirectSoundVoiceSettings_SetMixBins+0x4E : mov edx, [ecx+2Ch]
-        { 0x4E, 0x8B },
-        { 0x4F, 0x51 },
-        { 0x50, 0x2C },
-
-        // CDirectSoundVoiceSettings_SetMixBins+0x51 : cmp edx, [eax]
-        { 0x51, 0x3B },
-        { 0x52, 0x10 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CMcpxVoiceClient::SetMixBins
@@ -1938,25 +1877,6 @@ OOVPA_XREF(CDirectSoundVoice_SetOutputBuffer, 4039, 13,
         { 0x51, 0xC2 },
         { 0x52, 0x08 },
 OOVPA_END;
-
-#if 0 // No longer used, replaced by generic 4039 version
-// ******************************************************************
-// * CDirectSoundVoice::SetOutputBuffer
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetOutputBuffer, 4039, 7,
-
-    XREF_CDirectSoundVoice_SetOutputBuffer,
-    XRefZero)
-
-        { 0x09, 0xF7 },
-        { 0x14, 0x8B },
-        { 0x1F, 0x3B },
-        { 0x2A, 0xE8 },
-        { 0x35, 0x8B },
-        { 0x40, 0x74 },
-        { 0x4B, 0xD8 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CDirectSoundBuffer_SetOutputBuffer
