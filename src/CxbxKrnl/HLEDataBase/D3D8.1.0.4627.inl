@@ -128,7 +128,7 @@ OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle, 4627, 9)
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_KickOffAndWaitForIdle2
+// * D3D_KickOffAndWaitForIdle2 (D3D_KickOffAndWaitForIdle from D3D8LTCG)
 // ******************************************************************
 OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle2, 4627, 11)
 
@@ -207,7 +207,7 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 1+12,
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_CommonSetRenderTargetB
+// * D3D_CommonSetRenderTargetB (D3D_CommonSetRenderTarget from D3D8LTCG)
 // ******************************************************************
 #ifndef WIP_LessVertexPatching
 OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 11,

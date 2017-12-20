@@ -2782,6 +2782,7 @@ VOID WINAPI XTL::EMUPATCH(D3D_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDu
 		LOG_FUNC_ARG(dwDummy2)
 		LOG_FUNC_END;
 
+    // NOTE: Use this function for LTCG library only.
     // TODO: Actually do something here?
 
 	LOG_UNIMPLEMENTED();
