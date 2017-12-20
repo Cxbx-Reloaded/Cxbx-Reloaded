@@ -87,7 +87,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginVisibilityTest@0
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4361, 7) 
+OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4361, 7)
 
         { 0x07, 0x8B },
         { 0x0A, 0x46 },
