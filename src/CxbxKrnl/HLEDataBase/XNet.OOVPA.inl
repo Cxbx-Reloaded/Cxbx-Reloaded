@@ -65,16 +65,16 @@
 // ******************************************************************
 OOVPATable XNET_OOVPAV2[] = {
 
-	REGISTER_OOVPAS(XnInit, XREF, 3911, 4361/*, 4627*/), // 3911 is only XNETS library, XNET library is different OOVPA.
-	REGISTER_OOVPAS(WSAStartup, PATCH, 3911, 4361/*, 4627*/),
-	REGISTER_OOVPAS(XNetStartup, PATCH, 3911, 4361/*, 4627*/),
-	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911/*, 4361*/, 4627),
+	REGISTER_OOVPAS(XnInit, XREF, 3911, 4361), // 3911 is only XNETS library, XNET library is different OOVPA.
+	REGISTER_OOVPAS(WSAStartup, PATCH, 3911, 4361),
+	REGISTER_OOVPAS(XNetStartup, PATCH, 3911, 4361),
+	REGISTER_OOVPAS(XNetGetEthernetLinkStatus, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(bind, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(connect, PATCH, 3911/*, 4627*/, 5120),
+	REGISTER_OOVPAS(connect, PATCH, 3911, 5120),
 	REGISTER_OOVPAS(ioctlsocket, PATCH, 3911, 4627),
 	REGISTER_OOVPAS(listen, PATCH, 3911, 4627),
-	REGISTER_OOVPAS(recv, PATCH, 3911/*, 4627*/),
-	REGISTER_OOVPAS(send, PATCH, 3911/*, 4627*/),
+	REGISTER_OOVPAS(recv, PATCH, 3911),
+	REGISTER_OOVPAS(send, PATCH, 3911),
 	REGISTER_OOVPAS(socket, PATCH, 3911, 4627, 5455),
 };
 
