@@ -155,6 +155,10 @@
 //   * D3D_GetAdapterDisplayMode (4034)
 //   * D3D_GetAdapterModeCount (4034)
 //   * IDirect3DVertexBuffer8_Lock (4721, 5028, 5120, 5233)
+// * List of functions might be D3D8LTCG library: (Verifying with Sega GT 2002 title)
+//   * D3D_CreateDeviceX (4627)
+//   * D3D_KickOffAndWaitForIdle2 (4627)
+//   * D3D_CommonSetRenderTargetB (4627)
 
 #ifndef D3D8_OOVPA_INL
 #define D3D8_OOVPA_INL
