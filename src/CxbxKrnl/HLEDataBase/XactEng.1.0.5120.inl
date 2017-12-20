@@ -61,7 +61,6 @@ OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank, 5120, 13,
     XREF_XACT_CEngine_UnRegisterWaveBank,
     XRefZero)
 
-
         { 0x0E, 0x51 },
         { 0x1F, 0x00 },
 
