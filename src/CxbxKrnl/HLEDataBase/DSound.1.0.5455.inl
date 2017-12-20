@@ -74,50 +74,6 @@ OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5455, 18,
         { 0x96, 0xC9 },
 OOVPA_END;
 
-#if 0 // Moved to 4134
-// ******************************************************************
-// * DirectSound::CDirectSoundBuffer::SetBufferData
-// ******************************************************************
-OOVPA_XREF(CDirectSoundBuffer_SetBufferData, 5455, 19,
-
-    XREF_CDirectSoundBuffer_SetBufferData,
-    XRefZero)
-
-        // CDirectSoundBuffer_SetBufferData+0x00 : push ebp
-        { 0x00, 0x55 },
-
-        // CDirectSoundBuffer_SetBufferData+0x0F : cmp dword ptr [ebp+10h],edi
-        { 0x0F, 0x39 },
-        { 0x10, 0x7D },
-        { 0x11, 0x10 },
-
-        // CDirectSoundBuffer_SetBufferData+0x12 : mov dword ptr [ebp+0Ch],edi
-        { 0x12, 0x89 },
-        { 0x13, 0x7D },
-        { 0x14, 0x10 },
-
-        // CDirectSoundBuffer_SetBufferData+0x4B : mov eax,dword ptr [esi+1Ch]
-        { 0x4B, 0x8B },
-        { 0x4C, 0x46 },
-        { 0x4D, 0x1C },
-
-        // CDirectSoundBuffer_SetBufferData+0x64 : mov ecx,dword ptr [esi+20h]
-        { 0x64, 0x8B },
-        { 0x65, 0x4E },
-        { 0x66, 0x20 },
-
-        // CDirectSoundBuffer_SetBufferData+0x8A : mov ecx,dword ptr [esi+20h]
-        { 0x8A, 0x8B },
-        { 0x8B, 0x4E },
-        { 0x8C, 0x20 },
-
-        // CDirectSoundBuffer_SetBufferData+0xAB : retn 0x0C
-        { 0xAB, 0xC2 },
-        { 0xAC, 0x0C },
-        { 0xAD, 0x00 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones
 // ******************************************************************
@@ -187,34 +143,6 @@ OOVPA_XREF(DSound_CRefCount_Release, 5455, 10,
         { 0x1E, 0xC2 },
         { 0x1F, 0x04 },
 OOVPA_END;
-
-#if 0 // Replaced with generic OOVPA 5344
-// ******************************************************************
-// * CMcpxStream_Flush
-// ******************************************************************
-OOVPA_XREF(CMcpxStream_Flush, 5455, 11,
-
-    XREF_CMcpxStream_Flush,
-    XRefZero)
-
-        { 0x00, 0x55 },
-        { 0x01, 0x8B },
-
-        { 0x12, 0x33 },
-
-        { 0x38, 0x83 },
-        { 0x39, 0xFF },
-        { 0x3A, 0x06 },
-
-        { 0x4B, 0xE8 },
-
-        { 0x62, 0xE8 },
-
-        { 0xD1, 0xC9 },
-        { 0xD2, 0xC2 },
-        { 0xD3, 0x04 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CMcpxStream_Discontinuity
@@ -291,25 +219,6 @@ OOVPA_XREF(CDirectSound_SetI3DL2Listener, 5455, 20,
         { 0x106, 0x0C },
 OOVPA_END;
 
-#if 0 // No longer used, replaced by CMcpxVoiceClient_SetMixBins
-// ******************************************************************
-// * CDirectSoundVoiceSettings::SetMixBins
-// ******************************************************************
-OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 5455, 7,
-
-    XREF_CDirectSoundVoiceSettings_SetMixBins,
-    XRefZero)
-
-        { 0x1B, 0xEB },
-        { 0x32, 0x8B },
-        { 0x4C, 0x7C },
-        { 0x66, 0x00 },
-        { 0x84, 0xF6 },
-        { 0x9A, 0xB4 },
-        { 0xB4, 0x00 },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * CDirectSoundVoice::CommitDeferredSettings
 // ******************************************************************
@@ -351,26 +260,6 @@ OOVPA_XREF(CMcpxBuffer_SetBufferData, 5455, 9,
         { 0x89, 0xC2 },
         { 0x8A, 0x08 },
 OOVPA_END;
-
-#if 0 // Moved to 4361
-// ******************************************************************
-// * DirectSound::CMemoryManager::PoolAlloc
-// ******************************************************************
-OOVPA_NO_XREF(DSound_CMemoryManager_PoolAlloc, 5455, 11)
-
-	{ 0x00, 0x56 },
-	{ 0x24, 0x83 },
-	{ 0x25, 0x7C },
-	{ 0x26, 0x24 },
-	{ 0x27, 0x10 },
-	{ 0x28, 0x00 },
-	{ 0x37, 0xF3 },
-	{ 0x38, 0xAB },
-	{ 0x44, 0xC2 },
-	{ 0x45, 0x0C },
-	{ 0x46, 0x00 },
-OOVPA_END;
-#endif
 
 // ******************************************************************
 // * CDirectSound_GetSpeakerConfig
