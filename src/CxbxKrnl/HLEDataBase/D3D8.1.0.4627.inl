@@ -181,9 +181,9 @@ OOVPA_NO_XREF(D3D_CommonSetRenderTarget, 4627, 12)
 OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 1+12,
 
     XREF_D3D_CommonSetRenderTarget,
-	XRefOne)
+    XRefOne)
 
-		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+        XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 #endif
         // D3D_CommonSetRenderTarget+0x00 : sub esp, 0x20
         { 0x00, 0x83 },
@@ -217,9 +217,9 @@ OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 11,
 OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 1+11,
 
     XREF_D3D_CommonSetRenderTarget,
-	XRefOne)
+    XRefOne)
 
-		XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
+        XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
 #endif
         // D3D_CommonSetRenderTargetB+0x00 : sub esp, 0x24
         { 0x00, 0x83 },
@@ -403,25 +403,25 @@ OOVPA_XREF(D3DDevice_GetRenderTarget, 4627, 1+12,
 
         XREF_ENTRY( 0x01, XREF_D3DDevice_GetRenderTarget2 ),
 
-		// D3DDevice_GetRenderTarget+0x00 : call addr
-		{ 0x00, 0xE8 },
+        // D3DDevice_GetRenderTarget+0x00 : call addr
+        { 0x00, 0xE8 },
 
-		// D3DDevice_GetRenderTarget+0x05 : mov ecx, [esp + 0x04]
-		{ 0x05, 0x8B },
+        // D3DDevice_GetRenderTarget+0x05 : mov ecx, [esp + 0x04]
+        { 0x05, 0x8B },
         { 0x06, 0x4C },
         { 0x07, 0x24 },
         { 0x08, 0x04 },
 
-		// D3DDevice_GetRenderTarget+0x09 : mov [ecx], eax
-		{ 0x09, 0x89 },
+        // D3DDevice_GetRenderTarget+0x09 : mov [ecx], eax
+        { 0x09, 0x89 },
         { 0x0A, 0x01 },
 
-		// D3DDevice_GetRenderTarget+0x0B : xor eax, eax
-		{ 0x0B, 0x33 },
+        // D3DDevice_GetRenderTarget+0x0B : xor eax, eax
+        { 0x0B, 0x33 },
         { 0x0C, 0xC0 },
 
-		// D3DDevice_GetRenderTarget+0x0D : ret 0x0004
-		{ 0x0D, 0xC2 },
+        // D3DDevice_GetRenderTarget+0x0D : ret 0x0004
+        { 0x0D, 0xC2 },
         { 0x0E, 0x04 },
         { 0x0F, 0x00 },
 
@@ -433,17 +433,17 @@ OOVPA_END;
 #ifndef WIP_LessVertexPatching
 OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 2+8,
 
-	XREF_D3DDevice_GetRenderTarget2,
-	XRefTwo)
+    XREF_D3DDevice_GetRenderTarget2,
+    XRefTwo)
 #else
 OOVPA_XREF(D3DDevice_GetRenderTarget2, 4627, 3+8,
 
-	XREF_D3DDevice_GetRenderTarget2,
-	XRefThree)
+    XREF_D3DDevice_GetRenderTarget2,
+    XRefThree)
 #endif
-		XREF_ENTRY( 0x01, XREF_D3DDEVICE ), // Derived
+        XREF_ENTRY( 0x01, XREF_D3DDEVICE ), // Derived
 #ifdef WIP_LessVertexPatching
-		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+        XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 #endif
         XREF_ENTRY( 0x12, XREF_D3DResource_AddRef ),
 
@@ -501,10 +501,10 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 20)
 #else
 OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 1+20,
 
-	XREF_D3DDevice_GetDepthStencilSurface2,
-	XRefOne)
+    XREF_D3DDevice_GetDepthStencilSurface2,
+    XRefOne)
 
-		XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
+        XREF_ENTRY( 0x08, XREF_OFFSET_D3DDEVICE_M_DEPTHSTENCIL ), // Derived
 #endif
         { 0x00, 0xA1 },
 
@@ -784,10 +784,10 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 4627, 16)
 #else
 OOVPA_XREF(D3DDevice_SetPixelShader, 4627, 1+16,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x0A, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
+        XREF_ENTRY( 0x0A, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
 #endif
         { 0x03, 0x1D },
 
@@ -1017,10 +1017,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4627, 1+10,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x19, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
+        XREF_ENTRY( 0x19, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x14 : shl eax, 0x07
         { 0x14, 0xC1 },
@@ -1324,24 +1324,24 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(CMiniport_IsFlipPending, 4627, 18) // Was D3DDevice_Reset
 
-		{ 0x00, 0x8B },
-		{ 0x01, 0x81 },
-		{ 0x02, 0xBC },
-		{ 0x03, 0x01 },
-		{ 0x04, 0x00 },
-		{ 0x05, 0x00 },
-		{ 0x06, 0x83 },
-		{ 0x07, 0xE0 },
-		{ 0x08, 0x01 },
-		{ 0x09, 0x83 },
-		{ 0x0A, 0xC0 },
-		{ 0x0B, 0x1F },
-		{ 0x0C, 0x8D },
-		{ 0x0D, 0x04 },
-		{ 0x0E, 0x40 },
-		{ 0x0F, 0x8B },
-		{ 0x10, 0x04 },
-		{ 0x11, 0x81 },
+        { 0x00, 0x8B },
+        { 0x01, 0x81 },
+        { 0x02, 0xBC },
+        { 0x03, 0x01 },
+        { 0x04, 0x00 },
+        { 0x05, 0x00 },
+        { 0x06, 0x83 },
+        { 0x07, 0xE0 },
+        { 0x08, 0x01 },
+        { 0x09, 0x83 },
+        { 0x0A, 0xC0 },
+        { 0x0B, 0x1F },
+        { 0x0C, 0x8D },
+        { 0x0D, 0x04 },
+        { 0x0E, 0x40 },
+        { 0x0F, 0x8B },
+        { 0x10, 0x04 },
+        { 0x11, 0x81 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1392,38 +1392,38 @@ OOVPA_NO_XREF(D3DDevice_GetTexture2, 4627, 23)
 #else
 OOVPA_XREF(D3DDevice_GetTexture2, 4627, 1+23, // Up to 5233. Also for 5344, 5558, 5659, 5788, 5849, 5933
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
+        XREF_ENTRY( 0x0E, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived
 #endif
-		{ 0x00, 0x8B },
-		{ 0x01, 0x44 },
-		{ 0x02, 0x24 },
-		{ 0x03, 0x04 },
-		{ 0x04, 0x8B },
-		{ 0x05, 0x0D },
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
+        { 0x04, 0x8B },
+        { 0x05, 0x0D },
 
-		{ 0x0A, 0x56 },
-		{ 0x0B, 0x8D },
-		{ 0x0C, 0xB4 },
-		{ 0x0D, 0x81 },
-		{ 0x0E, 0x38 }, // GetTexture2 380B vs GetPalette2 480B
-		{ 0x0F, 0x0B },
+        { 0x0A, 0x56 },
+        { 0x0B, 0x8D },
+        { 0x0C, 0xB4 },
+        { 0x0D, 0x81 },
+        { 0x0E, 0x38 }, // GetTexture2 380B vs GetPalette2 480B
+        { 0x0F, 0x0B },
 
-		{ 0x10, 0x00 },
-		{ 0x11, 0x00 },
-		{ 0x12, 0x8B },
-		{ 0x13, 0x06 },
-		{ 0x14, 0x85 },
-		{ 0x15, 0xC0 },
-		{ 0x16, 0x74 },
+        { 0x10, 0x00 },
+        { 0x11, 0x00 },
+        { 0x12, 0x8B },
+        { 0x13, 0x06 },
+        { 0x14, 0x85 },
+        { 0x15, 0xC0 },
+        { 0x16, 0x74 },
 
-		{ 0x18, 0x50 },
-		{ 0x19, 0xE8 },
+        { 0x18, 0x50 },
+        { 0x19, 0xE8 },
 
-		{ 0x1E, 0x8B },
-		{ 0x1F, 0x06 },
+        { 0x1E, 0x8B },
+        { 0x1F, 0x06 },
 //        { 0x21, 0xC2 },
 OOVPA_END;
 
@@ -1432,23 +1432,23 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetStateVB, 4627, 12)
 
-		// D3DDevice_SetStateVB+0x00 : sub esp, 0xC
-		{ 0x00, 0x83 },
-		{ 0x01, 0xEC },
-		{ 0x02, 0x0C },
+        // D3DDevice_SetStateVB+0x00 : sub esp, 0xC
+        { 0x00, 0x83 },
+        { 0x01, 0xEC },
+        { 0x02, 0x0C },
 
-		// D3DDevice_SetStateVB+0x0D : and eax, 0xFFFFFFAF
-		{ 0x0D, 0x83 },
-		{ 0x0E, 0xE0 },
-		{ 0x0F, 0xAF },
+        // D3DDevice_SetStateVB+0x0D : and eax, 0xFFFFFFAF
+        { 0x0D, 0x83 },
+        { 0x0E, 0xE0 },
+        { 0x0F, 0xAF },
 
-		// D3DDevice_SetStateVB+0x10 : test ebx, 0x3FFFFF8F
-		{ 0x10, 0xF7 },
-		{ 0x11, 0xC3 },
-		{ 0x12, 0x8F },
-		{ 0x13, 0xFF },
-		{ 0x14, 0xFF },
-		{ 0x15, 0x3F },
+        // D3DDevice_SetStateVB+0x10 : test ebx, 0x3FFFFF8F
+        { 0x10, 0xF7 },
+        { 0x11, 0xC3 },
+        { 0x12, 0x8F },
+        { 0x13, 0xFF },
+        { 0x14, 0xFF },
+        { 0x15, 0x3F },
 OOVPA_END;
 
 // ******************************************************************
@@ -1456,22 +1456,22 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetStateUP, 4627, 11)
 
-		// D3DDevice_SetStateUP+0x05 : sub esp, 0x14
-		{ 0x05, 0x83 },
-		{ 0x06, 0xEC },
-		{ 0x07, 0x14 },
+        // D3DDevice_SetStateUP+0x05 : sub esp, 0x14
+        { 0x05, 0x83 },
+        { 0x06, 0xEC },
+        { 0x07, 0x14 },
 
-		// D3DDevice_SetStateUP+0x08 : test eax, 0x3FFFFF8F
-		{ 0x08, 0xA9 },
-		{ 0x09, 0x8F },
-		{ 0x0A, 0xFF },
-		{ 0x0B, 0xFF },
-		{ 0x0C, 0x3F },
+        // D3DDevice_SetStateUP+0x08 : test eax, 0x3FFFFF8F
+        { 0x08, 0xA9 },
+        { 0x09, 0x8F },
+        { 0x0A, 0xFF },
+        { 0x0B, 0xFF },
+        { 0x0C, 0x3F },
 
-		// D3DDevice_SetStateUP+0x27 : or eax, 0x50
-		{ 0x27, 0x83 },
-		{ 0x28, 0xC8 },
-		{ 0x29, 0x50 },
+        // D3DDevice_SetStateUP+0x27 : or eax, 0x50
+        { 0x27, 0x83 },
+        { 0x28, 0xC8 },
+        { 0x29, 0x50 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1709,7 +1709,7 @@ OOVPA_XREF(D3DDevice_CreatePalette, 4627, 1+10,
     XRefNoSaveIndex,
     XRefOne)
 
-		XREF_ENTRY( 0x06, XREF_D3DDevice_CreatePalette2 ),
+        XREF_ENTRY( 0x06, XREF_D3DDevice_CreatePalette2 ),
 
         { 0x00, 0x8B },
         { 0x0A, 0x8B },

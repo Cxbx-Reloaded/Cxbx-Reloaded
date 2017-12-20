@@ -113,7 +113,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 4831, 13,
 
-	XREF_CMcpxBuffer_GetStatus,
+    XREF_CMcpxBuffer_GetStatus,
     XRefZero)
 
         { 0x00, 0x0F },

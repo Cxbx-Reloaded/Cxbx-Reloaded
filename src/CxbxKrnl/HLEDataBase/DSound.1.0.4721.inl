@@ -63,7 +63,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 4721, 17,
 
-	XREF_CMcpxBuffer_GetStatus,
+    XREF_CMcpxBuffer_GetStatus,
     XRefZero)
 
         { 0x00, 0x0F },
@@ -92,7 +92,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_Pause, 4721, 12,
 
-	XREF_CMcpxBuffer_Pause,
+    XREF_CMcpxBuffer_Pause,
     XRefZero)
 
         { 0x00, 0x55 },

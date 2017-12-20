@@ -244,19 +244,19 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(CMemoryManager_MemAlloc, 4627, 10)
 
-		// DirectSound::CMemoryManager::PoolAlloc + 0x1B: cmp [esp+4+0xC], 0
-		{ 0x1B, 0x83 },
-		{ 0x1C, 0x7C },
-		{ 0x1D, 0x24 },
-		{ 0x1E, 0x10 },
-		{ 0x1F, 0x00 },
-		// DirectSound::CMemoryManager::PoolAlloc + 0x33: and ecx, 3
-		{ 0x33, 0x83 },
-		{ 0x34, 0xE1 },
-		{ 0x35, 0x03 },
-		// DirectSound::CMemoryManager::PoolAlloc + 0x65: retn 0xC
-		{ 0x65, 0xC2 },
-		{ 0x66, 0x0C }
+        // DirectSound::CMemoryManager::PoolAlloc + 0x1B: cmp [esp+4+0xC], 0
+        { 0x1B, 0x83 },
+        { 0x1C, 0x7C },
+        { 0x1D, 0x24 },
+        { 0x1E, 0x10 },
+        { 0x1F, 0x00 },
+        // DirectSound::CMemoryManager::PoolAlloc + 0x33: and ecx, 3
+        { 0x33, 0x83 },
+        { 0x34, 0xE1 },
+        { 0x35, 0x03 },
+        // DirectSound::CMemoryManager::PoolAlloc + 0x65: retn 0xC
+        { 0x65, 0xC2 },
+        { 0x66, 0x0C }
 OOVPA_END;
 
 // ******************************************************************
@@ -292,7 +292,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetDopplerFactor, 4627, 12,
 
-	XREF_CDirectSoundVoice_SetDopplerFactor,
+    XREF_CDirectSoundVoice_SetDopplerFactor,
     XRefZero)
 
         // CDirectSoundVoice_SetDopplerFactor+0x0D : mov edx, [esp+arg_4]

@@ -90,7 +90,7 @@ OOVPA_END;
 //Generic OOVPA as of 4242 and newer.
 OOVPA_XREF(CMcpxBuffer_Stop, 4242, 9,
 
-	XREF_CMcpxBuffer_Stop,
+    XREF_CMcpxBuffer_Stop,
     XRefZero)
 
         // CMcpxBuffer_Stop+0x0E : cmp al, 3
