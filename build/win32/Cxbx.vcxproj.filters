@@ -545,12 +545,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl">
-      <Filter>HLEDatabase\DSound</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl">
-      <Filter>HLEDatabase\DSound</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
@@ -569,9 +563,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5558.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.inl">
-      <Filter>HLEDatabase\XactEng</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.OOVPA.inl">
       <Filter>HLEDatabase\XactEng</Filter>
     </None>
@@ -579,9 +570,6 @@
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3950.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4039.inl">
@@ -599,9 +587,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
@@ -614,25 +599,13 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5120.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5344.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5455.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5659.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.inl">
-      <Filter>HLEDatabase\Xapi</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.OOVPA.inl">
@@ -645,24 +618,6 @@
       <Filter>HLEDatabase\XG</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.inl">
-      <Filter>HLEDatabase\XG</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl">
       <Filter>HLEDatabase\XG</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.OOVPA.inl">
@@ -678,9 +633,6 @@
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5028.inl">
-      <Filter>HLEDatabase\XOnline</Filter>
-    </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5455.inl">
