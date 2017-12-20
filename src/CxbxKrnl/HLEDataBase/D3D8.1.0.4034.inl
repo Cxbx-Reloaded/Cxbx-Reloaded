@@ -70,38 +70,38 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(CMiniport_CreateCtxDmaObject, 4034, 32) // Also for 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
 
-		{ 0x00, 0x55 },
-		{ 0x01, 0x8B },
-		{ 0x02, 0xEC },
-		{ 0x03, 0x51 },
-		{ 0x04, 0x51 },
-		{ 0x05, 0x53 },
-		{ 0x06, 0x56 },
-		{ 0x07, 0x57 },
-		{ 0x08, 0x33 },
-		{ 0x09, 0xC0 },
-		{ 0x0A, 0x50 },
-		{ 0x0B, 0x89 },
-		{ 0x0C, 0x45 },
-		{ 0x0D, 0xF8 },
-		{ 0x0E, 0x89 },
-		{ 0x0F, 0x45 },
-		{ 0x10, 0xFC },
-		{ 0x11, 0x8D },
-		{ 0x12, 0x45 },
-		{ 0x13, 0xFC },
-		{ 0x14, 0x50 },
-		{ 0x15, 0x8D },
-		{ 0x16, 0x45 },
-		{ 0x17, 0xF8 },
-		{ 0x18, 0x50 },
-		{ 0x19, 0xFF },
-		{ 0x1A, 0x75 },
-		{ 0x1B, 0x10 },
-		{ 0x1C, 0x8B },
-		{ 0x1D, 0xD1 },
-		{ 0x1E, 0x8B },
-		{ 0x1F, 0x3A },
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x51 },
+        { 0x04, 0x51 },
+        { 0x05, 0x53 },
+        { 0x06, 0x56 },
+        { 0x07, 0x57 },
+        { 0x08, 0x33 },
+        { 0x09, 0xC0 },
+        { 0x0A, 0x50 },
+        { 0x0B, 0x89 },
+        { 0x0C, 0x45 },
+        { 0x0D, 0xF8 },
+        { 0x0E, 0x89 },
+        { 0x0F, 0x45 },
+        { 0x10, 0xFC },
+        { 0x11, 0x8D },
+        { 0x12, 0x45 },
+        { 0x13, 0xFC },
+        { 0x14, 0x50 },
+        { 0x15, 0x8D },
+        { 0x16, 0x45 },
+        { 0x17, 0xF8 },
+        { 0x18, 0x50 },
+        { 0x19, 0xFF },
+        { 0x1A, 0x75 },
+        { 0x1B, 0x10 },
+        { 0x1C, 0x8B },
+        { 0x1D, 0xD1 },
+        { 0x1E, 0x8B },
+        { 0x1F, 0x3A },
 OOVPA_END;
 
 // ******************************************************************
@@ -161,11 +161,11 @@ OOVPA_END;
 OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 4034, 2+14,
 
     XREF_D3DDevice_SetRenderState_CullMode,
-	XRefTwo)
+    XRefTwo)
 
-		XREF_ENTRY( 0x03, XREF_D3DDEVICE ), // Derived
+        XREF_ENTRY( 0x03, XREF_D3DDEVICE ), // Derived
 
-		XREF_ENTRY( 0x2B, XREF_D3DRS_CULLMODE ), // Derived
+        XREF_ENTRY( 0x2B, XREF_D3DRS_CULLMODE ), // Derived
 
         // D3DDevice_SetRenderState_CullMode+0x00 : push esi
         { 0x00, 0x56 },
@@ -251,10 +251,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3DDevice_SetStreamSource, 4034, 1+14, // 1+28
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x22, XREF_G_STREAM ), // Derived
+        XREF_ENTRY( 0x22, XREF_G_STREAM ), // Derived
 
         // D3DDevice_SetStreamSource+0x08 : mov edi, [esp+8+0x04]
         { 0x08, 0x8B },
@@ -735,10 +735,10 @@ OOVPA_NO_XREF(D3DDevice_SetTexture, 4034, 10) // TODO : Alias 3911 instead ?
 #else
 OOVPA_XREF(D3DDevice_SetTexture, 4034, 1+10, // TODO : Alias 3911 instead ?
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived - verified for 4432 DolphinClassic 0x00021D10(SetTexture)+0x10=00021D20 : 8B 84 B7 78 0A 00 00 mov eax,[edi+esi*4+$00000A78]
+        XREF_ENTRY( 0x13, XREF_OFFSET_D3DDEVICE_M_TEXTURES ), // Derived - verified for 4432 DolphinClassic 0x00021D10(SetTexture)+0x10=00021D20 : 8B 84 B7 78 0A 00 00 mov eax,[edi+esi*4+$00000A78]
 #endif
         // D3DDevice_SetTexture+0x09 : push edi
         { 0x09, 0x57 },
@@ -769,10 +769,10 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 4034, 12)
 #else
 OOVPA_XREF(D3DDevice_SetPalette, 4034, 1+12,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
+        XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PALETTES ), // Derived
 #endif
         { 0x00, 0x53 },
         { 0x08, 0x57 },
@@ -793,11 +793,11 @@ OOVPA_END;
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
 OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 4034, 1+10,
-	
-	XRefNoSaveIndex,
-	XRefOne)
 
-		XREF_ENTRY( 0x18, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x18, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
 
         // D3DDevice_SetTextureState_TexCoordIndex+0x13 : shl eax, 0x07
         { 0x13, 0xC1 },
@@ -1100,10 +1100,10 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 4039, 9)
 #else
 OOVPA_XREF(D3DDevice_SetRenderTarget, 4039, 1+9,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x17, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
+        XREF_ENTRY( 0x17, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
 #endif
         { 0x06, 0x35 },
         { 0x12, 0x3B },
@@ -1124,10 +1124,10 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 4034, 12)
 #else
 OOVPA_XREF(D3DDevice_SetPixelShader, 4034, 1+12,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
+        XREF_ENTRY( 0x10, XREF_OFFSET_D3DDEVICE_M_PIXELSHADER ), // Derived
 #endif
         { 0x00, 0x8B },
         { 0x01, 0x44 },
@@ -1266,13 +1266,13 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4f, 4039, 11)
         { 0x1F, 0x00 },
         { 0x56, 0xC2 },
 /*
-	{ 0x0A, 0x46 },
-	{ 0x16, 0x08 },
-	{ 0x22, 0x09 },
-	{ 0x2E, 0x24 },
-	{ 0x3A, 0x24 },
-	{ 0x46, 0x8B },
-	{ 0x52, 0x14 },*/
+        { 0x0A, 0x46 },
+        { 0x16, 0x08 },
+        { 0x22, 0x09 },
+        { 0x2E, 0x24 },
+        { 0x3A, 0x24 },
+        { 0x46, 0x8B },
+        { 0x52, 0x14 },*/
 OOVPA_END;
 
 // ******************************************************************
@@ -1374,16 +1374,16 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_PSTextureModes, 4034, 10)
 
-		{ 0x0A, 0x89 },
-		{ 0x0B, 0x81 },
-		{ 0x0E, 0x00 },
-		{ 0x0F, 0x00 },
-		{ 0x10, 0x81 },
-		{ 0x11, 0x0D },
-		{ 0x16, 0x00 },
-		{ 0x17, 0x40 },
-		{ 0x1A, 0xA3 },
-		{ 0x1F, 0xC2 },
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x81 },
+        { 0x11, 0x0D },
+        { 0x16, 0x00 },
+        { 0x17, 0x40 },
+        { 0x1A, 0xA3 },
+        { 0x1F, 0xC2 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1439,10 +1439,10 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 4034, 12)
 #else
 OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleMode, 4034, 1+8,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 
-		XREF_ENTRY( 0x11, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+        XREF_ENTRY( 0x11, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 #endif
         // D3DDevice_SetRenderState_MultiSampleMode+0x0F : mov ecx, [eax+0x21F0]
         { 0x0F, 0x8B },
@@ -1475,18 +1475,18 @@ OOVPA_END;
 #ifndef WIP_LessVertexPatching
 OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4034, 1+8,
 
-	XRefNoSaveIndex,
-	XRefOne)
+    XRefNoSaveIndex,
+    XRefOne)
 #else
 OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4034, 2+8,
 
-	XRefNoSaveIndex,
-	XRefTwo)
+    XRefNoSaveIndex,
+    XRefTwo)
 #endif
-		XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
+        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
 
 #ifdef WIP_LessVertexPatching
-		XREF_ENTRY( 0x11, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+        XREF_ENTRY( 0x11, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
 #endif
 
         // D3DDevice_SetRenderState_MultiSampleRenderTargetMode+0x0F : mov ecx, [eax+0x21F0]
@@ -1941,16 +1941,16 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 4034, 11) // Up to 5344
 
-	{ 0x06, 0x56 },
-	{ 0x07, 0xD8 },
-	{ 0x08, 0x44 },
-	{ 0x09, 0x24 },
-	{ 0x0A, 0x08 },
+        { 0x06, 0x56 },
+        { 0x07, 0xD8 },
+        { 0x08, 0x44 },
+        { 0x09, 0x24 },
+        { 0x0A, 0x08 },
         { 0x0B, 0x8B },
         { 0x0C, 0x35 },
 
-	{ 0x2E, 0x8B },
-	{ 0x2F, 0x06 },
+        { 0x2E, 0x8B },
+        { 0x2F, 0x06 },
         { 0x46, 0xC2 },
         { 0x47, 0x08 },
 OOVPA_END;
@@ -1960,13 +1960,13 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3D_LazySetPointParams, 4034, 7)
 
-	{ 0x00, 0x83 },
-	{ 0x01, 0xEC },
-	{ 0x02, 0x14 },
-	{ 0x4E, 0xE0 },
-	{ 0x73, 0xF6 },
-	{ 0x74, 0xC4 },
-	{ 0x75, 0x41 },
+        { 0x00, 0x83 },
+        { 0x01, 0xEC },
+        { 0x02, 0x14 },
+        { 0x4E, 0xE0 },
+        { 0x73, 0xF6 },
+        { 0x74, 0xC4 },
+        { 0x75, 0x41 },
 OOVPA_END;
 
 // ******************************************************************

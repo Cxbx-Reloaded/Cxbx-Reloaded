@@ -76,7 +76,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(IDirectSoundBuffer8_SetAllParameters, 5558, 1+8,
 
-	XREF_CDirectSoundVoice_SetAllParameters,
+    XREF_CDirectSoundVoice_SetAllParameters,
     XRefOne)
 
         XREF_ENTRY( 0x19, XREF_CDirectSoundBuffer_SetAllParameters ),

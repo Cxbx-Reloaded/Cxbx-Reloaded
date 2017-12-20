@@ -61,11 +61,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(DirectSoundCreateBuffer, 4039, 1+10,
 
-           XRefNoSaveIndex,
-           XRefOne)
+       XRefNoSaveIndex,
+       XRefOne)
 
     // DirectSoundCreateBuffer+0x2B : call [CDirectSound::CreateSoundBuffer]
-    XREF_ENTRY(0x2C, XREF_CDirectSound_CreateSoundBuffer),
+        XREF_ENTRY(0x2C, XREF_CDirectSound_CreateSoundBuffer),
 
     // DirectSoundCreateBuffer+0x04 : and [ebp-0x04], 0
     { 0x04, 0x83 },
@@ -91,8 +91,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundBuffer, 4039, 15,
 
-           XREF_CDirectSound_CreateSoundBuffer,
-           XRefZero)
+       XREF_CDirectSound_CreateSoundBuffer,
+       XRefZero)
     // CDirectSound_CreateSoundBuffer+0x00 : push ebp
     { 0x00, 0x55 },
 
@@ -456,8 +456,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetHeadroom, 4039, 1+7,
 
-	XREF_CDirectSoundBuffer_SetHeadroom,
-	XRefOne)
+    XREF_CDirectSoundBuffer_SetHeadroom,
+    XRefOne)
 
         XREF_ENTRY( 0x31, XREF_CDirectSoundVoice_SetHeadroom ), // Was 4134 Offset -0x01h
 
@@ -900,7 +900,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 4039, 1+10,
 
-	XREF_CDirectSoundBuffer_GetCurrentPosition,
+    XREF_CDirectSoundBuffer_GetCurrentPosition,
     XRefOne)
 
         // CDirectSoundBuffer_GetCurrentPosition+0x38 : call [CMcpxBuffer::GetCurrentPosition]
@@ -1076,7 +1076,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_SetCurrentPosition, 4039, 9,
 
-	XREF_CMcpxBuffer_SetCurrentPosition,
+    XREF_CMcpxBuffer_SetCurrentPosition,
     XRefZero)
 
         // CMcpxBuffer_SetCurrentPosition+0x11 : lea eax, [esi+90h]
@@ -1100,7 +1100,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetCurrentPosition, 4039, 1+10,
 
-	XREF_CDirectSoundBuffer_SetCurrentPosition,
+    XREF_CDirectSoundBuffer_SetCurrentPosition,
     XRefOne)
 
         // CDirectSoundBuffer_SetCurrentPosition+0x34 : call [CMcpxBuffer::SetCurrentPosition]

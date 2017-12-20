@@ -322,7 +322,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CDirectSoundVoice_SetDopplerFactor, 4361, 12,
 
-	XREF_CDirectSoundVoice_SetDopplerFactor,
+    XREF_CDirectSoundVoice_SetDopplerFactor,
     XRefZero)
 
         // CDirectSoundVoice_SetDopplerFactor+0x0D : mov edx, [esp+arg_4]

@@ -225,11 +225,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(DirectSoundCreateBuffer, 3911, 1+11,
 
-           XRefNoSaveIndex,
-           XRefOne)
+       XRefNoSaveIndex,
+       XRefOne)
 
     // DirectSoundCreateBuffer+0x27 : call [IDirectSound::CreateSoundBuffer]
-    XREF_ENTRY(0x28, XREF_IDirectSound_CreateSoundBuffer),
+        XREF_ENTRY(0x28, XREF_IDirectSound_CreateSoundBuffer),
 
     // DirectSoundCreateBuffer+0x04 : and [ebp-0x04], 0
     { 0x04, 0x83 },
@@ -316,11 +316,11 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(DirectSoundCreateStream, 3911, 1+11,
 
-           XRefNoSaveIndex,
-           XRefOne)
+       XRefNoSaveIndex,
+       XRefOne)
 
     // DirectSoundCreateStream+0x27 : call [IDirectSound::CreateSoundStream]
-    XREF_ENTRY(0x28, XREF_IDirectSound_CreateSoundStream ),
+        XREF_ENTRY(0x28, XREF_IDirectSound_CreateSoundStream ),
 
     // DirectSoundCreateStream+0x04 : and [ebp-0x04], 0
     { 0x04, 0x83 },
@@ -516,7 +516,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_Stop, 3911, 10,
 
-	XREF_CMcpxBuffer_Stop,
+    XREF_CMcpxBuffer_Stop,
     XRefZero)
 
         // CMcpxBuffer_Stop+0x08 : or eax, dword ptr [esp+10h]
@@ -917,7 +917,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_GetStatus, 3911, 13,
 
-	XREF_CMcpxBuffer_GetStatus,
+    XREF_CMcpxBuffer_GetStatus,
     XRefZero)
 
         // CMcpxBuffer_GetStatus+0x10 : mov eax, [ebp+0x08]
@@ -2718,19 +2718,19 @@ OOVPA_XREF(CMcpxVoiceClient_Commit3dSettings, 3911, 10,
     XREF_CMcpxVoiceClient_Commit3dSettings,
     XRefZero)
 
-	// CMcpxVoiceClient::Commit3dSettings+0x17 : or [eax+0x80], ecx
-	{ 0x17, 0x09 },
-	{ 0x18, 0x88 },
-	{ 0x19, 0x80 },
-	{ 0x1A, 0x00 },
-	// CMcpxVoiceClient::Commit3dSettings+0x2B : add eax, 0x80
-	{ 0x2B, 0x05 },
-	{ 0x2C, 0x80 },
-	{ 0x2D, 0x00 },
-	// CMcpxVoiceClient::Commit3dSettings+0x3D : cmpxchg [ecx], edx
-	{ 0x3D, 0x0F },
-	{ 0x3E, 0xB1 },
-	{ 0x3F, 0x11 },
+        // CMcpxVoiceClient::Commit3dSettings+0x17 : or [eax+0x80], ecx
+        { 0x17, 0x09 },
+        { 0x18, 0x88 },
+        { 0x19, 0x80 },
+        { 0x1A, 0x00 },
+        // CMcpxVoiceClient::Commit3dSettings+0x2B : add eax, 0x80
+        { 0x2B, 0x05 },
+        { 0x2C, 0x80 },
+        { 0x2D, 0x00 },
+        // CMcpxVoiceClient::Commit3dSettings+0x3D : cmpxchg [ecx], edx
+        { 0x3D, 0x0F },
+        { 0x3E, 0xB1 },
+        { 0x3F, 0x11 },
 OOVPA_END;
 
 // ******************************************************************
@@ -2992,11 +2992,11 @@ OOVPA_END;
 // Generic OOVPA as of 3911 and newer.
 OOVPA_XREF(IDirectSoundBuffer_SetConeOrientation, 3911, 1+8,
 
-           XRefNoSaveIndex,
-           XRefOne)
+       XRefNoSaveIndex,
+       XRefOne)
 
     // IDirectSoundBuffer_SetConeOrientation+0x2C : call [CDirectSoundBuffer::SetConeOrientation]
-    XREF_ENTRY(0x2D, XREF_CDirectSoundBuffer_SetConeOrientation),
+        XREF_ENTRY(0x2D, XREF_CDirectSoundBuffer_SetConeOrientation),
 
     // IDirectSoundBuffer_SetConeOrientation+0x06 : fld [ebp+arg_C]
     { 0x06, 0xD9 },

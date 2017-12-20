@@ -240,7 +240,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_SetBufferData, 5455, 9,
 
-	XREF_CMcpxBuffer_SetBufferData,
+    XREF_CMcpxBuffer_SetBufferData,
     XRefZero)
 
         // CMcpxBuffer_SetBufferData+0x1E : cmp eax, ebx
