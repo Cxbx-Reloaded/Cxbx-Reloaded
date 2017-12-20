@@ -56,7 +56,7 @@ OOVPA_XREF(CDirectSound_CommitDeferredSettings, 5455, 18,
         { 0x2B, 0x80 },
 
         // CDirectSound_CommitDeferredSettings+0x3C : mov eax, dword ptr [esi+8]
-        { 0x3C, 0x8B }, 
+        { 0x3C, 0x8B },
         { 0x3D, 0x46 },
         { 0x3E, 0x08 },
 

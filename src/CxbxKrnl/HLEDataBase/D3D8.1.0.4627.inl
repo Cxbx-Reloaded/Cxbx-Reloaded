@@ -211,6 +211,7 @@ OOVPA_END;
 // ******************************************************************
 #ifndef WIP_LessVertexPatching
 OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 11,
+
     XREF_D3D_CommonSetRenderTarget,
     XRefZero)
 #else

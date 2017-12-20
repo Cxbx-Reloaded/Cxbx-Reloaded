@@ -273,7 +273,7 @@ OOVPA_XREF(CDirectSound_SetPosition, 4134, 14,
     XRefZero)
 
         // CDirectSound_SetPosition+0x00 : push ebp
-        { 0x00, 0x55},
+        { 0x00, 0x55 },
 
         // CDirectSound_SetPosition+0x2B : mov ecx, [ebp+0x08]
         { 0x2B, 0x8B },
@@ -436,7 +436,7 @@ OOVPA_XREF(CDirectSoundVoice_SetVolume, 4134, 1+10,
     XRefOne)
 
         // CDirectSoundVoice_SetVolume+0x15 : call [CMcpxVoiceClient::SetVolume]
-        XREF_ENTRY( 0x15, XREF_CMcpxVoiceClient_SetVolume ), 
+        XREF_ENTRY( 0x15, XREF_CMcpxVoiceClient_SetVolume ),
 
         // CDirectSoundVoice_SetVolume+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B },
@@ -668,7 +668,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetCurrentPosition, 4134, 1+10,
     XRefOne)
 
         // CDirectSoundBuffer_SetCurrentPosition+0x35 : call [CMcpxBuffer::SetCurrentPosition]
-        XREF_ENTRY( 0x35, XREF_CMcpxBuffer_SetCurrentPosition), 
+        XREF_ENTRY( 0x35, XREF_CMcpxBuffer_SetCurrentPosition),
 
         // CDirectSoundBuffer_SetCurrentPosition+0x00 : push esi
         { 0x00, 0x56 },
@@ -744,7 +744,7 @@ OOVPA_XREF(CDirectSoundBuffer_GetCurrentPosition, 4134, 1+10,
     XRefOne)
 
         // CDirectSoundBuffer_GetCurrentPosition+0x39 : call [CMcpxBuffer::GetCurrentPosition]
-        XREF_ENTRY( 0x39, XREF_CMcpxBuffer_GetCurrentPosition), 
+        XREF_ENTRY( 0x39, XREF_CMcpxBuffer_GetCurrentPosition),
 
         // CDirectSoundBuffer_GetCurrentPosition+0x00 : push esi
         { 0x00, 0x56 },
@@ -1990,7 +1990,7 @@ OOVPA_XREF(CDirectSound_SetVelocity, 4134, 16,
     XRefZero)
 
         // CDirectSound_SetVelocity+0x00 : push ebp
-        { 0x00, 0x55},
+        { 0x00, 0x55 },
 
         // CDirectSound_SetVelocity+0x24 : mov eax, 0x80004005
         { 0x24, 0xB8 },
@@ -2314,7 +2314,7 @@ OOVPA_XREF(CDirectSoundBuffer_Stop, 4134, 1+12,
     XRefOne)
 
         // CDirectSoundBuffer_Stop+0x33 : call [CMcpxBuffer::Stop]
-        XREF_ENTRY( 0x33, XREF_CMcpxBuffer_Stop), 
+        XREF_ENTRY( 0x33, XREF_CMcpxBuffer_Stop),
 
         // CDirectSoundBuffer_Stop+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 },
@@ -2827,6 +2827,7 @@ OOVPA_END;
 // * CDirectSoundStream_Flush
 // ******************************************************************
 OOVPA_XREF(CDirectSoundStream_Flush, 4134, 1+8,
+
     XRefNoSaveIndex,
     XRefOne)
 
@@ -2972,6 +2973,7 @@ OOVPA_END;
 // ******************************************************************
 // Generic OOVPA as of 4134 and newer
 OOVPA_XREF(CDirectSoundStream_Discontinuity, 4134, 1+8,
+
     XRefNoSaveIndex,
     XRefOne)
 
@@ -3019,6 +3021,7 @@ OOVPA_END;
 // ******************************************************************
 // NOTE: Has identical function to DirectSound::CAc97MediaObject::AddRef
 OOVPA_XREF(CDirectSoundStream_AddRef, 4134, 11,
+
     XRefNoSaveIndex,
     XRefZero)
 

@@ -268,7 +268,7 @@ OOVPA_NO_XREF(D3DDevice_CreateVertexShader, 3911, 38)
 
         { 0x46, 0x8D },
         { 0x47, 0x1C },
-        { 0x48, 0x30 }, 
+        { 0x48, 0x30 },
 /*
     OOVPA_NO_XREF(D3DDevice_CreateVertexShader, 5558)
 
