@@ -87,6 +87,7 @@
 //   * timeKillEvent (3950, 4034, 5028, 5233)
 //   * timeSetEvent (4034, 5233)
 // * Following OOVPA are invalid
+//   * CloseHandle (3911) // Has exact asm codes _ResetEvent@4
 //   * ReadFileEx (3911) // Has exact asm codes _WriteFileEx@20
 //   * WriteFileEx (3911) // Has exact asm codes _ReadFileEx@20
 //   * lstrcmpiW (3911) // Necessary XREF _xCompareStringW@20
