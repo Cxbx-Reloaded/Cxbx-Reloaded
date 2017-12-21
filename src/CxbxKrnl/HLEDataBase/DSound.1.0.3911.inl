@@ -4370,24 +4370,6 @@ OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 18,
         { 0xCC, 0x08 },
 OOVPA_END;
 
-#if 0 // Replaced with better OOVPA 3911 (See above)
-// ******************************************************************
-// * CDirectSound::EnableHeadphones
-// ******************************************************************
-OOVPA_XREF(CDirectSound_EnableHeadphones, 3911, 7,
-
-    XREF_CDirectSound_EnableHeadphones,
-    XRefZero)
-        { 0x18, 0x8B },
-        { 0x32, 0x0C },
-        { 0x4F, 0x8B },
-        { 0x66, 0x8B },
-        { 0x80, 0xFF },
-        { 0x9A, 0x76 },
-        { 0xB4, 0x5B },
-OOVPA_END;
-#endif
-
 // ******************************************************************
 // * IDirectSound_EnableHeadphones
 // ******************************************************************
