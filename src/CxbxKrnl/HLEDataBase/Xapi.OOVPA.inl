@@ -86,6 +86,21 @@
 //   * XapiFiberStartup (3950, 4034, 4039, 4134, 4531, 4721, 5028, 5455)
 //   * timeKillEvent (3950, 4034, 5028, 5233)
 //   * timeSetEvent (4034, 5233)
+// * Following OOVPA are invalid
+//   * ReadFileEx (3911) // Has exact asm codes _WriteFileEx@20
+//   * WriteFileEx (3911) // Has exact asm codes _ReadFileEx@20
+//   * lstrcmpiW (3911) // Necessary XREF _xCompareStringW@20
+// * Following OOVPA are missing (Obsolete?)
+//   * GetThreadPriorityBoost
+//   * RtlAllocateHeap
+//   * RtlCreateHeap
+//   * RtlDestroyHeap
+//   * RtlFreeHeap
+//   * RtlReAllocateHeap
+//   * RtlSizeHeap
+//   * XCalculateSignatureBeginEx
+//   * XCalculateSignatureEnd
+//   * XCalculateSignatureUpdate
 // NOTE: Known Xapi OOVPA not included in initial revision.
 //   * XFormatUtilityDrive (4242)
 //   * XSetProcessQuantumLength (4134)
