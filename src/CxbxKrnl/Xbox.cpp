@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->EEPROMDevice.h
+// *   src->CxbxKrnl->Xbox.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,33 +33,40 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
+#include "Xbox.h"
 
-#include "SMDevice.h"
+#include "PCIBus.h" // For PCIBus
+#include "SMBus.h" // For SMBus
+#include "SMCDevice.h" // For SMCDevice
+#include "EEPROMDevice.h" // For EEPROMDevice
+#include "EmuNVNet.h" // For NVNetDevice
 
-#define SMBUS_EEPROM_ADDRESS 0xA8 // = Write; Read = 0xA9
+PCIBus* g_PCIBus;
+SMBus* g_SMBus;
+SMCDevice* g_SMC;
+EEPROMDevice* g_EEPROM;
+NVNetDevice* g_NVNet;
 
-class EEPROMDevice : public SMDevice {
-public:
-	// SMDevice functions
-	void Init();
-	void Reset();
+#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
+#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
 
-	void QuickCommand(bool read);
-	uint8_t ReceiveByte();
-	uint8_t ReadByte(uint8_t command);
-	uint16_t ReadWord(uint8_t command);
-	int ReadBlock(uint8_t command, uint8_t *data);
+void InitXboxHardware()
+{
+	g_PCIBus = new PCIBus();
+	g_SMBus = new SMBus();
+	g_SMC = new SMCDevice(Revision1_1); // TODO : Make configurable
+	g_EEPROM = new EEPROMDevice();
+	g_NVNet = new NVNetDevice();
 
-	void SendByte(uint8_t data);
-	void WriteByte(uint8_t command, uint8_t value);
-	void WriteWord(uint8_t command, uint16_t value);
-	void WriteBlock(uint8_t command, uint8_t* data, int length);
+	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
+	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
 
-	// EEPROMDevice function
-	void SetEEPROM(uint8_t* pEEPROM) { m_pEEPROM = pEEPROM; };
-private:
-	uint8_t* m_pEEPROM;
-};
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
 
-extern EEPROMDevice* g_EEPROM;
+	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
+	// Resources : http://pablot.com/misc/fancontroller.cpp
+	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
+	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
+	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+}

@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->EEPROMDevice.h
+// *   src->CxbxKrnl->Xbox.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,34 +32,6 @@
 // *
 // *  All rights reserved
 // *
-// ******************************************************************
-#pragma once
+// ******************************************************************#pragma once
 
-#include "SMDevice.h"
-
-#define SMBUS_EEPROM_ADDRESS 0xA8 // = Write; Read = 0xA9
-
-class EEPROMDevice : public SMDevice {
-public:
-	// SMDevice functions
-	void Init();
-	void Reset();
-
-	void QuickCommand(bool read);
-	uint8_t ReceiveByte();
-	uint8_t ReadByte(uint8_t command);
-	uint16_t ReadWord(uint8_t command);
-	int ReadBlock(uint8_t command, uint8_t *data);
-
-	void SendByte(uint8_t data);
-	void WriteByte(uint8_t command, uint8_t value);
-	void WriteWord(uint8_t command, uint16_t value);
-	void WriteBlock(uint8_t command, uint8_t* data, int length);
-
-	// EEPROMDevice function
-	void SetEEPROM(uint8_t* pEEPROM) { m_pEEPROM = pEEPROM; };
-private:
-	uint8_t* m_pEEPROM;
-};
-
-extern EEPROMDevice* g_EEPROM;
+extern void InitXboxHardware();

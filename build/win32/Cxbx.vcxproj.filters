@@ -223,6 +223,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\Xbox.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -433,6 +436,9 @@
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\Xbox.h">
       <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>
