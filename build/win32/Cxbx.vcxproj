@@ -243,6 +243,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\SMBus.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\SMDevice.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\Xbox.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
@@ -533,6 +534,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\SMBus.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\SMDevice.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\Xbox.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
