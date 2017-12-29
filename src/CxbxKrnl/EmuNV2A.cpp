@@ -2766,7 +2766,7 @@ DEVICE_READ32(PFB)
 		break;
 	case NV_PFB_CSTATUS:
 	{
-		if (g_bIsChihiro) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
+		if (g_bIsChihiro || g_bIsDebug) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
 		result = CONTIGUOUS_MEMORY_XBOX_SIZE;
 	}
 	break;

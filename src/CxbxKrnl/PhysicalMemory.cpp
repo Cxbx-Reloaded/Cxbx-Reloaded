@@ -86,6 +86,10 @@ PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
 					}
 				}
 
+				// Reinstate this if the nv2a instance memory allocation is found to be ever deallocated after being 
+				// mapped during initialization. The only one that could do it is MmClaimGpuInstanceMemory, however it doesn't seem
+				// to deallocate the region, just to repurpose it...
+
 				//u32 offset = std::next(rit)->first + std::next(rit)->second;
 				/*if (rit == max_contiguous_it && m_MaxContiguousAddress - offset >= size)
 				{
@@ -272,6 +276,42 @@ VAddr PhysicalMemory::AllocateFragmented(size_t size)
 	SetError(PMEMORY_ALLOCATE_FRAGMENTED);
 	m_PhysicalMemoryInUse += size;
 	return aligned_start;
+}
+
+void PhysicalMemory::ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart)
+{
+	if (!offset) { return; } // nothing to do
+
+	if (bFragmentedMap)
+	{
+		auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
+		PAddr old_base = it->first;
+		size_t old_size = it->second;
+		m_Fragmented_mem_map.erase(old_base);
+
+		if (old_size - offset)
+		{
+			if (bStart) { m_Fragmented_mem_map.emplace(old_base + offset, old_size - offset); }
+			else { m_Fragmented_mem_map.emplace(old_base, old_size - offset); }
+		}
+
+		m_PhysicalMemoryInUse -= offset;
+	}
+	else
+	{
+		auto it = m_Mem_map.lower_bound(addr);
+		PAddr old_base = it->first;
+		size_t old_size = it->second;
+		m_Mem_map.erase(old_base);
+
+		if (old_size - offset)
+		{
+			if (bStart) { m_Mem_map.emplace(old_base + offset, old_size - offset); }
+			else { m_Mem_map.emplace(old_base, old_size - offset); }
+		}
+
+		m_PhysicalMemoryInUse -= offset;
+	}
 }
 
 void PhysicalMemory::DeAllocatePhysicalMemory(PAddr addr)

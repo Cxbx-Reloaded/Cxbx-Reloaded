@@ -119,6 +119,9 @@ extern XbeType g_XbeType;
 /*! indicates emulation of an Chihiro (arcade, instead of Xbox console) executable */
 extern bool g_bIsChihiro;
 
+/*! indicates emulation of a Debug xbe executable */
+extern bool g_bIsDebug;
+
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 

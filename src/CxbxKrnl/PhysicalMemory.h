@@ -104,6 +104,8 @@ class PhysicalMemory
 		PAddr AllocatePhysicalMemoryRange(size_t size, PAddr low_addr, PAddr high_addr);
 		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
 		VAddr AllocateFragmented(size_t size);
+		// shrinks the size af an allocation
+		void ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart);
 		// deallocates a block of the mapped file
 		void DeAllocatePhysicalMemory(PAddr addr);
 		// deallocates a block allocated with VirtualAlloc

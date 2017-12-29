@@ -49,8 +49,8 @@ enum class VMAType : u32
 	Free,
 	// vma represents allocated memory
 	Allocated,
-	// vma represents allocated memory mapped outside the second file view (allocated by VirtualAlloc)
-	Fragmented,
+	// stack allocation
+	Stack,
 	// tiled memory
 	MemTiled,
 	// nv2a
@@ -71,6 +71,8 @@ enum class VMAType : u32
 	DeviceBIOS,
 	// mcpx rom (retail xbox only)
 	DeviceMCPX,
+	// mark this vma as non-mergeable
+	Lock,
 };
 
 
@@ -88,6 +90,8 @@ struct VirtualMemoryArea
 	DWORD permissions = PAGE_NOACCESS;
 	// addr of the memory backing this block, if any
 	PAddr backing_block = NULL;
+	// this allocation was served by VirtualAlloc
+	bool bFragmented = false;
 	// tests if this area can be merged to the right with 'next'
 	bool CanBeMergedWith(const VirtualMemoryArea& next) const;
 };
@@ -104,30 +108,30 @@ class VMManager : public PhysicalMemory
 		~VMManager()
 		{
 			DeleteCriticalSection(&m_CriticalSection);
-			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
-			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hAliasedView);
+			UnmapViewOfFile((void *)m_Base);
+			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
+			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
 			CloseHandle(m_hAliasedView);
 		}
 		// initializes the page table to the default configuration
 		void Initialize(HANDLE file_view);
-		// initialize chihiro - specifc memory ranges
-		void InitializeChihiro();
+		// initialize chihiro/debug - specifc memory ranges
+		void InitializeChihiroDebug();
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
-		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, DWORD protect = PAGE_EXECUTE_READWRITE);
+		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE,
+			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates stack memory
 		VAddr AllocateStack(size_t size);
 		// deallocate a block of memory
-		void Deallocate(VAddr addr);
+		void Deallocate(VAddr addr, size_t size = 0);
 		// deallocate stack memory
 		void DeallocateStack(VAddr addr);
-		// checks if an overlapped memory block is present and, if so, deallocates it
-		void DeallocateOverlapped(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr target, size_t size, DWORD new_perms);
 		// query if a VAddr is valid
@@ -147,6 +151,8 @@ class VMManager : public PhysicalMemory
 		std::map<VAddr, VirtualMemoryArea> m_Vma_map;
 		// handle of the second file view region
 		HANDLE m_hAliasedView = NULL;
+		// start address of the memory region to which map non-contiguous allocations in the virtual space
+		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
 		// amount of image virtual memory in use
@@ -157,9 +163,9 @@ class VMManager : public PhysicalMemory
 		size_t m_StackMemoryInUse = 0;
 	
 		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE);
+		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, bool bNonContiguous = true);
 		// creates a vma representing the memory block to remove
-		void UnmapRange(VAddr target, bool StackFlag = false);
+		void UnmapRange(VAddr target, size_t size = 0);
 		// changes access permissions for a range of vma's, splitting them if necessary
 		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
 		// checks if a VAddr is valid; returns false if not
@@ -168,8 +174,6 @@ class VMManager : public PhysicalMemory
 		PAddr TranslateVAddrToPAddr(const VAddr addr);
 		// maps a new allocation in the virtual address space
 		void MapMemoryRegion(VAddr base, size_t size, PAddr target);
-		// maps a special allocation outside the virtual address space of the second file view
-		void MapSpecialRegion(VAddr base, size_t size, PAddr target);
 		// removes an allocation from the virtual address space
 		void UnmapRegion(VAddr base, size_t size);
 		// removes a vma block from the mapped memory
@@ -185,7 +189,7 @@ class VMManager : public PhysicalMemory
 		// splits a parent vma into two children
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma);
 		// merges the specified vma with adjacent ones if possible
-		VMAIter MergeAdjacentVMA(VMAIter iter);
+		VMAIter MergeAdjacentVMA(VMAIter vma_handle);
 		// changes access permissions for a vma
 		VMAIter ReprotectVMA(VMAIter vma_handle, DWORD new_perms);
 		// updates the page table
@@ -194,6 +198,10 @@ class VMManager : public PhysicalMemory
 		void Lock();
 		// releases the critical section
 		void Unlock();
+		// destructs a vma if not free already
+		VMAIter DestructVMA(VMAIter vma_handle, VAddr addr, size_t size);
+		// changes the size/base of a vma
+		void ResizeVMA(VMAIter vma_handle, size_t offset, bool bStart);
 };
 
 

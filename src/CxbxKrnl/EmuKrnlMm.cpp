@@ -72,7 +72,7 @@ XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL
 // the xbox kernel. Kernel code accessses this as a normal variable.
 // XAPI code however, reference to the address of this kernel variable,
 // thus use indirection (*LaunchDataPage) to get to the same contents.
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnull;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -112,34 +112,34 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
 
 	// size must be > 0
 	if (NumberOfBytes == 0)
-		pRet = NULL;
+		pRet = xbnull;
 
 	if (Alignment < PAGE_SIZE)
 		Alignment = PAGE_SIZE; // page boundary at least
 
 	// Only known flags are allowed
 	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
 	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
 	if ((ProtectionType & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) == (PAGE_NOCACHE | PAGE_WRITECOMBINE))
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Allocate when input arguments are valid
-	if (pRet != NULL)
+	if (pRet != xbnull)
 	{
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, NULL, Alignment, ProtectionType);
+		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, NULL, Alignment, ProtectionType, false);
 	}
 
 	RETURN(pRet);
@@ -157,7 +157,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	// TODO: this should probably allocate the memory at a specific system virtual address region...
 	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, NULL, PAGE_SIZE, Protect);
@@ -177,17 +177,18 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	unsigned int highest_physical_page = MM_XBOX_HIGHEST_PHYSICAL_PAGE;
-	if (g_bIsChihiro)
+	unsigned int instance_physical_page = MM_XBOX_INSTANCE_PHYSICAL_PAGE;
+	if (g_bIsChihiro || g_bIsDebug)
 	{
 		*NumberOfPaddingBytes = 0;
 		highest_physical_page = MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 	}
 	else
 		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
-		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
+		MI_CONVERT_PFN_TO_PHYSICAL(instance_physical_page + MM_INSTANCE_PAGE_COUNT);
 
 	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
 
@@ -219,9 +220,9 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(DebuggerThread)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	VAddr addr = NULL;
+	VAddr addr = xbnull;
 
 	/**
 	* Function at present does not:
@@ -241,16 +242,20 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 // ******************************************************************
 XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 (
-	PVOID EndAddress,
-	PVOID BaseAddress
+	PVOID StackBase,
+	PVOID StackLimit
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(EndAddress)
-		LOG_FUNC_ARG(BaseAddress)
-		LOG_FUNC_END;
+		LOG_FUNC_ARG(StackBase)
+		LOG_FUNC_ARG(StackLimit)
+	LOG_FUNC_END;
 
-	g_VMManager.DeallocateStack((VAddr)BaseAddress);
+	size_t ActualSize = ((VAddr)StackBase - (VAddr)StackLimit) + PAGE_SIZE;
+
+	VAddr StackBottom = (VAddr)StackBase - ActualSize;
+
+	g_VMManager.DeallocateStack(StackBottom);
 }
 
 // ******************************************************************
@@ -286,7 +291,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	g_VMManager.Deallocate((VAddr)BaseAddress);
 
@@ -310,9 +315,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	// MmLockUnlockBufferPages, emulate this???
 	LOG_INCOMPLETE();
 
-	PHYSICAL_ADDRESS addr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
-
-	return addr;
+	return g_VMManager.TranslateVAddr((VAddr)BaseAddress);
 }
 
 // ******************************************************************
@@ -349,7 +352,7 @@ XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
 	LOG_IGNORED();
@@ -367,7 +370,7 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(UnlockPage)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
 	LOG_IGNORED();
@@ -395,7 +398,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(ProtectionType)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	PVOID pRet;
 
@@ -426,7 +429,7 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Persist)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	if (BaseAddress == LaunchDataPage)
 	{
@@ -543,7 +546,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(NewProtect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
 }
@@ -563,7 +566,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	if ((xbaddr)BaseAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
 		// Don't free hardware devices (flash, NV2A, etc)

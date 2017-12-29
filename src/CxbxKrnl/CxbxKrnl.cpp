@@ -97,6 +97,7 @@ HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
+bool g_bIsDebug = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
@@ -609,13 +610,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-		// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+		// Register if we're running an Chihiro executable or a debug xbe (otherwise it's an Xbox retail executable)
 		g_bIsChihiro = (g_XbeType == xtChihiro);
+		g_bIsDebug = (g_XbeType == xtDebug);
 
-		if (g_bIsChihiro)
+		if (g_bIsChihiro || g_bIsDebug)
 		{
-			// Initialize the Chihiro - specific memory ranges
-			g_VMManager.InitializeChihiro();
+			// Initialize the Chihiro/Debug - specific memory ranges
+			g_VMManager.InitializeChihiroDebug();
 		}
 		
 		CxbxRestorePersistentMemoryRegions();

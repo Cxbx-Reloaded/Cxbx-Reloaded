@@ -1042,7 +1042,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 	// Update the kernel's LaunchDataPage :
 	{
-		if (xboxkrnl::LaunchDataPage == NULL)
+		if (xboxkrnl::LaunchDataPage == xbnull)
 		{
 			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
@@ -1058,11 +1058,11 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 		xboxkrnl::MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, PAGE_SIZE, TRUE);
 
-		if (pLaunchData != NULL)
+		if (pLaunchData != xbnull)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath == NULL)
+		if (lpTitlePath == xbnull)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };

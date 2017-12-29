@@ -36,7 +36,7 @@
 
 // Acknowledgment:
 // The core logic of the VMManager class is based on the virtual management code of the citra emulator (GPLv2 license),
-// with some modest changes and adaptions to suit Cxbx-Reloaded and Xbox emulation.
+// with some changes and adaptions to suit Cxbx-Reloaded and Xbox emulation.
 // Citra website: https://citra-emu.org/
 
 
@@ -52,7 +52,6 @@ VMManager g_VMManager;
 /* PTEflags */
 
 #define Present  1 << 0
-#define OutsideMapped 1 << 11
 
 
 /* Global page table */
@@ -70,7 +69,8 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 {
 	assert(base + size == next.base);
 
-	if (permissions != next.permissions || type != next.type) { return false; }
+	if (permissions != next.permissions || type != next.type ||
+		type == VMAType::Lock || next.type == VMAType::Lock) { return false; }
 	if (type == VMAType::Allocated && backing_block != next.backing_block) { return false; }
 
 	return true;
@@ -78,6 +78,29 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE file_view)
 {
+	// This reserves a large enough memory region to map the second physical memory file view, and aligns the start address.
+	// It must be page aligned otherwise the mapping/unmapping functions will produce incorrect results and on
+	// debug builds they will assert.
+	UINT_PTR addr = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE + PAGE_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	if (!addr)
+	{
+		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
+		return;
+	}
+	VAddr aligned_start = addr & ~(UINT_PTR)PAGE_MASK;
+	VirtualFree((void*)addr, 0, MEM_RELEASE);
+	m_Base = (VAddr)MapViewOfFileEx(
+		file_view,
+		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
+		0,
+		0,
+		CHIHIRO_MEMORY_SIZE,
+		(void*)aligned_start);
+	if (m_Base != aligned_start)
+	{
+		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
+		return;
+	}
 	m_hAliasedView = file_view;
 
 	m_Vma_map.clear();
@@ -87,7 +110,7 @@ void VMManager::Initialize(HANDLE file_view)
 	// Initialize the map with a single free region covering the entire virtual address space, less the first page
 	VirtualMemoryArea initial_vma;
 	initial_vma.base = FIRST_PAGE_ADDR;
-	initial_vma.size = MAX_VIRTUAL_ADDRESS - PAGE_SIZE;
+	initial_vma.size = MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1;
 	m_Vma_map.emplace(initial_vma.base, initial_vma);
 	UpdatePageTableForVMA(initial_vma);
 
@@ -100,7 +123,7 @@ void VMManager::Initialize(HANDLE file_view)
 	UpdatePageTableForVMA(first_page_vma);
 
 	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1);
+	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1, 0, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
 	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
@@ -115,7 +138,7 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1);
+	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, 0, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
 
 	// Map the tiled memory
 	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE);
@@ -190,17 +213,17 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Map the mcpx
 	// NOTE: Again, I can't use MCPX_BASE and MCPX_SIZE because those are not aligned
-	VMAIter mcpx_vma_handle = CarveVMA(MAX_VIRTUAL_ADDRESS - PAGE_SIZE, PAGE_SIZE);
+	VMAIter mcpx_vma_handle = CarveVMA(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1, PAGE_SIZE);
 	VirtualMemoryArea& mcpx_vma = mcpx_vma_handle->second;
 	mcpx_vma.type = VMAType::DeviceMCPX;
 	MergeAdjacentVMA(mcpx_vma_handle);
 	UpdatePageTableForVMA(mcpx_vma);
-	m_NonImageMemoryInUse += PAGE_SIZE;
+	m_NonImageMemoryInUse += (PAGE_SIZE);
 
 	printf("Page table initialized!\n");
 }
 
-void VMManager::InitializeChihiro()
+void VMManager::InitializeChihiroDebug()
 {
 	UnmapRange(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress);
 	m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
@@ -223,16 +246,23 @@ void VMManager::InitializeChihiro()
 	UpdatePageTableForVMA(tiled_memory_vma);
 	m_NonImageMemoryInUse += TILED_MEMORY_CHIHIRO_SIZE;
 
+	// NOTE: we cannot just call Unmap on the mcpx region because its base + size will overflow to 0x100000000
+	// which will trigger an assert in CarveVMARange
+	m_Vma_map.lower_bound(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1)->second.type = VMAType::Free;
+	m_NonImageMemoryInUse -= PAGE_SIZE;
+
 	// Map the bios
-	UnmapRange(MAX_VIRTUAL_ADDRESS - PAGE_SIZE); // unmap the mcpx
 	UnmapRange(BIOS_BASE);
 	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_CHIHIRO_SIZE);
 	VirtualMemoryArea& bios_vma = bios_vma_handle->second;
 	bios_vma.type = VMAType::DeviceBIOS;
 	UpdatePageTableForVMA(bios_vma);
-	m_NonImageMemoryInUse += BIOS_CHIHIRO_SIZE;
+	m_NonImageMemoryInUse += (BIOS_CHIHIRO_SIZE);
 
-	printf("Page table for Chihiro initialized!\n");
+	if (g_bIsChihiro) {
+		printf("Page table for Chihiro initialized!\n");
+	}
+	else { printf("Page table for Debug console initialized!\n"); }
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
@@ -240,14 +270,14 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->TotalPhysicalPages = m_MaxPhysicalMemory / PAGE_SIZE;
 	memory_statistics->AvailablePages = (m_MaxPhysicalMemory - m_PhysicalMemoryInUse) / PAGE_SIZE;
 	memory_statistics->VirtualMemoryBytesCommitted = m_ImageMemoryInUse + m_NonImageMemoryInUse;
-	memory_statistics->VirtualMemoryBytesReserved = (ULONG)(MAX_VIRTUAL_ADDRESS - (m_ImageMemoryInUse + m_NonImageMemoryInUse));
+	memory_statistics->VirtualMemoryBytesReserved = 0; // this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
 	memory_statistics->CachePagesCommitted = 0; // not implemented
 	memory_statistics->PoolPagesCommitted = 0; // not implemented
 	memory_statistics->StackPagesCommitted = m_StackMemoryInUse;
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
-VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, DWORD protect)
+VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, DWORD protect, bool bNonContiguous)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(size);
@@ -256,19 +286,21 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr ad
 		LOG_FUNC_ARG(addr);
 		LOG_FUNC_ARG(Alignment);
 		LOG_FUNC_ARG(protect);
+		LOG_FUNC_ARG(bNonContiguous);
 	LOG_FUNC_END;
 
-	// PAGE_WRITECOMBINE is not allowed for shared memory, unless SEC_WRITECOMBINE flag was specified when calling the
-	// CreateFileMapping function. Considering that Cxbx doesn't emulate the caches, it's probably safe to ignore this flag
+	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
+	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
+	// it's probably safe to ignore these flags
 
 	Lock();
-	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
-	VAddr v_addr = MapMemoryBlock(aligned_size, low_addr, high_addr, addr, Alignment);
+	size_t ReturnedSize = size;
+	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, addr, Alignment, bNonContiguous);
 	if (v_addr)
 	{
-		ReprotectVMARange(v_addr, aligned_size, protect & (~PAGE_WRITECOMBINE));
+		ReprotectVMARange(v_addr, ReturnedSize, protect & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
 		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ? 
-			m_ImageMemoryInUse += aligned_size : m_NonImageMemoryInUse += aligned_size;
+			m_ImageMemoryInUse += ReturnedSize : m_NonImageMemoryInUse += ReturnedSize;
 	}
 	Unlock();
 
@@ -277,16 +309,21 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr ad
 
 VAddr VMManager::AllocateZeroed(size_t size)
 {
-	LOG_FORWARD(Allocate); // Log AllocateZeroed as the origin of the following RETURN log message
+	LOG_FUNC_ONE_ARG(size);
 
-	VAddr addr = Allocate(size);
-	if (addr)
+	Lock();
+	size_t ReturnedSize = size;
+	VAddr v_addr = MapMemoryBlock(&ReturnedSize, 0, MAXULONG_PTR);
+	if (v_addr)
 	{
-		size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
-		memset((void*)addr, 0, aligned_size);
-	}
+		ReprotectVMARange(v_addr, ReturnedSize, PAGE_EXECUTE_READWRITE);
+		m_ImageMemoryInUse += ReturnedSize;
 
-	return addr;
+		memset((void*)v_addr, 0, ReturnedSize);
+	}
+	Unlock();
+
+	RETURN(v_addr);
 }
 
 VAddr VMManager::AllocateStack(size_t size)
@@ -294,39 +331,26 @@ VAddr VMManager::AllocateStack(size_t size)
 	LOG_FUNC_ONE_ARG(size);
 
 	Lock();
-	size_t aligned_size = (size + PAGE_SIZE + PAGE_MASK) & ~PAGE_MASK;
-	VAddr addr = MapMemoryBlock(aligned_size, 0, MAXULONG_PTR);
-	if (addr)
+	size_t ReturnedSize = size + PAGE_SIZE;
+	VAddr v_addr = MapMemoryBlock(&ReturnedSize, 0, MAXULONG_PTR);
+	if (v_addr)
 	{
-		ReprotectVMARange(addr, PAGE_SIZE, PAGE_NOACCESS);
-		addr += aligned_size;
-		m_StackMemoryInUse += aligned_size;
+		m_Vma_map.lower_bound(v_addr)->second.type = VMAType::Stack;
+		ReprotectVMARange(v_addr, PAGE_SIZE, PAGE_NOACCESS); // guard page of the stack
+		v_addr += ReturnedSize;
+		m_StackMemoryInUse += ReturnedSize;
 	}
 	Unlock();
 
-	RETURN(addr);
+	RETURN(v_addr);
 }
 
-void VMManager::DeallocateOverlapped(VAddr addr)
+void VMManager::Deallocate(VAddr addr, size_t size)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
 	Lock();
-	VAddr aligned_addr = addr & ~(UINT_PTR)PAGE_MASK;
-	auto it = m_Vma_map.lower_bound(aligned_addr);
-	if (it->first == aligned_addr && it->second.type != VMAType::Free)
-	{
-		UnmapRange(aligned_addr);
-	}
-	Unlock();
-}
-
-void VMManager::Deallocate(VAddr addr)
-{
-	LOG_FUNC_ONE_ARG(addr);
-
-	Lock();
-	UnmapRange(addr);
+	UnmapRange(addr, size);
 	Unlock();
 }
 
@@ -348,11 +372,12 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 		LOG_FUNC_ARG(new_perms);
 	LOG_FUNC_END;
 
-	// PAGE_WRITECOMBINE is not allowed for shared memory, unless SEC_WRITECOMBINE flag was specified when calling the
-	// CreateFileMapping function. Considering that Cxbx doesn't emulate the caches, it's probably safe to ignore this flag
+	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
+	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
+	// it's probably safe to ignore these flags
 
 	Lock();
-	ReprotectVMARange(target, size, new_perms & (~PAGE_WRITECOMBINE));
+	ReprotectVMARange(target, size, new_perms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
 	Unlock();
 }
 
@@ -422,11 +447,50 @@ size_t VMManager::QuerySize(VAddr addr)
 	RETURN(size);
 }
 
-VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment)
+VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, bool bNonContiguous)
 {
 	// Find a free memory block for the allocation, if any
 	u32 offset;
-	size_t aligned_size = size;
+	size_t aligned_size = (*size + PAGE_MASK) & ~PAGE_MASK;
+
+	if (addr)
+	{
+		// REMARK: the following assumes that there is only one VMAType::Free between VAddr and VAddr + size. This is fine for XeUnloadSection,
+		// not so for NtAllocateVirtualMemory. For that, an approch similar to UnmapRange (in particular VMAType::Lock) should be used.
+		// Also, NtAllocateVirtualMemory should have its own implementation function, so that this one can be split.
+
+		addr &= ~PAGE_MASK;
+		VMAIter vma_handle = GetVMAIterator(addr);
+
+		// base address is outside the range managed by the kernel
+		assert(vma_handle != m_Vma_map.end());
+
+		if (vma_handle->second.type == VMAType::Allocated || vma_handle->second.type == VMAType::Stack)
+		{
+			// region is overlapped (base must lie inside the allocated vma)
+			assert(addr < vma_handle->second.base + vma_handle->second.size);
+
+			size_t overlapped_size = vma_handle->second.base + vma_handle->second.size - addr;
+			if (addr + aligned_size <= vma_handle->second.base + vma_handle->second.size)
+			{
+				// region is totally inside the existing allocation, so there's nothing new to commit. Bail out now
+				*size = overlapped_size;
+				return addr;
+			}
+
+			auto next_vma = std::next(vma_handle);
+			addr = next_vma->first;
+			if (next_vma->second.base + aligned_size - overlapped_size > std::next(next_vma)->first)
+			{
+				aligned_size = std::next(next_vma)->first - next_vma->first;
+			}
+			else
+			{
+				aligned_size -= overlapped_size;
+			}
+		}
+	}
+
 	if (high_addr == MAXULONG_PTR)
 	{
 		offset = AllocatePhysicalMemory(aligned_size);
@@ -434,7 +498,6 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 	else
 	{
 		PAddr aligned_low = low_addr & ~(UINT_PTR)(Alignment - 1);
-		// Increase high_addr of one page to handle the case when low/high addr are exactly at the boundary of the allocation
 		PAddr aligned_high = (high_addr + PAGE_SIZE) & ~(UINT_PTR)(Alignment - 1);
 		if (aligned_high > m_MaxContiguousAddress) { aligned_high = m_MaxContiguousAddress; }
 		if (aligned_low > aligned_high) { aligned_low = aligned_high - PAGE_SIZE; }
@@ -448,12 +511,14 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 	{
 		case PMEMORY_SUCCESS:
 		{
-			if (!addr) {
-				addr = CONTIGUOUS_MEMORY_BASE + offset; // VAddr is simply the offset from the base address inside the second file view
-			} else {
-				addr &= ~PAGE_MASK;
+			if (!addr)
+			{
+				if (bNonContiguous) {
+					addr = m_Base + offset;
+				}
+				else { addr = CONTIGUOUS_MEMORY_BASE + offset; } // VAddr is simply the offset from the base of the contiguous memory
 			}
-
+			
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
 
 			VirtualMemoryArea& final_vma = vma_handle->second;
@@ -469,16 +534,14 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 
 		case PMEMORY_ALLOCATE_FRAGMENTED:
 		{
-			if (!addr) {
+			if (!addr)
 				addr = offset; // VAddr is the aligned address returned by VirtualAlloc
-			} else {
-				addr &= ~PAGE_MASK;
-			}
 
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
 
 			VirtualMemoryArea& final_vma = vma_handle->second;
-			final_vma.type = VMAType::Fragmented;
+			final_vma.type = VMAType::Allocated;
+			final_vma.bFragmented = true;
 			final_vma.permissions = PAGE_EXECUTE_READWRITE;
 			final_vma.backing_block = offset;
 
@@ -497,81 +560,80 @@ VAddr VMManager::MapMemoryBlock(size_t size, PAddr low_addr, PAddr high_addr, VA
 			CxbxKrnlCleanup("Unknown error code in Physical Memory class.");
 	}
 
+	*size = aligned_size;
 	return addr;
 }
 
-void VMManager::UnmapRange(VAddr target, bool StackFlag)
+void VMManager::UnmapRange(VAddr target, size_t size)
 {
 	VAddr aligned_start = target & ~(UINT_PTR)PAGE_MASK;
-	if (aligned_start == 0) // forbidden page
-	{
-		// This should also generate a STATUS_GUARD_PAGE_VIOLATION exception from Windows
-		CxbxKrnlCleanup("Access to guarded page 0x0 detected!\n");
-	}
+	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
+
 	auto it = m_Vma_map.lower_bound(aligned_start);
-	if (it->first != aligned_start)
+	if (aligned_size != 0)
 	{
-		CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!");
+		/*if (aligned_size == 0) { 
+			CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
+		}*/
+
+		VAddr EndingAddress = aligned_start + aligned_size;
+		size_t overlapped_size_start = std::prev(it)->second.base + std::prev(it)->second.size - aligned_start;
+		VirtualMemoryArea start_vma;
+		VirtualMemoryArea end_vma;
+		start_vma.base = aligned_start;
+		start_vma.type = VMAType::Lock;
+		start_vma.size = overlapped_size_start;
+		ResizeVMA(std::prev(it), overlapped_size_start, false);
+		auto low_it = m_Vma_map.emplace(aligned_start, start_vma).first;
+		auto high_pair = m_Vma_map.emplace(EndingAddress, end_vma);
+
+		if (high_pair.second)
+		{
+			size_t overlapped_size_end = EndingAddress - std::prev(high_pair.first)->first;
+			end_vma.base = EndingAddress;
+			end_vma.size = overlapped_size_end;
+			end_vma.type = VMAType::Lock;
+			ResizeVMA(std::prev(high_pair.first), overlapped_size_end, true);
+		}
+		else
+		{
+			end_vma.type = high_pair.first->second.type; // backup the existing vma type
+			high_pair.first->second.type = VMAType::Lock;
+		}
+		
+		auto start_it = std::next(low_it); // skip the first locked vma
+		for (; start_it != high_pair.first;)
+		{
+			start_it = DestructVMA(start_it, start_it->second.base, start_it->second.size);
+		}
+
+		if (high_pair.second)
+		{
+			low_it->second.type = VMAType::Free;
+			high_pair.first->second.type = VMAType::Free;
+			MergeAdjacentVMA(std::prev(start_it));
+		}
+		else
+		{
+			low_it->second.type = VMAType::Free;
+			start_it->second.type = end_vma.type; // restore previously saved vma type
+			MergeAdjacentVMA(std::prev(start_it));
+		}
 	}
 	else
 	{
-		switch (it->second.type)
-		{
-			case VMAType::Free:
-			case VMAType::MemTiled:
-			case VMAType::IO_DeviceNV2A:
-			case VMAType::MemNV2A_PRAMIN:
-			case VMAType::IO_DeviceAPU:
-			case VMAType::IO_DeviceAC97:
-			case VMAType::IO_DeviceUSB0:
-			case VMAType::IO_DeviceUSB1:
-			case VMAType::IO_DeviceNVNet:
-			case VMAType::DeviceBIOS:
-			case VMAType::DeviceMCPX:
-			{
-				CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected! \
-The type was %u", it->second.type);
-			}
-			default:
-			{
-				size_t aligned_size = it->second.size;
-				if (StackFlag)
-				{
-					m_StackMemoryInUse -= aligned_size;
-				}
-				else
-				{
-					it->second.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
-						m_ImageMemoryInUse -= aligned_size : m_NonImageMemoryInUse -= aligned_size;
-				}
-				if (it->second.type == VMAType::Allocated)
-				{
-					DeAllocatePhysicalMemory(it->second.backing_block);
-				}
-				else if (it->second.type == VMAType::Fragmented)
-				{
-					DeAllocateFragmented(it->second.backing_block);
-				}
-				VMAIter vma = CarveVMARange(aligned_start, aligned_size);
-
-				VAddr target_end = aligned_start + aligned_size;
-				VMAIter end = m_Vma_map.end();
-				// The comparison against the end of the range must be done using addresses since vma's can be
-				// merged during this process, causing invalidation of the iterators
-				while (vma != end && vma->second.base < target_end)
-				{
-					vma = std::next(Unmap(vma));
-				}
-			}
+		if (it->second.type == VMAType::Free || it->first != aligned_start) {
+			CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
 		}
+
+		DestructVMA(it, aligned_start, it->second.size);
 	}
 }
 
 void VMManager::ReprotectVMARange(VAddr target, size_t size, DWORD new_perms)
 {
 	VAddr aligned_start = target & ~(UINT_PTR)PAGE_MASK;
-	size_t aligned_size = ((target + size - 1 + PAGE_SIZE) &
-		~(UINT_PTR)PAGE_MASK) - aligned_start;
+	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
 
 	VMAIter vma = CarveVMARange(aligned_start, aligned_size);
 	VAddr target_end = aligned_start + aligned_size;
@@ -622,14 +684,6 @@ void VMManager::MapMemoryRegion(VAddr base, size_t size, PAddr target)
 	MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, Present);
 }
 
-void VMManager::MapSpecialRegion(VAddr base, size_t size, PAddr target)
-{
-	assert((base & PAGE_MASK) == 0); // unaligned address
-	assert((size & PAGE_MASK) == 0); // unaligned size
-
-	MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, Present | OutsideMapped);
-}
-
 void VMManager::UnmapRegion(VAddr base, size_t size)
 {
 	assert((base & PAGE_MASK) == 0); // unaligned address
@@ -637,7 +691,6 @@ void VMManager::UnmapRegion(VAddr base, size_t size)
 
 	MapPages(base / PAGE_SIZE, size / PAGE_SIZE, NULL, Present ^ Present);
 }
-
 
 VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle)
 {
@@ -677,10 +730,10 @@ VMManager::VMAIter VMManager::CarveVMA(VAddr base, size_t size)
 
 	VirtualMemoryArea& vma = vma_handle->second;
 
-	// region is already allocated
-	assert(vma.type == VMAType::Free);
+	// region is not allocated (must be VMAType::Free)
+	assert(vma_handle->second.type == VMAType::Free);
 
-	u32 start_in_vma = base - vma.base; // VAddr - start addr of vma region found (must be VMAType::Free)
+	u32 start_in_vma = base - vma_handle->second.base; // VAddr - start addr of vma region found
 	u32 end_in_vma = start_in_vma + size; // end addr of new vma
 
 	// requested allocation doesn't fit inside vma
@@ -704,12 +757,12 @@ VMManager::VMAIter VMManager::CarveVMARange(VAddr base, size_t size)
 {
 	VAddr target_end = base + size;
 	assert(target_end >= base);
-	assert(target_end <= MAX_VIRTUAL_ADDRESS - PAGE_SIZE);
+	assert(target_end <= MAX_VIRTUAL_ADDRESS);
 	assert(size > 0);
 
 	VMAIter begin_vma = GetVMAIterator(base);
-	VMAIter i_end = m_Vma_map.lower_bound(target_end);
-	for (auto i = begin_vma; i != i_end; ++i)
+	VMAIter it_end = m_Vma_map.lower_bound(target_end);
+	for (auto i = begin_vma; i != it_end; ++i)
 	{
 		if (i->second.type == VMAType::Free) { assert(0); }
 	}
@@ -750,27 +803,27 @@ VMManager::VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma)
 	return m_Vma_map.emplace_hint(std::next(vma_handle), new_vma.base, new_vma);
 }
 
-VMManager::VMAIter VMManager::MergeAdjacentVMA(VMAIter it)
+VMManager::VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle)
 {
-	VMAIter next_vma = std::next(it);
-	if (next_vma != m_Vma_map.end() && it->second.CanBeMergedWith(next_vma->second))
+	VMAIter next_vma = std::next(vma_handle);
+	if (next_vma != m_Vma_map.end() && vma_handle->second.CanBeMergedWith(next_vma->second))
 	{
-		it->second.size += next_vma->second.size;
+		vma_handle->second.size += next_vma->second.size;
 		m_Vma_map.erase(next_vma);
 	}
 
-	if (it != m_Vma_map.begin())
+	if (vma_handle != m_Vma_map.begin())
 	{
-		VMAIter prev_vma = std::prev(it);
-		if (prev_vma->second.CanBeMergedWith(it->second))
+		VMAIter prev_vma = std::prev(vma_handle);
+		if (prev_vma->second.CanBeMergedWith(vma_handle->second))
 		{
-			prev_vma->second.size += it->second.size;
-			m_Vma_map.erase(it);
-			it = prev_vma;
+			prev_vma->second.size += vma_handle->second.size;
+			m_Vma_map.erase(vma_handle);
+			vma_handle = prev_vma;
 		}
 	}
 
-	return it;
+	return vma_handle;
 }
 
 VMManager::VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
@@ -808,18 +861,91 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma)
 		break;
 
 		case VMAType::Allocated:
+		case VMAType::Stack:
 		{
 			MapMemoryRegion(vma.base, vma.size, vma.backing_block);
 		}
 		break;
 
-		case VMAType::Fragmented:
-		{
-			MapSpecialRegion(vma.base, vma.size, vma.backing_block);
-		}
-		break;
-
 		default:
-			CxbxKrnlCleanup("Unknown VMAType in UpdatePageTableForVMA");
+			CxbxKrnlCleanup("VMAType::Lock or Unknown type in UpdatePageTableForVMA");
+	}
+}
+
+VMManager::VMAIter VMManager::DestructVMA(VMAIter vma_handle, VAddr addr, size_t size)
+{
+	if (vma_handle->second.type == VMAType::Free) { return std::next(vma_handle); }
+
+
+	if (vma_handle->second.type != VMAType::Stack)
+	{
+		vma_handle->second.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
+			m_ImageMemoryInUse -= size : m_NonImageMemoryInUse -= size;
+	}
+	else { m_StackMemoryInUse -= size; }
+
+
+	if (vma_handle->second.type == VMAType::Allocated || vma_handle->second.type == VMAType::Stack)
+	{
+		if (vma_handle->second.bFragmented) { DeAllocateFragmented(vma_handle->second.backing_block); }
+		else { DeAllocatePhysicalMemory(vma_handle->second.backing_block); }
+	}
+
+	VMAIter vma = CarveVMARange(addr, size);
+
+	VAddr target_end = addr + size;
+	VMAIter end = m_Vma_map.end();
+	// The comparison against the end of the range must be done using addresses since vma's can be
+	// merged during this process, causing invalidation of the iterators
+	while (vma != end && vma->second.base < target_end)
+	{
+		vma = std::next(Unmap(vma));
+	}
+
+	return vma;
+}
+
+void VMManager::ResizeVMA(VMAIter vma_handle, size_t offset, bool bStart)
+{
+	if (!offset) { return; } // nothing to do
+
+	VirtualMemoryArea& old_vma = vma_handle->second;
+	VirtualMemoryArea new_vma = old_vma;
+
+	if (bStart)
+	{
+		if (offset > old_vma.size) { return; } // sanity check
+		VAddr new_base = old_vma.base + offset;
+		new_vma.base = new_base;
+		new_vma.size = old_vma.size - offset;
+
+		if (old_vma.type == VMAType::Allocated || old_vma.type == VMAType::Stack) {
+			ShrinkPhysicalAllocation(vma_handle->second.backing_block, offset, vma_handle->second.bFragmented, bStart);
+		}
+		m_Vma_map.erase(old_vma.base);
+		if(new_vma.size) { m_Vma_map.emplace(new_base, new_vma); }
+	}
+	else
+	{
+		if (offset > old_vma.size) { return; } // sanity check
+		VAddr new_base = old_vma.base;
+		new_vma.base = new_base;
+		new_vma.size = old_vma.size - offset;
+
+		if (old_vma.type == VMAType::Allocated || old_vma.type == VMAType::Stack) {
+			ShrinkPhysicalAllocation(vma_handle->second.backing_block, offset, vma_handle->second.bFragmented, bStart);
+		}
+		m_Vma_map.erase(old_vma.base);
+		if (new_vma.size) { m_Vma_map.emplace(new_base, new_vma); }
+	}
+
+	if (new_vma.type != VMAType::Free)
+	{
+		if (new_vma.type != VMAType::Stack)
+		{
+			new_vma.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
+				m_ImageMemoryInUse -= offset : m_NonImageMemoryInUse -= offset;
+		}
+		else { m_StackMemoryInUse -= offset; }
 	}
 }
