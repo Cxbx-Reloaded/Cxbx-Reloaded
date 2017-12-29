@@ -572,10 +572,6 @@ void VMManager::UnmapRange(VAddr target, size_t size)
 	auto it = m_Vma_map.lower_bound(aligned_start);
 	if (aligned_size != 0)
 	{
-		/*if (aligned_size == 0) { 
-			CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
-		}*/
-
 		VAddr EndingAddress = aligned_start + aligned_size;
 		size_t overlapped_size_start = std::prev(it)->second.base + std::prev(it)->second.size - aligned_start;
 		VirtualMemoryArea start_vma;
@@ -730,10 +726,10 @@ VMManager::VMAIter VMManager::CarveVMA(VAddr base, size_t size)
 
 	VirtualMemoryArea& vma = vma_handle->second;
 
-	// region is not allocated (must be VMAType::Free)
-	assert(vma_handle->second.type == VMAType::Free);
+	// region is already allocated
+	assert(vma.type == VMAType::Free);
 
-	u32 start_in_vma = base - vma_handle->second.base; // VAddr - start addr of vma region found
+	u32 start_in_vma = base - vma.base; // VAddr - start addr of vma region found (must be VMAType::Free)
 	u32 end_in_vma = start_in_vma + size; // end addr of new vma
 
 	// requested allocation doesn't fit inside vma
