@@ -472,6 +472,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
 	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
 
+	Lock();
+
 	if (bStub)
 	{
 		// REMARK: the following assumes that there is only one VMAType::Free between VAddr and VAddr + size. This is fine for XeUnloadSection,
@@ -493,6 +495,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 				// region is totally inside the existing allocation, so there's nothing new to commit. Bail out now
 				*addr = AlignedCapturedBase;
 				*size = AlignedCapturedSize;
+				Unlock();
 				RETURN(ret);
 			}
 
@@ -513,6 +516,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 			*addr = AlignedCapturedBase;
 			*size = 0;
 			ret = STATUS_NO_MEMORY;
+			Unlock();
 			RETURN(ret);
 		}
 		m_PhysicalMemoryInUse += AlignedCapturedSize;
@@ -525,12 +529,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 
 		*addr = AlignedCapturedBase;
 		*size = AlignedCapturedSize;
+		Unlock();
 		RETURN(ret);
 	}
 	else
 	{
+		Unlock();
 		// TODO: implement the real function
-
 		LOG_UNIMPLEMENTED();
 		RETURN(ret);
 	}
@@ -570,12 +575,15 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
 	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
 
+	Lock();
+
 	if (bStub)
 	{
 		*addr = AlignedCapturedBase;
 		*size = AlignedCapturedSize;
 		m_PhysicalMemoryInUse -= AlignedCapturedSize;
 		m_ImageMemoryInUse -= AlignedCapturedSize;
+		Unlock();
 		RETURN(ret);
 	}
 	else
@@ -627,6 +635,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 		}
 		*addr = AlignedCapturedBase;
 		*size = AlignedCapturedSize;
+		Unlock();
 		RETURN(ret);
 	}
 }
