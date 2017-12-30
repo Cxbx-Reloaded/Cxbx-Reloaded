@@ -54,6 +54,7 @@ extern "C" {
 // Sizes
 #define ONE_KB 1024
 #define ONE_MB (1024 * 1024)
+#define X64KB 64 * ONE_KB
 
 // Thread Information Block offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
 #define TIB_ArbitraryDataSlot 0x14
@@ -120,6 +121,10 @@ extern "C" {
 
 #define XBOX_FLASH_ROM_BASE      0xFFF00000
 #define XBOX_FLASH_ROM_SIZE      0x00100000 // - 0xFFFFFFF
+
+#define HIGHEST_USER_ADDRESS     0x7FFEFFFF
+#define HIGHEST_VAD_ADDRESS      HIGHEST_USER_ADDRESS - X64KB // for NtAllocateVirtualMemory
+
 
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we

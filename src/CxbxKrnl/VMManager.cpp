@@ -85,7 +85,6 @@ void VMManager::Initialize(HANDLE file_view)
 	if (!addr)
 	{
 		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
-		return;
 	}
 	VAddr aligned_start = addr & ~(UINT_PTR)PAGE_MASK;
 	VirtualFree((void*)addr, 0, MEM_RELEASE);
@@ -99,7 +98,6 @@ void VMManager::Initialize(HANDLE file_view)
 	if (m_Base != aligned_start)
 	{
 		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
-		return;
 	}
 	m_hAliasedView = file_view;
 
@@ -123,7 +121,7 @@ void VMManager::Initialize(HANDLE file_view)
 	UpdatePageTableForVMA(first_page_vma);
 
 	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1, 0, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
 	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
@@ -138,7 +136,7 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, 0, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
 
 	// Map the tiled memory
 	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE);
@@ -277,13 +275,12 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
-VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, DWORD protect, bool bNonContiguous)
+VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Alignment, DWORD protect, bool bNonContiguous)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(size);
 		LOG_FUNC_ARG(low_addr);
 		LOG_FUNC_ARG(high_addr);
-		LOG_FUNC_ARG(addr);
 		LOG_FUNC_ARG(Alignment);
 		LOG_FUNC_ARG(protect);
 		LOG_FUNC_ARG(bNonContiguous);
@@ -295,7 +292,7 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, VAddr ad
 
 	Lock();
 	size_t ReturnedSize = size;
-	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, addr, Alignment, bNonContiguous);
+	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, Alignment, bNonContiguous);
 	if (v_addr)
 	{
 		ReprotectVMARange(v_addr, ReturnedSize, protect & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
@@ -350,7 +347,7 @@ void VMManager::Deallocate(VAddr addr, size_t size)
 	LOG_FUNC_ONE_ARG(addr);
 
 	Lock();
-	UnmapRange(addr, size);
+	UnmapRange(addr);
 	Unlock();
 }
 
@@ -360,7 +357,7 @@ void VMManager::DeallocateStack(VAddr addr)
 
 	Lock();
 	ReprotectVMARange(addr, PAGE_SIZE, PAGE_EXECUTE_READWRITE);
-	UnmapRange(addr, true);
+	UnmapRange(addr);
 	Unlock();
 }
 
@@ -447,20 +444,40 @@ size_t VMManager::QuerySize(VAddr addr)
 	RETURN(size);
 }
 
-VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, VAddr addr, ULONG Alignment, bool bNonContiguous)
+xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
+	DWORD protect, bool bStub)
 {
-	// Find a free memory block for the allocation, if any
-	u32 offset;
-	size_t aligned_size = (*size + PAGE_MASK) & ~PAGE_MASK;
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(*addr);
+		LOG_FUNC_ARG(zero_bits);
+		LOG_FUNC_ARG(*size);
+		LOG_FUNC_ARG(allocation_type);
+		LOG_FUNC_ARG(protect);
+		LOG_FUNC_ARG(bStub);
+	LOG_FUNC_END;
 
-	if (addr)
+	VAddr CapturedBase = *addr;
+	size_t CapturedSize = *size;
+	xboxkrnl::NTSTATUS ret = STATUS_SUCCESS;
+
+	// Invalid base address
+	if (CapturedBase > HIGHEST_VAD_ADDRESS) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	// Invalid region size
+	if (((HIGHEST_VAD_ADDRESS + 1) - CapturedBase) < CapturedSize) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	// Size cannot be zero
+	if (CapturedSize == 0) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
+	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
+
+	if (bStub)
 	{
 		// REMARK: the following assumes that there is only one VMAType::Free between VAddr and VAddr + size. This is fine for XeUnloadSection,
 		// not so for NtAllocateVirtualMemory. For that, an approch similar to UnmapRange (in particular VMAType::Lock) should be used.
-		// Also, NtAllocateVirtualMemory should have its own implementation function, so that this one can be split.
 
-		addr &= ~PAGE_MASK;
-		VMAIter vma_handle = GetVMAIterator(addr);
+		VMAIter vma_handle = GetVMAIterator(AlignedCapturedBase);
 
 		// base address is outside the range managed by the kernel
 		assert(vma_handle != m_Vma_map.end());
@@ -468,28 +485,158 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, V
 		if (vma_handle->second.type == VMAType::Allocated || vma_handle->second.type == VMAType::Stack)
 		{
 			// region is overlapped (base must lie inside the allocated vma)
-			assert(addr < vma_handle->second.base + vma_handle->second.size);
+			assert(AlignedCapturedBase < vma_handle->second.base + vma_handle->second.size);
 
-			size_t overlapped_size = vma_handle->second.base + vma_handle->second.size - addr;
-			if (addr + aligned_size <= vma_handle->second.base + vma_handle->second.size)
+			size_t overlapped_size = vma_handle->second.base + vma_handle->second.size - AlignedCapturedBase;
+			if (AlignedCapturedBase + AlignedCapturedSize <= vma_handle->second.base + vma_handle->second.size)
 			{
 				// region is totally inside the existing allocation, so there's nothing new to commit. Bail out now
-				*size = overlapped_size;
-				return addr;
+				*addr = AlignedCapturedBase;
+				*size = AlignedCapturedSize;
+				RETURN(ret);
 			}
 
 			auto next_vma = std::next(vma_handle);
-			addr = next_vma->first;
-			if (next_vma->second.base + aligned_size - overlapped_size > std::next(next_vma)->first)
+			if (next_vma->second.base + AlignedCapturedSize - overlapped_size > std::next(next_vma)->first)
 			{
-				aligned_size = std::next(next_vma)->first - next_vma->first;
+				AlignedCapturedSize = std::next(next_vma)->first - next_vma->first;
 			}
 			else
 			{
-				aligned_size -= overlapped_size;
+				AlignedCapturedSize -= overlapped_size;
 			}
 		}
+
+		// Update the memory manager statistics
+		if (AlignedCapturedSize > m_MaxContiguousAddress - m_PhysicalMemoryInUse)
+		{
+			*addr = AlignedCapturedBase;
+			*size = 0;
+			ret = STATUS_NO_MEMORY;
+			RETURN(ret);
+		}
+		m_PhysicalMemoryInUse += AlignedCapturedSize;
+		if (vma_handle->second.type != VMAType::Stack)
+		{
+			vma_handle->second.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
+				m_ImageMemoryInUse += AlignedCapturedSize : m_NonImageMemoryInUse += AlignedCapturedSize;
+		}
+		else { m_StackMemoryInUse += AlignedCapturedSize; }
+
+		*addr = AlignedCapturedBase;
+		*size = AlignedCapturedSize;
+		RETURN(ret);
 	}
+	else
+	{
+		// TODO: implement the real function
+
+		LOG_UNIMPLEMENTED();
+		RETURN(ret);
+	}
+}
+
+xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(*addr);
+		LOG_FUNC_ARG(*size);
+		LOG_FUNC_ARG(free_type);
+		LOG_FUNC_ARG(bStub);
+	LOG_FUNC_END;
+
+	LOG_INCOMPLETE();
+
+	VAddr CapturedBase = *addr;
+	size_t CapturedSize = *size;
+	xboxkrnl::NTSTATUS ret = STATUS_SUCCESS;
+
+	// Only MEM_DECOMMIT and MEM_RELEASE are valid
+	if ((free_type & ~(MEM_DECOMMIT | MEM_RELEASE)) != 0) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	// MEM_DECOMMIT and MEM_RELEASE must not be specified together
+	if (((free_type & (MEM_DECOMMIT | MEM_RELEASE)) == 0) ||
+		((free_type & (MEM_DECOMMIT | MEM_RELEASE)) == (MEM_DECOMMIT | MEM_RELEASE))) {
+		ret = STATUS_INVALID_PARAMETER;
+		RETURN(ret);
+	}
+
+	// Invalid base address
+	if (CapturedBase > HIGHEST_USER_ADDRESS) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	// Invalid region size
+	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
+
+	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
+	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
+
+	if (bStub)
+	{
+		*addr = AlignedCapturedBase;
+		*size = AlignedCapturedSize;
+		m_PhysicalMemoryInUse -= AlignedCapturedSize;
+		m_ImageMemoryInUse -= AlignedCapturedSize;
+		RETURN(ret);
+	}
+	else
+	{
+		auto it = m_Vma_map.lower_bound(AlignedCapturedBase);
+
+		VAddr EndingAddress = AlignedCapturedBase + AlignedCapturedSize;
+		size_t overlapped_size_start = std::prev(it)->second.base + std::prev(it)->second.size - AlignedCapturedBase;
+		VirtualMemoryArea start_vma;
+		VirtualMemoryArea end_vma;
+		start_vma.base = AlignedCapturedBase;
+		start_vma.type = VMAType::Lock;
+		start_vma.size = overlapped_size_start;
+		ResizeVMA(std::prev(it), overlapped_size_start, false);
+		auto low_it = m_Vma_map.emplace(AlignedCapturedBase, start_vma).first;
+		auto high_pair = m_Vma_map.emplace(EndingAddress, end_vma);
+
+		if (high_pair.second)
+		{
+			size_t overlapped_size_end = EndingAddress - std::prev(high_pair.first)->first;
+			end_vma.base = EndingAddress;
+			end_vma.size = overlapped_size_end;
+			end_vma.type = VMAType::Lock;
+			ResizeVMA(std::prev(high_pair.first), overlapped_size_end, true);
+		}
+		else
+		{
+			end_vma.type = high_pair.first->second.type; // backup the existing vma type
+			high_pair.first->second.type = VMAType::Lock;
+		}
+
+		auto start_it = std::next(low_it); // skip the first locked vma
+		while (start_it != high_pair.first)
+		{
+			start_it = DestructVMA(start_it, start_it->second.base, start_it->second.size);
+		}
+
+		if (high_pair.second)
+		{
+			low_it->second.type = VMAType::Free;
+			high_pair.first->second.type = VMAType::Free;
+			MergeAdjacentVMA(std::prev(start_it));
+		}
+		else
+		{
+			low_it->second.type = VMAType::Free;
+			start_it->second.type = end_vma.type; // restore previously saved vma type
+			MergeAdjacentVMA(std::prev(start_it));
+		}
+		*addr = AlignedCapturedBase;
+		*size = AlignedCapturedSize;
+		RETURN(ret);
+	}
+}
+
+VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
+{
+	// Find a free memory block for the allocation, if any
+	VAddr addr;
+	u32 offset;
+	size_t aligned_size = (*size + PAGE_MASK) & ~PAGE_MASK;
 
 	if (high_addr == MAXULONG_PTR)
 	{
@@ -511,13 +658,10 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, V
 	{
 		case PMEMORY_SUCCESS:
 		{
-			if (!addr)
-			{
-				if (bNonContiguous) {
-					addr = m_Base + offset;
-				}
-				else { addr = CONTIGUOUS_MEMORY_BASE + offset; } // VAddr is simply the offset from the base of the contiguous memory
+			if (bNonContiguous) {
+				addr = m_Base + offset;
 			}
+			else { addr = CONTIGUOUS_MEMORY_BASE + offset; } // VAddr is simply the offset from the base of the contiguous memory
 			
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
 
@@ -534,8 +678,7 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, V
 
 		case PMEMORY_ALLOCATE_FRAGMENTED:
 		{
-			if (!addr)
-				addr = offset; // VAddr is the aligned address returned by VirtualAlloc
+			addr = offset; // VAddr is the aligned address returned by VirtualAlloc
 
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);
 
@@ -564,66 +707,17 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, V
 	return addr;
 }
 
-void VMManager::UnmapRange(VAddr target, size_t size)
+void VMManager::UnmapRange(VAddr target)
 {
 	VAddr aligned_start = target & ~(UINT_PTR)PAGE_MASK;
-	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
 
 	auto it = m_Vma_map.lower_bound(aligned_start);
-	if (aligned_size != 0)
-	{
-		VAddr EndingAddress = aligned_start + aligned_size;
-		size_t overlapped_size_start = std::prev(it)->second.base + std::prev(it)->second.size - aligned_start;
-		VirtualMemoryArea start_vma;
-		VirtualMemoryArea end_vma;
-		start_vma.base = aligned_start;
-		start_vma.type = VMAType::Lock;
-		start_vma.size = overlapped_size_start;
-		ResizeVMA(std::prev(it), overlapped_size_start, false);
-		auto low_it = m_Vma_map.emplace(aligned_start, start_vma).first;
-		auto high_pair = m_Vma_map.emplace(EndingAddress, end_vma);
-
-		if (high_pair.second)
-		{
-			size_t overlapped_size_end = EndingAddress - std::prev(high_pair.first)->first;
-			end_vma.base = EndingAddress;
-			end_vma.size = overlapped_size_end;
-			end_vma.type = VMAType::Lock;
-			ResizeVMA(std::prev(high_pair.first), overlapped_size_end, true);
-		}
-		else
-		{
-			end_vma.type = high_pair.first->second.type; // backup the existing vma type
-			high_pair.first->second.type = VMAType::Lock;
-		}
-		
-		auto start_it = std::next(low_it); // skip the first locked vma
-		for (; start_it != high_pair.first;)
-		{
-			start_it = DestructVMA(start_it, start_it->second.base, start_it->second.size);
-		}
-
-		if (high_pair.second)
-		{
-			low_it->second.type = VMAType::Free;
-			high_pair.first->second.type = VMAType::Free;
-			MergeAdjacentVMA(std::prev(start_it));
-		}
-		else
-		{
-			low_it->second.type = VMAType::Free;
-			start_it->second.type = end_vma.type; // restore previously saved vma type
-			MergeAdjacentVMA(std::prev(start_it));
-		}
+	
+	if (it->second.type == VMAType::Free || it->first != aligned_start) {
+		CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
 	}
-	else
-	{
-		if (it->second.type == VMAType::Free || it->first != aligned_start) {
-			CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
-		}
 
-		DestructVMA(it, aligned_start, it->second.size);
-	}
+	DestructVMA(it, aligned_start, it->second.size);
 }
 
 void VMManager::ReprotectVMARange(VAddr target, size_t size, DWORD new_perms)

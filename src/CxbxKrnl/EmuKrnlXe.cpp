@@ -94,16 +94,21 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// ergo720: I can't just +/- PAGE_SIZE the VirtualAddress and the VirtualSize of a section because some titles have
 			// sections less than PAGE_SIZE, which will cause again an overlap with the next section since both will have the
 			// same aligned starting address. 
-
 			// Test case: Dead or Alive 3, section XGRPH has a size of 764 bytes
 			// XGRPH										DSOUND
 			// 1F18A0 + 2FC -> aligned_start = 1F1000		1F1BA0 -> aligned_start = 1F1000 <- collision
 
-			// Make this loading consume physical memory as well
-			if (!g_VMManager.Allocate(Section->VirtualSize, 0, MAXULONG_PTR, (VAddr)Section->VirtualAddress))
-			{
-				ret = STATUS_NO_MEMORY;
-			}
+			// The following just increases the amount of physical/virtual memory consumed but doesn't actually allocate anything
+			// inside the manager. This is done so that, because we now have fewer physical allocations, we also get more free contiguous
+			// space that can be used by MmAllocateContiguousMemoryEx, which is problematic to map in the case of fragmentation. Also
+			// note that the manager physical allocation routines check the free memory left before attempting a new allocation and bail out
+			// immediately if not enough is available, this prevents exceeding the max memory on the Xbox
+
+			VAddr CapturedAddress = (VAddr)Section->VirtualAddress;
+			size_t CapturedSize = Section->VirtualSize;
+
+			ret = XbAllocateVirtualMemoryStub(&CapturedAddress, 0, &CapturedSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
 			// Increment the head/tail page reference counters
 			(*Section->HeadReferenceCount)++;
 			(*Section->TailReferenceCount)++;
@@ -164,7 +169,8 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 
 			if (EndingAddress > BaseAddress)
 			{
-				g_VMManager.Deallocate(BaseAddress, EndingAddress - BaseAddress);
+				size_t RegionSize = EndingAddress - BaseAddress;
+				XbFreeVirtualMemoryStub(&BaseAddress, &RegionSize, MEM_DECOMMIT);
 			}
 		}
 

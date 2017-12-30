@@ -40,6 +40,15 @@
 
 #include "PhysicalMemory.h"
 
+#define XbAllocateVirtualMemoryStub(addr, zero_bits, size, allocation_type, protect) \
+		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, true)
+#define XbAllocateVirtualMemoryReal(addr, zero_bits, size, allocation_type, protect) \
+		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, false)
+#define XbFreeVirtualMemoryStub(addr, size, free_type) \
+		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, true)
+#define XbFreeVirtualMemoryReal(addr, size, free_type) \
+		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, false)
+
 
 /* VMATypes */
 
@@ -122,7 +131,7 @@ class VMManager : public PhysicalMemory
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
-		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE,
+		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE,
 			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
@@ -142,7 +151,12 @@ class VMManager : public PhysicalMemory
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
 		size_t QuerySize(VAddr addr);
-	
+		// xbox implementation of NtAllocateVirtualMemory
+		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
+			DWORD protect, bool bStub);
+		// xbox implementation of NtFreeVirtualMemory
+		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub);
+
 	
 	private:
 		// m_Vma_map iterator
@@ -163,9 +177,9 @@ class VMManager : public PhysicalMemory
 		size_t m_StackMemoryInUse = 0;
 	
 		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, VAddr addr = NULL, ULONG Alignment = PAGE_SIZE, bool bNonContiguous = true);
+		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment = PAGE_SIZE, bool bNonContiguous = true);
 		// creates a vma representing the memory block to remove
-		void UnmapRange(VAddr target, size_t size = 0);
+		void UnmapRange(VAddr target);
 		// changes access permissions for a range of vma's, splitting them if necessary
 		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
 		// checks if a VAddr is valid; returns false if not
