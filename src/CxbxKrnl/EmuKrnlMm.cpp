@@ -160,7 +160,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 	LOG_FUNC_END;
 
 	// TODO: this should probably allocate the memory at a specific system virtual address region...
-	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, NULL, PAGE_SIZE, Protect);
+	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
 
 	RETURN(pRet);
 }
@@ -408,7 +408,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		pRet = (PVOID)PhysicalAddress;
 	}
 	else {
-		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, NULL, PAGE_SIZE, ProtectionType);
+		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
 		LOG_INCOMPLETE();
 	}
 

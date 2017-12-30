@@ -104,10 +104,24 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// note that the manager physical allocation routines check the free memory left before attempting a new allocation and bail out
 			// immediately if not enough is available, this prevents exceeding the max memory on the Xbox
 
-			VAddr CapturedAddress = (VAddr)Section->VirtualAddress;
-			size_t CapturedSize = Section->VirtualSize;
+			VAddr BaseAddress = (VAddr)Section->VirtualAddress;
+			VAddr EndingAddress = (VAddr)Section->VirtualAddress + Section->VirtualSize;
 
-			ret = XbAllocateVirtualMemoryStub(&CapturedAddress, 0, &CapturedSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+			if ((*Section->TailReferenceCount) != 0)
+			{
+				EndingAddress &= ~PAGE_MASK;
+			}
+
+			if ((*Section->HeadReferenceCount) != 0)
+			{
+				BaseAddress = (BaseAddress + PAGE_SIZE) & ~PAGE_MASK;
+			}
+
+			if (EndingAddress > BaseAddress)
+			{
+				size_t RegionSize = EndingAddress - BaseAddress;
+				ret = XbAllocateVirtualMemoryStub(&BaseAddress, 0, &RegionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+			}
 
 			// Increment the head/tail page reference counters
 			(*Section->HeadReferenceCount)++;

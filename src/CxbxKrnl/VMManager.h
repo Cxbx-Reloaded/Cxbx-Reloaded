@@ -138,7 +138,7 @@ class VMManager : public PhysicalMemory
 		// allocates stack memory
 		VAddr AllocateStack(size_t size);
 		// deallocate a block of memory
-		void Deallocate(VAddr addr, size_t size = 0);
+		void Deallocate(VAddr addr);
 		// deallocate stack memory
 		void DeallocateStack(VAddr addr);
 		// changes the protections of a memory region

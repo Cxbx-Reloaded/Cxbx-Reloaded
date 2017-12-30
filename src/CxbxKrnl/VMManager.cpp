@@ -286,16 +286,12 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Al
 		LOG_FUNC_ARG(bNonContiguous);
 	LOG_FUNC_END;
 
-	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
-	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
-	// it's probably safe to ignore these flags
-
 	Lock();
 	size_t ReturnedSize = size;
 	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, Alignment, bNonContiguous);
 	if (v_addr)
 	{
-		ReprotectVMARange(v_addr, ReturnedSize, protect & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
+		ReprotectVMARange(v_addr, ReturnedSize, protect);
 		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ? 
 			m_ImageMemoryInUse += ReturnedSize : m_NonImageMemoryInUse += ReturnedSize;
 	}
@@ -342,7 +338,7 @@ VAddr VMManager::AllocateStack(size_t size)
 	RETURN(v_addr);
 }
 
-void VMManager::Deallocate(VAddr addr, size_t size)
+void VMManager::Deallocate(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
@@ -369,12 +365,8 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 		LOG_FUNC_ARG(new_perms);
 	LOG_FUNC_END;
 
-	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
-	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
-	// it's probably safe to ignore these flags
-
 	Lock();
-	ReprotectVMARange(target, size, new_perms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
+	ReprotectVMARange(target, size, new_perms);
 	Unlock();
 }
 
@@ -476,10 +468,14 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 
 	if (bStub)
 	{
+		// The stub doesn't allocate anything, but the following is useful as reference
+		// WARNING: because there are no allocations being done, it can't know if there is overlap and so the memory statistics
+		// can be wrong in that case (this doesn't happen in XeLoadSection since it checks for the overlap with the head/tail counters)
+
 		// REMARK: the following assumes that there is only one VMAType::Free between VAddr and VAddr + size. This is fine for XeUnloadSection,
 		// not so for NtAllocateVirtualMemory. For that, an approch similar to UnmapRange (in particular VMAType::Lock) should be used.
 
-		VMAIter vma_handle = GetVMAIterator(AlignedCapturedBase);
+		/*VMAIter vma_handle = GetVMAIterator(AlignedCapturedBase);
 
 		// base address is outside the range managed by the kernel
 		assert(vma_handle != m_Vma_map.end());
@@ -508,7 +504,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 			{
 				AlignedCapturedSize -= overlapped_size;
 			}
-		}
+		}*/
 
 		// Update the memory manager statistics
 		if (AlignedCapturedSize > m_MaxContiguousAddress - m_PhysicalMemoryInUse)
@@ -520,12 +516,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 			RETURN(ret);
 		}
 		m_PhysicalMemoryInUse += AlignedCapturedSize;
-		if (vma_handle->second.type != VMAType::Stack)
-		{
-			vma_handle->second.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
-				m_ImageMemoryInUse += AlignedCapturedSize : m_NonImageMemoryInUse += AlignedCapturedSize;
-		}
-		else { m_StackMemoryInUse += AlignedCapturedSize; }
+		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
+			m_ImageMemoryInUse += AlignedCapturedSize : m_NonImageMemoryInUse += AlignedCapturedSize;
 
 		*addr = AlignedCapturedBase;
 		*size = AlignedCapturedSize;
@@ -579,12 +571,9 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 
 	if (bStub)
 	{
-		*addr = AlignedCapturedBase;
-		*size = AlignedCapturedSize;
+		// This was an allocation that didn't actually allocate anything, so just update the memory usage
 		m_PhysicalMemoryInUse -= AlignedCapturedSize;
-		m_ImageMemoryInUse -= AlignedCapturedSize;
-		Unlock();
-		RETURN(ret);
+		m_ImageMemoryInUse -= AlignedCapturedSize; // this should check the permissions of the region but for XeLoadSection it's always PAGE_EXECUTE_READWRITE
 	}
 	else
 	{
@@ -633,11 +622,12 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 			start_it->second.type = end_vma.type; // restore previously saved vma type
 			MergeAdjacentVMA(std::prev(start_it));
 		}
-		*addr = AlignedCapturedBase;
-		*size = AlignedCapturedSize;
-		Unlock();
-		RETURN(ret);
 	}
+
+	*addr = AlignedCapturedBase;
+	*size = AlignedCapturedSize;
+	Unlock();
+	RETURN(ret);
 }
 
 VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
@@ -927,10 +917,14 @@ VMManager::VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle)
 
 VMManager::VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 {
+	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
+	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
+	// it's probably safe to ignore these flags
+
 	VirtualMemoryArea& vma = vma_handle->second;
 	DWORD dummy;
-	vma.permissions = new_perms;
-	if (!VirtualProtect((void*)vma.base, vma.size, new_perms, &dummy))
+	vma.permissions = new_perms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE);
+	if (!VirtualProtect((void*)vma.base, vma.size, vma.permissions, &dummy))
 	{
 		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma! The error code was %d", GetLastError());
 	}
