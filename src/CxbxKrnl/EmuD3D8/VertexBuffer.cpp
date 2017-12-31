@@ -37,11 +37,11 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#include "CxbxKrnl/VMManager.h"
 #include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
-#include "CxbxKrnl/MemoryManager.h"
 
 #include <ctime>
 
@@ -468,7 +468,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 		uiVertexCount = pPatchDesc->dwVertexCount;
         dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
-        pNewData = (uint08*)g_MemoryManager.Allocate(dwNewSize);
+        pNewData = (uint08*)g_VMManager.Allocate(dwNewSize);
         if(!pNewData)
         {
             CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");

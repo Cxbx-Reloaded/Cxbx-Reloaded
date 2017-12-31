@@ -229,6 +229,11 @@ typedef long                            NTSTATUS;
 // Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
 #define PAGE_SIZE                   (1 << PAGE_SHIFT)
 #define PAGE_MASK                   (PAGE_SIZE - 1)
+#define MAX_NUM_OF_PAGES 1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT XBOX_MEMORY_SIZE - 32 * PAGE_SIZE // upper limit available for contiguous allocations (xbox)
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE // upper limit available for contiguous allocations (chihiro)
+#define ZERO_PAGE_ADDR 0
+#define FIRST_PAGE_ADDR PAGE_SIZE
 
 // Convert a physical frame number to its corresponding physical address.
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
@@ -2484,8 +2489,8 @@ typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 	ULONG FileSize; // File size (size of the section in the XBE file)
 	PCSZ SectionName; // Pointer to section name
 	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
-	ULONG HeadReferenceCount; // Pointer to head shared page reference count
-	ULONG TailReferenceCount; // Pointer to tail shared page reference count
+	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
+	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
 	BYTE ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
 }
 XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;

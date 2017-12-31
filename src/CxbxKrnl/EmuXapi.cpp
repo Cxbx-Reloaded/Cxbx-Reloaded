@@ -1042,21 +1042,27 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 	// Update the kernel's LaunchDataPage :
 	{
-		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
-			xboxkrnl::LaunchDataPage = NULL;
-
-		if (xboxkrnl::LaunchDataPage == NULL)
-			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+		if (xboxkrnl::LaunchDataPage == xbnull)
+		{
+			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+			if (!LaunchDataVAddr)
+			{
+				RETURN(STATUS_NO_MEMORY);
+			}
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
+		}
 
 		xboxkrnl::LaunchDataPage->Header.dwTitleId = g_pCertificate->dwTitleId;
 		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
 		xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
 
-		if (pLaunchData != NULL)
+		xboxkrnl::MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, PAGE_SIZE, TRUE);
+
+		if (pLaunchData != xbnull)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath == NULL)
+		if (lpTitlePath == xbnull)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };
@@ -1088,8 +1094,6 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	// If this function succeeds, it doesn't get a chance to return anything.
 	RETURN(ERROR_GEN_FAILURE);
 }
-
-DWORD g_XGetLaunchInfo_Status = -1;
 
 #if 0 // patch disabled
 // ******************************************************************

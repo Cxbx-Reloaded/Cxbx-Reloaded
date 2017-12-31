@@ -47,6 +47,8 @@ enum {
 	LLE_JIT = 1 << 2,
 };
 
+typedef UINT_PTR PAddr;
+
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
@@ -122,6 +124,12 @@ class EmuShared : public Mutex
 		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbe; Unlock(); }
 		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
 
+		// ******************************************************************
+		// * Launch data physical address Accessors
+		// ******************************************************************
+		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
+		void SetLaunchDataPAddress(PAddr *value) { Lock(); m_LaunchDataPAddress = *value; Unlock(); }
+
 
 	private:
 		// ******************************************************************
@@ -142,6 +150,7 @@ class EmuShared : public Mutex
 		float		 m_MSpF;
 		float        m_FPS;
 		bool		 m_bMultiXbe;
+		PAddr		 m_LaunchDataPAddress;
 };
 
 // ******************************************************************

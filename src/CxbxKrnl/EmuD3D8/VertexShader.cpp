@@ -41,7 +41,6 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/MemoryManager.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DVSDE_*
 
 // ****************************************************************************

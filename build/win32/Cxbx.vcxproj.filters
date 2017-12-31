@@ -187,9 +187,6 @@
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\MemoryManager.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -204,6 +201,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp">
       <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp">
+      <Filter>Emulator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -369,9 +372,6 @@
     <ClInclude Include="..\..\src\CxbxVersion.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\MemoryManager.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h">
       <Filter>GUI</Filter>
     </ClInclude>
@@ -395,6 +395,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h">
+      <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

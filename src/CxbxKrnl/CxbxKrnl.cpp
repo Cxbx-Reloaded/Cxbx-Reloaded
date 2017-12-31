@@ -55,7 +55,7 @@ namespace xboxkrnl
 #include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -89,7 +89,6 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
-char szFilePath_LaunchDataPage_bin[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
 
@@ -98,6 +97,7 @@ HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
+bool g_bIsDebug = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
@@ -303,18 +303,25 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
-	// TODO : Make sure memory.bin is at least 64 MB in size - FileSeek(hFile, CONTIGUOUS_MEMORY_SIZE, soFromBeginning);
-
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
 		PAGE_EXECUTE_READWRITE,
 		/* dwMaximumSizeHigh */0,
-		/* dwMaximumSizeLow */CONTIGUOUS_MEMORY_SIZE,
+		/* dwMaximumSizeLow */CHIHIRO_MEMORY_SIZE,
 		/**/nullptr);
 	if (hFileMapping == NULL)
 	{
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory : Couldn't create contiguous memory.bin file mapping!\n");
+		return nullptr;
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFile, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != CHIHIRO_MEMORY_SIZE)
+	{
+		CxbxKrnlCleanup("CxbxRestoreContiguousMemory : memory.bin file is not 128 MiB large!\n");
 		return nullptr;
 	}
 
@@ -324,7 +331,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
-		CONTIGUOUS_MEMORY_SIZE,
+		CONTIGUOUS_MEMORY_CHIHIRO_SIZE,
 		(void *)CONTIGUOUS_MEMORY_BASE);
 	if (memory != (void *)CONTIGUOUS_MEMORY_BASE)
 	{
@@ -336,11 +343,11 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), CONTIGUOUS_MEMORY_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_SIZE - 1);
+		GetCurrentThreadId(), CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
 
 	if (NeedsInitialization)
 	{
-		memset(memory, 0, CONTIGUOUS_MEMORY_SIZE);
+		memset(memory, 0, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
 		printf("[0x%.4X] INIT: Initialized contiguous memory\n", GetCurrentThreadId());
 	}
 	else
@@ -352,7 +359,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
-		TILED_MEMORY_SIZE,
+		TILED_MEMORY_CHIHIRO_SIZE,
 		(void *)TILED_MEMORY_BASE);
 	if (tiled_memory != (void *)TILED_MEMORY_BASE)
 	{
@@ -362,9 +369,12 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!");
 		return nullptr;
 	}
-
+	
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_SIZE - 1);
+		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
+
+	// Initialize the virtual manager :
+	g_VMManager.Initialize(hFileMapping);
 
 	return memory;
 }
@@ -575,8 +585,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 
-	CxbxRestorePersistentMemoryRegions();
-
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
@@ -602,11 +610,17 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-		// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+		// Register if we're running an Chihiro executable or a debug xbe (otherwise it's an Xbox retail executable)
 		g_bIsChihiro = (g_XbeType == xtChihiro);
+		g_bIsDebug = (g_XbeType == xtDebug);
 
-		// Determine memory size accordingly :
-		SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+		if (g_bIsChihiro || g_bIsDebug)
+		{
+			// Initialize the Chihiro/Debug - specific memory ranges
+			g_VMManager.InitializeChihiroDebug();
+		}
+		
+		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -887,7 +901,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_MemoryManager.Allocate(MAX_PATH);
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		printf("[0x%.4X] INIT: XeImageFileName = %s\n", GetCurrentThreadId(), xboxkrnl::XeImageFileName.Buffer);
@@ -1014,15 +1028,14 @@ void CxbxInitFilePaths()
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
 	}
 
-	snprintf(szFilePath_LaunchDataPage_bin, MAX_PATH, "%s\\CxbxLaunchDataPage.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
 
-// TODO : Is DefaultLaunchDataPage really necessary? (No-one assigns it yet to LaunchDataPage)
-xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
+// REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
+/*xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
 {
 	{   // header
 		2,  // 2: dashboard, 0: title
@@ -1030,27 +1043,20 @@ xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
 		"D:\\default.xbe",
 		0
 	}
-};
+};*/
 
 void CxbxRestoreLaunchDataPage()
 {
-	// If CxbxLaunchDataPage.bin exist, load it into "persistent" memory
-	FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "rb");
-	if (fp)
+	PAddr LaunchDataPAddr;
+	g_EmuShared->GetLaunchDataPAddress(&LaunchDataPAddr);
+
+	if (LaunchDataPAddr)
 	{
-		// Make sure LaunchDataPage is writeable  :
-		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
-			xboxkrnl::LaunchDataPage = NULL;
-
-		if (xboxkrnl::LaunchDataPage == NULL)
-			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
-
-		// Read in the contents.
-		fseek(fp, 0, SEEK_SET);
-		fread(xboxkrnl::LaunchDataPage, sizeof(xboxkrnl::LAUNCH_DATA_PAGE), 1, fp);
-		fclose(fp);
-		// Delete the file once we're done.
-		remove(szFilePath_LaunchDataPage_bin);
+		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr;
+		// Mark the launch page as allocated to prevent other allocations from overwriting it
+		xboxkrnl::MmAllocateContiguousMemoryEx(PAGE_SIZE, LaunchDataPAddr, LaunchDataPAddr + PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
+		LaunchDataPAddr = NULL;
+		g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
 
 		DbgPrintf("INIT: Restored LaunchDataPage\n");
 	}

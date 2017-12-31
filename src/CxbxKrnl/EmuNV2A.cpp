@@ -82,6 +82,7 @@ namespace xboxkrnl
 #include <cassert>
 //#include <gl\glut.h>
 
+
 // Public Domain ffs Implementation
 // See: http://snipplr.com/view/22147/stringsh-implementation/
 int ffs(int v)
@@ -2764,8 +2765,11 @@ DEVICE_READ32(PFB)
 		result = 3; // = NV_PFB_CFG0_PART_4
 		break;
 	case NV_PFB_CSTATUS:
-		result = CONTIGUOUS_MEMORY_SIZE;
-		break;
+	{
+		if (g_bIsChihiro || g_bIsDebug) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
+		result = CONTIGUOUS_MEMORY_XBOX_SIZE;
+	}
+	break;
 	case NV_PFB_WBC:
 		result = 0; // = !NV_PFB_WBC_FLUSH
 		break;

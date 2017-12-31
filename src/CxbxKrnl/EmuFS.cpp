@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
 #include "CxbxKrnl.h"
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -404,7 +404,9 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 				}
 			}
 
-			pNewTLS = g_MemoryManager.AllocateZeroed(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
+			/* + HACK: extra safety padding 0x100 */
+			pNewTLS = (void*)g_VMManager.AllocateZeroed(dwCopySize + dwZeroSize + 0x100);
+
 
 			if (dwCopySize > 0) {
 				memcpy(pNewTLS, pTLSData, dwCopySize);
@@ -446,7 +448,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	}
 
 	// Allocate the xbox KPCR structure
-	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)g_MemoryManager.AllocateZeroed(1, sizeof(xboxkrnl::KPCR));
+	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::KPCR));
 	xboxkrnl::NT_TIB *XbTib = &(NewPcr->NtTib);
 	xboxkrnl::PKPRCB Prcb = &(NewPcr->PrcbData);
 	// Note : As explained above (at EmuKeSetPcr), Cxbx cannot allocate one NT_TIB and KPRCB
@@ -488,7 +490,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Initialize a fake PrcbData.CurrentThread 
 	{
-		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_MemoryManager.AllocateZeroed(1, sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
+		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
 
 		EThread->Tcb.TlsData = pNewTLS;
 		EThread->UniqueThread = GetCurrentThreadId();
