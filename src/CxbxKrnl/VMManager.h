@@ -128,6 +128,8 @@ class VMManager : public PhysicalMemory
 		void Initialize(HANDLE file_view);
 		// initialize chihiro/debug - specifc memory ranges
 		void InitializeChihiroDebug();
+		// maps the virtual memory region used by a device
+		void MapHardwareDevice(VAddr base, size_t size, VMAType type);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory

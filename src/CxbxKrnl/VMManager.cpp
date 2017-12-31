@@ -78,25 +78,23 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE file_view)
 {
-	// This reserves a large enough memory region to map the second physical memory file view, and aligns the start address.
-	// It must be page aligned otherwise the mapping/unmapping functions will produce incorrect results and on
-	// debug builds they will assert.
-	UINT_PTR addr = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE + PAGE_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	if (!addr)
+	// This reserves a large enough memory region to map the second physical memory file view
+	UINT_PTR start = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	if (!start)
 	{
 		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
 	}
-	VAddr aligned_start = addr & ~(UINT_PTR)PAGE_MASK;
-	VirtualFree((void*)addr, 0, MEM_RELEASE);
+	VirtualFree((void*)start, 0, MEM_RELEASE);
 	m_Base = (VAddr)MapViewOfFileEx(
 		file_view,
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		0,
 		0,
 		CHIHIRO_MEMORY_SIZE,
-		(void*)aligned_start);
-	if (m_Base != aligned_start)
+		(void*)start);
+	if (m_Base != start)
 	{
+		UnmapViewOfFile((void*)start);
 		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
 	}
 	m_hAliasedView = file_view;
@@ -136,87 +134,42 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(sizeof(DUMMY_KERNEL), XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+	Allocate(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_EXECUTE_READWRITE, false);
 
 	// Map the tiled memory
-	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE);
-	VirtualMemoryArea& tiled_memory_vma = tiled_memory_vma_handle->second;
-	tiled_memory_vma.type = VMAType::MemTiled;
-	UpdatePageTableForVMA(tiled_memory_vma);
-	m_NonImageMemoryInUse += TILED_MEMORY_XBOX_SIZE;
+	MapHardwareDevice(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE, VMAType::MemTiled);
 
 	// Map the nv2a (1st region)
-	VMAIter nv2a_vma_handle = CarveVMA(NV2A_MEMORY_BASE, NV2A_PRAMIN_ADDR - NV2A_MEMORY_BASE);
-	VirtualMemoryArea& nv2a_vma = nv2a_vma_handle->second;
-	nv2a_vma.type = VMAType::IO_DeviceNV2A;
-	UpdatePageTableForVMA(nv2a_vma);
-	m_NonImageMemoryInUse += (NV2A_PRAMIN_ADDR - NV2A_MEMORY_BASE);
+	MapHardwareDevice(NV2A_MEMORY_BASE, NV2A_PRAMIN_ADDR - NV2A_MEMORY_BASE, VMAType::IO_DeviceNV2A);
 
 	// Map the nv2a pramin memory
-	VMAIter nv2a_pramin_vma_handle = CarveVMA(NV2A_PRAMIN_ADDR, NV2A_PRAMIN_SIZE);
-	VirtualMemoryArea& nv2a_pramin_vma = nv2a_pramin_vma_handle->second;
-	nv2a_pramin_vma.type = VMAType::MemNV2A_PRAMIN;
-	UpdatePageTableForVMA(nv2a_pramin_vma);
-	m_NonImageMemoryInUse += NV2A_PRAMIN_SIZE;
+	MapHardwareDevice(NV2A_PRAMIN_ADDR, NV2A_PRAMIN_SIZE, VMAType::MemNV2A_PRAMIN);
 
 	// Map the nv2a user region
-	VMAIter nv2a_user_vma_handle = CarveVMA(NV2A_USER_ADDR, NV2A_USER_SIZE);
-	VirtualMemoryArea& nv2a_user_vma = nv2a_user_vma_handle->second;
-	nv2a_user_vma.type = VMAType::IO_DeviceNV2A;
-	UpdatePageTableForVMA(nv2a_user_vma);
-	m_NonImageMemoryInUse += NV2A_USER_SIZE;
+	MapHardwareDevice(NV2A_USER_ADDR, NV2A_USER_SIZE, VMAType::IO_DeviceNV2A);
 
 	// Map the apu
-	VMAIter apu_vma_handle = CarveVMA(APU_BASE, APU_SIZE);
-	VirtualMemoryArea& apu_vma = apu_vma_handle->second;
-	apu_vma.type = VMAType::IO_DeviceAPU;
-	UpdatePageTableForVMA(apu_vma);
-	m_NonImageMemoryInUse += APU_SIZE;
+	MapHardwareDevice(APU_BASE, APU_SIZE, VMAType::IO_DeviceAPU);
 
 	// Map the ac97
-	VMAIter ac97_vma_handle = CarveVMA(AC97_BASE, AC97_SIZE);
-	VirtualMemoryArea& ac97_vma = ac97_vma_handle->second;
-	ac97_vma.type = VMAType::IO_DeviceAC97;
-	UpdatePageTableForVMA(ac97_vma);
-	m_NonImageMemoryInUse += AC97_SIZE;
+	MapHardwareDevice(AC97_BASE, AC97_SIZE, VMAType::IO_DeviceAC97);
 
 	// Map usb0
-	VMAIter usb0_vma_handle = CarveVMA(USB0_BASE, USB0_SIZE);
-	VirtualMemoryArea& usb0_vma = usb0_vma_handle->second;
-	usb0_vma.type = VMAType::IO_DeviceUSB0;
-	UpdatePageTableForVMA(usb0_vma);
-	m_NonImageMemoryInUse += USB0_SIZE;
+	MapHardwareDevice(USB0_BASE, USB0_SIZE, VMAType::IO_DeviceUSB0);
 
 	// Map usb1
-	VMAIter usb1_vma_handle = CarveVMA(USB1_BASE, USB1_SIZE);
-	VirtualMemoryArea& usb1_vma = usb1_vma_handle->second;
-	usb1_vma.type = VMAType::IO_DeviceUSB1;
-	UpdatePageTableForVMA(usb1_vma);
-	m_NonImageMemoryInUse += USB1_SIZE;
+	MapHardwareDevice(USB1_BASE, USB1_SIZE, VMAType::IO_DeviceUSB1);
 
 	// Map NVNet
 	// NOTE: I can't use NVNet_SIZE because it's not aligned
-	VMAIter NVNet_vma_handle = CarveVMA(NVNet_BASE, PAGE_SIZE);
-	VirtualMemoryArea& NVNet_vma = NVNet_vma_handle->second;
-	NVNet_vma.type = VMAType::IO_DeviceNVNet;
-	UpdatePageTableForVMA(NVNet_vma);
-	m_NonImageMemoryInUse += PAGE_SIZE;
+	MapHardwareDevice(NVNet_BASE, PAGE_SIZE, VMAType::IO_DeviceNVNet);
 
 	// Map the bios
-	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_CHIHIRO_SIZE - PAGE_SIZE);
-	VirtualMemoryArea& bios_vma = bios_vma_handle->second;
-	bios_vma.type = VMAType::DeviceBIOS;
-	UpdatePageTableForVMA(bios_vma);
-	m_NonImageMemoryInUse += BIOS_CHIHIRO_SIZE;
+	MapHardwareDevice(BIOS_BASE, BIOS_CHIHIRO_SIZE - PAGE_SIZE, VMAType::DeviceBIOS);
 
 	// Map the mcpx
 	// NOTE: Again, I can't use MCPX_BASE and MCPX_SIZE because those are not aligned
-	VMAIter mcpx_vma_handle = CarveVMA(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1, PAGE_SIZE);
-	VirtualMemoryArea& mcpx_vma = mcpx_vma_handle->second;
-	mcpx_vma.type = VMAType::DeviceMCPX;
-	MergeAdjacentVMA(mcpx_vma_handle);
-	UpdatePageTableForVMA(mcpx_vma);
-	m_NonImageMemoryInUse += (PAGE_SIZE);
+	MapHardwareDevice(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1, PAGE_SIZE, VMAType::DeviceMCPX);
 
 	printf("Page table initialized!\n");
 }
@@ -238,11 +191,7 @@ void VMManager::InitializeChihiroDebug()
 
 	// Map the tiled memory
 	UnmapRange(TILED_MEMORY_BASE);
-	VMAIter tiled_memory_vma_handle = CarveVMA(TILED_MEMORY_BASE, TILED_MEMORY_CHIHIRO_SIZE);
-	VirtualMemoryArea& tiled_memory_vma = tiled_memory_vma_handle->second;
-	tiled_memory_vma.type = VMAType::MemTiled;
-	UpdatePageTableForVMA(tiled_memory_vma);
-	m_NonImageMemoryInUse += TILED_MEMORY_CHIHIRO_SIZE;
+	MapHardwareDevice(TILED_MEMORY_BASE, TILED_MEMORY_CHIHIRO_SIZE, VMAType::MemTiled);
 
 	// NOTE: we cannot just call Unmap on the mcpx region because its base + size will overflow to 0x100000000
 	// which will trigger an assert in CarveVMARange
@@ -251,16 +200,21 @@ void VMManager::InitializeChihiroDebug()
 
 	// Map the bios
 	UnmapRange(BIOS_BASE);
-	VMAIter bios_vma_handle = CarveVMA(BIOS_BASE, BIOS_CHIHIRO_SIZE);
-	VirtualMemoryArea& bios_vma = bios_vma_handle->second;
-	bios_vma.type = VMAType::DeviceBIOS;
-	UpdatePageTableForVMA(bios_vma);
-	m_NonImageMemoryInUse += (BIOS_CHIHIRO_SIZE);
+	MapHardwareDevice(BIOS_BASE, BIOS_CHIHIRO_SIZE, VMAType::DeviceBIOS);
 
 	if (g_bIsChihiro) {
 		printf("Page table for Chihiro initialized!\n");
 	}
 	else { printf("Page table for Debug console initialized!\n"); }
+}
+
+void VMManager::MapHardwareDevice(VAddr base, size_t size, VMAType type)
+{
+	VMAIter vma_handle = CarveVMA(base, size);
+	VirtualMemoryArea& vma = vma_handle->second;
+	vma.type = type;
+	UpdatePageTableForVMA(vma);
+	m_NonImageMemoryInUse += size;
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
@@ -419,16 +373,36 @@ size_t VMManager::QuerySize(VAddr addr)
 
 	Lock();
 	auto it = m_Vma_map.lower_bound(addr);
-	if (it != m_Vma_map.end() && it->second.base == addr)
+	if (it != m_Vma_map.end())
 	{
-		// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
-		// we must check the corresponding physical allocation size
-		size = it->second.size;
-		auto next_it = std::next(it);
-		while (next_it != m_Vma_map.end() && it->second.backing_block == next_it->second.backing_block)
+		if (it->second.type == VMAType::Free)
 		{
-			size += next_it->second.size;
-			++next_it;
+			size = 0;
+			EmuWarning("VMManager: QuerySize : queried a free region!\n");
+		}
+		else
+		{
+			if (it->second.base != addr)
+			{
+				// This shouldn't happen for MmQueryAllocationSize, but if this function is called by other callers then it's possible
+				auto prev_it = std::prev(it);
+				PAddr prev_backing_block = prev_it->second.backing_block;
+				while (prev_it != m_Vma_map.begin() && prev_backing_block == prev_it->second.backing_block)
+				{
+					--prev_it;
+				}
+				it = std::next(prev_it);
+				EmuWarning("VMManager: QuerySize : quering not the start address of an allocation\n");
+			}
+			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
+			// we must check the corresponding physical allocation size
+			size = it->second.size;
+			auto next_it = std::next(it);
+			while (next_it != m_Vma_map.end() && it->second.backing_block == next_it->second.backing_block)
+			{
+				size += next_it->second.size;
+				++next_it;
+			}
 		}
 	}
 	Unlock();
@@ -521,16 +495,14 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 
 		*addr = AlignedCapturedBase;
 		*size = AlignedCapturedSize;
-		Unlock();
-		RETURN(ret);
 	}
 	else
 	{
-		Unlock();
 		// TODO: implement the real function
 		LOG_UNIMPLEMENTED();
-		RETURN(ret);
 	}
+	Unlock();
+	RETURN(ret);
 }
 
 xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub)
@@ -923,8 +895,8 @@ VMManager::VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 
 	VirtualMemoryArea& vma = vma_handle->second;
 	DWORD dummy;
-	vma.permissions = new_perms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE);
-	if (!VirtualProtect((void*)vma.base, vma.size, vma.permissions, &dummy))
+	vma.permissions = new_perms;
+	if (!VirtualProtect((void*)vma.base, vma.size, vma.permissions & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
 	{
 		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma! The error code was %d", GetLastError());
 	}

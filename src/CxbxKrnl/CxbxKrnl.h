@@ -68,6 +68,7 @@ extern "C" {
 
 // Define virtual base addresses for physical memory windows.
 #define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE // = 0x80000000
+#define KERNEL_SIZE sizeof(DUMMY_KERNEL)
 #define MM_XBOX_HIGHEST_PHYSICAL_PAGE	0x03FFF
 #define MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE    0x07FFF
 #define MM_64M_PHYSICAL_PAGE        0x04000
