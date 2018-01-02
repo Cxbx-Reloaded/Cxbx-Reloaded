@@ -1169,8 +1169,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_EMULATION_START:
-                StartEmulation(hwnd);
+            case ID_EMULATION_START:
+                if (m_Xbe != nullptr)
+                {
+                    StartEmulation(hwnd);
+                }
+                break;
+
+            case ID_EMULATION_STARTDEBUG:
+                if (m_Xbe != nullptr)
+                {
+                    StartEmulation(hwnd, true);
+                }
                 break;
 
             case ID_EMULATION_STOP:
@@ -1580,6 +1590,9 @@ void WndMain::RefreshMenus()
             // enable emulation start
             EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
+            // enable emulation with debugging
+            EnableMenuItem(emul_menu, ID_EMULATION_STARTDEBUG, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
+
             // enable emulation stop
             EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
         }
@@ -1893,7 +1906,7 @@ void WndMain::SaveXbeAs()
 }
 
 // start emulation
-void WndMain::StartEmulation(HWND hwndParent)
+void WndMain::StartEmulation(HWND hwndParent, bool WithLocalDebugger /*= false*/)
 {
     char szBuffer[MAX_PATH];
 
@@ -1920,16 +1933,39 @@ void WndMain::StartEmulation(HWND hwndParent)
 		char szArgsBuffer[4096];
 		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, (int)hwndParent, (int)m_KrnlDebug, m_KrnlDebugFilename);
 
-        if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
+        if (WithLocalDebugger)
         {
-            MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+            // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
+            const char* szDebugger = "CxbxDebugger.exe";
 
-            printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
+            char szDbgArgsBuffer[4096];
+            snprintf(szDbgArgsBuffer, 4096, "%s %s", szExeFileName, szArgsBuffer);
+
+            if ((int)ShellExecute(NULL, "open", szDebugger, szDbgArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
+            {
+                MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+
+                printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
+            }
+            else
+            {
+                m_bIsStarted = true;
+                printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
+            }
         }
         else
         {
-			m_bIsStarted = true;
-            printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
+            if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
+            {
+                MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+
+                printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
+            }
+            else
+            {
+                m_bIsStarted = true;
+                printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
+            }
         }
     }
 }

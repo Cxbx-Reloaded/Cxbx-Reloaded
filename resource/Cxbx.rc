@@ -127,7 +127,7 @@ BEGIN
     END
     POPUP "&Settings"
     BEGIN
-        MENUITEM "Config &Controller...",		ID_SETTINGS_CONFIG_CONTROLLER
+        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIG_AUDIO
         MENUITEM SEPARATOR
@@ -135,8 +135,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&HLE Cache"
         BEGIN
-            MENUITEM "&Clear entire HLE Cache",            ID_CACHE_CLEARHLECACHE_ALL
-            MENUITEM "&Rescan title HLE Cache",            ID_CACHE_CLEARHLECACHE_CURRENT
+            MENUITEM "&Clear entire HLE Cache",     ID_CACHE_CLEARHLECACHE_ALL
+            MENUITEM "&Rescan title HLE Cache",     ID_CACHE_CLEARHLECACHE_CURRENT
         END
         MENUITEM SEPARATOR
         POPUP "&LLE (Experimental)"
@@ -149,6 +149,8 @@ BEGIN
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
+        MENUITEM "Start with &Debugger...",     ID_EMULATION_STARTDEBUG
+        MENUITEM SEPARATOR
         MENUITEM "S&top\tF6",                   ID_EMULATION_STOP, GRAYED
     END
     POPUP "&Help"
@@ -232,11 +234,6 @@ BEGIN
     PUSHBUTTON      "Click to configure all input...",IDC_CONFIGURE_ALL,6,102,210,14,BS_FLAT
 END
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Video Configuration
-//
-
 IDD_VIDEO_CFG DIALOGEX 0, 0, 259, 121
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Video Configuration"
@@ -256,31 +253,23 @@ BEGIN
     LTEXT           "Other Options:",IDC_STATIC,21,71,49,8,0,WS_EX_RIGHT
     CONTROL         "Enable Hardware YUV Overlays",IDC_CV_HARDWAREYUV,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,84,123,11
 END
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Audio Configuration
-//
 
 IDD_AUDIO_CFG DIALOGEX 0, 0, 259, 121
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Audio Configuration"
 FONT 8, "Verdana", 0, 0, 0x1
 BEGIN
-COMBOBOX        IDC_AC_AUDIO_ADAPTER, 76, 12, 173, 100, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-CONTROL         "Enable PCM", IDC_AC_PCM, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 76, 46, 65, 10
-CONTROL         "Enable XADPCM", IDC_AC_XADPCM, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 76, 59, 123, 11
-CONTROL         "Enable Unknown Codec", IDC_AC_UNKNOWN_CODEC, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 76, 72, 98, 10
-CONTROL         "Use Legacy Audio Hack", IDC_AC_LEGACY_AUDIO_HACK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 76, 33, 98, 10
-PUSHBUTTON      "Cancel", IDC_AC_CANCEL, 146, 102, 50, 14, BS_FLAT
-PUSHBUTTON      "Accept", IDC_AC_ACCEPT, 206, 102, 50, 14, BS_FLAT
-GROUPBOX        "DirectSound Configuration", IDC_STATIC, 4, 1, 250, 98, BS_CENTER
-LTEXT           "Audio Adapter:", IDC_STATIC, 13, 14, 57, 8, 0, WS_EX_RIGHT
-LTEXT           "Other Options:", IDC_STATIC, 13, 33, 57, 8, 0, WS_EX_RIGHT
+    COMBOBOX        IDC_AC_AUDIO_ADAPTER,76,12,173,100,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Enable PCM",IDC_AC_PCM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,46,65,10
+    CONTROL         "Enable XADPCM",IDC_AC_XADPCM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,59,123,11
+    CONTROL         "Enable Unknown Codec",IDC_AC_UNKNOWN_CODEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,72,98,10
+    CONTROL         "Use Legacy Audio Hack",IDC_AC_LEGACY_AUDIO_HACK,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,76,33,98,10
+    PUSHBUTTON      "Cancel",IDC_AC_CANCEL,146,102,50,14,BS_FLAT
+    PUSHBUTTON      "Accept",IDC_AC_ACCEPT,206,102,50,14,BS_FLAT
+    GROUPBOX        "DirectSound Configuration",IDC_STATIC,4,1,250,98,BS_CENTER
+    LTEXT           "Audio Adapter:",IDC_STATIC,13,14,57,8,0,WS_EX_RIGHT
+    LTEXT           "Other Options:",IDC_STATIC,13,33,57,8,0,WS_EX_RIGHT
 END
-/////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
