@@ -34,6 +34,8 @@ namespace CxbxDebugger
 
             CachedArgs = items.ToArray();
 
+            SetDebugProcessActive(false);
+
             // TODO: Wait for user to start this?
             StartDebugging();
         }
@@ -112,18 +114,48 @@ namespace CxbxDebugger
 
         public void DebugEvent(string Message)
         {
-            if( listBox1.InvokeRequired )
+            if( lbConsole.InvokeRequired )
             {
                 // Ensure we Add items on the right thread
-                listBox1.Invoke(new MethodInvoker(delegate ()
+                lbConsole.Invoke(new MethodInvoker(delegate ()
                 {
-                    listBox1.Items.Add(Message);
+                    lbConsole.Items.Add(Message);
                 }));
             }
             else
             {
-                listBox1.Items.Add(Message);
+                lbConsole.Items.Add(Message);
             }
+        }
+
+        public void SetDebugProcessActive(bool Active)
+        {
+            if (btnRestart.InvokeRequired)
+            {
+                btnRestart.Invoke(new MethodInvoker(delegate ()
+                {
+                    // Disable when active
+                    btnRestart.Enabled = !Active;
+
+                    // Enable when active
+                    btnSuspend.Enabled = Active;
+                    btnResume.Enabled = Active;
+                }));
+            }
+            else
+            {
+                // Disable when active
+                btnRestart.Enabled = !Active;
+
+                // Enable when active
+                btnSuspend.Enabled = Active;
+                btnResume.Enabled = Active;
+            }
+        }
+
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            lbConsole.Items.Clear();
         }
     }
 
@@ -138,11 +170,13 @@ namespace CxbxDebugger
 
         public override void OnDebugStart()
         {
+            frm.SetDebugProcessActive(true);
             frm.DebugEvent("Started debugging session");
         }
 
         public override void OnDebugEnd()
         {
+            frm.SetDebugProcessActive(false);
             frm.DebugEvent("Ended debugging session");
         }
 
