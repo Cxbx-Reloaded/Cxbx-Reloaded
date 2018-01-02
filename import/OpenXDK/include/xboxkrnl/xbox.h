@@ -450,9 +450,9 @@ XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
 // ******************************************************************
 XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
 (
-	IN char *string,
-	IN size_t count,
-	IN const char *format,
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
 	...
 );
 
@@ -461,8 +461,8 @@ XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
 (
-	IN char *string,
-	IN const char *format,
+	IN PCHAR string,
+	IN LPCCH format,
 	...
 );
 
@@ -471,9 +471,9 @@ XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
 (
-	IN char *string,
-	IN size_t count,
-	IN const char *format,
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
 	...
 );
 
@@ -482,8 +482,8 @@ XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(364) INT CDECL RtlVsprintf
 (
-	IN char *string,
-	IN const char *format,
+	IN PCHAR string,
+	IN LPCCH format,
 	...
 );
 

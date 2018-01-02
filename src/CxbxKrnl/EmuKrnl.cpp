@@ -419,9 +419,9 @@ XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
 // ******************************************************************
 XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 (
-	IN char *string,
-	IN size_t count,
-	IN const char *format,
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
 	...
 )
 {
@@ -446,8 +446,8 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 (
-	IN char *string,
-	IN const char *format,
+	IN PCHAR string,
+	IN LPCCH format,
 	...
 )
 {
@@ -471,9 +471,9 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 (
-	IN char *string,
-	IN size_t count,
-	IN const char *format,
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
 	...
 )
 {
@@ -498,8 +498,8 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 (
-	IN char *string,
-	IN const char *format,
+	IN PCHAR string,
+	IN LPCCH format,
 	...
 )
 {

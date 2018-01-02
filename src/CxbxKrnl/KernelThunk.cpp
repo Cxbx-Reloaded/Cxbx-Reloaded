@@ -101,7 +101,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::ExTimerObjectType),               // 0x001F (31)
 	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertHeadList),        // 0x0020 (32)
 	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertTailList),        // 0x0021 (33)
-	(uint32)FUNC(&xboxkrnl::ExfInterlockedRemoveHeadList),        // 0x0022 (34)0
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedRemoveHeadList),        // 0x0022 (34)
 	(uint32)FUNC(&xboxkrnl::FscGetCacheSize),                     // 0x0023 (35)
 	(uint32)FUNC(&xboxkrnl::FscInvalidateIdleBlocks),             // 0x0024 (36)
 	(uint32)FUNC(&xboxkrnl::FscSetCacheSize),                     // 0x0025 (37)
