@@ -10,8 +10,8 @@ This is a workaround for patching or creating PDB files at runtime for Cxbx-Relo
 
 The debugger is a standalone C# application which wraps the child instance of Cxbx-Reloaded used to launch the XBE file.
 
-It uses the debugger API provided by Windows, primarily **WaitForDebugEvent** and **ContinueDebugEvent**. This API was implemented in C# by the Chromium project, and is used 
-selectively in this project.
+It uses the debugger API provided by Windows, primarily **WaitForDebugEvent** and **ContinueDebugEvent**. The C# implementation is taken from the VsChromium project.
+
 ## Roadmap
 
 ### Primary
@@ -27,6 +27,8 @@ selectively in this project.
 * Breakpoints - inserting and handling interrupts
 
 ## Thanks
+
+* The Chromium Project for [@VsChromium](https://github.com/chromium/vs-chromium), specifically [these Win32 sources](https://github.com/chromium/vs-chromium/tree/master/src/Core/Win32)
 
 * Sebastian Solnica ([@lowleveldesign](https://github.com/lowleveldesign)) for [Process Governor](https://github.com/lowleveldesign/process-governor) and [MinDBG](https://github.com/lowleveldesign/mindbg)
 
