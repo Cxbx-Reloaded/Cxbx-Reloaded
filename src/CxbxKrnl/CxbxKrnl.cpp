@@ -303,6 +303,10 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
+	// Make sure memory.bin is at least 128 MB in size
+	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFile);
+
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
