@@ -12,16 +12,16 @@ namespace CxbxDebugger
         public virtual void OnDebugStart() { }
         public virtual void OnDebugEnd() { }
 
-        public virtual void OnProcessCreate() { }
-        public virtual void OnProcessExit() { }
+        public virtual void OnProcessCreate(DebuggerProcess Process) { }
+        public virtual void OnProcessExit(DebuggerProcess Process) { }
 
-        public virtual void OnThreadCreate() { }
-        public virtual void OnThreadExit() { }
+        public virtual void OnThreadCreate(DebuggerThread Thread) { }
+        public virtual void OnThreadExit(DebuggerThread Thread) { }
 
-        public virtual void OnModuleLoaded(string ModuleName) { }
-        public virtual void OnModuleUnloaded() { }
+        public virtual void OnModuleLoaded(DebuggerModule Module) { }
+        public virtual void OnModuleUnloaded(DebuggerModule Module) { }
 
-        public virtual void OnCallstack(string[] Callstack) { }
+        public virtual void OnCallstack(DebuggerCallstack Callstack) { }
 
         public virtual void OnDebugOutput(string Message) { }
     }

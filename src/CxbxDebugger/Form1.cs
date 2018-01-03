@@ -114,17 +114,19 @@ namespace CxbxDebugger
 
         public void DebugEvent(string Message)
         {
-            if( lbConsole.InvokeRequired )
+            string MessageStamped = string.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), Message);
+
+            if ( lbConsole.InvokeRequired )
             {
                 // Ensure we Add items on the right thread
                 lbConsole.Invoke(new MethodInvoker(delegate ()
                 {
-                    lbConsole.Items.Add(Message);
+                    lbConsole.Items.Insert(0, MessageStamped);
                 }));
             }
             else
             {
-                lbConsole.Items.Add(Message);
+                lbConsole.Items.Insert(0, MessageStamped);
             }
         }
 
@@ -180,9 +182,9 @@ namespace CxbxDebugger
             frm.DebugEvent("Ended debugging session");
         }
 
-        public override void OnModuleLoaded(string ModuleName)
+        public override void OnModuleLoaded(DebuggerModule Module)
         {
-            frm.DebugEvent("Loading module: " + ModuleName);
+            frm.DebugEvent("Loading module: " + Module.Path);
         }
 
         public override void OnDebugOutput(string Message)
@@ -190,12 +192,12 @@ namespace CxbxDebugger
             frm.DebugEvent("Debug string: " + Message);
         }
 
-        public override void OnCallstack(string[] Callstack)
+        public override void OnCallstack(DebuggerCallstack Callstack)
         {
-            // Placeholder display
-            foreach( string str in Callstack)
+            foreach( DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
-                frm.DebugEvent("Callstack: " + str);
+                var stackFrameStr = string.Format("{0:X8} and {1:X8}", (uint)StackFrame.BasePointer, (uint)StackFrame.CodeAddress);
+                frm.DebugEvent("Callstack: " + stackFrameStr);
             }
         }
     }
