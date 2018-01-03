@@ -94,6 +94,7 @@ typedef unsigned long       DWORD;
 typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
+typedef int                 INT;
 typedef long                INT_PTR;
 typedef signed __int64      LONGLONG;
 typedef unsigned __int64    ULONGLONG;

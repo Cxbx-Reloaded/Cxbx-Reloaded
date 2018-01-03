@@ -419,9 +419,9 @@ XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
 // ******************************************************************
 XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 (
-	IN PCHAR string,
-	IN SIZE_T count,
-	IN LPCCH format,
+	IN char *string,
+	IN size_t count,
+	IN const char *format,
 	...
 )
 {
@@ -430,8 +430,6 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 		LOG_FUNC_ARG(count)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
@@ -446,8 +444,8 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 (
-	IN PCHAR string,
-	IN LPCCH format,
+	IN char *string,
+	IN const char *format,
 	...
 )
 {
@@ -455,8 +453,6 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
@@ -471,9 +467,9 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 (
-	IN PCHAR string,
-	IN SIZE_T count,
-	IN LPCCH format,
+	IN char *string,
+	IN size_t count,
+	IN const char *format,
 	...
 )
 {
@@ -482,8 +478,6 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 		LOG_FUNC_ARG(count)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
@@ -498,8 +492,8 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 // ******************************************************************
 XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 (
-	IN PCHAR string,
-	IN LPCCH format,
+	IN char *string,
+	IN const char *format,
 	...
 )
 {
@@ -507,8 +501,6 @@ XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
-
-	// UNTESTED. Possible test-case : debugchannel.xbe
 
 	va_list ap;
 	va_start(ap, format);
