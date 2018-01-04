@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace CxbxDebugger
 {
@@ -23,10 +24,17 @@ namespace CxbxDebugger
             AddressMap = new Dictionary<uint, string>(Pairs.Length);
 
             // Swap SYMBOL, ADDR to be ADDR -> SYMBOL
+            uint Addr;
             foreach (KeyValuePair<string, string> Symbol in Pairs)
             {
-                uint Address = Convert.ToUInt32(Symbol.Value);
-                AddressMap.Add(Address, Symbol.Key);
+                if (!uint.TryParse(Symbol.Value, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out Addr))
+                    continue;
+
+                // See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/832
+                if (!AddressMap.ContainsKey(Addr))
+                {
+                    AddressMap.Add(Addr, Symbol.Key);
+                }
             }
 
             return true;
