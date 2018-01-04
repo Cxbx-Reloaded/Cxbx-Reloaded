@@ -102,6 +102,7 @@ DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
+bool g_IsWine = false;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
@@ -237,6 +238,9 @@ void RestoreExeImageHeader()
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
 
+typedef const char* (CDECL *LPFN_WINEGETVERSION)(void);
+LPFN_WINEGETVERSION wine_get_version;
+
 // Returns the Win32 error in string format. Returns an empty string if there is no error.
 std::string CxbxGetErrorCodeAsString(DWORD errorCode)
 {
@@ -303,7 +307,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
-	// Make sure memory.bin is at least 128 MB in size
+	// Make sure memory.bin is at least 128 MB in size		
 	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
 	SetEndOfFile(hFile);
 
@@ -357,14 +361,23 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
 
+	size_t tiledMemorySize = TILED_MEMORY_CHIHIRO_SIZE;
+	if (g_IsWine) {
+		printf("Wine detected: Using 64MB Tiled Memory Size\n");
+		// TODO: Figure out why Wine needs this and Windows doesn't.
+		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
+		tiledMemorySize = TILED_MEMORY_XBOX_SIZE;
+	}
+
 	// Map memory.bin contents into tiled memory too :
 	void *tiled_memory = (void *)MapViewOfFileEx(
 		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		TILED_MEMORY_CHIHIRO_SIZE,
+		FILE_MAP_READ | FILE_MAP_WRITE,
+				/* dwFileOffsetHigh */0,
+				/* dwFileOffsetLow */0,
+		tiledMemorySize,
 		(void *)TILED_MEMORY_BASE);
+
 	if (tiled_memory != (void *)TILED_MEMORY_BASE)
 	{
 		if (tiled_memory)
@@ -400,6 +413,37 @@ void CxbxPopupMessage(const char *message, ...)
 
 void PrintCurrentConfigurationLog()
 {
+	// Print environment information
+	{
+		// Get Windows Version
+		DWORD dwVersion = 0;
+		DWORD dwMajorVersion = 0;
+		DWORD dwMinorVersion = 0;
+		DWORD dwBuild = 0;
+
+		// TODO: GetVersion is deprecated but we use it anyway (for now)
+		// The correct solution is to use GetProductInfo but that function 
+		// requires more logic to parse the response, and I didn't feel
+		// like building it just yet :P
+		dwVersion = GetVersion();
+
+		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+		dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+
+		// Get the build number.
+		if (dwVersion < 0x80000000) {
+			dwBuild = (DWORD)(HIWORD(dwVersion));
+		}
+
+		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
+		if (g_IsWine) {
+			printf("Wine %s\n", wine_get_version());
+			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		} else {
+			printf("Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		}
+	}
+
 	// Print current LLE configuration
 	{
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
@@ -535,6 +579,16 @@ void CxbxKrnlMain(int argc, char* argv[])
 #endif
 	}
 
+	// Detect Wine
+	g_IsWine = false;
+	HMODULE hNtDll = GetModuleHandle("ntdll.dll");
+
+	if (hNtDll != nullptr) {
+		wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
+		if (wine_get_version) {
+			g_IsWine = true;
+		}
+	}
 	// Now we got the arguments, start by initializing the Xbox memory map :
 	// PrepareXBoxMemoryMap()
 	{
