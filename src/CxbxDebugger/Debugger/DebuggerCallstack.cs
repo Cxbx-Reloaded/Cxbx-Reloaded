@@ -1,20 +1,31 @@
-﻿using System;
+﻿// Written by x1nixmzeng for the Cxbx-Reloaded project
+//
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CxbxDebugger
 {
     public class DebuggerStackFrame
     {
-        public IntPtr BasePointer { get; }
-        public IntPtr CodeAddress { get; }
+        public IntPtr PC { get; }
+        public IntPtr Base { get; }
+        public IntPtr Stack { get; }
+        
+        // TOOD Resolve symbol for this frame
 
-        public DebuggerStackFrame(IntPtr Base, IntPtr CodeAddr)
+        public DebuggerStackFrame(IntPtr EIP, IntPtr EBP, IntPtr ESP)
         {
-            BasePointer = Base;
-            CodeAddress = CodeAddr;
+            PC = EIP;
+            Base = EBP;
+            Stack = ESP;
+        }
+
+        public DebuggerStackFrame(IntPtr EIP, IntPtr EBP)
+        {
+            PC = EIP;
+            Base = EBP;
+            Stack = IntPtr.Zero;
         }
     }
 
@@ -42,6 +53,7 @@ namespace CxbxDebugger
             }
         }
 
+        // TODO Rename this property
         public bool HasEnoughFrames
         {
             get

@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace CxbxDebugger.TheadHelpers
+namespace CxbxDebugger
 {
     [Flags]
     public enum ContextFlags : uint
@@ -263,5 +263,8 @@ namespace CxbxDebugger.TheadHelpers
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool SetThreadContext(IntPtr hThread, ref CONTEXT_x86 lpContext);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint GetThreadId(IntPtr hThread);
     }
 }

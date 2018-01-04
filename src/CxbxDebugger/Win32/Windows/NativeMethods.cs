@@ -15,6 +15,10 @@ namespace LowLevelDesign.Win32.Windows
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         // x1nix: added
+        [DllImport("kernel32.dll")]
+        public static extern uint GetProcessId(IntPtr hProcess);
+
+        // x1nix: added
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint GetFinalPathNameByHandleW(IntPtr hFile, IntPtr lpszFilePath, uint cchFilePath = 0u, uint dwFlags = 0u);
     }

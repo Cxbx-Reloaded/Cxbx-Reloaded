@@ -37,7 +37,7 @@ namespace CxbxDebugger
             SetDebugProcessActive(false);
 
             // TODO: Wait for user to start this?
-            StartDebugging();
+            //StartDebugging();
         }
 
         private void StartDebugging()
@@ -182,21 +182,37 @@ namespace CxbxDebugger
             frm.DebugEvent("Ended debugging session");
         }
 
+        public override void OnThreadCreate(DebuggerThread Thread)
+        {
+            frm.DebugEvent(string.Format("Thread created {0}", Thread.ThreadID));
+        }
+
+        public override void OnThreadExit(DebuggerThread Thread)
+        {
+            frm.DebugEvent(string.Format("Thread exited {0}", Thread.ThreadID));
+        }
+
         public override void OnModuleLoaded(DebuggerModule Module)
         {
-            frm.DebugEvent("Loading module: " + Module.Path);
+            frm.DebugEvent(string.Format("Loaded module \"{0}\"", Module.Path));
+        }
+
+        public override void OnModuleUnloaded(DebuggerModule Module)
+        {
+            frm.DebugEvent(string.Format("Unloaded module \"{0}\"", Module.Path));
         }
 
         public override void OnDebugOutput(string Message)
         {
-            frm.DebugEvent("Debug string: " + Message);
+            frm.DebugEvent(string.Format("OutputDebugString \"{0}\"", Message));
         }
 
+        // TODO Update DebuggerStackFrame to query symbols
         public override void OnCallstack(DebuggerCallstack Callstack)
         {
             foreach( DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
-                var stackFrameStr = string.Format("{0:X8} and {1:X8}", (uint)StackFrame.BasePointer, (uint)StackFrame.CodeAddress);
+                var stackFrameStr = string.Format("{0:X8} --> {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
                 frm.DebugEvent("Callstack: " + stackFrameStr);
             }
         }

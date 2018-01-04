@@ -5,10 +5,6 @@ namespace CxbxDebugger
 {
     public abstract class DebuggerEventListener
     {
-        public DebuggerEventListener()
-        {
-        }
-        
         public virtual void OnDebugStart() { }
         public virtual void OnDebugEnd() { }
 

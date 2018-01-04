@@ -65,7 +65,13 @@ namespace VsChromium.Core.Win32.Processes
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ReadProcessMemory(SafeProcessHandle hProcess, IntPtr lpBaseAddress,
-          [Out] byte[] buffer, uint size, out UInt32 lpNumberOfBytesRead);
+          [Out] byte[] buffer, uint size, out uint lpNumberOfBytesRead);
+
+        // x1nix: added
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress,
+          [Out] byte[] buffer, uint size, out uint lpNumberOfBytesRead);
 
         [DllImport("ntdll.dll", SetLastError = true)]
         public static extern int NtQueryInformationProcess(SafeProcessHandle hProcess, ProcessInfoClass pic, ref ProcessBasicInformation pbi, int cb, out int pSize);

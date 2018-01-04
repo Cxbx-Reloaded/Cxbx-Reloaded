@@ -7,11 +7,10 @@ using System.Text;
 using WinProcesses = VsChromium.Core.Win32.Processes;
 using WinDebug = VsChromium.Core.Win32.Debugging;
 using System.Runtime.InteropServices;
-using CxbxDebugger.TheadHelpers;
 
 namespace CxbxDebugger
 {
-    public class Debugger : IDisposable
+    public class Debugger : DebuggerEventListener, IDisposable
     {
         enum RunState
         {
@@ -31,29 +30,31 @@ namespace CxbxDebugger
         string[] args = new string[] { };
 
         RunState State = RunState.NotLaunched;
-
-        List<DebuggerModule> ModuleList = new List<DebuggerModule>();
-        List<DebuggerThread> ThreadList = new List<DebuggerThread>();
-        List<DebuggerProcess> ProcessList = new List<DebuggerProcess>();
         
+        DebuggerInstance DebugInstance;
+
         List<DebuggerEventListener> EventListeners = new List<DebuggerEventListener>();
 
-        CONTEXT_x86 lastReadCtxt = new CONTEXT_x86
+        DebuggerSymbolServer SymbolSrv;
+
+        private void Init()
         {
-            ContextFlags =
-                ContextFlags.CONTEXT_i386 |
-                ContextFlags.CONTEXT_CONTROL |
-                ContextFlags.CONTEXT_INTEGER |
-                ContextFlags.CONTEXT_SEGMENTS
-        };
-        
+            DebugInstance = null;
+
+            SymbolSrv = new DebuggerSymbolServer();
+            
+            RegisterEventListener(this);
+        }
+
         public Debugger()
         {
-            // 
+            Init();
         }
 
         public Debugger(string[] x_args)
         {
+            Init();
+
             if (x_args == null)
                 return;
 
@@ -82,20 +83,17 @@ namespace CxbxDebugger
 
         public void Break()
         {
-            // This will ONLY suspend the main process
-            // Not ideal if there are multiple processes in play
-
-            if (!hThread.IsInvalid)
+            if (DebugInstance != null)
             {
-                WinProcesses.NativeMethods.SuspendThread(hThread.DangerousGetHandle());
+                DebugInstance.MainProcess.Suspend();
             }
         }
 
         public void Resume()
         {
-            if (!hThread.IsInvalid)
+            if (DebugInstance != null)
             {
-                WinProcesses.NativeMethods.ResumeThread(hThread.DangerousGetHandle());
+                DebugInstance.MainProcess.Resume();
             }
         }
 
@@ -109,6 +107,26 @@ namespace CxbxDebugger
             }
 
             return false;
+        }
+
+        static string CxbxDebuggerPrefix = "CxbxDebugger! ";
+
+
+        public override void OnDebugOutput(string Message)
+        {
+            if (Message.StartsWith(CxbxDebuggerPrefix))
+            {
+                SetupHLECacheProvider(Message.Substring(CxbxDebuggerPrefix.Length));
+            }
+        }
+
+        private void SetupHLECacheProvider(string Filename)
+        {
+            var Provider = new HLECacheProvider();
+            if( Provider.Load(Filename) )
+            {
+                SymbolSrv.RegisterProvider(Provider);
+            }
         }
 
         public bool Launch()
@@ -137,8 +155,27 @@ namespace CxbxDebugger
             if (bRet == true)
             {
                 // Store these so they can be marshalled, and closed correctly
+                // TODO Move to Debugger* classes
                 hProcess = new WinProcesses.SafeProcessHandle(stProcessInfo.hProcess);
                 hThread = new WinProcesses.SafeThreadHandle(stProcessInfo.hThread);
+
+                var Process = new DebuggerProcess();
+                
+                Process.Handle = stProcessInfo.hProcess;
+                Process.ProcessID = (uint)stProcessInfo.dwProcessId;
+
+                var Thread = new DebuggerThread(Process);
+
+                Thread.Handle = stProcessInfo.hThread;
+                Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
+
+                Process.Threads.Add(Thread);
+                Process.MainThread = Thread;
+
+                DebugInstance = new DebuggerInstance(Process);
+
+                // Register the instance to track thread creation
+                RegisterEventListener(DebugInstance);
 
                 State = RunState.Running;
             }
@@ -173,8 +210,10 @@ namespace CxbxDebugger
 
         private string ReadProcessString(IntPtr NamePtr, uint Length, bool Unicode)
         {
+            string resultStr = "";
+
             if (Length == 0 || Length > 512)
-                return "";
+                return resultStr;
 
             byte[] buffer = new byte[Length];
             
@@ -193,15 +232,18 @@ namespace CxbxDebugger
                 // FIXME Questionable Unicode support here
                 if (Unicode)
                 {
-                    return Encoding.Unicode.GetString(buffer, 0, (int)numRead);
+                    resultStr = Encoding.Unicode.GetString(buffer, 0, (int)numRead);
                 }
                 else
-                { 
-                    return Encoding.ASCII.GetString(buffer, 0, (int)numRead);
+                {
+                    // TODO Investigate why the read length includes the nul-terminator
+                    if (numRead > 1) --numRead;
+
+                    resultStr = Encoding.ASCII.GetString(buffer, 0, (int)numRead);
                 }
             }
 
-            return "";
+            return resultStr;
         }
 
         private uint GetMemory(IntPtr addr)
@@ -223,61 +265,46 @@ namespace CxbxDebugger
             return BitConverter.ToUInt32(buffer, 0);
         }
 
-        private void BuildCallstack()
+        private void HandleCreateThread(WinDebug.DEBUG_EVENT DebugEvent)
         {
-            // Skip if we have nothing to report to
-            if (EventListeners.Count == 0)
-                return;
+            var DebugInfo = DebugEvent.CreateThread;
 
-            bool Result = NativeMethods.GetThreadContext(hThread.DangerousGetHandle(), ref lastReadCtxt);
-            if (!Result)
-            {
-                // TODO: Handle this
-                return;
-            }
+            var Thread = new DebuggerThread(DebugInstance.MainProcess);
 
-            var ebp = lastReadCtxt.ebp;
-
-            var Callstack = new DebuggerCallstack();
-            Callstack.AddFrame(new DebuggerStackFrame(new IntPtr(ebp), new IntPtr(lastReadCtxt.eip)));
-            
-            do
-            {
-                var ReturnAddr = GetMemory(new IntPtr(ebp + 4));
-                ebp = GetMemory(new IntPtr(ebp));
-
-                if (ebp == 0 || ReturnAddr == ebp)
-                    break;
-
-                Callstack.AddFrame(new DebuggerStackFrame(new IntPtr(ebp), new IntPtr(ReturnAddr)));
-            }
-            while (!Callstack.HasEnoughFrames);
+            Thread.Handle = DebugInfo.hThread;
+            Thread.ThreadID = Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
 
             foreach (DebuggerEventListener EvtListener in EventListeners)
             {
-                EvtListener.OnCallstack(Callstack);
+                EvtListener.OnThreadCreate(Thread);
+            }
+        }
+        
+        private void HandleExitThread(WinDebug.DEBUG_EVENT DebugEvent)
+        {
+            var DebugInfo = DebugEvent.ExitThread;
+            
+            var TargetThread = DebugInstance.MainProcess.Threads.Find(Thread => Thread.ThreadID == DebugEvent.dwThreadId);
+            //uint ExitCode = DebugInfo.dwExitCode;
+
+            if (TargetThread != null)
+            {
+                foreach (DebuggerEventListener EvtListener in EventListeners)
+                {
+                    EvtListener.OnThreadExit(TargetThread);
+                }
             }
         }
 
         private void HandleCreateProcess(WinDebug.DEBUG_EVENT DebugEvent)
         {
-            // TODO Investigate why this is throwing an exception converting to this type
-            //var DebugInfo = DebugEvent.CreateProcessInfo;
-            
-            var Process = new DebuggerProcess();
+            var DebugInfo = DebugEvent.CreateProcessInfo;
 
-            //DebugInfo.hFile
-            //DebugInfo.hProcess
-            //DebugInfo.hThread
-
-            //DebugInfo.lpBaseOfImage
-            //DebugInfo.lpStartAddress
-
-            ProcessList.Add(Process);
+            // Stub
 
             foreach (DebuggerEventListener EvtListener in EventListeners)
             {
-                EvtListener.OnProcessCreate(Process);
+                EvtListener.OnProcessCreate(null);
             }
         }
 
@@ -285,7 +312,7 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.ExitProcess;
 
-            //DebugInfo.dwExitCode
+            // Stub
 
             foreach (DebuggerEventListener EvtListener in EventListeners)
             {
@@ -300,8 +327,7 @@ namespace CxbxDebugger
             var Module = new DebuggerModule();
             
             Module.Path = ResolveProcessPath(DebugInfo.hFile);
-
-            ModuleList.Add(Module);
+            Module.ImageBase = DebugInfo.lpBaseOfDll;
 
             foreach (DebuggerEventListener EvtListener in EventListeners)
             {
@@ -313,11 +339,14 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.UnloadDll;
 
-            //DebugInfo.lpBaseOfDll
+            var TargetModule = DebugInstance.MainProcess.Modules.Find(Module => Module.ImageBase == DebugInfo.lpBaseOfDll);
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            if (TargetModule != null)
             {
-                EvtListener.OnModuleUnloaded(null);
+                foreach (DebuggerEventListener EvtListener in EventListeners)
+                {
+                    EvtListener.OnModuleUnloaded(TargetModule);
+                }
             }
         }
 
@@ -335,7 +364,7 @@ namespace CxbxDebugger
         
         public void Run()
         {
-            WinDebug.DEBUG_EVENT DbgEvt;
+            WinDebug.DEBUG_EVENT DbgEvt = new WinDebug.DEBUG_EVENT();
             
             WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
             bool bContinue = true;
@@ -353,9 +382,29 @@ namespace CxbxDebugger
 
                 switch (DbgEvt.dwDebugEventCode)
                 {
+                    case WinDebug.DEBUG_EVENT_CODE.EXCEPTION_DEBUG_EVENT:
+                        {
+                            // TODO: Handle
+                        }
+                        break;
+
+                    case WinDebug.DEBUG_EVENT_CODE.CREATE_THREAD_DEBUG_EVENT:
+                        {
+                            HandleCreateThread(DbgEvt);
+                        }
+                        break;
+
                     case WinDebug.DEBUG_EVENT_CODE.CREATE_PROCESS_DEBUG_EVENT:
                         {
+                            // TODO: Limit support for multiple processes
                             HandleCreateProcess(DbgEvt);
+                        }
+                        break;
+
+
+                    case WinDebug.DEBUG_EVENT_CODE.EXIT_THREAD_DEBUG_EVENT:
+                        {
+                            HandleExitThread(DbgEvt);
                         }
                         break;
 
@@ -363,7 +412,7 @@ namespace CxbxDebugger
                         {
                             HandleExitProcess(DbgEvt);
 
-                            // XX temp
+                            // XX Temporary
                             bContinue = false;
                         }
                         break;
@@ -371,29 +420,24 @@ namespace CxbxDebugger
                     case WinDebug.DEBUG_EVENT_CODE.LOAD_DLL_DEBUG_EVENT:
                         {
                             HandleLoadDll(DbgEvt);
-                            
                         }
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.UNLOAD_DLL_DEBUG_EVENT:
                         {
                             HandleUnloadDll(DbgEvt);
-                            
                         }
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.OUTPUT_DEBUG_STRING_EVENT:
                         {
                             HandleOutputDebugString(DbgEvt);
-                            
                         }
                         break;
 
-                    case WinDebug.DEBUG_EVENT_CODE.EXCEPTION_DEBUG_EVENT:
+                    case WinDebug.DEBUG_EVENT_CODE.RIP_EVENT:
                         {
-                            // TODO: Handle properly
-
-                            BuildCallstack();
+                            // TODO: Handle
                         }
                         break;
                 }
