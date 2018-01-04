@@ -49,6 +49,20 @@ processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
+	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
+	typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+	BOOL bIsWow64 = FALSE;
+	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+	if (fnIsWow64Process != nullptr) {
+		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+	}
+	
+	if (bIsWow64 == FALSE) {
+		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded", MB_OK);
+		return 1;
+	}
+
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
 	{

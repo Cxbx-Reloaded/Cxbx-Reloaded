@@ -303,10 +303,6 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
-	// Make sure memory.bin is at least 128 MB in size
-	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
-	SetEndOfFile(hFile);
-
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
@@ -357,22 +353,6 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
 
-	// Map memory.bin contents into tiled memory too :
-	void *tiled_memory = (void *)MapViewOfFileEx(
-		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		TILED_MEMORY_CHIHIRO_SIZE,
-		(void *)TILED_MEMORY_BASE);
-	if (tiled_memory != (void *)TILED_MEMORY_BASE)
-	{
-		if (tiled_memory)
-			UnmapViewOfFile(tiled_memory);
-
-		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!");
-		return nullptr;
-	}
 	
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
@@ -400,6 +380,50 @@ void CxbxPopupMessage(const char *message, ...)
 
 void PrintCurrentConfigurationLog()
 {
+	// Print environment information
+	{
+		// Get Windows Version
+		DWORD dwVersion = 0;
+		DWORD dwMajorVersion = 0;
+		DWORD dwMinorVersion = 0;
+		DWORD dwBuild = 0;
+
+		// TODO: GetVersion is deprecated but we use it anyway (for now)
+		// The correct solution is to use GetProductInfo but that function 
+		// requires more logic to parse the response, and I didn't feel
+		// like building it just yet :P
+		dwVersion = GetVersion();
+
+		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+		dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+
+		// Get the build number.
+		if (dwVersion < 0x80000000) {
+			dwBuild = (DWORD)(HIWORD(dwVersion));
+		}
+
+		// Detect Wine
+		bool isWine = false;
+		typedef const char* (CDECL *LPFN_WINEGETVERSION)(void);
+		LPFN_WINEGETVERSION wine_get_version;
+		HMODULE hNtDll = GetModuleHandle("ntdll.dll");
+		
+		if (hNtDll != nullptr) {
+			wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
+			if (wine_get_version)	{
+				isWine = true;
+			}
+		}
+
+		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
+		if (isWine) {
+			printf("Wine %s\n", wine_get_version());
+			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		} else {
+			printf("Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		}
+	}
+
 	// Print current LLE configuration
 	{
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
