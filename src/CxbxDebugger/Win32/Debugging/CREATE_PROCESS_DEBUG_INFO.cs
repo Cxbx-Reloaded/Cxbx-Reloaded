@@ -11,7 +11,8 @@ namespace VsChromium.Core.Win32.Debugging {
     public uint dwDebugInfoFileOffset;
     public uint nDebugInfoSize;
     public IntPtr lpThreadLocalBase;
-    public PTHREAD_START_ROUTINE lpStartAddress;
+    // x1nix: Alignment fix, as PTHREAD_START_ROUTINE is failing to Marshal
+    public IntPtr lpStartAddress;
     public IntPtr lpImageName;
     public ushort fUnicode;
   }

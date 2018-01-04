@@ -6,6 +6,7 @@ namespace VsChromium.Core.Win32.Debugging {
   public struct CREATE_THREAD_DEBUG_INFO {
     public IntPtr hThread;
     public IntPtr lpThreadLocalBase;
-    public PTHREAD_START_ROUTINE lpStartAddress;
+    // x1nix: Alignment fix, as PTHREAD_START_ROUTINE is failing to Marshal
+    public IntPtr lpStartAddress;
   }
 }
