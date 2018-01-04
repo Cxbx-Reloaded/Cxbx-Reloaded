@@ -41,7 +41,7 @@
             this.btnRestart.Name = "btnRestart";
             this.btnRestart.Size = new System.Drawing.Size(63, 23);
             this.btnRestart.TabIndex = 0;
-            this.btnRestart.Text = "Restart Session";
+            this.btnRestart.Text = "Start";
             this.btnRestart.UseVisualStyleBackColor = true;
             this.btnRestart.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -51,7 +51,7 @@
             this.btnSuspend.Name = "btnSuspend";
             this.btnSuspend.Size = new System.Drawing.Size(63, 23);
             this.btnSuspend.TabIndex = 1;
-            this.btnSuspend.Text = "Suspend";
+            this.btnSuspend.Text = "Pause";
             this.btnSuspend.UseVisualStyleBackColor = true;
             this.btnSuspend.Click += new System.EventHandler(this.button2_Click);
             // 
