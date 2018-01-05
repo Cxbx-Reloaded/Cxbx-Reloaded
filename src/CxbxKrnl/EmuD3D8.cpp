@@ -5211,7 +5211,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
                 DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
-                if(dwSize == -1)
+                if(dwSize == 0)
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
@@ -5275,7 +5275,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
                 DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
-                if(dwSize == -1)
+                if(dwSize == 0)
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Push buffer allocation size unknown");
