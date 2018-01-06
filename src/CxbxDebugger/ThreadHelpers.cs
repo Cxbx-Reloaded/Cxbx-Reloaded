@@ -255,6 +255,131 @@ namespace CxbxDebugger
         public byte[] ExtendedRegisters;
     }
 
+    /// <summary>
+    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa363082(v=vs.85).aspx
+    /// </summary>
+    public enum ExceptionCode : uint
+    {
+        None = 0,
+        /// <summary>
+        /// The thread tried to read from or write to a virtual address for which it does not have the appropriate access.
+        /// </summary>
+        AccessViolation = 0xC0000005,
+        /// <summary>
+        /// The thread tried to access an array element that is out of bounds and the underlying hardware supports bounds checking.
+        /// </summary>
+        DataTypeMisalignment = 0x80000002,
+        /// <summary>
+        /// A breakpoint was encountered.
+        /// </summary>
+        Breakpoint = 0x80000003,
+        /// <summary>
+        /// A trace trap or other single-instruction mechanism signaled that one instruction has been executed.
+        /// </summary>
+        SingleStep = 0x80000004,
+        /// <summary>
+        /// The thread tried to read or write data that is misaligned on hardware that does not provide alignment. For example, 16-bit values must be aligned on 2-byte boundaries; 32-bit values on 4-byte boundaries, and so on.
+        /// </summary>
+        ArrayBoundsExceeded = 0xC000008C,
+        /// <summary>
+        /// One of the operands in a floating-point operation is denormal. A denormal value is one that is too small to represent as a standard floating-point value.
+        /// </summary>
+        Float_DenormalOperand = 0xC000008D,
+        /// <summary>
+        /// The thread tried to divide a floating-point value by a floating-point divisor of zero.
+        /// </summary>
+        Float_DivideByZero = 0xC000008E,
+        /// <summary>
+        /// The result of a floating-point operation cannot be represented exactly as a decimal fraction.
+        /// </summary>
+        Float_InexactResult = 0xC000008F,
+        /// <summary>
+        /// This exception represents any floating-point exception not included in this enumeration.
+        /// </summary>
+        Float_InvalidOperation = 0xC0000090,
+        /// <summary>
+        /// The exponent of a floating-point operation is greater than the magnitude allowed by the corresponding type.
+        /// </summary>
+        Float_Overflow = 0xC0000091,
+        /// <summary>
+        /// The stack overflowed or underflowed as the result of a floating-point operation.
+        /// </summary>
+        Float_StackCheck = 0xC0000092,
+        /// <summary>
+        /// The exponent of a floating-point operation is less than the magnitude allowed by the corresponding type.
+        /// </summary>
+        Float_Underflow = 0xC0000093,
+        /// <summary>
+        /// The thread tried to divide an integer value by an integer divisor of zero.
+        /// </summary>
+        Integer_DivideByZero = 0xC0000094,
+        /// <summary>
+        /// The result of an integer operation caused a carry out of the most significant bit of the result.
+        /// </summary>
+        Integer_Overflow = 0xC0000095,
+        /// <summary>
+        /// The thread tried to execute an instruction whose operation is not allowed in the current machine mode.
+        /// </summary>
+        PrivilegedInstruction = 0xC0000096,
+        /// <summary>
+        /// The thread tried to access a page that was not present, and the system was unable to load the page. For example, this exception might occur if a network connection is lost while running a program over the network.
+        /// </summary>
+        InPageError = 0xC0000006,
+        /// <summary>
+        /// The thread tried to execute an invalid instruction.
+        /// </summary>
+        IllegalInstruction = 0xC000001D,
+        /// <summary>
+        /// The thread tried to continue execution after a noncontinuable exception occurred.
+        /// </summary>
+        NoncontinuableException = 0xC0000025,
+        /// <summary>
+        /// The thread used up its stack.
+        /// </summary>
+        StackOverflow = 0xC00000FD,
+        /// <summary>
+        /// An exception handler returned an invalid disposition to the exception dispatcher.
+        /// Programmers using a high-level language such as C should never encounter this exception.
+        /// </summary>
+        InvalidDisposition = 0xC0000026,
+        /// <summary>
+        /// 
+        /// </summary>
+        GuardPageViolation = 0x80000001,
+        /// <summary>
+        /// 
+        /// </summary>
+        InvalidHandle = 0xC0000008,
+        /// <summary>
+        /// The DBG_CONTROL_C exception code occurs when CTRL+C is input to a console process that handles CTRL+C signals and is being debugged. This exception code is not meant to be handled by applications. It is raised only for the benefit of the debugger, and is raised only when a debugger is attached to the console process.
+        /// </summary>
+        CtrlC = 0x40010005,
+        /// <summary>
+        /// Will contain 1 parameter: the address to the thrown exception object.
+        /// See druntime\src\rt\deh.d
+        /// </summary>
+        DigitalMarsDException = 0xE0440001,
+    }
+
+    public enum RipType : uint
+    {
+        /// <summary>
+        /// Indicates that invalid data was passed to the function that failed. This caused the application to fail.
+        /// </summary>
+        SLE_ERROR = 1u,
+        /// <summary>
+        /// Indicates that invalid data was passed to the function, but the error probably will not cause the application to fail.
+        /// </summary>
+        SLE_MINORERROR = 2u,
+        /// <summary>
+        /// Indicates that potentially invalid data was passed to the function, but the function completed processing.
+        /// </summary>
+        SLE_WARNING = 3u,
+        /// <summary>
+        /// Indicates that only dwError was set.
+        /// </summary>
+        None = 0u,
+    }
 
     public static class NativeMethods
     {

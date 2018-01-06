@@ -36,4 +36,9 @@ namespace CxbxDebugger
     {
         void OnDebugOutput(string Message);
     }
+
+    public interface IDebuggerExceptionEvents
+    {
+        void OnAccessViolation();
+    }
 }

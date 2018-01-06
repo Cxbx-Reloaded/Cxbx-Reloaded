@@ -39,6 +39,7 @@ namespace CxbxDebugger
         List<IDebuggerModuleEvents> ModuleEvents = new List<IDebuggerModuleEvents>();
         List<IDebuggerCallstackEvents> CallstackEvents = new List<IDebuggerCallstackEvents>();
         List<IDebuggerOutputEvents> OutputEvents = new List<IDebuggerOutputEvents>();
+        List<IDebuggerExceptionEvents> ExceptionEvents = new List<IDebuggerExceptionEvents>();
 
         DebuggerSymbolServer SymbolSrv;
 
@@ -121,12 +122,12 @@ namespace CxbxDebugger
             {
                 string Payload = Message.Substring(CxbxDebuggerPrefix.Length);
 
-                //if (Payload.StartsWith("IoCreateFile@"))
-                //{
-                //    Payload = Payload.Substring("IoCreateFile@".Length);
-                //    // TODO: Something with payload
-                //}
-                //else
+                if (Payload.StartsWith("IoCreateFile@"))
+                {
+                    Payload = Payload.Substring("IoCreateFile@".Length);
+                    // TODO: Something with payload
+                }
+                else
                 {
                     SetupHLECacheProvider(Payload);
                 }
@@ -379,7 +380,37 @@ namespace CxbxDebugger
                 Event.OnDebugOutput(debugString);
             }
         }
-        
+
+        private void HandleException(WinDebug.DEBUG_EVENT DebugEvent)
+        {
+            var DebugInfo = DebugEvent.Exception;
+
+            switch ((ExceptionCode)DebugInfo.ExceptionRecord.ExceptionCode)
+            {
+                case ExceptionCode.AccessViolation:
+                    
+                    // Pauses execution
+                    Break();
+
+                    foreach(IDebuggerExceptionEvents Event in ExceptionEvents)
+                    {
+                        Event.OnAccessViolation();
+                    }
+
+                    break;
+
+                case ExceptionCode.Breakpoint:
+                    // TODO Handle
+                    break;
+
+                case ExceptionCode.SingleStep:
+                    // TODO Handle
+                    break;
+            }
+            
+            // hmm!!
+        }
+
         public void Run()
         {
             WinDebug.DEBUG_EVENT DbgEvt = new WinDebug.DEBUG_EVENT();
@@ -401,62 +432,43 @@ namespace CxbxDebugger
                 switch (DbgEvt.dwDebugEventCode)
                 {
                     case WinDebug.DEBUG_EVENT_CODE.EXCEPTION_DEBUG_EVENT:
-                        {
-                            // TODO: Handle
-                        }
+                        HandleException(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.CREATE_THREAD_DEBUG_EVENT:
-                        {
-                            HandleCreateThread(DbgEvt);
-                        }
+                        HandleCreateThread(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.CREATE_PROCESS_DEBUG_EVENT:
-                        {
-                            // TODO: Limit support for multiple processes
-                            HandleCreateProcess(DbgEvt);
-                        }
+                        // TODO: Limit support for multiple processes
+                        HandleCreateProcess(DbgEvt);
                         break;
-
-
+                        
                     case WinDebug.DEBUG_EVENT_CODE.EXIT_THREAD_DEBUG_EVENT:
-                        {
-                            HandleExitThread(DbgEvt);
-                        }
+                        HandleExitThread(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.EXIT_PROCESS_DEBUG_EVENT:
-                        {
-                            HandleExitProcess(DbgEvt);
+                        HandleExitProcess(DbgEvt);
 
-                            // XX Temporary
-                            bContinue = false;
-                        }
+                        // XX Temporary
+                        bContinue = false;
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.LOAD_DLL_DEBUG_EVENT:
-                        {
-                            HandleLoadDll(DbgEvt);
-                        }
+                        HandleLoadDll(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.UNLOAD_DLL_DEBUG_EVENT:
-                        {
-                            HandleUnloadDll(DbgEvt);
-                        }
+                        HandleUnloadDll(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.OUTPUT_DEBUG_STRING_EVENT:
-                        {
-                            HandleOutputDebugString(DbgEvt);
-                        }
+                        HandleOutputDebugString(DbgEvt);
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.RIP_EVENT:
-                        {
-                            // TODO: Handle
-                        }
+                        // TODO: Handle
                         break;
                 }
 
@@ -490,6 +502,9 @@ namespace CxbxDebugger
 
             IDebuggerOutputEvents OutputListener = EventClass as IDebuggerOutputEvents;
             if (OutputListener != null) OutputEvents.Add(OutputListener);
+
+            IDebuggerExceptionEvents ExceptionListener = EventClass as IDebuggerExceptionEvents;
+            if (ExceptionListener != null) ExceptionEvents.Add(ExceptionListener);
         }
     }
 }

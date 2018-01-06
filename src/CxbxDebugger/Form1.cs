@@ -191,7 +191,7 @@ namespace CxbxDebugger
             lbConsole.Items.Clear();
         }
 
-        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerCallstackEvents
+        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerCallstackEvents, IDebuggerExceptionEvents
         {
             Form1 frm;
 
@@ -283,6 +283,11 @@ namespace CxbxDebugger
                     var stackFrameStr = string.Format("{0:X8} --> {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
                     frm.DebugEvent("Callstack: " + stackFrameStr);
                 }
+            }
+
+            public void OnAccessViolation()
+            {
+                frm.DebugEvent("Access violation exception occured");
             }
         }
     }
