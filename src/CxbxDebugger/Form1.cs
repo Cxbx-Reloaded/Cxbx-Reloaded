@@ -14,14 +14,19 @@ namespace CxbxDebugger
         Debugger DebuggerInst;
         string[] CachedArgs;
 
+        DebuggerFormEvents DebugEvents;
+
+        List<DebuggerThread> DebugThreads = new List<DebuggerThread>();
+
         public Form1()
         {
             InitializeComponent();
-            
+
             string[] args = Environment.GetCommandLineArgs();
 
             // Arguments are expected before the Form is created
-            if (args.Length < 2 ) {
+            if (args.Length < 2)
+            {
                 throw new Exception("Incorrect usage");
             }
 
@@ -33,6 +38,8 @@ namespace CxbxDebugger
             }
 
             CachedArgs = items.ToArray();
+
+            DebugEvents = new DebuggerFormEvents(this);
 
             SetDebugProcessActive(false);
 
@@ -59,7 +66,7 @@ namespace CxbxDebugger
             {
                 // Create debugger instance
                 DebuggerInst = new Debugger(CachedArgs);
-                DebuggerInst.RegisterEventListener(new DebuggerFormEvents(this));
+                DebuggerInst.RegisterEventInterfaces(DebugEvents);
 
                 // Setup new debugger thread
                 DebuggerWorkerThread = new Thread(x =>
@@ -80,11 +87,35 @@ namespace CxbxDebugger
             StartDebugging();
         }
 
+        private void PopulateThreadList()
+        {
+            comboBox1.Items.Clear();
+
+            foreach (DebuggerThread Thread in DebugThreads)
+            {
+                bool IsMainThread = (Thread.Handle == Thread.OwningProcess.MainThread.Handle);
+                string DisplayStr = "";
+
+                if( IsMainThread )
+                {
+                    DisplayStr = string.Format("> [{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
+                }
+                else
+                {
+                    DisplayStr = string.Format("[{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
+                }
+
+                comboBox1.Items.Add(DisplayStr);
+            }
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
             if (DebuggerInst != null)
             {
                 DebuggerInst.Break();
+
+                PopulateThreadList();
             }
         }
 
@@ -106,17 +137,17 @@ namespace CxbxDebugger
                 }
             }
 
-            if(DebuggerInst!= null)
+            if (DebuggerInst != null)
             {
                 DebuggerInst.Dispose();
             }
         }
 
-        public void DebugEvent(string Message)
+        private void DebugEvent(string Message)
         {
             string MessageStamped = string.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), Message);
 
-            if ( lbConsole.InvokeRequired )
+            if (lbConsole.InvokeRequired)
             {
                 // Ensure we Add items on the right thread
                 lbConsole.Invoke(new MethodInvoker(delegate ()
@@ -130,7 +161,7 @@ namespace CxbxDebugger
             }
         }
 
-        public void SetDebugProcessActive(bool Active)
+        private void SetDebugProcessActive(bool Active)
         {
             if (btnRestart.InvokeRequired)
             {
@@ -159,61 +190,99 @@ namespace CxbxDebugger
         {
             lbConsole.Items.Clear();
         }
-    }
 
-    class DebuggerFormEvents : DebuggerEventListener
-    {
-        readonly Form1 frm;
-
-        public DebuggerFormEvents(Form1 main)
+        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerCallstackEvents
         {
-            frm = main;
-        }
+            Form1 frm;
 
-        public override void OnDebugStart()
-        {
-            frm.SetDebugProcessActive(true);
-            frm.DebugEvent("Started debugging session");
-        }
-
-        public override void OnDebugEnd()
-        {
-            frm.SetDebugProcessActive(false);
-            frm.DebugEvent("Ended debugging session");
-        }
-
-        public override void OnThreadCreate(DebuggerThread Thread)
-        {
-            frm.DebugEvent(string.Format("Thread created {0}", Thread.ThreadID));
-        }
-
-        public override void OnThreadExit(DebuggerThread Thread)
-        {
-            frm.DebugEvent(string.Format("Thread exited {0}", Thread.ThreadID));
-        }
-
-        public override void OnModuleLoaded(DebuggerModule Module)
-        {
-            frm.DebugEvent(string.Format("Loaded module \"{0}\"", Module.Path));
-        }
-
-        public override void OnModuleUnloaded(DebuggerModule Module)
-        {
-            frm.DebugEvent(string.Format("Unloaded module \"{0}\"", Module.Path));
-        }
-
-        public override void OnDebugOutput(string Message)
-        {
-            frm.DebugEvent(string.Format("OutputDebugString \"{0}\"", Message));
-        }
-
-        // TODO Update DebuggerStackFrame to query symbols
-        public override void OnCallstack(DebuggerCallstack Callstack)
-        {
-            foreach( DebuggerStackFrame StackFrame in Callstack.StackFrames)
+            public DebuggerFormEvents(Form1 main)
             {
-                var stackFrameStr = string.Format("{0:X8} --> {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
-                frm.DebugEvent("Callstack: " + stackFrameStr);
+                frm = main;
+            }
+
+            private string PrettyExitCode(uint ExitCode)
+            {
+                string ExitCodeString;
+
+                switch (ExitCode)
+                {
+                    case 0:
+                        ExitCodeString = "Finished";
+                        break;
+
+                    case 0xC000013A:
+                        // Actual code is STATUS_CONTROL_C_EXIT, but isn't very friendly
+                        ExitCodeString = "Debug session ended";
+                        break;
+
+                    default:
+                        ExitCodeString = string.Format("{0:X8}", ExitCode);
+                        break;
+                }
+
+                return ExitCodeString;
+            }
+
+            public void OnProcessCreate(DebuggerProcess Process)
+            {
+                // !
+            }
+
+            public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
+            {
+                int remainingThreads = Process.Threads.Count;
+
+                frm.DebugEvent(string.Format("Process exited {0} ({1})", Process.ProcessID, PrettyExitCode(ExitCode)));
+                frm.DebugEvent(string.Format("{0} thread(s) remain open", remainingThreads));
+            }
+
+            public void OnDebugStart()
+            {
+                frm.SetDebugProcessActive(true);
+                frm.DebugEvent("Started debugging session");
+            }
+
+            public void OnDebugEnd()
+            {
+                frm.SetDebugProcessActive(false);
+                frm.DebugEvent("Ended debugging session");
+            }
+
+            public void OnThreadCreate(DebuggerThread Thread)
+            {
+                frm.DebugEvent(string.Format("Thread created {0}", Thread.ThreadID));
+                frm.DebugThreads.Add(Thread);
+            }
+
+            public void OnThreadExit(DebuggerThread Thread, uint ExitCode)
+            {
+                frm.DebugEvent(string.Format("Thread exited {0} ({1})", Thread.ThreadID, PrettyExitCode(ExitCode)));
+                frm.DebugThreads.Remove(Thread);
+            }
+
+            public void OnModuleLoaded(DebuggerModule Module)
+            {
+                frm.DebugEvent(string.Format("Loaded module \"{0}\"", Module.Path));
+            }
+
+            public void OnModuleUnloaded(DebuggerModule Module)
+            {
+                frm.DebugEvent(string.Format("Unloaded module \"{0}\"", Module.Path));
+            }
+
+            public void OnDebugOutput(string Message)
+            {
+                frm.DebugEvent(string.Format("OutputDebugString \"{0}\"", Message));
+            }
+
+            // TODO Update DebuggerStackFrame to query symbols
+            public void OnCallstack(DebuggerCallstack Callstack)
+            {
+                foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
+                {
+                    var stackFrameStr = string.Format("{0:X8} --> {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
+                    frm.DebugEvent("Callstack: " + stackFrameStr);
+                }
             }
         }
     }

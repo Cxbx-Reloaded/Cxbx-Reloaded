@@ -64,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Debugger\Debugger.cs" />
-    <Compile Include="Debugger\DebuggerEventListener.cs" />
+    <Compile Include="Debugger\DebuggerEventInterfaces.cs" />
     <Compile Include="Debugger\DebuggerInstance.cs" />
     <Compile Include="Debugger\DebuggerModule.cs" />
     <Compile Include="Debugger\DebuggerProcess.cs" />

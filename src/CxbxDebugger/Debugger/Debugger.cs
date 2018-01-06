@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace CxbxDebugger
 {
-    public class Debugger : DebuggerEventListener, IDisposable
+    public class Debugger : IDebuggerOutputEvents, IDisposable
     {
         enum RunState
         {
@@ -33,7 +33,12 @@ namespace CxbxDebugger
         
         DebuggerInstance DebugInstance;
 
-        List<DebuggerEventListener> EventListeners = new List<DebuggerEventListener>();
+        List<IDebuggerGeneralEvents> GeneralEvents = new List<IDebuggerGeneralEvents>();
+        List<IDebuggerProcessEvents> ProcessEvents = new List<IDebuggerProcessEvents>();
+        List<IDebuggerThreadEvents> ThreadEvents = new List<IDebuggerThreadEvents>();
+        List<IDebuggerModuleEvents> ModuleEvents = new List<IDebuggerModuleEvents>();
+        List<IDebuggerCallstackEvents> CallstackEvents = new List<IDebuggerCallstackEvents>();
+        List<IDebuggerOutputEvents> OutputEvents = new List<IDebuggerOutputEvents>();
 
         DebuggerSymbolServer SymbolSrv;
 
@@ -42,8 +47,8 @@ namespace CxbxDebugger
             DebugInstance = null;
 
             SymbolSrv = new DebuggerSymbolServer();
-            
-            RegisterEventListener(this);
+
+            RegisterEventInterfaces(this);
         }
 
         public Debugger()
@@ -108,15 +113,23 @@ namespace CxbxDebugger
 
             return false;
         }
-
+        
         static string CxbxDebuggerPrefix = "CxbxDebugger! ";
-
-
-        public override void OnDebugOutput(string Message)
+        public void OnDebugOutput(string Message)
         {
             if (Message.StartsWith(CxbxDebuggerPrefix))
             {
-                SetupHLECacheProvider(Message.Substring(CxbxDebuggerPrefix.Length));
+                string Payload = Message.Substring(CxbxDebuggerPrefix.Length);
+
+                //if (Payload.StartsWith("IoCreateFile@"))
+                //{
+                //    Payload = Payload.Substring("IoCreateFile@".Length);
+                //    // TODO: Something with payload
+                //}
+                //else
+                {
+                    SetupHLECacheProvider(Payload);
+                }
             }
         }
 
@@ -169,13 +182,14 @@ namespace CxbxDebugger
                 Thread.Handle = stProcessInfo.hThread;
                 Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
 
+                // TODO: Fill out other Thread properties
+
                 Process.Threads.Add(Thread);
                 Process.MainThread = Thread;
 
                 DebugInstance = new DebuggerInstance(Process);
 
-                // Register the instance to track thread creation
-                RegisterEventListener(DebugInstance);
+                RegisterEventInterfaces(DebugInstance);
 
                 State = RunState.Running;
             }
@@ -273,25 +287,27 @@ namespace CxbxDebugger
 
             Thread.Handle = DebugInfo.hThread;
             Thread.ThreadID = Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
+            Thread.StartAddress = DebugInfo.lpStartAddress;
+            Thread.ThreadBase = DebugInfo.lpThreadLocalBase;
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach (IDebuggerThreadEvents Event in ThreadEvents )
             {
-                EvtListener.OnThreadCreate(Thread);
+                Event.OnThreadCreate(Thread);
             }
         }
         
         private void HandleExitThread(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.ExitThread;
-            
+
             var TargetThread = DebugInstance.MainProcess.Threads.Find(Thread => Thread.ThreadID == DebugEvent.dwThreadId);
-            //uint ExitCode = DebugInfo.dwExitCode;
+            uint ExitCode = DebugInfo.dwExitCode;
 
             if (TargetThread != null)
             {
-                foreach (DebuggerEventListener EvtListener in EventListeners)
+                foreach (IDebuggerThreadEvents Event in ThreadEvents)
                 {
-                    EvtListener.OnThreadExit(TargetThread);
+                    Event.OnThreadExit(TargetThread, ExitCode);
                 }
             }
         }
@@ -300,11 +316,9 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.CreateProcessInfo;
 
-            // Stub
-
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach (IDebuggerProcessEvents Event in ProcessEvents)
             {
-                EvtListener.OnProcessCreate(null);
+                Event.OnProcessCreate(null);
             }
         }
 
@@ -312,11 +326,15 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.ExitProcess;
 
-            // Stub
+            var TargetProcess = DebugInstance.Processes.Find(Process => Process.ProcessID == DebugEvent.dwProcessId);
+            uint ExitCode = DebugInfo.dwExitCode;
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            if (TargetProcess != null)
             {
-                EvtListener.OnProcessExit(null);
+                foreach (IDebuggerProcessEvents Event in ProcessEvents)
+                {
+                    Event.OnProcessExit(TargetProcess, ExitCode);
+                }
             }
         }
 
@@ -329,9 +347,9 @@ namespace CxbxDebugger
             Module.Path = ResolveProcessPath(DebugInfo.hFile);
             Module.ImageBase = DebugInfo.lpBaseOfDll;
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach (IDebuggerModuleEvents Event in ModuleEvents)
             {
-                EvtListener.OnModuleLoaded(Module);
+                Event.OnModuleLoaded(Module);
             }
         }
 
@@ -343,9 +361,9 @@ namespace CxbxDebugger
 
             if (TargetModule != null)
             {
-                foreach (DebuggerEventListener EvtListener in EventListeners)
+                foreach (IDebuggerModuleEvents Event in ModuleEvents)
                 {
-                    EvtListener.OnModuleUnloaded(TargetModule);
+                    Event.OnModuleUnloaded(TargetModule);
                 }
             }
         }
@@ -356,9 +374,9 @@ namespace CxbxDebugger
 
             string debugString = ReadProcessString(DebugInfo.lpDebugStringData, DebugInfo.nDebugStringLength, DebugInfo.fUnicode == 1);
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach(IDebuggerOutputEvents Event in OutputEvents)
             {
-                EvtListener.OnDebugOutput(debugString);
+                Event.OnDebugOutput(debugString);
             }
         }
         
@@ -369,9 +387,9 @@ namespace CxbxDebugger
             WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
             bool bContinue = true;
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach (IDebuggerGeneralEvents Event in GeneralEvents)
             {
-                EvtListener.OnDebugStart();
+                Event.OnDebugStart();
             }
 
             // Loop until told to stop
@@ -447,20 +465,31 @@ namespace CxbxDebugger
             
             State = RunState.Ended;
 
-            foreach (DebuggerEventListener EvtListener in EventListeners)
+            foreach (IDebuggerGeneralEvents Event in GeneralEvents)
             {
-                EvtListener.OnDebugEnd();
+                Event.OnDebugEnd();
             }
         }
 
-        public void RegisterEventListener(DebuggerEventListener EventListener)
+        public void RegisterEventInterfaces(object EventClass)
         {
-            EventListeners.Add(EventListener);
-        }
+            IDebuggerGeneralEvents GeneralListener = EventClass as IDebuggerGeneralEvents;
+            if(GeneralListener != null ) GeneralEvents.Add(GeneralListener);
 
-        public void UnregisterEventListener(DebuggerEventListener EventListener)
-        {
-            EventListeners.Remove(EventListener);
+            IDebuggerProcessEvents ProcessListener = EventClass as IDebuggerProcessEvents;
+            if (ProcessListener != null) ProcessEvents.Add(ProcessListener);
+
+            IDebuggerThreadEvents ThreadListener = EventClass as IDebuggerThreadEvents;
+            if (ThreadListener != null) ThreadEvents.Add(ThreadListener);
+
+            IDebuggerModuleEvents ModuleListener = EventClass as IDebuggerModuleEvents;
+            if (ModuleListener != null) ModuleEvents.Add(ModuleListener);
+
+            IDebuggerCallstackEvents CallstackListener = EventClass as IDebuggerCallstackEvents;
+            if (CallstackListener != null) CallstackEvents.Add(CallstackListener);
+
+            IDebuggerOutputEvents OutputListener = EventClass as IDebuggerOutputEvents;
+            if (OutputListener != null) OutputEvents.Add(OutputListener);
         }
     }
 }

@@ -33,6 +33,7 @@
             this.btnResume = new System.Windows.Forms.Button();
             this.lbConsole = new System.Windows.Forms.ListBox();
             this.btnClearLog = new System.Windows.Forms.Button();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnRestart
@@ -86,11 +87,21 @@
             this.btnClearLog.UseVisualStyleBackColor = true;
             this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
             // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(219, 14);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(230, 21);
+            this.comboBox1.TabIndex = 4;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(530, 271);
+            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.btnClearLog);
             this.Controls.Add(this.lbConsole);
             this.Controls.Add(this.btnResume);
@@ -110,6 +121,7 @@
         private System.Windows.Forms.Button btnResume;
         private System.Windows.Forms.ListBox lbConsole;
         private System.Windows.Forms.Button btnClearLog;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 
