@@ -27,11 +27,6 @@ namespace CxbxDebugger
         void OnModuleUnloaded(DebuggerModule Module);
     }
 
-    public interface IDebuggerCallstackEvents
-    {
-        void OnCallstack(DebuggerCallstack Callstack);
-    }
-
     public interface IDebuggerOutputEvents
     {
         void OnDebugOutput(string Message);

@@ -34,21 +34,17 @@ namespace CxbxDebugger
 
         public void Suspend()
         {
-            // TODO Thread may already be in a non-suspended state
-
             foreach (DebuggerThread Thread in Threads)
             {
-                WinProcesses.NativeMethods.SuspendThread(Thread.Handle);
+                Thread.Suspend();
             }
         }
 
         public void Resume()
         {
-            // TODO Thread may already be in a non-suspended state
-
             foreach (DebuggerThread Thread in Threads)
             {
-                WinProcesses.NativeMethods.ResumeThread(Thread.Handle);
+                Thread.Resume();
             }
         }
 

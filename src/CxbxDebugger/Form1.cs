@@ -82,20 +82,15 @@ namespace CxbxDebugger
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void PopulateThreadList(ComboBox.ObjectCollection Items)
         {
-            StartDebugging();
-        }
-
-        private void PopulateThreadList()
-        {
-            comboBox1.Items.Clear();
+            Items.Clear();
 
             foreach (DebuggerThread Thread in DebugThreads)
             {
                 bool IsMainThread = (Thread.Handle == Thread.OwningProcess.MainThread.Handle);
                 string DisplayStr = "";
-
+                
                 if( IsMainThread )
                 {
                     DisplayStr = string.Format("> [{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
@@ -105,25 +100,12 @@ namespace CxbxDebugger
                     DisplayStr = string.Format("[{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
                 }
 
-                comboBox1.Items.Add(DisplayStr);
-            }
-        }
+                if( Thread.WasSuspended )
+                {
+                    DisplayStr += " (Suspended)";
+                }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            if (DebuggerInst != null)
-            {
-                DebuggerInst.Break();
-
-                PopulateThreadList();
-            }
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            if (DebuggerInst != null)
-            {
-                DebuggerInst.Resume();
+                Items.Add(DisplayStr);
             }
         }
 
@@ -147,10 +129,10 @@ namespace CxbxDebugger
         {
             string MessageStamped = string.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), Message);
 
-            if (lbConsole.InvokeRequired)
+            if (InvokeRequired)
             {
                 // Ensure we Add items on the right thread
-                lbConsole.Invoke(new MethodInvoker(delegate ()
+                Invoke(new MethodInvoker(delegate ()
                 {
                     lbConsole.Items.Insert(0, MessageStamped);
                 }));
@@ -163,12 +145,12 @@ namespace CxbxDebugger
 
         private void SetDebugProcessActive(bool Active)
         {
-            if (btnRestart.InvokeRequired)
+            if (InvokeRequired)
             {
-                btnRestart.Invoke(new MethodInvoker(delegate ()
+                Invoke(new MethodInvoker(delegate ()
                 {
                     // Disable when active
-                    btnRestart.Enabled = !Active;
+                    btnStart.Enabled = !Active;
 
                     // Enable when active
                     btnSuspend.Enabled = Active;
@@ -178,7 +160,7 @@ namespace CxbxDebugger
             else
             {
                 // Disable when active
-                btnRestart.Enabled = !Active;
+                btnStart.Enabled = !Active;
 
                 // Enable when active
                 btnSuspend.Enabled = Active;
@@ -191,7 +173,7 @@ namespace CxbxDebugger
             lbConsole.Items.Clear();
         }
 
-        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerCallstackEvents, IDebuggerExceptionEvents
+        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerExceptionEvents
         {
             Form1 frm;
 
@@ -275,19 +257,50 @@ namespace CxbxDebugger
                 frm.DebugEvent(string.Format("OutputDebugString \"{0}\"", Message));
             }
 
-            // TODO Update DebuggerStackFrame to query symbols
-            public void OnCallstack(DebuggerCallstack Callstack)
-            {
-                foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
-                {
-                    var stackFrameStr = string.Format("{0:X8} --> {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
-                    frm.DebugEvent("Callstack: " + stackFrameStr);
-                }
-            }
-
             public void OnAccessViolation()
             {
                 frm.DebugEvent("Access violation exception occured");
+            }
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            StartDebugging();
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (DebuggerInst != null)
+            {
+                DebuggerInst.Break();
+
+                PopulateThreadList(cbThreads.Items);
+            }
+        }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            if (DebuggerInst != null)
+            {
+                DebuggerInst.Resume();
+            }
+        }
+
+        private void btnDumpCallstack_Click(object sender, EventArgs e)
+        {
+            int Index = cbThreads.SelectedIndex;
+            if (Index == -1)
+                return;
+
+            lbRegisters.Items.Clear();
+
+            var Callstack = DebugThreads[Index].CallstackCache;
+            foreach(DebuggerStackFrame StackFrame in Callstack.StackFrames)
+            {
+                // TODO Resolve symbol names
+                string FrameString = string.Format("{0:X8} {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
+
+                lbRegisters.Items.Add(FrameString);
             }
         }
     }

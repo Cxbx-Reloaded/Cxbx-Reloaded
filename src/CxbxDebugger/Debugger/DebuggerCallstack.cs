@@ -47,14 +47,13 @@ namespace CxbxDebugger
 
         public void AddFrame(DebuggerStackFrame StackFrame)
         {
-            if (!HasEnoughFrames)
+            if (CanCollect)
             {
                 StackFrames.Add(StackFrame);
             }
         }
-
-        // TODO Rename this property
-        public bool HasEnoughFrames
+        
+        public bool CanCollect
         {
             get
             {

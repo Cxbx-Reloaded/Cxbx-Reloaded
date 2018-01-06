@@ -2,6 +2,7 @@
 //
 
 using System;
+using WinProcesses = VsChromium.Core.Win32.Processes;
 
 namespace CxbxDebugger
 {
@@ -14,6 +15,25 @@ namespace CxbxDebugger
         public IntPtr StartAddress { get; set; }
         public IntPtr ThreadBase { get; set; }
 
+        private int CachedSuspendCount = 0;
+
+        public bool IsSuspended
+        {
+            get
+            {
+                // TODO: Check count is inside range [0..MAXIMUM_SUSPEND_COUNT]
+                return CachedSuspendCount > 0;
+            }
+        }
+
+        public bool WasSuspended
+        {
+            get
+            {
+                return CachedSuspendCount > 1;
+            }
+        }
+
         CONTEXT_x86 ContextCache = new CONTEXT_x86
         {
             ContextFlags =
@@ -23,7 +43,7 @@ namespace CxbxDebugger
                             ContextFlags.CONTEXT_SEGMENTS
         };
 
-        DebuggerCallstack CallstackCache = new DebuggerCallstack();
+        public DebuggerCallstack CallstackCache { get; private set; } = new DebuggerCallstack();
 
         // Based on DebugThread
         public DebuggerThread(DebuggerProcess Owner)
@@ -34,6 +54,43 @@ namespace CxbxDebugger
             ThreadID = 0;
             StartAddress = IntPtr.Zero;
             ThreadBase = IntPtr.Zero;
+        }
+
+        public void Suspend()
+        {
+            // Early-out if this thread was already in a suspended state
+            if (IsSuspended)
+                return;
+
+            int PrevSuspendCount = (int)WinProcesses.NativeMethods.SuspendThread(Handle);
+            if (PrevSuspendCount == -1)
+                throw new Exception("SuspendThread failed");
+
+            CachedSuspendCount = PrevSuspendCount +1;
+
+            UpdateContext();
+        }
+
+        public void Resume(bool ForceStart = false)
+        {
+            // Early-out if this thread was not already suspended
+            if (!IsSuspended)
+                return;
+
+            // Stores the internal "suspend counter" back to the previous state - which could still be suspended
+
+            int TargetCount = (ForceStart ? 0 : CachedSuspendCount - 1);
+            int LastSuspendCount;
+
+            do
+            {
+                LastSuspendCount = (int)WinProcesses.NativeMethods.ResumeThread(Handle);
+                if (LastSuspendCount == -1)
+                    throw new Exception("ResumeThread failed");
+            }
+            while (LastSuspendCount -1 > TargetCount);
+
+            CachedSuspendCount = TargetCount;
         }
 
         public void UpdateContext()
@@ -58,7 +115,7 @@ namespace CxbxDebugger
 
                 CallstackCache.AddFrame(new DebuggerStackFrame(new IntPtr(ReturnAddr), new IntPtr(ebp)));
             }
-            while (!CallstackCache.HasEnoughFrames);
+            while (CallstackCache.CanCollect);
         }
     }
 }

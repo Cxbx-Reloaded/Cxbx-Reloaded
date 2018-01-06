@@ -37,7 +37,6 @@ namespace CxbxDebugger
         List<IDebuggerProcessEvents> ProcessEvents = new List<IDebuggerProcessEvents>();
         List<IDebuggerThreadEvents> ThreadEvents = new List<IDebuggerThreadEvents>();
         List<IDebuggerModuleEvents> ModuleEvents = new List<IDebuggerModuleEvents>();
-        List<IDebuggerCallstackEvents> CallstackEvents = new List<IDebuggerCallstackEvents>();
         List<IDebuggerOutputEvents> OutputEvents = new List<IDebuggerOutputEvents>();
         List<IDebuggerExceptionEvents> ExceptionEvents = new List<IDebuggerExceptionEvents>();
 
@@ -496,9 +495,6 @@ namespace CxbxDebugger
 
             IDebuggerModuleEvents ModuleListener = EventClass as IDebuggerModuleEvents;
             if (ModuleListener != null) ModuleEvents.Add(ModuleListener);
-
-            IDebuggerCallstackEvents CallstackListener = EventClass as IDebuggerCallstackEvents;
-            if (CallstackListener != null) CallstackEvents.Add(CallstackListener);
 
             IDebuggerOutputEvents OutputListener = EventClass as IDebuggerOutputEvents;
             if (OutputListener != null) OutputEvents.Add(OutputListener);
