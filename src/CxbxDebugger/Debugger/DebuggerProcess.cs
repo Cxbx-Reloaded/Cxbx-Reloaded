@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using WinProcesses = VsChromium.Core.Win32.Processes;
 
 namespace CxbxDebugger
@@ -51,22 +52,87 @@ namespace CxbxDebugger
             }
         }
 
-        public uint ReadMemory(IntPtr addr)
+        private byte[] ReadMemoryInternal(IntPtr Address, int Size)
         {
-            byte[] buffer = new byte[4];
+            byte[] buffer = new byte[Size];
 
-            uint numRead = 0;
+            int numRead = 0;
             WinProcesses.NativeMethods.ReadProcessMemory
             (
                 Handle,
-                addr,
+                Address,
                 buffer,
                 4,
                 out numRead
             );
 
-            return BitConverter.ToUInt32(buffer, 0);
+            // Not handling errors for now
+            return buffer;
         }
 
+        public T ReadMemory<T>(IntPtr Address)
+        {
+            var size = Marshal.SizeOf(typeof(T));
+            byte[] Data = ReadMemoryInternal(Address, size);
+
+            object Value = default(T);
+
+            TypeCode TType = Type.GetTypeCode(typeof(T));
+            switch (TType)
+            {
+                case TypeCode.Byte:
+                    Value = Data[0];
+                    break;
+
+                case TypeCode.UInt32:
+                    Value = BitConverter.ToUInt32(Data, 0);
+                    break;
+
+                default:
+                    throw new Exception(string.Format("Unhandled type code {0}", TType.ToString()));
+            }
+
+            return (T)Value;
+        }
+
+        private void WriteMemoryInternal(IntPtr Address, byte[] Data)
+        {
+            int numWritten = 0;
+            WinProcesses.NativeMethods.WriteProcessMemory
+                (
+                    Handle,
+                    Address,
+                    Data,
+                    (uint)Data.Length,
+                    out numWritten
+                );
+        }
+
+        public void WriteMemory<T>(IntPtr Address, T Value)
+        {
+            byte[] Data = null;
+
+            object GenericValue = Value;
+
+            TypeCode TType = Type.GetTypeCode(Value.GetType());
+            switch (TType)
+            {
+                case TypeCode.Byte:
+                    Data = new byte[] { (byte)GenericValue };
+                    break;
+
+                case TypeCode.UInt32:
+                    Data = BitConverter.GetBytes((uint)GenericValue);
+                    break;
+
+                default:
+                    throw new Exception(string.Format("Unhandled type code {0}", TType.ToString()));
+            }
+
+            if (Data != null)
+            {
+                WriteMemoryInternal(Address, Data);
+            }
+        }
     }
 }

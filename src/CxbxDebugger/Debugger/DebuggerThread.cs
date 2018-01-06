@@ -50,8 +50,8 @@ namespace CxbxDebugger
 
             do
             {
-                var ReturnAddr = OwningProcess.ReadMemory(new IntPtr(ebp + 4));
-                ebp = OwningProcess.ReadMemory(new IntPtr(ebp));
+                var ReturnAddr = OwningProcess.ReadMemory<uint>(new IntPtr(ebp + 4));
+                ebp = OwningProcess.ReadMemory<uint>(new IntPtr(ebp));
 
                 if (ebp == 0 || ReturnAddr == ebp)
                     break;
