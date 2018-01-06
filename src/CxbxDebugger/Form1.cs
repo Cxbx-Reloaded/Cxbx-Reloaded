@@ -260,6 +260,9 @@ namespace CxbxDebugger
             public void OnAccessViolation()
             {
                 frm.DebugEvent("Access violation exception occured");
+
+                // Already suspended at this point, so we can rebuild the callstack list
+                frm.PopulateThreadList(frm.cbThreads.Items);
             }
         }
 
@@ -297,8 +300,16 @@ namespace CxbxDebugger
             var Callstack = DebugThreads[Index].CallstackCache;
             foreach(DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
-                // TODO Resolve symbol names
                 string FrameString = string.Format("{0:X8} {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
+
+                // Try to resolve the symbol name
+                var Symbol = DebuggerInst.ResolveSymbol(StackFrame.Base);
+                if( Symbol != null)
+                {
+                    uint Offset = Symbol.AddrBegin - (uint)StackFrame.Base;
+
+                    FrameString = string.Format("{0} + 0x{1:X}", Symbol.Name, Offset);
+                }
 
                 lbRegisters.Items.Add(FrameString);
             }

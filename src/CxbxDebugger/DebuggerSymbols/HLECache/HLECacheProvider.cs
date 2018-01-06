@@ -1,26 +1,32 @@
 ﻿// Written by x1nixmzeng for the Cxbx-Reloaded project
 //
 
+using System.Collections.Generic;
+using System.IO;
+
 namespace CxbxDebugger
 {
-    public class HLECacheProvider : DebuggerSymbolProvider
+    public class HLECacheProvider : DebuggerSymbolProviderBase
     {
-        HLECacheFile CacheFile;
-
         public bool Load(string FileName)
         {
-            CacheFile = new HLECacheFile();
-            return CacheFile.Load(FileName);
-        }
+            if (!File.Exists(FileName))
+                return false;
 
-        public override DebuggerSymbolResult ResolveAddress(uint Address)
-        {
-            var SymbolResult = new DebuggerSymbolResult();
+            HLECacheFile CacheFile = new HLECacheFile();
+            if (!CacheFile.Load(FileName))
+                return false;
 
-            // TODO: Resolve me
-            SymbolResult.Success = false;
+            foreach(KeyValuePair<uint, string> Item in CacheFile.AddressMap)
+            {
+                DebuggerSymbol NewSymbol = new DebuggerSymbol();
+                NewSymbol.Name = Item.Value;
+                NewSymbol.AddrBegin = Item.Key;
 
-            return SymbolResult;
+                AddSymbol(NewSymbol);
+            }
+
+            return true;
         }
     }
 }

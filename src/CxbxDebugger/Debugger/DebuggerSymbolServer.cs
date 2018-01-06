@@ -7,31 +7,50 @@ namespace CxbxDebugger
 {
     public class DebuggerSymbolServer
     {
-        List<DebuggerSymbolProvider> Providers = new List<DebuggerSymbolProvider>();
-
-        public DebuggerSymbolServer() { }
-
-        public DebuggerSymbolResult ResolveAddress(uint Address)
+        List<DebuggerSymbolProviderBase> Providers = new List<DebuggerSymbolProviderBase>();
+        
+        public DebuggerSymbol FindSymbol(uint Address)
         {
-            DebuggerSymbolResult Result = new DebuggerSymbolResult();
+            if (Providers.Count == 0)
+                return null;
 
-            foreach (DebuggerSymbolProvider SymbolProvider in Providers)
+            DebuggerSymbol BestResult = null;
+
+            // Find the first provider who can give a symbol for this address
+
+            int ProviderIndex = 0;
+            do
             {
-                Result = SymbolProvider.ResolveAddress(Address);
-
-                if (Result.Success)
+                BestResult = Providers[ProviderIndex].FindSymbolFromAddress(Address);
+                if (BestResult != null)
                     break;
             }
+            while (ProviderIndex < Providers.Count);
 
-            return Result;
+            // Try to find another symbol which is closer to the given address
+            // TODO Investigate adding symbol size metadata this can just check if Address is within a given range
+
+            for (int i = ProviderIndex + 1; i < Providers.Count; ++i)
+            {
+                DebuggerSymbol OtherResult = Providers[i].FindSymbolFromAddress(Address);
+                if (OtherResult == null)
+                    continue;
+
+                if(OtherResult.AddrBegin < BestResult.AddrBegin )
+                {
+                    BestResult = OtherResult;
+                }
+            }
+
+            return BestResult;
         }
 
-        public void RegisterProvider(DebuggerSymbolProvider Provider)
+        public void RegisterProvider(DebuggerSymbolProviderBase Provider)
         {
             Providers.Add(Provider);
         }
 
-        public void UnregisterProvider(DebuggerSymbolProvider Provider)
+        public void UnregisterProvider(DebuggerSymbolProviderBase Provider)
         {
             Providers.Remove(Provider);
         }

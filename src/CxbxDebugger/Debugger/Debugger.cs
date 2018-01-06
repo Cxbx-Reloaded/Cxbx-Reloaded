@@ -41,12 +41,16 @@ namespace CxbxDebugger
         List<IDebuggerExceptionEvents> ExceptionEvents = new List<IDebuggerExceptionEvents>();
 
         DebuggerSymbolServer SymbolSrv;
+        KernelProvider KernelSymbolProvider;
 
         private void Init()
         {
             DebugInstance = null;
 
             SymbolSrv = new DebuggerSymbolServer();
+
+            KernelSymbolProvider = new KernelProvider();
+            SymbolSrv.RegisterProvider(KernelSymbolProvider);
 
             RegisterEventInterfaces(this);
         }
@@ -115,19 +119,20 @@ namespace CxbxDebugger
         }
         
         static string CxbxDebuggerPrefix = "CxbxDebugger! ";
+        static string KernelImportPrefix = "KernelImport_";
         public void OnDebugOutput(string Message)
         {
             if (Message.StartsWith(CxbxDebuggerPrefix))
             {
                 string Payload = Message.Substring(CxbxDebuggerPrefix.Length);
 
-                if (Payload.StartsWith("IoCreateFile@"))
+                if (Payload.StartsWith(KernelImportPrefix))
                 {
-                    Payload = Payload.Substring("IoCreateFile@".Length);
-                    // TODO: Something with payload
+                    KernelSymbolProvider.AddKernelSymbolFromMessage(Payload);
                 }
                 else
                 {
+                    // TODO Ensure this 
                     SetupHLECacheProvider(Payload);
                 }
             }
@@ -480,6 +485,16 @@ namespace CxbxDebugger
             {
                 Event.OnDebugEnd();
             }
+        }
+
+        public DebuggerSymbol ResolveSymbol(uint Address)
+        {
+            return SymbolSrv.FindSymbol(Address);
+        }
+
+        public DebuggerSymbol ResolveSymbol(IntPtr Address)
+        {
+            return SymbolSrv.FindSymbol((uint)Address);
         }
 
         public void RegisterEventInterfaces(object EventClass)

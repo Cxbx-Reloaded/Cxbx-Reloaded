@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DebuggerSymbols\Kernel\KernelSymbolProvider.cs" />
     <Compile Include="Debugger\Debugger.cs" />
     <Compile Include="Debugger\DebuggerEventInterfaces.cs" />
     <Compile Include="Debugger\DebuggerInstance.cs" />
