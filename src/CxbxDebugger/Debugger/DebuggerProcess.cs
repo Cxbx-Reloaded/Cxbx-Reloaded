@@ -62,7 +62,7 @@ namespace CxbxDebugger
                 Handle,
                 Address,
                 buffer,
-                4,
+                Size,
                 out numRead
             );
 
