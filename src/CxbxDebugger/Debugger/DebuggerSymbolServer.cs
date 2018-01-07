@@ -24,10 +24,20 @@ namespace CxbxDebugger
                 BestResult = Providers[ProviderIndex].FindSymbolFromAddress(Address);
                 if (BestResult != null)
                     break;
+
+                ++ProviderIndex;
             }
             while (ProviderIndex < Providers.Count);
 
-            // Try to find another symbol which is closer to the given address
+            // Failed to find any symbols
+            if( BestResult == null )
+                return null;
+
+            // Found an exact match
+            if (BestResult.AddrBegin == Address)
+                return BestResult;
+
+            // Otherwise, try and find another symbol which is closer to the given address
             // TODO Investigate adding symbol size metadata this can just check if Address is within a given range
 
             for (int i = ProviderIndex + 1; i < Providers.Count; ++i)

@@ -21,6 +21,11 @@ namespace CxbxDebugger
             CurrentThread = InitialProcess.MainThread;
         }
 
+        public DebuggerProcess FindProcess(uint ProcessID)
+        {
+            return Processes.Find(Process => Process.ProcessID == ProcessID);
+        }
+
         public void OnThreadCreate(DebuggerThread Thread)
         {
             MainProcess.Threads.Add(Thread);

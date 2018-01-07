@@ -5,6 +5,7 @@ using System;
 using System.Windows.Forms;
 using System.Threading;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CxbxDebugger
 {
@@ -73,7 +74,7 @@ namespace CxbxDebugger
                 {
                     if (DebuggerInst.Launch())
                     {
-                        DebuggerInst.Run();
+                        DebuggerInst.RunThreaded();
                     }
                 });
 
@@ -82,27 +83,30 @@ namespace CxbxDebugger
             }
         }
 
-        private void PopulateThreadList(ComboBox.ObjectCollection Items)
+        private void PopulateThreadList(ComboBox.ObjectCollection Items, DebuggerThread FocusThread)
         {
             Items.Clear();
 
             foreach (DebuggerThread Thread in DebugThreads)
             {
                 bool IsMainThread = (Thread.Handle == Thread.OwningProcess.MainThread.Handle);
+                bool IsFocusThread = (FocusThread != null) && (Thread.Handle == FocusThread.Handle);
                 string DisplayStr = "";
-                
-                if( IsMainThread )
-                {
-                    DisplayStr = string.Format("> [{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
-                }
-                else
-                {
-                    DisplayStr = string.Format("[{0}] 0x{1:X8}", (uint)Thread.Handle, (uint)Thread.StartAddress);
-                }
+                string PrefixStr = "";
 
+                // Threads with focus are marked differently
+                if (IsFocusThread)
+                    PrefixStr = "* ";
+
+                // Main threads always override any existing prefix
+                if (IsMainThread)
+                    PrefixStr = "> ";
+                
+                DisplayStr = string.Format("{0}[{1}] 0x{2:X8}", PrefixStr, (uint)Thread.Handle, (uint)Thread.StartAddress);
+                
                 if( Thread.WasSuspended )
                 {
-                    DisplayStr += " (Suspended)";
+                    DisplayStr += " (suspended)";
                 }
 
                 Items.Add(DisplayStr);
@@ -125,7 +129,7 @@ namespace CxbxDebugger
             }
         }
 
-        private void DebugEvent(string Message)
+        private void DebugLog(string Message)
         {
             string MessageStamped = string.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), Message);
 
@@ -214,55 +218,60 @@ namespace CxbxDebugger
             {
                 int remainingThreads = Process.Threads.Count;
 
-                frm.DebugEvent(string.Format("Process exited {0} ({1})", Process.ProcessID, PrettyExitCode(ExitCode)));
-                frm.DebugEvent(string.Format("{0} thread(s) remain open", remainingThreads));
+                frm.DebugLog(string.Format("Process exited {0} ({1})", Process.ProcessID, PrettyExitCode(ExitCode)));
+                frm.DebugLog(string.Format("{0} thread(s) remain open", remainingThreads));
             }
 
             public void OnDebugStart()
             {
                 frm.SetDebugProcessActive(true);
-                frm.DebugEvent("Started debugging session");
+                frm.DebugLog("Started debugging session");
             }
 
             public void OnDebugEnd()
             {
                 frm.SetDebugProcessActive(false);
-                frm.DebugEvent("Ended debugging session");
+                frm.DebugLog("Ended debugging session");
             }
 
             public void OnThreadCreate(DebuggerThread Thread)
             {
-                frm.DebugEvent(string.Format("Thread created {0}", Thread.ThreadID));
+                frm.DebugLog(string.Format("Thread created {0}", Thread.ThreadID));
                 frm.DebugThreads.Add(Thread);
             }
 
             public void OnThreadExit(DebuggerThread Thread, uint ExitCode)
             {
-                frm.DebugEvent(string.Format("Thread exited {0} ({1})", Thread.ThreadID, PrettyExitCode(ExitCode)));
+                frm.DebugLog(string.Format("Thread exited {0} ({1})", Thread.ThreadID, PrettyExitCode(ExitCode)));
                 frm.DebugThreads.Remove(Thread);
             }
 
             public void OnModuleLoaded(DebuggerModule Module)
             {
-                frm.DebugEvent(string.Format("Loaded module \"{0}\"", Module.Path));
+                frm.DebugLog(string.Format("Loaded module \"{0}\"", Module.Path));
             }
 
             public void OnModuleUnloaded(DebuggerModule Module)
             {
-                frm.DebugEvent(string.Format("Unloaded module \"{0}\"", Module.Path));
+                frm.DebugLog(string.Format("Unloaded module \"{0}\"", Module.Path));
             }
 
             public void OnDebugOutput(string Message)
             {
-                frm.DebugEvent(string.Format("OutputDebugString \"{0}\"", Message));
+                frm.DebugLog(string.Format("OutputDebugString \"{0}\"", Message));
             }
 
-            public void OnAccessViolation()
+            public void OnAccessViolation(DebuggerThread Thread, IntPtr Address)
             {
-                frm.DebugEvent("Access violation exception occured");
+                string ProcessName = Path.GetFileName(Thread.OwningProcess.Path);
+                
+                // TODO Include GetLastError string
+                string ExceptionMessage = string.Format("Access violation thrown in {0} 0x{1:X8}", ProcessName, (uint)Address);
+
+                frm.DebugLog(ExceptionMessage);
 
                 // Already suspended at this point, so we can rebuild the callstack list
-                frm.PopulateThreadList(frm.cbThreads.Items);
+                frm.PopulateThreadList(frm.cbThreads.Items, Thread);
             }
         }
 
@@ -277,7 +286,7 @@ namespace CxbxDebugger
             {
                 DebuggerInst.Break();
 
-                PopulateThreadList(cbThreads.Items);
+                PopulateThreadList(cbThreads.Items, null);
             }
         }
 
@@ -300,15 +309,16 @@ namespace CxbxDebugger
             var Callstack = DebugThreads[Index].CallstackCache;
             foreach(DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
-                string FrameString = string.Format("{0:X8} {1:X8}", (uint)StackFrame.Base, (uint)StackFrame.PC);
+                string FrameString = string.Format("{0:X8}", (uint)StackFrame.PC);
 
                 // Try to resolve the symbol name
-                var Symbol = DebuggerInst.ResolveSymbol(StackFrame.Base);
+                var Symbol = DebuggerInst.ResolveSymbol(StackFrame.PC);
                 if( Symbol != null)
                 {
-                    uint Offset = Symbol.AddrBegin - (uint)StackFrame.Base;
+                    // TODO Investigate why this is a constant offset in the last few frames
+                    uint Offset = (uint)StackFrame.PC - Symbol.AddrBegin;
 
-                    FrameString = string.Format("{0} + 0x{1:X}", Symbol.Name, Offset);
+                    FrameString = string.Format("{0} +0x{1:X}", Symbol.Name, Offset);
                 }
 
                 lbRegisters.Items.Add(FrameString);

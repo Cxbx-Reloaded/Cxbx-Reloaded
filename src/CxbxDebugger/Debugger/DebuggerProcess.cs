@@ -8,15 +8,13 @@ using WinProcesses = VsChromium.Core.Win32.Processes;
 
 namespace CxbxDebugger
 {
-    public class DebuggerProcess
+    public class DebuggerProcess : DebuggerModule
     {
         public IntPtr Handle { get; set; }
         public uint ProcessID { get; set; }
-
         public List<DebuggerModule> Modules { get; set; }
         public List<DebuggerThread> Threads { get; set; }
 
-        public DebuggerModule MainModule { get; set; }
         public DebuggerThread MainThread { get; set; }
 
         // Based on DebugProcess
@@ -24,11 +22,12 @@ namespace CxbxDebugger
         {
             Handle = IntPtr.Zero;
             ProcessID = 0;
+            ImageBase = IntPtr.Zero;
+            Path = "";
 
             Modules = new List<DebuggerModule>();
             Threads = new List<DebuggerThread>();
 
-            MainModule = null;
             MainThread = null;
         }
 
@@ -46,6 +45,11 @@ namespace CxbxDebugger
             {
                 Thread.Resume();
             }
+        }
+
+        public DebuggerThread FindThread(uint ThreadID)
+        {
+            return Threads.Find(Thread => Thread.ThreadID == ThreadID);
         }
 
         private byte[] ReadMemoryInternal(IntPtr Address, int Size)

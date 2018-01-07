@@ -1,6 +1,8 @@
 ﻿// Written by x1nixmzeng for the Cxbx-Reloaded project
 //
 
+using System;
+
 namespace CxbxDebugger
 {
     public interface IDebuggerGeneralEvents
@@ -34,6 +36,6 @@ namespace CxbxDebugger
 
     public interface IDebuggerExceptionEvents
     {
-        void OnAccessViolation();
+        void OnAccessViolation(DebuggerThread Thread, IntPtr Address);
     }
 }

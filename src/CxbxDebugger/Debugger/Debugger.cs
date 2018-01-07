@@ -28,6 +28,7 @@ namespace CxbxDebugger
         WinProcesses.SafeThreadHandle hThread = new WinProcesses.SafeThreadHandle();
 
         string[] args = new string[] { };
+        string Target = "";
 
         RunState State = RunState.NotLaunched;
         
@@ -43,6 +44,8 @@ namespace CxbxDebugger
         DebuggerSymbolServer SymbolSrv;
         KernelProvider KernelSymbolProvider;
 
+        bool bContinue = true;
+
         private void Init()
         {
             DebugInstance = null;
@@ -51,7 +54,7 @@ namespace CxbxDebugger
 
             KernelSymbolProvider = new KernelProvider();
             SymbolSrv.RegisterProvider(KernelSymbolProvider);
-
+            
             RegisterEventInterfaces(this);
         }
 
@@ -77,6 +80,12 @@ namespace CxbxDebugger
                 {
                     args[i] = string.Format("\"{0}\"", args[i]);
                 }
+            }
+
+            // Copy XBE path without the quotes
+            if(x_args.Length > 2)
+            {
+                Target = x_args[2].Trim(new char[] { '"' });
             }
         }
 
@@ -182,19 +191,23 @@ namespace CxbxDebugger
                 Process.Handle = stProcessInfo.hProcess;
                 Process.ProcessID = (uint)stProcessInfo.dwProcessId;
 
+                // TODO: Split XBE and Cxbx into separate targets
+                Process.Path = Target;
+
                 var Thread = new DebuggerThread(Process);
 
                 Thread.Handle = stProcessInfo.hThread;
                 Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
 
-                // TODO: Fill out other Thread properties
+                // Other thread properties are setup after CREATE_THREAD_DEBUG_EVENT is received
 
                 Process.Threads.Add(Thread);
                 Process.MainThread = Thread;
 
                 DebugInstance = new DebuggerInstance(Process);
-
                 RegisterEventInterfaces(DebugInstance);
+
+                bContinue = true;
 
                 State = RunState.Running;
             }
@@ -291,7 +304,7 @@ namespace CxbxDebugger
             var Thread = new DebuggerThread(DebugInstance.MainProcess);
 
             Thread.Handle = DebugInfo.hThread;
-            Thread.ThreadID = Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
+            Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
             Thread.StartAddress = DebugInfo.lpStartAddress;
             Thread.ThreadBase = DebugInfo.lpThreadLocalBase;
 
@@ -321,9 +334,42 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.CreateProcessInfo;
 
-            foreach (IDebuggerProcessEvents Event in ProcessEvents)
+            // Check that this process is already registered, and update information about it
+
+            var TargetProcess = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
+            if( TargetProcess != null )
             {
-                Event.OnProcessCreate(null);
+                if( DebugInstance.MainProcess != TargetProcess )
+                {
+                    throw new Exception("Attempting to add a child process with a registered PID");
+                }
+
+                // Update information about this process
+                // TODO: Ensure this is at the right image base (0x10000)
+
+                TargetProcess.ImageBase = DebugInfo.lpBaseOfImage;
+                
+                // Update information about the main thread
+
+                //TargetProcess.MainThread.Handle = DebugInfo.hThread;
+                //TargetProcess.MainThread.ThreadID = (uint)DebugEvent.dwThreadId;
+                TargetProcess.MainThread.StartAddress = DebugInfo.lpStartAddress;
+                TargetProcess.MainThread.ThreadBase = DebugInfo.lpThreadLocalBase;
+                
+                foreach (IDebuggerProcessEvents Event in ProcessEvents)
+                {
+                    Event.OnProcessCreate(TargetProcess);
+                }
+
+                // Also message listeners about the existance of the main thread
+                foreach (IDebuggerThreadEvents Event in ThreadEvents)
+                {
+                    Event.OnThreadCreate(TargetProcess.MainThread);
+                }
+            }
+            else
+            {
+                throw new Exception("CxbxDebugger does not support multiple process");
             }
         }
 
@@ -331,7 +377,7 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.ExitProcess;
 
-            var TargetProcess = DebugInstance.Processes.Find(Process => Process.ProcessID == DebugEvent.dwProcessId);
+            var TargetProcess = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
             uint ExitCode = DebugInfo.dwExitCode;
 
             if (TargetProcess != null)
@@ -388,39 +434,43 @@ namespace CxbxDebugger
         private void HandleException(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.Exception;
-
+            
             switch ((ExceptionCode)DebugInfo.ExceptionRecord.ExceptionCode)
             {
                 case ExceptionCode.AccessViolation:
+
+                    // We can't suspend this thread
+                    bContinue = false;
                     
-                    // Pauses execution
-                    Break();
-
-                    foreach(IDebuggerExceptionEvents Event in ExceptionEvents)
+                    var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                    if (Thread != null)
                     {
-                        Event.OnAccessViolation();
-                    }
+                        Thread.UpdateContext();
 
+                        foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
+                        {
+                            Event.OnAccessViolation(Thread, DebugInfo.ExceptionRecord.ExceptionAddress);
+                        }
+                    }
+                    
                     break;
 
                 case ExceptionCode.Breakpoint:
                     // TODO Handle
+
                     break;
 
                 case ExceptionCode.SingleStep:
                     // TODO Handle
                     break;
             }
-            
-            // hmm!!
         }
 
-        public void Run()
+        public void RunThreaded()
         {
             WinDebug.DEBUG_EVENT DbgEvt = new WinDebug.DEBUG_EVENT();
             
             WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
-            bool bContinue = true;
 
             foreach (IDebuggerGeneralEvents Event in GeneralEvents)
             {
@@ -476,6 +526,7 @@ namespace CxbxDebugger
                         break;
                 }
 
+                // TODO: Stop doing this once we raise an exception
                 WinDebug.NativeMethods.ContinueDebugEvent(DbgEvt.dwProcessId, DbgEvt.dwThreadId, ContinueStatus);
             }
             
