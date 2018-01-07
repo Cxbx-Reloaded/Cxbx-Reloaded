@@ -55,9 +55,10 @@ namespace CxbxDebugger
 
         bool IsAttached()
         {
-            // TODO: Avoid clashing with VS when child process debugging is enabled for all processes
-            // TODO: Check the PID of the debugger? Ensure the PID is linked to CxbxDebugger.exe?
-            return IsDebuggerPresent() == TRUE;
+			bool IsDebugging;
+			g_EmuShared->GetDebuggingFlag(&IsDebugging);
+
+            return IsDebugging && IsDebuggerPresent() == TRUE;
         }
 
         class ReportHelper
@@ -124,8 +125,11 @@ namespace CxbxDebugger
     {
         switch (ExceptionCode)
         {
-        case Internal::FILE_OPENED:
+        case Internal::HLECACHE_FILE:
         case Internal::KERNEL_PATCH:
+        case Internal::FILE_OPENED:
+        case Internal::FILE_READ:
+        case Internal::FILE_CLOSED:
             return true;
         }
 

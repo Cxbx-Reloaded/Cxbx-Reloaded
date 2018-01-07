@@ -125,6 +125,12 @@ class EmuShared : public Mutex
 		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
 
 		// ******************************************************************
+		// * Debugging flag Accessors
+		// ******************************************************************
+		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
+		void SetDebuggingFlag(bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
+
+		// ******************************************************************
 		// * Launch data physical address Accessors
 		// ******************************************************************
 		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
@@ -150,6 +156,7 @@ class EmuShared : public Mutex
 		float		 m_MSpF;
 		float        m_FPS;
 		bool		 m_bMultiXbe;
+		bool		 m_bDebugging;
 		PAddr		 m_LaunchDataPAddress;
 };
 

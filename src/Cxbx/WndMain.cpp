@@ -1933,6 +1933,8 @@ void WndMain::StartEmulation(HWND hwndParent, bool WithLocalDebugger /*= false*/
 		char szArgsBuffer[4096];
 		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, (int)hwndParent, (int)m_KrnlDebug, m_KrnlDebugFilename);
 
+		g_EmuShared->SetDebuggingFlag(&WithLocalDebugger);
+
         if (WithLocalDebugger)
         {
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
