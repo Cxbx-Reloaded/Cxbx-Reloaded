@@ -469,7 +469,7 @@ namespace CxbxDebugger
 
                             foreach (IDebuggerFileEvents Event in FileEvents)
                             {
-                                Event.OnFileOpened(Report.Handle, Report.FileName);
+                                Event.OnFileOpened(Report);
                             }
                         }
                     }
@@ -484,7 +484,7 @@ namespace CxbxDebugger
 
                             foreach (IDebuggerFileEvents Event in FileEvents)
                             {
-                                Event.OnFileRead(Report.Handle, Report.Length);
+                                Event.OnFileRead(Report);
                             }
                         }
                     }
@@ -499,7 +499,7 @@ namespace CxbxDebugger
 
                             foreach (IDebuggerFileEvents Event in FileEvents)
                             {
-                                Event.OnFileClosed(Report.Handle);
+                                Event.OnFileClosed(Report);
                             }
                         }
                     }

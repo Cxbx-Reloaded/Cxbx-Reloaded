@@ -41,8 +41,8 @@ namespace CxbxDebugger
 
     public interface IDebuggerFileEvents
     {
-        void OnFileOpened(IntPtr Handle, string Name);
-        void OnFileRead(IntPtr Handle, uint Length);
-        void OnFileClosed(IntPtr Handle);
+        void OnFileOpened(DebuggerMessages.FileOpened Info);
+        void OnFileRead(DebuggerMessages.FileRead Info);
+        void OnFileClosed(DebuggerMessages.FileClosed Info);
     }
 }

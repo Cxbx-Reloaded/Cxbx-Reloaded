@@ -18,6 +18,7 @@ namespace CxbxDebugger
         DebuggerFormEvents DebugEvents;
 
         List<DebuggerThread> DebugThreads = new List<DebuggerThread>();
+        List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
         public Form1()
         {
@@ -280,19 +281,29 @@ namespace CxbxDebugger
                 frm.PopulateThreadList(frm.cbThreads.Items, Thread);
             }
 
-            public void OnFileOpened(IntPtr Handle, string Name)
+            public void OnFileOpened(DebuggerMessages.FileOpened Info)
             {
-                frm.DebugLog(string.Format("File opened \"{0}\" {1:X8}", Name, (uint)Handle));
+                frm.FileHandles.Add(Info);
+                frm.DebugLog(string.Format("Opened file: \"{0}\"", Info.FileName));
             }
 
-            public void OnFileRead(IntPtr Handle, uint Length)
+            public void OnFileRead(DebuggerMessages.FileRead Info)
             {
-                frm.DebugLog(string.Format("File read {0:X8} ({1} bytes)", (uint)Handle, Length));
+                var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
+                if (Found != null)
+                {
+                    frm.DebugLog(string.Format("Reading {0} byte(s) from: {1}", Info.Length, Found.FileName));
+                }
             }
 
-            public void OnFileClosed(IntPtr Handle)
+            public void OnFileClosed(DebuggerMessages.FileClosed Info)
             {
-                frm.DebugLog(string.Format("File closed {0}", (uint)Handle));
+                var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
+                if (Found != null)
+                {
+                    frm.DebugLog(string.Format("Closed file: \"{0}\"", Found.FileName));
+                    frm.FileHandles.Remove(Found);
+                }
             }
         }
 

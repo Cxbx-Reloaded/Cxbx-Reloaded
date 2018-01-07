@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.lbConsole = new System.Windows.Forms.ListBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -63,15 +62,15 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.lbConsole, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.splitContainer1, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 25);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 169F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(762, 302);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
@@ -134,7 +133,6 @@
             // btnStart
             // 
             this.btnStart.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnStart.Image = ((System.Drawing.Image)(resources.GetObject("btnStart.Image")));
             this.btnStart.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(35, 22);
@@ -149,7 +147,6 @@
             // btnSuspend
             // 
             this.btnSuspend.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnSuspend.Image = ((System.Drawing.Image)(resources.GetObject("btnSuspend.Image")));
             this.btnSuspend.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnSuspend.Name = "btnSuspend";
             this.btnSuspend.Size = new System.Drawing.Size(56, 22);
@@ -159,7 +156,6 @@
             // btnResume
             // 
             this.btnResume.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnResume.Image = ((System.Drawing.Image)(resources.GetObject("btnResume.Image")));
             this.btnResume.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnResume.Name = "btnResume";
             this.btnResume.Size = new System.Drawing.Size(53, 22);
@@ -179,7 +175,6 @@
             // btnDumpCallstack
             // 
             this.btnDumpCallstack.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnDumpCallstack.Image = ((System.Drawing.Image)(resources.GetObject("btnDumpCallstack.Image")));
             this.btnDumpCallstack.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDumpCallstack.Name = "btnDumpCallstack";
             this.btnDumpCallstack.Size = new System.Drawing.Size(26, 22);

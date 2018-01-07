@@ -22,7 +22,7 @@ namespace CxbxDebugger
             WCHAR,
         };
 
-        public struct HLECache
+        public class HLECache
         {
             public string FileName { get; set; }
         }
@@ -44,7 +44,7 @@ namespace CxbxDebugger
             return Report;
         }
 
-        public struct KernelPatch
+        public class KernelPatch
         {
             public string Name { get; set; }
             public IntPtr Address { get; set; }
@@ -68,7 +68,7 @@ namespace CxbxDebugger
             return Report;
         }
 
-        public struct FileOpened
+        public class FileOpened
         {
             public IntPtr Handle { get; set; }
             public string FileName { get; set; }
@@ -83,7 +83,7 @@ namespace CxbxDebugger
             StringType Type = (StringType)Data[1];
 
             if (Type != StringType.WCHAR)
-                throw new Exception("GetReportFile expects a widestring message");
+                throw new Exception("GetFileOpenedReport expects a widestring message");
 
             uint Length = Data[2];
             IntPtr MessagePtr = new IntPtr(Data[3]);
@@ -93,7 +93,7 @@ namespace CxbxDebugger
             return Report;
         }
 
-        public struct FileRead
+        public class FileRead
         {
             public IntPtr Handle { get; set; }
             public uint Length { get; set; }
@@ -109,7 +109,7 @@ namespace CxbxDebugger
             return Report;
         }
 
-        public struct FileClosed
+        public class FileClosed
         {
             public IntPtr Handle { get; set; }
         }
