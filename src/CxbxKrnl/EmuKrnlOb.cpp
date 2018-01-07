@@ -34,7 +34,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"

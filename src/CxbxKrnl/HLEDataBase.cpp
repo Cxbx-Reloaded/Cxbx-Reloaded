@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings

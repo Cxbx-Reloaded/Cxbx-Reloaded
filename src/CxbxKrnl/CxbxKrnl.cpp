@@ -34,7 +34,6 @@
 // *
 // ******************************************************************
 
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 /* prevent name collisions */
