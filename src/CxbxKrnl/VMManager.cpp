@@ -134,7 +134,7 @@ void VMManager::Initialize(HANDLE file_view)
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_EXECUTE_READWRITE, false);
+	Allocate(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_EXECUTE_READWRITE, true);
 
 	// Map the tiled memory
 	MapHardwareDevice(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE, VMAType::MemTiled);
@@ -229,7 +229,7 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
-VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Alignment, DWORD protect, bool bNonContiguous)
+VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Alignment, DWORD protect, bool bContiguous)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(size);
@@ -237,12 +237,12 @@ VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Al
 		LOG_FUNC_ARG(high_addr);
 		LOG_FUNC_ARG(Alignment);
 		LOG_FUNC_ARG(protect);
-		LOG_FUNC_ARG(bNonContiguous);
+		LOG_FUNC_ARG(bContiguous);
 	LOG_FUNC_END;
 
 	Lock();
 	size_t ReturnedSize = size;
-	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, Alignment, bNonContiguous);
+	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, Alignment, bContiguous);
 	if (v_addr)
 	{
 		ReprotectVMARange(v_addr, ReturnedSize, protect);
@@ -602,14 +602,14 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	RETURN(ret);
 }
 
-VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
+VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bContiguous)
 {
 	// Find a free memory block for the allocation, if any
 	VAddr addr;
 	u32 offset;
 	size_t aligned_size = (*size + PAGE_MASK) & ~PAGE_MASK;
 
-	if (high_addr == MAXULONG_PTR)
+	if (high_addr == MAXULONG_PTR) // TODO : && low_addr == 0) || bContiguous)
 	{
 		offset = AllocatePhysicalMemory(aligned_size);
 	}
@@ -629,7 +629,7 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, U
 	{
 		case PMEMORY_SUCCESS:
 		{
-			if (bNonContiguous) {
+			if (!bContiguous) {
 				addr = m_Base + offset;
 			}
 			else { addr = CONTIGUOUS_MEMORY_BASE + offset; } // VAddr is simply the offset from the base of the contiguous memory
@@ -649,6 +649,13 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, U
 
 		case PMEMORY_ALLOCATE_FRAGMENTED:
 		{
+			if (bContiguous) {
+				EmuWarning("Warning: Cannot allocate contiguous memory due to fragmentation!");
+				// TODO : Prevent the preceding call to AllocateFragmented. For now, cleanup.
+				DeAllocateFragmented((VAddr)offset);
+				return NULL;
+			}
+
 			addr = offset; // VAddr is the aligned address returned by VirtualAlloc
 
 			VMAIter vma_handle = CarveVMA(addr, aligned_size);

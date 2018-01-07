@@ -138,7 +138,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	if (pRet != xbnull)
 	{
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType, false);
+		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType, true);
 	}
 
 	RETURN(pRet);

@@ -134,7 +134,7 @@ class VMManager : public PhysicalMemory
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
 		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE,
-			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
+			DWORD protect = PAGE_EXECUTE_READWRITE, bool bContiguous = false);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates stack memory
@@ -179,7 +179,7 @@ class VMManager : public PhysicalMemory
 		size_t m_StackMemoryInUse = 0;
 	
 		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment = PAGE_SIZE, bool bNonContiguous = true);
+		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment = PAGE_SIZE, bool bContiguous = false);
 		// creates a vma representing the memory block to remove
 		void UnmapRange(VAddr target);
 		// changes access permissions for a range of vma's, splitting them if necessary
