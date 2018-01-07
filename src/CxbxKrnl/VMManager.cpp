@@ -638,7 +638,7 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, U
 
 			VirtualMemoryArea& final_vma = vma_handle->second;
 			final_vma.type = VMAType::Allocated;
-			final_vma.permissions = PAGE_EXECUTE_READWRITE;
+			final_vma.permissions = bContiguous ? PAGE_READWRITE : PAGE_EXECUTE_READWRITE;
 			final_vma.backing_block = offset;
 
 			UpdatePageTableForVMA(final_vma);
