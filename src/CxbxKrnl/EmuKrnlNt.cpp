@@ -57,6 +57,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -226,9 +227,16 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 
 		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
-	else
-		// close normal handles
-		ret = NtDll::NtClose(Handle);
+    else
+    {
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportFileClosed(Handle);
+        }
+
+        // close normal handles
+        ret = NtDll::NtClose(Handle);
+    }
 
 	RETURN(ret);
 }
@@ -1597,6 +1605,11 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	// Halo...
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
 	//        _asm int 3
+
+    if (CxbxDebugger::CanReport())
+    {
+        CxbxDebugger::ReportFileRead(FileHandle, Length);
+    }
 
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,

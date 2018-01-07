@@ -38,4 +38,11 @@ namespace CxbxDebugger
     {
         void OnAccessViolation(DebuggerThread Thread, IntPtr Address);
     }
+
+    public interface IDebuggerFileEvents
+    {
+        void OnFileOpened(IntPtr Handle, string Name);
+        void OnFileRead(IntPtr Handle, uint Length);
+        void OnFileClosed(IntPtr Handle);
+    }
 }

@@ -177,7 +177,13 @@ namespace CxbxDebugger
             lbConsole.Items.Clear();
         }
 
-        class DebuggerFormEvents : IDebuggerGeneralEvents, IDebuggerProcessEvents, IDebuggerModuleEvents, IDebuggerThreadEvents, IDebuggerOutputEvents, IDebuggerExceptionEvents
+        class DebuggerFormEvents : IDebuggerGeneralEvents,
+            IDebuggerProcessEvents,
+            IDebuggerModuleEvents,
+            IDebuggerThreadEvents,
+            IDebuggerOutputEvents,
+            IDebuggerExceptionEvents,
+            IDebuggerFileEvents
         {
             Form1 frm;
 
@@ -272,6 +278,21 @@ namespace CxbxDebugger
 
                 // Already suspended at this point, so we can rebuild the callstack list
                 frm.PopulateThreadList(frm.cbThreads.Items, Thread);
+            }
+
+            public void OnFileOpened(IntPtr Handle, string Name)
+            {
+                frm.DebugLog(string.Format("File opened \"{0}\" {1:X8}", Name, (uint)Handle));
+            }
+
+            public void OnFileRead(IntPtr Handle, uint Length)
+            {
+                frm.DebugLog(string.Format("File read {0:X8} ({1} bytes)", (uint)Handle, Length));
+            }
+
+            public void OnFileClosed(IntPtr Handle)
+            {
+                frm.DebugLog(string.Format("File closed {0}", (uint)Handle));
             }
         }
 

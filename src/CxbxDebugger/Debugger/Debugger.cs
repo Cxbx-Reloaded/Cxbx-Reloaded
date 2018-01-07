@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace CxbxDebugger
 {
-    public class Debugger : IDebuggerOutputEvents, IDisposable
+    public class Debugger : IDisposable
     {
         enum RunState
         {
@@ -40,6 +40,7 @@ namespace CxbxDebugger
         List<IDebuggerModuleEvents> ModuleEvents = new List<IDebuggerModuleEvents>();
         List<IDebuggerOutputEvents> OutputEvents = new List<IDebuggerOutputEvents>();
         List<IDebuggerExceptionEvents> ExceptionEvents = new List<IDebuggerExceptionEvents>();
+        List<IDebuggerFileEvents> FileEvents = new List<IDebuggerFileEvents>();
 
         DebuggerSymbolServer SymbolSrv;
         KernelProvider KernelSymbolProvider;
@@ -127,26 +128,6 @@ namespace CxbxDebugger
             return false;
         }
         
-        static string CxbxDebuggerPrefix = "CxbxDebugger! ";
-        static string KernelImportPrefix = "KernelImport_";
-        public void OnDebugOutput(string Message)
-        {
-            if (Message.StartsWith(CxbxDebuggerPrefix))
-            {
-                string Payload = Message.Substring(CxbxDebuggerPrefix.Length);
-
-                if (Payload.StartsWith(KernelImportPrefix))
-                {
-                    KernelSymbolProvider.AddKernelSymbolFromMessage(Payload);
-                }
-                else
-                {
-                    // TODO Ensure this 
-                    SetupHLECacheProvider(Payload);
-                }
-            }
-        }
-
         private void SetupHLECacheProvider(string Filename)
         {
             var Provider = new HLECacheProvider();
@@ -438,21 +419,90 @@ namespace CxbxDebugger
             switch ((ExceptionCode)DebugInfo.ExceptionRecord.ExceptionCode)
             {
                 case ExceptionCode.AccessViolation:
-
-                    // We can't suspend this thread
-                    bContinue = false;
-                    
-                    var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
-                    if (Thread != null)
                     {
-                        Thread.UpdateContext();
+                        // We can't suspend this thread
+                        bContinue = false;
 
-                        foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
                         {
-                            Event.OnAccessViolation(Thread, DebugInfo.ExceptionRecord.ExceptionAddress);
+                            Thread.UpdateContext();
+
+                            foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
+                            {
+                                Event.OnAccessViolation(Thread, DebugInfo.ExceptionRecord.ExceptionAddress);
+                            }
                         }
                     }
-                    
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.HLECACHE_FILE:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetHLECacheReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            SetupHLECacheProvider(Report.FileName);
+                        }
+                    }
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.KERNEL_PATCH:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetKernelPatchReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            KernelSymbolProvider.AddKernelSymbolFromMessage(Report);
+                        }
+                    }
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.FILE_OPENED:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetFileOpenedReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            foreach (IDebuggerFileEvents Event in FileEvents)
+                            {
+                                Event.OnFileOpened(Report.Handle, Report.FileName);
+                            }
+                        }
+                    }
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.FILE_READ:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetFileReadReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            foreach (IDebuggerFileEvents Event in FileEvents)
+                            {
+                                Event.OnFileRead(Report.Handle, Report.Length);
+                            }
+                        }
+                    }
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.FILE_CLOSED:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetFileClosedReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            foreach (IDebuggerFileEvents Event in FileEvents)
+                            {
+                                Event.OnFileClosed(Report.Handle);
+                            }
+                        }
+                    }
                     break;
 
                 case ExceptionCode.Breakpoint:
@@ -567,6 +617,9 @@ namespace CxbxDebugger
 
             IDebuggerExceptionEvents ExceptionListener = EventClass as IDebuggerExceptionEvents;
             if (ExceptionListener != null) ExceptionEvents.Add(ExceptionListener);
+
+            IDebuggerFileEvents FileListener = EventClass as IDebuggerFileEvents;
+            if (FileListener != null) FileEvents.Add(FileListener);
         }
     }
 }

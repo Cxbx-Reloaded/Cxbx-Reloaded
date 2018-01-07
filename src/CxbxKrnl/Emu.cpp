@@ -58,6 +58,7 @@ namespace NtDll
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
+#include "CxbxDebugger.h"
 
 #ifdef _DEBUG
 #include <Dbghelp.h>
@@ -239,6 +240,13 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
+        // Skip any debugger messages handled by an unsupported debugger (ie Visual Studio)
+        if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode))
+        {
+            g_bEmuException = false;
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
 		// Pass the exception to our X86 implementation, to try and execute the failing instruction
 		if (EmuX86_DecodeException(e))
 		{

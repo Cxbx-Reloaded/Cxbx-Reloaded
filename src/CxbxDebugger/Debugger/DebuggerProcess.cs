@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using WinProcesses = VsChromium.Core.Win32.Processes;
 
 namespace CxbxDebugger
@@ -52,19 +53,22 @@ namespace CxbxDebugger
             return Threads.Find(Thread => Thread.ThreadID == ThreadID);
         }
 
-        private byte[] ReadMemoryInternal(IntPtr Address, int Size)
+        private byte[] ReadMemoryInternal(IntPtr Address, uint Size)
         {
             byte[] buffer = new byte[Size];
 
             int numRead = 0;
-            WinProcesses.NativeMethods.ReadProcessMemory
+            if (!WinProcesses.NativeMethods.ReadProcessMemory
             (
                 Handle,
                 Address,
                 buffer,
                 Size,
                 out numRead
-            );
+            ))
+            {
+                throw new Exception(string.Format("ReadProcessMemory failed to read 0x{0:X8}", (uint)Address));
+            }
 
             // Not handling errors for now
             return buffer;
@@ -72,12 +76,19 @@ namespace CxbxDebugger
 
         public T ReadMemory<T>(IntPtr Address)
         {
-            var size = Marshal.SizeOf(typeof(T));
-            byte[] Data = ReadMemoryInternal(Address, size);
-
             object Value = default(T);
 
+            if (Address == IntPtr.Zero)
+                return (T)Value;
+
             TypeCode TType = Type.GetTypeCode(typeof(T));
+
+            if (TType == TypeCode.String)
+                throw new Exception("ReadMemory does not support reading strings of unknown length!");
+
+            uint Size = (uint)Marshal.SizeOf(typeof(T));
+            byte[] Data = ReadMemoryInternal(Address, Size);
+            
             switch (TType)
             {
                 case TypeCode.Byte:
@@ -93,6 +104,47 @@ namespace CxbxDebugger
             }
 
             return (T)Value;
+        }
+
+        //public string ReadString(IntPtr Address, bool IsWide)
+        //{
+        //    if (Address == IntPtr.Zero)
+        //        return "";
+
+        //    List<byte> StringData = new List<byte>();
+
+        //    while(true)
+        //    {
+        //        byte b = ReadMemory<byte>(Address);
+        //        if (b == 0)
+        //            break;
+
+        //        Address = new IntPtr((uint)Address + 1);
+        //        StringData.Add(b);
+        //    }
+
+        //    Encoding StringEncoding = (IsWide ? Encoding.Unicode : Encoding.ASCII);
+        //    return StringEncoding.GetString(StringData.ToArray());
+        //}
+
+        public string ReadString(IntPtr Address, uint Length)
+        {
+            if (Address == IntPtr.Zero)
+                return "";
+
+            byte[] StringData = ReadMemoryInternal(Address, Length);
+            
+            return Encoding.ASCII.GetString(StringData);
+        }
+
+        public string ReadWString(IntPtr Address, uint Length)
+        {
+            if (Address == IntPtr.Zero)
+                return "";
+
+            byte[] StringData = ReadMemoryInternal(Address, Length);
+            
+            return Encoding.Unicode.GetString(StringData);
         }
 
         private void WriteMemoryInternal(IntPtr Address, byte[] Data)

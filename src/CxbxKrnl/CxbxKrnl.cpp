@@ -56,6 +56,7 @@ namespace xboxkrnl
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
+#include "CxbxDebugger.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -651,13 +652,25 @@ void CxbxKrnlMain(int argc, char* argv[])
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
+    const bool SendDebugReports = CxbxDebugger::CanReport();
+
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
 	{
 		uint32_t* kt_tbl = (uint32_t*)kt;
 		int i = 0;
 		while (kt_tbl[i] != 0) {
 			int t = kt_tbl[i] & 0x7FFFFFFF;
+            
 			kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+
+            if (SendDebugReports)
+            {
+                // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
+                std::string importName = "KernelImport_" + std::to_string(t);
+
+                CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
+            }
+
 			i++;
 		}
 	}

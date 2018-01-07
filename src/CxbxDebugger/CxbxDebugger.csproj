@@ -67,6 +67,7 @@
     <Compile Include="Debugger\Debugger.cs" />
     <Compile Include="Debugger\DebuggerEventInterfaces.cs" />
     <Compile Include="Debugger\DebuggerInstance.cs" />
+    <Compile Include="Debugger\DebuggerMessages.cs" />
     <Compile Include="Debugger\DebuggerModule.cs" />
     <Compile Include="Debugger\DebuggerProcess.cs" />
     <Compile Include="Debugger\DebuggerCallstack.cs" />

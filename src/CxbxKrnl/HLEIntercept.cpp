@@ -44,6 +44,7 @@
 #include "EmuFS.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
+#include "CxbxDebugger.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
 #include "xxhash32.h"
@@ -163,8 +164,10 @@ public:
 
     ~CxbxDebuggerScopedMessage()
     {
-        std::string debuggerMessage = "CxbxDebugger! " + message;
-        OutputDebugString(debuggerMessage.c_str());
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportHLECacheFile(message.c_str(), message.length());
+        }
     }
 };
 
