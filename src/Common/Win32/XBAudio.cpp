@@ -40,7 +40,7 @@
 // ******************************************************************
 // * func: XBAudio::XBAudio
 // ******************************************************************
-XBAudio::XBAudio() : m_bLegacyAudioHack(false), m_bPCM(true), m_bXADPCM(false), m_bUnknownCodec(false)
+XBAudio::XBAudio() : m_bLegacyAudioHack(false), m_bPCM(true), m_bXADPCM(true), m_bUnknownCodec(true)
 {
     m_binAudioAdapter = { 0 };
 }
