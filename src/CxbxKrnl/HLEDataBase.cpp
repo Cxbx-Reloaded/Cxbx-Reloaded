@@ -94,7 +94,7 @@ const HLEData HLEDataBase[] = {
     //
     { Lib_DSOUND,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 },
 
-    // DSOUNDH is just meant to define hot fix, there is no seperate section
+    // DSOUNDH is just meant to define hot fix, there is no separate section
     //{ Lib_DSOUNDH,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_SIZEV2 },
 
     //
