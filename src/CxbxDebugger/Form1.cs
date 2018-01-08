@@ -234,6 +234,8 @@ namespace CxbxDebugger
 
                 frm.DebugLog(string.Format("Process exited {0} ({1})", Process.ProcessID, PrettyExitCode(ExitCode)));
                 frm.DebugLog(string.Format("{0} thread(s) remain open", remainingThreads));
+
+                frm.DebugModules.Clear();
             }
 
             public void OnDebugStart()
@@ -355,6 +357,8 @@ namespace CxbxDebugger
 
             lbRegisters.Items.Clear();
 
+            int OtherModuleCount = 0;
+
             var Callstack = DebugThreads[Index].CallstackCache;
             foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
@@ -363,14 +367,37 @@ namespace CxbxDebugger
                 var Module = DebuggerInst.ResolveModule((uint)StackFrame.PC);
                 if( Module != null )
                 {
+                    if( !Module.Core )
+                    {
+                        OtherModuleCount++;
+                        continue;
+                    }
+
                     ModuleName = Path.GetFileName(Module.Path);
                     ModuleBase = (uint)Module.ImageBase;
+                }
+                else
+                {
+                    OtherModuleCount++;
+                    continue;
+                }
+
+                if (OtherModuleCount > 0)
+                {
+                    lbRegisters.Items.Add("[External Code]");
+                    OtherModuleCount = 0;
                 }
 
                 uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
                 string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
 
                 lbRegisters.Items.Add(FrameString);
+            }
+
+            if (OtherModuleCount > 0)
+            {
+                lbRegisters.Items.Add("[External Code]");
+                OtherModuleCount = 0;
             }
         }
     }

@@ -184,6 +184,7 @@ namespace CxbxDebugger
 
                 Process.Threads.Add(Thread);
                 Process.MainThread = Thread;
+                Process.Core = true;
 
                 DebugInstance = new DebuggerInstance(Process);
                 RegisterEventInterfaces(DebugInstance);
@@ -330,6 +331,7 @@ namespace CxbxDebugger
 
                 XboxModule.Path = Target;
                 XboxModule.ImageBase = new IntPtr(0x00010000); // XBE_IMAGE_BASE
+                XboxModule.Core = true;
 
                 foreach (IDebuggerModuleEvents Event in ModuleEvents)
                 {
