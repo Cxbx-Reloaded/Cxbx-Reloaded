@@ -56,6 +56,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "VMManager.h" // For g_VMManager
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -150,6 +151,8 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		{
 			ULONG_PTR ResultingBaseAddress = (ULONG_PTR)*BaseAddress;
 			ULONG ResultingAllocationSize = *AllocationSize;
+
+			g_VMManager.m_VirtualMemoryBytesReserved += ResultingAllocationSize;
 
 			DbgPrintf("KNRL: NtAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize);
 		}
@@ -818,7 +821,17 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+
+	ULONG RegionSize;
+
+	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, &RegionSize, FreeType);
+
+	if (SUCCEEDED(ret)) {
+		// TODO : Start using XbFreeVirtualMemory, and move this there :
+		g_VMManager.m_VirtualMemoryBytesReserved -= RegionSize;
+		if (FreeSize != xbnullptr)
+			*FreeSize = RegionSize;
+	}
 
 	RETURN(ret);
 }

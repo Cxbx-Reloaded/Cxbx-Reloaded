@@ -51,7 +51,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
-#include "VMManager.h"
+#include "VMManager.h" // for g_VMManager
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
 #include "Logging.h"
