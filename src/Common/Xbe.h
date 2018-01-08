@@ -74,6 +74,9 @@ class Xbe : public Error
 		// purge illegal characters in Windows filenames or other OS's
 		void PurgeBadChar(std::string& s, const std::string& illegalChars = "\\/:?\"<>|");
 
+        // Convert game region field to string
+        const char *GameRegionToString();
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
@@ -249,6 +252,8 @@ class Xbe : public Error
 
         // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
+
+        std::string AllowedMediaToString();
 
         // used to encode/decode logo bitmap data
         union LogoRLE
