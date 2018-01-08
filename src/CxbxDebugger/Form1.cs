@@ -18,6 +18,8 @@ namespace CxbxDebugger
         DebuggerFormEvents DebugEvents;
 
         List<DebuggerThread> DebugThreads = new List<DebuggerThread>();
+        List<DebuggerModule> DebugModules = new List<DebuggerModule>();
+
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
         public Form1()
@@ -218,7 +220,7 @@ namespace CxbxDebugger
 
             public void OnProcessCreate(DebuggerProcess Process)
             {
-                // !
+                frm.DebugModules.Add(Process);
             }
 
             public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
@@ -256,11 +258,13 @@ namespace CxbxDebugger
             public void OnModuleLoaded(DebuggerModule Module)
             {
                 frm.DebugLog(string.Format("Loaded module \"{0}\"", Module.Path));
+                frm.DebugModules.Add(Module);
             }
 
             public void OnModuleUnloaded(DebuggerModule Module)
             {
                 frm.DebugLog(string.Format("Unloaded module \"{0}\"", Module.Path));
+                frm.DebugModules.Remove(Module);
             }
 
             public void OnDebugOutput(string Message)
@@ -339,19 +343,19 @@ namespace CxbxDebugger
             lbRegisters.Items.Clear();
 
             var Callstack = DebugThreads[Index].CallstackCache;
-            foreach(DebuggerStackFrame StackFrame in Callstack.StackFrames)
+            foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
             {
-                string FrameString = string.Format("{0:X8}", (uint)StackFrame.PC);
-
-                // Try to resolve the symbol name
-                var Symbol = DebuggerInst.ResolveSymbol(StackFrame.PC);
-                if( Symbol != null)
+                string ModuleName = "??";
+                uint ModuleBase = 0;
+                var Module = DebuggerInst.ResolveModule((uint)StackFrame.PC);
+                if( Module != null )
                 {
-                    // TODO Investigate why this is a constant offset in the last few frames
-                    uint Offset = (uint)StackFrame.PC - Symbol.AddrBegin;
-
-                    FrameString = string.Format("{0} +0x{1:X}", Symbol.Name, Offset);
+                    ModuleName = Path.GetFileName(Module.Path);
+                    ModuleBase = (uint)Module.ImageBase;
                 }
+
+                uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
+                string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
 
                 lbRegisters.Items.Add(FrameString);
             }

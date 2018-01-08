@@ -171,9 +171,8 @@ namespace CxbxDebugger
                 
                 Process.Handle = stProcessInfo.hProcess;
                 Process.ProcessID = (uint)stProcessInfo.dwProcessId;
-
-                // TODO: Split XBE and Cxbx into separate targets
-                Process.Path = Target;
+                // Cxbx-Reloaded path
+                Process.Path = args[0].Trim(new char[] { '"' });
 
                 var Thread = new DebuggerThread(Process);
 
@@ -326,9 +325,18 @@ namespace CxbxDebugger
                 }
 
                 // Update information about this process
-                // TODO: Ensure this is at the right image base (0x10000)
+                var XboxModule = new DebuggerModule();
 
-                TargetProcess.ImageBase = DebugInfo.lpBaseOfImage;
+                XboxModule.Path = Target;
+                XboxModule.ImageBase = new IntPtr(0x00010000); // XBE_IMAGE_BASE
+
+                foreach (IDebuggerModuleEvents Event in ModuleEvents)
+                {
+                    Event.OnModuleLoaded(XboxModule);
+                }
+
+                // + VM_PLACEHOLDER_SIZE
+                TargetProcess.ImageBase = new IntPtr((uint)DebugInfo.lpBaseOfImage + 0x3FEF000);
                 
                 // Update information about the main thread
 
@@ -336,7 +344,7 @@ namespace CxbxDebugger
                 //TargetProcess.MainThread.ThreadID = (uint)DebugEvent.dwThreadId;
                 TargetProcess.MainThread.StartAddress = DebugInfo.lpStartAddress;
                 TargetProcess.MainThread.ThreadBase = DebugInfo.lpThreadLocalBase;
-                
+
                 foreach (IDebuggerProcessEvents Event in ProcessEvents)
                 {
                     Event.OnProcessCreate(TargetProcess);
@@ -595,7 +603,12 @@ namespace CxbxDebugger
 
         public DebuggerSymbol ResolveSymbol(IntPtr Address)
         {
-            return SymbolSrv.FindSymbol((uint)Address);
+            return ResolveSymbol((uint)Address);
+        }
+
+        public DebuggerModule ResolveModule(uint Address)
+        {
+            return DebugInstance.FindModuleFromAddress(Address);
         }
 
         public void RegisterEventInterfaces(object EventClass)

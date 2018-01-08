@@ -13,7 +13,7 @@ namespace CxbxDebugger
     {
         public IntPtr Handle { get; set; }
         public uint ProcessID { get; set; }
-        public List<DebuggerModule> Modules { get; set; }
+        public List<DebuggerModule> Modules { get; private set; }
         public List<DebuggerThread> Threads { get; set; }
 
         public DebuggerThread MainThread { get; set; }
