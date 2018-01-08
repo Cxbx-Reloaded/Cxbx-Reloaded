@@ -150,6 +150,11 @@ namespace CxbxDebugger
             }
         }
 
+        private bool DebugAsk(string Message)
+        {
+            return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        }
+
         private void SetDebugProcessActive(bool Active)
         {
             if (InvokeRequired)
@@ -272,9 +277,15 @@ namespace CxbxDebugger
                 frm.DebugLog(string.Format("OutputDebugString \"{0}\"", Message));
             }
 
-            public void OnAccessViolation(DebuggerThread Thread, IntPtr Address)
+            public bool OnAccessViolation(DebuggerThread Thread, IntPtr Address)
             {
-                string ProcessName = Path.GetFileName(Thread.OwningProcess.Path);
+                string ProcessName = "??";
+
+                var Module = frm.DebuggerInst.ResolveModule((uint)Address);
+                if( Module != null )
+                {
+                    ProcessName = Path.GetFileName(Module.Path);
+                }
                 
                 // TODO Include GetLastError string
                 string ExceptionMessage = string.Format("Access violation thrown in {0} 0x{1:X8}", ProcessName, (uint)Address);
@@ -283,6 +294,8 @@ namespace CxbxDebugger
 
                 // Already suspended at this point, so we can rebuild the callstack list
                 frm.PopulateThreadList(frm.cbThreads.Items, Thread);
+
+                return frm.DebugAsk(ExceptionMessage + "\nTry to skip this error?");
             }
 
             public void OnFileOpened(DebuggerMessages.FileOpened Info)

@@ -46,6 +46,7 @@ namespace CxbxDebugger
         KernelProvider KernelSymbolProvider;
 
         bool bContinue = true;
+        WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
 
         private void Init()
         {
@@ -436,9 +437,18 @@ namespace CxbxDebugger
                         {
                             Thread.UpdateContext();
 
+                            bool OverrideContinue = bContinue;
+
                             foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
                             {
-                                Event.OnAccessViolation(Thread, DebugInfo.ExceptionRecord.ExceptionAddress);
+                                OverrideContinue |= Event.OnAccessViolation(Thread, DebugInfo.ExceptionRecord.ExceptionAddress);
+                            }
+
+                            // Attempt to skip this exception if requested
+                            if (OverrideContinue)
+                            {
+                                bContinue = true;
+                                ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
                             }
                         }
                     }
@@ -527,8 +537,7 @@ namespace CxbxDebugger
         public void RunThreaded()
         {
             WinDebug.DEBUG_EVENT DbgEvt = new WinDebug.DEBUG_EVENT();
-            
-            WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
+            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
 
             foreach (IDebuggerGeneralEvents Event in GeneralEvents)
             {
@@ -586,6 +595,7 @@ namespace CxbxDebugger
 
                 // TODO: Stop doing this once we raise an exception
                 WinDebug.NativeMethods.ContinueDebugEvent(DbgEvt.dwProcessId, DbgEvt.dwThreadId, ContinueStatus);
+                ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
             }
             
             State = RunState.Ended;
