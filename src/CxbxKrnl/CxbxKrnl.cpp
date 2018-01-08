@@ -777,31 +777,6 @@ void LoadXboxKeys(std::string path)
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
-// game region flags for Xbe certificate
-#define XBEIMAGE_GAME_REGION_US_CANADA  XBEIMAGE_GAME_REGION_NA
-#define XBEIMAGE_GAME_REGION_ALL (XBEIMAGE_GAME_REGION_US_CANADA | XBEIMAGE_GAME_REGION_JAPAN | XBEIMAGE_GAME_REGION_RESTOFWORLD)
-#define XBEIMAGE_GAME_REGION_KNOWN (XBEIMAGE_GAME_REGION_ALL | XBEIMAGE_GAME_REGION_MANUFACTURING)
-
-const char *GameRegionToString(DWORD aGameRegion)
-{
-	const char *Regions[] = {
-		"UNKNOWN", "NTSC", "JAP", "NTSC+JAP",
-		"PAL", "PAL+NTSC", "PAL+JAP", "ALL",
-
-		"DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
-		"PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "ALL (DEBUG)"
-	};
-
-    if ((aGameRegion & ~XBEIMAGE_GAME_REGION_KNOWN) > 0) {
-        // Just in case we need this if a certificate structure data is corrupted again.
-        DbgPrintf("REGION ERROR! (0x%X)\n", aGameRegion);
-        return "REGION ERROR";
-    }
-
-	DWORD index = (aGameRegion & 7) | (aGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING ? 8 : 0);
-	return Regions[index];
-}
-
 __declspec(noreturn) void CxbxKrnlInit
 (
 	HWND                    hwndParent,
@@ -974,7 +949,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		if (g_pCertificate != NULL) {
 			printf("[0x%.4X] INIT: XBE TitleID : %.8X\n", GetCurrentThreadId(), g_pCertificate->dwTitleId);
 			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
-			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), GameRegionToString(g_pCertificate->dwGameRegion));
+			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());
 		}
 
 		// Dump Xbe library build numbers

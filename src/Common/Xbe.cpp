@@ -658,7 +658,7 @@ void Xbe::DumpInformation(FILE *x_file)
     }
 
     fprintf(x_file, "Allowed Media                    : 0x%.08X\n", m_Certificate.dwAllowedMedia);
-    fprintf(x_file, "Game Region                      : 0x%.08X\n", m_Certificate.dwGameRegion);
+    fprintf(x_file, "Game Region                      : 0x%.08X (%s)\n", m_Certificate.dwGameRegion, GameRegionToString());
     fprintf(x_file, "Game Ratings                     : 0x%.08X\n", m_Certificate.dwGameRatings);
     fprintf(x_file, "Disk Number                      : 0x%.08X\n", m_Certificate.dwDiskNumber);
     fprintf(x_file, "Version                          : 0x%.08X\n", m_Certificate.dwVersion);
@@ -1012,4 +1012,26 @@ void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)
 		bool found = illegalChars.find(*it) != std::string::npos;
 		if (found) { *it = '_'; }
 	}
+}
+
+const char *Xbe::GameRegionToString()
+{
+    const char *Region_text[] = {
+        "Unknown", "NTSC", "JAP", "NTSC+JAP",
+        "PAL", "PAL+NTSC", "PAL+JAP", "Region Free",
+        "DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
+        "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "Region Free (DEBUG)"
+    };
+    const uint32 all_regions = XBEIMAGE_GAME_REGION_NA |
+                               XBEIMAGE_GAME_REGION_JAPAN |
+                               XBEIMAGE_GAME_REGION_RESTOFWORLD |
+                               XBEIMAGE_GAME_REGION_MANUFACTURING;
+
+    if(m_Certificate.dwGameRegion & ~all_regions) {
+        return "REGION ERROR";
+    }
+
+    uint8 index = (m_Certificate.dwGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
+    index |= (m_Certificate.dwGameRegion & 0x7);
+    return Region_text[index];
 }

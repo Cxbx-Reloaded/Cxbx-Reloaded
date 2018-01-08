@@ -74,6 +74,9 @@ class Xbe : public Error
 		// purge illegal characters in Windows filenames or other OS's
 		void PurgeBadChar(std::string& s, const std::string& illegalChars = "\\/:?\"<>|");
 
+        // Convert game region field to string
+        const char *GameRegionToString();
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
