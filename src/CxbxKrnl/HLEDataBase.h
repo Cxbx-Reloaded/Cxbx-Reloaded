@@ -36,11 +36,6 @@
 
 #include "HLEDataBase\D3D8.OOVPA.h"
 
-// ******************************************************************
-// * szHLELastCompileTime
-// ******************************************************************
-extern "C" const char *szHLELastCompileTime;
-
 //TODO: Need to remove these externs as v2 is no longer require it.
 extern const char *Lib_D3D8;
 extern const char *Lib_D3D8LTCG;
@@ -77,6 +72,11 @@ HLEDataBase[];
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
+
+// ******************************************************************
+// * GetHLEDataBaseHash
+// ******************************************************************
+extern uint32 GetHLEDataBaseHash();
 
 // ******************************************************************
 // * XRefDataBaseOffset

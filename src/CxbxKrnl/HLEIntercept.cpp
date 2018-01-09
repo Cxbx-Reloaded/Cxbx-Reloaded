@@ -165,7 +165,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
     printf("\n");
 	printf("*******************************************************************************\n");
-	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
+	printf("* Cxbx-Reloaded High Level Emulation database\n");
 	printf("*******************************************************************************\n");
 	printf("\n");
 
@@ -190,15 +190,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
-		// Verify the version of the cache file against the HLE Database
-		char buffer[SHRT_MAX] = { 0 };
-		char* bufferPtr = buffer;
-
-		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
 		g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
-		if (strcmp(buffer, szHLELastCompileTime) == 0) {
+		// Verify the version of the cache file against the HLE Database	
+		const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
+
+		if (HLECacheHash == GetHLEDataBaseHash()) {
+			char buffer[SHRT_MAX] = { 0 };
+			char* bufferPtr = buffer;
+
 			printf("Using HLE Cache\n");
+
 			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
 			// Parse the .INI file into the map of symbol addresses
@@ -624,7 +626,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("\n");
 
 	// Write the HLE Database version string
-	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
+	{
+		std::string HLECacheHashString = std::to_string(GetHLEDataBaseHash());
+		WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
+	}
 
 	// Write the Certificate Details to the cache file
 	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
