@@ -1529,30 +1529,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 4627, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
-// ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4627, 1+10,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
-
-        { 0x03, 0x04 },
-
-        { 0x19, 0x00 },
-        { 0x1A, 0x00 },
-        { 0x1B, 0x74 },
-        { 0x1C, 0x14 },
-        { 0x1D, 0x8D },
-        { 0x1E, 0x90 },
-        { 0x1F, 0x90 },
-        { 0x20, 0x0A },
-
-        { 0x31, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_ApplyStateBlock
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_ApplyStateBlock, 4627, 8)
