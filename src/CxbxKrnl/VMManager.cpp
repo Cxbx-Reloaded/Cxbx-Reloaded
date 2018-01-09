@@ -39,6 +39,7 @@
 // with some changes and adaptions to suit Cxbx-Reloaded and Xbox emulation.
 // Citra website: https://citra-emu.org/
 
+#define LOG_PREFIX "VMEM"
 
 #include "VMManager.h"
 #include "Logging.h"
@@ -87,7 +88,7 @@ void VMManager::Initialize(HANDLE file_view)
 	UINT_PTR start = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (!start)
 	{
-		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
+		CxbxKrnlCleanup(LOG_PREFIX ": VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
 	}
 	VirtualFree((void*)start, 0, MEM_RELEASE);
 	m_Base = (VAddr)MapViewOfFileEx(
@@ -99,8 +100,10 @@ void VMManager::Initialize(HANDLE file_view)
 		(void*)start);
 	if (m_Base != start)
 	{
-		UnmapViewOfFile((void*)start);
-		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
+		if (m_Base)
+			UnmapViewOfFile((void*)m_Base);
+
+		CxbxKrnlCleanup(LOG_PREFIX ": MapViewOfFileEx could not map the second physical memory view!");
 	}
 	m_hAliasedView = file_view;
 
@@ -256,7 +259,7 @@ VAddr VMManager::Allocate(size_t size, PageType page_type, PAddr low_addr, PAddr
 	LOG_FUNC_END;
 
 	if (size <= 0) {
-		EmuWarning("VMManager: Allocate : Request for zero bytes\n");
+		EmuWarning(LOG_PREFIX ": Allocate : Request for zero bytes\n");
 		RETURN(0);
 	}
 
@@ -348,6 +351,12 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 		LOG_FUNC_ARG(new_perms);
 	LOG_FUNC_END;
 
+	if ((new_perms & 0xFF) == 0)
+	{
+		EmuWarning(LOG_PREFIX ": Protect : Skipping due to missing permission flags\n");
+		return;
+	}
+
 	Lock();
 	ReprotectVMARange(target, size, new_perms);
 	Unlock();
@@ -407,7 +416,7 @@ size_t VMManager::QuerySize(VAddr addr)
 		if (it->second.vma_type == VMAType::Free)
 		{
 			size = 0;
-			EmuWarning("VMManager: QuerySize : queried a free region!\n");
+			EmuWarning(LOG_PREFIX ": QuerySize : queried a free region!\n");
 		}
 		else
 		{
@@ -422,7 +431,7 @@ size_t VMManager::QuerySize(VAddr addr)
 					--prev_it;
 				}
 				it = std::next(prev_it);
-				EmuWarning("VMManager: QuerySize : quering not the start address of an allocation\n");
+				EmuWarning(LOG_PREFIX ": QuerySize : quering not the start address of an allocation\n");
 			}
 			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
 			// we must check the corresponding physical allocation size
