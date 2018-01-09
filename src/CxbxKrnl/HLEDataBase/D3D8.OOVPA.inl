@@ -327,7 +327,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleAntiAlias, PATCH, 3911, 4034, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMask, PATCH, 3911, 4034, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMode, PATCH, 3925, 4034, 4134, 4627, 5233),
-	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034, 4627, 5344), // Was 5233 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_NormalizeNormals, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_OcclusionCullEnable, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_PSTextureModes, PATCH, 3911, 4034),
