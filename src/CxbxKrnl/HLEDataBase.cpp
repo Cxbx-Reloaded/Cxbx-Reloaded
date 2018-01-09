@@ -41,8 +41,6 @@
 #include "CxbxKrnl.h" // For xbaddr
 #include "HLEDataBase.h" // For PairScanLibSec
 
-extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
-
 const char *Lib_D3D8 = "D3D8";
 const char *Sec_D3D = "D3D";
 const char *Lib_D3D8LTCG = "D3D8LTCG";
@@ -134,6 +132,80 @@ const HLEData HLEDataBase[] = {
 // * HLEDataBaseCount
 // ******************************************************************
 const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEDataBase[0]);
+
+// ******************************************************************
+// * GetHLEDataBaseHash
+// ******************************************************************
+
+// TODO Write a constexpr variation on these methods
+namespace HashHelpers
+{
+	namespace Internal
+	{
+		// Adapted from https://gist.github.com/underscorediscovery/81308642d0325fd386237cfa3b44785c
+		const uint32 fnv1aprime = 0x1000193;
+		void hash_fnv1a(uint32& hash, const void* key, const uint32 len)
+		{
+			const char* data = (char*)key;
+			for (uint32 i = 0; i < len; ++i) {
+				uint8_t value = data[i];
+				hash ^= value;
+				hash *= fnv1aprime;
+			}
+		}
+
+		void HashAssumedLOOVPA(uint32& Hash, const OOVPA* pAssumedLOOVPA)
+		{
+			// Number of offset-value pairs in the "Header" LOOVPA structure
+			uint32 Size = pAssumedLOOVPA->Count * sizeof(OOVPA::LOVP);
+
+			// Size of "Header" structure
+			Size += sizeof(OOVPA);
+
+			// Part 1: The array of OOVPA::LOVP items
+			hash_fnv1a(Hash, pAssumedLOOVPA, Size);
+		}
+
+		void HashOOVPATable(uint32& Hash, const OOVPATable* pTable)
+		{
+			// Part 1: function name string
+			if (pTable->szFuncName != nullptr) {
+				hash_fnv1a(Hash, pTable->szFuncName, strlen(pTable->szFuncName));
+			}
+
+			// Part 2: version number
+			hash_fnv1a(Hash, &pTable->Version, sizeof(pTable->Version));
+
+			// Part 3: LOOVPA
+			if (pTable->Oovpa) {
+				HashAssumedLOOVPA(Hash, pTable->Oovpa);
+			}
+		}
+
+		void HashHLEData(uint32& Hash, const HLEData* pData)
+		{
+			for (uint32 i = 0; i < pData->OovpaTableCount; ++i) {
+				HashOOVPATable(Hash, &pData->OovpaTable[i]);
+			}
+		}
+	}
+
+	const uint32 HashHLEDataArray(const HLEData* pDataArray, uint32 Count)
+	{
+		uint32 Hash = 0x811c9dc5;
+		for (uint32 i = 0; i < Count; ++i) {
+			Internal::HashHLEData(Hash, pDataArray + i);
+		}
+		return Hash;
+	}
+}
+
+uint32 GetHLEDataBaseHash()
+{
+	// Calculate this just once
+	static uint32 CalculatedHash = HashHelpers::HashHLEDataArray(HLEDataBase, HLEDataBaseCount);
+	return CalculatedHash;
+}
 
 // ******************************************************************
 // * XRefDataBase
