@@ -43,6 +43,8 @@
 #define STRINGIZEX(x) #x
 #define STRINGIZE(x) STRINGIZEX(x)
 
+#define OOVPA_TABLE_COUNT(x) (sizeof(x) / sizeof(OOVPATable))
+
 #pragma pack(1)
 
 // ******************************************************************

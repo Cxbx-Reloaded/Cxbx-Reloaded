@@ -69,7 +69,7 @@ extern const struct HLEData
     const PairScanLibSec LibSec;
 
     OOVPATable     *OovpaTable;
-    uint32          OovpaTableSize;
+    uint32          OovpaTableCount;
 }
 HLEDataBase[];
 
