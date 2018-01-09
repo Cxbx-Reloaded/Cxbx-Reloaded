@@ -75,6 +75,9 @@ extern const uint32 HLEDataBaseCount;
 
 // ******************************************************************
 // * GetHLEDataBaseHash
+// ****************************************************************** 
+// Note: The returned hash is a 32-bit FNV-1a checksum
+// This checksum was chosen as the hash should approximate the database integrity - and run as fast as possible!
 // ******************************************************************
 extern uint32 GetHLEDataBaseHash();
 
