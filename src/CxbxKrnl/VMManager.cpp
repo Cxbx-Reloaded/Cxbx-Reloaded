@@ -363,12 +363,6 @@ void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
 		LOG_FUNC_ARG(new_perms);
 	LOG_FUNC_END;
 
-	if ((new_perms & 0xFF) == 0)
-	{
-		EmuWarning(LOG_PREFIX ": Protect : Skipping due to missing permission flags\n");
-		return;
-	}
-
 	Lock();
 	ReprotectVMARange(target, size, new_perms);
 	Unlock();
@@ -443,7 +437,7 @@ size_t VMManager::QuerySize(VAddr addr)
 					--prev_it;
 				}
 				it = std::next(prev_it);
-				EmuWarning(LOG_PREFIX ": QuerySize : quering not the start address of an allocation\n");
+				EmuWarning(LOG_PREFIX ": QuerySize : querying not the start address of an allocation\n");
 			}
 			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
 			// we must check the corresponding physical allocation size

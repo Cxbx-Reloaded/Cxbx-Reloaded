@@ -93,6 +93,28 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 #define PAGE_KNOWN_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_NOCACHE | PAGE_WRITECOMBINE)
 
+bool CheckMmProtectFlags(DWORD protect)
+{
+	bool HasReadOnly = protect & PAGE_READONLY;
+	bool HasReadWrite = protect & PAGE_READWRITE;
+	bool HasNoCache = protect & PAGE_NOCACHE;
+	bool HasWriteCombine = protect & PAGE_WRITECOMBINE;
+
+	// Only known flags are allowed
+	if ((protect & ~PAGE_KNOWN_FLAGS) != 0)
+		return false;
+
+	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
+	if (HasReadOnly == HasReadWrite)
+		return false;
+
+	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
+	if (HasNoCache && HasWriteCombine)
+		return false;
+
+	return true;
+}
+
 // ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx()
 // ******************************************************************
@@ -113,30 +135,14 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
-
-	// size must be > 0
-	if (NumberOfBytes == 0)
-		pRet = xbnull;
-
-	if (Alignment < PAGE_SIZE)
-		Alignment = PAGE_SIZE; // page boundary at least
-
-	// Only known flags are allowed
-	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
-		pRet = xbnull;
-
-	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
-		pRet = xbnull;
-
-	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
-	if ((ProtectionType & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) == (PAGE_NOCACHE | PAGE_WRITECOMBINE))
-		pRet = xbnull;
+	PVOID pRet = (PVOID)xbnullptr;
 
 	// Allocate when input arguments are valid
-	if (pRet != xbnull)
+	if ((NumberOfBytes > 0) && CheckMmProtectFlags(ProtectionType))
 	{
+		if (Alignment < PAGE_SIZE)
+			Alignment = PAGE_SIZE; // page boundary at least
+
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
 		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::Contiguous, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 	}
@@ -556,6 +562,9 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(NewProtect)
 	LOG_FUNC_END;
+
+	if (!CheckMmProtectFlags(NewProtect))
+		return;
 
 	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
 }
