@@ -258,7 +258,7 @@ VAddr VMManager::Allocate(size_t size, PageType page_type, PAddr low_addr, PAddr
 		LOG_FUNC_ARG(low_addr);
 		LOG_FUNC_ARG(high_addr);
 		LOG_FUNC_ARG(alignment);
-		LOG_FUNC_ARG(protect);
+		LOG_FUNC_ARG(protect); // TODO : LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, protect);
 	LOG_FUNC_END;
 
 	if (size <= 0) {
