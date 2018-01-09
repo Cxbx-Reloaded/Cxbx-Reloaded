@@ -93,8 +93,8 @@ OOVPATable XONLINES_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * XONLINES_OOVPA_COUNTV2
+// * XONLINES_OOVPA_COUNT
 // ******************************************************************
-const uint32 XONLINES_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(XONLINES_OOVPAV2);
+const uint32 XONLINES_OOVPA_COUNT = OOVPA_TABLE_COUNT(XONLINES_OOVPAV2);
 
 #endif

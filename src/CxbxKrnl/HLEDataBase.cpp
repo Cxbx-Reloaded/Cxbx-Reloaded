@@ -81,51 +81,51 @@ const char *Sec_XNET = "XNET";
 
 const HLEData HLEDataBase[] = {
     // Support inline functions in .text section
-    { Lib_D3D8,{ Sec_text, Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_COUNTV2 },
+    { Lib_D3D8,{ Sec_text, Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_COUNT },
 
     // Cannot support LTCG in HLE
-    //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_COUNTV2 },
+    //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_COUNT },
 
     // Jarupxx mention this is not a requirement?
-    //{ Lib_D3DX8,{ Sec_D3DX }, _OOVPAV2, _OOVPA_COUNTV2 },
+    //{ Lib_D3DX8,{ Sec_D3DX }, _OOVPAV2, _OOVPA_COUNT },
 
     //
-    { Lib_DSOUND,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_COUNTV2 },
+    { Lib_DSOUND,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_COUNT },
 
     // DSOUNDH is just meant to define hot fix, there is no seperate section
-    //{ Lib_DSOUNDH,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_COUNTV2 },
+    //{ Lib_DSOUNDH,{ Sec_DSOUND }, DSound_OOVPAV2, DSound_OOVPA_COUNT },
 
     //
-    { Lib_XACTENG, { Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_COUNTV2 },
+    { Lib_XACTENG, { Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_COUNT },
 
     // test case: Power Drome (Unluckily, it use LTCG version of the library.)
-    //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_COUNTV2 },
+    //{ Lib_XACTENLT,{ Sec_XACTENG }, XACTENG_OOVPAV2, XACTENG_OOVPA_COUNT },
 
     //
-    { Lib_XAPILIB,{ Sec_text, Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_COUNTV2 },
+    { Lib_XAPILIB,{ Sec_text, Sec_XPP }, XAPILIB_OOVPAV2, XAPILIB_OOVPA_COUNT },
 
     // Support inline functions in .text section
-    { Lib_XGRAPHC,{ Sec_text, Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_COUNTV2 },
+    { Lib_XGRAPHC,{ Sec_text, Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_COUNT },
 
     // Cannot support LTCG in HLE
-    //{ Lib_XGRAPHCL,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_COUNTV2 },
+    //{ Lib_XGRAPHCL,{ Sec_XGRPH }, XGRAPHC_OOVPAV2, XGRAPHC_OOVPA_COUNT },
 
     // Added Sec_text and Sec_XNET just in case.
     // TODO: Need to find out which function is only part of XOnlines.
-    { Lib_XONLINE,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_COUNTV2 },
+    { Lib_XONLINE,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_COUNT },
 
     // Fun fact, XONLINES are split into 2 header sections.
-    { Lib_XONLINES,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_COUNTV2 },
+    { Lib_XONLINES,{ Sec_text, Sec_XONLINE, Sec_XNET }, XONLINES_OOVPAV2, XONLINES_OOVPA_COUNT },
 
     // Added Sec_text just in case.
     // TODO: Need to find out which function is only part of XNets.
-    { Lib_XNET,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNTV2 },
+    { Lib_XNET,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNT },
 
     // XNETS only has XNET, might be true.
-    { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNTV2 },
+    { Lib_XNETS,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNT },
 
     // test case: Stake
-    { Lib_XNETN,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNTV2 },
+    { Lib_XNETN,{ Sec_text, Sec_XNET }, XNET_OOVPAV2, XNET_OOVPA_COUNT },
 };
 
 // ******************************************************************
