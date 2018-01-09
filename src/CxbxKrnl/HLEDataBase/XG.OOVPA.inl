@@ -100,8 +100,8 @@ OOVPATable XGRAPHC_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * XGRAPHC_OOVPA_COUNTV2
+// * XGRAPHC_OOVPA_COUNT
 // ******************************************************************
-const uint32 XGRAPHC_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(XGRAPHC_OOVPAV2);
+const uint32 XGRAPHC_OOVPA_COUNT = OOVPA_TABLE_COUNT(XGRAPHC_OOVPAV2);
 
 #endif
