@@ -85,7 +85,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 void VMManager::Initialize(HANDLE file_view)
 {
 	// This reserves a large enough memory region to map the second physical memory file view
-	UINT_PTR start = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	UINT_PTR start = (UINT_PTR)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_READWRITE);
 	if (!start)
 	{
 		CxbxKrnlCleanup(LOG_PREFIX ": VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
@@ -128,7 +128,7 @@ void VMManager::Initialize(HANDLE file_view)
 	UpdatePageTableForVMA(first_page_vma);
 
 	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	Allocate(PAGE_SIZE, PageType::Contiguous, 0, PAGE_SIZE - 1, PAGE_SIZE, PAGE_EXECUTE_READWRITE);
+	Allocate(PAGE_SIZE, PageType::Contiguous, 0, PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
 
 	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)
 	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
@@ -137,13 +137,13 @@ void VMManager::Initialize(HANDLE file_view)
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.vma_type = VMAType::Allocated;
 	upper_mem_vma.page_type = PageType::SystemMemory;
-	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
+	upper_mem_vma.permissions = PAGE_READWRITE;
 	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(32 * PAGE_SIZE, upper_mem_vma.page_type, m_MaxContiguousAddress, XBOX_MEMORY_SIZE);
 	UpdatePageTableForVMA(upper_mem_vma);
 
 	// Allocate memory for the dummy kernel
 	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(KERNEL_SIZE, PageType::Contiguous, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_EXECUTE_READWRITE);
+	Allocate(KERNEL_SIZE, PageType::Contiguous, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_READWRITE);
 
 	// Map the tiled memory
 	MapHardwareDevice(TILED_MEMORY_BASE, TILED_MEMORY_XBOX_SIZE, VMAType::MemTiled);
@@ -194,7 +194,7 @@ void VMManager::InitializeChihiroDebug()
 	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
 	upper_mem_vma.vma_type = VMAType::Allocated;
 	upper_mem_vma.page_type = PageType::SystemMemory;
-	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
+	upper_mem_vma.permissions = PAGE_READWRITE;
 	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(48 * PAGE_SIZE, upper_mem_vma.page_type, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
 	UpdatePageTableForVMA(upper_mem_vma);
 
@@ -205,6 +205,9 @@ void VMManager::InitializeChihiroDebug()
 	// NOTE: we cannot just call Unmap on the mcpx region because its base + size will overflow to 0x100000000
 	// which will trigger an assert in CarveVMARange
 	auto it = m_Vma_map.lower_bound(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1);
+
+	// The Xbox initialization always maps the mcpx at MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1,
+	// so lower_bound should always succeed here
 	assert(it != m_Vma_map.end());
 
 	it->second.vma_type = VMAType::Free;
@@ -304,7 +307,7 @@ VAddr VMManager::AllocateStack(size_t size)
 	LOG_FUNC_ONE_ARG(size);
 
 	assert(size > 0); // Size must be given
-	assert(size & PAGE_MASK == 0); // Size must be expressed in pages
+	assert((size & PAGE_MASK) == 0); // Size must be expressed in pages
 
 	Lock();
 	size_t ReturnedSize = size + PAGE_SIZE;
@@ -339,6 +342,15 @@ void VMManager::DeallocateStack(VAddr addr)
 	LOG_FUNC_ONE_ARG(addr);
 
 	Lock();
+	// UnmapRange will only dellocate a single vma and merge it with the next and the previous if possible.
+	// This means that only the StackBottom page will be dellocated since the Stack VMA was split in two
+	// by ReprotecVMARange when the stack was created.
+	// For example, a stack allocation of 16384 bytes will lead to two vma:
+	// 1- base StackBottom, 4096, PAGE_NOACCESS,
+	// 2- base StackBottom + PAGE_SIZE, 16384, PAGE_READWRITE.
+	// ReprotectVMARange will merge them back to a single VMA that UnmapRange will deallocate entirely.
+	// Test case : Tested with Dead or Alive 3, which calls this from CreateFiber
+	ReprotectVMARange(addr, PAGE_SIZE, PAGE_READWRITE);
 	UnmapRange(addr);
 	Unlock();
 }
@@ -586,7 +598,8 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	{
 		// This was an allocation that didn't actually allocate anything, so just update the memory usage
 		m_PhysicalMemoryInUse -= AlignedCapturedSize;
-		m_PageCount[(int)PageType::Image] -= AlignedCapturedSize / PAGE_SIZE; // this should check the permissions of the region but for XeLoadSection it's always PAGE_EXECUTE_READWRITE
+		m_PageCount[(int)PageType::Image] -= AlignedCapturedSize / PAGE_SIZE;
+		// this could check the permissions of the region but for XeLoadSection it's always PAGE_EXECUTE_READWRITE
 	}
 	else
 	{
@@ -695,7 +708,7 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PageType page_type, PAddr low_addr
 			VirtualMemoryArea& final_vma = vma_handle->second;
 			final_vma.vma_type = VMAType::Allocated;
 			final_vma.page_type = page_type;
-			final_vma.permissions = (page_type == PageType::Contiguous) ? PAGE_READWRITE : PAGE_EXECUTE_READWRITE;
+			final_vma.permissions = DefaultPageTypeProtection(page_type);
 			final_vma.backing_block = offset;
 
 			UpdatePageTableForVMA(final_vma);
@@ -714,7 +727,7 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PageType page_type, PAddr low_addr
 			final_vma.vma_type = VMAType::Allocated;
 			final_vma.page_type = page_type;
 			final_vma.bFragmented = true;
-			final_vma.permissions = PAGE_EXECUTE_READWRITE;
+			final_vma.permissions = DefaultPageTypeProtection(page_type);
 			final_vma.backing_block = offset;
 
 			UpdatePageTableForVMA(final_vma);

@@ -34,8 +34,18 @@
 // *
 // ******************************************************************
 
-#include "PhysicalMemory.h"
+#define LOG_PREFIX "PMEM"
 
+#include "PhysicalMemory.h"
+#include <assert.h>
+
+DWORD DefaultPageTypeProtection(const PageType page_type)
+{
+	switch (page_type) {
+	case PageType::Image: return PAGE_EXECUTE_READWRITE;
+	default: return PAGE_READWRITE;
+	}
+}
 
 PMEMORY_STATUS PhysicalMemory::GetError() const
 {
@@ -46,11 +56,12 @@ PAddr PhysicalMemory::AllocatePhysicalMemory(const size_t size, const PageType t
 {
 	PAddr addr = m_MaxContiguousAddress;
 	ClearError();
-	// TODO : assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
+	assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
+
 	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
 	if (size > FreeMemory)
 	{
-		EmuWarning("Out of physical memory!");
+		EmuWarning(LOG_PREFIX ": Out of physical memory!");
 		SetError(PMEMORY_INSUFFICIENT_MEMORY);
 		return addr;
 	}
@@ -161,11 +172,12 @@ PAddr PhysicalMemory::AllocatePhysicalMemoryRange(const size_t size, const PageT
 {
 	PAddr addr = m_MaxContiguousAddress;
 	ClearError();
-	// TODO : assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
+	assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
+
 	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
 	if (size > FreeMemory)
 	{
-		EmuWarning("Out of physical memory!");
+		EmuWarning(LOG_PREFIX ": Out of physical memory!");
 		SetError(PMEMORY_INSUFFICIENT_MEMORY);
 		return addr;
 	}
@@ -209,7 +221,7 @@ PAddr PhysicalMemory::AllocatePhysicalMemoryRange(const size_t size, const PageT
 				if (high_it == low_pair.first)
 				{
 					SetError(PMEMORY_INSUFFICIENT_MEMORY);
-					EmuWarning("Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
+					EmuWarning(LOG_PREFIX ": Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
 					if (high_pair.first->second == 0) { m_Mem_map.erase(high_addr); }
 					if (low_pair.first->second == 0) { m_Mem_map.erase(low_addr); }
 					return addr;
@@ -236,7 +248,7 @@ PAddr PhysicalMemory::AllocatePhysicalMemoryRange(const size_t size, const PageT
 					break;
 				}
 				SetError(PMEMORY_INSUFFICIENT_MEMORY);
-				EmuWarning("Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
+				EmuWarning(LOG_PREFIX ": Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
 				break;
 			}
 
@@ -262,22 +274,22 @@ VAddr PhysicalMemory::AllocateFragmented(const size_t size, const PageType type)
 {
 	if (type == PageType::Contiguous)
 	{
-		EmuWarning("Fragmentation prevented allocation of contiguous memory!");
+		EmuWarning(LOG_PREFIX ": Fragmentation prevented allocation of contiguous memory!");
 		SetError(PMEMORY_INSUFFICIENT_MEMORY);
 		return 0;
 	}
 
-	PAddr addr_ptr = (PAddr)VirtualAlloc(NULL, size + PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	PAddr addr_ptr = (PAddr)VirtualAlloc(NULL, size + PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, DefaultPageTypeProtection(type));
 	if (!addr_ptr)
 	{
-		EmuWarning("AllocateFragmented: VirtualAlloc could not allocate the memory!");
+		EmuWarning(LOG_PREFIX ": AllocateFragmented: VirtualAlloc could not allocate the memory!");
 		SetError(PMEMORY_INSUFFICIENT_MEMORY);
 		return m_MaxContiguousAddress;
 	}
 	VAddr aligned_start = addr_ptr & ~(UINT_PTR)PAGE_MASK;
 
 	m_Fragmented_mem_map[addr_ptr] = size;
-	EmuWarning("Warning: allocated memory via AllocateFragmented.");
+	EmuWarning(LOG_PREFIX ": Warning: allocated memory via AllocateFragmented.");
 	SetError(PMEMORY_ALLOCATE_FRAGMENTED);
 	m_PhysicalMemoryInUse += size;
 	return aligned_start;
@@ -307,7 +319,15 @@ void PhysicalMemory::ShrinkPhysicalAllocation(const PAddr addr, const size_t off
 	else
 	{
 		auto it = m_Mem_map.lower_bound(addr);
-		if (it == m_Mem_map.end()) { return; }
+
+		// ShrinkPhysicalAllocation is called from ResizeVMA which in turn is called from XbFreeVirtualMemory.
+		// The iterator passed is std::prev(auto it = m_Vma_map.lower_bound(AlignedCapturedBase);),
+		// which could only become end() if lower_bound is called on an address > MCPX_BASE,
+		// which is forbidden by the check if (CapturedBase > HIGHEST_USER_ADDRESS)
+		// { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }.
+		// Also, ShrinkPhysicalAllocation is only called if the vma found is of type Allocated or Stack,
+		// meaning a corresponding physical allocation exists, and so it can never be end()
+		assert(it != m_Mem_map.end());
 
 		PAddr old_base = it->first;
 		size_t old_size = it->second;
@@ -326,7 +346,11 @@ void PhysicalMemory::ShrinkPhysicalAllocation(const PAddr addr, const size_t off
 void PhysicalMemory::DeAllocatePhysicalMemory(const PAddr addr)
 {
 	auto it = m_Mem_map.lower_bound(addr);
-	if (it == m_Mem_map.end()) { EmuWarning("DeAllocatePhysicalMemory : addr unknown!");  return; }
+
+	// DeAllocatePhysicalMemory is only called in DestructVMA,
+	// which checks if the vma type is Allocated or Stack and,
+	// if so, calls the function and so the allocation must exist
+	assert(it != m_Mem_map.end());
 
 	m_PhysicalMemoryInUse -= it->second;
 	m_Mem_map.erase(addr);
@@ -335,7 +359,7 @@ void PhysicalMemory::DeAllocatePhysicalMemory(const PAddr addr)
 void PhysicalMemory::DeAllocateFragmented(const VAddr addr)
 {
 	auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
-	if (it == m_Fragmented_mem_map.end()) { EmuWarning("DeAllocateFragmented : addr unknown!");  return; }
+	if (it == m_Fragmented_mem_map.end()) { EmuWarning(LOG_PREFIX ": DeAllocateFragmented : addr unknown!");  return; }
 
 	VirtualFree((void*)it->first, 0, MEM_RELEASE);
 	m_PhysicalMemoryInUse -= it->second;

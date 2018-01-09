@@ -79,6 +79,7 @@ enum class PageType : u32 {
 	COUNT
 };
 
+extern DWORD DefaultPageTypeProtection(const PageType page_type);
 
 /* PhysicalMemory class */
 

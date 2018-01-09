@@ -96,7 +96,7 @@ struct VirtualMemoryArea
 	// vma kind of memory
 	VMAType vma_type = VMAType::Free;
 	// the page type of this memory area
-	PageType page_type = PageType::Unknown;
+	PageType page_type = PageType::Unknown; // TODO : Move this towards an actual PageTable entry once that get's implemented
 	// vma permissions
 	DWORD permissions = PAGE_NOACCESS;
 	// addr of the memory backing this block, if any
@@ -136,7 +136,7 @@ class VMManager : public PhysicalMemory
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
 		VAddr Allocate(size_t size, PageType page_type = PageType::VirtualMemory, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG alignment = PAGE_SIZE,
-			DWORD protect = PAGE_EXECUTE_READWRITE);
+			DWORD protect = PAGE_READWRITE);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates stack memory
