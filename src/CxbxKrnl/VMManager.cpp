@@ -251,7 +251,7 @@ VAddr VMManager::Allocate(size_t size, PageType page_type, PAddr low_addr, PAddr
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(size);
-		LOG_FUNC_ARG(page_type);
+		LOG_FUNC_ARG_TYPE(int, page_type); // TODO : Add a logging trait
 		LOG_FUNC_ARG(low_addr);
 		LOG_FUNC_ARG(high_addr);
 		LOG_FUNC_ARG(alignment);
