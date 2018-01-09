@@ -186,8 +186,8 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * XAPILIB_OOVPA_SIZE
+// * XAPILIB_OOVPA_COUNTV2
 // ******************************************************************
-uint32 XAPILIB_OOVPA_SIZEV2 = sizeof(XAPILIB_OOVPAV2);
+const uint32 XAPILIB_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(XAPILIB_OOVPAV2);
 
 #endif

@@ -597,7 +597,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                     if (bPrintSkip) printf("Found\n");
                                     bPrintSkip = false;
 
-                                    EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableSize, pSectionScan, BuildVersion);
+                                    EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableCount, pSectionScan, BuildVersion);
                                     break;
                                 }
                             }
@@ -887,7 +887,7 @@ xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 }
 
 // install function interception wrappers
-void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion)
+void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableCount, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion)
 {
     xbaddr lower = pSectionHeader->dwVirtualAddr;
 
@@ -895,7 +895,7 @@ void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Secti
     xbaddr upper = pSectionHeader->dwVirtualAddr + pSectionHeader->dwVirtualSize;
 
     // traverse the full OOVPA table
-    OOVPATable *pLoopEnd = &OovpaTable[OovpaTableSize / sizeof(OOVPATable)];
+    OOVPATable *pLoopEnd = &OovpaTable[OovpaTableCount];
     OOVPATable *pLoop = OovpaTable;
     OOVPATable *pLastKnownSymbol = nullptr;
     xbaddr pLastKnownFunc = 0;
@@ -1087,7 +1087,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oov
     }
 }
 
-void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
+void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index)
 {
     if (context->against == nullptr) {
         context->main_index = index;
@@ -1134,9 +1134,8 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
     }
 
     // verify each entry in this HLEData
-    uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
-    for (uint32 e = 0; e < count; e++) {
-        VerifyHLEDataEntry(context, data->OovpaTable, e, count);
+    for (uint32 e = 0; e < data->OovpaTableCount; e++) {
+        VerifyHLEDataEntry(context, data->OovpaTable, e);
     }
 }
 

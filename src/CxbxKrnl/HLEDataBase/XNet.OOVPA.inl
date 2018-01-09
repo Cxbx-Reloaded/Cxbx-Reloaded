@@ -79,8 +79,8 @@ OOVPATable XNET_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * XNET_OOVPA_SIZE
+// * XNET_OOVPA_COUNTV2
 // ******************************************************************
-uint32 XNET_OOVPA_SIZEV2 = sizeof(XNET_OOVPAV2);
+const uint32 XNET_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(XNET_OOVPAV2);
 
 #endif

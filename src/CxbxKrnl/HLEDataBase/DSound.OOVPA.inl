@@ -520,8 +520,8 @@ OOVPATable DSound_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * DSOUND_OOVPA_SIZE
+// * DSound_OOVPA_COUNTV2
 // ******************************************************************
-uint32 DSound_OOVPA_SIZEV2 = sizeof(DSound_OOVPAV2);
+const uint32 DSound_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(DSound_OOVPAV2);
 
 #endif

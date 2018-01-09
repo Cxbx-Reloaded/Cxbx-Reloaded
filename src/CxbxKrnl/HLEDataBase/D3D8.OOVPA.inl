@@ -434,8 +434,8 @@ OOVPATable D3D8_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * D3D8_OOVPA_SIZE
+// * D3D8_OOVPA_COUNTV2
 // ******************************************************************
-uint32 D3D8_OOVPA_SIZEV2 = sizeof(D3D8_OOVPAV2);
+const uint32 D3D8_OOVPA_COUNTV2 = OOVPA_TABLE_COUNT(D3D8_OOVPAV2);
 
 #endif
