@@ -210,6 +210,10 @@ namespace CxbxDebugger
                         ExitCodeString = "Finished";
                         break;
 
+                    case 1:
+                        ExitCodeString = "Forced to exit";
+                        break;
+
                     case 0xC000013A:
                         // Actual code is STATUS_CONTROL_C_EXIT, but isn't very friendly
                         ExitCodeString = "Debug session ended";
@@ -236,6 +240,15 @@ namespace CxbxDebugger
                 frm.DebugLog(string.Format("{0} thread(s) remain open", remainingThreads));
 
                 frm.DebugModules.Clear();
+
+                // Ask to close if the process was forced to exit
+                if (ExitCode == 1)
+                {
+                    if (frm.DebugAsk("The debugger was detached from the host\n\nDo you want to close the debugger?"))
+                    {
+                        frm.Close();
+                    }
+                }
             }
 
             public void OnDebugStart()
@@ -290,14 +303,18 @@ namespace CxbxDebugger
                 }
                 
                 // TODO Include GetLastError string
-                string ExceptionMessage = string.Format("Access violation ({0:X8}) thrown in {1} 0x{2:X8}", Code, ProcessName, (uint)Address);
+                string ExceptionMessage = string.Format("Access violation thrown at 0x{0:X8} ({1})", (uint)Address, ProcessName);
+
+                ExceptionMessage += string.Format("\n\nException code {0:X8}", Code);
 
                 frm.DebugLog(ExceptionMessage);
 
                 // Already suspended at this point, so we can rebuild the callstack list
                 frm.PopulateThreadList(frm.cbThreads.Items, Thread);
 
-                return frm.DebugAsk(ExceptionMessage + "\nAttempt to continue?\n\nWarning: Cxbx may crash!");
+                ExceptionMessage += "\n\nAttempt to ignore this and risk crashing the app?";
+
+                return frm.DebugAsk(ExceptionMessage);
             }
 
             public void OnFileOpened(DebuggerMessages.FileOpened Info)
