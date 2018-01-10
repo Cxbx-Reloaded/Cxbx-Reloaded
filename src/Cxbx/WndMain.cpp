@@ -131,26 +131,55 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			LONG result = ERROR_SUCCESS;
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
+			result = RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_FlagsLLE = 0;
+			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_XInputEnabled = 0;
+			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "HackDisablePixelShaders", NULL, &dwType, (PBYTE)&m_DisablePixelShaders, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_DisablePixelShaders = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_CxbxDebug = DebugMode::DM_NONE;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_KrnlDebug = DebugMode::DM_NONE;
+			}
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			result = RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_dwRecentXbe = 0;
+			}
 
-            dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeCxbxDebugFilename;
+			dwType = REG_SZ; dwSize = MAX_PATH; ULONG lErrCodeCxbxDebugFilename;
 			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+			if (lErrCodeCxbxDebugFilename != ERROR_SUCCESS) {
+				m_CxbxDebugFilename = "";
+			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
+				m_KrnlDebugFilename = "";
+			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -228,7 +257,11 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
                 m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
 
                 dwType = REG_SZ; dwSize = MAX_PATH;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+                result = RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+				if (result != ERROR_SUCCESS) {
+					m_szRecentXbe[v] = "";
+				}
+
             }
 
             RegCloseKey(hKey);
@@ -267,6 +300,9 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "XInputEnabled", 0, dwType, (PBYTE)&m_XInputEnabled, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -1177,6 +1213,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 StopEmulation();
                 break;
 
+			case ID_HACKS_DISABLEPIXELSHADERS:
+				m_DisablePixelShaders = !m_DisablePixelShaders;
+				RefreshMenus();
+				break;
+
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1571,6 +1612,9 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_XInputEnabled) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_XINPUT, chk_flag);
+
+			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 		}
 
         // emulation menu
@@ -1905,6 +1949,9 @@ void WndMain::StartEmulation(HWND hwndParent)
 
 	// register XInput flags with emulator process
 	g_EmuShared->SetXInputEnabled(&m_XInputEnabled);
+
+	// register Hacks with emulator process
+	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
 
 	// shell exe
     {

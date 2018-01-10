@@ -3090,6 +3090,9 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	SetHostSurface(pBackBuffer, pNewHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
+	
+	// Increment reference count
+	pBackBuffer->Common++;
 
     return pBackBuffer;
 }
@@ -3791,6 +3794,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
+
+	// If PixelShader Disable Hack is enabled, return a dummy handle
+	if (g_DisablePixelShaders) {
+		*pHandle = X_PIXELSHADER_FAKE_HANDLE;
+		RETURN(D3D_OK);
+	}
+
 #if 0 // PatrickvL Dxbx pixel shader translation
 
 	// Attempt to recompile PixelShader
@@ -9617,6 +9627,10 @@ XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	
 	// Get the active texture from this stage
 	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
+
+	if (pRet) {
+		pRet->Common++;
+	}
 
 	return pRet;
 }
