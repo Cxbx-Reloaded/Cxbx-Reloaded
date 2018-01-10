@@ -3791,6 +3791,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
+
+	// If PixelShader Disable Hack is enabled, return a dummy handle
+	if (g_DisablePixelShaders) {
+		*pHandle = X_PIXELSHADER_FAKE_HANDLE;
+		RETURN(D3D_OK);
+	}
+
 #if 0 // PatrickvL Dxbx pixel shader translation
 
 	// Attempt to recompile PixelShader
