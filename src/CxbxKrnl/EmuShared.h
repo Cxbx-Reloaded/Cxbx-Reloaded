@@ -107,6 +107,12 @@ class EmuShared : public Mutex
 		void SetXInputEnabled(int* value) { Lock(); m_XInputEnabled = *value; Unlock(); }
 
 		// ******************************************************************
+		// * Hack Flag Accessors
+		// ******************************************************************
+		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
+		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
+
+		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
 		// ******************************************************************
 		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
@@ -147,6 +153,7 @@ class EmuShared : public Mutex
 		char         m_XbePath[MAX_PATH];
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
+		int			 m_DisablePixelShaders;
 		float		 m_MSpF;
 		float        m_FPS;
 		bool		 m_bMultiXbe;
