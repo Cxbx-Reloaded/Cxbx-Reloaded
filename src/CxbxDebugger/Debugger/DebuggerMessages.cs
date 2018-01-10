@@ -14,6 +14,8 @@ namespace CxbxDebugger
             FILE_OPENED = 0x00deed02,
             FILE_READ = 0x00deed03,
             FILE_CLOSED = 0x00deed04,
+
+            OVERRIDE_EXCEPTION = 0x00ceed01,
         }
 
         enum StringType : uint
@@ -121,6 +123,28 @@ namespace CxbxDebugger
             Report.Handle = new IntPtr(Data[0]);
 
             return Report;
+        }
+
+        public class ExceptionHandledQuery
+        {
+            public IntPtr ReponseAddr { get; set; }
+            public IntPtr ExceptionAddress { get; set; }
+            public uint ExceptionCode { get; set; }
+            public uint ParameterCount{ get; set; }
+            public IntPtr ParameterBase{ get; set; }
+        }
+
+        public static ExceptionHandledQuery GetExceptionHandledQuery(DebuggerThread Context, uint[] Data)
+        {
+            ExceptionHandledQuery Query = new ExceptionHandledQuery();
+
+            Query.ReponseAddr = new IntPtr(Data[0]);
+            Query.ExceptionAddress = new IntPtr(Data[1]);
+            Query.ExceptionCode = Data[2];
+            Query.ParameterCount = Data[3];
+            Query.ParameterBase = new IntPtr(Data[4]);
+
+            return Query;
         }
     }
 }

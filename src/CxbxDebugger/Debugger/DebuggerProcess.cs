@@ -169,6 +169,10 @@ namespace CxbxDebugger
             TypeCode TType = Type.GetTypeCode(Value.GetType());
             switch (TType)
             {
+                case TypeCode.Boolean:
+                    Data = new byte[] { (bool)GenericValue ? (byte)0x1 : (byte)0x0 };
+                    break;
+
                 case TypeCode.Byte:
                     Data = new byte[] { (byte)GenericValue };
                     break;

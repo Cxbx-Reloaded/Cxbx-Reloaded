@@ -46,11 +46,17 @@ namespace CxbxDebugger
         // Note: Keep the top 3-bits empty as they are used internally
         enum ReportType : DWORD
         {
-            HLECACHE_FILE   = 0x00deed00,
-            KERNEL_PATCH    = 0x00deed01,
-            FILE_OPENED     = 0x00deed02,
-            FILE_READ       = 0x00deed03,
-            FILE_CLOSED     = 0x00deed04,            
+			// Debugger report codes:
+
+			HLECACHE_FILE = 0x00deed00,
+			KERNEL_PATCH = 0x00deed01,
+			FILE_OPENED = 0x00deed02,
+			FILE_READ = 0x00deed03,
+			FILE_CLOSED = 0x00deed04,
+
+			// Debugger query codes:
+
+			OVERRIDE_EXCEPTION = 0x00ceed01,
         };
 
         bool IsAttached()
@@ -131,6 +137,9 @@ namespace CxbxDebugger
         case Internal::FILE_READ:
         case Internal::FILE_CLOSED:
             return true;
+
+		case Internal::OVERRIDE_EXCEPTION:
+			return false;
         }
 
         return false;
@@ -188,4 +197,17 @@ namespace CxbxDebugger
 
         Report.Send();
     }
+
+	void ReportAndHandleException(PEXCEPTION_RECORD Exception, bool& Handled)
+	{
+		Internal::ReportHelper Report(Internal::OVERRIDE_EXCEPTION);
+		
+		Report.Add(&Handled);
+		Report.Add(Exception->ExceptionAddress);
+		Report.Add(Exception->ExceptionCode);
+		Report.Add(Exception->NumberParameters);
+		Report.Add(&Exception->ExceptionInformation[0]);
+
+		Report.Send();
+	}
 }

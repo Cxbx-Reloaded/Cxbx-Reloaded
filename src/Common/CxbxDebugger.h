@@ -50,4 +50,8 @@ namespace CxbxDebugger
     void ReportFileOpened(HANDLE hFile, const wchar_t* Filename, uint FilenameLength);
     void ReportFileRead(HANDLE hFile, uint Size);
     void ReportFileClosed(HANDLE hFile);
+
+	// Exception helpers:
+
+	void ReportAndHandleException(PEXCEPTION_RECORD Exception, bool& Handled);
 }

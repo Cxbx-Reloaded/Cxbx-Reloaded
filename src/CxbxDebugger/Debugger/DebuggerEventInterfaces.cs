@@ -36,7 +36,7 @@ namespace CxbxDebugger
 
     public interface IDebuggerExceptionEvents
     {
-        bool OnAccessViolation(DebuggerThread Thread, IntPtr Address);
+        bool OnAccessViolation(DebuggerThread Thread, uint Code, IntPtr Address);
     }
 
     public interface IDebuggerFileEvents
