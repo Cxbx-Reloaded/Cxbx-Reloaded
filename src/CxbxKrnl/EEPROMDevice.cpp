@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -7,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuNVNet.h
+// *   src->CxbxKrnl->EEPROMDevice.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,27 +28,67 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2017 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
 
-#include "PCIDevice.h" // For PCIDevice
+#include <cstring> // For memcpy
 
-#define NVNET_ADDR  0xFEF00000 
-#define NVNET_SIZE  0x00000400
+#include "EEPROMDevice.h" // For EEPROMDevice
 
-class NVNetDevice : public PCIDevice {
-public:
-	// PCI Device functions
-	void Init();
-	void Reset();
-	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
-	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
-	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
-};
+void EEPROMDevice::Init()
+{
+	// TODO
+}
 
-extern NVNetDevice* g_NVNet;
+void EEPROMDevice::Reset()
+{
+	// TODO
+}
+
+void EEPROMDevice::QuickCommand(bool read)
+{
+	// TODO
+}
+
+uint8_t EEPROMDevice::ReceiveByte()
+{
+	return 0; // TODO
+}
+
+uint8_t EEPROMDevice::ReadByte(uint8_t command)
+{
+	return *(m_pEEPROM + command);
+}
+
+uint16_t EEPROMDevice::ReadWord(uint8_t command)
+{
+	return *((uint16_t*)(m_pEEPROM + command));
+}
+
+int EEPROMDevice::ReadBlock(uint8_t command, uint8_t *data)
+{
+	return 0; // TODO
+}
+
+void EEPROMDevice::SendByte(uint8_t data)
+{
+	// TODO
+}
+
+void EEPROMDevice::WriteByte(uint8_t command, uint8_t value)
+{
+	*((uint16_t*)(m_pEEPROM + command)) = value;
+}
+
+void EEPROMDevice::WriteWord(uint8_t command, uint16_t value)
+{
+	*((uint16_t*)(m_pEEPROM + command)) = value;
+}
+
+void EEPROMDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
+{
+	std::memcpy(m_pEEPROM + command, data, length);
+}
