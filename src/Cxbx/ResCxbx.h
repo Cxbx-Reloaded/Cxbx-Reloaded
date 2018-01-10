@@ -1,6 +1,5 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\lukeu\Desktop\Projects\Xbox\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -102,6 +101,8 @@
 #define ID_CACHE_CLEARHLECACHE_ALL      40084
 #define ID_CACHE_CLEARHLECACHE_CURRENT  40085
 #define ID_SETTINGS_XINPUT              40086
+#define ID_SETTINGS_HACKS               40087
+#define ID_HACKS_DISABLEPIXELSHADERS    40088
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -109,7 +110,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         40087
+#define _APS_NEXT_COMMAND_VALUE         40089
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
