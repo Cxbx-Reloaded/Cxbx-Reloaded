@@ -436,6 +436,8 @@ namespace CxbxDebugger
                         // This will fallback to the debugee (Cxbx) and the exception handling routine.
                         // Should they be unsupported, the debugger "OVERRIDE_EXCEPTION" message is thrown
                         // which means the exception is usually fatal
+
+                        ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
                     }
                     break;
 
@@ -454,8 +456,6 @@ namespace CxbxDebugger
 
                             // Write the reponse to memory
                             Thread.OwningProcess.WriteMemory(Query.ReponseAddr, Handled);
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -468,8 +468,6 @@ namespace CxbxDebugger
                             var Report = DebuggerMessages.GetHLECacheReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
 
                             SetupHLECacheProvider(Report.FileName);
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -482,8 +480,6 @@ namespace CxbxDebugger
                             var Report = DebuggerMessages.GetKernelPatchReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
 
                             KernelSymbolProvider.AddKernelSymbolFromMessage(Report);
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -499,8 +495,6 @@ namespace CxbxDebugger
                             {
                                 Event.OnFileOpened(Report);
                             }
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -516,8 +510,6 @@ namespace CxbxDebugger
                             {
                                 Event.OnFileRead(Report);
                             }
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -533,8 +525,6 @@ namespace CxbxDebugger
                             {
                                 Event.OnFileClosed(Report);
                             }
-
-                            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
                         }
                     }
                     break;
@@ -547,13 +537,17 @@ namespace CxbxDebugger
                 case ExceptionCode.SingleStep:
                     // TODO Handle
                     break;
+
+                default:
+                    ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
+                    break;
             }
         }
 
         public void RunThreaded()
         {
             WinDebug.DEBUG_EVENT DbgEvt = new WinDebug.DEBUG_EVENT();
-            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
+            ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
 
             foreach (IDebuggerGeneralEvents Event in GeneralEvents)
             {
@@ -611,7 +605,7 @@ namespace CxbxDebugger
 
                 // TODO: Stop doing this once we raise an exception
                 WinDebug.NativeMethods.ContinueDebugEvent(DbgEvt.dwProcessId, DbgEvt.dwThreadId, ContinueStatus);
-                ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
+                ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
             }
             
             State = RunState.Ended;
