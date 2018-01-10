@@ -691,9 +691,11 @@ VAddr VMManager::MapMemoryBlock(size_t* size, PageType page_type, PAddr low_addr
 			switch (page_type) {
 			case PageType::Contiguous: {
 				addr = CONTIGUOUS_MEMORY_BASE + offset;  // VAddr is simply the offset from the base of the contiguous memory
+				break;
 			}
 			default: { // PageType::VirtualMemory, etc
 				addr = m_Base + offset;
+				break;
 			}
 			}
 
