@@ -43,6 +43,11 @@
 #define STRINGIZEX(x) #x
 #define STRINGIZE(x) STRINGIZEX(x)
 
+#include <iterator>
+
+// http://en.cppreference.com/w/cpp/iterator/size
+#define OOVPA_TABLE_COUNT(x) std::size(x)
+
 #pragma pack(1)
 
 // ******************************************************************
