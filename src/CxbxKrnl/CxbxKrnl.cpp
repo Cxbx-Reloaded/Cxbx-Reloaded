@@ -486,6 +486,12 @@ void PrintCurrentConfigurationLog()
 		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
 	}
 
+	// Print Enabled Hacks
+	{
+		printf("--------------------------- HACKS CONFIG ---------------------------\n");
+		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
+	}
+
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
 }
 
@@ -875,6 +881,13 @@ __declspec(noreturn) void CxbxKrnlInit
 		int XInputEnabled;
 		g_EmuShared->GetXInputEnabled(&XInputEnabled);
 		g_XInputEnabled = !!XInputEnabled;
+	}
+
+	// Process Hacks
+	{
+		int HackEnabled = 0;
+		g_EmuShared->GetDisablePixelShaders(&HackEnabled);
+		g_DisablePixelShaders = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
