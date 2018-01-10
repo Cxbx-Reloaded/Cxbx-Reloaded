@@ -489,7 +489,7 @@ void PrintCurrentConfigurationLog()
 	// Print Enabled Hacks
 	{
 		printf("--------------------------- HACKS CONFIG ---------------------------\n");
-		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 0 ? "enabled" : "disabled");
+		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
