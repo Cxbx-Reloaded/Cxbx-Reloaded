@@ -262,8 +262,13 @@ VAddr VMManager::Allocate(size_t size, PageType page_type, PAddr low_addr, PAddr
 	LOG_FUNC_END;
 
 	if (size <= 0) {
-		EmuWarning(LOG_PREFIX ": Allocate : Request for zero bytes\n");
+		EmuWarning(LOG_PREFIX ": Allocate : Request for zero bytes!");
 		RETURN(0);
+	}
+
+	if (alignment == 0) {
+		EmuWarning(LOG_PREFIX ": Allocate : Request with zero alignment, using PAGE_SIZE instead.");
+		alignment = PAGE_SIZE;
 	}
 
 	// Treat VirtualMemory pages with execute rights distinctly as Image pages :
@@ -422,7 +427,7 @@ size_t VMManager::QuerySize(VAddr addr)
 		if (it->second.vma_type == VMAType::Free)
 		{
 			size = 0;
-			EmuWarning(LOG_PREFIX ": QuerySize : queried a free region!\n");
+			EmuWarning(LOG_PREFIX ": QuerySize : queried a free region!");
 		}
 		else
 		{
@@ -437,7 +442,7 @@ size_t VMManager::QuerySize(VAddr addr)
 					--prev_it;
 				}
 				it = std::next(prev_it);
-				EmuWarning(LOG_PREFIX ": QuerySize : querying not the start address of an allocation\n");
+				EmuWarning(LOG_PREFIX ": QuerySize : querying not the start address of an allocation");
 			}
 			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
 			// we must check the corresponding physical allocation size
