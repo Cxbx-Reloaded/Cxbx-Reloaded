@@ -67,7 +67,6 @@ namespace xboxkrnl
 #include <thread>
 
 #include "CxbxKrnl.h"
-#include "device.h"
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuKrnl.h"
@@ -875,11 +874,11 @@ DEBUG_START(USER)
 
 
 
-#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Handle%s]\n", addr, result, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("EmuX86 Read32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandle%s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define DEBUG_READ32(DEV)            DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Handle%s]\n", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("EmuX86 Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandle%s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
+#define DEBUG_WRITE32(DEV)           DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
@@ -3395,11 +3394,11 @@ uint32_t EmuNV2A_Read(xbaddr addr, int size)
 
 	if (block != nullptr) {
 		switch (size) {
-			case 8:
+			case sizeof(uint8_t):
 				return block->read(addr - block->offset) & 0xFF;
-			case 16:
+			case sizeof(uint16_t) :
 				return block->read(addr - block->offset) & 0xFFFF;
-			case 32:
+			case sizeof(uint32_t) :
 				return block->read(addr - block->offset);
 			default:
 				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
@@ -3421,7 +3420,7 @@ void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 		uint32_t aligned_value = 0;
 		uint32_t mask = 0;
 		switch (size) {
-			case 8:
+			case sizeof(uint8_t) :
 				shift = (addr & 3) * 8;
 				aligned_addr = addr & ~3;
 				aligned_value = block->read(aligned_addr - block->offset);
@@ -3430,7 +3429,7 @@ void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 				// TODO : Must the second byte be written to the next DWORD?		
 				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
-			case 16:
+			case sizeof(uint16_t) :
 				assert((addr & 1) == 0);
 				
 				shift = (addr & 2) * 16;
@@ -3441,7 +3440,7 @@ void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 				// TODO : Must the second byte be written to the next DWORD?		
 				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
-			case 32:
+			case sizeof(uint32_t) :
 				block->write(addr - block->offset, value);
 				return;
 			default:

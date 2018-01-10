@@ -51,7 +51,9 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
+#include "SMBus.h" // For g_SMBus
 #include "EmuEEPROM.h" // For EEPROM
+#include "SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
@@ -235,22 +237,6 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 	RETURN(dwVector);
 }
 
-#define SMC_SLAVE_ADDRESS 0x20
-#define SMBUS_SMC_WRITE SMC_SLAVE_ADDRESS // = 0x20
-#define SMBUS_SMC_READ (SMC_SLAVE_ADDRESS || 1) // = 0x21
-
-#define EEPROM_ADDRESS 0xA8
-#define SMBUS_EEPROM_WRITE EEPROM_ADDRESS // = 0xA8
-#define SMBUS_EEPROM_READ (EEPROM_ADDRESS || 1) // = 0xA9
-
-#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A
-#define SMBUS_TV_ENCODER_ID_CONEXANT_WRITE SMBUS_TV_ENCODER_ID_CONEXANT // = 0x8A
-#define SMBUS_TV_ENCODER_ID_CONEXANT_READ (SMBUS_TV_ENCODER_ID_CONEXANT_WRITE || 1) // = 0x8B
-
-#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4
-#define SMBUS_TV_ENCODER_ID_FOCUS_WRITE SMBUS_TV_ENCODER_ID_FOCUS // = 0xD4
-#define SMBUS_TV_ENCODER_ID_FOCUS_READ (SMBUS_TV_ENCODER_ID_FOCUS_WRITE || 1) // = 0xD5
-
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
 // ******************************************************************
@@ -269,28 +255,31 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
+	// TODO : Prevent interrupts
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	// This really should use the correct EmuX86_WriteIO/ReadIO functions so the actual
-	// hardware can be implemented in only one single location!
-	switch (Address) {
-	case SMBUS_EEPROM_READ: {
+	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
+	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
+	if (ReadWord)
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_WORD_DATA | GE_HOST_STC);
+	else
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
+	// Note : GE_HOST_STC triggers ExecuteTransaction, which reads the command from the specified address
+
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
+	}
+	else {
+		*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
 		if (ReadWord)
-			*DataValue = *((PWORD)(((PBYTE)EEPROM) + Command));
-		else
-			*DataValue = *(((PBYTE)EEPROM) + Command);
-
-		break;
-	}
-	default:
-		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
-		// Resources : http://pablot.com/misc/fancontroller.cpp
-		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
-		LOG_INCOMPLETE();
-		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
+			*DataValue |= g_SMBus->IORead(1, SMB_HOST_DATA + 1) << 8;
 	}
 
-	RETURN(Status );
+	// TODO : Reenable interrupts
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -328,59 +317,46 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
 	CfgBits.u.bits.Enable = 1;
 
-	// TODO: Verify this calculation is actually correct
-	size_t Size = Length / sizeof(ULONG);
-	ULONG RegisterByteOffset = 0;
+	const int B = sizeof(uint8_t); // Byte
+	const int W = sizeof(uint16_t); // Word
+	const int L = sizeof(uint32_t); // Long
+	const UCHAR RegisterDataSizes[4][4] = {
+		{L, B, W, W},
+		{B, B, B, B},
+		{W, B, W, W},
+		{B, B, B, B}
+	};
 
 	while (Length > 0) {
-		switch (Size) {
-		case 4:
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+		int ByteOffset = RegisterNumber % sizeof(ULONG);
+		int Size = RegisterDataSizes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-			if (WritePCISpace) {
-				EmuX86_IOWrite32((xbaddr)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
-			}
-			else {
-				*((PULONG)Buffer) = EmuX86_IORead32((xbaddr)PCI_TYPE1_DATA_PORT);
-			}
-			break;
-		case 2:
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+		EmuX86_IOWrite((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
 
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
-
-			if (WritePCISpace) {
-				EmuX86_IOWrite16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
-			}
-			else {
-				*((PUSHORT)Buffer) = EmuX86_IORead16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
-			}
-			break;
-		case 1: {
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
-
-			if (WritePCISpace) {
-				EmuX86_IOWrite8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
-			}
-			else {
-				*((PUCHAR)Buffer) = EmuX86_IORead8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+		if (WritePCISpace) {
+			EmuX86_IOWrite(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer), Size);
+		} else {
+			uint32_t value = EmuX86_IORead(PCI_TYPE1_DATA_PORT, Size);
+			// TODO : Could memcpy(Buffer, &value, Size) the following (for all endianesses)?
+			switch (Size) {
+			case sizeof(uint8_t): // Byte
+				*((PUCHAR)Buffer) = value;
+				break;
+			case sizeof(uint16_t): // Word
+				*((PUSHORT)Buffer) = value;
+				break;
+			case sizeof(uint32_t): // Long
+				*((PULONG)Buffer) = value;
+				break;
 			}
 		}
-			break;
-		}
-
+		
 		RegisterNumber += Size;
 		Buffer = (PUCHAR)Buffer + Size;
 		Length -= Size;
 	}
 
-	
-	// TODO: Enable Interrupt Processing1
+	// TODO: Enable Interrupt Processing
 }
 
 // ******************************************************************
@@ -542,24 +518,27 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		LOG_FUNC_ARG(DataValue)
 		LOG_FUNC_END;
 
+	// TODO : Prevent interrupts
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	switch (Address) {
-	case SMBUS_EEPROM_WRITE: {
-		if (WriteWord)
-			*((PWORD)(((PBYTE)EEPROM) + Command)) = (WORD)DataValue;
-		else
-			*(((PBYTE)EEPROM) + Command) = (BYTE)DataValue;
+	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
+	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
+	g_SMBus->IOWrite(1, SMB_HOST_DATA, DataValue & 0xFF);
+	if (WriteWord) {
+		g_SMBus->IOWrite(1, SMB_HOST_DATA + 1, (DataValue >> 8) & 0xFF);
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_WORD_DATA | GE_HOST_STC);
+	}
+	else
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
+		// Note : GE_HOST_STC triggers ExecuteTransaction, which writes the command to the specified address
 
-		break;
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
 	}
-	default:
-		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
-		// Resources : http://pablot.com/misc/fancontroller.cpp
-		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
-		LOG_INCOMPLETE();
-		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
-	}
+
+	// TODO : Reenable interrupts
 
 	RETURN(Status);
 }
@@ -581,7 +560,7 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
+		*Buffer++ = (uint8_t)EmuX86_IORead((xbaddr)Port, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -601,7 +580,7 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
+		*Buffer++ = (uint16_t)EmuX86_IORead((xbaddr)Port, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -621,7 +600,7 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
+		*Buffer++ = EmuX86_IORead((xbaddr)Port, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -641,7 +620,7 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -661,7 +640,7 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -681,7 +660,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -748,14 +727,9 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 {
 	LOG_FUNC_ONE_ARG(ScratchRegister);
 
-	LOG_UNIMPLEMENTED();
+//	HalpSMCScratchRegister = ScratchRegister;
 
-/* TODO
-	HalpSMCScratchRegister = ScratchRegister;
+	NTSTATUS Res = HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
-	// TODO : Is this the way we need to set the value?
-	return HalWriteSMBusValue(SMC_ADDRESS, SMC_COMMAND_SCRATCH, WordFlag: False, ScratchRegister);
-*/
-	
-	RETURN(S_OK);
+	RETURN(Res);
 }

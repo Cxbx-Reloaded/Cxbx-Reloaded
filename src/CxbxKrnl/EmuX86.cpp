@@ -54,62 +54,56 @@
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
+#include "PCIBus.h"
 
 //
 // Read & write handlers handlers for I/O
 //
 
-uint32_t EmuX86_IORead32(xbaddr addr)
+static int field_pin = 0;
+
+uint32_t EmuX86_IORead(xbaddr addr, int size)
 {
 	switch (addr) {
-	case 0x8008:	// TIMER
-		// HACK: This is very wrong.
-		// This timer should count at a specific frequency (3579.545 ticks per ms)
-		// But this is enough to keep NXDK from hanging for now.
-		LARGE_INTEGER performanceCount;
-		QueryPerformanceCounter(&performanceCount);
-		return static_cast<uint32_t>(performanceCount.QuadPart);
+	case 0x8008: { // TODO : Move 0x8008 TIMER to a device
+		if (size == sizeof(uint32_t)) {
+			// HACK: This is very wrong.
+			// This timer should count at a specific frequency (3579.545 ticks per ms)
+			// But this is enough to keep NXDK from hanging for now.
+			LARGE_INTEGER performanceCount;
+			QueryPerformanceCounter(&performanceCount);
+			return static_cast<uint32_t>(performanceCount.QuadPart);
+		}
 		break;
 	}
-
-	EmuWarning("EmuX86_IORead32(0x%08X) [Unknown address]", addr);
-	return 0;
-}
-
-uint16_t EmuX86_IORead16(xbaddr addr)
-{
-	EmuWarning("EmuX86_IORead16(0x%08X) [Unknown address]", addr);
-	return 0;
-}
-
-static int field_pin = 0;
-uint8_t EmuX86_IORead8(xbaddr addr)
-{
-	switch (addr) {
-		case 0x80C0:
+	case 0x80C0: { // TODO : Move 0x80C0 TV encoder to a device
+		if (size == sizeof(uint8_t)) {
 			// field pin from tv encoder?
 			field_pin = (field_pin + 1) & 1;
 			return field_pin << 5;
-			break;
+		}
+		break;
+	}
 	}
 
-	EmuWarning("EmuX86_IORead8(0x%08X) [Unknown address]", addr);
+	// Pass the IO Read to the PCI Bus, this will handle devices with BARs set to IO addresses
+	uint32_t value = 0;
+	if (g_PCIBus->IORead(addr, &value, size)) {
+		return value;
+	}
+
+	EmuWarning("EmuX86_IORead(0x%08X, %d) [Unhandled]", addr, size);
 	return 0;
 }
 
-void EmuX86_IOWrite32(xbaddr addr, uint32_t value)
+void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 {
-	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
-}
+	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
+	if (g_PCIBus->IOWrite(addr, value, size)) {
+		return;
+	}
 
-void EmuX86_IOWrite16(xbaddr addr, uint16_t value)
-{
-	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
-}
-
-void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
-{
-	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+	EmuWarning("EmuX86_IOWrite(0x%08X, 0x%04X, %d) [Unhandled]", addr, value, size);
 }
 
 //
@@ -119,34 +113,37 @@ void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
 // to prevent recursive exceptions when accessing unallocated memory.
 //
 
-uint32_t EmuX86_Mem_Read32(xbaddr addr)
+uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 {
-	return *(uint32_t*)addr;
+	switch (size) {
+	case sizeof(uint32_t) :
+		return *(uint32_t*)addr;
+	case sizeof(uint16_t) :
+		return *(uint16_t*)addr;
+	case sizeof(uint8_t) :
+		return *(uint8_t*)addr;
+	default:
+		// UNREACHABLE(size);
+		return 0;
+	}
 }
 
-uint16_t EmuX86_Mem_Read16(xbaddr addr)
+void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 {
-	return *(uint16_t*)addr;
-}
-
-uint8_t EmuX86_Mem_Read8(xbaddr addr)
-{
-	return *(uint8_t*)addr;
-}
-
-void EmuX86_Mem_Write32(xbaddr addr, uint32_t value)
-{
-	*(uint32_t*)addr = value;
-}
-
-void EmuX86_Mem_Write16(xbaddr addr, uint16_t value)
-{
-	*(uint16_t*)addr = value;
-}
-
-void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
-{
-	*(uint8_t*)addr = value;
+	switch (size) {
+	case sizeof(uint32_t) :
+		*(uint32_t*)addr = (uint32_t)value;
+		break;
+	case sizeof(uint16_t) :
+		*(uint16_t*)addr = (uint16_t)value;
+		break;
+	case sizeof(uint8_t) :
+		*(uint8_t*)addr = (uint8_t)value;
+		break;
+	default:
+		// UNREACHABLE(size);
+		return;
+	}
 }
 
 uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
@@ -170,203 +167,75 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 // Read & write handlers for memory-mapped hardware devices
 //
 
-uint32_t EmuX86_Read32Aligned(xbaddr addr)
+uint32_t EmuX86_Read(xbaddr addr, int size)
 {
-	assert((addr & 3) == 0);
+	if ((addr & (size - 1)) != 0) {
+		EmuWarning("EmuX86_Read(0x%08X, %d) [Unaligned unimplemented]", addr, size);
+		// LOG_UNIMPLEMENTED();
+		return 0;
+	}
 
 	uint32_t value;
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		value = EmuNV2A_Read(addr - NV2A_ADDR, 32);
-		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 32);
+		value = EmuNV2A_Read(addr - NV2A_ADDR, size);
+		// Note : EmuNV2A_Read does it's own logging
 	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
+		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
 	} else {
+		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+		if (g_PCIBus->MMIORead(addr, &value, size)) {
+			return value;
+		}
+
 		if (g_bEmuException) {
-			EmuWarning("EmuX86_Read32Aligned(0x%08X) [Unknown address]", addr);
+			EmuWarning("EmuX86_Read(0x%08X, %d) [Unknown address]", addr, size);
 			value = 0;
 		} else {
 			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read32(addr);
+			value = EmuX86_Mem_Read(addr, size);
 		}
 
-		DbgPrintf("EmuX86_Read32Aligned(0x%08X) = 0x%08X\n", addr, value);
+		DbgPrintf("X86 : Read(0x%08X, %d) = 0x%08X\n", addr, size, value);
 	}
 
 	return value;
 }
 
-uint32_t EmuX86_Read32(xbaddr addr)
+void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 {
-	uint32_t value;
-
-	if ((addr & 3) == 0)
-		value = EmuX86_Read32Aligned(addr);
-	else {
-		EmuWarning("EmuX86_Read32(0x%08X) [Unaligned unimplemented]", addr);
-		value = 0;
+	if ((addr & (size - 1)) != 0) {
+		EmuWarning("EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
+		// LOG_UNIMPLEMENTED();
+		return;
 	}
-
-	return value;
-}
-
-uint16_t EmuX86_Read16(xbaddr addr)
-{
-	uint16_t value;
-
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
-		value = EmuNV2A_Read(addr - NV2A_ADDR, 16);
-		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 16);
-	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
-	} else {
-		if (g_bEmuException) {
-			EmuWarning("EmuX86_Read16(0x%08X) [Unknown address]", addr);
-			value = 0;
-		} else {
-			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read16(addr);
-		}
-
-		DbgPrintf("X86 : Read16(0x%.8X) = 0x%.4X\n", addr, value);
-	}
-
-	return value;
-}
-
-uint8_t EmuX86_Read8(xbaddr addr)
-{
-	uint8_t value;
-
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
-		value = EmuNV2A_Read(addr - NV2A_ADDR, 8);
-		// Note : EmuNV2A_Read32 does it's own logging
-	} else if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		value = EmuNVNet_Read(addr - NVNET_ADDR, 8);
-	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE);
-	} else {
-		if (g_bEmuException) {
-			EmuWarning("EmuX86_Read8(0x%08X) [Unknown address]", addr);
-			value = 0;
-		}
-		else {
-			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read8(addr);
-		}
-
-		DbgPrintf("X86 : Read8(0x%.8X) = 0x%.2X\n", addr, value);
-	}
-
-	return value;
-}
-
-void EmuX86_Write32Aligned(xbaddr addr, uint32_t value)
-{
-	assert((addr & 3) == 0);
 
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		EmuNV2A_Write(addr - NV2A_ADDR, value, 32);
-		// Note : EmuNV2A_Write32 does it's own logging
-		return;
-	}
-
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 32);
+		EmuNV2A_Write(addr - NV2A_ADDR, value, size);
+		// Note : EmuNV2A_Write does it's own logging
 		return;
 	}
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		EmuWarning("EmuX86_Write(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		return;
+	}
+
+	// Pass the Write to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+	if (g_PCIBus->MMIOWrite(addr, value, size)) {
 		return;
 	}
 
 	if (g_bEmuException) {
-		EmuWarning("EmuX86_Write32Aligned(0x%08X, 0x%08X) [Unknown address]", addr, value);
+		EmuWarning("EmuX86_Write(0x%08X, 0x%08X) [Unknown address]", addr, value);
 		return;
 	}
 
 	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("X86 : Write32Aligned(0x%.8X, 0x%.8X)\n", addr, value);
-	EmuX86_Mem_Write32(addr, value);
-}
-
-void EmuX86_Write32(xbaddr addr, uint32_t value)
-{
-	if ((addr & 3) == 0) {
-		EmuX86_Write32Aligned(addr, value);
-	}
-	else {
-		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unaligned unimplemented]", addr, value);
-		// LOG_UNIMPLEMENTD();
-	}
-}
-
-void EmuX86_Write16(xbaddr addr, uint16_t value)
-{
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
-		EmuNV2A_Write(addr - NV2A_ADDR, value, 16);
-		// Note : EmuNV2A_Write32 does it's own logging
-		return;
-	}
-
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 16);
-		return;
-	}
-
-	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		EmuWarning("EmuX86_Write16(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
-		return;
-	}
-
-	if (g_bEmuException) {
-		EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
-		return;
-	}
-
-	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("X86 : Write16(0x%.8X, 0x%.4X)\n", addr, value);
-	EmuX86_Mem_Write16(addr, value);
-}
-
-void EmuX86_Write8(xbaddr addr, uint8_t value)
-{
-
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not 
-		EmuNV2A_Write(addr - NV2A_ADDR, value, 8);
-		// Note : EmuNV2A_Write32 does it's own logging
-		return;
-	}
-
-	if (addr >= NVNET_ADDR && addr < NVNET_ADDR + NVNET_SIZE) {
-		EmuNVNet_Write(addr - NVNET_ADDR, value, 8);
-		return;
-	}
-
-	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		EmuWarning("EmuX86_Write8(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
-		return;
-	}
-
-	if (g_bEmuException) {
-		EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
-		return;
-	}
-
-	// Outside EmuException, pass the memory-access through to normal memory :
-	DbgPrintf("X86 : Write8(0x%.8X, 0x%.2X)\n", addr, value);
-	EmuX86_Mem_Write8(addr, value);
+	DbgPrintf("X86 : Write(0x%.8X, 0x%.8X, %d)\n", addr, value, size);
+	EmuX86_Mem_Write(addr, value, size);
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
@@ -473,16 +342,17 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	!BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];*/
 }
 
-inline void * EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
+inline void * EmuX86_GetRegisterPointer(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
 	int offset = ContextRecordOffsetByRegisterType[reg];
 	if (offset > 0)
 		return (void*)((uintptr_t)(e->ContextRecord) + offset);
 
+	assert(false);
 	return nullptr;
 }
 
-inline uint32_t EmuX86_GetRegisterValue32(LPEXCEPTION_POINTERS e, uint8_t reg)
+inline uint32_t EmuX86_GetRegisterValue32(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
 	if (reg != R_NONE)
 	{
@@ -494,38 +364,14 @@ inline uint32_t EmuX86_GetRegisterValue32(LPEXCEPTION_POINTERS e, uint8_t reg)
 	return 0;
 }
 
-inline uint16_t EmuX86_GetRegisterValue16(LPEXCEPTION_POINTERS e, uint8_t reg)
-{
-	if (reg != R_NONE)
-	{
-		void* regptr = EmuX86_GetRegisterPointer(e, reg);
-		if (regptr != nullptr)
-			return *(uint16_t *)regptr;
-	}
-
-	return 0;
-}
-
-inline uint8_t EmuX86_GetRegisterValue8(LPEXCEPTION_POINTERS e, uint8_t reg)
-{
-	if (reg != R_NONE)
-	{
-		void* regptr = EmuX86_GetRegisterPointer(e, reg);
-		if (regptr != nullptr)
-			return *(uint8_t *)regptr;
-	}
-
-	return 0;
-}
-
-xbaddr EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_SMEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
 {
 	xbaddr base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	return base + (uint32_t)info.disp;
 }
 
-xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_MEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
 {
 	xbaddr base = EmuX86_GetRegisterValue32(e, info.base);
 
@@ -537,154 +383,143 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int opera
 		return base + index + (uint32_t)info.disp;
 }
 
-xbaddr EmuX86_Operand_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand, bool &is_internal_addr)
+typedef struct {
+	xbaddr addr;
+	bool is_internal_addr; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
+	int size; // Expressed in bytes, not bits!
+} OperandAddress;
+
+bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
 {
+	opAddr.size = info.ops[operand].size / 8; // Convert size in bits into bytes
 	switch (info.ops[operand].type) {
 	case O_NONE:
 	{
 		// ignore operand
-		return xbnull;
+		return false;
 	}
 	case O_REG:
-		is_internal_addr = true;
-		return (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		return true;
 	{
 	}
 	case O_IMM:
 	{
-		is_internal_addr = true;
-		return (xbaddr)(&info.imm);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm);
+		return true;
 	}
 	case O_IMM1:
 	{
-		is_internal_addr = true;
-		return (xbaddr)(&info.imm.ex.i1);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm.ex.i1);
+		return true;
 	}
 	case O_IMM2:
 	{
-		is_internal_addr = true;
-		return (xbaddr)(&info.imm.ex.i2);
+		opAddr.is_internal_addr = true;
+		opAddr.addr = (xbaddr)(&info.imm.ex.i2);
+		return true;
 	}
 	case O_DISP:
 	{
-		is_internal_addr = false;
-		return (xbaddr)info.disp;
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = (xbaddr)info.disp;
+		return true;
 	}
 	case O_SMEM:
 	{
-		is_internal_addr = false;
-		return EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		return true;
 	}
 	case O_MEM:
 	{
-		is_internal_addr = false;
-		return EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		opAddr.is_internal_addr = false;
+		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
+		opAddr.addr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		return true;
 	}
 	case O_PC:
 	{
-		is_internal_addr = false;
-		return (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		opAddr.is_internal_addr = false;
+		opAddr.addr = (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		return true;
 	}
 	case O_PTR:
 	{
-		is_internal_addr = false;
-		return (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
+		opAddr.is_internal_addr = false;
+		opAddr.addr = (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
+		return true;
 	}
 	default:
-		return xbnull;
+		// UNREACHABLE(info.ops[operand].type);
+		return false;
 	}
 
-	return xbnull;
+	return false;
 }
 
-bool EmuX86_Addr_Read(xbaddr srcAddr, bool is_internal_addr, uint16_t size, OUT uint32_t *value)
+bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
 {
-	if (is_internal_addr)
-	{
-		switch (size) {
-		case 8:
-			*value = *((uint8_t*)srcAddr);
-			return true;
-		case 16:
-			*value = *((uint16_t*)srcAddr);
-			return true;
-		case 32:
-			*value = *((uint32_t*)srcAddr);
-			return true;
-		default:
-			return false;
-		}
+	// Disallow write-access to immediate value adresses
+	switch (info.ops[operand].type) {
+	case O_IMM:
+	case O_IMM1:
+	case O_IMM2:
+		EmuWarning("Refused operand write-access to immedate value address!");
+		return false;
 	}
-	else
-	{
-		switch (size) {
-		case 8:
-			*value = EmuX86_Read8(srcAddr);
-			return true;
-		case 16:
-			*value = EmuX86_Read16(srcAddr);
-			return true;
-		case 32:
-			*value = EmuX86_Read32(srcAddr);
-			return true;
-		default:
-			return false;
-		}
+
+	// Except for the above restriction, writes may access the same operand addresses as reads :
+	return EmuX86_Operand_Addr_ForReadOnly(e, info, operand, OUT opAddr);
+}
+
+uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
+{
+	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
+	if (opAddr.is_internal_addr) {
+		return EmuX86_Mem_Read(opAddr.addr, opAddr.size);
+	}
+	else {
+		return EmuX86_Read(opAddr.addr, opAddr.size);
 	}
 }
 
-bool EmuX86_Addr_Write(xbaddr destAddr, bool is_internal_addr, uint16_t size, uint32_t value)
+void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 {
-	if (is_internal_addr)
-	{
-		switch (size) {
-		case 8:
-			*((uint8_t*)destAddr) = (uint8_t)value;
-			return true;
-		case 16:
-			*((uint16_t*)destAddr) = (uint16_t)value;
-			return true;
-		case 32:
-			*((uint32_t*)destAddr) = value;
-			return true;
-		default:
-			return false;
-		}
+	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
+	if (opAddr.is_internal_addr) {
+		EmuX86_Mem_Write(opAddr.addr, value, opAddr.size);
 	}
-	else
-	{
-		switch (size) {
-		case 8:
-			EmuX86_Write8(destAddr, value & 0xFF);
-			return true;
-		case 16:
-			EmuX86_Write16(destAddr, value & 0xFFFF);
-			return true;
-		case 32:
-			EmuX86_Write32(destAddr, value);
-			return true;
-		default:
-			return false;
-		}
+	else {
+		EmuX86_Write(opAddr.addr, value, opAddr.size);
 	}
 }
 
-bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
+bool EmuX86_Operand_Read(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OUT uint32_t *value)
 {
-	bool is_internal_addr;
-	xbaddr srcAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
-	if (srcAddr != xbnull)
-		return EmuX86_Addr_Read(srcAddr, is_internal_addr, info.ops[operand].size, value);
+	OperandAddress opAddr;
+	if (EmuX86_Operand_Addr_ForReadOnly(e, info, operand, OUT opAddr)) {
+		*value = EmuX86_Addr_Read(opAddr);
+		return true;
+	}
 
 	return false;
 }
 
 bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
-	bool is_internal_addr;
-	xbaddr destAddr = EmuX86_Operand_Addr(e, info, operand, OUT is_internal_addr);
-	if (destAddr != xbnull)
-		return EmuX86_Addr_Write(destAddr, is_internal_addr, info.ops[operand].size, value);
+	OperandAddress opAddr;
+	if (EmuX86_Operand_Addr_ForReadWrite(e, info, operand, OUT opAddr)) {
+		EmuX86_Addr_Write(opAddr, value);
+		return true;
+	}
 
 	return false;
 }
@@ -777,36 +612,17 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &dest))
 		return false;
 
-	// ADD reads and writes destination :
-	bool is_internal_addr;
-	xbaddr addr = EmuX86_Operand_Addr(e, info, 0, OUT is_internal_addr);
-	if (addr == xbnull)
+	// ADD reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	if (is_internal_addr)
-		return false;
+	const uint32_t src = EmuX86_Addr_Read(opAddr);
 
-	uint32_t src = 0;
-	uint64_t result = 0;
-	switch (info.ops[0].size) {
-	case 8: {
-		src = EmuX86_Read8(addr);
-		result = (uint64_t)dest + (uint64_t)src;
-		EmuX86_Write8(addr, static_cast<uint8_t>(result));
-	}
-	case 16: {
-		src = EmuX86_Read16(addr);
-		result = (uint64_t)dest + (uint64_t)src;
-		EmuX86_Write16(addr, static_cast<uint16_t>(result));
-	}
-	case 32: {
-		src = EmuX86_Read32(addr);
-		result = (uint64_t)dest + (uint64_t)src;
-		EmuX86_Write32(addr, static_cast<uint32_t>(result));
-	}	
-	default:
-		return false;
-	}
+	const uint64_t result = (uint64_t)dest + (uint64_t)src;
+
+	// Write back the result
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
@@ -827,16 +643,18 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+	// AND reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// AND Destination with src
 	uint32_t result = dest & src;
 
 	// Write back the result
-	if (!EmuX86_Operand_Write(e, info, 0, result))
-		return false;	
+	EmuX86_Addr_Write(opAddr, result);
 
 	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
@@ -961,15 +779,18 @@ void EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 
 bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+	// DEC reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// DEC Destination to src 
 	uint64_t result = (uint64_t)dest - (uint64_t)1;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the result.
 	EmuX86_SetFlags_OSZAP(e, 
@@ -984,25 +805,12 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	uint32_t value = 0;
 	uint32_t addr;
-
 	if (!EmuX86_Operand_Read(e, info, 1, &addr))
 		return false;
 
-	switch (info.ops[0].size) {
-	case 8:
-		value = EmuX86_IORead8(addr);
-		break;
-	case 16:
-		value = EmuX86_IORead16(addr);
-		break;
-	case 32:
-		value = EmuX86_IORead32(addr);
-		break;
-	default:
-		return false;
-	}
+	// IN does an I/O read on the address, writing the value to the second operand :
+	uint32_t value = EmuX86_IORead(addr, info.ops[0].size / 8); // Convert size in bits into bytes
 
 	if (!EmuX86_Operand_Write(e, info, 0, value)) {
 		return false;
@@ -1015,15 +823,18 @@ bool EmuX86_Opcode_IN(LPEXCEPTION_POINTERS e, _DInst& info)
 
 bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+	// INC reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// INC Destination to src 
 	uint64_t result = (uint64_t)dest + (uint64_t)1;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 	
 	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the re
 	EmuX86_SetFlags_OSZAP(e,
@@ -1077,16 +888,18 @@ bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+	// OR reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// OR Destination with src
 	uint32_t result = dest | src;
 
 	// Write back the result
-	if (!EmuX86_Operand_Write(e, info, 0, result))
-		return false;
+	EmuX86_Addr_Write(opAddr, result);
 
 	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
 	EmuX86_SetFlags_OSZPC(e,
@@ -1111,26 +924,11 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// OUT does an I/O write on the address, using the value from the second operand :
-	switch (info.ops[1].size) {
-	case 8: {
-		EmuX86_IOWrite8(addr, (uint8_t)value);
-		return true;
-	}
-	case 16: {
-		EmuX86_IOWrite16(addr, (uint16_t)value);
-		return true;
-	}
-	case 32: {
-		EmuX86_IOWrite32(addr, value);
-		return true;
-	}
-	default:
-		return false;
-	}
+	EmuX86_IOWrite(addr, value, info.ops[1].size / 8); // Convert size in bits into bytes
 
 	// Note : OUT instructions never update CPU flags
 
-	return false;
+return true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -1140,15 +938,18 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &dest))
+	// SUB reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	// SUB Destination with src 
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
 	// Write result back
-	EmuX86_Operand_Write(e, info, 0, static_cast<uint32_t>(result));
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 
 	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
 	EmuX86_SetFlags_OSZAPC(e,
@@ -1228,80 +1029,84 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	}
 
 	// Decoded instruction information.
+	// Opcode handler note : 
+	// If an opcode or one of it's operand can't be decoded, that's a clear failure.
+	// However, if for any reason, an opcode operand cannot be read from or written to,
+	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
-	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
+	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, OUT info)) {
 		EmuWarning("Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
+		return false;
 	}
-	else {
-		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
-		case I_ADD:
-			if (EmuX86_Opcode_ADD(e, info)) break;
-			goto unimplemented_opcode;
-		case I_AND:
-			if (EmuX86_Opcode_AND(e, info)) break;
-			goto unimplemented_opcode;
-		case I_CMP:
-			if (EmuX86_Opcode_CMP(e, info)) break;
-			goto unimplemented_opcode;
-		case I_CMPXCHG:
-			if (EmuX86_Opcode_CMPXCHG(e, info)) break;
-			goto unimplemented_opcode;
-		case I_CPUID:
-			EmuX86_Opcode_CPUID(e, info);
-			break;
-		case I_DEC:
-			if (EmuX86_Opcode_DEC(e, info)) break;
-			goto unimplemented_opcode;
-		case I_IN:
-			if (EmuX86_Opcode_IN(e, info)) break;
-			goto unimplemented_opcode;
-		case I_INC:
-			if (EmuX86_Opcode_INC(e, info)) break;
-			goto unimplemented_opcode;
-		case I_INVD: // Flush internal caches; initiate flushing of external caches.
-			break; // We can safely ignore this
-		case I_MOV:
-			if (EmuX86_Opcode_MOV(e, info)) break;
-			goto unimplemented_opcode;
-		case I_MOVZX:			
-			if (EmuX86_Opcode_MOVZX(e, info)) break;
-			goto unimplemented_opcode;
-		case I_OR:
-			if (EmuX86_Opcode_OR(e, info)) break;
-			goto unimplemented_opcode;
-		case I_OUT:
-			if (EmuX86_Opcode_OUT(e, info)) break;
-			goto unimplemented_opcode;
-		case I_SUB:
-			if (EmuX86_Opcode_SUB(e, info)) break;
-			goto unimplemented_opcode;
-		case I_TEST:
-			if (EmuX86_Opcode_TEST(e, info)) break;
-			goto unimplemented_opcode;
-		case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
-			break; // We can safely ignore this
-		case I_WRMSR:
-			// We do not emulate processor specific registers just yet
-			// Some titles attempt to manually set the TSC via this instruction
-			// This needs fixing eventually, but should be acceptible to ignore for now!
-			// Chase: Hollywood Stunt Driver hits this
-			EmuWarning("WRMSR instruction ignored");
-			break;
-		default:
-			EmuWarning("Unhandled instruction : %u", info.opcode);
-			goto unimplemented_opcode;
-		}
 
-		// When falling through here, the instruction was handled correctly,
-		// skip over the instruction and continue execution :
+	switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
+	case I_ADD:
+		if (EmuX86_Opcode_ADD(e, info)) break;
+		goto opcode_error;
+	case I_AND:
+		if (EmuX86_Opcode_AND(e, info)) break;
+		goto opcode_error;
+	case I_CMP:
+		if (EmuX86_Opcode_CMP(e, info)) break;
+		goto opcode_error;
+	case I_CMPXCHG:
+		if (EmuX86_Opcode_CMPXCHG(e, info)) break;
+		goto opcode_error;
+	case I_CPUID:
+		EmuX86_Opcode_CPUID(e, info);
+		break;
+	case I_DEC:
+		if (EmuX86_Opcode_DEC(e, info)) break;
+		goto opcode_error;
+	case I_IN:
+		if (EmuX86_Opcode_IN(e, info)) break;
+		goto opcode_error;
+	case I_INC:
+		if (EmuX86_Opcode_INC(e, info)) break;
+		goto opcode_error;
+	case I_INVD: // Flush internal caches; initiate flushing of external caches.
+		break; // We can safely ignore this
+	case I_MOV:
+		if (EmuX86_Opcode_MOV(e, info)) break;
+		goto opcode_error;
+	case I_MOVZX:			
+		if (EmuX86_Opcode_MOVZX(e, info)) break;
+		goto opcode_error;
+	case I_OR:
+		if (EmuX86_Opcode_OR(e, info)) break;
+		goto opcode_error;
+	case I_OUT:
+		if (EmuX86_Opcode_OUT(e, info)) break;
+		goto opcode_error;
+	case I_SUB:
+		if (EmuX86_Opcode_SUB(e, info)) break;
+		goto opcode_error;
+	case I_TEST:
+		if (EmuX86_Opcode_TEST(e, info)) break;
+		goto opcode_error;
+	case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
+		break; // We can safely ignore this
+	case I_WRMSR:
+		// We do not emulate processor specific registers just yet
+		// Some titles attempt to manually set the TSC via this instruction
+		// This needs fixing eventually, but should be acceptible to ignore for now!
+		// Chase: Hollywood Stunt Driver hits this
+		EmuWarning("WRMSR instruction ignored");
+		break;
+	default:
+		EmuWarning("Unhandled instruction : %u", info.opcode);
 		e->ContextRecord->Eip += info.size;
-		return true;
-
-unimplemented_opcode:
-		EmuWarning("0x%08X: Not Implemented\n", e->ContextRecord->Eip);	// TODO : format decodedInstructions[0]
-		e->ContextRecord->Eip += info.size;
+		return false;
 	}
-	
+
+	// When falling through here, the instruction was handled correctly,
+	// skip over the instruction and continue execution :
+	e->ContextRecord->Eip += info.size;
+	return true;
+
+opcode_error:
+	EmuWarning("0x%08X: Error while handling instruction %u", e->ContextRecord->Eip, info.opcode); // TODO : format decodedInstructions[0]
+	e->ContextRecord->Eip += info.size;
 	return false;
 }
 

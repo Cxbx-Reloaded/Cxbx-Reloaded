@@ -63,6 +63,9 @@ namespace xboxkrnl
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
+#include "Xbox.h" // For InitXboxHardware()
+#include "EEPROMDevice.h" // For g_EEPROM
+#include "LED.h" // For LED::Sequence
 
 /* prevent name collisions */
 namespace NtDll
@@ -306,7 +309,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
-	// Make sure memory.bin is at least 128 MB in size		
+	// Make sure memory.bin is at least 128 MB in size
 	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
 	SetEndOfFile(hFile);
 
@@ -385,7 +388,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!");
 		return nullptr;
 	}
-	
+
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
 
@@ -421,7 +424,7 @@ void PrintCurrentConfigurationLog()
 		DWORD dwBuild = 0;
 
 		// TODO: GetVersion is deprecated but we use it anyway (for now)
-		// The correct solution is to use GetProductInfo but that function 
+		// The correct solution is to use GetProductInfo but that function
 		// requires more logic to parse the response, and I didn't feel
 		// like building it just yet :P
 		dwVersion = GetVersion();
@@ -676,7 +679,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// Initialize the Chihiro/Debug - specific memory ranges
 			g_VMManager.InitializeChihiroDebug();
 		}
-		
+
 		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
@@ -775,6 +778,12 @@ void LoadXboxKeys(std::string path)
 
 	// If we didn't already exit the function, keys.bin could not be loaded
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
+}
+
+void SetLEDSequence(LED::Sequence aLEDSequence)
+{
+	// TODO : Move to best suited location & implement
+	// See http://xboxdevwiki.net/PIC#The_LED
 }
 
 __declspec(noreturn) void CxbxKrnlInit
@@ -1001,7 +1010,13 @@ __declspec(noreturn) void CxbxKrnlInit
     XTL::CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
+
 	SetupXboxDeviceTypes();
+
+	InitXboxHardware();
+
+	// Now the hardware devices exist, couple the EEPROM buffer to it's device
+	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
 
 	// Always initialise NV2A: We may need it for disabled HLE patches too!
 	EmuNV2A_Init();
