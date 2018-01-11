@@ -17,7 +17,7 @@ Cxbx-Reloaded is early in development and still pretty unstable, so don't expect
   * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
 ## Automated Builds
-Cxbx-Reloaded is not yet ready for general release, but the latest development build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) (navigate to Configuration: Release => Artifacts => export\Release.zip).
+Cxbx-Reloaded is not yet ready for general release, but the latest development build can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) (navigate to Configuration: Release => Artifacts => export\Release.zip). Also, a history of AppVeyor builds is [available here](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history).
 
 ## Compatibility
 Cxbx-Reloaded has a separate [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues). If you have something to report on a title, please create or update the issue for it over there. (Please, read the [Read-me file](https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md) first!)
