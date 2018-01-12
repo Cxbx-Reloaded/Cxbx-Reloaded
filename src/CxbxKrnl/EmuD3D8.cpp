@@ -3090,6 +3090,9 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	SetHostSurface(pBackBuffer, pNewHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
+	
+	// Increment reference count
+	pBackBuffer->Common++;
 
     return pBackBuffer;
 }
@@ -9624,6 +9627,10 @@ XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	
 	// Get the active texture from this stage
 	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
+
+	if (pRet) {
+		pRet->Common++;
+	}
 
 	return pRet;
 }
