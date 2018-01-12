@@ -650,6 +650,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	CxbxRestorePersistentMemoryRegions();
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -685,8 +686,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// Initialize the Chihiro/Debug - specific memory ranges
 			g_VMManager.InitializeChihiroDebug();
 		}
-
-		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
