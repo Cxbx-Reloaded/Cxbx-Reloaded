@@ -5311,7 +5311,9 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Texture...\n");
             }
 
-            X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
+			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+
+			X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
             X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
             D3DFORMAT   PCFormat = EmuXB2PC_D3DFormat(X_Format);
