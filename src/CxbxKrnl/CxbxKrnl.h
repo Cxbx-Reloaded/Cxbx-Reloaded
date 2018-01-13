@@ -232,4 +232,7 @@ extern char szFilePath_EEPROM_bin[MAX_PATH];
 }
 #endif
 
+// Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+extern std::string CxbxGetLastErrorString(char * lpszFunction);
+
 #endif
