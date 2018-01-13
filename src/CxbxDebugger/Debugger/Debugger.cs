@@ -31,6 +31,8 @@ namespace CxbxDebugger
         string Target = "";
 
         RunState State = RunState.NotLaunched;
+
+        DebuggerMessages.DebuggerInit InitParams = new DebuggerMessages.DebuggerInit();
         
         DebuggerInstance DebugInstance;
 
@@ -347,7 +349,7 @@ namespace CxbxDebugger
                 //TargetProcess.MainThread.ThreadID = (uint)DebugEvent.dwThreadId;
                 TargetProcess.MainThread.StartAddress = DebugInfo.lpStartAddress;
                 TargetProcess.MainThread.ThreadBase = DebugInfo.lpThreadLocalBase;
-
+                
                 foreach (IDebuggerProcessEvents Event in ProcessEvents)
                 {
                     Event.OnProcessCreate(TargetProcess);
@@ -514,17 +516,48 @@ namespace CxbxDebugger
                     }
                     break;
 
+                case (ExceptionCode)DebuggerMessages.ReportType.FILE_WRITE:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetFileWriteReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            foreach (IDebuggerFileEvents Event in FileEvents)
+                            {
+                                Event.OnFileWrite(Report);
+                            }
+                        }
+                    }
+                    break;
+
                 case (ExceptionCode)DebuggerMessages.ReportType.FILE_CLOSED:
                     {
                         var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
                         if (Thread != null)
                         {
                             var Report = DebuggerMessages.GetFileClosedReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
-
-                            foreach (IDebuggerFileEvents Event in FileEvents)
+                            if (Report != null)
                             {
-                                Event.OnFileClosed(Report);
+                                foreach (IDebuggerFileEvents Event in FileEvents)
+                                {
+                                    Event.OnFileClosed(Report);
+                                }
                             }
+                        }
+                    }
+                    break;
+
+                case (ExceptionCode)DebuggerMessages.ReportType.DEBUGGER_INIT:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetDebuggerInitReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+
+                            InitParams = Report;
+
+
                         }
                     }
                     break;
@@ -653,6 +686,11 @@ namespace CxbxDebugger
 
             IDebuggerFileEvents FileListener = EventClass as IDebuggerFileEvents;
             if (FileListener != null) FileEvents.Add(FileListener);
+        }
+
+        public IntPtr GetScreenBuffer()
+        {
+            return InitParams.ScreenBuffer;
         }
     }
 }

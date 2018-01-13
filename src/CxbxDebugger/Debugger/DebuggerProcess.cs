@@ -142,9 +142,17 @@ namespace CxbxDebugger
             if (Address == IntPtr.Zero)
                 return "";
 
-            byte[] StringData = ReadMemoryInternal(Address, Length);
-            
+            byte[] StringData = ReadMemoryInternal(Address, Length * 2);
+
             return Encoding.Unicode.GetString(StringData);
+        }
+        
+        public byte[] ReadMemoryBlock(IntPtr Address, uint Size)
+        {
+            if (Address == IntPtr.Zero)
+                return null;
+
+            return ReadMemoryInternal(Address, Size);
         }
 
         private void WriteMemoryInternal(IntPtr Address, byte[] Data)

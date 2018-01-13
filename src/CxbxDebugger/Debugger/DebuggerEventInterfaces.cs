@@ -43,6 +43,7 @@ namespace CxbxDebugger
     {
         void OnFileOpened(DebuggerMessages.FileOpened Info);
         void OnFileRead(DebuggerMessages.FileRead Info);
+        void OnFileWrite(DebuggerMessages.FileWrite Info);
         void OnFileClosed(DebuggerMessages.FileClosed Info);
     }
 }

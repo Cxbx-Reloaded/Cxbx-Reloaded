@@ -1605,10 +1605,14 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
 	//        _asm int 3
 
-    if (CxbxDebugger::CanReport())
-    {
-        CxbxDebugger::ReportFileRead(FileHandle, Length);
-    }
+	if (CxbxDebugger::CanReport())
+	{
+		u64 Offset = ~0;
+		if (ByteOffset)
+			Offset = ByteOffset->QuadPart;
+
+		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
+	}
 
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,
@@ -2008,6 +2012,15 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	// Halo..
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
 	//        _asm int 3
+
+	if (CxbxDebugger::CanReport())
+	{
+		u64 Offset = ~0;
+		if (ByteOffset)
+			Offset = ByteOffset->QuadPart;
+		
+		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
+	}
 
 	NTSTATUS ret = NtDll::NtWriteFile(
 		FileHandle,

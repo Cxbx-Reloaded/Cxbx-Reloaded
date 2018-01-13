@@ -6,6 +6,9 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace CxbxDebugger
 {
@@ -20,6 +23,57 @@ namespace CxbxDebugger
         List<DebuggerThread> DebugThreads = new List<DebuggerThread>();
         List<DebuggerModule> DebugModules = new List<DebuggerModule>();
 
+        enum FileEventType
+        {
+            Opened,
+            Read,
+            Write,
+            Closed,
+            OpenedFailed,
+        }
+
+        struct FileEvents
+        {
+            public FileEventType Type;
+            public string Name;
+            public uint Length;
+            public uint Offset;
+
+            public FileEvents(FileEventType Type, string Name, uint Length = 0, uint Offset = uint.MaxValue)
+            {
+                this.Type = Type;
+                this.Name = Name;
+                this.Length = Length;
+                this.Offset = Offset;
+            }
+
+            public static FileEvents Opened(string Name)
+            {
+                return new FileEvents(FileEventType.Opened, Name);
+            }
+
+            public static FileEvents OpenedFailed(string Name)
+            {
+                return new FileEvents(FileEventType.OpenedFailed, Name);
+            }
+
+            public static FileEvents Read(string Name, uint Length, uint Offset)
+            {
+                return new FileEvents(FileEventType.Read, Name, Length, Offset);
+            }
+
+            public static FileEvents Write(string Name, uint Length, uint Offset)
+            {
+                return new FileEvents(FileEventType.Write, Name, Length, Offset);
+            }
+
+            public static FileEvents Closed(string Name)
+            {
+                return new FileEvents(FileEventType.Closed, Name);
+            }
+        }
+
+        List<FileEvents> DbgFileEvents = new List<FileEvents>();
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
         public Form1()
@@ -150,6 +204,60 @@ namespace CxbxDebugger
             }
         }
 
+        private void DebugFileEvent(FileEvents Event)
+        {
+            DbgFileEvents.Add(Event);
+
+            Invoke(new MethodInvoker(delegate ()
+            {
+                listView1.BeginUpdate();
+                {
+                    var lvi = listView1.Items.Add(Event.Type.ToString());
+                    lvi.SubItems.Add(Event.Name);
+
+                    switch (Event.Type)
+                    {
+                        case FileEventType.Read:
+                        case FileEventType.Write:
+                            string text = string.Format("{0} bytes", Event.Length.ToString());
+
+                            if( Event.Offset != uint.MaxValue)
+                            {
+                                text += string.Format(" from offset {0}", Event.Offset);
+                            }
+
+                            lvi.SubItems.Add(text);
+                            break;
+
+                        case FileEventType.OpenedFailed:
+                            lvi.SubItems.Add("Failed to open file");
+                            break;
+                    }
+                }
+                listView1.EndUpdate();
+
+                switch (Event.Type)
+                {
+
+                    case FileEventType.Opened:
+                    case FileEventType.Closed:
+                    case FileEventType.OpenedFailed:
+                        {
+                            listBox1.BeginUpdate();
+                            listBox1.Items.Clear();
+
+                            foreach (DebuggerMessages.FileOpened FOpen in FileHandles)
+                            {
+                                listBox1.Items.Add(FOpen.FileName);
+                            }
+
+                            listBox1.EndUpdate();
+                        }
+                        break;
+                }
+            }));
+        }
+
         private bool DebugAsk(string Message)
         {
             return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
@@ -263,6 +371,11 @@ namespace CxbxDebugger
                 frm.DebugLog("Ended debugging session");
             }
 
+            public void OnDebugTitle(string Title)
+            {
+                frm.Text = string.Format("{0} - Cxbx-Reloaded Debugger", Title);
+            }
+
             public void OnThreadCreate(DebuggerThread Thread)
             {
                 frm.DebugLog(string.Format("Thread created {0}", Thread.ThreadID));
@@ -319,8 +432,19 @@ namespace CxbxDebugger
 
             public void OnFileOpened(DebuggerMessages.FileOpened Info)
             {
-                frm.FileHandles.Add(Info);
-                frm.DebugLog(string.Format("Opened file: \"{0}\"", Info.FileName));
+                if (Info.Succeeded)
+                {
+                    frm.FileHandles.Add(Info);
+                    frm.DebugLog(string.Format("Opened file: \"{0}\"", Info.FileName));
+
+                    frm.DebugFileEvent(FileEvents.Opened(Info.FileName));
+                }
+                else
+                {
+                    frm.DebugLog(string.Format("Opened file FAILED: \"{0}\"", Info.FileName));
+
+                    frm.DebugFileEvent(FileEvents.OpenedFailed(Info.FileName));
+                }
             }
 
             public void OnFileRead(DebuggerMessages.FileRead Info)
@@ -329,6 +453,17 @@ namespace CxbxDebugger
                 if (Found != null)
                 {
                     frm.DebugLog(string.Format("Reading {0} byte(s) from: {1}", Info.Length, Found.FileName));
+                    frm.DebugFileEvent(FileEvents.Read(Found.FileName, Info.Length, Info.Offset));
+                }
+            }
+
+            public void OnFileWrite(DebuggerMessages.FileWrite Info)
+            {
+                var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
+                if (Found != null)
+                {
+                    frm.DebugLog(string.Format("Writing {0} byte(s) to: {1}", Info.Length, Found.FileName));
+                    frm.DebugFileEvent(FileEvents.Write(Found.FileName, Info.Length, Info.Offset));
                 }
             }
 
@@ -337,8 +472,11 @@ namespace CxbxDebugger
                 var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
                 if (Found != null)
                 {
-                    frm.DebugLog(string.Format("Closed file: \"{0}\"", Found.FileName));
                     frm.FileHandles.Remove(Found);
+
+                    frm.DebugFileEvent(FileEvents.Closed(Found.FileName));
+
+                    frm.DebugLog(string.Format("Closed file: \"{0}\"", Found.FileName));
                 }
             }
         }
@@ -364,6 +502,25 @@ namespace CxbxDebugger
             {
                 DebuggerInst.Resume();
             }
+        }
+        
+        private Bitmap DumpFramebuffer()
+        {
+            IntPtr BufferAddr = DebuggerInst.GetScreenBuffer();
+            uint BufferSize = 640 * 480 * 4;
+            
+            var buff = DebugThreads[0].OwningProcess.ReadMemoryBlock(BufferAddr, BufferSize);
+
+            // todo: convert this buffer into (RGBA from BGRA)
+            var bmp = new Bitmap(640, 480, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+
+            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+            {
+                Marshal.Copy(buff, 0, bmpData.Scan0, buff.Length);
+            }
+            bmp.UnlockBits(bmpData);
+
+            return bmp;
         }
 
         private void btnDumpCallstack_Click(object sender, EventArgs e)
@@ -416,6 +573,11 @@ namespace CxbxDebugger
                 lbRegisters.Items.Add("[External Code]");
                 OtherModuleCount = 0;
             }
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

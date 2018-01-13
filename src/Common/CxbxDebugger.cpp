@@ -54,6 +54,7 @@ namespace CxbxDebugger
 			FILE_READ = 0x00deed03,
 			FILE_CLOSED = 0x00deed04,
 			DEBUGGER_INIT = 0x00deed05,
+			FILE_WRITE = 0x00deed06,
 
 			// Debugger query codes:
 
@@ -197,22 +198,35 @@ namespace CxbxDebugger
 		Report.Send();
 	}
 
-	void ReportFileOpened(HANDLE hFile, const wchar_t* Filename)
+	void ReportFileOpened(HANDLE hFile, const wchar_t* Filename, bool Success)
 	{
 		Internal::ReportHelper Report(Internal::FILE_OPENED);
 
 		Report.Add(hFile);
 		Report.AddWString(Filename);
+		Report.Add(Success);
 
 		Report.Send();
 	}
 
-	void ReportFileRead(HANDLE hFile, uint Size)
+	void ReportFileRead(HANDLE hFile, uint Size, u64 Offset)
 	{
 		Internal::ReportHelper Report(Internal::FILE_READ);
 
 		Report.Add(hFile);
 		Report.Add(Size);
+		Report.Add(static_cast<uint>(Offset));
+
+		Report.Send();
+	}
+
+	void ReportFileWrite(HANDLE hFile, uint Size, u64 Offset)
+	{
+		Internal::ReportHelper Report(Internal::FILE_WRITE);
+
+		Report.Add(hFile);
+		Report.Add(Size);
+		Report.Add(static_cast<uint>(Offset));
 
 		Report.Send();
 	}

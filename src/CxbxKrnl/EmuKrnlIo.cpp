@@ -297,7 +297,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
         
         if (CxbxDebugger::CanReport())
         {
-            CxbxDebugger::ReportFileOpened(*FileHandle, nativeObjectAttributes.NtUnicodeString.Buffer);
+            CxbxDebugger::ReportFileOpened(*FileHandle, nativeObjectAttributes.NtUnicodeString.Buffer, SUCCEEDED(ret));
         }
     }
 
