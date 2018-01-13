@@ -176,7 +176,10 @@ OOVPA_END;
 // * D3D_CommonSetRenderTarget
 // ******************************************************************
 #ifndef WIP_LessVertexPatching
-OOVPA_NO_XREF(D3D_CommonSetRenderTarget, 4627, 12)
+OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 12,
+
+    XREF_D3D_CommonSetRenderTarget,
+    XRefZero)
 #else
 OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 1+12,
 
@@ -498,7 +501,10 @@ OOVPA_END;
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
 #ifndef WIP_LessVertexPatching
-OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 20)
+OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 20,
+
+    XREF_D3DDevice_GetDepthStencilSurface2,
+    XRefZero)
 #else
 OOVPA_XREF(D3DDevice_GetDepthStencilSurface2, 4627, 1+20,
 
