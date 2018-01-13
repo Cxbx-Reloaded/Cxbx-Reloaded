@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 #include "xxhash32.h"
 #include <condition_variable>
@@ -2067,6 +2066,7 @@ static void EmuUnswizzleTextureStages()
 		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
 		if (pHostTexture != nullptr)
 		{
+			if (pHostTexture->GetType() == XTL::D3DRTYPE_CUBETEXTURE) continue; // Prevent exceptions - skip cubes for now
 			hRet = pHostTexture->UnlockRect(0); // remove old lock
 			DEBUG_D3DRESULT(hRet, "pHostTexture->UnlockRect");
 		}
@@ -3090,6 +3090,9 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	SetHostSurface(pBackBuffer, pNewHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
+	
+	// Increment reference count
+	pBackBuffer->Common++;
 
     return pBackBuffer;
 }
@@ -3791,6 +3794,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
+
+	// If PixelShader Disable Hack is enabled, return a dummy handle
+	if (g_DisablePixelShaders) {
+		*pHandle = X_PIXELSHADER_FAKE_HANDLE;
+		RETURN(D3D_OK);
+	}
+
 #if 0 // PatrickvL Dxbx pixel shader translation
 
 	// Attempt to recompile PixelShader
@@ -5211,7 +5221,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
                 DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
-                if(dwSize == -1)
+                if(dwSize == 0)
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
@@ -5275,7 +5285,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
                 DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
 
-                if(dwSize == -1)
+                if(dwSize == 0)
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Push buffer allocation size unknown");
@@ -9617,6 +9627,10 @@ XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	
 	// Get the active texture from this stage
 	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
+
+	if (pRet) {
+		pRet->Common++;
+	}
 
 	return pRet;
 }

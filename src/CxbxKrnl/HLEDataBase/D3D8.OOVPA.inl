@@ -131,8 +131,6 @@
 //   * D3DDevice_SetPixelShaderConstant (4034)
 //   * D3DDevice_SetPixelShaderProgram (4034)
 //   * D3DDevice_SetRenderTarget (4034)
-//   * D3DDevice_SetStateUP (4034, 4039, 4134, 4242, 4432, 4531)
-//   * D3DDevice_SetStateVB (4034, 4039, 4134, 4242, 4432, 4531)
 //   * D3DDevice_SetVertexData2f (4034)
 //   * D3DDevice_SetVertexData2s (4034)
 //   * D3DDevice_SetVertexData4f (4034)
@@ -287,7 +285,8 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_IsFencePending, PATCH, 3911, 4039, 5028),
 	REGISTER_OOVPAS(D3DDevice_KickOff, PATCH, 3911, 4034, 4531, 5028, 5455),
 	REGISTER_OOVPAS(D3DDevice_KickPushBuffer, PATCH, 3911),
-	REGISTER_OOVPAS(D3DDevice_LazySetStateVB, XREF, 5028),
+	REGISTER_OOVPAS(D3DDevice_LazySetStateVB, XREF, 5028, 5558),
+	REGISTER_OOVPAS(D3DDevice_LazySetStateUP, UNPATCHED, 5028, 5558),
 	REGISTER_OOVPAS(D3DDevice_LightEnable, PATCH, 3911, 5344), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_LoadVertexShader, PATCH, 3911, 4034, 4627, 5028),
 	REGISTER_OOVPAS(D3DDevice_LoadVertexShaderProgram, PATCH, 3911),
@@ -328,7 +327,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleAntiAlias, PATCH, 3911, 4034, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMask, PATCH, 3911, 4034, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMode, PATCH, 3925, 4034, 4134, 4627, 5233),
-	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034, 4627, 5344), // Was 5233 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 4034), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_NormalizeNormals, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_OcclusionCullEnable, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetRenderState_PSTextureModes, PATCH, 3911, 4034),
@@ -352,8 +351,8 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetScreenSpaceOffset, PATCH, 4034, 5455), // Was 5233 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetShaderConstantMode, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetSoftDisplayFilter, PATCH, 3911, 4034, 4134),
-	REGISTER_OOVPAS(D3DDevice_SetStateUP, UNPATCHED, 3911, 4627),
-	REGISTER_OOVPAS(D3DDevice_SetStateVB, UNPATCHED, 3911, 4627),
+	REGISTER_OOVPAS(D3DDevice_SetStateUP, UNPATCHED, 3911, 4034, 4134),
+	REGISTER_OOVPAS(D3DDevice_SetStateVB, UNPATCHED, 3911, 4034, 4134),
 	REGISTER_OOVPAS(D3DDevice_SetStipple, PATCH, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetStreamSource, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3DDevice_SetSwapCallback, PATCH, 4134, 4242, 4432, 4627, 5028, 5233, 5344, 5455, 5558, 5659),
@@ -435,8 +434,8 @@ OOVPATable D3D8_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * D3D8_OOVPA_SIZE
+// * D3D8_OOVPA_COUNT
 // ******************************************************************
-uint32 D3D8_OOVPA_SIZEV2 = sizeof(D3D8_OOVPAV2);
+const uint32 D3D8_OOVPA_COUNT = OOVPA_TABLE_COUNT(D3D8_OOVPAV2);
 
 #endif

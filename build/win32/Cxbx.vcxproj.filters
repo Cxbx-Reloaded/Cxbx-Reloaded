@@ -109,9 +109,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\DbgConsole.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\device.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -133,16 +130,10 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp">
@@ -193,9 +184,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNVNet.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -208,8 +196,37 @@
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuNVNet.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\PCIBus.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\PCIDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\SMBus.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\SMDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp">
+      <Filter>Hardware</Filter>
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp">
       <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\SMCDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\Xbox.cpp">
+      <Filter>Hardware</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -282,9 +299,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\device.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h">
       <Filter>Emulator</Filter>
     </ClInclude>
@@ -306,13 +320,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h">
@@ -381,9 +389,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNVNet.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\XADPCM.h">
       <Filter>Shared</Filter>
     </ClInclude>
@@ -399,14 +404,46 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuNVNet.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\PCIBus.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\PCIDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\SMBus.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\SMDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EEPROMDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\SMCDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\LED.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
+      <Filter>Hardware</Filter>
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
       <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\Xbox.h">
+      <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -705,6 +742,9 @@
     </Filter>
     <Filter Include="HLEDatabase\XOnline">
       <UniqueIdentifier>{40bc9467-7e4d-4ab5-b062-1aa0ba4af44d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware">
+      <UniqueIdentifier>{922ab09b-aa8e-41bb-b781-58654160ee3d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

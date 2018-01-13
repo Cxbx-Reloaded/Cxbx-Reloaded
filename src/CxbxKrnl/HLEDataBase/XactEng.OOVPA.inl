@@ -105,8 +105,8 @@ OOVPATable XACTENG_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * XACTENG_OOVPA_SIZE
+// * XACTENG_OOVPA_COUNT
 // ******************************************************************
-uint32 XACTENG_OOVPA_SIZEV2 = sizeof(XACTENG_OOVPAV2);
+const uint32 XACTENG_OOVPA_COUNT = OOVPA_TABLE_COUNT(XACTENG_OOVPAV2);
 
 #endif

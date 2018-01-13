@@ -34,7 +34,6 @@
 // *
 // ******************************************************************
 
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 /* prevent name collisions */
@@ -65,6 +64,9 @@ namespace xboxkrnl
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
+#include "Xbox.h" // For InitXboxHardware()
+#include "EEPROMDevice.h" // For g_EEPROM
+#include "LED.h" // For LED::Sequence
 
 /* prevent name collisions */
 namespace NtDll
@@ -103,6 +105,7 @@ DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
+bool g_IsWine = false;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
@@ -238,6 +241,9 @@ void RestoreExeImageHeader()
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
 
+typedef const char* (CDECL *LPFN_WINEGETVERSION)(void);
+LPFN_WINEGETVERSION wine_get_version;
+
 // Returns the Win32 error in string format. Returns an empty string if there is no error.
 std::string CxbxGetErrorCodeAsString(DWORD errorCode)
 {
@@ -304,6 +310,10 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		}
 	}
 
+	// Make sure memory.bin is at least 128 MB in size
+	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFile);
+
 	HANDLE hFileMapping = CreateFileMapping(
 		hFile,
 		/* lpFileMappingAttributes */nullptr,
@@ -354,14 +364,23 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
 
+	size_t tiledMemorySize = TILED_MEMORY_CHIHIRO_SIZE;
+	if (g_IsWine) {
+		printf("Wine detected: Using 64MB Tiled Memory Size\n");
+		// TODO: Figure out why Wine needs this and Windows doesn't.
+		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
+		tiledMemorySize = TILED_MEMORY_XBOX_SIZE;
+	}
+
 	// Map memory.bin contents into tiled memory too :
 	void *tiled_memory = (void *)MapViewOfFileEx(
 		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		TILED_MEMORY_CHIHIRO_SIZE,
+		FILE_MAP_READ | FILE_MAP_WRITE,
+				/* dwFileOffsetHigh */0,
+				/* dwFileOffsetLow */0,
+		tiledMemorySize,
 		(void *)TILED_MEMORY_BASE);
+
 	if (tiled_memory != (void *)TILED_MEMORY_BASE)
 	{
 		if (tiled_memory)
@@ -370,7 +389,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		CxbxKrnlCleanup("CxbxRestoreContiguousMemory: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!");
 		return nullptr;
 	}
-	
+
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
 
@@ -397,6 +416,37 @@ void CxbxPopupMessage(const char *message, ...)
 
 void PrintCurrentConfigurationLog()
 {
+	// Print environment information
+	{
+		// Get Windows Version
+		DWORD dwVersion = 0;
+		DWORD dwMajorVersion = 0;
+		DWORD dwMinorVersion = 0;
+		DWORD dwBuild = 0;
+
+		// TODO: GetVersion is deprecated but we use it anyway (for now)
+		// The correct solution is to use GetProductInfo but that function
+		// requires more logic to parse the response, and I didn't feel
+		// like building it just yet :P
+		dwVersion = GetVersion();
+
+		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+		dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+
+		// Get the build number.
+		if (dwVersion < 0x80000000) {
+			dwBuild = (DWORD)(HIWORD(dwVersion));
+		}
+
+		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
+		if (g_IsWine) {
+			printf("Wine %s\n", wine_get_version());
+			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		} else {
+			printf("Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
+		}
+	}
+
 	// Print current LLE configuration
 	{
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
@@ -435,6 +485,12 @@ void PrintCurrentConfigurationLog()
 		printf("PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
 		printf("XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
 		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+	}
+
+	// Print Enabled Hacks
+	{
+		printf("--------------------------- HACKS CONFIG ---------------------------\n");
+		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -532,6 +588,16 @@ void CxbxKrnlMain(int argc, char* argv[])
 #endif
 	}
 
+	// Detect Wine
+	g_IsWine = false;
+	HMODULE hNtDll = GetModuleHandle("ntdll.dll");
+
+	if (hNtDll != nullptr) {
+		wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
+		if (wine_get_version) {
+			g_IsWine = true;
+		}
+	}
 	// Now we got the arguments, start by initializing the Xbox memory map :
 	// PrepareXBoxMemoryMap()
 	{
@@ -620,7 +686,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// Initialize the Chihiro/Debug - specific memory ranges
 			g_VMManager.InitializeChihiroDebug();
 		}
-		
+
 		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
@@ -733,29 +799,10 @@ void LoadXboxKeys(std::string path)
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
-// game region flags for Xbe certificate
-#define XBEIMAGE_GAME_REGION_US_CANADA  XBEIMAGE_GAME_REGION_NA
-#define XBEIMAGE_GAME_REGION_ALL (XBEIMAGE_GAME_REGION_US_CANADA | XBEIMAGE_GAME_REGION_JAPAN | XBEIMAGE_GAME_REGION_RESTOFWORLD)
-#define XBEIMAGE_GAME_REGION_KNOWN (XBEIMAGE_GAME_REGION_ALL | XBEIMAGE_GAME_REGION_MANUFACTURING)
-
-const char *GameRegionToString(DWORD aGameRegion)
+void SetLEDSequence(LED::Sequence aLEDSequence)
 {
-	const char *Regions[] = {
-		"UNKNOWN", "NTSC", "JAP", "NTSC+JAP",
-		"PAL", "PAL+NTSC", "PAL+JAP", "ALL",
-
-		"DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
-		"PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "ALL (DEBUG)"
-	};
-
-    if ((aGameRegion & ~XBEIMAGE_GAME_REGION_KNOWN) > 0) {
-        // Just in case we need this if a certificate structure data is corrupted again.
-        DbgPrintf("REGION ERROR! (0x%X)\n", aGameRegion);
-        return "REGION ERROR";
-    }
-
-	DWORD index = (aGameRegion & 7) | (aGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING ? 8 : 0);
-	return Regions[index];
+	// TODO : Move to best suited location & implement
+	// See http://xboxdevwiki.net/PIC#The_LED
 }
 
 __declspec(noreturn) void CxbxKrnlInit
@@ -849,6 +896,13 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_XInputEnabled = !!XInputEnabled;
 	}
 
+	// Process Hacks
+	{
+		int HackEnabled = 0;
+		g_EmuShared->GetDisablePixelShaders(&HackEnabled);
+		g_DisablePixelShaders = !!HackEnabled;
+	}
+
 #ifdef _DEBUG_PRINT_CURRENT_CONF
 	PrintCurrentConfigurationLog();
 #endif
@@ -930,7 +984,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		if (g_pCertificate != NULL) {
 			printf("[0x%.4X] INIT: XBE TitleID : %.8X\n", GetCurrentThreadId(), g_pCertificate->dwTitleId);
 			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
-			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), GameRegionToString(g_pCertificate->dwGameRegion));
+			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());
 		}
 
 		// Dump Xbe library build numbers
@@ -982,7 +1036,13 @@ __declspec(noreturn) void CxbxKrnlInit
     XTL::CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
+
 	SetupXboxDeviceTypes();
+
+	InitXboxHardware();
+
+	// Now the hardware devices exist, couple the EEPROM buffer to it's device
+	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
 
 	// Always initialise NV2A: We may need it for disabled HLE patches too!
 	EmuNV2A_Init();

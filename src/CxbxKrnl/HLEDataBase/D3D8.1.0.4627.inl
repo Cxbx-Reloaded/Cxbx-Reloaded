@@ -1429,53 +1429,6 @@ OOVPA_XREF(D3DDevice_GetTexture2, 4627, 1+23, // Up to 5233. Also for 5344, 5558
 OOVPA_END;
 
 // ******************************************************************
-// * D3D::CDevice::SetStateVB
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetStateVB, 4627, 12)
-
-        // D3DDevice_SetStateVB+0x00 : sub esp, 0xC
-        { 0x00, 0x83 },
-        { 0x01, 0xEC },
-        { 0x02, 0x0C },
-
-        // D3DDevice_SetStateVB+0x0D : and eax, 0xFFFFFFAF
-        { 0x0D, 0x83 },
-        { 0x0E, 0xE0 },
-        { 0x0F, 0xAF },
-
-        // D3DDevice_SetStateVB+0x10 : test ebx, 0x3FFFFF8F
-        { 0x10, 0xF7 },
-        { 0x11, 0xC3 },
-        { 0x12, 0x8F },
-        { 0x13, 0xFF },
-        { 0x14, 0xFF },
-        { 0x15, 0x3F },
-OOVPA_END;
-
-// ******************************************************************
-// * D3D::CDevice::SetStateUP
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetStateUP, 4627, 11)
-
-        // D3DDevice_SetStateUP+0x05 : sub esp, 0x14
-        { 0x05, 0x83 },
-        { 0x06, 0xEC },
-        { 0x07, 0x14 },
-
-        // D3DDevice_SetStateUP+0x08 : test eax, 0x3FFFFF8F
-        { 0x08, 0xA9 },
-        { 0x09, 0x8F },
-        { 0x0A, 0xFF },
-        { 0x0B, 0xFF },
-        { 0x0C, 0x3F },
-
-        // D3DDevice_SetStateUP+0x27 : or eax, 0x50
-        { 0x27, 0x83 },
-        { 0x28, 0xC8 },
-        { 0x29, 0x50 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 4627, 10)
@@ -1572,30 +1525,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_MultiSampleMode, 4627, 8)
         { 0x1B, 0x75 },
         { 0x21, 0x00 },
         { 0x28, 0x00 },
-        { 0x31, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
-// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
-// ******************************************************************
-OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4627, 1+10,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        XREF_ENTRY( 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE ), // Derived
-
-        { 0x03, 0x04 },
-
-        { 0x19, 0x00 },
-        { 0x1A, 0x00 },
-        { 0x1B, 0x74 },
-        { 0x1C, 0x14 },
-        { 0x1D, 0x8D },
-        { 0x1E, 0x90 },
-        { 0x1F, 0x90 },
-        { 0x20, 0x0A },
-
         { 0x31, 0xC2 },
 OOVPA_END;
 

@@ -34,7 +34,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"
@@ -654,7 +653,12 @@ XBSYSAPI EXPORTNUM(106) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDeviceQueue
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(DeviceQueue);
-	LOG_UNIMPLEMENTED();
+
+	DeviceQueue->Type = DeviceQueueObject;
+	DeviceQueue->Size = sizeof(KDEVICE_QUEUE);
+	DeviceQueue->Busy = FALSE;
+
+	InitializeListHead(&DeviceQueue->DeviceListHead);
 }
 
 // ******************************************************************
@@ -875,6 +879,11 @@ XBSYSAPI EXPORTNUM(114) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertByKeyDeviceQue
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x0073 - KeInsertDeviceQueue()
+// * This implementation is inspired by ReactOS source code
+// * Ref: https://github.com/reactos/reactos/blob/master/ntoskrnl/ke/devqueue.c
+// ******************************************************************
 XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
@@ -886,9 +895,23 @@ XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
 		LOG_FUNC_ARG(DeviceQueueEntry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN Res = FALSE;
 
-	RETURN(STATUS_SUCCESS);
+	// We should lock the device queue here
+	
+	if (DeviceQueue->Busy == TRUE) {
+		InsertTailList(&DeviceQueue->DeviceListHead, &DeviceQueueEntry->DeviceListEntry);
+		Res = TRUE;
+	}
+	else {
+		DeviceQueue->Busy = TRUE;
+	}
+
+	DeviceQueueEntry->Inserted = Res;
+
+	// We should unlock the device queue here
+
+	RETURN(Res);
 }
 
 XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue

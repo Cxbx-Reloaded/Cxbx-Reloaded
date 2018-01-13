@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"
@@ -413,6 +412,110 @@ XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 // ******************************************************************
 // TODO : Determine size, structure & filling behind IdexChannelObject
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
+
+// ******************************************************************
+// * 0x0169 - RtlSnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(count)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = snprintf(string, count, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016A - RtlSprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = sprintf(string, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016B - RtlVsnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(count)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = vsnprintf(string, count, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016C - RtlVsprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = vsprintf(string, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
 
 // ******************************************************************
 // * 0x016F - UnknownAPI367()

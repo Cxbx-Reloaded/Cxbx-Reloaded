@@ -36,11 +36,6 @@
 
 #include "HLEDataBase\D3D8.OOVPA.h"
 
-// ******************************************************************
-// * szHLELastCompileTime
-// ******************************************************************
-extern "C" const char *szHLELastCompileTime;
-
 //TODO: Need to remove these externs as v2 is no longer require it.
 extern const char *Lib_D3D8;
 extern const char *Lib_D3D8LTCG;
@@ -69,7 +64,7 @@ extern const struct HLEData
     const PairScanLibSec LibSec;
 
     OOVPATable     *OovpaTable;
-    uint32          OovpaTableSize;
+    uint32          OovpaTableCount;
 }
 HLEDataBase[];
 
@@ -77,6 +72,15 @@ HLEDataBase[];
 // * HLEDataBaseCount
 // ******************************************************************
 extern const uint32 HLEDataBaseCount;
+
+// ******************************************************************
+// * GetHLEDataBaseHash
+// ****************************************************************** 
+// Note: The returned hash is a 32-bit FNV-1a checksum
+// This checksum was chosen as the hash should approximate the database integrity - and run as fast as possible!
+// In future this should be a compile-time expression - not calculated at run-time
+// ******************************************************************
+extern uint32 GetHLEDataBaseHash();
 
 // ******************************************************************
 // * XRefDataBaseOffset

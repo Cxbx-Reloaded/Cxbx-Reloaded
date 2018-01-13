@@ -34,7 +34,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"
@@ -103,6 +102,88 @@ xboxkrnl::NTSTATUS EmuObFindObjectByHandle
 	return Status;
 }
 
+xboxkrnl::POBJECT_HEADER
+EmuObHeaderFromObject
+(
+	IN PVOID Object
+)
+{
+	//assert(Object);
+	return (xboxkrnl::POBJECT_HEADER)((uintptr_t)Object - offsetof(xboxkrnl::OBJECT_HEADER, Body));
+	// Note : Can't use OBJECT_TO_OBJECT_HEADER, it leads to ambiguous symbol errors
+}
+
+int
+EmuObStringPadding
+(
+	IN INT NameLength
+)
+{
+	if (NameLength == 0)
+		return 0;
+
+	// Trailing zero, plus the number of bytes to align the next part on a 32-bit address
+	return 1 + sizeof(uint32_t) - ((NameLength + 1) & (sizeof(uint32_t) - 1));
+}
+
+int
+EmuObNameBufferSize
+(
+	IN INT NameLength
+)
+{
+	//assert(NameLength > 0);
+
+	return NameLength
+		+ EmuObStringPadding(NameLength)
+		+ sizeof(xboxkrnl::OBJECT_STRING);
+}
+
+xboxkrnl::POBJECT_STRING
+EmuObStringFromObjectHeader
+(
+	IN xboxkrnl::POBJECT_HEADER ObjectHeader
+)
+{
+	//assert(ObjectHeader);
+
+	if (ObjectHeader->Flags & OB_FLAG_NAMED_OBJECT)
+		return (xboxkrnl::POBJECT_STRING)((uintptr_t)ObjectHeader - sizeof(xboxkrnl::OBJECT_STRING));
+	else
+		return xbnullptr;
+
+}
+
+xboxkrnl::POBJECT_STRING
+EmuObStringFromObject
+(
+	IN PVOID Object
+)
+{
+	//assert(Object);
+
+	xboxkrnl::POBJECT_HEADER ObjectHeader = EmuObHeaderFromObject(Object);
+	return EmuObStringFromObjectHeader(ObjectHeader);
+}
+
+void *
+EmuObjectToBasePointer
+(
+	IN PVOID Object
+)
+{
+	//assert(Object);
+
+	xboxkrnl::POBJECT_HEADER ObjectHeader = EmuObHeaderFromObject(Object);
+	uintptr_t Base = (uintptr_t)ObjectHeader;
+	xboxkrnl::POBJECT_STRING Name = EmuObStringFromObjectHeader(ObjectHeader);
+	if (Name != xbnullptr) {
+		Base -= EmuObNameBufferSize(Name->Length);
+	}
+
+	return (void *)Base;
+}
+
 xboxkrnl::NTSTATUS EmuObFindObjectByName
 (
 	IN xboxkrnl::POBJECT_STRING ObjectName,
@@ -118,6 +199,7 @@ xboxkrnl::NTSTATUS EmuObFindObjectByName
 
 	LOG_UNIMPLEMENTED();
 	// TODO : Implement a mechanism by which all named objects can be queried. See comments in ObCreateObject
+	// For all visited objects, use EmuObStringFromObject to get to their name (or xbnullptr when its absent)
 
 	return Status;
 }
@@ -141,8 +223,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
-	OBJECT_STRING TmpName = { 0 };
-	int NameSize = 0;
+	int NameBufferSize = 0;
 
 	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
 		if (ObjectAttributes->ObjectName->Length == 0) {
@@ -150,52 +231,50 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		}
 		else {
 			// TODO : Split name in parts?
-			TmpName.Buffer = ObjectAttributes->ObjectName->Buffer;
-			TmpName.Length = ObjectAttributes->ObjectName->Length;
-			TmpName.MaximumLength = ObjectAttributes->ObjectName->Length;
-			NameSize = sizeof(OBJECT_STRING) + TmpName.Length + sizeof('\0'); // trailing zero
+			NameBufferSize = EmuObNameBufferSize(ObjectAttributes->ObjectName->Length);
 		}
 	}
 
 	if (Status == STATUS_SUCCESS) {
 		// Allocate the object
-		int ObjectSize = offsetof(OBJECT_HEADER, Body) + ObjectBodySize;
+		int ObjectBufferSize = NameBufferSize + offsetof(OBJECT_HEADER, Body) + ObjectBodySize;
 		// TODO : Is this ever something else than ExAllocatePoolWithTag ?
-		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(ObjectSize + NameSize, ObjectType->PoolTag);
-		if (ObjectHeader == NULL) {
+		void *ObjectBuffer = ObjectType->AllocateProcedure(ObjectBufferSize, ObjectType->PoolTag);
+		if (ObjectBuffer == NULL) {
 			// Detected out of memory
 			*Object = NULL;
 			Status = STATUS_INSUFFICIENT_RESOURCES;
 		}
 		else {
+			// Remember Name buffer start, and retrieve object header pointer :
+			// Note : Object memory-layout will be : 
+			// { Name, '\0', Four-byte-alignment padding, OBJECT_STRING } OBJECT_HEADER
+			char *NameBuffer = (char *)ObjectBuffer;
+			POBJECT_HEADER ObjectHeader = (OBJECT_HEADER*)((uintptr_t)ObjectBuffer + NameBufferSize);
+
 			// Initialize default values of object (header) :
 			ObjectHeader->PointerCount = 1;
 			ObjectHeader->HandleCount = 0;
 			ObjectHeader->Type = ObjectType;
-			if (NameSize == 0)
-				ObjectHeader->Flags = 0;
-			else {
+			ObjectHeader->Flags = 0;
+			// TODO : Is this needed? : memset(&ObjectHeader->Body, 0, ObjectBodySize);
+
+			// Prepend name (if any) :
+			if (NameBufferSize > 0) {
 				LOG_INCOMPLETE();
-				// TODO : For other Ob* API's it must become possible to get from
-				// and Object(Header) address to the Name. Right now, this requires
-				// adding ObjectSize to ObjectHeader. This won't be available outside
-				// ObCreateObject, so we need a better solution for this. 
-				// It might be possible to put the OBJECT_STRING struct BEFORE the
-				// ObjectHeader (and the NameBuffer itself before that), which would
-				// make it possible to simply offset everything off an Object.
-				// It might also be possible to insert a linked list struct, so
+				// TODO :  It might be possible to insert a linked list struct, so
 				// ObReferenceObjectByName can iterate over all named objects.
 				// (It's probably wise to use one list per pool, to reduce the number
 				// of objects to walk through.)
 
-				// Copy name after object (we've reserved NameSize bytes there) :
-				OBJECT_STRING *Name = (OBJECT_STRING *)((char *)ObjectHeader + ObjectSize);
-				char *NameBuffer = (char *)Name + sizeof(OBJECT_STRING);
 				// Initialize name struct :
-				Name->Buffer = NameBuffer;
-				Name->Length = Name->MaximumLength = TmpName.Length;
+				OBJECT_STRING *ObjectName = (OBJECT_STRING *)((uintptr_t)ObjectHeader - sizeof(OBJECT_STRING));
+				ObjectName->Buffer = NameBuffer;
+				ObjectName->Length = ObjectName->MaximumLength = ObjectAttributes->ObjectName->Length;
 				// Copy name into reserved buffer :
-				memcpy(NameBuffer, TmpName.Buffer, TmpName.Length);
+				memcpy(NameBuffer, ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
+				// Terminate the name string with a trailing zero :
+				NameBuffer[ObjectAttributes->ObjectName->Length] = '\0';
 				// Mark object as named :
 				ObjectHeader->Flags = OB_FLAG_NAMED_OBJECT;
 				// TODO : Verify this all works, then use it somehow
@@ -475,17 +554,14 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 	LOG_FUNC_ONE_ARG_OUT(Object);
 	
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-	
-	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0)
-	{
+	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0) {
 		POBJECT_TYPE ObjectType = ObjectHeader->Type;
-
-		if (ObjectType->DeleteProcedure != NULL)
+		if (ObjectType->DeleteProcedure != NULL) {
 			ObjectType->DeleteProcedure(Object);
-		
-		LOG_INCOMPLETE(); // TODO : How to handle named objects? See comments in ObCreateObject
+		}
 
-		ObjectType->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
+		void *ObjectBase = EmuObjectToBasePointer(Object);
+		ObjectType->FreeProcedure(ObjectBase); // TODO : Is this ever something else than ExFreePool ?
 	}
 }
 

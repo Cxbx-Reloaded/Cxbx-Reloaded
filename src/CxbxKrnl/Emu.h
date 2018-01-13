@@ -108,4 +108,7 @@ typedef struct DUMMY_KERNEL
 	IMAGE_SECTION_HEADER SectionHeader;
 } *PDUMMY_KERNEL;
 
+
+extern bool g_DisablePixelShaders;
+
 #endif

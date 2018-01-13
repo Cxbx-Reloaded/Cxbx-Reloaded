@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 
 #define LOG_PREFIX "HLE " // Intentional extra space to align on 4 characters
 
@@ -83,6 +82,18 @@ void* GetXboxFunctionPointer(std::string functionName)
 	// If we got here, the function wasn't patched, so we can just look it up the HLE cache
 	// and return the correct offset
 	auto symbol = g_SymbolAddresses.find(functionName);
+	if (symbol != g_SymbolAddresses.end()) {
+		return (void*)symbol->second;
+	}
+	
+	// No function was matched, however, it is currently possible for a symbol to exist 
+	// and be suffixed with _UNPATCHED. (Due to the HLE Database UNPATCHED flag)
+	// In this case, the above will fail despite us actually knowing the location of the symbol
+	// So do the check (again) with the _UNPATCHED suffix
+	// NOTE: A proper solution would be to completely seperate the OOVPA table and Patch
+	// flags: Perhaps renaming HLEDatabase to SymbolDatabase, then having a seprate PatchTable
+	// file, mapping symbol names to patch functions.
+	symbol = g_SymbolAddresses.find(functionName + "_UNPATCHED");
 	if (symbol != g_SymbolAddresses.end()) {
 		return (void*)symbol->second;
 	}
@@ -177,7 +188,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
     printf("\n");
 	printf("*******************************************************************************\n");
-	printf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
+	printf("* Cxbx-Reloaded High Level Emulation database\n");
 	printf("*******************************************************************************\n");
 	printf("\n");
 
@@ -205,15 +216,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
-		// Verify the version of the cache file against the HLE Database
-		char buffer[SHRT_MAX] = { 0 };
-		char* bufferPtr = buffer;
-
-		GetPrivateProfileString("Info", "HLEDatabaseVersion", NULL, buffer, sizeof(buffer), filename.c_str());
 		g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
-		if (strcmp(buffer, szHLELastCompileTime) == 0) {
+		// Verify the version of the cache file against the HLE Database	
+		const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
+
+		if (HLECacheHash == GetHLEDataBaseHash()) {
+			char buffer[SHRT_MAX] = { 0 };
+			char* bufferPtr = buffer;
+
 			printf("Using HLE Cache\n");
+
 			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
 			// Parse the .INI file into the map of symbol addresses
@@ -489,7 +502,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							patchOffset -= Increment;
 
 							// Derive address of a few other deferred render state slots (to help xref-based function location)
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 8*4;
                             XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
                             XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
                             XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
@@ -612,7 +625,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                     if (bPrintSkip) printf("Found\n");
                                     bPrintSkip = false;
 
-                                    EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableSize, pSectionScan, BuildVersion);
+                                    EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableCount, pSectionScan, BuildVersion);
                                     break;
                                 }
                             }
@@ -639,7 +652,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("\n");
 
 	// Write the HLE Database version string
-	WritePrivateProfileString("Info", "HLEDatabaseVersion", szHLELastCompileTime, filename.c_str());
+	{
+		std::string HLECacheHashString = std::to_string(GetHLEDataBaseHash());
+		WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
+	}
 
 	// Write the Certificate Details to the cache file
 	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
@@ -900,7 +916,7 @@ xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 }
 
 // install function interception wrappers
-void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion)
+void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableCount, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion)
 {
     xbaddr lower = pSectionHeader->dwVirtualAddr;
 
@@ -908,7 +924,7 @@ void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::Secti
     xbaddr upper = pSectionHeader->dwVirtualAddr + pSectionHeader->dwVirtualSize;
 
     // traverse the full OOVPA table
-    OOVPATable *pLoopEnd = &OovpaTable[OovpaTableSize / sizeof(OOVPATable)];
+    OOVPATable *pLoopEnd = &OovpaTable[OovpaTableCount];
     OOVPATable *pLoop = OovpaTable;
     OOVPATable *pLastKnownSymbol = nullptr;
     xbaddr pLastKnownFunc = 0;
@@ -1100,7 +1116,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oov
     }
 }
 
-void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
+void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index)
 {
     if (context->against == nullptr) {
         context->main_index = index;
@@ -1147,9 +1163,8 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
     }
 
     // verify each entry in this HLEData
-    uint32 count = data->OovpaTableSize / sizeof(OOVPATable);
-    for (uint32 e = 0; e < count; e++) {
-        VerifyHLEDataEntry(context, data->OovpaTable, e, count);
+    for (uint32 e = 0; e < data->OovpaTableCount; e++) {
+        VerifyHLEDataEntry(context, data->OovpaTable, e);
     }
 }
 

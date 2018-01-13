@@ -145,6 +145,10 @@ BEGIN
             MENUITEM "LLE &APU",                    ID_EMULATION_LLE_APU
             MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU
         END
+        POPUP "Hacks"
+        BEGIN
+            MENUITEM "Disable Pixel Shaders",       ID_HACKS_DISABLEPIXELSHADERS
+        END
     END
     POPUP "E&mulation"
     BEGIN

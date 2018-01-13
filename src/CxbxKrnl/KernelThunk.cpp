@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 // prevent name collisions
@@ -428,10 +427,10 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::HalIsResetOrShutdownPending),         // 0x0166 (358)
 	(uint32)FUNC(&xboxkrnl::IoMarkIrpMustComplete),               // 0x0167 (359)
 	(uint32)FUNC(&xboxkrnl::HalInitiateShutdown),                 // 0x0168 (360)
-	(uint32)PANIC(0x0169),                                        // 0x0169 (361) KRNL(_snprintf)
-	(uint32)PANIC(0x016A),                                        // 0x016A (362) KRNL(_sprintf)
-	(uint32)PANIC(0x016B),                                        // 0x016B (363) KRNL(_vsnprintf)
-	(uint32)PANIC(0x016C),                                        // 0x016C (364) KRNL(_vsprintf)
+	(uint32)FUNC(&xboxkrnl::RtlSnprintf),                         // 0x0169 (361)
+	(uint32)FUNC(&xboxkrnl::RtlSprintf),                          // 0x016A (362)
+	(uint32)FUNC(&xboxkrnl::RtlVsnprintf),                        // 0x016B (363) 
+	(uint32)FUNC(&xboxkrnl::RtlVsprintf),                         // 0x016C (364)
 	(uint32)FUNC(&xboxkrnl::HalEnableSecureTrayEject),            // 0x016D (365)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMCScratchRegister),          // 0x016E (366)
 	(uint32)FUNC(&xboxkrnl::UnknownAPI367),                       // 0x016F (367)
