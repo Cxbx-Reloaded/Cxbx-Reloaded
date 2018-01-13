@@ -585,7 +585,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
     // print init flags
     {
-        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags.bMountUtilityDrive);
+        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags_value);
 
         if(m_Header.dwInitFlags.bMountUtilityDrive)
             fprintf(x_file, "[Mount Utility Drive] ");
@@ -703,7 +703,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
             // print flags
             {
-                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags.bWritable);
+                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags_value);
 
                 if(m_SectionHeader[v].dwFlags.bWritable)
                     fprintf(x_file, "(Writable) ");
@@ -773,16 +773,16 @@ void Xbe::DumpInformation(FILE *x_file)
 
                 // print flags
                 {
-                    fprintf(x_file, "Flags                            : ");
+                    fprintf(x_file, "Flags                            : 0x%.04X ", m_LibraryVersion[v].wFlags_value);
 
-                    fprintf(x_file, "QFEVersion : 0x%.04X, ", m_LibraryVersion[v].dwFlags.QFEVersion);
+                    fprintf(x_file, "QFEVersion : 0x%.04X, ", m_LibraryVersion[v].wFlags.QFEVersion);
 
-                    if(m_LibraryVersion[v].dwFlags.bDebugBuild)
+                    if(m_LibraryVersion[v].wFlags.bDebugBuild)
                         fprintf(x_file, "Debug, ");
                     else
                         fprintf(x_file, "Retail, ");
 
-                    switch(m_LibraryVersion[v].dwFlags.Approved)
+                    switch(m_LibraryVersion[v].wFlags.Approved)
                     {
                         case 0:
                             fprintf(x_file, "Unapproved");

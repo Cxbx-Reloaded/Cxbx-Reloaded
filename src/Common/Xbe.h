@@ -92,7 +92,7 @@ class Xbe : public Error
             uint32 dwSections;                      // 0x011C - number of sections
             uint32 dwSectionHeadersAddr;            // 0x0120 - section headers address
 
-            struct InitFlags                        // 0x0124 - initialization flags
+			typedef struct                         
             {
                 uint32 bMountUtilityDrive   : 1;    // mount utility drive flag
                 uint32 bFormatUtilityDrive  : 1;    // format utility drive flag
@@ -102,8 +102,12 @@ class Xbe : public Error
                 uint32 Unused_b1            : 8;    // unused (or unknown)
                 uint32 Unused_b2            : 8;    // unused (or unknown)
                 uint32 Unused_b3            : 8;    // unused (or unknown)
-            }
-            dwInitFlags;
+			} InitFlags;
+
+			union {                                 // 0x0124 - initialization flags
+				InitFlags dwInitFlags;
+				uint32 dwInitFlags_value;
+			};
 
             uint32 dwEntryAddr;                     // 0x0128 - entry point address
             uint32 dwTLSAddr;                       // 0x012C - thread local storage directory address
@@ -162,7 +166,7 @@ class Xbe : public Error
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
-            struct _Flags
+            typedef struct 
             {
                 uint32 bWritable        : 1;    // writable flag
                 uint32 bPreload         : 1;    // preload flag
@@ -175,8 +179,12 @@ class Xbe : public Error
                 uint32 Unused_b1        : 8;    // unused (or unknown)
                 uint32 Unused_b2        : 8;    // unused (or unknown)
                 uint32 Unused_b3        : 8;    // unused (or unknown)
-            }
-            dwFlags;
+			} _Flags;
+
+			union {
+				_Flags dwFlags;
+				uint32 dwFlags_value;
+			};
 
             uint32 dwVirtualAddr;               // virtual address
             uint32 dwVirtualSize;               // virtual size
@@ -200,13 +208,17 @@ class Xbe : public Error
             uint16 wMinorVersion;               // minor version
             uint16 wBuildVersion;               // build version
 
-            struct Flags
+            typedef struct 
             {
                 uint16 QFEVersion       : 13;   // QFE Version
                 uint16 Approved         : 2;    // Approved? (0:no, 1:possibly, 2:yes)
                 uint16 bDebugBuild      : 1;    // Is this a debug build?
-            }
-            dwFlags;
+			} Flags;
+
+			union {
+				Flags wFlags;
+				uint16 wFlags_value;
+			};
         }
         #include "AlignPosfix1.h"
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
