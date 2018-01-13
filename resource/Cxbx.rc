@@ -190,6 +190,10 @@ BEGIN
         BOTTOMMARGIN, 119
         HORZGUIDE, 116
     END
+
+    IDD_AUDIO_CFG, DIALOG
+    BEGIN
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
