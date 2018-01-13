@@ -51,7 +51,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
-#include "VMManager.h"
+#include "VMManager.h" // for g_VMManager
 #include "EmuXTL.h"
 #include "HLEDatabase.h"
 #include "Logging.h"
@@ -3773,7 +3773,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeletePixelShader");
 		}
 
-		g_MemoryManager.Free(pPixelShader);
+		g_VMManager.Deallocate((VAddr)pPixelShader);
 	}*/
 }
 
@@ -3838,7 +3838,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 	// CreatePixelShader() is expected to return a pHandle directly to a shader interface.
 
 	/*
-	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)g_MemoryManager.AllocateZeroed(1, sizeof(PIXEL_SHADER)); // Clear, to prevent side-effects on random contents
+	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)g_VMManager.AllocateZeroed(sizeof(PIXEL_SHADER)); // Clear, to prevent side-effects on random contents
 
 	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
@@ -4368,7 +4368,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 		if(FAILED(hRet))
 			CxbxKrnlCleanup("IndexBuffer Lock Failed!);
 
-        (*ppIndexBuffer)->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
+        (*ppIndexBuffer)->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_VMManager.Allocate(..., AllocationType::Contiguous)
     }
 
     return hRet;
@@ -4957,8 +4957,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_End)()
         EmuFlushIVB();
 
     // TODO: Should technically clean this up at some point..but on XP doesnt matter much
-//    g_MemoryManager.Free(g_pIVBVertexBuffer);
-//    g_MemoryManager.Free(g_IVBTable);
+//    g_VMManager.Deallocate((VAddr)g_pIVBVertexBuffer);
+//    g_VMManager.Deallocate((VAddr)g_IVBTable);
 }
 
 // ******************************************************************
@@ -5268,7 +5268,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 memcpy(pNativeData, (void*)pBase, dwSize);
                 pNewHostVertexBuffer->Unlock();
 
-				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
+				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_VMManager.Allocate(..., AllocationType::Contiguous)
 			}
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pNewHostVertexBuffer);
@@ -8537,7 +8537,7 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
     X_D3DPalette *pPalette = EmuNewD3DPalette();
 
 	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
-    pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size), 0, (~((::ULONG_PTR)0)), PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+	pPalette->Data = (DWORD)xboxkrnl::MmAllocateContiguousMemory(XboxD3DPaletteSizeToBytes(Size));
     pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
@@ -9112,7 +9112,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
     // so that we can return a valid page aligned pointer
     //
 
-    PVOID pRet = g_MemoryManager.Allocate(dwSize + PAGE_SIZE);
+    PVOID pRet = g_VMManager.Allocate(dwSize + PAGE_SIZE);
 
     // align to page boundary
     {
@@ -9747,7 +9747,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 		FILE* fp = fopen( "PersistedSurface.bin", "wb" );
 		if(fp)
 		{
-			void* ptr = g_MemoryManager.Allocate( BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
+			void* ptr = g_VMManager.Allocate( BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
 
 			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, D3DLOCK_READONLY ) ) )
 			{
