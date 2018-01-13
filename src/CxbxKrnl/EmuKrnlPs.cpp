@@ -135,6 +135,8 @@ static unsigned int WINAPI PCSTProxy
 	// Do minimal thread initialization
 	InitXboxThread(g_CPUXbox);
 
+	SetEvent(hStartedEvent);
+
 	if (StartSuspended == TRUE)
 		// Suspend right before calling the thread notification routines
 		SuspendThread(GetCurrentThread());
@@ -159,8 +161,6 @@ static unsigned int WINAPI PCSTProxy
 	// use the special calling convention
 	__try
 	{
-		SetEvent(hStartedEvent);
-
 		// Given the non-standard calling convention (requiring
 		// the first argument in ebp+4) we need the below __asm.
 		//
@@ -186,9 +186,6 @@ static unsigned int WINAPI PCSTProxy
 
 callComplete:
 
-    if (hStartedEvent != NULL) {
-        CloseHandle(hStartedEvent);
-    }
 	// This will also handle thread notification :
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 
@@ -301,6 +298,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
     {
         DWORD dwThreadId = 0, dwThreadWait;
         bool bWait = true;
+		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
 
         // PCSTProxy is responsible for cleaning up this pointer
         ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
@@ -309,33 +307,40 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
         iPCSTProxyParam->StartSuspended = CreateSuspended;
-        iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
+        iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
         DbgPrintf("KRNL: Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
-            dwThreadWait = WaitForSingleObject(*ThreadHandle, 300);
+            dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
             switch (dwThreadWait) {
-                // Thread is running
-                case WAIT_TIMEOUT:
-                // Thread is complete
-                case WAIT_OBJECT_0: {
-                    // if either of two above is true, don't need to wait.
+                case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
+					DbgPrintf("KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
                     bWait = false;
                     break;
                 }
-                // A problem has occurred, what should we do?
-                case WAIT_FAILED: {
-                    break;
-                }
-                // Unknown wait
-                default:
+                case WAIT_OBJECT_0: { // The state of the specified object is signaled.
+					DbgPrintf("KRNL: Xbox proxy thread is started.\n");
                     bWait = false;
                     break;
+                }
+                default: {
+					if (dwThreadWait == WAIT_FAILED) // The function has failed
+						bWait = false;
+
+					std::string ErrorStr = CxbxGetLastErrorString("KRNL: While waiting for Xbox proxy thread to start");
+					DbgPrintf("%s\n", ErrorStr.c_str());
+					break;
+                }
             }
         }
+
+		// Release the event
+		CloseHandle(hStartedEvent);
+		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		DbgPrintf("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
