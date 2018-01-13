@@ -1029,7 +1029,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		}
 	}
 
-	// initialize grapchics
+	// initialize graphics
 	DbgPrintf("INIT: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
@@ -1056,6 +1056,11 @@ __declspec(noreturn) void CxbxKrnlInit
 	{
 		DbgPrintf("INIT: Initializing Direct3D.\n");
 		XTL::EmuD3DInit();
+	}
+	
+	if (CxbxDebugger::CanReport())
+	{
+		CxbxDebugger::ReportDebuggerInit(CxbxKrnl_Xbe->m_szAsciiTitle);
 	}
 
 	// Apply Media Patches to bypass Anti-Piracy checks

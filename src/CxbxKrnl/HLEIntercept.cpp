@@ -177,7 +177,7 @@ public:
     {
         if (CxbxDebugger::CanReport())
         {
-            CxbxDebugger::ReportHLECacheFile(message.c_str(), message.length());
+            CxbxDebugger::ReportHLECacheFile(message.c_str());
         }
     }
 };

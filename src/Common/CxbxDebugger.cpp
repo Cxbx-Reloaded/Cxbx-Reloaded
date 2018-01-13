@@ -41,11 +41,11 @@
 
 namespace CxbxDebugger
 {
-    namespace Internal
-    {
-        // Note: Keep the top 3-bits empty as they are used internally
-        enum ReportType : DWORD
-        {
+	namespace Internal
+	{
+		// Note: Keep the top 3-bits empty as they are used internally
+		enum ReportType : DWORD
+		{
 			// Debugger report codes:
 
 			HLECACHE_FILE = 0x00deed00,
@@ -53,155 +53,183 @@ namespace CxbxDebugger
 			FILE_OPENED = 0x00deed02,
 			FILE_READ = 0x00deed03,
 			FILE_CLOSED = 0x00deed04,
+			DEBUGGER_INIT = 0x00deed05,
 
 			// Debugger query codes:
 
 			OVERRIDE_EXCEPTION = 0x00ceed01,
-        };
+		};
 
-        bool IsAttached()
-        {
+		bool IsAttached()
+		{
 			bool IsDebugging;
 			g_EmuShared->GetDebuggingFlag(&IsDebugging);
 
-            return IsDebugging && IsDebuggerPresent() == TRUE;
-        }
+			return IsDebugging && IsDebuggerPresent() == TRUE;
+		}
 
-        class ReportHelper
-        {
-            ReportType ExceptionCode;
+		class ReportHelper
+		{
+			ReportType ExceptionCode;
 
-            ULONG_PTR ExceptionInfo[EXCEPTION_MAXIMUM_PARAMETERS];
-            DWORD ExceptionInfoCount;
+			ULONG_PTR ExceptionInfo[EXCEPTION_MAXIMUM_PARAMETERS];
+			DWORD ExceptionInfoCount;
 
-            ReportHelper() = delete;
-            ReportHelper(const ReportHelper&) = delete;
+			ReportHelper() = delete;
+			ReportHelper(const ReportHelper&) = delete;
 
-            enum StringType : DWORD
-            {
-                STRING_CHAR,
-                STRING_WCHAR,
-            };
+			enum StringType : DWORD
+			{
+				STRING_CHAR,
+				STRING_WCHAR,
+			};
 
-        public:
-            ReportHelper(ReportType Code)
-                : ExceptionCode(Code)
-                , ExceptionInfoCount(0)
-            { }
+		public:
+			ReportHelper(ReportType Code)
+				: ExceptionCode(Code)
+				, ExceptionInfoCount(0)
+			{ }
 
-            void Send()
-            {
-                if (ExceptionInfoCount > 0)
-                {
-                    RaiseException(ExceptionCode, 0, ExceptionInfoCount, (ULONG_PTR*)ExceptionInfo);
-                }
-                else
-                {
-                    RaiseException(ExceptionCode, 0, 0, nullptr);
-                }
-            }
+			void Send()
+			{
+				if (ExceptionInfoCount > 0)
+				{
+					RaiseException(ExceptionCode, 0, ExceptionInfoCount, (ULONG_PTR*)ExceptionInfo);
+				}
+				else
+				{
+					RaiseException(ExceptionCode, 0, 0, nullptr);
+				}
+			}
 
-            template<typename T>
-            void Add(T Param)
-            {
-                if (ExceptionInfoCount + 1 < EXCEPTION_MAXIMUM_PARAMETERS)
-                {
-                    ExceptionInfo[ExceptionInfoCount] = (ULONG_PTR)Param;
-                    ++ExceptionInfoCount;
-                }
-            }
+			template<typename T>
+			void Add(T Param)
+			{
+				if (ExceptionInfoCount + 1 < EXCEPTION_MAXIMUM_PARAMETERS)
+				{
+					ExceptionInfo[ExceptionInfoCount] = (ULONG_PTR)Param;
+					++ExceptionInfoCount;
+				}
+			}
 
-            void AddString(const char* szString, uint StringLength)
-            {
-                Add(STRING_CHAR);
-                Add(StringLength);
-                Add(szString);
-            }
+			void AddString(const char* szString)
+			{
+				Add(STRING_CHAR);
+				Add(std::strlen(szString));
+				Add(szString);
+			}
 
-            void AddWString(const wchar_t* wszString, uint StringLength)
-            {
-                Add(STRING_WCHAR);
-                Add(StringLength);
-                Add(wszString);
-            }
-        };
-    }
+			void AddWString(const wchar_t* wszString)
+			{
+				Add(STRING_WCHAR);
+				Add(std::wcslen(wszString));
+				Add(wszString);
+			}
+		};
 
-    bool IsDebuggerException(DWORD ExceptionCode)
-    {
-        switch (ExceptionCode)
-        {
-        case Internal::HLECACHE_FILE:
-        case Internal::KERNEL_PATCH:
-        case Internal::FILE_OPENED:
-        case Internal::FILE_READ:
-        case Internal::FILE_CLOSED:
-            return true;
+		uint32 GetVirtualFrameBuffer()
+		{
+			const xbaddr FrameBufferAddr = TILED_MEMORY_BASE + 0x40000;
+
+			uint32 VirtualFrameBufferAddr;
+
+			__asm
+			{
+				mov eax, [FrameBufferAddr];
+				mov eax, [eax];
+				mov VirtualFrameBufferAddr, eax;
+			}
+
+			return VirtualFrameBufferAddr;
+		}
+	}
+
+	bool IsDebuggerException(DWORD ExceptionCode)
+	{
+		switch (ExceptionCode)
+		{
+		case Internal::HLECACHE_FILE:
+		case Internal::KERNEL_PATCH:
+		case Internal::FILE_OPENED:
+		case Internal::FILE_READ:
+		case Internal::FILE_CLOSED:
+		case Internal::DEBUGGER_INIT:
+			return true;
 
 		case Internal::OVERRIDE_EXCEPTION:
 			return false;
-        }
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    bool CanReport()
-    {
-        return Internal::IsAttached();
-    }
+	bool CanReport()
+	{
+		return Internal::IsAttached();
+	}
 
-    void ReportHLECacheFile(const char* Filename, uint FilenameLength)
-    {
-        Internal::ReportHelper Report(Internal::HLECACHE_FILE);
+	void ReportDebuggerInit(const char* XbeTitle)
+	{
+		Internal::ReportHelper Report(Internal::DEBUGGER_INIT);
 
-        Report.AddString(Filename, FilenameLength);
+		Report.Add(Internal::GetVirtualFrameBuffer());
+		Report.AddString(XbeTitle);
 
-        Report.Send();
-    }
+		Report.Send();
+	}
 
-    void ReportKernelPatch(const char* ImportName, DWORD Address)
-    {
-        Internal::ReportHelper Report(Internal::KERNEL_PATCH);
+	void ReportHLECacheFile(const char* Filename)
+	{
+		Internal::ReportHelper Report(Internal::HLECACHE_FILE);
 
-        Report.AddString(ImportName, strlen(ImportName));
-        Report.Add(Address);
+		Report.AddString(Filename);
 
-        Report.Send();
-    }
+		Report.Send();
+	}
 
-    void ReportFileOpened(HANDLE hFile, const wchar_t* Filename, uint FilenameLength)
-    {
-        Internal::ReportHelper Report(Internal::FILE_OPENED);
+	void ReportKernelPatch(const char* ImportName, DWORD Address)
+	{
+		Internal::ReportHelper Report(Internal::KERNEL_PATCH);
 
-        Report.Add(hFile);
-        Report.AddWString(Filename, FilenameLength);
+		Report.AddString(ImportName);
+		Report.Add(Address);
 
-        Report.Send();
-    }
+		Report.Send();
+	}
 
-    void ReportFileRead(HANDLE hFile, uint Size)
-    {
-        Internal::ReportHelper Report(Internal::FILE_READ);
+	void ReportFileOpened(HANDLE hFile, const wchar_t* Filename)
+	{
+		Internal::ReportHelper Report(Internal::FILE_OPENED);
 
-        Report.Add(hFile);
-        Report.Add(Size);
+		Report.Add(hFile);
+		Report.AddWString(Filename);
 
-        Report.Send();
-    }
+		Report.Send();
+	}
 
-    void ReportFileClosed(HANDLE hFile)
-    {
-        Internal::ReportHelper Report(Internal::FILE_CLOSED);
+	void ReportFileRead(HANDLE hFile, uint Size)
+	{
+		Internal::ReportHelper Report(Internal::FILE_READ);
 
-        Report.Add(hFile);
+		Report.Add(hFile);
+		Report.Add(Size);
 
-        Report.Send();
-    }
+		Report.Send();
+	}
+
+	void ReportFileClosed(HANDLE hFile)
+	{
+		Internal::ReportHelper Report(Internal::FILE_CLOSED);
+
+		Report.Add(hFile);
+
+		Report.Send();
+	}
 
 	void ReportAndHandleException(PEXCEPTION_RECORD Exception, bool& Handled)
 	{
 		Internal::ReportHelper Report(Internal::OVERRIDE_EXCEPTION);
-		
+
 		Report.Add(&Handled);
 		Report.Add(Exception->ExceptionAddress);
 		Report.Add(Exception->ExceptionCode);

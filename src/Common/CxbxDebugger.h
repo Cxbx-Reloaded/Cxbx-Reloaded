@@ -36,20 +36,22 @@
 
 namespace CxbxDebugger
 {
-    // Skip exception codes produced by the debugger (workaround for child process debugging)
-    bool IsDebuggerException(DWORD ExceptionCode);
+	// Skip exception codes produced by the debugger (workaround for child process debugging)
+	bool IsDebuggerException(DWORD ExceptionCode);
 
-    // Check reporting is supported and enabled before calling a report helper
-    bool CanReport();
+	// Check reporting is supported and enabled before calling a report helper
+	bool CanReport();
 
-    // Report helpers:
+	// Report helpers:
 
-    void ReportHLECacheFile(const char* Filename, uint FilenameLength);
-    void ReportKernelPatch(const char* ImportName, DWORD Address);
+	void ReportDebuggerInit(const char* XbeTitle);
 
-    void ReportFileOpened(HANDLE hFile, const wchar_t* Filename, uint FilenameLength);
-    void ReportFileRead(HANDLE hFile, uint Size);
-    void ReportFileClosed(HANDLE hFile);
+	void ReportHLECacheFile(const char* Filename);
+	void ReportKernelPatch(const char* ImportName, DWORD Address);
+
+	void ReportFileOpened(HANDLE hFile, const wchar_t* Filename);
+	void ReportFileRead(HANDLE hFile, uint Size);
+	void ReportFileClosed(HANDLE hFile);
 
 	// Exception helpers:
 
