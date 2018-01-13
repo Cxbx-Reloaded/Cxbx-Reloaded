@@ -188,8 +188,16 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	// In this case, experimental means that these functions work and are safe
 	// but not officially in the C++ standard yet
 	// Requires a compiler with C++17 support
-	std::experimental::filesystem::remove_all(partitionPath);
-	std::experimental::filesystem::create_directory(partitionPath);
+	try
+	{
+		std::experimental::filesystem::remove_all(partitionPath);
+		std::experimental::filesystem::create_directory(partitionPath);
+	}
+	catch (std::experimental::filesystem::filesystem_error fsException)
+	{
+		printf("std::experimental::filesystem failed with message: %s\n", fsException.what());
+	}
+
 
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
