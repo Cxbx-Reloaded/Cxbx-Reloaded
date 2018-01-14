@@ -183,8 +183,8 @@ namespace CxbxDebugger
                 Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
 
                 // Other thread properties are setup after CREATE_THREAD_DEBUG_EVENT is received
-
-                Process.Threads.Add(Thread);
+                
+                // Although the main thread is set here, it isn't registered in the Threads array at this point
                 Process.MainThread = Thread;
                 Process.Core = true;
 
@@ -285,7 +285,12 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.CreateThread;
 
-            var Thread = new DebuggerThread(DebugInstance.MainProcess);
+            var Process = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
+
+            if (Process == null)
+                throw new Exception("Unable to create tread with untracked process id");
+
+            var Thread = new DebuggerThread(Process);
 
             Thread.Handle = DebugInfo.hThread;
             Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
@@ -302,7 +307,7 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.ExitThread;
 
-            var TargetThread = DebugInstance.MainProcess.Threads.Find(Thread => Thread.ThreadID == DebugEvent.dwThreadId);
+            var TargetThread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
             uint ExitCode = DebugInfo.dwExitCode;
 
             if (TargetThread != null)
