@@ -132,6 +132,7 @@ static unsigned int WINAPI PCSTProxy
 		StartSuspended,
 		hStartedEvent);
 
+
 	// Do minimal thread initialization
 	InitXboxThread(g_CPUXbox);
 
@@ -299,6 +300,10 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         DWORD dwThreadId = 0, dwThreadWait;
         bool bWait = true;
 		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
+		if (hStartedEvent == NULL) {
+			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
+			CxbxKrnlCleanup(errorMessage.c_str());
+		}
 
         // PCSTProxy is responsible for cleaning up this pointer
         ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
@@ -312,13 +317,16 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
-        DbgPrintf("KRNL: Waiting for Xbox proxy thread to start...\n");
+		// Give the thread chance to start
+		Sleep(100);
+
+        EmuWarning("KRNL: Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
             dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
             switch (dwThreadWait) {
                 case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
-					DbgPrintf("KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
+					EmuWarning("KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
                     bWait = false;
                     break;
                 }
@@ -332,7 +340,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 						bWait = false;
 
 					std::string ErrorStr = CxbxGetLastErrorString("KRNL: While waiting for Xbox proxy thread to start");
-					DbgPrintf("%s\n", ErrorStr.c_str());
+					EmuWarning("%s\n", ErrorStr.c_str());
 					break;
                 }
             }
@@ -343,7 +351,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		DbgPrintf("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+		EmuWarning("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
 		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
 		{
