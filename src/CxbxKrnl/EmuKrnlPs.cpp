@@ -353,14 +353,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		EmuWarning("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
-		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
-		{
-			HANDLE hDupHandle = NULL;
-
-			DuplicateHandle(g_CurrentProcessHandle, *ThreadHandle, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-			CxbxKrnlRegisterThread(hDupHandle);
-		}
+		CxbxKrnlRegisterThread(*ThreadHandle);
 
 		if (ThreadId != NULL)
 			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
