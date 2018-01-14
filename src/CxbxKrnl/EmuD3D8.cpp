@@ -471,14 +471,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
-        // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
-        {
-            HANDLE hDupHandle = NULL;
-
-            DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-            CxbxKrnlRegisterThread(hDupHandle);
-        }
+        CxbxKrnlRegisterThread(hThread);
     }
 
 /* TODO : Port this Dxbx code :

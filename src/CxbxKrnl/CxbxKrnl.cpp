@@ -984,13 +984,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		}
 	}
 
-	// duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
-	{
-		HANDLE hDupHandle = NULL;
-
-		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-		CxbxKrnlRegisterThread(hDupHandle);
-	}
+	CxbxKrnlRegisterThread(GetCurrentThread());
 
 	// Clear critical section list
 	//extern void InitializeSectionStructures(void); 
@@ -1169,6 +1163,19 @@ __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
 void CxbxKrnlRegisterThread(HANDLE hThread)
 {
+	// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+	{
+		HANDLE hDupHandle = NULL;
+
+		if (DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+			hThread = hDupHandle; // Thread handle was duplicated, continue registration with the duplicate
+		}
+		else {
+			auto message = CxbxGetLastErrorString("DuplicateHandle");
+			EmuWarning(message.c_str());
+		}
+	}
+
     int v=0;
 
     for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
