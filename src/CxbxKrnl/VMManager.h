@@ -42,12 +42,8 @@
 
 #define XbAllocateVirtualMemoryStub(addr, zero_bits, size, allocation_type, protect) \
 		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, true)
-#define XbAllocateVirtualMemoryReal(addr, zero_bits, size, allocation_type, protect) \
-		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, false)
 #define XbFreeVirtualMemoryStub(addr, size, free_type) \
 		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, true)
-#define XbFreeVirtualMemoryReal(addr, size, free_type) \
-		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, false)
 
 
 /* VMATypes */
@@ -157,9 +153,9 @@ class VMManager : public PhysicalMemory
 		size_t QuerySize(VAddr addr);
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
-			DWORD protect, bool bStub);
+			DWORD protect, bool bStub = false);
 		// xbox implementation of NtFreeVirtualMemory
-		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub);
+		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub = false);
 
 	
 	private:
@@ -173,7 +169,7 @@ class VMManager : public PhysicalMemory
 		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-	public: // TODO : Retore private once NtAllocateVirtualMemory calls XbAllocateVirtualMemory and NtFreeVirtualMemory calls XbFreeVirtualMemory
+	public: // TODO : Restore private once NtAllocateVirtualMemory calls XbAllocateVirtualMemory and NtFreeVirtualMemory calls XbFreeVirtualMemory
 		// this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
 	private:
