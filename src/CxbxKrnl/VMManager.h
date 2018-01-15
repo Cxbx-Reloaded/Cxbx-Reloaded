@@ -169,7 +169,6 @@ class VMManager : public PhysicalMemory
 		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-	public: // TODO : Restore private once NtAllocateVirtualMemory calls XbAllocateVirtualMemory and NtFreeVirtualMemory calls XbFreeVirtualMemory
 		// this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
 	private:

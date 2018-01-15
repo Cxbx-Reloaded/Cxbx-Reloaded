@@ -461,6 +461,12 @@ size_t VMManager::QuerySize(VAddr addr)
 	RETURN(size);
 }
 
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h" // TODO : Remove dependancy once NtDll::NtAllocateVirtualMemory is gone again
+};
+
 xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
 	DWORD protect, bool bStub)
 {
@@ -473,26 +479,30 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 		LOG_FUNC_ARG(bStub);
 	LOG_FUNC_END;
 
+	assert(addr); // addr must be assigned
 	VAddr CapturedBase = *addr;
+
+	assert(size); // size must be assigned
 	size_t CapturedSize = *size;
+
 	xboxkrnl::NTSTATUS ret = STATUS_SUCCESS;
-
-	// Invalid base address
-	if (CapturedBase > HIGHEST_VAD_ADDRESS) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
-
-	// Invalid region size
-	if (((HIGHEST_VAD_ADDRESS + 1) - CapturedBase) < CapturedSize) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
-
-	// Size cannot be zero
-	if (CapturedSize == 0) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
-
-	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
-	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
 
 	Lock();
 
 	if (bStub)
 	{
+		// Invalid base address
+		if (CapturedBase > HIGHEST_VAD_ADDRESS) { ret = STATUS_INVALID_PARAMETER; goto failed; }
+
+		// Invalid region size
+		if (((HIGHEST_VAD_ADDRESS + 1) - CapturedBase) < CapturedSize) { ret = STATUS_INVALID_PARAMETER; goto failed; }
+
+		// Size cannot be zero
+		if (CapturedSize == 0) { ret = STATUS_INVALID_PARAMETER; goto failed; }
+
+		VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
+		size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
+
 		// The stub doesn't allocate anything, but the following is useful as reference
 		// WARNING: because there are no allocations being done, it can't know if there is overlap and so the memory statistics
 		// can be wrong in that case (this doesn't happen in XeLoadSection since it checks for the overlap with the head/tail counters)
@@ -534,25 +544,55 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bi
 		// Update the memory manager statistics
 		if (AlignedCapturedSize > m_MaxContiguousAddress - m_PhysicalMemoryInUse)
 		{
+			// TODO : Can return-values be ignored when this failure-case is hit?
 			*addr = AlignedCapturedBase;
 			*size = 0;
 			ret = STATUS_NO_MEMORY;
-			Unlock();
-			RETURN(ret);
+			goto failed;
 		}
-
-		m_PhysicalMemoryInUse += AlignedCapturedSize;
-		PageType page_type = HasPageExecutionFlag(protect) ? PageType::Image : PageType::VirtualMemory;
-		m_PageCount[(int)page_type] += AlignedCapturedSize / PAGE_SIZE;
-
-		*addr = AlignedCapturedBase;
-		*size = AlignedCapturedSize;
+		else
+		{
+			CapturedBase = AlignedCapturedBase;
+			CapturedSize = AlignedCapturedSize;
+			ret = STATUS_SUCCESS;
+		}
 	}
 	else
 	{
+		// This is the not-bStub side of XbAllocateVirtualMemory, which (for now) forwards to Windows.
+
+		// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
+		// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
+		// this flag fixes Azurik for XP.
+		if (allocation_type & MEM_NOZERO)
+			EmuWarning("MEM_NOZERO flag is not supported!");
+
+		ret = NtDll::NtAllocateVirtualMemory(
+			/*ProcessHandle=*/g_CurrentProcessHandle,
+			(NtDll::PVOID *)&CapturedBase,
+			zero_bits,
+			/*RegionSize=*/(PULONG)(&CapturedSize),
+			allocation_type & ~MEM_NOZERO,
+			protect);
+
 		// TODO: implement the real function
 		LOG_UNIMPLEMENTED();
 	}
+
+	if (NT_SUCCESS(ret))
+	{
+		m_VirtualMemoryBytesReserved += CapturedSize;
+		if (protect & MEM_COMMIT)
+		{
+			m_PhysicalMemoryInUse += CapturedSize;
+			PageType page_type = HasPageExecutionFlag(protect) ? PageType::Image : PageType::VirtualMemory;
+			m_PageCount[(int)page_type] += CapturedSize / PAGE_SIZE;
+		}
+
+		*addr = CapturedBase;
+		*size = CapturedSize;
+	}
+failed:
 	Unlock();
 	RETURN(ret);
 }
@@ -568,14 +608,19 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 
 	LOG_INCOMPLETE();
 
+	assert(addr); // Callers must pass in an assigned `addr`
 	VAddr CapturedBase = *addr;
+
+	assert(size); // Callers must pass in an assigned `size`
 	size_t CapturedSize = *size;
+
 	xboxkrnl::NTSTATUS ret = STATUS_SUCCESS;
 
 	// Only MEM_DECOMMIT and MEM_RELEASE are valid
 	if ((free_type & ~(MEM_DECOMMIT | MEM_RELEASE)) != 0) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
 
 	// MEM_DECOMMIT and MEM_RELEASE must not be specified together
+	// TODO : Perhaps this is wrong - see https://msdn.microsoft.com/en-us/library/windows/hardware/ff566416(v=vs.85).aspx
 	if (((free_type & (MEM_DECOMMIT | MEM_RELEASE)) == 0) ||
 		((free_type & (MEM_DECOMMIT | MEM_RELEASE)) == (MEM_DECOMMIT | MEM_RELEASE))) {
 		ret = STATUS_INVALID_PARAMETER;
@@ -583,25 +628,22 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	}
 
 	// Invalid base address
+	// TODO : Check validity differently (use m_Vma_map)
 	if (CapturedBase > HIGHEST_USER_ADDRESS) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
 
-	// Invalid region size
-	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }
-
 	VAddr AlignedCapturedBase = CapturedBase & ~PAGE_MASK;
-	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK;
+	size_t AlignedCapturedSize = (CapturedSize + PAGE_MASK) & ~PAGE_MASK; // TODO : Retrieve allocation size from use m_Vma_map using AlignedCapturedBase
 
 	Lock();
 
 	if (bStub)
 	{
 		// This was an allocation that didn't actually allocate anything, so just update the memory usage
-		m_PhysicalMemoryInUse -= AlignedCapturedSize;
-		m_PageCount[(int)PageType::Image] -= AlignedCapturedSize / PAGE_SIZE;
-		// this could check the permissions of the region but for XeLoadSection it's always PAGE_EXECUTE_READWRITE
+		ret = STATUS_SUCCESS;
 	}
 	else
 	{
+#if 0
 		auto it = m_Vma_map.lower_bound(AlignedCapturedBase);
 
 		VAddr EndingAddress = AlignedCapturedBase + AlignedCapturedSize;
@@ -656,10 +698,34 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 			start_it->second.page_type = end_vma.page_type; // restore previously saved page type
 			MergeAdjacentVMA(std::prev(start_it));
 		}
+#else
+		// This is the not-bStub side of XbFreeVirtualMemory, which (for now) forwards to Windows.
+
+		ret = NtDll::NtFreeVirtualMemory(
+			/*ProcessHandle=*/g_CurrentProcessHandle,
+			(NtDll::PVOID *)(&AlignedCapturedBase),
+			/*RegionSize=*/(PULONG)(&AlignedCapturedSize),
+			free_type);
+
+		// TODO: implement the real function (see above?)
+		LOG_INCOMPLETE();
+#endif
 	}
 
-	*addr = AlignedCapturedBase;
-	*size = AlignedCapturedSize;
+	if (NT_SUCCESS(ret))
+	{
+		m_VirtualMemoryBytesReserved -= AlignedCapturedSize;
+		if (free_type & MEM_DECOMMIT)
+		{
+			m_PhysicalMemoryInUse -= AlignedCapturedSize;
+			PageType page_type = PageType::Image; // TODO : Determine the actual PageType
+			m_PageCount[(int)page_type] -= AlignedCapturedSize / PAGE_SIZE;
+		}
+
+		*addr = AlignedCapturedBase;
+		*size = AlignedCapturedSize;
+	}
+
 	Unlock();
 	RETURN(ret);
 }
