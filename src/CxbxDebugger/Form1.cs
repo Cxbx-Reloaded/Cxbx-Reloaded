@@ -204,15 +204,20 @@ namespace CxbxDebugger
             }
         }
 
+        private bool MatchString(string Haystack, string Needle)
+        {
+            return Haystack.Contains(Needle);
+        }
+
         private void DebugFileEvent(FileEvents Event)
         {
             DbgFileEvents.Add(Event);
 
             Invoke(new MethodInvoker(delegate ()
             {
-                listView1.BeginUpdate();
+                lvFileDetails.BeginUpdate();
                 {
-                    var lvi = listView1.Items.Add(Event.Type.ToString());
+                    var lvi = lvFileDetails.Items.Insert(0, Event.Type.ToString());
                     lvi.SubItems.Add(Event.Name);
 
                     switch (Event.Type)
@@ -221,7 +226,7 @@ namespace CxbxDebugger
                         case FileEventType.Write:
                             string text = string.Format("{0} bytes", Event.Length.ToString());
 
-                            if( Event.Offset != uint.MaxValue)
+                            if (Event.Offset != uint.MaxValue)
                             {
                                 text += string.Format(" from offset {0}", Event.Offset);
                             }
@@ -234,7 +239,7 @@ namespace CxbxDebugger
                             break;
                     }
                 }
-                listView1.EndUpdate();
+                lvFileDetails.EndUpdate();
 
                 switch (Event.Type)
                 {
@@ -243,19 +248,37 @@ namespace CxbxDebugger
                     case FileEventType.Closed:
                     case FileEventType.OpenedFailed:
                         {
-                            listBox1.BeginUpdate();
-                            listBox1.Items.Clear();
+                            lbOpenedFiles.BeginUpdate();
+                            lbOpenedFiles.Items.Clear();
 
                             foreach (DebuggerMessages.FileOpened FOpen in FileHandles)
                             {
-                                listBox1.Items.Add(FOpen.FileName);
+                                lbOpenedFiles.Items.Add(FOpen.FileName);
                             }
 
-                            listBox1.EndUpdate();
+                            lbOpenedFiles.EndUpdate();
                         }
                         break;
                 }
             }));
+
+            // Very POC check for files hit
+            if (Event.Type == FileEventType.Opened)
+            {
+                if (tbFileBit.Text.Length > 0)
+                {
+                    if (MatchString(Event.Name, tbFileBit.Text))
+                    {
+                        if( checkBox1.Checked )
+                        {
+                            if (DebuggerInst != null)
+                            {
+                                Suspend("file open");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private bool DebugAsk(string Message)
@@ -486,22 +509,37 @@ namespace CxbxDebugger
             StartDebugging();
         }
 
-        private void toolStripButton2_Click(object sender, EventArgs e)
+        private void Suspend(string Reason)
         {
             if (DebuggerInst != null)
             {
                 DebuggerInst.Break();
 
+                NativeWrappers.FlashWindowTray(Handle);
                 PopulateThreadList(cbThreads.Items, null);
             }
+
+            lblStatus.Text = string.Format("Suspended ({0})", Reason);
         }
 
-        private void toolStripButton3_Click(object sender, EventArgs e)
+        private void Resume()
         {
             if (DebuggerInst != null)
             {
                 DebuggerInst.Resume();
             }
+
+            lblStatus.Text = "Running";
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            Suspend("manually triggered");
+        }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            Resume();
         }
         
         private Bitmap DumpFramebuffer()
@@ -512,7 +550,7 @@ namespace CxbxDebugger
             var buff = DebugThreads[0].OwningProcess.ReadMemoryBlock(BufferAddr, BufferSize);
 
             // todo: convert this buffer into (RGBA from BGRA)
-            var bmp = new Bitmap(640, 480, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            var bmp = new Bitmap(640, 480, PixelFormat.Format32bppRgb);
 
             BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
             {
@@ -529,7 +567,7 @@ namespace CxbxDebugger
             if (Index == -1)
                 return;
 
-            lbRegisters.Items.Clear();
+            lbCallstack.Items.Clear();
 
             int OtherModuleCount = 0;
 
@@ -558,19 +596,19 @@ namespace CxbxDebugger
 
                 if (OtherModuleCount > 0)
                 {
-                    lbRegisters.Items.Add("[External Code]");
+                    lbCallstack.Items.Add("[External Code]");
                     OtherModuleCount = 0;
                 }
 
                 uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
                 string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
 
-                lbRegisters.Items.Add(FrameString);
+                lbCallstack.Items.Add(FrameString);
             }
 
             if (OtherModuleCount > 0)
             {
-                lbRegisters.Items.Add("[External Code]");
+                lbCallstack.Items.Add("[External Code]");
                 OtherModuleCount = 0;
             }
         }
@@ -578,6 +616,44 @@ namespace CxbxDebugger
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            uint addr = 0;
+
+            string text = textBox2.Text;
+
+            if (text.StartsWith("0x"))
+            {
+                addr = Convert.ToUInt32(text.Substring(2), 16);
+            }
+            else if (!uint.TryParse(textBox2.Text, out addr))
+            {
+                return;
+            }
+
+            byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(addr), 256);
+
+            string hexData = "";
+
+            int i = 0;
+            while (i < data.Length)
+            {
+                hexData += string.Format("{0:X2} ", data[i]);
+                ++i;
+
+                if (i > 0 && (i % 16) == 0)
+                    hexData += "\n";
+            }
+
+            textBox1.Text = hexData;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // TODO Fix the frame buffer lookup
+            //pictureBox1.Image = DumpFramebuffer();
         }
     }
 }

@@ -381,6 +381,35 @@ namespace CxbxDebugger
         None = 0u,
     }
 
+    [Flags]
+    public enum FlashWindowFlags : uint
+    {
+        /// <summary>
+        /// Flash both the window caption and taskbar button. This is equivalent to setting the FLASHW_CAPTION | FLASHW_TRAY flags.
+        /// </summary>
+        FLASHW_ALL = (FLASHW_CAPTION | FLASHW_TRAY),
+        /// <summary>
+        /// Flash the window caption.
+        /// </summary>
+        FLASHW_CAPTION = 0x00000001,
+        /// <summary>
+        /// Stop flashing. The system restores the window to its original state.
+        /// </summary>
+        FLASHW_STOP = 0,
+        /// <summary>
+        /// Flash continuously, until the FLASHW_STOP flag is set.
+        /// </summary>
+        FLASHW_TIMER = 0x00000004,
+        /// <summary>
+        /// Flash continuously until the window comes to the foreground.
+        /// </summary>
+        FLASHW_TIMERNOFG = 0x0000000C,
+        /// <summary>
+        /// Flash the taskbar button.
+        /// </summary>
+        FLASHW_TRAY = 0x00000002,
+    }
+
     public static class NativeMethods
     {
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -391,5 +420,41 @@ namespace CxbxDebugger
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint GetThreadId(IntPtr hThread);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FLASHWINFO
+        {
+            public uint cbSize;
+            public IntPtr hwnd;
+            public uint dwFlags;
+            public uint uCount;
+            public uint dwTimeout;
+        }
+        [DllImport("User32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool FlashWindowEx(ref FLASHWINFO pfwi);
+    }
+
+    public static class NativeWrappers
+    {
+        public static void FlashWindowTray(IntPtr Handle)
+        {
+            var FlashParams = new NativeMethods.FLASHWINFO();
+            FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
+            FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_TRAY;
+            FlashParams.hwnd = Handle;
+
+            NativeMethods.FlashWindowEx(ref FlashParams);
+        }
+
+        public static void FlashWindowTitlebar(IntPtr Handle)
+        {
+            var FlashParams = new NativeMethods.FLASHWINFO();
+            FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
+            FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_CAPTION;
+            FlashParams.hwnd = Handle;
+
+            NativeMethods.FlashWindowEx(ref FlashParams);
+        }
     }
 }
