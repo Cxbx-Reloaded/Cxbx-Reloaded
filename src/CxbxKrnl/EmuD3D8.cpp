@@ -3090,6 +3090,9 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	SetHostSurface(pBackBuffer, pNewHostSurface);
     // update data pointer
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
+	
+	// Increment reference count
+	pBackBuffer->Common++;
 
     return pBackBuffer;
 }
@@ -5308,7 +5311,9 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Texture...\n");
             }
 
-            X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
+			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+
+			X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
             X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
             D3DFORMAT   PCFormat = EmuXB2PC_D3DFormat(X_Format);
@@ -9624,6 +9629,10 @@ XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	
 	// Get the active texture from this stage
 	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
+
+	if (pRet) {
+		pRet->Common++;
+	}
 
 	return pRet;
 }
