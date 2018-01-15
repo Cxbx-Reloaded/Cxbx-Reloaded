@@ -5218,7 +5218,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
-                    dwSize = 0x2000;  // temporarily assign a small buffer, which will be increased later
+                    dwSize = PAGE_SIZE;  // temporarily assign a small buffer, which will be increased later
 					/*hRet = E_FAIL;
 					goto fail;*/
                 }
@@ -5261,7 +5261,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 memcpy(pNativeData, (void*)pBase, dwSize);
                 pNewHostVertexBuffer->Unlock();
 
-				pResource->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
+				pResource->Data = (DWORD)pBase; // Set pResource->Data to point to Xbox Vertex buffer memory
 			}
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pNewHostVertexBuffer);
