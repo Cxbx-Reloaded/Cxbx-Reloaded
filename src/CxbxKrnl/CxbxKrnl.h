@@ -221,7 +221,7 @@ extern Xbe *CxbxKrnl_Xbe;
 /*! parent window handle */
 extern HWND CxbxKrnl_hEmuParent;
 extern DebugMode CxbxKrnl_DebugMode;
-extern char* CxbxKrnl_DebugFileName;
+extern std::string CxbxKrnl_DebugFileName;
 
 /*! file paths */
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];

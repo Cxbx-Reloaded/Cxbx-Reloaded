@@ -57,6 +57,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 
+#include <algorithm> // for std::replace
 #include <locale>
 #include <codecvt>
 
@@ -472,7 +473,11 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 				char szArgsBuffer[4096];
 
-				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				// Some titles (Xbox Dashboard) use ";" as a final path seperator
+				// This allows the Xbox Live option on the dashboard to properly launch XOnlinedash.xbe
+				std::replace(XbePath.begin(), XbePath.end(), ';', '\\');
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 			}
