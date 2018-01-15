@@ -4678,11 +4678,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Begin)
 
     g_IVBPrimitiveType = PrimitiveType;
 
-    if(g_IVBTable == nullptr)
-    {
-        g_IVBTable = (struct XTL::_D3DIVB*)g_VMManager.Allocate(sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
-    }
-
     g_IVBTblOffs = 0;
     g_IVBFVF = 0;
 

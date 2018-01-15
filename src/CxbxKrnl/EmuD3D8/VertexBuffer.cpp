@@ -53,7 +53,7 @@
 XTL::DWORD                  *XTL::g_pIVBVertexBuffer = nullptr;
 XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
-struct XTL::_D3DIVB         *XTL::g_IVBTable = nullptr;
+struct XTL::_D3DIVB         XTL::g_IVBTable[IVB_TABLE_SIZE];
 extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
