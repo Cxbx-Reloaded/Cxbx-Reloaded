@@ -152,6 +152,14 @@ extern "C" {
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
+// Kernel boot flags
+enum {
+	BOOT_EJECT_PENDING =  1 << 0,
+	BOOT_FATAL_ERROR =    1 << 1,
+	BOOT_SKIP_ANIMATION = 1 << 2,
+	BOOT_RUN_DASHBOARD =  1 << 3,
+};
+
 void CxbxPopupMessage(const char *message, ...);
 
 #define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \
@@ -169,7 +177,7 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-__declspec(noreturn) void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
 __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...);
@@ -182,6 +190,12 @@ void CxbxKrnlSuspend();
 
 /*! resume emulation */
 void CxbxKrnlResume();
+
+/*! terminate gracefully the emulation */
+void CxbxKrnlShutDown();
+
+/*! display the fatal error message*/
+void CxbxKrnlPrintUEM(ULONG ErrorCode);
 
 /*! terminate the calling thread */
 __declspec(noreturn) void CxbxKrnlTerminateThread();
@@ -205,6 +219,9 @@ extern uint32 CxbxKrnl_KernelThunkTable[379];
 
 extern bool g_IsWine;
 
+extern bool g_CxbxPrintUEM;
+extern ULONG g_CxbxFatalErrorCode;
+
 void InitXboxThread(DWORD_PTR cores);
 
 /*! thread local storage structure */
@@ -221,7 +238,7 @@ extern Xbe *CxbxKrnl_Xbe;
 /*! parent window handle */
 extern HWND CxbxKrnl_hEmuParent;
 extern DebugMode CxbxKrnl_DebugMode;
-extern char* CxbxKrnl_DebugFileName;
+extern std::string CxbxKrnl_DebugFileName;
 
 /*! file paths */
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
@@ -231,5 +248,8 @@ extern char szFilePath_EEPROM_bin[MAX_PATH];
 #ifdef __cplusplus
 }
 #endif
+
+// Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+extern std::string CxbxGetLastErrorString(char * lpszFunction);
 
 #endif

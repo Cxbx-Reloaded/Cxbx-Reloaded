@@ -47,14 +47,12 @@
 #include "mnemonics.h"
 
 #include "CxbxKrnl.h"
-#include "Emu.h"
+#include "Emu.h" // For EmuWarning
 #include "EmuX86.h"
-#include "EmuNV2A.h"
-#include "EmuNVNet.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
-#include "PCIBus.h"
+#include "devices\Xbox.h" // For g_PCIBus
 
 //
 // Read & write handlers handlers for I/O
@@ -177,11 +175,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 
 	uint32_t value;
 
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		value = EmuNV2A_Read(addr - NV2A_ADDR, size);
-		// Note : EmuNV2A_Read does it's own logging
-	} else if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
 	} else {
 		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
@@ -208,13 +202,6 @@ void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 	if ((addr & (size - 1)) != 0) {
 		EmuWarning("EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
 		// LOG_UNIMPLEMENTED();
-		return;
-	}
-
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
-		EmuNV2A_Write(addr - NV2A_ADDR, value, size);
-		// Note : EmuNV2A_Write does it's own logging
 		return;
 	}
 

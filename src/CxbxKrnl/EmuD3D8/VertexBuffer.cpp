@@ -53,7 +53,7 @@
 XTL::DWORD                  *XTL::g_pIVBVertexBuffer = nullptr;
 XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
-struct XTL::_D3DIVB         *XTL::g_IVBTable = nullptr;
+struct XTL::_D3DIVB         XTL::g_IVBTable[IVB_TABLE_SIZE];
 extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
@@ -639,18 +639,18 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 {
     // Check for active linear textures.
 	bool bHasLinearTex = false, bTexIsLinear[4] = { false };
-    X_D3DPixelContainer *pLinearPixelContainer[4];
+	X_D3DBaseTexture *pLinearBaseTexture[4];
 
     for(uint08 i = 0; i < 4; i++)
     {
-        X_D3DPixelContainer *pPixelContainer = EmuD3DActiveTexture[i];
-		if (pPixelContainer)
+		X_D3DBaseTexture *pBaseTexture = EmuD3DActiveTexture[i];
+		if (pBaseTexture)
 		{ 
-			XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+			XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pBaseTexture->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 			if (EmuXBFormatIsLinear(XBFormat))
 			{
 				bHasLinearTex = bTexIsLinear[i] = true;
-				pLinearPixelContainer[i] = pPixelContainer;
+				pLinearBaseTexture[i] = pBaseTexture;
 			}
         }
     }
@@ -741,8 +741,8 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         {
             if(bTexIsLinear[0])
             {
-                ((FLOAT*)pUVData)[0] /= ( pLinearPixelContainer[0]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT*)pUVData)[1] /= ((pLinearPixelContainer[0]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                ((FLOAT*)pUVData)[0] /= ( pLinearBaseTexture[0]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                ((FLOAT*)pUVData)[1] /= ((pLinearBaseTexture[0]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
             }
             pUVData += sizeof(FLOAT) * 2;
         }
@@ -751,8 +751,8 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         {
             if(bTexIsLinear[1])
             {
-                ((FLOAT*)pUVData)[0] /= ( pLinearPixelContainer[1]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT*)pUVData)[1] /= ((pLinearPixelContainer[1]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                ((FLOAT*)pUVData)[0] /= ( pLinearBaseTexture[1]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                ((FLOAT*)pUVData)[1] /= ((pLinearBaseTexture[1]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
             }
             pUVData += sizeof(FLOAT) * 2;
         }
@@ -761,16 +761,16 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         {
             if(bTexIsLinear[2])
             {
-                ((FLOAT*)pUVData)[0] /= ( pLinearPixelContainer[2]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                ((FLOAT*)pUVData)[1] /= ((pLinearPixelContainer[2]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                ((FLOAT*)pUVData)[0] /= ( pLinearBaseTexture[2]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                ((FLOAT*)pUVData)[1] /= ((pLinearBaseTexture[2]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
             }
             pUVData += sizeof(FLOAT) * 2;
         }
 
         if((dwTexN >= 4) && bTexIsLinear[3])
         {
-            ((FLOAT*)pUVData)[0] /= ( pLinearPixelContainer[3]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-            ((FLOAT*)pUVData)[1] /= ((pLinearPixelContainer[3]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+            ((FLOAT*)pUVData)[0] /= ( pLinearBaseTexture[3]->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+            ((FLOAT*)pUVData)[1] /= ((pLinearBaseTexture[3]->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
         }
     }
 

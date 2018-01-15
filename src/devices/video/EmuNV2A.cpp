@@ -66,12 +66,13 @@ namespace xboxkrnl
 #include <queue>
 #include <thread>
 
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuFS.h"
-#include "EmuKrnl.h"
+#include "CxbxKrnl\CxbxKrnl.h"
+#include "CxbxKrnl\Emu.h"
+#include "CxbxKrnl\EmuFS.h"
+#include "CxbxKrnl\EmuKrnl.h"
+#include "CxbxKrnl\HLEIntercept.h"
+
 #include "EmuNV2A.h"
-#include "HLEIntercept.h"
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
 
 #include <gl\glew.h>
@@ -350,7 +351,7 @@ struct {
 	uint32_t enabled_interrupts;
 	std::thread puller_thread;
 	Cache1State cache1;
-	uint32_t regs[NV_PFIFO_SIZE]; // TODO : union
+	uint32_t regs[_NV_PFIFO_SIZE]; // TODO : union
 } pfifo;
 
 struct {
@@ -571,12 +572,14 @@ const char *DebugNV_##DEV##(xbaddr addr) \
 
 DEBUG_START(PMC)
 	DEBUG_CASE(NV_PMC_BOOT_0);
+	DEBUG_CASE(NV_PMC_BOOT_1);
 	DEBUG_CASE(NV_PMC_INTR_0);
 	DEBUG_CASE(NV_PMC_INTR_EN_0);
 	DEBUG_CASE(NV_PMC_ENABLE);
 DEBUG_END(PMC)
 
 DEBUG_START(PBUS)
+	DEBUG_CASE(NV_PBUS_FBIO_RAM)
 	DEBUG_CASE_EX(NV_PBUS_PCI_NV_0, ":VENDOR_ID");
 	DEBUG_CASE(NV_PBUS_PCI_NV_1);
 	DEBUG_CASE_EX(NV_PBUS_PCI_NV_2, ":REVISION_ID");
@@ -604,25 +607,45 @@ DEBUG_START(PBUS)
 DEBUG_END(PBUS)
 
 DEBUG_START(PFIFO)
+	DEBUG_CASE(NV_PFIFO_DELAY_0);
+	DEBUG_CASE(NV_PFIFO_DMA_TIMESLICE);
+	DEBUG_CASE(NV_PFIFO_TIMESLICE);
 	DEBUG_CASE(NV_PFIFO_INTR_0);
 	DEBUG_CASE(NV_PFIFO_INTR_EN_0);
 	DEBUG_CASE(NV_PFIFO_RAMHT);
 	DEBUG_CASE(NV_PFIFO_RAMFC);
 	DEBUG_CASE(NV_PFIFO_RAMRO);
 	DEBUG_CASE(NV_PFIFO_RUNOUT_STATUS);
+	DEBUG_CASE(NV_PFIFO_RUNOUT_PUT_ADDRESS);
+	DEBUG_CASE(NV_PFIFO_RUNOUT_GET_ADDRESS);
+	DEBUG_CASE(NV_PFIFO_CACHES);
 	DEBUG_CASE(NV_PFIFO_MODE);
 	DEBUG_CASE(NV_PFIFO_DMA);
+	DEBUG_CASE(NV_PFIFO_SIZE)
+	DEBUG_CASE(NV_PFIFO_CACHE0_PUSH0);
+	DEBUG_CASE(NV_PFIFO_CACHE0_PULL0);
+	DEBUG_CASE(NV_PFIFO_CACHE0_HASH);
 	DEBUG_CASE(NV_PFIFO_CACHE1_PUSH0);
 	DEBUG_CASE(NV_PFIFO_CACHE1_PUSH1);
+	DEBUG_CASE(NV_PFIFO_CACHE1_PUT);
 	DEBUG_CASE(NV_PFIFO_CACHE1_STATUS);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_PUSH);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_FETCH);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_STATE);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_INSTANCE);
+	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_CTL);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_PUT);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_GET);
+	DEBUG_CASE(NV_PFIFO_CACHE1_REF);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_SUBROUTINE);
 	DEBUG_CASE(NV_PFIFO_CACHE1_PULL0);
+	DEBUG_CASE(NV_PFIFO_CACHE1_PULL1);
+	DEBUG_CASE(NV_PFIFO_CACHE1_HASH);
+	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_0);
+	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_1);
+	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_2);
+	DEBUG_CASE(NV_PFIFO_CACHE1_SEMAPHORE);
+	DEBUG_CASE(NV_PFIFO_CACHE1_GET);
 	DEBUG_CASE(NV_PFIFO_CACHE1_ENGINE);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_DCOUNT);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW);
@@ -634,22 +657,36 @@ DEBUG_START(PRMA)
 DEBUG_END(PRMA)
 
 DEBUG_START(PVIDEO)
+	DEBUG_CASE(NV_PVIDEO_DEBUG_2);
+	DEBUG_CASE(NV_PVIDEO_DEBUG_3);
 	DEBUG_CASE(NV_PVIDEO_INTR);
 	DEBUG_CASE(NV_PVIDEO_INTR_EN);
 	DEBUG_CASE(NV_PVIDEO_BUFFER);
 	DEBUG_CASE(NV_PVIDEO_STOP);
-	DEBUG_CASE(NV_PVIDEO_BASE);
-	DEBUG_CASE(NV_PVIDEO_LIMIT);
-	DEBUG_CASE(NV_PVIDEO_LUMINANCE);
-	DEBUG_CASE(NV_PVIDEO_CHROMINANCE);
-	DEBUG_CASE(NV_PVIDEO_OFFSET);
-	DEBUG_CASE(NV_PVIDEO_SIZE_IN);
-	DEBUG_CASE(NV_PVIDEO_POINT_IN);
-	DEBUG_CASE(NV_PVIDEO_DS_DX);
-	DEBUG_CASE(NV_PVIDEO_DT_DY);
-	DEBUG_CASE(NV_PVIDEO_POINT_OUT);
-	DEBUG_CASE(NV_PVIDEO_SIZE_OUT);
-	DEBUG_CASE(NV_PVIDEO_FORMAT);
+	DEBUG_CASE(NV_PVIDEO_BASE(0));
+	DEBUG_CASE(NV_PVIDEO_BASE(1));
+	DEBUG_CASE(NV_PVIDEO_LIMIT(0));
+	DEBUG_CASE(NV_PVIDEO_LIMIT(1));
+	DEBUG_CASE(NV_PVIDEO_LUMINANCE(0));
+	DEBUG_CASE(NV_PVIDEO_LUMINANCE(1));
+	DEBUG_CASE(NV_PVIDEO_CHROMINANCE(0));
+	DEBUG_CASE(NV_PVIDEO_CHROMINANCE(1));
+	DEBUG_CASE(NV_PVIDEO_OFFSET(0));
+	DEBUG_CASE(NV_PVIDEO_OFFSET(1));
+	DEBUG_CASE(NV_PVIDEO_SIZE_IN(0));
+	DEBUG_CASE(NV_PVIDEO_SIZE_IN(1));
+	DEBUG_CASE(NV_PVIDEO_POINT_IN(0));
+	DEBUG_CASE(NV_PVIDEO_POINT_IN(1));
+	DEBUG_CASE(NV_PVIDEO_DS_DX(0));
+	DEBUG_CASE(NV_PVIDEO_DS_DX(1));
+	DEBUG_CASE(NV_PVIDEO_DT_DY(0));
+	DEBUG_CASE(NV_PVIDEO_DT_DY(1));
+	DEBUG_CASE(NV_PVIDEO_POINT_OUT(0));
+	DEBUG_CASE(NV_PVIDEO_POINT_OUT(1));
+	DEBUG_CASE(NV_PVIDEO_SIZE_OUT(0));
+	DEBUG_CASE(NV_PVIDEO_SIZE_OUT(1));
+	DEBUG_CASE(NV_PVIDEO_FORMAT(0));
+	DEBUG_CASE(NV_PVIDEO_FORMAT(1));
 DEBUG_END(PVIDEO)
 
 DEBUG_START(PTIMER)
@@ -660,7 +697,6 @@ DEBUG_START(PTIMER)
 	DEBUG_CASE(NV_PTIMER_TIME_0);
 	DEBUG_CASE(NV_PTIMER_TIME_1);
 	DEBUG_CASE(NV_PTIMER_ALARM_0);
-
 DEBUG_END(PTIMER)
 
 DEBUG_START(PCOUNTER)
@@ -680,6 +716,7 @@ DEBUG_END(PRMVIO)
 
 DEBUG_START(PFB)
 	DEBUG_CASE(NV_PFB_CFG0)
+	DEBUG_CASE(NV_PFB_CFG1)
 	DEBUG_CASE(NV_PFB_CSTATUS)
 	DEBUG_CASE(NV_PFB_REFCTRL)
 	DEBUG_CASE(NV_PFB_NVM) // 	NV_PFB_NVM_MODE_DISABLE 
@@ -688,17 +725,53 @@ DEBUG_START(PFB)
 	DEBUG_CASE(NV_PFB_TIMING0)
 	DEBUG_CASE(NV_PFB_TIMING1)
 	DEBUG_CASE(NV_PFB_TIMING2)
-	DEBUG_CASE(NV_PFB_TILE)
-	DEBUG_CASE(NV_PFB_TLIMIT)
-	DEBUG_CASE(NV_PFB_TSIZE)
-	DEBUG_CASE(NV_PFB_TSTATUS)
+	DEBUG_CASE(NV_PFB_TILE(0))
+	DEBUG_CASE(NV_PFB_TLIMIT(0))
+	DEBUG_CASE(NV_PFB_TSIZE(0))
+	DEBUG_CASE(NV_PFB_TSTATUS(0))
+	DEBUG_CASE(NV_PFB_TILE(1))
+	DEBUG_CASE(NV_PFB_TLIMIT(1))
+	DEBUG_CASE(NV_PFB_TSIZE(1))
+	DEBUG_CASE(NV_PFB_TSTATUS(1))
+	DEBUG_CASE(NV_PFB_TILE(2))
+	DEBUG_CASE(NV_PFB_TLIMIT(2))
+	DEBUG_CASE(NV_PFB_TSIZE(2))
+	DEBUG_CASE(NV_PFB_TSTATUS(2))
+	DEBUG_CASE(NV_PFB_TILE(3))
+	DEBUG_CASE(NV_PFB_TLIMIT(3))
+	DEBUG_CASE(NV_PFB_TSIZE(3))
+	DEBUG_CASE(NV_PFB_TSTATUS(3))
+	DEBUG_CASE(NV_PFB_TILE(4))
+	DEBUG_CASE(NV_PFB_TLIMIT(4))
+	DEBUG_CASE(NV_PFB_TSIZE(4))
+	DEBUG_CASE(NV_PFB_TSTATUS(4))
+	DEBUG_CASE(NV_PFB_TILE(5))
+	DEBUG_CASE(NV_PFB_TLIMIT(5))
+	DEBUG_CASE(NV_PFB_TSIZE(5))
+	DEBUG_CASE(NV_PFB_TSTATUS(5))
+	DEBUG_CASE(NV_PFB_TILE(6))
+	DEBUG_CASE(NV_PFB_TLIMIT(6))
+	DEBUG_CASE(NV_PFB_TSIZE(6))
+	DEBUG_CASE(NV_PFB_TSTATUS(6))
+	DEBUG_CASE(NV_PFB_TILE(7))
+	DEBUG_CASE(NV_PFB_TLIMIT(7))
+	DEBUG_CASE(NV_PFB_TSIZE(7))
+	DEBUG_CASE(NV_PFB_TSTATUS(7))
 	DEBUG_CASE(NV_PFB_MRS)
 	DEBUG_CASE(NV_PFB_EMRS)
 	DEBUG_CASE(NV_PFB_MRS_EXT)
 	DEBUG_CASE(NV_PFB_EMRS_EXT)
 	DEBUG_CASE(NV_PFB_REF)
 	DEBUG_CASE(NV_PFB_PRE)
-	DEBUG_CASE(NV_PFB_ZCOMP)
+	DEBUG_CASE(NV_PFB_ZCOMP(0))
+	DEBUG_CASE(NV_PFB_ZCOMP(1))
+	DEBUG_CASE(NV_PFB_ZCOMP(2))
+	DEBUG_CASE(NV_PFB_ZCOMP(3))
+	DEBUG_CASE(NV_PFB_ZCOMP(4))
+	DEBUG_CASE(NV_PFB_ZCOMP(5))
+	DEBUG_CASE(NV_PFB_ZCOMP(6))
+	DEBUG_CASE(NV_PFB_ZCOMP(7))
+	DEBUG_CASE(NV_PFB_ZCOMP_OFFSET)
 	DEBUG_CASE(NV_PFB_ARB_PREDIVIDER)
 	DEBUG_CASE(NV_PFB_ARB_TIMEOUT)
 	DEBUG_CASE(NV_PFB_ARB_XFER_REM)
@@ -722,20 +795,81 @@ DEBUG_START(PSTRAPS)
 DEBUG_END(PSTRAPS)
 
 DEBUG_START(PGRAPH)
+	DEBUG_CASE(NV_PGRAPH_DEBUG_0);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_1);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_3);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_4);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_5);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_8);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_9);
 	DEBUG_CASE(NV_PGRAPH_INTR);
 	DEBUG_CASE(NV_PGRAPH_NSOURCE);
 	DEBUG_CASE(NV_PGRAPH_INTR_EN);
 	DEBUG_CASE(NV_PGRAPH_CTX_CONTROL);
 	DEBUG_CASE(NV_PGRAPH_CTX_USER);
 	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH1);
+	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH2);
+	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH3);
+	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH4);
+	DEBUG_CASE(NV_PGRAPH_STATUS);
 	DEBUG_CASE(NV_PGRAPH_TRAPPED_ADDR);
 	DEBUG_CASE(NV_PGRAPH_TRAPPED_DATA_LOW);
 	DEBUG_CASE(NV_PGRAPH_SURFACE);
 	DEBUG_CASE(NV_PGRAPH_INCREMENT);
 	DEBUG_CASE(NV_PGRAPH_FIFO);
+	DEBUG_CASE(NV_PGRAPH_RDI_INDEX);
+	DEBUG_CASE(NV_PGRAPH_RDI_DATA);
+	DEBUG_CASE(NV_PGRAPH_FFINTFC_ST2);
 	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_TABLE);
 	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_POINTER);
 	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_TRIGGER);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_2);
+	DEBUG_CASE(NV_PGRAPH_TTILE(0));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(0));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(0));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(0));
+	DEBUG_CASE(NV_PGRAPH_TTILE(1));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(1));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(1));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(1));
+	DEBUG_CASE(NV_PGRAPH_TTILE(2));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(2));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(2));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(2));
+	DEBUG_CASE(NV_PGRAPH_TTILE(3));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(3));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(3));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(3));
+	DEBUG_CASE(NV_PGRAPH_TTILE(4));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(4));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(4));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(4));	
+	DEBUG_CASE(NV_PGRAPH_TTILE(5));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(5));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(5));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(5));	
+	DEBUG_CASE(NV_PGRAPH_TTILE(6));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(6));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(6));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(6));
+	DEBUG_CASE(NV_PGRAPH_TTILE(7));
+	DEBUG_CASE(NV_PGRAPH_TLIMIT(7));
+	DEBUG_CASE(NV_PGRAPH_TSIZE(7));
+	DEBUG_CASE(NV_PGRAPH_TSTATUS(7));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(0));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(1));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(2));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(3));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(4));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(5));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(6));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP(7));
+	DEBUG_CASE(NV_PGRAPH_ZCOMP_OFFSET);
+	DEBUG_CASE(NV_PGRAPH_FBCFG0);
+	DEBUG_CASE(NV_PGRAPH_FBCFG1);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_6);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_7);
+	DEBUG_CASE(NV_PGRAPH_DEBUG_10);
 	DEBUG_CASE(NV_PGRAPH_CSV0_D);
 	DEBUG_CASE(NV_PGRAPH_CSV0_C);
 	DEBUG_CASE(NV_PGRAPH_CSV1_B);
@@ -774,8 +908,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_SHADOWZSLOPETHRESHOLD);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR0);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR1);
-	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0);
-	DEBUG_CASE(NV_PGRAPH_TEXADDRESS0_ADDRV);
+	DEBUG_CASE_EX(NV_PGRAPH_TEXADDRESS0, ":_ADDRV");
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS1);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS2);
 	DEBUG_CASE(NV_PGRAPH_TEXADDRESS3);
@@ -824,7 +957,6 @@ DEBUG_START(PCRTC)
 	DEBUG_CASE(NV_PCRTC_INTR_EN_0);
 	DEBUG_CASE(NV_PCRTC_START);
 	DEBUG_CASE(NV_PCRTC_CONFIG);
-
 DEBUG_END(PCRTC)
 
 DEBUG_START(PRMCIO)
@@ -864,12 +996,10 @@ DEBUG_START(PRAMIN)
 DEBUG_END(PRAMIN)
 
 DEBUG_START(USER)
-
 	DEBUG_CASE(NV_USER_DMA_PUT);
 	DEBUG_CASE(NV_USER_DMA_GET);
 	DEBUG_CASE(NV_USER_REF);
-
-	DEBUG_END(USER)
+DEBUG_END(USER)
 
 
 
@@ -892,6 +1022,11 @@ DEBUG_START(USER)
 static inline uint32_t ldl_le_p(const void *p)
 {
 	return *(uint32_t*)p;
+}
+
+static inline void stl_le_p(uint32_t *p, uint32 v)
+{
+	*p = v;
 }
 
 static DMAObject nv_dma_load(xbaddr dma_obj_address)
@@ -919,7 +1054,7 @@ static void *nv_dma_map(xbaddr dma_obj_address, xbaddr *len)
 	DMAObject dma = nv_dma_load(dma_obj_address);
 
 	/* TODO: Handle targets and classes properly */
-	printf("dma_map %x, %x, %x %x"  "\n",
+	printf("dma_map %x, %x, %x %x\n",
 		dma.dma_class, dma.dma_target, dma.address, dma.limit);
 
 	dma.address &= 0x07FFFFFF;
@@ -1073,7 +1208,7 @@ static void pfifo_run_pusher() {
 
 static uint32_t ramht_hash(uint32_t handle)
 {
-	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE) + 12);
+	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 
 	/* XXX: Think this is different to what nouveau calculates... */
 	unsigned int bits = ffs(ramht_size) - 2;
@@ -1091,14 +1226,14 @@ static uint32_t ramht_hash(uint32_t handle)
 
 static RAMHTEntry ramht_lookup(uint32_t handle)
 {
-	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE) + 12);
+	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 
 	uint32_t hash = ramht_hash(handle);
 	assert(hash * 8 < ramht_size);
 
 	uint32_t ramht_address =
 		GET_MASK(pfifo.regs[NV_PFIFO_RAMHT],
-			NV_PFIFO_RAMHT_BASE_ADDRESS) << 12;
+			NV_PFIFO_RAMHT_BASE_ADDRESS_MASK) << 12;
 
 	uint8_t *entry_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + ramht_address + hash * 8);
 
@@ -1244,6 +1379,12 @@ static bool pgraph_zeta_write_enabled()
 		| NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE);
 }
 
+static void pgraph_update_surface(bool upload,
+	bool color_write, bool zeta_write)
+{
+	printf("TODO: pgraph_update_surface\n");
+}
+
 static unsigned int kelvin_map_stencil_op(uint32_t parameter)
 {
 	unsigned int op;
@@ -1319,7 +1460,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 {
 	std::lock_guard<std::mutex> lk(pgraph.mutex);
 
-	int i;
+//	int i;
 	GraphicsSubchannel *subchannel_data;
 	GraphicsObject *object;
 
@@ -1396,7 +1537,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 			/* I guess this kicks it off? */
 			if (image_blit->operation == NV09F_SET_OPERATION_SRCCOPY) {
 
-				printf("NV09F_SET_OPERATION_SRCCOPY");
+				printf("NV09F_SET_OPERATION_SRCCOPY\n");
 
 				GraphicsObject *context_surfaces_obj = lookup_graphics_object(image_blit->context_surfaces);
 				assert(context_surfaces_obj);
@@ -1434,7 +1575,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 
 				printf("  - 0x%tx -> 0x%tx\n", source - MM_SYSTEM_PHYSICAL_MAP,dest - MM_SYSTEM_PHYSICAL_MAP);
 
-				int y;
+				unsigned int y;
 				for (y = 0; y<image_blit->height; y++) {
 					uint8_t *source_row = source
 						+ (image_blit->in_y + y) * context_surfaces->source_pitch
@@ -1474,9 +1615,8 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 			kelvin->dma_state = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_COLOR:
-			printf("TODO: pgraph_update_surface\n");
 			/* try to get any straggling draws in before the surface's changed :/ */
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.dma_color = parameter;
 			break;
@@ -1496,8 +1636,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 			pgraph.dma_report = parameter;
 			break;
 		case NV097_SET_SURFACE_CLIP_HORIZONTAL:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_shape.clip_x =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
@@ -1505,8 +1644,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
 			break;
 		case NV097_SET_SURFACE_CLIP_VERTICAL:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_shape.clip_y =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
@@ -1514,8 +1652,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_FORMAT:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_shape.color_format =
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_COLOR);
@@ -1531,8 +1668,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_PITCH:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_color.pitch =
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_COLOR);
@@ -1540,14 +1676,12 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_ZETA);
 			break;
 		case NV097_SET_SURFACE_COLOR_OFFSET:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_color.offset = parameter;
 			break;
 		case NV097_SET_SURFACE_ZETA_OFFSET:
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			pgraph.surface_zeta.offset = parameter;
 			break;
@@ -1562,8 +1696,7 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 			pgraph.regs[NV_PGRAPH_TEXADDRESS0 + slot * 4] = parameter;
 			break;
 		case NV097_SET_CONTROL0: {
-			printf("TODO: pgraph_update_surface\n");
-			//pgraph_update_surface(d, false, true, true);
+			pgraph_update_surface(false, true, true);
 
 			bool stencil_write_enable =
 				parameter & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
@@ -1989,6 +2122,29 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 		case NV097_SET_TEXGEN_VIEW_MODEL:
 			SET_MASK(pgraph.regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_TEXGEN_REF, parameter);
 			break;
+		case NV097_SET_SEMAPHORE_OFFSET:
+			kelvin->semaphore_offset = parameter;
+			break;
+		case NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: {
+
+			pgraph_update_surface(false, true, true);
+
+			//qemu_mutex_unlock(&d->pgraph.lock);
+			//qemu_mutex_lock_iothread();
+
+			xbaddr semaphore_dma_len;
+			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(kelvin->dma_semaphore,
+				&semaphore_dma_len);
+			assert(kelvin->semaphore_offset < semaphore_dma_len);
+			semaphore_data += kelvin->semaphore_offset;
+
+			stl_le_p((uint32_t*)semaphore_data, parameter);
+
+			//qemu_mutex_lock(&d->pgraph.lock);
+			//qemu_mutex_unlock_iothread();
+
+			break;
+		}
 		default:
 			if (method >= NV097_SET_COMBINER_ALPHA_ICW && method <= NV097_SET_COMBINER_ALPHA_ICW + 28) {
 				slot = (method - NV097_SET_COMBINER_ALPHA_ICW) / 4;
@@ -2141,6 +2297,8 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 
 static void* pfifo_puller_thread()
 {
+	CxbxSetThreadName("Cxbx NV2A FIFO");
+
 	Cache1State *state = &pfifo.cache1;
 
 	while (true) {
@@ -2234,10 +2392,13 @@ DEVICE_READ32(PMC)
 	case NV_PMC_BOOT_0:	// chipset and stepping: NV2A, A02, Rev 0
 		result = 0x02A000A2;
 		break;
-	case NV_PMC_INTR_0:
+	case NV_PMC_BOOT_1:	// Selects big/little endian mode for the card
+		result = 0; // When read, returns 0 if in little-endian mode, 0x01000001 if in big-endian mode.
+		break;
+	case NV_PMC_INTR_0: // Shows which functional units have pending IRQ
 		result = pmc.pending_interrupts;
 		break;
-	case NV_PMC_INTR_EN_0:
+	case NV_PMC_INTR_EN_0: // Selects which functional units can cause IRQs
 		result = pmc.enabled_interrupts;
 		break;
 	default:
@@ -2360,7 +2521,7 @@ DEVICE_READ32(PFIFO)
 			pfifo.cache1.error);
 		break;
 	case NV_PFIFO_CACHE1_DMA_INSTANCE:
-		SET_MASK(result, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS,
+		SET_MASK(result, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK,
 			pfifo.cache1.dma_instance >> 4);
 		break;
 	case NV_PFIFO_CACHE1_DMA_PUT:
@@ -2439,7 +2600,7 @@ DEVICE_WRITE32(PFIFO)
 			pfifo.cache1.error = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_ERROR);
 			break;
 		case NV_PFIFO_CACHE1_DMA_INSTANCE:
-			pfifo.cache1.dma_instance =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS) << 4;
+			pfifo.cache1.dma_instance =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK) << 4;
 			break;
 		case NV_PFIFO_CACHE1_DMA_PUT:
 			user.channel_control[pfifo.cache1.channel_id].dma_put = value;
@@ -3258,7 +3419,7 @@ static const NV2ABlockInfo regions[] = {{
 	}, {
 		/* MMIO and DMA FIFO submission to PGRAPH and VPE */
 		NV_PFIFO_ADDR, // = 0x002000
-		NV_PFIFO_SIZE, // = 0x002000
+		_NV_PFIFO_SIZE, // = 0x002000
 		EmuNV2A_PFIFO_Read32,
 		EmuNV2A_PFIFO_Write32,
 	}, {
@@ -3306,7 +3467,7 @@ static const NV2ABlockInfo regions[] = {{
 	}, {
 		/* aliases VGA sequencer and graphics controller registers */
 		NV_PRMVIO_ADDR, // = 0x0c0000
-		NV_PRMVIO_SIZE, // = 0x001000
+		NV_PRMVIO_SIZE, // = 0x008000 // Was 0x001000
 		EmuNV2A_PRMVIO_Read32,
 		EmuNV2A_PRMVIO_Write32,
 	},{
@@ -3359,10 +3520,16 @@ static const NV2ABlockInfo regions[] = {{
 		EmuNV2A_PRAMIN_Write32,
 	},{
 		/* PFIFO MMIO and DMA submission area */
-		NV_USER_ADDR, // = 0x800000,
-		NV_USER_SIZE, // = 0x800000,
+		NV_USER_ADDR, // = 0x800000
+		NV_USER_SIZE, // = 0x400000 // Was 0x800000
 		EmuNV2A_USER_Read32,
 		EmuNV2A_USER_Write32,
+	}, {
+		/* User area remapped? */
+		NV_UREMAP_ADDR, // = 0xC00000
+		NV_UREMAP_SIZE, // = 0x400000
+		EmuNV2A_USER_Read32, // NOTE : Re-used (*not* EmuNV2A_UREMAP_Read32)
+		EmuNV2A_USER_Write32, // NOTE : Re-used (*not* EmuNV2A_UREMAP_Write32)
 	}, {
 		0xFFFFFFFF,
 		0,
@@ -3435,7 +3602,7 @@ void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 				shift = (addr & 2) * 16;
 				aligned_addr = addr & ~3;
 				aligned_value = block->read(addr - block->offset);
-				 mask = 0xFFFF << shift;
+				mask = 0xFFFF << shift;
 				
 				// TODO : Must the second byte be written to the next DWORD?		
 				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
@@ -3728,6 +3895,8 @@ std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
 static void nv2a_vblank_thread()
 {
+	CxbxSetThreadName("Cxbx NV2A VBlank");
+
 	auto nextVBlankTime = GetNextVBlankTime();
 
 	while (true) {
@@ -3740,10 +3909,42 @@ static void nv2a_vblank_thread()
 	}
 }
 
+void CxbxReserveNV2AMemory()
+{
+	// Reserve NV2A memory :
+	void *memory = (void *)VirtualAllocEx(
+		GetCurrentProcess(),
+		(void *)NV2A_ADDR,
+		NV2A_SIZE,
+		MEM_RESERVE, // Don't allocate actual physical storage in memory
+		PAGE_NOACCESS); // Any access must result in an access violation exception (handled in EmuException/EmuX86_DecodeException)
+	if (memory == NULL) {
+		EmuWarning("Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
+		return;
+	}
+
+	printf("[0x%.4X] INIT: Reserved %d MiB of Xbox NV2A memory at 0x%.8X to 0x%.8X\n",
+		GetCurrentThreadId(), NV2A_SIZE / ONE_MB, NV2A_ADDR, NV2A_ADDR + NV2A_SIZE - 1);
+
+	// Allocate PRAMIN Region
+	memory = VirtualAllocEx(
+		GetCurrentProcess(),
+		(void*)(NV2A_ADDR + NV_PRAMIN_ADDR),
+		NV_PRAMIN_SIZE,
+		MEM_COMMIT, // No MEM_RESERVE |
+		PAGE_READWRITE);
+	if (memory == NULL) {
+		EmuWarning("Couldn't allocate NV2A PRAMIN memory");
+		return;
+	}
+
+	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8X to 0x%.8X\n",
+		GetCurrentThreadId(), NV_PRAMIN_SIZE / ONE_MB, NV2A_ADDR + NV_PRAMIN_ADDR, NV2A_ADDR + NV_PRAMIN_ADDR + NV_PRAMIN_SIZE - 1);
+}
+
 void EmuNV2A_Init()
 {
-	// Allocate PRAMIN Region
-	VirtualAlloc((void*)(NV2A_ADDR + NV_PRAMIN_ADDR), NV_PRAMIN_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	CxbxReserveNV2AMemory();
 
 	pcrtc.start = 0;
 
@@ -3756,6 +3957,6 @@ void EmuNV2A_Init()
 	
 	// Only spawn VBlank thread when LLE is enabled
 	if (bLLE_GPU) {
-		vblank_thread = std::thread(nv2a_vblank_thread);;
+		vblank_thread = std::thread(nv2a_vblank_thread);
 	}
 }

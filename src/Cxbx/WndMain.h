@@ -131,18 +131,29 @@ class WndMain : public Wnd
 		// ******************************************************************
 		void CrashMonitor();
 
-        // ******************************************************************
-        // * drawing information
-        // ******************************************************************
-        HDC         m_BackDC;
-        HDC         m_LogoDC;
+		// ******************************************************************
+		// * draw Xbox LED bitmap
+		// ******************************************************************
+		void DrawLedBitmap(HWND hwnd, bool boolbDefault);
+
+		// ******************************************************************
+		// * drawing information
+		// ******************************************************************
+		HDC         m_BackDC;
+		HDC         m_LogoDC;
 		HDC         m_GameLogoDC;
-        HBITMAP     m_OrigBmp;
-        HBITMAP     m_OrigLogo;
+		HDC         m_LedDC;
+		HBITMAP     m_OrigBmp;
+		HBITMAP     m_OrigLogo;
 		HBITMAP     m_OrigGameLogo;
-        HBITMAP     m_BackBmp;
-        HBITMAP     m_LogoBmp;
+		HBITMAP     m_OriLed;
+		HBITMAP     m_BackBmp;
+		HBITMAP     m_LogoBmp;
 		HBITMAP		m_GameLogoBMP;
+		HBITMAP     m_LedBmp;
+		HBRUSH      m_Brushes[4];
+		HPEN        m_Pens[4];
+		int         m_xBmp, m_yBmp;
 
         // ******************************************************************
         // * Xbe objects
@@ -188,9 +199,14 @@ class WndMain : public Wnd
 		int         m_FlagsLLE;
 
 		// ******************************************************************
-		// * XInout Enabled Flag
+		// * XInput Enabled Flag
 		// ******************************************************************		
 		int			m_XInputEnabled;
+
+		// ******************************************************************
+		// * Hack Flags
+		// ******************************************************************	
+		int		m_DisablePixelShaders;
 
         // ******************************************************************
         // * debug output filenames

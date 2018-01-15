@@ -38,16 +38,21 @@
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
+#include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
+#include <multimon.h>
 
 #include <io.h>
 
 #include <sstream> // for std::stringstream
+#include <fstream>
+#include <iostream>
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
+#define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 #define STBI_ONLY_JPEG
 #define STBI_NO_LINEAR
 #define STB_IMAGE_IMPLEMENTATION
@@ -84,6 +89,7 @@ void ClearHLECache()
 }
 
 #define TIMERID_FPS 0
+#define TIMERID_LED 1
 
 WndMain::WndMain(HINSTANCE x_hInstance) :
 	Wnd(x_hInstance),
@@ -131,26 +137,55 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			LONG result = ERROR_SUCCESS;
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
+			result = RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_FlagsLLE = 0;
+			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_XInputEnabled = 0;
+			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "HackDisablePixelShaders", NULL, &dwType, (PBYTE)&m_DisablePixelShaders, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_DisablePixelShaders = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_CxbxDebug = DebugMode::DM_NONE;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_KrnlDebug = DebugMode::DM_NONE;
+			}
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			result = RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_dwRecentXbe = 0;
+			}
 
-            dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeCxbxDebugFilename;
+			dwType = REG_SZ; dwSize = MAX_PATH; ULONG lErrCodeCxbxDebugFilename;
 			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+			if (lErrCodeCxbxDebugFilename != ERROR_SUCCESS) {
+				m_CxbxDebugFilename[0] = '\0';
+			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
+				m_KrnlDebugFilename[0] = '\0';
+			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -228,7 +263,11 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
                 m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
 
                 dwType = REG_SZ; dwSize = MAX_PATH;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+                result = RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+				if (result != ERROR_SUCCESS) {
+					m_szRecentXbe[v] = "";
+				}
+
             }
 
             RegCloseKey(hKey);
@@ -267,6 +306,9 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "XInputEnabled", 0, dwType, (PBYTE)&m_XInputEnabled, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -329,6 +371,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 HDC hDC = GetDC(hwnd);
 
                 m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
+
+				// create Xbox LED bitmap
+				{
+					m_xBmp = GetSystemMetrics(SM_CXMENUCHECK);
+					m_yBmp = GetSystemMetrics(SM_CYMENUCHECK);
+					m_LedDC = CreateCompatibleDC(hDC);
+					m_LedBmp = CreateCompatibleBitmap(hDC, m_xBmp, m_yBmp);
+					m_Brushes[XBOX_LED_COLOUR_OFF] = CreateSolidBrush(RGB(0, 0, 0));
+					m_Brushes[XBOX_LED_COLOUR_GREEN] = CreateSolidBrush(RGB(0, 255, 0));
+					m_Brushes[XBOX_LED_COLOUR_RED] = CreateSolidBrush(RGB(255, 0, 0));
+					m_Brushes[XBOX_LED_COLOUR_ORANGE] = CreateSolidBrush(RGB(255, 165, 0));
+					m_Pens[XBOX_LED_COLOUR_OFF] = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+					m_Pens[XBOX_LED_COLOUR_GREEN] = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+					m_Pens[XBOX_LED_COLOUR_RED] = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+					m_Pens[XBOX_LED_COLOUR_ORANGE] = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
+					DrawLedBitmap(hwnd, true);
+				}
 
                 // decompress jpeg, convert to bitmap resource
                 {
@@ -414,9 +473,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					if (m_hwndChild == NULL) {
 						float fps = 0;
 						float mspf = 0;
+						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
 						g_EmuShared->SetCurrentMSpF(&mspf);
 						g_EmuShared->SetCurrentFPS(&fps);
+						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
+						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
 						UpdateCaption();
 						RefreshMenus();
@@ -433,8 +495,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
 					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
 						KillTimer(hwnd, TIMERID_FPS);
+						KillTimer(hwnd, TIMERID_LED);
 						m_hwndChild = NULL;
 						StopEmulation();
+						DrawLedBitmap(hwnd, true);
 					}
                 }
                 break;
@@ -449,6 +513,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case TIMERID_FPS:
 				{
 					UpdateCaption();
+				}
+				break;
+
+				case TIMERID_LED:
+				{
+					DrawLedBitmap(hwnd, false);
 				}
 				break;
 			}
@@ -937,56 +1007,43 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-						FILE *TxtFile = fopen(ofn.lpstrFile, "wt");
-
-						// verify file was opened
-						if (TxtFile == 0)
-							MessageBox(m_hwnd, "Could not open text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-						else
-						{
-							m_Xbe->DumpInformation(TxtFile);
-
-							fclose(TxtFile);
-
-							if (m_Xbe->HasError())
-							{
-								MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-							}
-							else
-							{
-								char buffer[255];
-
-								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-								printf("WndMain: %s\n", buffer);
-
-								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-							}
-						}
+                        std::string Xbe_info = DumpInformation(m_Xbe);
+                        if (m_Xbe->HasError()) {
+                            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                        }
+                        else {
+                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
+                            if(Xbe_dump_file.is_open()) {
+                                Xbe_dump_file << Xbe_info;
+                                Xbe_dump_file.close();
+                                char buffer[255];
+                                sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+                                printf("WndMain: %s\n", buffer);
+                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+                            }
+                            else {
+                                MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                            }
+                        }
 					}
 				}
 			}
 			break;
 
-			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-			{
-				// dump xbe information to debug console
-				m_Xbe->DumpInformation(stdout);
-
-				if (m_Xbe->HasError())
-				{
-					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-				}
-				else
-				{
-					char buffer[255];
-
-					sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-					printf("WndMain: %s\n", buffer);
-				}
-			}
-			break;
+            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+            {
+                std::string Xbe_info = DumpInformation(m_Xbe);
+                if (m_Xbe->HasError()) {
+                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                }
+                else {
+                    std::cout << Xbe_info;
+                    char buffer[255];
+                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+                    printf("WndMain: %s\n", buffer);
+                }
+            }
+            break;
 
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);
@@ -1177,6 +1234,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 StopEmulation();
                 break;
 
+			case ID_HACKS_DISABLEPIXELSHADERS:
+				m_DisablePixelShaders = !m_DisablePixelShaders;
+				RefreshMenus();
+				break;
+
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1205,27 +1267,49 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             FreeConsole();
 
-            HDC hDC = GetDC(hwnd);
+			HDC hDC = GetDC(hwnd);
 
-            SelectObject(m_LogoDC, m_OrigLogo);
+			SelectObject(m_LogoDC, m_OrigLogo);
 
-            SelectObject(m_BackDC, m_OrigBmp);
+			SelectObject(m_BackDC, m_OrigBmp);
 
 			SelectObject(m_GameLogoDC, m_OrigGameLogo);
 
-            DeleteObject(m_LogoDC);
+			SelectObject(m_LedDC, m_OriLed);
 
-            DeleteObject(m_BackDC);
+			DeleteObject(m_LogoDC);
+
+			DeleteObject(m_BackDC);
 
 			DeleteObject(m_GameLogoDC);
 
-            DeleteObject(m_LogoBmp);
+			DeleteObject(m_LedDC);
 
-            DeleteObject(m_BackBmp);
+			DeleteObject(m_LogoBmp);
+
+			DeleteObject(m_BackBmp);
 
 			DeleteObject(m_GameLogoBMP);
 
-            ReleaseDC(hwnd, hDC);
+			DeleteObject(m_LedBmp);
+
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_OFF]);
+
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_GREEN]);
+
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_RED]);
+
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_ORANGE]);
+
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_OFF]);
+
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_GREEN]);
+
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_RED]);
+
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_ORANGE]);
+
+			ReleaseDC(hwnd, hDC);
 
             delete m_Xbe;
 
@@ -1571,6 +1655,9 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_XInputEnabled) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_XINPUT, chk_flag);
+
+			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 		}
 
         // emulation menu
@@ -1699,7 +1786,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
     strcpy(m_XbeFilename, x_filename);
 
-    m_Xbe = new Xbe(m_XbeFilename);
+    m_Xbe = new Xbe(m_XbeFilename, true);
 
     if(m_Xbe->HasError())
     {
@@ -1906,6 +1993,9 @@ void WndMain::StartEmulation(HWND hwndParent)
 	// register XInput flags with emulator process
 	g_EmuShared->SetXInputEnabled(&m_XInputEnabled);
 
+	// register Hacks with emulator process
+	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
+
 	// shell exe
     {
         GetModuleFileName(NULL, szBuffer, MAX_PATH);
@@ -1954,6 +2044,8 @@ void WndMain::StopEmulation()
 // wrapper function to call CrashMonitor
 DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 {
+	CxbxSetThreadName("Cxbx Crash Monitor");
+
 	static_cast<WndMain*>(lpVoid)->CrashMonitor();
 	return 0;
 }
@@ -1961,12 +2053,12 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 // monitor for crashes
 void WndMain::CrashMonitor()
 {
-	bool bMultiXbe;
+	bool bQuickReboot;
 	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
 
 	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
 
-	g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
 
 	if (state == WAIT_OBJECT_0) // StopEmulation
 	{
@@ -1974,14 +2066,14 @@ void WndMain::CrashMonitor()
 		return;
 	}
 
-	if (state == WAIT_ABANDONED && !bMultiXbe) // that's a crash
+	if (state == WAIT_ABANDONED && !bQuickReboot) // that's a crash
 	{
 		CloseHandle(hCrashMutex);
 		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
 		{
 			KillTimer(m_hwnd, TIMERID_FPS);
-			//KillTimer(m_hwnd, 2); for the LED
-			//DrawDefaultLedBitmap(hwnd); for the LED
+			KillTimer(m_hwnd, TIMERID_LED);
+			DrawLedBitmap(m_hwnd, true);
 			m_hwndChild = NULL;
 			m_bIsStarted = false;
 			UpdateCaption();
@@ -1993,8 +2085,48 @@ void WndMain::CrashMonitor()
 	// multi-xbe
 	// destroy this thread and start a new one
 	CloseHandle(hCrashMutex);
-	bMultiXbe = false;
-	g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+	bQuickReboot = false;
+	g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
+
+	return;
+}
+
+// draw Xbox LED bitmap
+void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
+{
+	HMENU hMenu = GetMenu(hwnd);
+	int ActiveLEDColor;
+
+	// When so requested, or when not emulating, draw a black bitmap
+	if (bdefault || !m_bIsStarted) {
+		ActiveLEDColor = XBOX_LED_COLOUR_OFF;
+	}
+	else { // draw colored bitmap
+		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
+		static int LedSequenceOffset = 0;
+
+		g_EmuShared->GetLedSequence(LedSequence);
+
+		// Select active color and cycle through all 4 phases in the sequence
+		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
+		++LedSequenceOffset;
+	}
+
+	SelectObject(m_LedDC, m_Brushes[ActiveLEDColor]);
+	SelectObject(m_LedDC, m_Pens[ActiveLEDColor]);
+
+	m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
+	Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
+	m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
+
+	MENUITEMINFO mii = { 0 };
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_FTYPE | MIIM_BITMAP;
+	mii.fType = MFT_RIGHTJUSTIFY;
+	mii.hbmpItem = m_LedBmp;
+	SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
+
+	DrawMenuBar(hwnd);
 
 	return;
 }

@@ -84,7 +84,7 @@ typedef VOID (*PHAL_SHUTDOWN_NOTIFICATION)(
     IN struct _HAL_SHUTDOWN_REGISTRATION *ShutdownRegistration
 );
 
-typedef struct {
+typedef struct _HAL_SHUTDOWN_REGISTRATION {
     PHAL_SHUTDOWN_NOTIFICATION NotificationRoutine;
     LONG Priority;
     LIST_ENTRY ListEntry;

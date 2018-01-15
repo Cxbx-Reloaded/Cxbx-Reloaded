@@ -51,7 +51,7 @@ class Xbe : public Error
 {
     public:
         // construct via Xbe file
-        Xbe(const char *x_szFilename);
+        Xbe(const char *x_szFilename, bool bFromGUI);
 		
         // deconstructor
        ~Xbe();
@@ -62,8 +62,7 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-        // dump Xbe information to text file
-        void DumpInformation(FILE *x_file);
+        std::string DumpInformation();
 
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
@@ -92,7 +91,7 @@ class Xbe : public Error
             uint32 dwSections;                      // 0x011C - number of sections
             uint32 dwSectionHeadersAddr;            // 0x0120 - section headers address
 
-            struct InitFlags                        // 0x0124 - initialization flags
+			typedef struct                         
             {
                 uint32 bMountUtilityDrive   : 1;    // mount utility drive flag
                 uint32 bFormatUtilityDrive  : 1;    // format utility drive flag
@@ -102,8 +101,12 @@ class Xbe : public Error
                 uint32 Unused_b1            : 8;    // unused (or unknown)
                 uint32 Unused_b2            : 8;    // unused (or unknown)
                 uint32 Unused_b3            : 8;    // unused (or unknown)
-            }
-            dwInitFlags;
+			} InitFlags;
+
+			union {                                 // 0x0124 - initialization flags
+				InitFlags dwInitFlags;
+				uint32 dwInitFlags_value;
+			};
 
             uint32 dwEntryAddr;                     // 0x0128 - entry point address
             uint32 dwTLSAddr;                       // 0x012C - thread local storage directory address
@@ -154,6 +157,7 @@ class Xbe : public Error
             uint32  dwOriginalCertificateSize;			  // 0x01D0 - Original Certificate Size?
             uint32  dwOnlineService;					  // 0x01D4 - Online Service ID
             uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
+            uint08  bzCodeEncKey[16];					  // 0x01DC - Code Encryption Key?
         }
         #include "AlignPosfix1.h"
         m_Certificate;
@@ -162,7 +166,7 @@ class Xbe : public Error
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
-            struct _Flags
+            typedef struct 
             {
                 uint32 bWritable        : 1;    // writable flag
                 uint32 bPreload         : 1;    // preload flag
@@ -175,8 +179,12 @@ class Xbe : public Error
                 uint32 Unused_b1        : 8;    // unused (or unknown)
                 uint32 Unused_b2        : 8;    // unused (or unknown)
                 uint32 Unused_b3        : 8;    // unused (or unknown)
-            }
-            dwFlags;
+			} _Flags;
+
+			union {
+				_Flags dwFlags;
+				uint32 dwFlags_value;
+			};
 
             uint32 dwVirtualAddr;               // virtual address
             uint32 dwVirtualSize;               // virtual size
@@ -200,13 +208,17 @@ class Xbe : public Error
             uint16 wMinorVersion;               // minor version
             uint16 wBuildVersion;               // build version
 
-            struct Flags
+            typedef struct 
             {
                 uint16 QFEVersion       : 13;   // QFE Version
                 uint16 Approved         : 2;    // Approved? (0:no, 1:possibly, 2:yes)
                 uint16 bDebugBuild      : 1;    // Is this a debug build?
-            }
-            dwFlags;
+			} Flags;
+
+			union {
+				Flags wFlags;
+				uint16 wFlags_value;
+			};
         }
         #include "AlignPosfix1.h"
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
@@ -243,17 +255,17 @@ class Xbe : public Error
         // retrieve thread local storage index address
         uint32 *GetTLSIndex() { if(m_TLS == 0) return 0; else return (uint32*)GetAddr(m_TLS->dwTLSIndexAddr); }
 
+        // return a modifiable pointer inside this structure that corresponds to a virtual address
+        uint08 *GetAddr(uint32 x_dwVirtualAddress);
+
+        const wchar_t *GetUnicodeFilenameAddr();
     private:
         // constructor initialization
         void ConstructorInit();
 
-        // return a modifiable pointer inside this structure that corresponds to a virtual address
-        uint08 *GetAddr(uint32 x_dwVirtualAddress);
-
         // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
 
-        std::string AllowedMediaToString();
 
         // used to encode/decode logo bitmap data
         union LogoRLE

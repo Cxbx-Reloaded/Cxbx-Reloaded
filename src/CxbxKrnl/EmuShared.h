@@ -42,6 +42,13 @@
 #include <memory.h>
 
 enum {
+	XBOX_LED_COLOUR_OFF,
+	XBOX_LED_COLOUR_GREEN,
+	XBOX_LED_COLOUR_RED,
+	XBOX_LED_COLOUR_ORANGE,
+};
+
+enum {
 	LLE_APU = 1 << 0,
 	LLE_GPU = 1 << 1,
 	LLE_JIT = 1 << 2,
@@ -101,10 +108,22 @@ class EmuShared : public Mutex
 		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
 
 		// ******************************************************************
+		// * Boot flag Accessors
+		// ******************************************************************
+		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags; Unlock(); }
+		void SetBootFlags(int *value) { Lock(); m_BootFlags = *value; Unlock(); }
+
+		// ******************************************************************
 		// * XInput Flag Accessors
 		// ******************************************************************
 		void GetXInputEnabled(int* value) { Lock(); *value = m_XInputEnabled; Unlock(); }
 		void SetXInputEnabled(int* value) { Lock(); m_XInputEnabled = *value; Unlock(); }
+
+		// ******************************************************************
+		// * Hack Flag Accessors
+		// ******************************************************************
+		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
+		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
@@ -119,16 +138,38 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
-		// * MultiXbe flag Accessors
+		// * Kernel quick reboot flag Accessors
 		// ******************************************************************
-		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbe; Unlock(); }
-		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
+		void GetQuickRebootFlag(bool *value) { Lock(); *value = m_bKeQuickReboot; Unlock(); }
+		void SetQuickRebootFlag(bool *value) { Lock(); m_bKeQuickReboot = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Launch data physical address Accessors
 		// ******************************************************************
 		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
 		void SetLaunchDataPAddress(PAddr *value) { Lock(); m_LaunchDataPAddress = *value; Unlock(); }
+
+		// ******************************************************************
+		// * Xbox LED values Accessors
+		// ******************************************************************
+		void GetLedSequence(int *value)
+		{
+			Lock();
+			for (int i = 0; i < 4; ++i)
+			{
+				value[i] = m_LedSequence[i];
+			}
+			Unlock();
+		}
+		void SetLedSequence(int *value)
+		{
+			Lock();
+			for (int i = 0; i < 4; ++i)
+			{
+				m_LedSequence[i] = value[i];
+			}
+			Unlock();
+		}
 
 
 	private:
@@ -145,12 +186,15 @@ class EmuShared : public Mutex
 		XBVideo      m_XBVideo;
 		XBAudio      m_XBAudio;
 		char         m_XbePath[MAX_PATH];
+		int			 m_BootFlags;
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
+		int			 m_DisablePixelShaders;
 		float		 m_MSpF;
 		float        m_FPS;
-		bool		 m_bMultiXbe;
+		bool		 m_bKeQuickReboot;
 		PAddr		 m_LaunchDataPAddress;
+		int          m_LedSequence[4];
 };
 
 // ******************************************************************

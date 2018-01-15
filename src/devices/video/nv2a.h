@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -9,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->EEPROMDevice.h
+// *   src->devices->video->nv2a.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,38 +26,27 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 #pragma once
 
-#include "SMDevice.h"
+#include "devices\PCIDevice.h" // For PCIDevice
 
-#define SMBUS_EEPROM_ADDRESS 0xA8 // = Write; Read = 0xA9
+#define NV2A_ADDR  0xFD000000
+#define NV2A_SIZE             0x01000000
 
-class EEPROMDevice : public SMDevice {
+class NV2ADevice : public PCIDevice {
 public:
-	// SMDevice functions
+	// PCI Device functions
 	void Init();
 	void Reset();
 
-	void QuickCommand(bool read);
-	uint8_t ReceiveByte();
-	uint8_t ReadByte(uint8_t command);
-	uint16_t ReadWord(uint8_t command);
-	int ReadBlock(uint8_t command, uint8_t *data);
-
-	void SendByte(uint8_t data);
-	void WriteByte(uint8_t command, uint8_t value);
-	void WriteWord(uint8_t command, uint16_t value);
-	void WriteBlock(uint8_t command, uint8_t* data, int length);
-
-	// EEPROMDevice function
-	void SetEEPROM(uint8_t* pEEPROM) { m_pEEPROM = pEEPROM; };
-private:
-	uint8_t* m_pEEPROM;
+	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
+	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
+	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
+	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 };
-
-extern EEPROMDevice* g_EEPROM;

@@ -188,8 +188,16 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	// In this case, experimental means that these functions work and are safe
 	// but not officially in the C++ standard yet
 	// Requires a compiler with C++17 support
-	std::experimental::filesystem::remove_all(partitionPath);
-	std::experimental::filesystem::create_directory(partitionPath);
+	try
+	{
+		std::experimental::filesystem::remove_all(partitionPath);
+		std::experimental::filesystem::create_directory(partitionPath);
+	}
+	catch (std::experimental::filesystem::filesystem_error fsException)
+	{
+		printf("std::experimental::filesystem failed with message: %s\n", fsException.what());
+	}
+
 
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
@@ -323,6 +331,16 @@ void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING 
 	memcpy(dest->Buffer, src.c_str(), dest->Length);
 }
 
+void replace_all(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
 NTSTATUS CxbxConvertFilePath(
 	std::string RelativeXboxPath, 
 	OUT std::wstring &RelativeHostPath, 
@@ -414,6 +432,9 @@ NTSTATUS CxbxConvertFilePath(
 			if (HostPath.back() != '\\')
 				HostPath.append(1, '\\');
 		}
+
+		// Lastly, remove any '\\' sequences in the string (this should fix the problem with Azurik game saves)
+		replace_all( RelativePath, "\\\\", "\\" );
 
 		if (g_bPrintfOn) {
 			DbgPrintf("FILE: %s Corrected path...\n", aFileAPIName.c_str());

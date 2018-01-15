@@ -143,4 +143,11 @@ extern volatile bool g_bPrintfOn;
 	#define DbgPrintf null_func
 #endif
 
+#if WIN32
+#include "Win32\Threads.h"
+#define CxbxSetThreadName(Name) SetCurrentThreadName(Name)
+#else
+#define CxbxSetThreadName(Name)
+#endif
+
 #endif

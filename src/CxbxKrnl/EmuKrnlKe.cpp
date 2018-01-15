@@ -271,6 +271,8 @@ DWORD ExecuteDpcQueue()
 
 DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 {
+	CxbxSetThreadName("DPC Handler");
+
 	DbgPrintf("KRNL: DPC thread is running\n");
 
 	// Make sure DPC callbacks run on the same core as the one that runs Xbox1 code :

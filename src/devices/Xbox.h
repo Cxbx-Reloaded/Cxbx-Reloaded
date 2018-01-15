@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->Xbox.cpp
+// *   src->CxbxKrnl->Xbox.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,41 +32,50 @@
 // *
 // *  All rights reserved
 // *
-// ******************************************************************
-#include "Xbox.h"
+// ******************************************************************#pragma once
+#pragma once
 
 #include "PCIBus.h" // For PCIBus
 #include "SMBus.h" // For SMBus
+#include "MCPXDevice.h" // For MCPXDevice
 #include "SMCDevice.h" // For SMCDevice
 #include "EEPROMDevice.h" // For EEPROMDevice
 #include "EmuNVNet.h" // For NVNetDevice
+#include "devices\video\nv2a.h" // For NV2ADevice
 
-PCIBus* g_PCIBus;
-SMBus* g_SMBus;
-SMCDevice* g_SMC;
-EEPROMDevice* g_EEPROM;
-NVNetDevice* g_NVNet;
+#define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
+#define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
+#define SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER 0x20 // = Write; Read = 0x21
+#define SMBUS_ADDRESS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 0x8B
+#define SMBUS_ADDRESS_TEMPERATURE_MEASUREMENT 0x98 // = Write; Read = 0x99
+#define SMBUS_ADDRESS_EEPROM 0xA8 // = Write; Read = 0xA9
+#define SMBUS_ADDRESS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0xD5
+#define SMBUS_ADDRESS_TV_ENCODER_ID_XCALIBUR 0xE0 // = Write; Read = 0xE1
 
-#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
-#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
+typedef enum {
+	Revision1_0,
+	Revision1_1,
+	Revision1_2,
+	Revision1_3,
+	Revision1_4,
+	Revision1_5,
+	Revision1_6,
+	DebugKit
+} HardwareModel;
 
-void InitXboxHardware()
-{
-	g_PCIBus = new PCIBus();
-	g_SMBus = new SMBus();
-	g_SMC = new SMCDevice(Revision1_1); // TODO : Make configurable
-	g_EEPROM = new EEPROMDevice();
-	g_NVNet = new NVNetDevice();
+typedef enum { // TODO : Move to it's own file
+	// http://xboxdevwiki.net/Hardware_Revisions#Video_encoder
+	Conexant,
+	Focus,
+	XCalibur
+} TVEncoder;
 
-	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
-	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
+extern PCIBus* g_PCIBus;
+extern SMBus* g_SMBus;
+extern MCPXDevice* g_MCPX;
+extern SMCDevice* g_SMC;
+extern EEPROMDevice* g_EEPROM;
+extern NVNetDevice* g_NVNet;
+extern NV2ADevice* g_NV2A;
 
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
-
-	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
-	// Resources : http://pablot.com/misc/fancontroller.cpp
-	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
-	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
-	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
-}
+extern void InitXboxHardware(HardwareModel hardwareModel);

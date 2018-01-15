@@ -36,6 +36,11 @@
 
 #include "CxbxKrnl.h"
 
+
+// It's a real shame but the new conversion code needs to be disable for now
+// it causes crashes and other issues in titles using palletted textures
+// It seems draw time conversion is really required before this can function
+// correctly.
 #define OLD_COLOR_CONVERSION
 
 // simple render state encoding lookup table
@@ -57,6 +62,8 @@ extern D3DCOLOR DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, cons
 typedef void(*FormatToARGBRow)(const uint8* src, uint8* dst_argb, int width);
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(X_D3DFORMAT Format);
+
+bool EmuXBFormatCanBeConvertedToARGB(X_D3DFORMAT Format);
 
 bool EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format);
 

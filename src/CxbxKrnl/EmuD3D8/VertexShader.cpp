@@ -2194,6 +2194,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // The size of the shader is
         *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
+		// Do not attempt to compile empty shaders
+		if (pShader->IntermediateCount == 0) {
+			EmuWarning("Skipped empty Pixel Shader");
+			return STATUS_INVALID_PARAMETER;
+		}
+
         char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 100); // Should be plenty
         DbgVshPrintf("-- Before conversion --\n");
         VshWriteShader(pShader, pShaderDisassembly, FALSE);

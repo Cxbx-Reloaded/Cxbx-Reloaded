@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -9,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->Xbox.h
+// *   Cxbx->Win32->Threads.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,10 +26,51 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *
 // *  All rights reserved
 // *
-// ******************************************************************#pragma once
+// ******************************************************************
 
-extern void InitXboxHardware();
+#include <windows.h>
+#include "Threads.h"
+
+// Exception structure and method from:
+// https://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
+
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+#pragma pack(push,8)  
+typedef struct tagTHREADNAME_INFO
+{
+	DWORD dwType; // Must be 0x1000.  
+	LPCSTR szName; // Pointer to name (in user addr space).  
+	DWORD dwThreadID; // Thread ID (-1=caller thread).  
+	DWORD dwFlags; // Reserved for future use, must be zero.  
+} THREADNAME_INFO;
+#pragma pack(pop)  
+
+void SetThreadName(DWORD dwThreadID, const char* szThreadName)
+{
+	if (!IsDebuggerPresent())
+		return;
+
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = szThreadName;
+	info.dwThreadID = dwThreadID;
+	info.dwFlags = 0;
+#pragma warning(push)  
+#pragma warning(disable: 6320 6322)  
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+	}
+#pragma warning(pop)  
+}
+
+void SetCurrentThreadName(const char* szThreadName)
+{
+	SetThreadName(GetCurrentThreadId(), szThreadName);
+}
