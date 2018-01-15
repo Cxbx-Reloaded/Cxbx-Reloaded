@@ -83,7 +83,7 @@ Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 
 HWND CxbxKrnl_hEmuParent = NULL;
 DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
-char* CxbxKrnl_DebugFileName = NULL;
+std::string CxbxKrnl_DebugFileName = "";
 Xbe::Certificate *g_pCertificate = NULL;
 
 /*! thread handles */
@@ -533,7 +533,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// Get KernelDebugFileName :
-	std::string DebugFileName;
+	std::string DebugFileName = "";
 	if (argc > 4) {
 		DebugFileName = argv[5];
 	}
