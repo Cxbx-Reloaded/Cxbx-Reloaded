@@ -1656,7 +1656,7 @@ bool WndMain::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 
 	while (j < dataSize) {
 
-		if (format != X_D3DFMT_DXT1) // Skip X_	 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 			j += 8;
 
 		// Read two 16-bit pixels
