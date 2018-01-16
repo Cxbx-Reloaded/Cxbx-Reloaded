@@ -6022,11 +6022,13 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
 	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
 
+	// Backup the data pointer, as it may get wiped out by this release call
+	DWORD data = pThis->Data;
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
 	// If we freed the last resource, also release the host copy
 	if (uRet == 0) {
-		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pThis->Data);
+		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
 		if (it != g_RegisteredResources.end()) {
 			g_RegisteredResources.erase(it);
 		}
