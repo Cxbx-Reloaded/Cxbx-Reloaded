@@ -6012,82 +6012,32 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 // ******************************************************************
 ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 (
-    X_D3DResource      *pThis
-)
+	X_D3DResource      *pThis
+	)
 {
-	//FUNC_EXPORTS
+	FUNC_EXPORTS
+		LOG_FUNC_ONE_ARG(pThis);
 
-	LOG_FUNC_ONE_ARG(pThis);
+	// First, call the Xbox release function
+	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
+	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
 
-    ULONG uRet = 0;
+	ULONG uRet = XB_D3DResource_Release(pThis);
 
-	// HACK: In case the clone technique fails...
-	if(!pThis)
-	{
-		EmuWarning("NULL texture!");
-
-		return 0;
-	}
-
-	if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-    {
-		uRet = (--pThis->Common) & X_D3DCOMMON_REFCOUNT_MASK;
-        if (uRet == 0)
-        {
-            if(g_pCachedYuvSurface == pThis)
-                g_pCachedYuvSurface = NULL;
-
-            // free memory associated with this special resource handle
-			g_VMManager.Deallocate((VAddr)pThis->Lock);
-        }
-        
-		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
-    } else if (GetXboxCommonResourceType(pThis) == X_D3DCOMMON_TYPE_INDEXBUFFER)  {
-		if ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1) {
-			CxbxRemoveIndexBuffer((PWORD)GetDataFromXboxResource(pThis));
+	// If we freed the last resource, also release the host copy
+	if (uRet == 0) {
+		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pThis->Data);
+		if (it != g_RegisteredResources.end()) {
+			g_RegisteredResources.erase(it);
 		}
 
-		uRet = pThis->Common--; // Release
-    } else {
-        IDirect3DResource8 *pHostResource = GetHostResource(pThis);
-
-        if(pThis->Lock == X_D3DRESOURCE_LOCK_PALETTE)
-        {
-			g_VMManager.Deallocate((VAddr)pThis->Data);
-            uRet = --pThis->Lock; // TODO : This makes no sense (as it mangles X_D3DRESOURCE_LOCK_PALETTE) but crashes otherwise?!
-        }
-        else if(pHostResource != nullptr)
-        {
-			auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pThis->Data);
-			if (it != g_RegisteredResources.end()) {
-				g_RegisteredResources.erase(it);
-			}
-
-            #ifdef _DEBUG_TRACE_VB
-            D3DRESOURCETYPE Type = pResource8->GetType();
-            #endif
-
-			/*
-			 * Temporarily disable this until we figure out correct reference counting!
-			uRet = pResource8->Release();
-            if(uRet == 0 && pThis->Common)
-            {
-                DbgPrintf("EmuIDirect3DResource8_Release : Cleaned up a Resource!\n");
-
-                #ifdef _DEBUG_TRACE_VB
-                if(Type == D3DRTYPE_VERTEXBUFFER)
-                {
-                    g_VBTrackTotal.remove(pResource8);
-                    g_VBTrackDisable.remove(pResource8);
-                }
-                #endif
-
-                //delete pThis;
-            } */
-        }
-
-        pThis->Common--; // Release
-    }
+		auto resourceIt = g_HostResources.find(pThis);
+		if (resourceIt != g_HostResources.end()) {
+			IDirect3DResource8* hostResource = GetHostResource(pThis);
+			hostResource->Release();
+			g_HostResources.erase(pThis);
+		}
+	}
 
     return uRet;
 }
@@ -6781,7 +6731,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
 	} else {
-		EmuVerifyResourceIsRegistered(pSurface);
 		uint08 *pYUY2SourceBuffer = (uint08*)GetDataFromXboxResource(pSurface);
 
 		g_dwOverlayW = (pSurface->Size & X_D3DSIZE_WIDTH_MASK) + 1;
