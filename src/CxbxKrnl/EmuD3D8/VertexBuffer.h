@@ -130,7 +130,7 @@ extern DWORD                  *g_pIVBVertexBuffer;
 extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
 extern DWORD                   g_IVBFVF;
 
-#define IVB_TABLE_SIZE  ONE_MB // This should be more than enough.. Tweak as necessary if it overflows
+#define IVB_TABLE_SIZE  4096 // This should be more than enough. Tweak as necessary if it overflows or the resulting VertexBuffer fails to allocate
 #define IVB_BUFFER_SIZE sizeof(_D3DIVB) * IVB_TABLE_SIZE
 
 // TODO : Enlarge IVB_TABLE_SIZE and IVB_BUFFER_SIZE
