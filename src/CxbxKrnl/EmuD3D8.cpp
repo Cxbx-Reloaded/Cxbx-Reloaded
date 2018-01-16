@@ -668,12 +668,11 @@ inline boolean IsResourceTypeGPUReadable(const DWORD ResourceType)
 	return false;
 }
 
-inline bool IsYuvSurface(const XTL::X_D3DResource *pXboxResource)
+inline bool IsYuvSurfaceOrTexture(const XTL::X_D3DResource *pXboxResource)
 {
 	// Was : return (pXboxResource->Data == X_D3DRESOURCE_DATA_YUV_SURFACE);
-	if (GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE)
-		if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
-			return true;
+	if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
+		return true;
 
 	return false;
 }
@@ -690,6 +689,8 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 	return result;
 }
 
+std::map <XTL::X_D3DResource*, XTL::IDirect3DResource8*> g_HostResources;
+
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
@@ -701,7 +702,8 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	XTL::IDirect3DResource8 *result = (XTL::IDirect3DResource8 *)pXboxResource->Lock;
+	XTL::IDirect3DResource8* result = g_HostResources[pXboxResource];
+
 	if (result == nullptr) {
 		EmuWarning("EmuResource is not a valid pointer!");
 	}
@@ -717,7 +719,7 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if(GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	return (XTL::IDirect3DSurface8 *)pXboxResource->Lock;
+	return (XTL::IDirect3DSurface8*)g_HostResources[pXboxResource];
 }
 
 XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
@@ -728,7 +730,7 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	return (XTL::IDirect3DBaseTexture8 *)pXboxResource->Lock;
+	return (XTL::IDirect3DBaseTexture8*)g_HostResources[pXboxResource];
 }
 
 XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
@@ -759,7 +761,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	return (XTL::IDirect3DIndexBuffer8 *)pXboxResource->Lock;
+	return (XTL::IDirect3DIndexBuffer8*)g_HostResources[pXboxResource];
 }
 
 XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
@@ -769,7 +771,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	return (XTL::IDirect3DVertexBuffer8 *)pXboxResource->Lock;
+	return (XTL::IDirect3DVertexBuffer8*)g_HostResources[pXboxResource];
 }
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
@@ -777,7 +779,7 @@ void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	pXboxResource->Lock = (DWORD)pHostSurface;
+	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostSurface;
 }
 
 void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
@@ -785,7 +787,7 @@ void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->Lock = (DWORD)pHostTexture;
+	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostTexture;
 }
 
 void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
@@ -793,7 +795,7 @@ void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->Lock = (DWORD)pHostCubeTexture;
+	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostCubeTexture;
 }
 
 void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
@@ -801,7 +803,7 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolum
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	pXboxResource->Lock = (DWORD)pHostVolumeTexture;
+	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostVolumeTexture;
 }
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
@@ -809,7 +811,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	pXboxResource->Lock = (DWORD)pHostIndexBuffer;
+	g_HostResources[pXboxResource] = pHostIndexBuffer;
 }
 
 void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
@@ -817,7 +819,7 @@ void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	pXboxResource->Lock = (DWORD)pHostVertexBuffer;
+	g_HostResources[pXboxResource] = pHostVertexBuffer;
 }
 
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
@@ -835,12 +837,6 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 		switch (pData) {
 		case X_D3DRESOURCE_DATA_BACK_BUFFER:
 			return nullptr;
-		case X_D3DRESOURCE_DATA_YUV_SURFACE:
-			// YUV surfaces are marked as such in the Data field,
-			// and their data is put in their Lock field :s
-			pData = pXboxResource->Lock;
-			// TODO : What about X_D3DRESOURCE_LOCK_FLAG_NOSIZE?
-			break;
 		case X_D3DRESOURCE_DATA_RENDER_TARGET:
 			return nullptr;
 		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
@@ -4501,10 +4497,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
     EmuD3DActiveTexture[Stage] = pTexture;
     if(pTexture != NULL)
     {
-        EmuVerifyResourceIsRegistered(pTexture);
-		pHostBaseTexture = GetHostBaseTexture(pTexture);
-
-        if(IsYuvSurface(pTexture))
+        if(IsYuvSurfaceOrTexture(pTexture))
         {
             //
             // NOTE: TODO: This is almost a hack! :)
@@ -4514,6 +4507,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
         }
         else
         {			
+			EmuVerifyResourceIsRegistered(pTexture);
+			pHostBaseTexture = GetHostBaseTexture(pTexture);
+
 			// Remove old locks before setting
 			/*if(IsXboxResourceLocked(pTexture))
 			{
@@ -6175,11 +6171,10 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 		LOG_FUNC_ARG(Flags)
 		LOG_FUNC_END;
 
-    EmuVerifyResourceIsRegistered(pPixelContainer);
 
 	// If this is a YUV surface, just use the Xbox implementation of this function
 	// as we don't store a host counterpart.
-	if (IsYuvSurface(pPixelContainer)) {
+	if (IsYuvSurfaceOrTexture(pPixelContainer)) {
 		typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD);
 		static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
 
@@ -6253,7 +6248,7 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
 		LOG_FUNC_ARG(pDesc)
 		LOG_FUNC_END;
 
-	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) or IsYuvSurface(pPixelContainer) works too
+	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) or IsYuvSurfaceOrTexture(pPixelContainer) works too
 	pDesc->Format = GetXboxPixelContainerFormat(pPixelContainer);
     pDesc->Type = GetXboxD3DResourceType(pPixelContainer);
     pDesc->Usage = 0;
@@ -6363,11 +6358,9 @@ VOID WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
     HRESULT hRet = D3D_OK;
 
-	EmuVerifyResourceIsRegistered(pThis);
-
 	// If this is a YUV surface, just use the Xbox implementation of this function
 	// as we don't store a host counterpart.
-	if (IsYuvSurface(pThis)) {
+	if (IsYuvSurfaceOrTexture(pThis)) {
 		typedef VOID(__stdcall *XB_D3DSurface_LockRect_t)(X_D3DResource*, D3DLOCKED_RECT*, CONST RECT*, DWORD);
 		static XB_D3DSurface_LockRect_t XB_D3DSurface_LockRect = (XB_D3DSurface_LockRect_t)GetXboxFunctionPointer("D3DSurface_LockRect");
 
@@ -6376,6 +6369,8 @@ VOID WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 		XB_D3DSurface_LockRect(pThis, pLockedRect, pRect, Flags);
 		return;
 	}
+
+	EmuVerifyResourceIsRegistered(pThis);
 
 	DWORD NewFlags = 0;
 	if (Flags & X_D3DLOCK_READONLY)
@@ -6531,6 +6526,18 @@ VOID WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
 		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
+
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurfaceOrTexture(pThis)) {
+		typedef VOID(__stdcall *XB_D3DTexture_LockRect_t)(X_D3DResource*, UINT, D3DLOCKED_RECT*, CONST RECT*, DWORD);
+		static XB_D3DTexture_LockRect_t XB_D3DTexture_LockRect = (XB_D3DTexture_LockRect_t)GetXboxFunctionPointer("D3DTexture_LockRect");
+
+		// No need to check for success here, as we are calling LockRect from LockRect, if this address wasn't found
+		// we must be very broken :P
+		XB_D3DTexture_LockRect(pThis, Level, pLockedRect, pRect, Flags);
+		return;
+	}
 
     EmuVerifyResourceIsRegistered(pThis);
 
