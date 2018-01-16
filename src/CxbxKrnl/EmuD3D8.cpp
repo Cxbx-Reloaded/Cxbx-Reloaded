@@ -69,7 +69,6 @@ namespace xboxkrnl
 HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
-XTL::LPDIRECTDRAWSURFACE7           g_pDDSOverlay7 = nullptr; // DirectDraw7 Overlay Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_CurrentVertexShader = 0;
 DWORD								g_dwCurrentPixelShader = 0;
@@ -91,7 +90,6 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static BOOL                         g_bSupportsYUY2Overlay = FALSE; // Does device support YUY2 overlays?
 static bool                         g_bSupportsTextureFormat[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
@@ -866,8 +864,8 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 		pData |= MM_SYSTEM_PHYSICAL_MAP;
 		break;
 	case X_D3DCOMMON_TYPE_TEXTURE:
-		break;
 	case X_D3DCOMMON_TYPE_SURFACE:
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
 		break;
 	case X_D3DCOMMON_TYPE_FIXUP:
 		break;
@@ -1929,46 +1927,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     free(lpCodes);						
 				}
 
-				// TODO : Remove these :
-				g_bSupportsYUY2Overlay = g_bSupportsTextureFormat[XTL::X_D3DFMT_YUY2];
-
-				// check for YUY2 overlay support TODO: accept other overlay types
-                {
-                    if (!g_bSupportsYUY2Overlay)
-                        EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-                    else {
-                        // Does the user want to use Hardware accelerated YUV surfaces?
-                        if (g_XBVideo.GetHardwareYUV()) {
-                            DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Enabled...\n");
-                        } else {
-                            g_bSupportsYUY2Overlay = false;
-                            DbgPrintf("EmuD3D8: Hardware accelerated YUV surfaces Disabled...\n");
-                        }
-                    }
-                }
-
-                // initialize primary surface
-                if(g_bSupportsYUY2Overlay)
-                {
-                    XTL::DDSURFACEDESC2 ddsd2;
-					HRESULT hRet;
-
-                    ZeroMemory(&ddsd2, sizeof(ddsd2));
-                    ddsd2.dwSize = sizeof(ddsd2);
-                    ddsd2.dwFlags = DDSD_CAPS;
-                    ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-
-                    hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
-					DEBUG_D3DRESULT(hRet, "g_pDD7->CreateSurface");
-
-					if (FAILED(hRet))
-					{
-						CxbxKrnlCleanup("Could not create primary surface (0x%.08X)", hRet);
-						// TODO : Make up our mind: Either halt (above) or continue (below)
-						g_bSupportsYUY2Overlay = false;
-					}
-                }
-
                 // update render target cache
                 g_pCachedRenderTarget = EmuNewD3DSurface();
 				XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
@@ -2053,13 +2011,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				{
 					g_pDDClipper->Release();
 					g_pDDClipper = nullptr;
-				}
-
-				// cleanup overlay surface
-				if (g_pDDSOverlay7 != nullptr)
-				{
-					g_pDDSOverlay7->Release();
-					g_pDDSOverlay7 = nullptr;
 				}
 
 				// cleanup directdraw surface
@@ -4553,12 +4504,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
         EmuVerifyResourceIsRegistered(pTexture);
 		pHostBaseTexture = GetHostBaseTexture(pTexture);
 
-        if(pTexture->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+        if(IsYuvSurface(pTexture))
         {
             //
             // NOTE: TODO: This is almost a hack! :)
             //
-
 			EMUPATCH(D3DDevice_UpdateOverlay)((X_D3DSurface*)pTexture, NULL, NULL, FALSE, 0);
             
         }
@@ -5540,89 +5490,74 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 				dwPitch = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
             }
 
-            if(X_Format == X_D3DFMT_YUY2)
+            if(bSwizzled || bCompressed)
             {
-                // cache the overlay size
-                g_dwOverlayW = dwWidth;
-                g_dwOverlayH = dwHeight;
-                g_dwOverlayP = RoundUp(g_dwOverlayW, 64) * dwBPP;
+                uint32 w = dwWidth;
+                uint32 h = dwHeight;
 
-                // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
-				// Note : This is the only change to the pResource argument passed into D3DResource_Register !
-                pPixelContainer->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
-                pPixelContainer->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+                for(uint32 v=0;v<dwMipMapLevels;v++)
+                {
+                    if( ((1u << v) >= w) || ((1u << v) >= h))
+                    {
+                        dwMipMapLevels = v + 1;
+                        break;
+                    }
+                }
+            }
+
+			// One of these will be created :
+			XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
+			XTL::IDirect3DCubeTexture8 *pNewHostCubeTexture = nullptr;
+			XTL::IDirect3DTexture8 *pNewHostTexture = nullptr;
+
+            // create the happy little texture
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+            {
+
+				hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
+
+				// First fail, retry with a fallback format
+				// If this succeeds, the texture may not render correctly, but it won't crash
+                if(FAILED(hRet)) {
+                    EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
+							DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+
+					EmuWarning("Trying Fallback");
+					hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
+				}
+
+				// If the fallback failed, show an error and exit execution. We cannot safely continue in this state.
+				if (FAILED(hRet)) {
+					CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
+						DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+				}
+
+				SetHostSurface(pResource, pNewHostSurface);
+				DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pNewHostSurface);
+                DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, PCFormat);
             }
             else
             {
-                if(bSwizzled || bCompressed)
+                // TODO: HACK: Figure out why this is necessary!
+                // TODO: This is necessary for DXT1 textures at least (4x4 blocks minimum)
+                if(dwWidth < 4)
                 {
-                    uint32 w = dwWidth;
-                    uint32 h = dwHeight;
+                    EmuWarning("Expanding texture width (%d->4)", dwWidth);
+                    dwWidth = 4;
 
-                    for(uint32 v=0;v<dwMipMapLevels;v++)
-                    {
-                        if( ((1u << v) >= w) || ((1u << v) >= h))
-                        {
-                            dwMipMapLevels = v + 1;
-                            break;
-                        }
-                    }
+                    dwMipMapLevels = 3;
                 }
 
-				// One of these will be created :
-				XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
-				XTL::IDirect3DCubeTexture8 *pNewHostCubeTexture = nullptr;
-				XTL::IDirect3DTexture8 *pNewHostTexture = nullptr;
-
-                // create the happy little texture
-                if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                if(dwHeight < 4)
                 {
+                    EmuWarning("Expanding texture height (%d->4)", dwHeight);
+                    dwHeight = 4;
 
-					hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
-					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
-
-					// First fail, retry with a fallback format
-					// If this succeeds, the texture may not render correctly, but it won't crash
-                    if(FAILED(hRet)) {
-                        EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
-
-						EmuWarning("Trying Fallback");
-						hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
-					}
-
-					// If the fallback failed, show an error and exit execution. We cannot safely continue in this state.
-					if (FAILED(hRet)) {
-						CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
-							DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
-					}
-
-					SetHostSurface(pResource, pNewHostSurface);
-					DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pNewHostSurface);
-                    DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, PCFormat);
+                    dwMipMapLevels = 3;
                 }
-                else
-                {
-                    // TODO: HACK: Figure out why this is necessary!
-                    // TODO: This is necessary for DXT1 textures at least (4x4 blocks minimum)
-                    if(dwWidth < 4)
-                    {
-                        EmuWarning("Expanding texture width (%d->4)", dwWidth);
-                        dwWidth = 4;
 
-                        dwMipMapLevels = 3;
-                    }
-
-                    if(dwHeight < 4)
-                    {
-                        EmuWarning("Expanding texture height (%d->4)", dwHeight);
-                        dwHeight = 4;
-
-                        dwMipMapLevels = 3;
-                    }
-
-#ifdef OLD_COLOR_CONVERSION // Current palette approach - Later, use ______P8ToARGBRow_C() 
-                    // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+    #ifdef OLD_COLOR_CONVERSION // Current palette approach - Later, use ______P8ToARGBRow_C()                // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
                     // Since most modern graphics cards does not support
                     // palette based textures we need to expand it to
                     // ARGB texture format
@@ -5633,69 +5568,68 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 						else
 							EmuWarning("X_Format RequiresConversionToARGB");
 
-                        CacheFormat = PCFormat;       // Save this for later
-                        PCFormat = D3DFMT_A8R8G8B8;   // ARGB
-                    }
+                    CacheFormat = PCFormat;       // Save this for later
+                    PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+                }
 #endif // OLD_COLOR_CONVERSION
 
-                    if(bCubemap)
-                    {
-                        DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
-                            dwMipMapLevels, PCFormat);
+                if(bCubemap)
+                {
+                    DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
+                        dwMipMapLevels, PCFormat);
 
-                        hRet = g_pD3DDevice8->CreateCubeTexture
-                        (
-                            dwWidth, dwMipMapLevels, 0, PCFormat,
-                            D3DPOOL_MANAGED, &pNewHostCubeTexture
-                        );
-						DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateCubeTexture");
+                    hRet = g_pD3DDevice8->CreateCubeTexture
+                    (
+                        dwWidth, dwMipMapLevels, 0, PCFormat,
+                        D3DPOOL_MANAGED, &pNewHostCubeTexture
+                    );
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateCubeTexture");
 
-                        if(FAILED(hRet))
-                            CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
+                    if(FAILED(hRet))
+                        CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
+							DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
-						SetHostCubeTexture(pResource, pNewHostCubeTexture);
-						DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pNewHostCubeTexture);
-                    }
-                    else
-                    {
-                    //    printf("CreateTexture(%d, %d, %d, 0, %d (X=0x%.08X), D3DPOOL_MANAGED)\n", dwWidth, dwHeight,
-                     //       dwMipMapLevels, PCFormat, X_Format);
+					SetHostCubeTexture(pResource, pNewHostCubeTexture);
+					DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pNewHostCubeTexture);
+                }
+                else
+                {
+                //    printf("CreateTexture(%d, %d, %d, 0, %d (X=0x%.08X), D3DPOOL_MANAGED)\n", dwWidth, dwHeight,
+                    //       dwMipMapLevels, PCFormat, X_Format);
 
-						// HACK: Quantum Redshift
-						/*if( dwMipMapLevels == 8 && X_Format == X_D3DFMT_DXT1 )
-						{
-							printf( "Dirty Quantum Redshift hack applied!\n" );
-							dwMipMapLevels = 1;
-						}*/
+					// HACK: Quantum Redshift
+					/*if( dwMipMapLevels == 8 && X_Format == X_D3DFMT_DXT1 )
+					{
+						printf( "Dirty Quantum Redshift hack applied!\n" );
+						dwMipMapLevels = 1;
+					}*/
 
+					hRet = g_pD3DDevice8->CreateTexture
+                    (
+                        dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
+                        D3DPOOL_MANAGED, &pNewHostTexture
+                    );
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture");
+
+					/*if(FAILED(hRet))
+					{
 						hRet = g_pD3DDevice8->CreateTexture
-                        (
-                            dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
-                            D3DPOOL_MANAGED, &pNewHostTexture
-                        );
-						DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture");
-
-						/*if(FAILED(hRet))
-						{
-							hRet = g_pD3DDevice8->CreateTexture
-							(
-								dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
-								D3DPOOL_SYSTEMMEM, &pNewHostTexture
-							);
-							DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DPOOL_SYSTEMMEM)");
-						}*/
+						(
+							dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
+							D3DPOOL_SYSTEMMEM, &pNewHostTexture
+						);
+						DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DPOOL_SYSTEMMEM)");
+					}*/
 
 
-						if(FAILED(hRet))
-							EmuWarning("CreateTexture Failed!\n\n"
-								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
-						else
-						{
-							DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pNewHostTexture);
+					if(FAILED(hRet))
+						EmuWarning("CreateTexture Failed!\n\n"
+							"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
+					else
+					{
+						DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pNewHostTexture);
 
-							SetHostTexture(pResource, pNewHostTexture);
-						}
+						SetHostTexture(pResource, pNewHostTexture);
 					}
 				}
 
@@ -5778,7 +5712,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 								DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
 								DWORD dwMipSizeInBytes = dwDataSize;
 
-								// Convert a row at a time, using a libyuv-like callback approach :										
+								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
 									X_Format,
 									pSrc, dwMipWidth, dwMipHeight, dwSrcPitch,
@@ -6243,6 +6177,18 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 
     EmuVerifyResourceIsRegistered(pPixelContainer);
 
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurface(pPixelContainer)) {
+		typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD);
+		static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
+
+		// No need to check for success here, as we are calling Lock2DSurface from Lock2DSurface, if this address wasn't found
+		// we must be very broken :P
+		XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+		return;
+	}
+
 	XTL::IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pPixelContainer);
 
 	HRESULT hRet;
@@ -6417,64 +6363,68 @@ VOID WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 
     HRESULT hRet = D3D_OK;
 
-    if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
-    {
-        pLockedRect->Pitch = g_dwOverlayP;
-        pLockedRect->pBits = (PVOID)pThis->Lock;
-    }
-    else
-    {
-		EmuVerifyResourceIsRegistered(pThis);
+	EmuVerifyResourceIsRegistered(pThis);
 
-		DWORD NewFlags = 0;
-		if (Flags & X_D3DLOCK_READONLY)
-			NewFlags |= D3DLOCK_READONLY;
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurface(pThis)) {
+		typedef VOID(__stdcall *XB_D3DSurface_LockRect_t)(X_D3DResource*, D3DLOCKED_RECT*, CONST RECT*, DWORD);
+		static XB_D3DSurface_LockRect_t XB_D3DSurface_LockRect = (XB_D3DSurface_LockRect_t)GetXboxFunctionPointer("D3DSurface_LockRect");
 
-		//if (Flags & X_D3DLOCK_TILED)
-			//EmuWarning("D3DLOCK_TILED ignored!");
+		// No need to check for success here, as we are calling LockRect from LockRect, if this address wasn't found
+		// we must be very broken :P
+		XB_D3DSurface_LockRect(pThis, pLockedRect, pRect, Flags);
+		return;
+	}
 
-		if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
-			CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
+	DWORD NewFlags = 0;
+	if (Flags & X_D3DLOCK_READONLY)
+		NewFlags |= D3DLOCK_READONLY;
 
-		// As it turns out, D3DSurface_LockRect can also be called with textures (not just surfaces)
-		// so cater for that. TODO : Should we handle cube and volume textures here too?
-		DWORD dwCommonType = GetXboxCommonResourceType(pThis);
-		switch (dwCommonType) {
-		case X_D3DCOMMON_TYPE_TEXTURE:
+	//if (Flags & X_D3DLOCK_TILED)
+		//EmuWarning("D3DLOCK_TILED ignored!");
+
+	if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
+		CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
+
+	// As it turns out, D3DSurface_LockRect can also be called with textures (not just surfaces)
+	// so cater for that. TODO : Should we handle cube and volume textures here too?
+	DWORD dwCommonType = GetXboxCommonResourceType(pThis);
+	switch (dwCommonType) {
+	case X_D3DCOMMON_TYPE_TEXTURE:
+	{
+		IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+		if (pHostTexture == nullptr)
 		{
-			IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
-			if (pHostTexture == nullptr)
-			{
-				EmuWarning("Missing Texture!");
-				hRet = E_FAIL;
-			}
-			else
-			{
-				pHostTexture->UnlockRect(0); // remove old lock
-				hRet = pHostTexture->LockRect(0, pLockedRect, pRect, Flags);
-				DEBUG_D3DRESULT(hRet, "pHostTexture->LockRect");
-			}
-			break;
+			EmuWarning("Missing Texture!");
+			hRet = E_FAIL;
 		}
-		case X_D3DCOMMON_TYPE_SURFACE:
+		else
 		{
-			IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
-			if (pHostSurface == nullptr)
-			{
-				EmuWarning("Missing Surface!");
-				hRet = E_FAIL;
-			}
-			else
-			{
-				pHostSurface->UnlockRect(); // remove old lock
-				hRet = pHostSurface->LockRect(pLockedRect, pRect, NewFlags);
-				DEBUG_D3DRESULT(hRet, "pHostSurface->LockRect");
-			}
-			break;
+			pHostTexture->UnlockRect(0); // remove old lock
+			hRet = pHostTexture->LockRect(0, pLockedRect, pRect, Flags);
+			DEBUG_D3DRESULT(hRet, "pHostTexture->LockRect");
 		}
-		default:
-			EmuWarning("D3DSurface_LockRect: Unhandled type!");
+		break;
+	}
+	case X_D3DCOMMON_TYPE_SURFACE:
+	{
+		IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
+		if (pHostSurface == nullptr)
+		{
+			EmuWarning("Missing Surface!");
+			hRet = E_FAIL;
 		}
+		else
+		{
+			pHostSurface->UnlockRect(); // remove old lock
+			hRet = pHostSurface->LockRect(pLockedRect, pRect, NewFlags);
+			DEBUG_D3DRESULT(hRet, "pHostSurface->LockRect");
+		}
+		break;
+	}
+	default:
+		EmuWarning("D3DSurface_LockRect: Unhandled type!");
 	}
 }
 
@@ -6584,43 +6534,32 @@ VOID WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
 
     EmuVerifyResourceIsRegistered(pThis);
 
-    // check if we have an unregistered YUV2 resource
-    if( (pThis != nullptr) && (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE))
-    {
-        pLockedRect->Pitch = g_dwOverlayP;
-        pLockedRect->pBits = (PVOID)pThis->Lock;
+    IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
 
-        hRet = D3D_OK;
-    }
-    else
-    {
-        IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+    DWORD NewFlags = 0;
 
-        DWORD NewFlags = 0;
+    if(Flags & X_D3DLOCK_READONLY)
+        NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & X_D3DLOCK_READONLY)
-            NewFlags |= D3DLOCK_READONLY;
+    //if(Flags & X_D3DLOCK_TILED)
+        //EmuWarning("D3DLOCK_TILED ignored!");
 
-        //if(Flags & X_D3DLOCK_TILED)
-            //EmuWarning("D3DLOCK_TILED ignored!"); 
+    if(Flags & X_D3DLOCK_NOOVERWRITE)
+        NewFlags |= D3DLOCK_NOOVERWRITE;
 
-        if(Flags & X_D3DLOCK_NOOVERWRITE)
-            NewFlags |= D3DLOCK_NOOVERWRITE;
+    if(Flags & X_D3DLOCK_NOFLUSH)
+        EmuWarning("D3DLOCK_NOFLUSH ignored!");
 
-        if(Flags & X_D3DLOCK_NOFLUSH)
-            EmuWarning("D3DLOCK_NOFLUSH ignored!");
+    if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && !(Flags & X_D3DLOCK_NOOVERWRITE) && !(Flags & X_D3DLOCK_NOFLUSH) && Flags != 0)
+        CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-        if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && !(Flags & X_D3DLOCK_NOOVERWRITE) && !(Flags & X_D3DLOCK_NOFLUSH) && Flags != 0)
-            CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
-
-		if (pHostTexture != nullptr)
-		{
-			pHostTexture->UnlockRect(Level); // remove old lock
-			hRet = pHostTexture->LockRect(Level, pLockedRect, pRect, NewFlags);
-		}
-
-		pThis->Common |= X_D3DCOMMON_ISLOCKED;
+	if (pHostTexture != nullptr)
+	{
+		pHostTexture->UnlockRect(Level); // remove old lock
+		hRet = pHostTexture->LockRect(Level, pLockedRect, pRect, NewFlags);
 	}
+
+	pThis->Common |= X_D3DCOMMON_ISLOCKED;
 }
 
 // ******************************************************************
@@ -6803,61 +6742,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     BOOL Enable
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Enable);
 
-    if(Enable == FALSE && (g_pDDSOverlay7 != nullptr))
-    {
-        g_pDDSOverlay7->UpdateOverlay(NULL, g_pDDSPrimary, NULL, DDOVER_HIDE, 0);
-
-        // cleanup overlay clipper
-        if(g_pDDClipper != nullptr)
-        {
-            g_pDDClipper->Release();
-            g_pDDClipper = nullptr;
-        }
-
-        // cleanup overlay surface
-        if(g_pDDSOverlay7 != nullptr)
-        {
-            g_pDDSOverlay7->Release();
-            g_pDDSOverlay7 = nullptr;
-        }
-    }
-    else if(Enable == TRUE && (g_pDDSOverlay7 == nullptr))
-    {
-        // initialize overlay surface
-        if(g_bSupportsYUY2Overlay)
-        {
-            XTL::DDSURFACEDESC2 ddsd2;
-
-            ZeroMemory(&ddsd2, sizeof(ddsd2));
-
-            ddsd2.dwSize = sizeof(ddsd2);
-            ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
-            ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
-            ddsd2.dwWidth = g_dwOverlayW;
-            ddsd2.dwHeight = g_dwOverlayH;
-            ddsd2.ddpfPixelFormat.dwSize = sizeof(XTL::DDPIXELFORMAT);
-            ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
-            ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
-
-            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
-			DEBUG_D3DRESULT(hRet, "g_pDD7->CreateSurface");
-
-			if(FAILED(hRet))
-                CxbxKrnlCleanup("Could not create overlay surface");
-
-            hRet = g_pDD7->CreateClipper(0, &g_pDDClipper, NULL);
-			DEBUG_D3DRESULT(hRet, "g_pDD7->CreateClipper");
-
-			if(FAILED(hRet))
-                CxbxKrnlCleanup("Could not create overlay clipper");
-
-            hRet = g_pDDClipper->SetHWnd(0, g_hEmuWindow);
-        }
-    }
+	// We can safely ignore this, as long as we properly handle UpdateOverlay
 }
 
 // ******************************************************************
@@ -6885,7 +6774,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
 	} else {
+		EmuVerifyResourceIsRegistered(pSurface);
 		uint08 *pYUY2SourceBuffer = (uint08*)GetDataFromXboxResource(pSurface);
+
+		g_dwOverlayW = (pSurface->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+		g_dwOverlayH = ((pSurface->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+		g_dwOverlayP = (((pSurface->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+
 		RECT EmuSourRect;
 		RECT EmuDestRect;
 
@@ -6902,132 +6797,57 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			GetClientRect(g_hEmuWindow, &EmuDestRect);
 		}
 
-		// manually copy data over to overlay
-		if(g_bSupportsYUY2Overlay)
-		{
-			// Make sure the overlay is allocated before using it
-			if (g_pDDSOverlay7 == nullptr) {
-				EMUPATCH(D3DDevice_EnableOverlay)(TRUE);
+		IDirect3DSurface8 *pBackBufferSurface = nullptr;
+		HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer - Unable to get backbuffer surface!");
 
-				assert(g_pDDSOverlay7 != nullptr);
-			}
+		// if we obtained the backbuffer, load the YUY2 into the backbuffer
+		if (SUCCEEDED(hRet)) {
+			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
+			D3DSURFACE_DESC BackBufferDesc;
+			pBackBufferSurface->GetDesc(&BackBufferDesc);
 
-			DDSURFACEDESC2  ddsd2;
-			ZeroMemory(&ddsd2, sizeof(ddsd2));
-			ddsd2.dwSize = sizeof(ddsd2);
-
-			HRESULT hRet;
-			hRet = g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, 0);
-			DEBUG_D3DRESULT(hRet, "g_pDDSOverlay7->Lock - Unable to lock overlay surface!");
-
-			if(SUCCEEDED(hRet))
+			// Limit the width and height of the output to the backbuffer dimensions.
+			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
+			// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
 			{
-				// copy data
-				char *pDest = (char*)ddsd2.lpSurface;
-				char *pSour = (char*)pYUY2SourceBuffer;
-
-				int p = g_dwOverlayW * 2; // 2 = EmuXBFormatBytesPerPixel(D3DFMT_YUY2);
-				int h = g_dwOverlayH;
-
-				// TODO: sucker the game into rendering directly to the overlay (speed boost)
-				if( (ddsd2.lPitch == p) && ((int)g_dwOverlayP == p) )
-					memcpy(pDest, pSour, p*h);
-				else
-				{
-					for(int y=0;y<h;y++)
-					{
-						memcpy(pDest, pSour, p);
-						pDest += ddsd2.lPitch;
-						pSour += g_dwOverlayP;
-					}
+				// Use our (bounded) copy when bounds exceed :
+				if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
+					EmuDestRect.right = (LONG)BackBufferDesc.Width;
+					DstRect = &EmuDestRect;
 				}
 
-				hRet = g_pDDSOverlay7->Unlock(NULL);
-				DEBUG_D3DRESULT(hRet, "g_pDDSOverlay7->Unlock");
-			}
-
-			// update overlay!
-			DWORD dwUpdateFlags = DDOVER_SHOW;
-			DDOVERLAYFX ddofx;
-
-			ZeroMemory(&ddofx, sizeof(ddofx));
-			ddofx.dwSize = sizeof(DDOVERLAYFX);
-			if (EnableColorKey) {
-				{
-				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_DESTOVERLAY)
-					dwUpdateFlags |= DDOVER_KEYDESTOVERRIDE | DDOVER_DDFX;
-					ddofx.dckDestColorkey.dwColorSpaceLowValue = ColorKey;
-					ddofx.dckDestColorkey.dwColorSpaceHighValue = ColorKey;
-				}
-			}  else {
-				if (g_DriverCaps.dwCKeyCaps & DDCKEYCAPS_SRCOVERLAY)
-				{
-					dwUpdateFlags |= DDOVER_KEYSRCOVERRIDE | DDOVER_DDFX;
-					ddofx.dckSrcColorkey.dwColorSpaceLowValue = ColorKey;
-					ddofx.dckSrcColorkey.dwColorSpaceHighValue = ColorKey;
+				if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
+					EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
+					DstRect = &EmuDestRect;
 				}
 			}
 
-			// Get the screen (multi-monitor-compatible) coordinates of the client area :
-			MapWindowPoints(g_hEmuWindow, HWND_DESKTOP, (LPPOINT)&EmuDestRect, 2);
+			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
+			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+			hRet = D3DXLoadSurfaceFromMemory(
+				/* pDestSurface = */ pBackBufferSurface,
+				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
+				/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
+				/* pSrcMemory = */ pYUY2SourceBuffer, // Source buffer
+				/* SrcFormat = */ D3DFMT_YUY2,
+				/* SrcPitch = */ g_dwOverlayP,
+				/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
+				/* SrcRect = */ &EmuSourRect,
+				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+				/* ColorKey = */ EnableColorKey ? ColorKey : 0);
+			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
 
-			hRet = g_pDDSOverlay7->UpdateOverlay(&EmuSourRect, g_pDDSPrimary, &EmuDestRect, dwUpdateFlags, &ddofx);
-			DEBUG_D3DRESULT(hRet, "g_pDDSOverlay7->UpdateOverlay");
+			pBackBufferSurface->Release();
 		}
-		else // No hardware overlay
-		{
-			IDirect3DSurface8 *pBackBufferSurface = nullptr;
-			HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer - Unable to get backbuffer surface!");
 
-			// if we obtained the backbuffer, load the YUY2 into the backbuffer
-			if (SUCCEEDED(hRet)) {
-				// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
-				D3DSURFACE_DESC BackBufferDesc;
-				pBackBufferSurface->GetDesc(&BackBufferDesc);
+		// Update overlay if present was not called since the last call to
+		// EmuD3DDevice_UpdateOverlay.
+		if(g_bHackUpdateSoftwareOverlay)
+			g_pD3DDevice8->Present(0, 0, 0, 0);
 
-				// Limit the width and height of the output to the backbuffer dimensions.
-				// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper 
-				// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
-				{
-					// Use our (bounded) copy when bounds exceed :
-					if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
-						EmuDestRect.right = (LONG)BackBufferDesc.Width;
-						DstRect = &EmuDestRect;
-					}
-
-					if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
-						EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
-						DstRect = &EmuDestRect;
-					}
-				}
-
-				// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
-				// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-				// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-				hRet = D3DXLoadSurfaceFromMemory(
-					/* pDestSurface = */ pBackBufferSurface,
-					/* pDestPalette = */ nullptr, // Palette not needed for YUY2
-					/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
-					/* pSrcMemory = */ pYUY2SourceBuffer, // Source buffer
-					/* SrcFormat = */ D3DFMT_YUY2,
-					/* SrcPitch = */ g_dwOverlayP,
-					/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
-					/* SrcRect = */ &EmuSourRect,
-					/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
-					/* ColorKey = */ EnableColorKey ? ColorKey : 0);
-				DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-
-				pBackBufferSurface->Release();
-			}
-
-			// Update overlay if present was not called since the last call to
-			// EmuD3DDevice_UpdateOverlay.
-			if(g_bHackUpdateSoftwareOverlay)
-				g_pD3DDevice8->Present(0, 0, 0, 0);
-
-			g_bHackUpdateSoftwareOverlay = TRUE;
-		}
+		g_bHackUpdateSoftwareOverlay = TRUE;
 	}   
 }
 
@@ -7043,7 +6863,7 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 	LOG_UNIMPLEMENTED();
 
     // TODO: Actually check for update status
-    return FALSE;
+    return TRUE;
 }
 
 // ******************************************************************
