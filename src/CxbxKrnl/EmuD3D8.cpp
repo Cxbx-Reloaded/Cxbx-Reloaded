@@ -4898,7 +4898,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         }
 
         default:
-            CxbxKrnlCleanup("Unknown IVB Register : %d", Register);
+            EmuWarning("Unknown IVB Register : %d", Register);
     }   
 }
 
