@@ -126,7 +126,6 @@ extern uint32						g_BuildVersion;
 std::vector<DWORD> g_RegisteredResources;
 
 // current active index buffer
-static XTL::X_D3DIndexBuffer       *g_pIndexBuffer  = NULL; // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
 
 // current active vertex stream
@@ -703,13 +702,13 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	XTL::IDirect3DResource8* result = g_HostResources[pXboxResource->Data];
-
-	if (result == nullptr) {
+	auto it = g_HostResources.find(pXboxResource->Data);
+	if (it == g_HostResources.end()) {
 		EmuWarning("EmuResource is not a valid pointer!");
+		return nullptr;
 	}
 
-	return result;
+	return it->second;
 }
 
 XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
@@ -720,7 +719,7 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if(GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	return (XTL::IDirect3DSurface8*)g_HostResources[pXboxResource->Data];
+	return (XTL::IDirect3DSurface8*) GetHostResource(pXboxResource);
 }
 
 XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
@@ -731,7 +730,7 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	return (XTL::IDirect3DBaseTexture8*)g_HostResources[pXboxResource->Data];
+	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource);
 }
 
 XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
@@ -762,7 +761,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	return (XTL::IDirect3DIndexBuffer8*)g_HostResources[pXboxResource->Data];
+	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);;
 }
 
 XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
@@ -772,7 +771,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	return (XTL::IDirect3DVertexBuffer8*)g_HostResources[pXboxResource->Data];
+	return (XTL::IDirect3DVertexBuffer8*)GetHostResource(pXboxResource);
 }
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
@@ -2253,7 +2252,7 @@ void CxbxUpdateActiveIndexBuffer
 		}
 
 		DbgPrintf("CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
-		memcpy(pData, pIndexData, IndexCount * 2); 
+		memcpy(pData, pIndexData, IndexCount * 2);
 
 		indexBuffer.pHostIndexBuffer->Unlock();
 	}
@@ -5320,7 +5319,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create push buffer
             {
-                DWORD dwSize = g_VMManager.QuerySize((VAddr)pThis->Data);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
 
                 if(dwSize == 0)
                 {
@@ -5652,7 +5651,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                             }
                         }
 
-                        BYTE *pSrc = (BYTE*)pThis->Data; // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
+                        BYTE *pSrc = (BYTE*)(pThis->Data | MM_SYSTEM_PHYSICAL_MAP); // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                          ||( (DWORD)pThis->Data == X_D3DRESOURCE_DATA_BACK_BUFFER))
@@ -5671,9 +5670,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                         }
 						else
 						{
-							if (level == 0)
-								pResource->Data = (DWORD)pSrc;
-
 							if((DWORD)pSrc == 0x80000000)
 							{
 								// TODO: Fix or handle this situation..?
@@ -8226,9 +8222,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
-    // update index buffer, if necessary
-    if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
-        CxbxKrnlCleanup("g_pIndexBuffer != 0");
 
 	CxbxUpdateNativeD3DResources();
 	CxbxUpdateActiveIndexBuffer((PWORD)pIndexData, VertexCount);
@@ -8398,6 +8391,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
     if(pNewZStencil != NULL)
     {
+		EmuVerifyResourceIsRegistered(pNewZStencil);
         if(GetHostSurface(pNewZStencil) != nullptr)
         {
             EmuVerifyResourceIsRegistered(pNewZStencil);
