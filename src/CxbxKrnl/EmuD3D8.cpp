@@ -6012,6 +6012,15 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	IDirect3DResource8* pHostResource = GetHostResource(pThis);
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
+	// If this was a cached renter target or depth surface, clear the cache variable too!
+	if (uRet == 0 && pThis == g_pCachedRenderTarget) {
+		g_pCachedRenderTarget = nullptr;
+	}
+
+	if (uRet == 0 && pThis == g_pCachedDepthStencil) {
+		g_pCachedDepthStencil = nullptr;
+	}
+
 	// If we freed the last resource, also release the host copy (if it exists!)
 	if (uRet == 0 && pHostResource != nullptr) {
 		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
@@ -8378,9 +8387,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
     if(pRenderTarget != NULL)
     {
+		EmuVerifyResourceIsRegistered(pRenderTarget);
+		g_pCachedRenderTarget = pRenderTarget;
+
 		if(GetHostSurface(pRenderTarget) != nullptr)
 		{
-			EmuVerifyResourceIsRegistered(pRenderTarget);
 			pPCRenderTarget = GetHostSurface(pRenderTarget);
 		}
 		else
@@ -8392,9 +8403,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
     if(pNewZStencil != NULL)
     {
 		EmuVerifyResourceIsRegistered(pNewZStencil);
+		g_pCachedDepthStencil = pNewZStencil;
         if(GetHostSurface(pNewZStencil) != nullptr)
         {
-            EmuVerifyResourceIsRegistered(pNewZStencil);
             pPCNewZStencil = GetHostSurface(pNewZStencil);
         }
         else
