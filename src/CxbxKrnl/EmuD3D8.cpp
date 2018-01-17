@@ -689,7 +689,8 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 	return result;
 }
 
-std::map <XTL::X_D3DResource*, XTL::IDirect3DResource8*> g_HostResources;
+// Map native resource data pointers to the host resource
+std::map <DWORD, XTL::IDirect3DResource8*> g_HostResources;
 
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 {
@@ -702,7 +703,7 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	XTL::IDirect3DResource8* result = g_HostResources[pXboxResource];
+	XTL::IDirect3DResource8* result = g_HostResources[pXboxResource->Data];
 
 	if (result == nullptr) {
 		EmuWarning("EmuResource is not a valid pointer!");
@@ -719,7 +720,7 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if(GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	return (XTL::IDirect3DSurface8*)g_HostResources[pXboxResource];
+	return (XTL::IDirect3DSurface8*)g_HostResources[pXboxResource->Data];
 }
 
 XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
@@ -730,7 +731,7 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	return (XTL::IDirect3DBaseTexture8*)g_HostResources[pXboxResource];
+	return (XTL::IDirect3DBaseTexture8*)g_HostResources[pXboxResource->Data];
 }
 
 XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
@@ -761,7 +762,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	return (XTL::IDirect3DIndexBuffer8*)g_HostResources[pXboxResource];
+	return (XTL::IDirect3DIndexBuffer8*)g_HostResources[pXboxResource->Data];
 }
 
 XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
@@ -771,7 +772,7 @@ XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResour
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	return (XTL::IDirect3DVertexBuffer8*)g_HostResources[pXboxResource];
+	return (XTL::IDirect3DVertexBuffer8*)g_HostResources[pXboxResource->Data];
 }
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
@@ -779,7 +780,7 @@ void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostSurface;
+	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostSurface;
 }
 
 void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
@@ -787,7 +788,7 @@ void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostTexture;
+	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostTexture;
 }
 
 void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
@@ -795,7 +796,7 @@ void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostCubeTexture;
+	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostCubeTexture;
 }
 
 void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
@@ -803,7 +804,7 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolum
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource] = (XTL::IDirect3DResource8*)pHostVolumeTexture;
+	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostVolumeTexture;
 }
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
@@ -811,7 +812,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	g_HostResources[pXboxResource] = pHostIndexBuffer;
+	g_HostResources[pXboxResource->Data] = pHostIndexBuffer;
 }
 
 void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
@@ -819,7 +820,7 @@ void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	g_HostResources[pXboxResource] = pHostVertexBuffer;
+	g_HostResources[pXboxResource->Data] = pHostVertexBuffer;
 }
 
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
@@ -851,17 +852,14 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	DWORD Type = GetXboxCommonResourceType(pXboxResource);
 	switch (Type) {
 	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
-		break;
 	case X_D3DCOMMON_TYPE_INDEXBUFFER:
-		break;
-	case X_D3DCOMMON_TYPE_PUSHBUFFER:
-		break;
 	case X_D3DCOMMON_TYPE_PALETTE:
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
-		break;
 	case X_D3DCOMMON_TYPE_TEXTURE:
 	case X_D3DCOMMON_TYPE_SURFACE:
 		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		break;
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
 		break;
 	case X_D3DCOMMON_TYPE_FIXUP:
 		break;
@@ -5243,10 +5241,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
     X_D3DResource *pResource = pThis;
 
     DWORD dwCommonType = GetXboxCommonResourceType(pResource);
-
-    // add the offset of the current resource to the base
-	pBase = (PVOID)((DWORD)pBase + pResource->Data);
-    
+   
 
     // Determine the resource type, and initialize
     switch(dwCommonType)
@@ -5259,11 +5254,11 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 			XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
 
 			// Vertex buffers live in Physical Memory Region
-			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+			void* pVirtualAddr = (void*)((xbaddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
 
             // create vertex buffer
             {
-                DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pVirtualAddr);
 
                 if(dwSize == 0)
                 {
@@ -5309,10 +5304,8 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                     CxbxKrnlCleanup("VertexBuffer Lock Failed!\n\nError: \nDesc: "/*,
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
-                memcpy(pNativeData, (void*)pBase, dwSize);
+                memcpy(pNativeData, (void*)pVirtualAddr, dwSize);
                 pNewHostVertexBuffer->Unlock();
-
-				pResource->Data = (DWORD)pBase; // Set pResource->Data to point to Xbox Vertex buffer memory
 			}
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pNewHostVertexBuffer);
@@ -5327,7 +5320,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create push buffer
             {
-                DWORD dwSize = g_VMManager.QuerySize((VAddr)pBase);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pThis->Data);
 
                 if(dwSize == 0)
                 {
@@ -5338,8 +5331,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                     break;
                 }
-
-                pResource->Data = (DWORD)pBase;
             }
 
             DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
@@ -5355,7 +5346,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Texture...\n");
             }
 
-			pBase = (void*)((xbaddr)pBase | MM_SYSTEM_PHYSICAL_MAP);
+			void* pVirtualAddr = (void*)((xbaddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
 
 			X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
@@ -5661,10 +5652,10 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                             }
                         }
 
-                        BYTE *pSrc = (BYTE*)pBase; // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
+                        BYTE *pSrc = (BYTE*)pThis->Data; // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
-                         ||( (DWORD)pBase == X_D3DRESOURCE_DATA_BACK_BUFFER))
+                         ||( (DWORD)pThis->Data == X_D3DRESOURCE_DATA_BACK_BUFFER))
                         {
                             EmuWarning("Attempt to registered to another resource's data (eww!)");
 
@@ -5937,9 +5928,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
 				DWORD dwSize = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette));
 
-                g_pCurrentPalette[TextureStage] = pBase;
-
-                pResource->Data = (DWORD)pBase;
+                g_pCurrentPalette[TextureStage] = (PVOID)pThis->Data;
             }
 
             //DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pResource->Size, pResource->AllocationSize);
@@ -6022,22 +6011,22 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
 	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
 
-	// Backup the data pointer, as it may get wiped out by this release call
+	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the Release call!
 	DWORD data = pThis->Data;
+	IDirect3DResource8* pHostResource = GetHostResource(pThis);
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
-	// If we freed the last resource, also release the host copy
-	if (uRet == 0) {
+	// If we freed the last resource, also release the host copy (if it exists!)
+	if (uRet == 0 && pHostResource != nullptr) {
 		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
 		if (it != g_RegisteredResources.end()) {
 			g_RegisteredResources.erase(it);
 		}
 
-		auto resourceIt = g_HostResources.find(pThis);
+		auto resourceIt = g_HostResources.find(data);
 		if (resourceIt != g_HostResources.end()) {
-			IDirect3DResource8* hostResource = GetHostResource(pThis);
-			hostResource->Release();
-			g_HostResources.erase(pThis);
+			pHostResource->Release();
+			g_HostResources.erase(data);
 		}
 	}
 
