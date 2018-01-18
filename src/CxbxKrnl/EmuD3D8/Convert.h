@@ -58,6 +58,8 @@ typedef void(*FormatToARGBRow)(const uint8* src, uint8* dst_argb, int width);
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(X_D3DFORMAT Format);
 
+bool EmuXBFormatCanBeConvertedToARGB(X_D3DFORMAT Format);
+
 bool EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format);
 
 // how many bits does this format use per pixel?

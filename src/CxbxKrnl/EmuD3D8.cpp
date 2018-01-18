@@ -984,12 +984,66 @@ VOID CxbxGetPixelContainerMeasures
 	}
 }
 
+bool ConvertD3DTextureToARGBBuffer(
+	XTL::X_D3DFORMAT X_Format,
+	uint8 *pSrc,
+	int SrcWidth, int SrcHeight,
+	uint SrcPitch,
+	uint8 *pDest, int DestPitch,
+	int TextureStage = 0
+)
+{
+	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	if (ConvertRowToARGB == nullptr)
+		return false; // Unhandled conversion
+
+	uint8 *unswizleBuffer = nullptr;
+	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
+		unswizleBuffer = (uint8*)malloc(SrcPitch * SrcHeight); // TODO : Reuse buffer when performance is important
+		// First we need to unswizzle the texture data
+		XTL::EmuUnswizzleRect(
+			pSrc, SrcWidth, SrcHeight, 1, unswizleBuffer,
+			SrcPitch, {}, {}, EmuXBFormatBytesPerPixel(X_Format)
+		);
+		// Convert colors from the unswizzled buffer
+		pSrc = unswizleBuffer;
+	}
+
+	int AdditionalArgument;
+	if (X_Format == XTL::X_D3DFMT_P8)
+		AdditionalArgument = (int)g_pCurrentPalette[TextureStage];
+	else
+		AdditionalArgument = DestPitch;
+
+	DWORD SrcRowOff = 0;
+	uint8 *pDestRow = pDest;
+	if (EmuXBFormatIsCompressed(X_Format)) {
+		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
+		SrcHeight = (SrcHeight + 3) / 4;
+		DestPitch *= 4;
+	}
+
+	for (int y = 0; y < SrcHeight; y++) {
+		*(int*)pDestRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
+		ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, SrcWidth);
+		SrcRowOff += SrcPitch;
+		pDestRow += DestPitch;
+	}
+
+	if (unswizleBuffer)
+		free(unswizleBuffer);
+
+	return true;
+}
+
 uint8 *XTL::ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
 	uint8 *pSrc,
-	int *pWidth, int *pHeight
+	int *pWidth, int *pHeight,
+	int TextureStage // default = 0
 )
 {
+	// Avoid allocating pDest when ConvertD3DTextureToARGBBuffer will fail anyway
 	XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxPixelContainer);
 	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
 	if (ConvertRowToARGB == nullptr)
@@ -1005,43 +1059,18 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 		&SrcSize
 	);
 
+	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
 	int DestPitch = *pWidth * sizeof(DWORD);
 	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
 
-	uint8 *unswizleBuffer = nullptr;
-	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8*)malloc(SrcPitch * *pHeight); // TODO : Reuse buffer when performance is important
-		// First we need to unswizzle the texture data
-		XTL::EmuUnswizzleRect(
-			pSrc, *pWidth, *pHeight, 1, unswizleBuffer,
-			SrcPitch, {}, {}, EmuXBFormatBytesPerPixel(X_Format)
-		);
-		// Convert colors from the unswizzled buffer
-		pSrc = unswizleBuffer;
-	}
+	// And convert the source towards that buffer
+	/*ignore result*/ConvertD3DTextureToARGBBuffer(
+		X_Format,
+		pSrc, *pWidth, *pHeight, SrcPitch,
+		pDest, DestPitch,
+		TextureStage);
 
-	DWORD SrcRowOff = 0;
-	uint8 *pDestRow = pDest;
-	if (EmuXBFormatIsCompressed(X_Format)) {
-		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
-		for (int y = 0; y < *pHeight; y+=4) {
-			*(int*)pDestRow = DestPitch; // Dirty hack, to avoid an extra parameter to all conversion callbacks
-			ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, *pWidth);
-			SrcRowOff += SrcPitch;
-			pDestRow += DestPitch * 4;
-		}
-	}
-	else {
-		while (SrcRowOff < SrcSize) {
-			ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, *pWidth);
-			SrcRowOff += SrcPitch;
-			pDestRow += DestPitch;
-		}
-	}
-
-	if (unswizleBuffer)
-		free(unswizleBuffer);
-
+	// NOTE : Caller must take ownership!
 	return pDest;
 }
 
@@ -5332,9 +5361,20 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 			// Let's try using some 16-bit format instead...
 			if(X_Format == X_D3DFMT_X1R5G5B5 )
 			{
+#ifdef OLD_COLOR_CONVERSION // Current approach
 				EmuWarning( "X_D3DFMT_X1R5G5B5 -> D3DFMT_R5GB5" );
 				X_Format = X_D3DFMT_R5G6B5;
 				PCFormat = D3DFMT_R5G6B5;
+#else // Later, convert to ARGB :
+				CacheFormat = PCFormat;       // Save this for later
+				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+			}
+
+			// Detect formats that must be converted to ARGB
+			if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
+				CacheFormat = PCFormat;       // Save this for later
+				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+#endif // !OLD_COLOR_CONVERSION
 			}
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
@@ -5489,6 +5529,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                         dwMipMapLevels = 3;
                     }
 
+#ifdef OLD_COLOR_CONVERSION // Current palette approach - Later, use ______P8ToARGBRow_C() 
                     // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
                     // Since most modern graphics cards does not support
                     // palette based textures we need to expand it to
@@ -5503,6 +5544,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                         CacheFormat = PCFormat;       // Save this for later
                         PCFormat = D3DFMT_A8R8G8B8;   // ARGB
                     }
+#endif // OLD_COLOR_CONVERSION
 
                     if(bCubemap)
                     {
@@ -5628,6 +5670,39 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 							{
 								// TODO: Fix or handle this situation..?
 							}
+#ifndef OLD_COLOR_CONVERSION // Later, use ConvertD3DTextureToARGBBuffer
+							else if (CacheFormat != 0) // Do we need to convert to ARGB?
+							{
+								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
+
+								BYTE *pPixelData = (BYTE*)LockedRect.pBits;
+								DWORD dwDataSize = dwMipWidth*dwMipHeight;
+								DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
+
+								uint8 *pSrc = pPixelData;
+								uint8 *pDest = (uint8 *)pExpandedTexture;
+
+								DWORD dwSrcPitch = dwMipWidth * dwBPP;//sizeof(DWORD);
+								DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
+								DWORD dwMipSizeInBytes = dwDataSize;
+
+								// Convert a row at a time, using a libyuv-like callback approach :										
+								if (!ConvertD3DTextureToARGBBuffer(
+									X_Format,
+									pSrc, dwMipWidth, dwMipHeight, dwSrcPitch,
+									pDest, dwDestPitch,
+									TextureStage)) {
+									CxbxKrnlCleanup("Unhandled conversion!");
+								}
+
+								//__asm int 3;
+								// Copy the expanded texture back to the buffer
+								memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
+
+								// Flush unused data buffers
+								free(pExpandedTexture);
+							}
+#endif // !OLD_COLOR_CONVERSION
 							else
 							{
 								if (bSwizzled)
@@ -5685,6 +5760,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 									}
 								}
 
+#ifdef OLD_COLOR_CONVERSION // Currently, convert here. Later, use ConvertD3DTextureToARGBBuffer above
 								if (CacheFormat != 0) // Do we need to convert to ARGB?
 								{
 									EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
@@ -5725,7 +5801,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 									}
 									else
 									{
-#ifdef OLD_COLOR_CONVERSION
 										const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
 
 										for (unsigned int y = 0; y < dwDataSize; y++)
@@ -5751,25 +5826,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 												x = 0;
 												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
 											}
-										}
-#else // !OLD_COLOR_CONVERSION
-										// Convert a row at a time, using a libyuv-like callback approach :
-										const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
-										if (ConvertRowToARGB == nullptr)
-											CxbxKrnlCleanup("Unhandled conversion!");
-										
-										uint8 *pSrc = pPixelData;
-										uint8 *pDest = (uint8 *)pExpandedTexture;
-										DWORD dwSrcPitch = dwMipWidth * sizeof(DWORD);
-										DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
-										DWORD dwMipSizeInBytes = dwDataSize;
-
-										DWORD SrcRowOff = 0;
-										uint8 *pDestRow = (uint8 *)pDest;
-										while (SrcRowOff < dwMipSizeInBytes) {
-											ConvertRowToARGB(((uint8 *)pSrc) + SrcRowOff, pDestRow, dwMipWidth);
-											SrcRowOff += dwSrcPitch;
-											pDestRow += dwDestPitch;
 										}
 #endif // !OLD_COLOR_CONVERSION
 									}
@@ -7939,7 +7995,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
     #ifdef _DEBUG_TRACK_VB
     if(pStreamData != NULL)
     {
-        g_bVBSkipStream = g_VBTrackDisable.exists(GetHostVertexBuffer(pStreamData));
+        g_bVBSkipStream = g_VBTrackDisable.exists(pHostVertexBuffer);
     }
     #endif
 
