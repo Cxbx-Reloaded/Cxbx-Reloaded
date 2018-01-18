@@ -60,7 +60,8 @@ extern VOID CxbxSetPixelContainerHeader
 extern uint8 *ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
 	uint8 *pSrc,
-	int *pWidth, int *pHeight
+	int *pWidth, int *pHeight,
+	int TextureStage = 0
 );
 
 // initialize direct3d
