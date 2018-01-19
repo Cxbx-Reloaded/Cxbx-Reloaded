@@ -24,13 +24,14 @@ void SMBus::Reset()
 
 void SMBus::ConnectDevice(uint8_t addr, SMDevice *pDevice)
 {
+	uint8_t dev_addr = (addr >> 1) & 0x7f;
 
-	if (m_Devices.find(addr) != m_Devices.end()) {
+	if (m_Devices.find(dev_addr) != m_Devices.end()) {
 		printf("PCIBus: Attempting to connect two devices to the same device address\n");
 		return;
 	}
 
-	m_Devices[addr] = pDevice;
+	m_Devices[dev_addr] = pDevice;
 	pDevice->Init();
 }
 
