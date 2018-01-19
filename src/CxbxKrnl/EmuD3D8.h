@@ -74,7 +74,7 @@ extern VOID EmuD3DCleanup();
 extern X_D3DTILE EmuD3DTileCache[0x08];
 
 // EmuD3DActiveTexture
-extern X_D3DPixelContainer *EmuD3DActiveTexture[TEXTURE_STAGES];
+extern X_D3DBaseTexture *EmuD3DActiveTexture[TEXTURE_STAGES];
 
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
@@ -560,7 +560,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetIndices)
 VOID WINAPI EMUPATCH(D3DDevice_SetTexture)
 (
     DWORD           Stage,
-    X_D3DResource  *pTexture
+	X_D3DBaseTexture  *pTexture
 );
 
 // ******************************************************************
@@ -1736,7 +1736,16 @@ VOID WINAPI EMUPATCH(D3DDevice_KickPushBuffer)();
 // ******************************************************************
 // * patch: D3DDevice_GetTexture2
 // ******************************************************************
-X_D3DResource* WINAPI EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage);
+X_D3DBaseTexture* WINAPI EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage);
+
+// ******************************************************************
+// * patch: D3DDevice_GetTexture
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_GetTexture)
+(
+	DWORD           Stage,
+	X_D3DBaseTexture  **pTexture
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
