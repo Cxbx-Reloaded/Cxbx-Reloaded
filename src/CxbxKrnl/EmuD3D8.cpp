@@ -162,7 +162,7 @@ static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DPixelContainer *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
+XTL::X_D3DBaseTexture *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
 
 
 // information passed to the create device proxy thread
@@ -2080,12 +2080,12 @@ static void EmuUnswizzleTextureStages()
 
 	for( int i = 0; i < TEXTURE_STAGES; i++ )
 	{
-		XTL::X_D3DPixelContainer *pPixelContainer = XTL::EmuD3DActiveTexture[i];
-		if (pPixelContainer == NULL)
+		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
+		if (pBaseTexture == NULL)
 			continue;
 
 		HRESULT hRet;
-		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pPixelContainer);
+		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
 		if (pHostTexture != nullptr)
 		{
 			if (pHostTexture->GetType() == XTL::D3DRTYPE_CUBETEXTURE) continue; // Prevent exceptions - skip cubes for now
@@ -2093,15 +2093,15 @@ static void EmuUnswizzleTextureStages()
 			DEBUG_D3DRESULT(hRet, "pHostTexture->UnlockRect");
 		}
 
-		if(!IsXboxResourceLocked(pPixelContainer))
+		if(!IsXboxResourceLocked(pBaseTexture))
 			continue;
 
-		XTL::X_D3DFORMAT XBFormat = GetXboxPixelContainerFormat(pPixelContainer);
+		XTL::X_D3DFORMAT XBFormat = GetXboxPixelContainerFormat(pBaseTexture);
 		if(!XTL::EmuXBFormatIsSwizzled(XBFormat))
 			continue;
 
 		DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
-		pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
+		pBaseTexture->Common &= ~X_D3DCOMMON_ISLOCKED;
 
 		// TODO: potentially XXHash32::hash() to see if this surface was actually modified..
 
@@ -3322,7 +3322,8 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 
 	X_D3DSurface *result = g_pCachedRenderTarget;
 
-	EMUPATCH(D3DResource_AddRef)(result);
+	if (result)
+		EMUPATCH(D3DResource_AddRef)(result);
 
     RETURN(result);
 }
@@ -3355,7 +3356,8 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
 	X_D3DSurface *result = g_pCachedDepthStencil;
 
-	EMUPATCH(D3DResource_AddRef)(result);
+	if (result)
+		EMUPATCH(D3DResource_AddRef)(result);
 		
 	RETURN(result);
 }
@@ -4455,7 +4457,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 (
     DWORD           Stage,
-    X_D3DResource  *pTexture
+	X_D3DBaseTexture  *pTexture
 )
 {
 	FUNC_EXPORTS
@@ -4467,7 +4469,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 
 	IDirect3DBaseTexture8 *pHostBaseTexture = nullptr;
 
-    EmuD3DActiveTexture[Stage] = (X_D3DPixelContainer*)pTexture;
+    EmuD3DActiveTexture[Stage] = pTexture;
     if(pTexture != NULL)
     {
         EmuVerifyResourceIsRegistered(pTexture);
@@ -9670,20 +9672,36 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_KickPushBuffer)()
 // ******************************************************************
 // * patch: D3DDevice_GetTexture2
 // ******************************************************************
-XTL::X_D3DResource* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
+XTL::X_D3DBaseTexture* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 {
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Stage);
 	
 	// Get the active texture from this stage
-	X_D3DPixelContainer* pRet = EmuD3DActiveTexture[Stage];
+	X_D3DBaseTexture* pRet = EmuD3DActiveTexture[Stage];
 
 	if (pRet) {
 		pRet->Common++;
 	}
 
 	return pRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetTexture
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTexture)
+(
+	DWORD           Stage,
+	XTL::X_D3DBaseTexture  **pTexture
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_GetTexture2");
+
+	*pTexture = EMUPATCH(D3DDevice_GetTexture2)(Stage);
 }
 
 // ******************************************************************
