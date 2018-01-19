@@ -5829,7 +5829,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
 											}
 										}
-#endif // !OLD_COLOR_CONVERSION
 									}
 
 									//__asm int 3;
@@ -5839,6 +5838,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 									// Flush unused data buffers
 									free(pExpandedTexture);
 								}
+#endif // !OLD_COLOR_CONVERSION
 							}
 						}
 
