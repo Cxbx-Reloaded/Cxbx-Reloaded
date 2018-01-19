@@ -3114,7 +3114,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
     pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
 	
 	// Increment reference count
-	pBackBuffer->Common++;
+	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
 
     return pBackBuffer;
 }
@@ -3323,7 +3323,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 	X_D3DSurface *result = g_pCachedRenderTarget;
 
 	if (result)
-		EMUPATCH(D3DResource_AddRef)(result);
+		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
 
     RETURN(result);
 }
@@ -3357,7 +3357,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 	X_D3DSurface *result = g_pCachedDepthStencil;
 
 	if (result)
-		EMUPATCH(D3DResource_AddRef)(result);
+		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
 		
 	RETURN(result);
 }
@@ -5952,7 +5952,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
     X_D3DResource      *pThis
 )
 {
-	FUNC_EXPORTS
+	// FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pThis);
 
@@ -7936,7 +7936,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
 		pVertexBuffer = g_D3DStreams[StreamNumber];
 		if (pVertexBuffer)
 		{
-			EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
+			pVertexBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
 			*pStride = g_D3DStreamStrides[StreamNumber];
 		}
 	}
@@ -9682,7 +9682,7 @@ XTL::X_D3DBaseTexture* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	X_D3DBaseTexture* pRet = EmuD3DActiveTexture[Stage];
 
 	if (pRet) {
-		pRet->Common++;
+		pRet->Common++; // EMUPATCH(D3DResource_AddRef)(pRet);
 	}
 
 	return pRet;
