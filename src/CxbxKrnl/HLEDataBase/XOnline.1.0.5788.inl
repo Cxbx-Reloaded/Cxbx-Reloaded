@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5788.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->XOnline.1.0.5788.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,36 +33,28 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XnInit
+// * XoUpdateLaunchNewImageInternal
 // ******************************************************************
-OOVPA_XREF(XnInit, 5788, 8,
+OOVPA_XREF(XoUpdateLaunchNewImageInternal, 5788, 16,
 
-    XREF_XNINIT,
+    XREF_XoUpdateLaunchNewImageInternal,
     XRefZero)
 
-        { 0x1E, 0x3B },
-        { 0x3E, 0x45 },
-        { 0x5E, 0x00 },
-        { 0x81, 0x57 },
-        { 0xA2, 0x57 },
-        { 0xC0, 0x33 },
-        { 0xDE, 0xFE },
-        { 0xFE, 0x48 },
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0xF0 },
+        { 0x06, 0x02 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+        { 0x09, 0x53 },
+        { 0x0A, 0x56 },
+        { 0x0B, 0x8B },
+        { 0x0C, 0x75 },
+        { 0x0D, 0x08 },
+
+        { 0x6E, 0xEB },
+        { 0x88, 0x3D },
 OOVPA_END;
-
-// ******************************************************************
-// * XOnline_5788
-// ******************************************************************
-OOVPATable XOnline_5788[] = {
-	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
-	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
-	REGISTER_OOVPA(XnInit, 5788, XREF),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-	REGISTER_OOVPA(bind, 4361, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
-};
-
-// ******************************************************************
-// * XOnline_5788_SIZE
-// ******************************************************************
-uint32 XOnline_5788_SIZE = sizeof(XOnline_5788);

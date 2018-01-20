@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -44,9 +45,8 @@ namespace xboxkrnl
 
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
-#include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -213,6 +213,7 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 
 __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 {
+	// Note : Inlined KeGetCurrentIrql()
 	__asm
 	{
 		mov eax, fs : [TIB_ArbitraryDataSlot]
@@ -334,7 +335,7 @@ void EmuInitFS()
 	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs58 });					// mov eax, large fs:58
 	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Eax });					// mov large fs:0, eax
 
-	DbgPrintf("Patching FS Register Accesses\n");
+	DbgPrintf("INIT: Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
 
@@ -344,7 +345,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		DbgPrintf("Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		DbgPrintf("INIT: Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++)
@@ -361,7 +362,7 @@ void EmuInitFS()
 
 				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 				{
-					DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
+					DbgPrintf("INIT: Patching FS Instruction at 0x%.8X\n", addr);
 
 					// Write Call opcode
 					*(uint08*)addr = OPCODE_CALL_E8;
@@ -377,7 +378,7 @@ void EmuInitFS()
 		}
 	}
 	
-	DbgPrintf("Done\n");
+	DbgPrintf("INIT: Done patching FS Register Accesses\n");
 }
 
 // generate fs segment selector
@@ -387,50 +388,57 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Be aware that TLS might be absent (for example in homebrew "Wolf3d-xbox")
 	if (pTLS != nullptr) {
-		// Make sure the TLS Start and End addresses are within Xbox virtual memory
-		if (pTLS->dwDataStartAddr >= XBE_MAX_VA || pTLS->dwDataEndAddr >= XBE_MAX_VA) {
-			return;
-		}
-
-
 		// copy global TLS to the current thread
 		{
-			uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+			uint32 dwCopySize = 0;
 			uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-			pNewTLS = g_MemoryManager.AllocateZeroed(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
-
-			memcpy(pNewTLS, pTLSData, dwCopySize);
-
-#ifdef _DEBUG_TRACE
-			// dump raw TLS data
-			if (pNewTLS == nullptr)
-				DbgPrintf("EmuFS: TLS Non-Existant (OK)\n");
-			else
-			{
-				DbgPrintf("EmuFS: TLS Data Dump...\n");
-				if (g_bPrintfOn)
-				{
-					for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
-					{
-						uint08 *bByte = (uint08*)pNewTLS + v;
-
-						if (v % 0x10 == 0)
-							DbgPrintf("EmuFS: 0x%.08X: ", (xbaddr)bByte);
-
-						// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
-						printf("%.01X", (uint32)(*bByte));
-					}
-
-					printf("\n");
+			if (pTLSData != NULL) {
+				// Make sure the TLS Start and End addresses are within Xbox virtual memory
+				if (pTLS->dwDataStartAddr >= XBE_MAX_VA || pTLS->dwDataEndAddr >= XBE_MAX_VA) {
+					// ignore
+				}
+				else {
+					dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 				}
 			}
+
+			/* + HACK: extra safety padding 0x100 */
+			pNewTLS = (void*)g_VMManager.AllocateZeroed(dwCopySize + dwZeroSize + 0x100);
+
+
+			if (dwCopySize > 0) {
+				memcpy(pNewTLS, pTLSData, dwCopySize);
+			}
+
+#ifdef _DEBUG_TRACE
+            // dump raw TLS data
+            if (pNewTLS == nullptr) {
+                DbgPrintf("KRNL: TLS Non-Existant (OK)\n");
+            } else {
+                DbgPrintf("KRNL: TLS Data Dump...\n");
+                if (g_bPrintfOn) {
+                    for (uint32 v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
+
+                        uint08 *bByte = (uint08*)pNewTLS + v;
+
+                        if (v % 0x10 == 0) {
+                            DbgPrintf("KRNL: 0x%.8X:", (xbaddr)bByte);
+                        }
+
+                        // Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+                        printf(" %.2X", *bByte);
+                    }
+
+                    printf("\n");
+                }
+            }
 #endif
 		}
 
 		// prepare TLS
 		{
-			*(xbaddr*)pTLS->dwTLSIndexAddr = (xbaddr)nullptr;
+			*(xbaddr*)pTLS->dwTLSIndexAddr = xbnull;
 
 			// dword @ pTLSData := pTLSData
 			if (pNewTLS != nullptr)
@@ -439,7 +447,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	}
 
 	// Allocate the xbox KPCR structure
-	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)g_MemoryManager.AllocateZeroed(1, sizeof(xboxkrnl::KPCR));
+	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::KPCR));
 	xboxkrnl::NT_TIB *XbTib = &(NewPcr->NtTib);
 	xboxkrnl::PKPRCB Prcb = &(NewPcr->PrcbData);
 	// Note : As explained above (at EmuKeSetPcr), Cxbx cannot allocate one NT_TIB and KPRCB
@@ -481,7 +489,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Initialize a fake PrcbData.CurrentThread 
 	{
-		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_MemoryManager.AllocateZeroed(1, sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
+		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
 
 		EThread->Tcb.TlsData = pNewTLS;
 		EThread->UniqueThread = GetCurrentThreadId();
@@ -492,5 +500,5 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	// Make the KPCR struct available to KeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
-	DbgPrintf("EmuFS: Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.08X)\n", pTLS);
+	DbgPrintf("KRNL: Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)\n", pTLS);
 }

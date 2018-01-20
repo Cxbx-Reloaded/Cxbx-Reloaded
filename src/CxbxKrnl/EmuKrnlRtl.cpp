@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -193,7 +194,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	CxbxKrnlCleanup("RtlAssert() raised by emulated program - consult Debug log");
+	CxbxPopupMessage("RtlAssert() raised by emulated program - consult Debug log");
 }
 
 // ******************************************************************

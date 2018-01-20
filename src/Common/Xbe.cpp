@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Xbe.cpp
+// *   Cxbx->Common->Xbe.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -134,6 +134,30 @@ Xbe::Xbe(const char *x_szFilename)
         printf("OK\n");
 
         printf("Xbe::Xbe: Title identified as %s\n", m_szAsciiTitle);
+
+		// Detect empty title :
+		int len = strlen(m_szAsciiTitle);
+		while (len > 0 && m_szAsciiTitle[len-1] <= ' ')
+			len--;
+		if (len <= 0) {
+			// Try to fix empty title; first, try the executable name:
+			char Dir[_MAX_DIR];
+			char Filename[_MAX_FNAME];
+			_splitpath(x_szFilename, nullptr, Dir, Filename, nullptr);
+			if (_stricmp(Filename, "default") != 0) {
+				strcpy(m_szAsciiTitle, Filename);
+			}
+			else {
+				// If executable is named "default.xbe", try the parent folder name:
+				len = strlen(Dir);
+				if (len > 0) {
+					Dir[len - 1] = '\0';
+					_splitpath(Dir, nullptr, nullptr, m_szAsciiTitle, nullptr);
+				}
+			}
+
+			printf("Xbe::Xbe: Replaced empty title with fallback : %s\n", m_szAsciiTitle);
+		}
     }
 
     // read Xbe section headers
@@ -163,18 +187,18 @@ Xbe::Xbe(const char *x_szFilename)
     {
         printf("Xbe::Xbe: Reading Section Names...\n");
 
-        m_szSectionName = new char[m_Header.dwSections][9];
+        m_szSectionName = new char[m_Header.dwSections][10];
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Xbe: Reading Section Name 0x%.04X...", v);
 
             uint08 *sn = GetAddr(m_SectionHeader[v].dwSectionNameAddr);
 
-            memset(m_szSectionName[v], 0, 9);
+            memset(m_szSectionName[v], 0, 10);
 
             if(sn != 0)
             {
-                for(int b=0;b<8;b++)
+                for(int b=0;b<9;b++)
                 {
                     m_szSectionName[v][b] = sn[b];
 
@@ -561,7 +585,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
     // print init flags
     {
-        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags.bMountUtilityDrive);
+        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags_value);
 
         if(m_Header.dwInitFlags.bMountUtilityDrive)
             fprintf(x_file, "[Mount Utility Drive] ");
@@ -633,8 +657,8 @@ void Xbe::DumpInformation(FILE *x_file)
         fprintf(x_file, "\n");
     }
 
-    fprintf(x_file, "Allowed Media                    : 0x%.08X\n", m_Certificate.dwAllowedMedia);
-    fprintf(x_file, "Game Region                      : 0x%.08X\n", m_Certificate.dwGameRegion);
+    fprintf(x_file, "Allowed Media                    : 0x%.08X (%s)\n", m_Certificate.dwAllowedMedia, AllowedMediaToString().c_str());
+    fprintf(x_file, "Game Region                      : 0x%.08X (%s)\n", m_Certificate.dwGameRegion, GameRegionToString());
     fprintf(x_file, "Game Ratings                     : 0x%.08X\n", m_Certificate.dwGameRatings);
     fprintf(x_file, "Disk Number                      : 0x%.08X\n", m_Certificate.dwDiskNumber);
     fprintf(x_file, "Version                          : 0x%.08X\n", m_Certificate.dwVersion);
@@ -679,7 +703,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
             // print flags
             {
-                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags.bWritable);
+                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags_value);
 
                 if(m_SectionHeader[v].dwFlags.bWritable)
                     fprintf(x_file, "(Writable) ");
@@ -749,16 +773,16 @@ void Xbe::DumpInformation(FILE *x_file)
 
                 // print flags
                 {
-                    fprintf(x_file, "Flags                            : ");
+                    fprintf(x_file, "Flags                            : 0x%.04X ", m_LibraryVersion[v].wFlags_value);
 
-                    fprintf(x_file, "QFEVersion : 0x%.04X, ", m_LibraryVersion[v].dwFlags.QFEVersion);
+                    fprintf(x_file, "QFEVersion : 0x%.04X, ", m_LibraryVersion[v].wFlags.QFEVersion);
 
-                    if(m_LibraryVersion[v].dwFlags.bDebugBuild)
+                    if(m_LibraryVersion[v].wFlags.bDebugBuild)
                         fprintf(x_file, "Debug, ");
                     else
                         fprintf(x_file, "Retail, ");
 
-                    switch(m_LibraryVersion[v].dwFlags.Approved)
+                    switch(m_LibraryVersion[v].wFlags.Approved)
                     {
                         case 0:
                             fprintf(x_file, "Unapproved");
@@ -966,4 +990,89 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     }
 
     return 0;
+}
+
+
+void *Xbe::FindSection(char *zsSectionName)
+{
+	for (uint32 v = 0; v < m_Header.dwSections; v++) {
+		if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
+			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
+				return m_bzSection[v];
+			}
+		}
+	}
+
+	return NULL;
+}
+
+void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)
+{
+	for (auto it = s.begin(); it < s.end(); ++it)
+	{
+		bool found = illegalChars.find(*it) != std::string::npos;
+		if (found) { *it = '_'; }
+	}
+}
+
+const char *Xbe::GameRegionToString()
+{
+    const char *Region_text[] = {
+        "Unknown", "NTSC", "JAP", "NTSC+JAP",
+        "PAL", "PAL+NTSC", "PAL+JAP", "Region Free",
+        "DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
+        "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "Region Free (DEBUG)"
+    };
+    const uint32 all_regions = XBEIMAGE_GAME_REGION_NA |
+                               XBEIMAGE_GAME_REGION_JAPAN |
+                               XBEIMAGE_GAME_REGION_RESTOFWORLD |
+                               XBEIMAGE_GAME_REGION_MANUFACTURING;
+
+    if(m_Certificate.dwGameRegion & ~all_regions) {
+        return "REGION ERROR";
+    }
+
+    uint8 index = (m_Certificate.dwGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
+    index |= (m_Certificate.dwGameRegion & 0x7);
+    return Region_text[index];
+}
+
+std::string Xbe::AllowedMediaToString()
+{
+    const uint32 dwAllowedMedia = m_Certificate.dwAllowedMedia;
+    std::string text = "Media Types:";
+
+    if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) {
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_HARD_DISK)
+            text.append(" HARD_DISK");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_X2)
+            text.append(" DVD_X2");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_CD)
+            text.append(" DVD_CD");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_CD)
+            text.append(" CD");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_5_RO)
+            text.append(" DVD_5_RO");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_9_RO)
+            text.append(" DVD_9_RO");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_5_RW)
+            text.append(" DVD_5_RW");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DVD_9_RW)
+            text.append(" DVD_9_RW");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_DONGLE)
+            text.append(" DONGLE");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD)
+            text.append(" BOARD");
+        if((dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) >= (XBEIMAGE_MEDIA_TYPE_MEDIA_BOARD * 2))
+            text.append(" UNKNOWN");
+    }
+
+    if(dwAllowedMedia & ~XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) {
+        text.append(" NONSECURE");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK)
+            text.append(" HARD_DISK");
+        if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE)
+            text.append(" MODE");
+    }
+    return text;
 }

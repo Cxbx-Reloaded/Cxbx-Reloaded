@@ -37,6 +37,7 @@
 #include "Cxbx.h"
 #include "Common/Win32/XBController.h"
 #include "Common/Win32/XBVideo.h"
+#include "Common/Win32/XBAudio.h"
 
 #include <memory.h>
 
@@ -46,44 +47,52 @@ enum {
 	LLE_JIT = 1 << 2,
 };
 
+typedef UINT_PTR PAddr;
+
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
 class EmuShared : public Mutex
 {
-    public:
+	public:
 		int m_RefCount;
 
-        // ******************************************************************
-        // * Each process needs to call this to initialize shared memory
-        // ******************************************************************
-        static void Init();
+		// ******************************************************************
+		// * Each process needs to call this to initialize shared memory
+		// ******************************************************************
+		static void Init();
 
 		void EmuShared::Load();
 		void EmuShared::Save();
 
 		// ******************************************************************
-        // * Each process needs to call this to cleanup shared memory
-        // ******************************************************************
-        static void Cleanup();
+		// * Each process needs to call this to cleanup shared memory
+		// ******************************************************************
+		static void Cleanup();
 
-        // ******************************************************************
-        // * Xbox Video Accessors
-        // ******************************************************************
-        void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-        void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+		// ******************************************************************
+		// * Xbox Video Accessors
+		// ******************************************************************
+		void GetXBVideo(      XBVideo *video) { Lock(); *video = XBVideo(m_XBVideo); Unlock(); }
+		void SetXBVideo(const XBVideo *video) { Lock(); m_XBVideo = XBVideo(*video); Unlock(); }
 
-        // ******************************************************************
-        // * Xbox Controller Accessors
-        // ******************************************************************
-        void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-        void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+		// ******************************************************************
+		// * Xbox Audio Accessors
+		// ******************************************************************
+		void GetXBAudio(      XBAudio *audio) { Lock(); *audio = XBAudio(m_XBAudio); Unlock(); }
+		void SetXBAudio(const XBAudio *audio) { Lock(); m_XBAudio = XBAudio(*audio); Unlock(); }
 
-        // ******************************************************************
-        // * Xbe Path Accessors
-        // ******************************************************************
-        void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
-        void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
+		// ******************************************************************
+		// * Xbox Controller Accessors
+		// ******************************************************************
+		void GetXBController(      XBController *ctrl) { Lock(); *ctrl = XBController(m_XBController); Unlock(); }
+		void SetXBController(const XBController *ctrl) { Lock(); m_XBController = XBController(*ctrl); Unlock(); }
+
+		// ******************************************************************
+		// * Xbe Path Accessors
+		// ******************************************************************
+		void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
+		void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -91,20 +100,64 @@ class EmuShared : public Mutex
 		void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
 		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
 
-    private:
-        // ******************************************************************
-        // * Constructor / Deconstructor
-        // ******************************************************************
-         EmuShared();
-        ~EmuShared();
+		// ******************************************************************
+		// * XInput Flag Accessors
+		// ******************************************************************
+		void GetXInputEnabled(int* value) { Lock(); *value = m_XInputEnabled; Unlock(); }
+		void SetXInputEnabled(int* value) { Lock(); m_XInputEnabled = *value; Unlock(); }
 
-        // ******************************************************************
-        // * Shared configuration
-        // ******************************************************************
-        XBController m_XBController;
-        XBVideo      m_XBVideo;
-        char         m_XbePath[MAX_PATH];
+		// ******************************************************************
+		// * Hack Flag Accessors
+		// ******************************************************************
+		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
+		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
+
+		// ******************************************************************
+		// * MSpF/Benchmark values Accessors
+		// ******************************************************************
+		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
+		void SetCurrentMSpF(float *value) { Lock(); m_MSpF = *value; Unlock(); }
+
+		// ******************************************************************
+		// * FPS/Benchmark values Accessors
+		// ******************************************************************
+		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
+		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
+
+		// ******************************************************************
+		// * MultiXbe flag Accessors
+		// ******************************************************************
+		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbe; Unlock(); }
+		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
+
+		// ******************************************************************
+		// * Launch data physical address Accessors
+		// ******************************************************************
+		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
+		void SetLaunchDataPAddress(PAddr *value) { Lock(); m_LaunchDataPAddress = *value; Unlock(); }
+
+
+	private:
+		// ******************************************************************
+		// * Constructor / Deconstructor
+		// ******************************************************************
+		EmuShared();
+		~EmuShared();
+
+		// ******************************************************************
+		// * Shared configuration
+		// ******************************************************************
+		XBController m_XBController;
+		XBVideo      m_XBVideo;
+		XBAudio      m_XBAudio;
+		char         m_XbePath[MAX_PATH];
 		int          m_FlagsLLE;
+		int			 m_XInputEnabled;
+		int			 m_DisablePixelShaders;
+		float		 m_MSpF;
+		float        m_FPS;
+		bool		 m_bMultiXbe;
+		PAddr		 m_LaunchDataPAddress;
 };
 
 // ******************************************************************

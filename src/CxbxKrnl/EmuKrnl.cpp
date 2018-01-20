@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -50,6 +51,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h"
+#include "EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
@@ -128,6 +130,23 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
 xboxkrnl::KPCR* KeGetPcr();
+
+// ******************************************************************
+// * KiLockDispatcherDatabase()
+// ******************************************************************
+// * Not exported in kernel thunk table
+// * NOTE: This is a macro on the Xbox, however we implement it 
+// * as a function because a macro doesn't compile this: *(&OldIrql)
+// ******************************************************************
+void xboxkrnl::KiLockDispatcherDatabase
+(
+	OUT KIRQL* OldIrql
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(OldIrql);
+
+	*(OldIrql) = KeRaiseIrqlToDpcLevel();
+}
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
@@ -279,31 +298,28 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql()
 // ******************************************************************
-// Raises the hardware priority (irql)
-// NewIrql = Irql to raise to
+// Raises the hardware priority (irq level)
+// NewIrql = Irq level to raise to
 // RETURN VALUE previous irq level
-XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 (
-    IN UCHAR NewIrql
+    IN KIRQL NewIrql
 )
 {
 	LOG_FUNC_ONE_ARG(NewIrql);
 
-	UCHAR OldIrql;
+	// Inlined KeGetCurrentIrql() :
+	PKPCR Pcr = KeGetPcr();
+	KIRQL OldIrql = (KIRQL)Pcr->Irql;
 
-	KPCR* Pcr = KeGetPcr();
-
-	if (NewIrql < Pcr->Irql)	{
-		// TODO: Enable this after KeBugCheck is implemented
-		//KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
-		// for (;;);
-
-		CxbxKrnlCleanup("IRQL_NOT_GREATER_OR_EQUAL");
+	if (NewIrql < OldIrql)	{
+		KeBugCheck(0x00000009); // IRQL_NOT_GREATER_OR_EQUAL
 	}
 	
-	OldIrql = Pcr->Irql;
 	Pcr->Irql = NewIrql;
-	
+
+	LOG_INCOMPLETE();
+
 	RETURN(OldIrql);
 }
 
@@ -314,12 +330,21 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
 // ARGUMENTS NewIrql = Irql to lower to
 XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 (
-    IN UCHAR NewIrql
+    IN KIRQL NewIrql
 )
 {
 	LOG_FUNC_ONE_ARG(NewIrql);
 
-	LOG_UNIMPLEMENTED();
+	KPCR* Pcr = KeGetPcr();
+
+	if (NewIrql > Pcr->Irql) {
+		KeBugCheck(0x0000000A); // IRQL_NOT_LESS_OR_EQUAL
+	}
+
+	Pcr->Irql = NewIrql;
+
+	// TODO: Dispatch pending interrupts
+	LOG_INCOMPLETE();
 }
 
 // ******************************************************************
@@ -327,6 +352,8 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 // ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(162) xboxkrnl::ULONG_PTR xboxkrnl::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
+
+extern xboxkrnl::KPRCB *KeGetCurrentPrcb();
 
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
@@ -338,22 +365,27 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 {
 	LOG_FUNC_ONE_ARG(OldIrql);
 
-	LOG_UNIMPLEMENTED();
+	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) // Avoid KeIsExecutingDpc(), as that logs
+		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+
+	LOG_INCOMPLETE(); // TODO : Thread-switch?
+
+	KfLowerIrql(OldIrql);
 }
 
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 (
 	IN ULONG	Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
-
+	
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	
+	return 0; // Was XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
 }
 
 // ******************************************************************
@@ -380,6 +412,110 @@ XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 // ******************************************************************
 // TODO : Determine size, structure & filling behind IdexChannelObject
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
+
+// ******************************************************************
+// * 0x0169 - RtlSnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(count)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = snprintf(string, count, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016A - RtlSprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = sprintf(string, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016B - RtlVsnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(count)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = vsnprintf(string, count, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
+
+// ******************************************************************
+// * 0x016C - RtlVsprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(string)
+		LOG_FUNC_ARG(format)
+		LOG_FUNC_END;
+
+	// UNTESTED. Possible test-case : debugchannel.xbe
+
+	va_list ap;
+	va_start(ap, format);
+	INT Result = vsprintf(string, format, ap);
+	va_end(ap);
+
+	RETURN(Result);
+}
 
 // ******************************************************************
 // * 0x016F - UnknownAPI367()

@@ -8,7 +8,7 @@
 //       The types defined here should be kept in synch with ksmedia.h WDM 
 //       DDK for kernel mode filters.
 //
-// Copyright (c) 1997 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1997 - 2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -269,7 +269,19 @@ enum AM_MPEG2Profile {
                         //  indicates that "camera mode" was used.
 #define AMMPEG2_LetterboxAnalogOut  0x00000020  //if set and this stream is sent to an analog output, it should 
                         //  be letterboxed.  Streams sent to VGA should be letterboxed only by renderers.
+#define AMMPEG2_DSS_UserData        0x00000040  //if set, the MPEG-2 decoder must process DSS style user data
+#define AMMPEG2_DVB_UserData        0x00000080  //if set, the MPEG-2 decoder must process DVB style user data
+#define AMMPEG2_27MhzTimebase       0x00000100  //if set, the PTS,DTS timestamps advance at 27MHz rather than 90KHz
 
+#define AMMPEG2_WidescreenAnalogOut 0x00000200  //if set and this stream is sent to an analog output, it should 
+                        //  be in widescreen format (4x3 content should be centered on a 16x9 output).
+                        //  Streams sent to VGA should be widescreened only by renderers.
+
+// PRESENT in dwReserved1 field in VIDEOINFOHEADER2
+#define AMCONTROL_USED              0x00000001 // Used to test if these flags are supported.  Set and test for AcceptMediaType.
+                                                // If rejected, then you cannot use the AMCONTROL flags (send 0 for dwReserved1) 
+#define AMCONTROL_PAD_TO_4x3        0x00000002 // if set means display the image in a 4x3 area 
+#define AMCONTROL_PAD_TO_16x9       0x00000004 // if set means display the image in a 16x9 area 
 
 typedef struct tagVIDEOINFOHEADER2 {
     RECT                rcSource;
@@ -281,7 +293,10 @@ typedef struct tagVIDEOINFOHEADER2 {
     DWORD               dwCopyProtectFlags; // use AMCOPYPROTECT_* defines. Reject connection if undefined bits are not 0
     DWORD               dwPictAspectRatioX; // X dimension of picture aspect ratio, e.g. 16 for 16x9 display 
     DWORD               dwPictAspectRatioY; // Y dimension of picture aspect ratio, e.g.  9 for 16x9 display
-    DWORD               dwReserved1;        // must be 0; reject connection otherwise
+    union {
+        DWORD dwControlFlags;               // use AMCONTROL_* defines, use this from now on
+        DWORD dwReserved1;                  // for backward compatiblity (was "must be 0";  connection rejected otherwise)
+    };
     DWORD               dwReserved2;        // must be 0; reject connection otherwise
     BITMAPINFOHEADER    bmiHeader;
 } VIDEOINFOHEADER2;
@@ -313,18 +328,18 @@ typedef struct tagMPEG2VIDEOINFO {
 //===================================================================================
 
 #define AM_VIDEO_FLAG_FIELD_MASK        0x0003L // use this mask to check whether the sample is field1 or field2 or frame
-#define AM_VIDEO_FLAG_INTERLEAVED_FRAME     0x0000L     // the sample is a frame (remember to use AM_VIDEO_FLAG_FIELD_MASK when using this)
+#define AM_VIDEO_FLAG_INTERLEAVED_FRAME 0x0000L // the sample is a frame (remember to use AM_VIDEO_FLAG_FIELD_MASK when using this)
 #define AM_VIDEO_FLAG_FIELD1            0x0001L // the sample is field1 (remember to use AM_VIDEO_FLAG_FIELD_MASK when using this)
 #define AM_VIDEO_FLAG_FIELD2            0x0002L // the sample is the field2 (remember to use AM_VIDEO_FLAG_FIELD_MASK when using this)
 #define AM_VIDEO_FLAG_FIELD1FIRST       0x0004L // if set means display field1 first, else display field2 first.
-                            // this bit is irrelavant for 1FieldPerSample mode
+                                                // this bit is irrelavant for 1FieldPerSample mode
 #define AM_VIDEO_FLAG_WEAVE             0x0008L // if set use bob display mode else weave
 #define AM_VIDEO_FLAG_IPB_MASK          0x0030L // use this mask to check whether the sample is I, P or B
-#define AM_VIDEO_FLAG_I_SAMPLE          0x0000L     // I Sample (remember to use AM_VIDEO_FLAG_IPB_MASK when using this)
+#define AM_VIDEO_FLAG_I_SAMPLE          0x0000L // I Sample (remember to use AM_VIDEO_FLAG_IPB_MASK when using this)
 #define AM_VIDEO_FLAG_P_SAMPLE          0x0010L // P Sample (remember to use AM_VIDEO_FLAG_IPB_MASK when using this)
 #define AM_VIDEO_FLAG_B_SAMPLE          0x0020L // B Sample (remember to use AM_VIDEO_FLAG_IPB_MASK when using this)
 #define AM_VIDEO_FLAG_REPEAT_FIELD      0x0040L // if set means display the field which has been displayed first again after displaying 
-                            // both fields first. This bit is irrelavant for 1FieldPerSample mode
+                                                // both fields first. This bit is irrelavant for 1FieldPerSample mode
 
 // -----------------------------------------------------------------------
 // AM_KSPROPSETID_DvdKaraoke property set definitions

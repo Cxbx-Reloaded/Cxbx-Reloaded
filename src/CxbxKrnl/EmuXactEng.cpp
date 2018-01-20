@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "XACT"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -47,9 +48,8 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
-#include "EmuAlloc.h"
 #include "EmuXTL.h"
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -81,7 +81,7 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 
 	// TODO: Any other form of initialization?
 
-	*ppEngine = (X_XACTEngine*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTEngine ) );
+	*ppEngine = (X_XACTEngine*)g_VMManager.AllocateZeroed(sizeof( X_XACTEngine ));
 
 		
 	
@@ -129,7 +129,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTWaveBank ));
 
 	RETURN(S_OK);
 }
@@ -154,7 +154,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTWaveBank ));
 
 	RETURN(S_OK);
 }
@@ -181,7 +181,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 
 	// TODO: Implement
 
-	*ppSoundBank = (X_XACTSoundBank*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTSoundBank ) );
+	*ppSoundBank = (X_XACTSoundBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTSoundBank ));
 
 	RETURN(S_OK);
 }
@@ -231,7 +231,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 		LOG_FUNC_ARG(ppSoundSource)
 		LOG_FUNC_END;
 
-	*ppSoundSource = (X_XACTSoundSource*)g_MemoryManager.AllocateZeroed(1, sizeof( X_XACTSoundSource ) );
+	*ppSoundSource = (X_XACTSoundSource*)g_VMManager.AllocateZeroed(sizeof( X_XACTSoundSource ));
 
 	RETURN(S_OK);
 }

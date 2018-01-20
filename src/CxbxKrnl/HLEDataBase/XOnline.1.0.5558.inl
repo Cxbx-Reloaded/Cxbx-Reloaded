@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5558.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->XOnline.1.0.5558.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,37 +33,28 @@
 // ******************************************************************
 
 // ******************************************************************
-// * WSAStartup
+// * CXo::XOnlineLogon
 // ******************************************************************
-OOVPA_NO_XREF(WSAStartup, 5558, 7)
+OOVPA_XREF(CXo_XOnlineLogon, 5558, 14,
 
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0x6A },
-        { 0x0E, 0x68 },
-        { 0x13, 0xE8 },
-        { 0x18, 0xC2 },
-        { 0x1A, 0x00 },
+    XREF_CXo_XOnlineLogon,
+    XRefZero)
+
+        { 0x02, 0xEC },
+
+        { 0x15, 0xE9 },
+        { 0x1C, 0xF0 },
+
+        { 0x27, 0xA8 },
+        { 0x28, 0x01 },
+        { 0x29, 0x75 },
+        { 0x2A, 0x0C },
+        { 0x2B, 0xC7 },
+        { 0x2C, 0x45 },
+//      { 0x2D, 0x10 },
+        { 0x2E, 0x00 },
+        { 0x2F, 0x10 },
+        { 0x30, 0x15 },
+        { 0x31, 0x80 },
+        { 0x32, 0xE9 },
 OOVPA_END;
-
-// ******************************************************************
-// * XOnline_5558
-// ******************************************************************
-// * TODO: Verify all of these
-// ******************************************************************
-OOVPATable XOnline_5558[] = {
-
-	REGISTER_OOVPA(XNetStartup, 5233, PATCH),
-	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
-	REGISTER_OOVPA(XnInit, 4627, XREF),
-	// REGISTER_OOVPA(socket, 4361, PATCH),
-	REGISTER_OOVPA(bind, 4361, PATCH),
-	// REGISTER_OOVPA(listen, 4361, PATCH),
-	REGISTER_OOVPA(ioctlsocket, 4361, PATCH),
-	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 4627, PATCH),
-};
-
-// ******************************************************************
-// * XOnline_5558_SIZE
-// ******************************************************************
-uint32 XOnline_5558_SIZE = sizeof(XOnline_5558);

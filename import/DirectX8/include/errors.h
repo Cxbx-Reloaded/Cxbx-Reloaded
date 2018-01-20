@@ -3,7 +3,7 @@
 //
 // Desc:  ActiveMovie error defines.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 

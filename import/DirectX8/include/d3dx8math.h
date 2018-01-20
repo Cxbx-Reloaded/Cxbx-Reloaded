@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 1998 Microsoft Corporation.  All Rights Reserved.
+//  Copyright (C) Microsoft Corporation.  All Rights Reserved.
 //
 //  File:       d3dx8math.h
 //  Content:    D3DX math types and functions
@@ -15,13 +15,6 @@
 #include <math.h>
 #pragma warning(disable:4201) // anonymous unions warning
 
-
-
-typedef struct ID3DXMatrixStack *LPD3DXMATRIXSTACK;
-
-// {E3357330-CC5E-11d2-A434-00A0C90629A8}
-DEFINE_GUID( IID_ID3DXMatrixStack,
-0xe3357330, 0xcc5e, 0x11d2, 0xa4, 0x34, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
 
 
 //===========================================================================
@@ -227,6 +220,105 @@ public:
 typedef struct _D3DMATRIX D3DXMATRIX, *LPD3DXMATRIX;
 #endif //!__cplusplus
 
+//===========================================================================
+//
+// Aligned Matrices
+//
+// This class helps keep matrices 16-byte aligned as preferred by P4 cpus.
+// It aligns matrices on the stack and on the heap or in global scope.
+// It does this using __declspec(align(16)) which works on VC7 and on VC 6
+// with the processor pack. Unfortunately there is no way to detect the 
+// latter so this is turned on only on VC7. On other compilers this is the
+// the same as D3DXMATRIX.
+// Using this class on a compiler that does not actually do the alignment
+// can be dangerous since it will not expose bugs that ignore alignment.
+// E.g if an object of this class in inside a struct or class, and some code
+// memcopys data in it assuming tight packing. This could break on a compiler
+// that eventually start aligning the matrix.
+//
+//===========================================================================
+#ifdef __cplusplus
+typedef struct _D3DXMATRIXA16 : public D3DXMATRIX
+{
+    _D3DXMATRIXA16() {}
+    _D3DXMATRIXA16( CONST FLOAT * f): D3DXMATRIX(f) {}
+    _D3DXMATRIXA16( CONST D3DMATRIX& m): D3DXMATRIX(m) {}
+    _D3DXMATRIXA16( FLOAT _11, FLOAT _12, FLOAT _13, FLOAT _14,
+                    FLOAT _21, FLOAT _22, FLOAT _23, FLOAT _24,
+                    FLOAT _31, FLOAT _32, FLOAT _33, FLOAT _34,
+                    FLOAT _41, FLOAT _42, FLOAT _43, FLOAT _44 ) :
+                D3DXMATRIX(_11, _12, _13, _14,
+                           _21, _22, _23, _24,
+                           _31, _32, _33, _34,
+                           _41, _42, _43, _44) {}
+    void* operator new(size_t s)
+    {
+        LPBYTE p = ::new BYTE[s + 16];
+        if (p)
+        {
+            BYTE offset = (BYTE)(16 - ((UINT_PTR)p & 15));
+            p += offset;
+            p[-1] = offset;
+        }
+        return p;
+    };
+
+    void* operator new[](size_t s)
+    {
+        LPBYTE p = ::new BYTE[s + 16];
+        if (p)
+        {
+            BYTE offset = (BYTE)(16 - ((UINT_PTR)p & 15));
+            p += offset;
+            p[-1] = offset;
+        }
+        return p;
+    };
+
+    // This is NOT a virtual operator. If you cast
+    // to D3DXMATRIX, do not delete using that
+    void operator delete(void* p)
+    {
+        if(p)
+        {
+            BYTE* pb = static_cast<BYTE*>(p);
+            pb -= pb[-1];
+            ::delete [] pb;
+        }
+    };
+
+    // This is NOT a virtual operator. If you cast
+    // to D3DXMATRIX, do not delete using that
+    void operator delete[](void* p)
+    {
+        if(p)
+        {
+            BYTE* pb = static_cast<BYTE*>(p);
+            pb -= pb[-1];
+            ::delete [] pb;
+        }
+    };
+
+    struct _D3DXMATRIXA16& operator=(CONST D3DXMATRIX& rhs)
+    {
+        memcpy(&_11, &rhs, sizeof(D3DXMATRIX));
+        return *this;
+    };
+} _D3DXMATRIXA16;
+
+#else //!__cplusplus
+typedef D3DXMATRIX  _D3DXMATRIXA16;
+#endif //!__cplusplus
+
+#if _MSC_VER >= 1300        // VC7
+#define _ALIGN_16 __declspec(align(16))
+#else
+#define _ALIGN_16                   // Earlier compiler may not understand this, do nothing.
+#endif
+
+#define D3DXMATRIXA16 _ALIGN_16 _D3DXMATRIXA16
+
+typedef D3DXMATRIXA16 *LPD3DXMATRIXA16;
 
 //===========================================================================
 //
@@ -433,7 +525,7 @@ D3DXVECTOR2* WINAPI D3DXVec2CatmullRom
 // Barycentric coordinates.  V1 + f(V2-V1) + g(V3-V1)
 D3DXVECTOR2* WINAPI D3DXVec2BaryCentric
     ( D3DXVECTOR2 *pOut, CONST D3DXVECTOR2 *pV1, CONST D3DXVECTOR2 *pV2,
-      D3DXVECTOR2 *pV3, FLOAT f, FLOAT g);
+      CONST D3DXVECTOR2 *pV3, FLOAT f, FLOAT g);
 
 // Transform (x, y, 0, 1) by matrix.
 D3DXVECTOR4* WINAPI D3DXVec2Transform
@@ -642,13 +734,17 @@ extern "C" {
 FLOAT WINAPI D3DXMatrixfDeterminant
     ( CONST D3DXMATRIX *pM );
 
+D3DXMATRIX* WINAPI D3DXMatrixTranspose
+    ( D3DXMATRIX *pOut, CONST D3DXMATRIX *pM );
+
 // Matrix multiplication.  The result represents the transformation M2
 // followed by the transformation M1.  (Out = M1 * M2)
 D3DXMATRIX* WINAPI D3DXMatrixMultiply
     ( D3DXMATRIX *pOut, CONST D3DXMATRIX *pM1, CONST D3DXMATRIX *pM2 );
 
-D3DXMATRIX* WINAPI D3DXMatrixTranspose
-    ( D3DXMATRIX *pOut, CONST D3DXMATRIX *pM );
+// Matrix multiplication, followed by a transpose. (Out = T(M1 * M2))
+D3DXMATRIX* WINAPI D3DXMatrixMultiplyTranspose
+    ( D3DXMATRIX *pOut, CONST D3DXMATRIX *pM1, CONST D3DXMATRIX *pM2 );
 
 // Calculate inverse of matrix.  Inversion my fail, in which case NULL will
 // be returned.  The determinant of pM is also returned it pfDeterminant
@@ -845,20 +941,29 @@ D3DXQUATERNION* WINAPI D3DXQuaternionLn
 // if q = (0, theta * v); exp(q) = (cos(theta), sin(theta) * v)
 D3DXQUATERNION* WINAPI D3DXQuaternionExp
     ( D3DXQUATERNION *pOut, CONST D3DXQUATERNION *pQ );
-
-// Spherical linear interpolation between Q1 (s == 0) and Q2 (s == 1).
+      
+// Spherical linear interpolation between Q1 (t == 0) and Q2 (t == 1).
 // Expects unit quaternions.
 D3DXQUATERNION* WINAPI D3DXQuaternionSlerp
     ( D3DXQUATERNION *pOut, CONST D3DXQUATERNION *pQ1,
       CONST D3DXQUATERNION *pQ2, FLOAT t );
 
 // Spherical quadrangle interpolation.
-// Slerp(Slerp(Q1, Q4, t), Slerp(Q2, Q3, t), 2t(1-t))
+// Slerp(Slerp(Q1, C, t), Slerp(A, B, t), 2t(1-t))
 D3DXQUATERNION* WINAPI D3DXQuaternionSquad
     ( D3DXQUATERNION *pOut, CONST D3DXQUATERNION *pQ1,
-      CONST D3DXQUATERNION *pQ2, CONST D3DXQUATERNION *pQ3,
-      CONST D3DXQUATERNION *pQ4, FLOAT t );
+      CONST D3DXQUATERNION *pA, CONST D3DXQUATERNION *pB,
+      CONST D3DXQUATERNION *pC, FLOAT t );
 
+// Setup control points for spherical quadrangle interpolation
+// from Q1 to Q2.  The control points are chosen in such a way 
+// to ensure the continuity of tangents with adjacent segments.
+void WINAPI D3DXQuaternionSquadSetup
+    ( D3DXQUATERNION *pAOut, D3DXQUATERNION *pBOut, D3DXQUATERNION *pCOut,
+      CONST D3DXQUATERNION *pQ0, CONST D3DXQUATERNION *pQ1, 
+      CONST D3DXQUATERNION *pQ2, CONST D3DXQUATERNION *pQ3 );
+
+// Barycentric interpolation.
 // Slerp(Slerp(Q1, Q2, f+g), Slerp(Q1, Q3, f+g), g/(f+g))
 D3DXQUATERNION* WINAPI D3DXQuaternionBaryCentric
     ( D3DXQUATERNION *pOut, CONST D3DXQUATERNION *pQ1,
@@ -913,7 +1018,7 @@ D3DXPLANE* WINAPI D3DXPlaneFromPoints
       CONST D3DXVECTOR3 *pV3);
 
 // Transform a plane by a matrix.  The vector (a,b,c) must be normal.
-// M must be an affine transform.
+// M should be the inverse transpose of the transformation desired.
 D3DXPLANE* WINAPI D3DXPlaneTransform
     ( D3DXPLANE *pOut, CONST D3DXPLANE *pP, CONST D3DXMATRIX *pM );
 
@@ -970,6 +1075,23 @@ D3DXCOLOR* WINAPI D3DXColorAdjustContrast
 
 
 
+//--------------------------
+// Misc
+//--------------------------
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Calculate Fresnel term given the cosine of theta (likely obtained by
+// taking the dot of two normals), and the refraction index of the material.
+FLOAT WINAPI D3DXFresnelTerm
+    (FLOAT CosTheta, FLOAT RefractionIndex);     
+
+#ifdef __cplusplus
+}
+#endif
+
 
 
 //===========================================================================
@@ -977,6 +1099,17 @@ D3DXCOLOR* WINAPI D3DXColorAdjustContrast
 //    Matrix Stack
 //
 //===========================================================================
+
+typedef interface ID3DXMatrixStack ID3DXMatrixStack;
+typedef interface ID3DXMatrixStack *LPD3DXMATRIXSTACK;
+
+// {E3357330-CC5E-11d2-A434-00A0C90629A8}
+DEFINE_GUID( IID_ID3DXMatrixStack,
+0xe3357330, 0xcc5e, 0x11d2, 0xa4, 0x34, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+
+
+#undef INTERFACE
+#define INTERFACE ID3DXMatrixStack
 
 DECLARE_INTERFACE_(ID3DXMatrixStack, IUnknown)
 {
@@ -1066,7 +1199,10 @@ DECLARE_INTERFACE_(ID3DXMatrixStack, IUnknown)
 extern "C" {
 #endif
 
-HRESULT WINAPI D3DXCreateMatrixStack( DWORD Flags, LPD3DXMATRIXSTACK *ppStack );
+HRESULT WINAPI 
+    D3DXCreateMatrixStack( 
+        DWORD               Flags, 
+        LPD3DXMATRIXSTACK*  ppStack);
 
 #ifdef __cplusplus
 }

@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "XGRP"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -242,13 +243,13 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	UINT			Pitch
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
 		LOG_FUNC_ARG(Levels)
-		LOG_FUNC_ARG(Usage) // TODO : How to embed this?
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage) // TODO : How to embed this?
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_ARG(Pool) // TODO : How to embed this?
 		LOG_FUNC_ARG(pTexture)

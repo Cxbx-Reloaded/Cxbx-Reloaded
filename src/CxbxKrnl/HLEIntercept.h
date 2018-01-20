@@ -34,13 +34,18 @@
 #ifndef HLEINTERCEPT_H
 #define HLEINTERCEPT_H
 
+#include <map>
+
 extern bool bLLE_APU; // Set this to true for experimental APU (sound) LLE
 extern bool bLLE_GPU; // Set this to true for experimental GPU (graphics) LLE
 extern bool bLLE_JIT; // Set this to true for experimental JIT
 
+extern std::map<std::string, xbaddr> g_SymbolAddresses;
+
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
 std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset);
+void* GetXboxFunctionPointer(std::string functionName);
 
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();

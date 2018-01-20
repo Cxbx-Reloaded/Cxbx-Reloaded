@@ -33,14 +33,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
-#include "CxbxKrnl/MemoryManager.h"
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
@@ -594,7 +592,7 @@ extern void XTL::EmuExecutePushBufferRaw
     if(g_bStepPush)
     {
         g_pD3DDevice8->Present(0,0,0,0);
-        Sleep(500);
+		Sleep(500);
     }
 }
 

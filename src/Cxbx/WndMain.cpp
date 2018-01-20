@@ -37,26 +37,63 @@
 #include "DlgAbout.h"
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
+#include "DlgAudioConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
+#include "Shlwapi.h"
 
 #include <io.h>
+
+#include <sstream> // for std::stringstream
+#include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
 #define STBI_ONLY_JPEG
 #define STBI_NO_LINEAR
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-WndMain::WndMain(HINSTANCE x_hInstance) : 
-	Wnd(x_hInstance), 
-	m_bCreated(false), 
-	m_Xbe(0), 
-	m_bXbeChanged(false), 
-	m_bCanStart(true), 
-	m_hwndChild(NULL), 
-	m_KrnlDebug(DM_NONE), 
-	m_CxbxDebug(DM_NONE), 
+static int gameLogoWidth, gameLogoHeight;
+
+void ClearHLECache()
+{
+	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+	std::string fullpath = cacheDir + "*.ini";
+
+	WIN32_FIND_DATA data;
+	HANDLE hFind = FindFirstFile(fullpath.c_str(), &data);
+
+	if (hFind != INVALID_HANDLE_VALUE) {
+		BOOL bContinue = TRUE;
+		do {
+			if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+				fullpath = cacheDir + data.cFileName;
+
+				if (!DeleteFile(fullpath.c_str())) {
+					break;
+				}
+			}
+
+			bContinue = FindNextFile(hFind, &data);
+		} while (bContinue);
+
+		FindClose(hFind);
+	}
+
+	printf("Cleared HLE Cache\n");
+}
+
+#define TIMERID_FPS 0
+
+WndMain::WndMain(HINSTANCE x_hInstance) :
+	Wnd(x_hInstance),
+	m_bCreated(false),
+	m_Xbe(nullptr),
+	m_bXbeChanged(false),
+	m_bIsStarted(false),
+	m_hwndChild(NULL),
+	m_KrnlDebug(DM_NONE),
+	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_dwRecentXbe(0)
 {
@@ -94,23 +131,120 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			LONG result = ERROR_SUCCESS;
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_FlagsLLE = 0;
+			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			result = RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_XInputEnabled = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "HackDisablePixelShaders", NULL, &dwType, (PBYTE)&m_DisablePixelShaders, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_DisablePixelShaders = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_CxbxDebug = DebugMode::DM_NONE;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_KrnlDebug = DebugMode::DM_NONE;
+			}
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			result = RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_dwRecentXbe = 0;
+			}
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+			dwType = REG_SZ; dwSize = MAX_PATH; ULONG lErrCodeCxbxDebugFilename;
+			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+			if (lErrCodeCxbxDebugFilename != ERROR_SUCCESS) {
+				m_CxbxDebugFilename = "";
+			}
 
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
+			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
+				m_KrnlDebugFilename = "";
+			}
+
+			// Prevent using an incorrect path from the registry if the debug folders have been moved
+			if (m_CxbxDebug == DM_FILE)
+			{
+				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_CxbxDebugFilename) == 0)
+				{
+					m_CxbxDebug = DM_NONE;
+				}
+				else
+				{
+					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
+					char *CxbxDebugName = (char*)calloc(1, MAX_PATH);
+
+					strcpy(CxbxDebugName, strrchr(m_CxbxDebugFilename, '\\'));
+
+					if(strlen(m_CxbxDebugFilename) < strlen(CxbxDebugName))
+					{
+						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+						m_CxbxDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen(CxbxDebugName));
+						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
+						{
+							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
+							m_CxbxDebug = DM_NONE;
+						}
+					}
+					free(CxbxDebugPath);
+					free(CxbxDebugName);
+				}
+			}
+
+			if (m_KrnlDebug == DM_FILE)
+			{
+				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_KrnlDebugFilename) == 0)
+				{
+					m_KrnlDebug = DM_NONE;
+				}
+				else
+				{
+					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
+					char *KrnlDebugName = (char*)calloc(1, MAX_PATH);
+
+					strcpy(KrnlDebugName, strrchr(m_KrnlDebugFilename, '\\'));
+
+					if(strlen(m_KrnlDebugFilename) < strlen(KrnlDebugName))
+					{
+						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+						m_KrnlDebug = DM_NONE;
+					}
+					else
+					{
+						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen(KrnlDebugName));
+						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
+						{
+							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
+							m_KrnlDebug = DM_NONE;
+						}
+					}
+					free(KrnlDebugPath);
+					free(KrnlDebugName);
+				}
+			}
 
             int v=0;
 
@@ -123,7 +257,11 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
                 m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
 
                 dwType = REG_SZ; dwSize = MAX_PATH;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+                result = RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+				if (result != ERROR_SUCCESS) {
+					m_szRecentXbe[v] = "";
+				}
+
             }
 
             RegCloseKey(hKey);
@@ -159,6 +297,12 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "XInputEnabled", 0, dwType, (PBYTE)&m_XInputEnabled, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -264,7 +408,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                     }
-
+					
                     stbi_image_free(bmpBuff);
 
                     FreeResource(hRes);
@@ -275,7 +419,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 m_BackDC   = CreateCompatibleDC(hDC);
                 m_LogoDC   = CreateCompatibleDC(hDC);
-
+				
                 m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
                 m_OrigLogo = (HBITMAP)SelectObject(m_LogoDC, m_LogoBmp);
 
@@ -284,6 +428,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
 
             SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+			DragAcceptFiles(hwnd, TRUE);
+
+			// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
+
+			ChangeWindowMessageFilterEx(hwnd, WM_DROPFILES, MSGFLT_ALLOW, nullptr);
+			ChangeWindowMessageFilterEx(hwnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
+			ChangeWindowMessageFilterEx(hwnd, 0x0049, MSGFLT_ALLOW, nullptr);
 
             m_bCreated = true;
         }
@@ -295,35 +446,59 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
-                    m_hwndChild = GetWindow(hwnd, GW_CHILD);
-
-                    char AsciiTitle[MAX_PATH];
-
-					sprintf(AsciiTitle, "Cxbx-Reloaded %s : Emulating %s", _CXBX_VERSION, m_Xbe->m_szAsciiTitle);
-
-                    SetWindowText(m_hwnd, AsciiTitle);
-
-                    RefreshMenus();
+					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
+					if (m_hwndChild == NULL) {
+						float fps = 0;
+						float mspf = 0;
+						g_EmuShared->SetCurrentMSpF(&mspf);
+						g_EmuShared->SetCurrentFPS(&fps);
+						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
+						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
+						UpdateCaption();
+						RefreshMenus();
+					}
+					else
+					{
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
+					}
                 }
                 break;
 
                 case WM_DESTROY:
                 {
-                    m_hwndChild = NULL;
-                    SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
-                    RefreshMenus();
+					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
+					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
+						KillTimer(hwnd, TIMERID_FPS);
+						m_hwndChild = NULL;
+						StopEmulation();
+					}
                 }
                 break;
             }
         };
+		break; // added per PVS suggestion.
+
+		case WM_TIMER:
+		{
+			switch (wParam)
+			{
+				case TIMERID_FPS:
+				{
+					UpdateCaption();
+				}
+				break;
+			}
+		}
+		break;
 
         case WM_SYSKEYDOWN:
         {
-            if(m_hwndChild != 0)
+            if(m_hwndChild != NULL)
             {
                 SendMessage(m_hwndChild, uMsg, wParam, lParam);
             }
         };
+		break; // added per PVS suggestion.
 
         case WM_PAINT:
         {
@@ -352,7 +527,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
                 BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
-//              BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
+
+				BitBlt(hDC, m_w - gameLogoWidth - 3, m_h - nLogoBmpH - 12 - gameLogoHeight, gameLogoWidth, gameLogoHeight, m_GameLogoDC, 0, 0, SRCCOPY);
+
                 BitBlt(hDC, m_w-nLogoBmpW-4, m_h-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
                 int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
@@ -367,7 +544,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 char buffer[255];
 
-                if(m_Xbe != 0 && m_Xbe->HasError())
+                if(m_Xbe != nullptr && m_Xbe->HasError())
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
                     sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
@@ -394,26 +571,26 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case VK_F5:
                 {
-                    if(m_Xbe != 0 && (m_hwndChild == NULL) && m_bCanStart)
-                    {
-                        m_bCanStart = false;
-                        StartEmulation(hwnd);
-                    }
+					// Try to open the most recent Xbe if none is opened yet :
+					if (m_Xbe == nullptr)
+						OpenMRU(0);
+
+					if (m_Xbe != nullptr)
+						if(!m_bIsStarted)
+							StartEmulation(hwnd);
                 }
                 break;
 
                 case VK_F6:
                 {
-                    if(m_hwndChild != NULL && !m_bCanStart)
-                    {
+					if(m_bIsStarted)
                         StopEmulation();
-                    }
                 }
                 break;
 
                 default:
                 {
-                    if(m_hwndChild != 0)
+                    if(m_hwndChild != NULL)
                     {
                         SendMessage(m_hwndChild, uMsg, wParam, lParam);
                     }
@@ -422,636 +599,634 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
+		case WM_DROPFILES:
+		{
+			if(!m_bIsStarted) {
+				char DroppedXbeFilename[MAX_PATH];
+				DragQueryFile((HDROP)wParam, 0, DroppedXbeFilename, MAX_PATH);
+				OpenXbe(DroppedXbeFilename);
+			}
+		}
+		break;
+
         case WM_COMMAND:
         {
-            switch(LOWORD(wParam))
-            {
-                case ID_FILE_OPEN_XBE:
-                {
-                    OPENFILENAME ofn = {0};
-
-                    char filename[MAX_PATH] = {0};
-
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-                    ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
-                    ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = MAX_PATH;
-                    ofn.nFilterIndex    = 1;
-                    ofn.lpstrFileTitle  = NULL;
-                    ofn.nMaxFileTitle   = 0;
-                    ofn.lpstrInitialDir = NULL;
-                    ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-                    if(GetOpenFileName(&ofn) == TRUE)
-                    {
-                        if(m_Xbe != 0)
-                            CloseXbe();
-
-                        if(m_Xbe != 0)
-                            break;
-
-                        OpenXbe(ofn.lpstrFile);
-                    }
-                }
-                break;
-
-                case ID_FILE_CLOSE_XBE:
-                    CloseXbe();
-                    break;
-
-                case ID_FILE_SAVEXBEFILE:
-                {
-                    if(m_XbeFilename[0] == '\0')
-                        SaveXbeAs();
-                    else
-                        SaveXbe(m_XbeFilename);
-                }
-                break;
-
-                case ID_FILE_SAVEXBEFILEAS:
-                    SaveXbeAs();
-                    break;
-
-                case ID_FILE_RXBE_0:
-                case ID_FILE_RXBE_1:
-                case ID_FILE_RXBE_2:
-                case ID_FILE_RXBE_3:
-                case ID_FILE_RXBE_4:
-                case ID_FILE_RXBE_5:
-                case ID_FILE_RXBE_6:
-                case ID_FILE_RXBE_7:
-                case ID_FILE_RXBE_8:
-                case ID_FILE_RXBE_9:
-                {
-                    if(m_Xbe != 0)
-                        CloseXbe();
-
-                    if(m_Xbe != 0)
-                        break;
-
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU file_menu = GetSubMenu(menu, 0);
-                    HMENU rxbe_menu = GetSubMenu(file_menu, 6);
-
-                    char szBuffer[270];
-
-                    GetMenuString(rxbe_menu, LOWORD(wParam), szBuffer, 269, MF_BYCOMMAND);
-
-                    char *szFilename = (char*)((uint32)szBuffer + 5);
-
-                    OpenXbe(szFilename);
-                }
-                break;
-
-                case ID_FILE_EXIT:
-                    SendMessage(hwnd, WM_CLOSE, 0, 0);
-                    break;
-
-                case ID_EDIT_LOGOBITMAP_EXPORT:
-                {
-                    OPENFILENAME ofn = {0};
-
-                    char filename[MAX_PATH] = "logo.bmp";
-
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-                    ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
-                    ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = MAX_PATH;
-                    ofn.nFilterIndex    = 1;
-                    ofn.lpstrFileTitle  = NULL;
-                    ofn.nMaxFileTitle   = 0;
-                    ofn.lpstrInitialDir = NULL;
-                    ofn.lpstrDefExt     = "bmp";
-                    ofn.lpstrTitle      = "Export Logo Bitmap";
-                    ofn.Flags           = OFN_PATHMUSTEXIST;
-
-                    if(GetSaveFileName(&ofn) == TRUE)
-                    {
-                        // ask permission to overwrite if file already exists
-                        if(_access(ofn.lpstrFile, 0) != -1)
-                        {
-                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
-                                return TRUE;
-                        }
-
-                        // export logo bitmap
-                        {
-                            uint08 i_gray[100*17];
-
-                            m_Xbe->ExportLogoBitmap(i_gray);
-
-                            if (false == m_Xbe->HasError())
-                            {
-                                FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
-
-                                // write bitmap header
-                                {
-                                    BITMAPFILEHEADER    bmfh;
-
-                                    bmfh.bfType         = *(uint16*)"BM";
-                                    bmfh.bfSize         = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100*17)*sizeof(RGBTRIPLE) + 2;
-                                    bmfh.bfReserved1    = 0;
-                                    bmfh.bfReserved2    = 0;
-                                    bmfh.bfOffBits      = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD);
-
-                                    fwrite(&bmfh, sizeof(bmfh), 1, LogoBitmap);
-                                }
-
-                                // write bitmap info
-                                {
-                                    BITMAPINFO          bmi;
-
-                                    bmi.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
-                                    bmi.bmiHeader.biWidth         = 100;
-                                    bmi.bmiHeader.biHeight        = -17;
-                                    bmi.bmiHeader.biPlanes        = 1;
-                                    bmi.bmiHeader.biBitCount      = 24;
-                                    bmi.bmiHeader.biCompression   = BI_RGB;
-                                    bmi.bmiHeader.biSizeImage     = 0;
-                                    bmi.bmiHeader.biXPelsPerMeter = 0;
-                                    bmi.bmiHeader.biYPelsPerMeter = 0;
-                                    bmi.bmiHeader.biClrUsed       = 0;
-                                    bmi.bmiHeader.biClrImportant  = 0;
-
-                                    fwrite(&bmi, sizeof(bmi) - 4, 1, LogoBitmap);
-                                }
-
-                                // write bitmap data
-                                {
-                                    RGBTRIPLE bmp_data[100*17];
-
-                                    for(uint32 v=0;v<100*17;v++)
-                                    {
-                                        bmp_data[v].rgbtRed   = i_gray[v];
-                                        bmp_data[v].rgbtGreen = i_gray[v];
-                                        bmp_data[v].rgbtBlue  = i_gray[v];
-                                    }
-
-                                    fwrite(bmp_data, 100*17*sizeof(RGBTRIPLE), 1, LogoBitmap);
-                                }
-
-                                // write bitmap padding
-                                {
-                                    uint16 pad = 0;
-
-                                    fwrite(&pad, 2, 1, LogoBitmap);
-                                }
-
-                                fclose(LogoBitmap);
-                            }
-
-                            if(m_Xbe->HasError())
-                                MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                            else
-                            {
-                                char buffer[255];
-
-                                sprintf(buffer, "%s's logo bitmap was successfully exported.", m_Xbe->m_szAsciiTitle);
-
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-
-                                printf("WndMain: %s\n", buffer);
-                            }
-                        }
-                    }
-                }
-                break;
-
-                case ID_EDIT_LOGOBITMAP_IMPORT:
-                {
-                    OPENFILENAME ofn = {0};
-
-                    char filename[MAX_PATH] = "*.bmp";
-
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-                    ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
-                    ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = MAX_PATH;
-                    ofn.nFilterIndex    = 1;
-                    ofn.lpstrFileTitle  = NULL;
-                    ofn.nMaxFileTitle   = 0;
-                    ofn.lpstrInitialDir = NULL;
-                    ofn.lpstrDefExt     = "bmp";
-                    ofn.lpstrTitle      = "Import Logo Bitmap";
-                    ofn.Flags           = OFN_PATHMUSTEXIST;
-
-                    if(GetOpenFileName(&ofn) == TRUE)
-                    {
-                        // import logo bitmap
-                        {
-                            uint08 i_gray[100*17];
-
-                            // read bitmap file
-                            {
-                                FILE *logo = fopen(ofn.lpstrFile, "rb");
-
-                                char *bmp_err = 0;
-
-                                // read bitmap header
-                                if(!bmp_err)
-                                {
-                                    BITMAPFILEHEADER bmfh;
-
-                                    fread(&bmfh, sizeof(bmfh), 1, logo);
-
-                                    if(bmfh.bfType != *(uint16*)"BM")
-                                        bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
-                                    else if(bmfh.bfSize != sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100*17)*sizeof(RGBTRIPLE) + 2)
-                                        bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
-                                }
-
-                                // read bitmap info
-                                if(!bmp_err)
-                                {
-                                    BITMAPINFO bmi;
-
-                                    fread(&bmi, sizeof(bmi) - 4, 1, logo);
-
-                                    if(bmi.bmiHeader.biWidth != 100 || bmi.bmiHeader.biHeight != -17)
-                                        bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
-                                }
-
-                                // read bitmap data
-                                if(!bmp_err)
-                                {
-                                    RGBTRIPLE bmp_data[100*17];
-
-                                    fread(bmp_data, 100*17*sizeof(RGBTRIPLE), 1, logo);
-
-                                    for(uint32 c=0;c<100*17;c++)
-                                        i_gray[c] = (char)(((float)bmp_data[c].rgbtRed + (float)bmp_data[c].rgbtGreen + (float)bmp_data[c].rgbtBlue) / 3.0);
-                                }
-
-                                fclose(logo);
-
-                                if(bmp_err != 0)
-                                {
-                                    MessageBox(m_hwnd, bmp_err, "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
-                                    break;
-                                }
-                            }
-
-                            m_Xbe->ImportLogoBitmap(i_gray);
-
-                            if(m_Xbe->HasError())
-                            {
-                                MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-
-                                if (m_Xbe->HasFatalError())
-                                {
-                                    CloseXbe();
-                                }
-                                else
-                                {
-                                    m_Xbe->ClearError();
-                                }
-                                    
-                            }
-                            else
-                            {
-                                m_bXbeChanged = true;
-
-                                LoadLogo();
-
-                                char buffer[255];
-
-                                sprintf(buffer, "%s's logo bitmap was successfully updated.", m_Xbe->m_szAsciiTitle);
-
-                                printf("WndMain: %s\n", buffer);
-
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-                            }
-                        }
-                    }
-                }
-                break;
-
-                case ID_EDIT_PATCH_ALLOW64MB:
-                {
-                    m_bXbeChanged = true;
-
-                    m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
-
-                    RefreshMenus();
-
-                    if(m_Xbe->m_Header.dwInitFlags.bLimit64MB)
-                        printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-                    else
-                        printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-                }
-                break;
-
-                case ID_EDIT_PATCH_DEBUGMODE:
-                {
-                    m_bXbeChanged = true;
-
-                    // patch to/from debug mode
-                    if((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
-                    {
-                        // we're in debug mode, so switch over to retail
-                        uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
-                        uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
-
-                        m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
-                        m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
-                    }
-                    else
-                    {
-                        // we're in retail mode, so switch to debug
-                        uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
-                        uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
-
-                        m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
-                        m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
-                    }
-
-                    RefreshMenus();
-
-                    bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
-
-                    if(res)
-                        printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
-                    else
-                        printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
-                }
-                break;
-
-                case ID_EDIT_DUMPXBEINFOTO_FILE:
-                {
-                    OPENFILENAME ofn = {0};
-
-                    char filename[MAX_PATH] = "Xbe.txt";
-
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-                    ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-                    ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = MAX_PATH;
-                    ofn.nFilterIndex    = 1;
-                    ofn.lpstrFileTitle  = NULL;
-                    ofn.nMaxFileTitle   = 0;
-                    ofn.lpstrInitialDir = NULL;
-                    ofn.lpstrDefExt     = "txt";
-                    ofn.Flags           = OFN_PATHMUSTEXIST;
-
-                    if(GetSaveFileName(&ofn) == TRUE)
-                    {
-                        // ask permission to overwrite if file exists
-                        if(_access(ofn.lpstrFile, 0) != -1)
-                        {
-                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
-                                return TRUE;
-                        }
-
-                        // dump xbe information to file
-                        {
-                            FILE *TxtFile = fopen(ofn.lpstrFile, "wt");
-
-                            // verify file was opened
-                            if(TxtFile == 0)
-                                MessageBox(m_hwnd, "Could not open text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                            else
-                            {
-                                m_Xbe->DumpInformation(TxtFile);
-
-                                fclose(TxtFile);
-
-                                if(m_Xbe->HasError())
-                                {
-                                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                                }
-                                else
-                                {
-                                    char buffer[255];
-
-                                    sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-                                    printf("WndMain: %s\n", buffer);
-
-                                    MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-                                }
-                            }
-                        }
-                    }
-                }
-                break;
-
-                case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-                {
-                    // dump xbe information to debug console
-                    m_Xbe->DumpInformation(stdout);
-
-                    if(m_Xbe->HasError())
-                    {
-                        MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                    }
-                    else
-                    {
-                        char buffer[255];
-
-                        sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-                        printf("WndMain: %s\n", buffer);
-                    }
-                }
-                break;
-
-                case ID_SETTINGS_CONFIG_CONTROLLER:
-                    ShowControllerConfig(hwnd);
-                    break;
-
-                case ID_SETTINGS_CONFIG_VIDEO:
-                    ShowVideoConfig(hwnd);
-                    break;
-
-				case ID_CACHE_CLEARHLECACHE:
+			switch (LOWORD(wParam))
+			{
+			case ID_FILE_OPEN_XBE:
+			{
+				OPENFILENAME ofn = { 0 };
+
+				char filename[MAX_PATH] = { 0 };
+
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = m_hwnd;
+				ofn.lpstrFilter = "Xbox Executables (*.xbe)\0*.xbe\0";
+				ofn.lpstrFile = filename;
+				ofn.nMaxFile = MAX_PATH;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFileTitle = NULL;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = NULL;
+				ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+				if (GetOpenFileName(&ofn) == TRUE)
 				{
-					std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
-					std::string fullpath = cacheDir + "*.ini";
+					OpenXbe(ofn.lpstrFile);
+				}
+			}
+			break;
 
-					WIN32_FIND_DATA data;
-					HANDLE hFind = FindFirstFile(fullpath.c_str(), &data);
+			case ID_FILE_CLOSE_XBE:
+				CloseXbe();
+				break;
 
-					if (hFind != INVALID_HANDLE_VALUE) {
-						BOOL bContinue = TRUE;	
-						do	{
-							if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-								fullpath = cacheDir + data.cFileName;
+			case ID_FILE_SAVEXBEFILE:
+			{
+				if (m_XbeFilename[0] == '\0')
+					SaveXbeAs();
+				else
+					SaveXbe(m_XbeFilename);
+			}
+			break;
 
-								if (!DeleteFile(fullpath.c_str())) {
-									break;
-								}
-							}
+			case ID_FILE_SAVEXBEFILEAS:
+				SaveXbeAs();
+				break;
 
-							bContinue = FindNextFile(hFind, &data);
-						} while (bContinue);
+			case ID_FILE_RXBE_0:
+			case ID_FILE_RXBE_1:
+			case ID_FILE_RXBE_2:
+			case ID_FILE_RXBE_3:
+			case ID_FILE_RXBE_4:
+			case ID_FILE_RXBE_5:
+			case ID_FILE_RXBE_6:
+			case ID_FILE_RXBE_7:
+			case ID_FILE_RXBE_8:
+			case ID_FILE_RXBE_9:
+			{
+				OpenMRU(LOWORD(wParam) - ID_FILE_RXBE_0);
+			}
+			break;
 
-						FindClose(hFind);
+			case ID_FILE_EXIT:
+				SendMessage(hwnd, WM_CLOSE, 0, 0);
+				break;
+
+			case ID_EDIT_LOGOBITMAP_EXPORT:
+			{
+				OPENFILENAME ofn = { 0 };
+
+				char filename[MAX_PATH] = "logo.bmp";
+
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = m_hwnd;
+				ofn.lpstrFilter = "Bitmap Image Files (*.bmp)\0*.bmp\0";
+				ofn.lpstrFile = filename;
+				ofn.nMaxFile = MAX_PATH;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFileTitle = NULL;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrDefExt = "bmp";
+				ofn.lpstrTitle = "Export Logo Bitmap";
+				ofn.Flags = OFN_PATHMUSTEXIST;
+
+				if (GetSaveFileName(&ofn) == TRUE)
+				{
+					// ask permission to overwrite if file already exists
+					if (_access(ofn.lpstrFile, 0) != -1)
+					{
+						if (MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+							return TRUE;
 					}
 
-					MessageBox(m_hwnd, "The HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+					// export logo bitmap
+					{
+						uint08 i_gray[100 * 17];
+
+						m_Xbe->ExportLogoBitmap(i_gray);
+
+						if (false == m_Xbe->HasError())
+						{
+							FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
+
+							// write bitmap header
+							{
+								BITMAPFILEHEADER    bmfh;
+
+								bmfh.bfType = *(uint16*)"BM";
+								bmfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100 * 17) * sizeof(RGBTRIPLE) + 2;
+								bmfh.bfReserved1 = 0;
+								bmfh.bfReserved2 = 0;
+								bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+
+								fwrite(&bmfh, sizeof(bmfh), 1, LogoBitmap);
+							}
+
+							// write bitmap info
+							{
+								BITMAPINFO          bmi;
+
+								bmi.bmiHeader.biSize = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+								bmi.bmiHeader.biWidth = 100;
+								bmi.bmiHeader.biHeight = -17;
+								bmi.bmiHeader.biPlanes = 1;
+								bmi.bmiHeader.biBitCount = 24;
+								bmi.bmiHeader.biCompression = BI_RGB;
+								bmi.bmiHeader.biSizeImage = 0;
+								bmi.bmiHeader.biXPelsPerMeter = 0;
+								bmi.bmiHeader.biYPelsPerMeter = 0;
+								bmi.bmiHeader.biClrUsed = 0;
+								bmi.bmiHeader.biClrImportant = 0;
+
+								fwrite(&bmi, sizeof(bmi) - 4, 1, LogoBitmap);
+							}
+
+							// write bitmap data
+							{
+								RGBTRIPLE bmp_data[100 * 17];
+
+								for (uint32 v = 0; v < 100 * 17; v++)
+								{
+									bmp_data[v].rgbtRed = i_gray[v];
+									bmp_data[v].rgbtGreen = i_gray[v];
+									bmp_data[v].rgbtBlue = i_gray[v];
+								}
+
+								fwrite(bmp_data, 100 * 17 * sizeof(RGBTRIPLE), 1, LogoBitmap);
+							}
+
+							// write bitmap padding
+							{
+								uint16 pad = 0;
+
+								fwrite(&pad, 2, 1, LogoBitmap);
+							}
+
+							fclose(LogoBitmap);
+						}
+
+						if (m_Xbe->HasError())
+							MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+						else
+						{
+							char buffer[255];
+
+							sprintf(buffer, "%s's logo bitmap was successfully exported.", m_Xbe->m_szAsciiTitle);
+
+							MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+
+							printf("WndMain: %s\n", buffer);
+						}
+					}
 				}
+			}
+			break;
+
+			case ID_EDIT_LOGOBITMAP_IMPORT:
+			{
+				OPENFILENAME ofn = { 0 };
+
+				char filename[MAX_PATH] = "*.bmp";
+
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = m_hwnd;
+				ofn.lpstrFilter = "Bitmap Image Files (*.bmp)\0*.bmp\0";
+				ofn.lpstrFile = filename;
+				ofn.nMaxFile = MAX_PATH;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFileTitle = NULL;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrDefExt = "bmp";
+				ofn.lpstrTitle = "Import Logo Bitmap";
+				ofn.Flags = OFN_PATHMUSTEXIST;
+
+				if (GetOpenFileName(&ofn) == TRUE)
+				{
+					// import logo bitmap
+					{
+						uint08 i_gray[100 * 17];
+
+						// read bitmap file
+						{
+							FILE *logo = fopen(ofn.lpstrFile, "rb");
+
+							char *bmp_err = 0;
+
+							// read bitmap header
+							if (!bmp_err)
+							{
+								BITMAPFILEHEADER bmfh;
+
+								fread(&bmfh, sizeof(bmfh), 1, logo);
+
+								if (bmfh.bfType != *(uint16*)"BM")
+									bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
+								else if (bmfh.bfSize != sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100 * 17) * sizeof(RGBTRIPLE) + 2)
+									bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
+							}
+
+							// read bitmap info
+							if (!bmp_err)
+							{
+								BITMAPINFO bmi;
+
+								fread(&bmi, sizeof(bmi) - 4, 1, logo);
+
+								if (bmi.bmiHeader.biWidth != 100 || bmi.bmiHeader.biHeight != -17)
+									bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
+							}
+
+							// read bitmap data
+							if (!bmp_err)
+							{
+								RGBTRIPLE bmp_data[100 * 17];
+
+								fread(bmp_data, 100 * 17 * sizeof(RGBTRIPLE), 1, logo);
+
+								for (uint32 c = 0; c < 100 * 17; c++)
+									i_gray[c] = (char)(((float)bmp_data[c].rgbtRed + (float)bmp_data[c].rgbtGreen + (float)bmp_data[c].rgbtBlue) / 3.0);
+							}
+
+							fclose(logo);
+
+							if (bmp_err != 0)
+							{
+								MessageBox(m_hwnd, bmp_err, "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
+								break;
+							}
+						}
+
+						m_Xbe->ImportLogoBitmap(i_gray);
+
+						if (m_Xbe->HasError())
+						{
+							MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+
+							if (m_Xbe->HasFatalError())
+							{
+								CloseXbe();
+							}
+							else
+							{
+								m_Xbe->ClearError();
+							}
+
+						}
+						else
+						{
+							m_bXbeChanged = true;
+
+							LoadLogo();
+
+							char buffer[255];
+
+							sprintf(buffer, "%s's logo bitmap was successfully updated.", m_Xbe->m_szAsciiTitle);
+
+							printf("WndMain: %s\n", buffer);
+
+							MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+						}
+					}
+				}
+			}
+			break;
+
+			case ID_EDIT_PATCH_ALLOW64MB:
+			{
+				m_bXbeChanged = true;
+
+				m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
+
+				RefreshMenus();
+
+				if (m_Xbe->m_Header.dwInitFlags.bLimit64MB)
+					printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
+				else
+					printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
+			}
+			break;
+
+			case ID_EDIT_PATCH_DEBUGMODE:
+			{
+				m_bXbeChanged = true;
+
+				// patch to/from debug mode
+				if ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
+				{
+					// we're in debug mode, so switch over to retail
+					uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
+					uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
+
+					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
+					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
+				}
+				else
+				{
+					// we're in retail mode, so switch to debug
+					uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
+					uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
+
+					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
+					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
+				}
+
+				RefreshMenus();
+
+				bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
+
+				if (res)
+					printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
+				else
+					printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
+			}
+			break;
+
+			case ID_EDIT_DUMPXBEINFOTO_FILE:
+			{
+				OPENFILENAME ofn = { 0 };
+
+				char filename[MAX_PATH] = "Xbe.txt";
+
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = m_hwnd;
+				ofn.lpstrFilter = "Text Documents (*.txt)\0*.txt\0";
+				ofn.lpstrFile = filename;
+				ofn.nMaxFile = MAX_PATH;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFileTitle = NULL;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrDefExt = "txt";
+				ofn.Flags = OFN_PATHMUSTEXIST;
+
+				if (GetSaveFileName(&ofn) == TRUE)
+				{
+					// ask permission to overwrite if file exists
+					if (_access(ofn.lpstrFile, 0) != -1)
+					{
+						if (MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+							return TRUE;
+					}
+
+					// dump xbe information to file
+					{
+						FILE *TxtFile = fopen(ofn.lpstrFile, "wt");
+
+						// verify file was opened
+						if (TxtFile == 0)
+							MessageBox(m_hwnd, "Could not open text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+						else
+						{
+							m_Xbe->DumpInformation(TxtFile);
+
+							fclose(TxtFile);
+
+							if (m_Xbe->HasError())
+							{
+								MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+							}
+							else
+							{
+								char buffer[255];
+
+								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+
+								printf("WndMain: %s\n", buffer);
+
+								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+							}
+						}
+					}
+				}
+			}
+			break;
+
+			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+			{
+				// dump xbe information to debug console
+				m_Xbe->DumpInformation(stdout);
+
+				if (m_Xbe->HasError())
+				{
+					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+				}
+				else
+				{
+					char buffer[255];
+
+					sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+
+					printf("WndMain: %s\n", buffer);
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_CONTROLLER:
+				ShowControllerConfig(hwnd);
 				break;
 
-                case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
-                {
-                    if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
-                        m_KrnlDebug = DM_CONSOLE;
-                    else
-                        m_KrnlDebug = DM_NONE;
+			case ID_SETTINGS_CONFIG_VIDEO:
+				ShowVideoConfig(hwnd);
+				break;
 
-                    MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
-
-                    RefreshMenus();
-
-                    UpdateDebugConsoles();
-                }
+            case ID_SETTINGS_CONFIG_AUDIO:
+                ShowAudioConfig(hwnd);
                 break;
 
-                case ID_EMULATION_DEBUGOUTPUTKERNEL_FILE:
-                {
-                    if(m_KrnlDebug == DM_FILE)
-                    {
-                        m_KrnlDebug = DM_NONE;
+			case ID_CACHE_CLEARHLECACHE_ALL:
+			{
+				ClearHLECache();
+				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+			}
+			break;
 
-                        RefreshMenus();
+			case ID_CACHE_CLEARHLECACHE_CURRENT:
+			{
+				std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
 
-                        UpdateDebugConsoles();
-                    }
-                    else
-                    {
-                        OPENFILENAME ofn = {0};
+				// Hash the loaded XBE's header, use it as a filename
+				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
+				std::stringstream sstream;
+				std::string szTitleName(m_Xbe->m_szAsciiTitle);
+				m_Xbe->PurgeBadChar(szTitleName);
+				sstream << cacheDir << szTitleName << "-" << std::hex << uiHash << ".ini";
+				std::string fullpath = sstream.str();
 
-                        char filename[MAX_PATH] = "KrnlDebug.txt";
+				if (DeleteFile(fullpath.c_str())) {
+					MessageBox(m_hwnd, "This title's HLE Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
+				}
+			}
+			break;
 
-                        ofn.lStructSize     = sizeof(OPENFILENAME);
-                        ofn.hwndOwner       = m_hwnd;
-                        ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-                        ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = MAX_PATH;
-                        ofn.nFilterIndex    = 1;
-                        ofn.lpstrFileTitle  = NULL;
-                        ofn.nMaxFileTitle   = 0;
-                        ofn.lpstrInitialDir = NULL;
-                        ofn.lpstrDefExt     = "txt";
-                        ofn.Flags           = OFN_PATHMUSTEXIST;
+			case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
+			{
+				if (m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
+					m_KrnlDebug = DM_CONSOLE;
+				else
+					m_KrnlDebug = DM_NONE;
 
-                        if(GetSaveFileName(&ofn) != FALSE)
-                        {
-                            MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
+				MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
 
-                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, MAX_PATH-1);
+				RefreshMenus();
 
-                            m_KrnlDebug = DM_FILE;
+				UpdateDebugConsoles();
+			}
+			break;
 
-                            RefreshMenus();
-
-                            UpdateDebugConsoles();
-                        }
-                    }
-                }
-                break;
-
-                case ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE:
-                {
-                    if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
-                        m_CxbxDebug = DM_CONSOLE;
-                    else
-                        m_CxbxDebug = DM_NONE;
-
-                    RefreshMenus();
-
-                    UpdateDebugConsoles();
-                }
-                break;
-
-                case ID_EMULATION_DEBUGOUTPUTGUI_FILE:
-                {
-                    if(m_CxbxDebug == DM_FILE)
-                    {
-                        m_CxbxDebug = DM_NONE;
-
-                        RefreshMenus();
-
-                        UpdateDebugConsoles();
-                    }
-                    else
-                    {
-                        OPENFILENAME ofn = {0};
-
-                        char filename[MAX_PATH] = "CxbxDebug.txt";
-
-                        ofn.lStructSize     = sizeof(OPENFILENAME);
-                        ofn.hwndOwner       = m_hwnd;
-                        ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-                        ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = MAX_PATH;
-                        ofn.nFilterIndex    = 1;
-                        ofn.lpstrFileTitle  = NULL;
-                        ofn.nMaxFileTitle   = 0;
-                        ofn.lpstrInitialDir = NULL;
-                        ofn.lpstrDefExt     = "txt";
-                        ofn.Flags           = OFN_PATHMUSTEXIST;
-
-                        if(GetSaveFileName(&ofn) != FALSE)
-                        {
-                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, MAX_PATH-1);
-
-                            m_CxbxDebug = DM_FILE;
-
-                            RefreshMenus();
-
-                            UpdateDebugConsoles();
-                        }
-
-                    }
-                }
-                break;
-
-				case ID_EMULATION_LLE_JIT:
+			case ID_EMULATION_DEBUGOUTPUTKERNEL_FILE:
+			{
+				if (m_KrnlDebug == DM_FILE)
 				{
-					m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
+					m_KrnlDebug = DM_NONE;
 
 					RefreshMenus();
-				}
-				break;
 
-				case ID_EMULATION_LLE_APU:
+					UpdateDebugConsoles();
+				}
+				else
 				{
-					m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
+					OPENFILENAME ofn = { 0 };
+
+					char filename[MAX_PATH] = "KrnlDebug.txt";
+
+					ofn.lStructSize = sizeof(OPENFILENAME);
+					ofn.hwndOwner = m_hwnd;
+					ofn.lpstrFilter = "Text Documents (*.txt)\0*.txt\0";
+					ofn.lpstrFile = filename;
+					ofn.nMaxFile = MAX_PATH;
+					ofn.nFilterIndex = 1;
+					ofn.lpstrFileTitle = NULL;
+					ofn.nMaxFileTitle = 0;
+					ofn.lpstrInitialDir = NULL;
+					ofn.lpstrDefExt = "txt";
+					ofn.Flags = OFN_PATHMUSTEXIST;
+
+					if (GetSaveFileName(&ofn) != FALSE)
+					{
+						MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
+
+						strncpy(m_KrnlDebugFilename, ofn.lpstrFile, MAX_PATH - 1);
+
+						m_KrnlDebug = DM_FILE;
+
+						RefreshMenus();
+
+						UpdateDebugConsoles();
+					}
+				}
+			}
+			break;
+
+			case ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE:
+			{
+				if (m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
+					m_CxbxDebug = DM_CONSOLE;
+				else
+					m_CxbxDebug = DM_NONE;
+
+				RefreshMenus();
+
+				UpdateDebugConsoles();
+			}
+			break;
+
+			case ID_EMULATION_DEBUGOUTPUTGUI_FILE:
+			{
+				if (m_CxbxDebug == DM_FILE)
+				{
+					m_CxbxDebug = DM_NONE;
 
 					RefreshMenus();
-				}
-				break;
 
-				case ID_EMULATION_LLE_GPU:
+					UpdateDebugConsoles();
+				}
+				else
 				{
-					m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
+					OPENFILENAME ofn = { 0 };
 
-					RefreshMenus();
+					char filename[MAX_PATH] = "CxbxDebug.txt";
+
+					ofn.lStructSize = sizeof(OPENFILENAME);
+					ofn.hwndOwner = m_hwnd;
+					ofn.lpstrFilter = "Text Documents (*.txt)\0*.txt\0";
+					ofn.lpstrFile = filename;
+					ofn.nMaxFile = MAX_PATH;
+					ofn.nFilterIndex = 1;
+					ofn.lpstrFileTitle = NULL;
+					ofn.nMaxFileTitle = 0;
+					ofn.lpstrInitialDir = NULL;
+					ofn.lpstrDefExt = "txt";
+					ofn.Flags = OFN_PATHMUSTEXIST;
+
+					if (GetSaveFileName(&ofn) != FALSE)
+					{
+						strncpy(m_CxbxDebugFilename, ofn.lpstrFile, MAX_PATH - 1);
+
+						m_CxbxDebug = DM_FILE;
+
+						RefreshMenus();
+
+						UpdateDebugConsoles();
+					}
+
 				}
+			}
+			break;
+
+			case ID_EMULATION_LLE_JIT:
+			{
+				m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
+				ClearHLECache();
+				RefreshMenus();
+			}
+			break;
+
+			case ID_EMULATION_LLE_APU:
+			{
+				m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
+				ClearHLECache();
+				RefreshMenus();
+			}
+			break;
+
+			case ID_EMULATION_LLE_GPU:
+			{
+				m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
+				ClearHLECache();
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_XINPUT:
+				m_XInputEnabled = !m_XInputEnabled;
+				RefreshMenus();
 				break;
 
-				case ID_EMULATION_START:
-                    StartEmulation(hwnd);
-                    break;
-
-                case ID_EMULATION_STOP:
-                    StopEmulation();
-                    break;
-
-                case ID_HELP_ABOUT:
-                {
-					ShowAboutDialog(hwnd);
-                }
+			case ID_EMULATION_START:
+                StartEmulation(hwnd);
                 break;
 
-                case ID_HELP_HOMEPAGE:
-                    ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
-                    break;
+            case ID_EMULATION_STOP:
+                StopEmulation();
+                break;
+
+			case ID_HACKS_DISABLEPIXELSHADERS:
+				m_DisablePixelShaders = !m_DisablePixelShaders;
+				RefreshMenus();
+				break;
+
+            case ID_HELP_ABOUT:
+            {
+				ShowAboutDialog(hwnd);
+            }
+            break;
+
+            case ID_HELP_HOMEPAGE:
+                ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
+                break;
             }
 
             break;
@@ -1059,10 +1234,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_CLOSE:
         {
-            if(m_Xbe != 0)
+            if(m_Xbe != nullptr)
                 CloseXbe();
 
-            if(m_Xbe == 0)
+            if(m_Xbe == nullptr)
                 DestroyWindow(hwnd);
         }
         break;
@@ -1077,19 +1252,25 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             SelectObject(m_BackDC, m_OrigBmp);
 
+			SelectObject(m_GameLogoDC, m_OrigGameLogo);
+
             DeleteObject(m_LogoDC);
 
             DeleteObject(m_BackDC);
+
+			DeleteObject(m_GameLogoDC);
 
             DeleteObject(m_LogoBmp);
 
             DeleteObject(m_BackBmp);
 
+			DeleteObject(m_GameLogoBMP);
+
             ReleaseDC(hwnd, hDC);
 
             delete m_Xbe;
 
-            m_Xbe = 0;
+            m_Xbe = nullptr;
 
             PostQuitMessage(0);
         }
@@ -1119,6 +1300,9 @@ void WndMain::XbeLoaded()
 {
     LoadLogo();
 
+	LoadGameLogo();
+
+	UpdateCaption();
     RefreshMenus();
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
@@ -1158,9 +1342,156 @@ void WndMain::LoadLogo()
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
+// TODO : Move these types to a more appropriate place
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943984(v=vs.85).aspx
+struct DDS_PIXELFORMAT {
+	DWORD dwSize;
+	DWORD dwFlags;
+	DWORD dwFourCC;
+	DWORD dwRGBBitCount;
+	DWORD dwRBitMask;
+	DWORD dwGBitMask;
+	DWORD dwBBitMask;
+	DWORD dwABitMask;
+};
+
+// Source : https://msdn.microsoft.com/en-us/library/windows/desktop/bb943982(v=vs.85).aspx
+typedef struct {
+	DWORD           dwSize;
+	DWORD           dwFlags;
+	DWORD           dwHeight;
+	DWORD           dwWidth;
+	DWORD           dwPitchOrLinearSize;
+	DWORD           dwDepth;
+	DWORD           dwMipMapCount;
+	DWORD           dwReserved1[11];
+	DDS_PIXELFORMAT ddspf;
+	DWORD           dwCaps;
+	DWORD           dwCaps2;
+	DWORD           dwCaps3;
+	DWORD           dwCaps4;
+	DWORD           dwReserved2;
+} DDS_HEADER;
+
+// load game logo bitmap
+void WndMain::LoadGameLogo()
+{
+	// Export Game Logo bitmap (XTIMAG or XSIMAG)
+	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAGE"); // Check for XTIMAGE
+	if (!pSection) {
+		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAGE"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		if (!pSection) {
+			return;
+		}
+	}
+
+	gameLogoWidth = 0;
+	gameLogoHeight = 0;	
+
+	uint8 *ImageData = NULL;
+	XTL::X_D3DPixelContainer XboxPixelContainer = {};
+	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
+
+	switch (*(DWORD*)pSection) {
+	case MAKEFOURCC('D', 'D', 'S', ' '): {
+		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
+		XTL::D3DFORMAT Format = XTL::D3DFMT_UNKNOWN;
+		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
+			switch (pDDSHeader->ddspf.dwFourCC) {
+			case MAKEFOURCC('D', 'X', 'T', '1'): Format = XTL::D3DFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): Format = XTL::D3DFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): Format = XTL::D3DFMT_DXT5; break;
+			}
+		}
+		else {
+			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
+		}
+
+		if (Format == XTL::D3DFMT_UNKNOWN)
+			return;
+
+		ImageData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
+		//gameLogoHeight = pDDSHeader->dwHeight;
+		//gameLogoWidth = pDDSHeader->dwWidth;
+		
+		// TODO : Use PixelCopy code here to decode. For now, fake it :
+		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
+			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
+			(XTL::UINT)pDDSHeader->dwWidth,
+			(XTL::UINT)pDDSHeader->dwHeight,
+			1,
+			XTL::EmuPC2XB_D3DFormat(Format),
+			2,
+			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
+		break;
+	}
+	case MAKEFOURCC('X', 'P', 'R', '0'):
+	case MAKEFOURCC('X', 'P', 'R', '1'): {
+		struct Xbe::XprHeader *pXprHeader = (struct Xbe::XprHeader*)pSection;
+
+		uint SizeOfResourceHeaders = pXprHeader->dwXprHeaderSize - sizeof(Xbe::XprHeader);
+		uint SizeOfResourceData = pXprHeader->dwXprTotalSize - pXprHeader->dwXprHeaderSize;
+
+		uint8 *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
+		uint8 *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
+
+		pXboxPixelContainer = (XTL::X_D3DPixelContainer*)ResourceHeaders;
+		ImageData = ResourceData;
+
+		break;
+	}
+	default: {
+		return;
+	}
+	}
+
+	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, ImageData, &gameLogoWidth, &gameLogoHeight);
+	if (!bitmapData)
+		return;
+
+	HDC hDC = GetDC(m_hwnd);
+	m_GameLogoBMP = CreateCompatibleBitmap(hDC, gameLogoWidth, gameLogoHeight);
+
+	// create bitmap
+	{
+		BITMAPINFO BmpInfo;
+
+		BmpInfo.bmiHeader.biSize = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+		BmpInfo.bmiHeader.biWidth = gameLogoWidth;
+		BmpInfo.bmiHeader.biHeight = 0 - (long)gameLogoHeight; //  If biHeight is negative, the bitmap is a top-down DIB and its origin is the upper-left corner.
+		BmpInfo.bmiHeader.biPlanes = 1;
+		BmpInfo.bmiHeader.biBitCount = 32;
+		BmpInfo.bmiHeader.biCompression = BI_RGB;
+		BmpInfo.bmiHeader.biSizeImage = 0;
+		BmpInfo.bmiHeader.biXPelsPerMeter = 0;
+		BmpInfo.bmiHeader.biYPelsPerMeter = 0;
+		BmpInfo.bmiHeader.biClrUsed = 0;
+		BmpInfo.bmiHeader.biClrImportant = 0;
+
+		SetDIBits(hDC, m_GameLogoBMP, 0, gameLogoHeight, bitmapData, &BmpInfo, DIB_RGB_COLORS);
+	}
+
+	m_GameLogoDC = CreateCompatibleDC(hDC);
+	m_OrigGameLogo = (HBITMAP)SelectObject(m_GameLogoDC, m_GameLogoBMP);
+
+	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+
+	if (hDC != NULL)
+		ReleaseDC(m_hwnd, hDC);
+
+	free(bitmapData);
+}
+
+
 // refresh menu items
 void WndMain::RefreshMenus()
 {
+	bool XbeLoaded = (m_Xbe != nullptr);
+	bool Running = (m_hwndChild != NULL); // TODO : Use m_bIsStarted?
+	UINT MF_WhenXbeLoaded = XbeLoaded ? MF_ENABLED : MF_GRAYED;
+	UINT MF_WhenXbeLoadedNotRunning = (XbeLoaded && !Running) ? MF_ENABLED : MF_GRAYED;
+	UINT MF_WhenXbeLoadedAndRunning = (XbeLoaded && Running) ? MF_ENABLED : MF_GRAYED;
+
     // disable/enable appropriate menus
     {
         HMENU menu = GetMenu(m_hwnd);
@@ -1170,14 +1501,14 @@ void WndMain::RefreshMenus()
             HMENU file_menu = GetSubMenu(menu, 0);
 
             // enable/disable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable/disable save .xbe file
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable/disable save .xbe file as
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
-			
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
+
             // recent xbe files menu
             {
                 HMENU rxbe_menu = GetSubMenu(file_menu, 6);
@@ -1195,19 +1526,19 @@ void WndMain::RefreshMenus()
             HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
             // enable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
             // enable logo bitmap menu
-            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_WhenXbeLoaded);
 
             // enable patch menu
-            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_WhenXbeLoaded);
 
             // patch menu
             {
                 // check "allow >64 MB" if appropriate
-                if(m_Xbe != 0)
+                if(m_Xbe != nullptr)
                 {
                     UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
 
@@ -1215,7 +1546,7 @@ void WndMain::RefreshMenus()
                 }
 
                 // check "debug mode" if appropriate
-                if(m_Xbe != 0)
+                if(m_Xbe != nullptr)
                 {
                     UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
 
@@ -1266,16 +1597,24 @@ void WndMain::RefreshMenus()
 		// settings menu
 		{
 			HMENU settings_menu = GetSubMenu(menu, 3);
-			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
+
+			// enable/disable clear current hle cache
+			EnableMenuItem(settings_menu, ID_CACHE_CLEARHLECACHE_CURRENT, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
 			UINT chk_flag = (m_FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_JIT, chk_flag);
-			
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_JIT, chk_flag);
+
 			chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_APU, chk_flag);
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_APU, chk_flag);
 
 			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_GPU, chk_flag);
+			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
+
+			chk_flag = (m_XInputEnabled) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_SETTINGS_XINPUT, chk_flag);
+
+			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 		}
 
         // emulation menu
@@ -1283,10 +1622,10 @@ void WndMain::RefreshMenus()
             HMENU emul_menu = GetSubMenu(menu, 4);
 
             // enable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | ((m_Xbe == 0 || (m_hwndChild != NULL)) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
             // enable emulation stop
-            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | ((m_hwndChild == NULL) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
         }
     }
 }
@@ -1365,11 +1704,42 @@ void WndMain::UpdateRecentFiles()
     }
 }
 
+void WndMain::UpdateCaption()
+{
+	char AsciiTitle[MAX_PATH];
+
+	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", _CXBX_VERSION);
+	if (m_Xbe != nullptr) {
+		if (m_bIsStarted) {
+			i += sprintf(AsciiTitle + i, " : Emulating ");
+		}
+		else {
+			i += sprintf(AsciiTitle + i, " : Loaded ");
+		}
+
+		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);		
+		if (m_bIsStarted) {
+			if (g_EmuShared != NULL) {
+				float currentFPSVal = 0;
+				float currentMSpFVal = 0;
+				g_EmuShared->GetCurrentFPS(&currentFPSVal);
+				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
+				i += sprintf(AsciiTitle + i, " - FPS: %.2f  MS/F: %.2f", currentFPSVal, currentMSpFVal);
+			}
+		}
+	}
+
+	SetWindowText(m_hwnd, AsciiTitle);
+}
+
 // open an xbe file
 void WndMain::OpenXbe(const char *x_filename)
 {
-    if(m_Xbe != 0)
-        return;
+    if (m_Xbe != nullptr) {
+        CloseXbe();
+        if (m_Xbe != nullptr)
+            return;
+    }
 
     strcpy(m_XbeFilename, x_filename);
 
@@ -1379,8 +1749,9 @@ void WndMain::OpenXbe(const char *x_filename)
     {
         MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
-        delete m_Xbe; m_Xbe = 0;
+        delete m_Xbe; m_Xbe = nullptr;
 
+        UpdateCaption();
         return;
     }
 
@@ -1451,7 +1822,8 @@ void WndMain::OpenXbe(const char *x_filename)
 // close xbe file
 void WndMain::CloseXbe()
 {
-    StopEmulation();
+    if (m_bIsStarted)
+        StopEmulation();
 
     if(m_bXbeChanged)
     {
@@ -1467,8 +1839,9 @@ void WndMain::CloseXbe()
 
     m_bXbeChanged = false;
 
-    delete m_Xbe; m_Xbe = 0;
+    delete m_Xbe; m_Xbe = nullptr;
 
+    UpdateCaption();
     RefreshMenus();
 
     // clear logo bitmap
@@ -1484,7 +1857,27 @@ void WndMain::CloseXbe()
         }
     }
 
+	// clear game logo bitmap
+	SelectObject(m_GameLogoDC, m_OrigGameLogo);
+	DeleteObject(m_GameLogoDC);
+	DeleteObject(m_GameLogoBMP);
+
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+void WndMain::OpenMRU(int mru)
+{
+	HMENU menu = GetMenu(m_hwnd);
+	HMENU file_menu = GetSubMenu(menu, 0);
+	HMENU rxbe_menu = GetSubMenu(file_menu, 6);
+
+	char szBuffer[270];
+
+	GetMenuString(rxbe_menu, ID_FILE_RXBE_0 + mru, szBuffer, 269, MF_BYCOMMAND);
+
+	char *szFilename = (char*)((uint32)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
+
+	OpenXbe(szFilename);
 }
 
 // save xbe file
@@ -1554,6 +1947,12 @@ void WndMain::StartEmulation(HWND hwndParent)
 	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 
+	// register XInput flags with emulator process
+	g_EmuShared->SetXInputEnabled(&m_XInputEnabled);
+
+	// register Hacks with emulator process
+	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
+
 	// shell exe
     {
         GetModuleFileName(NULL, szBuffer, MAX_PATH);
@@ -1570,13 +1969,13 @@ void WndMain::StartEmulation(HWND hwndParent)
 
         if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
-            m_bCanStart = true;
             MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }
         else
         {
+			m_bIsStarted = true;
             printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
         }
     }
@@ -1585,13 +1984,64 @@ void WndMain::StartEmulation(HWND hwndParent)
 // stop emulation
 void WndMain::StopEmulation()
 {
-    if(!IsWindow(m_hwndChild))
-    {
-        m_hwndChild = NULL;
-        SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
-        RefreshMenus();
+    m_bIsStarted = false;
+    if (m_hwndChild != NULL) {
+		if (IsWindow(m_hwndChild)) {
+			SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
+		}
+
+		m_hwndChild = NULL;
     }
 
-    SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
-    m_bCanStart = true;
+	UpdateCaption();
+    RefreshMenus();
+}
+
+
+// wrapper function to call CrashMonitor
+DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
+{
+	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+	return 0;
+}
+
+// monitor for crashes
+void WndMain::CrashMonitor()
+{
+	bool bMultiXbe;
+	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
+
+	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
+
+	g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+
+	if (state == WAIT_OBJECT_0) // StopEmulation
+	{
+		CloseHandle(hCrashMutex);
+		return;
+	}
+
+	if (state == WAIT_ABANDONED && !bMultiXbe) // that's a crash
+	{
+		CloseHandle(hCrashMutex);
+		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
+		{
+			KillTimer(m_hwnd, TIMERID_FPS);
+			//KillTimer(m_hwnd, 2); for the LED
+			//DrawDefaultLedBitmap(hwnd); for the LED
+			m_hwndChild = NULL;
+			m_bIsStarted = false;
+			UpdateCaption();
+			RefreshMenus();
+		}
+		return;
+	}
+
+	// multi-xbe
+	// destroy this thread and start a new one
+	CloseHandle(hCrashMutex);
+	bMultiXbe = false;
+	g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+
+	return;
 }

@@ -94,6 +94,7 @@ typedef unsigned long       DWORD;
 typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
+typedef int                 INT;
 typedef long                INT_PTR;
 typedef signed __int64      LONGLONG;
 typedef unsigned __int64    ULONGLONG;
@@ -229,6 +230,11 @@ typedef long                            NTSTATUS;
 // Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
 #define PAGE_SIZE                   (1 << PAGE_SHIFT)
 #define PAGE_MASK                   (PAGE_SIZE - 1)
+#define MAX_NUM_OF_PAGES 1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT XBOX_MEMORY_SIZE - 32 * PAGE_SIZE // upper limit available for contiguous allocations (xbox)
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE // upper limit available for contiguous allocations (chihiro)
+#define ZERO_PAGE_ADDR 0
+#define FIRST_PAGE_ADDR PAGE_SIZE
 
 // Convert a physical frame number to its corresponding physical address.
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
@@ -454,6 +460,17 @@ typedef struct _FILE_FS_SIZE_INFORMATION
     ULONG           BytesPerSector;
 }
 FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+// ******************************************************************
+// * FILE_FS_VOLUME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+	LARGE_INTEGER	VolumeCreationTime;
+	ULONG			VolumeSerialNumber;
+	ULONG			VolumeLabelLength;
+	BOOLEAN			SupportsObjects;
+	CHAR			VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
 // ******************************************************************
 // * FILE_INFORMATION_CLASS
@@ -1347,6 +1364,13 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
+typedef struct _KDEVICE_QUEUE_ENTRY 
+{
+	LIST_ENTRY DeviceListEntry;
+	ULONG SortKey;
+	BOOLEAN Inserted;
+} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY, *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
+
 // ******************************************************************
 // FILE_SEGMENT_ELEMENT
 // ******************************************************************
@@ -1509,7 +1533,7 @@ struct _KDPC;
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-typedef VOID (*PKDEFERRED_ROUTINE)
+typedef VOID (__stdcall *PKDEFERRED_ROUTINE)
 (
     IN struct _KDPC *Dpc,
     IN PVOID         DeferredContext,
@@ -1567,6 +1591,7 @@ typedef enum _KOBJECTS
 	TimerSynchronizationObject = 9,
 	ApcObject = 0x12,
 	DpcObject = 0x13,
+	DeviceQueueObject = 0x14,
 }
 KOBJECTS, *PKOBJECTS;
 
@@ -1789,7 +1814,7 @@ typedef struct _KQUEUE
 	ULONG MaximumCount;
 	LIST_ENTRY ThreadListHead;
 }
-KQUEUE, *PKQUEUE;
+KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 // ******************************************************************
 // * EXCEPTION_DISPOSITION
@@ -1895,7 +1920,7 @@ typedef struct _KAPC
 	/* 0x20/32 */ PVOID SystemArgument1;
 	/* 0x24/36 */ PVOID SystemArgument2;
 }
-KAPC, *PKAPC;
+KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
 
 // ******************************************************************
 // * KTHREAD
@@ -1950,7 +1975,7 @@ typedef struct _KTHREAD
 	/* 0x104/260 */ LIST_ENTRY ThreadListEntry;
 	/* 0x10C/268 */ UCHAR _padding[4];
 }
-KTHREAD, *PKTHREAD;
+KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 
 // ******************************************************************
 // * ETHREAD
@@ -2063,8 +2088,8 @@ XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 typedef struct _XBOX_HARDWARE_INFO
 {
     ULONG Flags;
-    UCHAR Unknown1;
-    UCHAR Unknown2;
+    UCHAR GpuRevision;
+	UCHAR McpRevision;
     UCHAR Unknown3;
     UCHAR Unknown4;
 }
@@ -2466,11 +2491,49 @@ typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 	ULONG FileSize; // File size (size of the section in the XBE file)
 	PCSZ SectionName; // Pointer to section name
 	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
-	ULONG HeadReferenceCount; // Pointer to head shared page reference count
-	ULONG TailReferenceCount; // Pointer to tail shared page reference count
+	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
+	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
 	BYTE ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
 }
 XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
+
+// From Windows Driver Development Kit
+typedef enum _MEDIA_TYPE {
+	Unknown,                // Format is unknown
+	F5_1Pt2_512,            // 5.25", 1.2MB,  512 bytes/sector
+	F3_1Pt44_512,           // 3.5",  1.44MB, 512 bytes/sector
+	F3_2Pt88_512,           // 3.5",  2.88MB, 512 bytes/sector
+	F3_20Pt8_512,           // 3.5",  20.8MB, 512 bytes/sector
+	F3_720_512,             // 3.5",  720KB,  512 bytes/sector
+	F5_360_512,             // 5.25", 360KB,  512 bytes/sector
+	F5_320_512,             // 5.25", 320KB,  512 bytes/sector
+	F5_320_1024,            // 5.25", 320KB,  1024 bytes/sector
+	F5_180_512,             // 5.25", 180KB,  512 bytes/sector
+	F5_160_512,             // 5.25", 160KB,  512 bytes/sector
+	RemovableMedia,         // Removable media other than floppy
+	FixedMedia,             // Fixed hard disk media
+	F3_120M_512,            // 3.5", 120M Floppy
+	F3_640_512,             // 3.5" ,  640KB,  512 bytes/sector
+	F5_640_512,             // 5.25",  640KB,  512 bytes/sector
+	F5_720_512,             // 5.25",  720KB,  512 bytes/sector
+	F3_1Pt2_512,            // 3.5" ,  1.2Mb,  512 bytes/sector
+	F3_1Pt23_1024,          // 3.5" ,  1.23Mb, 1024 bytes/sector
+	F5_1Pt23_1024,          // 5.25",  1.23MB, 1024 bytes/sector
+	F3_128Mb_512,           // 3.5" MO 128Mb   512 bytes/sector
+	F3_230Mb_512,           // 3.5" MO 230Mb   512 bytes/sector
+	F8_256_128,             // 8",     256KB,  128 bytes/sector
+	F3_200Mb_512,           // 3.5",   200M Floppy (HiFD)
+	F3_240M_512,            // 3.5",   240Mb Floppy (HiFD)
+	F3_32M_512              // 3.5",   32Mb Floppy
+} MEDIA_TYPE, *PMEDIA_TYPE;
+
+typedef struct _DISK_GEOMETRY {
+	LARGE_INTEGER Cylinders;
+	MEDIA_TYPE MediaType;
+	DWORD TracksPerCylinder;
+	DWORD SectorsPerTrack;
+	DWORD BytesPerSector;
+} DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 // ******************************************************************
 // * Debug

@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -59,6 +60,8 @@ namespace NtDll
 
 #include <chrono>
 #include <thread>
+#include <windows.h>
+#include <map>
 
 // Copied over from Dxbx. 
 // TODO : Move towards thread-simulation based Dpc emulation
@@ -71,6 +74,8 @@ typedef struct _DpcData {
 } DpcData;
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
+
+std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
@@ -158,19 +163,19 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 
 // Forward KeRaiseIrql() to KfRaiseIrql()
 #define KeRaiseIrql(NewIrql, OldIrql) \
-	*OldIrql = KfRaiseIrql(NewIrql)
+	*(OldIrql) = KfRaiseIrql(NewIrql)
 
-DWORD BootTickCount = 0;
+ULONGLONG BootTickCount = 0;
 
 // The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
 // The only difference we'll take into account here, is that the Xbox will probably reboot
 // much more often than Windows, so we correct this with a 'BootTickCount' value :
 DWORD CxbxXboxGetTickCount()
 {
-	return GetTickCount() - BootTickCount;
+	return (DWORD)(GetTickCount64() - BootTickCount);
 }
 
-DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
+DWORD ExecuteDpcQueue()
 {
 	xboxkrnl::PKDPC pkdpc;
 	DWORD dwWait;
@@ -178,10 +183,8 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 	LONG lWait;
 	xboxkrnl::PKTIMER pktimer;
 
-	while (true)
-	{
-		// While we're working with the DpcQueue, we need to be thread-safe :
-		EnterCriticalSection(&(g_DpcData.Lock));
+	// While we're working with the DpcQueue, we need to be thread-safe :
+	EnterCriticalSection(&(g_DpcData.Lock));
 
 //    if (g_DpcData._fShutdown)
 //        break; // while 
@@ -191,80 +194,119 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 //    g_DpcData._dwDpcThreadId = g_DpcData._dwThreadId;
 //    Assert(g_DpcData._dwDpcThreadId != 0);
 
-		// Are there entries in the DpqQueue?
-		while (!IsListEmpty(&(g_DpcData.DpcQueue)))
-		{
-			// Extract the head entry and retrieve the containing KDPC pointer for it:
-			pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
-			// Mark it as no longer linked into the DpcQueue
-			pkdpc->Inserted = FALSE;
-			// Set DpcRoutineActive to support KeIsExecutingDpc:
-			KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+	// Are there entries in the DpqQueue?
+	while (!IsListEmpty(&(g_DpcData.DpcQueue)))
+	{
+		// Extract the head entry and retrieve the containing KDPC pointer for it:
+		pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
+		// Mark it as no longer linked into the DpcQueue
+		pkdpc->Inserted = FALSE;
+		// Set DpcRoutineActive to support KeIsExecutingDpc:
+		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+		DbgPrintf("KRNL: Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+		__try {
 			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
 				pkdpc,
 				pkdpc->DeferredContext,
 				pkdpc->SystemArgument1,
 				pkdpc->SystemArgument2);
-			KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
+		} __except (EmuException(GetExceptionInformation()))
+		{
+			EmuWarning("Problem with ExceptionFilter!");
 		}
 
-		dwWait = INFINITE;
-		if (!IsListEmpty(&(g_DpcData.TimerQueue)))
+		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
+	}
+
+	dwWait = INFINITE;
+	if (!IsListEmpty(&(g_DpcData.TimerQueue)))
+	{
+		while (true)
 		{
-			while (true)
+			dwNow = CxbxXboxGetTickCount();
+			dwWait = INFINITE;
+			pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
+			pkdpc = nullptr;
+			while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
 			{
-				dwNow = CxbxXboxGetTickCount();
-				dwWait = INFINITE;
-				pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
-				pkdpc = nullptr;
-				while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
+				lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
+				if (lWait <= 0)
 				{
-					lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
-					if (lWait <= 0) 
-					{
-						pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
-						pkdpc = pktimer->Dpc;
-						break; // while
-					}
-
-					if (dwWait > (DWORD)lWait)
-						dwWait = (DWORD)lWait;
-
-					pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
+					pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
+					pkdpc = pktimer->Dpc;
+					break; // while
 				}
 
-				if (pkdpc == nullptr)
-					break; // while
+				if (dwWait > (DWORD)lWait)
+					dwWait = (DWORD)lWait;
 
-				pkdpc->DeferredRoutine(pkdpc,
+				pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
+			}
+
+			if (pkdpc == nullptr)
+				break; // while
+
+			DbgPrintf("KRNL: Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+			__try {
+				pkdpc->DeferredRoutine(
+					pkdpc,
 					pkdpc->DeferredContext,
 					pkdpc->SystemArgument1,
 					pkdpc->SystemArgument2);
+			} __except (EmuException(GetExceptionInformation()))
+			{
+				EmuWarning("Problem with ExceptionFilter!");
 			}
 		}
+	}
 
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
 //    g_DpcData._dwDpcThreadId = 0;
-		LeaveCriticalSection(&(g_DpcData.Lock));
+	LeaveCriticalSection(&(g_DpcData.Lock));
+
+	return dwWait;
+}
+
+DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
+{
+	DbgPrintf("KRNL: DPC thread is running\n");
+
+	// Make sure DPC callbacks run on the same core as the one that runs Xbox1 code :
+	// Note : This function runs on the Xbox core to somewhat approximate
+	// CPU locking (the prevention of interrupts to avoid thread-switches)
+	// so that callbacks don't get preempted. This needs more work.
+	InitXboxThread(g_CPUXbox);
+
+	while (true)
+	{
+		DWORD dwWait = ExecuteDpcQueue();
 
 		// TODO : Wait for shutdown too here
 		WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
+
+		SwitchToThread();
 	} // while
+
+	DbgPrintf("KRNL: DPC thread is finished\n");
 
 	return S_OK;
 }
 
 void InitDpcAndTimerThread()
 {
-	DWORD dwThreadId;
+	DWORD dwThreadId = 0;
 
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
 	InitializeListHead(&(g_DpcData.TimerQueue));
+
+	DbgPrintf("INIT: Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
+
 	g_DpcData.DpcThread = CreateThread(/*lpThreadAttributes=*/nullptr, /*dwStackSize=*/0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, /*lpParameter=*/nullptr, /*dwCreationFlags=*/0, &dwThreadId);
+	DbgPrintf("INIT: Created DPC thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", g_DpcData.DpcThread, dwThreadId);
 	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
 }
 
@@ -279,7 +321,7 @@ void ConnectKeInterruptTimeToThunkTable(); // forward
 
 void CxbxInitPerformanceCounters()
 {
-	BootTickCount = GetTickCount();
+	BootTickCount = GetTickCount64();
 
 	// Measure current host performance counter and frequency
 	QueryPerformanceCounter(&NativePerformanceCounter);
@@ -341,9 +383,15 @@ XBSYSAPI EXPORTNUM(93) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeAlertThread
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(94) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBoostPriorityThread
 (
+	IN PKTHREAD Thread,
+	IN KPRIORITY Increment
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Thread);
+		LOG_FUNC_ARG(Increment);
+		LOG_FUNC_END;
+
 
 	LOG_UNIMPLEMENTED();
 
@@ -392,16 +440,16 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 
 	char buffer[1024];
 	sprintf(buffer, "The running software triggered KeBugCheck with the following information\n"
-		"BugCheckCode: 0x%08X\n"
-		"BugCheckParamater1 0x%08X\n"
-		"BugCheckParamater2 0x%08X\n"
-		"BugCheckParamater3 0x%08X\n"
-		"BugCheckParamater4 0x%08X\n"
+		"BugCheckCode: 0x%.8X\n"
+		"BugCheckParameter1: 0x%p\n"
+		"BugCheckParameter2: 0x%p\n"
+		"BugCheckParameter3: 0x%p\n"
+		"BugCheckParameter4: 0x%p\n"
 		"\nThis is the Xbox equivalent to a BSOD and would cause the console to automatically reboot\n"
 		"\nContinue Execution (Not Recommended)?\n",
 		BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
 
-	HRESULT result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
+	int result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
 
 	if (result == IDNO)	{
 		CxbxKrnlCleanup(NULL);
@@ -446,6 +494,9 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
 	BOOLEAN ret = FALSE;
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
 
 	// here we have to connect the interrupt object to the vector
 	if (!InterruptObject->Connected)
@@ -460,6 +511,8 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 		}
 	}
 	// else do nothing
+
+	KiUnlockDispatcherDatabase(OldIrql);
 
 	RETURN(ret);
 }
@@ -495,15 +548,19 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
+
 	// Do the reverse of KeConnectInterrupt
-	// Untested (no known test cases) and not thread safe :
-	if (InterruptObject->Connected)
-	{
+	if (InterruptObject->Connected) { // Text case : d3dbvt.xbe
 		// Mark InterruptObject as not connected anymore
 		HalDisableSystemInterrupt(InterruptObject->BusInterruptLevel);
 		EmuInterruptList[InterruptObject->BusInterruptLevel] = NULL;
 		InterruptObject->Connected = FALSE;
 	}
+
+	KiUnlockDispatcherDatabase(OldIrql);
 }
 
 // ******************************************************************
@@ -526,9 +583,10 @@ XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
 // ******************************************************************
 XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 {
-	LOG_FUNC();
+	LOG_FUNC(); // TODO : Remove nested logging on this somehow, so we can call this (instead of inlining)
 
-	KIRQL Irql = KeGetPcr()->Irql;
+	KPCR* Pcr = KeGetPcr();
+	KIRQL Irql = (KIRQL)Pcr->Irql;
 
 	RETURN(Irql);
 }
@@ -587,6 +645,23 @@ XBSYSAPI EXPORTNUM(105) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeApc
 }
 
 // ******************************************************************
+// * 0x006A - KeInitializeDeviceQueue()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(106) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDeviceQueue
+(
+	OUT PKDEVICE_QUEUE DeviceQueue
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(DeviceQueue);
+
+	DeviceQueue->Type = DeviceQueueObject;
+	DeviceQueue->Size = sizeof(KDEVICE_QUEUE);
+	DeviceQueue->Busy = FALSE;
+
+	InitializeListHead(&DeviceQueue->DeviceListHead);
+}
+
+// ******************************************************************
 // * 0x006B - KeInitializeDpc()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
@@ -625,10 +700,19 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 		LOG_FUNC_ARG(SignalState)
 		LOG_FUNC_END;
 
+	// Setup the Xbox event struct
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
-	InitializeListHead(&(Event->Header.WaitListHead));
+	InitializeListHead(&(Event->Header.WaitListHead)); 
+
+
+	// Create a Windows event, to be used in KeWaitForObject
+	// TODO: This doesn't check for events that are already initialized
+	// This shouldn't happen, except on shoddily coded titles so we
+	// ignore it for now
+	HANDLE hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
+	g_KeEventHandles[Event] = hostEvent;
 }
 
 // ******************************************************************
@@ -667,6 +751,7 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 	// Interrupt->DispatchCode = []?; //TODO : Populate this interrupt dispatch
 	// code block, patch it up so it works with the address of this Interrupt
 	// struct and calls the right dispatch routine (depending on InterruptMode). 
+	LOG_INCOMPLETE();
 }
 
 // ******************************************************************
@@ -776,6 +861,111 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 	Timer->Period = 0;
 }
 
+XBSYSAPI EXPORTNUM(114) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertByKeyDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * 0x0073 - KeInsertDeviceQueue()
+// * This implementation is inspired by ReactOS source code
+// * Ref: https://github.com/reactos/reactos/blob/master/ntoskrnl/ke/devqueue.c
+// ******************************************************************
+XBSYSAPI EXPORTNUM(115) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_END;
+
+	BOOLEAN Res = FALSE;
+
+	// We should lock the device queue here
+	
+	if (DeviceQueue->Busy == TRUE) {
+		InsertTailList(&DeviceQueue->DeviceListHead, &DeviceQueueEntry->DeviceListEntry);
+		Res = TRUE;
+	}
+	else {
+		DeviceQueue->Busy = TRUE;
+	}
+
+	DeviceQueueEntry->Inserted = Res;
+
+	// We should unlock the device queue here
+
+	RETURN(Res);
+}
+
+XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue
+(
+	IN PRKQUEUE Queue,
+	IN PLIST_ENTRY Entry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Entry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
+(
+	IN PRKQUEUE Queue,
+	IN PLIST_ENTRY Entry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Entry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(118) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueApc
+(
+	IN PRKAPC Apc,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2,
+	IN KPRIORITY Increment
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Apc)
+		LOG_FUNC_ARG(SystemArgument1)
+		LOG_FUNC_ARG(SystemArgument2)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
 // ******************************************************************
 // * 0x0077 - KeInsertQueueDpc()
 // ******************************************************************
@@ -812,7 +1002,7 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 
 	// Thread-safety is no longer required anymore
 	LeaveCriticalSection(&(g_DpcData.Lock));
-	// TODO : Instead, enable interrupts - use KeLowerIrql(&OldIrql) ?
+	// TODO : Instead, enable interrupts - use KeLowerIrql(OldIrql) ?
 
 	RETURN(NeedsInsertion);
 }
@@ -855,6 +1045,44 @@ XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
 	// TODO : Enable kernel APCs
 
 	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
+(
+	IN PRKEVENT Event,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KePulseEvent called on a non-existant event!");
+	}
+	else {
+		PulseEvent(g_KeEventHandles[Event]);
+	}
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(124) xboxkrnl::LONG NTAPI xboxkrnl::KeQueryBasePriorityThread
+(
+	IN PKTHREAD Thread
+)
+{
+	LOG_FUNC_ONE_ARG(Thread);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
 }
 
 // ******************************************************************
@@ -956,23 +1184,24 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FUNC();
 
-	if(KeGetCurrentIrql() > DISPATCH_LEVEL)
+	// Inlined KeGetCurrentIrql() :
+	KPCR* Pcr = KeGetPcr();
+	KIRQL OldIrql = (KIRQL)Pcr->Irql;
+
+	if(OldIrql > DISPATCH_LEVEL)
 		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
-	KIRQL kRet = NULL;
-
-	KPCR* Pcr = KeGetPcr();
 	Pcr->Irql = DISPATCH_LEVEL;
 
 #ifdef _DEBUG_TRACE
-	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
-	DbgPrintf("Old IRQL is %d.\n", kRet);
+	DbgPrintf("KRNL: Raised IRQL to DISPATCH_LEVEL (2).\n");
+	DbgPrintf("Old IRQL is %d.\n", OldIrql);
 #endif
 
-	// We reached the DISPATCH_LEVEL, so the queue can be processed now :
-	// TODO : ExecuteDpcQueue();
+	// We reached the DISPATCH_LEVEL, so the queue can be processed now
+	ExecuteDpcQueue();
 	
-	RETURN(kRet);
+	RETURN(OldIrql);
 }
 
 // ******************************************************************
@@ -986,6 +1215,113 @@ XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel(
 	// See KfRaiseIrql / KeRaiseIrqlToDpcLevel - use APC_LEVEL?
 
 	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
+(
+	IN PRKMUTANT Mutant,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Abandoned,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Mutant)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Abandoned)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+	
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
+(
+	IN PRKSEMAPHORE Semaphore,
+	IN KPRIORITY Increment,
+	IN BOOLEAN Adjustment,
+	IN BOOLEAN Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Semaphore)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Adjustment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
+XBSYSAPI EXPORTNUM(133) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveByKeyDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+XBSYSAPI EXPORTNUM(134) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN ULONG SortKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(SortKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+XBSYSAPI EXPORTNUM(135) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveEntryDeviceQueue
+(
+	IN PKDEVICE_QUEUE DeviceQueue,
+	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceQueue)
+		LOG_FUNC_ARG(DeviceQueueEntry)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+
+XBSYSAPI EXPORTNUM(136) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRemoveQueue
+(
+	IN PRKQUEUE Queue,
+	IN KPROCESSOR_MODE WaitMode,
+	IN PLARGE_INTEGER Timeout
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
 }
 
 // ******************************************************************
@@ -1031,6 +1367,15 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 	LONG ret = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KeResetEvent called on a non-existant event!");
+	}
+	else {
+		ResetEvent(g_KeEventHandles[Event]);
+	}
+
+
 	return ret;
 }
 
@@ -1066,6 +1411,18 @@ XBSYSAPI EXPORTNUM(140) xboxkrnl::ULONG NTAPI xboxkrnl::KeResumeThread
 	LOG_UNIMPLEMENTED();
 
 	RETURN(ret);
+}
+
+XBSYSAPI EXPORTNUM(141) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRundownQueue
+(
+	IN PRKQUEUE Queue
+)
+{
+	LOG_FUNC_ONE_ARG(Queue);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
 }
 
 // ******************************************************************
@@ -1110,6 +1467,22 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 	RETURN(ret);
 }
 
+XBSYSAPI EXPORTNUM(144) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
+(
+	IN PKTHREAD Thread,
+	IN ULONG Disable
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_ARG(Disable)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(0);
+}
+
 // ******************************************************************
 // * 0x0091 - KeSetEvent()
 // ******************************************************************
@@ -1130,8 +1503,48 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	LONG ret = Event->Header.SignalState;
 	Event->Header.SignalState = TRUE;
 
+	// Fetch the host event and signal it, if present
+	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
+		EmuWarning("KeSetEvent called on a non-existant event. Creating it!");
+		// TODO: Find out why some XDKs do not call KeInitializeEvent first
+		KeInitializeEvent(Event, NotificationEvent, TRUE);
+	} else {
+		SetEvent(g_KeEventHandles[Event]);
+	}
+
 	RETURN(ret);
 }
+
+XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
+(
+	IN PRKEVENT Event,
+	IN PRKTHREAD *Thread
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
+(
+	IN PKPROCESS Process,
+	IN KPRIORITY BasePriority
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Process)
+		LOG_FUNC_ARG(BasePriority)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(BasePriority);
+}
+
 
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
@@ -1335,7 +1748,7 @@ XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_I
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
+XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObjects
 (
 	IN ULONG Count,
 	IN PVOID Object[],
@@ -1360,37 +1773,44 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	for (uint i = 0; i < Count; i++)
-		if (IsEmuHandle(Object[i]))
-		{
-			ret = WAIT_FAILED;
-			EmuWarning("WaitFor EmuHandle not supported!");
-			break;
-		}
+	// Take the input and build two arrays: One of handles created by our kernel and one for not
+	// Handles created by our kernel need to be forwarded to WaitForMultipleObjects while handles
+	// created by Windows need to be forwarded to NtDll::KeWaitForMultipleObjects
+	std::vector<HANDLE> nativeObjects;
+	std::vector<HANDLE> ntdllObjects;
 
-	if (ret == STATUS_SUCCESS)
-	{
+	for (uint i = 0; i < Count; i++) {
+		DbgPrintf("Object: 0x%08X\n", Object[i]);
+		if (g_KeEventHandles.find((PKEVENT)Object[i]) == g_KeEventHandles.end()) {
+			ntdllObjects.push_back(Object[i]);
+		} else {
+			nativeObjects.push_back(g_KeEventHandles[(PRKEVENT)Object[i]]);
+		}
+	}
+
+	if (ntdllObjects.size() > 0) {
 		// TODO : What should we do with the (currently ignored)
 		//        WaitReason, WaitMode, WaitBlockArray?
 
-		if (Count == 1)
-		{
-			// Note : WaitType is irrelevant here
-			ret = NtDll::NtWaitForSingleObject(
-				Object[0],
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
+		// Unused arguments : WaitReason, WaitMode, WaitBlockArray
+		ret = NtDll::NtWaitForMultipleObjects(
+			ntdllObjects.size(),
+			&ntdllObjects[0],
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
 
-			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
-		}
-		else
-			// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-			ret = NtDll::NtWaitForMultipleObjects(
-				Count,
-				Object,
-				(NtDll::OBJECT_WAIT_TYPE)WaitType,
-				Alertable,
-				(NtDll::PLARGE_INTEGER)Timeout);
+		if (FAILED(ret))
+			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+	}
+	
+	if (nativeObjects.size() > 0) {
+		ret = NtDll::NtWaitForMultipleObjects(
+			nativeObjects.size(),
+			&nativeObjects[0],
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
 
 		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
@@ -1402,7 +1822,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 // ******************************************************************
 // * 0x009F - KeWaitForSingleObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
+XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 (
 	IN PVOID Object,
 	IN KWAIT_REASON WaitReason,

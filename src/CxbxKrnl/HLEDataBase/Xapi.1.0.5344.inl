@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5344.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->Xapi.1.0.5344.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,34 +33,21 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XAPI_5344
+// * XLaunchNewImageA
 // ******************************************************************
-OOVPATable XAPI_5344[] = {
+OOVPA_NO_XREF(XLaunchNewImageA, 5344, 11)
 
-	REGISTER_OOVPA(GetTimeZoneInformation, 3911, DISABLED),
-	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
-	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
-	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
-	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
-	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
-	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
-	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
-	REGISTER_OOVPA(XGetDeviceChanges, 5233, DISABLED),
-	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 5233, PATCH),
-	REGISTER_OOVPA(XID_fCloseDevice, 4928, XREF),
-	REGISTER_OOVPA(XInputClose, 3911, PATCH),
-	REGISTER_OOVPA(XInputGetState, 4928, PATCH),
-	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
-	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
-	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
-	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
-	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
-	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
-	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
-};
+        { 0x00, 0xB8 },
 
-// ******************************************************************
-// * XAPI_5344_SIZE
-// ******************************************************************
-uint32 XAPI_5344_SIZE = sizeof(XAPI_5344);
+        { 0x18, 0x75 },
+        { 0x19, 0x19 },
+        { 0x1A, 0x83 },
+        { 0x1B, 0xC1 },
+        { 0x1C, 0x04 },
+        { 0x1D, 0x3B },
+        { 0x1E, 0xC8 },
+        { 0x1F, 0x72 },
+
+        { 0x30, 0xC2 },
+        { 0x41, 0xEE },
+OOVPA_END;

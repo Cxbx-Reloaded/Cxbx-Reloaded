@@ -61,6 +61,7 @@ class WndMain : public Wnd
         // ******************************************************************
         void OpenXbe(const char *x_filename);
         void CloseXbe();
+        void OpenMRU(int mru);
         void SaveXbe(const char *x_filename);
         void SaveXbeAs();
 
@@ -95,6 +96,11 @@ class WndMain : public Wnd
         // ******************************************************************
         void LoadLogo();
 
+		// ******************************************************************
+		// * refresh the game logo in the main window
+		// ******************************************************************
+		void LoadGameLogo();
+
         // ******************************************************************
         // * refresh all menus (checks, enabled, disabled, etc)
         // ******************************************************************
@@ -110,15 +116,33 @@ class WndMain : public Wnd
         // ******************************************************************
         void UpdateRecentFiles();
 
+		// ******************************************************************
+		// * update title bar caption with xbe name and FPS/MSF
+		// ******************************************************************
+		void UpdateCaption();
+
+		// ******************************************************************
+		// * crash monitoring wrapper function
+		// ******************************************************************
+		static DWORD WINAPI CrashMonitorWrapper(LPVOID lpVoid);
+
+		// ******************************************************************
+		// * crash monitoring function thread
+		// ******************************************************************
+		void CrashMonitor();
+
         // ******************************************************************
         // * drawing information
         // ******************************************************************
         HDC         m_BackDC;
         HDC         m_LogoDC;
+		HDC         m_GameLogoDC;
         HBITMAP     m_OrigBmp;
         HBITMAP     m_OrigLogo;
+		HBITMAP     m_OrigGameLogo;
         HBITMAP     m_BackBmp;
         HBITMAP     m_LogoBmp;
+		HBITMAP		m_GameLogoBMP;
 
         // ******************************************************************
         // * Xbe objects
@@ -129,7 +153,7 @@ class WndMain : public Wnd
         // * changes remembered for internal purposes
         // ******************************************************************
         bool        m_bXbeChanged;
-        bool        m_bCanStart;
+        bool        m_bIsStarted;
 
         // ******************************************************************
         // * cached filenames
@@ -163,11 +187,22 @@ class WndMain : public Wnd
 		// ******************************************************************
 		int         m_FlagsLLE;
 
+		// ******************************************************************
+		// * XInput Enabled Flag
+		// ******************************************************************		
+		int			m_XInputEnabled;
+
+		// ******************************************************************
+		// * Hack Flags
+		// ******************************************************************	
+		int		m_DisablePixelShaders;
+
         // ******************************************************************
         // * debug output filenames
         // ******************************************************************
         char       *m_CxbxDebugFilename;
         char       *m_KrnlDebugFilename;
+
 };
 
 #endif

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4721.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->Xapi.1.0.4721.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,36 +33,26 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XAPI_4721
+// * XLaunchNewImageA
 // ******************************************************************
-OOVPATable XAPI_4721[] = {
-    // REGISTER_OOVPA(RtlCreateHeap, 3911, PATCH), // obsolete, (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    // REGISTER_OOVPA(RtlAllocateHeap, 3911, PATCH), // obsolete (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    // REGISTER_OOVPA(RtlReAllocateHeap, 4627, PATCH), // obsolete 
-    // REGISTER_OOVPA(RtlFreeHeap, 4627, PATCH), // obsolete 
-    // REGISTER_OOVPA(RtlSizeHeap, 4627, PATCH), // obsolete 
-	// REGISTER_OOVPA(RtlDestroyHeap, 4627, PATCH), // obsolete 
-	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
-	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
-	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
-	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
-	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
-	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
-	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
-	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
-	REGISTER_OOVPA(XInputClose, 3911, PATCH),
-	// REGISTER_OOVPA(XInputClose, 4361, PATCH),
-	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete 
-	// REGISTER_OOVPA(XapiInitProcess, 4361, PATCH), // obsolete, Too High Level
-    // REGISTER_OOVPA(XapiBootDash, 3911, PATCH), // obsolete 
-	REGISTER_OOVPA(CreateFiber, 3911, DISABLED),
-	REGISTER_OOVPA(DeleteFiber, 3911, DISABLED),
-	REGISTER_OOVPA(SwitchToFiber, 3911, DISABLED),
-	REGISTER_OOVPA(ConvertThreadToFiber, 3911, DISABLED),
-	REGISTER_OOVPA(OutputDebugStringA, 3911, PATCH),
-};
+OOVPA_NO_XREF(XLaunchNewImageA, 4721, 15)
 
-// ******************************************************************
-// * XAPI_4721_SIZE
-// ******************************************************************
-uint32 XAPI_4721_SIZE = sizeof(XAPI_4721);
+        { 0x03, 0x81 },
+        { 0x04, 0xEC },
+        { 0x05, 0x84 },
+        { 0x06, 0x03 },
+        { 0x07, 0x00 },
+        { 0x08, 0x00 },
+
+        { 0x33, 0x3C },
+        { 0x34, 0x44 },
+
+        { 0xA0, 0x3B },
+        { 0xA1, 0xC3 },
+        { 0xA2, 0x7C },
+        { 0xA3, 0x5A },
+        { 0xA4, 0x57 },
+        { 0xA5, 0x8D },
+
+        { 0xC1, 0x15 },
+OOVPA_END;

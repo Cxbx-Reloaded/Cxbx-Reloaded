@@ -4,10 +4,10 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 6.00.0338 */
+ /* File created by MIDL compiler version 6.00.0347 */
 /* Compiler settings for amstream.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
-    protocol : dce , ms_ext, c_ext
+    protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
@@ -18,7 +18,7 @@
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__
-#define __REQUIRED_RPCNDR_H_VERSION__ 440
+#define __REQUIRED_RPCNDR_H_VERSION__ 475
 #endif
 
 #include "rpc.h"
@@ -2258,7 +2258,7 @@ AMMultiMediaStream;
 #endif
 #endif /* __DirectShowStreamLib_LIBRARY_DEFINED__ */
 
-/* interface __MIDL_itf_amstream_0387 */
+/* interface __MIDL_itf_amstream_0410 */
 /* [local] */ 
 
 #ifndef __cplusplus
@@ -2274,8 +2274,8 @@ DEFINE_GUID(CLSID_AMMediaTypeStream, /* CF0F2F7C-F7BF-11d0-900D-00C04FD9189D */
 0xcf0f2f7c, 0xf7bf, 0x11d0, 0x90, 0xd, 0x0, 0xc0, 0x4f, 0xd9, 0x18, 0x9d);
 
 
-extern RPC_IF_HANDLE __MIDL_itf_amstream_0387_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_amstream_0387_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_amstream_0410_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_amstream_0410_v0_0_s_ifspec;
 
 /* Additional Prototypes for ALL interfaces */
 

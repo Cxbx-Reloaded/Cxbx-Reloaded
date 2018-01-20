@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "XAPI"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 /* prevent name collisions */
@@ -61,7 +62,7 @@ extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
 bool g_bXInputOpenCalled = false;
 
-bool CxbxMountUtilityDrive(bool formatClean);
+XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
 // ******************************************************************
 // * prevent name collisions
@@ -89,36 +90,89 @@ XFIBER g_Fibers[256];
 // Number of fiber routines queued
 int	   g_FiberCount = 0;
 
-
-// ******************************************************************
-// * patch: XFormatUtilityDrive
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(XFormatUtilityDrive)()
+void SetupXboxDeviceTypes()
 {
-	FUNC_EXPORTS
+	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
+	if (gDeviceType_Gamepad == nullptr) {
+		// First, attempt to find GetTypeInformation
+		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
+		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbnull) {
+			printf("Deriving XDEVICE_TYPE_GAMEPAD from DeviceTable (via GetTypeInformation)\n");
+			// Read the offset values of the device table structure from GetTypeInformation
+			xbaddr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
+			xbaddr deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
 
-	LOG_FUNC();
+			// Calculate the number of device entires in the table
+			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
 
-    // TODO: yeah... we'll format... riiiiight
+			printf("DeviceTableStart: 0x%08X\n", deviceTableStartOffset);
+			printf("DeviceTableEnd: 0x%08X\n", deviceTableEndOffset);
+			printf("DeviceTable Entires: %u\n", deviceTableEntryCount);
 
-	RETURN(TRUE);
-}
+			// Sanity check: Where all these device offsets within Xbox memory
+			if (deviceTableStartOffset >= XBOX_MEMORY_SIZE || deviceTableEndOffset >= XBOX_MEMORY_SIZE) {
+				CxbxKrnlCleanup("XAPI DeviceTable Location is outside of Xbox Memory range");
+			}
 
-// ******************************************************************
-// * patch: XMountUtilityDrive
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(XMountUtilityDrive)
-(
-    BOOL    fFormatClean
-)
-{
-	FUNC_EXPORTS
+			// Iterate through the table until we find gamepad
+			XTL::PXID_TYPE_INFORMATION* deviceTable = (XTL::PXID_TYPE_INFORMATION*)(deviceTableStartOffset);
+			for (unsigned int i = 0; i < deviceTableEntryCount; i++) {
+				// Skip empty table entries
+				if (deviceTable[i] == nullptr) {
+					continue;
+				}
 
-	LOG_FUNC_ONE_ARG(fFormatClean);
+				printf("----------------------------------------\n");
+				printf("DeviceTable[%u]->ucType = %d\n", i, deviceTable[i]->ucType);
+				printf("DeviceTable[%u]->XppType = 0x%08X (", i, deviceTable[i]->XppType);
 
-	CxbxMountUtilityDrive(fFormatClean == TRUE);
+				switch (deviceTable[i]->ucType) {
+				case 1:
+					gDeviceType_Gamepad = deviceTable[i]->XppType;
+					printf("XDEVICE_TYPE_GAMEPAD)\n");
+					break;
+				default:
+					printf("Unknown)\n");
+					break;
+				}
+			}
+		} else {
+			// XDKs without GetTypeInformation have the GamePad address hardcoded in XInputOpen
+			// Only the earliest XDKs use this code path, and the offset never changed between them
+			// so this works well for us.
+			void* XInputOpenAddr = (void*)g_SymbolAddresses["XInputOpen"];
+			if (XInputOpenAddr != nullptr) {
+				printf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)\n", XInputOpenAddr);
+				gDeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+			}
+		}
 
-	RETURN(TRUE);
+		if (gDeviceType_Gamepad == nullptr) {
+			EmuWarning("XAPI: XDEVICE_TYPE_GAMEPAD was not found");
+			return;
+		}
+
+		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
+
+		// Set the device as connected
+		// We need to set the ChangeConnected attribute so that titles calling
+		// XGetDeviceChanges before calling XGetDevices work as expected
+		// This fixes input in Far Cry Instincts
+		gDeviceType_Gamepad->CurrentConnected = 1;
+		gDeviceType_Gamepad->ChangeConnected = 1;
+		gDeviceType_Gamepad->PreviousConnected = 0;
+
+		// JSRF Hack: Don't set the ChangeConnected flag. 
+		// Without this, JSRF hard crashes 
+		// TODO: Why is this still needed? 
+		// TODO: Perhaps we should implement LLE for OHCI/USB much sooner than planned
+		// TitleID 0x49470018 = JSRF NTSC-U
+		// TitleID 0x5345000A = JSRF PAL, NTSC-J
+		// TitleID 0x53450016 = JSRF NTSC-J (Demo)
+		if (g_pCertificate->dwTitleId == 0x49470018 || g_pCertificate->dwTitleId == 0x5345000A || g_pCertificate->dwTitleId == 0x53450016) {
+			gDeviceType_Gamepad->ChangeConnected = 0;
+		}
+	}
 }
 
 // ******************************************************************
@@ -137,24 +191,14 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(PreallocTypes)
 		LOG_FUNC_END;
 
-	/*for( DWORD i = 0; i < dwPreallocTypeCount; i++ )
-	{
-		printf( "PreallocTypes[%d]: Device = 0x%.08X, 0x%.08X, 0x%.08X\n\tCount %d\n", i,
-			PreallocTypes[i].DeviceType->Reserved[0],
-			PreallocTypes[i].DeviceType->Reserved[1],
-			PreallocTypes[i].DeviceType->Reserved[2], PreallocTypes[i].dwPreallocCount );
-	}*/
-
-    int v;
-
-    for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {
         g_pXInputSetStateStatus[v].hDevice = 0;
         g_pXInputSetStateStatus[v].dwLatency = 0;
         g_pXInputSetStateStatus[v].pFeedback = 0;
     }
 
-    for(v=0;v<XINPUT_HANDLE_SLOTS;v++)
+    for(int v=0;v<XINPUT_HANDLE_SLOTS;v++)
     {
         g_hInputHandle[v] = 0;
     }
@@ -162,6 +206,10 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 
 // ******************************************************************
 // * patch: XGetDevices
+// * Note: This could be unpatched however,
+// * XInitDevices is required to be unpatched first.
+// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 (
@@ -172,18 +220,23 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
-	// Report DeviceConnected in Port 0
-	DeviceType->CurrentConnected = 1;
+	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
-    DWORD ret = DeviceType->CurrentConnected;
+	DWORD ret = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
+
+	xboxkrnl::KfLowerIrql(oldIrql);
 
 	RETURN(ret);
 }
 
 // ******************************************************************
 // * patch: XGetDeviceChanges
+// * Note: This could be unpatched however,
+// * XInitDevices is required to be unpatched first.
+// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 (
@@ -198,34 +251,34 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(pdwInsertions)
 		LOG_FUNC_ARG(pdwRemovals)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-    BOOL bRet = FALSE;
-    static BOOL bFirst = TRUE;
+	BOOL ret = FALSE;
 
-    // Return 1 Controller Inserted initially, then no changes forever
-    if(bFirst)
+    if(!DeviceType->ChangeConnected)
     {
-        if(DeviceType->CurrentConnected == 0 && DeviceType->ChangeConnected == 0 && DeviceType->PreviousConnected == 0)
-		{
-			*pdwInsertions = (1<<0);
-			*pdwRemovals   = 0;
-			bRet = TRUE;
-			bFirst = FALSE;
-		}
-		else
-		{
-			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->CurrentConnected, DeviceType->ChangeConnected, DeviceType->PreviousConnected);
-		}
+        *pdwInsertions = 0;
+        *pdwRemovals = 0;
     }
     else
     {
-        *pdwInsertions = (1<<0); //0;
-        *pdwRemovals   = 0;
+		UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+
+        *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
+        *pdwRemovals = (DeviceType->PreviousConnected & ~DeviceType->CurrentConnected);
+        ULONG RemoveInsert = DeviceType->ChangeConnected &
+            DeviceType->CurrentConnected &
+            DeviceType->PreviousConnected;
+        *pdwRemovals |= RemoveInsert;
+        *pdwInsertions |= RemoveInsert;
+        DeviceType->ChangeConnected = 0;
+        DeviceType->PreviousConnected = DeviceType->CurrentConnected;
+        ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
+
+		xboxkrnl::KfLowerIrql(oldIrql);
     }
 
-	RETURN(TRUE); // TODO : RETURN(bRet);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -364,9 +417,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
         for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
         {
-            HANDLE hDevice = g_pXInputSetStateStatus[v].hDevice;
-
-            if(hDevice == 0)
+            if ((HANDLE)g_pXInputSetStateStatus[v].hDevice == 0)
                 continue;
 
             g_pXInputSetStateStatus[v].dwLatency = 0;
@@ -468,18 +519,22 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
         if((dwPort >= 0) && (dwPort <= 3))
         {
-			DbgPrintf( "EmuXInputGetState(): dwPort = %d\n", dwPort );
+			DbgPrintf("XAPI: EmuXInputGetState(): dwPort = %d\n", dwPort );
 
             if(dwPort == 0)
             {
-                EmuDInputPoll(pState);
-		//		EmuXInputPCPoll(pState);
+				if (g_XInputEnabled) {
+					EmuXInputPCPoll(pState);
+				} else {
+					EmuDInputPoll(pState);
+				}
+				
                 ret = ERROR_SUCCESS;
             }
         }
     }
 	else
-		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
+		EmuWarning("EmuXInputGetState(): pph == NULL!");
 
 	RETURN(ret);
 }
@@ -662,7 +717,7 @@ VOID WINAPI XTL::EMUPATCH(XapiThreadStartup)
     DWORD dwDummy2
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwDummy1)
@@ -697,7 +752,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     BOOL                    fRegister
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThreadNotification)
@@ -764,7 +819,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 	if( !pFiber )
 		EmuWarning( "CreateFiber failed!" );
 	else
-		DbgPrintf("CreateFiber returned 0x%X\n", pFiber);
+		DbgPrintf("XAPI: CreateFiber returned 0x%X\n", pFiber);
 
 	// Add to list of queued fiber routines
 	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
@@ -787,7 +842,7 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuDeleteFiber\n"
+	DbgPrintf("XAPI: EmuDeleteFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
@@ -809,7 +864,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuSwitchToFiber\n"
+	DbgPrintf("XAPI: EmuSwitchToFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
@@ -827,7 +882,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 
 	g_FiberCount = 0;
 
-	DbgPrintf( "Finished executing fibers!\n" );
+	DbgPrintf("XAPI: Finished executing fibers!\n" );
 
 }
 #endif
@@ -843,7 +898,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuConvertThreadToFiber\n"
+	DbgPrintf("XAPI: EmuConvertThreadToFiber\n"
 			"(\n"
 			"	lpParameter        : 0x%.08X\n"
 			");\n",
@@ -851,7 +906,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 
 	LPVOID pRet = ConvertThreadToFiber( lpParameter );
 	
-	DbgPrintf( "EmuConvertThreadToFiber returned 0x%X\n", pRet );
+	DbgPrintf("XAPI: EmuConvertThreadToFiber returned 0x%X\n", pRet );
 
 
 	return pRet;
@@ -866,7 +921,7 @@ VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 {
 	FUNC_EXPORTS
 
-	DbgPrintf("EmuXapi: EmuXapiFiberStarup()\n"
+	DbgPrintf("XAPI: EmuXapiFiberStarup()\n"
 			"(\n"
 			"	dwDummy            : 0x%.08X\n"
 			");\n",
@@ -904,7 +959,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pfnAPC)
+		LOG_FUNC_ARG_TYPE(PVOID, pfnAPC)
 		LOG_FUNC_ARG(hThread)
 		LOG_FUNC_ARG(dwData)
 		LOG_FUNC_END;
@@ -925,6 +980,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	RETURN(dwRet);
 }
 
+#if 0 // Handled by WaitForSingleObject
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
@@ -936,7 +992,7 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 	BOOL			bWait
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hFile)
@@ -952,6 +1008,7 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 
 	RETURN(bRet);
 }
+#endif
 
 // ******************************************************************
 // * patch: XLaunchNewImageA
@@ -962,7 +1019,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	// Note : This can be tested using "Innocent tears",
 	// which relaunches different xbes between scenes;
@@ -984,22 +1041,27 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 	// Update the kernel's LaunchDataPage :
 	{
-		if (xboxkrnl::LaunchDataPage == &DefaultLaunchDataPage)
-			xboxkrnl::LaunchDataPage = NULL;
+		if (xboxkrnl::LaunchDataPage == xbnull)
+		{
+			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
+			if (!LaunchDataVAddr)
+			{
+				RETURN(STATUS_NO_MEMORY);
+			}
+			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
+		}
 
-		if (xboxkrnl::LaunchDataPage == NULL)
-			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE *)xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
-
-		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-		xboxkrnl::LaunchDataPage->Header.dwTitleId = pCertificate->dwTitleId;
+		xboxkrnl::LaunchDataPage->Header.dwTitleId = g_pCertificate->dwTitleId;
 		xboxkrnl::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
 		xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
 
-		if (pLaunchData != NULL)
+		xboxkrnl::MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, PAGE_SIZE, TRUE);
+
+		if (pLaunchData != xbnull)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath == NULL)
+		if (lpTitlePath == xbnull)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };
@@ -1032,8 +1094,6 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	RETURN(ERROR_GEN_FAILURE);
 }
 
-DWORD g_XGetLaunchInfo_Status = -1;
-
 #if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetLaunchInfo
@@ -1045,11 +1105,13 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 )
 {
 	FUNC_EXPORTS
+
 	// TODO : This patch can be removed once we're sure all XAPI library
 	// functions indirectly reference our xboxkrnl::LaunchDataPage variable.
 	// For this, we need a test-case that hits this function, and run that
 	// with and without this patch enabled. Behavior should be identical.
 	// When this is verified, this patch can be removed.
+	LOG_TEST_CASE("Unpatching test needed");
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdwLaunchDataType)
@@ -1063,10 +1125,8 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 		// Note : Here, CxbxRestoreLaunchDataPage() was already called,
 		// which has loaded LaunchDataPage from a binary file (if present).
 
-		Xbe::Certificate *pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-
 		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
-		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == pCertificate->dwTitleId)
+		if (   (xboxkrnl::LaunchDataPage->Header.dwTitleId == g_pCertificate->dwTitleId)
 			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
 			|| (xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DEBUGGER_CMDLINE))
 		{
@@ -1141,7 +1201,7 @@ MMRESULT WINAPI XTL::EMUPATCH(timeSetEvent)
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(uDelay)
 		LOG_FUNC_ARG(uResolution)
-		LOG_FUNC_ARG(fptc)
+		LOG_FUNC_ARG_TYPE(PVOID, fptc)
 		LOG_FUNC_ARG(dwUser)
 		LOG_FUNC_ARG(fuEvent)
 		LOG_FUNC_END;

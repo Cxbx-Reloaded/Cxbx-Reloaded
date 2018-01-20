@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4432.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->DSound.1.0.4432.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,122 +33,22 @@
 // ******************************************************************
 
 // ******************************************************************
-// * DirectSoundDoWork
+// * XFileCreateMediaObjectAsync
 // ******************************************************************
-#define DirectSoundDoWork_4432 DirectSoundDoWork_4361
+OOVPA_NO_XREF(XFileCreateMediaObjectAsync, 4432, 12)
 
-// ******************************************************************
-// * DirectSoundGetSampleTime
-// ******************************************************************
-#define DirectSoundGetSampleTime_4432 DirectSoundGetSampleTime_4361
+        { 0x00, 0x56 },
+        { 0x1F, 0x1B },
 
-// ******************************************************************
-// * IDirectSound_Release
-// ******************************************************************
-OOVPA_NO_XREF(IDirectSound_Release, 4432, 12)
+        { 0x2B, 0x07 },
+        { 0x2C, 0x80 },
+        { 0x2D, 0x78 },
+        { 0x2E, 0x20 },
+        { 0x2F, 0xFF },
+        { 0x30, 0x74 },
+        { 0x31, 0x24 },
+        { 0x32, 0x10 },
 
-        // IDirectSound_Release+0x04 : lea ecx, [eax-8]
-        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x05, 0x48 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xF8 }, // (Offset,Value)-Pair #3
-
-        // IDirectSound_Release+0x07 : neg eax
-        { 0x07, 0xF7 }, // (Offset,Value)-Pair #4
-        { 0x08, 0xD8 }, // (Offset,Value)-Pair #5
-
-        // IDirectSound_Release+0x09 : sbb eax, eax
-        { 0x09, 0x1B }, // (Offset,Value)-Pair #6
-        { 0x0A, 0xC0 }, // (Offset,Value)-Pair #7
-
-        // IDirectSound_Release+0x0D : mov ecx, [eax]
-        { 0x0D, 0x8B }, // (Offset,Value)-Pair #8
-        { 0x0E, 0x08 }, // (Offset,Value)-Pair #9
-
-        // IDirectSound_Release+0x10 : call dword ptr [ecx+8]
-        { 0x10, 0xFF }, // (Offset,Value)-Pair #10
-        { 0x11, 0x51 }, // (Offset,Value)-Pair #11
-        { 0x12, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x5D, 0xC2 },
+        { 0x5E, 0x0C },
 OOVPA_END;
-
-// ******************************************************************
-
-// ******************************************************************
-// * DirectSound_CDirectSoundVoiceSettings::SetMixBins
-// ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4432, 10,
-
-    XREF_DSSETMIXBINSC,
-    XRefZero)
-
-        // DirectSound_CDirectSoundVoiceSettings_SetMixBins+0x06 : jnz +0x1A
-        { 0x06, 0x75 }, // (Offset,Value)-Pair #1
-        { 0x07, 0x1A }, // (Offset,Value)-Pair #2
-
-        // DirectSound_CDirectSoundVoiceSettings_SetMixBins+0x08 : test byte ptr [ecx+8], 0x10
-        { 0x08, 0xF6 }, // (Offset,Value)-Pair #3
-        { 0x09, 0x41 }, // (Offset,Value)-Pair #4
-        { 0x0A, 0x08 }, // (Offset,Value)-Pair #5
-        { 0x0B, 0x10 }, // (Offset,Value)-Pair #6
-
-        // DirectSound_CDirectSoundVoiceSettings_SetMixBins+0x2B : jbe +0x2B
-        { 0x2B, 0x76 }, // (Offset,Value)-Pair #7
-        { 0x2C, 0x2B }, // (Offset,Value)-Pair #8
-
-        // DirectSound_CDirectSoundVoiceSettings_SetMixBins+0xB2 : retn 0x04
-        { 0xB2, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0xB3, 0x04 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * DirectSoundCreate, 4432
-// ******************************************************************
-OOVPATable DSound_4432[] = {
-
-	REGISTER_OOVPA(DirectSoundCreate, 4134, PATCH),
-	REGISTER_OOVPA(DirectSoundDoWork, 4134, PATCH),
-	REGISTER_OOVPA(DirectSoundGetSampleTime, 4432, PATCH),
-	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundStream, 4361, XREF),
-	REGISTER_OOVPA(DirectSoundCreateStream, 4361, PATCH),
-	REGISTER_OOVPA(CMcpxStream_Pause, 4361, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
-	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound_Release, 4432, PATCH),
-	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 4361, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLoopRegion, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetLoopRegion, 4134, PATCH),
-	REGISTER_OOVPA(CMcpxBuffer_SetBufferData, 4134, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetBufferData, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetBufferData, 4134, PATCH),
-	REGISTER_OOVPA(CMcpxBuffer_SetCurrentPosition, 4134, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetCurrentPosition, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetCurrentPosition, 4134, PATCH),
-	REGISTER_OOVPA(CMcpxBuffer_Stop, 4361, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Stop, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4361, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMaxDistance, 4134, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMaxDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMaxDistance, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMinDistance, 4134, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMinDistance, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMinDistance, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetI3DL2Listener, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4432, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBins, 4134, XREF),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetMixBins, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_CommitDeferredSettings, 4134, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSound_SetDistanceFactorA, 4134, XREF),
-	REGISTER_OOVPA(IDirectSound_SetDistanceFactor, 4134, PATCH),
-	REGISTER_OOVPA(IDirectSound_DownloadEffectsImage, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
-	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
-};
-
-// ******************************************************************
-// * DSound_4432_SIZE
-// ******************************************************************
-uint32 DSound_4432_SIZE = sizeof(DSound_4432);

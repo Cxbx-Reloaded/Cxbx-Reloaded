@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 // prevent name collisions
@@ -63,7 +62,7 @@ const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 
 xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 {
-	xboxkrnl::XBOX_EEPROM *EEPROM;
+	xboxkrnl::XBOX_EEPROM *pEEPROM;
 
 	// First, try to open an existing EEPROM.bin file :
 	HANDLE hFileEEPROM = CreateFile(szFilePath_EEPROM_bin,
@@ -87,7 +86,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 			/* hTemplateFile */nullptr);
 		if (hFileEEPROM == INVALID_HANDLE_VALUE)
 		{
-			DbgPrintf("CxbxRestoreEEPROM : Couldn't create EEPROM.bin file!\n");
+			DbgPrintf("INIT: Couldn't create EEPROM.bin file!\n");
 			return nullptr;
 		}
 	}
@@ -103,41 +102,54 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/**/nullptr);
 	if (hFileMappingEEPROM == NULL)
 	{
-		DbgPrintf("CxbxRestoreEEPROM : Couldn't create EEPROM.bin file mapping!\n");
+		DbgPrintf("INIT: Couldn't create EEPROM.bin file mapping!\n");
 		return nullptr;
 	}
 
 	// Map EEPROM.bin contents into memory :
-	EEPROM = (xboxkrnl::XBOX_EEPROM *)MapViewOfFile(
+	pEEPROM = (xboxkrnl::XBOX_EEPROM *)MapViewOfFile(
 		hFileMappingEEPROM,
 		FILE_MAP_READ | FILE_MAP_WRITE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
-	if (EEPROM == NULL)
-		DbgPrintf("CxbxRestoreEEPROM : Couldn't map EEPROM.bin into memory!\n");
+	if (pEEPROM == nullptr) {
+		DbgPrintf("INIT: Couldn't map EEPROM.bin into memory!\n");
+		return nullptr;
+	}
 
 	// TODO : Verify checksums
 
+	// Check for (and fix) invalid fields that were set by previous versions of Cxbx-Reloaded
+	// Without this, all users would have to delete their EEPROM.bin
+	// The issue was that the AV_FLAG_XXhz was set in the wrong field, we fix it by
+	// resetting FactorySettings.AVRegion and setting user video flags to the default
+	// The user can then set their desired settings using the Xbox Dashboard
+	if (pEEPROM->FactorySettings.AVRegion == AV_STANDARD_NTSC_M) {
+		DbgPrintf("INIT: Repairing bad EEPROM (from previous Cxbx-Reloaded builds)\n");
+		pEEPROM->UserSettings.VideoFlags = 0;
+		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	}
+
 	if (NeedsInitialization)
 	{
-		memset(EEPROM, 0, EEPROM_SIZE);
+		memset(pEEPROM, 0, EEPROM_SIZE);
 
 		// TODO: Make these configurable or autodetect of some sort :
-		EEPROM->UserSettings.Language = 0x01;  // = English
-		EEPROM->UserSettings.VideoFlags = 0x10;  // = Letterbox
-		EEPROM->UserSettings.AudioFlags = 0;  // = Stereo, no AC3, no DTS
-		EEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-		EEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
-		EEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		EEPROM->FactorySettings.AVRegion = 0x01; // = NTSC_M
+		pEEPROM->UserSettings.Language = 0x01;  // = English
+		pEEPROM->UserSettings.VideoFlags = 0;   // = Use XDK defaults
+		pEEPROM->UserSettings.AudioFlags = 0;   // = Stereo, no AC3, no DTS
+		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
+		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
 
-		DbgPrintf("EmuMain: Initialized default EEPROM\n");
+		DbgPrintf("INIT: Initialized default EEPROM\n");
 	}
 	else
-		DbgPrintf("EmuMain: Loaded EEPROM.bin\n");
+		DbgPrintf("INIT: Loaded EEPROM.bin\n");
 
-	return EEPROM;
+	return pEEPROM;
 }

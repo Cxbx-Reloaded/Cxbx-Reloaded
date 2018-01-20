@@ -1,9 +1,9 @@
 //------------------------------------------------------------------------------
 // File: DynGraph.idl
 //
-// Desc: Dynamic graph interfaces.
+// Desc: Dynamic graph interfaces
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -98,9 +98,9 @@ interface IGraphConfig : IUnknown {
                       [in] DWORD dwFlags);
 
     HRESULT Reconfigure([in] IGraphConfigCallback *pCallback,
-                        [in] PVOID pvContext,
-                        [in] DWORD dwFlags,
-                        [in] HANDLE hAbortEvent);
+                      [in] PVOID pvContext,
+                      [in] DWORD dwFlags,
+                      [in] HANDLE hAbortEvent);
 
      
     HRESULT AddFilterToCache([in] IBaseFilter *pFilter);

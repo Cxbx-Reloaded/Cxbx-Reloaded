@@ -158,6 +158,11 @@ XBSYSAPI EXPORTNUM(161) VOID FASTCALL KfLowerIrql
 // ******************************************************************
 XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 
+void KiLockDispatcherDatabase 
+(
+	OUT KIRQL* OldIrql
+);
+
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
@@ -174,7 +179,7 @@ XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) DWORD NTAPI PhyGetLinkState
 (
 	IN ULONG	Mode
 );
@@ -440,10 +445,47 @@ XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
 
-XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
-XBSYSAPI EXPORTNUM(362) VOID *xsprintf;      // ""
-XBSYSAPI EXPORTNUM(363) VOID *xvsnprintf;    // ""
-XBSYSAPI EXPORTNUM(364) VOID *xvsprintf;     // ""
+// ******************************************************************
+// * 0x0169 - RtlSnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+);
+
+// ******************************************************************
+// * 0x016A - RtlSprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+);
+
+// ******************************************************************
+// * 0x016B - RtlVsnprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
+(
+	IN PCHAR string,
+	IN SIZE_T count,
+	IN LPCCH format,
+	...
+);
+
+// ******************************************************************
+// * 0x016C - RtlVsprintf()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(364) INT CDECL RtlVsprintf
+(
+	IN PCHAR string,
+	IN LPCCH format,
+	...
+);
 
 XBSYSAPI EXPORTNUM(367) NTSTATUS NTAPI UnknownAPI367
 (

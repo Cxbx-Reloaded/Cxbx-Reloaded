@@ -165,7 +165,8 @@ struct NativeObjectAttributes {
 	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
 };
 
-NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "");
+NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "", bool partitionHeader = false);
+NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &RelativeHostPath, OUT NtDll::HANDLE *RootDirectory, std::string aFileAPIName = "", bool partitionHeader = false);
 
 // ******************************************************************
 // * Wrapper of a handle object
@@ -239,8 +240,6 @@ void CleanupSymbolicLinks();
 
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
 NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
-bool CxbxMountUtilityDrive(bool formatClean);
-bool CxbxIsUtilityDrive(NtDll::HANDLE RootDirectory);
 
 std::wstring string_to_wstring(std::string const & src);
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);
@@ -285,4 +284,38 @@ NTSTATUS NTToXboxFileInformation
 	IN  ULONG FileInformationClass,
 	IN  ULONG Length
 );
+
+// Xbox Partition Information
+typedef struct
+{
+	UCHAR Name[16];
+	ULONG Flags;
+	ULONG LBAStart;
+	ULONG LBASize;
+	ULONG Reserved;
+} XboxPartitionTableEntry;
+
+typedef struct
+{
+	UCHAR	Magic[16];
+	char	Res0[32];
+	XboxPartitionTableEntry	TableEntries[14];
+} XboxPartitionTable;
+
+typedef struct _FATX_SUPERBLOCK
+{
+	char	Tag[4];
+	unsigned int VolumeID;
+	unsigned int ClusterSize;
+	USHORT	FatCopies;
+	int		Resvd;
+	char	Unused[4078];
+} FATX_SUPERBLOCK;
+
+XboxPartitionTable CxbxGetPartitionTable();
+FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
+std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
+void CxbxFormatPartitionByHandle(HANDLE hFile);
+
 #endif

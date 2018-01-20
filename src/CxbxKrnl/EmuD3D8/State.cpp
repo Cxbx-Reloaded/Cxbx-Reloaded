@@ -33,7 +33,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "CxbxKrnl/Emu.h"
@@ -172,49 +171,49 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[0+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[0+Adjust2] == 5)
-                    CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0+Adjust2]);
+					EmuWarning("ClampToEdge is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0+Adjust2]);
             }
 
             if(pCur[1+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[1+Adjust2] == 5)
-                    CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]);
+					EmuWarning("ClampToEdge is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]);
             }
 
             if(pCur[2+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[2+Adjust2] == 5)
-                    CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]);
+					EmuWarning("ClampToEdge is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]);
             }
 
             if(pCur[3+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[3+Adjust2] == 4)
-                    CxbxKrnlCleanup("QuinCunx is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3+Adjust2]);
+                    EmuWarning("QuinCunx is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3+Adjust2]);
             }
 
             if(pCur[4+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[4+Adjust2] == 4)
-                    CxbxKrnlCleanup("QuinCunx is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4+Adjust2]);
+					EmuWarning("QuinCunx is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4+Adjust2]);
             }
 
             if(pCur[5+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[5+Adjust2] == 4)
-                    CxbxKrnlCleanup("QuinCunx is unsupported (temporarily)");
-
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5+Adjust2]);
+					EmuWarning("QuinCunx is unsupported (temporarily)");
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5+Adjust2]);
             }
 
             if(pCur[6+Adjust2] != X_D3DTSS_UNK)
@@ -310,7 +309,7 @@ void XTL::EmuUpdateDeferredStates()
 					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BUMPENVMAPLUMINANCE);
 					break;
 				default:
-					CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12 - Adjust1]);
+					EmuWarning("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12 - Adjust1]);
 					break;
 				}
             }
@@ -328,8 +327,8 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[16-Adjust1] != X_D3DTSS_UNK)
             {
                 if(pCur[16-Adjust1] > 12 && pCur[16-Adjust1] != 14 && pCur[16-Adjust1] != 13)
-                    CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16-Adjust1]);
-
+                    EmuWarning("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16-Adjust1]);
+				else
 				if( pCur[16-Adjust1] == 14 )
 					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA);
 				if( pCur[16-Adjust1] == 15 )

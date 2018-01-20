@@ -3,7 +3,7 @@
 //
 // Desc: Broadcast Driver Architecture Media Definitions for ATSC
 //
-// Copyright (c) 1996 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1996-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 

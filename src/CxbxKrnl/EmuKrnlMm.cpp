@@ -30,12 +30,14 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2017 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -48,9 +50,8 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
-#include "ResourceTracker.h" // For g_AlignCache
-#include "MemoryManager.h"
+#include "VMManager.h"
+#include "EmuShared.h"
 
 // prevent name collisions
 namespace NtDll
@@ -70,7 +71,7 @@ XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL
 // the xbox kernel. Kernel code accessses this as a normal variable.
 // XAPI code however, reference to the address of this kernel variable,
 // thus use indirection (*LaunchDataPage) to get to the same contents.
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = NULL;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnull;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -110,30 +111,34 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(HighestAcceptableAddress)
 		LOG_FUNC_ARG(Alignment)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
+
+	// size must be > 0
+	if (NumberOfBytes == 0)
+		pRet = xbnull;
 
 	if (Alignment < PAGE_SIZE)
 		Alignment = PAGE_SIZE; // page boundary at least
 
 	// Only known flags are allowed
 	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
 	if (((ProtectionType & PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
 	if ((ProtectionType & (PAGE_NOCACHE | PAGE_WRITECOMBINE)) == (PAGE_NOCACHE | PAGE_WRITECOMBINE))
-		pRet = NULL;
+		pRet = xbnull;
 
 	// Allocate when input arguments are valid
-	if (pRet != NULL)
+	if (pRet != xbnull)
 	{
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = g_MemoryManager.AllocateContiguous(NumberOfBytes, Alignment);
+		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType, false);
 	}
 
 	RETURN(pRet);
@@ -151,10 +156,10 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	// TODO: should this be aligned?
-	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
+	// TODO: this should probably allocate the memory at a specific system virtual address region...
+	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
 
 	RETURN(pRet);
 }
@@ -171,15 +176,20 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	if (g_bIsChihiro)
+	unsigned int highest_physical_page = MM_XBOX_HIGHEST_PHYSICAL_PAGE;
+	unsigned int instance_physical_page = MM_XBOX_INSTANCE_PHYSICAL_PAGE;
+	if (g_bIsChihiro || g_bIsDebug)
+	{
 		*NumberOfPaddingBytes = 0;
+		highest_physical_page = MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE;
+	}
 	else
 		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
-		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
+		MI_CONVERT_PFN_TO_PHYSICAL(instance_physical_page + MM_INSTANCE_PAGE_COUNT);
 
-	DbgPrintf("MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
+	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
 
 #ifdef _DEBUG_TRACE
 	if (NumberOfBytes != MAXULONG_PTR)
@@ -189,7 +199,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	}
 #endif
 
-	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(MM_HIGHEST_PHYSICAL_PAGE + 1)
+	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(highest_physical_page + 1)
 		- *NumberOfPaddingBytes;
 
 	RETURN(Result);
@@ -209,41 +219,21 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(DebuggerThread)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	NtDll::PVOID BaseAddress = NULL;
-
-	if (!NumberOfBytes) {
-		// NumberOfBytes cannot be zero when passed to NtAllocateVirtualMemory() below
-		CxbxKrnlCleanup("Assertion: 'NumberOfBytes != 0' in MmCreateKernelStack()");
-	}
-
-	if (NumberOfBytes & 0xFF) {
-		// Validate NumberOfBytes for alignment with the page size
-		CxbxKrnlCleanup("Assertion: '(NumberOfBytes & (PAGE_SIZE -1)) == 0' in MmCreateKernelStack()");
-	}
+	VAddr addr = xbnull;
 
 	/**
 	* Function at present does not:
-	* - Create an additional guard PAGE_SIZE after allocation,
-	* - Fill allocation with any values
 	* - Treat DebuggerThread any differently
 	*/
 
-	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		/*BaseAddress=*/&BaseAddress,
-		/*ZeroBits=*/0,
-		/*RegionSize=*/&NumberOfBytes,
-		/*AllocationType=*/MEM_COMMIT,
-		/*Protect=*/PAGE_READWRITE);
+	if (NumberOfBytes)
+	{
+		addr = g_VMManager.AllocateStack(NumberOfBytes);
+	}
 
-	if (FAILED(ret))
-		EmuWarning("MmCreateKernelStack failed!");
-	else
-		BaseAddress = (PVOID)((ULONG)BaseAddress + NumberOfBytes);
-
-	RETURN(BaseAddress);
+	RETURN((PVOID)addr);
 }
 
 // ******************************************************************
@@ -251,25 +241,20 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 // ******************************************************************
 XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 (
-	PVOID EndAddress,
-	PVOID BaseAddress
+	PVOID StackBase,
+	PVOID StackLimit
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(EndAddress)
-		LOG_FUNC_ARG(BaseAddress)
-		LOG_FUNC_END;
+		LOG_FUNC_ARG(StackBase)
+		LOG_FUNC_ARG(StackLimit)
+	LOG_FUNC_END;
 
-	// TODO : Untested
-	ULONG RegionSize = 0;
-	NTSTATUS ret = NtDll::NtFreeVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		&BaseAddress,
-		&RegionSize,
-		/*FreeType=*/MEM_RELEASE);
+	size_t ActualSize = ((VAddr)StackBase - (VAddr)StackLimit) + PAGE_SIZE;
 
-	if (FAILED(ret))
-		EmuWarning("MmDeleteKernelStack failed!");
+	VAddr StackBottom = (VAddr)StackBase - ActualSize;
+
+	g_VMManager.DeallocateStack(StackBottom);
 }
 
 // ******************************************************************
@@ -285,13 +270,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	if (BaseAddress == &DefaultLaunchDataPage) {
-		DbgPrintf("Ignored MmFreeContiguousMemory(&DefaultLaunchDataPage)\n");
-		LOG_IGNORED();
-		return;
-	}
-
-	g_MemoryManager.Free(BaseAddress);
+	g_VMManager.Deallocate((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
 	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
@@ -311,9 +290,9 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	g_MemoryManager.Free(BaseAddress);
+	g_VMManager.Deallocate((VAddr)BaseAddress);
 
 	RETURN(STATUS_SUCCESS);
 }
@@ -335,8 +314,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	// MmLockUnlockBufferPages, emulate this???
 	LOG_INCOMPLETE();
 
-	// We emulate Virtual/Physical memory 1:1	
-	return (PHYSICAL_ADDRESS)BaseAddress;
+	return g_VMManager.TranslateVAddr((VAddr)BaseAddress);
 }
 
 // ******************************************************************
@@ -349,9 +327,14 @@ XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
 {
 	LOG_FUNC_ONE_ARG_OUT(VirtualAddress);
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN Ret = FALSE;
 
-	RETURN(TRUE);
+	if (g_VMManager.QueryVAddr((VAddr)VirtualAddress))
+	{
+		Ret = TRUE;
+	}
+
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -368,8 +351,9 @@ XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
+	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
 	LOG_IGNORED();
 }
 
@@ -385,8 +369,9 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(UnlockPage)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
+	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
 	LOG_IGNORED();
 }
 
@@ -412,11 +397,19 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(ProtectionType)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	// TODO: should this be aligned?
-	PVOID pRet = g_MemoryManager.Allocate(NumberOfBytes);
-	LOG_INCOMPLETE();
+	PVOID pRet;
+
+	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
+	if (PhysicalAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
+		// Return physical address as virtual (accesses will go through EmuException) :
+		pRet = (PVOID)PhysicalAddress;
+	}
+	else {
+		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
+		LOG_INCOMPLETE();
+	}
 
 	RETURN(pRet);
 }
@@ -435,27 +428,21 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Persist)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	if (BaseAddress == LaunchDataPage)
 	{
+		PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
 		if (Persist)
 		{
-			FILE* fp = fopen(szFilePath_LaunchDataPage_bin, "wb"); // TODO : Support wide char paths using _wfopen
-			if (fp)
-			{
-				DbgPrintf("Persisting LaunchDataPage\n");
-				fseek(fp, 0, SEEK_SET);
-				fwrite(LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), 1, fp);
-				fclose(fp);
-			}
-			else
-				DbgPrintf("Can't persist LaunchDataPage to %s!\n", szFilePath_LaunchDataPage_bin);
+			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
+			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
 		}
 		else
 		{
-			DbgPrintf("Forgetting LaunchDataPage\n");
-			remove(szFilePath_LaunchDataPage_bin);
+			LaunchDataPAddr = NULL;
+			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
+			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
 		}
 	}
 	else
@@ -485,12 +472,7 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 {
 	LOG_FUNC_ONE_ARG(VirtualAddress);
 
-	// Assume read/write when page is allocated :
-	ULONG Result = PAGE_NOACCESS;
-
-	if (g_MemoryManager.IsAllocated(VirtualAddress)) {
-		Result = PAGE_READWRITE;
-	}
+	 ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
 
 	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
 	
@@ -507,9 +489,7 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	LOG_INCOMPLETE(); // TODO : Free PAGE_WRITECOMBINE differently
-
-	ULONG uiSize = g_MemoryManager.QueryAllocationSize(BaseAddress);
+	ULONG uiSize = g_VMManager.QuerySize((VAddr)BaseAddress);
 
 	RETURN(uiSize);
 }
@@ -524,30 +504,20 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(MemoryStatistics);
 
-	MEMORYSTATUS MemoryStatus;
-	SYSTEM_INFO SysInfo;
 	NTSTATUS ret;
+
+#ifdef _DEBUG_TRACE
+	if (!MemoryStatistics)
+	{
+		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		LOG_IGNORED();
+		RETURN(STATUS_SUCCESS);
+	}
+#endif
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
-		GlobalMemoryStatus(&MemoryStatus);
-		GetSystemInfo(&SysInfo);
-
-		/**
-		* When each of the PMM_STATISTICS MemoryStatistics elements
-		* are setup correctly below, these two lines become redundant
-		*/
-		ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
-		MemoryStatistics->Length = sizeof(MM_STATISTICS);
-
-		MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalPhys / SysInfo.dwPageSize;
-		MemoryStatistics->AvailablePages = MemoryStatus.dwAvailPhys / SysInfo.dwPageSize;
-		MemoryStatistics->VirtualMemoryBytesCommitted = MemoryStatus.dwTotalVirtual - MemoryStatus.dwAvailVirtual;
-		MemoryStatistics->VirtualMemoryBytesReserved = MemoryStatus.dwAvailVirtual;
-		// MemoryStatistics->CachePagesCommitted = [ ];
-		// MemoryStatistics->PoolPagesCommitted = [ ];
-		// MemoryStatistics->StackPagesCommitted = [ ];
-		// MemoryStatistics->ImagePagesCommitted = [ ];
+		g_VMManager.MemoryStatistics(MemoryStatistics);
 
 		DbgPrintf("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
 		DbgPrintf("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
@@ -563,7 +533,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	}
 	else
 	{
-		EmuWarning("EmuKrnl: MmQueryStatistics with unusual size -> 0x%.08X", MemoryStatistics->Length);
+		EmuWarning("KRNL: MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
@@ -584,14 +554,9 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(NewProtect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	DWORD dwOldProtect;
-
-	if (!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
-		EmuWarning("VirtualProtect Failed!");
-
-	DbgPrintf("EmuKrnl: VirtualProtect was 0x%.08X -> 0x%.08X\n", dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
 }
 
 // ******************************************************************
@@ -609,10 +574,15 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	g_MemoryManager.Free(BaseAddress);
-	LOG_INCOMPLETE();
+	if ((xbaddr)BaseAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
+		// Don't free hardware devices (flash, NV2A, etc)
+	}
+	else {
+		g_VMManager.Deallocate((VAddr)BaseAddress);
+		LOG_INCOMPLETE();
+	}
 
 	RETURN(STATUS_SUCCESS);
 }

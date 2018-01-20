@@ -34,19 +34,20 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
+	#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
 };
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
-#include "MemoryManager.h"
+#include "VMManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -56,7 +57,6 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -127,7 +127,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 		LOG_FUNC_END;
 
-	PVOID pRet = g_MemoryManager.AllocateZeroed(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
+	PVOID pRet = (xboxkrnl::PVOID)g_VMManager.AllocateZeroed(NumberOfBytes); // Clear, to prevent side-effects on random contents
 	
 	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
 
@@ -158,7 +158,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 {
 	LOG_FUNC_ONE_ARG(P);
 
-	g_MemoryManager.Free(P);
+	g_VMManager.Deallocate((VAddr)P);
 }
 
 // ******************************************************************

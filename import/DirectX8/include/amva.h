@@ -3,7 +3,7 @@
 //
 // Desc: DirectShowMotionComp include file.
 //
-// Copyright (c) 1997 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1997-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -24,32 +24,32 @@ extern "C" {
 
 typedef struct _tag_AMVAUncompBufferInfo
 {
- DWORD                   dwMinNumSurfaces;           // IN   min number of surfaces to be allocated
- DWORD                   dwMaxNumSurfaces;           // IN   max number of surfaces to be allocated
- DDPIXELFORMAT           ddUncompPixelFormat;        // IN   pixel format of surfaces to be allocated
+     DWORD                   dwMinNumSurfaces;       // IN   min number of surfaces to be allocated
+     DWORD                   dwMaxNumSurfaces;       // IN   max number of surfaces to be allocated
+     DDPIXELFORMAT           ddUncompPixelFormat;    // IN   pixel format of surfaces to be allocated
 } AMVAUncompBufferInfo, *LPAMVAUncompBufferInfo;
 
 typedef struct _tag_AMVAUncompDataInfo
 {
-    DWORD                   dwUncompWidth;              // [in]     width of uncompressed data
-    DWORD                   dwUncompHeight;             // [in]     height of uncompressed data
-    DDPIXELFORMAT           ddUncompPixelFormat;        // [in]     pixel-format of uncompressed data
+    DWORD                   dwUncompWidth;           // [in]     width of uncompressed data
+    DWORD                   dwUncompHeight;          // [in]     height of uncompressed data
+    DDPIXELFORMAT           ddUncompPixelFormat;     // [in]     pixel-format of uncompressed data
 } AMVAUncompDataInfo, *LPAMVAUncompDataInfo;
 
 typedef struct _tag_AMVAInternalMemInfo
 {
-    DWORD                   dwScratchMemAlloc;          // [out]    amount of scratch memory will the hal allocate for its private use
+    DWORD                   dwScratchMemAlloc;       // [out]    amount of scratch memory will the hal allocate for its private use
 } AMVAInternalMemInfo, *LPAMVAInternalMemInfo;
 
 
 typedef struct _tag_AMVACompBufferInfo
 {
-    DWORD                   dwNumCompBuffers;           // [out]    number of buffers reqd for compressed data
-    DWORD                   dwWidthToCreate;            // [out]    Width of surface to create
-    DWORD                   dwHeightToCreate;           // [out]    Height of surface to create
-    DWORD                   dwBytesToAllocate;          // [out]    Total number of bytes used by each surface
-    DDSCAPS2                ddCompCaps;                 // [out]    caps to create surfaces to store compressed data
-    DDPIXELFORMAT           ddPixelFormat;              // [out]    fourcc to create surfaces to store compressed data
+    DWORD                   dwNumCompBuffers;        // [out]    number of buffers reqd for compressed data
+    DWORD                   dwWidthToCreate;         // [out]    Width of surface to create
+    DWORD                   dwHeightToCreate;        // [out]    Height of surface to create
+    DWORD                   dwBytesToAllocate;       // [out]    Total number of bytes used by each surface
+    DDSCAPS2                ddCompCaps;              // [out]    caps to create surfaces to store compressed data
+    DDPIXELFORMAT           ddPixelFormat;           // [out]    fourcc to create surfaces to store compressed data
 } AMVACompBufferInfo, *LPAMVACompBufferInfo;
 
 
@@ -66,16 +66,16 @@ typedef struct _tag_AMVABeginFrameInfo
 // Note that you are NOT allowed to store any pointer in pMiscData
 typedef struct _tag_AMVAEndFrameInfo
 {
-    DWORD                   dwSizeMiscData;             // [in]     size of other misc data to begin frame
-    LPVOID                  pMiscData;                  // [in]     pointer to misc data
+    DWORD                   dwSizeMiscData;          // [in]     size of other misc data to begin frame
+    LPVOID                  pMiscData;               // [in]     pointer to misc data
 } AMVAEndFrameInfo, *LPAMVAEndFrameInfo;
 
 typedef struct _tag_AMVABUFFERINFO
 {
-    DWORD                   dwTypeIndex;                // [in]    Type of buffer
-    DWORD                   dwBufferIndex;              // [in]    Buffer index
-    DWORD                   dwDataOffset;               // [in]    offset of relevant data from the beginning of buffer
-    DWORD                   dwDataSize;                 // [in]    size of relevant data
+    DWORD                   dwTypeIndex;             // [in]    Type of buffer
+    DWORD                   dwBufferIndex;           // [in]    Buffer index
+    DWORD                   dwDataOffset;            // [in]    offset of relevant data from the beginning of buffer
+    DWORD                   dwDataSize;              // [in]    size of relevant data
 } AMVABUFFERINFO, *LPAMVABUFFERINFO;
 
 #ifdef __cplusplus

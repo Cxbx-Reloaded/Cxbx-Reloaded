@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "XONL"
 
 #include "Emu.h"
 #include "Logging.h"
@@ -50,6 +51,7 @@ namespace NtDll
 
 #include "EmuXTL.h"
 
+/*
 // ******************************************************************
 // * patch: WSAStartup
 // ******************************************************************
@@ -69,11 +71,12 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 	// Prevent this function from failing by requesting a version of Winsock that
 	// we know for sure is actually supported on Windows.  This also fixes one error
 	// in the 4920 dashboard.
-    int ret = WSAStartup(MAKEWORD(2,2) /*wVersionRequested*/, lpWSAData);
+    int ret = WSAStartup(MAKEWORD(2,2) /*wVersionRequested, lpWSAData);
 
 	RETURN(ret);
 }
 
+/*
 // ******************************************************************
 // * patch: XNetStartup
 // ******************************************************************
@@ -92,20 +95,6 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
 	RETURN(ret);
 }
 
-// ******************************************************************
-// * patch: XNetGetEthernetLinkStatus
-// ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-
-	// for now, no ethernet connection is available
-	DWORD ret = XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
-
-	RETURN(ret);
-}
 
 // ******************************************************************
 // * patch: This::Emusocket
@@ -273,6 +262,7 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 
 	RETURN(ret);
 }
+*/
 
 // ******************************************************************
 // * patch: XOnlineLaunchNewImage
@@ -295,6 +285,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 	RETURN(ret);
 }
 
+/*
 // ******************************************************************
 // * patch: XOnlineLogon
 // ******************************************************************
@@ -323,3 +314,4 @@ HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
 
 	RETURN(ret);
 }
+*/

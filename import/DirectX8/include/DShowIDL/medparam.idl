@@ -4,12 +4,12 @@
 // Desc: Definition of the IMediaParams and associated interfaces. These
 //       interfaces are designed to allow communication of curve-following
 //       behaviors for parameters of objects which require dynamic changes
-//       to their parameters at run time. All changes are specified by
+//       to their parameters at run time.  All changes are specified by
 //       timestamp and curve type to ensure the parameters can be set
 //       at sufficient accuracy with predictable behavior on subsequent
 //       playback of the same curves.
 //
-// Copyright (c) 1999 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1999-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -19,9 +19,9 @@ import "strmif.idl";
 
 
 //------------------------------------------------------------------------------
-// Define the semantic type to be used for each parameter. All values passed
+// Define the semantic type to be used for each parameter.  All values passed
 // into this interface are 32-bit floats, but the interface can specify that
-// the values must be integer, or booleans or enumerated types
+// the values must be integer, booleans, or enumerated types
 //------------------------------------------------------------------------------
 typedef float MP_DATA;          // All data is 32-bit floats
 
@@ -136,10 +136,10 @@ const MP_FLAGS MPF_PUNCHIN_STOPPED = 0x0002; // Return change notifications duri
 
 //------------------------------------------------------------------------------
 // IMediaParamInfo - Interface used to determine the names, data types and
-// units of the parameters which are exposed by the object. This interface
+// units of the parameters which are exposed by the object.  This interface
 // is used at discovery time, and is not required during run-time since the
 // objects parameters are a fixed set and this data can be cached by the
-// calling applicaiton
+// calling applicaiton.
 //------------------------------------------------------------------------------
 [
 object,

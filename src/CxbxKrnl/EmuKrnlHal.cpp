@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -48,16 +49,26 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
+#include "SMBus.h" // For g_SMBus
 #include "EmuEEPROM.h" // For EEPROM
+#include "SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
+
+#include <algorithm> // for std::replace
+#include <locale>
+#include <codecvt>
 
 // prevent name collisions
 namespace NtDll
 {
 #include "EmuNtDll.h"
 };
+
+static DWORD EmuSoftwareInterrupRequestRegister = 0;
+HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
@@ -102,7 +113,8 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 {
 	LOG_FUNC_ONE_ARG(Request);
 
-	LOG_UNIMPLEMENTED();
+	// Mask out this interrupt request
+	EmuSoftwareInterrupRequestRegister &= ~(1 << Request);
 }
 
 // ******************************************************************
@@ -115,14 +127,15 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 {
 	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
+	HalSystemInterrupts[BusInterruptLevel].Disable();
 }
 
 // ******************************************************************
 // * 0x0028 - HalDiskCachePartitionCount
 // ******************************************************************
-// This enables Partition3..7  Source:OpenXDK  TODO : Make this configurable
-XBSYSAPI EXPORTNUM(40) xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 4; // Was 3
+// This specifies the number of Cache partitions available for game data caching
+// On real hardware, there are three, generally known as X, Y and Z in homebrew
+XBSYSAPI EXPORTNUM(40) xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 3; 
 
 // ******************************************************************
 // * 0x0029 - HalDiskModelNumber
@@ -139,7 +152,7 @@ XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) xboxkrnl::VOID NTAPI xboxkrnl::HalEnableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
@@ -150,9 +163,8 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
-
-	RETURN(FALSE);
+	HalSystemInterrupts[BusInterruptLevel].Enable();
+	HalSystemInterrupts[BusInterruptLevel].SetInterruptMode(InterruptMode);
 }
 
 #ifdef _DEBUG_TRACE
@@ -218,29 +230,13 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
-		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
+		DbgPrintf("KRNL: HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
 			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
 
 	RETURN(dwVector);
 }
-
-#define SMC_SLAVE_ADDRESS 0x20
-#define SMBUS_SMC_WRITE SMC_SLAVE_ADDRESS // = 0x20
-#define SMBUS_SMC_READ (SMC_SLAVE_ADDRESS || 1) // = 0x21
-
-#define EEPROM_ADDRESS 0xA8
-#define SMBUS_EEPROM_WRITE EEPROM_ADDRESS // = 0xA8
-#define SMBUS_EEPROM_READ (EEPROM_ADDRESS || 1) // = 0xA9
-
-#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A
-#define SMBUS_TV_ENCODER_ID_CONEXANT_WRITE SMBUS_TV_ENCODER_ID_CONEXANT // = 0x8A
-#define SMBUS_TV_ENCODER_ID_CONEXANT_READ (SMBUS_TV_ENCODER_ID_CONEXANT_WRITE || 1) // = 0x8B
-
-#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4
-#define SMBUS_TV_ENCODER_ID_FOCUS_WRITE SMBUS_TV_ENCODER_ID_FOCUS // = 0xD4
-#define SMBUS_TV_ENCODER_ID_FOCUS_READ (SMBUS_TV_ENCODER_ID_FOCUS_WRITE || 1) // = 0xD5
 
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
@@ -260,26 +256,31 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
+	// TODO : Prevent interrupts
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	switch (Address) {
-	case SMBUS_EEPROM_READ: {
+	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
+	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
+	if (ReadWord)
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_WORD_DATA | GE_HOST_STC);
+	else
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
+	// Note : GE_HOST_STC triggers ExecuteTransaction, which reads the command from the specified address
+
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
+	}
+	else {
+		*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
 		if (ReadWord)
-			*DataValue = *((PWORD)(((PBYTE)EEPROM) + Command));
-		else
-			*DataValue = *(((PBYTE)EEPROM) + Command);
-
-		break;
-	}
-	default:
-		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
-		// Resources : http://pablot.com/misc/fancontroller.cpp
-		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
-		LOG_INCOMPLETE();
-		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
+			*DataValue |= g_SMBus->IORead(1, SMB_HOST_DATA + 1) << 8;
 	}
 
-	RETURN(Status );
+	// TODO : Reenable interrupts
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -317,65 +318,52 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
 	CfgBits.u.bits.Enable = 1;
 
-	// TODO: Verify this calculation is actually correct
-	size_t Size = Length / sizeof(ULONG);
-	ULONG RegisterByteOffset = 0;
+	const int B = sizeof(uint8_t); // Byte
+	const int W = sizeof(uint16_t); // Word
+	const int L = sizeof(uint32_t); // Long
+	const UCHAR RegisterDataSizes[4][4] = {
+		{L, B, W, W},
+		{B, B, B, B},
+		{W, B, W, W},
+		{B, B, B, B}
+	};
 
 	while (Length > 0) {
-		switch (Size) {
-		case 4:
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+		int ByteOffset = RegisterNumber % sizeof(ULONG);
+		int Size = RegisterDataSizes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-			if (WritePCISpace) {
-				EmuX86_IOWrite32((xbaddr)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
-			}
-			else {
-				*((PULONG)Buffer) = EmuX86_IORead32((xbaddr)PCI_TYPE1_DATA_PORT);
-			}
-			break;
-		case 2:
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+		EmuX86_IOWrite((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
 
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
-
-			if (WritePCISpace) {
-				EmuX86_IOWrite16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
-			}
-			else {
-				*((PUSHORT)Buffer) = EmuX86_IORead16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
-			}
-			break;
-		case 1: {
-			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
-			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-
-			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
-
-			if (WritePCISpace) {
-				EmuX86_IOWrite8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
-			}
-			else {
-				*((PUCHAR)Buffer) = EmuX86_IORead8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+		if (WritePCISpace) {
+			EmuX86_IOWrite(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer), Size);
+		} else {
+			uint32_t value = EmuX86_IORead(PCI_TYPE1_DATA_PORT, Size);
+			// TODO : Could memcpy(Buffer, &value, Size) the following (for all endianesses)?
+			switch (Size) {
+			case sizeof(uint8_t): // Byte
+				*((PUCHAR)Buffer) = value;
+				break;
+			case sizeof(uint16_t): // Word
+				*((PUSHORT)Buffer) = value;
+				break;
+			case sizeof(uint32_t): // Long
+				*((PULONG)Buffer) = value;
+				break;
 			}
 		}
-			break;
-		}
-
+		
 		RegisterNumber += Size;
 		Buffer = (PUCHAR)Buffer + Size;
 		Length -= Size;
 	}
 
-	
-	// TODO: Enable Interrupt Processing1
+	// TODO: Enable Interrupt Processing
 }
 
 // ******************************************************************
 // * 0x002F - HalRegisterShutdownNotification()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID xboxkrnl::HalRegisterShutdownNotification
+XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
 	IN BOOLEAN Register
@@ -400,13 +388,16 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 {
 	LOG_FUNC_ONE_ARG(Request);
 
-	LOG_UNIMPLEMENTED();
+	// Set this software interrupt request :
+	EmuSoftwareInterrupRequestRegister |= (1 << Request);
+
+	LOG_INCOMPLETE();
 }
 
 // ******************************************************************
 // * 0x0031 - HalReturnToFirmware()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalReturnToFirmware
 (
 	RETURN_FIRMWARE Routine
 )
@@ -428,31 +419,67 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFir
 		{
 			// Save the launch data page to disk for later.
 			// (Note : XWriteTitleInfoNoReboot does this too)
-			MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+			// Commented out because XLaunchNewImage is disabled!
+			// MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
 
-			char *lpTitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
-			char szXbePath[MAX_PATH];
+			std::string TitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
 			char szWorkingDirectoy[MAX_PATH];
 
+			// If the title path starts with a semicolon, remove it
+			if (TitlePath.length() > 0 && TitlePath[0] == ';') {
+				TitlePath.erase(0, 1);
+			}
+
+			// If the title path was an empty string, we need to launch the dashboard
+			if (TitlePath.length() == 0) {
+				TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+			}
+
+			std::string XbePath = TitlePath;
 			// Convert Xbox XBE Path to Windows Path
 			{
-				EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
-				snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
+				HANDLE rootDirectoryHandle;
+				std::wstring wXbePath;
+				// We pretend to come from NtCreateFile to force symbolic link resolution
+				CxbxConvertFilePath(TitlePath, wXbePath, &rootDirectoryHandle, "NtCreateFile");
+
+				// Convert Wide String as returned by above to a string, for XbePath
+				XbePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wXbePath);
+
+				// If the rootDirectoryHandle is not null, we have a relative path
+				// We need to prepend the path of the root directory to get a full DOS path
+				if (rootDirectoryHandle != nullptr) {
+					char directoryPathBuffer[MAX_PATH];
+					GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
+					XbePath = directoryPathBuffer + std::string("\\") + XbePath;
+
+					// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
+					// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
+					// Without exception
+					XbePath.erase(0, 4);
+				}
 			}
 
 			// Determine Working Directory
 			{
-				strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+				strncpy_s(szWorkingDirectoy, XbePath.c_str(), MAX_PATH);
 				PathRemoveFileSpec(szWorkingDirectoy);
 			}
 
 			// Relaunch Cxbx, to load another Xbe
 			{
+				bool bMultiXbe = true;
+				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+
 				char szArgsBuffer[4096];
 
-				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
+				// Some titles (Xbox Dashboard) use ";" as a final path seperator
+				// This allows the Xbox Live option on the dashboard to properly launch XOnlinedash.xbe
+				std::replace(XbePath.begin(), XbePath.end(), ';', '\\');
+
+				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
-					CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 			}
 		}
 		break;
@@ -496,24 +523,27 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		LOG_FUNC_ARG(DataValue)
 		LOG_FUNC_END;
 
+	// TODO : Prevent interrupts
+
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	switch (Address) {
-	case SMBUS_EEPROM_WRITE: {
-		if (WriteWord)
-			*((PWORD)(((PBYTE)EEPROM) + Command)) = (WORD)DataValue;
-		else
-			*(((PBYTE)EEPROM) + Command) = (BYTE)DataValue;
+	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
+	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
+	g_SMBus->IOWrite(1, SMB_HOST_DATA, DataValue & 0xFF);
+	if (WriteWord) {
+		g_SMBus->IOWrite(1, SMB_HOST_DATA + 1, (DataValue >> 8) & 0xFF);
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_WORD_DATA | GE_HOST_STC);
+	}
+	else
+		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_BYTE_DATA | GE_HOST_STC);
+		// Note : GE_HOST_STC triggers ExecuteTransaction, which writes the command to the specified address
 
-		break;
+	// Check if the command was executed successfully
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+		Status = STATUS_UNSUCCESSFUL;
 	}
-	default:
-		// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
-		// Resources : http://pablot.com/misc/fancontroller.cpp
-		// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
-		LOG_INCOMPLETE();
-		Status = STATUS_UNSUCCESSFUL; // TODO : Faked. Figure out the real error status
-	}
+
+	// TODO : Reenable interrupts
 
 	RETURN(Status);
 }
@@ -535,7 +565,7 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
+		*Buffer++ = (uint8_t)EmuX86_IORead((xbaddr)Port, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -555,7 +585,7 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
+		*Buffer++ = (uint16_t)EmuX86_IORead((xbaddr)Port, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -575,7 +605,7 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
+		*Buffer++ = EmuX86_IORead((xbaddr)Port, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -595,7 +625,7 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -615,7 +645,7 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -635,7 +665,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -702,14 +732,9 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 {
 	LOG_FUNC_ONE_ARG(ScratchRegister);
 
-	LOG_UNIMPLEMENTED();
+//	HalpSMCScratchRegister = ScratchRegister;
 
-/* TODO
-	HalpSMCScratchRegister = ScratchRegister;
+	NTSTATUS Res = HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
-	// TODO : Is this the way we need to set the value?
-	return HalWriteSMBusValue(SMC_ADDRESS, SMC_COMMAND_SCRATCH, WordFlag: False, ScratchRegister);
-*/
-	
-	RETURN(S_OK);
+	RETURN(Res);
 }

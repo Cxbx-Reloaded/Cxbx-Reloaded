@@ -518,17 +518,50 @@ typedef enum _CREATE_FILE_TYPE
 }
 CREATE_FILE_TYPE;
 
-// ******************************************************************
-// * FILE_FS_SIZE_INFORMATION
-// ******************************************************************
-typedef struct _FILE_FS_SIZE_INFORMATION
-{
-    LARGE_INTEGER   TotalAllocationUnits;
-    LARGE_INTEGER   AvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
-}
-FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+typedef struct _FILE_FS_LABEL_INFORMATION {
+	ULONG VolumeLabelLength;
+	WCHAR VolumeLabel[1];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
+
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+	LARGE_INTEGER VolumeCreationTime;
+	ULONG VolumeSerialNumber;
+	ULONG VolumeLabelLength;
+	BOOLEAN SupportsObjects;
+	WCHAR VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
+typedef struct _FILE_FS_SIZE_INFORMATION {
+	LARGE_INTEGER TotalAllocationUnits;
+	LARGE_INTEGER AvailableAllocationUnits;
+	ULONG SectorsPerAllocationUnit;
+	ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
+	LARGE_INTEGER TotalAllocationUnits;
+	LARGE_INTEGER CallerAvailableAllocationUnits;
+	LARGE_INTEGER ActualAvailableAllocationUnits;
+	ULONG SectorsPerAllocationUnit;
+	ULONG BytesPerSector;
+} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_OBJECTID_INFORMATION {
+	UCHAR ObjectId[16];
+	UCHAR ExtendedInfo[48];
+} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
+
+typedef struct _FILE_FS_DEVICE_INFORMATION {                    
+	DWORD DeviceType;                                     
+	ULONG Characteristics;                                      
+} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;     
+															
+typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
+	ULONG FileSystemAttributes;
+	LONG MaximumComponentNameLength;
+	ULONG FileSystemNameLength;
+	WCHAR FileSystemName[1];
+} FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
 
 // ******************************************************************
 // * FILE_INFORMATION_CLASS

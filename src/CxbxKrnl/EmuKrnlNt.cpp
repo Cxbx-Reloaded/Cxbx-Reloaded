@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -55,8 +56,6 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
-#include "MemoryManager.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -94,7 +93,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 	ULONG_PTR RequestedBaseAddress = (ULONG_PTR)*BaseAddress;
 	ULONG RequestedAllocationSize = *AllocationSize;
 
-	DbgPrintf("NtAllocateVirtualMemory requested range : 0x%.08X - 0x%.08X\n", RequestedBaseAddress, RequestedBaseAddress + RequestedAllocationSize);
+	DbgPrintf("KNRL: NtAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", RequestedBaseAddress, RequestedBaseAddress + RequestedAllocationSize);
 
 	// Don't allow base address to exceed highest virtual address
 	if (RequestedBaseAddress > MM_HIGHEST_VAD_ADDRESS)
@@ -152,7 +151,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 			ULONG_PTR ResultingBaseAddress = (ULONG_PTR)*BaseAddress;
 			ULONG ResultingAllocationSize = *AllocationSize;
 
-			DbgPrintf("NtAllocateVirtualMemory resulting range : 0x%.08X - 0x%.08X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize);
+			DbgPrintf("KNRL: NtAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize);
 		}
 		else
 			if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
@@ -267,7 +266,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	if (FAILED(ret))
 		EmuWarning("NtCreateDirectoryObject Failed!");
 	else
-		DbgPrintf("EmuKrnl: NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", *DirectoryHandle);
+		DbgPrintf("KRNL: NtCreateDirectoryObject DirectoryHandle = 0x%.8X\n", *DirectoryHandle);
 
 	RETURN(ret);
 }
@@ -344,10 +343,10 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		if(FAILED(ret))
 			EmuWarning("NtCreateEvent Failed!");
 		else
-			DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
+			DbgPrintf("KRNL: NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
 	}
 	else
-		DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
+		DbgPrintf("KRNL: NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
 
 	RETURN(ret);
 }
@@ -383,6 +382,26 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 		CreateDisposition,
 		CreateOptions,
 		0);
+}
+
+XBSYSAPI EXPORTNUM(191) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
+(
+	OUT PHANDLE IoCompletionHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(IoCompletionHandle)
+		LOG_FUNC_ARG(DesiredAccess)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(Count)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_NOT_IMPLEMENTED);
 }
 
 // ******************************************************************
@@ -449,10 +468,10 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		if(FAILED(ret))
 			EmuWarning("NtCreateMutant Failed!");
 		else
-			DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
+			DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
 	}
 	else
-		DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
+		DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
 
 	RETURN(ret);
 }
@@ -524,10 +543,10 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		if(FAILED(ret))
 			EmuWarning("NtCreateSemaphore failed!");
 		else
-			DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
+			DbgPrintf("KRNL: NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
 	}
 	else
-		DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
+		DbgPrintf("KRNL: NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
 
 	RETURN(ret);
 }
@@ -587,7 +606,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	if (FAILED(ret))
 		EmuWarning("NtCreateTimer failed!");
 	else
-		DbgPrintf("EmuKrnl: NtCreateTimer TimerHandle = 0x%.08X\n", *TimerHandle);
+		DbgPrintf("KRNL: NtCreateTimer TimerHandle = 0x%.8X\n", *TimerHandle);
 
 	RETURN(ret);
 }
@@ -663,6 +682,32 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		Authentication->AuthenticationPage.CDFValid = 1;
 		Authentication->AuthenticationPage.PartitionArea = 1;
 		Authentication->AuthenticationPage.Authentication = 1;
+		break;
+	}
+	case 0x70000: // IOCTL_DISK_GET_DRIVE_GEOMETRY
+	{
+		PDISK_GEOMETRY DiskGeometry = (PDISK_GEOMETRY)OutputBuffer;
+
+		DiskGeometry->MediaType = FixedMedia;
+		DiskGeometry->TracksPerCylinder = 1;
+		DiskGeometry->SectorsPerTrack = 1;
+		DiskGeometry->BytesPerSector = 512;
+		DiskGeometry->Cylinders.QuadPart = 0x1400000;	// Around 10GB, size of stock xbox HDD
+		break;
+	}
+	case 0x74004: // IOCTL_DISK_GET_PARTITION_INFO 
+	{
+		PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
+
+		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+		
+		// Now we read from the partition table, to fill in the partitionInfo struct
+		partitioninfo->PartitionNumber = partitionNumber;
+		partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
+		partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * 512;
+		partitioninfo->HiddenSectors = partitionTable.TableEntries[partitionNumber - 1].Reserved;
+		partitioninfo->RecognizedPartition = true;
 		break;
 	}
 	default:
@@ -808,18 +853,19 @@ XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtFsControlFile(
-		FileHandle,
-		Event,
-		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-		ApcContext,
-		(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-		FsControlCode,
-		InputBuffer,
-		InputBufferLength,
-		OutputBuffer,
-		OutputBufferLength);
+	NTSTATUS ret = STATUS_INVALID_PARAMETER;
 
+	switch (FsControlCode) {
+		case 0x00090020: // FSCTL_DISMOUNT_VOLUME 
+			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+			if (partitionNumber > 0) {
+				CxbxFormatPartitionByHandle(FileHandle);
+				ret = STATUS_SUCCESS;
+			}
+			break;
+	}
+
+	LOG_UNIMPLEMENTED();
 	RETURN(ret);
 }
 
@@ -903,7 +949,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	if (ret != STATUS_SUCCESS)
 		EmuWarning("NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 	else
-		DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
+		DbgPrintf("KRNL: NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *LinkHandle);
 
 	RETURN(ret);
 }
@@ -1033,9 +1079,15 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
 	// initialize FileMask
 	{
-		if (FileMask != 0)
+		if (FileMask != 0) {
+			// Xbox expects directories to be listed when *.* is passed
+			if (strncmp(FileMask->Buffer, "*.*", FileMask->Length) == 0) {
+				FileMask->Length = 1;
+				FileMask->Buffer = "*";
+			}
+
 			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/FileMask->Buffer, /*MaxCount=*/MAX_PATH);
-		else
+		} else
 			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/"", /*MaxCount=*/MAX_PATH);
 
 		NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
@@ -1395,7 +1447,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 			ret = STATUS_SUCCESS;
 
-			DbgPrintf("EmuKrnl: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
+			DbgPrintf("KRNL: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
 		}
 	}
 
@@ -1422,30 +1474,93 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
+	// FileFsSizeInformation is a special case that should read from our emulated partition table
+	if ((DWORD)FileInformationClass == FileFsSizeInformation) {
+		PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
+
+		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+		FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
+
+		XboxSizeInfo->BytesPerSector = 512;
+
+		// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
+		// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
+		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+
+		// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
+		if (superBlock.ClusterSize > 0) {
+			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
+		}
+
+		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * XboxSizeInfo->BytesPerSector;
+		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize  * XboxSizeInfo->BytesPerSector;
+
+		RETURN(STATUS_SUCCESS);
+	}
+
+	// Get the required size for the host buffer
+	// This may differ than the xbox buffer size so we also need to handle conversions!
+	ULONG HostBufferSize = 0;
+	switch ((DWORD)FileInformationClass) {
+		case FileFsVolumeInformation:
+			// Reserve a large enough buffer for the file information 
+			// including the variable length path field
+			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION) + MAX_PATH;
+			break;
+		case FileFsLabelInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
+			break;
+		case FileFsDeviceInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_DEVICE_INFORMATION);
+			break;
+		case FileFsAttributeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_ATTRIBUTE_INFORMATION);
+			break;
+		case FileFsFullSizeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_FULL_SIZE_INFORMATION);
+			break;
+		case FileFsObjectIdInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_OBJECTID_INFORMATION);
+			break;
+	}
+
+	PVOID NativeFileInformation = _aligned_malloc(HostBufferSize, 8);
+
 	NTSTATUS ret = NtDll::NtQueryVolumeInformationFile(
 		FileHandle,
 		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
-		(NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
+		(NtDll::PFILE_FS_SIZE_INFORMATION)NativeFileInformation, HostBufferSize,
 		(NtDll::FS_INFORMATION_CLASS)FileInformationClass);
 
-	if (ret == STATUS_SUCCESS)
-	{
-		// NOTE: TODO: Dynamically fill in, or allow configuration?
-		if (FileInformationClass == FileFsSizeInformation)
-		{
-			FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
+	// Convert Xbox NativeFileInformation to FileInformation
+	if (ret == STATUS_SUCCESS) {
+		switch ((DWORD)FileInformationClass) {
+				case FileFsVolumeInformation: {
+					PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
+					NtDll::PFILE_FS_VOLUME_INFORMATION HostVolumeInfo = (NtDll::PFILE_FS_VOLUME_INFORMATION)NativeFileInformation;
 
-			SizeInfo->TotalAllocationUnits.QuadPart = 0x4C468;
-			SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
-			SizeInfo->SectorsPerAllocationUnit = 32;
-			SizeInfo->BytesPerSector = 512;
+					// Most options can just be directly copied to the Xbox version, only the strings differ
+					XboxVolumeInfo->VolumeCreationTime.QuadPart = HostVolumeInfo->VolumeCreationTime.QuadPart;
+					XboxVolumeInfo->VolumeSerialNumber = HostVolumeInfo->VolumeSerialNumber;
+					XboxVolumeInfo->VolumeLabelLength = HostVolumeInfo->VolumeLabelLength;
+					XboxVolumeInfo->SupportsObjects = HostVolumeInfo->SupportsObjects;
+
+					// Convert strings to the Xbox format 
+					wcstombs(XboxVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabelLength);
+				}
+				break;
+			default:
+				// For all other types, just do a memcpy and hope for the best!
+				EmuWarning("NtQueryVolumeInformationFile: Unknown FileInformationClass");
+				memcpy_s(FileInformation, Length, NativeFileInformation, HostBufferSize);
+				break;
 		}
-		else
-			LOG_UNIMPLEMENTED();
-
 	}
-	else
-	{
+
+	_aligned_free(NativeFileInformation);
+
+	if (FAILED(ret)) {
 		EmuWarning("NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
 
@@ -1493,8 +1608,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 		(NtDll::LARGE_INTEGER*)ByteOffset,
 		/*Key=*/nullptr);
 
-	if (FAILED(ret))
-		EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
+    if (FAILED(ret)) {
+        EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
+    }
 
 	RETURN(ret);
 }
@@ -1569,7 +1685,7 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 
 	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
 
-	Sleep(10);
+	//Sleep(10);
 
 	RETURN(ret);
 }
@@ -1676,7 +1792,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 // ******************************************************************
 // * 0x00E5 - NtSetTimerEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS xboxkrnl::NtSetTimerEx
+XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 (
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
@@ -1769,7 +1885,7 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
 	(CompletionRoutine)(dwErrorCode, dwTransferred, lpOverlapped);
 
-	DbgPrintf("EmuKrnl: NtUserIoApcDispatcher Completed\n");
+	DbgPrintf("KRNL: NtUserIoApcDispatcher Completed\n");
 }
 
 // ******************************************************************

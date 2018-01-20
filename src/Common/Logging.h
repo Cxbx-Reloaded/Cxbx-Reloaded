@@ -87,11 +87,13 @@ inline T _log_sanitize(T value)
 	return value;
 }
 
+#if 0 // TODO FIXME : Disabled for now, as this is incorrectly called for INT types too
 // Convert booleans to strings properly
 inline const char * _log_sanitize(BOOL value)
 {
 	return value ? "TRUE" : "FALSE";
 }
+#endif
 
 // Macro to ease declaring a _log_sanitize overload (invokeable via C) for type T
 #define LOG_SANITIZE_HEADER(C, T)           \
@@ -137,8 +139,33 @@ LOG_SANITIZE(sanitized_wchar_pointer, wchar_t *);
 // Function (and argument) logging defines
 //
 
-#define LOG_ARG_START "\n   " << std::setw(20) << std::left 
-#define LOG_ARG_OUT_START "\n OUT " << std::setw(18) << std::left 
+constexpr const int str_length(const char* str) {
+	return str_end(str) - str;
+}
+
+constexpr const char* str_skip_prefix(const char* str, const char *prefix) {
+	return (*str == *prefix) ? str_skip_prefix(str + 1, prefix + 1) : str;
+}
+
+constexpr const char* remove_prefix(const char* str, const char *prefix) {
+	return (str_skip_prefix(str, prefix) == str + str_length(prefix)) ? str_skip_prefix(str, prefix) : str;
+}
+
+constexpr char* xtl_prefix = "XTL::";
+constexpr char* emupatch_prefix = "EmuPatch_"; // See #define EMUPATCH
+
+constexpr const char* remove_emupatch_prefix(const char* str) {
+	// return an empty string when str isn't given
+	// skip XTL:: and/or EmuPatch_ prefix if present
+	return remove_prefix(remove_prefix(str, xtl_prefix), emupatch_prefix);
+}
+
+#define LOG_ARG_START "\n   " << std::setfill(' ') << std::setw(20) << std::left 
+#define LOG_ARG_OUT_START "\n OUT " << std::setfill(' ') << std::setw(18) << std::left 
+
+#ifndef LOG_PREFIX
+#define LOG_PREFIX __FILENAME__
+#endif // LOG_PREFIX
 
 #ifdef _DEBUG_TRACE
 
@@ -149,25 +176,34 @@ extern thread_local std::string _logPrefix;
 #define LOG_THREAD_INIT \
 	if (_logPrefix.length() == 0) { \
 		std::stringstream tmp; \
-		tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] "; \
+		tmp << "[" << hexstring16 << GetCurrentThreadId() << "] "; \
 		_logPrefix = tmp.str(); \
     }
 
-#define LOG_INIT \
+#define LOG_FUNC_INIT(func) \
 	LOG_THREAD_INIT \
-	static std::string _logFuncPrefix; \
+	static thread_local std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << _logPrefix << __FILENAME__ << " : " << __func__; \
+		tmp << _logPrefix << LOG_PREFIX << ": " << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
 		_logFuncPrefix = tmp.str(); \
 	}
 
-#define LOG_FUNC_BEGIN \
-	LOG_INIT \
+#define LOG_INIT \
+	LOG_FUNC_INIT(__func__)
+
+#define LOG_FINIT \
+	_logFuncPrefix.clear(); // Reset prefix, to show caller changes
+
+#define LOG_FUNC_BEGIN_NO_INIT \
 	do { if(g_bPrintfOn) { \
 		bool _had_arg = false; \
 		std::stringstream msg; \
 		msg << _logFuncPrefix << "(";
+
+#define LOG_FUNC_BEGIN \
+	LOG_INIT \
+	LOG_FUNC_BEGIN_NO_INIT
 
 // LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 #define LOG_FUNC_ARG(arg) \
@@ -228,7 +264,11 @@ extern thread_local std::string _logPrefix;
 
 #else // _DEBUG_TRACE
 
+#define LOG_THREAD_INIT
+#define LOG_FUNC_INIT(func)
+#define LOG_FINIT
 #define LOG_INIT
+#define LOG_FUNC_BEGIN_NO_INIT
 #define LOG_FUNC_BEGIN
 #define LOG_FUNC_ARG(arg)
 #define LOG_FUNC_ARG_TYPE(type, arg)
@@ -263,6 +303,10 @@ extern thread_local std::string _logPrefix;
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
+#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
+
+#define LOG_XBOX_CALL(func) DbgPrintf("TRAC: Xbox " ## func ## "() call\n");
+#define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call\n");
 
 //
 // Headers for rendering enums, flags and (pointer-to-)types :
@@ -272,13 +316,16 @@ extern thread_local std::string _logPrefix;
 #define LOGRENDER_HEADER_BY_REF(Type) std::ostream& operator<<(std::ostream& os, const Type& value)
 #define LOGRENDER_HEADER_BY_PTR(Type) std::ostream& operator<<(std::ostream& os, const Type *value)
 
+#define TYPE2PCHAR(Type) Type##ToPCHAR
+#define TYPE2PCHAR_HEADER(Type) const char * TYPE2PCHAR(Type)(const Type &value)
+
 // Macro for implementation of rendering any Type-ToString :
 #define LOGRENDER_TYPE(Type) LOGRENDER_HEADER_BY_REF(Type) \
-{ return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
+{ return os << "("#Type")" << hex4((int)value) << " = " << TYPE2PCHAR(Type)(value); }
 
 // Macro's for Enum-ToString conversions :
-#define ENUM2STR_HEADER(EnumType) LOGRENDER_HEADER_BY_REF(EnumType);
-#define ENUM2STR_START(EnumType) const char * EnumType##ToString(const EnumType &value) { switch (value) {
+#define ENUM2STR_HEADER(EnumType) extern TYPE2PCHAR_HEADER(EnumType); LOGRENDER_HEADER_BY_REF(EnumType);
+#define ENUM2STR_START(EnumType) TYPE2PCHAR_HEADER(EnumType) { switch (value) {
 #define ENUM2STR_CASE(a) case a: return #a;
 // ENUM2STR_CASE_DEF is needed for #define'd symbols
 #define ENUM2STR_CASE_DEF(a) case a: return #a;
@@ -287,25 +334,50 @@ extern thread_local std::string _logPrefix;
 
 // Macro's for Flags-ToString conversions :
 #define FLAGS2STR_HEADER(FlagType) LOGRENDER_HEADER_BY_REF(FlagType);
-#define FLAGS2STR_START(FlagType) std::string FlagType##ToString(const FlagType &value) { std::string res;
+#define FLAGS2STR_START(FlagType) std::string TYPE2PCHAR(FlagType)(const FlagType &value) { std::string res;
 #define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
 #define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
 #define FLAGS2STR_END_and_LOGRENDER(FlagType) FLAGS2STR_END LOGRENDER_TYPE(FlagType)
 
 // Macro's for Struct-member rendering :
+#define LOGRENDER_MEMBER_NAME_VALUE(Name, Value) << LOG_ARG_START << (Name) << "  : " << (Value)
+#define LOGRENDER_MEMBER_NAME_TYPE_VALUE(Name, Type, Value) << LOG_ARG_START << (Name) << "  : " << (Type)(Value)
 #define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
-#define LOGRENDER_MEMBER_VALUE(Member) << value.Member
-#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
+#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME_VALUE("."#Member, value.Member)
+#define LOGRENDER_MEMBER_TYPE(Type, Member) LOGRENDER_MEMBER_NAME(Member) << (Type)value.Member
 #define LOGRENDER_MEMBER_SANITIZED(Member, MemberType) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((MemberType)value.Member)
 
 // Macro to ease declaration of two render functions, for type and pointer-to-type :
 #define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);
 
+// Traits to switch ostreams to our preferred rendering of hexadecimal values
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring8(std::basic_ostream<_CharT, _Traits>&os)
+{
+	// std::noshowbase is not neccessary to set (it's the default, and we never use std::showbase)
+	return os << "0x" << std::setfill('0') << std::setw(2) << std::right << std::hex << std::uppercase;
+}
+
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring16(std::basic_ostream<_CharT, _Traits>&os)
+{
+	return os << "0x" << std::setfill('0') << std::setw(4) << std::right << std::hex << std::uppercase;
+}
+
+template <class _CharT, class _Traits>
+std::basic_ostream<_CharT, _Traits>&
+hexstring32(std::basic_ostream<_CharT, _Traits>&os)
+{
+	return os << "0x" << std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase;
+}
+
 // Macro combining pointer-to-type implementation and type rendering header :
 #define LOGRENDER(Type)                                         \
 LOGRENDER_HEADER_BY_PTR(Type)                                   \
 {                                                               \
-	os << "0x" << std::hex << std::uppercase << (void*)(value); \
+	os << hexstring32 << (void*)(value);                        \
 	if (value)                                                  \
 		os << " -> "#Type"* {" << *value << "}";                \
                                                                 \
@@ -315,9 +387,9 @@ LOGRENDER_HEADER_BY_PTR(Type)                                   \
 LOGRENDER_HEADER_BY_REF(Type)                                   \
 
 //
-// An example type rendering, for PULONG
+// An example type rendering, for PVOID
 //
 
-LOGRENDER_HEADER_BY_REF(PULONG);
+LOGRENDER_HEADER_BY_REF(PVOID);
 
 #endif _LOGGING_H

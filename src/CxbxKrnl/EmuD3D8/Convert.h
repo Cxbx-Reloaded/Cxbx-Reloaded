@@ -36,10 +36,13 @@
 
 #include "CxbxKrnl.h"
 
+#define OLD_COLOR_CONVERSION
+
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
+#ifdef OLD_COLOR_CONVERSION
 typedef struct _ComponentEncodingInfo
 {
 	int8_t ABits, RBits, GBits, BBits;
@@ -49,6 +52,13 @@ typedef struct _ComponentEncodingInfo
 extern const ComponentEncodingInfo *EmuXBFormatComponentEncodingInfo(X_D3DFORMAT Format);
 
 extern D3DCOLOR DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, const uint32 value);
+#endif // OLD_COLOR_CONVERSION
+
+typedef void(*FormatToARGBRow)(const uint8* src, uint8* dst_argb, int width);
+
+extern const FormatToARGBRow EmuXBFormatComponentConverter(X_D3DFORMAT Format);
+
+bool EmuXBFormatCanBeConvertedToARGB(X_D3DFORMAT Format);
 
 bool EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format);
 
@@ -131,19 +141,19 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
 			return D3DBLENDOP_MAX;
 		case 0xF006:
 			{
-				CxbxKrnlCleanup("D3DBLENDOP_ADDSIGNED is not supported!");
+				EmuWarning("D3DBLENDOP_ADDSIGNED is not supported!");
 				return D3DBLENDOP_ADD;
 			};
 		case 0xF005:
 			{
-				CxbxKrnlCleanup("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
+				EmuWarning("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
 				return D3DBLENDOP_REVSUBTRACT;
 			}
     }
 
-    CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+    EmuWarning("Unknown D3DBLENDOP (0x%.08X)", Value);
 
-    return (D3DBLENDOP)Value;
+    return (D3DBLENDOP)D3DBLENDOP_ADD;
 }
 
 // convert from xbox to pc blend types 

@@ -149,6 +149,17 @@ typedef struct _XPP_DEVICE_TYPE
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
 // ******************************************************************
+// * XID_TYPE_INFORMATION
+// ******************************************************************
+typedef struct _XID_TYPE_INFORMATION
+{
+	UCHAR				ucType;
+	UCHAR				ucUnknown[3];
+	PXPP_DEVICE_TYPE    XppType;
+	DWORD				dwUnknown[5];
+} XID_TYPE_INFORMATION, *PXID_TYPE_INFORMATION;
+
+// ******************************************************************
 // * XDEVICE_PREALLOC_TYPE
 // ******************************************************************
 typedef struct _XDEVICE_PREALLOC_TYPE 
@@ -228,6 +239,30 @@ typedef struct _XINPUT_STATE
     };
 }
 XINPUT_STATE, *PXINPUT_STATE;
+
+// ******************************************************************
+// * offsets into analog button array
+// ******************************************************************
+#define XB_XINPUT_GAMEPAD_A                0
+#define XB_XINPUT_GAMEPAD_B                1
+#define XB_XINPUT_GAMEPAD_X                2
+#define XB_XINPUT_GAMEPAD_Y                3
+#define XB_XINPUT_GAMEPAD_BLACK            4
+#define XB_XINPUT_GAMEPAD_WHITE            5
+#define XB_XINPUT_GAMEPAD_LEFT_TRIGGER     6
+#define XB_XINPUT_GAMEPAD_RIGHT_TRIGGER    7
+
+// ******************************************************************
+// * masks for digital buttons
+// ******************************************************************
+#define XB_XINPUT_GAMEPAD_DPAD_UP          0x00000001
+#define XB_XINPUT_GAMEPAD_DPAD_DOWN        0x00000002
+#define XB_XINPUT_GAMEPAD_DPAD_LEFT        0x00000004
+#define XB_XINPUT_GAMEPAD_DPAD_RIGHT       0x00000008
+#define XB_XINPUT_GAMEPAD_START            0x00000010
+#define XB_XINPUT_GAMEPAD_BACK             0x00000020
+#define XB_XINPUT_GAMEPAD_LEFT_THUMB       0x00000040
+#define XB_XINPUT_GAMEPAD_RIGHT_THUMB      0x00000080
 
 // ******************************************************************
 // * XINPUT_FEEDBACK_HEADER
@@ -582,6 +617,7 @@ DWORD WINAPI EMUPATCH(QueueUserAPC)
 	DWORD   	dwData
 );
 
+#if 0 // Handled by WaitForSingleObject
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
@@ -592,6 +628,7 @@ BOOL WINAPI EMUPATCH(GetOverlappedResult)
 	LPDWORD			lpNumberOfBytesTransferred,
 	BOOL			bWait
 );
+#endif
 
 // ******************************************************************
 // * patch: XLaunchNewImageA

@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -45,7 +46,6 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "MemoryManager.h"
 
 // prevent name collisions
 namespace NtDll
@@ -54,7 +54,6 @@ namespace NtDll
 };
 
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), g_MemoryManager.Allocate(), etc.
 
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;
@@ -62,16 +61,40 @@ PVOID g_pPersistedData = NULL;
 ULONG AvQueryAvCapabilities()
 {
 	// This is the only AV mode we currently emulate, so we can hardcode the return value
-	// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
-	// This function should first query the AV Pack type, read the user's EEPROM settings and
-	// return the correct flags based on this.
-	//
-	// For the AV Pack, read SMC_COMMAND_VIDEO_MODE (or HalBootSMCVideoMode) and convert it to a AV_PACK_*
-	//
-	// To read the EEPROM, call ExQueryNonVolatileSetting() with these config flags :
-	// XC_FACTORY_AV_REGION; if that fails, fallback on AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
-	// XC_VIDEO_FLAGS; if that fails, fallback on 0
-	return AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	// TODO: Once we add the ability to change av pack, read HalSmcVideoMode) and convert it to a AV_PACK_*
+	ULONG avpack = AV_PACK_HDTV;
+	ULONG type;
+	ULONG resultSize;
+
+	// First, read the factory AV settings
+	ULONG avRegion;
+	NTSTATUS result = xboxkrnl::ExQueryNonVolatileSetting(
+		xboxkrnl::XC_FACTORY_AV_REGION,
+		&type,
+		&avRegion,
+		sizeof(ULONG),
+		&resultSize);
+
+	// If this failed, default to AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
+	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+		avRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	}
+
+	// Read the user-configurable (via the dashboard) settings
+	ULONG userSettings;
+	result = xboxkrnl::ExQueryNonVolatileSetting(
+		xboxkrnl::XC_VIDEO,
+		&type,
+		&userSettings,
+		sizeof(ULONG),
+		&resultSize);
+
+	// If this failed, default to no user-options set
+	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+		userSettings = 0;
+	}
+
+	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
 // Xbox code will set this address via AvSetSavedDataAddress

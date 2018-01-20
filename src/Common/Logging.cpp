@@ -67,7 +67,7 @@ inline void output_char(std::ostream& os, char c)
 		case '\t': os << "\\t"; break;
 		case '\v': os << "\\v"; break;
 			// All other to-escape-characters are rendered as hexadecimal :
-		default: os << "\\x" << std::hex << std::uppercase << (int)c;
+		default: os << "\\x" << std::setfill('0') << std::setw(2) << std::right << std::hex << std::uppercase << (int)c;
 		}
 	}
 	else
@@ -92,7 +92,7 @@ inline void output_wchar(std::ostream& os, wchar_t c)
 		case '\t': os << "\\t"; break;
 		case '\v': os << "\\v"; break;
 			// All other to-escape-characters are rendered as hexadecimal :
-		default: os << "\\x" << std::hex << std::uppercase << (wint_t)c;
+		default: os << "\\x" << std::setfill('0') << std::setw(4) << std::right << std::hex << std::uppercase << (wint_t)c;
 		}
 	}
 	else
@@ -101,17 +101,17 @@ inline void output_wchar(std::ostream& os, wchar_t c)
 
 LOG_SANITIZE_HEADER(hex1, uint8_t)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+	return os << hexstring8 << (int)container.value;
 }
 
 LOG_SANITIZE_HEADER(hex2, uint16_t)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+	return os << hexstring16 << (int)container.value;
 }
 
 LOG_SANITIZE_HEADER(hex4, uint32_t)
 {
-	return os << "0x" << std::hex << std::uppercase << (int)container.value;
+	return os << hexstring32 << (int)container.value;
 }
 
 LOG_SANITIZE_HEADER(sanitized_char, char)
@@ -144,7 +144,7 @@ LOG_SANITIZE_HEADER(sanitized_char_pointer, char *)
 		}
 
 	v = container.value;
-	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	os << hexstring32 << (uint32_t)v << " = \"";
 	if (needsEscaping)
 	{
 		while (*v)
@@ -174,24 +174,19 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 		}
 
 	v = container.value;
-	os << "0x" << std::hex << std::uppercase << (void *)v << " = \"";
+	os << hexstring32 << (uint32_t)v << " = \"";
 	if (needsEscaping)
 	{
 		while (*v)
 			output_wchar(os, *v++);
 	}
 	else
-		os << v;
+		os << v; // TODO : FIXME - VS2015 doesn''t render this string (instead, it shows a hexadecimal memory address)
 
 	return os << "\"";
 }
 
-LOGRENDER_HEADER_BY_REF(PULONG)
+LOGRENDER_HEADER_BY_REF(PVOID)
 {
-	os << hex4((uint32_t)value);
-	if (value != nullptr)
-		os << " (*value: " << hex4(*value) << ")";
-
-	return os;
+	return os << hex4((uint32_t)value);
 }
-

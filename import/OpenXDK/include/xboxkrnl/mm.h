@@ -71,8 +71,8 @@ XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 // ******************************************************************
 XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
 (
-    IN PVOID EndAddress,
-    IN PVOID BaseAddress
+    IN PVOID StackBase,
+    IN PVOID StackLimit
 );
 
 // ******************************************************************

@@ -33,8 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -71,6 +72,15 @@ LOGRENDER_HEADER_BY_REF(PBYTE)
 		return os << "NULL";
 
 	return os << "/*unprinted contents*/"; // TODO : Actually try to print the buffer (up to some length)
+}
+
+LOGRENDER_HEADER_BY_REF(PULONG)
+{
+	os << "(PULONG)" << hex4((uint32_t)value);
+	if (value != nullptr)
+		os << " (*value: " << hex4(*value) << ")";
+
+	return os;
 }
 
 //

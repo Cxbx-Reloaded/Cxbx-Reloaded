@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Xbe.h
+// *   Cxbx->Common->Xbe.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -42,6 +42,9 @@
 //#include <windef.h> // For MAX_PATH
 // The above leads to 55 compile errors, so until we've sorted out why that happens, declare MAX_PATH ourselves for now :
 #define MAX_PATH 260
+#define XPR_IMAGE_WH 128
+#define XPR_IMAGE_DATA_SIZE (XPR_IMAGE_WH * XPR_IMAGE_WH) / 2
+#define XPR_IMAGE_HDR_SIZE 2048
 
 // Xbe (Xbox Executable) file object
 class Xbe : public Error
@@ -52,6 +55,9 @@ class Xbe : public Error
 		
         // deconstructor
        ~Xbe();
+
+	   // find an image by name
+	   void *FindSection(char *zsSectionName);
 
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
@@ -64,6 +70,12 @@ class Xbe : public Error
 
         // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
+
+		// purge illegal characters in Windows filenames or other OS's
+		void PurgeBadChar(std::string& s, const std::string& illegalChars = "\\/:?\"<>|");
+
+        // Convert game region field to string
+        const char *GameRegionToString();
 
         // Xbe header
         #include "AlignPrefix1.h"
@@ -80,7 +92,7 @@ class Xbe : public Error
             uint32 dwSections;                      // 0x011C - number of sections
             uint32 dwSectionHeadersAddr;            // 0x0120 - section headers address
 
-            struct InitFlags                        // 0x0124 - initialization flags
+			typedef struct                         
             {
                 uint32 bMountUtilityDrive   : 1;    // mount utility drive flag
                 uint32 bFormatUtilityDrive  : 1;    // format utility drive flag
@@ -90,8 +102,12 @@ class Xbe : public Error
                 uint32 Unused_b1            : 8;    // unused (or unknown)
                 uint32 Unused_b2            : 8;    // unused (or unknown)
                 uint32 Unused_b3            : 8;    // unused (or unknown)
-            }
-            dwInitFlags;
+			} InitFlags;
+
+			union {                                 // 0x0124 - initialization flags
+				InitFlags dwInitFlags;
+				uint32 dwInitFlags_value;
+			};
 
             uint32 dwEntryAddr;                     // 0x0128 - entry point address
             uint32 dwTLSAddr;                       // 0x012C - thread local storage directory address
@@ -137,7 +153,11 @@ class Xbe : public Error
             uint32  dwVersion;                            // 0x00AC - version
             uint08  bzLanKey[16];                         // 0x00B0 - lan key
             uint08  bzSignatureKey[16];                   // 0x00C0 - signature key
+            // NOT ALL XBEs have these fields!
             uint08  bzTitleAlternateSignatureKey[16][16]; // 0x00D0 - alternate signature keys
+            uint32  dwOriginalCertificateSize;			  // 0x01D0 - Original Certificate Size?
+            uint32  dwOnlineService;					  // 0x01D4 - Online Service ID
+            uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
         }
         #include "AlignPosfix1.h"
         m_Certificate;
@@ -146,7 +166,7 @@ class Xbe : public Error
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
-            struct _Flags
+            typedef struct 
             {
                 uint32 bWritable        : 1;    // writable flag
                 uint32 bPreload         : 1;    // preload flag
@@ -159,8 +179,12 @@ class Xbe : public Error
                 uint32 Unused_b1        : 8;    // unused (or unknown)
                 uint32 Unused_b2        : 8;    // unused (or unknown)
                 uint32 Unused_b3        : 8;    // unused (or unknown)
-            }
-            dwFlags;
+			} _Flags;
+
+			union {
+				_Flags dwFlags;
+				uint32 dwFlags_value;
+			};
 
             uint32 dwVirtualAddr;               // virtual address
             uint32 dwVirtualSize;               // virtual size
@@ -184,13 +208,17 @@ class Xbe : public Error
             uint16 wMinorVersion;               // minor version
             uint16 wBuildVersion;               // build version
 
-            struct Flags
+            typedef struct 
             {
                 uint16 QFEVersion       : 13;   // QFE Version
                 uint16 Approved         : 2;    // Approved? (0:no, 1:possibly, 2:yes)
                 uint16 bDebugBuild      : 1;    // Is this a debug build?
-            }
-            dwFlags;
+			} Flags;
+
+			union {
+				Flags wFlags;
+				uint16 wFlags_value;
+			};
         }
         #include "AlignPosfix1.h"
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
@@ -209,8 +237,8 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_TLS;
 
-        // Xbe section names, each 8 bytes max and null terminated
-        char (*m_szSectionName)[9];
+        // Xbe section names, stored null terminated
+        char (*m_szSectionName)[10];
 
         // Xbe sections
         uint08 **m_bzSection;
@@ -237,6 +265,8 @@ class Xbe : public Error
         // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
 
+        std::string AllowedMediaToString();
+
         // used to encode/decode logo bitmap data
         union LogoRLE
         {
@@ -257,6 +287,63 @@ class Xbe : public Error
             }
             m_Sixteen;
         };
+
+	public:
+		// used to decode game logo bitmap data
+		#include "AlignPrefix1.h"
+		struct X_D3DResourceLoc
+		{
+			uint32 Common;
+			uint32 Data;
+			uint32 Lock;
+			uint32 Format;
+			uint32 Size;
+		}
+		#include "AlignPosfix1.h"
+		;
+
+		#include "AlignPrefix1.h"
+		// XPR structures
+
+		// Purpose:
+		//   The XPR file format allows multiple graphics resources to be pre-defined
+		//   and bundled together into one file.  These resources can be copied into
+		//   memory and then immediately used in-place as D3D objects such as textures
+		//   and vertex buffers.  The structure below defines the XPR header and the
+		//   unique identifier for this file type.
+		struct XprHeader
+		{
+			uint32 dwXprMagic; // 'XPR0' or 'XPR1'
+			uint32 dwXprTotalSize;
+			uint32 dwXprHeaderSize;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprHeader;
+
+		#include "AlignPrefix1.h"
+		// Layout of SaveImage.xbx saved game image file
+		//
+		// File is XPR0 format. Since the XPR will always contain only a single
+		// 256x256 DXT1 image, we know exactly what the header portion will look like
+		struct XprImageHeader
+		{
+			XprHeader xprHeader; // Standard XPR struct
+			X_D3DResourceLoc d3dTexture; // Standard D3D texture struct
+			uint32 dwEndOfHeader; // $FFFFFFFF
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImageHeader;
+
+
+		#include "AlignPrefix1.h"
+		struct XprImage
+		{
+			XprImageHeader xprImageHeader;
+			char strPad[XPR_IMAGE_HDR_SIZE - sizeof(XprImageHeader)];
+			unsigned char pBits;
+		}
+		#include "AlignPosfix1.h"
+		*m_xprImage;
 };
 
 // debug/retail XOR keys
@@ -290,8 +377,11 @@ const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK = 0x40000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE      = 0x80000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_MASK          = 0x00FFFFFF;
 
-// OpenXDK logo bitmap (used by cxbe by default)
-extern uint08 OpenXDK[];
-extern uint32 dwSizeOfOpenXDK;
-
+// section type flags for Xbe
+const uint32 XBEIMAGE_SECTION_WRITEABLE				 = 0x00000001;
+const uint32 XBEIMAGE_SECTION_PRELOAD				 = 0x00000002;
+const uint32 XBEIMAGE_SECTION_EXECUTABLE			 = 0x00000004;
+const uint32 XBEIMAGE_SECTION_INSERTFILE			 = 0x00000008;
+const uint32 XBEIMAGE_SECTION_HEAD_PAGE_READONLY	 = 0x00000010;
+const uint32 XBEIMAGE_SECTION_TAIL_PAGE_READONLY	 = 0x00000020;
 #endif

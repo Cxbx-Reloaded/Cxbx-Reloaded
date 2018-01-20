@@ -4,7 +4,7 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 6.00.0338 */
+ /* File created by MIDL compiler version 6.00.0347 */
 /* Compiler settings for mediaobj.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust
@@ -294,7 +294,7 @@ void __RPC_STUB IMediaBuffer_GetBufferAndLength_Stub(
 #endif 	/* __IMediaBuffer_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_mediaobj_0085 */
+/* interface __MIDL_itf_mediaobj_0089 */
 /* [local] */ 
 
 typedef struct _DMO_OUTPUT_DATA_BUFFER
@@ -309,8 +309,8 @@ typedef struct _DMO_OUTPUT_DATA_BUFFER *PDMO_OUTPUT_DATA_BUFFER;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0085_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0085_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0089_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0089_v0_0_s_ifspec;
 
 #ifndef __IMediaObject_INTERFACE_DEFINED__
 #define __IMediaObject_INTERFACE_DEFINED__
@@ -1079,7 +1079,7 @@ void __RPC_STUB IEnumDMO_Clone_Stub(
 #endif 	/* __IEnumDMO_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_mediaobj_0087 */
+/* interface __MIDL_itf_mediaobj_0091 */
 /* [local] */ 
 
 
@@ -1089,8 +1089,8 @@ enum _DMO_INPLACE_PROCESS_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0087_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0087_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0091_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0091_v0_0_s_ifspec;
 
 #ifndef __IMediaObjectInPlace_INTERFACE_DEFINED__
 #define __IMediaObjectInPlace_INTERFACE_DEFINED__
@@ -1235,7 +1235,7 @@ void __RPC_STUB IMediaObjectInPlace_GetLatency_Stub(
 #endif 	/* __IMediaObjectInPlace_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_mediaobj_0088 */
+/* interface __MIDL_itf_mediaobj_0092 */
 /* [local] */ 
 
 
@@ -1244,8 +1244,8 @@ enum _DMO_QUALITY_STATUS_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0088_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0088_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0092_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0092_v0_0_s_ifspec;
 
 #ifndef __IDMOQualityControl_INTERFACE_DEFINED__
 #define __IDMOQualityControl_INTERFACE_DEFINED__
@@ -1381,7 +1381,7 @@ void __RPC_STUB IDMOQualityControl_GetStatus_Stub(
 #endif 	/* __IDMOQualityControl_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_mediaobj_0089 */
+/* interface __MIDL_itf_mediaobj_0093 */
 /* [local] */ 
 
 
@@ -1390,8 +1390,8 @@ enum _DMO_VIDEO_OUTPUT_STREAM_FLAGS
     } ;
 
 
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0089_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0089_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0093_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_mediaobj_0093_v0_0_s_ifspec;
 
 #ifndef __IDMOVideoOutputOptimizations_INTERFACE_DEFINED__
 #define __IDMOVideoOutputOptimizations_INTERFACE_DEFINED__

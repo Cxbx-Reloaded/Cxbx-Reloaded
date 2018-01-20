@@ -12,6 +12,10 @@ build:
   project: build/win32/Cxbx.sln
   parallel: true
   verbosity: minimal
+after_build:
+  - cmd: PackageBuild.bat %CONFIGURATION%
 artifacts:
-- path: export\Release.zip
-- path: export\Debug.zip
+- path: export/*.zip
+install:
+  # Git clone happens between init and install 
+  - cmd: git submodule update --init --recursive

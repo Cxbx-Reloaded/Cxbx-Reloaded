@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -92,6 +93,18 @@ void LOG_PCSTProxy
 		LOG_FUNC_END;
 }
 
+void InitXboxThread(DWORD_PTR cores)
+{
+	// initialize FS segment selector
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
+	// Run this thread solely on the indicated core(s) :
+	SetThreadAffinityMask(GetCurrentThread(), cores);
+}
+
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
@@ -119,13 +132,11 @@ static unsigned int WINAPI PCSTProxy
 		StartSuspended,
 		hStartedEvent);
 
-	// Do minimal thread initialization
-	{
-		EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
-		_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-		_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
-	}
+	// Do minimal thread initialization
+	InitXboxThread(g_CPUXbox);
+
+	SetEvent(hStartedEvent);
 
 	if (StartSuspended == TRUE)
 		// Suspend right before calling the thread notification routines
@@ -142,7 +153,7 @@ static unsigned int WINAPI PCSTProxy
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(TRUE);
 		}
@@ -151,8 +162,6 @@ static unsigned int WINAPI PCSTProxy
 	// use the special calling convention
 	__try
 	{
-		SetEvent(hStartedEvent);
-
 		// Given the non-standard calling convention (requiring
 		// the first argument in ebp+4) we need the below __asm.
 		//
@@ -284,40 +293,67 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	//	else
 	//		KernelStackSize = round up;
 
-	static bool bFirstTime = false;
+    static bool bFirstTime = false;
 
-	// create thread, using our special proxy technique
-	{
-		DWORD dwThreadId;
-
-		// PCSTProxy is responsible for cleaning up this pointer
-		::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
-
-		iPCSTProxyParam->StartRoutine = StartRoutine;
-		iPCSTProxyParam->StartContext = StartContext;
-		iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
-		iPCSTProxyParam->StartSuspended = CreateSuspended;
-		iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-		*ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
-
-		// Make sure Xbox1 code runs on one core :
-		SetThreadAffinityMask(*ThreadHandle, g_CPUXbox);
-
-		WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
-
-		//        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
-
-		DbgPrintf("EmuKrnl: ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", *ThreadHandle, dwThreadId);
-
-		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
-		{
-			HANDLE hDupHandle = NULL;
-
-			DuplicateHandle(g_CurrentProcessHandle, *ThreadHandle, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-			CxbxKrnlRegisterThread(hDupHandle);
+    // create thread, using our special proxy technique
+    {
+        DWORD dwThreadId = 0, dwThreadWait;
+        bool bWait = true;
+		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
+		if (hStartedEvent == NULL) {
+			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
+			CxbxKrnlCleanup(errorMessage.c_str());
 		}
+
+        // PCSTProxy is responsible for cleaning up this pointer
+        ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
+
+        iPCSTProxyParam->StartRoutine = StartRoutine;
+        iPCSTProxyParam->StartContext = StartContext;
+        iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
+        iPCSTProxyParam->StartSuspended = CreateSuspended;
+        iPCSTProxyParam->hStartedEvent = hStartedEvent;
+
+        *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
+
+		// Give the thread chance to start
+		Sleep(100);
+
+        EmuWarning("KRNL: Waiting for Xbox proxy thread to start...\n");
+
+        while (bWait) {
+            dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
+            switch (dwThreadWait) {
+                case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
+					EmuWarning("KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
+                    bWait = false;
+                    break;
+                }
+                case WAIT_OBJECT_0: { // The state of the specified object is signaled.
+					DbgPrintf("KRNL: Xbox proxy thread is started.\n");
+                    bWait = false;
+                    break;
+                }
+                default: {
+					if (dwThreadWait == WAIT_FAILED) // The function has failed
+						bWait = false;
+
+					std::string ErrorStr = CxbxGetLastErrorString("KRNL: While waiting for Xbox proxy thread to start");
+					EmuWarning("%s\n", ErrorStr.c_str());
+					break;
+                }
+            }
+        }
+
+		// Release the event
+		CloseHandle(hStartedEvent);
+		hStartedEvent = NULL;
+
+		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
+		EmuWarning("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+
+		CxbxKrnlRegisterThread(*ThreadHandle);
 
 		if (ThreadId != NULL)
 			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
@@ -409,7 +445,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}

@@ -56,7 +56,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord);
 #endif
 
 // global flags specifying current emulation state
-extern volatile bool g_bEmuException;
+extern volatile thread_local bool g_bEmuException;
 extern volatile bool g_bEmuSuspended;
 
 // global exception patching address
@@ -74,7 +74,7 @@ extern int g_iThreadNotificationCount;
 extern DWORD_PTR g_CPUXbox;
 extern DWORD_PTR g_CPUOthers;
 
-extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlInit
+extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlMain
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 extern LARGE_INTEGER HostSystemTimeDelta;
@@ -95,6 +95,7 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 // 4 controllers
 #define XINPUT_HANDLE_SLOTS 4
 
+extern bool g_XInputEnabled;
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 extern void InitializeSectionStructures(void);
@@ -106,5 +107,8 @@ typedef struct DUMMY_KERNEL
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_SECTION_HEADER SectionHeader;
 } *PDUMMY_KERNEL;
+
+
+extern bool g_DisablePixelShaders;
 
 #endif

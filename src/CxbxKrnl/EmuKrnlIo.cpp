@@ -34,8 +34,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
+
+#define LOG_PREFIX "KRNL"
 
 // prevent name collisions
 namespace xboxkrnl
@@ -259,9 +260,25 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	NativeObjectAttributes nativeObjectAttributes;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
+	// If we are NOT accessing a directory, and we match a partition path, we need to redirect to a partition.bin file
+	bool isDirectPartitionAccess = false;
+	std::string objectName = std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
+	if ((CreateOptions & FILE_DIRECTORY_FILE) == 0 && _strnicmp(objectName.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0 && objectName.length() <= DeviceHarddisk0PartitionPrefix.length() + 2) {
+		isDirectPartitionAccess = true;
+	}
 
-	if (!FAILED(ret))
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile", isDirectPartitionAccess);
+
+	// When a Synchronous CreateOption is specified, DesiredAccess must have SYNCHRONIZE set
+	if ((CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT) != 0 ||
+		(CreateOptions & FILE_SYNCHRONOUS_IO_ALERT) != 0) {
+		DesiredAccess |= SYNCHRONIZE;
+	}
+
+	// Force ShareAccess to all 
+	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+
+	if (SUCCEEDED(ret))
 		// redirect to NtCreateFile
 		ret = NtDll::NtCreateFile(
 			FileHandle, 
@@ -278,11 +295,11 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	if (FAILED(ret))
 	{
-		EmuWarning("EmuKrnl: IoCreateFile Failed! (0x%.08X)\n", ret);
+		EmuWarning("KRNL: IoCreateFile Failed! (%s)\n", NtStatusToString(ret));
 	}
 	else
 	{
-		DbgPrintf("EmuKrnl: IoCreateFile = 0x%.08X\n", *FileHandle);
+		DbgPrintf("KRNL: IoCreateFile = 0x%.8X\n", *FileHandle);
 	}
 
 	RETURN(ret);
@@ -312,10 +329,10 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(68) xboxkrnl::VOID NTAPI xboxkrnl::IoDeleteDevice
 (
-	IN PDEVICE_OBJECT irql
+	IN PDEVICE_OBJECT Irql
 )
 {
-	LOG_FUNC_ONE_ARG(irql);
+	LOG_FUNC_ONE_ARG(Irql);
 
 	LOG_UNIMPLEMENTED();
 }

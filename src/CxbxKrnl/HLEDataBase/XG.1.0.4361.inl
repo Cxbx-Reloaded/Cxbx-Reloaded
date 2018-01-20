@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4361.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->XG.1.0.4361.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,117 +33,16 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XGIsSwizzledFormat
+// * XFONT_OpenBitmapFontFromMemory
 // ******************************************************************
-OOVPA_NO_XREF(XGIsSwizzledFormat, 4361, 12)
+OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory, 4361, 8)
 
-        // XGIsSwizzledFormat+0x04 : cmp eax, 0x2D
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
-        { 0x06, 0x2D }, // (Offset,Value)-Pair #3
-
-        // XGIsSwizzledFormat+0x0C : jge +0x31
-        { 0x0C, 0x7D }, // (Offset,Value)-Pair #4
-        { 0x0D, 0x31 }, // (Offset,Value)-Pair #5
-
-        // XGIsSwizzledFormat+0x17 : cmp eax, 0x0B
-        { 0x17, 0x83 }, // (Offset,Value)-Pair #6
-        { 0x18, 0xF8 }, // (Offset,Value)-Pair #7
-        { 0x19, 0x0B }, // (Offset,Value)-Pair #8
-
-        // XGIsSwizzledFormat+0x1A : jz +0x23
-        { 0x1A, 0x74 }, // (Offset,Value)-Pair #9
-        { 0x1B, 0x23 }, // (Offset,Value)-Pair #10
-
-        // XGIsSwizzledFormat+0x42 : jmp +0xE4
-        { 0x42, 0xEB }, // (Offset,Value)-Pair #11
-        { 0x43, 0xE4 }, // (Offset,Value)-Pair #12
+        { 0x0B, 0x75 },
+        { 0x1A, 0x8B },
+        { 0x28, 0x8B },
+        { 0x32, 0x08 },
+        { 0x3F, 0x8B },
+        { 0x4C, 0x8B },
+        { 0x59, 0x45 },
+        { 0x66, 0x0C },
 OOVPA_END;
-
-// ******************************************************************
-// * XGSwizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGSwizzleRect, 4361, 10)
-
-        // XGSwizzleRect+0x2E : pop eax
-        { 0x2E, 0x58 }, // (Offset,Value)-Pair #1
-
-        // XGSwizzleRect+0x4A : cmp dword ptr [ebp+0x74], 1
-        { 0x4A, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x4B, 0x7D }, // (Offset,Value)-Pair #3
-        { 0x4C, 0x74 }, // (Offset,Value)-Pair #4
-        { 0x4D, 0x01 }, // (Offset,Value)-Pair #5
-
-        // XGSwizzleRect+0xD8 : mov edx, [ebp+0x74]
-        { 0xD8, 0x8B }, // (Offset,Value)-Pair #6
-        { 0xD9, 0x55 }, // (Offset,Value)-Pair #7
-        { 0xDA, 0x74 }, // (Offset,Value)-Pair #8
-
-        // XGSwizzleRect+0xEC : jmp +0x0B
-        { 0xEC, 0xEB }, // (Offset,Value)-Pair #9
-        { 0xED, 0x0B }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * XGSetVertexBufferHeader
-// ******************************************************************
-OOVPA_NO_XREF(XGSetVertexBufferHeader, 4361, 8)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0x18 },
-        { 0x0A, 0x08 },
-        { 0x0D, 0x00 },
-        { 0x10, 0x00 },
-        { 0x13, 0x48 },
-        { 0x16, 0x18 },
-OOVPA_END;
-
-// ******************************************************************
-// * XGCompressRect
-// ******************************************************************
-OOVPA_NO_XREF(XGCompressRect, 4361, 8)
-
-        { 0x1E, 0x00 },
-        { 0x3E, 0xA8 },
-        { 0x5E, 0x85 },
-        { 0x80, 0x85 },
-        { 0x9E, 0x07 },
-        { 0xBE, 0x80 },
-        { 0xDE, 0x74 },
-        { 0xFE, 0x8B },
-OOVPA_END;
-
-// ******************************************************************
-// * XGSetIndexBufferHeader
-// ******************************************************************
-OOVPA_NO_XREF(XGSetIndexBufferHeader, 4361, 8)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0x18 },
-        { 0x0A, 0x08 },
-        { 0x0D, 0x00 },
-        { 0x10, 0x01 },
-        { 0x13, 0x48 },
-        { 0x16, 0x18 },
-OOVPA_END;
-
-// ******************************************************************
-// * XG_4361
-// ******************************************************************
-OOVPATable XG_4361[] = {
-
-	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
-	// REGISTER_OOVPA(XGSwizzleRect, 4361, DISABLED), // TODO : Uncomment
-	// REGISTER_OOVPA(XGUnswizzleRect, 3911, DISABLED), // TODO : Uncomment
-	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
-	REGISTER_OOVPA(XGSetVertexBufferHeader, 4361, XREF),
-	REGISTER_OOVPA(XGSetIndexBufferHeader, 4361, XREF),
-	REGISTER_OOVPA(XGCompressRect, 4361, XREF),
-};
-
-// ******************************************************************
-// * XG_4361_SIZE
-// ******************************************************************
-uint32 XG_4361_SIZE = sizeof(XG_4361);

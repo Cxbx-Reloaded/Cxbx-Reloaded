@@ -3,7 +3,7 @@
 //
 // Desc: Audio related definitions and interfaces for ActiveMovie.
 //
-// Copyright (c) 1992 - 2000, Microsoft Corporation.  All rights reserved.
+// Copyright (c) 1992-2001, Microsoft Corporation.  All rights reserved.
 //------------------------------------------------------------------------------
 
 
@@ -18,9 +18,9 @@ extern "C" {
 #include <dsound.h>
 
 // This is the interface the audio renderer supports to give the application
-// access to the direct sound object and buffers it is using, to allow the
+// access to the direct sound object and the buffers it is using, to allow the
 // application to use things like the 3D features of Direct Sound for the
-// soundtrack of a movie being played with Active Movie
+// soundtrack of a movie being played with Active Movie.
 
 // be nice to our friends in C
 #undef INTERFACE
