@@ -62,8 +62,8 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-        // dump Xbe information to text file
-        void DumpInformation(FILE *x_file);
+        bool DumpInformationToFile(std::string);
+        void DumpInformationToConsole();
 
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
@@ -255,17 +255,17 @@ class Xbe : public Error
         // retrieve thread local storage index address
         uint32 *GetTLSIndex() { if(m_TLS == 0) return 0; else return (uint32*)GetAddr(m_TLS->dwTLSIndexAddr); }
 
+        // return a modifiable pointer inside this structure that corresponds to a virtual address
+        uint08 *GetAddr(uint32 x_dwVirtualAddress);
+
+        const wchar_t *GetUnicodeFilenameAddr();
     private:
         // constructor initialization
         void ConstructorInit();
 
-        // return a modifiable pointer inside this structure that corresponds to a virtual address
-        uint08 *GetAddr(uint32 x_dwVirtualAddress);
-
         // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
 
-        std::string AllowedMediaToString();
 
         // used to encode/decode logo bitmap data
         union LogoRLE
@@ -344,6 +344,49 @@ class Xbe : public Error
 		}
 		#include "AlignPosfix1.h"
 		*m_xprImage;
+};
+
+class XbePrinter
+{
+    public:
+        XbePrinter(Xbe*);
+        std::string GenXbeInfo();
+
+    private:
+        Xbe *Xbe_to_print;
+        Xbe::Header *Xbe_header;
+        Xbe::Certificate *Xbe_certificate;
+
+        std::string GenHexRow(uint08*, const uint08, const uint08);
+        std::string utf8_to_ascii(const wchar_t*);
+        std::string AllowedMediaToString();
+        std::string GameRatingToString();
+
+        std::string GenDumpHeader();
+
+        std::string GenXbeHeaderInfo();
+        std::string GenDigitalSignature();
+        std::string GenGeneralHeaderInfo1();
+        std::string GenInitFlags();
+        std::string GenGeneralHeaderInfo2();
+
+        std::string GenXbeCertificateInfo();
+        std::string GenCertificateHeader();
+        std::string GenAlternateTitleIDs();
+        std::string GenMediaInfo();
+        std::string GenLANKey();
+        std::string GenSignatureKey();
+        std::string GenAlternateSignatureKeys();
+
+        std::string GenSectionInfo();
+        std::string GenSectionHeaders();
+        std::string GenSectionFlags(Xbe::SectionHeader);
+        std::string GenSectionDigest(Xbe::SectionHeader);
+
+        std::string GenLibraryVersions();
+        std::string GenLibraryFlags(Xbe::LibraryVersion);
+
+        std::string GenTLS();
 };
 
 // debug/retail XOR keys
