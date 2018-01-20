@@ -331,6 +331,16 @@ void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING 
 	memcpy(dest->Buffer, src.c_str(), dest->Length);
 }
 
+void replace_all(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
 NTSTATUS CxbxConvertFilePath(
 	std::string RelativeXboxPath, 
 	OUT std::wstring &RelativeHostPath, 
@@ -421,6 +431,19 @@ NTSTATUS CxbxConvertFilePath(
 			// And if needed, add it to the host path instead :
 			if (HostPath.back() != '\\')
 				HostPath.append(1, '\\');
+		}
+
+		// Lastly, remove any '\\' sequences in the string (this should fix the problem with Azurik game saves)
+		replace_all( RelativePath, "\\\\", "\\" );
+
+		if (g_bPrintfOn) {
+			DbgPrintf("FILE: %s Corrected path...\n", aFileAPIName.c_str());
+			printf("  Org:\"%s\"\n", OriginalPath.c_str());
+			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
+				printf("  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+			}
+			else
+				printf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
 		}
 
 		if (g_bPrintfOn) {
