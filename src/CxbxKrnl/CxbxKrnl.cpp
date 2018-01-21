@@ -1017,9 +1017,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
 
-	// Always initialise NV2A: We may need it for disabled HLE patches too!
-	EmuNV2A_Init();
-
 	if (bLLE_GPU)
 	{
 		DbgPrintf("INIT: Initializing OpenGL.\n");
