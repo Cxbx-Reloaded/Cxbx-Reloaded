@@ -2742,6 +2742,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet;
+	
+	g_CurrentVertexShader = Handle;
 
     if(VshHandleIsVertexShader(Handle))
     {
@@ -8967,7 +8969,36 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();    
+	// NOTE: Azurik needs this to work, but this implementation makes
+	// Sonic Heroes (E3 Demo) run slower and look a bit worse.  An investigation
+	// may be necessary...
+#if 1
+	DWORD Handle = g_CurrentVertexShader;
+	
+	// TODO: Cache vertex shaders?  Azurik overwrites the same vertex shader
+	// slot over and over again with many different vertex shaders per frame...
+	if( VshHandleIsVertexShader(Handle) )
+    {
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+
+		// Save the contents of the existing vertex shader program
+		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->DeclarationSize );
+		memmove( pDeclaration, pVertexShader->pDeclaration, pVertexShader->DeclarationSize );
+		
+		// Delete the vertex shader
+		EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
+
+		// Re-create the vertex shader with the new code
+		HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &Handle, 0 );
+		free(pDeclaration);
+		if( FAILED( hr ) )
+			CxbxKrnlCleanup( "Error re-creating vertex shader!" );
+
+		EMUPATCH(D3DDevice_LoadVertexShader)(Handle, Address);
+		EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
+    }
+#endif   
 }
 
 // ******************************************************************

@@ -171,6 +171,8 @@
       <BaseAddress>0x10000</BaseAddress>
       <FixedBaseAddress>true</FixedBaseAddress>
       <LargeAddressAware>true</LargeAddressAware>
+      <StackReserveSize>65536</StackReserveSize>
+      <StackCommitSize>65536</StackCommitSize>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
