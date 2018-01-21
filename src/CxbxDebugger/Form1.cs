@@ -9,6 +9,7 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using cs_x86;
 
 namespace CxbxDebugger
 {
@@ -363,6 +364,7 @@ namespace CxbxDebugger
                 frm.DebugModules.Add(Process);
             }
 
+
             public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
             {
                 int remainingThreads = Process.Threads.Count;
@@ -561,12 +563,15 @@ namespace CxbxDebugger
             return bmp;
         }
 
+        List<IntPtr> CallstackAddress = new List<IntPtr>();
+
         private void btnDumpCallstack_Click(object sender, EventArgs e)
         {
             int Index = cbThreads.SelectedIndex;
             if (Index == -1)
                 return;
 
+            CallstackAddress.Clear();
             lbCallstack.Items.Clear();
 
             int OtherModuleCount = 0;
@@ -596,6 +601,7 @@ namespace CxbxDebugger
 
                 if (OtherModuleCount > 0)
                 {
+                    CallstackAddress.Add(IntPtr.Zero);
                     lbCallstack.Items.Add("[External Code]");
                     OtherModuleCount = 0;
                 }
@@ -603,19 +609,16 @@ namespace CxbxDebugger
                 uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
                 string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
 
+                CallstackAddress.Add(StackFrame.PC);
                 lbCallstack.Items.Add(FrameString);
             }
 
             if (OtherModuleCount > 0)
             {
+                CallstackAddress.Add(IntPtr.Zero); 
                 lbCallstack.Items.Add("[External Code]");
                 OtherModuleCount = 0;
             }
-        }
-
-        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -654,6 +657,31 @@ namespace CxbxDebugger
         {
             // TODO Fix the frame buffer lookup
             //pictureBox1.Image = DumpFramebuffer();
+        }
+
+        private void lbCallstack_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if( lbCallstack.SelectedIndex != -1 )
+            {
+                IntPtr ptr = CallstackAddress[lbCallstack.SelectedIndex];
+
+                if (ptr == IntPtr.Zero)
+                    return;
+                
+                byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(ptr, 32);
+
+                string disassembly = "";
+
+                using (Capstone cs = Capstone.CreateEngine())
+                {
+                    cs.DisassembleIt(data, (ulong)ptr, delegate (CapstoneInstruction Instruction)
+                    {
+                        disassembly += string.Format("{0:x8} {1}", Instruction.Address, Instruction.Disassembly) + "\r\n";
+                    });
+                }
+
+                textBox1.Text = disassembly;
+            }
         }
     }
 }
