@@ -110,8 +110,8 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		break;
 	//0x03	tray state
 	//#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-	//0x09	CPU temperature(°C)
-	//0x0A	board temperature(°C)
+	//0x09	CPU temperature(Â°C)
+	//0x0A	board temperature(Â°C)
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
 	//0x10	current fan speed(0~50)
