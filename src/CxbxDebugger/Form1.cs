@@ -621,22 +621,59 @@ namespace CxbxDebugger
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        static private bool ReadInt(TextBox Source, ref int Out)
+        {
+            if (int.TryParse(Source.Text, out Out))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        static private bool ReadAddress(TextBox Source, ref uint Out)
+        {
+            if (Source.Text.StartsWith("0x"))
+            {
+                Out = Convert.ToUInt32(Source.Text.Substring(2), 16);
+                return true;
+            }
+            else
+            {
+                if (uint.TryParse(Source.Text, out Out))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private byte[] ReadMemory()
         {
             uint addr = 0;
-
-            string text = textBox2.Text;
-
-            if (text.StartsWith("0x"))
+            if (!ReadAddress(txAddress, ref addr))
             {
-                addr = Convert.ToUInt32(text.Substring(2), 16);
+                return null;
             }
-            else if (!uint.TryParse(textBox2.Text, out addr))
-            {
+
+            int size = 0;
+            ReadInt(txSize, ref size);
+
+            if (size < 0)
+                size = 256;
+
+            return DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(addr), (uint)size);
+        }
+        
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (DebuggerInst == null)
                 return;
-            }
 
-            byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(addr), 256);
+            byte[] data = ReadMemory();
+            if (data == null)
+                return;
 
             string hexData = "";
 
@@ -685,6 +722,25 @@ namespace CxbxDebugger
                 }
                 
                 textBox3.Text = disassembly;
+            }
+        }
+
+        private void btnDumpMemory_Click(object sender, EventArgs e)
+        {
+            if (DebuggerInst == null)
+                return;
+
+            if(diagSaveMemory.ShowDialog() == DialogResult.OK)
+            {
+                byte[] data = ReadMemory();
+                if (data == null)
+                    return;
+
+                var Strm = File.OpenWrite(diagSaveMemory.FileNames[0]);
+                Strm.Write(data, 0, data.Length);
+                Strm.Close();
+
+                MessageBox.Show("Memory dumped!");
             }
         }
     }

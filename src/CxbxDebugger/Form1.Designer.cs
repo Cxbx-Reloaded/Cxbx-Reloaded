@@ -55,11 +55,16 @@
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lbOpenedFiles = new System.Windows.Forms.ListBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.button1 = new System.Windows.Forms.Button();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.btnDumpMemory = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.txSize = new System.Windows.Forms.TextBox();
+            this.btnReadMemory = new System.Windows.Forms.Button();
+            this.txAddress = new System.Windows.Forms.TextBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -337,8 +342,12 @@
             // 
             // tabPage5
             // 
-            this.tabPage5.Controls.Add(this.button1);
-            this.tabPage5.Controls.Add(this.textBox2);
+            this.tabPage5.Controls.Add(this.btnDumpMemory);
+            this.tabPage5.Controls.Add(this.label2);
+            this.tabPage5.Controls.Add(this.label1);
+            this.tabPage5.Controls.Add(this.txSize);
+            this.tabPage5.Controls.Add(this.btnReadMemory);
+            this.tabPage5.Controls.Add(this.txAddress);
             this.tabPage5.Controls.Add(this.textBox1);
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Name = "tabPage5";
@@ -348,22 +357,58 @@
             this.tabPage5.Text = "Memory";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
-            // button1
+            // btnDumpMemory
             // 
-            this.button1.Location = new System.Drawing.Point(593, 6);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(149, 23);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "Read Memory";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnDumpMemory.Location = new System.Drawing.Point(538, 90);
+            this.btnDumpMemory.Name = "btnDumpMemory";
+            this.btnDumpMemory.Size = new System.Drawing.Size(204, 23);
+            this.btnDumpMemory.TabIndex = 6;
+            this.btnDumpMemory.Text = "Dump Memory (to File)";
+            this.btnDumpMemory.UseVisualStyleBackColor = true;
+            this.btnDumpMemory.Click += new System.EventHandler(this.btnDumpMemory_Click);
             // 
-            // textBox2
+            // label2
             // 
-            this.textBox2.Location = new System.Drawing.Point(471, 8);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(116, 20);
-            this.textBox2.TabIndex = 1;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(471, 38);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(61, 13);
+            this.label2.TabIndex = 5;
+            this.label2.Text = "Size (bytes)";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(471, 12);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(45, 13);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Address";
+            // 
+            // txSize
+            // 
+            this.txSize.Location = new System.Drawing.Point(538, 35);
+            this.txSize.Name = "txSize";
+            this.txSize.Size = new System.Drawing.Size(204, 20);
+            this.txSize.TabIndex = 3;
+            this.txSize.Text = "256";
+            // 
+            // btnReadMemory
+            // 
+            this.btnReadMemory.Location = new System.Drawing.Point(538, 61);
+            this.btnReadMemory.Name = "btnReadMemory";
+            this.btnReadMemory.Size = new System.Drawing.Size(204, 23);
+            this.btnReadMemory.TabIndex = 2;
+            this.btnReadMemory.Text = "Read Memory";
+            this.btnReadMemory.UseVisualStyleBackColor = true;
+            this.btnReadMemory.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // txAddress
+            // 
+            this.txAddress.Location = new System.Drawing.Point(538, 9);
+            this.txAddress.Name = "txAddress";
+            this.txAddress.Size = new System.Drawing.Size(204, 20);
+            this.txAddress.TabIndex = 1;
             // 
             // textBox1
             // 
@@ -391,6 +436,10 @@
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(39, 17);
             this.lblStatus.Text = "Ready";
+            // 
+            // diagSaveMemory
+            // 
+            this.diagSaveMemory.Filter = "Any Type|*.*";
             // 
             // Form1
             // 
@@ -451,14 +500,19 @@
         private System.Windows.Forms.ListBox lbOpenedFiles;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button btnReadMemory;
+        private System.Windows.Forms.TextBox txAddress;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox tbFileBit;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox txSize;
+        private System.Windows.Forms.Button btnDumpMemory;
+        private System.Windows.Forms.SaveFileDialog diagSaveMemory;
     }
 }
 
