@@ -190,6 +190,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EEPROMDevice.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
     <ClInclude Include="..\..\import\stb\stb_image.h" />
@@ -359,6 +360,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\devices\video\nv2a.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
