@@ -53,26 +53,15 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
 
 	bool bLedHasChanged = true;
+	int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 
-	if (aLEDSequence == LED::GREEN) // Automatic solid green color
-	{
-		int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
+	LedSequence[0] = ((aLEDSequence >> 6) & 2) | ((aLEDSequence >> 3) & 1);
+	LedSequence[1] = ((aLEDSequence >> 5) & 2) | ((aLEDSequence >> 2) & 1);
+	LedSequence[2] = ((aLEDSequence >> 4) & 2) | ((aLEDSequence >> 1) & 1);
+	LedSequence[3] = ((aLEDSequence >> 3) & 2) | ((aLEDSequence >> 0) & 1);
 
-		g_EmuShared->SetLedStatus(&bLedHasChanged);
-		g_EmuShared->SetLedSequence(LedSequence);
-	}
-	else // Draw the color represented by the sequence obtained
-	{
-		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
-
-		LedSequence[0] = ((aLEDSequence >> 3) & 1) | ((aLEDSequence >> 6) & 2);
-		LedSequence[1] = ((aLEDSequence >> 2) & 1) | ((aLEDSequence >> 5) & 2);
-		LedSequence[2] = ((aLEDSequence >> 1) & 1) | ((aLEDSequence >> 4) & 2);
-		LedSequence[3] = (aLEDSequence & 1) | ((aLEDSequence >> 3) & 2);
-
-		g_EmuShared->SetLedStatus(&bLedHasChanged);
-		g_EmuShared->SetLedSequence(LedSequence);
-	}
+	g_EmuShared->SetLedStatus(&bLedHasChanged);
+	g_EmuShared->SetLedSequence(LedSequence);
 }
 
 /* SMCDevice */
@@ -121,8 +110,8 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		break;
 	//0x03	tray state
 	//#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-	//0x09	CPU temperature(°C)
-	//0x0A	board temperature(°C)
+	//0x09	CPU temperature(Â°C)
+	//0x0A	board temperature(Â°C)
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
 	//0x10	current fan speed(0~50)
