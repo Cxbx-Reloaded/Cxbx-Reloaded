@@ -36,7 +36,12 @@
 
 #include "CxbxKrnl.h"
 
-//#define OLD_COLOR_CONVERSION
+
+// It's a real shame but the new conversion code needs to be disable for now
+// it causes crashes and other issues in titles using palletted textures
+// It seems draw time conversion is really required before this can function
+// correctly.
+#define OLD_COLOR_CONVERSION
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
