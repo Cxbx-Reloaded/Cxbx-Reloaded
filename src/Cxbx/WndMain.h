@@ -151,14 +151,8 @@ class WndMain : public Wnd
 		HBITMAP     m_LogoBmp;
 		HBITMAP		m_GameLogoBMP;
 		HBITMAP     m_LedBmp;
-		HBRUSH      m_BrushBlack;
-		HBRUSH      m_BrushRed;
-		HBRUSH      m_BrushGreen;
-		HBRUSH      m_BrushOrange;
-		HPEN        m_PenBlack;
-		HPEN        m_PenRed;
-		HPEN        m_PenGreen;
-		HPEN        m_PenOrange;
+		HBRUSH      m_Brushes[4];
+		HPEN        m_Pens[4];
 		int         m_xBmp, m_yBmp;
 
         // ******************************************************************

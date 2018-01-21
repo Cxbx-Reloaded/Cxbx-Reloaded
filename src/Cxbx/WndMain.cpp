@@ -375,14 +375,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					m_yBmp = GetSystemMetrics(SM_CYMENUCHECK);
 					m_LedDC = CreateCompatibleDC(hDC);
 					m_LedBmp = CreateCompatibleBitmap(hDC, m_xBmp, m_yBmp);
-					m_BrushBlack = CreateSolidBrush(RGB(0, 0, 0));
-					m_BrushRed = CreateSolidBrush(RGB(255, 0, 0));
-					m_BrushGreen = CreateSolidBrush(RGB(0, 255, 0));
-					m_BrushOrange = CreateSolidBrush(RGB(255, 165, 0));
-					m_PenBlack = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-					m_PenRed = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-					m_PenGreen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
-					m_PenOrange = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
+					m_Brushes[XBOX_LED_COLOUR_OFF] = CreateSolidBrush(RGB(0, 0, 0));
+					m_Brushes[XBOX_LED_COLOUR_GREEN] = CreateSolidBrush(RGB(0, 255, 0));
+					m_Brushes[XBOX_LED_COLOUR_RED] = CreateSolidBrush(RGB(255, 0, 0));
+					m_Brushes[XBOX_LED_COLOUR_ORANGE] = CreateSolidBrush(RGB(255, 165, 0));
+					m_Pens[XBOX_LED_COLOUR_OFF] = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+					m_Pens[XBOX_LED_COLOUR_GREEN] = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+					m_Pens[XBOX_LED_COLOUR_RED] = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+					m_Pens[XBOX_LED_COLOUR_ORANGE] = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
 					DrawLedBitmap(hwnd, true);
 				}
 
@@ -1305,21 +1305,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			DeleteObject(m_LedBmp);
 
-			DeleteObject(m_BrushBlack);
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_OFF]);
 
-			DeleteObject(m_BrushRed);
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_GREEN]);
 
-			DeleteObject(m_BrushGreen);
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_RED]);
 
-			DeleteObject(m_BrushOrange);
+			DeleteObject(m_Brushes[XBOX_LED_COLOUR_ORANGE]);
 
-			DeleteObject(m_PenBlack);
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_OFF]);
 
-			DeleteObject(m_PenRed);
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_GREEN]);
 
-			DeleteObject(m_PenGreen);
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_RED]);
 
-			DeleteObject(m_PenOrange);
+			DeleteObject(m_Pens[XBOX_LED_COLOUR_ORANGE]);
 
 			ReleaseDC(hwnd, hDC);
 
@@ -2105,88 +2105,53 @@ void WndMain::CrashMonitor()
 void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 {
 	HMENU hMenu = GetMenu(hwnd);
-	if (bdefault) // draw default black bitmap
-	{
-		SelectObject(m_LedDC, m_BrushBlack);
-		SelectObject(m_LedDC, m_PenBlack);
-		m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
-		Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
-		m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
-		MENUITEMINFO mii;
-		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_BITMAP | MIIM_FTYPE;
-		mii.fType = MFT_RIGHTJUSTIFY;
-		mii.hbmpItem = m_LedBmp;
-		SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
-		DrawMenuBar(hwnd);
+	int ActiveLEDColor;
+
+	// When so requested, or when not emulating, draw a black bitmap
+	if (bdefault || !m_bIsStarted) {
+		ActiveLEDColor = XBOX_LED_COLOUR_OFF;
 	}
-	else // draw colored bitmap
-	{
+	else { // draw colored bitmap
+		static int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
+
 		bool bLedHasChanged;
-		int LedSequence[4];
 
 		g_EmuShared->GetLedStatus(&bLedHasChanged);
-		g_EmuShared->GetLedSequence(LedSequence);
-		if (bLedHasChanged)
-		{
-			LedSequenceOffset = 0;
+		if (bLedHasChanged) {
+			// To prevent restarting the sequence when identical sequences are set, check if the new sequence is actually different
+			int NewLedSequence[4];
+			g_EmuShared->GetLedSequence(NewLedSequence);
+			if (LedSequence[0] != NewLedSequence[0] || LedSequence[1] != NewLedSequence[1] || LedSequence[2] != NewLedSequence[2] || LedSequence[3] != NewLedSequence[3]) {
+				// Only when the new sequence is different, restart it's cycle
+				g_EmuShared->GetLedSequence(LedSequence);
+				LedSequenceOffset = 0;
+			}
+			// Indicate we've handled the change
 			bLedHasChanged = false;
 			g_EmuShared->SetLedStatus(&bLedHasChanged);
 		}
 
-		m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
-		Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
-		MENUITEMINFO mii;
-		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_BITMAP | MIIM_FTYPE;
-		mii.fType = MFT_RIGHTJUSTIFY;
-		mii.hbmpItem = m_LedBmp;
-
-		switch (LedSequence[LedSequenceOffset])
-		{
-		case XBOX_LED_COLOUR_RED:
-		{
-			SelectObject(m_LedDC, m_BrushRed);
-			SelectObject(m_LedDC, m_PenRed);
-		}
-		break;
-
-		case XBOX_LED_COLOUR_GREEN:
-		{
-			SelectObject(m_LedDC, m_BrushGreen);
-			SelectObject(m_LedDC, m_PenGreen);
-		}
-		break;
-
-		case XBOX_LED_COLOUR_ORANGE:
-		{
-			SelectObject(m_LedDC, m_BrushOrange);
-			SelectObject(m_LedDC, m_PenOrange);
-		}
-		break;
-
-		case XBOX_LED_COLOUR_OFF:
-		{
-			SelectObject(m_LedDC, m_BrushBlack);
-			SelectObject(m_LedDC, m_PenBlack);
-		}
-		break;
-		}
-
-		m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
-		if (LedSequenceOffset == 3)
-		{
-			LedSequenceOffset = 0;
-		}
-		else
-		{
-			++LedSequenceOffset;
-		}
-		SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
-
-		DrawMenuBar(hwnd);
+		// Select active color and cycle through all 4 phases in the sequence
+		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
+		++LedSequenceOffset;
 	}
+
+	SelectObject(m_LedDC, m_Brushes[ActiveLEDColor]);
+	SelectObject(m_LedDC, m_Pens[ActiveLEDColor]);
+
+	m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
+	Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
+	m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
+
+	MENUITEMINFO mii = { 0 };
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_FTYPE | MIIM_BITMAP;
+	mii.fType = MFT_RIGHTJUSTIFY;
+	mii.hbmpItem = m_LedBmp;
+	SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
+
+	DrawMenuBar(hwnd);
 
 	return;
 }
