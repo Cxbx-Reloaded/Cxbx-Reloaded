@@ -42,6 +42,13 @@
 #include <memory.h>
 
 enum {
+	XBOX_LED_COLOUR_OFF,
+	XBOX_LED_COLOUR_GREEN,
+	XBOX_LED_COLOUR_RED,
+	XBOX_LED_COLOUR_ORANGE,
+};
+
+enum {
 	LLE_APU = 1 << 0,
 	LLE_GPU = 1 << 1,
 	LLE_JIT = 1 << 2,
@@ -136,6 +143,30 @@ class EmuShared : public Mutex
 		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
 		void SetLaunchDataPAddress(PAddr *value) { Lock(); m_LaunchDataPAddress = *value; Unlock(); }
 
+		// ******************************************************************
+		// * Xbox LED values Accessors
+		// ******************************************************************
+		void GetLedStatus(bool *value) { Lock(); *value = m_bLedHasChanged; Unlock(); }
+		void SetLedStatus(bool *value) { Lock(); m_bLedHasChanged = *value; Unlock(); }
+		void GetLedSequence(int *value)
+		{
+			Lock();
+			for (int i = 0; i < 4; ++i)
+			{
+				value[i] = m_LedSequence[i];
+			}
+			Unlock();
+		}
+		void SetLedSequence(int *value)
+		{
+			Lock();
+			for (int i = 0; i < 4; ++i)
+			{
+				m_LedSequence[i] = value[i];
+			}
+			Unlock();
+		}
+
 
 	private:
 		// ******************************************************************
@@ -158,6 +189,8 @@ class EmuShared : public Mutex
 		float        m_FPS;
 		bool		 m_bMultiXbe;
 		PAddr		 m_LaunchDataPAddress;
+		bool         m_bLedHasChanged;
+		int          m_LedSequence[4];
 };
 
 // ******************************************************************
