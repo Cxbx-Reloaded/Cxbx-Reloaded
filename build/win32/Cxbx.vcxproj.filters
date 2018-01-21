@@ -226,6 +226,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\Xbox.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\devices\video\nv2a.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -439,6 +442,9 @@
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Xbox.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\devices\video\nv2a.h">
       <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>

@@ -40,12 +40,14 @@
 #include "SMCDevice.h" // For SMCDevice
 #include "EEPROMDevice.h" // For EEPROMDevice
 #include "EmuNVNet.h" // For NVNetDevice
+#include "devices\video\nv2a.h" // For NV2ADevice
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
 SMCDevice* g_SMC;
 EEPROMDevice* g_EEPROM;
 NVNetDevice* g_NVNet;
+NV2ADevice* g_NV2A;
 
 #define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
 #define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
@@ -57,12 +59,14 @@ void InitXboxHardware()
 	g_SMC = new SMCDevice(Revision1_1); // TODO : Make configurable
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
+	g_NV2A = new NV2ADevice();
 
 	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
 	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
 
 	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
 	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
+	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp
