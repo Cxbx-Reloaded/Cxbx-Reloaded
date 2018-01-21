@@ -38,8 +38,8 @@
 
 #define LOG_PREFIX "NV2A"
 
-#include "../../CxbxKrnl/CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
-#include "../../CxbxKrnl/EmuNV2A.h" // For now, use EmuNV2A
+#include "CxbxKrnl\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
+#include "EmuNV2A.h" // For now, use EmuNV2A
 
 #include "nv2a.h"
 

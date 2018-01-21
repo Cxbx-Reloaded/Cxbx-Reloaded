@@ -190,8 +190,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\devices\video\nv2a.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EEPROMDevice.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
     <ClInclude Include="..\..\import\stb\stb_image.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
@@ -218,8 +216,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNVNet.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
@@ -231,20 +227,12 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\LED.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\PCIBus.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\PCIDevice.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\SMCDevice.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\SMBus.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\SMDevice.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\Xbox.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
@@ -260,6 +248,19 @@
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
     <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
+    <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
+    <ClInclude Include="..\..\src\devices\EmuNVNet.h" />
+    <ClInclude Include="..\..\src\devices\LED.h" />
+    <ClInclude Include="..\..\src\devices\PCIBus.h" />
+    <ClInclude Include="..\..\src\devices\PCIDevice.h" />
+    <ClInclude Include="..\..\src\devices\SMBus.h" />
+    <ClInclude Include="..\..\src\devices\SMCDevice.h" />
+    <ClInclude Include="..\..\src\devices\SMDevice.h" />
+    <ClInclude Include="..\..\src\devices\video\EmuNV2A.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
+    <ClInclude Include="..\..\src\devices\video\vga.h" />
+    <ClInclude Include="..\..\src\devices\Xbox.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CONTRIBUTORS" />
@@ -360,8 +361,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\devices\video\nv2a.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
@@ -481,8 +480,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNVNet.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />
@@ -525,18 +522,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\PCIBus.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\PCIDevice.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\SMBus.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\SMDevice.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\Xbox.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
@@ -600,6 +591,16 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\EEPROMDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\EmuNVNet.cpp" />
+    <ClCompile Include="..\..\src\devices\PCIBus.cpp" />
+    <ClCompile Include="..\..\src\devices\PCIDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\SMBus.cpp" />
+    <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp" />
+    <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
+    <ClCompile Include="..\..\src\devices\Xbox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="subhook.vcxproj">
