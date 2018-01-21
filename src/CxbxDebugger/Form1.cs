@@ -647,7 +647,7 @@ namespace CxbxDebugger
                 ++i;
 
                 if (i > 0 && (i % 16) == 0)
-                    hexData += "\n";
+                    hexData += "\r\n";
             }
 
             textBox1.Text = hexData;
@@ -667,20 +667,24 @@ namespace CxbxDebugger
 
                 if (ptr == IntPtr.Zero)
                     return;
-                
-                byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(ptr, 32);
+
+                // Read preceeding bytes for more context
+                IntPtr OffsetAddr = new IntPtr((uint)ptr - 16);
+
+                byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(OffsetAddr, 64);
 
                 string disassembly = "";
 
                 using (Capstone cs = Capstone.CreateEngine())
                 {
-                    cs.DisassembleIt(data, (ulong)ptr, delegate (CapstoneInstruction Instruction)
+                    cs.DisassembleIt(data, (ulong)OffsetAddr, delegate (CapstoneInstruction Instruction)
                     {
-                        disassembly += string.Format("{0:x8} {1}", Instruction.Address, Instruction.Disassembly) + "\r\n";
+                        string Cursor = (Instruction.Address == (uint)ptr) ? "> " : "  ";
+                        disassembly += string.Format("{0}{1:x8} {2}", Cursor, Instruction.Address, Instruction.Disassembly) + "\r\n";
                     });
                 }
-
-                textBox1.Text = disassembly;
+                
+                textBox3.Text = disassembly;
             }
         }
     }
