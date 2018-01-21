@@ -34,7 +34,7 @@
 // ******************************************************************
 #pragma once
 
-#include "../../CxbxKrnl/PCIDevice.h" // For PCIDevice
+#include "devices\PCIDevice.h" // For PCIDevice
 
 #define NV2A_ADDR  0xFD000000
 #define NV2A_SIZE             0x01000000

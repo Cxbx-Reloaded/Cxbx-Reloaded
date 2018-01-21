@@ -48,9 +48,10 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuKrnl.h"
+#include "CxbxKrnl\CxbxKrnl.h"
+#include "CxbxKrnl\Emu.h"
+#include "CxbxKrnl\EmuKrnl.h"
+
 #include "EmuNVNet.h"
 
 // NVNET Register Definitions

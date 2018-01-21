@@ -51,7 +51,6 @@ namespace xboxkrnl
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnl.h"
 #include "EmuShared.h"
-#include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
@@ -63,8 +62,9 @@ namespace xboxkrnl
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
-#include "Xbox.h" // For InitXboxHardware()
-#include "EEPROMDevice.h" // For g_EEPROM
+#include "devices\EEPROMDevice.h" // For g_EEPROM
+#include "devices\video\EmuNV2A.h" // For InitOpenGLContext
+#include "devices\Xbox.h" // For InitXboxHardware()
 
 /* prevent name collisions */
 namespace NtDll
