@@ -131,18 +131,35 @@ class WndMain : public Wnd
 		// ******************************************************************
 		void CrashMonitor();
 
-        // ******************************************************************
-        // * drawing information
-        // ******************************************************************
-        HDC         m_BackDC;
-        HDC         m_LogoDC;
+		// ******************************************************************
+		// * draw Xbox LED bitmap
+		// ******************************************************************
+		void DrawLedBitmap(HWND hwnd, bool boolbDefault);
+
+		// ******************************************************************
+		// * drawing information
+		// ******************************************************************
+		HDC         m_BackDC;
+		HDC         m_LogoDC;
 		HDC         m_GameLogoDC;
-        HBITMAP     m_OrigBmp;
-        HBITMAP     m_OrigLogo;
+		HDC         m_LedDC;
+		HBITMAP     m_OrigBmp;
+		HBITMAP     m_OrigLogo;
 		HBITMAP     m_OrigGameLogo;
-        HBITMAP     m_BackBmp;
-        HBITMAP     m_LogoBmp;
+		HBITMAP     m_OriLed;
+		HBITMAP     m_BackBmp;
+		HBITMAP     m_LogoBmp;
 		HBITMAP		m_GameLogoBMP;
+		HBITMAP     m_LedBmp;
+		HBRUSH      m_BrushBlack;
+		HBRUSH      m_BrushRed;
+		HBRUSH      m_BrushGreen;
+		HBRUSH      m_BrushOrange;
+		HPEN        m_PenBlack;
+		HPEN        m_PenRed;
+		HPEN        m_PenGreen;
+		HPEN        m_PenOrange;
+		int         m_xBmp, m_yBmp;
 
         // ******************************************************************
         // * Xbe objects

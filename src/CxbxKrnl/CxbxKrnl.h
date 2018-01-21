@@ -221,7 +221,7 @@ extern Xbe *CxbxKrnl_Xbe;
 /*! parent window handle */
 extern HWND CxbxKrnl_hEmuParent;
 extern DebugMode CxbxKrnl_DebugMode;
-extern char* CxbxKrnl_DebugFileName;
+extern std::string CxbxKrnl_DebugFileName;
 
 /*! file paths */
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
@@ -231,5 +231,8 @@ extern char szFilePath_EEPROM_bin[MAX_PATH];
 #ifdef __cplusplus
 }
 #endif
+
+// Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+extern std::string CxbxGetLastErrorString(char * lpszFunction);
 
 #endif

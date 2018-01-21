@@ -66,7 +66,6 @@ namespace xboxkrnl
 
 #include "Xbox.h" // For InitXboxHardware()
 #include "EEPROMDevice.h" // For g_EEPROM
-#include "LED.h" // For LED::Sequence
 
 /* prevent name collisions */
 namespace NtDll
@@ -84,7 +83,7 @@ Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 
 HWND CxbxKrnl_hEmuParent = NULL;
 DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
-char* CxbxKrnl_DebugFileName = NULL;
+std::string CxbxKrnl_DebugFileName = "";
 Xbe::Certificate *g_pCertificate = NULL;
 
 /*! thread handles */
@@ -534,7 +533,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// Get KernelDebugFileName :
-	std::string DebugFileName;
+	std::string DebugFileName = "";
 	if (argc > 4) {
 		DebugFileName = argv[5];
 	}
@@ -651,6 +650,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	CxbxRestorePersistentMemoryRegions();
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -686,8 +686,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// Initialize the Chihiro/Debug - specific memory ranges
 			g_VMManager.InitializeChihiroDebug();
 		}
-
-		CxbxRestorePersistentMemoryRegions();
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -797,12 +795,6 @@ void LoadXboxKeys(std::string path)
 
 	// If we didn't already exit the function, keys.bin could not be loaded
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
-}
-
-void SetLEDSequence(LED::Sequence aLEDSequence)
-{
-	// TODO : Move to best suited location & implement
-	// See http://xboxdevwiki.net/PIC#The_LED
 }
 
 __declspec(noreturn) void CxbxKrnlInit
@@ -997,13 +989,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		}
 	}
 
-	// duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
-	{
-		HANDLE hDupHandle = NULL;
-
-		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-		CxbxKrnlRegisterThread(hDupHandle);
-	}
+	CxbxKrnlRegisterThread(GetCurrentThread());
 
 	// Clear critical section list
 	//extern void InitializeSectionStructures(void); 
@@ -1130,7 +1116,7 @@ void CxbxRestoreLaunchDataPage()
 
 	if (LaunchDataPAddr)
 	{
-		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr;
+		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)(CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr);
 		// Mark the launch page as allocated to prevent other allocations from overwriting it
 		xboxkrnl::MmAllocateContiguousMemoryEx(PAGE_SIZE, LaunchDataPAddr, LaunchDataPAddr + PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
 		LaunchDataPAddr = NULL;
@@ -1187,6 +1173,19 @@ __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
 void CxbxKrnlRegisterThread(HANDLE hThread)
 {
+	// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+	{
+		HANDLE hDupHandle = NULL;
+
+		if (DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+			hThread = hDupHandle; // Thread handle was duplicated, continue registration with the duplicate
+		}
+		else {
+			auto message = CxbxGetLastErrorString("DuplicateHandle");
+			EmuWarning(message.c_str());
+		}
+	}
+
     int v=0;
 
     for(v=0;v<MAXIMUM_XBOX_THREADS;v++)

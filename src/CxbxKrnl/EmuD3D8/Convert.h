@@ -36,7 +36,7 @@
 
 #include "CxbxKrnl.h"
 
-#define OLD_COLOR_CONVERSION
+//#define OLD_COLOR_CONVERSION
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
@@ -57,6 +57,8 @@ extern D3DCOLOR DecodeUInt32ToColor(const ComponentEncodingInfo * encoding, cons
 typedef void(*FormatToARGBRow)(const uint8* src, uint8* dst_argb, int width);
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(X_D3DFORMAT Format);
+
+bool EmuXBFormatCanBeConvertedToARGB(X_D3DFORMAT Format);
 
 bool EmuXBFormatRequiresConversionToARGB(X_D3DFORMAT Format);
 

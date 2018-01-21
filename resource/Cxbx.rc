@@ -163,6 +163,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&About",                      ID_HELP_ABOUT
     END
+	MENUITEM "LED",						ID_LED
 END
 
 

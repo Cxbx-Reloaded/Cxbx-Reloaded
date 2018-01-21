@@ -42,12 +42,14 @@
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
+#include <multimon.h>
 
 #include <io.h>
 
 #include <sstream> // for std::stringstream
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
+#define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 #define STBI_ONLY_JPEG
 #define STBI_NO_LINEAR
 #define STB_IMAGE_IMPLEMENTATION
@@ -84,6 +86,7 @@ void ClearHLECache()
 }
 
 #define TIMERID_FPS 0
+#define TIMERID_LED 1
 
 WndMain::WndMain(HINSTANCE x_hInstance) :
 	Wnd(x_hInstance),
@@ -366,6 +369,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
+				// create Xbox LED bitmap
+				{
+					m_xBmp = GetSystemMetrics(SM_CXMENUCHECK);
+					m_yBmp = GetSystemMetrics(SM_CYMENUCHECK);
+					m_LedDC = CreateCompatibleDC(hDC);
+					m_LedBmp = CreateCompatibleBitmap(hDC, m_xBmp, m_yBmp);
+					m_BrushBlack = CreateSolidBrush(RGB(0, 0, 0));
+					m_BrushRed = CreateSolidBrush(RGB(255, 0, 0));
+					m_BrushGreen = CreateSolidBrush(RGB(0, 255, 0));
+					m_BrushOrange = CreateSolidBrush(RGB(255, 165, 0));
+					m_PenBlack = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+					m_PenRed = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+					m_PenGreen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+					m_PenOrange = CreatePen(PS_SOLID, 1, RGB(255, 165, 0));
+					DrawLedBitmap(hwnd, true);
+				}
+
                 // decompress jpeg, convert to bitmap resource
                 {
                     HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG");
@@ -450,9 +470,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					if (m_hwndChild == NULL) {
 						float fps = 0;
 						float mspf = 0;
+						bool LedHasChanged = false;
+						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
 						g_EmuShared->SetCurrentMSpF(&mspf);
 						g_EmuShared->SetCurrentFPS(&fps);
+						g_EmuShared->SetLedStatus(&LedHasChanged);
+						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
+						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
 						UpdateCaption();
 						RefreshMenus();
@@ -469,8 +494,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
 					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
 						KillTimer(hwnd, TIMERID_FPS);
+						KillTimer(hwnd, TIMERID_LED);
 						m_hwndChild = NULL;
 						StopEmulation();
+						DrawLedBitmap(hwnd, true);
 					}
                 }
                 break;
@@ -485,6 +512,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case TIMERID_FPS:
 				{
 					UpdateCaption();
+				}
+				break;
+
+				case TIMERID_LED:
+				{
+					DrawLedBitmap(hwnd, false);
 				}
 				break;
 			}
@@ -1256,27 +1289,49 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             FreeConsole();
 
-            HDC hDC = GetDC(hwnd);
+			HDC hDC = GetDC(hwnd);
 
-            SelectObject(m_LogoDC, m_OrigLogo);
+			SelectObject(m_LogoDC, m_OrigLogo);
 
-            SelectObject(m_BackDC, m_OrigBmp);
+			SelectObject(m_BackDC, m_OrigBmp);
 
 			SelectObject(m_GameLogoDC, m_OrigGameLogo);
 
-            DeleteObject(m_LogoDC);
+			SelectObject(m_LedDC, m_OriLed);
 
-            DeleteObject(m_BackDC);
+			DeleteObject(m_LogoDC);
+
+			DeleteObject(m_BackDC);
 
 			DeleteObject(m_GameLogoDC);
 
-            DeleteObject(m_LogoBmp);
+			DeleteObject(m_LedDC);
 
-            DeleteObject(m_BackBmp);
+			DeleteObject(m_LogoBmp);
+
+			DeleteObject(m_BackBmp);
 
 			DeleteObject(m_GameLogoBMP);
 
-            ReleaseDC(hwnd, hDC);
+			DeleteObject(m_LedBmp);
+
+			DeleteObject(m_BrushBlack);
+
+			DeleteObject(m_BrushRed);
+
+			DeleteObject(m_BrushGreen);
+
+			DeleteObject(m_BrushOrange);
+
+			DeleteObject(m_PenBlack);
+
+			DeleteObject(m_PenRed);
+
+			DeleteObject(m_PenGreen);
+
+			DeleteObject(m_PenOrange);
+
+			ReleaseDC(hwnd, hDC);
 
             delete m_Xbe;
 
@@ -2065,8 +2120,8 @@ void WndMain::CrashMonitor()
 		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
 		{
 			KillTimer(m_hwnd, TIMERID_FPS);
-			//KillTimer(m_hwnd, 2); for the LED
-			//DrawDefaultLedBitmap(hwnd); for the LED
+			KillTimer(m_hwnd, TIMERID_LED);
+			DrawLedBitmap(m_hwnd, true);
 			m_hwndChild = NULL;
 			m_bIsStarted = false;
 			UpdateCaption();
@@ -2080,6 +2135,96 @@ void WndMain::CrashMonitor()
 	CloseHandle(hCrashMutex);
 	bMultiXbe = false;
 	g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+
+	return;
+}
+
+// draw Xbox LED bitmap
+void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
+{
+	HMENU hMenu = GetMenu(hwnd);
+	if (bdefault) // draw default black bitmap
+	{
+		SelectObject(m_LedDC, m_BrushBlack);
+		SelectObject(m_LedDC, m_PenBlack);
+		m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
+		Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
+		m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof(mii);
+		mii.fMask = MIIM_BITMAP | MIIM_FTYPE;
+		mii.fType = MFT_RIGHTJUSTIFY;
+		mii.hbmpItem = m_LedBmp;
+		SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
+		DrawMenuBar(hwnd);
+	}
+	else // draw colored bitmap
+	{
+		static int LedSequenceOffset = 0;
+		bool bLedHasChanged;
+		int LedSequence[4];
+
+		g_EmuShared->GetLedStatus(&bLedHasChanged);
+		g_EmuShared->GetLedSequence(LedSequence);
+		if (bLedHasChanged)
+		{
+			LedSequenceOffset = 0;
+			bLedHasChanged = false;
+			g_EmuShared->SetLedStatus(&bLedHasChanged);
+		}
+
+		m_OriLed = (HBITMAP)SelectObject(m_LedDC, m_LedBmp);
+		Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof(mii);
+		mii.fMask = MIIM_BITMAP | MIIM_FTYPE;
+		mii.fType = MFT_RIGHTJUSTIFY;
+		mii.hbmpItem = m_LedBmp;
+
+		switch (LedSequence[LedSequenceOffset])
+		{
+		case XBOX_LED_COLOUR_RED:
+		{
+			SelectObject(m_LedDC, m_BrushRed);
+			SelectObject(m_LedDC, m_PenRed);
+		}
+		break;
+
+		case XBOX_LED_COLOUR_GREEN:
+		{
+			SelectObject(m_LedDC, m_BrushGreen);
+			SelectObject(m_LedDC, m_PenGreen);
+		}
+		break;
+
+		case XBOX_LED_COLOUR_ORANGE:
+		{
+			SelectObject(m_LedDC, m_BrushOrange);
+			SelectObject(m_LedDC, m_PenOrange);
+		}
+		break;
+
+		case XBOX_LED_COLOUR_OFF:
+		{
+			SelectObject(m_LedDC, m_BrushBlack);
+			SelectObject(m_LedDC, m_PenBlack);
+		}
+		break;
+		}
+
+		m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
+		if (LedSequenceOffset == 3)
+		{
+			LedSequenceOffset = 0;
+		}
+		else
+		{
+			++LedSequenceOffset;
+		}
+		SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
+
+		DrawMenuBar(hwnd);
+	}
 
 	return;
 }

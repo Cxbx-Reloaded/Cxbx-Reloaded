@@ -35,14 +35,43 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#include "SMCDevice.h" // For SMCDevice
-#include "LED.h"
-
 /* prevent name collisions */
 namespace xboxkrnl
 {
 #include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 };
+
+#include "EmuShared.h"
+#include "SMCDevice.h" // For SMCDevice
+#include "LED.h"
+
+void SetLEDSequence(LED::Sequence aLEDSequence)
+{
+	// See http://xboxdevwiki.net/PIC#The_LED
+	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
+
+	bool bLedHasChanged = true;
+
+	if (aLEDSequence == LED::GREEN) // Automatic solid green color
+	{
+		int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
+
+		g_EmuShared->SetLedStatus(&bLedHasChanged);
+		g_EmuShared->SetLedSequence(LedSequence);
+	}
+	else // Draw the color represented by the sequence obtained
+	{
+		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
+
+		LedSequence[0] = ((aLEDSequence >> 3) & 1) | ((aLEDSequence >> 6) & 2);
+		LedSequence[1] = ((aLEDSequence >> 2) & 1) | ((aLEDSequence >> 5) & 2);
+		LedSequence[2] = ((aLEDSequence >> 1) & 1) | ((aLEDSequence >> 4) & 2);
+		LedSequence[3] = (aLEDSequence & 1) | ((aLEDSequence >> 3) & 2);
+
+		g_EmuShared->SetLedStatus(&bLedHasChanged);
+		g_EmuShared->SetLedSequence(LedSequence);
+	}
+}
 
 /* SMCDevice */
 
@@ -153,7 +182,11 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// TODO : Implement the above, SMB_GLOBAL_STATUS should probably get the GS_PRERR_STS flag. But how?
 		return;
 		}
-	// #define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
+	case SMC_COMMAND_LED_SEQUENCE: // 0x08 LED flashing sequence
+		// ergo720: if WriteWord is true the Xbox still sets the LED correctly but it errors with ntstatus
+		// STATUS_IO_DEVICE_ERROR, however WriteWord is not accessible from here
+		// The LED flashing sequence is stored in the buffer of the SMCDevice class, so there's nothing to do here
+		break;
 	//0x0C	tray eject(0 = eject; 1 = load)
 	//0x0E	another scratch register ? seems like an error code.
 	//0x19	reset on eject(0 = enable; 1 = disable)
