@@ -539,7 +539,7 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		// Note : GE_HOST_STC triggers ExecuteTransaction, which writes the command to the specified address
 
 	// Check if the command was executed successfully
-	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
 		Status = STATUS_UNSUCCESSFUL;
 	}
 

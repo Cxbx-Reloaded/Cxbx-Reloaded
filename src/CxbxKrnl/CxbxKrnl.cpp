@@ -789,6 +789,7 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 {
 	// TODO : Move to best suited location & implement
 	// See http://xboxdevwiki.net/PIC#The_LED
+	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
 }
 
 __declspec(noreturn) void CxbxKrnlInit

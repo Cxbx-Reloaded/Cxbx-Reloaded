@@ -36,7 +36,7 @@
 
 #include "CxbxKrnl.h"
 
-#define OLD_COLOR_CONVERSION
+//#define OLD_COLOR_CONVERSION
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
