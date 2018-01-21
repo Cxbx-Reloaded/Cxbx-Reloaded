@@ -52,7 +52,7 @@
 #include "HLEIntercept.h" // for bLLE_GPU
 
 #include <assert.h>
-#include "PCIBus.h"
+#include "devices\PCIBus.h"
 
 //
 // Read & write handlers handlers for I/O

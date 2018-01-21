@@ -51,11 +51,11 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
-#include "SMBus.h" // For g_SMBus
-#include "EmuEEPROM.h" // For EEPROM
-#include "SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
+#include "Common\EmuEEPROM.h" // For EEPROM
+#include "devices\SMBus.h" // For g_SMBus
+#include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 
 #include <algorithm> // for std::replace
 #include <locale>
