@@ -41,6 +41,7 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 };
 
+#include "CxbxKrnl.h"
 #include "EmuShared.h"
 #include "SMCDevice.h" // For SMCDevice
 #include "LED.h"
@@ -164,7 +165,13 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		if (value == 0) // Note : MAME Xbox/Chihiro driver doesn't check for zero
 			m_PICVersionStringIndex = 0;
 		return;
-	//0x02	reset and power off control
+	case SMC_COMMAND_RESET: //0x02	reset and power off control
+		// See http://xboxdevwiki.net/PIC#Reset_and_Power_Off
+		switch (value) {
+		case SMC_RESET_ASSERT_RESET: return; //TODO
+		case SMC_RESET_ASSERT_POWERCYCLE: return; //TODO
+		case SMC_RESET_ASSERT_SHUTDOWN: CxbxKrnlShutDown(); return; // Power off, terminating the emulation
+		}
 	//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
 	//0x06	power fan speed(0..~50)
 	case SMC_COMMAND_LED_MODE: // 0x07 LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
@@ -175,9 +182,9 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L572
 		//
 		// HalWriteSMBusValue(0x20, 0x08, false, x) and then HalWriteSMBusValue(0x20, 0x07, false, y > 1)
-		// will cause the led to be solid green, with the next pair of 
+		// will cause the led to be solid green, while the next pair of 
 		// HalWriteSMBusValue with arbitrary y will cause the led to assume the color of the sequence x
-		// and afterwards this will repeat with whatever y; ntstatus are always 0
+		// and afterwards this will repeat with whatever y; ntstatus is always 0
 		//
 		// TODO : Implement the above, SMB_GLOBAL_STATUS should probably get the GS_PRERR_STS flag. But how?
 		return;

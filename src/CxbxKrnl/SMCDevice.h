@@ -74,7 +74,7 @@
 //
 //Command	Description
 //0x01	PIC version string counter reset
-//0x02	reset and power off control
+#define SMC_COMMAND_RESET 0x02	 //0x02	reset and power off control
 //0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
 //0x06	power fan speed(0..~50)
 #define SMC_COMMAND_LED_MODE 0x07	// LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
@@ -86,6 +86,13 @@
 //0x1B	scratch register for the original kernel
 //0x20	response to PIC challenge(written first)
 //0x21	response to PIC challenge(written second)
+
+//
+// Register values for SMC_COMMAND_RESET
+//
+#define SMC_RESET_ASSERT_RESET			0x01
+#define SMC_RESET_ASSERT_POWERCYCLE		0x40
+#define SMC_RESET_ASSERT_SHUTDOWN		0x80
 
 typedef enum { // TODO : Move to it's own file
 	Revision1_0,

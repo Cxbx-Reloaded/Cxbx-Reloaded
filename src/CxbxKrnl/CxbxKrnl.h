@@ -183,6 +183,9 @@ void CxbxKrnlSuspend();
 /*! resume emulation */
 void CxbxKrnlResume();
 
+/*! terminate gracefully the emulation */
+void CxbxKrnlShutDown();
+
 /*! terminate the calling thread */
 __declspec(noreturn) void CxbxKrnlTerminateThread();
 

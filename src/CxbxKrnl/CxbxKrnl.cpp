@@ -1264,6 +1264,15 @@ void CxbxKrnlResume()
     g_bEmuSuspended = false;
 }
 
+void CxbxKrnlShutDown()
+{
+	if (CxbxKrnl_hEmuParent != NULL)
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+	EmuShared::Cleanup();
+	TerminateProcess(g_CurrentProcessHandle, 0);
+}
+
 __declspec(noreturn) void CxbxKrnlTerminateThread()
 {
     TerminateThread(GetCurrentThread(), 0);
