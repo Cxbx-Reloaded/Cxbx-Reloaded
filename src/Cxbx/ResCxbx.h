@@ -103,6 +103,7 @@
 #define ID_SETTINGS_XINPUT              40086
 #define ID_SETTINGS_HACKS               40087
 #define ID_HACKS_DISABLEPIXELSHADERS    40088
+#define ID_LED                          40089
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

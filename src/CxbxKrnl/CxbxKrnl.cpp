@@ -65,7 +65,6 @@ namespace xboxkrnl
 
 #include "Xbox.h" // For InitXboxHardware()
 #include "EEPROMDevice.h" // For g_EEPROM
-#include "LED.h" // For LED::Sequence
 
 /* prevent name collisions */
 namespace NtDll
@@ -783,13 +782,6 @@ void LoadXboxKeys(std::string path)
 
 	// If we didn't already exit the function, keys.bin could not be loaded
 	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
-}
-
-void SetLEDSequence(LED::Sequence aLEDSequence)
-{
-	// TODO : Move to best suited location & implement
-	// See http://xboxdevwiki.net/PIC#The_LED
-	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
 }
 
 __declspec(noreturn) void CxbxKrnlInit
