@@ -182,7 +182,11 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// TODO : Implement the above, SMB_GLOBAL_STATUS should probably get the GS_PRERR_STS flag. But how?
 		return;
 		}
-	// #define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
+	case SMC_COMMAND_LED_SEQUENCE: // 0x08 LED flashing sequence
+		// ergo720: if WriteWord is true the Xbox still sets the LED correctly but it errors with ntstatus
+		// STATUS_IO_DEVICE_ERROR, however WriteWord is not accessible from here
+		// The LED flashing sequence is stored in the buffer of the SMCDevice class, so there's nothing to do here
+		break;
 	//0x0C	tray eject(0 = eject; 1 = load)
 	//0x0E	another scratch register ? seems like an error code.
 	//0x19	reset on eject(0 = enable; 1 = disable)
