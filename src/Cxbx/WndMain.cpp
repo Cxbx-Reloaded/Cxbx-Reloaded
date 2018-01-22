@@ -47,6 +47,8 @@
 #include <io.h>
 
 #include <sstream> // for std::stringstream
+#include <fstream>
+#include <iostream>
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
@@ -1006,12 +1008,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-                        bool success = m_Xbe->DumpInformationToFile(ofn.lpstrFile);
+                        std::string Xbe_info = m_Xbe->DumpInformation();
                         if (m_Xbe->HasError()) {
                             MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                         }
                         else {
-                            if(success) {
+                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
+                            if(Xbe_dump_file.is_open()) {
+                                Xbe_dump_file << Xbe_info;
+                                Xbe_dump_file.close();
                                 char buffer[255];
                                 sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
                                 printf("WndMain: %s\n", buffer);
@@ -1026,24 +1031,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-			{
-				m_Xbe->DumpInformationToConsole();
-
-				if (m_Xbe->HasError())
-				{
-					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-				}
-				else
-				{
-					char buffer[255];
-
-					sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
-
-					printf("WndMain: %s\n", buffer);
-				}
-			}
-			break;
+            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+            {
+                std::string Xbe_info = m_Xbe->DumpInformation();
+                if (m_Xbe->HasError()) {
+                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                }
+                else {
+                    std::cout << Xbe_info;
+                    char buffer[255];
+                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+                    printf("WndMain: %s\n", buffer);
+                }
+            }
+            break;
 
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);

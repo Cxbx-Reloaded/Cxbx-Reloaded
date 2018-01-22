@@ -40,8 +40,6 @@
 #include <cstdlib>
 #include <locale>
 #include <codecvt>
-#include <fstream>
-#include <iostream>
 #include <sstream>
 #include <iomanip>
 
@@ -550,30 +548,13 @@ static char *BetterTime(uint32 x_timeDate)
     return x_ctime;
 }
 
-bool Xbe::DumpInformationToFile(std::string out_filename)
+std::string Xbe::DumpInformation()
 {
     if(HasError()) {
-        return false;
+        return "ERROR";
     }
-
-    bool success = false;
     XbePrinter printer(this);
-    std::ofstream out_file(out_filename);
-    if(out_file.is_open()) {
-        out_file << printer.GenXbeInfo();
-        out_file.close();
-        success = true;
-    }
-    return success;
-}
-
-void Xbe::DumpInformationToConsole()
-{
-    if(HasError())
-        return;
-
-    XbePrinter printer(this);
-    std::cout << printer.GenXbeInfo();
+    return printer.GenXbeInfo();
 }
 
 // import logo bitmap from raw monochrome data

@@ -62,8 +62,7 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-        bool DumpInformationToFile(std::string);
-        void DumpInformationToConsole();
+        std::string DumpInformation();
 
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
