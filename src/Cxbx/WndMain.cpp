@@ -47,6 +47,8 @@
 #include <io.h>
 
 #include <sstream> // for std::stringstream
+#include <fstream>
+#include <iostream>
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
@@ -1006,56 +1008,43 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-						FILE *TxtFile = fopen(ofn.lpstrFile, "wt");
-
-						// verify file was opened
-						if (TxtFile == 0)
-							MessageBox(m_hwnd, "Could not open text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-						else
-						{
-							m_Xbe->DumpInformation(TxtFile);
-
-							fclose(TxtFile);
-
-							if (m_Xbe->HasError())
-							{
-								MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-							}
-							else
-							{
-								char buffer[255];
-
-								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-								printf("WndMain: %s\n", buffer);
-
-								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-							}
-						}
+                        std::string Xbe_info = m_Xbe->DumpInformation();
+                        if (m_Xbe->HasError()) {
+                            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                        }
+                        else {
+                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
+                            if(Xbe_dump_file.is_open()) {
+                                Xbe_dump_file << Xbe_info;
+                                Xbe_dump_file.close();
+                                char buffer[255];
+                                sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+                                printf("WndMain: %s\n", buffer);
+                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+                            }
+                            else {
+                                MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                            }
+                        }
 					}
 				}
 			}
 			break;
 
-			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-			{
-				// dump xbe information to debug console
-				m_Xbe->DumpInformation(stdout);
-
-				if (m_Xbe->HasError())
-				{
-					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-				}
-				else
-				{
-					char buffer[255];
-
-					sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-
-					printf("WndMain: %s\n", buffer);
-				}
-			}
-			break;
+            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+            {
+                std::string Xbe_info = m_Xbe->DumpInformation();
+                if (m_Xbe->HasError()) {
+                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                }
+                else {
+                    std::cout << Xbe_info;
+                    char buffer[255];
+                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+                    printf("WndMain: %s\n", buffer);
+                }
+            }
+            break;
 
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);
