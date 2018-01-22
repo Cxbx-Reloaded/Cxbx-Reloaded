@@ -119,6 +119,7 @@ public:
 	void WriteByte(uint8_t command, uint8_t value);
 	void WriteWord(uint8_t command, uint16_t value);
 	void WriteBlock(uint8_t command, uint8_t* data, int length);
+
 private:
 	HardwareModel m_HardwareModel;
 	int m_PICVersionStringIndex = 0;

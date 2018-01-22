@@ -209,3 +209,4 @@ void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
 {
 	// TODO
 }
+

@@ -70,6 +70,11 @@ namespace NtDll
 static DWORD EmuSoftwareInterrupRequestRegister = 0;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
+// variables used by the SMC to know a reset / shutdown is pending
+uint8_t ResetOrShutdownCommandCode = 0;
+uint32_t ResetOrShutdownDataValue = 0;
+
+
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
 // ******************************************************************
@@ -684,9 +689,11 @@ XBSYSAPI EXPORTNUM(358) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalIsResetOrShutdownPe
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN ret = FALSE;
 
-	RETURN(FALSE);
+	if (ResetOrShutdownCommandCode != 0) { ret = TRUE; }
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -699,7 +706,9 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 {
 	LOG_FUNC();
 	
-	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_RESET, 0, SMC_RESET_ASSERT_SHUTDOWN);
+	ResetOrShutdownCommandCode = SMC_COMMAND_RESET;
+	ResetOrShutdownDataValue = SMC_RESET_ASSERT_SHUTDOWN;
+	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
 
 	RETURN(S_OK);
 }
