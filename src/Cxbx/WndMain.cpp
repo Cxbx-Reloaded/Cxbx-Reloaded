@@ -38,6 +38,7 @@
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
+#include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
@@ -1006,7 +1007,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-                        std::string Xbe_info = m_Xbe->DumpInformation();
+                        std::string Xbe_info = DumpInformation(m_Xbe);
                         if (m_Xbe->HasError()) {
                             MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                         }
@@ -1031,7 +1032,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
             {
-                std::string Xbe_info = m_Xbe->DumpInformation();
+                std::string Xbe_info = DumpInformation(m_Xbe);
                 if (m_Xbe->HasError()) {
                     MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                 }

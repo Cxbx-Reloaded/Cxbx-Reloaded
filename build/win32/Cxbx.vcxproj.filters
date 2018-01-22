@@ -229,6 +229,9 @@
     <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\XbePrinter.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -449,6 +452,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\vga.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\XbePrinter.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
