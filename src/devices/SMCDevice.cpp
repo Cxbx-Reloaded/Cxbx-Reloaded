@@ -52,7 +52,6 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 	// See http://xboxdevwiki.net/PIC#The_LED
 	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
 
-	bool bLedHasChanged = true;
 	int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 
 	LedSequence[0] = ((aLEDSequence >> 6) & 2) | ((aLEDSequence >> 3) & 1);
@@ -60,7 +59,6 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 	LedSequence[2] = ((aLEDSequence >> 4) & 2) | ((aLEDSequence >> 1) & 1);
 	LedSequence[3] = ((aLEDSequence >> 3) & 2) | ((aLEDSequence >> 0) & 1);
 
-	g_EmuShared->SetLedStatus(&bLedHasChanged);
 	g_EmuShared->SetLedSequence(LedSequence);
 }
 
