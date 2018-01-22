@@ -684,9 +684,14 @@ XBSYSAPI EXPORTNUM(358) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalIsResetOrShutdownPe
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN ret = FALSE;
+	uint8_t CommandCode;
+	uint32_t DataValue;
+	g_SMC->GetResetOrShutdownCode(&CommandCode, &DataValue);
 
-	RETURN(FALSE);
+	if (CommandCode != 0) { ret = TRUE; }
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -699,7 +704,10 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 {
 	LOG_FUNC();
 	
-	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_RESET, 0, SMC_RESET_ASSERT_SHUTDOWN);
+	uint8_t CommandCode = SMC_COMMAND_RESET;
+	uint32_t DataValue = SMC_RESET_ASSERT_SHUTDOWN;
+	g_SMC->SetResetOrShutdownCode(&CommandCode, &DataValue);
+	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, CommandCode, 0, DataValue);
 
 	RETURN(S_OK);
 }

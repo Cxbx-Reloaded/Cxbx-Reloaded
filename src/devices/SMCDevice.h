@@ -36,6 +36,7 @@
 #pragma once
 
 #include "SMDevice.h"
+#include <atomic>
 
 // This https://upload.wikimedia.org/wikipedia/commons/9/94/Xbox-Motherboard-FR.jpg shows :
 // PIC16LC63A-04/SO
@@ -119,10 +120,15 @@ public:
 	void WriteByte(uint8_t command, uint8_t value);
 	void WriteWord(uint8_t command, uint16_t value);
 	void WriteBlock(uint8_t command, uint8_t* data, int length);
+	void GetResetOrShutdownCode(uint8_t* CommandCode, uint32_t* DataValue);
+	void SetResetOrShutdownCode(uint8_t* CommandCode, uint32_t* DataValue);
 private:
 	HardwareModel m_HardwareModel;
 	int m_PICVersionStringIndex = 0;
 	uint8_t buffer[256] = {};
+	// variables used by the SMC to know a reset / shutdown is pending
+	std::atomic<uint8_t> ResetOrShutdownCommandCode;
+	std::atomic<uint32_t> ResetOrShutdownDataValue;
 };
 
 extern SMCDevice* g_SMC;

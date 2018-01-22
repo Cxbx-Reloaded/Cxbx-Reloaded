@@ -75,6 +75,8 @@ void SMCDevice::Init()
 	buffer[SMC_COMMAND_AV_PACK] = AV_PACK_HDTV; // see http://xboxdevwiki.net/PIC#The_AV_Pack
 	buffer[SMC_COMMAND_LED_SEQUENCE] = LED::GREEN;
 	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
+	ResetOrShutdownCommandCode.store(0);
+	ResetOrShutdownDataValue.store(0);
 }
 
 void SMCDevice::Reset()
@@ -208,4 +210,16 @@ void SMCDevice::WriteWord(uint8_t command, uint16_t value)
 void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
 {
 	// TODO
+}
+
+void SMCDevice::GetResetOrShutdownCode(uint8_t* CommandCode, uint32_t* DataValue)
+{
+	*CommandCode = ResetOrShutdownCommandCode.load();
+	*DataValue = ResetOrShutdownDataValue.load();
+}
+
+void SMCDevice::SetResetOrShutdownCode(uint8_t* CommandCode, uint32_t* DataValue)
+{
+	ResetOrShutdownCommandCode.store(*CommandCode);
+	ResetOrShutdownDataValue.store(*DataValue);
 }
