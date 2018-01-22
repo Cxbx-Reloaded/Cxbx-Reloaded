@@ -192,6 +192,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
+    <ClInclude Include="..\..\src\Common\XbePrinter.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
     <ClInclude Include="..\..\import\stb\stb_image.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
@@ -362,6 +363,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
+    <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />

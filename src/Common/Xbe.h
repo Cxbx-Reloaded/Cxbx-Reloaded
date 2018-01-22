@@ -345,49 +345,6 @@ class Xbe : public Error
 		*m_xprImage;
 };
 
-class XbePrinter
-{
-    public:
-        XbePrinter(Xbe*);
-        std::string GenXbeInfo();
-
-    private:
-        Xbe *Xbe_to_print;
-        Xbe::Header *Xbe_header;
-        Xbe::Certificate *Xbe_certificate;
-
-        std::string GenHexRow(uint08*, const uint08, const uint08);
-        std::string utf8_to_ascii(const wchar_t*);
-        std::string AllowedMediaToString();
-        std::string GameRatingToString();
-
-        std::string GenDumpHeader();
-
-        std::string GenXbeHeaderInfo();
-        std::string GenDigitalSignature();
-        std::string GenGeneralHeaderInfo1();
-        std::string GenInitFlags();
-        std::string GenGeneralHeaderInfo2();
-
-        std::string GenXbeCertificateInfo();
-        std::string GenCertificateHeader();
-        std::string GenAlternateTitleIDs();
-        std::string GenMediaInfo();
-        std::string GenLANKey();
-        std::string GenSignatureKey();
-        std::string GenAlternateSignatureKeys();
-
-        std::string GenSectionInfo();
-        std::string GenSectionHeaders();
-        std::string GenSectionFlags(Xbe::SectionHeader);
-        std::string GenSectionDigest(Xbe::SectionHeader);
-
-        std::string GenLibraryVersions();
-        std::string GenLibraryFlags(Xbe::LibraryVersion);
-
-        std::string GenTLS();
-};
-
 // debug/retail XOR keys
 const uint32 XOR_EP_DEBUG                            = 0x94859D4B; // Entry Point (Debug)
 const uint32 XOR_EP_RETAIL                           = 0xA8FC57AB; // Entry Point (Retail)
