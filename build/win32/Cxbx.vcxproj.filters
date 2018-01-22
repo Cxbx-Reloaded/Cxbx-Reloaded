@@ -216,6 +216,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EEPROMDevice.cpp">
       <Filter>Hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -439,6 +440,7 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
       <Filter>Shared</Filter>
     </ClInclude>
