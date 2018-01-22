@@ -539,9 +539,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5659.inl">
-      <Filter>HLEDatabase\D3D8</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl">
       <Filter>HLEDatabase\D3D8</Filter>
     </None>
