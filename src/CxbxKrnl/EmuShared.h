@@ -146,8 +146,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Xbox LED values Accessors
 		// ******************************************************************
-		void GetLedStatus(bool *value) { Lock(); *value = m_bLedHasChanged; Unlock(); }
-		void SetLedStatus(bool *value) { Lock(); m_bLedHasChanged = *value; Unlock(); }
 		void GetLedSequence(int *value)
 		{
 			Lock();
@@ -189,7 +187,6 @@ class EmuShared : public Mutex
 		float        m_FPS;
 		bool		 m_bMultiXbe;
 		PAddr		 m_LaunchDataPAddress;
-		bool         m_bLedHasChanged;
 		int          m_LedSequence[4];
 };
 

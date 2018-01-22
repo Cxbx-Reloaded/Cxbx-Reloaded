@@ -470,11 +470,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					if (m_hwndChild == NULL) {
 						float fps = 0;
 						float mspf = 0;
-						bool LedHasChanged = false;
 						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
 						g_EmuShared->SetCurrentMSpF(&mspf);
 						g_EmuShared->SetCurrentFPS(&fps);
-						g_EmuShared->SetLedStatus(&LedHasChanged);
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
@@ -2112,25 +2110,10 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		ActiveLEDColor = XBOX_LED_COLOUR_OFF;
 	}
 	else { // draw colored bitmap
-		static int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
+		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
 
-		bool bLedHasChanged;
-
-		g_EmuShared->GetLedStatus(&bLedHasChanged);
-		if (bLedHasChanged) {
-			// To prevent restarting the sequence when identical sequences are set, check if the new sequence is actually different
-			int NewLedSequence[4];
-			g_EmuShared->GetLedSequence(NewLedSequence);
-			if (LedSequence[0] != NewLedSequence[0] || LedSequence[1] != NewLedSequence[1] || LedSequence[2] != NewLedSequence[2] || LedSequence[3] != NewLedSequence[3]) {
-				// Only when the new sequence is different, restart it's cycle
-				g_EmuShared->GetLedSequence(LedSequence);
-				LedSequenceOffset = 0;
-			}
-			// Indicate we've handled the change
-			bLedHasChanged = false;
-			g_EmuShared->SetLedStatus(&bLedHasChanged);
-		}
+		g_EmuShared->GetLedSequence(LedSequence);
 
 		// Select active color and cycle through all 4 phases in the sequence
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
