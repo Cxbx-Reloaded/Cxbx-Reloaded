@@ -689,14 +689,16 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 }
 
 // Map native resource data pointers to the host resource
-std::map <DWORD, XTL::IDirect3DResource8*> g_HostResources;
+std::map <uint64_t, XTL::IDirect3DResource8*> g_HostResources;
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	EmuVerifyResourceIsRegistered(pXboxResource);
+	if (shouldRegister) {
+		EmuVerifyResourceIsRegistered(pXboxResource);
+	}
 
 	if (IsSpecialXboxResource(pXboxResource)) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
 		return nullptr;
@@ -704,9 +706,12 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	auto it = g_HostResources.find(pXboxResource->Data);
+	auto it = g_HostResources.find(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
 	if (it == g_HostResources.end()) {
-		EmuWarning("EmuResource is not a valid pointer!");
+		// Prevent logging a warning when we expect a null result (for example, D3DResource_Release)
+		if (shouldRegister) {
+			EmuWarning("EmuResource is not a valid pointer!");
+		}
 		return nullptr;
 	}
 
@@ -715,12 +720,12 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
 {
-	auto it = g_HostResources.find(pXboxResource->Data);
+	auto it = g_HostResources.find(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
 	if (it != g_HostResources.end()) {
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
-	g_HostResources[pXboxResource->Data] = pHostResource;
+	g_HostResources[((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource] = pHostResource;
 
 }
 
@@ -2047,14 +2052,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 // check if a resource has been registered yet (if not, register it)
 static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 {
-    // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
-    if(pResource->Lock != 0 && pResource->Lock != 0xEEEEEEEE && pResource->Lock != 0xFFFFFFFF)
-        return;
-
-	// Skip resources with unknown size
-	if (pResource->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
-		return;
-
 	// Skip resources without data
 	if (pResource->Data == NULL)
 		return;
@@ -3142,8 +3139,6 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
         CxbxKrnlCleanup("Unable to retrieve back buffer");
 	
 	SetHostSurface(pBackBuffer, pNewHostSurface);
-    // update data pointer
-    pBackBuffer->Data = X_D3DRESOURCE_DATA_BACK_BUFFER;
 	
 	// Increment reference count
 	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
@@ -5925,7 +5920,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
 	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the Release call!
 	DWORD data = pThis->Data;
-	IDirect3DResource8* pHostResource = GetHostResource(pThis);
+	IDirect3DResource8* pHostResource = GetHostResource(pThis, false);
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
 	// If this was a cached renter target or depth surface, clear the cache variable too!
@@ -5945,10 +5940,10 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 			g_RegisteredResources.erase(it);
 		}
 
-		auto resourceIt = g_HostResources.find(data);
+		auto resourceIt = g_HostResources.find(((uint64_t)data << 32) | (DWORD)pThis);
 		if (resourceIt != g_HostResources.end()) {
 			pHostResource->Release();
-			g_HostResources.erase(data);
+			g_HostResources.erase(((uint64_t)data << 32) | (DWORD)pThis);
 		}
 	}
 
