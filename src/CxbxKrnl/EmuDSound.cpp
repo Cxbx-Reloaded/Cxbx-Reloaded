@@ -3370,7 +3370,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
     LPCWAVEFORMATEX*        ppwfxFormat,
     OUT void**              ppMediaObject) //XFileMediaObject, include XMediaObject interface
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3937,7 +3937,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObjectEx)
     HANDLE              hFile,
     OUT void**          ppMediaObject) //XWaveFileMediaObject, include XFileMediaObject and XMediaObject interfaces
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
