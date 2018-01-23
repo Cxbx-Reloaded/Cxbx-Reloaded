@@ -713,6 +713,17 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource)
 	return it->second;
 }
 
+void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
+{
+	auto it = g_HostResources.find(pXboxResource->Data);
+	if (it != g_HostResources.end()) {
+		EmuWarning("SetHostResource: Overwriting an existing host resource");
+	}
+
+	g_HostResources[pXboxResource->Data] = pHostResource;
+
+}
+
 XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
@@ -781,7 +792,7 @@ void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostSurface;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostSurface);
 }
 
 void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
@@ -789,7 +800,7 @@ void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *p
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostTexture;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostTexture);
 }
 
 void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
@@ -797,7 +808,7 @@ void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostCubeTexture;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostCubeTexture);
 }
 
 void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
@@ -805,7 +816,7 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolum
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	g_HostResources[pXboxResource->Data] = (XTL::IDirect3DResource8*)pHostVolumeTexture;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVolumeTexture);
 }
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
@@ -813,7 +824,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	g_HostResources[pXboxResource->Data] = pHostIndexBuffer;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostIndexBuffer);
 }
 
 void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
@@ -821,7 +832,7 @@ void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertex
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	g_HostResources[pXboxResource->Data] = pHostVertexBuffer;
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVertexBuffer);
 }
 
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
@@ -6021,6 +6032,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	}
 
 	// If we freed the last resource, also release the host copy (if it exists!)
+	// TODO: Move this into a FreeHostResource() function;
 	if (uRet == 0 && pHostResource != nullptr) {
 		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
 		if (it != g_RegisteredResources.end()) {
