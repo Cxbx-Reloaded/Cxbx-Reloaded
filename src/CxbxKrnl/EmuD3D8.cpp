@@ -7826,10 +7826,10 @@ void EmuUpdateActiveTextureStages()
 		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
 		if (pBaseTexture == nullptr) {
 			HRESULT hRet = g_pD3DDevice8->SetTexture(i, NULL);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
 			continue;
 		}
 
-		HRESULT hRet;
 		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
 		if (pHostTexture != nullptr) {
 			HRESULT hRet = g_pD3DDevice8->SetTexture(i, pHostTexture);
@@ -10072,7 +10072,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	X_D3DSurface**		ppCubeMapSurface
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
@@ -10107,7 +10107,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 	UINT				Level
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FORWARD("D3DCubeTexture_GetCubeMapSurface");
 
