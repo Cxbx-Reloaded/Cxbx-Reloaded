@@ -4499,101 +4499,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_ARG(pTexture)
 		LOG_FUNC_END;
 
-	IDirect3DBaseTexture8 *pHostBaseTexture = nullptr;
-
     EmuD3DActiveTexture[Stage] = pTexture;
-    if(pTexture != NULL)
-    {
-        if(IsYuvSurfaceOrTexture(pTexture))
-        {
-            //
-            // NOTE: TODO: This is almost a hack! :)
-            //
-			EMUPATCH(D3DDevice_UpdateOverlay)((X_D3DSurface*)pTexture, NULL, NULL, FALSE, 0);
-            
-        }
-        else
-        {			
-			pHostBaseTexture = GetHostBaseTexture(pTexture);
-
-			// Remove old locks before setting
-			/*if(IsXboxResourceLocked(pTexture))
-			{
-				((IDirect3DTexture8*)pHostBaseTexture)->UnlockRect(0);
-				pTexture->Common &= ~X_D3DCOMMON_ISLOCKED;
-			}*/
-
-
-			// Let's be SURE that the texture is unlocked AND unswizzled before
-			// we set it!!!
-		//	EmuUnswizzleTextureStages();
-
-            #ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE
-            if(pTexture != NULL && (pHostBaseTexture != nullptr))
-            {
-                static int dwDumpTexture = 0;
-
-                char szBuffer[256];
-
-                switch(pHostBaseTexture->GetType())
-                {
-                    case D3DRTYPE_TEXTURE:
-                    {
-                        sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureNorm - %.03d (0x%.08X).bmp", dwDumpTexture++, pHostBaseTexture);
-
-						((IDirect3DTexture8 *)pHostBaseTexture)->UnlockRect(0);
-
-                        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pHostBaseTexture, NULL);
-                    }
-                    break;
-
-                    case D3DRTYPE_CUBETEXTURE:
-                    {
-                        for(int face=0;face<6;face++)
-                        {
-                            sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureCube%d - %.03d (0x%.08X).bmp", face, dwDumpTexture++, pHostBaseTexture);
-
-							((IDirect3DCubeTexture8 *)pHostBaseTexture)->UnlockRect((D3DCUBEMAP_FACES)face, 0);
-
-                            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pHostBaseTexture, NULL);
-                        }
-                    }
-                    break;
-                }
-            }
-            #endif
-        }
-    }
-
-    /*
-    static IDirect3DTexture8 *pDummyTexture[TEXTURE_STAGES] = {nullptr, nullptr, nullptr, nullptr};
-
-    if(pDummyTexture[Stage] == nullptr)
-    {
-        if(Stage == 0)
-        {
-            if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy1.bmp", &pDummyTexture[Stage]) != D3D_OK)
-                CxbxKrnlCleanup("Could not create dummy texture!");
-        }
-        else if(Stage == 1)
-        {
-            if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy2.bmp", &pDummyTexture[Stage]) != D3D_OK)
-                CxbxKrnlCleanup("Could not create dummy texture!");
-        }
-    }
-    //*/
-
-    /*
-    static int dwDumpTexture = 0;
-    char szBuffer[256];
-    sprintf(szBuffer, "C:\\Aaron\\Textures\\DummyTexture - %.03d (0x%.08X).bmp", dwDumpTexture++, pDummyTexture);
-    pDummyTexture->UnlockRect(0);
-    D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pDummyTexture, NULL);
-    //*/
-
-    //HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pDummyTexture[Stage]);
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, (g_iWireframe == 0) ? pHostBaseTexture : nullptr);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
 }
 
 // ******************************************************************
@@ -6115,7 +6021,7 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
     DWORD                Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPixelContainer)
@@ -6162,7 +6068,7 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	DWORD				Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPixelContainer)
@@ -6298,7 +6204,7 @@ VOID WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
     DWORD               Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
@@ -6461,7 +6367,7 @@ VOID WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
     DWORD           Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
@@ -6544,7 +6450,7 @@ VOID WINAPI XTL::EMUPATCH(D3DVolumeTexture_LockBox)
     DWORD               Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
@@ -6574,7 +6480,7 @@ VOID WINAPI XTL::EMUPATCH(D3DCubeTexture_LockRect)
     DWORD               Flags
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
@@ -7913,9 +7819,29 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShader");    
 }
 
+void EmuUpdateActiveTextureStages()
+{
+	for (int i = 0; i < TEXTURE_STAGES; i++)
+	{
+		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
+		if (pBaseTexture == nullptr) {
+			HRESULT hRet = g_pD3DDevice8->SetTexture(i, NULL);
+			continue;
+		}
+
+		HRESULT hRet;
+		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
+		if (pHostTexture != nullptr) {
+			HRESULT hRet = g_pD3DDevice8->SetTexture(i, pHostTexture);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
+		}
+	}
+}
+
 void CxbxUpdateNativeD3DResources()
 {
 	XTL::EmuUpdateDeferredStates();
+	EmuUpdateActiveTextureStages();
 	EmuUnswizzleTextureStages();
 /* TODO : Port these :
 	DxbxUpdateActiveVertexShader();
