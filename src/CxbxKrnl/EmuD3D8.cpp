@@ -9578,63 +9578,18 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 
 	HRESULT hRet = D3D_OK;
 
-	// TODO: If this functionality is ever really needed, an idea for 
-	// implementation would be to save a copy of the backbuffer's contents
-	// and free the memory after the next call to D3DDevice::Present().
-	// This temporary data could also be made available to the Xbox game
-	// through AvGetSavedDataAddress() since D3DDevice::GetPersistedDisplay2
-	// just contains a call to that kernel function.  So far, Unreal Champ-
-	// ionship is the only game that uses this functionality that I know of.
-	// Other Unreal Engine 2.x games might as well.
+	LOG_UNIMPLEMENTED();
 
-	IDirect3DSurface8* pBackSurface = NULL;
-	if( SUCCEEDED( g_pD3DDevice8->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &pBackSurface ) ) )
-	{
-		//D3DXSaveSurfaceToFile( "persisted_surface.bmp", D3DXIFF_BMP, pBackSurface, NULL, NULL );
-		pBackSurface->Release();
+	// TODO: This function simply saves a copy of the display to a surface and persists it in contiguous memory
+	// This function, if ever required, can be implemented as the following
+	// 1. Check for an existing persisted surface via AvGetSavedDataAddress, free it if necessary
+	// 2. Create an Xbox format surface with the same size and format as active display
+	// 3. Copy the host framebuffer to the xbox surface, converting format if necessary
+	// 4. Set the display mode via AvSetDisplayMode to the same format as the persisted surface,
+	//    passing the ->Data pointer of the xbox surface as the framebuffer pointer.
+	// 5. Use MmPersistContigousMemory to persist the surface data across reboot
+	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
-		DbgPrintf("Persisted display surface saved to persisted_surface.bmp\n");
-	}
-	else
-	{
-		EmuWarning("(Temporarily) Not persisting display. Blueshogun can fix this.");
-	}
-
-	if(!g_pD3DDevice8)
-	{
-		EmuWarning("Direct3D device not initialized!");
-		hRet =  E_FAIL;
-	}
-	/*else
-	{
-		IDirect3DSurface8* pBackBuffer = NULL;
-		D3DLOCKED_RECT LockedRect;
-		D3DSURFACE_DESC BackBufferDesc;
-
-		g_pD3DDevice8->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer );
-		
-		pBackBuffer->GetDesc( &BackBufferDesc );
-
-		DWORD dwBytesPerPixel = ( BackBufferDesc.Format == D3DFMT_X8R8G8B8 || BackBufferDesc.Format == D3DFMT_A8R8G8B8 ) ? 4 : 2;
-		FILE* fp = fopen( "PersistedSurface.bin", "wb" );
-		if(fp)
-		{
-			void* ptr = g_VMManager.Allocate( BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
-
-			if( SUCCEEDED( pBackBuffer->LockRect( &LockedRect, NULL, D3DLOCK_READONLY ) ) )
-			{
-				CopyMemory( ptr, LockedRect.pBits, BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel );
-				
-				fwrite( ptr, BackBufferDesc.Width * BackBufferDesc.Height * dwBytesPerPixel, 1, fp );
-
-				pBackBuffer->UnlockRect();
-			}
-	
-			fclose(fp);
-		}
-	}*/
-
-		
 
 	return hRet;
 }
@@ -10143,7 +10098,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPixelShader)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurface)
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(ppSurface);
 
@@ -10172,7 +10127,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurfac
 // ******************************************************************
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface2)()
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FORWARD("D3DDevice_GetPersistedSurface");
 
