@@ -122,9 +122,6 @@ static int                          g_iWireframe    = 0;
 // build version
 extern uint32						g_BuildVersion;
 
-// resource caching for _Register
-std::vector<DWORD> g_RegisteredResources;
-
 // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
 
@@ -721,6 +718,15 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	}
 
 	return it->second;
+}
+
+// Return true if the Xbox resource has an existing host copy
+bool HasHostResource(XTL::X_D3DResource* pXboxResource)
+{
+	// Use GetHostResource with shouldRegister = false, then compare with nullptr
+	// This effecticely checks if a resource exists, but avoids creating it, all without
+	// code duplication
+	return GetHostResource(false) != nullptr;
 }
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
@@ -2065,13 +2071,12 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if(IsSpecialXboxResource(pResource))
         return;
 
-	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pResource->Data) != g_RegisteredResources.end()) {
+	// TODO: || RequiresConversion() {unsupported formats} || RequiresUpdate() {modified data?}
+	if (HasHostResource(pResource)) {
 		return;
 	}
 
 	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
-        
-	g_RegisteredResources.push_back(pResource->Data);
 }
 
 // ensure a given width/height are powers of 2
@@ -5940,13 +5945,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// If we freed the last resource, also release the host copy (if it exists!)
 	// TODO: Move this into a FreeHostResource() function;
 	if (uRet == 0) {
-		// Cleanup RegisteredResources array
-		// We can remove this soon, after a little more cleanup
-		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
-		if (it != g_RegisteredResources.end()) {
-			g_RegisteredResources.erase(it);
-		}
-
 		// Release the host resource and remove it from the list
 		if (hostResourceIterator != g_HostResources.end()) {
 			(hostResourceIterator->second)->Release();
