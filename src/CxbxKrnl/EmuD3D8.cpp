@@ -7821,6 +7821,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
 void EmuUpdateActiveTextureStages()
 {
+	LOG_INIT;
+
 	for (int i = 0; i < TEXTURE_STAGES; i++)
 	{
 		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
