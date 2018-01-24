@@ -59,6 +59,14 @@ void NV2ADevice::Init()
 	// Register physical memory on bar 1
 	r.Memory.address = 0;
 	RegisterBAR(1, XBOX_MEMORY_SIZE, r.value); // TODO : Read g_PhysicalMemory->Size
+	/* LukeUsher commented at https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/882#discussion_r162871029
+
+	This is not right: I should have done a better review ;)
+	The starting address here is the physical address in the Xbox memory the VRAM should be placed at,
+	and should point to the TILED memory region ((0xF0000000 >> 4))
+
+	This maps VRAM address 0 to 0xF0000000. (this is what our TILED memory is: VRAM accessed via the GPU device)
+	*/
 
 	m_DeviceId = 0x02A5;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
