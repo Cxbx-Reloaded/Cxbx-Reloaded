@@ -691,6 +691,11 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 // Map native resource data pointers to the host resource
 std::map <uint64_t, XTL::IDirect3DResource8*> g_HostResources;
 
+uint64_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
+{
+	return ((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource;
+}
+
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true)
 {
 	if (pXboxResource == NULL)
@@ -706,7 +711,7 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	auto it = g_HostResources.find(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
+	auto it = g_HostResources.find(GetHostResourceKey(pXboxResource));
 	if (it == g_HostResources.end()) {
 		// Prevent logging a warning when we expect a null result (for example, D3DResource_Release)
 		if (shouldRegister) {
@@ -720,12 +725,12 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
 {
-	auto it = g_HostResources.find(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
+	auto it = g_HostResources.find(GetHostResourceKey(pXboxResource));
 	if (it != g_HostResources.end()) {
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
-	g_HostResources[((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource] = pHostResource;
+	g_HostResources[GetHostResourceKey(pXboxResource)] = pHostResource;
 
 }
 
@@ -5914,13 +5919,13 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	FUNC_EXPORTS
 		LOG_FUNC_ONE_ARG(pThis);
 
-	// First, call the Xbox release function
+	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the following release call!
+	DWORD data = pThis->Data;
+	auto hostResourceIterator = g_HostResources.find(GetHostResourceKey(pThis));
+
+	// Call the Xbox version of D3DResource_Release and store the result
 	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
 	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
-
-	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the Release call!
-	DWORD data = pThis->Data;
-	IDirect3DResource8* pHostResource = GetHostResource(pThis, false);
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
 	// If this was a cached renter target or depth surface, clear the cache variable too!
@@ -5934,16 +5939,18 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
 	// If we freed the last resource, also release the host copy (if it exists!)
 	// TODO: Move this into a FreeHostResource() function;
-	if (uRet == 0 && pHostResource != nullptr) {
+	if (uRet == 0) {
+		// Cleanup RegisteredResources array
+		// We can remove this soon, after a little more cleanup
 		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
 		if (it != g_RegisteredResources.end()) {
 			g_RegisteredResources.erase(it);
 		}
 
-		auto resourceIt = g_HostResources.find(((uint64_t)data << 32) | (DWORD)pThis);
-		if (resourceIt != g_HostResources.end()) {
-			pHostResource->Release();
-			g_HostResources.erase(((uint64_t)data << 32) | (DWORD)pThis);
+		// Release the host resource and remove it from the list
+		if (hostResourceIterator != g_HostResources.end()) {
+			(hostResourceIterator->second)->Release();
+			g_HostResources.erase(hostResourceIterator);
 		}
 	}
 
