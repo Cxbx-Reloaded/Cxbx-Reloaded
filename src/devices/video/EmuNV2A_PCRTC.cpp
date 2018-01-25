@@ -1,0 +1,45 @@
+DEVICE_READ32(PCRTC)
+{
+	DEVICE_READ32_SWITCH() {
+
+	case NV_PCRTC_INTR_0:
+		result = pcrtc.pending_interrupts;
+		break;
+	case NV_PCRTC_INTR_EN_0:
+		result = pcrtc.enabled_interrupts;
+		break;
+	case NV_PCRTC_START:
+		result = pcrtc.start;
+		break;
+	default: 
+		result = 0;
+		//DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
+		break;
+	}
+
+	DEVICE_READ32_END(PCRTC);
+}
+
+DEVICE_WRITE32(PCRTC)
+{
+	switch (addr) {
+
+	case NV_PCRTC_INTR_0:
+		pcrtc.pending_interrupts &= ~value;
+		update_irq();
+		break;
+	case NV_PCRTC_INTR_EN_0:
+		pcrtc.enabled_interrupts = value;
+		update_irq();
+		break;
+	case NV_PCRTC_START:
+		pcrtc.start = value &= 0x07FFFFFF;
+		break;
+
+	default: 
+		DEVICE_WRITE32_REG(pcrtc); // Was : DEBUG_WRITE32_UNHANDLED(PCRTC);
+		break;
+	}
+
+	DEVICE_WRITE32_END(PCRTC);
+}

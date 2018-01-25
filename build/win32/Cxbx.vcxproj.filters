@@ -728,6 +728,69 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.OOVPA.inl">
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PBUS.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PCOUNTER.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PCRTC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PFB.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PFIFO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PGRAPH.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PMC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMDAC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMIN.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMA.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMCIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMDIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMFB.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMVIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PSTRAPS.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PTIMER.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PTV.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PVIDEO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PVPE.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp">
+      <Filter>Hardware</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

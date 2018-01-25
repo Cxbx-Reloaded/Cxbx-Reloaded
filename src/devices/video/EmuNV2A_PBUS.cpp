@@ -1,0 +1,35 @@
+DEVICE_READ32(PBUS)
+{
+	DEVICE_READ32_SWITCH() {
+	case NV_PBUS_PCI_NV_0:
+		result = 0x10de;	// PCI_VENDOR_ID_NVIDIA	(?where to return PCI_DEVICE_ID_NVIDIA_NV2A = 0x01b7)
+
+		break;
+	case NV_PBUS_PCI_NV_1:
+		result = 1; // NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED
+		break;
+	case NV_PBUS_PCI_NV_2:
+		result = (0x02 << 24) | 161; // PCI_CLASS_DISPLAY_3D (0x02) Rev 161 (0xA1) 
+		break;
+
+	default: 
+		DEBUG_READ32_UNHANDLED(PBUS); // TODO : DEVICE_READ32_REG(pbus);
+		break;
+	}
+
+	DEVICE_READ32_END(PBUS);
+}
+
+DEVICE_WRITE32(PBUS)
+{
+	switch(addr) {
+	case NV_PBUS_PCI_NV_1:
+		// TODO : Handle write on NV_PBUS_PCI_NV_1 with  1 (NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED) + 4 (NV_PBUS_PCI_NV_1_BUS_MASTER_ENABLED)
+		break;
+	default: 
+		DEBUG_WRITE32_UNHANDLED(PBUS); // TODO : DEVICE_WRITE32_REG(pbus);
+		break;
+	}
+
+	DEVICE_WRITE32_END(PBUS);
+}

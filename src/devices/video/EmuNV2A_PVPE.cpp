@@ -1,0 +1,23 @@
+DEVICE_READ32(PVPE)
+{
+	DEVICE_READ32_SWITCH() {
+	default:
+		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
+		break;
+	}
+
+	DEVICE_READ32_END(PVPE);
+}
+
+
+DEVICE_WRITE32(PVPE)
+{
+	switch (addr) {
+	default:
+		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
+		break;
+	}
+
+	DEVICE_WRITE32_END(PVPE);
+}
+

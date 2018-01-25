@@ -1,0 +1,70 @@
+DEVICE_READ32(PRMCIO)
+{
+	DEVICE_READ32_SWITCH() {
+	case VGA_CRT_IM:
+	case VGA_CRT_IC:
+		result = prmcio.cr_index;
+		break;
+	case VGA_CRT_DM:
+	case VGA_CRT_DC:
+		result = prmcio.cr[prmcio.cr_index];
+	
+		printf("vga: read CR%x = 0x%02x\n", prmcio.cr_index, result);
+		break;
+	default:
+		DEBUG_READ32_UNHANDLED(PRMCIO);
+		printf("vga: UNHANDLED ADDR %s\n", addr);
+		break;
+	}
+
+	DEVICE_READ32_END(PRMCIO);
+}
+
+DEVICE_WRITE32(PRMCIO)
+{
+	switch (addr) {
+	case VGA_CRT_IM:
+	case VGA_CRT_IC:
+		prmcio.cr_index = value;
+		break;
+	case VGA_CRT_DM:
+	case VGA_CRT_DC:
+		printf("vga: write CR%x = 0x%02x\n", prmcio.cr_index, value);
+
+		/* handle CR0-7 protection */
+		if ((prmcio.cr[VGA_CRTC_V_SYNC_END] & VGA_CR11_LOCK_CR0_CR7) &&
+			prmcio.cr_index <= VGA_CRTC_OVERFLOW) {
+			/* can always write bit 4 of CR7 */
+			if (prmcio.cr_index == VGA_CRTC_OVERFLOW) {
+				prmcio.cr[VGA_CRTC_OVERFLOW] = (prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
+					(value & 0x10);
+				EmuWarning("TODO: vbe_update_vgaregs");
+				//vbe_update_vgaregs();
+			}
+			return;
+		}
+
+		prmcio.cr[prmcio.cr_index] = value;
+		EmuWarning("TODO: vbe_update_vgaregs");
+		//vbe_update_vgaregs();
+
+		switch (prmcio.cr_index) {
+			case VGA_CRTC_H_TOTAL:
+			case VGA_CRTC_H_SYNC_START:
+			case VGA_CRTC_H_SYNC_END:
+			case VGA_CRTC_V_TOTAL:
+			case VGA_CRTC_OVERFLOW:
+			case VGA_CRTC_V_SYNC_END:
+			case VGA_CRTC_MODE:
+				// TODO: s->update_retrace_info(s);
+				EmuWarning("TODO: update_retrace_info");
+				break;
+			}
+		break;
+	default:
+		DEBUG_WRITE32_UNHANDLED(PRMCIO); // TODO : DEVICE_WRITE32_REG(prmcio);
+		break;
+	}
+
+	DEVICE_WRITE32_END(PRMCIO);
+}

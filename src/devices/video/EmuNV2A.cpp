@@ -556,452 +556,7 @@ static void update_irq()
 }
 
 
-#define DEBUG_START(DEV) \
-const char *DebugNV_##DEV##(xbaddr addr) \
-{ \
-	switch (addr) {
-#define DEBUG_CASE(a) \
-		case a: return #a;
-#define DEBUG_CASE_EX(a, c) \
-		case a: return #a##c;
-#define DEBUG_END(DEV) \
-		default: \
-			return "Unknown " #DEV " Address"; \
-	} \
-}
-
-DEBUG_START(PMC)
-	DEBUG_CASE(NV_PMC_BOOT_0);
-	DEBUG_CASE(NV_PMC_BOOT_1);
-	DEBUG_CASE(NV_PMC_INTR_0);
-	DEBUG_CASE(NV_PMC_INTR_EN_0);
-	DEBUG_CASE(NV_PMC_ENABLE);
-DEBUG_END(PMC)
-
-DEBUG_START(PBUS)
-	DEBUG_CASE(NV_PBUS_FBIO_RAM)
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_0, ":VENDOR_ID");
-	DEBUG_CASE(NV_PBUS_PCI_NV_1);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_2, ":REVISION_ID");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_3, ":LATENCY_TIMER");
-	DEBUG_CASE(NV_PBUS_PCI_NV_4);
-	DEBUG_CASE(NV_PBUS_PCI_NV_5);
-	DEBUG_CASE(NV_PBUS_PCI_NV_6);
-	DEBUG_CASE(NV_PBUS_PCI_NV_7);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_11, ":SUBSYSTEM");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_12, ":ROM_BASE");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_13, ":CAP_PTR");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_14, ":RESERVED");
-	DEBUG_CASE(NV_PBUS_PCI_NV_15);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_16, ":SUBSYSTEM");
-	DEBUG_CASE(NV_PBUS_PCI_NV_17);
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_18, ":AGP_STATUS");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_19, ":AGP_COMMAND");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_20, ":ROM_SHADOW");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_21, ":VGA");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_22, ":SCRATCH");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_23, ":DT_TIMEOUT");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_24, ":PME");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_25, ":POWER_STATE");
-	DEBUG_CASE_EX(NV_PBUS_PCI_NV_26, ":RESERVED");
-DEBUG_END(PBUS)
-
-DEBUG_START(PFIFO)
-	DEBUG_CASE(NV_PFIFO_DELAY_0);
-	DEBUG_CASE(NV_PFIFO_DMA_TIMESLICE);
-	DEBUG_CASE(NV_PFIFO_TIMESLICE);
-	DEBUG_CASE(NV_PFIFO_INTR_0);
-	DEBUG_CASE(NV_PFIFO_INTR_EN_0);
-	DEBUG_CASE(NV_PFIFO_RAMHT);
-	DEBUG_CASE(NV_PFIFO_RAMFC);
-	DEBUG_CASE(NV_PFIFO_RAMRO);
-	DEBUG_CASE(NV_PFIFO_RUNOUT_STATUS);
-	DEBUG_CASE(NV_PFIFO_RUNOUT_PUT_ADDRESS);
-	DEBUG_CASE(NV_PFIFO_RUNOUT_GET_ADDRESS);
-	DEBUG_CASE(NV_PFIFO_CACHES);
-	DEBUG_CASE(NV_PFIFO_MODE);
-	DEBUG_CASE(NV_PFIFO_DMA);
-	DEBUG_CASE(NV_PFIFO_SIZE)
-	DEBUG_CASE(NV_PFIFO_CACHE0_PUSH0);
-	DEBUG_CASE(NV_PFIFO_CACHE0_PULL0);
-	DEBUG_CASE(NV_PFIFO_CACHE0_HASH);
-	DEBUG_CASE(NV_PFIFO_CACHE1_PUSH0);
-	DEBUG_CASE(NV_PFIFO_CACHE1_PUSH1);
-	DEBUG_CASE(NV_PFIFO_CACHE1_PUT);
-	DEBUG_CASE(NV_PFIFO_CACHE1_STATUS);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_PUSH);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_FETCH);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_STATE);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_INSTANCE);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_CTL);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_PUT);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_GET);
-	DEBUG_CASE(NV_PFIFO_CACHE1_REF);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_SUBROUTINE);
-	DEBUG_CASE(NV_PFIFO_CACHE1_PULL0);
-	DEBUG_CASE(NV_PFIFO_CACHE1_PULL1);
-	DEBUG_CASE(NV_PFIFO_CACHE1_HASH);
-	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_0);
-	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_1);
-	DEBUG_CASE(NV_PFIFO_CACHE1_ACQUIRE_2);
-	DEBUG_CASE(NV_PFIFO_CACHE1_SEMAPHORE);
-	DEBUG_CASE(NV_PFIFO_CACHE1_GET);
-	DEBUG_CASE(NV_PFIFO_CACHE1_ENGINE);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_DCOUNT);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_RSVD_SHADOW);
-	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_DATA_SHADOW);
-DEBUG_END(PFIFO)
-
-DEBUG_START(PRMA)
-DEBUG_END(PRMA)
-
-DEBUG_START(PVIDEO)
-	DEBUG_CASE(NV_PVIDEO_DEBUG_2);
-	DEBUG_CASE(NV_PVIDEO_DEBUG_3);
-	DEBUG_CASE(NV_PVIDEO_INTR);
-	DEBUG_CASE(NV_PVIDEO_INTR_EN);
-	DEBUG_CASE(NV_PVIDEO_BUFFER);
-	DEBUG_CASE(NV_PVIDEO_STOP);
-	DEBUG_CASE(NV_PVIDEO_BASE(0));
-	DEBUG_CASE(NV_PVIDEO_BASE(1));
-	DEBUG_CASE(NV_PVIDEO_LIMIT(0));
-	DEBUG_CASE(NV_PVIDEO_LIMIT(1));
-	DEBUG_CASE(NV_PVIDEO_LUMINANCE(0));
-	DEBUG_CASE(NV_PVIDEO_LUMINANCE(1));
-	DEBUG_CASE(NV_PVIDEO_CHROMINANCE(0));
-	DEBUG_CASE(NV_PVIDEO_CHROMINANCE(1));
-	DEBUG_CASE(NV_PVIDEO_OFFSET(0));
-	DEBUG_CASE(NV_PVIDEO_OFFSET(1));
-	DEBUG_CASE(NV_PVIDEO_SIZE_IN(0));
-	DEBUG_CASE(NV_PVIDEO_SIZE_IN(1));
-	DEBUG_CASE(NV_PVIDEO_POINT_IN(0));
-	DEBUG_CASE(NV_PVIDEO_POINT_IN(1));
-	DEBUG_CASE(NV_PVIDEO_DS_DX(0));
-	DEBUG_CASE(NV_PVIDEO_DS_DX(1));
-	DEBUG_CASE(NV_PVIDEO_DT_DY(0));
-	DEBUG_CASE(NV_PVIDEO_DT_DY(1));
-	DEBUG_CASE(NV_PVIDEO_POINT_OUT(0));
-	DEBUG_CASE(NV_PVIDEO_POINT_OUT(1));
-	DEBUG_CASE(NV_PVIDEO_SIZE_OUT(0));
-	DEBUG_CASE(NV_PVIDEO_SIZE_OUT(1));
-	DEBUG_CASE(NV_PVIDEO_FORMAT(0));
-	DEBUG_CASE(NV_PVIDEO_FORMAT(1));
-DEBUG_END(PVIDEO)
-
-DEBUG_START(PTIMER)
-	DEBUG_CASE(NV_PTIMER_INTR_0);
-	DEBUG_CASE(NV_PTIMER_INTR_EN_0);
-	DEBUG_CASE(NV_PTIMER_NUMERATOR);
-	DEBUG_CASE(NV_PTIMER_DENOMINATOR);
-	DEBUG_CASE(NV_PTIMER_TIME_0);
-	DEBUG_CASE(NV_PTIMER_TIME_1);
-	DEBUG_CASE(NV_PTIMER_ALARM_0);
-DEBUG_END(PTIMER)
-
-DEBUG_START(PCOUNTER)
-DEBUG_END(PCOUNTER)
-
-DEBUG_START(PVPE)
-DEBUG_END(PVPE)
-
-DEBUG_START(PTV)
-DEBUG_END(PTV)
-
-DEBUG_START(PRMFB)
-DEBUG_END(PRMFB)
-
-DEBUG_START(PRMVIO)
-DEBUG_END(PRMVIO)
-
-DEBUG_START(PFB)
-	DEBUG_CASE(NV_PFB_CFG0)
-	DEBUG_CASE(NV_PFB_CFG1)
-	DEBUG_CASE(NV_PFB_CSTATUS)
-	DEBUG_CASE(NV_PFB_REFCTRL)
-	DEBUG_CASE(NV_PFB_NVM) // 	NV_PFB_NVM_MODE_DISABLE 
-	DEBUG_CASE(NV_PFB_PIN)
-	DEBUG_CASE(NV_PFB_PAD)
-	DEBUG_CASE(NV_PFB_TIMING0)
-	DEBUG_CASE(NV_PFB_TIMING1)
-	DEBUG_CASE(NV_PFB_TIMING2)
-	DEBUG_CASE(NV_PFB_TILE(0))
-	DEBUG_CASE(NV_PFB_TLIMIT(0))
-	DEBUG_CASE(NV_PFB_TSIZE(0))
-	DEBUG_CASE(NV_PFB_TSTATUS(0))
-	DEBUG_CASE(NV_PFB_TILE(1))
-	DEBUG_CASE(NV_PFB_TLIMIT(1))
-	DEBUG_CASE(NV_PFB_TSIZE(1))
-	DEBUG_CASE(NV_PFB_TSTATUS(1))
-	DEBUG_CASE(NV_PFB_TILE(2))
-	DEBUG_CASE(NV_PFB_TLIMIT(2))
-	DEBUG_CASE(NV_PFB_TSIZE(2))
-	DEBUG_CASE(NV_PFB_TSTATUS(2))
-	DEBUG_CASE(NV_PFB_TILE(3))
-	DEBUG_CASE(NV_PFB_TLIMIT(3))
-	DEBUG_CASE(NV_PFB_TSIZE(3))
-	DEBUG_CASE(NV_PFB_TSTATUS(3))
-	DEBUG_CASE(NV_PFB_TILE(4))
-	DEBUG_CASE(NV_PFB_TLIMIT(4))
-	DEBUG_CASE(NV_PFB_TSIZE(4))
-	DEBUG_CASE(NV_PFB_TSTATUS(4))
-	DEBUG_CASE(NV_PFB_TILE(5))
-	DEBUG_CASE(NV_PFB_TLIMIT(5))
-	DEBUG_CASE(NV_PFB_TSIZE(5))
-	DEBUG_CASE(NV_PFB_TSTATUS(5))
-	DEBUG_CASE(NV_PFB_TILE(6))
-	DEBUG_CASE(NV_PFB_TLIMIT(6))
-	DEBUG_CASE(NV_PFB_TSIZE(6))
-	DEBUG_CASE(NV_PFB_TSTATUS(6))
-	DEBUG_CASE(NV_PFB_TILE(7))
-	DEBUG_CASE(NV_PFB_TLIMIT(7))
-	DEBUG_CASE(NV_PFB_TSIZE(7))
-	DEBUG_CASE(NV_PFB_TSTATUS(7))
-	DEBUG_CASE(NV_PFB_MRS)
-	DEBUG_CASE(NV_PFB_EMRS)
-	DEBUG_CASE(NV_PFB_MRS_EXT)
-	DEBUG_CASE(NV_PFB_EMRS_EXT)
-	DEBUG_CASE(NV_PFB_REF)
-	DEBUG_CASE(NV_PFB_PRE)
-	DEBUG_CASE(NV_PFB_ZCOMP(0))
-	DEBUG_CASE(NV_PFB_ZCOMP(1))
-	DEBUG_CASE(NV_PFB_ZCOMP(2))
-	DEBUG_CASE(NV_PFB_ZCOMP(3))
-	DEBUG_CASE(NV_PFB_ZCOMP(4))
-	DEBUG_CASE(NV_PFB_ZCOMP(5))
-	DEBUG_CASE(NV_PFB_ZCOMP(6))
-	DEBUG_CASE(NV_PFB_ZCOMP(7))
-	DEBUG_CASE(NV_PFB_ZCOMP_OFFSET)
-	DEBUG_CASE(NV_PFB_ARB_PREDIVIDER)
-	DEBUG_CASE(NV_PFB_ARB_TIMEOUT)
-	DEBUG_CASE(NV_PFB_ARB_XFER_REM)
-	DEBUG_CASE(NV_PFB_ARB_DIFF_BANK)
-	DEBUG_CASE(NV_PFB_CLOSE_PAGE0)
-	DEBUG_CASE(NV_PFB_CLOSE_PAGE1)
-	DEBUG_CASE(NV_PFB_CLOSE_PAGE2)
-	DEBUG_CASE(NV_PFB_BPARB)
-	DEBUG_CASE(NV_PFB_CMDQ0)
-	DEBUG_CASE(NV_PFB_CMDQ1)
-	DEBUG_CASE(NV_PFB_ILL_INSTR)
-	DEBUG_CASE(NV_PFB_RT)
-	DEBUG_CASE(NV_PFB_AUTOCLOSE)
-	DEBUG_CASE(NV_PFB_WBC)
-	DEBUG_CASE(NV_PFB_CMDQ_PRT)
-	DEBUG_CASE(NV_PFB_CPU_RRQ)
-	DEBUG_CASE(NV_PFB_BYPASS);
-DEBUG_END(PFB)
-
-DEBUG_START(PSTRAPS)
-DEBUG_END(PSTRAPS)
-
-DEBUG_START(PGRAPH)
-	DEBUG_CASE(NV_PGRAPH_DEBUG_0);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_1);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_3);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_4);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_5);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_8);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_9);
-	DEBUG_CASE(NV_PGRAPH_INTR);
-	DEBUG_CASE(NV_PGRAPH_NSOURCE);
-	DEBUG_CASE(NV_PGRAPH_INTR_EN);
-	DEBUG_CASE(NV_PGRAPH_CTX_CONTROL);
-	DEBUG_CASE(NV_PGRAPH_CTX_USER);
-	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH1);
-	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH2);
-	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH3);
-	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH4);
-	DEBUG_CASE(NV_PGRAPH_STATUS);
-	DEBUG_CASE(NV_PGRAPH_TRAPPED_ADDR);
-	DEBUG_CASE(NV_PGRAPH_TRAPPED_DATA_LOW);
-	DEBUG_CASE(NV_PGRAPH_SURFACE);
-	DEBUG_CASE(NV_PGRAPH_INCREMENT);
-	DEBUG_CASE(NV_PGRAPH_FIFO);
-	DEBUG_CASE(NV_PGRAPH_RDI_INDEX);
-	DEBUG_CASE(NV_PGRAPH_RDI_DATA);
-	DEBUG_CASE(NV_PGRAPH_FFINTFC_ST2);
-	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_TABLE);
-	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_POINTER);
-	DEBUG_CASE(NV_PGRAPH_CHANNEL_CTX_TRIGGER);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_2);
-	DEBUG_CASE(NV_PGRAPH_TTILE(0));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(0));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(0));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(0));
-	DEBUG_CASE(NV_PGRAPH_TTILE(1));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(1));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(1));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(1));
-	DEBUG_CASE(NV_PGRAPH_TTILE(2));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(2));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(2));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(2));
-	DEBUG_CASE(NV_PGRAPH_TTILE(3));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(3));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(3));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(3));
-	DEBUG_CASE(NV_PGRAPH_TTILE(4));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(4));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(4));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(4));	
-	DEBUG_CASE(NV_PGRAPH_TTILE(5));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(5));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(5));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(5));	
-	DEBUG_CASE(NV_PGRAPH_TTILE(6));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(6));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(6));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(6));
-	DEBUG_CASE(NV_PGRAPH_TTILE(7));
-	DEBUG_CASE(NV_PGRAPH_TLIMIT(7));
-	DEBUG_CASE(NV_PGRAPH_TSIZE(7));
-	DEBUG_CASE(NV_PGRAPH_TSTATUS(7));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(0));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(1));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(2));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(3));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(4));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(5));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(6));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP(7));
-	DEBUG_CASE(NV_PGRAPH_ZCOMP_OFFSET);
-	DEBUG_CASE(NV_PGRAPH_FBCFG0);
-	DEBUG_CASE(NV_PGRAPH_FBCFG1);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_6);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_7);
-	DEBUG_CASE(NV_PGRAPH_DEBUG_10);
-	DEBUG_CASE(NV_PGRAPH_CSV0_D);
-	DEBUG_CASE(NV_PGRAPH_CSV0_C);
-	DEBUG_CASE(NV_PGRAPH_CSV1_B);
-	DEBUG_CASE(NV_PGRAPH_CSV1_A);
-	DEBUG_CASE(NV_PGRAPH_CHEOPS_OFFSET);
-	DEBUG_CASE(NV_PGRAPH_BLEND);
-	DEBUG_CASE(NV_PGRAPH_BLENDCOLOR);
-	DEBUG_CASE(NV_PGRAPH_BORDERCOLOR0);
-	DEBUG_CASE(NV_PGRAPH_BORDERCOLOR1);
-	DEBUG_CASE(NV_PGRAPH_BORDERCOLOR2);
-	DEBUG_CASE(NV_PGRAPH_BORDERCOLOR3);
-	DEBUG_CASE(NV_PGRAPH_BUMPOFFSET1);
-	DEBUG_CASE(NV_PGRAPH_BUMPSCALE1);
-	DEBUG_CASE(NV_PGRAPH_CLEARRECTX);
-	DEBUG_CASE(NV_PGRAPH_CLEARRECTY);
-	DEBUG_CASE(NV_PGRAPH_COLORCLEARVALUE);
-	DEBUG_CASE(NV_PGRAPH_COMBINEFACTOR0);
-	DEBUG_CASE(NV_PGRAPH_COMBINEFACTOR1);
-	DEBUG_CASE(NV_PGRAPH_COMBINEALPHAI0);
-	DEBUG_CASE(NV_PGRAPH_COMBINEALPHAO0);
-	DEBUG_CASE(NV_PGRAPH_COMBINECOLORI0);
-	DEBUG_CASE(NV_PGRAPH_COMBINECOLORO0);
-	DEBUG_CASE(NV_PGRAPH_COMBINECTL);
-	DEBUG_CASE(NV_PGRAPH_COMBINESPECFOG0);
-	DEBUG_CASE(NV_PGRAPH_COMBINESPECFOG1);
-	DEBUG_CASE(NV_PGRAPH_CONTROL_0);
-	DEBUG_CASE(NV_PGRAPH_CONTROL_2);
-	DEBUG_CASE(NV_PGRAPH_CONTROL_3);
-	DEBUG_CASE(NV_PGRAPH_FOGCOLOR);
-	DEBUG_CASE(NV_PGRAPH_FOGPARAM0);
-	DEBUG_CASE(NV_PGRAPH_FOGPARAM1);
-	DEBUG_CASE(NV_PGRAPH_SETUPRASTER);
-	DEBUG_CASE(NV_PGRAPH_SHADERCLIPMODE);
-	DEBUG_CASE(NV_PGRAPH_SHADERCTL);
-	DEBUG_CASE(NV_PGRAPH_SHADERPROG);
-	DEBUG_CASE(NV_PGRAPH_SHADOWZSLOPETHRESHOLD);
-	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR0);
-	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR1);
-	DEBUG_CASE_EX(NV_PGRAPH_TEXADDRESS0, ":_ADDRV");
-	DEBUG_CASE(NV_PGRAPH_TEXADDRESS1);
-	DEBUG_CASE(NV_PGRAPH_TEXADDRESS2);
-	DEBUG_CASE(NV_PGRAPH_TEXADDRESS3);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL0_0);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL0_1);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL0_2);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL0_3);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL1_0);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL1_1);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL1_2);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL1_3);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL2_0);
-	DEBUG_CASE(NV_PGRAPH_TEXCTL2_1);
-	DEBUG_CASE(NV_PGRAPH_TEXFILTER0);
-	DEBUG_CASE(NV_PGRAPH_TEXFILTER1);
-	DEBUG_CASE(NV_PGRAPH_TEXFILTER2);
-	DEBUG_CASE(NV_PGRAPH_TEXFILTER3);
-	DEBUG_CASE(NV_PGRAPH_TEXFMT0);
-	DEBUG_CASE(NV_PGRAPH_TEXFMT1);
-	DEBUG_CASE(NV_PGRAPH_TEXFMT2);
-	DEBUG_CASE(NV_PGRAPH_TEXFMT3);
-	DEBUG_CASE(NV_PGRAPH_TEXIMAGERECT0);
-	DEBUG_CASE(NV_PGRAPH_TEXIMAGERECT1);
-	DEBUG_CASE(NV_PGRAPH_TEXIMAGERECT2);
-	DEBUG_CASE(NV_PGRAPH_TEXIMAGERECT3);
-	DEBUG_CASE(NV_PGRAPH_TEXOFFSET0);
-	DEBUG_CASE(NV_PGRAPH_TEXOFFSET1);
-	DEBUG_CASE(NV_PGRAPH_TEXOFFSET2);
-	DEBUG_CASE(NV_PGRAPH_TEXOFFSET3);
-	DEBUG_CASE(NV_PGRAPH_TEXPALETTE0);
-	DEBUG_CASE(NV_PGRAPH_TEXPALETTE1);
-	DEBUG_CASE(NV_PGRAPH_TEXPALETTE2);
-	DEBUG_CASE(NV_PGRAPH_TEXPALETTE3);
-	DEBUG_CASE(NV_PGRAPH_ZSTENCILCLEARVALUE);
-	DEBUG_CASE(NV_PGRAPH_ZCLIPMIN);
-	DEBUG_CASE(NV_PGRAPH_ZOFFSETBIAS);
-	DEBUG_CASE(NV_PGRAPH_ZOFFSETFACTOR);
-	DEBUG_CASE(NV_PGRAPH_EYEVEC0);
-	DEBUG_CASE(NV_PGRAPH_EYEVEC1);
-	DEBUG_CASE(NV_PGRAPH_EYEVEC2);
-	DEBUG_CASE(NV_PGRAPH_ZCLIPMAX);
-DEBUG_END(PGRAPH)
-
-DEBUG_START(PCRTC)
-	DEBUG_CASE(NV_PCRTC_INTR_0);
-	DEBUG_CASE(NV_PCRTC_INTR_EN_0);
-	DEBUG_CASE(NV_PCRTC_START);
-	DEBUG_CASE(NV_PCRTC_CONFIG);
-DEBUG_END(PCRTC)
-
-DEBUG_START(PRMCIO)
-	DEBUG_CASE(VGA_CRT_DC);
-	DEBUG_CASE(VGA_CRT_DM);
-	DEBUG_CASE(VGA_ATT_R);
-	DEBUG_CASE(VGA_ATT_W);
-	DEBUG_CASE(VGA_GFX_D);
-	DEBUG_CASE(VGA_SEQ_D);
-	DEBUG_CASE(VGA_MIS_R);
-	DEBUG_CASE(VGA_MIS_W);
-	DEBUG_CASE(VGA_FTC_R);
-	DEBUG_CASE(VGA_IS1_RC);
-	DEBUG_CASE(VGA_IS1_RM);
-	DEBUG_CASE(VGA_PEL_D);
-	DEBUG_CASE(VGA_PEL_MSK);
-	DEBUG_CASE(VGA_CRT_IC);
-	DEBUG_CASE(VGA_CRT_IM);
-	DEBUG_CASE(VGA_GFX_I);
-	DEBUG_CASE(VGA_SEQ_I);
-	DEBUG_CASE(VGA_PEL_IW);
-	DEBUG_CASE(VGA_PEL_IR);
-DEBUG_END(PRMCIO)
-
-DEBUG_START(PRAMDAC)
-	DEBUG_CASE(NV_PRAMDAC_NVPLL_COEFF);
-	DEBUG_CASE(NV_PRAMDAC_MPLL_COEFF);
-	DEBUG_CASE(NV_PRAMDAC_VPLL_COEFF);
-	DEBUG_CASE(NV_PRAMDAC_PLL_TEST_COUNTER);
-
-DEBUG_END(PRAMDAC)
-
-DEBUG_START(PRMDIO)
-DEBUG_END(PRMDIO)
-
-DEBUG_START(PRAMIN)
-DEBUG_END(PRAMIN)
-
-DEBUG_START(USER)
-	DEBUG_CASE(NV_USER_DMA_PUT);
-	DEBUG_CASE(NV_USER_DMA_GET);
-	DEBUG_CASE(NV_USER_REF);
-DEBUG_END(USER)
-
-
+#include "EmuNV2A_DEBUG.cpp"
 
 
 #define DEBUG_READ32(DEV)            DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
@@ -1062,192 +617,6 @@ static void *nv_dma_map(xbaddr dma_obj_address, xbaddr *len)
 	// assert(dma.address + dma.limit < memory_region_size(d->vram));
 	*len = dma.limit;
 	return (void*)(MM_SYSTEM_PHYSICAL_MAP + dma.address);
-}
-
-/* pusher should be fine to run from a mimo handler
-* whenever's it's convenient */
-static void pfifo_run_pusher() {
-	uint8_t channel_id;
-	ChannelControl *control;
-	Cache1State *state;
-	CacheEntry *command;
-	uint8_t *dma;
-	xbaddr dma_len;
-	uint32_t word;
-
-	/* TODO: How is cache1 selected? */
-	state = &pfifo.cache1;
-	channel_id = state->channel_id;
-	control = &user.channel_control[channel_id];
-
-	if (!state->push_enabled) return;
-
-	/* only handling DMA for now... */
-
-	/* Channel running DMA */
-	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
-	assert(channel_modes & (1 << channel_id));
-	assert(state->mode == FIFO_DMA);
-
-	if (!state->dma_push_enabled) return;
-	if (state->dma_push_suspended) return;
-
-	/* We're running so there should be no pending errors... */
-	assert(state->error == NV_PFIFO_CACHE1_DMA_STATE_ERROR_NONE);
-
-	dma = (uint8_t*)nv_dma_map(state->dma_instance, &dma_len);
-
-	printf("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
-		dma_len, control->dma_get, control->dma_put);
-
-	/* based on the convenient pseudocode in envytools */
-	while (control->dma_get != control->dma_put) {
-		if (control->dma_get >= dma_len) {
-			state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION;
-			break;
-		}
-
-		word = ldl_le_p((uint32_t*)(dma + control->dma_get));
-		control->dma_get += 4;
-
-		if (state->method_count) {
-			/* data word of methods command */
-			state->data_shadow = word;
-
-			CacheEntry* command = (CacheEntry*)calloc(1, sizeof(CacheEntry));
-			command->method = state->method;
-			command->subchannel = state->subchannel;
-			command->nonincreasing = state->method_nonincreasing;
-			command->parameter = word;
-
-			std::lock_guard<std::mutex> lk(state->mutex);
-			state->cache.push(command);
-			state->cache_cond.notify_all();
-
-			if (!state->method_nonincreasing) {
-				state->method += 4;
-			}
-
-			state->method_count--;
-			state->dcount++;
-		} else {
-			/* no command active - this is the first word of a new one */
-			state->rsvd_shadow = word;
-			/* match all forms */
-			if ((word & 0xe0000003) == 0x20000000) {
-				/* old jump */
-				state->get_jmp_shadow = control->dma_get;
-				control->dma_get = word & 0x1fffffff;
-				printf("pb OLD_JMP 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 3) == 1) {
-				/* jump */
-				state->get_jmp_shadow = control->dma_get;
-				control->dma_get = word & 0xfffffffc;
-				printf("pb JMP 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 3) == 2) {
-				/* call */
-				if (state->subroutine_active) {
-					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_CALL;
-					break;
-				}
-				state->subroutine_return = control->dma_get;
-				state->subroutine_active = true;
-				control->dma_get = word & 0xfffffffc;
-				printf("pb CALL 0x%08X\n", control->dma_get);
-			}
-			else if (word == 0x00020000) {
-				/* return */
-				if (!state->subroutine_active) {
-					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RETURN;
-					break;
-				}
-				control->dma_get = state->subroutine_return;
-				state->subroutine_active = false;
-				printf("pb RET 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 0xe0030003) == 0) {
-				/* increasing methods */
-				state->method = word & 0x1fff;
-				state->subchannel = (word >> 13) & 7;
-				state->method_count = (word >> 18) & 0x7ff;
-				state->method_nonincreasing = false;
-				state->dcount = 0;
-			}
-			else if ((word & 0xe0030003) == 0x40000000) {
-				/* non-increasing methods */
-				state->method = word & 0x1fff;
-				state->subchannel = (word >> 13) & 7;
-				state->method_count = (word >> 18) & 0x7ff;
-				state->method_nonincreasing = true;
-				state->dcount = 0;
-			}
-			else {
-				printf("pb reserved cmd 0x%08X - 0x%08X\n",
-					control->dma_get, word);
-				state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RESERVED_CMD;
-				break;
-			}
-		}
-	}
-
-	printf("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
-		dma_len, control->dma_get, control->dma_put);
-
-	if (state->error) {
-		printf("pb error: %d\n", state->error);
-		assert(false);
-
-		state->dma_push_suspended = true;
-
-		pfifo.pending_interrupts |= NV_PFIFO_INTR_0_DMA_PUSHER;
-		update_irq();
-	}
-}
-
-static uint32_t ramht_hash(uint32_t handle)
-{
-	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
-
-	/* XXX: Think this is different to what nouveau calculates... */
-	unsigned int bits = ffs(ramht_size) - 2;
-
-	uint32_t hash = 0;
-	while (handle) {
-		hash ^= (handle & ((1 << bits) - 1));
-		handle >>= bits;
-	}
-	hash ^= pfifo.cache1.channel_id << (bits - 4);
-
-	return hash;
-}
-
-
-static RAMHTEntry ramht_lookup(uint32_t handle)
-{
-	unsigned int ramht_size = 1 << (GET_MASK(pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
-
-	uint32_t hash = ramht_hash(handle);
-	assert(hash * 8 < ramht_size);
-
-	uint32_t ramht_address =
-		GET_MASK(pfifo.regs[NV_PFIFO_RAMHT],
-			NV_PFIFO_RAMHT_BASE_ADDRESS_MASK) << 12;
-
-	uint8_t *entry_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + ramht_address + hash * 8);
-
-	uint32_t entry_handle = ldl_le_p((uint32_t*)entry_ptr);
-	uint32_t entry_context = ldl_le_p((uint32_t*)(entry_ptr + 4));
-
-	RAMHTEntry entry;
-	entry.handle = entry_handle;
-	entry.instance = (entry_context & NV_RAMHT_INSTANCE) << 4;
-	entry.engine = (FIFOEngine)((entry_context & NV_RAMHT_ENGINE) >> 16);
-	entry.channel_id = (entry_context & NV_RAMHT_CHID) >> 24;
-	entry.valid = entry_context & NV_RAMHT_STATUS;
-
-	return entry;
 }
 
 static void pgraph_context_switch(unsigned int channel_id)
@@ -2735,807 +2104,99 @@ DEVICE_WRITE32(PCOUNTER)
 	DEVICE_WRITE32_END(PCOUNTER);
 }
 
-static inline uint64_t muldiv64(uint64_t a, uint32_t b, uint32_t c)
-{
-	union {
-		uint64_t ll;
-		struct {
-			uint32_t low, high;
-		} l;
-	} u, res;
-	uint64_t rl, rh;
-
-	u.ll = a;
-	rl = (uint64_t)u.l.low * (uint64_t)b;
-	rh = (uint64_t)u.l.high * (uint64_t)b;
-	rh += (rl >> 32);
-	res.l.high = rh / c;
-	res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
-	return res.ll;
-}
-
-/* PIMTER - time measurement and time-based alarms */
-static uint32_t ptimer_get_clock()
-{
-	// Get time in nanoseconds
-	long int time = static_cast<long int>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
-	
-	return muldiv64(time, pramdac.core_clock_freq * ptimer.numerator, CLOCKS_PER_SEC * ptimer.denominator);
-}
-
-DEVICE_READ32(PTIMER)
-{
-	DEVICE_READ32_SWITCH() {
-	case NV_PTIMER_INTR_0:
-		result = ptimer.pending_interrupts;
-		break;
-	case NV_PTIMER_INTR_EN_0:
-		result = ptimer.enabled_interrupts;
-		break;
-	case NV_PTIMER_NUMERATOR:
-		result = ptimer.numerator;
-		break;
-	case NV_PTIMER_DENOMINATOR:
-		result = ptimer.denominator;
-		break;
-	case NV_PTIMER_TIME_0:
-		result = (ptimer_get_clock() & 0x7ffffff) << 5;
-		break;
-	case NV_PTIMER_TIME_1:
-		result = (ptimer_get_clock() >> 27) & 0x1fffffff;
-		break;
-	default: 
-		result = 0;
-		//DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
-		break;
-	}
-
-	DEVICE_READ32_END(PTIMER);
-}
-
-
-DEVICE_WRITE32(PTIMER)
-{
-	switch (addr) {
-
-	case NV_PTIMER_INTR_0:
-		ptimer.pending_interrupts &= ~value;
-		update_irq();
-		break;
-	case NV_PTIMER_INTR_EN_0:
-		ptimer.enabled_interrupts = value;
-		update_irq();
-		break;
-	case NV_PTIMER_DENOMINATOR:
-		ptimer.denominator = value;
-		break;
-	case NV_PTIMER_NUMERATOR:
-		ptimer.numerator = value;
-		break;
-	case NV_PTIMER_ALARM_0:
-		ptimer.alarm_time = value;
-		break;
-	default: 
-		//DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PTIMER);
-}
-
-
-DEVICE_READ32(PVPE)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
-		break;
-	}
-
-	DEVICE_READ32_END(PVPE);
-}
-
-
-DEVICE_WRITE32(PVPE)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PVPE);
-}
-
-
-DEVICE_READ32(PTV)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PTV); // TODO : DEVICE_READ32_REG(ptv);
-		break;
-	}
-
-	DEVICE_READ32_END(PTV);
-}
-
-DEVICE_WRITE32(PTV)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PTV); // TODO : DEVICE_WRITE32_REG(ptv);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PTV);
-}
-
-
-DEVICE_READ32(PRMFB)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PRMFB); // TODO : DEVICE_READ32_REG(prmfb);
-		break;
-	}
-
-	DEVICE_READ32_END(PRMFB);
-}
-
-DEVICE_WRITE32(PRMFB)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PRMFB); // TODO : DEVICE_WRITE32_REG(prmfb);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRMFB);
-}
-
-
-DEVICE_READ32(PRMVIO)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PRMVIO); // TODO : DEVICE_READ32_REG(prmvio);
-		break;
-	}
-
-	DEVICE_READ32_END(PRMVIO);
-}
-
-DEVICE_WRITE32(PRMVIO)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PRMVIO); // TODO : DEVICE_WRITE32_REG(prmvio);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRMVIO);
-}
-
-
-DEVICE_READ32(PFB)
-{
-	DEVICE_READ32_SWITCH() {
-	case NV_PFB_CFG0:
-		result = 3; // = NV_PFB_CFG0_PART_4
-		break;
-	case NV_PFB_CSTATUS:
-	{
-		if (g_bIsChihiro || g_bIsDebug) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
-		result = CONTIGUOUS_MEMORY_XBOX_SIZE;
-	}
-	break;
-	case NV_PFB_WBC:
-		result = 0; // = !NV_PFB_WBC_FLUSH
-		break;
-	default:
-		DEVICE_READ32_REG(pfb);
-		break;
-	}
-
-	DEVICE_READ32_END(PFB);
-}
-
-DEVICE_WRITE32(PFB)
-{
-	switch (addr) {
-	default:
-		DEVICE_WRITE32_REG(pfb);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PFB);
-}
-
-
-DEVICE_READ32(PSTRAPS)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PSTRAPS);
-		break;
-	}
-
-	DEVICE_READ32_END(PSTRAPS);
-}
-
-DEVICE_WRITE32(PSTRAPS)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PSTRAPS);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PSTRAPS);
-}
-
-
-DEVICE_READ32(PGRAPH)
-{
-	std::lock_guard<std::mutex> lk(pgraph.mutex);
-
-	DEVICE_READ32_SWITCH() {
-	case NV_PGRAPH_INTR:
-		result = pgraph.pending_interrupts;
-		break;
-	case NV_PGRAPH_INTR_EN:
-		result = pgraph.enabled_interrupts;
-		break;
-	case NV_PGRAPH_NSOURCE:
-		result = pgraph.notify_source;
-		break;
-	case NV_PGRAPH_CTX_USER:
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D, pgraph.context[pgraph.channel_id].channel_3d);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D_VALID, 1);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_SUBCH, pgraph.context[pgraph.channel_id].subchannel << 13);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHID, pgraph.channel_id);
-		break;
-	case NV_PGRAPH_TRAPPED_ADDR:
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_CHID, pgraph.trapped_channel_id);
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_SUBCH, pgraph.trapped_subchannel);
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_MTHD, pgraph.trapped_method);
-		break;
-	case NV_PGRAPH_TRAPPED_DATA_LOW:
-		result = pgraph.trapped_data[0];
-		break;
-	case NV_PGRAPH_FIFO:
-		SET_MASK(result, NV_PGRAPH_FIFO_ACCESS, pgraph.fifo_access);
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TABLE:
-		result = pgraph.context_table >> 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_POINTER:
-		result = pgraph.context_address >> 4;
-		break;
-	default:
-		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
-	}
-
-	DEVICE_READ32_END(PGRAPH);
-}
-
-static void pgraph_set_context_user(uint32_t value)
-{
-	pgraph.channel_id = (value & NV_PGRAPH_CTX_USER_CHID) >> 24;
-	pgraph.context[pgraph.channel_id].channel_3d = GET_MASK(value, NV_PGRAPH_CTX_USER_CHANNEL_3D);
-	pgraph.context[pgraph.channel_id].subchannel = GET_MASK(value, NV_PGRAPH_CTX_USER_SUBCH);
-}
-
-DEVICE_WRITE32(PGRAPH)
-{
-	std::lock_guard<std::mutex> lk(pgraph.mutex);
-
-	switch (addr) {
-	case NV_PGRAPH_INTR:
-		pgraph.pending_interrupts &= ~value;
-		pgraph.interrupt_cond.notify_all();
-		break;
-	case NV_PGRAPH_INTR_EN:
-		pgraph.enabled_interrupts = value;
-		break;
-	case NV_PGRAPH_CTX_CONTROL:
-		pgraph.channel_valid = (value & NV_PGRAPH_CTX_CONTROL_CHID);
-		break;
-	case NV_PGRAPH_CTX_USER:
-		pgraph_set_context_user(value);
-		break;
-	case NV_PGRAPH_INCREMENT:
-		if (value & NV_PGRAPH_INCREMENT_READ_3D) {
-			SET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
-				NV_PGRAPH_SURFACE_READ_3D,
-				(GET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
-					NV_PGRAPH_SURFACE_READ_3D) + 1)
-				% GET_MASK(pgraph.regs[NV_PGRAPH_SURFACE],
-					NV_PGRAPH_SURFACE_MODULO_3D));
-
-			pgraph.flip_3d.notify_all();
-		}
-		break;
-	case NV_PGRAPH_FIFO:
-		pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
-		pgraph.fifo_access_cond.notify_all();
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TABLE:
-		pgraph.context_table = (value & NV_PGRAPH_CHANNEL_CTX_TABLE_INST) << 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_POINTER:
-		pgraph.context_address =
-			(value & NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TRIGGER:
-		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
-			printf("PGRAPH: read channel %d context from %0x08X\n",
-				pgraph.channel_id, pgraph.context_address);
-
-			uint8_t *context_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + pgraph.context_address);
-			uint32_t context_user = ldl_le_p((uint32_t*)context_ptr);
-
-			printf("    - CTX_USER = 0x%x\n", context_user);
-
-
-			pgraph_set_context_user(context_user);
-		}
-		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT) {
-			/* do stuff ... */
-		}
-
-		break;
-	default: 
-		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PGRAPH);
-}
-
-
-DEVICE_READ32(PCRTC)
-{
-	DEVICE_READ32_SWITCH() {
-
-	case NV_PCRTC_INTR_0:
-		result = pcrtc.pending_interrupts;
-		break;
-	case NV_PCRTC_INTR_EN_0:
-		result = pcrtc.enabled_interrupts;
-		break;
-	case NV_PCRTC_START:
-		result = pcrtc.start;
-		break;
-	default: 
-		result = 0;
-		//DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
-		break;
-	}
-
-	DEVICE_READ32_END(PCRTC);
-}
-
-DEVICE_WRITE32(PCRTC)
-{
-	switch (addr) {
-
-	case NV_PCRTC_INTR_0:
-		pcrtc.pending_interrupts &= ~value;
-		update_irq();
-		break;
-	case NV_PCRTC_INTR_EN_0:
-		pcrtc.enabled_interrupts = value;
-		update_irq();
-		break;
-	case NV_PCRTC_START:
-		pcrtc.start = value &= 0x07FFFFFF;
-		break;
-
-	default: 
-		DEVICE_WRITE32_REG(pcrtc); // Was : DEBUG_WRITE32_UNHANDLED(PCRTC);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PCRTC);
-}
-
-
-DEVICE_READ32(PRMCIO)
-{
-	DEVICE_READ32_SWITCH() {
-	case VGA_CRT_IM:
-	case VGA_CRT_IC:
-		result = prmcio.cr_index;
-		break;
-	case VGA_CRT_DM:
-	case VGA_CRT_DC:
-		result = prmcio.cr[prmcio.cr_index];
-	
-		printf("vga: read CR%x = 0x%02x\n", prmcio.cr_index, result);
-		break;
-	default:
-		DEBUG_READ32_UNHANDLED(PRMCIO);
-		printf("vga: UNHANDLED ADDR %s\n", addr);
-		break;
-	}
-
-	DEVICE_READ32_END(PRMCIO);
-}
-
-DEVICE_WRITE32(PRMCIO)
-{
-	switch (addr) {
-	case VGA_CRT_IM:
-	case VGA_CRT_IC:
-		prmcio.cr_index = value;
-		break;
-	case VGA_CRT_DM:
-	case VGA_CRT_DC:
-		printf("vga: write CR%x = 0x%02x\n", prmcio.cr_index, value);
-
-		/* handle CR0-7 protection */
-		if ((prmcio.cr[VGA_CRTC_V_SYNC_END] & VGA_CR11_LOCK_CR0_CR7) &&
-			prmcio.cr_index <= VGA_CRTC_OVERFLOW) {
-			/* can always write bit 4 of CR7 */
-			if (prmcio.cr_index == VGA_CRTC_OVERFLOW) {
-				prmcio.cr[VGA_CRTC_OVERFLOW] = (prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
-					(value & 0x10);
-				EmuWarning("TODO: vbe_update_vgaregs");
-				//vbe_update_vgaregs();
-			}
-			return;
-		}
-
-		prmcio.cr[prmcio.cr_index] = value;
-		EmuWarning("TODO: vbe_update_vgaregs");
-		//vbe_update_vgaregs();
-
-		switch (prmcio.cr_index) {
-			case VGA_CRTC_H_TOTAL:
-			case VGA_CRTC_H_SYNC_START:
-			case VGA_CRTC_H_SYNC_END:
-			case VGA_CRTC_V_TOTAL:
-			case VGA_CRTC_OVERFLOW:
-			case VGA_CRTC_V_SYNC_END:
-			case VGA_CRTC_MODE:
-				// TODO: s->update_retrace_info(s);
-				EmuWarning("TODO: update_retrace_info");
-				break;
-			}
-		break;
-	default:
-		DEBUG_WRITE32_UNHANDLED(PRMCIO); // TODO : DEVICE_WRITE32_REG(prmcio);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRMCIO);
-}
-
-
-DEVICE_READ32(PRAMDAC)
-{
-	DEVICE_READ32_SWITCH() {
-
-	case NV_PRAMDAC_NVPLL_COEFF:
-		result = pramdac.core_clock_coeff;
-		break;
-	case NV_PRAMDAC_MPLL_COEFF:
-		result = pramdac.memory_clock_coeff;
-		break;
-	case NV_PRAMDAC_VPLL_COEFF:
-		result = pramdac.video_clock_coeff;
-		break;
-	case NV_PRAMDAC_PLL_TEST_COUNTER:
-		/* emulated PLLs locked instantly? */
-		result = NV_PRAMDAC_PLL_TEST_COUNTER_VPLL2_LOCK
-			| NV_PRAMDAC_PLL_TEST_COUNTER_NVPLL_LOCK
-			| NV_PRAMDAC_PLL_TEST_COUNTER_MPLL_LOCK
-			| NV_PRAMDAC_PLL_TEST_COUNTER_VPLL_LOCK;
-		break;
-
-	default: 
-		//DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
-		break;
-	}
-
-	DEVICE_READ32_END(PRAMDAC);
-}
-
-DEVICE_WRITE32(PRAMDAC)
-{
-	switch (addr) {
-
-	uint32_t m, n, p;
-	case NV_PRAMDAC_NVPLL_COEFF:
-		pramdac.core_clock_coeff = value;
-
-		m = value & NV_PRAMDAC_NVPLL_COEFF_MDIV;
-		n = (value & NV_PRAMDAC_NVPLL_COEFF_NDIV) >> 8;
-		p = (value & NV_PRAMDAC_NVPLL_COEFF_PDIV) >> 16;
-
-		if (m == 0) {
-			pramdac.core_clock_freq = 0;
-		}
-		else {
-			pramdac.core_clock_freq = (NV2A_CRYSTAL_FREQ * n)
-				/ (1 << p) / m;
-		}
-
-		break;
-	case NV_PRAMDAC_MPLL_COEFF:
-		pramdac.memory_clock_coeff = value;
-		break;
-	case NV_PRAMDAC_VPLL_COEFF:
-		pramdac.video_clock_coeff = value;
-		break;
-
-	default: 
-		//DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRAMDAC);
-}
-
-
-DEVICE_READ32(PRMDIO)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PRMDIO);
-		break;
-	}
-
-	DEVICE_READ32_END(PRMDIO);
-}
-
-DEVICE_WRITE32(PRMDIO)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PRMDIO);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRMDIO);
-}
-
-
-DEVICE_READ32(PRAMIN)
-{
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEVICE_READ32_REG(pramin);
-		break;
-	}
-
-	DEVICE_READ32_END(PRAMIN);
-}
-
-DEVICE_WRITE32(PRAMIN)
-{
-	switch (addr) {
-	default:
-		DEVICE_WRITE32_REG(pramin);
-		break;
-	}
-
-	DEVICE_WRITE32_END(PRAMIN);
-}
-
-
-DEVICE_READ32(USER)
-{
-	unsigned int channel_id = addr >> 16;
-	assert(channel_id < NV2A_NUM_CHANNELS);
-
-	ChannelControl *control = &user.channel_control[channel_id];
-	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
-
-	/* PIO Mode */
-	if (!channel_modes & (1 << channel_id)) {
-		assert(false);
-	}
-
-	/* DMA Mode */
-	addr &= 0xFFFF;
-	DEVICE_READ32_SWITCH() {
-		case NV_USER_DMA_PUT:
-			result = control->dma_put;
-			break;
-		case NV_USER_DMA_GET:
-			result = control->dma_get;
-			break;
-		case NV_USER_REF:
-			result = control->ref;
-			break;
-		default:
-			DEBUG_READ32_UNHANDLED(USER);
-			break;
-	}
-
-	DEVICE_READ32_END(USER);
-}
-
-DEVICE_WRITE32(USER)
-{
-	unsigned int channel_id = addr >> 16;
-	assert(channel_id < NV2A_NUM_CHANNELS);
-
-	ChannelControl *control = &user.channel_control[channel_id];
-
-	uint32_t channel_modes = pfifo.regs[NV_PFIFO_MODE];
-
-	if (channel_modes & (1 << channel_id)) {
-		/* DMA Mode */
-		switch (addr & 0xFFFF) {
-		case NV_USER_DMA_PUT:
-			control->dma_put = value;
-
-			if (pfifo.cache1.push_enabled) {
-				pfifo_run_pusher();
-			}
-			break;
-		case NV_USER_DMA_GET:
-			control->dma_get = value;
-			break;
-		case NV_USER_REF:
-			control->ref = value;
-			break;
-		default:
-			DEBUG_WRITE32_UNHANDLED(USER);
-			break;
-		}
-	}
-	else {
-		/* PIO Mode */
-		assert(false);
-	}
-
-	DEVICE_WRITE32_END(USER);
-}
-
+#include "EmuNV2A_PMC.cpp"
+#include "EmuNV2A_PBUS.cpp"
+#include "EmuNV2A_PFIFO.cpp"
+#include "EmuNV2A_PRMA.cpp"
+#include "EmuNV2A_PVIDEO.cpp"
+#include "EmuNV2A_PCOUNTER.cpp"
+#include "EmuNV2A_PTIMER.cpp"
+#include "EmuNV2A_PVPE.cpp"
+#include "EmuNV2A_PTV.cpp"
+#include "EmuNV2A_PRMFB.cpp"
+#include "EmuNV2A_PRMVIO.cpp"
+#include "EmuNV2A_PFB.cpp"
+#include "EmuNV2A_PSTRAPS.cpp"
+#include "EmuNV2A_PGRAPH.cpp"
+#include "EmuNV2A_PCRTC.cpp"
+#include "EmuNV2A_PRMCIO.cpp"
+#include "EmuNV2A_PRAMDAC.cpp"
+#include "EmuNV2A_PRMDIO.cpp"
+#include "EmuNV2A_PRAMIN.cpp"
+#include "EmuNV2A_USER.cpp"
+
+typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
+typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
+
+typedef value_t(*read_func)(/*void *opaque, */hwaddr addr); //, unsigned int size);
+typedef void(*write_func)(/*void *opaque, */hwaddr addr, value_t val); //, unsigned int size);
+
+typedef struct {
+	read_func read;
+	write_func write;
+} MemoryRegionOps;
 
 typedef struct NV2ABlockInfo {
-		uint32_t offset;
-		uint32_t size;
-		uint32_t(*read)(xbaddr addr);
-		void(*write)(xbaddr addr, uint32_t value);
+	const char* name;
+	hwaddr offset;
+	uint64_t size;
+	MemoryRegionOps ops;
 } NV2ABlockInfo;
 
-static const NV2ABlockInfo regions[] = {{
-		/* card master control */
-		NV_PMC_ADDR, // = 0x000000
-		NV_PMC_SIZE, // = 0x001000
-		EmuNV2A_PMC_Read32,
-		EmuNV2A_PMC_Write32,
-	}, {
-		/* bus control */
-		NV_PBUS_ADDR, // = 0x001000
-		NV_PBUS_SIZE, // = 0x001000
-		EmuNV2A_PBUS_Read32,
-		EmuNV2A_PBUS_Write32,
-	}, {
-		/* MMIO and DMA FIFO submission to PGRAPH and VPE */
-		NV_PFIFO_ADDR, // = 0x002000
-		_NV_PFIFO_SIZE, // = 0x002000
-		EmuNV2A_PFIFO_Read32,
-		EmuNV2A_PFIFO_Write32,
-	}, {
-		/* access to BAR0/BAR1 from real mode */
-		NV_PRMA_ADDR, // = 0x007000
-		NV_PRMA_SIZE, // = 0x001000
-		EmuNV2A_PRMA_Read32,
-		EmuNV2A_PRMA_Write32,
-	}, {
-		/* video overlay */
-		NV_PVIDEO_ADDR, // = 0x008000
-		NV_PVIDEO_SIZE, // = 0x001000
-		EmuNV2A_PVIDEO_Read32,
-		EmuNV2A_PVIDEO_Write32,
-	}, {
-		/* time measurement and time-based alarms */
-		NV_PTIMER_ADDR, // = 0x009000
-		NV_PTIMER_SIZE, // = 0x001000
-		EmuNV2A_PTIMER_Read32,
-		EmuNV2A_PTIMER_Write32,
-	}, {
-		/* performance monitoring counters */
-		NV_PCOUNTER_ADDR, // = 0x00a000
-		NV_PCOUNTER_SIZE, // = 0x001000
-		EmuNV2A_PCOUNTER_Read32,
-		EmuNV2A_PCOUNTER_Write32,
-	}, {
-		/* MPEG2 decoding engine */
-		NV_PVPE_ADDR, // = 0x00b000
-		NV_PVPE_SIZE, // = 0x001000
-		EmuNV2A_PVPE_Read32,
-		EmuNV2A_PVPE_Write32,
-	},	{
-		/* TV encoder */
-		NV_PTV_ADDR, // = 0x00d000
-		NV_PTV_SIZE, // = 0x001000
-		EmuNV2A_PTV_Read32,
-		EmuNV2A_PTV_Write32,
-	}, {
-		/* aliases VGA memory window */
-		NV_PRMFB_ADDR, // = 0x0a0000
-		NV_PRMFB_SIZE, // = 0x020000
-		EmuNV2A_PRMFB_Read32,
-		EmuNV2A_PRMFB_Write32,
-	}, {
-		/* aliases VGA sequencer and graphics controller registers */
-		NV_PRMVIO_ADDR, // = 0x0c0000
-		NV_PRMVIO_SIZE, // = 0x008000 // Was 0x001000
-		EmuNV2A_PRMVIO_Read32,
-		EmuNV2A_PRMVIO_Write32,
-	},{
-		/* memory interface */
-		NV_PFB_ADDR, // = 0x100000
-		NV_PFB_SIZE, // = 0x001000
-		EmuNV2A_PFB_Read32,
-		EmuNV2A_PFB_Write32,
-	}, {
-		/* straps readout / override */
-		NV_PSTRAPS_ADDR, // = 0x101000
-		NV_PSTRAPS_SIZE, // = 0x001000
-		EmuNV2A_PSTRAPS_Read32,
-		EmuNV2A_PSTRAPS_Write32,
-	}, {
-		/* accelerated 2d/3d drawing engine */
-		NV_PGRAPH_ADDR, // = 0x400000
-		NV_PGRAPH_SIZE, // = 0x002000
-		EmuNV2A_PGRAPH_Read32,
-		EmuNV2A_PGRAPH_Write32,
-	}, {
-		/* more CRTC controls */
-		NV_PCRTC_ADDR, // = 0x600000
-		NV_PCRTC_SIZE, // = 0x001000
-		EmuNV2A_PCRTC_Read32,
-		EmuNV2A_PCRTC_Write32,
-	}, {
-		/* aliases VGA CRTC and attribute controller registers */
-		NV_PRMCIO_ADDR, // = 0x601000
-		NV_PRMCIO_SIZE, // = 0x001000
-		EmuNV2A_PRMCIO_Read32,
-		EmuNV2A_PRMCIO_Write32,
-	}, {
-		/* RAMDAC, cursor, and PLL control */
-		NV_PRAMDAC_ADDR, // = 0x680000
-		NV_PRAMDAC_SIZE, // = 0x001000
-		EmuNV2A_PRAMDAC_Read32,
-		EmuNV2A_PRAMDAC_Write32,
-	}, {
-		/* aliases VGA palette registers */
-		NV_PRMDIO_ADDR, // = 0x681000
-		NV_PRMDIO_SIZE, // = 0x001000
-		EmuNV2A_PRMDIO_Read32,
-		EmuNV2A_PRMDIO_Write32,
-	}, {
-		/* RAMIN access */
-		NV_PRAMIN_ADDR, // = 0x700000
-		NV_PRAMIN_SIZE, // = 0x100000
-		EmuNV2A_PRAMIN_Read32,
-		EmuNV2A_PRAMIN_Write32,
-	},{
-		/* PFIFO MMIO and DMA submission area */
-		NV_USER_ADDR, // = 0x800000
-		NV_USER_SIZE, // = 0x400000 // Was 0x800000
-		EmuNV2A_USER_Read32,
-		EmuNV2A_USER_Write32,
-	}, {
-		/* User area remapped? */
-		NV_UREMAP_ADDR, // = 0xC00000
-		NV_UREMAP_SIZE, // = 0x400000
-		EmuNV2A_USER_Read32, // NOTE : Re-used (*not* EmuNV2A_UREMAP_Read32)
-		EmuNV2A_USER_Write32, // NOTE : Re-used (*not* EmuNV2A_UREMAP_Write32)
-	}, {
-		0xFFFFFFFF,
-		0,
-		nullptr,
-		nullptr,
-	},
+const NV2ABlockInfo regions[] = { // blocktable
+
+// Note : Avoid designated initializers to facilitate C++ builds
+#define ENTRY(OFFSET, SIZE, NAME, RDFUNC, WRFUNC) \
+	{ \
+        #NAME, OFFSET, SIZE, \
+        { RDFUNC, WRFUNC }, \
+    }, \
+
+	/* card master control */
+	ENTRY(0x000000, 0x001000, PMC, EmuNV2A_PMC_Read32, EmuNV2A_PMC_Write32)
+	/* bus control */
+	ENTRY(0x001000, 0x001000, PBUS, EmuNV2A_PBUS_Read32, EmuNV2A_PBUS_Write32)
+	/* MMIO and DMA FIFO submission to PGRAPH and VPE */
+	ENTRY(0x002000, 0x002000, PFIFO, EmuNV2A_PFIFO_Read32, EmuNV2A_PFIFO_Write32)
+	/* access to BAR0/BAR1 from real mode */
+	ENTRY(0x007000, 0x001000, PRMA, EmuNV2A_PRMA_Read32, EmuNV2A_PRMA_Write32)
+	/* video overlay */
+	ENTRY(0x008000, 0x001000, PVIDEO, EmuNV2A_PVIDEO_Read32, EmuNV2A_PVIDEO_Write32)
+	/* time measurement and time-based alarms */
+	ENTRY(0x009000, 0x001000, PTIMER, EmuNV2A_PTIMER_Read32, EmuNV2A_PTIMER_Write32)
+	/* performance monitoring counters */
+	ENTRY(0x00a000, 0x001000, PCOUNTER, EmuNV2A_PCOUNTER_Read32, EmuNV2A_PCOUNTER_Write32)
+	/* MPEG2 decoding engine */
+	ENTRY(0x00b000, 0x001000, PVPE, EmuNV2A_PVPE_Read32, EmuNV2A_PVPE_Write32)
+	/* TV encoder */
+	ENTRY(0x00d000, 0x001000, PTV, EmuNV2A_PTV_Read32, EmuNV2A_PTV_Write32)
+	/* aliases VGA memory window */
+	ENTRY(0x0a0000, 0x020000, PRMFB, EmuNV2A_PRMFB_Read32, EmuNV2A_PRMFB_Write32)
+	/* aliases VGA sequencer and graphics controller registers */
+	ENTRY(0x0c0000, 0x008000, PRMVIO, EmuNV2A_PRMVIO_Read32, EmuNV2A_PRMVIO_Write32) // Size was 0x001000
+	/* memory interface */
+	ENTRY(0x100000, 0x001000, PFB, EmuNV2A_PFB_Read32, EmuNV2A_PFB_Write32)
+	/* straps readout / override */
+	ENTRY(0x101000, 0x001000, PSTRAPS, EmuNV2A_PSTRAPS_Read32, EmuNV2A_PSTRAPS_Write32)
+	/* accelerated 2d/3d drawing engine */
+	ENTRY(0x400000, 0x002000, PGRAPH, EmuNV2A_PGRAPH_Read32, EmuNV2A_PGRAPH_Write32)
+	/* more CRTC controls */
+	ENTRY(0x600000, 0x001000, PCRTC, EmuNV2A_PCRTC_Read32, EmuNV2A_PCRTC_Write32)
+	/* aliases VGA CRTC and attribute controller registers */
+	ENTRY(0x601000, 0x001000, PRMCIO, EmuNV2A_PRMCIO_Read32, EmuNV2A_PRMCIO_Write32)
+	/* RAMDAC, cursor, and PLL control */
+	ENTRY(0x680000, 0x001000, PRAMDAC, EmuNV2A_PRAMDAC_Read32, EmuNV2A_PRAMDAC_Write32)
+	/* aliases VGA palette registers */
+	ENTRY(0x681000, 0x001000, PRMDIO, EmuNV2A_PRMDIO_Read32, EmuNV2A_PRMDIO_Write32)
+	/* RAMIN access */
+	ENTRY(0x700000, 0x100000, PRAMIN, EmuNV2A_PRAMIN_Read32, EmuNV2A_PRAMIN_Write32)
+	/* PFIFO MMIO and DMA submission area */
+	ENTRY(0x800000, 0x400000, USER, EmuNV2A_USER_Read32, EmuNV2A_USER_Write32) // Size was 0x800000
+	/* User area mirror - TODO : Confirm */
+	ENTRY(0xC00000, 0x400000, USER, EmuNV2A_USER_Read32, EmuNV2A_USER_Write32) // NOTE : Mirror of USER
+
+	ENTRY(0xFFFFFF, 0x000000, END, nullptr, nullptr)
+#undef ENTRY
 };
 
 const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr) 
@@ -3544,7 +2205,7 @@ const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
 	const NV2ABlockInfo* block = &regions[0];
 	int i = 0;
 
-	while (block->read != nullptr) {
+	while (block->size > 0) {
 		if (addr >= block->offset && addr < block->offset + block->size) {
 			return block;
 		}
@@ -3562,11 +2223,11 @@ uint32_t EmuNV2A_Read(xbaddr addr, int size)
 	if (block != nullptr) {
 		switch (size) {
 			case sizeof(uint8_t):
-				return block->read(addr - block->offset) & 0xFF;
+				return block->ops.read(addr - block->offset) & 0xFF;
 			case sizeof(uint16_t) :
-				return block->read(addr - block->offset) & 0xFFFF;
+				return block->ops.read(addr - block->offset) & 0xFFFF;
 			case sizeof(uint32_t) :
-				return block->read(addr - block->offset);
+				return block->ops.read(addr - block->offset);
 			default:
 				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
 				return 0;
@@ -3590,25 +2251,25 @@ void EmuNV2A_Write(xbaddr addr, uint32_t value, int size)
 			case sizeof(uint8_t) :
 				shift = (addr & 3) * 8;
 				aligned_addr = addr & ~3;
-				aligned_value = block->read(aligned_addr - block->offset);
+				aligned_value = block->ops.read(aligned_addr - block->offset);
 				mask = 0xFF << shift;
 
 				// TODO : Must the second byte be written to the next DWORD?		
-				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				block->ops.write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
 			case sizeof(uint16_t) :
 				assert((addr & 1) == 0);
 				
 				shift = (addr & 2) * 16;
 				aligned_addr = addr & ~3;
-				aligned_value = block->read(addr - block->offset);
+				aligned_value = block->ops.read(addr - block->offset);
 				mask = 0xFFFF << shift;
 				
 				// TODO : Must the second byte be written to the next DWORD?		
-				block->write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				block->ops.write(aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
 			case sizeof(uint32_t) :
-				block->write(addr - block->offset, value);
+				block->ops.write(addr - block->offset, value);
 				return;
 			default:
 				EmuWarning("EmuNV2A_Read: Invalid read size: %d", size);
