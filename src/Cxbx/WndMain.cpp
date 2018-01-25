@@ -178,13 +178,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_SZ; dwSize = MAX_PATH; ULONG lErrCodeCxbxDebugFilename;
 			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
 			if (lErrCodeCxbxDebugFilename != ERROR_SUCCESS) {
-				m_CxbxDebugFilename = "";
+				m_CxbxDebugFilename[0] = '\0';
 			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
-				m_KrnlDebugFilename = "";
+				m_KrnlDebugFilename[0] = '\0';
 			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
