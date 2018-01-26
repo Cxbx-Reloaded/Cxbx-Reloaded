@@ -135,7 +135,6 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
     &XTL::EMUPATCH(XFileMediaObject_DoWork),            // 0x24
 };
 
-
 /* NOTE: SUCCEEDED define is only checking for is equal or greater than zero value.
     And FAILED check for less than zero value. Since DS_OK is only 0 base on DirectSound documentation,
     there is chance of failure which contain value greater than 0.
@@ -3590,7 +3589,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
     DWORD       dwMaxPackets,
     OUT void**      ppMediaObject)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3619,7 +3618,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
     DWORD               dwOrigin,
     LPDWORD             pdwAbsolute)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3642,7 +3641,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3661,7 +3660,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
     X_XFileMediaObject* pThis,
     OUT LPDWORD             pdwStatus)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3685,7 +3684,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
     X_XFileMediaObject* pThis,
     OUT XMEDIAINFO*         pInfo)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3710,7 +3709,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
     LPXMEDIAPACKET      pInputBuffer,
     LPXMEDIAPACKET      pOutputBuffer)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3734,7 +3733,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
 (
 	X_XFileMediaObject* pThis)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3758,7 +3757,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
 (
 	X_XFileMediaObject* pThis)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3785,7 +3784,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 (
 	X_XFileMediaObject *pThis)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
