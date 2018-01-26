@@ -90,3 +90,5 @@ namespace LED {
 	constexpr Sequence FAST_GREEN_ORANGE   = Phase0::Green  | Phase1::Orange | Phase2::Green  | Phase3::Orange;
 
 }
+
+extern void SetLEDSequence(LED::Sequence aLEDSequence);

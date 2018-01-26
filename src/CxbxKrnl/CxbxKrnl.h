@@ -152,6 +152,14 @@ extern "C" {
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
+// Kernel boot flags
+enum {
+	BOOT_EJECT_PENDING =  1 << 0,
+	BOOT_FATAL_ERROR =    1 << 1,
+	BOOT_SKIP_ANIMATION = 1 << 2,
+	BOOT_RUN_DASHBOARD =  1 << 3,
+};
+
 void CxbxPopupMessage(const char *message, ...);
 
 #define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \
@@ -186,6 +194,9 @@ void CxbxKrnlResume();
 /*! terminate gracefully the emulation */
 void CxbxKrnlShutDown();
 
+/*! display the fatal error message*/
+void CxbxKrnlPrintUEM(ULONG ErrorCode);
+
 /*! terminate the calling thread */
 __declspec(noreturn) void CxbxKrnlTerminateThread();
 
@@ -207,6 +218,9 @@ void ConnectWindowsTimersToThunkTable();
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
 extern bool g_IsWine;
+
+extern bool g_CxbxPrintUEM;
+extern ULONG g_CxbxFatalErrorCode;
 
 void InitXboxThread(DWORD_PTR cores);
 

@@ -65,6 +65,7 @@ namespace xboxkrnl
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\video\EmuNV2A.h" // For InitOpenGLContext
 #include "devices\Xbox.h" // For InitXboxHardware()
+#include "devices\LED.h" // For LED::Sequence
 
 /* prevent name collisions */
 namespace NtDll
@@ -104,6 +105,9 @@ DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
 bool g_IsWine = false;
+
+bool g_CxbxPrintUEM = false;
+ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
@@ -1006,6 +1010,22 @@ __declspec(noreturn) void CxbxKrnlInit
 	DbgPrintf("INIT: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
+	// Now process the boot flags to see if there are any special conditions to handle
+	int BootFlags = 0;
+	g_EmuShared->GetBootFlags(&BootFlags);
+
+	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO
+	if (BootFlags & BOOT_FATAL_ERROR)
+	{
+		// If we are here it means we have been rebooted to display the fatal error screen. The error code is set
+		// to 0x15 and the led flashes with the sequence green, red, red, red
+
+		SetLEDSequence(0xE1);
+		CxbxKrnlPrintUEM(FATAL_ERROR_REBOOT_ROUTINE); // won't return
+	}
+	if (BootFlags & BOOT_SKIP_ANIMATION) {} // TODO
+	if (BootFlags & BOOT_RUN_DASHBOARD) {} // TODO
+
     XTL::CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
@@ -1268,6 +1288,54 @@ void CxbxKrnlShutDown()
 
 	EmuShared::Cleanup();
 	TerminateProcess(g_CurrentProcessHandle, 0);
+}
+
+void CxbxKrnlPrintUEM(ULONG ErrorCode)
+{
+	ULONG Type;
+	xboxkrnl::XBOX_EEPROM Eeprom;
+	ULONG ResultSize;
+
+	NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
+
+	if (status == STATUS_SUCCESS)
+	{
+		xboxkrnl::XBOX_UEM_INFO* UEMInfo = (xboxkrnl::XBOX_UEM_INFO*)&(Eeprom.UEMInfo[0]);
+
+		if (UEMInfo->ErrorCode == FATAL_ERROR_NONE)
+		{
+			// ergo720: the Xbox sets the error code and displays the UEM only for non-manufacturing xbe's (it power cycles
+			// otherwise). Considering that this flag can be easily tampered with in the xbe and the typical end user of cxbx
+			// can't fix the cause of the fatal error, I decided to always display it anyway.
+
+			UEMInfo->ErrorCode = (UCHAR)ErrorCode;
+			UEMInfo->History |= (1 << (ErrorCode - 5));
+		}
+		else {
+			UEMInfo->ErrorCode = FATAL_ERROR_NONE;
+		}
+		xboxkrnl::ExSaveNonVolatileSetting(xboxkrnl::XC_MAX_ALL, Type, &Eeprom, sizeof(Eeprom));
+	}
+	else {
+		CxbxKrnlCleanup("Could not display the fatal error screen");
+	}
+
+	if (g_bIsChihiro)
+	{
+		// The Chihiro doesn't display the UEM
+		CxbxKrnlCleanup("The running Chihiro xbe has encountered a fatal error and needs to close");
+	}
+
+	g_CxbxFatalErrorCode = ErrorCode;
+	g_CxbxPrintUEM = true; // print the UEM
+
+	int BootFlags;
+	g_EmuShared->GetBootFlags(&BootFlags);
+	BootFlags ^= BOOT_FATAL_ERROR;     // clear the fatal error flag to avoid looping here endlessly
+	g_EmuShared->SetBootFlags(&BootFlags);
+
+	// Sleep forever to prevent continuing the initialization
+	Sleep(INFINITE);
 }
 
 __declspec(noreturn) void CxbxKrnlTerminateThread()

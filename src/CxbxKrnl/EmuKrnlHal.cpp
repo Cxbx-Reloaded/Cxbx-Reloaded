@@ -473,8 +473,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 			// Relaunch Cxbx, to load another Xbe
 			{
-				bool bMultiXbe = true;
-				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+				bool bQuickReboot = true;
+				g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
 
 				char szArgsBuffer[4096];
 
@@ -495,8 +495,21 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		break;
 
 	case ReturnFirmwareFatal:
-		CxbxPopupMessage("Emulated Xbox hit a fatal error (might be called by XapiBootToDash from within dashboard)");
+	{
+		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we cannot display it without
+		// an OOVPA for it; the only one we can support now is FATAL_ERROR_REBOOT_ROUTINE
+
+		xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
+		char szArgsBuffer[4096];
+		char szWorkingDirectoy[MAX_PATH];
+		bool bQuickReboot = true;
+		g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
+		g_EmuShared->GetXbePath(szWorkingDirectoy);
+		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
+		if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+			CxbxKrnlCleanup("Could not reboot");
 		break;
+	}
 
 	case ReturnFirmwareAll:
 		LOG_UNIMPLEMENTED();

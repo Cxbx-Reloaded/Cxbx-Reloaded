@@ -83,7 +83,7 @@
 //0x0E	another scratch register ? seems like an error code.
 //0x19	reset on eject(0 = enable; 1 = disable)
 //0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
-//0x1B	scratch register for the original kernel
+#define SMC_COMMAND_SCRATCH 0x1B	//0x1B	scratch register for the original kernel
 //0x20	response to PIC challenge(written first)
 //0x21	response to PIC challenge(written second)
 
@@ -93,6 +93,14 @@
 #define SMC_RESET_ASSERT_RESET			0x01
 #define SMC_RESET_ASSERT_POWERCYCLE		0x40
 #define SMC_RESET_ASSERT_SHUTDOWN		0x80
+
+//
+// Register values for SMC_COMMAND_SCRATCH
+//
+#define SMC_SCRATCH_TRAY_EJECT_PENDING	0x01
+#define SMC_SCRATCH_DISPLAY_FATAL_ERROR	0x02
+#define SMC_SCRATCH_SHORT_ANIMATION		0x04
+#define SMC_SCRATCH_DASHBOARD_BOOT		0x08
 
 typedef enum { // TODO : Move to it's own file
 	Revision1_0,

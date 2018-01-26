@@ -156,8 +156,8 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	case SMC_COMMAND_RESET: //0x02	reset and power off control
 		// See http://xboxdevwiki.net/PIC#Reset_and_Power_Off
 		switch (value) {
-		case SMC_RESET_ASSERT_RESET: return; //TODO
-		case SMC_RESET_ASSERT_POWERCYCLE: return; //TODO
+		case SMC_RESET_ASSERT_RESET: return; // TODO
+		case SMC_RESET_ASSERT_POWERCYCLE: return; // TODO
 		case SMC_RESET_ASSERT_SHUTDOWN: CxbxKrnlShutDown(); return; // Power off, terminating the emulation
 		}
 	//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
@@ -186,7 +186,21 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	//0x0E	another scratch register ? seems like an error code.
 	//0x19	reset on eject(0 = enable; 1 = disable)
 	//0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
-	//0x1B	scratch register for the original kernel
+	case SMC_COMMAND_SCRATCH: //0x1B	scratch register for the original kernel
+		// See http://xboxdevwiki.net/PIC#Scratch_register_values
+		switch (value) {
+		case SMC_SCRATCH_TRAY_EJECT_PENDING: return; // TODO
+		case SMC_SCRATCH_DISPLAY_FATAL_ERROR:
+		{
+			int FatalFlag;
+			g_EmuShared->GetBootFlags(&FatalFlag);
+			FatalFlag |= BOOT_FATAL_ERROR;
+			g_EmuShared->SetBootFlags(&FatalFlag);
+			break;
+		}
+		case SMC_SCRATCH_SHORT_ANIMATION: return; // TODO
+		case SMC_SCRATCH_DASHBOARD_BOOT: return;  // TODO
+		}
 	//0x20	response to PIC challenge(written first)
 	//0x21	response to PIC challenge(written second)
 	}
