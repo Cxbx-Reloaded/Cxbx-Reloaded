@@ -49,8 +49,6 @@
 // the low-level functionality of this PIC, but only the minimum set of
 // high-level commands that are sufficient for the Xbox.
 
-#define SMBUS_SMC_SLAVE_ADDRESS 0x20 // = Write; Read = 0x21
-
 // Reading:
 
 // From https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC :
@@ -58,10 +56,10 @@
 #define SMC_COMMAND_VERSION 0x01	// PIC version string
 //0x03	tray state
 #define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-//0x09	CPU temperature(°C)
-//0x0A	board temperature(°C)
+#define SMC_COMMAND_CPU_TEMP 0x09 // CPU temperature (°C)
+#define SMC_COMMAND_GPU_TEMP 0x0A // GPU (board?) temperature (°C)
 //0x0F	reads scratch register written with 0x0E
-//0x10	current fan speed(0~50)
+#define SMC_COMMAND_POWER_FAN_READBACK 0x10 // Current power fan speed (0-50)
 //0x11	interrupt reason
 //0x18	reading this reg locks up xbox in "overheated" state
 #define SMC_COMMAND_SCRATCH 0x1B	// scratch register for the original kernel
@@ -75,8 +73,8 @@
 //Command	Description
 //0x01	PIC version string counter reset
 #define SMC_COMMAND_RESET 0x02	 //0x02	reset and power off control
-//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
-//0x06	power fan speed(0..~50)
+#define SMC_COMMAND_POWER_FAN_MODE 0x05 // power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
+#define SMC_COMMAND_POWER_FAN_REGISTER 0x06 // Set custom power fan speed (0-50)
 #define SMC_COMMAND_LED_MODE 0x07	// LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
 #define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
 //0x0C	tray eject(0 = eject; 1 = load)
@@ -102,16 +100,18 @@
 #define SMC_SCRATCH_SHORT_ANIMATION		0x04
 #define SMC_SCRATCH_DASHBOARD_BOOT		0x08
 
-typedef enum { // TODO : Move to it's own file
-	Revision1_0,
-	Revision1_1,
-	DebugKit
-} HardwareModel;
+typedef enum {
+	// http://xboxdevwiki.net/System_Management_Controller
+	P01,
+	P2L,
+	D01, // Seen in a debug kit 
+	D05, // Seen in a earlier model chihiro
+} SCMRevision;
 
 class SMCDevice : public SMDevice {
 public:
 	// constructor
-	SMCDevice(HardwareModel hardwareModel);
+	SMCDevice(SCMRevision revision);
 
 	// SMDevice functions
 	void Init();
@@ -129,9 +129,7 @@ public:
 	void WriteBlock(uint8_t command, uint8_t* data, int length);
 
 private:
-	HardwareModel m_HardwareModel;
+	SCMRevision m_revision;
 	int m_PICVersionStringIndex = 0;
 	uint8_t buffer[256] = {};
 };
-
-extern SMCDevice* g_SMC;

@@ -33,39 +33,124 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Xbox.h"
-
-#include "PCIBus.h" // For PCIBus
-#include "SMBus.h" // For SMBus
-#include "SMCDevice.h" // For SMCDevice
-#include "EEPROMDevice.h" // For EEPROMDevice
-#include "EmuNVNet.h" // For NVNetDevice
-#include "devices\video\nv2a.h" // For NV2ADevice
+#include "Xbox.h" // For HardwareModel
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
+MCPXDevice* g_MCPX;
 SMCDevice* g_SMC;
 EEPROMDevice* g_EEPROM;
 NVNetDevice* g_NVNet;
 NV2ADevice* g_NV2A;
 
-#define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
-#define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
-
-void InitXboxHardware()
+MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
+	switch (hardwareModel) {
+	case Revision1_0:
+	case Revision1_1:
+	case Revision1_2:
+	case Revision1_3:
+	case Revision1_4:
+	case Revision1_5:
+	case Revision1_6:
+		return MCPXRevision::MCPX_X3;
+	case DebugKit:
+		// EmuWarning("Guessing MCPXVersion");
+		return MCPXRevision::MCPX_X2;
+	default:
+		// UNREACHABLE(hardwareModel);
+		return MCPXRevision::MCPX_X3;
+	}
+}
+
+SCMRevision SCMRevisionFromHardwareModel(HardwareModel hardwareModel)
+{
+	switch (hardwareModel) {
+	case Revision1_0:
+		return SCMRevision::P01; // Our SCM returns PIC version string "P01"
+	case Revision1_1:
+	case Revision1_2:
+	case Revision1_3:
+	case Revision1_4:
+	case Revision1_5:
+	case Revision1_6:
+		// EmuWarning("Guessing SCMRevision");
+		return SCMRevision::P2L; // Assumption; Our SCM returns PIC version string "P05"
+	case DebugKit:
+		return SCMRevision::D01; // Our SCM returns PIC version string "DXB"
+	default:
+		// UNREACHABLE(hardwareModel);
+		return SCMRevision::P2L;
+	}
+}
+
+TVEncoder TVEncoderFromHardwareModel(HardwareModel hardwareModel)
+{
+	switch (hardwareModel) {
+	case Revision1_0:
+	case Revision1_1:
+	case Revision1_2:
+	case Revision1_3:
+		return TVEncoder::Conexant;
+	case Revision1_4:
+		return TVEncoder::Focus;
+	case Revision1_5:
+		return TVEncoder::Focus; // Assumption
+	case Revision1_6:
+		return TVEncoder::XCalibur;
+	case DebugKit:
+		// EmuWarning("Guessing TvEncoder");
+		return TVEncoder::Focus;
+	default: 
+		// UNREACHABLE(hardwareModel);
+		return TVEncoder::Focus;
+	}
+}
+
+void InitXboxHardware(HardwareModel hardwareModel)
+{
+	// Determine which (revisions of which) components should be used for this hardware model
+	MCPXRevision mcpx_revision = MCPXRevisionFromHardwareModel(hardwareModel);
+	SCMRevision smc_revision = SCMRevisionFromHardwareModel(hardwareModel);
+	TVEncoder tv_encoder = TVEncoderFromHardwareModel(hardwareModel);
+
+	// Create busses
 	g_PCIBus = new PCIBus();
 	g_SMBus = new SMBus();
-	g_SMC = new SMCDevice(Revision1_1); // TODO : Make configurable
+
+	// Create devices
+	g_MCPX = new MCPXDevice(mcpx_revision);
+	g_SMC = new SMCDevice(smc_revision);
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
 
-	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
-	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
+	// Connect devices to SM bus
+	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
+	g_SMBus->ConnectDevice(SMBUS_ADDRESS_EEPROM, g_EEPROM); // W 0xA8 R 0xA9
 
+	// TODO : Other SMBus devices to connect
+	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_MCPX, g_MCPX); // W 0x10 R 0x11 -- TODO : Is MCPX an SMBus and/or PCI device?
+	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_TEMPERATURE_MEASUREMENT, g_TemperatureMeasurement); // W 0x98 R 0x99
+	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_TV_ENCODER, g_TVEncoder); // W 0x88 R 0x89
+	switch (tv_encoder) {
+	case TVEncoder::Conexant:
+		// g_SMBus->ConnectDevice(SMBUS_ADDRESS_TV_ENCODER_ID_CONEXANT, g_TVEncoderConexant); // W 0x8A R 0x8B
+		break;
+	case TVEncoder::Focus:
+		// g_SMBus->ConnectDevice(SMBUS_ADDRESS_TV_ENCODER_ID_FOCUS, g_TVEncoderFocus); // W 0xD4 R 0xD5
+		break;
+	case TVEncoder::XCalibur:
+		// g_SMBus->ConnectDevice(SMBUS_ADDRESS_TV_ENCODER_ID_XCALIBUR, g_TVEncoderXCalibur); // W 0xE0 R 0xE1
+		break;
+	}
+
+	// Connect devices to PCI bus
 	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
 	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
+	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 1)), g_MCPX); // MCPX device ID = 0x0808 ?
+	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
+	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
 	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS

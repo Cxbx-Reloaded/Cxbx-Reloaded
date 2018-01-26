@@ -54,7 +54,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 #include "Common\EmuEEPROM.h" // For EEPROM
-#include "devices\SMBus.h" // For g_SMBus
+#include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 
 #include <algorithm> // for std::replace
@@ -794,7 +794,7 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 	
 	ResetOrShutdownCommandCode = SMC_COMMAND_RESET;
 	ResetOrShutdownDataValue = SMC_RESET_ASSERT_SHUTDOWN;
-	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
+	xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
 
 	RETURN(S_OK);
 }
@@ -829,7 +829,7 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 
 //	HalpSMCScratchRegister = ScratchRegister;
 
-	NTSTATUS Res = HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
+	NTSTATUS Res = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
 	RETURN(Res);
 }
