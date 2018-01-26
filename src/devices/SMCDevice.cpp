@@ -102,6 +102,7 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		case SCMRevision::P2L: buffer[0] = "P05"[m_PICVersionStringIndex]; break; // ??
 		case SCMRevision::D01: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
 		case SCMRevision::D05: buffer[0] = "D05"[m_PICVersionStringIndex]; break; // ??
+		// default: UNREACHABLE(m_revision);
 		}
 
 		m_PICVersionStringIndex = (m_PICVersionStringIndex + 1) % 3;
