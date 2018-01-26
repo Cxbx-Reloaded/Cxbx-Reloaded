@@ -3344,7 +3344,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
     HANDLE      hFile,
     OUT void**      ppMediaObject)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
@@ -3907,7 +3907,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
     DWORD           dwFlagsAndAttributes,
     OUT void**      ppMediaObject)
 {
-    FUNC_EXPORTS;
+    //FUNC_EXPORTS;
 
     enterCriticalSection;
 
