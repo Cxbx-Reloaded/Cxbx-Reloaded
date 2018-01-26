@@ -99,8 +99,9 @@ TVEncoder TVEncoderFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_6:
 		return TVEncoder::XCalibur;
 	case DebugKit:
-		// EmuWarning("Guessing TvEncoder");
-		return TVEncoder::Focus;
+		// LukeUsher : My debug kit and at least most of them (maybe all?)
+		// are equivalent to v1.0 and have Conexant encoders.
+		return TVEncoder::Conexant;
 	default: 
 		// UNREACHABLE(hardwareModel);
 		return TVEncoder::Focus;
