@@ -2565,15 +2565,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 	typedef VOID(__stdcall *XB_D3DDevice_GetDisplayMode_t)(X_D3DDISPLAYMODE*);
 	static XB_D3DDevice_GetDisplayMode_t XB_D3DDevice_GetDisplayMode = (XB_D3DDevice_GetDisplayMode_t)GetXboxFunctionPointer("D3DDevice_GetDisplayMode");
 	
-	// Check the function pointer for validity, if it is not valid, we must abort as we have a missing OOVPA
-	if (XB_D3DDevice_GetDisplayMode == nullptr) {
-		CxbxKrnlCleanup("D3DDevice_GetDisplayFieldStatus: Could not locate D3DDevice_GetDisplayMode");
+	X_D3DDISPLAYMODE displayMode;
+
+	// If we can find the Xbox version of GetDisplayMode, use the real data returned, otherwise
+	// use a sensible default
+	if (XB_D3DDevice_GetDisplayMode != nullptr) {
+		XB_D3DDevice_GetDisplayMode(&displayMode);
+	} else {
+		// We don't show a warning because doing so pollutes the kernel debug log as this function gets called every frame
+		displayMode.Flags = X_D3DPRESENTFLAG_INTERLACED;
 	}
 	
-	// Call the Xbox GetDisplayMode function to retrieve flags for the active video mode
-	X_D3DDISPLAYMODE displayMode;
-	XB_D3DDevice_GetDisplayMode(&displayMode);
-
 	// Set the VBlank count
 	pFieldStatus->VBlankCount = g_VBData.VBlank;
 
