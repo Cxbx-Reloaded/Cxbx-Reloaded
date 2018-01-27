@@ -294,6 +294,7 @@ std::string XbePrinter::GenXbeCertificateInfo()
     text.append(GenLANKey());
     text.append(GenSignatureKey());
     text.append(GenAlternateSignatureKeys());
+    text.append(GenExtraInfo());
     return text;
 }
 
@@ -376,6 +377,22 @@ std::string XbePrinter::GenAlternateSignatureKeys()
     }
     text.append("\n                                   </Hex Dump>\n");
     return text;
+}
+
+std::string XbePrinter::GenExtraInfo()
+{
+    std::stringstream text;
+    
+    if (Xbe_certificate->dwSize >= 0x1EC)
+    {
+        SSTREAM_SET_HEX(text);
+        text << "Original Certificate Size        : 0x" << std::setw(8) << Xbe_certificate->dwOriginalCertificateSize << "\n";
+        text << "Online Service ID                : 0x" << std::setw(8) << Xbe_certificate->dwOnlineService << "\n";
+        text << "Extra Security Flags             : 0x" << std::setw(8) << Xbe_certificate->dwSecurityFlags << "\n";
+        text << "Code Encryption Key              : ";
+        text << GenHexRow(&(Xbe_certificate->bzCodeEncKey[0]), 0, 16) << "\n";
+    }
+    return text.str();
 }
 
 std::string XbePrinter::GenSectionInfo()

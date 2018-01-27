@@ -72,6 +72,7 @@ class XbePrinter
         std::string GenLANKey();
         std::string GenSignatureKey();
         std::string GenAlternateSignatureKeys();
+        std::string GenExtraInfo();
 
         std::string GenSectionInfo();
         std::string GenSectionHeaders();
