@@ -123,7 +123,7 @@ static int                          g_iWireframe    = 0;
 extern uint32						g_BuildVersion;
 
 // resource caching for _Register
-std::vector<DWORD> g_RegisteredResources;
+std::vector<uint64_t> g_RegisteredResources;
 
 // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
@@ -2065,13 +2065,13 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if(IsSpecialXboxResource(pResource))
         return;
 
-	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), pResource->Data) != g_RegisteredResources.end()) {
+	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), GetHostResourceKey(pResource)) != g_RegisteredResources.end()) {
 		return;
 	}
 
 	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
         
-	g_RegisteredResources.push_back(pResource->Data);
+	g_RegisteredResources.push_back(GetHostResourceKey(pResource));
 }
 
 // ensure a given width/height are powers of 2
