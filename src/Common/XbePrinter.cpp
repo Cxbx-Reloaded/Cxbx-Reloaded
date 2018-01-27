@@ -382,9 +382,10 @@ std::string XbePrinter::GenAlternateSignatureKeys()
 std::string XbePrinter::GenExtraInfo()
 {
     std::stringstream text;
-    SSTREAM_SET_HEX(text);
-    if (Xbe_certificate->dwSize == 0x1EC)
+    
+    if (Xbe_certificate->dwSize >= 0x1EC)
     {
+        SSTREAM_SET_HEX(text);
         text << "Original Certificate Size        : 0x" << std::setw(8) << Xbe_certificate->dwOriginalCertificateSize << "\n";
         text << "Online Service ID                : 0x" << std::setw(8) << Xbe_certificate->dwOnlineService << "\n";
         text << "Extra Security Flags             : 0x" << std::setw(8) << Xbe_certificate->dwSecurityFlags << "\n";
