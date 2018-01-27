@@ -157,7 +157,7 @@ class Xbe : public Error
             uint32  dwOriginalCertificateSize;			  // 0x01D0 - Original Certificate Size?
             uint32  dwOnlineService;					  // 0x01D4 - Online Service ID
             uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
-			uint08  bzCodeEncKey[16];					  // 0x01DC - Code Encryption Key?
+            uint08  bzCodeEncKey[16];					  // 0x01DC - Code Encryption Key?
         }
         #include "AlignPosfix1.h"
         m_Certificate;
