@@ -9,6 +9,7 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using cs_x86;
 
 namespace CxbxDebugger
@@ -567,58 +568,7 @@ namespace CxbxDebugger
 
         private void btnDumpCallstack_Click(object sender, EventArgs e)
         {
-            int Index = cbThreads.SelectedIndex;
-            if (Index == -1)
-                return;
 
-            CallstackAddress.Clear();
-            lbCallstack.Items.Clear();
-
-            int OtherModuleCount = 0;
-
-            var Callstack = DebugThreads[Index].CallstackCache;
-            foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
-            {
-                string ModuleName = "??";
-                uint ModuleBase = 0;
-                var Module = DebuggerInst.ResolveModule((uint)StackFrame.PC);
-                if( Module != null )
-                {
-                    if( !Module.Core )
-                    {
-                        OtherModuleCount++;
-                        continue;
-                    }
-
-                    ModuleName = Path.GetFileName(Module.Path);
-                    ModuleBase = (uint)Module.ImageBase;
-                }
-                else
-                {
-                    OtherModuleCount++;
-                    continue;
-                }
-
-                if (OtherModuleCount > 0)
-                {
-                    CallstackAddress.Add(IntPtr.Zero);
-                    lbCallstack.Items.Add("[External Code]");
-                    OtherModuleCount = 0;
-                }
-
-                uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
-                string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
-
-                CallstackAddress.Add(StackFrame.PC);
-                lbCallstack.Items.Add(FrameString);
-            }
-
-            if (OtherModuleCount > 0)
-            {
-                CallstackAddress.Add(IntPtr.Zero); 
-                lbCallstack.Items.Add("[External Code]");
-                OtherModuleCount = 0;
-            }
         }
 
         static private bool ReadInt(TextBox Source, ref int Out)
@@ -696,6 +646,37 @@ namespace CxbxDebugger
             //pictureBox1.Image = DumpFramebuffer();
         }
 
+        public delegate string ResolveAddressSymbol(uint Address);
+
+        public static string ResolveSymbols(string s, ResolveAddressSymbol Resolver)
+        {
+            return Regex.Replace(s, "(0x[a-f0-9]+)", delegate (Match match)
+            {
+                string v = match.ToString();
+
+                uint Address = (uint)Convert.ToInt32(v, 16);
+                
+                // No need to lookup small addresses
+                if (Address > 0x1000)
+                {
+                    return Resolver(Address);
+                }
+                else
+                {
+                    return v;
+                }
+            },
+            RegexOptions.IgnoreCase);
+        }
+
+        string FormatDisassembly(string Disassembly)
+        {
+            return ResolveSymbols(Disassembly, delegate (uint Address)
+            {
+                return "addr=" + Convert.ToString(Address, 16);
+            });
+        }
+
         private void lbCallstack_SelectedIndexChanged(object sender, EventArgs e)
         {
             if( lbCallstack.SelectedIndex != -1 )
@@ -717,7 +698,7 @@ namespace CxbxDebugger
                     cs.DisassembleIt(data, (ulong)OffsetAddr, delegate (CapstoneInstruction Instruction)
                     {
                         string Cursor = (Instruction.Address == (uint)ptr) ? "> " : "  ";
-                        disassembly += string.Format("{0}{1:x8} {2}", Cursor, Instruction.Address, Instruction.Disassembly) + "\r\n";
+                        disassembly += string.Format("{0}{1:x8} {2}", Cursor, Instruction.Address, FormatDisassembly(Instruction.Disassembly)) + "\r\n";
                     });
                 }
                 
@@ -742,6 +723,67 @@ namespace CxbxDebugger
 
                 MessageBox.Show("Memory dumped!");
             }
+        }
+
+        private void DumpCallstack()
+        {
+            int Index = cbThreads.SelectedIndex;
+            if (Index == -1)
+                return;
+
+            CallstackAddress.Clear();
+            lbCallstack.Items.Clear();
+
+            int OtherModuleCount = 0;
+
+            var Callstack = DebugThreads[Index].CallstackCache;
+            foreach (DebuggerStackFrame StackFrame in Callstack.StackFrames)
+            {
+                string ModuleName = "??";
+                uint ModuleBase = 0;
+                var Module = DebuggerInst.ResolveModule((uint)StackFrame.PC);
+                if (Module != null)
+                {
+                    if (!Module.Core)
+                    {
+                        OtherModuleCount++;
+                        continue;
+                    }
+
+                    ModuleName = Path.GetFileName(Module.Path);
+                    ModuleBase = (uint)Module.ImageBase;
+                }
+                else
+                {
+                    OtherModuleCount++;
+                    continue;
+                }
+
+                if (OtherModuleCount > 0)
+                {
+                    CallstackAddress.Add(IntPtr.Zero);
+                    lbCallstack.Items.Add("[External Code]");
+                    OtherModuleCount = 0;
+                }
+
+                uint ModuleOffset = (uint)StackFrame.PC - ModuleBase;
+                string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
+
+                CallstackAddress.Add(StackFrame.PC);
+                lbCallstack.Items.Add(FrameString);
+            }
+
+            if (OtherModuleCount > 0)
+            {
+                CallstackAddress.Add(IntPtr.Zero);
+                lbCallstack.Items.Add("[External Code]");
+                OtherModuleCount = 0;
+            }
+        }
+
+        private void cbThreads_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            DumpCallstack();
         }
     }
 }
