@@ -5924,6 +5924,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the following release call!
 	DWORD data = pThis->Data;
 	auto hostResourceIterator = g_HostResources.find(GetHostResourceKey(pThis));
+	auto registeredResourceIterator = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), GetHostResourceKey(pThis));
 
 	// Call the Xbox version of D3DResource_Release and store the result
 	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
@@ -5944,9 +5945,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	if (uRet == 0) {
 		// Cleanup RegisteredResources array
 		// We can remove this soon, after a little more cleanup
-		auto it = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), data);
-		if (it != g_RegisteredResources.end()) {
-			g_RegisteredResources.erase(it);
+		if (registeredResourceIterator != g_RegisteredResources.end()) {
+			g_RegisteredResources.erase(registeredResourceIterator);
 		}
 
 		// Release the host resource and remove it from the list
