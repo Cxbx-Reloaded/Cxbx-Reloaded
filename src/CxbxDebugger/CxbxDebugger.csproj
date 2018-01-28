@@ -85,6 +85,9 @@
     <Compile Include="DebuggerSymbols\HLECache\Utils\INIReader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RicherTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ThreadHelpers.cs" />
     <Compile Include="Win32\Constants.cs" />
     <Compile Include="Win32\Debugging\CONTINUE_STATUS.cs" />

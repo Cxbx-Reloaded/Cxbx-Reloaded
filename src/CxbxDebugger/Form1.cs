@@ -105,6 +105,16 @@ namespace CxbxDebugger
 
             // TODO: Wait for user to start this?
             //StartDebugging();
+
+            disassemblyText.InlineLinkClicked += OnDisassemblyNavigation;
+        }
+
+        private void OnDisassemblyNavigation(object sender, InlineLinkClickedEventArgs e)
+        {
+            // TODO: Go to memory window?
+            Console.WriteLine("Attempting to view memory at " + e.Link);
+
+            ShowMemoryAt(e.Link);
         }
 
         private void StartDebugging()
@@ -646,35 +656,34 @@ namespace CxbxDebugger
             //pictureBox1.Image = DumpFramebuffer();
         }
 
-        public delegate string ResolveAddressSymbol(uint Address);
+        public delegate void OtherData(string Part);
+        public delegate void ResolveAddressSymbol(uint Address);
 
-        public static string ResolveSymbols(string s, ResolveAddressSymbol Resolver)
+        public static void ExtractSymbols(string Text, OtherData Data, ResolveAddressSymbol Resolver)
         {
-            return Regex.Replace(s, "(0x[a-f0-9]+)", delegate (Match match)
-            {
-                string v = match.ToString();
+            // This regex will match addresses in the format "0x123"
+            // TODO: Fix ajoined addresses ie "0x1230x123" - treated as 0x1230
+            MatchCollection Matches = Regex.Matches(Text, "(0x[a-f0-9]+)", RegexOptions.IgnoreCase);
 
-                uint Address = (uint)Convert.ToInt32(v, 16);
+            int LastIndex = 0;
+            for(int i = 0; i < Matches.Count; ++i)
+            {
+                if( Matches[i].Index > LastIndex )
+                {
+                    var Last = Text.Substring(LastIndex, Matches[i].Index - LastIndex);
+                    Data(Last);
+                }
                 
-                // No need to lookup small addresses
-                if (Address > 0x1000)
-                {
-                    return Resolver(Address);
-                }
-                else
-                {
-                    return v;
-                }
-            },
-            RegexOptions.IgnoreCase);
-        }
+                uint Address = (uint)Convert.ToInt32(Matches[i].ToString(), 16);
+                Resolver(Address);
 
-        string FormatDisassembly(string Disassembly)
-        {
-            return ResolveSymbols(Disassembly, delegate (uint Address)
+                LastIndex = Matches[i].Index + Matches[i].Length;
+            }
+
+            if( LastIndex < Text.Length)
             {
-                return "addr=" + Convert.ToString(Address, 16);
-            });
+                Data(Text.Substring(LastIndex));
+            }
         }
 
         private void lbCallstack_SelectedIndexChanged(object sender, EventArgs e)
@@ -691,18 +700,32 @@ namespace CxbxDebugger
 
                 byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(OffsetAddr, 64);
 
-                string disassembly = "";
+                disassemblyText.Clear();
 
                 using (Capstone cs = Capstone.CreateEngine())
                 {
                     cs.DisassembleIt(data, (ulong)OffsetAddr, delegate (CapstoneInstruction Instruction)
                     {
                         string Cursor = (Instruction.Address == (uint)ptr) ? "> " : "  ";
-                        disassembly += string.Format("{0}{1:x8} {2}", Cursor, Instruction.Address, FormatDisassembly(Instruction.Disassembly)) + "\r\n";
+
+                        disassemblyText.Add(string.Format("{0}{1:x8} ", Cursor, Instruction.Address));
+
+                        ExtractSymbols(Instruction.Disassembly,
+                            delegate (string Data)
+                            {
+                                disassemblyText.Add(Data);
+                            },
+                            delegate (uint Address)
+                            {
+                                // TODO Resolve symbol name
+                                string label = Convert.ToString(Address, 16);
+
+                                disassemblyText.InsertLink(label);
+                            });
+
+                        disassemblyText.AddLine("");
                     });
                 }
-                
-                textBox3.Text = disassembly;
             }
         }
 
@@ -784,6 +807,13 @@ namespace CxbxDebugger
         private void cbThreads_SelectedIndexChanged(object sender, EventArgs e)
         {
             DumpCallstack();
+        }
+
+        private void ShowMemoryAt(string Address)
+        {
+            // Switch to memory page and set address string
+            tabControl1.SelectedTab = tabPage5;
+            txAddress.Text = string.Format("0x{0}", Address);
         }
     }
 }
