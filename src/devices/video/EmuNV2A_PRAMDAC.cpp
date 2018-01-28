@@ -24,6 +24,9 @@ DEVICE_READ32(PRAMDAC)
 		break;
 	}
 
+    /* Surprisingly, QEMU doesn't handle unaligned access for you properly */
+    // result >>= 32 - 8 * size - 8 * (addr & 3);
+	
 	DEVICE_READ32_END(PRAMDAC);
 }
 

@@ -33,7 +33,9 @@ DEVICE_WRITE32(PCRTC)
 		update_irq();
 		break;
 	case NV_PCRTC_START:
-		pcrtc.start = value &= 0x07FFFFFF;
+        value &= 0x07FFFFFF;
+        // assert(val < memory_region_size(d->vram));
+		pcrtc.start = value;
 		break;
 
 	default: 

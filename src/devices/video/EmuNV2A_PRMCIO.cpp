@@ -1,5 +1,6 @@
 DEVICE_READ32(PRMCIO)
 {
+	// vga_ioport_read :
 	DEVICE_READ32_SWITCH() {
 	case VGA_CRT_IM:
 	case VGA_CRT_IC:
@@ -23,6 +24,19 @@ DEVICE_READ32(PRMCIO)
 DEVICE_WRITE32(PRMCIO)
 {
 	switch (addr) {
+#if 0 // TODO : Enable
+    case VGA_ATT_W:
+        /* Cromwell sets attrs without enabling VGA_AR_ENABLE_DISPLAY
+         * (which should result in a blank screen).
+         * Either nvidia's hardware is lenient or it is set through
+         * something else. The former seems more likely.
+         */
+        if (d->vga.ar_flip_flop == 0) {
+            value |= VGA_AR_ENABLE_DISPLAY;
+        }
+        break;
+#endif
+	// vga_ioport_write :
 	case VGA_CRT_IM:
 	case VGA_CRT_IC:
 		prmcio.cr_index = value;

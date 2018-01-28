@@ -26,6 +26,7 @@ DEVICE_WRITE32(PMC)
 {
 	switch(addr) {
 	case NV_PMC_INTR_0:
+        /* the bits of the interrupts to clear are wrtten */
 		pmc.pending_interrupts &= ~value;
 		update_irq();
 		break;
