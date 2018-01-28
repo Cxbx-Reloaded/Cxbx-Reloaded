@@ -177,7 +177,7 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-__declspec(noreturn) void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
 __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...);

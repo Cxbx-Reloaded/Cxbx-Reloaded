@@ -571,6 +571,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		}
 	}
 
+	// We must save this handle now to keep the child window working in the case we need to display the UEM
+	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : NULL;
+
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
 	// Write a header to the log
@@ -600,6 +603,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			g_IsWine = true;
 		}
 	}
+
 	// Now we got the arguments, start by initializing the Xbox memory map :
 	// PrepareXBoxMemoryMap()
 	{
@@ -670,7 +674,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	{
 		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder) 
 		g_EmuShared->SetXbePath(xbePath.c_str());
-		CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
 			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
@@ -740,7 +744,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		EntryPoint ^= XOR_EP_KEY[g_XbeType];
 		// Launch XBE
 		CxbxKrnlInit(
-			hWnd, 
 			XbeTlsData, 
 			XbeTls, 
 			CxbxKrnl_Xbe->m_LibraryVersion, 
@@ -790,7 +793,6 @@ void LoadXboxKeys(std::string path)
 
 __declspec(noreturn) void CxbxKrnlInit
 (
-	HWND                    hwndParent,
 	void                   *pTLSData,
 	Xbe::TLS               *pTLS,
 	Xbe::LibraryVersion    *pLibraryVersion,
@@ -804,7 +806,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxKrnl_TLS = pTLS;
 	CxbxKrnl_TLSData = pTLSData;
 	CxbxKrnl_XbeHeader = pXbeHeader;
-	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 	CxbxKrnl_DebugMode = DbgMode;
 	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
 
@@ -837,7 +838,7 @@ __declspec(noreturn) void CxbxKrnlInit
 			"   pXBEHeaderSize      : 0x%.08X\n"
 			"   Entry               : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+			GetCurrentThreadId(), CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 #else
 		printf("[0x%X] INIT: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
@@ -1008,7 +1009,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// initialize grapchics
 	DbgPrintf("INIT: Initializing render window.\n");
-	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+	XTL::CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
 	int BootFlags = 0;
@@ -1296,6 +1297,11 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	xboxkrnl::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
 
+	int BootFlags;
+	g_EmuShared->GetBootFlags(&BootFlags);
+	BootFlags &= ~BOOT_FATAL_ERROR;         // clear the fatal error flag to avoid looping here endlessly
+	g_EmuShared->SetBootFlags(&BootFlags);
+
 	NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
 
 	if (status == STATUS_SUCCESS)
@@ -1328,11 +1334,6 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 
 	g_CxbxFatalErrorCode = ErrorCode;
 	g_CxbxPrintUEM = true; // print the UEM
-
-	int BootFlags;
-	g_EmuShared->GetBootFlags(&BootFlags);
-	BootFlags ^= BOOT_FATAL_ERROR;     // clear the fatal error flag to avoid looping here endlessly
-	g_EmuShared->SetBootFlags(&BootFlags);
 
 	// Sleep forever to prevent continuing the initialization
 	Sleep(INFINITE);

@@ -51,7 +51,7 @@ class Xbe : public Error
 {
     public:
         // construct via Xbe file
-        Xbe(const char *x_szFilename);
+        Xbe(const char *x_szFilename, bool bFromGUI);
 		
         // deconstructor
        ~Xbe();

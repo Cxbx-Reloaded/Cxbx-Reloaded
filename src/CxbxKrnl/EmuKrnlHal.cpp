@@ -507,7 +507,11 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		g_EmuShared->GetXbePath(szWorkingDirectoy);
 		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 		if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+		{
+			int BootFlags = 0;
+			g_EmuShared->SetBootFlags(&BootFlags); // clear all boot flags in the case of failure
 			CxbxKrnlCleanup("Could not reboot");
+		}
 		break;
 	}
 

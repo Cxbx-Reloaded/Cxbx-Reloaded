@@ -1272,6 +1272,18 @@ typedef struct _LAUNCH_DATA_PAGE
 LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
 
 // ******************************************************************
+// * DASH_LAUNCH_DATA
+// ******************************************************************
+typedef struct _DASH_LAUNCH_DATA
+{
+	DWORD dwReason;
+	DWORD dwContext;
+	DWORD dwParameter1;
+	DWORD dwParameter2;
+	BYTE  Reserved[3072 - 16];
+} DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
+
+// ******************************************************************
 // * DISPATCHER_HEADER
 // ******************************************************************
 typedef struct _DISPATCHER_HEADER
