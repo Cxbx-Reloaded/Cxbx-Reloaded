@@ -1786,7 +1786,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
     strcpy(m_XbeFilename, x_filename);
 
-    m_Xbe = new Xbe(m_XbeFilename);
+    m_Xbe = new Xbe(m_XbeFilename, true);
 
     if(m_Xbe->HasError())
     {
@@ -2051,12 +2051,12 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 // monitor for crashes
 void WndMain::CrashMonitor()
 {
-	bool bMultiXbe;
+	bool bQuickReboot;
 	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
 
 	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
 
-	g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
 
 	if (state == WAIT_OBJECT_0) // StopEmulation
 	{
@@ -2064,7 +2064,7 @@ void WndMain::CrashMonitor()
 		return;
 	}
 
-	if (state == WAIT_ABANDONED && !bMultiXbe) // that's a crash
+	if (state == WAIT_ABANDONED && !bQuickReboot) // that's a crash
 	{
 		CloseHandle(hCrashMutex);
 		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
@@ -2083,8 +2083,8 @@ void WndMain::CrashMonitor()
 	// multi-xbe
 	// destroy this thread and start a new one
 	CloseHandle(hCrashMutex);
-	bMultiXbe = false;
-	g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+	bQuickReboot = false;
+	g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
 
 	return;
 }

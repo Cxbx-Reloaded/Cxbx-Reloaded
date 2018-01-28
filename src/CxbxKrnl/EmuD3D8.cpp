@@ -1,4 +1,4 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
@@ -57,6 +57,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 #include "HLEIntercept.h" // for bLLE_GPU
+#include "Cxbx\\ResCxbx.h"
 
 #include <assert.h>
 #include <process.h>
@@ -97,8 +98,6 @@ static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
 static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
 static DWORD                        g_dwOverlayP    = 640;  // Cached Overlay Pitch
-static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
-static uint32                       g_XbeHeaderSize = 0;    // XbeHeaderSize
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
@@ -394,7 +393,7 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	case DDERR_NOTLOCKED: return "An attempt was made to unlock a surface that was not locked.";
 	case DDERR_NOTPAGELOCKED: return "An attempt was made to page-unlock a surface with no outstanding page locks.";
 	case DDERR_NOTPALETTIZED: return "The surface being used is not a palette-based surface.";
-	case DDERR_NOVSYNCHW: return "There is no hardware support for vertical blanksynchronized operations.";
+	case DDERR_NOVSYNCHW: return "There is no hardware support for vertical blanksynchronized operations.";
 	case DDERR_NOZBUFFERHW: return "The operation to create a z-buffer in display memory or to perform a blit, using a z-buffer cannot be carried out because there is no hardware support for z-buffers.";
 	case DDERR_NOZOVERLAYHW: return "The overlay surfaces cannot be z-layered, based on the z-order because the hardware does not support z-ordering of overlays.";
 	case DDERR_OUTOFCAPS: return "The hardware needed for the requested operation has already been allocated.";
@@ -452,18 +451,15 @@ const char *D3DErrorString(HRESULT hResult)
 	return buffer;
 }
 
-VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID XTL::CxbxInitWindow(bool bFullInit)
 {
     g_EmuShared->GetXBVideo(&g_XBVideo);
 
     if(g_XBVideo.GetFullscreen())
         CxbxKrnl_hEmuParent = NULL;
 
-    // cache XbeHeader and size of XbeHeader
-    g_XbeHeader     = XbeHeader;
-    g_XbeHeaderSize = XbeHeaderSize;
-
     // create timing thread
+	if (bFullInit)
     {
         DWORD dwThreadId;
 
@@ -499,7 +495,8 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
 		// Ported from Dxbx :
 		// If possible, assign this thread to another core than the one that runs Xbox1 code :
-		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
+		if (bFullInit)
+			SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
             SwitchToThread(); 
@@ -508,6 +505,70 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     }
 
 	SetFocus(g_hEmuWindow);
+}
+
+void DrawUEM(HWND hWnd)
+{
+	// Draw the universal error message (UEM)
+	// See http://xboxdevwiki.net/Fatal_Error
+	// Only call this from WM_PAINT message!
+
+	PAINTSTRUCT ps;
+
+	BeginPaint(hWnd, &ps);
+
+	HDC hDC = GetDC(hWnd);
+	HDC hMemDC = CreateCompatibleDC(hDC);
+	HBITMAP hUEMBmp = CreateCompatibleBitmap(hDC, 640, 480);
+	HBITMAP hOriUEMBmp = (HBITMAP)SelectObject(hMemDC, hUEMBmp);
+
+
+	int nHeight = -MulDiv(8, GetDeviceCaps(hMemDC, LOGPIXELSY), 72);
+
+	HFONT hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
+
+	HGDIOBJ tmpObj = SelectObject(hMemDC, hFont);
+
+	SetBkColor(hMemDC, RGB(0, 0, 0));
+
+	SetTextColor(hMemDC, RGB(0, 204, 0));
+
+	wchar_t buff[500];
+	LoadStringW(GetModuleHandle(NULL), IDS_UEM, buff, sizeof(buff) / sizeof(wchar_t));
+	std::wstring wstr(buff);
+
+	// Unfortunately, DrawTextW doesn't support vertical alignemnt, so we have to do the calculation
+	// ourselves. See here: https://social.msdn.microsoft.com/Forums/vstudio/en-US/abd89aae-16a0-41c6-8db6-b119ea90b42a/win32-drawtext-how-center-in-vertical-with-new-lines-and-tabs?forum=vclanguage
+
+	RECT rect = { 0, 0, 640, 480 };
+	RECT textrect = { 0, 0, 640, 480 };
+	DrawTextW(hMemDC, wstr.c_str(), wstr.length(), &textrect, DT_CALCRECT);
+	rect.top = (rect.bottom - textrect.bottom) / 2;
+	DrawTextW(hMemDC, wstr.c_str(), wstr.length(), &rect, DT_CENTER);
+
+
+	// Draw the Xbox error code
+
+	SetTextColor(hMemDC, RGB(255, 255, 255));
+	std::string err_str(std::to_string(g_CxbxFatalErrorCode));
+	rect.left = 20;
+	DrawText(hMemDC, err_str.c_str(), err_str.length(), &rect, DT_LEFT);
+
+	GetClientRect(hWnd, &rect);
+	SetStretchBltMode(hDC, COLORONCOLOR);
+	StretchBlt(hDC, rect.left, rect.top, rect.right, rect.bottom, hMemDC, 0, 0, 640, 480, SRCCOPY);
+
+	SelectObject(hMemDC, hOriUEMBmp);
+	SelectObject(hDC, tmpObj);
+
+	DeleteObject(hUEMBmp);
+	DeleteObject(hFont);
+	DeleteObject(hMemDC);
+
+	if (hDC != NULL)
+		ReleaseDC(hWnd, hDC);
+
+	EndPaint(hWnd, &ps);
 }
 
 inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource *pXboxResource)
@@ -1191,13 +1252,13 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         RegisterClassEx(&wc);
     }
 
-	bool bMultiXbe;
-	g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+	bool bQuickReboot;
+	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
 
 	// precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
-	while (bMultiXbe)
+	while (bQuickReboot)
 	{
-		g_EmuShared->GetMultiXbeFlag(&bMultiXbe);
+		g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
 	}
 
 	HANDLE hCrashMutex = CreateMutex(NULL, TRUE, "CrashMutex");
@@ -1364,6 +1425,15 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             return D3D_OK; // = 0
         }
         break;
+
+		case WM_PAINT:
+		{
+			if (g_CxbxPrintUEM)
+			{
+				DrawUEM(hWnd);
+			}
+		}
+		break;
 
         case WM_SYSKEYDOWN:
         {
