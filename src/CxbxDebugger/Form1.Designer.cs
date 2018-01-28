@@ -41,8 +41,6 @@
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.lbCallstack = new System.Windows.Forms.ListBox();
-            this.disassemblyText = new CxbxDebugger.RicherTextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -68,13 +66,16 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
+            this.disassemblyText = new CxbxDebugger.RicherTextBox();
+            this.cbFrames = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).BeginInit();
@@ -114,7 +115,10 @@
             this.btnSuspend,
             this.btnResume,
             this.toolStripSeparator2,
-            this.cbThreads});
+            this.toolStripLabel1,
+            this.cbThreads,
+            this.toolStripLabel2,
+            this.cbFrames});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
@@ -163,7 +167,7 @@
             // 
             this.cbThreads.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbThreads.Name = "cbThreads";
-            this.cbThreads.Size = new System.Drawing.Size(121, 25);
+            this.cbThreads.Size = new System.Drawing.Size(200, 25);
             this.cbThreads.SelectedIndexChanged += new System.EventHandler(this.cbThreads_SelectedIndexChanged);
             // 
             // tableLayoutPanel3
@@ -225,37 +229,10 @@
             // 
             // splitContainer2.Panel1
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.lbCallstack);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.disassemblyText);
+            this.splitContainer2.Panel1.Controls.Add(this.disassemblyText);
             this.splitContainer2.Size = new System.Drawing.Size(742, 203);
-            this.splitContainer2.SplitterDistance = 247;
+            this.splitContainer2.SplitterDistance = 550;
             this.splitContainer2.TabIndex = 2;
-            // 
-            // lbCallstack
-            // 
-            this.lbCallstack.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lbCallstack.FormattingEnabled = true;
-            this.lbCallstack.Location = new System.Drawing.Point(0, 0);
-            this.lbCallstack.Name = "lbCallstack";
-            this.lbCallstack.Size = new System.Drawing.Size(247, 203);
-            this.lbCallstack.TabIndex = 0;
-            this.lbCallstack.SelectedIndexChanged += new System.EventHandler(this.lbCallstack_SelectedIndexChanged);
-            // 
-            // disassemblyText
-            // 
-            this.disassemblyText.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.disassemblyText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.disassemblyText.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.disassemblyText.Location = new System.Drawing.Point(0, 0);
-            this.disassemblyText.Name = "disassemblyText";
-            this.disassemblyText.ReadOnly = true;
-            this.disassemblyText.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.disassemblyText.Size = new System.Drawing.Size(491, 203);
-            this.disassemblyText.TabIndex = 1;
-            this.disassemblyText.Text = "";
             // 
             // tabPage2
             // 
@@ -405,7 +382,7 @@
             // 
             this.splitContainer4.Panel2.Controls.Add(this.groupBox2);
             this.splitContainer4.Size = new System.Drawing.Size(742, 203);
-            this.splitContainer4.SplitterDistance = 247;
+            this.splitContainer4.SplitterDistance = 391;
             this.splitContainer4.TabIndex = 7;
             // 
             // textBox1
@@ -417,7 +394,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox1.Size = new System.Drawing.Size(247, 203);
+            this.textBox1.Size = new System.Drawing.Size(391, 203);
             this.textBox1.TabIndex = 0;
             // 
             // groupBox2
@@ -431,7 +408,7 @@
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox2.Location = new System.Drawing.Point(0, 0);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(491, 203);
+            this.groupBox2.Size = new System.Drawing.Size(347, 203);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "View or Dump Memory";
@@ -509,6 +486,38 @@
             // 
             this.diagSaveMemory.Filter = "Any Type|*.*";
             // 
+            // disassemblyText
+            // 
+            this.disassemblyText.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.disassemblyText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.disassemblyText.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.disassemblyText.Location = new System.Drawing.Point(0, 0);
+            this.disassemblyText.Name = "disassemblyText";
+            this.disassemblyText.ReadOnly = true;
+            this.disassemblyText.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.disassemblyText.Size = new System.Drawing.Size(550, 203);
+            this.disassemblyText.TabIndex = 1;
+            this.disassemblyText.Text = "";
+            // 
+            // cbFrames
+            // 
+            this.cbFrames.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbFrames.Name = "cbFrames";
+            this.cbFrames.Size = new System.Drawing.Size(200, 25);
+            this.cbFrames.SelectedIndexChanged += new System.EventHandler(this.cbFrames_SelectedIndexChanged);
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(47, 22);
+            this.toolStripLabel1.Text = "Thread:";
+            // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(74, 22);
+            this.toolStripLabel2.Text = "Stack Frame:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -526,7 +535,6 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
@@ -567,7 +575,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.ListBox lbCallstack;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabPage tabPage4;
@@ -596,6 +603,9 @@
         private System.Windows.Forms.SplitContainer splitContainer3;
         private System.Windows.Forms.SplitContainer splitContainer4;
         private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripComboBox cbFrames;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
     }
 }
 

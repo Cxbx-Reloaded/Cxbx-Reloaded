@@ -170,8 +170,10 @@ namespace CxbxDebugger
                 // Main threads always override any existing prefix
                 if (IsMainThread)
                     PrefixStr = "> ";
-                
-                DisplayStr = string.Format("{0}[{1}] 0x{2:X8}", PrefixStr, (uint)Thread.Handle, (uint)Thread.StartAddress);
+
+                string fn = Path.GetFileName(Thread.OwningProcess.Path);
+
+                DisplayStr = string.Format("{0}[{1}] {2}!{3:X8}", PrefixStr, (uint)Thread.Handle, fn, (uint)Thread.StartAddress);
                 
                 if( Thread.WasSuspended )
                 {
@@ -686,11 +688,11 @@ namespace CxbxDebugger
             }
         }
 
-        private void lbCallstack_SelectedIndexChanged(object sender, EventArgs e)
+        private void cbFrames_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if( lbCallstack.SelectedIndex != -1 )
+            if(cbFrames.SelectedIndex != -1 )
             {
-                IntPtr ptr = CallstackAddress[lbCallstack.SelectedIndex];
+                IntPtr ptr = CallstackAddress[cbFrames.SelectedIndex];
 
                 if (ptr == IntPtr.Zero)
                     return;
@@ -755,7 +757,7 @@ namespace CxbxDebugger
                 return;
 
             CallstackAddress.Clear();
-            lbCallstack.Items.Clear();
+            cbFrames.Items.Clear();
 
             int OtherModuleCount = 0;
 
@@ -785,7 +787,7 @@ namespace CxbxDebugger
                 if (OtherModuleCount > 0)
                 {
                     CallstackAddress.Add(IntPtr.Zero);
-                    lbCallstack.Items.Add("[External Code]");
+                    cbFrames.Items.Add("[External Code]");
                     OtherModuleCount = 0;
                 }
 
@@ -793,13 +795,13 @@ namespace CxbxDebugger
                 string FrameString = string.Format("{0} +{1:X8} ({2:X8})", ModuleName, ModuleOffset, (uint)StackFrame.PC);
 
                 CallstackAddress.Add(StackFrame.PC);
-                lbCallstack.Items.Add(FrameString);
+                cbFrames.Items.Add(FrameString);
             }
 
             if (OtherModuleCount > 0)
             {
                 CallstackAddress.Add(IntPtr.Zero);
-                lbCallstack.Items.Add("[External Code]");
+                cbFrames.Items.Add("[External Code]");
                 OtherModuleCount = 0;
             }
         }
@@ -815,5 +817,7 @@ namespace CxbxDebugger
             tabControl1.SelectedTab = tabPage5;
             txAddress.Text = string.Format("0x{0}", Address);
         }
+
+        
     }
 }
