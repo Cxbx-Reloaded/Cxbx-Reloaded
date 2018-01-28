@@ -122,8 +122,10 @@ static int                          g_iWireframe    = 0;
 // build version
 extern uint32						g_BuildVersion;
 
+typedef uint64_t resource_key_t;
+
 // resource caching for _Register
-std::vector<uint64_t> g_RegisteredResources;
+std::vector<resource_key_t> g_RegisteredResources;
 
 // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
@@ -689,11 +691,30 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 }
 
 // Map native resource data pointers to the host resource
-std::map <uint64_t, XTL::IDirect3DResource8*> g_HostResources;
+std::map <resource_key_t, XTL::IDirect3DResource8*> g_HostResources;
 
-uint64_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
+resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 {
-	return ((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource;
+	return (resource_key_t)(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
+}
+
+bool FreeHostResource(resource_key_t key)
+{
+	// Cleanup RegisteredResources array
+	auto registeredResourceIterator = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key);
+	// We can remove this soon, after a little more cleanup
+	if (registeredResourceIterator != g_RegisteredResources.end()) {
+		g_RegisteredResources.erase(registeredResourceIterator);
+	}
+
+	// Release the host resource and remove it from the list
+	auto hostResourceIterator = g_HostResources.find(key);
+	if (hostResourceIterator != g_HostResources.end()) {
+		if (hostResourceIterator->second) {
+			(hostResourceIterator->second)->Release();
+		}
+		g_HostResources.erase(hostResourceIterator);
+	}
 }
 
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true)
@@ -711,7 +732,8 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
 
-	auto it = g_HostResources.find(GetHostResourceKey(pXboxResource));
+	auto key = GetHostResourceKey(pXboxResource);
+	auto it = g_HostResources.find(key);
 	if (it == g_HostResources.end()) {
 		// Prevent logging a warning when we expect a null result (for example, D3DResource_Release)
 		if (shouldRegister) {
@@ -725,12 +747,13 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
 {
-	auto it = g_HostResources.find(GetHostResourceKey(pXboxResource));
+	auto key = GetHostResourceKey(pXboxResource);
+	auto it = g_HostResources.find(key);
 	if (it != g_HostResources.end()) {
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
-	g_HostResources[GetHostResourceKey(pXboxResource)] = pHostResource;
+	g_HostResources[key] = pHostResource;
 
 }
 
@@ -2065,13 +2088,14 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if(IsSpecialXboxResource(pResource))
         return;
 
-	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), GetHostResourceKey(pResource)) != g_RegisteredResources.end()) {
+	auto key = GetHostResourceKey(pResource);
+	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
 		return;
 	}
 
 	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
         
-	g_RegisteredResources.push_back(GetHostResourceKey(pResource));
+	g_RegisteredResources.push_back(key);
 }
 
 // ensure a given width/height are powers of 2
@@ -5921,39 +5945,32 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	FUNC_EXPORTS
 		LOG_FUNC_ONE_ARG(pThis);
 
-	// Backup the data pointer and fetch the host resource now, as the Data field may be wiped out by the following release call!
-	DWORD data = pThis->Data;
-	auto hostResourceIterator = g_HostResources.find(GetHostResourceKey(pThis));
-	auto registeredResourceIterator = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), GetHostResourceKey(pThis));
+	// Backup the key now, as the Xbox resource may be wiped out by the following release call!
+	auto key = GetHostResourceKey(pThis);
 
 	// Call the Xbox version of D3DResource_Release and store the result
 	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
 	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
-	// If this was a cached renter target or depth surface, clear the cache variable too!
-	if (uRet == 0 && pThis == g_pCachedRenderTarget) {
-		g_pCachedRenderTarget = nullptr;
-	}
-
-	if (uRet == 0 && pThis == g_pCachedDepthStencil) {
-		g_pCachedDepthStencil = nullptr;
-	}
-
-	// If we freed the last resource, also release the host copy (if it exists!)
-	// TODO: Move this into a FreeHostResource() function;
+	// Was the Xbox resource freed?
 	if (uRet == 0) {
-		// Cleanup RegisteredResources array
-		// We can remove this soon, after a little more cleanup
-		if (registeredResourceIterator != g_RegisteredResources.end()) {
-			g_RegisteredResources.erase(registeredResourceIterator);
+
+		// If this was a cached renter target or depth surface, clear the cache variable too!
+		if (pThis == g_pCachedRenderTarget) {
+			g_pCachedRenderTarget = nullptr;
 		}
 
-		// Release the host resource and remove it from the list
-		if (hostResourceIterator != g_HostResources.end()) {
-			(hostResourceIterator->second)->Release();
-			g_HostResources.erase(hostResourceIterator);
+		if (pThis == g_pCachedDepthStencil) {
+			g_pCachedDepthStencil = nullptr;
 		}
+
+		if (pThis == g_pCachedYuvSurface) {
+			g_pCachedYuvSurface = nullptr;
+		}
+
+		// Also release the host copy (if it exists!)
+		FreeHostResource(key); 
 	}
 
     return uRet;
