@@ -3002,7 +3002,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
     CONST POINT        *pDestPointsArray
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSourceSurface)
