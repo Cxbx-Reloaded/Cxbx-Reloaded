@@ -565,19 +565,29 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 	KiUnlockDispatcherDatabase(OldIrql);
 }
 
+// From looking at the wine src code for Rtl*CriticalSection functions
+// and from seeing what the xbox kernel does with KeEnter/Leave CriticalRegion,
+// I can only conclude that is is accessing a Teb structure in Xbox memory.
+// Many Xbox Kernel functions load this pointer and make changes to fields
+// in it. More research will be needed to define all fields
+uint8_t* get_thread_Teb() {
+    return (uint8_t*)0x80047BF0;
+}
+#define CRITICAL_REGION_UNKNOWN1 (get_thread_Teb() + 0x34)
+#define CRITICAL_REGION_UNKNOWN2 (get_thread_Teb() + 0x49)
+#define CRITICAL_REGION_UNKNOWN3 (get_thread_Teb() + 0x68)
+
 // ******************************************************************
 // * 0x0065 - KeEnterCriticalRegion()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
 (
-	VOID
+    VOID
 )
 {
-	LOG_FUNC();
-
-	// TODO : Disable kernel APCs
-
-	LOG_UNIMPLEMENTED();
+    LOG_FUNC();
+    uint32_t* critical_region_unk = (uint32_t*)CRITICAL_REGION_UNKNOWN3;
+    *critical_region_unk--;
 }
 
 // ******************************************************************
@@ -1039,14 +1049,22 @@ void ConnectKeInterruptTimeToThunkTable()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
 (
-	VOID
+    VOID
 )
 {
-	LOG_FUNC();
+    LOG_FUNC();
 
-	// TODO : Enable kernel APCs
+    uint32_t* critcal_region_unk1 = (uint32_t*)CRITICAL_REGION_UNKNOWN1;
+    uint8_t* critcal_region_unk2 = CRITICAL_REGION_UNKNOWN2;
+    uint32_t* critical_region_unk3 = (uint32_t*)CRITICAL_REGION_UNKNOWN3;
 
-	LOG_UNIMPLEMENTED();
+    *critical_region_unk3++;
+    if(*critical_region_unk3 == 0) {
+        if(*critcal_region_unk1 != (uint32_t)critcal_region_unk1) {
+            *critcal_region_unk2 = 1;
+            HalRequestSoftwareInterrupt(1);
+        }
+    }
 }
 
 XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
