@@ -698,7 +698,7 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 	return (resource_key_t)(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
 }
 
-bool FreeHostResource(resource_key_t key)
+void FreeHostResource(resource_key_t key)
 {
 	// Cleanup RegisteredResources array
 	auto registeredResourceIterator = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key);
@@ -719,7 +719,7 @@ bool FreeHostResource(resource_key_t key)
 
 XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true)
 {
-	if (pXboxResource == NULL)
+	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
 
 	if (shouldRegister) {
