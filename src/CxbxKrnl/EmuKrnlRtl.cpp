@@ -56,46 +56,6 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuWarning()
 
-// A critical section containing the PC and Xbox equivalent
-struct INTERNAL_CRITICAL_SECTION
-{
-	xboxkrnl::PRTL_CRITICAL_SECTION XboxCriticalSection;
-	NtDll::_RTL_CRITICAL_SECTION NativeCriticalSection;
-};
-
-#define MAX_XBOX_CRITICAL_SECTIONS 1024
-INTERNAL_CRITICAL_SECTION GlobalCriticalSections[MAX_XBOX_CRITICAL_SECTIONS] = { 0 };
-
-void InitializeSectionStructures(void)
-{
-	ZeroMemory(GlobalCriticalSections, sizeof(GlobalCriticalSections));
-}
-
-int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
-{
-	int FreeSection = -1;
-
-	int iSection = 0;
-	for (iSection = 0; iSection < MAX_XBOX_CRITICAL_SECTIONS; ++iSection)
-	{
-		if (GlobalCriticalSections[iSection].XboxCriticalSection == CriticalSection)
-		{
-			FreeSection = iSection;
-			break;
-		}
-		else if (FreeSection < 0 && GlobalCriticalSections[iSection].XboxCriticalSection == NULL)
-		{
-			FreeSection = iSection;
-		}
-	}
-
-	if (FreeSection < 0)
-	{
-		EmuWarning("Too many critical sections in use!\n");
-	}
-
-	return FreeSection;
-}
 extern uint8_t* get_thread_Teb();
 
 // ******************************************************************
