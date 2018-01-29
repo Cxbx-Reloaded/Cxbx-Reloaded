@@ -5965,10 +5965,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 			g_pCachedDepthStencil = nullptr;
 		}
 
-		if (pThis == g_pCachedYuvSurface) {
-			g_pCachedYuvSurface = nullptr;
-		}
-
 		// Also release the host copy (if it exists!)
 		FreeHostResource(key); 
 	}
@@ -6619,6 +6615,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
 	//FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Enable);
+	g_fYuvEnabled = Enable;
 
 	// We can safely ignore this, as long as we properly handle UpdateOverlay
 }
@@ -6644,6 +6641,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		LOG_FUNC_ARG(EnableColorKey)
 		LOG_FUNC_ARG(ColorKey)
 		LOG_FUNC_END;
+
+	if (!g_fYuvEnabled) {
+		return;
+	}
 
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
@@ -7539,11 +7540,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
         EmuWarning("EmuD3DDevice_SetRenderState_YuvEnable using overlay!");
         
 		EMUPATCH(D3DDevice_EnableOverlay)(g_fYuvEnabled);
-    }
-
-    if(g_fYuvEnabled)
-    {
-		EMUPATCH(D3DDevice_UpdateOverlay)(g_pCachedYuvSurface, NULL, NULL, FALSE, 0);
     }
 }
 
