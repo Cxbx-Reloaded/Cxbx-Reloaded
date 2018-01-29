@@ -98,8 +98,6 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 extern bool g_XInputEnabled;
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
-extern void InitializeSectionStructures(void);
-
 typedef struct DUMMY_KERNEL
 {
 	IMAGE_DOS_HEADER DosHeader;
