@@ -75,9 +75,10 @@ extern void FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader);
 extern boolean IsValidCurrentShader(void);
 extern boolean VshHandleIsValidShader(DWORD Handle);
 
-// Dxbx note : On Xbox, a FVF is recognizable when the handle has D3DFVF_RESERVED0 non zero.
-inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & D3DFVF_RESERVED0) > 0 ? TRUE : FALSE; }
-inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
+// Dxbx note : On Xbox, a FVF is recognizable when the handle <= 0x0000FFFF
+// (as all values above are allocated VertexShader addresses).
+inline boolean VshHandleIsFVF(DWORD Handle) { return (Handle > NULL) && (Handle <= 0x0000FFFF); }
+inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle > 0x0000FFFF) ? TRUE : FALSE; }
 inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return VshHandleIsVertexShader(Handle) ? (X_D3DVertexShader *)Handle : nullptr; }
 VERTEX_DYNAMIC_PATCH *VshGetVertexDynamicPatch(DWORD Handle);
 
