@@ -983,10 +983,6 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	CxbxKrnlRegisterThread(GetCurrentThread());
 
-	// Clear critical section list
-	//extern void InitializeSectionStructures(void); 
-	InitializeSectionStructures();
-
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
 	DbgPrintf("INIT: Determining CPU affinity.\n");
