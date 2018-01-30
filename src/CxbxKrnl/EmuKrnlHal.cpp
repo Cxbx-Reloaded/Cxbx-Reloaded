@@ -74,6 +74,9 @@ HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 uint8_t ResetOrShutdownCommandCode = 0;
 uint32_t ResetOrShutdownDataValue = 0;
 
+// global list of routines executed during a reboot
+LIST_ENTRY_INITIALIZE_HEAD(ShutdownRoutineList);
+
 
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
@@ -377,9 +380,46 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ShutdownRegistration)
 		LOG_FUNC_ARG(Register)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	PLIST_ENTRY ListEntry;
+	KIRQL OldIrql;
+
+	OldIrql = KeRaiseIrqlToDpcLevel();
+
+	if (Register)
+	{
+		ListEntry = ShutdownRoutineList.Flink;
+		while (ListEntry != &ShutdownRoutineList)
+		{
+			if (ShutdownRegistration->Priority > LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry)->Priority)
+			{
+				LIST_ENTRY_INSERT_TAIL(ListEntry, &ShutdownRegistration->ListEntry)
+				break;
+			}
+			ListEntry = ListEntry->Flink;
+		}
+
+		if (ListEntry == &ShutdownRoutineList)
+		{
+			LIST_ENTRY_INSERT_TAIL(ListEntry, &ShutdownRegistration->ListEntry)
+		}
+	}
+	else
+	{
+		ListEntry = ShutdownRoutineList.Flink;
+		while (ListEntry != &ShutdownRoutineList)
+		{
+			if (ShutdownRegistration == LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry))
+			{
+				LIST_ENTRY_REMOVE(&ShutdownRegistration->ListEntry)
+				break;
+			}
+			ListEntry = ListEntry->Flink;
+		}
+	}
+
+	KfLowerIrql(OldIrql);
 }
 
 // ******************************************************************
@@ -426,6 +466,35 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 			// (Note : XWriteTitleInfoNoReboot does this too)
 			// Commented out because XLaunchNewImage is disabled!
 			// MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, sizeof(LAUNCH_DATA_PAGE), TRUE);
+
+			{
+				// ergo720: I tested this with Tenchu and Dead or Alive Ultimate, both of which register a single shutdown
+				// routine with HalRegisterShutdownNotification. The routines are correctly registered but when invoked they
+				// cause a crash. It's because these routines are registered by and act upon the Xbox hardware, most of it
+				// is not LLEd enough and so, until then, we don't try to execute the shutdown routines
+
+				#if 0
+				KIRQL OldIrql;
+				PLIST_ENTRY ListEntry;
+				PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration;
+
+				while (true)
+				{
+					OldIrql = KeRaiseIrqlToDpcLevel();
+
+					ListEntry = LIST_ENTRY_REMOVE_AT_HEAD(&ShutdownRoutineList)
+
+					KfLowerIrql(OldIrql);
+
+					if (ListEntry == &ShutdownRoutineList)
+						break;
+
+					ShutdownRegistration = LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry);
+					ShutdownRegistration->NotificationRoutine(ShutdownRegistration);
+				}
+				#endif
+			}
+
 
 			std::string TitlePath = xboxkrnl::LaunchDataPage->Header.szLaunchPath;
 			char szWorkingDirectoy[MAX_PATH];
@@ -496,8 +565,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 	case ReturnFirmwareFatal:
 	{
-		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we cannot display it without
-		// an OOVPA for it; the only one we can support now is FATAL_ERROR_REBOOT_ROUTINE
+		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we need to change our corresponding
+		// paths if we want to emulate all the possible fatal errors
 
 		xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 		char szArgsBuffer[4096];
