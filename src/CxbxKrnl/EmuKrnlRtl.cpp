@@ -56,8 +56,6 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuWarning()
 
-extern uint8_t* get_thread_Teb();
-
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
@@ -369,15 +367,15 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 {
     LOG_FUNC_ONE_ARG(CriticalSection);
 
-    HANDLE thread_Teb = (HANDLE)get_thread_Teb();
+    HANDLE thread = (HANDLE)KeGetCurrentThread();
 
     CriticalSection->LockCount++;
     if(CriticalSection->LockCount == 0) {
-        CriticalSection->OwningThread = thread_Teb;
+        CriticalSection->OwningThread = thread;
         CriticalSection->RecursionCount = 1;
     }
     else {
-        if(CriticalSection->OwningThread != thread_Teb) {
+        if(CriticalSection->OwningThread != thread) {
             KeWaitForSingleObject(
                 (PVOID)CriticalSection,
                 (KWAIT_REASON)0,
@@ -385,7 +383,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
                 (BOOLEAN)0,
                 (PLARGE_INTEGER)0
             );
-            CriticalSection->OwningThread = thread_Teb;
+            CriticalSection->OwningThread = thread;
             CriticalSection->RecursionCount = 1;
         }
         else {
@@ -908,21 +906,15 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 	LOG_FUNC_ONE_ARG(CriticalSection);
 
     BOOLEAN ret = false;
+    HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-    #ifdef _WIN32
-        LONG exchange_result = InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1);
-    #elif __linux__
-        // Typing will likely be different on Linux
-        LONG exchange_result = __sync_val_compare_and_swap(&CriticalSection->LockCount, 0, -1);
-    #endif
-
-    if(exchange_result == -1) {
-        CriticalSection->OwningThread = (HANDLE)get_thread_Teb();
+    if(InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
+        CriticalSection->OwningThread = thread;
         CriticalSection->RecursionCount = 1;
         ret = true;
     }
     else {
-        if(CriticalSection->OwningThread == (HANDLE)get_thread_Teb()) {
+        if(CriticalSection->OwningThread == thread) {
             CriticalSection->LockCount++;
             CriticalSection->RecursionCount++;
             ret = true;
