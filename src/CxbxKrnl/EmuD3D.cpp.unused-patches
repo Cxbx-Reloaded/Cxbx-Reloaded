@@ -1,0 +1,2008 @@
+﻿
+// ******************************************************************
+// * patch: D3DDevice_GetCreationParameters
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PARAMETERS *pParameters)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pParameters);
+
+    pParameters->AdapterOrdinal = D3DADAPTER_DEFAULT;
+    pParameters->DeviceType = D3DDEVTYPE_HAL;
+    pParameters->hFocusWindow = NULL;
+    pParameters->BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+}
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3D_CheckDeviceFormat
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    X_D3DFORMAT                 AdapterFormat,
+    DWORD                       Usage,
+    X_D3DRESOURCETYPE           RType,
+    X_D3DFORMAT                 CheckFormat
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(AdapterFormat)
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
+		LOG_FUNC_ARG(RType)
+		LOG_FUNC_ARG(CheckFormat)
+		LOG_FUNC_END;
+
+    if(RType > 7)
+        CxbxKrnlCleanup("RType > 7");
+
+	// HACK: Return true for everything? (Hunter the Reckoning)
+
+    HRESULT hRet = D3D_OK; /*g_pD3D8->CheckDeviceFormat
+    (
+        g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF,
+        EmuXB2PC_D3DFormat(AdapterFormat), Usage, (D3DRESOURCETYPE)RType, EmuXB2PC_D3DFormat(CheckFormat)
+    );*/
+
+    return hRet;
+}
+#endif
+
+// ******************************************************************
+// * patch: D3D_KickOffAndWaitForIdle
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3D_KickOffAndWaitForIdle)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+    // TODO: Actually do something here?
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: D3D_KickOffAndWaitForIdle2
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3D_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDummy2)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwDummy1)
+		LOG_FUNC_ARG(dwDummy2)
+		LOG_FUNC_END;
+
+    // NOTE: Use this function for LTCG library only.
+    // TODO: Actually do something here?
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EMUPATCH(D3DDevice_AddRef)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	// TODO: Make sure the Xbox reference count also gets updated
+    ULONG ret = g_pD3DDevice8->AddRef();
+
+    return ret;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CopyRects
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
+(
+    X_D3DSurface       *pSourceSurface,
+    CONST RECT         *pSourceRectsArray,
+    UINT                cRects,
+    X_D3DSurface       *pDestinationSurface,
+    CONST POINT        *pDestPointsArray
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSourceSurface)
+		LOG_FUNC_ARG(pSourceRectsArray)
+		LOG_FUNC_ARG(cRects)
+		LOG_FUNC_ARG(pDestinationSurface)
+		LOG_FUNC_ARG(pDestPointsArray)
+		LOG_FUNC_END;
+
+	XTL::IDirect3DSurface8 *pHostSurface = GetHostSurface(pSourceSurface);
+	pHostSurface->UnlockRect(); // remove old lock
+
+    /*
+    static int kthx = 0;
+    char fileName[255];
+
+    sprintf(fileName, "C:\\Aaron\\Textures\\SourceSurface-%d.bmp", kthx++);
+
+    D3DXSaveSurfaceToFile(fileName, D3DXIFF_BMP, GetHostSurface(pSourceSurface), NULL, NULL);
+    //*/
+
+    HRESULT hRet = g_pD3DDevice8->CopyRects
+    (
+		pHostSurface,
+        pSourceRectsArray,
+        cRects,
+		GetHostSurface(pDestinationSurface),
+        pDestPointsArray
+    );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CopyRects");    
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreateImageSurface
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
+(
+    UINT                Width,
+    UINT                Height,
+    X_D3DFORMAT         Format,
+    X_D3DSurface      **ppSurface
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(ppSurface)
+		LOG_FUNC_END;
+
+    *ppSurface = EmuNewD3DSurface();
+	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
+
+    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &pNewHostSurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
+
+	if(FAILED(hRet))
+		if(Format == X_D3DFMT_LIN_D24S8)
+		{
+			EmuWarning("CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8");
+			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &pNewHostSurface);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface(ARGB)");
+		}
+	
+	if(FAILED(hRet))
+		/*EmuWarning*/CxbxKrnlCleanup("CreateImageSurface failed!\nFormat = 0x%8.8X", Format);
+	else
+		SetHostSurface(*ppSurface, pNewHostSurface);  
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_Reset
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
+(
+    X_D3DPRESENT_PARAMETERS *pPresentationParameters
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pPresentationParameters);
+
+	LOG_IGNORED();
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetTile
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTile)
+(
+    DWORD           Index,
+    X_D3DTILE      *pTile
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pTile)
+		LOG_FUNC_END;
+
+    if(pTile != NULL)
+        memcpy(pTile, &EmuD3DTileCache[Index], sizeof(X_D3DTILE));
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTile
+// ******************************************************************
+// * Dxbx note : SetTile is applied to SetTileNoWait in Cxbx 4361 OOPVA's!
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTile)
+(
+    DWORD               Index,
+    CONST X_D3DTILE    *pTile
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pTile)
+		LOG_FUNC_END;
+
+    if(pTile != NULL)
+        memcpy(&EmuD3DTileCache[Index], pTile, sizeof(X_D3DTILE));
+}
+
+
+// ******************************************************************
+// * patch: D3DDevice_CreateTexture2
+// ******************************************************************
+XTL::X_D3DResource * WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture2)
+(
+    UINT                Width,
+    UINT                Height,
+    UINT                Depth,
+    UINT                Levels,
+    DWORD               Usage,
+    X_D3DFORMAT         Format,
+    X_D3DRESOURCETYPE   D3DResource
+)
+{
+	//FUNC_EXPORTS
+
+    X_D3DTexture *pTexture = NULL;
+
+    switch(D3DResource)
+    {
+	case X_D3DRTYPE_TEXTURE: {
+		LOG_FORWARD("D3DDevice_CreateTexture");
+		EMUPATCH(D3DDevice_CreateTexture)(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
+		break;
+	}
+	case X_D3DRTYPE_VOLUMETEXTURE: {
+		LOG_FORWARD("D3DDevice_CreateVolumeTexture");
+		EMUPATCH(D3DDevice_CreateVolumeTexture)(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DVolumeTexture**)&pTexture);
+		break;
+	}
+	case X_D3DRTYPE_CUBETEXTURE: {
+		LOG_FORWARD("D3DDevice_CreateCubeTexture");
+		//DbgPrintf( "D3DDevice_CreateTexture2: Width = 0x%X, Height = 0x%X\n", Width, Height );
+		//CxbxKrnlCleanup("Cube textures temporarily not supported!");
+		EMUPATCH(D3DDevice_CreateCubeTexture)(Width, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DCubeTexture**)&pTexture);
+		break;
+	}
+	default:
+		CxbxKrnlCleanup("D3DResource = %d is not supported!", D3DResource);
+    }
+
+    return pTexture;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreateTexture
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
+(
+    UINT            Width,
+    UINT            Height,
+    UINT            Levels,
+    DWORD           Usage,
+    X_D3DFORMAT     Format,
+    D3DPOOL         Pool,
+    X_D3DTexture  **ppTexture
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppTexture)
+		LOG_FUNC_END;
+
+	// Get Bytes Per Pixel, for correct Pitch calculation :
+	DWORD dwBPP = EmuXBFormatBytesPerPixel(Format);
+
+	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for X_D3DFMT_YUY2?
+
+    HRESULT hRet;
+
+	X_D3DTexture *pTexture = EmuNewD3DTexture();
+	IDirect3DTexture8 *pNewHostTexture = nullptr;
+	DWORD Texture_Data;
+
+    if(Format == X_D3DFMT_YUY2)
+    {
+        // cache the overlay size
+        g_dwOverlayW = Width;
+        g_dwOverlayH = Height;
+        g_dwOverlayP = Pitch;
+
+		// If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
+        Texture_Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
+        pTexture->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+
+        g_pCachedYuvSurface = (X_D3DSurface*)pTexture;
+
+        hRet = D3D_OK;
+    }
+    else
+    {
+		// Convert Format (Xbox->PC)
+		D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+		// TODO: HACK: Devices that don't support this should somehow emulate it!
+		//* This is OK on my GeForce FX 5600
+		if(PCFormat == D3DFMT_D16)
+		{
+			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+			PCFormat = D3DFMT_R5G6B5;
+		}
+		//*
+		else if(PCFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+		{
+			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+			PCFormat = D3DFMT_L8;
+		}
+		//*/
+		//* This is OK on my GeForce FX 5600
+		else if(PCFormat == D3DFMT_D24S8)
+		{
+			EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
+		}//*/
+		// TODO: HACK: This texture format fails on some newer hardware
+		else if(PCFormat == D3DFMT_X1R5G5B5)
+		{
+			EmuWarning("D3DFMT_X1R5G5B5 -> D3DFMT_R5G6B5");
+			PCFormat = D3DFMT_R5G6B5;
+		}
+
+        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
+//        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
+        D3DPOOL PCPool  = D3DPOOL_MANAGED;
+
+		// DIRTY HACK: Render targets. The D3DUSAGE_RENDERTARGET
+		// flag isn't always set by the XDK (if ever).
+		/*if( Width != 640 && Height != 480 )
+		{
+		//	EmuAdjustPower2(&Width, &Height);
+		}
+		else
+		{
+			PCUsage = D3DUSAGE_RENDERTARGET;
+			PCPool = D3DPOOL_DEFAULT;
+		}*/
+
+//		EmuAdjustPower2(&Width, &Height);
+
+//        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        if(Usage & (D3DUSAGE_RENDERTARGET))
+        {
+			PCPool = D3DPOOL_DEFAULT;
+        }
+
+        hRet = g_pD3DDevice8->CreateTexture
+        (
+            Width, Height, Levels,
+            PCUsage,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, PCPool, &pNewHostTexture
+        );
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture");
+
+        if(FAILED(hRet))
+        {
+            //EmuWarning("CreateTexture Failed!");
+			EmuWarning("CreateTexture Failed!\n\n"
+								"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, Width, Height);
+			Texture_Data = 0xBEADBEAD;
+        }
+        else
+        {
+			SetHostTexture(pTexture, pNewHostTexture);
+
+            /**
+             * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock. 
+             * It will cause an Error with the DirectX Debug runtime.
+             *
+             * This is most commonly seen with
+             *      D3DUSAGE_RENDERTARGET or
+             *      D3DUSAGE_DEPTHSTENCIL
+             * that can only be used with D3DPOOL_DEFAULT per MSDN.
+             */
+            D3DLOCKED_RECT LockedRect;
+
+			pNewHostTexture->LockRect(0, &LockedRect, NULL, D3DLOCK_READONLY);
+			Texture_Data = (DWORD)LockedRect.pBits;
+            g_DataToTexture.insert(Texture_Data, pTexture);
+			pNewHostTexture->UnlockRect(0);
+        }
+    }
+
+	// Set all X_D3DTexture members (except Lock)
+	EMUPATCH(XGSetTextureHeader)(Width, Height, Levels, Usage, Format, Pool, pTexture, Texture_Data, Pitch);
+
+	DbgPrintf("EmuD3D8: Created Texture : 0x%.08X (0x%.08X)\n", pTexture, pNewHostTexture);
+
+	*ppTexture = pTexture;
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreateVolumeTexture
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
+(
+    UINT                 Width,
+    UINT                 Height,
+    UINT                 Depth,
+    UINT                 Levels,
+    DWORD                Usage,
+    X_D3DFORMAT          Format,
+    D3DPOOL              Pool,
+    X_D3DVolumeTexture **ppVolumeTexture
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Depth)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppVolumeTexture)
+		LOG_FUNC_END;
+
+    *ppVolumeTexture = EmuNewD3DVolumeTexture();
+
+    HRESULT hRet;
+
+    if(Format == X_D3DFMT_YUY2)
+    {
+        // cache the overlay size
+        g_dwOverlayW = Width;
+        g_dwOverlayH = Height;
+        g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
+
+        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture
+        (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_YUV_SURFACE;
+        (*ppVolumeTexture)->Lock = (DWORD)g_VMManager.Allocate(g_dwOverlayP * g_dwOverlayH);
+		(*ppVolumeTexture)->Format = Format << X_D3DFORMAT_FORMAT_SHIFT;
+
+        (*ppVolumeTexture)->Size = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK)
+                                 | (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT)
+                                 | (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+
+        hRet = D3D_OK;
+    }
+    else
+    {
+		// Convert Format (Xbox->PC)
+		D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+		// TODO: HACK: Devices that don't support this should somehow emulate it!
+		if (PCFormat == D3DFMT_D16)
+		{
+			EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5 ?
+		}
+		else if (PCFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+		{
+			EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+			PCFormat = D3DFMT_L8;
+		}
+		else if (PCFormat == D3DFMT_D24S8)
+		{
+			EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+			PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
+		}
+
+		EmuAdjustPower2(&Width, &Height);
+
+		XTL::IDirect3DVolumeTexture8 *pNewHostVolumeTexture = nullptr;
+
+        hRet = g_pD3DDevice8->CreateVolumeTexture
+        (
+            Width, Height, Depth, Levels,
+            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, D3DPOOL_MANAGED, &pNewHostVolumeTexture
+        );
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVolumeTexture");
+
+        if(SUCCEEDED(hRet))
+		{
+			SetHostVolumeTexture(*ppVolumeTexture, pNewHostVolumeTexture);
+			DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, pNewHostVolumeTexture);
+		}
+    }
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreateCubeTexture
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
+(
+    UINT                 EdgeLength,
+    UINT                 Levels,
+    DWORD                Usage,
+    X_D3DFORMAT          Format,
+    D3DPOOL              Pool,
+    X_D3DCubeTexture  **ppCubeTexture
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EdgeLength)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppCubeTexture)
+		LOG_FUNC_END;
+
+	if(Format == X_D3DFMT_YUY2)
+    {
+        CxbxKrnlCleanup("YUV not supported for cube textures");
+    }
+
+    // Convert Format (Xbox->PC)
+    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+    // TODO: HACK: Devices that don't support this should somehow emulate it!
+    if(PCFormat == D3DFMT_D16)
+    {
+        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_R5G6B5?
+    }
+    else if(PCFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+    {
+        EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+        PCFormat = D3DFMT_L8;
+    }
+    else if(PCFormat == D3DFMT_D24S8)
+    {
+        EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+        PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
+    }
+    
+    *ppCubeTexture = EmuNewD3DCubeTexture();
+	XTL::IDirect3DCubeTexture8 *pNewHostCubeTexture = nullptr;
+
+    HRESULT hRet = g_pD3DDevice8->CreateCubeTexture
+    (
+        EdgeLength, Levels,
+        0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        PCFormat, D3DPOOL_MANAGED, &pNewHostCubeTexture
+    );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateCubeTexture");
+
+    if(SUCCEEDED(hRet))
+	{
+		SetHostCubeTexture(*ppCubeTexture, pNewHostCubeTexture);
+		DbgPrintf("EmuD3D8: Created Cube Texture : 0x%.08X (0x%.08X)\n", *ppCubeTexture, pNewHostCubeTexture);
+	}    
+
+    return hRet;
+}
+
+#if 0
+// ******************************************************************
+// * patch: D3DDevice_CreateIndexBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
+(
+    UINT                 Length,
+    DWORD                Usage,
+    X_D3DFORMAT          Format,
+    D3DPOOL              Pool,
+    X_D3DIndexBuffer   **ppIndexBuffer
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(ppIndexBuffer)
+		LOG_FUNC_END;
+
+	if (Format != X_D3DFMT_INDEX16)
+		EmuWarning("CreateIndexBuffer called with unexpected format! (0x%.08X)", Format);
+
+    *ppIndexBuffer = EmuNewD3DIndexBuffer();
+
+	XTL::IDirect3DIndexBuffer8 *pNewHostIndexBuffer = nullptr;
+
+	HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
+    (
+        Length/*InBytes*/, /*Usage=*/0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pNewHostIndexBuffer
+    );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
+    if(SUCCEEDED(hRet))
+	{
+		SetHostIndexBuffer(*ppIndexBuffer, pNewHostIndexBuffer);
+		DbgPrintf("D3DDevice_CreateIndexBuffer: pHostIndexBuffer := 0x%.08X\n", pNewHostIndexBuffer);
+	}
+
+    // update data ptr
+    {
+        BYTE *pNativeData = nullptr;
+
+		hRet = pNewHostIndexBuffer->Lock(/*OffsetToLock=*/0, Length, &pNativeData, /*Flags=*/0);
+		DEBUG_D3DRESULT(hRet, "pNewHostIndexBuffer->Lock");
+
+		if(FAILED(hRet))
+			CxbxKrnlCleanup("IndexBuffer Lock Failed!);
+
+        (*ppIndexBuffer)->Data = (DWORD)pNativeData; // For now, give the native buffer memory to Xbox. TODO : g_MemoryManager.AllocateContiguous
+    }
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreateIndexBuffer2
+// ******************************************************************
+XTL::X_D3DIndexBuffer * WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer2)(UINT Length)
+{
+	FUNC_EXPORTS
+
+    X_D3DIndexBuffer *pIndexBuffer = NULL;
+
+	LOG_FORWARD("D3DDevice_CreateIndexBuffer");
+
+	EMUPATCH(D3DDevice_CreateIndexBuffer)
+    (
+        Length/*InBytes*/,
+        /*Usage=*/0,
+        X_D3DFMT_INDEX16,
+        D3DPOOL_MANAGED,
+        &pIndexBuffer
+    );
+
+    return pIndexBuffer;
+}
+
+#endif
+
+#if 0
+// ******************************************************************
+// * patch: D3DDevice_SetIndices
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
+(
+    X_D3DIndexBuffer   *pIndexData,
+    UINT                BaseVertexIndex
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pIndexData)
+		LOG_FUNC_ARG(BaseVertexIndex)
+		LOG_FUNC_END;
+
+    HRESULT hRet = D3D_OK;
+
+    g_dwBaseVertexIndex = BaseVertexIndex;
+	g_pIndexBuffer = pIndexData;
+
+    return hRet;
+}
+
+#endif
+
+
+// ******************************************************************
+// * patch: D3DDevice_GetDisplayMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayMode)
+(
+    OUT X_D3DDISPLAYMODE         *pMode
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG_OUT(pMode);
+
+    HRESULT hRet;
+
+    // make adjustments to parameters to make sense with windows d3d
+    {
+        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
+
+        hRet = g_pD3DDevice8->GetDisplayMode(pPCMode);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetDisplayMode");
+
+        // Convert Format (PC->Xbox)
+        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
+
+        // TODO: Make this configurable in the future?
+        pMode->Flags  = 0x000000A1; // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+
+        // TODO: Retrieve from current CreateDevice settings?
+        pMode->Width = 640;
+        pMode->Height = 480;
+    }
+}
+
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: IDirect3DResource8_GetType
+// ******************************************************************
+XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
+(
+    X_D3DResource      *pThis
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pThis);
+
+	D3DRESOURCETYPE rType;
+
+	// Check for Xbox specific resources (Azurik may need this)
+	DWORD dwType = GetXboxResourceType(pThis);
+
+	switch(dwType)
+	{
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
+		rType = (D3DRESOURCETYPE) 8; break;
+	case X_D3DCOMMON_TYPE_PALETTE:
+		rType = (D3DRESOURCETYPE) 9; break;
+	case X_D3DCOMMON_TYPE_FIXUP:
+		rType = (D3DRESOURCETYPE) 10; break;
+	default:
+		rType = GetHostResource(pThis)->GetType(); break;
+	}
+
+    
+
+    return (X_D3DRESOURCETYPE)rType;
+}
+#endif
+
+// ******************************************************************
+// * patch: Lock2DSurface
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    D3DCUBEMAP_FACES     FaceType,
+    UINT                 Level,
+    D3DLOCKED_RECT      *pLockedRect,
+    RECT                *pRect,
+    DWORD                Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurfaceOrTexture(pPixelContainer)) {
+		typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD);
+		static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
+
+		// No need to check for success here, as we are calling Lock2DSurface from Lock2DSurface, if this address wasn't found
+		// we must be very broken :P
+		XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+		return;
+	}
+
+	XTL::IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pPixelContainer);
+
+	HRESULT hRet;
+	
+	hRet = pHostCubeTexture->UnlockRect(FaceType, Level); // remove old lock
+	DEBUG_D3DRESULT(hRet, "pHostCubeTexture->UnlockRect");
+
+	hRet = pHostCubeTexture->LockRect(FaceType, Level, pLockedRect, pRect, Flags);
+	DEBUG_D3DRESULT(hRet, "pHostCubeTexture->LockRect");
+}
+
+// ******************************************************************
+// * patch: Lock3DSurface
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    UINT				Level,
+	D3DLOCKED_BOX		*pLockedVolume,
+	D3DBOX				*pBox,
+	DWORD				Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedVolume)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+	HRESULT hRet;
+	XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture = GetHostVolumeTexture(pPixelContainer);
+
+	hRet = pHostVolumeTexture->UnlockBox(Level); // remove old lock
+	DEBUG_D3DRESULT(hRet, "pHostVolumeTexture->UnlockBox");
+
+	hRet = pHostVolumeTexture->LockBox(Level, pLockedVolume, pBox, Flags);
+	DEBUG_D3DRESULT(hRet, "pHostVolumeTexture->LockBox");
+}
+
+// TODO : Can be DISABLED once CreateDevice is unpatched (because this reads Data from the first Xbox FrameBuffer)
+// ******************************************************************
+// * patch: Get2DSurfaceDesc
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDesc)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    DWORD                dwLevel,
+    X_D3DSURFACE_DESC   *pDesc
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(dwLevel)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
+
+	// TODO : Check if (pPixelContainer->Data == X_D3DRESOURCE_DATA_YUV_SURFACE) or IsYuvSurfaceOrTexture(pPixelContainer) works too
+	pDesc->Format = GetXboxPixelContainerFormat(pPixelContainer);
+    pDesc->Type = GetXboxD3DResourceType(pPixelContainer);
+    pDesc->Usage = 0;
+	if (dwLevel == 0)
+	{
+		if (EmuXBFormatIsRenderTarget(pDesc->Format))
+			pDesc->Usage = X_D3DUSAGE_RENDERTARGET;
+		else
+			if (EmuXBFormatIsDepthBuffer(pDesc->Format))
+				pDesc->Usage = X_D3DUSAGE_DEPTHSTENCIL;
+	}
+
+	pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)X_D3DMULTISAMPLE_NONE;
+
+	UINT dwPitch; // dummy value
+	CxbxGetPixelContainerMeasures(pPixelContainer, dwLevel, &(pDesc->Width), &(pDesc->Height), &dwPitch, &(pDesc->Size));
+}
+
+// ******************************************************************
+// * patch: IDirect3DSurface8_GetDesc
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
+(
+    X_D3DResource      *pThis,
+    X_D3DSURFACE_DESC  *pDesc
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
+
+    HRESULT hRet;
+
+    if(pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+    {
+        pDesc->Format = X_D3DFMT_YUY2;
+        pDesc->Height = g_dwOverlayH;
+        pDesc->Width  = g_dwOverlayW;
+        pDesc->MultiSampleType = (D3DMULTISAMPLE_TYPE)0;
+        pDesc->Size   = g_dwOverlayP*g_dwOverlayH;
+        pDesc->Type   = X_D3DRTYPE_SURFACE;
+        pDesc->Usage  = 0;
+
+        hRet = D3D_OK;
+    }
+    else
+    {
+        IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
+
+        D3DSURFACE_DESC SurfaceDesc;
+
+		if( pHostSurface != nullptr )
+		{
+        hRet = pHostSurface->GetDesc(&SurfaceDesc);
+
+			// rearrange into windows format (remove D3DPool)
+			{
+				// Convert Format (PC->Xbox)
+				pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+				pDesc->Type   = (X_D3DRESOURCETYPE)SurfaceDesc.Type;
+
+				if(pDesc->Type > 7)
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+
+				pDesc->Usage  = SurfaceDesc.Usage;
+				pDesc->Size   = SurfaceDesc.Size;
+
+				// TODO: Convert from Xbox to PC!!
+				if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
+					pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
+				else
+					CxbxKrnlCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+
+				pDesc->Width  = SurfaceDesc.Width;
+				pDesc->Height = SurfaceDesc.Height;
+			}
+		}
+		else
+			hRet = D3DERR_INVALIDCALL;
+	}
+}
+
+// ******************************************************************
+// * patch: IDirect3DSurface8_LockRect
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
+(
+    X_D3DResource      *pThis,
+    D3DLOCKED_RECT     *pLockedRect,
+    CONST RECT         *pRect,
+    DWORD               Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+    HRESULT hRet = D3D_OK;
+
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurfaceOrTexture(pThis)) {
+		typedef VOID(__stdcall *XB_D3DSurface_LockRect_t)(X_D3DResource*, D3DLOCKED_RECT*, CONST RECT*, DWORD);
+		static XB_D3DSurface_LockRect_t XB_D3DSurface_LockRect = (XB_D3DSurface_LockRect_t)GetXboxFunctionPointer("D3DSurface_LockRect");
+
+		// No need to check for success here, as we are calling LockRect from LockRect, if this address wasn't found
+		// we must be very broken :P
+		XB_D3DSurface_LockRect(pThis, pLockedRect, pRect, Flags);
+		return;
+	}
+
+	DWORD NewFlags = 0;
+	if (Flags & X_D3DLOCK_READONLY)
+		NewFlags |= D3DLOCK_READONLY;
+
+	//if (Flags & X_D3DLOCK_TILED)
+		//EmuWarning("D3DLOCK_TILED ignored!");
+
+	if (!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && Flags != 0)
+		CxbxKrnlCleanup("D3DSurface_LockRect: Unknown Flags! (0x%.08X)", Flags);
+
+	// As it turns out, D3DSurface_LockRect can also be called with textures (not just surfaces)
+	// so cater for that. TODO : Should we handle cube and volume textures here too?
+	DWORD dwCommonType = GetXboxCommonResourceType(pThis);
+	switch (dwCommonType) {
+	case X_D3DCOMMON_TYPE_TEXTURE:
+	{
+		IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+		if (pHostTexture == nullptr)
+		{
+			EmuWarning("Missing Texture!");
+			hRet = E_FAIL;
+		}
+		else
+		{
+			pHostTexture->UnlockRect(0); // remove old lock
+			hRet = pHostTexture->LockRect(0, pLockedRect, pRect, Flags);
+			DEBUG_D3DRESULT(hRet, "pHostTexture->LockRect");
+		}
+		break;
+	}
+	case X_D3DCOMMON_TYPE_SURFACE:
+	{
+		IDirect3DSurface8 *pHostSurface = GetHostSurface(pThis);
+		if (pHostSurface == nullptr)
+		{
+			EmuWarning("Missing Surface!");
+			hRet = E_FAIL;
+		}
+		else
+		{
+			pHostSurface->UnlockRect(); // remove old lock
+			hRet = pHostSurface->LockRect(pLockedRect, pRect, NewFlags);
+			DEBUG_D3DRESULT(hRet, "pHostSurface->LockRect");
+		}
+		break;
+	}
+	default:
+		EmuWarning("D3DSurface_LockRect: Unhandled type!");
+	}
+}
+
+// ******************************************************************
+// * patch: IDirect3DBaseTexture8_GetLevelCount
+// ******************************************************************
+DWORD WINAPI XTL::EMUPATCH(D3DBaseTexture_GetLevelCount)
+(
+    X_D3DBaseTexture   *pThis
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pThis);
+
+	DWORD dwRet = 0;
+
+	if( pThis )
+	{
+		IDirect3DBaseTexture8 *pHostBaseTexture = GetHostBaseTexture(pThis);
+
+		if( pHostBaseTexture )
+			dwRet = pHostBaseTexture->GetLevelCount();
+	}
+
+    return dwRet;
+}
+
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetSurfaceLevel2
+// ******************************************************************
+XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
+(
+    X_D3DTexture   *pThis,
+    UINT            Level
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_END;
+
+    X_D3DSurface *result = NULL;
+
+	if (!pThis)
+		EmuWarning("pThis not assigned!");
+	else
+	{
+		if (pThis->Data == X_D3DRESOURCE_DATA_YUV_SURFACE)
+		{
+			result = (X_D3DSurface*)pThis;
+		}
+		else
+		{
+			result = EmuNewD3DSurface();
+			result->Data = X_D3DRESOURCE_DATA_SURFACE_LEVEL;
+			result->Format = 0; // TODO : Set this
+			result->Size = 0; // TODO : Set this
+
+			IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+			IDirect3DSurface8 *pNewHostSurface = nullptr;
+
+			HRESULT hRet = pHostTexture->GetSurfaceLevel(Level, &pNewHostSurface);
+			DEBUG_D3DRESULT(hRet, "pHostTexture->GetSurfaceLevel");
+
+			if (SUCCEEDED(hRet))
+				SetHostSurface(result, pNewHostSurface);
+
+			result->Parent = pThis;
+			pThis->Common++; // AddRef Parent too
+		}
+		
+		result->Common++; // Don't EMUPATCH(D3DResource_AddRef)(result) - that would AddRef Parent one too many
+	}
+	
+    RETURN(result);
+}
+
+// ******************************************************************
+// * patch: IDirect3DTexture8_LockRect
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
+(
+    X_D3DTexture   *pThis,
+    UINT            Level,
+    D3DLOCKED_RECT *pLockedRect,
+    CONST RECT     *pRect,
+    DWORD           Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+    HRESULT hRet = D3D_OK;
+
+	// If this is a YUV surface, just use the Xbox implementation of this function
+	// as we don't store a host counterpart.
+	if (IsYuvSurfaceOrTexture(pThis)) {
+		typedef VOID(__stdcall *XB_D3DTexture_LockRect_t)(X_D3DResource*, UINT, D3DLOCKED_RECT*, CONST RECT*, DWORD);
+		static XB_D3DTexture_LockRect_t XB_D3DTexture_LockRect = (XB_D3DTexture_LockRect_t)GetXboxFunctionPointer("D3DTexture_LockRect");
+
+		// No need to check for success here, as we are calling LockRect from LockRect, if this address wasn't found
+		// we must be very broken :P
+		XB_D3DTexture_LockRect(pThis, Level, pLockedRect, pRect, Flags);
+		return;
+	}
+
+    IDirect3DTexture8 *pHostTexture = GetHostTexture(pThis);
+
+    DWORD NewFlags = 0;
+
+    if(Flags & X_D3DLOCK_READONLY)
+        NewFlags |= D3DLOCK_READONLY;
+
+    //if(Flags & X_D3DLOCK_TILED)
+        //EmuWarning("D3DLOCK_TILED ignored!");
+
+    if(Flags & X_D3DLOCK_NOOVERWRITE)
+        NewFlags |= D3DLOCK_NOOVERWRITE;
+
+    if(Flags & X_D3DLOCK_NOFLUSH)
+        EmuWarning("D3DLOCK_NOFLUSH ignored!");
+
+    if(!(Flags & X_D3DLOCK_READONLY) && !(Flags & X_D3DLOCK_TILED) && !(Flags & X_D3DLOCK_NOOVERWRITE) && !(Flags & X_D3DLOCK_NOFLUSH) && Flags != 0)
+        CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+
+	if (pHostTexture != nullptr)
+	{
+		pHostTexture->UnlockRect(Level); // remove old lock
+		hRet = pHostTexture->LockRect(Level, pLockedRect, pRect, NewFlags);
+	}
+
+	pThis->Common |= X_D3DCOMMON_ISLOCKED;
+}
+
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel)
+(
+    X_D3DTexture       *pThis,
+    UINT                Level,
+    X_D3DSurface      **ppSurfaceLevel
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FORWARD("D3DTexture_GetSurfaceLevel2");
+
+	*ppSurfaceLevel = EMUPATCH(D3DTexture_GetSurfaceLevel2)(pThis, Level);
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: IDirect3DVolumeTexture8_LockBox
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DVolumeTexture_LockBox)
+(
+    X_D3DVolumeTexture *pThis,
+    UINT                Level,
+    D3DLOCKED_BOX      *pLockedVolume,
+    CONST D3DBOX       *pBox,
+    DWORD               Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedVolume)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+    IDirect3DVolumeTexture8 *pHostVolumeTexture = GetHostVolumeTexture(pThis);
+
+	pHostVolumeTexture->UnlockBox(Level); // remove old lock
+    HRESULT hRet = pHostVolumeTexture->LockBox(Level, pLockedVolume, pBox, Flags);
+	DEBUG_D3DRESULT(hRet, "pHostVolumeTexture->LockBox");
+}
+
+// ******************************************************************
+// * patch: IDirect3DCubeTexture8_LockRect
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DCubeTexture_LockRect)
+(
+    X_D3DCubeTexture   *pThis,
+    D3DCUBEMAP_FACES    FaceType,
+    UINT                Level,
+    D3DLOCKED_RECT     *pLockedBox,
+    CONST RECT         *pRect,
+    DWORD               Flags
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedBox)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+    IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pThis);
+
+	pHostCubeTexture->UnlockRect(FaceType, Level); // remove old lock
+	HRESULT hRet = pHostCubeTexture->LockRect(FaceType, Level, pLockedBox, pRect, Flags);    
+}
+
+// ******************************************************************
+// * patch: D3DDevice_Release
+// ******************************************************************
+ULONG WINAPI XTL::EMUPATCH(D3DDevice_Release)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	// See GetD3DResourceRefCount()
+    g_pD3DDevice8->AddRef();
+    DWORD RefCount = g_pD3DDevice8->Release();
+    if (RefCount == 1)
+    {
+        // Signal proxy thread, and wait for completion
+        g_EmuCDPD.bReady = true;
+        g_EmuCDPD.bCreate = false;
+
+        while(g_EmuCDPD.bReady)
+            Sleep(10);
+        RefCount = g_EmuCDPD.hRet;
+    }
+    else
+    {
+        RefCount = g_pD3DDevice8->Release();
+    }
+
+    return RefCount;
+}
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3DDevice_CreateVertexBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer)
+(
+    UINT                Length,
+    DWORD               Usage,
+    DWORD               FVF,
+    D3DPOOL             Pool,
+    X_D3DVertexBuffer **ppVertexBuffer
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_CreateVertexBuffer2");
+
+	*ppVertexBuffer = EMUPATCH(D3DDevice_CreateVertexBuffer2)(Length);
+
+    return D3D_OK;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3DDevice_CreateVertexBuffer2
+// ******************************************************************
+XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
+(
+    UINT Length
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Length);
+
+    X_D3DVertexBuffer *pD3DVertexBuffer = EmuNewD3DVertexBuffer();
+	XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
+	
+    HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
+    (
+        Length,
+        0,
+        0,
+        D3DPOOL_MANAGED,
+        &pNewHostVertexBuffer
+    );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVertexBuffer");
+
+    if(SUCCEEDED(hRet))
+		SetHostVertexBuffer(pD3DVertexBuffer, pNewHostVertexBuffer);
+
+    #ifdef _DEBUG_TRACK_VB
+    g_VBTrackTotal.insert(pNewHostVertexBuffer);
+    #endif
+
+    return pD3DVertexBuffer;
+}
+#endif
+
+// ******************************************************************
+// * patch: D3DDevice_KickOff (D3D::CDevice::KickOff)
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_KickOff)()
+{
+	//FUNC_EXPORTS
+		
+	LOG_FUNC();
+
+	// TODO: Anything (kick off and NOT wait for idle)?
+	// NOTE: We should actually emulate D3DDevice_KickPushBuffer()
+	// instead of this function.  When needed, use the breakpoint (int 3)
+	// to determine what is calling this function if it's something other
+	// than D3DDevice_KickPushBuffer() itself.
+
+//	__asm int 3;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_KickPushBuffer
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_KickPushBuffer)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	// TODO -oDxbx : Locate the current PushBuffer address, and supply that to RunPushBuffer (without a fixup)
+	LOG_UNIMPLEMENTED();
+
+}
+
+// ******************************************************************
+// * patch: D3D_CMiniport_GetDisplayCapabilities
+// ******************************************************************
+DWORD WINAPI XTL::EMUPATCH(D3D_CMiniport_GetDisplayCapabilities)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	// This function was only found in Run Like Hell (5233) @ 0x11FCD0.
+	// So far, this function hasn't been found in any other XDKs.  
+
+	DWORD AvInfo;
+
+	xboxkrnl::AvSendTVEncoderOption(NULL,
+		AV_QUERY_AV_CAPABILITIES,
+		0,
+		&AvInfo);
+
+	RETURN(AvInfo);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_BeginPushBuffer
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPushBuffer)
+(
+	X_D3DPushBuffer *pPushBuffer
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pPushBuffer);
+
+	// TODO: Implement. Easier said than done with Direct3D, but OpenGL
+	// can emulate this functionality rather easily.
+	LOG_UNIMPLEMENTED();
+//	CxbxKrnlCleanup("BeginPushBuffer is not yet implemented!\n"
+	//				"This is going to be a difficult fix for Direct3D but NOT OpenGL!");
+
+}
+
+// ******************************************************************
+// * patch: D3DDevice_EndPushBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndPushBuffer)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: XMETAL_StartPush
+// ******************************************************************
+PDWORD WINAPI XTL::EMUPATCH(XMETAL_StartPush)(void* Unknown)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Unknown);
+
+	// This function is too low level to actually emulate
+	// Only use for debugging.
+//	__asm int 3;
+
+	LOG_UNIMPLEMENTED();
+
+	return 0;
+}
+
+
+// ******************************************************************
+// * patch: D3D_MakeRequestedSpace
+// ******************************************************************
+PDWORD WINAPI XTL::EMUPATCH(D3D_MakeRequestedSpace)
+(
+	DWORD MinimumSpace,
+	DWORD RequestedSpace
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(MinimumSpace)
+		LOG_FUNC_ARG(RequestedSpace)
+		LOG_FUNC_END;
+
+	// NOTE: This function is ignored, as we currently don't emulate the push buffer
+	LOG_IGNORED();
+
+	return PushBuffer; // Return a buffer that will be filled with GPU commands
+
+	// Note: This should work together with functions like XMETAL_StartPush/
+	// D3DDevice_BeginPush(Buffer)/D3DDevice_EndPush(Buffer) and g_pPrimaryPB
+
+	// TODO : Once we start emulating the PushBuffer, this will have to be the
+	// actual pushbuffer, for which we should let CreateDevice run unpatched.
+	// Also, we will require a mechanism (thread) which handles the commands
+	// send to the pushbuffer, emulating them much like EmuExecutePushBufferRaw
+	// (maybe even use that).
+}
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3DDevice_MakeSpace
+// ******************************************************************
+void WINAPI XTL::EMUPATCH(D3DDevice_MakeSpace)()
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	// NOTE: Like the above function, this should not be emulated.  The intended
+	// usage is the same as above.
+	LOG_UNIMPLEMENTED();
+		
+}
+#endif
+
+// ******************************************************************
+// * patch: D3DDevice_GetPushBufferOffset
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPushBufferOffset)
+(
+	DWORD *pOffset
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pOffset);
+
+	// TODO: Implement
+	*pOffset = 0;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: IDirect3DCubeTexture8_GetCubeMapSurface
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level,
+	X_D3DSurface**		ppCubeMapSurface
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(ppCubeMapSurface)
+		LOG_FUNC_END;
+
+	HRESULT hRet;
+
+	// Create a new surface
+	*ppCubeMapSurface = EmuNewD3DSurface();
+	IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pThis);
+	IDirect3DSurface8 *pNewHostSurface = nullptr;
+
+	hRet = pHostCubeTexture->GetCubeMapSurface(FaceType, Level, &pNewHostSurface);
+	DEBUG_D3DRESULT(hRet, "pHostCubeTexture->GetCubeMapSurface");
+
+	if (SUCCEEDED(hRet))
+		SetHostSurface(*ppCubeMapSurface, pNewHostSurface);		
+
+	return hRet;
+}
+
+// ******************************************************************
+// * patch: IDirect3DCubeTexture8_GetCubeMapSurface2
+// ******************************************************************
+XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FORWARD("D3DCubeTexture_GetCubeMapSurface");
+
+	X_D3DSurface* pCubeMapSurface = NULL;
+
+	EMUPATCH(D3DCubeTexture_GetCubeMapSurface)(pThis, FaceType, Level, &pCubeMapSurface);
+
+	return pCubeMapSurface;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetPersistedSurface2
+// ******************************************************************
+XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface2)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_GetPersistedSurface");
+
+	X_D3DSurface* pSurface = NULL;
+
+	EMUPATCH(D3DDevice_GetPersistedSurface)(&pSurface);
+
+	return pSurface;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetPersistedSurface
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurface)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(ppSurface);
+
+	// Attempt to load the persisted surface from persisted_surface.bmp
+
+	*ppSurface = EmuNewD3DSurface();
+	IDirect3DSurface8 *pNewHostSurface = nullptr;
+
+	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &pNewHostSurface);
+	DEBUG_D3DRESULT(hr, "g_pD3DDevice8->CreateImageSurface - Could not create temporary surface!");
+
+	if( SUCCEEDED( hr ) )
+	{
+		SetHostSurface(*ppSurface, pNewHostSurface);
+		hr = D3DXLoadSurfaceFromFileA(GetHostSurface(*ppSurface), NULL, NULL, "persisted_surface.bmp",
+			NULL, D3DX_DEFAULT, 0, NULL );
+		DEBUG_D3DRESULT(hr, "D3DXLoadSurfaceFromFileA");
+
+		if( SUCCEEDED( hr ) )
+			DbgPrintf( "Successfully loaded persisted_surface.bmp\n" );
+	}
+}
+
+// ******************************************************************
+// * patch: IDirect3DResource8_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
+(
+    X_D3DResource      *pThis
+)
+{
+	// FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pThis);
+
+    if (!pThis)
+	{
+        EmuWarning("IDirect3DResource8::AddRef() was not passed a valid pointer!");
+		return 0;
+    }
+
+	// Initially, increment the Xbox refcount and return that
+	ULONG uRet = (++(pThis->Common)) & X_D3DCOMMON_REFCOUNT_MASK;
+
+	// Index buffers don't have a native resource assigned
+	if (GetXboxCommonResourceType(pThis) != X_D3DCOMMON_TYPE_INDEXBUFFER) {
+
+		// If this is the first reference on a surface
+		if (uRet == 1)
+			if (pThis->Common & X_D3DCOMMON_TYPE_SURFACE)
+				// Try to AddRef the parent too
+				if (((X_D3DSurface *)pThis)->Parent != NULL)
+					((X_D3DSurface *)pThis)->Parent->Common++;
+
+		// Try to retrieve the host resource behind this resource
+		IDirect3DResource8 *pHostResource = GetHostResource(pThis);
+		if (pHostResource != 0)
+			// if there's a host resource, AddRef it too and return that
+			uRet = pHostResource->AddRef();
+	}
+
+	
+    return uRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette)
+(
+    X_D3DPALETTESIZE    Size,
+    X_D3DPalette      **ppPalette
+)
+{
+	// FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_CreatePalette2");
+
+    *ppPalette = EMUPATCH(D3DDevice_CreatePalette2)(Size);
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette2
+// ******************************************************************
+XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
+(
+    X_D3DPALETTESIZE    Size
+)
+{
+	// FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Size);
+
+    X_D3DPalette *pPalette = EmuNewD3DPalette();
+
+	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+    pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size), 0, (~((::ULONG_PTR)0)), PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+    pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
+
+	// TODO: Should't we register the palette with a call to
+	// EmuIDirect3DResource8_Register? So far, it doesn't look
+	// like the palette registration code gets used.  If not, then we
+	// need to cache the palette manually during any calls to
+	// EmuD3DDevice_SetPalette for 8-bit textures to work properly.
+
+    DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
+
+    
+
+    return pPalette;
+}
+
+
+#if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
+// ******************************************************************
+// * patch: D3D_AllocContiguousMemory
+// ******************************************************************
+PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
+(
+    SIZE_T dwSize,
+    DWORD dwAllocAttributes
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwSize)
+		LOG_FUNC_ARG(dwAllocAttributes)
+		LOG_FUNC_END;
+
+    //
+    // NOTE: Kludgey (but necessary) solution:
+    //
+    // Since this memory must be aligned on a page boundary, we must allocate an extra page
+    // so that we can return a valid page aligned pointer
+    //
+
+    PVOID pRet = g_MemoryManager.Allocate(dwSize + PAGE_SIZE);
+
+    // align to page boundary
+    {
+        DWORD dwRet = (DWORD)pRet;
+
+        dwRet += PAGE_SIZE - dwRet % PAGE_SIZE;
+
+        g_AlignCache.insert(dwRet, pRet);
+
+        pRet = (PVOID)dwRet;
+    }
+
+	RETURN(pRet);
+}
+#endif
+
+#if 0 // DISABLED (Just calls Get2DSurfaceDesc)
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetLevelDesc
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
+(
+    UINT Level,
+    X_D3DSURFACE_DESC* pDesc
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;    
+
+    return D3D_OK;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: Direct3D_CheckDeviceMultiSampleType
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
+(
+    UINT                 Adapter,
+    D3DDEVTYPE           DeviceType,
+    X_D3DFORMAT          SurfaceFormat,
+    BOOL                 Windowed,
+    D3DMULTISAMPLE_TYPE  MultiSampleType
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(SurfaceFormat)
+		LOG_FUNC_ARG(Windowed)
+		LOG_FUNC_ARG(MultiSampleType)
+		LOG_FUNC_END;
+
+    if(Adapter != D3DADAPTER_DEFAULT)
+    {
+        EmuWarning("Adapter is not D3DADAPTER_DEFAULT, correcting!");
+        Adapter = D3DADAPTER_DEFAULT;
+    }
+
+    if(DeviceType == D3DDEVTYPE_FORCE_DWORD)
+        EmuWarning("DeviceType == D3DDEVTYPE_FORCE_DWORD");
+
+    // Convert SurfaceFormat (Xbox->PC)
+    D3DFORMAT PCSurfaceFormat = EmuXB2PC_D3DFormat(SurfaceFormat);
+
+    // TODO: HACK: Devices that don't support this should somehow emulate it!
+    if(PCSurfaceFormat == D3DFMT_D16)
+    {
+        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
+        PCSurfaceFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCSurfaceFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+    {
+        EmuWarning("D3DFMT_P8 is an unsupported texture format!");
+        PCSurfaceFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCSurfaceFormat == D3DFMT_D24S8)
+    {
+        EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
+        PCSurfaceFormat = D3DFMT_X8R8G8B8;
+    }
+
+    if(Windowed != FALSE)
+        Windowed = FALSE;
+
+    // TODO: Convert from Xbox to PC!!
+    D3DMULTISAMPLE_TYPE PCMultiSampleType = EmuXB2PC_D3DMultiSampleFormat((DWORD) MultiSampleType);
+
+    // Now call the real CheckDeviceMultiSampleType with the corrected parameters.
+    HRESULT hRet = g_pD3D8->CheckDeviceMultiSampleType
+    (
+        Adapter,
+        DeviceType,
+        PCSurfaceFormat,
+        Windowed,
+        PCMultiSampleType
+    );
+
+    
+
+    return hRet;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3D_GetDeviceCaps
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
+(
+    UINT        Adapter,
+    D3DDEVTYPE  DeviceType,
+    D3DCAPS8    *pCaps
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(pCaps)
+		LOG_FUNC_END;
+
+    HRESULT hRet = g_pD3D8->GetDeviceCaps(Adapter, DeviceType, pCaps);
+	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetDeviceCaps");
+
+	if(FAILED(hRet))
+		CxbxKrnlCleanup("IDirect3D8::GetDeviceCaps failed!");    
+
+    return hRet;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3D_SetPushBufferSize
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
+(
+    DWORD PushBufferSize,
+    DWORD KickOffSize
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(PushBufferSize)
+		LOG_FUNC_ARG(KickOffSize)
+		LOG_FUNC_END;
+
+    HRESULT hRet = D3D_OK;
+
+    // This is a Xbox extension, meaning there is no pc counterpart.
+
+    
+
+    return hRet;
+}
+#endif
+
+#if 0 // patch DISABLED
+// ******************************************************************
+// * patch: IDirect3DVertexBuffer8_GetDesc
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_GetDesc)
+(
+    X_D3DVertexBuffer    *pThis,
+    X_D3DVERTEXBUFFER_DESC *pDesc
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pDesc)
+		LOG_FUNC_END;
+
+	pDesc->Format = X_D3DFMT_VERTEXDATA;
+	pDesc->Type = X_D3DRTYPE_VERTEXBUFFER;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3D_GetAdapterIdentifier
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3D_GetAdapterIdentifier)
+(
+	UINT					Adapter,
+	DWORD					Flags,
+	D3DADAPTER_IDENTIFIER8* pIdentifier
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_ARG(pIdentifier)
+		LOG_FUNC_END;
+
+	// TODO: Fill the Intentifier structure with the content of what an Xbox would return.
+	// It might not matter for now, but just in case.
+
+	// NOTE: Games do not crash when this function is not intercepted (at least not so far)
+	// so it's recommended to add this function to every XDK you possibly can as it will
+	// save you much hassle (at least it did for Max Payne).
+
+	HRESULT hRet = g_pD3D8->GetAdapterIdentifier( Adapter, Flags, pIdentifier );
+	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetAdapterIdentifier");		
+
+	return hRet;
+}
+#endif
+
+#if 0 // patch disabled
+// ******************************************************************
+// * patch: D3DDevice_GetDeviceCaps
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDeviceCaps)
+(
+    D3DCAPS8                   *pCaps
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pCaps);
+
+    HRESULT hRet = g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF, pCaps);
+	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetDeviceCaps");
+
+	if(FAILED(hRet))
+		CxbxKrnlCleanup("EmuD3DDevice_GetDeviceCaps failed!");
+}
+#endif
