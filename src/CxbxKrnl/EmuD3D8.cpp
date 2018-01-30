@@ -691,6 +691,7 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 }
 
 // Map native resource data pointers to the host resource
+// TODO: Move all these HostResource functions into a ResourceManager class
 std::map <resource_key_t, XTL::IDirect3DResource8*> g_HostResources;
 
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
@@ -3107,6 +3108,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
 // ******************************************************************
 // * patch: D3DDevice_GetBackBuffer2
 // ******************************************************************
+// #define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 (
     INT                 BackBuffer
@@ -3116,65 +3118,148 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	LOG_FUNC_ONE_ARG(BackBuffer);
 
-    /** unsafe, somehow
-    HRESULT hRet = D3D_OK;
+	X_D3DSurface* pXboxBackBuffer = nullptr;
 
-    X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
-	
-    if(BackBuffer == -1)
-    {
-        static IDirect3DSurface8 *pCachedPrimarySurface = nullptr;
 
-        if(pCachedPrimarySurface == nullptr)
-        {
-            // create a buffer to return
-            // TODO: Verify the surface is always 640x480
-            hRet = g_pD3DDevice8->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
-        }
+#ifndef COPY_BACKBUFFER_TO_XBOX_SURFACE
+	/** unsafe, somehow
+	HRESULT hRet = D3D_OK;
 
-        SetHostSurface(pBackBuffer, pCachedPrimarySurface);
+	X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 
-        hRet = g_pD3DDevice8->GetFrontBuffer(pCachedPrimarySurface);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetFrontBuffer");
+	if(BackBuffer == -1)
+	{
+	static IDirect3DSurface8 *pCachedPrimarySurface = nullptr;
 
-		if(FAILED(hRet))
-        {
-            EmuWarning("Could not retrieve primary surface, using backbuffer");
-			SetHostSurface(pBackBuffer, nullptr);
-            pCachedPrimarySurface->Release();
-            pCachedPrimarySurface = nullptr;
-            BackBuffer = 0;
-        }
-
-        // Debug: Save this image temporarily
-        //D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pBackBuffer), NULL, NULL);
-    }
-
-    if(BackBuffer != -1) {
-        hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+	if(pCachedPrimarySurface == nullptr)
+	{
+	// create a buffer to return
+	// TODO: Verify the surface is always 640x480
+	hRet = g_pD3DDevice8->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
 	}
-    //*/
+
+	SetHostSurface(pBackBuffer, pCachedPrimarySurface);
+
+	hRet = g_pD3DDevice8->GetFrontBuffer(pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetFrontBuffer");
+
+	if(FAILED(hRet))
+	{
+	EmuWarning("Could not retrieve primary surface, using backbuffer");
+	SetHostSurface(pBackBuffer, nullptr);
+	pCachedPrimarySurface->Release();
+	pCachedPrimarySurface = nullptr;
+	BackBuffer = 0;
+	}
+
+	// Debug: Save this image temporarily
+	//D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pBackBuffer), NULL, NULL);
+	}
+
+	if(BackBuffer != -1) {
+	hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+	}
+	//*/
 
 	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-    if(BackBuffer == -1)
-        BackBuffer = 0;
+	if (BackBuffer == -1)
+		BackBuffer = 0;
 
-    HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
 
-	if(FAILED(hRet))
-        CxbxKrnlCleanup("Unable to retrieve back buffer");
-	
+	if (FAILED(hRet))
+		CxbxKrnlCleanup("Unable to retrieve back buffer");
+
 	SetHostSurface(pBackBuffer, pNewHostSurface);
-	
+
 	// Increment reference count
 	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
 
-    return pBackBuffer;
+	return pBackBuffer;
+#else
+	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
+	// This gives us the correct Xbox surface to update.
+	// We get signatures for both backbuffer functions as it changed in later XDKs
+	typedef X_D3DSurface*(__stdcall *XB_D3DDevice_GetBackBuffer2_t)(INT);
+	typedef VOID(__stdcall *XB_D3DDevice_GetBackBuffer_t)(INT, D3DBACKBUFFER_TYPE, X_D3DSurface**);
+	static XB_D3DDevice_GetBackBuffer2_t XB_D3DDevice_GetBackBuffer2 = (XB_D3DDevice_GetBackBuffer2_t)GetXboxFunctionPointer("D3DDevice_GetBackBuffer2");
+	static XB_D3DDevice_GetBackBuffer_t XB_D3DDevice_GetBackBuffer = (XB_D3DDevice_GetBackBuffer_t)GetXboxFunctionPointer("D3DDevice_GetBackBuffer");
+
+	// This also updates the reference count, so we don't need to do this ourselves
+	if (XB_D3DDevice_GetBackBuffer != nullptr) {
+		XB_D3DDevice_GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
+	}
+	else {
+		pXboxBackBuffer = XB_D3DDevice_GetBackBuffer2(BackBuffer);
+	}
+
+	// Now pXboxBackbuffer points to the requested Xbox backbuffer
+	if (pXboxBackBuffer == nullptr) {
+		EmuWarning("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer, creating a fake backbuffer");
+		pXboxBackBuffer = EmuNewD3DSurface();
+	}
+
+	// Now we can fetch the host backbuffer
+	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
+
+	if (BackBuffer == -1)
+		BackBuffer = 0;
+
+	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+
+	if (FAILED(hRet)) {
+		CxbxKrnlCleanup("Unable to retrieve back buffer");
+	}
+
+	D3DSURFACE_DESC hostSurfaceDesc;
+	if (pNewHostSurface->GetDesc(&hostSurfaceDesc) != D3D_OK) {
+		EmuWarning("Could not get Back Buffer Host Surface Desc");
+		goto skip_backbuffer_copy;
+	}
+
+	// Get the host surface for the destination Xbox surface
+	XTL::IDirect3DSurface8* pCopySrcSurface = GetHostSurface(pXboxBackBuffer);
+		
+	// Now we can copy the host back buffer to the Xbox
+	D3DLOCKED_RECT lockedRect;
+	hRet = pNewHostSurface->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
+	if (hRet != STATUS_SUCCESS) {
+		EmuWarning("Could not lock Host Back Buffer");
+		goto skip_backbuffer_copy;
+	}
+
+	// Do the copy from the host backbuffer to the host surface representing the backbuffer
+	// This handles format conversion back to Xbox format (assuming the host surface is the same format), and makes sure our HostResource is up to date
+	// That way if it gets used as a trex
+	D3DXLoadSurfaceFromMemory(pCopySrcSurface, NULL, NULL, lockedRect.pBits, hostSurfaceDesc.Format, lockedRect.Pitch, NULL, NULL, 0, 0);
+	pNewHostSurface->UnlockRect();
+
+	if (pNewHostSurface->GetDesc(&hostSurfaceDesc) != D3D_OK) {
+		EmuWarning("Could not get Xbox Back Buffer Host Surface Desc");
+		goto skip_backbuffer_copy;
+	}
+
+	// Finally, do the copy from the converted host resource to the xbox resource
+	hRet = pCopySrcSurface->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
+	if (hRet != STATUS_SUCCESS) {
+		EmuWarning("Could not lock Host Resource for Xbox Back Buffer");
+		goto skip_backbuffer_copy;
+	}
+	
+	memcpy(pXboxBackBuffer, lockedRect.pBits, hostSurfaceDesc.Size);
+
+	pCopySrcSurface->UnlockRect();
+	
+	
+skip_backbuffer_copy:
+    return pXboxBackBuffer;
+#endif
 }
 
 // ******************************************************************
