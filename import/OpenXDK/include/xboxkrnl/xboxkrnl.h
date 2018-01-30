@@ -400,6 +400,46 @@ typedef struct _LIST_ENTRY
 }
 LIST_ENTRY, *PLIST_ENTRY;
 
+// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
+// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
+
+#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
+
+#define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
+((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
+
+#define LIST_ENTRY_INSERT_HEAD(ListHead, Entry) {\
+xboxkrnl::PLIST_ENTRY Flink;\
+Flink = ListHead->Flink;\
+(Entry)->Flink = Flink;\
+(Entry)->Blink = ListHead;\
+Flink->Blink = Entry;\
+ListHead->Flink = Entry;\
+}
+
+#define LIST_ENTRY_INSERT_TAIL(ListHead, Entry) {\
+xboxkrnl::PLIST_ENTRY Blink;\
+Blink = ListHead->Blink;\
+(Entry)->Flink = ListHead;\
+(Entry)->Blink = Blink;\
+Blink->Flink = Entry;\
+ListHead->Blink = Entry;\
+}
+
+#define LIST_ENTRY_REMOVE(Entry) {\
+xboxkrnl::PLIST_ENTRY ExFlink;\
+xboxkrnl::PLIST_ENTRY ExBlink;\
+ExFlink = (Entry)->Flink;\
+ExBlink = (Entry)->Blink;\
+ExFlink->Blink = ExBlink;\
+ExBlink->Flink = ExFlink;\
+}
+
+#define LIST_ENTRY_REMOVE_AT_HEAD(ListHead) \
+(ListHead)->Flink;\
+LIST_ENTRY_REMOVE((ListHead)->Flink)
+
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY  *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
@@ -1281,7 +1321,8 @@ typedef struct _DASH_LAUNCH_DATA
 	DWORD dwParameter1;
 	DWORD dwParameter2;
 	BYTE  Reserved[3072 - 16];
-} DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
+}
+DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
 
 // ******************************************************************
 // * DISPATCHER_HEADER
