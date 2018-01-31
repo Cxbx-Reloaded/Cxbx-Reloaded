@@ -690,9 +690,62 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 	return result;
 }
 
-// Map native resource data pointers to the host resource
-// TODO: Move all these HostResource functions into a ResourceManager class
-std::map <resource_key_t, XTL::IDirect3DResource8*> g_HostResources;
+void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
+{
+	// Don't pass in unassigned Xbox resources
+	if (pXboxResource == NULL)
+		return nullptr;
+
+	xbaddr pData = pXboxResource->Data;
+	if (pData == NULL)
+		return nullptr;
+
+	if (IsSpecialXboxResource(pXboxResource))
+	{
+		switch (pData) {
+		case X_D3DRESOURCE_DATA_BACK_BUFFER:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_RENDER_TARGET:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
+			return nullptr;
+		case X_D3DRESOURCE_DATA_SURFACE_LEVEL:
+			return nullptr;
+		default:
+			CxbxKrnlCleanup("Unhandled special resource type");
+		}
+	}
+
+	DWORD Type = GetXboxCommonResourceType(pXboxResource);
+	switch (Type) {
+	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
+	case X_D3DCOMMON_TYPE_INDEXBUFFER:
+	case X_D3DCOMMON_TYPE_PALETTE:
+	case X_D3DCOMMON_TYPE_TEXTURE:
+	case X_D3DCOMMON_TYPE_SURFACE:
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		break;
+	case X_D3DCOMMON_TYPE_PUSHBUFFER:
+		break;
+	case X_D3DCOMMON_TYPE_FIXUP:
+		break;
+	default:
+		CxbxKrnlCleanup("Unhandled resource type");
+	}
+
+	return (uint08*)pData;
+}
+
+typedef struct {
+	XTL::IDirect3DResource8* pHostResource = nullptr;
+	XTL::X_D3DResource* pXboxResource = nullptr;
+	void* pXboxData = nullptr;
+	size_t szXboxDataSize = 0;
+	uint32_t hash = 0;
+} host_resource_info_t;
+
+std::map <resource_key_t, host_resource_info_t> g_HostResources;
 
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 {
@@ -711,8 +764,8 @@ void FreeHostResource(resource_key_t key)
 	// Release the host resource and remove it from the list
 	auto hostResourceIterator = g_HostResources.find(key);
 	if (hostResourceIterator != g_HostResources.end()) {
-		if (hostResourceIterator->second) {
-			(hostResourceIterator->second)->Release();
+		if (hostResourceIterator->second.pHostResource) {
+			(hostResourceIterator->second.pHostResource)->Release();
 		}
 		g_HostResources.erase(hostResourceIterator);
 	}
@@ -743,7 +796,37 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 		return nullptr;
 	}
 
-	return it->second;
+	return it->second.pHostResource;
+}
+
+size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
+{
+	// TODO: Smart size calculation based around format of resource
+	return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
+}
+
+bool HostResourceRequiresUpdate(resource_key_t key)
+{
+	auto it = g_HostResources.find(key);
+	if (it == g_HostResources.end()) {
+		return false;
+	}
+
+	// Currently, we only dynamically update Textures and Surfaces, so if our resource
+	// isn't of these types, do nothing
+	DWORD type = GetXboxCommonResourceType(it->second.pXboxResource);
+	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE) {
+		return false;
+	}
+
+	uint32_t oldHash = it->second.hash;
+	it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
+
+	if (it->second.hash != oldHash) {
+		return true;
+	}
+
+	return false;
 }
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
@@ -754,7 +837,14 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
-	g_HostResources[key] = pHostResource;
+	host_resource_info_t hostResourceInfo;
+	hostResourceInfo.pHostResource = pHostResource;
+	hostResourceInfo.pXboxResource = pXboxResource;
+	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
+	hostResourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
+	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
+
+	g_HostResources[key] = hostResourceInfo;
 
 }
 
@@ -867,53 +957,6 @@ void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertex
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
 	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVertexBuffer);
-}
-
-void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
-{
-	// Don't pass in unassigned Xbox resources
-	if(pXboxResource == NULL)
-		return nullptr;
-
-	xbaddr pData = pXboxResource->Data;
-	if (pData == NULL)
-		return nullptr;
-
-	if (IsSpecialXboxResource(pXboxResource))
-	{
-		switch (pData) {
-		case X_D3DRESOURCE_DATA_BACK_BUFFER:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_RENDER_TARGET:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_SURFACE_LEVEL:
-			return nullptr;
-		default:
-			CxbxKrnlCleanup("Unhandled special resource type");
-		}
-	}
-
-	DWORD Type = GetXboxCommonResourceType(pXboxResource);
-	switch (Type) {
-	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
-	case X_D3DCOMMON_TYPE_INDEXBUFFER:
-	case X_D3DCOMMON_TYPE_PALETTE:
-	case X_D3DCOMMON_TYPE_TEXTURE:
-	case X_D3DCOMMON_TYPE_SURFACE:
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
-		break;
-	case X_D3DCOMMON_TYPE_PUSHBUFFER:
-		break;
-	case X_D3DCOMMON_TYPE_FIXUP:
-		break;
-	default:
-		CxbxKrnlCleanup("Unhandled resource type");
-	}
-
-	return (uint08*)pData;
 }
 
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
@@ -1968,25 +2011,16 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				}
 
                 // update render target cache
-                g_pCachedRenderTarget = EmuNewD3DSurface();
 				XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
-
-                g_pCachedRenderTarget->Data = X_D3DRESOURCE_DATA_RENDER_TARGET;
                 hRet = g_pD3DDevice8->GetRenderTarget(&pNewHostSurface);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetRenderTarget");
 
-				SetHostSurface(g_pCachedRenderTarget, pNewHostSurface);
-
-                // update z-stencil surface cache
-                g_pCachedDepthStencil = EmuNewD3DSurface();
+				// update z-stencil surface cache
 				pNewHostSurface = nullptr;
-				g_pCachedDepthStencil->Data = X_D3DRESOURCE_DATA_DEPTH_STENCIL;
 				hRet = g_pD3DDevice8->GetDepthStencilSurface(&pNewHostSurface);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetDepthStencilSurface");
 
 				g_bHasDepthStencil = SUCCEEDED(hRet);
-				if (g_bHasDepthStencil)
-					SetHostSurface(g_pCachedDepthStencil, pNewHostSurface);
 
 				hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
@@ -2091,7 +2125,11 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 
 	auto key = GetHostResourceKey(pResource);
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
-		return;
+		if (!HostResourceRequiresUpdate(key)) {
+			return;
+		}
+
+		FreeHostResource(key);
 	}
 
 	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
