@@ -114,6 +114,8 @@ static unsigned int WINAPI PCSTProxy
 	IN PVOID Parameter
 )
 {
+	CxbxSetThreadName("PsCreateSystemThread Proxy");
+
 	PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
 	PVOID StartRoutine = iPCSTProxyParam->StartRoutine;
