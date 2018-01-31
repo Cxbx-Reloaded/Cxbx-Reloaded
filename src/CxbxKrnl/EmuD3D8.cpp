@@ -3911,7 +3911,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_ARG(pTexture)
 		LOG_FUNC_END;
 
-    EmuD3DActiveTexture[Stage] = pTexture;
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	typedef ULONG(__stdcall *XB_D3DDevice_SetTexture_t)(DWORD, X_D3DBaseTexture*);
+	static XB_D3DDevice_SetTexture_t XB_D3DDevice_SetTexture = (XB_D3DDevice_SetTexture_t)GetXboxFunctionPointer("D3DDevice_SetTexture");
+	XB_D3DDevice_SetTexture(Stage, pTexture);
+
+	EmuD3DActiveTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -3949,31 +3954,12 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
     else
     {
-        //
-        // WARNING: TODO: Correct reference counting has not been completely verified for this code
-        //
-
-        X_D3DTexture *pTexture = (X_D3DTexture *)g_DataToTexture.get(Data);
-		IDirect3DBaseTexture8 *pHostBaseTexture = GetHostBaseTexture(pTexture);
-
-        EmuWarning("Switching Texture 0x%.08X (0x%.08X) @ Stage %d", pTexture, pHostBaseTexture, Stage);
-
-        HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pHostBaseTexture);
-
-        /*
-        if(GetHostBaseTexture(pTexture) != nullptr)
-        {
-            static int dwDumpTexture = 0;
-
-            char szBuffer[255];
-
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\0x%.08X-SwitchTexture%.03d.bmp", pTexture, dwDumpTexture++);
-
-            pHostBaseTexture->UnlockRect(0);
-
-            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pHostBaseTexture, NULL);
-        }
-        //*/
+		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
+		// The closest thing we can do with HLE is update the data pointer ourselves and hope for the best
+		X_D3DBaseTexture* pActiveTexture = EmuD3DActiveTexture[Stage];
+		if (pActiveTexture != nullptr) {
+			pActiveTexture->Data = Data;
+		}
     }
 }
 
