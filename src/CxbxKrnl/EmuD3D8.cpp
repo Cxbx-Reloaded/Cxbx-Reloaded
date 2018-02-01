@@ -822,12 +822,14 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 	// Rehash the resource after a certain amount of milliseconds has passed
 	// We do this because hashing every single use is too expensive
 	// Note: This will have to do until we get proper dirty page support
-	// Even with a 1ms hash lifetime, Turok goes from 2fps to 160fps on the title screen
+	// Currently this is set to roughly 1 hash per frame, but may need adjusting
+	// if wrong textures are seen in game.
 	auto now = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(it->second.lastHashedTime - now).count();
-	if (duration > 1) {
-	uint32_t oldHash = it->second.hash;
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - it->second.lastHashedTime).count();
+	if (duration > 16) {
+		uint32_t oldHash = it->second.hash;
 		it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
+		it->second.lastHashedTime = now;
 
 		if (it->second.hash != oldHash) {
 			return true;
