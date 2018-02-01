@@ -682,6 +682,8 @@ void EmuNV2A_Init()
 
 	d->pcrtc.start = 0;
 
+	d->vram_size = (g_bIsChihiro || g_bIsDebug) ? CONTIGUOUS_MEMORY_CHIHIRO_SIZE : CONTIGUOUS_MEMORY_XBOX_SIZE;
+
 	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
 	d->pramdac.core_clock_freq = 189000000;
 	d->pramdac.memory_clock_coeff = 0;

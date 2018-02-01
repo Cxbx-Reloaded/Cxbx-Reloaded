@@ -1,3 +1,136 @@
+static const GLenum pgraph_texture_min_filter_map[] = {
+    0,
+    GL_NEAREST,
+    GL_LINEAR,
+    GL_NEAREST_MIPMAP_NEAREST,
+    GL_LINEAR_MIPMAP_NEAREST,
+    GL_NEAREST_MIPMAP_LINEAR,
+    GL_LINEAR_MIPMAP_LINEAR,
+    GL_LINEAR, /* TODO: Convolution filter... */
+};
+
+static const GLenum pgraph_texture_mag_filter_map[] = {
+    0,
+    GL_NEAREST,
+    GL_LINEAR,
+    0,
+    GL_LINEAR /* TODO: Convolution filter... */
+};
+
+static const GLenum pgraph_texture_addr_map[] = {
+    0,
+    GL_REPEAT,
+    GL_MIRRORED_REPEAT,
+    GL_CLAMP_TO_EDGE,
+    GL_CLAMP_TO_BORDER,
+    // GL_CLAMP
+};
+
+static const GLenum pgraph_blend_factor_map[] = {
+    GL_ZERO,
+    GL_ONE,
+    GL_SRC_COLOR,
+    GL_ONE_MINUS_SRC_COLOR,
+    GL_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA,
+    GL_DST_ALPHA,
+    GL_ONE_MINUS_DST_ALPHA,
+    GL_DST_COLOR,
+    GL_ONE_MINUS_DST_COLOR,
+    GL_SRC_ALPHA_SATURATE,
+    0,
+    GL_CONSTANT_COLOR,
+    GL_ONE_MINUS_CONSTANT_COLOR,
+    GL_CONSTANT_ALPHA,
+    GL_ONE_MINUS_CONSTANT_ALPHA,
+};
+
+static const GLenum pgraph_blend_equation_map[] = {
+    GL_FUNC_SUBTRACT,
+    GL_FUNC_REVERSE_SUBTRACT,
+    GL_FUNC_ADD,
+    GL_MIN,
+    GL_MAX,
+    GL_FUNC_REVERSE_SUBTRACT,
+    GL_FUNC_ADD,
+};
+
+static const GLenum pgraph_blend_logicop_map[] = {
+    GL_CLEAR,
+    GL_AND,
+    GL_AND_REVERSE,
+    GL_COPY,
+    GL_AND_INVERTED,
+    GL_NOOP,
+    GL_XOR,
+    GL_OR,
+    GL_NOR,
+    GL_EQUIV,
+    GL_INVERT,
+    GL_OR_REVERSE,
+    GL_COPY_INVERTED,
+    GL_OR_INVERTED,
+    GL_NAND,
+    GL_SET,
+};
+
+static const GLenum pgraph_cull_face_map[] = {
+    0,
+    GL_FRONT,
+    GL_BACK,
+    GL_FRONT_AND_BACK
+};
+
+static const GLenum pgraph_depth_func_map[] = {
+    GL_NEVER,
+    GL_LESS,
+    GL_EQUAL,
+    GL_LEQUAL,
+    GL_GREATER,
+    GL_NOTEQUAL,
+    GL_GEQUAL,
+    GL_ALWAYS,
+};
+
+static const GLenum pgraph_stencil_func_map[] = {
+    GL_NEVER,
+    GL_LESS,
+    GL_EQUAL,
+    GL_LEQUAL,
+    GL_GREATER,
+    GL_NOTEQUAL,
+    GL_GEQUAL,
+    GL_ALWAYS,
+};
+
+static const GLenum pgraph_stencil_op_map[] = {
+    0,
+    GL_KEEP,
+    GL_ZERO,
+    GL_REPLACE,
+    GL_INCR,
+    GL_DECR,
+    GL_INVERT,
+    GL_INCR_WRAP,
+    GL_DECR_WRAP,
+};
+
+typedef struct ColorFormatInfo {
+    unsigned int bytes_per_pixel;
+    bool linear;
+    GLint gl_internal_format;
+    GLenum gl_format;
+    GLenum gl_type;
+    GLenum gl_swizzle_mask[4];
+} ColorFormatInfo;
+
+typedef struct SurfaceColorFormatInfo {
+    unsigned int bytes_per_pixel;
+    GLint gl_internal_format;
+    GLenum gl_format;
+    GLenum gl_type;
+} SurfaceColorFormatInfo;
+
 static void pgraph_context_switch(NV2AState *d, unsigned int channel_id);
 static void pgraph_set_context_user(NV2AState *d, uint32_t val);
 //static void pgraph_wait_fifo_access(NV2AState *d);
@@ -1078,6 +1211,56 @@ static void pgraph_method_log(unsigned int subchannel,	unsigned int graphics_cla
 	last = method;
 }
 
+static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
+                                                   unsigned int attr)
+{
+    int i;
+    VertexAttribute *attribute = &pg->vertex_attributes[attr];
+
+    if (attribute->inline_buffer || pg->inline_buffer_length == 0) {
+        return;
+    }
+
+    /* Now upload the previous attribute value */
+    attribute->inline_buffer = (float*)calloc(1, NV2A_MAX_BATCH_LENGTH
+                                                  * sizeof(float) * 4);
+    for (i = 0; i < pg->inline_buffer_length; i++) {
+        memcpy(&attribute->inline_buffer[i * 4],
+               attribute->inline_value,
+               sizeof(float) * 4);
+    }
+}
+
+static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
+{
+    int i;
+
+    assert(pg->inline_buffer_length < NV2A_MAX_BATCH_LENGTH);
+
+    for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+        VertexAttribute *attribute = &pg->vertex_attributes[i];
+        if (attribute->inline_buffer) {
+            memcpy(&attribute->inline_buffer[
+                      pg->inline_buffer_length * 4],
+                   attribute->inline_value,
+                   sizeof(float) * 4);
+        }
+    }
+
+    pg->inline_buffer_length++;
+}
+
+static bool pgraph_framebuffer_dirty(PGRAPHState *pg)
+{
+    bool shape_changed = memcmp(&pg->surface_shape, &pg->last_surface_shape,
+                                sizeof(SurfaceShape)) != 0;
+    if (!shape_changed || (!pg->surface_shape.color_format
+            && !pg->surface_shape.zeta_format)) {
+        return false;
+    }
+    return true;
+}
+
 static bool pgraph_color_write_enabled(PGRAPHState *pg)
 {
 	return pg->regs[NV_PGRAPH_CONTROL_0] & (
@@ -1133,6 +1316,43 @@ static GraphicsObject* lookup_graphics_object(PGRAPHState *s,xbaddr instance_add
 		}
 	}
 	return NULL;
+}
+
+/* 16 bit to [0.0, F16_MAX = 511.9375] */
+static float convert_f16_to_float(uint16_t f16) {
+    if (f16 == 0x0000) { return 0.0; }
+    uint32_t i = (f16 << 11) + 0x3C000000;
+    return *(float*)&i;
+}
+
+/* 24 bit to [0.0, F24_MAX] */
+static float convert_f24_to_float(uint32_t f24) {
+    assert(!(f24 >> 24));
+    f24 &= 0xFFFFFF;
+    if (f24 == 0x000000) { return 0.0; }
+    uint32_t i = f24 << 7;
+    return *(float*)&i;
+}
+
+static uint8_t cliptobyte(int x)
+{
+    return (uint8_t)((x < 0) ? 0 : ((x > 255) ? 255 : x));
+}
+
+static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix,
+                                uint8_t *r, uint8_t *g, uint8_t* b) {
+    int c, d, e;
+    c = (int)line[ix * 2] - 16;
+    if (ix % 2) {
+        d = (int)line[ix * 2 - 1] - 128;
+        e = (int)line[ix * 2 + 1] - 128;
+    } else {
+        d = (int)line[ix * 2 + 1] - 128;
+        e = (int)line[ix * 2 + 3] - 128;
+    }
+    *r = cliptobyte((298 * c + 409 * e + 128) >> 8);
+    *g = cliptobyte((298 * c - 100 * d - 208 * e + 128) >> 8);
+    *b = cliptobyte((298 * c + 516 * d + 128) >> 8);
 }
 
 static unsigned int kelvin_map_stencil_op(uint32_t parameter)
@@ -1206,3 +1426,53 @@ static unsigned int kelvin_map_texgen(uint32_t parameter, unsigned int channel)
 	return texgen;
 }
 
+static uint64_t fnv_hash(const uint8_t *data, size_t len)
+{
+    /* 64 bit Fowler/Noll/Vo FNV-1a hash code */
+    uint64_t hval = 0xcbf29ce484222325ULL;
+    const uint8_t *dp = data;
+    const uint8_t *de = data + len;
+    while (dp < de) {
+        hval ^= (uint64_t) *dp++;
+        hval += (hval << 1) + (hval << 4) + (hval << 5) +
+            (hval << 7) + (hval << 8) + (hval << 40);
+    }
+
+    return hval;
+}
+
+static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples)
+{
+#ifdef __SSE4_2__
+    uint64_t h[4] = {len, 0, 0, 0};
+    assert(samples > 0);
+
+    if (len < 8 || len % 8) {
+        return fnv_hash(data, len);
+    }
+
+    assert(len >= 8 && len % 8 == 0);
+    const uint64_t *dp = (const uint64_t*)data;
+    const uint64_t *de = dp + (len / 8);
+    size_t step = len / 8 / samples;
+    if (step == 0) step = 1;
+
+    while (dp < de - step * 3) {
+        h[0] = __builtin_ia32_crc32di(h[0], dp[step * 0]);
+        h[1] = __builtin_ia32_crc32di(h[1], dp[step * 1]);
+        h[2] = __builtin_ia32_crc32di(h[2], dp[step * 2]);
+        h[3] = __builtin_ia32_crc32di(h[3], dp[step * 3]);
+        dp += step * 4;
+    }
+    if (dp < de - step * 0)
+        h[0] = __builtin_ia32_crc32di(h[0], dp[step * 0]);
+    if (dp < de - step * 1)
+        h[1] = __builtin_ia32_crc32di(h[1], dp[step * 1]);
+    if (dp < de - step * 2)
+        h[2] = __builtin_ia32_crc32di(h[2], dp[step * 2]);
+
+    return h[0] + (h[1] << 10) + (h[2] << 21) + (h[3] << 32);
+#else
+    return fnv_hash(data, len);
+#endif
+}

@@ -6,11 +6,8 @@ DEVICE_READ32(PFB)
 		result = 3; // = NV_PFB_CFG0_PART_4
 		break;
 	case NV_PFB_CSTATUS:
-	{
-		if (g_bIsChihiro || g_bIsDebug) { result = CONTIGUOUS_MEMORY_CHIHIRO_SIZE; break; }
-		result = CONTIGUOUS_MEMORY_XBOX_SIZE;
-	}
-	break;
+		result = d->vram_size;
+		break;
 	case NV_PFB_WBC:
 		result = 0; // = !NV_PFB_WBC_FLUSH /* Flush not pending. */
 		break;
