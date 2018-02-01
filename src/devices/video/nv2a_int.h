@@ -1,3 +1,4 @@
+// Source : https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a_int.h
 /*
  * QEMU Geforce NV2A internal definitions
  *
@@ -18,12 +19,38 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#define NV_NUM_BLOCKS 21
+#define NV_PMC          0   /* card master control */
+#define NV_PBUS         1   /* bus control */
+#define NV_PFIFO        2   /* MMIO and DMA FIFO submission to PGRAPH and VPE */
+#define NV_PFIFO_CACHE  3
+#define NV_PRMA         4   /* access to BAR0/BAR1 from real mode */
+#define NV_PVIDEO       5   /* video overlay */
+#define NV_PTIMER       6   /* time measurement and time-based alarms */
+#define NV_PCOUNTER     7   /* performance monitoring counters */
+#define NV_PVPE         8   /* MPEG2 decoding engine */
+#define NV_PTV          9   /* TV encoder */
+#define NV_PRMFB        10  /* aliases VGA memory window */
+#define NV_PRMVIO       11  /* aliases VGA sequencer and graphics controller registers */
+#define NV_PFB          12  /* memory interface */
+#define NV_PSTRAPS      13  /* straps readout / override */
+#define NV_PGRAPH       14  /* accelerated 2d/3d drawing engine */
+#define NV_PCRTC        15  /* more CRTC controls */
+#define NV_PRMCIO       16  /* aliases VGA CRTC and attribute controller registers */
+#define NV_PRAMDAC      17  /* RAMDAC, cursor, and PLL control */
+#define NV_PRMDIO       18  /* aliases VGA palette registers */
+#define NV_PRAMIN       19  /* RAMIN access */
+#define NV_USER         20  /* PFIFO MMIO and DMA submission area */
 
 #define NV_PMC_BOOT_0                                    0x00000000
+#define NV_PMC_BOOT_1                                    0x00000004
 #define NV_PMC_INTR_0                                    0x00000100
 #   define NV_PMC_INTR_0_PFIFO                                 (1 << 8)
 #   define NV_PMC_INTR_0_PGRAPH                               (1 << 12)
+#   define NV_PMC_INTR_0_PVIDEO                               (1 << 16)
+#   define NV_PMC_INTR_0_PTIMER                               (1 << 20)
 #   define NV_PMC_INTR_0_PCRTC                                (1 << 24)
+#   define NV_PMC_INTR_0_PCRTC2                               (1 << 25)
 #   define NV_PMC_INTR_0_PBUS                                 (1 << 28)
 #   define NV_PMC_INTR_0_SOFTWARE                             (1 << 31)
 #define NV_PMC_INTR_EN_0                                 0x00000140
@@ -32,8 +59,16 @@
 #define NV_PMC_ENABLE                                    0x00000200
 #   define NV_PMC_ENABLE_PFIFO                                 (1 << 8)
 #   define NV_PMC_ENABLE_PGRAPH                               (1 << 12)
+#   define NV_PMC_ENABLE_PFB                                  (1 << 20)
+#   define NV_PMC_ENABLE_PCRTC                                (1 << 24)
+#   define NV_PMC_ENABLE_PCRTC2                               (1 << 25)
+#   define NV_PMC_ENABLE_PVIDEO                               (1 << 28)
 
 
+#define NV_PBUS_FBIO_RAM                                 0x00000218  
+#  define NV_PBUS_FBIO_RAM_TYPE                              0x00000100
+#    define NV_PBUS_FBIO_RAM_TYPE_DDR                          (0 << 8)
+#    define NV_PBUS_FBIO_RAM_TYPE_SDR                          (1 << 8)
 /* These map approximately to the pci registers */
 #define NV_PBUS_PCI_NV_0                                 0x00000800
 #   define NV_PBUS_PCI_NV_0_VENDOR_ID                         0x0000FFFF
@@ -65,6 +100,9 @@
 #define NV_PBUS_PCI_NV_26                                0x00000868
 
 
+#define NV_PFIFO_DELAY_0                                 0x00000040
+#define NV_PFIFO_DMA_TIMESLICE                           0x00000044
+#define NV_PFIFO_TIMESLICE                               0x0000004C
 #define NV_PFIFO_INTR_0                                  0x00000100
 #   define NV_PFIFO_INTR_0_CACHE_ERROR                          (1 << 0)
 #   define NV_PFIFO_INTR_0_RUNOUT                               (1 << 4)
@@ -82,21 +120,37 @@
 #   define NV_PFIFO_INTR_EN_0_SEMAPHORE                        (1 << 20)
 #   define NV_PFIFO_INTR_EN_0_ACQUIRE_TIMEOUT                  (1 << 24)
 #define NV_PFIFO_RAMHT                                   0x00000210
-#   define NV_PFIFO_RAMHT_BASE_ADDRESS                        0x000001F0
-#   define NV_PFIFO_RAMHT_SIZE                                0x00030000
+//#   define NV_PFIFO_RAMHT_BASE_ADDRESS                        0x000001F0
+#   define NV_PFIFO_RAMHT_BASE_ADDRESS_MASK                   0x000001F0
+#   define NV_PFIFO_RAMHT_BASE_ADDRESS_SHIFT                  4
+#   define NV_PFIFO_RAMHT_BASE_ADDRESS_MOVE                   12
+//#   define NV_PFIFO_RAMHT_SIZE                                0x00030000
+#   define NV_PFIFO_RAMHT_SIZE_MASK                           0x00030000
+#   define NV_PFIFO_RAMHT_SIZE_SHIFT                          16
 #       define NV_PFIFO_RAMHT_SIZE_4K                             0
 #       define NV_PFIFO_RAMHT_SIZE_8K                             1
 #       define NV_PFIFO_RAMHT_SIZE_16K                            2
 #       define NV_PFIFO_RAMHT_SIZE_32K                            3
-#   define NV_PFIFO_RAMHT_SEARCH                              0x03000000
+//#   define NV_PFIFO_RAMHT_SEARCH                              0x03000000
+#   define NV_PFIFO_RAMHT_SEARCH_MASK                         0x03000000
+#   define NV_PFIFO_RAMHT_SEARCH_SHIFT                        24
 #       define NV_PFIFO_RAMHT_SEARCH_16                           0
 #       define NV_PFIFO_RAMHT_SEARCH_32                           1
 #       define NV_PFIFO_RAMHT_SEARCH_64                           2
 #       define NV_PFIFO_RAMHT_SEARCH_128                          3
 #define NV_PFIFO_RAMFC                                   0x00000214
-#   define NV_PFIFO_RAMFC_BASE_ADDRESS1                       0x000001FC
-#   define NV_PFIFO_RAMFC_SIZE                                0x00010000
-#   define NV_PFIFO_RAMFC_BASE_ADDRESS2                       0x00FE0000
+//#   define NV_PFIFO_RAMFC_BASE_ADDRESS1                       0x000001FC
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS1_MASK                  0x000001FC
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS1_SHIFT                 2
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS1_MOVE                  10
+//#   define NV_PFIFO_RAMFC_SIZE                                0x00010000
+#   define NV_PFIFO_RAMFC_SIZE_MASK                           0x00010000
+#   define NV_PFIFO_RAMFC_SIZE_1K                             0x00000000
+#   define NV_PFIFO_RAMFC_SIZE_2K                             0x00010000
+//#   define NV_PFIFO_RAMFC_BASE_ADDRESS2                       0x00FE0000
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS2_MASK                  0x00FE0000
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS2_SHIFT                 17
+#   define NV_PFIFO_RAMFC_BASE_ADDRESS2_MOVE                  10
 #define NV_PFIFO_RAMRO                                   0x00000218
 #   define NV_PFIFO_RAMRO_BASE_ADDRESS                        0x000001FE
 #   define NV_PFIFO_RAMRO_SIZE                                0x00010000
@@ -104,13 +158,21 @@
 #   define NV_PFIFO_RUNOUT_STATUS_RANOUT                       (1 << 0)
 #   define NV_PFIFO_RUNOUT_STATUS_LOW_MARK                     (1 << 4)
 #   define NV_PFIFO_RUNOUT_STATUS_HIGH_MARK                    (1 << 8)
+#define NV_PFIFO_RUNOUT_PUT_ADDRESS                      0x00000410
+#define NV_PFIFO_RUNOUT_GET_ADDRESS                      0x00000420
+#define NV_PFIFO_CACHES                                  0x00000500
 #define NV_PFIFO_MODE                                    0x00000504
 #define NV_PFIFO_DMA                                     0x00000508
+#define NV_PFIFO_SIZE                                    0x0000050C
+#define NV_PFIFO_CACHE0_PUSH0                            0x00001000
+#define NV_PFIFO_CACHE0_PULL0                            0x00001050
+#define NV_PFIFO_CACHE0_HASH                             0x00001058
 #define NV_PFIFO_CACHE1_PUSH0                            0x00001200
 #   define NV_PFIFO_CACHE1_PUSH0_ACCESS                         (1 << 0)
 #define NV_PFIFO_CACHE1_PUSH1                            0x00001204
 #   define NV_PFIFO_CACHE1_PUSH1_CHID                         0x0000001F
 #   define NV_PFIFO_CACHE1_PUSH1_MODE                         0x00000100
+#define NV_PFIFO_CACHE1_PUT                              0x00001210
 #define NV_PFIFO_CACHE1_STATUS                           0x00001214
 #   define NV_PFIFO_CACHE1_STATUS_LOW_MARK                      (1 << 4)
 #   define NV_PFIFO_CACHE1_STATUS_HIGH_MARK                     (1 << 8)
@@ -137,14 +199,26 @@
 #       define NV_PFIFO_CACHE1_DMA_STATE_ERROR_RESERVED_CMD       4
 #       define NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION         6
 #define NV_PFIFO_CACHE1_DMA_INSTANCE                     0x0000122C
-#   define NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS               0x0000FFFF
+//#   define NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS               0x0000FFFF
+#   define NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK          0x0000FFFF
+#   define NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_SHIFT         0
+#   define NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MOVE          4
+#define NV_PFIFO_CACHE1_DMA_CTL                          0x00001230
 #define NV_PFIFO_CACHE1_DMA_PUT                          0x00001240
 #define NV_PFIFO_CACHE1_DMA_GET                          0x00001244
+#define NV_PFIFO_CACHE1_REF                              0x00001248
 #define NV_PFIFO_CACHE1_DMA_SUBROUTINE                   0x0000124C
 #   define NV_PFIFO_CACHE1_DMA_SUBROUTINE_RETURN_OFFSET       0x1FFFFFFC
 #   define NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE                (1 << 0)
 #define NV_PFIFO_CACHE1_PULL0                            0x00001250
 #   define NV_PFIFO_CACHE1_PULL0_ACCESS                        (1 << 0)
+#define NV_PFIFO_CACHE1_PULL1                            0x00001254
+#define NV_PFIFO_CACHE1_HASH                             0x00001258
+#define NV_PFIFO_CACHE1_ACQUIRE_0                        0x00001260
+#define NV_PFIFO_CACHE1_ACQUIRE_1                        0x00001264
+#define NV_PFIFO_CACHE1_ACQUIRE_2                        0x00001268
+#define NV_PFIFO_CACHE1_SEMAPHORE                        0x0000126C
+#define NV_PFIFO_CACHE1_GET                              0x00001270
 #define NV_PFIFO_CACHE1_ENGINE                           0x00001280
 #define NV_PFIFO_CACHE1_DMA_DCOUNT                       0x000012A0
 #   define NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE                   0x00001FFC
@@ -154,6 +228,13 @@
 #define NV_PFIFO_CACHE1_DMA_DATA_SHADOW                  0x000012AC
 
 
+#define NV_PGRAPH_DEBUG_0                                0x00000080
+#define NV_PGRAPH_DEBUG_1                                0x00000084
+#define NV_PGRAPH_DEBUG_3                                0x0000008C
+#define NV_PGRAPH_DEBUG_4                                0x00000090
+#define NV_PGRAPH_DEBUG_5                                0x00000094
+#define NV_PGRAPH_DEBUG_8                                0x00000098
+#define NV_PGRAPH_DEBUG_9                                0x0000009C
 #define NV_PGRAPH_INTR                                   0x00000100
 #   define NV_PGRAPH_INTR_NOTIFY                              (1 << 0)
 #   define NV_PGRAPH_INTR_MISSING_HW                          (1 << 4)
@@ -212,6 +293,10 @@
 #   define NV_PGRAPH_CTX_SWITCH1_CONTEXT_BETA1                 (1 << 29)
 #   define NV_PGRAPH_CTX_SWITCH1_CONTEXT_BETA4                 (1 << 30)
 #   define NV_PGRAPH_CTX_SWITCH1_VOLATILE_RESET                (1 << 31)
+#define NV_PGRAPH_CTX_SWITCH2                            0x00000150
+#define NV_PGRAPH_CTX_SWITCH3                            0x00000154
+#define NV_PGRAPH_CTX_SWITCH4                            0x00000158
+#define NV_PGRAPH_STATUS                                 0x00000700
 #define NV_PGRAPH_TRAPPED_ADDR                           0x00000704
 #   define NV_PGRAPH_TRAPPED_ADDR_MTHD                        0x00001FFF
 #   define NV_PGRAPH_TRAPPED_ADDR_SUBCH                       0x00070000
@@ -227,6 +312,9 @@
 #   define NV_PGRAPH_INCREMENT_READ_3D                          (1 << 1)
 #define NV_PGRAPH_FIFO                                   0x00000720
 #   define NV_PGRAPH_FIFO_ACCESS                                (1 << 0)
+#define NV_PGRAPH_RDI_INDEX                              0x00000750
+#define NV_PGRAPH_RDI_DATA                               0x00000754
+#define NV_PGRAPH_FFINTFC_ST2                            0x00000764
 #define NV_PGRAPH_CHANNEL_CTX_TABLE                      0x00000780
 #   define NV_PGRAPH_CHANNEL_CTX_TABLE_INST                   0x0000FFFF
 #define NV_PGRAPH_CHANNEL_CTX_POINTER                    0x00000784
@@ -234,6 +322,18 @@
 #define NV_PGRAPH_CHANNEL_CTX_TRIGGER                    0x00000788
 #   define NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN                (1 << 0)
 #   define NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT              (1 << 1)
+#define NV_PGRAPH_DEBUG_2                                0x00000880
+#define NV_PGRAPH_TTILE(i)                               0x00000900 + (i * 0x10)
+#define NV_PGRAPH_TLIMIT(i)                              0x00000904 + (i * 0x10)
+#define NV_PGRAPH_TSIZE(i)                               0x00000908 + (i * 0x10)
+#define NV_PGRAPH_TSTATUS(i)                             0x0000090C + (i * 0x10)
+#define NV_PGRAPH_ZCOMP(i)                               0x00000980 + (i * 4)
+#define NV_PGRAPH_ZCOMP_OFFSET                           0x000009A0
+#define NV_PGRAPH_FBCFG0                                 0x000009A4
+#define NV_PGRAPH_FBCFG1                                 0x000009A8
+#define NV_PGRAPH_DEBUG_6                                0x00000B80
+#define NV_PGRAPH_DEBUG_7                                0x00000B84
+#define NV_PGRAPH_DEBUG_10                               0x00000B88
 #define NV_PGRAPH_CSV0_D                                 0x00000FB4
 #   define NV_PGRAPH_CSV0_D_LIGHTS                              0x0000FFFF
 #   define NV_PGRAPH_CSV0_D_LIGHT0                              0x00000003
@@ -544,6 +644,8 @@
 #define NV_PCRTC_CONFIG                                  0x00000804
 
 
+#define NV_PVIDEO_DEBUG_2                                0x00000088
+#define NV_PVIDEO_DEBUG_3                                0x0000008C
 #define NV_PVIDEO_INTR                                   0x00000100
 #   define NV_PVIDEO_INTR_BUFFER_0                              (1 << 0)
 #   define NV_PVIDEO_INTR_BUFFER_1                              (1 << 4)
@@ -554,26 +656,26 @@
 #   define NV_PVIDEO_BUFFER_0_USE                               (1 << 0)
 #   define NV_PVIDEO_BUFFER_1_USE                               (1 << 4)
 #define NV_PVIDEO_STOP                                   0x00000704
-#define NV_PVIDEO_BASE                                   0x00000900
-#define NV_PVIDEO_LIMIT                                  0x00000908
-#define NV_PVIDEO_LUMINANCE                              0x00000910
-#define NV_PVIDEO_CHROMINANCE                            0x00000918
-#define NV_PVIDEO_OFFSET                                 0x00000920
-#define NV_PVIDEO_SIZE_IN                                0x00000928
+#define NV_PVIDEO_BASE(i)                                0x00000900 + (i * 4)
+#define NV_PVIDEO_LIMIT(i)                               0x00000908 + (i * 4)
+#define NV_PVIDEO_LUMINANCE(i)                           0x00000910 + (i * 4)
+#define NV_PVIDEO_CHROMINANCE(i)                         0x00000918 + (i * 4)
+#define NV_PVIDEO_OFFSET(i)                              0x00000920 + (i * 4)
+#define NV_PVIDEO_SIZE_IN(i)                             0x00000928 + (i * 4)
 #   define NV_PVIDEO_SIZE_IN_WIDTH                            0x000007FF
 #   define NV_PVIDEO_SIZE_IN_HEIGHT                           0x07FF0000
-#define NV_PVIDEO_POINT_IN                               0x00000930
+#define NV_PVIDEO_POINT_IN(i)                            0x00000930 + (i * 4)
 #   define NV_PVIDEO_POINT_IN_S                               0x00007FFF
 #   define NV_PVIDEO_POINT_IN_T                               0xFFFE0000
-#define NV_PVIDEO_DS_DX                                  0x00000938
-#define NV_PVIDEO_DT_DY                                  0x00000940
-#define NV_PVIDEO_POINT_OUT                              0x00000948
+#define NV_PVIDEO_DS_DX(i)                               0x00000938 + (i * 4)
+#define NV_PVIDEO_DT_DY(i)                               0x00000940 + (i * 4)
+#define NV_PVIDEO_POINT_OUT(i)                           0x00000948 + (i * 4)
 #   define NV_PVIDEO_POINT_OUT_X                              0x00000FFF
 #   define NV_PVIDEO_POINT_OUT_Y                              0x0FFF0000
-#define NV_PVIDEO_SIZE_OUT                               0x00000950
+#define NV_PVIDEO_SIZE_OUT(i)                            0x00000950 + (i * 4)
 #   define NV_PVIDEO_SIZE_OUT_WIDTH                           0x00000FFF
 #   define NV_PVIDEO_SIZE_OUT_HEIGHT                          0x0FFF0000
-#define NV_PVIDEO_FORMAT                                 0x00000958
+#define NV_PVIDEO_FORMAT(i)                              0x00000958 + (i * 4)
 #   define NV_PVIDEO_FORMAT_PITCH                             0x00001FFF
 #   define NV_PVIDEO_FORMAT_COLOR                             0x00030000
 #       define NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8             1
@@ -594,6 +696,7 @@
 #define NV_PFB_DEBUG_0                                   0x00000080
 #define NV_PFB_CFG0                                      0x00000200
 #   define NV_PFB_CFG0_PART                                   0x00000003
+#define NV_PFB_CFG1                                      0x00000204
 #define NV_PFB_CSTATUS                                   0x0000020C
 #define NV_PFB_REFCTRL                                   0x00000210
 #define NV_PFB_NVM                                       0x00000214 // 	NV_PFB_NVM_MODE_DISABLE 
@@ -602,17 +705,18 @@
 #define NV_PFB_TIMING0                                   0x00000220
 #define NV_PFB_TIMING1                                   0x00000224
 #define NV_PFB_TIMING2                                   0x00000228
-#define NV_PFB_TILE							0x00000240
-#define NV_PFB_TLIMIT                       0x00000244
-#define NV_PFB_TSIZE                        0x00000248
-#define NV_PFB_TSTATUS                      0x0000024C
+#define NV_PFB_TILE(i)                                   0x00000240 + (i * 0x10)
+#define NV_PFB_TLIMIT(i)                                 0x00000244 + (i * 0x10)
+#define NV_PFB_TSIZE(i)                                  0x00000248 + (i * 0x10)
+#define NV_PFB_TSTATUS(i)                                0x0000024C + (i * 0x10)
 #define NV_PFB_MRS                                       0x000002C0
 #define NV_PFB_EMRS                                      0x000002C4
 #define NV_PFB_MRS_EXT                                   0x000002C8
 #define NV_PFB_EMRS_EXT                                  0x000002CC
 #define NV_PFB_REF                                       0x000002D0
 #define NV_PFB_PRE                                       0x000002D4
-#define NV_PFB_ZCOMP                        0x00000300
+#define NV_PFB_ZCOMP(i)                                  0x00000300 + (i * 4)
+#define NV_PFB_ZCOMP_OFFSET                              0x00000324
 #define NV_PFB_ARB_PREDIVIDER                            0x00000328
 #define NV_PFB_ARB_TIMEOUT                               0x0000032C
 #define NV_PFB_ARB_XFER_REM                              0x00000334
@@ -632,6 +736,10 @@
 #define NV_PFB_CPU_RRQ                                   0x00000420
 #define NV_PFB_BYPASS                                    0x00000424
 
+#define NV_PRAMIN_DMA_CLASS(i)                           0x00000000 + (i * 0x10)
+#define NV_PRAMIN_DMA_LIMIT(i)                           0x00000004 + (i * 0x10)
+#define NV_PRAMIN_DMA_START(i)                           0x00000008 + (i * 0x10)
+#define NV_PRAMIN_DMA_ADDRESS(i)                         0x0000000C + (i * 0x10)
 
 #define NV_PRAMDAC_NVPLL_COEFF                           0x00000500
 #   define NV_PRAMDAC_NVPLL_COEFF_MDIV                        0x000000FF
@@ -704,7 +812,7 @@
 #   define NV062_SET_CONTEXT_DMA_IMAGE_DESTIN                 0x00000188
 #   define NV062_SET_COLOR_FORMAT                             0x00000300
 #       define NV062_SET_COLOR_FORMAT_LE_Y8                    0x01
-#		define NV062_SET_COLOR_FORMAT_LE_R5G6B5                0x04
+#       define NV062_SET_COLOR_FORMAT_LE_R5G6B5                0x04
 #       define NV062_SET_COLOR_FORMAT_LE_A8R8G8B8              0x0A
 #   define NV062_SET_PITCH                                    0x00000304
 #   define NV062_SET_OFFSET_SOURCE                            0x00000308
@@ -773,8 +881,84 @@
 #   define NV097_SET_SURFACE_COLOR_OFFSET                     0x00000210
 #   define NV097_SET_SURFACE_ZETA_OFFSET                      0x00000214
 #   define NV097_SET_COMBINER_ALPHA_ICW                       0x00000260
+#       define NV097_SET_COMBINER_ALPHA_ICW_A_MAP                 0xE0000000
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_UNSIGNED_IDENTITY 0
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_UNSIGNED_INVERT   1
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_EXPAND_NORMAL     2
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_EXPAND_NEGATE     3
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_HALFBIAS_NORMAL   4
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_HALFBIAS_NEGATE   5
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_SIGNED_IDENTITY   6
+#           define NV097_SET_COMBINER_ALPHA_ICW_A_MAP_SIGNED_NEGATE     7
+#       define NV097_SET_COMBINER_ALPHA_ICW_A_ALPHA               (1<<28)
+#       define NV097_SET_COMBINER_ALPHA_ICW_A_SOURCE              0x0F000000
+#       define NV097_SET_COMBINER_ALPHA_ICW_B_MAP                 0x00E00000
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_UNSIGNED_IDENTITY 0
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_UNSIGNED_INVERT   1
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_EXPAND_NORMAL     2
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_EXPAND_NEGATE     3
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_HALFBIAS_NORMAL   4
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_HALFBIAS_NEGATE   5
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_SIGNED_IDENTITY   6
+#           define NV097_SET_COMBINER_ALPHA_ICW_B_MAP_SIGNED_NEGATE     7
+#       define NV097_SET_COMBINER_ALPHA_ICW_B_ALPHA               (1<<20)
+#       define NV097_SET_COMBINER_ALPHA_ICW_B_SOURCE              0x000F0000
+#       define NV097_SET_COMBINER_ALPHA_ICW_C_MAP                 0x0000E000
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_UNSIGNED_IDENTITY 0
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_UNSIGNED_INVERT   1
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_EXPAND_NORMAL     2
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_EXPAND_NEGATE     3
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_HALFBIAS_NORMAL   4
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_HALFBIAS_NEGATE   5
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_SIGNED_IDENTITY   6
+#           define NV097_SET_COMBINER_ALPHA_ICW_C_MAP_SIGNED_NEGATE     7
+#       define NV097_SET_COMBINER_ALPHA_ICW_C_ALPHA               (1<<12)
+#       define NV097_SET_COMBINER_ALPHA_ICW_C_SOURCE              0x00000F00
+#       define NV097_SET_COMBINER_ALPHA_ICW_D_MAP                 0x000000E0
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_UNSIGNED_IDENTITY 0
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_UNSIGNED_INVERT   1
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_EXPAND_NORMAL     2
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_EXPAND_NEGATE     3
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_HALFBIAS_NORMAL   4
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_HALFBIAS_NEGATE   5
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_SIGNED_IDENTITY   6
+#           define NV097_SET_COMBINER_ALPHA_ICW_D_MAP_SIGNED_NEGATE     7
+#       define NV097_SET_COMBINER_ALPHA_ICW_D_ALPHA               (1<<4)
+#       define NV097_SET_COMBINER_ALPHA_ICW_D_SOURCE              0x0000000F
 #   define NV097_SET_COMBINER_SPECULAR_FOG_CW0                0x00000288
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_INVERSE      0xE0000000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_ALPHA        (1<<28)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_SOURCE       0x0F000000
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_SOURCE_REG_SPECLIT 0xE
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_A_SOURCE_REG_EF_PROD 0xF
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_INVERSE      0x00E00000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_ALPHA        (1<<20)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE       0x000F0000
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_SPECLIT 0xE
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_EF_PROD 0xF
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_C_INVERSE      0x0000E000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_C_ALPHA        (1<<12)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_C_SOURCE       0x00000F00
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_C_SOURCE_REG_SPECLIT 0xE
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_C_SOURCE_REG_EF_PROD 0xF
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_INVERSE      0x000000E0
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_ALPHA        (1<<4)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE       0x0000000F
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT 0xE
+#           define NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_EF_PROD 0xF
 #   define NV097_SET_COMBINER_SPECULAR_FOG_CW1                0x0000028C
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_E_INVERSE      0xE0000000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_E_ALPHA        (1<<28)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_E_SOURCE       0x0F000000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_F_INVERSE      0x00E00000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_F_ALPHA        (1<<20)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_F_SOURCE       0x000F0000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_G_INVERSE      0x0000E000
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_G_ALPHA        (1<<12)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_G_SOURCE       0x00000F00
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_SPECULAR_CLAMP (1<<7)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_SPECULAR_ADD_INVERT_R5 (1<<6)
+#       define NV097_SET_COMBINER_SPECULAR_FOG_CW1_SPECULAR_ADD_INVERT_R12 0x0000003F
 #   define NV097_SET_CONTROL0                                 0x00000290
 #       define NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE            (1 << 0)
 #       define NV097_SET_CONTROL0_Z_FORMAT                        (1 << 12)
@@ -928,13 +1112,37 @@
 #       define NV097_SET_TEXGEN_VIEW_MODEL_LOCAL_VIEWER           0
 #       define NV097_SET_TEXGEN_VIEW_MODEL_INFINITE_VIEWER        1
 #   define NV097_SET_FOG_PLANE                                0x000009D0
+#   define NV097_SET_FLAT_SHADE_OP                            0x000009FC
 #   define NV097_SET_SCENE_AMBIENT_COLOR                      0x00000A10
 #   define NV097_SET_VIEWPORT_OFFSET                          0x00000A20
 #   define NV097_SET_EYE_POSITION                             0x00000A50
 #   define NV097_SET_COMBINER_FACTOR0                         0x00000A60
 #   define NV097_SET_COMBINER_FACTOR1                         0x00000A80
 #   define NV097_SET_COMBINER_ALPHA_OCW                       0x00000AA0
+#       define NV097_SET_COMBINER_ALPHA_OCW_OP                    0xFFFF8000
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_NOSHIFT           0
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_NOSHIFT_BIAS      1
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_SHIFTLEFTBY1      2
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_SHIFTLEFTBY1_BIAS 3
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_SHIFTLEFTBY2      4
+#           define NV097_SET_COMBINER_ALPHA_OCW_OP_SHIFTRIGHTBY1     6
+#       define NV097_SET_COMBINER_ALPHA_OCW_MUX_ENABLE            (1<<14)
+#       define NV097_SET_COMBINER_ALPHA_OCW_SUM_DST               0x00000F00
+#       define NV097_SET_COMBINER_ALPHA_OCW_AB_DST                0x000000F0
+#       define NV097_SET_COMBINER_ALPHA_OCW_CD_DST                0x0000000F
 #   define NV097_SET_COMBINER_COLOR_ICW                       0x00000AC0
+#       define NV097_SET_COMBINER_COLOR_ICW_A_MAP                 0xE0000000
+#       define NV097_SET_COMBINER_COLOR_ICW_A_ALPHA               (1<<28)
+#       define NV097_SET_COMBINER_COLOR_ICW_A_SOURCE              0x0F000000
+#       define NV097_SET_COMBINER_COLOR_ICW_B_MAP                 0x00E00000
+#       define NV097_SET_COMBINER_COLOR_ICW_B_ALPHA               (1<<20)
+#       define NV097_SET_COMBINER_COLOR_ICW_B_SOURCE              0x000F0000
+#       define NV097_SET_COMBINER_COLOR_ICW_C_MAP                 0x0000E000
+#       define NV097_SET_COMBINER_COLOR_ICW_C_ALPHA               (1<<12)
+#       define NV097_SET_COMBINER_COLOR_ICW_C_SOURCE              0x00000F00
+#       define NV097_SET_COMBINER_COLOR_ICW_D_MAP                 0x000000E0
+#       define NV097_SET_COMBINER_COLOR_ICW_D_ALPHA               (1<<4)
+#       define NV097_SET_COMBINER_COLOR_ICW_D_SOURCE              0x0000000F
 #   define NV097_SET_VIEWPORT_SCALE                           0x00000AF0
 #   define NV097_SET_TRANSFORM_PROGRAM                        0x00000B00
 #   define NV097_SET_TRANSFORM_CONSTANT                       0x00000B80
@@ -1081,6 +1289,8 @@
 #   define NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET              0x00001B3C
 #   define NV097_SET_SEMAPHORE_OFFSET                         0x00001D6C
 #   define NV097_BACK_END_WRITE_SEMAPHORE_RELEASE             0x00001D70
+#   define NV097_SET_ZMIN_MAX_CONTROL                         0x00001D78
+#   define NV097_SET_COMPRESS_ZBUFFER_EN                      0x00001D80
 #   define NV097_SET_ZSTENCIL_CLEAR_VALUE                     0x00001D8C
 #   define NV097_SET_COLOR_CLEAR_VALUE                        0x00001D90
 #   define NV097_CLEAR_SURFACE                                0x00001D94
@@ -1095,13 +1305,118 @@
 #   define NV097_SET_CLEAR_RECT_VERTICAL                      0x00001D9C
 #   define NV097_SET_SPECULAR_FOG_FACTOR                      0x00001E20
 #   define NV097_SET_COMBINER_COLOR_OCW                       0x00001E40
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_AB        0xFFF80000
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_AB_DISABLE  0
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_AB_AB_DST_ENABLE 1
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_CD        (1<<18)
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_CD_DISABLE  0
+#       define NV097_SET_COMBINER_COLOR_OCW_BLUETOALPHA_CD_CD_DST_ENABLE 1
+#       define NV097_SET_COMBINER_COLOR_OCW_OP                    0x00038000
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_NOSHIFT          0
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_NOSHIFT_BIAS     1
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1     2
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1_BIAS 3
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY2     4
+#           define NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTRIGHTBY1    6
+#       define NV097_SET_COMBINER_COLOR_OCW_MUX_ENABLE            (1 << 14)
+#       define NV097_SET_COMBINER_COLOR_OCW_AB_DOT_ENABLE         (1 << 13)
+#       define NV097_SET_COMBINER_COLOR_OCW_CD_DOT_ENABLE         (1<<12)
+#       define NV097_SET_COMBINER_COLOR_OCW_SUM_DST               0x00000F00
+#       define NV097_SET_COMBINER_COLOR_OCW_AB_DST                0x000000F0
+#       define NV097_SET_COMBINER_COLOR_OCW_CD_DST                0x0000000F
 #   define NV097_SET_COMBINER_CONTROL                         0x00001E60
+#       define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT         0x000000FF
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_ONE   1
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_TWO   2
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_THREE 3
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_FOUR  4
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_FIVE  5
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_SIX   6
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_SEVEN 7
+#           define NV097_SET_COMBINER_CONTROL_ITERATION_COUNT_EIGHT 8
+#       define NV097_SET_COMBINER_CONTROL_MUX_SELECT              0x00000F00
+#           define NV097_SET_COMBINER_CONTROL_MUX_SELECT_LSB        0
+#           define NV097_SET_COMBINER_CONTROL_MUX_SELECT_MSB        1
+#       define NV097_SET_COMBINER_CONTROL_FACTOR0                 0x0000F000
+#           define NV097_SET_COMBINER_CONTROL_FACTOR0_SAME_FACTOR_ALL 0
+#           define NV097_SET_COMBINER_CONTROL_FACTOR0_EACH_STAGE    1
+#       define NV097_SET_COMBINER_CONTROL_FACTOR1                 0xFFFF0000
+#           define NV097_SET_COMBINER_CONTROL_FACTOR1_SAME_FACTOR_ALL 0
+#           define NV097_SET_COMBINER_CONTROL_FACTOR1_EACH_STAGE    1
 #   define NV097_SET_SHADOW_ZSLOPE_THRESHOLD                  0x00001E68
 #   define NV097_SET_SHADER_STAGE_PROGRAM                     0x00001E70
+#       define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0              0x0000001F
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_PROGRAM_NONE   0
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_2D_PROJECTIVE  1
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_3D_PROJECTIVE  2
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_CUBE_MAP       3
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_PASS_THROUGH   4
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE0_CLIP_PLANE     5
+#       define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1              0x000003E0
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE   0x00
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_2D_PROJECTIVE  0x01
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE  0x02
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP       0x03
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PASS_THROUGH   0x04
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CLIP_PLANE     0x05
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP     0x06
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE 0x07
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_DEPENDENT_AR   0x0F
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_DEPENDENT_GB   0x10
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_DOT_PRODUCT    0x11
+#       define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2              0x00007C00
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_PROGRAM_NONE   0x00
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_2D_PROJECTIVE  0x01
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_3D_PROJECTIVE  0x02
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_CUBE_MAP       0x03
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_PASS_THROUGH   0x04
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_CLIP_PLANE     0x05
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_BUMPENVMAP     0x06
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_BUMPENVMAP_LUMINANCE 0x07
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_BRDF           0x08
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DOT_ST         0x09
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DOT_ZW         0x0A
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DOT_REFLECT_DIFFUSE 0x0B
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DEPENDENT_AR   0x0F
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DEPENDENT_GB   0x10
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE2_DOT_PRODUCT    0x11
+#       define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3              0x000F8000
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_PROGRAM_NONE   0x00
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_2D_PROJECTIVE  0x01
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_3D_PROJECTIVE  0x02
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_CUBE_MAP       0x03
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_PASS_THROUGH   0x04
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_CLIP_PLANE     0x05
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_BUMPENVMAP     0x06
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_BUMPENVMAP_LUMINANCE 0x07
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_BRDF           0x08
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_ST         0x09
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_ZW         0x0A
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_REFLECT_SPECULAR 0x0C
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_STR_3D     0x0D
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_STR_CUBE   0x0E
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DEPENDENT_AR   0x0F
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DEPENDENT_GB   0x10
+#           define NV097_SET_SHADER_STAGE_PROGRAM_STAGE3_DOT_REFLECT_SPECULAR_CONST 0x12
 #   define NV097_SET_SHADER_OTHER_STAGE_INPUT                 0x00001E78
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE1          0x0000FFFF
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE1_INSTAGE_0  0
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2          0x000F0000
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2_INSTAGE_0  0
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2_INSTAGE_1  1
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3          0x00F00000
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_0  0
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_1  1
+#       define NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_2  2
+#   define NV097_SET_TRANSFORM_DATA                           0x00001E80
+#   define NV097_LAUNCH_TRANSFORM_PROGRAM                     0x00001E90
 #   define NV097_SET_TRANSFORM_EXECUTION_MODE                 0x00001E94
 #       define NV097_SET_TRANSFORM_EXECUTION_MODE_MODE            0x00000003
+#           define NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED    0
+#           define NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM  2
 #       define NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE      0xFFFFFFFC
+#           define NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_USER 0
+#           define NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV 1
 #   define NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN           0x00001E98
 #   define NV097_SET_TRANSFORM_PROGRAM_LOAD                   0x00001E9C
 #   define NV097_SET_TRANSFORM_PROGRAM_START                  0x00001EA0

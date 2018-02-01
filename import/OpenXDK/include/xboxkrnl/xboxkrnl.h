@@ -400,6 +400,46 @@ typedef struct _LIST_ENTRY
 }
 LIST_ENTRY, *PLIST_ENTRY;
 
+// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
+// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
+
+#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
+
+#define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
+((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
+
+#define LIST_ENTRY_INSERT_HEAD(ListHead, Entry) {\
+xboxkrnl::PLIST_ENTRY Flink;\
+Flink = ListHead->Flink;\
+(Entry)->Flink = Flink;\
+(Entry)->Blink = ListHead;\
+Flink->Blink = Entry;\
+ListHead->Flink = Entry;\
+}
+
+#define LIST_ENTRY_INSERT_TAIL(ListHead, Entry) {\
+xboxkrnl::PLIST_ENTRY Blink;\
+Blink = ListHead->Blink;\
+(Entry)->Flink = ListHead;\
+(Entry)->Blink = Blink;\
+Blink->Flink = Entry;\
+ListHead->Blink = Entry;\
+}
+
+#define LIST_ENTRY_REMOVE(Entry) {\
+xboxkrnl::PLIST_ENTRY ExFlink;\
+xboxkrnl::PLIST_ENTRY ExBlink;\
+ExFlink = (Entry)->Flink;\
+ExBlink = (Entry)->Blink;\
+ExFlink->Blink = ExBlink;\
+ExBlink->Flink = ExFlink;\
+}
+
+#define LIST_ENTRY_REMOVE_AT_HEAD(ListHead) \
+(ListHead)->Flink;\
+LIST_ENTRY_REMOVE((ListHead)->Flink)
+
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY  *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
@@ -1270,6 +1310,19 @@ typedef struct _LAUNCH_DATA_PAGE
     UCHAR               LaunchData[3072];
 }
 LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
+
+// ******************************************************************
+// * DASH_LAUNCH_DATA
+// ******************************************************************
+typedef struct _DASH_LAUNCH_DATA
+{
+	DWORD dwReason;
+	DWORD dwContext;
+	DWORD dwParameter1;
+	DWORD dwParameter2;
+	BYTE  Reserved[3072 - 16];
+}
+DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
 
 // ******************************************************************
 // * DISPATCHER_HEADER
@@ -2182,6 +2235,44 @@ typedef struct _XBOX_EEPROM
 	UCHAR Reserved1[2];
 }
 XBOX_EEPROM;
+
+// ******************************************************************
+// * XBOX_UEM_INFO
+// ******************************************************************
+typedef struct _XBOX_UEM_INFO
+{
+	UCHAR ErrorCode;
+	UCHAR Reserved;
+	USHORT History;
+}
+XBOX_UEM_INFO;
+
+// ******************************************************************
+// * Xbox UEM (fatal error) codes
+// ******************************************************************
+#define FATAL_ERROR_NONE                0x00
+#define FATAL_ERROR_CORE_DIGITAL        0x01
+#define FATAL_ERROR_BAD_EEPROM          0x02
+#define FATAL_ERROR_UNUSED1             0x03
+#define FATAL_ERROR_BAD_RAM             0x04
+#define FATAL_ERROR_HDD_NOT_LOCKED      0x05
+#define FATAL_ERROR_HDD_CANNOT_UNLOCK   0x06
+#define FATAL_ERROR_HDD_TIMEOUT         0x07
+#define FATAL_ERROR_HDD_NOT_FOUND       0x08
+#define FATAL_ERROR_HDD_BAD_CONFIG      0x09
+#define FATAL_ERROR_DVD_TIMEOUT         0x0A
+#define FATAL_ERROR_DVD_NOT_FOUND       0x0B
+#define FATAL_ERROR_DVD_BAD_CONFIG      0x0C
+#define FATAL_ERROR_XBE_DASH_GENERIC    0x0D
+#define FATAL_ERROR_XBE_DASH_ERROR      0x0E
+#define FATAL_ERROR_UNUSED2             0x0F
+#define FATAL_ERROR_XBE_DASH_SETTINGS   0x10
+#define FATAL_ERROR_UNUSED3             0x11
+#define FATAL_ERROR_UNUSED4             0x12
+#define FATAL_ERROR_UNUSED5             0x13
+#define FATAL_ERROR_XBE_DASH_X2_PASS    0x14
+#define FATAL_ERROR_REBOOT_ROUTINE      0x15
+#define FATAL_ERROR_RESERVED            0xFF
 
 // ******************************************************************
 // * TIME_FIELDS

@@ -41,7 +41,9 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 };
 
-#include "EmuShared.h"
+#include "CxbxKrnl\CxbxKrnl.h"
+#include "CxbxKrnl\EmuShared.h"
+
 #include "SMCDevice.h" // For SMCDevice
 #include "LED.h"
 
@@ -50,27 +52,14 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 	// See http://xboxdevwiki.net/PIC#The_LED
 	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
 
-	bool bLedHasChanged = true;
+	int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 
-	if (aLEDSequence == LED::GREEN) // Automatic solid green color
-	{
-		int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
+	LedSequence[0] = ((aLEDSequence >> 6) & 2) | ((aLEDSequence >> 3) & 1);
+	LedSequence[1] = ((aLEDSequence >> 5) & 2) | ((aLEDSequence >> 2) & 1);
+	LedSequence[2] = ((aLEDSequence >> 4) & 2) | ((aLEDSequence >> 1) & 1);
+	LedSequence[3] = ((aLEDSequence >> 3) & 2) | ((aLEDSequence >> 0) & 1);
 
-		g_EmuShared->SetLedStatus(&bLedHasChanged);
-		g_EmuShared->SetLedSequence(LedSequence);
-	}
-	else // Draw the color represented by the sequence obtained
-	{
-		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
-
-		LedSequence[0] = ((aLEDSequence >> 3) & 1) | ((aLEDSequence >> 6) & 2);
-		LedSequence[1] = ((aLEDSequence >> 2) & 1) | ((aLEDSequence >> 5) & 2);
-		LedSequence[2] = ((aLEDSequence >> 1) & 1) | ((aLEDSequence >> 4) & 2);
-		LedSequence[3] = (aLEDSequence & 1) | ((aLEDSequence >> 3) & 2);
-
-		g_EmuShared->SetLedStatus(&bLedHasChanged);
-		g_EmuShared->SetLedSequence(LedSequence);
-	}
+	g_EmuShared->SetLedSequence(LedSequence);
 }
 
 /* SMCDevice */
@@ -119,8 +108,8 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		break;
 	//0x03	tray state
 	//#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-	//0x09	CPU temperature(°C)
-	//0x0A	board temperature(°C)
+	//0x09	CPU temperature(Â°C)
+	//0x0A	board temperature(Â°C)
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
 	//0x10	current fan speed(0~50)
@@ -164,7 +153,13 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		if (value == 0) // Note : MAME Xbox/Chihiro driver doesn't check for zero
 			m_PICVersionStringIndex = 0;
 		return;
-	//0x02	reset and power off control
+	case SMC_COMMAND_RESET: //0x02	reset and power off control
+		// See http://xboxdevwiki.net/PIC#Reset_and_Power_Off
+		switch (value) {
+		case SMC_RESET_ASSERT_RESET: return; // TODO
+		case SMC_RESET_ASSERT_POWERCYCLE: return; // TODO
+		case SMC_RESET_ASSERT_SHUTDOWN: CxbxKrnlShutDown(); return; // Power off, terminating the emulation
+		}
 	//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
 	//0x06	power fan speed(0..~50)
 	case SMC_COMMAND_LED_MODE: // 0x07 LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
@@ -175,9 +170,9 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L572
 		//
 		// HalWriteSMBusValue(0x20, 0x08, false, x) and then HalWriteSMBusValue(0x20, 0x07, false, y > 1)
-		// will cause the led to be solid green, with the next pair of 
+		// will cause the led to be solid green, while the next pair of 
 		// HalWriteSMBusValue with arbitrary y will cause the led to assume the color of the sequence x
-		// and afterwards this will repeat with whatever y; ntstatus are always 0
+		// and afterwards this will repeat with whatever y; ntstatus is always 0
 		//
 		// TODO : Implement the above, SMB_GLOBAL_STATUS should probably get the GS_PRERR_STS flag. But how?
 		return;
@@ -191,7 +186,21 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	//0x0E	another scratch register ? seems like an error code.
 	//0x19	reset on eject(0 = enable; 1 = disable)
 	//0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
-	//0x1B	scratch register for the original kernel
+	case SMC_COMMAND_SCRATCH: //0x1B	scratch register for the original kernel
+		// See http://xboxdevwiki.net/PIC#Scratch_register_values
+		switch (value) {
+		case SMC_SCRATCH_TRAY_EJECT_PENDING: return; // TODO
+		case SMC_SCRATCH_DISPLAY_FATAL_ERROR:
+		{
+			int FatalFlag;
+			g_EmuShared->GetBootFlags(&FatalFlag);
+			FatalFlag |= BOOT_FATAL_ERROR;
+			g_EmuShared->SetBootFlags(&FatalFlag);
+			break;
+		}
+		case SMC_SCRATCH_SHORT_ANIMATION: return; // TODO
+		case SMC_SCRATCH_DASHBOARD_BOOT: return;  // TODO
+		}
 	//0x20	response to PIC challenge(written first)
 	//0x21	response to PIC challenge(written second)
 	}
@@ -214,3 +223,4 @@ void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
 {
 	// TODO
 }
+

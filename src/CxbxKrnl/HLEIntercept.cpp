@@ -374,6 +374,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
+                uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
 
                 if (preserveVersion < BuildVersion) {
                     preserveVersion = BuildVersion;
@@ -403,6 +404,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					// Skip scanning for D3D8 symbols when LLE GPU is selected
 					if (bLLE_GPU)
 						continue;
+
+					// Functions in this library were updated by June 2003 XDK (5558) with Integrated Hotfixes,
+					// However August 2003 XDK (5659) still uses the old function.
+					// Please use updated 5788 instead.
+					if (BuildVersion >= 5558 && BuildVersion <=5659 && QFEVersion > 1) {
+						EmuWarning("D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
+						BuildVersion = 5788;
+					}
 				}
 				if (strcmp(LibraryName.c_str(), Lib_DSOUND) == 0)
                 {

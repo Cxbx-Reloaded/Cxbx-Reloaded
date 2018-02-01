@@ -43,7 +43,7 @@
 #include <ddraw.h>
 
 // initialize render window
-extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+extern VOID CxbxInitWindow(bool bFullInit);
 
 extern VOID CxbxSetPixelContainerHeader
 (

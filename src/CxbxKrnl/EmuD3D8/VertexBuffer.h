@@ -130,12 +130,13 @@ extern DWORD                  *g_pIVBVertexBuffer;
 extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
 extern DWORD                   g_IVBFVF;
 
-#define IVB_TABLE_SIZE 1024
-#define IVB_BUFFER_SIZE sizeof(_D3DIVB)*1024
+#define IVB_TABLE_SIZE  4096 // This should be more than enough. Tweak as necessary if it overflows or the resulting VertexBuffer fails to allocate
+#define IVB_BUFFER_SIZE sizeof(_D3DIVB) * IVB_TABLE_SIZE
+
 // TODO : Enlarge IVB_TABLE_SIZE and IVB_BUFFER_SIZE
 // TODO : Calculate IVB_BUFFER_SIZE using sizeof(DWORD)
 
-extern struct _D3DIVB
+struct _D3DIVB
 {
     XTL::D3DXVECTOR3 Position;   // Position
     FLOAT            Rhw;        // Rhw
@@ -147,8 +148,9 @@ extern struct _D3DIVB
     XTL::D3DXVECTOR2 TexCoord2;  // TexCoord2
     XTL::D3DXVECTOR2 TexCoord3;  // TexCoord3
     XTL::D3DXVECTOR2 TexCoord4;  // TexCoord4
-}
-*g_IVBTable;
+};
+
+extern _D3DIVB g_IVBTable[IVB_TABLE_SIZE];
 
 extern UINT g_IVBTblOffs;
 

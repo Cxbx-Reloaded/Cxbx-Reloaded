@@ -51,7 +51,7 @@ class Xbe : public Error
 {
     public:
         // construct via Xbe file
-        Xbe(const char *x_szFilename);
+        Xbe(const char *x_szFilename, bool bFromGUI);
 		
         // deconstructor
        ~Xbe();
@@ -62,8 +62,7 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-        // dump Xbe information to text file
-        void DumpInformation(FILE *x_file);
+        std::string DumpInformation();
 
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
@@ -158,6 +157,7 @@ class Xbe : public Error
             uint32  dwOriginalCertificateSize;			  // 0x01D0 - Original Certificate Size?
             uint32  dwOnlineService;					  // 0x01D4 - Online Service ID
             uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
+            uint08  bzCodeEncKey[16];					  // 0x01DC - Code Encryption Key?
         }
         #include "AlignPosfix1.h"
         m_Certificate;
@@ -255,17 +255,17 @@ class Xbe : public Error
         // retrieve thread local storage index address
         uint32 *GetTLSIndex() { if(m_TLS == 0) return 0; else return (uint32*)GetAddr(m_TLS->dwTLSIndexAddr); }
 
+        // return a modifiable pointer inside this structure that corresponds to a virtual address
+        uint08 *GetAddr(uint32 x_dwVirtualAddress);
+
+        const wchar_t *GetUnicodeFilenameAddr();
     private:
         // constructor initialization
         void ConstructorInit();
 
-        // return a modifiable pointer inside this structure that corresponds to a virtual address
-        uint08 *GetAddr(uint32 x_dwVirtualAddress);
-
         // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
 
-        std::string AllowedMediaToString();
 
         // used to encode/decode logo bitmap data
         union LogoRLE

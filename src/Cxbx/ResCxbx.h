@@ -15,6 +15,7 @@
 #define IDD_ABOUT                       119
 #define IDR_CONTRIBUTORS                121
 #define IDR_COPYING                     122
+#define IDS_UEM                         123
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002

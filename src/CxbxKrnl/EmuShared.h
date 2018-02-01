@@ -108,6 +108,12 @@ class EmuShared : public Mutex
 		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
 
 		// ******************************************************************
+		// * Boot flag Accessors
+		// ******************************************************************
+		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags; Unlock(); }
+		void SetBootFlags(int *value) { Lock(); m_BootFlags = *value; Unlock(); }
+
+		// ******************************************************************
 		// * XInput Flag Accessors
 		// ******************************************************************
 		void GetXInputEnabled(int* value) { Lock(); *value = m_XInputEnabled; Unlock(); }
@@ -132,10 +138,10 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
-		// * MultiXbe flag Accessors
+		// * Kernel quick reboot flag Accessors
 		// ******************************************************************
-		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbe; Unlock(); }
-		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbe = *value; Unlock(); }
+		void GetQuickRebootFlag(bool *value) { Lock(); *value = m_bKeQuickReboot; Unlock(); }
+		void SetQuickRebootFlag(bool *value) { Lock(); m_bKeQuickReboot = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Debugging flag Accessors
@@ -152,8 +158,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Xbox LED values Accessors
 		// ******************************************************************
-		void GetLedStatus(bool *value) { Lock(); *value = m_bLedHasChanged; Unlock(); }
-		void SetLedStatus(bool *value) { Lock(); m_bLedHasChanged = *value; Unlock(); }
 		void GetLedSequence(int *value)
 		{
 			Lock();
@@ -188,15 +192,15 @@ class EmuShared : public Mutex
 		XBVideo      m_XBVideo;
 		XBAudio      m_XBAudio;
 		char         m_XbePath[MAX_PATH];
+		int			 m_BootFlags;
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
 		int			 m_DisablePixelShaders;
 		float		 m_MSpF;
 		float        m_FPS;
-		bool		 m_bMultiXbe;
+		bool		 m_bKeQuickReboot;
 		bool		 m_bDebugging;
 		PAddr		 m_LaunchDataPAddress;
-		bool         m_bLedHasChanged;
 		int          m_LedSequence[4];
 };
 
