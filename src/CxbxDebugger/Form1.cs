@@ -171,9 +171,15 @@ namespace CxbxDebugger
                 if (IsMainThread)
                     PrefixStr = "> ";
 
-                string fn = Path.GetFileName(Thread.OwningProcess.Path);
-
-                DisplayStr = string.Format("{0}[{1}] {2}!{3:X8}", PrefixStr, (uint)Thread.Handle, fn, (uint)Thread.StartAddress);
+                if (Thread.DebugName != null)
+                {
+                    DisplayStr = string.Format("{0}[{1}] {2}", PrefixStr, (uint)Thread.Handle, Thread.DebugName);
+                }
+                else
+                {
+                    string fn = Path.GetFileName(Thread.OwningProcess.Path);
+                    DisplayStr = string.Format("{0}[{1}] {2}!{3:X8}", PrefixStr, (uint)Thread.Handle, fn, (uint)Thread.StartAddress);
+                }
                 
                 if( Thread.WasSuspended )
                 {
@@ -424,6 +430,11 @@ namespace CxbxDebugger
             {
                 frm.DebugLog(string.Format("Thread exited {0} ({1})", Thread.ThreadID, PrettyExitCode(ExitCode)));
                 frm.DebugThreads.Remove(Thread);
+            }
+
+            public void OnThreadNamed(DebuggerThread Thread)
+            {
+                frm.DebugLog(string.Format("Thread {0} named {1}", Thread.ThreadID, Thread.DebugName));
             }
 
             public void OnModuleLoaded(DebuggerModule Module)

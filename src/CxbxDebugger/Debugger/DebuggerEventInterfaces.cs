@@ -21,6 +21,7 @@ namespace CxbxDebugger
     {
         void OnThreadCreate(DebuggerThread Thread);
         void OnThreadExit(DebuggerThread Thread, uint ExitCode);
+        void OnThreadNamed(DebuggerThread Thread);
     }
 
     public interface IDebuggerModuleEvents

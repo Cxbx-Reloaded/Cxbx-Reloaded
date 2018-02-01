@@ -14,6 +14,7 @@ namespace CxbxDebugger
         public uint ThreadID { get; set; }
         public IntPtr StartAddress { get; set; }
         public IntPtr ThreadBase { get; set; }
+        public string DebugName { get; set; }
 
         private int CachedSuspendCount = 0;
 

@@ -4,7 +4,7 @@
 using System;
 
 namespace CxbxDebugger
-{   
+{
     public class DebuggerMessages
     {
         public enum ReportType : uint
@@ -18,6 +18,9 @@ namespace CxbxDebugger
             FILE_WRITE = 0x00deed06,
 
             OVERRIDE_EXCEPTION = 0x00ceed01,
+
+            // Exception code from https://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
+            MS_VC_EXCEPTION = 0x406D1388,
         }
 
         enum StringType : uint
@@ -36,7 +39,7 @@ namespace CxbxDebugger
             HLECache Report = new HLECache();
 
             StringType Type = (StringType)Data[0];
-            
+
             if (Type != StringType.CHAR)
                 throw new Exception("GetHLECacheReport expects a string message");
 
@@ -76,7 +79,7 @@ namespace CxbxDebugger
         {
             public IntPtr Handle { get; set; }
             public string FileName { get; set; }
-            public bool Succeeded{ get; set; }
+            public bool Succeeded { get; set; }
         }
 
         public static FileOpened GetFileOpenedReport(DebuggerThread Context, uint[] Data)
@@ -145,7 +148,7 @@ namespace CxbxDebugger
         {
             // TODO: Restructure this library
             uint InvalidHandle = (uint)VsChromium.Core.Win32.Handles.NativeMethods.INVALID_HANDLE_VALUE;
-            
+
             // Skip invalid file handles
             if (Data[0] == InvalidHandle)
                 return null;
@@ -162,8 +165,8 @@ namespace CxbxDebugger
             public IntPtr ReponseAddr { get; set; }
             public IntPtr ExceptionAddress { get; set; }
             public uint ExceptionCode { get; set; }
-            public uint ParameterCount{ get; set; }
-            public IntPtr ParameterBase{ get; set; }
+            public uint ParameterCount { get; set; }
+            public IntPtr ParameterBase { get; set; }
         }
 
         public static ExceptionHandledQuery GetExceptionHandledQuery(DebuggerThread Context, uint[] Data)
@@ -200,6 +203,34 @@ namespace CxbxDebugger
             IntPtr MessagePtr = new IntPtr(Data[3]);
 
             Report.Title = Context.OwningProcess.ReadString(MessagePtr, Length);
+
+            return Report;
+        }
+
+        public class MSVCThreadName
+        {
+            public string Name { get; set; }
+            public uint ThreadId { get; set; }
+        }
+
+        public static MSVCThreadName GetMSVCThreadName(DebuggerThread Context, uint[] Data)
+        {
+            uint Type = Data[0];
+            if (Type != 0x1000)
+                return null;
+
+            string ReportName = "";
+
+            IntPtr MessagePtr = new IntPtr(Data[1]);
+            if (MessagePtr != IntPtr.Zero)
+            {
+                ReportName = Context.OwningProcess.ReadString(MessagePtr, false);
+            }
+
+            MSVCThreadName Report = new MSVCThreadName();
+
+            Report.Name = ReportName;
+            Report.ThreadId = Data[2];
 
             return Report;
         }

@@ -561,8 +561,36 @@ namespace CxbxDebugger
                             var Report = DebuggerMessages.GetDebuggerInitReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
 
                             InitParams = Report;
+                        }
+                    }
+                    break;
 
+                case (ExceptionCode)DebuggerMessages.ReportType.MS_VC_EXCEPTION:
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            var Report = DebuggerMessages.GetMSVCThreadName(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
+                            if(Report != null)
+                            {
+                                // Resolve the ThreadId of an invalid ID to the current thread name
+                                if (Report.ThreadId == uint.MaxValue)
+                                {
+                                    Report.ThreadId = (uint)DebugEvent.dwThreadId;
+                                }
 
+                                var ResolvedThread = DebugInstance.MainProcess.FindThread(Report.ThreadId);
+                                if(ResolvedThread != null)
+                                {
+                                    // Update the resolved thread name
+                                    ResolvedThread.DebugName = Report.Name;
+
+                                    foreach (IDebuggerThreadEvents Event in ThreadEvents)
+                                    {
+                                        Event.OnThreadNamed(Thread);
+                                    }
+                                }
+                            }
                         }
                     }
                     break;

@@ -66,6 +66,11 @@ namespace CxbxDebugger
             MainProcess.Threads.Remove(Thread);
         }
 
+        public void OnThreadNamed(DebuggerThread Thread)
+        {
+            // Unused
+        }
+
         public void OnModuleLoaded(DebuggerModule Module)
         {
             MainProcess.Modules.Add(Module);
