@@ -742,6 +742,7 @@ typedef struct {
 	void* pXboxData = nullptr;
 	size_t szXboxDataSize = 0;
 	uint32_t hash = 0;
+	std::chrono::time_point<std::chrono::high_resolution_clock> lastHashedTime;
 } host_resource_info_t;
 
 std::map <resource_key_t, host_resource_info_t> g_HostResources;
@@ -818,11 +819,19 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 		return false;
 	}
 
+	// Rehash the resource after a certain amount of milliseconds has passed
+	// We do this because hashing every single use is too expensive
+	// Note: This will have to do until we get proper dirty page support
+	// Even with a 1ms hash lifetime, Turok goes from 2fps to 160fps on the title screen
+	auto now = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(it->second.lastHashedTime - now).count();
+	if (duration > 1) {
 	uint32_t oldHash = it->second.hash;
-	it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
+		it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
 
-	if (it->second.hash != oldHash) {
-		return true;
+		if (it->second.hash != oldHash) {
+			return true;
+		}
 	}
 
 	return false;
@@ -842,6 +851,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
 	hostResourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
+	hostResourceInfo.lastHashedTime = std::chrono::high_resolution_clock::now();
 
 	g_HostResources[key] = hostResourceInfo;
 
