@@ -3,13 +3,13 @@ DEVICE_READ32(PCRTC)
 	DEVICE_READ32_SWITCH() {
 
 	case NV_PCRTC_INTR_0:
-		result = pcrtc.pending_interrupts;
+		result = d->pcrtc.pending_interrupts;
 		break;
 	case NV_PCRTC_INTR_EN_0:
-		result = pcrtc.enabled_interrupts;
+		result = d->pcrtc.enabled_interrupts;
 		break;
 	case NV_PCRTC_START:
-		result = pcrtc.start;
+		result = d->pcrtc.start;
 		break;
 	default: 
 		result = 0;
@@ -25,17 +25,17 @@ DEVICE_WRITE32(PCRTC)
 	switch (addr) {
 
 	case NV_PCRTC_INTR_0:
-		pcrtc.pending_interrupts &= ~value;
-		update_irq();
+		d->pcrtc.pending_interrupts &= ~value;
+		update_irq(d);
 		break;
 	case NV_PCRTC_INTR_EN_0:
-		pcrtc.enabled_interrupts = value;
-		update_irq();
+		d->pcrtc.enabled_interrupts = value;
+		update_irq(d);
 		break;
 	case NV_PCRTC_START:
         value &= 0x07FFFFFF;
         // assert(val < memory_region_size(d->vram));
-		pcrtc.start = value;
+		d->pcrtc.start = value;
 		break;
 
 	default: 

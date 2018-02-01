@@ -8,14 +8,14 @@ DEVICE_READ32(PMC)
 		result = 0; // When read, returns 0 if in little-endian mode, 0x01000001 if in big-endian mode.
 		break;
 	case NV_PMC_INTR_0: // Shows which functional units have pending IRQ
-		result = pmc.pending_interrupts;
+		result = d->pmc.pending_interrupts;
 		break;
 	case NV_PMC_INTR_EN_0: // Selects which functional units can cause IRQs
-		result = pmc.enabled_interrupts;
+		result = d->pmc.enabled_interrupts;
 		break;
 	default:
 		result = 0;
-		//DEVICE_READ32_REG(pmc); // Was : DEBUG_READ32_UNHANDLED(PMC);
+		//DEVICE_READ32_REG(PMC); // Was : DEBUG_READ32_UNHANDLED(PMC);
 		break;
 	}
 
@@ -27,12 +27,12 @@ DEVICE_WRITE32(PMC)
 	switch(addr) {
 	case NV_PMC_INTR_0:
         /* the bits of the interrupts to clear are wrtten */
-		pmc.pending_interrupts &= ~value;
-		update_irq();
+		d->pmc.pending_interrupts &= ~value;
+		update_irq(d);
 		break;
 	case NV_PMC_INTR_EN_0:
-		pmc.enabled_interrupts = value;
-		update_irq();
+		d->pmc.enabled_interrupts = value;
+		update_irq(d);
 		break;
 
 	default: 

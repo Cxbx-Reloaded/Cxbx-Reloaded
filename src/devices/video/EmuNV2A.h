@@ -37,20 +37,6 @@
 // Valid after PCI init :
 #define NV20_REG_BASE_KERNEL 0xFD000000
 
-#define NV2A_ADDR  0xFD000000
-#define NV2A_SIZE             0x01000000
-
-#define NV_PMC_SIZE                 0x001000
-#define _NV_PFIFO_SIZE               0x002000 // Underscore prefix to prevent clash with NV_PFIFO_SIZE
-#define NV_PVIDEO_SIZE              0x001000
-#define NV_PTIMER_SIZE              0x001000
-#define NV_PFB_SIZE                 0x001000
-#define NV_PGRAPH_SIZE              0x002000
-#define NV_PCRTC_SIZE               0x001000
-#define NV_PRAMDAC_SIZE             0x001000
-#define NV_PRAMIN_ADDR   0x00700000
-#define NV_PRAMIN_SIZE              0x100000
-
 typedef volatile DWORD *PPUSH;
 
 typedef struct {

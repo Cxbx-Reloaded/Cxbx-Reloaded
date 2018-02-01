@@ -4,13 +4,13 @@ DEVICE_READ32(PRMCIO)
 	DEVICE_READ32_SWITCH() {
 	case VGA_CRT_IM:
 	case VGA_CRT_IC:
-		result = prmcio.cr_index;
+		result = d->prmcio.cr_index;
 		break;
 	case VGA_CRT_DM:
 	case VGA_CRT_DC:
-		result = prmcio.cr[prmcio.cr_index];
+		result = d->prmcio.cr[d->prmcio.cr_index];
 	
-		printf("vga: read CR%x = 0x%02x\n", prmcio.cr_index, result);
+		printf("vga: read CR%x = 0x%02x\n", d->prmcio.cr_index, result);
 		break;
 	default:
 		DEBUG_READ32_UNHANDLED(PRMCIO);
@@ -39,18 +39,18 @@ DEVICE_WRITE32(PRMCIO)
 	// vga_ioport_write :
 	case VGA_CRT_IM:
 	case VGA_CRT_IC:
-		prmcio.cr_index = value;
+		d->prmcio.cr_index = value;
 		break;
 	case VGA_CRT_DM:
 	case VGA_CRT_DC:
-		printf("vga: write CR%x = 0x%02x\n", prmcio.cr_index, value);
+		printf("vga: write CR%x = 0x%02x\n", d->prmcio.cr_index, value);
 
 		/* handle CR0-7 protection */
-		if ((prmcio.cr[VGA_CRTC_V_SYNC_END] & VGA_CR11_LOCK_CR0_CR7) &&
-			prmcio.cr_index <= VGA_CRTC_OVERFLOW) {
+		if ((d->prmcio.cr[VGA_CRTC_V_SYNC_END] & VGA_CR11_LOCK_CR0_CR7) &&
+			d->prmcio.cr_index <= VGA_CRTC_OVERFLOW) {
 			/* can always write bit 4 of CR7 */
-			if (prmcio.cr_index == VGA_CRTC_OVERFLOW) {
-				prmcio.cr[VGA_CRTC_OVERFLOW] = (prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
+			if (d->prmcio.cr_index == VGA_CRTC_OVERFLOW) {
+				d->prmcio.cr[VGA_CRTC_OVERFLOW] = (d->prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
 					(value & 0x10);
 				EmuWarning("TODO: vbe_update_vgaregs");
 				//vbe_update_vgaregs();
@@ -58,11 +58,11 @@ DEVICE_WRITE32(PRMCIO)
 			return;
 		}
 
-		prmcio.cr[prmcio.cr_index] = value;
+		d->prmcio.cr[d->prmcio.cr_index] = value;
 		EmuWarning("TODO: vbe_update_vgaregs");
 		//vbe_update_vgaregs();
 
-		switch (prmcio.cr_index) {
+		switch (d->prmcio.cr_index) {
 			case VGA_CRTC_H_TOTAL:
 			case VGA_CRTC_H_SYNC_START:
 			case VGA_CRTC_H_SYNC_END:
