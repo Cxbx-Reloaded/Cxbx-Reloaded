@@ -52,6 +52,9 @@ typedef struct tagTHREADNAME_INFO
 
 void SetThreadName(DWORD dwThreadID, const char* szThreadName)
 {
+	if (!IsDebuggerPresent())
+		return;
+
 	THREADNAME_INFO info;
 	info.dwType = 0x1000;
 	info.szName = szThreadName;
@@ -69,5 +72,5 @@ void SetThreadName(DWORD dwThreadID, const char* szThreadName)
 
 void SetCurrentThreadName(const char* szThreadName)
 {
-	SetThreadName((DWORD)-1, szThreadName);
+	SetThreadName(GetCurrentThreadId(), szThreadName);
 }
