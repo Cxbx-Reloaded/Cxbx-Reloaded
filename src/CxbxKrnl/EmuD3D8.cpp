@@ -724,7 +724,6 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	case X_D3DCOMMON_TYPE_TEXTURE:
 	case X_D3DCOMMON_TYPE_SURFACE:
 		pData |= MM_SYSTEM_PHYSICAL_MAP;
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
 		break;
 	case X_D3DCOMMON_TYPE_PUSHBUFFER:
 		break;
@@ -6533,6 +6532,7 @@ void EmuUpdateActiveTextureStages()
 		}
 
 		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
+
 		if (pHostTexture != nullptr) {
 			HRESULT hRet = g_pD3DDevice8->SetTexture(i, pHostTexture);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
