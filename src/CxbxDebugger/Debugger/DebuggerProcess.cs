@@ -67,19 +67,18 @@ namespace CxbxDebugger
                 out numRead
             ))
             {
-                throw new Exception(string.Format("ReadProcessMemory failed to read 0x{0:X8}", (uint)Address));
+                // A read error could be a malformed address, so fail gracefully
+                return null;
             }
 
             // Not handling errors for now
             return buffer;
         }
 
-        public T ReadMemory<T>(IntPtr Address)
+        public bool ReadMemory<T>(IntPtr Address, ref T Result)
         {
-            object Value = default(T);
-
             if (Address == IntPtr.Zero)
-                return (T)Value;
+                return false;
 
             TypeCode TType = Type.GetTypeCode(typeof(T));
 
@@ -88,7 +87,12 @@ namespace CxbxDebugger
 
             uint Size = (uint)Marshal.SizeOf(typeof(T));
             byte[] Data = ReadMemoryInternal(Address, Size);
-            
+
+            if (Data == null)
+                return false;
+
+            object Value = default(T);
+
             switch (TType)
             {
                 case TypeCode.Byte:
@@ -103,7 +107,8 @@ namespace CxbxDebugger
                     throw new Exception(string.Format("Unhandled type code {0}", TType.ToString()));
             }
 
-            return (T)Value;
+            Result = (T)Value;
+            return true;
         }
 
         public string ReadString(IntPtr Address)
@@ -113,9 +118,12 @@ namespace CxbxDebugger
 
             List<byte> StringData = new List<byte>();
 
+            byte chr = 0;
             while (true)
             {
-                byte chr = ReadMemory<byte>(Address);
+                if (!ReadMemory(Address, ref chr))
+                    break;
+
                 if (chr == 0)
                     break;
 
@@ -133,10 +141,15 @@ namespace CxbxDebugger
 
             List<byte> StringData = new List<byte>();
 
+            byte chr1 = 0;
+            byte chr2 = 0;
             while (true)
             {
-                byte chr1 = ReadMemory<byte>(Address);
-                byte chr2 = ReadMemory<byte>(Address + 1);
+                if (!ReadMemory(Address, ref chr1))
+                    break;
+                if (!ReadMemory(Address + 1, ref chr2))
+                    break;
+
                 if (chr1 == 0 && chr2 == 0)
                     break;
 
@@ -154,6 +167,9 @@ namespace CxbxDebugger
                 return "";
 
             byte[] StringData = ReadMemoryInternal(Address, Length);
+
+            if (StringData == null)
+                return "";
             
             return Encoding.ASCII.GetString(StringData);
         }
@@ -164,6 +180,9 @@ namespace CxbxDebugger
                 return "";
 
             byte[] StringData = ReadMemoryInternal(Address, Length * 2);
+
+            if (StringData == null)
+                return "";
 
             return Encoding.Unicode.GetString(StringData);
         }
@@ -176,10 +195,10 @@ namespace CxbxDebugger
             return ReadMemoryInternal(Address, Size);
         }
 
-        private void WriteMemoryInternal(IntPtr Address, byte[] Data)
+        private bool WriteMemoryInternal(IntPtr Address, byte[] Data)
         {
             int numWritten = 0;
-            WinProcesses.NativeMethods.WriteProcessMemory
+            return WinProcesses.NativeMethods.WriteProcessMemory
                 (
                     Handle,
                     Address,

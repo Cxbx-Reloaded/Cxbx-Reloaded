@@ -100,16 +100,18 @@ namespace CxbxDebugger
             if (!Result)
                 return;
             
-            var ebp = ContextCache.ebp;
+            uint ebp = ContextCache.ebp;
 
             CallstackCache = new DebuggerCallstack();
-
             CallstackCache.AddFrame(new DebuggerStackFrame(new IntPtr(ContextCache.eip), new IntPtr(ebp), new IntPtr(ContextCache.esp)));
 
+            uint ReturnAddr = 0;
             do
             {
-                var ReturnAddr = OwningProcess.ReadMemory<uint>(new IntPtr(ebp + 4));
-                ebp = OwningProcess.ReadMemory<uint>(new IntPtr(ebp));
+                if (!OwningProcess.ReadMemory(new IntPtr(ebp + 4), ref ReturnAddr))
+                    break;
+                if (!OwningProcess.ReadMemory(new IntPtr(ebp), ref ebp))
+                    break;
 
                 if (ebp == 0 || ReturnAddr == ebp)
                     break;
