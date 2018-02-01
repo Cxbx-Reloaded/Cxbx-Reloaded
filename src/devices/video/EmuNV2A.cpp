@@ -388,6 +388,7 @@ struct {
 } pramdac;
 
 struct {
+	intptr_t memory;
 	uint32_t regs[NV_PRAMIN_SIZE]; // TODO : union
 } pramin;
 
@@ -588,7 +589,7 @@ static DMAObject nv_dma_load(xbaddr dma_obj_address)
 {
 	assert(dma_obj_address < NV_PRAMIN_SIZE);
 
-	uint32_t *dma_obj = (uint32_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + dma_obj_address);
+	uint32_t *dma_obj = (uint32_t*)(pramin.memory + dma_obj_address);
 	uint32_t flags = ldl_le_p(dma_obj);
 	uint32_t limit = ldl_le_p(dma_obj + 1);
 	uint32_t frame = ldl_le_p(dma_obj + 2);
@@ -703,7 +704,7 @@ static void load_graphics_object(xbaddr instance_address, GraphicsObject *obj)
 	uint32_t switch1, switch2, switch3;
 	
 	assert(instance_address < NV_PRAMIN_SIZE);
-	obj_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR  + instance_address);
+	obj_ptr = (uint8_t*)(pramin.memory + instance_address);
 
 	switch1 = ldl_le_p((uint32_t*)obj_ptr);
 	switch2 = ldl_le_p((uint32_t*)(obj_ptr + 4));
@@ -2588,13 +2589,13 @@ void CxbxReserveNV2AMemory()
 		GetCurrentThreadId(), NV2A_SIZE / ONE_MB, NV2A_ADDR, NV2A_ADDR + NV2A_SIZE - 1);
 
 	// Allocate PRAMIN Region
-	memory = VirtualAllocEx(
+	pramin.memory = (intptr_t)VirtualAllocEx(
 		GetCurrentProcess(),
 		(void*)(NV2A_ADDR + NV_PRAMIN_ADDR),
 		NV_PRAMIN_SIZE,
 		MEM_COMMIT, // No MEM_RESERVE |
 		PAGE_READWRITE);
-	if (memory == NULL) {
+	if (pramin.memory == NULL) {
 		EmuWarning("Couldn't allocate NV2A PRAMIN memory");
 		return;
 	}

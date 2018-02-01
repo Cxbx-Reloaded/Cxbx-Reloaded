@@ -444,7 +444,7 @@ static RAMHTEntry ramht_lookup(uint32_t handle)
 		GET_MASK(pfifo.regs[NV_PFIFO_RAMHT],
 			NV_PFIFO_RAMHT_BASE_ADDRESS_MASK) << 12;
 
-	uint8_t *entry_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + ramht_address + hash * 8);
+	uint8_t *entry_ptr = (uint8_t*)(pramin.memory + ramht_address + hash * 8);
 
 	uint32_t entry_handle = ldl_le_p((uint32_t*)entry_ptr);
 	uint32_t entry_context = ldl_le_p((uint32_t*)(entry_ptr + 4));

@@ -95,7 +95,7 @@ DEVICE_WRITE32(PGRAPH)
 			printf("PGRAPH: read channel %d context from %0x08X\n",
 				pgraph.channel_id, pgraph.context_address);
 
-			uint8_t *context_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR + pgraph.context_address);
+			uint8_t *context_ptr = (uint8_t*)(pramin.memory + pgraph.context_address);
 			uint32_t context_user = ldl_le_p((uint32_t*)context_ptr);
 
 			printf("    - CTX_USER = 0x%x\n", context_user);
