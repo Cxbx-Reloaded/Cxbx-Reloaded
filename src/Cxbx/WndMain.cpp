@@ -610,7 +610,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						OpenMRU(0);
 
 					if (m_Xbe != nullptr)
-						if(!m_bIsStarted)
+						if (!m_bIsStarted)
 							StartEmulation(hwnd);
                 }
                 break;
@@ -621,6 +621,17 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         StopEmulation();
                 }
                 break;
+
+				case VK_F9:
+				{
+					// Try to open the most recent Xbe if none is opened yet :
+					if (m_Xbe == nullptr)
+						OpenMRU(0);
+
+					if (m_Xbe != nullptr)
+						if (!m_bIsStarted)
+							StartEmulation(hwnd, debuggerOn);
+				}
 
                 default:
                 {
@@ -1236,7 +1247,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             case ID_EMULATION_STARTDEBUG:
                 if (m_Xbe != nullptr)
                 {
-                    StartEmulation(hwnd, true);
+                    StartEmulation(hwnd, debuggerOn);
                 }
                 break;
 
@@ -1993,7 +2004,7 @@ void WndMain::SaveXbeAs()
 }
 
 // start emulation
-void WndMain::StartEmulation(HWND hwndParent, bool WithLocalDebugger /*= false*/)
+void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
     char szBuffer[MAX_PATH];
 
@@ -2023,9 +2034,10 @@ void WndMain::StartEmulation(HWND hwndParent, bool WithLocalDebugger /*= false*/
 		char szArgsBuffer[4096];
 		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, (int)hwndParent, (int)m_KrnlDebug, m_KrnlDebugFilename);
 
-		g_EmuShared->SetDebuggingFlag(&WithLocalDebugger);
+		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
+		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
-        if (WithLocalDebugger)
+        if (AttachLocalDebugger)
         {
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
             const char* szDebugger = "CxbxDebugger.exe";

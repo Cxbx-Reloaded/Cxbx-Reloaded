@@ -111,6 +111,9 @@ extern bool g_bIntegrityChecking;
 /*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
+/*! debugger enable state */
+enum DebuggerState { debuggerOff, debuggerOn };
+
 /*! type of Xbe */
 enum XbeType { xtRetail, xtDebug, xtChihiro };
 

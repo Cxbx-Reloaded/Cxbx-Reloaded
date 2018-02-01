@@ -153,7 +153,7 @@ BEGIN
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
-        MENUITEM "Start with &Debugger...",     ID_EMULATION_STARTDEBUG, GRAYED
+        MENUITEM "Start with &Debugger...\tF9", ID_EMULATION_STARTDEBUG, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "S&top\tF6",                   ID_EMULATION_STOP, GRAYED
     END
