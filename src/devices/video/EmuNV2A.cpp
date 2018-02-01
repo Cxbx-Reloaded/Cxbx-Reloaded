@@ -2297,6 +2297,8 @@ static void pgraph_method(unsigned int subchannel, unsigned int method, uint32_t
 
 static void* pfifo_puller_thread()
 {
+	CxbxSetThreadName("Cxbx NV2A FIFO");
+
 	Cache1State *state = &pfifo.cache1;
 
 	while (true) {
@@ -3893,6 +3895,8 @@ std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
 static void nv2a_vblank_thread()
 {
+	CxbxSetThreadName("Cxbx NV2A VBlank");
+
 	auto nextVBlankTime = GetNextVBlankTime();
 
 	while (true) {

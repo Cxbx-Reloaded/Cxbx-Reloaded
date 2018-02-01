@@ -1230,6 +1230,8 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 // window message processing thread
 static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 {
+	CxbxSetThreadName("Cxbx Render Window");
+
     // register window class
     {
         LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
@@ -1572,6 +1574,8 @@ std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double,
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
+	CxbxSetThreadName("Cxbx Timing Thread");
+
     // since callbacks come from here
 	InitXboxThread(g_CPUOthers); // avoid Xbox1 core for lowest possible latency
 
@@ -1671,6 +1675,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 {
 	LOG_FUNC();
+
+	CxbxSetThreadName("Cxbx CreateDevice Proxy");
 
     DbgPrintf("EmuD3D8: CreateDevice proxy thread is running.\n");
 

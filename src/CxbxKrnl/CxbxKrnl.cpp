@@ -500,6 +500,8 @@ void PrintCurrentConfigurationLog()
 
 static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 {
+	CxbxSetThreadName("CxbxKrnl Interrupts");
+
 	// Make sure Xbox1 code runs on one core :
 	InitXboxThread(g_CPUXbox);
 
@@ -519,6 +521,11 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 void CxbxKrnlMain(int argc, char* argv[])
 {
+	// Treat this instance as the Xbox runtime entry point XBOXStartup()
+	// This is defined in OpenXDK:
+	//   import/OpenXDK/include/xhal/xhal.h
+	CxbxSetThreadName("Cxbx XBOXStartup");
+
 	// Skip '/load' switch
 	// Get XBE Name :
 	std::string xbePath = argv[2];

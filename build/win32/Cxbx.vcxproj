@@ -190,6 +190,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\Common\XbePrinter.h" />
@@ -362,6 +363,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />

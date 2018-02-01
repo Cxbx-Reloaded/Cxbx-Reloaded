@@ -2044,6 +2044,8 @@ void WndMain::StopEmulation()
 // wrapper function to call CrashMonitor
 DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 {
+	CxbxSetThreadName("Cxbx Crash Monitor");
+
 	static_cast<WndMain*>(lpVoid)->CrashMonitor();
 	return 0;
 }
