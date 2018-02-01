@@ -106,7 +106,7 @@ namespace CxbxDebugger
             return (T)Value;
         }
 
-        public string ReadString(IntPtr Address, bool IsWide)
+        public string ReadString(IntPtr Address)
         {
             if (Address == IntPtr.Zero)
                 return "";
@@ -115,16 +115,37 @@ namespace CxbxDebugger
 
             while (true)
             {
-                byte b = ReadMemory<byte>(Address);
-                if (b == 0)
+                byte chr = ReadMemory<byte>(Address);
+                if (chr == 0)
                     break;
 
-                Address = new IntPtr((uint)Address + 1);
-                StringData.Add(b);
+                Address += sizeof(byte);
+                StringData.Add(chr);
             }
+            
+            return Encoding.ASCII.GetString(StringData.ToArray());
+        }
 
-            Encoding StringEncoding = (IsWide ? Encoding.Unicode : Encoding.ASCII);
-            return StringEncoding.GetString(StringData.ToArray());
+        public string ReadWString(IntPtr Address)
+        {
+            if (Address == IntPtr.Zero)
+                return "";
+
+            List<byte> StringData = new List<byte>();
+
+            while (true)
+            {
+                byte chr1 = ReadMemory<byte>(Address);
+                byte chr2 = ReadMemory<byte>(Address + 1);
+                if (chr1 == 0 && chr2 == 0)
+                    break;
+
+                Address += sizeof(short);
+                StringData.Add(chr1);
+                StringData.Add(chr2);
+            }
+            
+            return Encoding.Unicode.GetString(StringData.ToArray());
         }
 
         public string ReadString(IntPtr Address, uint Length)

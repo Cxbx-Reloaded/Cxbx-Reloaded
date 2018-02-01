@@ -224,7 +224,7 @@ namespace CxbxDebugger
             IntPtr MessagePtr = new IntPtr(Data[1]);
             if (MessagePtr != IntPtr.Zero)
             {
-                ReportName = Context.OwningProcess.ReadString(MessagePtr, false);
+                ReportName = Context.OwningProcess.ReadString(MessagePtr);
             }
 
             MSVCThreadName Report = new MSVCThreadName();
