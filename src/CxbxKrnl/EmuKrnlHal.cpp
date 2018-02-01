@@ -568,7 +568,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we need to change our corresponding
 		// paths if we want to emulate all the possible fatal errors
 
-		xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
+		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 		char szArgsBuffer[4096];
 		char szWorkingDirectoy[MAX_PATH];
 		bool bQuickReboot = true;
