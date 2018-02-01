@@ -7,7 +7,8 @@ typedef struct RAMHTEntry {
 } RAMHTEntry;
 
 static void pfifo_run_pusher(NV2AState *d); // forward declaration
-int pfifo_puller_thread(void *opaque);
+int pfifo_puller_thread(NV2AState *d);
+static uint32_t ramht_hash(NV2AState *d, uint32_t handle);
 static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declaration
 
 DEVICE_READ32(PFIFO)
@@ -36,12 +37,11 @@ DEVICE_READ32(PFIFO)
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, d->pfifo.cache1.mode);
 		break;
 	case NV_PFIFO_CACHE1_STATUS: {
-		std::lock_guard<std::mutex> lk(d->pfifo.cache1.mutex);
-
+		d->pfifo.cache1.cache_lock.lock();
 		if (d->pfifo.cache1.cache.empty()) {
 			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
 		}
-
+		d->pfifo.cache1.cache_lock.unlock();
 	}	break;
 	case NV_PFIFO_CACHE1_DMA_PUSH:
 		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS,
@@ -77,15 +77,16 @@ DEVICE_READ32(PFIFO)
 			| d->pfifo.cache1.subroutine_active;
 		break;
 	case NV_PFIFO_CACHE1_PULL0: {
-		std::lock_guard<std::mutex> lk(d->pfifo.cache1.mutex);
+		d->pfifo.cache1.cache_lock.lock();
 		result = d->pfifo.cache1.pull_enabled;
+		d->pfifo.cache1.cache_lock.unlock();
 	} break;
 	case NV_PFIFO_CACHE1_ENGINE: {
-		std::lock_guard<std::mutex> lk(d->pfifo.cache1.mutex);
+		d->pfifo.cache1.cache_lock.lock();
 		for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 			result |= d->pfifo.cache1.bound_engines[i] << (i * 2);
 		}
-		
+		d->pfifo.cache1.cache_lock.unlock();
 	}	break;
 	case NV_PFIFO_CACHE1_DMA_DCOUNT:
 		result = d->pfifo.cache1.dcount;
@@ -155,7 +156,7 @@ DEVICE_WRITE32(PFIFO)
 			d->pfifo.cache1.subroutine_active = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
 			break;
 		case NV_PFIFO_CACHE1_PULL0: {
-			std::lock_guard<std::mutex> lk(d->pfifo.cache1.mutex);
+			d->pfifo.cache1.cache_lock.lock();
 
 			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& !d->pfifo.cache1.pull_enabled) {
@@ -167,14 +168,14 @@ DEVICE_WRITE32(PFIFO)
 				&& d->pfifo.cache1.pull_enabled) {
 				d->pfifo.cache1.pull_enabled = false;
 			}
+			d->pfifo.cache1.cache_lock.unlock();
 		}	break;
 		case NV_PFIFO_CACHE1_ENGINE: {
-			std::lock_guard<std::mutex> lk(d->pfifo.cache1.mutex);
-
+			d->pfifo.cache1.cache_lock.lock();
 			for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 				d->pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
 			}
-
+			d->pfifo.cache1.cache_lock.unlock();
 		} break;
 		case NV_PFIFO_CACHE1_DMA_DCOUNT:
 			d->pfifo.cache1.dcount = (value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
@@ -251,10 +252,10 @@ static void pfifo_run_pusher(NV2AState *d) {
 			command->subchannel = state->subchannel;
 			command->nonincreasing = state->method_nonincreasing;
 			command->parameter = word;
-
-			std::lock_guard<std::mutex> lk(state->mutex);
+			state->cache_lock.lock();
 			state->cache.push(command);
 			state->cache_cond.notify_all();
+			state->cache_lock.unlock();
 
 			if (!state->method_nonincreasing) {
 				state->method += 4;
@@ -338,28 +339,26 @@ static void pfifo_run_pusher(NV2AState *d) {
 	}
 }
 
-int pfifo_puller_thread(void *opaque)
+int pfifo_puller_thread(NV2AState *d)
 {
 	CxbxSetThreadName("Cxbx NV2A FIFO");
 
-	NV2AState *d = (NV2AState *)opaque;
 	Cache1State *state = &d->pfifo.cache1;
 
 	while (true) {
-		// Scope the lock so that it automatically unlocks at tne end of this block
-		{
-			std::unique_lock<std::mutex> lk(state->mutex);
-
-			while (state->cache.empty() || !state->pull_enabled) {
-				state->cache_cond.wait(lk);
-			}
-
-			// Copy cache to working_cache
-			while (!state->cache.empty()) {
-				state->working_cache.push(state->cache.front());
-				state->cache.pop();
-			}
+		state->cache_lock.lock();
+		while (state->cache.empty() || !state->pull_enabled) {
+			state->cache_cond.wait(state->cache_lock);
 		}
+
+		// Copy cache to working_cache
+		while (!state->cache.empty()) {
+			state->working_cache.push(state->cache.front());
+			state->cache.pop();
+		}
+		state->cache_lock.unlock();
+
+		d->pgraph.lock.lock();
 
 		while (!state->working_cache.empty()) {
 			CacheEntry* command = state->working_cache.front();
@@ -385,9 +384,10 @@ int pfifo_puller_thread(void *opaque)
 				}
 
 				/* the engine is bound to the subchannel */
-				std::lock_guard<std::mutex> lk(state->mutex);
+				state->cache_lock.lock();
 				state->bound_engines[command->subchannel] = entry.engine;
 				state->last_engine = entry.engine;
+				state->cache_lock.unlock();
 			} else if (command->method >= 0x100) {
 				/* method passed to engine */
 
@@ -426,6 +426,9 @@ int pfifo_puller_thread(void *opaque)
 			free(command);
 		}
 	}
+
+	d->pgraph.lock.unlock();
+
 
 	return 0;
 }

@@ -277,7 +277,7 @@ typedef struct GraphicsContext {
 
 
 typedef struct PGRAPHState {
-	std::mutex mutex;
+	std::unique_lock<std::mutex> lock;
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -295,6 +295,7 @@ typedef struct PGRAPHState {
 
 	bool fifo_access;
 	std::condition_variable fifo_access_cond;
+
 	std::condition_variable flip_3d;
 
 	unsigned int channel_id;
@@ -419,7 +420,7 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::mutex mutex;
+	std::unique_lock<std::mutex> cache_lock;
 	std::condition_variable cache_cond;
 	std::queue<CacheEntry*> cache;
 	std::queue<CacheEntry*> working_cache;

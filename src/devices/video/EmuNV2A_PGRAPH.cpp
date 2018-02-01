@@ -1,3 +1,8 @@
+// TODO : Replace these functions by something equivalent
+#define qemu_mutex_lock_iothread()
+#define qemu_mutex_unlock_iothread()
+#define NV2A_DPRINTF printf
+
 static const GLenum pgraph_texture_min_filter_map[] = {
     0,
     GL_NEAREST,
@@ -176,7 +181,7 @@ static void pgraph_method_log(unsigned int subchannel, unsigned int graphics_cla
 
 DEVICE_READ32(PGRAPH)
 {
-	std::lock_guard<std::mutex> lk(d->pgraph.mutex);
+	d->pgraph.lock.lock();
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
@@ -215,6 +220,8 @@ DEVICE_READ32(PGRAPH)
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
+	d->pgraph.lock.unlock();
+
 	DEVICE_READ32_END(PGRAPH);
 }
 
@@ -227,7 +234,7 @@ static void pgraph_set_context_user(NV2AState *d, uint32_t value)
 
 DEVICE_WRITE32(PGRAPH)
 {
-	std::lock_guard<std::mutex> lk(d->pgraph.mutex);
+	d->pgraph.lock.lock();
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
@@ -289,13 +296,13 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	}
 
+	d->pgraph.lock.unlock();
+
 	DEVICE_WRITE32_END(PGRAPH);
 }
 
 static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter)
 {
-	std::lock_guard<std::mutex> lk(d->pgraph.mutex);
-
 //	int i;
 	GraphicsSubchannel *subchannel_data;
 	GraphicsObject *object;
@@ -317,9 +324,9 @@ static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int me
 	if (method == NV_SET_OBJECT) {
 		subchannel_data->object_instance = parameter;
 
-		//qemu_mutex_lock_iothread();
+		qemu_mutex_lock_iothread();
 		load_graphics_object(d, parameter, object);
-		//qemu_mutex_unlock_iothread();
+		qemu_mutex_unlock_iothread();
 		return;
 	}
 
@@ -440,6 +447,73 @@ static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int me
 
 	case NV_KELVIN_PRIMITIVE: {
 		switch (method) {
+    case NV097_NO_OPERATION:
+        /* The bios uses nop as a software method call -
+         * it seems to expect a notify interrupt if the parameter isn't 0.
+         * According to a nouveau guy it should still be a nop regardless
+         * of the parameter. It's possible a debug register enables this,
+         * but nothing obvious sticks out. Weird.
+         */
+        if (parameter != 0) {
+            assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
+
+
+            pg->trapped_channel_id = pg->channel_id;
+            pg->trapped_subchannel = subchannel;
+            pg->trapped_method = method;
+            pg->trapped_data[0] = parameter;
+            pg->notify_source = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
+            pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
+
+			pg->lock.unlock();
+            qemu_mutex_lock_iothread();
+            update_irq(d);
+			pg->lock.lock();
+            qemu_mutex_unlock_iothread();
+
+            while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
+                d->pgraph.interrupt_cond.wait(pg->lock);
+            }
+        }
+        break;
+
+    case NV097_WAIT_FOR_IDLE:
+        pgraph_update_surface(d, false, true, true);
+        break;
+
+
+    case NV097_SET_FLIP_READ:
+        SET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_READ_3D,
+                 parameter);
+        break;
+    case NV097_SET_FLIP_WRITE:
+        SET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_WRITE_3D,
+                 parameter);
+        break;
+    case NV097_SET_FLIP_MODULO:
+        SET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_MODULO_3D,
+                 parameter);
+        break;
+    case NV097_FLIP_INCREMENT_WRITE: {
+        NV2A_DPRINTF("flip increment write %d -> ",
+            GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
+                          NV_PGRAPH_SURFACE_WRITE_3D));
+        SET_MASK(pg->regs[NV_PGRAPH_SURFACE],
+                 NV_PGRAPH_SURFACE_WRITE_3D,
+                 (GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
+                          NV_PGRAPH_SURFACE_WRITE_3D)+1)
+                    % GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
+                               NV_PGRAPH_SURFACE_MODULO_3D) );
+        NV2A_DPRINTF("%d\n",
+            GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
+                          NV_PGRAPH_SURFACE_WRITE_3D));
+
+//        if (glFrameTerminatorGREMEDY) {
+//            glFrameTerminatorGREMEDY();
+//        }
+
+        break;
+    }
 		case NV097_SET_CONTEXT_DMA_NOTIFIES:
 			kelvin->dma_notifies = parameter;
 			break;
@@ -968,7 +1042,7 @@ static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int me
 			pgraph_update_surface(d, false, true, true);
 
 			//qemu_mutex_unlock(&d->pg->lock);
-			//qemu_mutex_lock_iothread();
+			qemu_mutex_lock_iothread();
 
 			xbaddr semaphore_dma_len;
 			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, kelvin->dma_semaphore,
@@ -979,7 +1053,7 @@ static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int me
 			stl_le_p((uint32_t*)semaphore_data, parameter);
 
 			//qemu_mutex_lock(&d->pg->lock);
-			//qemu_mutex_unlock_iothread();
+			qemu_mutex_unlock_iothread();
 
 			break;
 		}
@@ -1131,43 +1205,42 @@ static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int me
 		EmuWarning("EmuNV2A: Unknown Graphics Class/Method 0x%08X/0x%08X\n", object->graphics_class, method);
 		break;
 	}
+
 }
 
 static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 {
 	bool valid = false;
 
-	// Scope the lock so that it gets unlocked at end of this block
-	{
-		std::lock_guard<std::mutex> lk(d->pgraph.mutex);
+	d->pgraph.lock.lock(); // TODO : This isn't in xqemu / OpenXbox?
 
-		valid = d->pgraph.channel_valid && d->pgraph.channel_id == channel_id;
-		if (!valid) {
-			d->pgraph.trapped_channel_id = channel_id;
-		}
+	valid = d->pgraph.channel_valid && d->pgraph.channel_id == channel_id;
+	if (!valid) {
+		d->pgraph.trapped_channel_id = channel_id;
 	}
+
+	d->pgraph.lock.unlock(); // TODO : This isn't in xqemu / OpenXbox?
 
 	if (!valid) {
 		printf("puller needs to switch to ch %d\n", channel_id);
 
-		//qemu_mutex_lock_iothread();
+		d->pgraph.lock.unlock()
+		qemu_mutex_lock_iothread();
 		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
 		update_irq(d);
 
-		std::unique_lock<std::mutex> lk(d->pgraph.mutex);
-		//qemu_mutex_unlock_iothread();
+		d->pgraph.lock.lock();
+		qemu_mutex_unlock_iothread();
 
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			d->pgraph.interrupt_cond.wait(lk);
+			d->pgraph.interrupt_cond.wait(d->pgraph.lock);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
-	std::unique_lock<std::mutex> lk(d->pgraph.mutex);
-
 	while (!d->pgraph.fifo_access) {	
-		d->pgraph.fifo_access_cond.wait(lk);
+		d->pgraph.fifo_access_cond.wait(d->pgraph.lock);
 	}
 }
 
