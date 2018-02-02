@@ -57,12 +57,13 @@
 #define NV_PGRAPH_SIZE              0x002000
 #define NV_PCRTC_SIZE               0x001000
 #define NV_PRAMDAC_SIZE             0x001000
-#define NV_PRAMIN_ADDR   0x00700000
-#define NV_PRAMIN_SIZE              0x100000
 
 typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
-
+#define NV2A_DPRINTF printf // Compatibility; TODO : Replace this by something equivalent
+#define NV2A_GL_DPRINTF EmuWarning // Compatibility; TODO : Replace this by something equivalent
+#define VSH_TOKEN_SIZE 4 // Compatibility; TODO : Move this to nv2a_vsh.h
+//#define MAX(a,b) ((a)>(b) ? (a) : (b)) // Compatibility
 
 #define USE_TEXTURE_CACHE
 
@@ -123,12 +124,27 @@ inline int SET_MASK(int v, int mask, int val) {
     return (v) |= ((__val) << (ffs(__mask)-1)) & (__mask);              
 }
 
-#define CASE_4(v, step)                                              \
-    case (v):                                                        \
-	case (v)+(step) :												 \
-	case (v)+(step) * 2:                                             \
-	case (v)+(step) * 3
+// Power-of-two CASE statements
+#define CASE_1(v, step) case (v)
+#define CASE_2(v, step) CASE_1(v, step) : CASE_1(v + (step) * 1, step)
+#define CASE_4(v, step) CASE_2(v, step) : CASE_2(v + (step) * 2, step)
+#define CASE_8(v, step) CASE_4(v, step) : CASE_4(v + (step) * 4, step)
+#define CASE_16(v, step) CASE_8(v, step) : CASE_8(v + (step) * 8, step)
+#define CASE_32(v, step) CASE_16(v, step) : CASE_16(v + (step) * 16, step)
+#define CASE_64(v, step) CASE_32(v, step) : CASE_32(v + (step) * 32, step)
+#define CASE_128(v, step) CASE_64(v, step) : CASE_64(v + (step) * 64, step)
 
+// Non-power-of-two CASE statements
+#define CASE_3(v, step) CASE_2(v, step) : CASE_1(v + (step) * 2, step)
+#define CASE_12(v, step) CASE_8(v, step) : CASE_4(v + (step) * 8, step)
+#define CASE_13(v, step) CASE_8(v, step) : CASE_3(v + (step) * 8, step)
+#define CASE_28(v, step) CASE_16(v, step) : CASE_12(v + (step) * 16, step)
+#define CASE_29(v, step) CASE_16(v, step) : CASE_13(v + (step) * 16, step)
+#define CASE_61(v, step) CASE_32(v, step) : CASE_29(v + (step) * 32, step)
+#define CASE_78(v, step) CASE_64(v, step) : CASE_12(v + (step) * 64, step)
+#define CASE_125(v, step) CASE_64(v, step) : CASE_61(v + (step) * 64, step)
+#define CASE_132(v, step) CASE_128(v, step) : CASE_4(v + (step) * 128, step)
+#define CASE_253(v, step) CASE_128(v, step) : CASE_125(v + (step) * 128, step)
 
 #define NV2A_DEVICE(obj) \
     OBJECT_CHECK(NV2AState, (obj), "nv2a")
@@ -339,7 +355,7 @@ typedef struct PGRAPHState {
 
 	bool enable_vertex_program_write;
 
-	//uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
+	uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
 
 	uint32_t vsh_constants[NV2A_VERTEXSHADER_CONSTANTS][4];
 	bool vsh_constants_dirty[NV2A_VERTEXSHADER_CONSTANTS];
@@ -449,7 +465,6 @@ typedef struct NV2AState {
 	struct {
 		uint8_t *ramin_ptr;
 		size_t ramin_size;
-		uint32_t regs[NV_PRAMIN_SIZE]; // TODO : union
 	} pramin;
 
     // MemoryRegion mmio;
@@ -458,7 +473,7 @@ typedef struct NV2AState {
     struct {
         uint32_t pending_interrupts;
         uint32_t enabled_interrupts;
-		uint32_t regs[NV_PMC_SIZE]; // TODO : union
+		uint32_t regs[NV_PMC_SIZE]; // Not in xqemu/openxbox? TODO : union
     } pmc;
 
     struct {
@@ -479,7 +494,7 @@ typedef struct NV2AState {
         uint32_t numerator;
         uint32_t denominator;
         uint32_t alarm_time;
-		uint32_t regs[NV_PTIMER_SIZE]; // TODO : union
+		uint32_t regs[NV_PTIMER_SIZE]; // Not in xqemu/openxbox? TODO : union
     } ptimer;
 
     struct {
@@ -492,7 +507,7 @@ typedef struct NV2AState {
         uint32_t pending_interrupts;
         uint32_t enabled_interrupts;
         hwaddr start;
-		uint32_t regs[NV_PCRTC_SIZE]; // TODO : union
+		uint32_t regs[NV_PCRTC_SIZE]; // Not in xqemu/openxbox? TODO : union
     } pcrtc;
 
     struct {
@@ -500,7 +515,7 @@ typedef struct NV2AState {
         uint64_t core_clock_freq;
         uint32_t memory_clock_coeff;
         uint32_t video_clock_coeff;
-		uint32_t regs[NV_PRAMDAC_SIZE]; // TODO : union
+		uint32_t regs[NV_PRAMDAC_SIZE]; // Not in xqemu/openxbox? TODO : union
     } pramdac;
 
     struct {
@@ -511,9 +526,9 @@ typedef struct NV2AState {
 	struct {
 		uint8_t cr_index;
 		uint8_t cr[256]; /* CRT registers */
-	} prmcio;
+	} prmcio; // Not in xqemu/openxbox?
 
-    std::mutex io_lock;
+    std::mutex io_lock; // TODO ? std::unique_lock<std::mutex>
     //SDL_Window *sdl_window;
 
 } NV2AState;

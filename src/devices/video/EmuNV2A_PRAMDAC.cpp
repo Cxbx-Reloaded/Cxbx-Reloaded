@@ -44,8 +44,7 @@ DEVICE_WRITE32(PRAMDAC)
 
 		if (m == 0) {
 			d->pramdac.core_clock_freq = 0;
-		}
-		else {
+		} else {
 			d->pramdac.core_clock_freq = (NV2A_CRYSTAL_FREQ * n)
 				/ (1 << p) / m;
 		}

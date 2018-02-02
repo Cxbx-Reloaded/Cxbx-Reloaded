@@ -642,6 +642,10 @@ static void nv2a_vblank_thread(NV2AState *d)
 	}
 }
 
+// See NV2ABlockInfo regions[] PRAMIN
+#define NV_PRAMIN_ADDR   0x00700000
+#define NV_PRAMIN_SIZE              0x100000
+
 void CxbxReserveNV2AMemory(NV2AState *d)
 {
 	// Reserve NV2A memory :
@@ -673,7 +677,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 	}
 
 	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), NV_PRAMIN_SIZE / ONE_MB, NV2A_ADDR + NV_PRAMIN_ADDR, NV2A_ADDR + NV_PRAMIN_ADDR + NV_PRAMIN_SIZE - 1);
+		GetCurrentThreadId(), d->pramin.ramin_size / ONE_MB, d->pramin.ramin_ptr, d->pramin.ramin_ptr + d->pramin.ramin_size - 1);
 }
 
 void EmuNV2A_Init()
@@ -682,6 +686,7 @@ void EmuNV2A_Init()
 
 	d->pcrtc.start = 0;
 
+	d->vram_ptr = (uint8_t*)MM_SYSTEM_PHYSICAL_MAP;
 	d->vram_size = (g_bIsChihiro || g_bIsDebug) ? CONTIGUOUS_MEMORY_CHIHIRO_SIZE : CONTIGUOUS_MEMORY_XBOX_SIZE;
 
 	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */

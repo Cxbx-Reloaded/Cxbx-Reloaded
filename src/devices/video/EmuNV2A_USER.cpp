@@ -60,8 +60,7 @@ DEVICE_WRITE32(USER)
 			DEBUG_WRITE32_UNHANDLED(USER);
 			break;
 		}
-	}
-	else {
+	} else {
 		/* PIO Mode */
 		assert(false);
 	}

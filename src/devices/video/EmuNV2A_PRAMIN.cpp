@@ -1,21 +1,13 @@
 DEVICE_READ32(PRAMIN)
 {
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEVICE_READ32_REG(pramin);
-		break;
-	}
+	uint32_t result = *((uint32_t*)(d->pramin.ramin_ptr + addr));
 
 	DEVICE_READ32_END(PRAMIN);
 }
 
 DEVICE_WRITE32(PRAMIN)
 {
-	switch (addr) {
-	default:
-		DEVICE_WRITE32_REG(pramin);
-		break;
-	}
+	*((uint32_t*)(d->pramin.ramin_ptr + addr)) = value;
 
 	DEVICE_WRITE32_END(PRAMIN);
 }

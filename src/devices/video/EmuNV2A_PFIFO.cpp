@@ -36,13 +36,13 @@ DEVICE_READ32(PFIFO)
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_CHID, d->pfifo.cache1.channel_id);
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, d->pfifo.cache1.mode);
 		break;
-	case NV_PFIFO_CACHE1_STATUS: {
+	case NV_PFIFO_CACHE1_STATUS:
 		d->pfifo.cache1.cache_lock.lock();
 		if (d->pfifo.cache1.cache.empty()) {
 			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
 		}
 		d->pfifo.cache1.cache_lock.unlock();
-	}	break;
+		break;
 	case NV_PFIFO_CACHE1_DMA_PUSH:
 		SET_MASK(result, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS,
 			d->pfifo.cache1.dma_push_enabled);
@@ -76,18 +76,18 @@ DEVICE_READ32(PFIFO)
 		result = d->pfifo.cache1.subroutine_return
 			| d->pfifo.cache1.subroutine_active;
 		break;
-	case NV_PFIFO_CACHE1_PULL0: {
+	case NV_PFIFO_CACHE1_PULL0:
 		d->pfifo.cache1.cache_lock.lock();
 		result = d->pfifo.cache1.pull_enabled;
 		d->pfifo.cache1.cache_lock.unlock();
-	} break;
-	case NV_PFIFO_CACHE1_ENGINE: {
+		break;
+	case NV_PFIFO_CACHE1_ENGINE:
 		d->pfifo.cache1.cache_lock.lock();
 		for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 			result |= d->pfifo.cache1.bound_engines[i] << (i * 2);
 		}
 		d->pfifo.cache1.cache_lock.unlock();
-	}	break;
+		break;
 	case NV_PFIFO_CACHE1_DMA_DCOUNT:
 		result = d->pfifo.cache1.dcount;
 		break;
@@ -110,6 +110,8 @@ DEVICE_READ32(PFIFO)
 
 DEVICE_WRITE32(PFIFO)
 {
+    int i;
+
 	switch(addr) {
 		case NV_PFIFO_INTR_0:
 			d->pfifo.pending_interrupts &= ~value;
@@ -128,22 +130,31 @@ DEVICE_WRITE32(PFIFO)
 			assert(d->pfifo.cache1.channel_id < NV2A_NUM_CHANNELS);
 			break;
 		case NV_PFIFO_CACHE1_DMA_PUSH:
-			d->pfifo.cache1.dma_push_enabled = GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS);
-			if (d->pfifo.cache1.dma_push_suspended	&& !GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS)) {
+			d->pfifo.cache1.dma_push_enabled =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS);
+			if (d->pfifo.cache1.dma_push_suspended
+				&& !GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS)) {
 				d->pfifo.cache1.dma_push_suspended = false;
 				pfifo_run_pusher(d);
 			}
-			d->pfifo.cache1.dma_push_suspended = GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS);
+			d->pfifo.cache1.dma_push_suspended =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_PUSH_STATUS);
 			break;
 		case NV_PFIFO_CACHE1_DMA_STATE:
-			d->pfifo.cache1.method_nonincreasing =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE);
-			d->pfifo.cache1.method = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD) << 2;
-			d->pfifo.cache1.subchannel = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_SUBCHANNEL);
-			d->pfifo.cache1.method_count =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT);
-			d->pfifo.cache1.error = GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_ERROR);
+			d->pfifo.cache1.method_nonincreasing =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE);
+			d->pfifo.cache1.method =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD) << 2;
+			d->pfifo.cache1.subchannel =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_SUBCHANNEL);
+			d->pfifo.cache1.method_count =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT);
+			d->pfifo.cache1.error =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_STATE_ERROR);
 			break;
 		case NV_PFIFO_CACHE1_DMA_INSTANCE:
-			d->pfifo.cache1.dma_instance =	GET_MASK(value, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK) << 4;
+			d->pfifo.cache1.dma_instance =
+				GET_MASK(value, NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK) << 4;
 			break;
 		case NV_PFIFO_CACHE1_DMA_PUT:
 			d->user.channel_control[d->pfifo.cache1.channel_id].dma_put = value;
@@ -152,12 +163,13 @@ DEVICE_WRITE32(PFIFO)
 			d->user.channel_control[d->pfifo.cache1.channel_id].dma_get = value;
 			break;
 		case NV_PFIFO_CACHE1_DMA_SUBROUTINE:
-			d->pfifo.cache1.subroutine_return = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_RETURN_OFFSET);
-			d->pfifo.cache1.subroutine_active = (value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
+			d->pfifo.cache1.subroutine_return =
+				(value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_RETURN_OFFSET);
+			d->pfifo.cache1.subroutine_active =
+				(value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
 			break;
-		case NV_PFIFO_CACHE1_PULL0: {
+		case NV_PFIFO_CACHE1_PULL0:
 			d->pfifo.cache1.cache_lock.lock();
-
 			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& !d->pfifo.cache1.pull_enabled) {
 				d->pfifo.cache1.pull_enabled = true;
@@ -169,19 +181,21 @@ DEVICE_WRITE32(PFIFO)
 				d->pfifo.cache1.pull_enabled = false;
 			}
 			d->pfifo.cache1.cache_lock.unlock();
-		}	break;
-		case NV_PFIFO_CACHE1_ENGINE: {
+			break;
+		case NV_PFIFO_CACHE1_ENGINE:
 			d->pfifo.cache1.cache_lock.lock();
-			for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
+			for (i=0; i < NV2A_NUM_SUBCHANNELS; i++) {
 				d->pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
 			}
 			d->pfifo.cache1.cache_lock.unlock();
-		} break;
+			break;
 		case NV_PFIFO_CACHE1_DMA_DCOUNT:
-			d->pfifo.cache1.dcount = (value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
+			d->pfifo.cache1.dcount =
+				(value & NV_PFIFO_CACHE1_DMA_DCOUNT_VALUE);
 			break;
 		case NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW:
-			d->pfifo.cache1.get_jmp_shadow = (value & NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW_OFFSET);
+			d->pfifo.cache1.get_jmp_shadow =
+				(value & NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW_OFFSET);
 			break;
 		case NV_PFIFO_CACHE1_DMA_RSVD_SHADOW:
 			d->pfifo.cache1.rsvd_shadow = value;
@@ -196,6 +210,7 @@ DEVICE_WRITE32(PFIFO)
 
 	DEVICE_WRITE32_END(PFIFO);
 }
+
 
 /* pusher should be fine to run from a mimo handler
 * whenever's it's convenient */
@@ -215,6 +230,7 @@ static void pfifo_run_pusher(NV2AState *d) {
 
 	if (!state->push_enabled) return;
 
+
 	/* only handling DMA for now... */
 
 	/* Channel running DMA */
@@ -230,12 +246,13 @@ static void pfifo_run_pusher(NV2AState *d) {
 
 	dma = (uint8_t*)nv_dma_map(d, state->dma_instance, &dma_len);
 
-	printf("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
+	NV2A_DPRINTF("DMA pusher: max 0x%08X, 0x%08X - 0x%08X\n",
 		dma_len, control->dma_get, control->dma_put);
 
 	/* based on the convenient pseudocode in envytools */
 	while (control->dma_get != control->dma_put) {
 		if (control->dma_get >= dma_len) {
+
 			state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION;
 			break;
 		}
@@ -247,7 +264,7 @@ static void pfifo_run_pusher(NV2AState *d) {
 			/* data word of methods command */
 			state->data_shadow = word;
 
-			command = (CacheEntry*)calloc(1, sizeof(CacheEntry));
+			command = (CacheEntry*)malloc(sizeof(CacheEntry));
 			command->method = state->method;
 			command->subchannel = state->subchannel;
 			command->nonincreasing = state->method_nonincreasing;
@@ -271,15 +288,13 @@ static void pfifo_run_pusher(NV2AState *d) {
 				/* old jump */
 				state->get_jmp_shadow = control->dma_get;
 				control->dma_get = word & 0x1fffffff;
-				printf("pb OLD_JMP 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 3) == 1) {
+				NV2A_DPRINTF("pb OLD_JMP 0x%08X\n", control->dma_get);
+			} else if ((word & 3) == 1) {
 				/* jump */
 				state->get_jmp_shadow = control->dma_get;
 				control->dma_get = word & 0xfffffffc;
-				printf("pb JMP 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 3) == 2) {
+				NV2A_DPRINTF("pb JMP 0x%08X\n", control->dma_get);
+			} else if ((word & 3) == 2) {
 				/* call */
 				if (state->subroutine_active) {
 					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_CALL;
@@ -288,9 +303,8 @@ static void pfifo_run_pusher(NV2AState *d) {
 				state->subroutine_return = control->dma_get;
 				state->subroutine_active = true;
 				control->dma_get = word & 0xfffffffc;
-				printf("pb CALL 0x%08X\n", control->dma_get);
-			}
-			else if (word == 0x00020000) {
+				NV2A_DPRINTF("pb CALL 0x%08X\n", control->dma_get);
+			} else if (word == 0x00020000) {
 				/* return */
 				if (!state->subroutine_active) {
 					state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RETURN;
@@ -298,9 +312,8 @@ static void pfifo_run_pusher(NV2AState *d) {
 				}
 				control->dma_get = state->subroutine_return;
 				state->subroutine_active = false;
-				printf("pb RET 0x%08X\n", control->dma_get);
-			}
-			else if ((word & 0xe0030003) == 0) {
+				NV2A_DPRINTF("pb RET 0x%08X\n", control->dma_get);
+			} else if ((word & 0xe0030003) == 0) {
 				/* increasing methods */
 				state->method = word & 0x1fff;
 				state->subchannel = (word >> 13) & 7;
@@ -315,9 +328,8 @@ static void pfifo_run_pusher(NV2AState *d) {
 				state->method_count = (word >> 18) & 0x7ff;
 				state->method_nonincreasing = true;
 				state->dcount = 0;
-			}
-			else {
-				printf("pb reserved cmd 0x%08X - 0x%08X\n",
+			} else {
+				NV2A_DPRINTF("pb reserved cmd 0x%08X - 0x%08X\n",
 					control->dma_get, word);
 				state->error = NV_PFIFO_CACHE1_DMA_STATE_ERROR_RESERVED_CMD;
 				break;
@@ -325,11 +337,11 @@ static void pfifo_run_pusher(NV2AState *d) {
 		}
 	}
 
-	printf("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
+	NV2A_DPRINTF("DMA pusher done: max 0x%08X, 0x%08X - 0x%08X\n",
 		dma_len, control->dma_get, control->dma_put);
 
 	if (state->error) {
-		printf("pb error: %d\n", state->error);
+		NV2A_DPRINTF("pb error: %d\n", state->error);
 		assert(false);
 
 		state->dma_push_suspended = true;
@@ -344,6 +356,8 @@ int pfifo_puller_thread(NV2AState *d)
 	CxbxSetThreadName("Cxbx NV2A FIFO");
 
 	Cache1State *state = &d->pfifo.cache1;
+
+	// glo_set_current(d->pgraph.gl_context);
 
 	while (true) {
 		state->cache_lock.lock();
@@ -411,7 +425,8 @@ int pfifo_puller_thread(NV2AState *d)
 				switch (engine) {
 				case ENGINE_GRAPHICS:
 					pgraph_wait_fifo_access(d);
-					pgraph_method(d, command->subchannel, command->method, parameter);
+					pgraph_method(d, command->subchannel,
+									command->method, parameter);
 					break;
 				default:
 					assert(false);
@@ -425,17 +440,17 @@ int pfifo_puller_thread(NV2AState *d)
 
 			free(command);
 		}
+
+		d->pgraph.lock.unlock();
 	}
-
-	d->pgraph.lock.unlock();
-
 
 	return 0;
 }
 
 static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 {
-	unsigned int ramht_size = 1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
+	unsigned int ramht_size =
+		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 
 	/* XXX: Think this is different to what nouveau calculates... */
 	unsigned int bits = ffs(ramht_size) - 2;
@@ -452,7 +467,8 @@ static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 
 static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 {
-	unsigned int ramht_size = 1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
+	unsigned int ramht_size =
+		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 
 	uint32_t hash = ramht_hash(d, handle);
 	assert(hash * 8 < ramht_size);
@@ -475,4 +491,3 @@ static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 
 	return entry;
 }
-
