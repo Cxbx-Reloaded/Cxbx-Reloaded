@@ -561,6 +561,8 @@ std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
 static void nv2a_vblank_thread(NV2AState *d)
 {
+	CxbxSetThreadName("Cxbx NV2A VBLANK");
+
 	auto nextVBlankTime = GetNextVBlankTime();
 
 	while (true) {
