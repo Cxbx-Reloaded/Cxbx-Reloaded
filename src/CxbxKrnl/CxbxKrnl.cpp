@@ -64,7 +64,7 @@ namespace xboxkrnl
 #include <sstream> // For std::ostringstream
 
 #include "devices\EEPROMDevice.h" // For g_EEPROM
-#include "devices\video\EmuNV2A.h" // For InitOpenGLContext
+#include "devices\video\nv2a.h" // For InitOpenGLContext
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 

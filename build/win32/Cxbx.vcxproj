@@ -262,7 +262,6 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
-    <ClInclude Include="..\..\src\devices\video\EmuNV2A.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
@@ -628,7 +627,6 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
-    <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
   </ItemGroup>

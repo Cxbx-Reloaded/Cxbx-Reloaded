@@ -229,9 +229,6 @@
     <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -451,9 +448,6 @@
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\EmuNVNet.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\EmuNV2A.h">
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
