@@ -63,6 +63,9 @@ namespace xboxkrnl
 #include <process.h>
 #include <clocale>
 
+// Allow use of time duration literals (making 16ms, etc possible)
+using namespace std::literals::chrono_literals;
+
 // This doesn't work : #include <dxerr8.h> // See DXGetErrorString8A below
 
 // Global(s)
@@ -742,7 +745,8 @@ typedef struct {
 	void* pXboxData = nullptr;
 	size_t szXboxDataSize = 0;
 	uint32_t hash = 0;
-	std::chrono::time_point<std::chrono::high_resolution_clock> lastHashedTime;
+	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
+	std::chrono::milliseconds hashLifeTime = 1ms;
 } host_resource_info_t;
 
 std::map <resource_key_t, host_resource_info_t> g_HostResources;
@@ -819,24 +823,30 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 		return false;
 	}
 
-	// Rehash the resource after a certain amount of milliseconds has passed
-	// We do this because hashing every single use is too expensive
-	// Note: This will have to do until we get proper dirty page support
-	// Currently this is set to roughly 1 hash per frame, but may need adjusting
-	// if wrong textures are seen in game.
+	bool modified = false;
+
 	auto now = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - it->second.lastHashedTime).count();
-	if (duration > 16) {
+	if (now > it->second.nextHashTime) {
 		uint32_t oldHash = it->second.hash;
 		it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
-		it->second.lastHashedTime = now;
 
 		if (it->second.hash != oldHash) {
-			return true;
+			// The data changed, so reset the hash lifetime
+			it->second.hashLifeTime = 1ms;
+			modified = true;
+		} else {
+			// The data did not change, so increase the hash lifetime
+			// TODO: choose a sensible upper limit
+			if (it->second.hashLifeTime < 1000ms) {
+				it->second.hashLifeTime += 10ms;
+			}
 		}
 	}
 
-	return false;
+	// Update the next hash lifetime based on the hash lifetime
+	it->second.nextHashTime = now + it->second.hashLifeTime;
+
+	return modified;
 }
 
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
@@ -853,7 +863,8 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
 	hostResourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
-	hostResourceInfo.lastHashedTime = std::chrono::high_resolution_clock::now();
+	hostResourceInfo.hashLifeTime = 1ms;
+	hostResourceInfo.nextHashTime = std::chrono::high_resolution_clock::now() + hostResourceInfo.hashLifeTime;
 
 	g_HostResources[key] = hostResourceInfo;
 
@@ -1651,8 +1662,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime()
 {
-	using namespace std::literals::chrono_literals;
-
 	// TODO: Read display frequency from Xbox Display Adapter
 	// This is accessed by calling CMiniport::GetRefreshRate(); 
 	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
