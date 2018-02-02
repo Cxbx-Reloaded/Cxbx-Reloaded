@@ -293,7 +293,7 @@ typedef struct GraphicsContext {
 
 
 typedef struct PGRAPHState {
-	std::unique_lock<std::mutex> lock;
+	std::mutex lock; // std::unique_lock<std::mutex>(lock, std::defer_lock);
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -436,7 +436,7 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::unique_lock<std::mutex> cache_lock;
+	std::mutex cache_lock; // std::unique_lock<std::mutex>(cache_lock, std::defer_lock);
 	std::condition_variable cache_cond;
 	std::queue<CacheEntry*> cache;
 	std::queue<CacheEntry*> working_cache;
@@ -528,7 +528,7 @@ typedef struct NV2AState {
 		uint8_t cr[256]; /* CRT registers */
 	} prmcio; // Not in xqemu/openxbox?
 
-    std::mutex io_lock; // TODO ? std::unique_lock<std::mutex>
+	std::mutex io_lock;
     //SDL_Window *sdl_window;
 
 } NV2AState;

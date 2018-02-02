@@ -713,8 +713,10 @@ static void pgraph_method(NV2AState *d,
 				pg->lock.lock();
 				qemu_mutex_unlock_iothread();
 
+				std::unique_lock<std::mutex> _lock(pg->lock); // TODO : Is this correct??
+
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					pg->interrupt_cond.wait(pg->lock);
+					pg->interrupt_cond.wait(_lock);
 				}
 			}
 			break;
@@ -784,7 +786,9 @@ static void pgraph_method(NV2AState *d,
 					!= GET_MASK(s, NV_PGRAPH_SURFACE_WRITE_3D)) {
 					break;
 				}
-				pg->flip_3d.wait(pg->lock);
+				std::unique_lock<std::mutex> _lock(pg->lock); // TODO : Is this correct??
+
+				pg->flip_3d.wait(_lock);
 			}
 			NV2A_DPRINTF("flip stall done\n");
 			break;
@@ -2598,15 +2602,19 @@ static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 		d->pgraph.lock.lock();
 		qemu_mutex_unlock_iothread();
 
+		std::unique_lock<std::mutex> _lock(d->pgraph.lock); // TODO : Is this correct??
+
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			d->pgraph.interrupt_cond.wait(d->pgraph.lock);
+			d->pgraph.interrupt_cond.wait(_lock);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
-	while (!d->pgraph.fifo_access) {	
-		d->pgraph.fifo_access_cond.wait(d->pgraph.lock);
+	std::unique_lock<std::mutex> _lock(d->pgraph.lock); // TODO : Is this correct??
+
+	while (!d->pgraph.fifo_access) {
+		d->pgraph.fifo_access_cond.wait(_lock);
 	}
 }
 

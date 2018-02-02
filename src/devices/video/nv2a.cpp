@@ -704,7 +704,6 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	}
 	}
 
-	// TODO : Log unexpected bar access
 	EmuWarning("NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
 	return 0;
 }
