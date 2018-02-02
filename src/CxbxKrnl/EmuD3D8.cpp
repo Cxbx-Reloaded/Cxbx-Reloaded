@@ -843,7 +843,7 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 		}
 	}
 
-	// Update the next hash lifetime based on the hash lifetime
+	// Update the next hash time based on the hash lifetime
 	it->second.nextHashTime = now + it->second.hashLifeTime;
 
 	return modified;
@@ -3334,6 +3334,56 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 		
 	RETURN(result);
 }
+
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette)
+(
+	X_D3DPALETTESIZE    Size,
+	X_D3DPalette      **ppPalette
+	)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_CreatePalette2");
+
+	*ppPalette = EMUPATCH(D3DDevice_CreatePalette2)(Size);
+
+	return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette2
+// ******************************************************************
+XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
+(
+	X_D3DPALETTESIZE    Size
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Size);
+
+	X_D3DPalette *pPalette = EmuNewD3DPalette();
+
+	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+	pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size), 0, (~((::ULONG_PTR)0)), PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
+	pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
+
+												 // TODO: Should't we register the palette with a call to
+												 // EmuIDirect3DResource8_Register? So far, it doesn't look
+												 // like the palette registration code gets used.  If not, then we
+												 // need to cache the palette manually during any calls to
+												 // EmuD3DDevice_SetPalette for 8-bit textures to work properly.
+
+	DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
+
+
+
+	return pPalette;
+}
+
 
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexShader
@@ -7399,6 +7449,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
     LOG_UNIMPLEMENTED(); 
 }
 
+// Maps pFunction defintions to pre-compiled shaders
+// to reduce the speed impact of LoadVertexShaderProgram
+typedef uint64_t load_shader_program_key_t;
+std::map<load_shader_program_key_t, DWORD> g_LoadVertexShaderProgramCache;
+
 // ******************************************************************
 // * patch: D3DDevice_LoadVertexShaderProgram
 // ******************************************************************
@@ -7415,36 +7470,42 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	// NOTE: Azurik needs this to work, but this implementation makes
-	// Sonic Heroes (E3 Demo) run slower and look a bit worse.  An investigation
-	// may be necessary...
-#if 1
-	DWORD Handle = g_CurrentVertexShader;
-	
-	// TODO: Cache vertex shaders?  Azurik overwrites the same vertex shader
-	// slot over and over again with many different vertex shaders per frame...
-	if( VshHandleIsVertexShader(Handle) )
+	DWORD hCurrentShader = g_CurrentVertexShader;
+
+
+	load_shader_program_key_t shaderCacheKey = (hCurrentShader << 32) | (DWORD)pFunction;
+
+	// If the shader key was located in the cache, use the cached shader
+	// TODO: When do we clear the cache? In this approach, shaders are
+	// never freed...
+	auto it = g_LoadVertexShaderProgramCache.find(shaderCacheKey);
+	if (it != g_LoadVertexShaderProgramCache.end()) {
+		EMUPATCH(D3DDevice_LoadVertexShader)(it->second, Address);
+		EMUPATCH(D3DDevice_SelectVertexShader)(it->second, Address);
+		return;
+	}
+
+	if( VshHandleIsVertexShader(hCurrentShader) )
     {
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+		DWORD hNewShader = 0;
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(hCurrentShader & 0x7FFFFFFF);
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
 
 		// Save the contents of the existing vertex shader program
 		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->DeclarationSize );
 		memmove( pDeclaration, pVertexShader->pDeclaration, pVertexShader->DeclarationSize );
-		
-		// Delete the vertex shader
-		EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
 
-		// Re-create the vertex shader with the new code
-		HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &Handle, 0 );
+		// Create a new vertex shader with the new 
+		HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &hNewShader, 0 );
 		free(pDeclaration);
 		if( FAILED( hr ) )
-			CxbxKrnlCleanup( "Error re-creating vertex shader!" );
+			CxbxKrnlCleanup( "Error creating new vertex shader!" );
 
-		EMUPATCH(D3DDevice_LoadVertexShader)(Handle, Address);
-		EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
+		EMUPATCH(D3DDevice_LoadVertexShader)(hNewShader, Address);
+		EMUPATCH(D3DDevice_SelectVertexShader)(hNewShader, Address);
+
+		g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewShader;
     }
-#endif   
 }
 
 // ******************************************************************
