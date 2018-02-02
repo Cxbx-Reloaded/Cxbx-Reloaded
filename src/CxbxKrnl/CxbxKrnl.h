@@ -63,60 +63,84 @@ extern "C" {
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 
-// Define virtual base and alternate virtual base of kernel.
-#define KSEG0_BASE                  0x80000000
-
-// Define virtual base addresses for physical memory windows.
-#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE // = 0x80000000
-#define KERNEL_SIZE sizeof(DUMMY_KERNEL)
-#define MM_XBOX_HIGHEST_PHYSICAL_PAGE	0x03FFF
-#define MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE    0x07FFF
-#define MM_64M_PHYSICAL_PAGE        0x04000
-#define MM_XBOX_INSTANCE_PHYSICAL_PAGE   0x03FE0
-#define MM_CHIHIRO_INSTANCE_PHYSICAL_PAGE   0x07FF0
-#define MM_INSTANCE_PAGE_COUNT      16
-#define CONTIGUOUS_MEMORY_BASE MM_SYSTEM_PHYSICAL_MAP // = 0x80000000
-#define CONTIGUOUS_MEMORY_XBOX_SIZE (64 * ONE_MB)
-#define CONTIGUOUS_MEMORY_CHIHIRO_SIZE (128 * ONE_MB)
-#define TILED_MEMORY_BASE 0xF0000000 // Tiled memory is a mirror of contiguous memory, residing at 0xF0000000
-#define TILED_MEMORY_XBOX_SIZE CONTIGUOUS_MEMORY_XBOX_SIZE
-#define TILED_MEMORY_CHIHIRO_SIZE CONTIGUOUS_MEMORY_CHIHIRO_SIZE
-#define NV2A_MEMORY_BASE 0xFD000000 // See NV2A_ADDR
-#define NV2A_MEMORY_SIZE 0x01000000 // See NV2A_SIZE
-#define NV2A_PRAMIN_ADDR 0xFD700000
-#define NV2A_PRAMIN_SIZE 0x100000
-#define NV2A_USER_ADDR 0xFD800000
-#define NV2A_USER_SIZE 0x800000
-#define APU_BASE 0xFE800000
-#define APU_SIZE 0x80000
-#define AC97_BASE 0xFEC00000
-#define AC97_SIZE 0x1000
-#define USB0_BASE 0xFED00000
-#define USB0_SIZE 0x1000
-#define USB1_BASE 0xFED08000
-#define USB1_SIZE 0x1000
-#define NVNet_BASE 0xFEF00000
-#define NVNet_SIZE 0x400
-#define BIOS_BASE 0xFF000000
-#define BIOS_XBOX_SIZE 0xFFFE00
-#define BIOS_CHIHIRO_SIZE 0x1000000
-#define MCPX_BASE 0xFFFFFE00
-#define MCPX_SIZE 0x200
-#define MAX_VIRTUAL_ADDRESS 0xFFFFFFFF
+// Miscellaneous memory variables
+#define KERNEL_STACK_SIZE 12288 // 0x03000, needed by PsCreateSystemThreadEx, however the current implementation doesn't use it
+#define KERNEL_SIZE                 sizeof(DUMMY_KERNEL)
+#define PAGE_SHIFT                  12
+// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size. Large pages are 4 MiB instead
+// NOTE: PAGE_SIZE is also defined in xfile.h (oxdk) and linux_wrapper.h (oxdk)
+#define PAGE_SIZE                   (1 << PAGE_SHIFT)
+#define PAGE_SIZE_LARGE             0x400000
+#define PAGE_MASK                   (PAGE_SIZE - 1)
+#define MAX_NUM_OF_PAGES            1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
+#define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to WC and UC regions of NV2A
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
 #define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
 #define XBE_IMAGE_BASE 0x00010000
 
+// Define virtual base and alternate virtual base of kernel.
+#define KSEG0_BASE                  0x80000000
+
+// Define virtual base addresses used by the system.
+#define SYSTEM_PHYSICAL_MAP                     KSEG0_BASE // = 0x80000000
+#define KERNEL_PHYSICAL_ADDRESS                 XBE_IMAGE_BASE // = 0x10000
+#define XBOX_HIGHEST_PHYSICAL_PAGE	            0x03FFF
+#define CHIHIRO_HIGHEST_PHYSICAL_PAGE           0x07FFF
+#define X64M_PHYSICAL_PAGE                      0x04000
+#define XBOX_INSTANCE_PHYSICAL_PAGE             0x03FE0
+#define CHIHIRO_INSTANCE_PHYSICAL_PAGE          0x07FF0
+#define XBOX_PFN_DATABASE_PHYSICAL_PAGE         0x03FF0
+#define CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE      0x07FD0
+#define PAGE_DIRECTORY_PHYSICAL_ADDRESS         0x0F000
+#define INSTANCE_PAGE_COUNT                     16
+// upper limit available for contiguous allocations (xbox)
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT            XBOX_MEMORY_SIZE - 32 * PAGE_SIZE
+// upper limit available for contiguous allocations (chihiro)
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT         CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE
+#define ZERO_PAGE_ADDR                          0
+#define FIRST_PAGE_ADDR                         PAGE_SIZE
+#define CONTIGUOUS_MEMORY_BASE                  SYSTEM_PHYSICAL_MAP // = 0x80000000
+#define CONTIGUOUS_MEMORY_XBOX_SIZE             (64 * ONE_MB)
+#define CONTIGUOUS_MEMORY_CHIHIRO_SIZE          (128 * ONE_MB)
+// Tiled memory is a mirror of contiguous memory, residing at 0xF0000000
+#define TILED_MEMORY_BASE                       0xF0000000
+#define TILED_MEMORY_XBOX_SIZE                  CONTIGUOUS_MEMORY_XBOX_SIZE
+#define TILED_MEMORY_CHIHIRO_SIZE               CONTIGUOUS_MEMORY_CHIHIRO_SIZE
+#define NV2A_MEMORY_BASE                        0xFD000000 // See NV2A_ADDR
+#define NV2A_MEMORY_SIZE                        0x01000000 // See NV2A_SIZE
+#define NV2A_PRAMIN_ADDR                        0xFD700000
+#define NV2A_PRAMIN_SIZE                        0x100000
+#define NV2A_USER_ADDR                          0xFD800000
+#define NV2A_USER_SIZE                          0x800000
+#define APU_BASE                                0xFE800000
+#define APU_SIZE                                0x80000
+#define AC97_BASE                               0xFEC00000
+#define AC97_SIZE                               0x1000
+#define USB0_BASE                               0xFED00000
+#define USB0_SIZE                               0x1000
+#define USB1_BASE                               0xFED08000
+#define USB1_SIZE                               0x1000
+#define NVNet_BASE                              0xFEF00000
+#define NVNet_SIZE                              0x400
+#define BIOS_BASE                               0xFF000000
+#define BIOS_XBOX_SIZE                          0xFFFE00
+#define BIOS_CHIHIRO_SIZE                       0x1000000
+#define MCPX_BASE                               0xFFFFFE00
+#define MCPX_SIZE                               0x200
+#define MAX_VIRTUAL_ADDRESS                     0xFFFFFFFF
+
 /*! base addresses of various components */
-#define XBOX_KERNEL_BASE (MM_SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
+#define XBOX_KERNEL_BASE (SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
 
-#define XBOX_WRITE_COMBINED_BASE 0xF0000000
+#define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
 #define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
+#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE - 1
 
-#define XBOX_UNCACHED_BASE       0xF8000000
-#define XBOX_UNCACHED_SIZE       0x07F00000 // - 0xFFEFFFFF
+#define XBOX_UNCACHED_BASE       0xF8000000 // UC
+#define XBOX_UNCACHED_SIZE       0x07C00000 // - 0xFFBFFFFF
+#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE - 1
 
 #define XBOX_NV2A_INIT_VECTOR    0xFF000008
 
@@ -125,6 +149,12 @@ extern "C" {
 
 #define HIGHEST_USER_ADDRESS     0x7FFEFFFF
 #define HIGHEST_VAD_ADDRESS      HIGHEST_USER_ADDRESS - X64KB // for NtAllocateVirtualMemory
+
+#define PAGE_TABLES_BASE         0xC0000000
+#define PAGE_TABLES_END          0xC03FFFFF
+
+#define PDE_BASE                 0xC0300000
+#define PTE_BASE                 0xC0000000
 
 
 // For now, virtual addresses are somewhat limited, as we use

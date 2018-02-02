@@ -122,10 +122,8 @@ class VMManager : public PhysicalMemory
 			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
 			CloseHandle(m_hAliasedView);
 		}
-		// initializes the page table to the default configuration
+		// initializes the memory manager to the default configuration
 		void Initialize(HANDLE file_view);
-		// initialize chihiro/debug - specifc memory ranges
-		void InitializeChihiroDebug();
 		// maps the virtual memory region used by a device
 		void MapHardwareDevice(VAddr base, size_t size, VMAType vma_type);
 		// retrieves memory statistics

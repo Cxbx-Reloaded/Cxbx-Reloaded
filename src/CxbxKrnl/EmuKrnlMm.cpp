@@ -184,16 +184,16 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
 	LOG_FUNC_END;
 
-	unsigned int highest_physical_page = MM_XBOX_HIGHEST_PHYSICAL_PAGE;
-	unsigned int instance_physical_page = MM_XBOX_INSTANCE_PHYSICAL_PAGE;
+	unsigned int highest_physical_page = XBOX_HIGHEST_PHYSICAL_PAGE;
+	unsigned int instance_physical_page = XBOX_INSTANCE_PHYSICAL_PAGE;
 	if (g_bIsChihiro || g_bIsDebug)
 	{
 		*NumberOfPaddingBytes = 0;
-		highest_physical_page = MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE;
+		highest_physical_page = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 	}
 	else
-		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
-		MI_CONVERT_PFN_TO_PHYSICAL(instance_physical_page + MM_INSTANCE_PAGE_COUNT);
+		*NumberOfPaddingBytes = CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(X64M_PHYSICAL_PAGE) -
+		CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(instance_physical_page + INSTANCE_PAGE_COUNT);
 
 	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
 
@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	}
 #endif
 
-	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(highest_physical_page + 1)
+	PVOID Result = (PUCHAR)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(highest_physical_page + 1)
 		- *NumberOfPaddingBytes;
 
 	RETURN(Result);

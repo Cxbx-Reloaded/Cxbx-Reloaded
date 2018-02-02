@@ -98,6 +98,7 @@ Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
+bool g_IsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
@@ -280,7 +281,7 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 	return result;
 }
 
-void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
+HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 {
 	// First, try to open an existing memory.bin file :
 	HANDLE hFile = CreateFile(szFilePath_memory_bin,
@@ -392,10 +393,7 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
 
-	// Initialize the virtual manager :
-	g_VMManager.Initialize(hFileMapping);
-
-	return memory;
+	return hFileMapping;
 }
 
 #pragma optimize("", off)
@@ -699,7 +697,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	// This is wrong: the VMManager is still not initialized here. Persistent memory should be restored by the 
+	// memory manager instead during start up, like the xbox does
 	CxbxRestorePersistentMemoryRegions();
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
@@ -727,15 +727,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-		// Register if we're running an Chihiro executable or a debug xbe (otherwise it's an Xbox retail executable)
+		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 		g_bIsDebug = (g_XbeType == xtDebug);
+		g_IsRetail = (g_XbeType == xtRetail);
 
-		if (g_bIsChihiro || g_bIsDebug)
-		{
-			// Initialize the Chihiro/Debug - specific memory ranges
-			g_VMManager.InitializeChihiroDebug();
-		}
+		// Initialize the virtual manager
+		g_VMManager.Initialize(hMemoryBin);
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));

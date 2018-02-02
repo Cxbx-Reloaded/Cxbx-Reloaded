@@ -60,6 +60,8 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
+#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
+
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
