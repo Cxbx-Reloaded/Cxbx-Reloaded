@@ -64,9 +64,9 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 
 /* SMCDevice */
 
-SMCDevice::SMCDevice(HardwareModel hardwareModel)
+SMCDevice::SMCDevice(SCMRevision revision)
 {
-	m_HardwareModel = hardwareModel;
+	m_revision = revision;
 }
 
 void SMCDevice::Init()
@@ -97,30 +97,31 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
 		// See http://xboxdevwiki.net/PIC#PIC_version_string
-		switch (m_HardwareModel) {
-		case Revision1_0: buffer[0] = "P01"[m_PICVersionStringIndex]; break;
-		case Revision1_1: buffer[0] = "P05"[m_PICVersionStringIndex]; break;
-		case DebugKit: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
-		// default: UNREACHABLE(hardwareModel);
+		switch (m_revision) {
+		case SCMRevision::P01: buffer[0] = "P01"[m_PICVersionStringIndex]; break;
+		case SCMRevision::P2L: buffer[0] = "P05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::D01: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
+		case SCMRevision::D05: buffer[0] = "D05"[m_PICVersionStringIndex]; break; // ??
+		// default: UNREACHABLE(m_revision);
 		}
 
 		m_PICVersionStringIndex = (m_PICVersionStringIndex + 1) % 3;
 		break;
-	//0x03	tray state
-	//#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-	//0x09	CPU temperature(°C)
-	//0x0A	board temperature(°C)
+	//case 0x03: // tray state
+	//case SMC_COMMAND_AV_PACK: // 0x04	// A / V Pack state
+	//case SMC_COMMAND_CPU_TEMP: // 0x09 // CPU temperature (°C)
+	//case SMC_COMMAND_GPU_TEMP: // 0x0A // GPU (board?) temperature (°C)
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
-	//0x10	current fan speed(0~50)
-	//0x11	interrupt reason
-	//0x18	reading this reg locks up xbox in "overheated" state
-	//#define SMC_COMMAND_SCRATCH 0x1B	// scratch register for the original kernel
+	//case SMC_COMMAND_POWER_FAN_READBACK: // 0x10 // Current power fan speed (0-50)
+	//case 0x11: // interrupt reason
+	//case 0x18: // reading this reg locks up xbox in "overheated" state
+	//case SMC_COMMAND_SCRATCH: // 0x1B	// scratch register for the original kernel
 	case SMC_COMMAND_CHALLENGE_1C: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1D: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1E: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1F: // random number for boot challenge
-		if (m_HardwareModel == DebugKit)
+		if (m_revision == SCMRevision::D01)
 			// See http://xboxdevwiki.net/PIC#PIC_Challenge_.28regs_0x1C.7E0x21.29
 			return 0;
 
@@ -160,8 +161,8 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		case SMC_RESET_ASSERT_POWERCYCLE: return; // TODO
 		case SMC_RESET_ASSERT_SHUTDOWN: CxbxKrnlShutDown(); return; // Power off, terminating the emulation
 		}
-	//0x05	power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
-	//0x06	power fan speed(0..~50)
+	//case SMC_COMMAND_POWER_FAN_MODE: // 0x05 // power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
+	//case SMC_COMMAND_POWER_FAN_REGISTER: // 0x06 // Set custom power fan speed (0-50)
 	case SMC_COMMAND_LED_MODE: // 0x07 LED mode(0 = automatic; 1 = custom sequence from reg 0x08)
 		switch (value) {
 		case 0: SetLEDSequence(LED::GREEN); return; // Automatic LED management: we set it to solid green
@@ -182,10 +183,10 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// STATUS_IO_DEVICE_ERROR, however WriteWord is not accessible from here
 		// The LED flashing sequence is stored in the buffer of the SMCDevice class, so there's nothing to do here
 		break;
-	//0x0C	tray eject(0 = eject; 1 = load)
-	//0x0E	another scratch register ? seems like an error code.
-	//0x19	reset on eject(0 = enable; 1 = disable)
-	//0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
+	//case 0x0C: // tray eject(0 = eject; 1 = load)
+	//case 0x0E: // another scratch register ? seems like an error code.
+	//case 0x19: // reset on eject(0 = enable; 1 = disable)
+	//case 0x1A: // interrupt enable(write 0x01 to enable; can't disable once enabled)
 	case SMC_COMMAND_SCRATCH: //0x1B	scratch register for the original kernel
 		// See http://xboxdevwiki.net/PIC#Scratch_register_values
 		switch (value) {
@@ -201,8 +202,9 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		case SMC_SCRATCH_SHORT_ANIMATION: return; // TODO
 		case SMC_SCRATCH_DASHBOARD_BOOT: return;  // TODO
 		}
-	//0x20	response to PIC challenge(written first)
-	//0x21	response to PIC challenge(written second)
+		break;
+	//case 0x20: // response to PIC challenge(written first)
+	//case 0x21: // response to PIC challenge(written second)
 	}
 
 	buffer[command] = value;

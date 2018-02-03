@@ -47,7 +47,7 @@ void PCIBus::IOWriteConfigData(uint32_t pData) {
 bool PCIBus::IORead(uint32_t addr, uint32_t* data, unsigned size)
 {
 	switch (addr) {
-	case PORT_PCI_CONFIG_DATA:
+	case PORT_PCI_CONFIG_DATA: // 0xCFC
 		if (size == sizeof(uint32_t)) {
 			*data = IOReadConfigData();
 			return true;
@@ -69,13 +69,13 @@ bool PCIBus::IORead(uint32_t addr, uint32_t* data, unsigned size)
 bool PCIBus::IOWrite(uint32_t addr, uint32_t value, unsigned size)
 {
 	switch (addr) {
-	case PORT_PCI_CONFIG_ADDRESS:
+	case PORT_PCI_CONFIG_ADDRESS: // 0xCF8
 		if (size == sizeof(uint32_t)) {
 			IOWriteConfigAddress(value);
 			return true;
 		} // TODO : else log wrong size-access?
 		break;
-	case PORT_PCI_CONFIG_DATA:
+	case PORT_PCI_CONFIG_DATA: // 0xCFC
 		if (size == sizeof(uint32_t)) {
 			IOWriteConfigData(value);
 			return true; // TODO : Should IOWriteConfigData() success/failure be returned?

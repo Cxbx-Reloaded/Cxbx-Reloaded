@@ -1249,8 +1249,6 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 			// Bail out if the buffer gets too big
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
-			
-			ntFileInfo = malloc(bufferSize);
 		}
 	} while (ret == STATUS_BUFFER_OVERFLOW);
 	

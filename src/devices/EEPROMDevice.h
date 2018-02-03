@@ -37,8 +37,6 @@
 
 #include "SMDevice.h"
 
-#define SMBUS_EEPROM_ADDRESS 0xA8 // = Write; Read = 0xA9
-
 class EEPROMDevice : public SMDevice {
 public:
 	// SMDevice functions
@@ -61,5 +59,3 @@ public:
 private:
 	uint8_t* m_pEEPROM;
 };
-
-extern EEPROMDevice* g_EEPROM;

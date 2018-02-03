@@ -48,5 +48,3 @@ public:
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 };
-
-extern NVNetDevice* g_NVNet;
