@@ -234,7 +234,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp">
       <Filter>Shared</Filter>
-    </ClInclude>
+    </ClCompile>
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
