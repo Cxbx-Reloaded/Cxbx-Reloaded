@@ -455,7 +455,7 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
       <Filter>Hardware</Filter>
-    </ClCompile>
+    </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
       <Filter>Shared</Filter>
     </ClInclude>
