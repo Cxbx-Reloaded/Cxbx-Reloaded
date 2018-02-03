@@ -411,9 +411,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\PCIDevice.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
