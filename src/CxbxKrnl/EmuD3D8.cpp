@@ -3776,6 +3776,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 	auto it = g_HostPixelShaderCache.find(Handle);
 	if (it != g_HostPixelShaderCache.end()) {
 		hostShaderHandle = it->second;
+		g_HostPixelShaderCache.erase(it);
 	}
 
     if(hostShaderHandle == X_PIXELSHADER_FAKE_HANDLE)
@@ -3800,8 +3801,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 
 		g_VMManager.Deallocate((VAddr)pPixelShader);
 	}*/
-
-	g_HostPixelShaderCache.erase(it);
 }
 
 // ******************************************************************
@@ -3821,17 +3820,25 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet = E_FAIL;
+	bool noXboxCreate = false;
 
 	// Call the Xbox version of CreatePixelShader, this gives us a handle we can safely return to Xbox code
 	// and properly sets up the internal shader structure, pointed to by the handle
 	typedef HRESULT(__stdcall *XB_D3DDevice_CreateTexture_t)(X_D3DPIXELSHADERDEF*, DWORD*);
-	static XB_D3DDevice_CreateTexture_t XB_D3DDevice_CreatePixelShader = (XB_D3DDevice_CreateTexture_t)GetXboxFunctionPointer("D3DDevice_CreatePixelShader");
-	hRet = XB_D3DDevice_CreatePixelShader(pPSDef, pHandle);
 
-	// If the pixel shader function succeeded, continue, else, return
-	if (FAILED(hRet)) {
-		EmuWarning("XB_D3DDevice_CreatePixelShader Failed");
-		RETURN(hRet);
+	static XB_D3DDevice_CreateTexture_t XB_D3DDevice_CreatePixelShader = (XB_D3DDevice_CreateTexture_t)GetXboxFunctionPointer("D3DDevice_CreatePixelShader");
+	if (XB_D3DDevice_CreatePixelShader) {
+		hRet = XB_D3DDevice_CreatePixelShader(pPSDef, pHandle);
+
+		// If the pixel shader function succeeded, continue, else, return
+		if (FAILED(hRet)) {
+			EmuWarning("XB_D3DDevice_CreatePixelShader Failed");
+			RETURN(hRet);
+		}
+	} else {
+		// We couldn't find the Xbox CreatePixelShader function
+		// This may happen if this function is called by SetPixelShaderProgram
+		noXboxCreate = true;
 	}
 
 	DWORD hostShaderHandle = 0;
@@ -3919,6 +3926,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
     {
         DbgPrintf("pHandle = 0x%.08X (0x%.08X)\n", pHandle, *pHandle);
     }
+
+	// If the Xbox CreatePixelShader could not be found, set the handle
+	// has the host handle
+	if (noXboxCreate) {
+		*pHandle = hostShaderHandle;
+	} 
 
 	g_HostPixelShaderCache[*pHandle] = hostShaderHandle;
 
