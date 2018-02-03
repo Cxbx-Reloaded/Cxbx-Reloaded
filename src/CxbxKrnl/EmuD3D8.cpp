@@ -3749,6 +3749,11 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
 }
 
+// Cache pixel shaders, the main reason for this is so that
+// CreatePixelShader can return a good Xbox handle rather than 
+// a host handle
+std::map<DWORD, DWORD> g_HostPixelShaderCache;
+
 // ******************************************************************
 // * patch: D3DDevice_DeletePixelShader
 // ******************************************************************
@@ -3758,16 +3763,28 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 )
 {
 	FUNC_EXPORTS
-
 	LOG_FUNC_ONE_ARG(Handle);
 
-    if(Handle == X_PIXELSHADER_FAKE_HANDLE)
+	// Forward to the Xbox version of DeletePixelShader, to free the xbox resource correctly
+	typedef HRESULT(__stdcall *XB_D3DDevice_DeletePixelShader_t)(DWORD);
+	static XB_D3DDevice_DeletePixelShader_t XB_D3DDevice_DeletePixelShader = (XB_D3DDevice_DeletePixelShader_t)GetXboxFunctionPointer("D3DDevice_DeletePixelShader");
+	XB_D3DDevice_DeletePixelShader(Handle);
+
+	DWORD hostShaderHandle = 0;
+
+	// Fetch the host handle
+	auto it = g_HostPixelShaderCache.find(Handle);
+	if (it != g_HostPixelShaderCache.end()) {
+		hostShaderHandle = it->second;
+	}
+
+    if(hostShaderHandle == X_PIXELSHADER_FAKE_HANDLE)
     {
         // Do Nothing!
     }
     else
     {
-        HRESULT hRet = g_pD3DDevice8->DeletePixelShader(Handle);
+        HRESULT hRet = g_pD3DDevice8->DeletePixelShader(hostShaderHandle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeletePixelShader");
 	}
 
@@ -3783,6 +3800,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 
 		g_VMManager.Deallocate((VAddr)pPixelShader);
 	}*/
+
+	g_HostPixelShaderCache.erase(it);
 }
 
 // ******************************************************************
@@ -3803,16 +3822,29 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 	HRESULT hRet = E_FAIL;
 
+	// Call the Xbox version of CreatePixelShader, this gives us a handle we can safely return to Xbox code
+	// and properly sets up the internal shader structure, pointed to by the handle
+	typedef HRESULT(__stdcall *XB_D3DDevice_CreateTexture_t)(X_D3DPIXELSHADERDEF*, DWORD*);
+	static XB_D3DDevice_CreateTexture_t XB_D3DDevice_CreatePixelShader = (XB_D3DDevice_CreateTexture_t)GetXboxFunctionPointer("D3DDevice_CreatePixelShader");
+	hRet = XB_D3DDevice_CreatePixelShader(pPSDef, pHandle);
+
+	// If the pixel shader function succeeded, continue, else, return
+	if (FAILED(hRet)) {
+		EmuWarning("XB_D3DDevice_CreatePixelShader Failed");
+		RETURN(hRet);
+	}
+
+	DWORD hostShaderHandle = 0;
+
 	// If PixelShader Disable Hack is enabled, return a dummy handle
 	if (g_DisablePixelShaders) {
-		*pHandle = X_PIXELSHADER_FAKE_HANDLE;
+		g_HostPixelShaderCache[*pHandle] = X_PIXELSHADER_FAKE_HANDLE;
 		RETURN(D3D_OK);
 	}
 
 #if 0 // PatrickvL Dxbx pixel shader translation
-
 	// Attempt to recompile PixelShader
-	hRet = DxbxUpdateActivePixelShader(pPSDef, pHandle);
+	hRet = DxbxUpdateActivePixelShader(pPSDef, hostShaderHandle);
 	// redirect to windows d3d
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
 #endif
@@ -3831,7 +3863,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		hRet = g_pD3DDevice8->CreatePixelShader
 		(
 			pFunction,
-			pHandle
+			&hostShaderHandle
 			/*&Handle*/
 		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
@@ -3875,7 +3907,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
     if(FAILED(hRet))
     {
-        *pHandle = X_PIXELSHADER_FAKE_HANDLE;
+        hostShaderHandle = X_PIXELSHADER_FAKE_HANDLE;
 
 		// This is called too frequently as Azurik creates and destroys a
 		// pixel shader every frame, and makes debugging harder.
@@ -3888,9 +3920,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
         DbgPrintf("pHandle = 0x%.08X (0x%.08X)\n", pHandle, *pHandle);
     }
 
-    
+	g_HostPixelShaderCache[*pHandle] = hostShaderHandle;
 
-    return hRet;
+	RETURN(hRet);
 }
 
 // ******************************************************************
@@ -3908,8 +3940,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
     // Redirect to Windows D3D
     HRESULT hRet = D3D_OK;
 
+	DWORD hostShaderHandle = 0;
+
+	// Fetch the host handle
+	auto it = g_HostPixelShaderCache.find(Handle);
+	if (it != g_HostPixelShaderCache.end()) {
+		hostShaderHandle = it->second;
+	}
+
     // Fake Programmable Pipeline
-    if(Handle == X_PIXELSHADER_FAKE_HANDLE)
+    if(hostShaderHandle == X_PIXELSHADER_FAKE_HANDLE)
     {
         // programmable pipeline
         //*
@@ -3946,12 +3986,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
         g_bFakePixelShaderLoaded = TRUE;
     }
     // Fixed Pipeline, or Recompiled Programmable Pipeline
-    else if(Handle != NULL)
+    else if(hostShaderHandle != NULL)
     {
         EmuWarning("Trying fixed or recompiled programmable pipeline pixel shader!");
         g_bFakePixelShaderLoaded = FALSE;
-		g_dwCurrentPixelShader = Handle;
-        hRet = g_pD3DDevice8->SetPixelShader(g_iWireframe == 0 ? Handle : 0);
+		g_dwCurrentPixelShader = hostShaderHandle;
+        hRet = g_pD3DDevice8->SetPixelShader(g_iWireframe == 0 ? hostShaderHandle : 0);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetPixelShader(fixed)");
 	}
 
@@ -7799,29 +7839,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderProgram)
 
 	LOG_FUNC_ONE_ARG(pPSDef);
 
-	HRESULT hRet = E_FAIL;
-	DWORD dwHandle;
-
-	// Redirect this call to windows Direct3D
-	hRet = g_pD3DDevice8->CreatePixelShader
-    (
-        (DWORD*) pPSDef,
-        &dwHandle
-    );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
-
-    if(FAILED(hRet))
-    {
-        dwHandle = X_PIXELSHADER_FAKE_HANDLE;
-
-        EmuWarning("We're lying about the creation of a pixel shader!");
-    }
-
-	// Now, redirect this to Xbox Direct3D 
-	//
-	//EMUPATCH(D3DDevice_CreatePixelShader)(pPSDef, &dwHandle);
-	//hRet = EMUPATCH(D3DDevice_SetPixelShader)( dwHandle );
-	//
+	// This is not strictly correct, but close enough
+	// On real hardware, SetPixelShaderProgram is identical to
+	// SetPixelShader, but it doesn't require a Handle
+	DWORD dwHandle = 0;
+	EMUPATCH(D3DDevice_CreatePixelShader)(pPSDef, &dwHandle);
+	EMUPATCH(D3DDevice_SetPixelShader)( dwHandle );
 }
 
 // ******************************************************************
