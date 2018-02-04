@@ -617,8 +617,15 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 
 NV2ADevice::NV2ADevice()
 {
-	m_nv2a_state.pfifo.cache1.cache_lock = std::unique_lock<std::mutex>(m_nv2a_state.pfifo.cache1._cache_lock, std::defer_lock);
-	m_nv2a_state.pgraph.lock = std::unique_lock<std::mutex>(m_nv2a_state.pgraph._lock, std::defer_lock);
+	m_nv2a_state = new NV2AState();
+
+	m_nv2a_state->pfifo.cache1.cache_lock = std::unique_lock<std::mutex>(m_nv2a_state->pfifo.cache1._cache_lock, std::defer_lock);
+	m_nv2a_state->pgraph.lock = std::unique_lock<std::mutex>(m_nv2a_state->pgraph._lock, std::defer_lock);
+}
+
+NV2ADevice::~NV2ADevice()
+{
+	delete m_nv2a_state;
 }
 
 // PCI Device functions
@@ -647,7 +654,7 @@ void NV2ADevice::Init()
 	m_DeviceId = 0x02A5;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
-	NV2AState *d = &m_nv2a_state; // glue
+	NV2AState *d = m_nv2a_state; // glue
 
 	CxbxReserveNV2AMemory(d);
 
@@ -693,15 +700,15 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 		if (block != nullptr) {
 			switch (size) {
 			case sizeof(uint8_t) :
-				return block->ops.read(&m_nv2a_state, addr - block->offset) & 0xFF;
+				return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFF;
 			case sizeof(uint16_t) :
 				assert((addr & 1) == 0); // TODO : What if this fails?	
 
-				return block->ops.read(&m_nv2a_state, addr - block->offset) & 0xFFFF;
+				return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFFFF;
 			case sizeof(uint32_t) :
 				assert((addr & 3) == 0); // TODO : What if this fails?	
 
-				return block->ops.read(&m_nv2a_state, addr - block->offset);
+				return block->ops.read(m_nv2a_state, addr - block->offset);
 			}
 		}
 		break;
@@ -732,24 +739,24 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 			switch (size) {
 			case sizeof(uint8_t) :
 				aligned_addr = addr & ~3;
-				aligned_value = block->ops.read(&m_nv2a_state, aligned_addr - block->offset);
+				aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
 				shift = (addr & 3) * 8;
 				mask = 0xFF << shift;
-				block->ops.write(&m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
 			case sizeof(uint16_t) :
 				assert((addr & 1) == 0); // TODO : What if this fails?				
 
 				aligned_addr = addr & ~3;
-				aligned_value = block->ops.read(&m_nv2a_state, aligned_addr - block->offset);
+				aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
 				shift = (addr & 2) * 16;
 				mask = 0xFFFF << shift;				
-				block->ops.write(&m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+				block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
 				return;
 			case sizeof(uint32_t) :
 				assert((addr & 3) == 0); // TODO : What if this fails?	
 
-				block->ops.write(&m_nv2a_state, addr - block->offset, value);
+				block->ops.write(m_nv2a_state, addr - block->offset, value);
 				return;
 			}
 		}

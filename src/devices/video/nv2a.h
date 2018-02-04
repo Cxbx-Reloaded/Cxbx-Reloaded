@@ -615,6 +615,8 @@ class NV2ADevice : public PCIDevice {
 public:
 	// constructor
 	NV2ADevice();
+	// destructor
+	~NV2ADevice();
 
 	// PCI Device functions
 	void Init();
@@ -625,5 +627,5 @@ public:
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 private:
-	NV2AState m_nv2a_state;
+	NV2AState *m_nv2a_state;
 };
