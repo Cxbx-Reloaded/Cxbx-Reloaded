@@ -191,7 +191,6 @@ void CxbxLaunchXbe(void(*Entry)())
 	{
 		EmuWarning("Problem with ExceptionFilter");
 	}
-
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -522,11 +521,6 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 void CxbxKrnlMain(int argc, char* argv[])
 {
-	// Treat this instance as the Xbox runtime entry point XBOXStartup()
-	// This is defined in OpenXDK:
-	//   import/OpenXDK/include/xhal/xhal.h
-	CxbxSetThreadName("Cxbx XBOXStartup");
-
 	// Skip '/load' switch
 	// Get XBE Name :
 	std::string xbePath = argv[2];
@@ -1090,10 +1084,16 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
-    DbgPrintf("INIT: Calling XBE entry point...\n");
+
+	DbgPrintf("INIT: Calling XBE entry point...\n");
 	CxbxLaunchXbe(Entry);
-    DbgPrintf("INIT: XBE entry point returned\n");
-    fflush(stdout);
+
+	// FIXME: Wait for Cxbx to exit or error fatally
+	Sleep(INFINITE);
+
+	DbgPrintf("INIT: XBE entry point returned\n");
+	fflush(stdout);
+
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
 }
