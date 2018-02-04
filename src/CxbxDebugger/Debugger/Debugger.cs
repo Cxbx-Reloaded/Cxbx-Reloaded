@@ -7,6 +7,7 @@ using System.Text;
 using WinProcesses = VsChromium.Core.Win32.Processes;
 using WinDebug = VsChromium.Core.Win32.Debugging;
 using System.Runtime.InteropServices;
+using WinLowLevel = LowLevelDesign.Win32.Windows.NativeMethods;
 
 namespace CxbxDebugger
 {
@@ -165,32 +166,10 @@ namespace CxbxDebugger
 
             if (bRet == true)
             {
-                // Store these so they can be marshalled, and closed correctly
-                // TODO Move to Debugger* classes
+                // Store so they can be marshalled and closed correctly
                 hProcess = new WinProcesses.SafeProcessHandle(stProcessInfo.hProcess);
                 hThread = new WinProcesses.SafeThreadHandle(stProcessInfo.hThread);
-
-                var Process = new DebuggerProcess();
                 
-                Process.Handle = stProcessInfo.hProcess;
-                Process.ProcessID = (uint)stProcessInfo.dwProcessId;
-                // Cxbx-Reloaded path
-                Process.Path = args[0].Trim(new char[] { '"' });
-
-                var Thread = new DebuggerThread(Process);
-
-                Thread.Handle = stProcessInfo.hThread;
-                Thread.ThreadID = NativeMethods.GetThreadId(Thread.Handle);
-
-                // Other thread properties are setup after CREATE_THREAD_DEBUG_EVENT is received
-                
-                // Although the main thread is set here, it isn't registered in the Threads array at this point
-                Process.MainThread = Thread;
-                Process.Core = true;
-
-                DebugInstance = new DebuggerInstance(Process);
-                RegisterEventInterfaces(DebugInstance);
-
                 bContinue = true;
 
                 State = RunState.Running;
@@ -206,7 +185,7 @@ namespace CxbxDebugger
             const int bufSize = 1024;
             var strPtr = Marshal.AllocHGlobal(bufSize);
 
-            uint length = LowLevelDesign.Win32.Windows.NativeMethods.GetFinalPathNameByHandleW
+            uint length = WinLowLevel.GetFinalPathNameByHandleW
             (
                 FileHandle,
                 strPtr,
@@ -285,6 +264,11 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.CreateThread;
 
+            if ((uint)DebugEvent.dwProcessId != DebugInstance.MainProcess.ProcessID)
+            {
+                throw new Exception("Handling event for unknown process");
+            }
+            
             var Process = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
 
             if (Process == null)
@@ -307,11 +291,16 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.ExitThread;
 
-            var TargetThread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
-            uint ExitCode = DebugInfo.dwExitCode;
+            if ((uint)DebugEvent.dwProcessId != DebugInstance.MainProcess.ProcessID)
+            {
+                throw new Exception("Handling event for unknown process");
+            }
 
+            var TargetThread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
             if (TargetThread != null)
             {
+                uint ExitCode = DebugInfo.dwExitCode;
+
                 foreach (IDebuggerThreadEvents Event in ThreadEvents)
                 {
                     Event.OnThreadExit(TargetThread, ExitCode);
@@ -319,62 +308,66 @@ namespace CxbxDebugger
             }
         }
 
+        const int VM_PLACEHOLDER_SIZE = 0x3FEF000;
+        const int XBE_IMAGE_BASE = 0x00010000;
+
         private void HandleCreateProcess(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.CreateProcessInfo;
 
-            // Check that this process is already registered, and update information about it
+            var Process = new DebuggerProcess();
 
-            var TargetProcess = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
-            if( TargetProcess != null )
+            Process.Core = true;
+            Process.Handle = DebugInfo.hProcess;
+            Process.ProcessID = WinLowLevel.GetProcessId(Process.Handle);
+            Process.Path = ResolveProcessPath(DebugInfo.hFile);
+
+            // Skip over allocated Xbox memory
+            Process.ImageBase = DebugInfo.lpStartAddress + VM_PLACEHOLDER_SIZE; 
+
+            var MainThread = new DebuggerThread(Process);
+
+            MainThread.Handle = DebugInfo.hThread;
+            MainThread.ThreadID = NativeMethods.GetThreadId(DebugInfo.hThread);
+            MainThread.ThreadBase = DebugInfo.lpThreadLocalBase;
+
+            // Setup as the main thread
+            // TODO Check that we need to treat this as a special case
+            Process.MainThread = MainThread;
+
+            DebugInstance = new DebuggerInstance(Process);
+            RegisterEventInterfaces(DebugInstance);
+
+            foreach (IDebuggerProcessEvents Event in ProcessEvents)
             {
-                if( DebugInstance.MainProcess != TargetProcess )
-                {
-                    throw new Exception("Attempting to add a child process with a registered PID");
-                }
-
-                // Update information about this process
-                var XboxModule = new DebuggerModule();
-
-                XboxModule.Path = Target;
-                XboxModule.ImageBase = new IntPtr(0x00010000); // XBE_IMAGE_BASE
-                XboxModule.Core = true;
-
-                foreach (IDebuggerModuleEvents Event in ModuleEvents)
-                {
-                    Event.OnModuleLoaded(XboxModule);
-                }
-
-                // + VM_PLACEHOLDER_SIZE
-                TargetProcess.ImageBase = new IntPtr((uint)DebugInfo.lpBaseOfImage + 0x3FEF000);
-                
-                // Update information about the main thread
-
-                //TargetProcess.MainThread.Handle = DebugInfo.hThread;
-                //TargetProcess.MainThread.ThreadID = (uint)DebugEvent.dwThreadId;
-                TargetProcess.MainThread.StartAddress = DebugInfo.lpStartAddress;
-                TargetProcess.MainThread.ThreadBase = DebugInfo.lpThreadLocalBase;
-                
-                foreach (IDebuggerProcessEvents Event in ProcessEvents)
-                {
-                    Event.OnProcessCreate(TargetProcess);
-                }
-
-                // Also message listeners about the existance of the main thread
-                foreach (IDebuggerThreadEvents Event in ThreadEvents)
-                {
-                    Event.OnThreadCreate(TargetProcess.MainThread);
-                }
+                Event.OnProcessCreate(Process);
             }
-            else
+
+            foreach (IDebuggerThreadEvents Event in ThreadEvents)
             {
-                throw new Exception("CxbxDebugger does not support multiple process");
+                Event.OnThreadCreate(MainThread);
+            }
+            
+            var XboxModule = new DebuggerModule();
+            
+            XboxModule.Path = Target;
+            XboxModule.ImageBase = new IntPtr(XBE_IMAGE_BASE);
+            XboxModule.Core = true;
+
+            foreach (IDebuggerModuleEvents Event in ModuleEvents)
+            {
+                Event.OnModuleLoaded(XboxModule);
             }
         }
 
         private void HandleExitProcess(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.ExitProcess;
+
+            if ((uint)DebugEvent.dwProcessId != DebugInstance.MainProcess.ProcessID)
+            {
+                throw new Exception("Handling event for unknown process");
+            }
 
             var TargetProcess = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
             uint ExitCode = DebugInfo.dwExitCode;
@@ -392,6 +385,11 @@ namespace CxbxDebugger
         {
             var DebugInfo = DebugEvent.LoadDll;
 
+            if ((uint)DebugEvent.dwProcessId != DebugInstance.MainProcess.ProcessID)
+            {
+                throw new Exception("Handling event for unknown process");
+            }
+
             var Module = new DebuggerModule();
             
             Module.Path = ResolveProcessPath(DebugInfo.hFile);
@@ -406,6 +404,11 @@ namespace CxbxDebugger
         private void HandleUnloadDll(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.UnloadDll;
+
+            if ((uint)DebugEvent.dwProcessId != DebugInstance.MainProcess.ProcessID)
+            {
+                throw new Exception("Handling event for unknown process");
+            }
 
             var TargetModule = DebugInstance.MainProcess.Modules.Find(Module => Module.ImageBase == DebugInfo.lpBaseOfDll);
 
@@ -473,7 +476,6 @@ namespace CxbxDebugger
                         if (Thread != null)
                         {
                             var Report = DebuggerMessages.GetHLECacheReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
-
                             SetupHLECacheProvider(Report.FileName);
                         }
                     }
@@ -637,7 +639,6 @@ namespace CxbxDebugger
                         break;
 
                     case WinDebug.DEBUG_EVENT_CODE.CREATE_PROCESS_DEBUG_EVENT:
-                        // TODO: Limit support for multiple processes
                         HandleCreateProcess(DbgEvt);
                         break;
                         

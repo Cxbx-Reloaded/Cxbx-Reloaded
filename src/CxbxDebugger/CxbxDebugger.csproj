@@ -74,6 +74,9 @@
     <Compile Include="DebuggerSymbols\DebuggerSymbolProvider.cs" />
     <Compile Include="Debugger\DebuggerSymbolServer.cs" />
     <Compile Include="Debugger\DebuggerThread.cs" />
+    <Compile Include="DebugOutputManager.cs" />
+    <Compile Include="FileEventManager.cs" />
+    <Compile Include="FileWatchManager.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -169,6 +172,18 @@
       <Project>{9131b025-5019-4dee-84a3-86d2703a81c0}</Project>
       <Name>cs_x86</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pause_16x_24.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Run_16x_24.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BreakpointEnable_16x_24.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BreakpointDisable_16x_24.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

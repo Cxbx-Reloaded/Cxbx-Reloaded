@@ -123,7 +123,7 @@ namespace CxbxDebugger
         {
             if (InlineLinkClicked != null)
             {
-                int Split = e.LinkText.IndexOf('@');
+                int Split = e.LinkText.LastIndexOf('@');
 
                 string Label = e.LinkText.Substring(0, Split);
                 string Link = e.LinkText.Substring(Split + 1);
