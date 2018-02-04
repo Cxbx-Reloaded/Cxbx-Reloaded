@@ -540,7 +540,7 @@ void TriggerPendingConnectedInterrupts()
 {
 	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
 		// If the interrupt is pending and connected, process it
-		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
 			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}

@@ -293,7 +293,8 @@ typedef struct GraphicsContext {
 
 
 typedef struct PGRAPHState {
-	std::mutex lock; // std::unique_lock<std::mutex>(lock, std::defer_lock);
+	std::mutex _lock;
+	std::unique_lock<std::mutex> lock;
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -436,7 +437,8 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::mutex cache_lock; // std::unique_lock<std::mutex>(cache_lock, std::defer_lock);
+	std::mutex _cache_lock;
+	std::unique_lock<std::mutex> cache_lock;
 	std::condition_variable cache_cond;
 	std::queue<CacheEntry*> cache;
 	std::queue<CacheEntry*> working_cache;
@@ -611,6 +613,9 @@ void InitOpenGLContext();
 
 class NV2ADevice : public PCIDevice {
 public:
+	// constructor
+	NV2ADevice();
+
 	// PCI Device functions
 	void Init();
 	void Reset();

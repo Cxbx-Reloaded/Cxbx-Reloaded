@@ -362,10 +362,8 @@ int pfifo_puller_thread(NV2AState *d)
 	while (true) {
 		state->cache_lock.lock();
 
-		std::unique_lock<std::mutex> _cache_lock(state->cache_lock); // TODO : Is this correct??
-
 		while (state->cache.empty() || !state->pull_enabled) {
-			state->cache_cond.wait(_cache_lock);
+			state->cache_cond.wait(state->cache_lock);
 		}
 
 		// Copy cache to working_cache

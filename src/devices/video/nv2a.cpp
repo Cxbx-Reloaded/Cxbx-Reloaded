@@ -615,6 +615,12 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 
 /* NV2ADevice */
 
+NV2ADevice::NV2ADevice()
+{
+	m_nv2a_state.pfifo.cache1.cache_lock = std::unique_lock<std::mutex>(m_nv2a_state.pfifo.cache1._cache_lock, std::defer_lock);
+	m_nv2a_state.pgraph.lock = std::unique_lock<std::mutex>(m_nv2a_state.pgraph._lock, std::defer_lock);
+}
+
 // PCI Device functions
 
 void NV2ADevice::Init()
