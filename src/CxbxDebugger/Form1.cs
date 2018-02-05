@@ -111,9 +111,15 @@ namespace CxbxDebugger
             }
         }
 
-        private void PopulateThreadList(ComboBox.ObjectCollection Items, DebuggerThread FocusThread)
+        private void PopulateThreadList(ToolStripComboBox cbItems, DebuggerThread FocusThread)
         {
-            Items.Clear();
+            cbItems.Items.Clear();
+
+            uint AutoThreadId= DebugThreads[0].OwningProcess.MainThread.ThreadID;
+            if (FocusThread != null)
+                AutoThreadId = FocusThread.ThreadID;
+
+            int AutoIndex = 0;
 
             foreach (DebuggerThread Thread in DebugThreads)
             {
@@ -154,8 +160,16 @@ namespace CxbxDebugger
                     DisplayStr += " (suspended)";
                 }
 
-                Items.Add(DisplayStr);
+                if (AutoThreadId == Thread.ThreadID)
+                {
+                    AutoIndex = cbItems.Items.Count;
+                }
+
+                cbItems.Items.Add(DisplayStr);
             }
+
+            // Auto-select this thread
+            cbItems.SelectedIndex = AutoIndex;
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -429,7 +443,7 @@ namespace CxbxDebugger
                 frm.DebugLog(ExceptionMessage);
 
                 // Already suspended at this point, so we can rebuild the callstack list
-                frm.PopulateThreadList(frm.cbThreads.Items, Thread);
+                frm.PopulateThreadList(frm.cbThreads, Thread);
 
                 ExceptionMessage += "\n\nAttempt to ignore this and risk crashing the app?";
 
@@ -499,7 +513,7 @@ namespace CxbxDebugger
                 DebuggerInst.Break();
 
                 NativeWrappers.FlashWindowTray(Handle);
-                PopulateThreadList(cbThreads.Items, null);
+                PopulateThreadList(cbThreads, null);
             }
 
             lblStatus.Text = string.Format("Suspended ({0})", Reason);
@@ -833,6 +847,12 @@ namespace CxbxDebugger
                     cbFrames.Items.Add("[External Code]");
                     OtherModuleCount = 0;
                 }
+            }
+
+            if(cbFrames.Items.Count > 0 )
+            {
+                // Auto-select the first item to dump
+                cbFrames.SelectedIndex = 0;
             }
         }
 
