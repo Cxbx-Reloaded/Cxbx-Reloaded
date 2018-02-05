@@ -688,11 +688,11 @@ namespace CxbxDebugger
             }
         }
 
-        private void DumpDisassembly(CallstackInfo info)
+        private void DumpDisassembly(uint DisAddress)
         {
             // Read preceeding bytes for more context
             // TODO: This MUST align with a previous instruction or our disassembler will fail
-            uint OffsetAddr = info.InstructionPointer; // -16
+            uint OffsetAddr = DisAddress; // -16
 
             byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(OffsetAddr), 64);
 
@@ -700,15 +700,28 @@ namespace CxbxDebugger
 
             // TODO: Needs refactoring
 
+            uint ModuleEntry = 0;
+            string ModuleName = "";
+            var Module = DebuggerInst.ResolveModule(OffsetAddr);
+            if (Module != null)
+            {
+                ModuleEntry = (uint)Module.ImageBase;
+                ModuleName = Path.GetFileName(Module.Path);
+            }
+
             // TODO: "call dword ptr [0x00XXXXXX]" instructions should be resolved
             using (Capstone cs = Capstone.CreateEngine())
             {
                 cs.DisassembleIt(data, OffsetAddr, delegate (CapstoneInstruction Instruction)
                 {
-                    string Cursor = (Instruction.Address == info.InstructionPointer) ? "> " : "  ";
+                    string Cursor = (Instruction.Address == DisAddress) ? "> " : "  ";
 
                     txDisassembly.Add(Cursor);
-                    txDisassembly.InsertLink(string.Format("{0:x8}", Instruction.Address));
+
+                    string LinkName = string.Format("{0} +{1:x}", ModuleName, Instruction.Address - ModuleEntry);
+                    string Link = string.Format("{0:x8}", Instruction.Address);
+
+                    txDisassembly.InsertLink(LinkName, Link);
                     txDisassembly.Add(" ");
 
                     ExtractSymbols
@@ -722,12 +735,9 @@ namespace CxbxDebugger
                         {
                             string label = Convert.ToString(address, 16);
 
-                            // Temporary until we can resolve good symbols
+                            // Temporary until we can resolve usable symbols
                             txDisassembly.InsertLink(label);
-
-                            //var symbol = DebuggerInst.ResolveSymbol(address);
-                            //if (symbol != null)
-                            //{
+                            
                             //    uint offset = (address - symbol.AddrBegin);
                             //    uint mbase = info.ModuleBase;
                             //
@@ -758,7 +768,7 @@ namespace CxbxDebugger
                 if (info.InstructionPointer == 0)
                     return;
 
-                DumpDisassembly(info);
+                DumpDisassembly(info.InstructionPointer);
             }
         }
 
@@ -781,7 +791,7 @@ namespace CxbxDebugger
             }
         }
 
-        private void DumpCallstack(bool ShowExternal = false)
+        private void DumpCallstack(bool ShowExternal = true)
         {
             int Index = cbThreads.SelectedIndex;
             if (Index == -1)
@@ -876,8 +886,7 @@ namespace CxbxDebugger
             uint addr = 0;
             if (ReadAddress(txDisassemblyAddr, ref addr))
             {
-                // TODO: Which module are we dumping
-                DumpDisassembly(new CallstackInfo(addr, 0));
+                DumpDisassembly(addr);
             }
         }
 
@@ -886,8 +895,7 @@ namespace CxbxDebugger
             uint addr = 0;
             if (ReadAddress(txDisassemblyAddr, ref addr))
             {
-                // TODO: Which module are we dumping
-                DumpDisassembly(new CallstackInfo(addr, 0));
+                DumpDisassembly(addr);
             }
         }
 
@@ -911,6 +919,17 @@ namespace CxbxDebugger
         private void clbBreakpoints_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             fileWatchMan.SetEnabled(e.Index, e.NewValue == CheckState.Checked);
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if( keyData == Keys.F5 )
+            {
+                StartDebugging();
+                return true;
+            }
+
+            return false;
         }
     }
 }
