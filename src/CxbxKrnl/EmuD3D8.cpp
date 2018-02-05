@@ -803,10 +803,40 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	return it->second.pHostResource;
 }
 
+// Forward declaration of CxbxGetPixelContainerMeasures to prevent
+// polluting the diff too much by reshuffling functions around
+VOID CxbxGetPixelContainerMeasures
+(
+	XTL::X_D3DPixelContainer *pPixelContainer,
+	DWORD dwLevel,
+	UINT *pWidth,
+	UINT *pHeight,
+	UINT *pPitch,
+	UINT *pSize
+);
+
 size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 {
 	// TODO: Smart size calculation based around format of resource
-	return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
+	switch (GetXboxCommonResourceType(pXboxResource)) {
+	case X_D3DCOMMON_TYPE_SURFACE:
+	case X_D3DCOMMON_TYPE_TEXTURE:
+		uint SrcPitch, SrcSize, Width, Height;
+		CxbxGetPixelContainerMeasures(
+			(XTL::X_D3DPixelContainer*)pXboxResource,
+			0, // dwLevel
+			&Width,
+			&Height,
+			&SrcPitch,
+			&SrcSize
+		);
+
+		return SrcSize;
+	default:
+		// Fallback to querying the allocation size, if no other calculation was present
+		return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
+	}
+	
 }
 
 bool HostResourceRequiresUpdate(resource_key_t key)
