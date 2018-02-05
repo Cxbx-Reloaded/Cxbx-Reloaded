@@ -665,7 +665,7 @@ namespace CxbxDebugger
         {
             // This regex will match addresses in the format "0x123"
             // TODO: Fix ajoined addresses ie "0x1230x123" - treated as 0x1230
-            MatchCollection Matches = Regex.Matches(Text, "(0x[a-f0-9]+)", RegexOptions.IgnoreCase);
+            MatchCollection Matches = Regex.Matches(Text, "(-?0x[a-f0-9]+)", RegexOptions.IgnoreCase);
 
             int LastIndex = 0;
             for (int i = 0; i < Matches.Count; ++i)
@@ -676,8 +676,18 @@ namespace CxbxDebugger
                     ProcessOtherData(Last);
                 }
 
-                uint Address = (uint)Convert.ToInt32(Matches[i].ToString(), 16);
-                ProcessAddrData(Address);
+                string MatchStr = Matches[i].ToString();
+                if( MatchStr.StartsWith("-"))
+                {
+                    uint Address = (uint)Convert.ToInt32(MatchStr.Substring(1), 16);
+                    Address = ~Address;
+                    ProcessAddrData(Address);
+                }
+                else
+                {
+                    uint Address = (uint)Convert.ToInt32(MatchStr, 16);
+                    ProcessAddrData(Address);
+                }
 
                 LastIndex = Matches[i].Index + Matches[i].Length;
             }
@@ -688,6 +698,37 @@ namespace CxbxDebugger
             }
         }
 
+        class SymbolInfoHelper
+        {
+            uint EP = 0;
+            string Name = "";
+
+            public SymbolInfoHelper(Debugger dbgr, uint Address)
+            {
+                var Module = dbgr.ResolveModule(Address);
+                if (Module != null)
+                {
+                    EP = (uint)Module.ImageBase;
+                    Name = Path.GetFileName(Module.Path);
+                }
+            }
+
+            public void GenerateLink(RicherTextBox tb, uint Address)
+            {
+                if (EP != 0)
+                {
+                    string LinkName = string.Format("{0} +{1:x}", Name, Address - EP);
+                    string Link = string.Format("{0:x8}", Address);
+
+                    tb.InsertLink(LinkName, Link);
+                }
+                else
+                {
+                    tb.Add(string.Format("0x{0:X8}", Address));
+                }
+            }
+        }
+        
         private void DumpDisassembly(uint DisAddress)
         {
             // Read preceeding bytes for more context
@@ -700,15 +741,8 @@ namespace CxbxDebugger
 
             // TODO: Needs refactoring
 
-            uint ModuleEntry = 0;
-            string ModuleName = "";
-            var Module = DebuggerInst.ResolveModule(OffsetAddr);
-            if (Module != null)
-            {
-                ModuleEntry = (uint)Module.ImageBase;
-                ModuleName = Path.GetFileName(Module.Path);
-            }
-
+            var ModuleInfo = new SymbolInfoHelper(DebuggerInst, OffsetAddr);
+            
             // TODO: "call dword ptr [0x00XXXXXX]" instructions should be resolved
             using (Capstone cs = Capstone.CreateEngine())
             {
@@ -717,11 +751,7 @@ namespace CxbxDebugger
                     string Cursor = (Instruction.Address == DisAddress) ? "> " : "  ";
 
                     txDisassembly.Add(Cursor);
-
-                    string LinkName = string.Format("{0} +{1:x}", ModuleName, Instruction.Address - ModuleEntry);
-                    string Link = string.Format("{0:x8}", Instruction.Address);
-
-                    txDisassembly.InsertLink(LinkName, Link);
+                    ModuleInfo.GenerateLink(txDisassembly, (uint)Instruction.Address);
                     txDisassembly.Add(" ");
 
                     ExtractSymbols
@@ -733,10 +763,9 @@ namespace CxbxDebugger
                         },
                         delegate (uint address)
                         {
-                            string label = Convert.ToString(address, 16);
-
-                            // Temporary until we can resolve usable symbols
-                            txDisassembly.InsertLink(label);
+                            var Info = new SymbolInfoHelper(DebuggerInst, address);
+                            Info.GenerateLink(txDisassembly, address);
+                            
                             
                             //    uint offset = (address - symbol.AddrBegin);
                             //    uint mbase = info.ModuleBase;
