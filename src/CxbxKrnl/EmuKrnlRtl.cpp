@@ -56,6 +56,72 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuWarning()
 
+#ifdef _WIN32
+
+#include <map> // For critical section map
+#include <Synchapi.h> // For native CriticalSections
+
+static std::map<xboxkrnl::PRTL_CRITICAL_SECTION, CRITICAL_SECTION> critical_sections;
+
+static void add_critical_section(
+    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section,
+    CRITICAL_SECTION host_crit_section
+)
+{
+    // Key not found
+    if(critical_sections.find(xbox_crit_section) == critical_sections.end()) {
+        critical_sections[xbox_crit_section] = host_crit_section;
+    }
+    else {
+        EmuWarning("Critical Section key %p already exists\n", xbox_crit_section);
+    }
+}
+
+static CRITICAL_SECTION* find_critical_section(
+    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section
+)
+{
+    // Key found
+    if(critical_sections.find(xbox_crit_section) != critical_sections.end()) {
+        return &critical_sections[xbox_crit_section];
+    }
+    return NULL;
+}
+
+static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+{
+    CRITICAL_SECTION host_crit_section;
+    InitializeCriticalSection(&host_crit_section);
+    add_critical_section(xbox_crit_secion, host_crit_section);
+}
+
+static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+{
+    // This is required because it is possible for a game to create a critical
+    // section without calling RtlInitializeCriticalSection, which means that
+    // there is no host critical section. This hack allows us to create the
+    // missing critical section. The real Xbox RtlEnterCriticalSection function
+    // does not create a critical section if it does not exist.
+    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_secion);
+    if(host_crit_section == NULL) {
+        InitHostCriticalSection(xbox_crit_secion);
+        host_crit_section = find_critical_section(xbox_crit_secion);
+    }
+    EnterCriticalSection(host_crit_section);
+}
+
+static void LeaveHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+{
+    LeaveCriticalSection(find_critical_section(xbox_crit_secion));
+}
+
+static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+{
+    return TryEnterCriticalSection(find_critical_section(xbox_crit_secion));
+}
+
+#endif // _WIN32
+
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
@@ -390,6 +456,8 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
             CriticalSection->RecursionCount++;
         }
     }
+
+    EnterHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -656,6 +724,8 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
     CriticalSection->Unknown[2] = (DWORD)&CriticalSection->Unknown[2];
     CriticalSection->RecursionCount = 0;
     CriticalSection->OwningThread = 0;
+
+    InitHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -720,6 +790,8 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
             KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (BOOLEAN)0);
         }
     }
+
+    LeaveHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -920,7 +992,9 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
             ret = true;
         }
     }
-	RETURN(ret);
+
+    // Return the host value until the xbox kernel is fully implemented
+    RETURN(TryEnterHostCriticalSection(CriticalSection));
 }
 
 // ******************************************************************
