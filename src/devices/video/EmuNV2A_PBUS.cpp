@@ -1,3 +1,4 @@
+/* PBUS - bus control */
 DEVICE_READ32(PBUS)
 {
 	DEVICE_READ32_SWITCH() {

@@ -11,6 +11,7 @@ int pfifo_puller_thread(NV2AState *d);
 static uint32_t ramht_hash(NV2AState *d, uint32_t handle);
 static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declaration
 
+/* PFIFO - MMIO and DMA FIFO submission to PGRAPH and VPE */
 DEVICE_READ32(PFIFO)
 {
 	DEVICE_READ32_SWITCH() {
@@ -277,7 +278,6 @@ static void pfifo_run_pusher(NV2AState *d) {
 			if (!state->method_nonincreasing) {
 				state->method += 4;
 			}
-
 			state->method_count--;
 			state->dcount++;
 		} else {
@@ -320,8 +320,7 @@ static void pfifo_run_pusher(NV2AState *d) {
 				state->method_count = (word >> 18) & 0x7ff;
 				state->method_nonincreasing = false;
 				state->dcount = 0;
-			}
-			else if ((word & 0xe0030003) == 0x40000000) {
+			} else if ((word & 0xe0030003) == 0x40000000) {
 				/* non-increasing methods */
 				state->method = word & 0x1fff;
 				state->subchannel = (word >> 13) & 7;
@@ -361,9 +360,14 @@ int pfifo_puller_thread(NV2AState *d)
 
 	while (true) {
 		state->cache_lock.lock();
-
 		while (state->cache.empty() || !state->pull_enabled) {
 			state->cache_cond.wait(state->cache_lock);
+
+			if (d->exiting) {
+				state->cache_lock.unlock();
+				// glo_set_current(NULL);
+				return 0;
+			}
 		}
 
 		// Copy cache to working_cache

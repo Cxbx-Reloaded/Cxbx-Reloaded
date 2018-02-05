@@ -1,3 +1,4 @@
+/* USER - PFIFO MMIO and DMA submission area */
 DEVICE_READ32(USER)
 {
 	unsigned int channel_id = addr >> 16;

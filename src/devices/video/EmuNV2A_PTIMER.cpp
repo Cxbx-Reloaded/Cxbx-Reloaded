@@ -17,13 +17,15 @@ static inline uint64_t muldiv64(uint64_t a, uint32_t b, uint32_t c)
 	return res.ll;
 }
 
-/* PIMTER - time measurement and time-based alarms */
-static uint32_t ptimer_get_clock(NV2AState * d)
+/* PTIMER - time measurement and time-based alarms */
+static uint64_t ptimer_get_clock(NV2AState * d)
 {
 	// Get time in nanoseconds
 	long int time = static_cast<long int>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
 	
-	return muldiv64(time, d->pramdac.core_clock_freq * d->ptimer.numerator, CLOCKS_PER_SEC * d->ptimer.denominator);
+	return muldiv64(time,
+					d->pramdac.core_clock_freq * d->ptimer.numerator,
+					CLOCKS_PER_SEC * d->ptimer.denominator);
 }
 
 DEVICE_READ32(PTIMER)

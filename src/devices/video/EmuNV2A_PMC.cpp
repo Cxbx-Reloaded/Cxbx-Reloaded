@@ -1,3 +1,4 @@
+/* PMC - card master control */
 DEVICE_READ32(PMC)
 {
 	DEVICE_READ32_SWITCH() {

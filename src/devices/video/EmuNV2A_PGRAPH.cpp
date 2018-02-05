@@ -2581,12 +2581,12 @@ static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 {
 	bool valid;
 
-	d->pgraph.lock.lock(); // TODO : This isn't in xqemu / OpenXbox?
+	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.lock.lock();
 	valid = d->pgraph.channel_valid && d->pgraph.channel_id == channel_id;
 	if (!valid) {
 		d->pgraph.trapped_channel_id = channel_id;
 	}
-	d->pgraph.lock.unlock(); // TODO : This isn't in xqemu / OpenXbox?
+	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.lock.unlock();
 
 	if (!valid) {
 		NV2A_DPRINTF("puller needs to switch to ch %d\n", channel_id);

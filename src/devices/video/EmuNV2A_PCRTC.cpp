@@ -36,6 +36,10 @@ DEVICE_WRITE32(PCRTC)
         value &= 0x07FFFFFF;
         // assert(val < memory_region_size(d->vram));
 		d->pcrtc.start = value;
+
+        NV2A_DPRINTF("PCRTC_START - %x %x %x %x\n",
+                d->vram_ptr[value+64], d->vram_ptr[value+64+1],
+                d->vram_ptr[value+64+2], d->vram_ptr[value+64+3]);
 		break;
 
 	default: 
