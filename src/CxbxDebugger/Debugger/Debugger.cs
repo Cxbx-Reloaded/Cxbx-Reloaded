@@ -323,7 +323,7 @@ namespace CxbxDebugger
             Process.Path = ResolveProcessPath(DebugInfo.hFile);
 
             // Skip over allocated Xbox memory
-            Process.ImageBase = DebugInfo.lpStartAddress + VM_PLACEHOLDER_SIZE; 
+            Process.ImageBase = DebugInfo.lpStartAddress - VM_PLACEHOLDER_SIZE; 
 
             var MainThread = new DebuggerThread(Process);
 
