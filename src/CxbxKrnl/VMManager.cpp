@@ -118,7 +118,6 @@ void VMManager::Initialize(HANDLE file_view)
 	if (!g_IsRetail)
 	{
 		m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
-		m_PfnDatabaseVAddress = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + SYSTEM_PHYSICAL_MAP;
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
 		m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
 	}
@@ -237,40 +236,6 @@ void VMManager::Initialize(HANDLE file_view)
 		printf("Page table for Debug console initialized!\n");
 	}
 	else { printf("Page table for Retail console initialized!\n"); }
-}
-
-void VMManager::InitializeChihiroDebug()
-{
-	UnmapRange(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress);
-	m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
-	m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
-
-	// Allocate the nv2a instance memory and the memory holding the PFN database (the latter is not not emulated)	
-	VMAIter upper_mem_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress, 48 * PAGE_SIZE);
-	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
-	upper_mem_vma.type = VMAType::Allocated;
-	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
-	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(48 * PAGE_SIZE, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
-	UpdatePageTableForVMA(upper_mem_vma);
-	m_ImageMemoryInUse += 48 * PAGE_SIZE;
-
-	// Map the tiled memory
-	UnmapRange(TILED_MEMORY_BASE);
-	MapHardwareDevice(TILED_MEMORY_BASE, TILED_MEMORY_CHIHIRO_SIZE, VMAType::MemTiled);
-
-	// NOTE: we cannot just call Unmap on the mcpx region because its base + size will overflow to 0x100000000
-	// which will trigger an assert in CarveVMARange
-	m_Vma_map.lower_bound(MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1)->second.type = VMAType::Free;
-	m_NonImageMemoryInUse -= PAGE_SIZE;
-
-	// Map the bios
-	UnmapRange(BIOS_BASE);
-	MapHardwareDevice(BIOS_BASE, BIOS_CHIHIRO_SIZE, VMAType::DeviceBIOS);
-
-	if (g_bIsChihiro) {
-		printf("Page table for Chihiro initialized!\n");
-	}
-	else { printf("Page table for Debug console initialized!\n"); }
 }
 
 void VMManager::MapHardwareDevice(VAddr base, size_t size, VMAType type)

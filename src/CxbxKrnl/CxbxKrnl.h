@@ -64,7 +64,7 @@ extern "C" {
 #define XBADDR_MAX UINT32_MAX
 
 // Miscellaneous memory variables
-#define KERNEL_STACK_SIZE 12288 // 0x03000, needed by PsCreateSystemThreadEx, however the current implementation doesn't use it
+#define KERNEL_STACK_SIZE           12288 // 0x03000, needed by PsCreateSystemThreadEx, however the current implementation doesn't use it
 #define KERNEL_SIZE                 sizeof(DUMMY_KERNEL)
 #define PAGE_SHIFT                  12
 // Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size. Large pages are 4 MiB instead
@@ -86,7 +86,7 @@ extern "C" {
 // Define virtual base addresses used by the system.
 #define SYSTEM_PHYSICAL_MAP                     KSEG0_BASE // = 0x80000000
 #define KERNEL_PHYSICAL_ADDRESS                 XBE_IMAGE_BASE // = 0x10000
-#define XBOX_HIGHEST_PHYSICAL_PAGE	            0x03FFF
+#define XBOX_HIGHEST_PHYSICAL_PAGE              0x03FFF
 #define CHIHIRO_HIGHEST_PHYSICAL_PAGE           0x07FFF
 #define X64M_PHYSICAL_PAGE                      0x04000
 #define XBOX_INSTANCE_PHYSICAL_PAGE             0x03FE0
@@ -94,7 +94,9 @@ extern "C" {
 #define XBOX_PFN_DATABASE_PHYSICAL_PAGE         0x03FF0
 #define CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE      0x07FD0
 #define PAGE_DIRECTORY_PHYSICAL_ADDRESS         0x0F000
-#define INSTANCE_PAGE_COUNT                     16
+#define D3D_PHYSICAL_PAGE                       0x00000
+#define DEBUGKIT_FIRST_UPPER_HALF_PAGE          0x04000
+#define NV2A_INSTANCE_PAGE_COUNT                16
 // upper limit available for contiguous allocations (xbox)
 #define XBOX_CONTIGUOUS_MEMORY_LIMIT            XBOX_MEMORY_SIZE - 32 * PAGE_SIZE
 // upper limit available for contiguous allocations (chihiro)
@@ -104,10 +106,8 @@ extern "C" {
 #define CONTIGUOUS_MEMORY_BASE                  SYSTEM_PHYSICAL_MAP // = 0x80000000
 #define CONTIGUOUS_MEMORY_XBOX_SIZE             (64 * ONE_MB)
 #define CONTIGUOUS_MEMORY_CHIHIRO_SIZE          (128 * ONE_MB)
-// Tiled memory is a mirror of contiguous memory, residing at 0xF0000000
-#define TILED_MEMORY_BASE                       0xF0000000
-#define TILED_MEMORY_XBOX_SIZE                  CONTIGUOUS_MEMORY_XBOX_SIZE
-#define TILED_MEMORY_CHIHIRO_SIZE               CONTIGUOUS_MEMORY_CHIHIRO_SIZE
+#define XBOX_PFN_ADDRESS                        ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)SYSTEM_PHYSICAL_MAP)
+#define CHIHIRO_PFN_ADDRESS                     ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)SYSTEM_PHYSICAL_MAP)
 #define NV2A_MEMORY_BASE                        0xFD000000 // See NV2A_ADDR
 #define NV2A_MEMORY_SIZE                        0x01000000 // See NV2A_SIZE
 #define NV2A_PRAMIN_ADDR                        0xFD700000
@@ -133,7 +133,7 @@ extern "C" {
 
 /*! base addresses of various components */
 #define XBOX_KERNEL_BASE (SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
-
+// The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
 #define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
 #define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE - 1

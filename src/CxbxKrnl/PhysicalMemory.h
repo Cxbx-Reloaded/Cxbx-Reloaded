@@ -61,10 +61,11 @@ namespace xboxkrnl
 typedef uintptr_t VAddr;
 typedef uintptr_t PAddr;
 typedef uint32_t u32;
-typedef uint16_t u16; // Used by PageType
 typedef DWORD PTEflags;
 typedef ULONG PFN_Number;
 
+
+// NOTE: all the bit fields below can have endianess issues...
 
 /* The Xbox PTE, modelled around the Intel 386 PTE specification */
 typedef struct _XBOX_PTE
@@ -102,9 +103,9 @@ typedef struct _MMPTE
 
 
 /* enum describing the usage type of the memory pages */
-enum PageType : u16 {
+enum PageType {
 	Unknown,                   // Used by the PFN database
-	Stack,				       // Used by MmCreateKernelStack / VMManager::AllocateStack
+	Stack,                     // Used by MmCreateKernelStack
 	VirtualPageTable,
 	SystemPageTable,           // Not used yet
 	Pool,                      // Used by ExAllocatePoolWithTag
@@ -112,16 +113,10 @@ enum PageType : u16 {
 	SystemMemory,              // Used by MmAllocateSystemMemory
 	Image,                     // Used by XeLoadSection
 	Cache,                     // Not used yet
-	Contiguous,                // Used by MmAllocateContiguousMemoryEx
+	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
 	Debugger,                  // xbdm-related
-	COUNT
+	COUNT                      // the array size containing the page usage per type
 };
-
-
-typedef struct _MMPFNFREE {
-	USHORT PfnFlink;        // contains the pfn of the next element in the list
-	USHORT PfnBlink;        // contains the pfn of the previous element in the list
-} MMPFNFREE, *PMMPFNFREE;
 
 
 /* PFN entry used by the memory manager */
@@ -136,7 +131,7 @@ typedef struct _XBOX_PFN {
 			ULONG Busy : 1;        // If set, PFN is in use
 			ULONG Reserved : 1;
 			ULONG PteIndex : 10;
-			ULONG BusyType : 4;
+			ULONG BusyType : 4;    // What the page is used for
 		} Busy;
 		// I'm still unsure about what the others below are used for...
 		/*struct {
@@ -191,9 +186,12 @@ typedef struct _XBOX_PFN {
 #define DISABLE_CACHING(Pte) ((Pte).Hardware.CacheDisable = 1); ((Pte).Hardware.WriteThrough = 1)
 #define ValidKernelPteBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x63
 // This returns the VAddr in the contiguous region
-#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) (SYSTEM_PHYSICAL_MAP + (Pfn << PAGE_SHIFT))
+#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)SYSTEM_PHYSICAL_MAP + (Pfn << PAGE_SHIFT))
 // This works with both PAddr and VAddr in the contiguous region
 #define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) ((Va & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
+// This returns the address of the PFN entry for Xbox/Chihiro
+#define XBOX_PFN_ELEMENT(pfn) (&((PXBOX_PFN)XBOX_PFN_ADDRESS)[pfn])
+#define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
 
 
 /* Global helper function used to copy an ULONG block of memory to another buffer */
@@ -208,7 +206,7 @@ class PhysicalMemory
 		// otherwise it's mapped from the top. AllocationThreshold is 64KiB, the allocation granularity of the Xbox
 		const unsigned int m_AllocationThreshold = 1024 * 64;
 		// amount of physical memory in use
-		size_t m_PhysicalMemoryInUse = 0;
+		size_t m_PhysicalPagesInUse = 0;
 		// max physical memory available on the Xbox/Chihiro
 		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
 		// map tracking the physical memory currently in use
@@ -219,12 +217,10 @@ class PhysicalMemory
 		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
 		// highest address available for contiguous allocations
 		PAddr m_MaxContiguousAddress = XBOX_CONTIGUOUS_MEMORY_LIMIT;
-		// VAddr of the PFN Database
-		VAddr m_PfnDatabaseVAddress = XBOX_PFN_DATABASE_PHYSICAL_PAGE + SYSTEM_PHYSICAL_MAP;
 		// the size of memory occupied by the PFN/NV2A instance memory
 		size_t m_UpperPMemorySize = 32 * PAGE_SIZE;
-		// max physical memory available on the Xbox/Chihiro
-		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
+		// array containing the number of pages in use per type
+		int m_PagesByUsage[COUNT] = { 0 };
 	
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};
@@ -241,9 +237,9 @@ class PhysicalMemory
 		// set up the pfn database after a quick reboot (a new xbe is launched)
 		void ReinitializePfnDatabase();
 		// inserts a range of pages in the manager free list
-		void InsertPageRangeInFreeList(PFN_Number Pfn, PFN_Number PfnEndExcluded);
+		//void InsertPageRangeInFreeList(PFN_Number Pfn, PFN_Number PfnEndExcluded);
 		// inserts a single page in the manager free list
-		void InsertPageInFreeList(PFN_Number Pfn, bool InsertAtHead);
+		//void InsertPageInFreeList(PFN_Number Pfn, bool InsertAtHead);
 		// allocates a block of the mapped file, returns m_MaxContiguousAddress and sets an error code if unsuccessful
 		PAddr AllocatePhysicalMemory(size_t size);
 		// allocates a block of the mapped file between the specified range if possible
