@@ -238,6 +238,9 @@
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -466,6 +469,9 @@
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\MCPXDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\swizzle.h">
       <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>

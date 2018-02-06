@@ -1,5 +1,3 @@
-#undef COMPILE_OPENGL // define this to include all OpenGL calls
-
 // FIXME
 #if 1
 #define qemu_mutex_lock_iothread(...) do { \
@@ -351,26 +349,20 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
 #ifdef COMPILE_OPENGL
 static void pgraph_shader_update_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
-static void pgraph_bind_shaders(PGRAPHState *pg);
 #endif // COMPILE_OPENGL
+static void pgraph_bind_shaders(PGRAPHState *pg);
 static bool pgraph_framebuffer_dirty(PGRAPHState *pg);
 static bool pgraph_color_write_enabled(PGRAPHState *pg);
 static bool pgraph_zeta_write_enabled(PGRAPHState *pg);
 static void pgraph_set_surface_dirty(PGRAPHState *pg, bool color, bool zeta);
-#ifdef COMPILE_OPENGL
 static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color);
-#endif // COMPILE_OPENGL
 static void pgraph_update_surface(NV2AState *d, bool upload, bool color_write, bool zeta_write);
-#ifdef COMPILE_OPENGL
 static void pgraph_bind_textures(NV2AState *d);
-#endif // COMPILE_OPENGL
 static void pgraph_apply_anti_aliasing_factor(PGRAPHState *pg, unsigned int *width, unsigned int *height);
 static void pgraph_get_surface_dimensions(PGRAPHState *pg, unsigned int *width, unsigned int *height);
-#ifdef COMPILE_OPENGL
 static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size, bool f);
 static void pgraph_bind_vertex_attributes(NV2AState *d, unsigned int num_elements, bool inline_data, unsigned int inline_stride);
 static unsigned int pgraph_bind_inline_array(NV2AState *d);
-#endif // COMPILE_OPENGL
 static void load_graphics_object(NV2AState *d, hwaddr instance_address, GraphicsObject *obj);
 static GraphicsObject* lookup_graphics_object(PGRAPHState *s, hwaddr instance_address);
 static float convert_f16_to_float(uint16_t f16);
@@ -378,9 +370,9 @@ static float convert_f24_to_float(uint32_t f24);
 static uint8_t cliptobyte(int x);
 static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix, uint8_t *r, uint8_t *g, uint8_t* b);
 static uint8_t* convert_texture_data(const TextureShape s, const uint8_t *data, const uint8_t *palette_data, unsigned int width, unsigned int height, unsigned int depth, unsigned int row_pitch, unsigned int slice_pitch);
-#ifdef COMPILE_OPENGL
 static void upload_gl_texture(GLenum gl_target, const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
 static TextureBinding* generate_texture(const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
+#ifdef COMPILE_OPENGL
 static guint texture_key_hash(gconstpointer key);
 static gboolean texture_key_equal(gconstpointer a, gconstpointer b);
 static gpointer texture_key_retrieve(gpointer key, gpointer user_data, GError **error);
@@ -1662,7 +1654,7 @@ static void pgraph_method(NV2AState *d,
 				vertex_attribute->converted_elements = 0;
 			} else {
 				if (vertex_attribute->converted_buffer) {
-					free(vertex_attribute->converted_buffer);
+					g_free(vertex_attribute->converted_buffer);
 					vertex_attribute->converted_buffer = NULL;
 				}
 			}
@@ -1766,8 +1758,8 @@ static void pgraph_method(NV2AState *d,
 			bool stencil_test = pg->regs[NV_PGRAPH_CONTROL_1]
 									& NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE;
 
-#ifdef COMPILE_OPENGL
 			if (parameter == NV097_SET_BEGIN_END_OP_END) {
+#ifdef COMPILE_OPENGL
 
 				assert(pg->shader_binding);
 
@@ -2050,10 +2042,10 @@ static void pgraph_method(NV2AState *d,
 					glBeginQuery(GL_SAMPLES_PASSED, gl_query);
 				}
 
+#endif // COMPILE_OPENGL
 			}
 
 			pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
-#endif // COMPILE_OPENGL
 			break;
 		}
 		CASE_4(NV097_SET_TEXTURE_OFFSET, 64):
@@ -2177,9 +2169,9 @@ static void pgraph_method(NV2AState *d,
 			unsigned int start = GET_MASK(parameter, NV097_DRAW_ARRAYS_START_INDEX);
 			unsigned int count = GET_MASK(parameter, NV097_DRAW_ARRAYS_COUNT)+1;
 
-#ifdef COMPILE_OPENGL
 			pg->draw_arrays_max_count = MAX(pg->draw_arrays_max_count, start + count);
 
+#ifdef COMPILE_OPENGL
 			assert(pg->draw_arrays_length < ARRAY_SIZE(pg->gl_draw_arrays_start));
 #endif // COMPILE_OPENGL
 
@@ -2664,7 +2656,7 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
     }
 
     /* Now upload the previous attribute value */
-    attribute->inline_buffer = (float*)malloc(NV2A_MAX_BATCH_LENGTH
+    attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
                                                   * sizeof(float) * 4);
     for (i = 0; i < pg->inline_buffer_length; i++) {
         memcpy(&attribute->inline_buffer[i * 4],
@@ -2692,19 +2684,19 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
     pg->inline_buffer_length++;
 }
 
-#ifdef COMPILE_OPENGL
 void pgraph_init(NV2AState *d)
 {
     int i;
 
     PGRAPHState *pg = &d->pgraph;
 
-    pg->lock = SDL_CreateMutex();
-    pg->interrupt_cond = SDL_CreateCond();
-    pg->fifo_access_cond = SDL_CreateCond();
-    pg->flip_3d = SDL_CreateCond();
+	pg->lock = std::unique_lock<std::mutex>(pg->_lock, std::defer_lock);  // was SDL_CreateMutex();
+	//pg->interrupt_cond = SDL_CreateCond();
+    //pg->fifo_access_cond = SDL_CreateCond();
+    //pg->flip_3d = SDL_CreateCond();
 
-    /* fire up opengl */
+#ifdef COMPILE_OPENGL
+	/* fire up opengl */
 
     // pg->gl_context = glo_context_create();
     // assert(pg->gl_context);
@@ -2780,10 +2772,12 @@ void pgraph_init(NV2AState *d)
     assert(glGetError() == GL_NO_ERROR);
 
     // glo_set_current(NULL);
+#endif // COMPILE_OPENGL
 }
 
 void pgraph_destroy(PGRAPHState *pg)
 {
+#ifdef COMPILE_OPENGL
     SDL_DestroyMutex(pg->lock);
     SDL_DestroyCond(pg->interrupt_cond);
     SDL_DestroyCond(pg->fifo_access_cond);
@@ -2805,15 +2799,17 @@ void pgraph_destroy(PGRAPHState *pg)
     // glo_set_current(NULL);
 
     // glo_context_destroy(pg->gl_context);
+#endif // COMPILE_OPENGL
 }
 
+#ifdef COMPILE_OPENGL
 static void pgraph_shader_update_constants(PGRAPHState *pg,
                                            ShaderBinding *binding,
                                            bool binding_changed,
                                            bool vertex_program,
                                            bool fixed_function)
 {
-    int i, j;
+	int i, j;
 
     /* update combiner constants */
     for (i = 0; i<= 8; i++) {
@@ -2992,6 +2988,7 @@ static void pgraph_shader_update_constants(PGRAPHState *pg,
     }
 
 }
+#endif // COMPILE_OPENGL
 
 static void pgraph_bind_shaders(PGRAPHState *pg)
 {
@@ -3006,11 +3003,12 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     int program_start = GET_MASK(pg->regs[NV_PGRAPH_CSV0_C],
                                  NV_PGRAPH_CSV0_C_CHEOPS_PROGRAM_START);
 
+#ifdef COMPILE_OPENGL
     NV2A_GL_DGROUP_BEGIN("%s (VP: %s FFP: %s)", __func__,
                          vertex_program ? "yes" : "no",
                          fixed_function ? "yes" : "no");
 
-    ShaderBinding* old_binding = pg->shader_binding;
+	ShaderBinding* old_binding = pg->shader_binding;
 
     ShaderState state = {
         .psh = (PshState){
@@ -3160,8 +3158,8 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
                                    vertex_program, fixed_function);
 
     NV2A_GL_DGROUP_END();
-}
 #endif // COMPILE_OPENGL
+}
 
 static bool pgraph_framebuffer_dirty(PGRAPHState *pg)
 {
@@ -3202,7 +3200,6 @@ static void pgraph_set_surface_dirty(PGRAPHState *pg, bool color, bool zeta)
     pg->surface_zeta.draw_dirty |= zeta;
 }
 
-#ifdef COMPILE_OPENGL
 static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
     PGRAPHState *pg = &d->pgraph;
 
@@ -3222,8 +3219,8 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
         gl_buffer = &pg->gl_color_buffer;
 
         assert(pg->surface_shape.color_format != 0);
-        assert(pg->surface_shape.color_format
-                < ARRAY_SIZE(kelvin_surface_color_format_map));
+        //assert(pg->surface_shape.color_format
+        //        < ARRAY_SIZE(kelvin_surface_color_format_map));
         SurfaceColorFormatInfo f =
             kelvin_surface_color_format_map[pg->surface_shape.color_format];
         if (f.bytes_per_pixel == 0) {
@@ -3326,7 +3323,8 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
                            bytes_per_pixel);
         }
 
-        if (!color) {
+#ifdef COMPILE_OPENGL
+		if (!color) {
             /* need to clear the depth_stencil and depth attachment for zeta */
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_DEPTH_ATTACHMENT,
@@ -3375,6 +3373,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
 
         assert(glCheckFramebufferStatus(GL_FRAMEBUFFER)
             == GL_FRAMEBUFFER_COMPLETE);
+#endif // COMPILE_OPENGL
 
         if (color) {
             pgraph_update_memory_buffer(d, dma.address + surface->offset,
@@ -3400,13 +3399,15 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
     }
 
     if (!upload && surface->draw_dirty) {
-        /* read the opengl framebuffer into the surface */
+#ifdef COMPILE_OPENGL
+		/* read the opengl framebuffer into the surface */
 
         glo_readpixels(gl_format, gl_type,
                        bytes_per_pixel, surface->pitch,
                        width, height,
                        buf);
         assert(glGetError() == GL_NO_ERROR);
+#endif // COMPILE_OPENGL
 
         if (swizzle) {
             swizzle_rect(buf,
@@ -3448,12 +3449,10 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
         g_free(buf);
     }
 }
-#endif // COMPILE_OPENGL
 
 static void pgraph_update_surface(NV2AState *d, bool upload,
 	bool color_write, bool zeta_write)
 {
-#ifdef COMPILE_OPENGL
     PGRAPHState *pg = &d->pgraph;
 
     pg->surface_shape.z_format = GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
@@ -3469,6 +3468,7 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
 
         pg->surface_color.buffer_dirty = true;
         pg->surface_zeta.buffer_dirty = true;
+#ifdef COMPILE_OPENGL
 
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0,
@@ -3493,6 +3493,7 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
             glDeleteTextures(1, &pg->gl_zeta_buffer);
             pg->gl_zeta_buffer = 0;
         }
+#endif // COMPILE_OPENGL
 
         memcpy(&pg->last_surface_shape, &pg->surface_shape,
                sizeof(SurfaceShape));
@@ -3508,15 +3509,12 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         && (upload || pg->surface_zeta.draw_dirty)) {
         pgraph_update_surface_part(d, upload, false);
     }
-#else  // COMPILE_OPENGL
-	printf("TODO: pgraph_update_surface\n");
-#endif // COMPILE_OPENGL
 
 }
 
-#ifdef COMPILE_OPENGL
 static void pgraph_bind_textures(NV2AState *d)
 {
+#ifdef COMPILE_OPENGL
     int i;
     PGRAPHState *pg = &d->pgraph;
 
@@ -3843,8 +3841,8 @@ static void pgraph_bind_textures(NV2AState *d)
         pg->texture_dirty[i] = false;
     }
     NV2A_GL_DGROUP_END();
-}
 #endif // COMPILE_OPENGL
+}
 
 static void pgraph_apply_anti_aliasing_factor(PGRAPHState *pg,
                                               unsigned int *width,
@@ -3880,11 +3878,11 @@ static void pgraph_get_surface_dimensions(PGRAPHState *pg,
     }
 }
 
-#ifdef COMPILE_OPENGL
 static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
                                         bool f)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, d->pgraph.gl_memory_buffer);
+#ifdef COMPILE_OPENGL
+	glBindBuffer(GL_ARRAY_BUFFER, d->pgraph.gl_memory_buffer);
 
     hwaddr end = TARGET_PAGE_ALIGN(addr + size);
     addr &= TARGET_PAGE_MASK;
@@ -3895,6 +3893,7 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
     //                                             DIRTY_MEMORY_NV2A)) {
         glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
     // }
+#endif // COMPILE_OPENGL
 }
 
 static void pgraph_bind_vertex_attributes(NV2AState *d,
@@ -3902,7 +3901,8 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                                           bool inline_data,
                                           unsigned int inline_stride)
 {
-    int i, j;
+#ifdef COMPILE_OPENGL
+	int i, j;
     PGRAPHState *pg = &d->pgraph;
 
     if (inline_data) {
@@ -4014,11 +4014,13 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
         }
     }
     NV2A_GL_DGROUP_END();
+#endif // COMPILE_OPENGL
 }
 
 static unsigned int pgraph_bind_inline_array(NV2AState *d)
 {
-    int i;
+#ifdef COMPILE_OPENGL
+	int i;
 
     PGRAPHState *pg = &d->pgraph;
 
@@ -4049,8 +4051,8 @@ static unsigned int pgraph_bind_inline_array(NV2AState *d)
     pgraph_bind_vertex_attributes(d, index_count, true, vertex_size);
 
     return index_count;
-}
 #endif // COMPILE_OPENGL
+}
 
 static void load_graphics_object(NV2AState *d, hwaddr instance_address,
 									GraphicsObject *obj)
@@ -4138,7 +4140,7 @@ static uint8_t* convert_texture_data(const TextureShape s,
 {
     if (s.color_format == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8) {
         assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)malloc(width * height * 4);
+        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int x, y;
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
@@ -4151,7 +4153,7 @@ static uint8_t* convert_texture_data(const TextureShape s,
     } else if (s.color_format
                    == NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8) {
         assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)malloc(width * height * 4);
+        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int x, y;
         for (y = 0; y < height; y++) {
             const uint8_t* line = &data[y * s.width * 2];
@@ -4166,7 +4168,7 @@ static uint8_t* convert_texture_data(const TextureShape s,
     } else if (s.color_format
                    == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5) {
         assert(depth == 1); /* FIXME */
-        uint8_t *converted_data = (uint8_t*)malloc(width * height * 3);
+        uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 3);
 		unsigned int x, y;
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
@@ -4187,12 +4189,12 @@ static uint8_t* convert_texture_data(const TextureShape s,
     }
 }
 
-#ifdef COMPILE_OPENGL
 static void upload_gl_texture(GLenum gl_target,
                               const TextureShape s,
                               const uint8_t *texture_data,
                               const uint8_t *palette_data)
 {
+#ifdef COMPILE_OPENGL
     ColorFormatInfo f = kelvin_color_format_map[s.color_format];
 
     switch(gl_target) {
@@ -4327,12 +4329,14 @@ static void upload_gl_texture(GLenum gl_target,
         assert(false);
         break;
     }
+#endif // COMPILE_OPENGL
 }
 
 static TextureBinding* generate_texture(const TextureShape s,
                                         const uint8_t *texture_data,
                                         const uint8_t *palette_data)
 {
+#ifdef COMPILE_OPENGL
     ColorFormatInfo f = kelvin_color_format_map[s.color_format];
 
     /* Create a new opengl texture */
@@ -4423,8 +4427,10 @@ static TextureBinding* generate_texture(const TextureShape s,
     ret->gl_texture = gl_texture;
     ret->refcnt = 1;
     return ret;
+#endif // COMPILE_OPENGL
 }
 
+#ifdef COMPILE_OPENGL
 /* functions for texture LRU cache */
 static guint texture_key_hash(gconstpointer key)
 {

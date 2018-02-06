@@ -264,6 +264,7 @@
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
+    <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
   </ItemGroup>
@@ -628,6 +629,7 @@
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
+    <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
   </ItemGroup>
   <ItemGroup>

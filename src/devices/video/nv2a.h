@@ -44,6 +44,7 @@
 
 #include <GL/glew.h>
 
+#include "swizzle.h"
 #include "nv2a_int.h"
 
 #define NV2A_ADDR  0xFD000000
@@ -63,7 +64,14 @@ typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and 
 #define NV2A_DPRINTF printf // Compatibility; TODO : Replace this by something equivalent
 #define NV2A_GL_DPRINTF EmuWarning // Compatibility; TODO : Replace this by something equivalent
 #define VSH_TOKEN_SIZE 4 // Compatibility; TODO : Move this to nv2a_vsh.h
-//#define MAX(a,b) ((a)>(b) ? (a) : (b)) // Compatibility
+#define MAX(a,b) ((a)>(b) ? (a) : (b)) // Compatibility
+#define MIN(a,b) ((a)<(b) ? (a) : (b)) // Compatibility
+#undef COMPILE_OPENGL // Compatibility; define this to include all OpenGL calls
+#define HWADDR_PRIx "p" // Compatibility
+#define g_free(x) free(x) // Compatibility
+#define g_malloc(x) malloc(x) // Compatibility
+#define g_malloc0(x) calloc(1, x) // Compatibility
+#define g_realloc(x, y) realloc(x, y) // Compatibility
 
 #define USE_TEXTURE_CACHE
 

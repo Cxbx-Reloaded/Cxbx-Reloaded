@@ -265,7 +265,7 @@ static void pfifo_run_pusher(NV2AState *d) {
 			/* data word of methods command */
 			state->data_shadow = word;
 
-			command = (CacheEntry*)malloc(sizeof(CacheEntry));
+			command = (CacheEntry*)g_malloc0(sizeof(CacheEntry));
 			command->method = state->method;
 			command->subchannel = state->subchannel;
 			command->nonincreasing = state->method_nonincreasing;
@@ -354,9 +354,11 @@ int pfifo_puller_thread(NV2AState *d)
 {
 	CxbxSetThreadName("Cxbx NV2A FIFO");
 
-	Cache1State *state = &d->pfifo.cache1;
+	Cache1State *state = &(d->pfifo.cache1);
 
-	// glo_set_current(d->pgraph.gl_context);
+#ifdef COMPILE_OPENGL
+	glo_set_current(d->pgraph.gl_context);
+#endif
 
 	while (true) {
 		state->cache_lock.lock();
@@ -365,7 +367,9 @@ int pfifo_puller_thread(NV2AState *d)
 
 			if (d->exiting) {
 				state->cache_lock.unlock();
-				// glo_set_current(NULL);
+#ifdef COMPILE_OPENGL
+				glo_set_current(NULL);
+#endif
 				return 0;
 			}
 		}
@@ -443,7 +447,7 @@ int pfifo_puller_thread(NV2AState *d)
 				// qemu_mutex_unlock(&state->cache_lock);
 			}
 
-			free(command);
+			g_free(command);
 		}
 
 		d->pgraph.lock.unlock();
