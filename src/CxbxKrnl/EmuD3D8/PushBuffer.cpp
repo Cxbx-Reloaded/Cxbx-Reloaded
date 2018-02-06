@@ -40,6 +40,9 @@
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
 
+// TODO: Find somewhere to put this that doesn't conflict with XTL::
+extern void EmuUpdateActiveTextureStages();
+
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
 
@@ -98,6 +101,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
     // TODO: This technically should be enabled
     XTL::EmuUpdateDeferredStates();
+	EmuUpdateActiveTextureStages();
 
     #ifdef _DEBUG_TRACK_PB
     bool bShowPB = false;

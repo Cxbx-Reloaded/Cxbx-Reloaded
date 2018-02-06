@@ -446,4 +446,6 @@ void XTL::EmuUpdateDeferredStates()
         g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
         //*/
     }
+
+
 }
