@@ -90,6 +90,27 @@ void ClearHLECache()
 	printf("Cleared HLE Cache\n");
 }
 
+void WndMain::InitializeSettings() {
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+		for (int v = 0; v < m_dwRecentXbe; v++) {
+			char buffer[32];
+			sprintf(buffer, "RecentXbe%d", v);
+			RegDeleteValue(hKey, buffer);
+		}
+		RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
+		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "KrnlDebug");
+		RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
+		RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
+
+		RegDeleteTree(hKey, "XBVideo"); RegDeleteTree(hKey, "XBAudio"); RegDeleteTree(hKey, "XBController");
+
+		RegCloseKey(hKey);
+
+		g_SaveOnExit = false;
+	}
+}
+
 #define TIMERID_FPS 0
 #define TIMERID_LED 1
 
@@ -1090,26 +1111,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					"\nAre you sure you want to proceed?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
 
 				if (ret == IDYES) {
-					HKEY hKey;
-					if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-						for (int v = 0; v<m_dwRecentXbe; v++) {
-							char buffer[32];
-							sprintf(buffer, "RecentXbe%d", v);
-							RegDeleteValue(hKey, buffer);
-						}
-						RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
-						RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "KrnlDebug");
-						RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
-						RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
-
-						RegDeleteTree(hKey, "XBVideo"); RegDeleteTree(hKey, "XBAudio"); RegDeleteTree(hKey, "XBController");
-
-						RegCloseKey(hKey);
-
-						g_SaveOnExit = false;
-						MessageBox(m_hwnd, "Cxbx-Reloaded has been initialized and will now close.", "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-						SendMessage(hwnd, WM_CLOSE, 0, 0);
-					}
+					InitializeSettings();
+					MessageBox(m_hwnd, "Cxbx-Reloaded has been initialized and will now close.", "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+					SendMessage(hwnd, WM_CLOSE, 0, 0);
 				}
 			}
 			break;

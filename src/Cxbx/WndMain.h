@@ -132,6 +132,11 @@ class WndMain : public Wnd
 		void CrashMonitor();
 
 		// ******************************************************************
+		// * clear registry values and keys
+		// ******************************************************************
+		void InitializeSettings();
+
+		// ******************************************************************
 		// * draw Xbox LED bitmap
 		// ******************************************************************
 		void DrawLedBitmap(HWND hwnd, bool boolbDefault);
