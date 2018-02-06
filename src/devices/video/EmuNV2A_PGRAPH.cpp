@@ -477,7 +477,7 @@ DEVICE_WRITE32(PGRAPH)
 					NV_PGRAPH_SURFACE_READ_3D) + 1)
 				% GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_MODULO_3D));
-			d->pgraph.flip_3d.notify_all();
+			d->pgraph.flip_3d_cond.notify_all();
 		}
 		break;
 	case NV_PGRAPH_FIFO:
@@ -777,7 +777,7 @@ static void pgraph_method(NV2AState *d,
 					break;
 				}
 
-				pg->flip_3d.wait(pg->lock);
+				pg->flip_3d_cond.wait(pg->lock);
 			}
 			NV2A_DPRINTF("flip stall done\n");
 			break;
@@ -2693,7 +2693,7 @@ void pgraph_init(NV2AState *d)
 	pg->lock = std::unique_lock<std::mutex>(pg->_lock, std::defer_lock);  // was SDL_CreateMutex();
 	//pg->interrupt_cond = SDL_CreateCond();
     //pg->fifo_access_cond = SDL_CreateCond();
-    //pg->flip_3d = SDL_CreateCond();
+    //pg->flip_3d_cond = SDL_CreateCond();
 
 #ifdef COMPILE_OPENGL
 	/* fire up opengl */
@@ -2781,7 +2781,7 @@ void pgraph_destroy(PGRAPHState *pg)
     SDL_DestroyMutex(pg->lock);
     SDL_DestroyCond(pg->interrupt_cond);
     SDL_DestroyCond(pg->fifo_access_cond);
-    SDL_DestroyCond(pg->flip_3d);
+    SDL_DestroyCond(pg->flip_3d_cond);
 
     // glo_set_current(pg->gl_context);
 

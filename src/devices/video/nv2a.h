@@ -321,7 +321,7 @@ typedef struct PGRAPHState {
 	bool fifo_access;
 	std::condition_variable fifo_access_cond;
 
-	std::condition_variable flip_3d;
+	std::condition_variable flip_3d_cond; // Was flip_3d
 
 	unsigned int channel_id;
 	bool channel_valid;
