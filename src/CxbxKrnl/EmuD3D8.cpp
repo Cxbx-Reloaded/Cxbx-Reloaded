@@ -6491,6 +6491,39 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 	ForceResourceRehash(pPixelContainer);
 }
 
+
+// ******************************************************************
+// * patch: Lock3DSurface
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
+(
+	X_D3DPixelContainer *pPixelContainer,
+	UINT				Level,
+	D3DLOCKED_BOX		*pLockedVolume,
+	D3DBOX				*pBox,
+	DWORD				Flags
+	)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedVolume)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+	// Pass through to the Xbox implementation of this function
+	typedef VOID(__stdcall *XB_Lock3DSurface_t)(X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD);
+	static XB_Lock3DSurface_t XB_Lock3DSurface = (XB_Lock3DSurface_t)GetXboxFunctionPointer("Lock3DSurface");
+	XB_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
+
+	// Mark the resource as modified
+	ForceResourceRehash(pPixelContainer);
+}
+
+
 // ******************************************************************
 // * patch: IDirect3DVertexBuffer8_Lock
 // ******************************************************************
@@ -7635,6 +7668,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		EMUPATCH(D3DDevice_SelectVertexShader)(hNewShader, Address);
 
 		g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewShader;
+
+		EmuWarning("Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
     }
 }
 
