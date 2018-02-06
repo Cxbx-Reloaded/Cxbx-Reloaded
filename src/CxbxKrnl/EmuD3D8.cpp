@@ -205,6 +205,11 @@ g_EmuCDPD = {0};
 
 #endif
 
+// Declares an unpatched Xbox function trampoline, callable by name (with a 'XB_' prefix attached)
+#define XB_trampoline(ret, conv, name, arguments) \
+	typedef ret(conv *XB_##name##_t)arguments; \
+	static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
+
 // TODO: This should be a D3DDevice structure
 DWORD g_XboxD3DDevice[64 * ONE_KB / sizeof(DWORD)] = { 0 };
 
@@ -2633,8 +2638,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 	// D3DDevice_GetDisplayMode and read the result
 
 	// Get a function pointer to the unpatched xbox function D3DDevice_GetDisplayMode
-	typedef VOID(__stdcall *XB_D3DDevice_GetDisplayMode_t)(X_D3DDISPLAYMODE*);
-	static XB_D3DDevice_GetDisplayMode_t XB_D3DDevice_GetDisplayMode = (XB_D3DDevice_GetDisplayMode_t)GetXboxFunctionPointer("D3DDevice_GetDisplayMode");
+	XB_trampoline(VOID, WINAPI, D3DDevice_GetDisplayMode, (X_D3DDISPLAYMODE*));
 	
 	X_D3DDISPLAYMODE displayMode;
 
@@ -3075,10 +3079,9 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
-	typedef X_D3DSurface*(__stdcall *XB_D3DDevice_GetBackBuffer2_t)(INT);
-	typedef VOID(__stdcall *XB_D3DDevice_GetBackBuffer_t)(INT, D3DBACKBUFFER_TYPE, X_D3DSurface**);
-	static XB_D3DDevice_GetBackBuffer2_t XB_D3DDevice_GetBackBuffer2 = (XB_D3DDevice_GetBackBuffer2_t)GetXboxFunctionPointer("D3DDevice_GetBackBuffer2");
-	static XB_D3DDevice_GetBackBuffer_t XB_D3DDevice_GetBackBuffer = (XB_D3DDevice_GetBackBuffer_t)GetXboxFunctionPointer("D3DDevice_GetBackBuffer");
+	XB_trampoline(X_D3DSurface, WINAPI, D3DDevice_GetBackBuffer2, (INT));
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_GetBackBuffer, (INT, D3DBACKBUFFER_TYPE, X_D3DSurface**));
 
 	// This also updates the reference count, so we don't need to do this ourselves
 	if (XB_D3DDevice_GetBackBuffer != nullptr) {
@@ -3809,8 +3812,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeletePixelShader)
 	LOG_FUNC_ONE_ARG(Handle);
 
 	// Forward to the Xbox version of DeletePixelShader, to free the xbox resource correctly
-	typedef HRESULT(__stdcall *XB_D3DDevice_DeletePixelShader_t)(DWORD);
-	static XB_D3DDevice_DeletePixelShader_t XB_D3DDevice_DeletePixelShader = (XB_D3DDevice_DeletePixelShader_t)GetXboxFunctionPointer("D3DDevice_DeletePixelShader");
+	XB_trampoline(VOID, WINAPI, D3DDevice_DeletePixelShader, (DWORD));
+
 	XB_D3DDevice_DeletePixelShader(Handle);
 
 	DWORD hostShaderHandle = 0;
@@ -3867,9 +3870,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 	// Call the Xbox version of CreatePixelShader, this gives us a handle we can safely return to Xbox code
 	// and properly sets up the internal shader structure, pointed to by the handle
-	typedef HRESULT(__stdcall *XB_D3DDevice_CreateTexture_t)(X_D3DPIXELSHADERDEF*, DWORD*);
+	XB_trampoline(HRESULT, WINAPI, D3DDevice_CreatePixelShader, (X_D3DPIXELSHADERDEF*, DWORD*));
 
-	static XB_D3DDevice_CreateTexture_t XB_D3DDevice_CreatePixelShader = (XB_D3DDevice_CreateTexture_t)GetXboxFunctionPointer("D3DDevice_CreatePixelShader");
 	if (XB_D3DDevice_CreatePixelShader) {
 		hRet = XB_D3DDevice_CreatePixelShader(pPSDef, pHandle);
 
@@ -4078,8 +4080,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_END;
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	typedef ULONG(__stdcall *XB_D3DDevice_SetTexture_t)(DWORD, X_D3DBaseTexture*);
-	static XB_D3DDevice_SetTexture_t XB_D3DDevice_SetTexture = (XB_D3DDevice_SetTexture_t)GetXboxFunctionPointer("D3DDevice_SetTexture");
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture, (DWORD, X_D3DBaseTexture*));
+
 	XB_D3DDevice_SetTexture(Stage, pTexture);
 
 	EmuD3DActiveTexture[Stage] = pTexture;
@@ -5413,8 +5415,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	auto key = GetHostResourceKey(pThis);
 
 	// Call the Xbox version of D3DResource_Release and store the result
-	typedef ULONG(__stdcall *XB_D3DResource_Release_t)(X_D3DResource*);
-	static XB_D3DResource_Release_t XB_D3DResource_Release = (XB_D3DResource_Release_t)GetXboxFunctionPointer("D3DResource_Release");
+	XB_trampoline(ULONG, WINAPI, D3DResource_Release, (X_D3DResource*));
+
 	ULONG uRet = XB_D3DResource_Release(pThis);
 
 	// Was the Xbox resource freed?
@@ -6483,8 +6485,8 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 
 
 	// Pass through to the Xbox implementation of this function
-	typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD);
-	static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
+	XB_trampoline(VOID, WINAPI, Lock2DSurface, (X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD));
+
 	XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
 
 	// Mark the resource as modified
@@ -6515,8 +6517,8 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 		LOG_FUNC_END;
 
 	// Pass through to the Xbox implementation of this function
-	typedef VOID(__stdcall *XB_Lock3DSurface_t)(X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD);
-	static XB_Lock3DSurface_t XB_Lock3DSurface = (XB_Lock3DSurface_t)GetXboxFunctionPointer("Lock3DSurface");
+	XB_trampoline(VOID, WINAPI, Lock3DSurface, (X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD));
+
 	XB_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
@@ -6548,8 +6550,8 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 
 
 	// Pass through to the Xbox implementation of this function
-	typedef VOID(__stdcall *XB_D3DVertexBuffer_Lock_t)(X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD);
-	static XB_D3DVertexBuffer_Lock_t XB_D3DVertexBuffer_Lock = (XB_D3DVertexBuffer_Lock_t)GetXboxFunctionPointer("D3DVertexBuffer_Lock");
+	XB_trampoline(VOID, WINAPI, D3DVertexBuffer_Lock, (X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD));
+
 	XB_D3DVertexBuffer_Lock(pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
 
 	// Mark the resource as modified
@@ -6573,8 +6575,8 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 		LOG_FUNC_END;
 
 	// Pass through to the Xbox implementation of this function
-	typedef BYTE*(__stdcall *XB_D3DVertexBuffer_Lock2_t)(X_D3DVertexBuffer*, DWORD);
-	static XB_D3DVertexBuffer_Lock2_t XB_D3DVertexBuffer_Lock2 = (XB_D3DVertexBuffer_Lock2_t)GetXboxFunctionPointer("D3DVertexBuffer_Lock2");
+	XB_trampoline(BYTE*, WINAPI, D3DVertexBuffer_Lock2, (X_D3DVertexBuffer*, DWORD));
+
 	BYTE* pRet = XB_D3DVertexBuffer_Lock2(pVertexBuffer, Flags);
 
 	// Mark the resource as modified
