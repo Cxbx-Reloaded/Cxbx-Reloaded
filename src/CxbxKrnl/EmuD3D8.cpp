@@ -745,6 +745,7 @@ typedef struct {
 	void* pXboxData = nullptr;
 	size_t szXboxDataSize = 0;
 	uint32_t hash = 0;
+	bool forceRehash = false;
 	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
 } host_resource_info_t;
@@ -772,6 +773,15 @@ void FreeHostResource(resource_key_t key)
 			(hostResourceIterator->second.pHostResource)->Release();
 		}
 		g_HostResources.erase(hostResourceIterator);
+	}
+}
+
+void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
+{
+	auto key = GetHostResourceKey(pXboxResource);
+	auto it = g_HostResources.find(key);
+	if (it != g_HostResources.end()) {
+		it->second.forceRehash = true;
 	}
 }
 
@@ -856,7 +866,7 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 	bool modified = false;
 
 	auto now = std::chrono::high_resolution_clock::now();
-	if (now > it->second.nextHashTime) {
+	if (now > it->second.nextHashTime || it->second.forceRehash) {
 		uint32_t oldHash = it->second.hash;
 		it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
 
@@ -871,6 +881,8 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 				it->second.hashLifeTime += 10ms;
 			}
 		}
+		
+		it->second.forceRehash = false;
 	}
 
 	// Update the next hash time based on the hash lifetime
@@ -895,6 +907,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
 	hostResourceInfo.hashLifeTime = 1ms;
 	hostResourceInfo.nextHashTime = std::chrono::high_resolution_clock::now() + hostResourceInfo.hashLifeTime;
+	hostResourceInfo.forceRehash = false;
 
 	g_HostResources[key] = hostResourceInfo;
 
@@ -6442,6 +6455,40 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)
 
     HRESULT hRet = g_pD3DDevice8->GetTransform(State, pMatrix);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetTransform");    
+}
+
+// ******************************************************************
+// * patch: Lock2DSurface
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
+(
+	X_D3DPixelContainer *pPixelContainer,
+	D3DCUBEMAP_FACES     FaceType,
+	UINT                 Level,
+	D3DLOCKED_RECT      *pLockedRect,
+	RECT                *pRect,
+	DWORD                Flags
+	)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+
+	// Pass through to the Xbox implementation of this function
+	typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD);
+	static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
+	XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+
+	// Mark the resource as modified
+	ForceResourceRehash(pPixelContainer);
 }
 
 // ******************************************************************
