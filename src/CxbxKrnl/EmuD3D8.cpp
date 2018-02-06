@@ -859,7 +859,7 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 	// Currently, we only dynamically update Textures and Surfaces, so if our resource
 	// isn't of these types, do nothing
 	DWORD type = GetXboxCommonResourceType(it->second.pXboxResource);
-	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE) {
+	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE && type != X_D3DCOMMON_TYPE_VERTEXBUFFER) {
 		return false;
 	}
 
@@ -6546,18 +6546,14 @@ VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 		LOG_FUNC_ARG(Flags)
 		LOG_FUNC_END;
 
-    IDirect3DVertexBuffer8 *pHostVertexBuffer = GetHostVertexBuffer(pVertexBuffer);
 
-	// Let's verify this VB exists before trying to lock it...
-	if( !pHostVertexBuffer )
-	{
-		EmuWarning("pNewHostVertexBuffer == NULL!");
-		return;
-	}
+	// Pass through to the Xbox implementation of this function
+	typedef VOID(__stdcall *XB_D3DVertexBuffer_Lock_t)(X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD);
+	static XB_D3DVertexBuffer_Lock_t XB_D3DVertexBuffer_Lock = (XB_D3DVertexBuffer_Lock_t)GetXboxFunctionPointer("D3DVertexBuffer_Lock");
+	XB_D3DVertexBuffer_Lock(pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
 
-	pHostVertexBuffer->Unlock(); // remove old lock
-	HRESULT hRet = pHostVertexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
-	DEBUG_D3DRESULT(hRet, "pHostVertexBuffer->Lock");
+	// Mark the resource as modified
+	ForceResourceRehash(pVertexBuffer);
 }
 
 // ******************************************************************
@@ -6576,26 +6572,15 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 		LOG_FUNC_ARG(Flags)
 		LOG_FUNC_END;
 
-    BYTE *pbNativeData = NULL;
+	// Pass through to the Xbox implementation of this function
+	typedef BYTE*(__stdcall *XB_D3DVertexBuffer_Lock2_t)(X_D3DVertexBuffer*, DWORD);
+	static XB_D3DVertexBuffer_Lock2_t XB_D3DVertexBuffer_Lock2 = (XB_D3DVertexBuffer_Lock2_t)GetXboxFunctionPointer("D3DVertexBuffer_Lock2");
+	BYTE* pRet = XB_D3DVertexBuffer_Lock2(pVertexBuffer, Flags);
 
-    HRESULT hRet = D3D_OK;
-	
-    IDirect3DVertexBuffer8 *pHostVertexBuffer = GetHostVertexBuffer(pVertexBuffer);
-	if (pHostVertexBuffer == nullptr)
-		EmuWarning("D3DVertexBuffer_Lock2 : pNewHostVertexBuffer == nullptr!");
-	else
-	{
-		pHostVertexBuffer->Unlock(); // remove old lock
-		hRet = pHostVertexBuffer->Lock(
-			/*OffsetToLock=*/0, 
-			/*SizeToLock=*/0/*=entire buffer*/, 
-			&pbNativeData,
-			EmuXB2PC_D3DLock(Flags) // Fixed flags check, Battlestar Galactica now displays graphics correctly
-		);
-		DEBUG_D3DRESULT(hRet, "pHostVertexBuffer->Lock");
-	}
+	// Mark the resource as modified
+	ForceResourceRehash(pVertexBuffer);
 
-    return pbNativeData; // For now, give the native buffer memory to Xbox. TODO : pVertexBuffer->Data 
+	RETURN(pRet);
 }
 
 XTL::X_D3DVertexBuffer*g_D3DStreams[16];
