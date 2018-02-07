@@ -17,13 +17,13 @@ It uses the debugger API provided by Windows, primarily **WaitForDebugEvent** an
 ### Primary
 
 * ~~Create wrapper for the Cxbx-Reloaded child process~~
-* Support new threads
+* ~~Support new threads~~
 * Support displaying of interrupts and exceptions
 * Support resolving relevant XBE symbols from a callstack
 
 ### Secondary
 
-* Suspending threads and checking memory
+* ~~Suspending threads and checking memory~~
 * Breakpoints - inserting and handling interrupts
 
 ## Thanks
