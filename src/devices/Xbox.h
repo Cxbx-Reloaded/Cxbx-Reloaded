@@ -33,5 +33,49 @@
 // *  All rights reserved
 // *
 // ******************************************************************#pragma once
+#pragma once
 
-extern void InitXboxHardware();
+#include "PCIBus.h" // For PCIBus
+#include "SMBus.h" // For SMBus
+#include "MCPXDevice.h" // For MCPXDevice
+#include "SMCDevice.h" // For SMCDevice
+#include "EEPROMDevice.h" // For EEPROMDevice
+#include "EmuNVNet.h" // For NVNetDevice
+#include "devices\video\nv2a.h" // For NV2ADevice
+
+#define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
+#define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
+#define SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER 0x20 // = Write; Read = 0x21
+#define SMBUS_ADDRESS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 0x8B
+#define SMBUS_ADDRESS_TEMPERATURE_MEASUREMENT 0x98 // = Write; Read = 0x99
+#define SMBUS_ADDRESS_EEPROM 0xA8 // = Write; Read = 0xA9
+#define SMBUS_ADDRESS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0xD5
+#define SMBUS_ADDRESS_TV_ENCODER_ID_XCALIBUR 0xE0 // = Write; Read = 0xE1
+
+typedef enum {
+	Revision1_0,
+	Revision1_1,
+	Revision1_2,
+	Revision1_3,
+	Revision1_4,
+	Revision1_5,
+	Revision1_6,
+	DebugKit
+} HardwareModel;
+
+typedef enum { // TODO : Move to it's own file
+	// http://xboxdevwiki.net/Hardware_Revisions#Video_encoder
+	Conexant,
+	Focus,
+	XCalibur
+} TVEncoder;
+
+extern PCIBus* g_PCIBus;
+extern SMBus* g_SMBus;
+extern MCPXDevice* g_MCPX;
+extern SMCDevice* g_SMC;
+extern EEPROMDevice* g_EEPROM;
+extern NVNetDevice* g_NVNet;
+extern NV2ADevice* g_NV2A;
+
+extern void InitXboxHardware(HardwareModel hardwareModel);

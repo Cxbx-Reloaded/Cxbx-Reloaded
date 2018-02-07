@@ -56,11 +56,13 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
+#include <assert.h>
 
 #define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
 
@@ -88,10 +90,12 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
+	// BaseAddress may be unassigned
+	assert(AllocationSize != xbnullptr); // AllocationSize must be assigned
 
 	NTSTATUS ret = 0;
 
-	ULONG_PTR RequestedBaseAddress = (ULONG_PTR)*BaseAddress;
+	ULONG_PTR RequestedBaseAddress = (BaseAddress) ? (ULONG_PTR)*BaseAddress : 0;
 	ULONG RequestedAllocationSize = *AllocationSize;
 
 	DbgPrintf("KNRL: NtAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", RequestedBaseAddress, RequestedBaseAddress + RequestedAllocationSize);
@@ -109,8 +113,9 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		ret = STATUS_INVALID_PARAMETER;
 
 	// Allocation should fit in remaining address range
-	if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - RequestedBaseAddress + 1) < RequestedAllocationSize)
-		ret = STATUS_INVALID_PARAMETER;
+	if (RequestedBaseAddress > 0)
+		if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - RequestedBaseAddress + 1) < RequestedAllocationSize)
+			ret = STATUS_INVALID_PARAMETER;
 
 	// Only known flags are allowed
 	if ((AllocationType & ~MEM_KNOWN_FLAGS) != 0)
@@ -129,30 +134,24 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 
 	if (ret == 0)
 	{
-		// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
-		// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
-		// this flag fixes Azurik for XP.
-
-		if (AllocationType & MEM_NOZERO)
-		{
-			EmuWarning("MEM_NOZERO flag is not supported!");
-			AllocationType &= ~MEM_NOZERO;
-		}
-
-		ret = NtDll::NtAllocateVirtualMemory(
-			/*ProcessHandle=*/g_CurrentProcessHandle,
-			BaseAddress,
+		ret = g_VMManager.XbAllocateVirtualMemory(
+			(VAddr*)&RequestedBaseAddress,
 			ZeroBits,
-			/*RegionSize=*/AllocationSize,
+			(size_t*)&RequestedAllocationSize,
 			AllocationType,
 			Protect);
 
 		if (NT_SUCCESS(ret))
 		{
-			ULONG_PTR ResultingBaseAddress = (ULONG_PTR)*BaseAddress;
-			ULONG ResultingAllocationSize = *AllocationSize;
+			ULONG_PTR ResultingBaseAddress = RequestedBaseAddress;
+			ULONG ResultingAllocationSize = RequestedAllocationSize;
 
-			DbgPrintf("KNRL: NtAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize);
+			DbgPrintf("KNRL: NtAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize - 1);
+
+			if (BaseAddress)
+				*BaseAddress = (PVOID*)ResultingBaseAddress;
+
+			*AllocationSize = RequestedAllocationSize;
 		}
 		else
 			if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
@@ -826,7 +825,17 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+	assert(BaseAddress); // Must be assigned
+	// FreeSize may be unassigned
+
+	ULONG RegionSize = (FreeSize) ? *FreeSize : 0;
+
+	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)&RegionSize, FreeType);
+
+	if (SUCCEEDED(ret)) {
+		if (FreeSize != xbnullptr)
+			*FreeSize = RegionSize;
+	}
 
 	RETURN(ret);
 }
@@ -1257,8 +1266,6 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 			// Bail out if the buffer gets too big
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
-			
-			ntFileInfo = malloc(bufferSize);
 		}
 	} while (ret == STATUS_BUFFER_OVERFLOW);
 	

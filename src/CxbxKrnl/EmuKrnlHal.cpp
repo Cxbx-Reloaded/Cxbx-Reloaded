@@ -54,7 +54,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 #include "Common\EmuEEPROM.h" // For EEPROM
-#include "devices\SMBus.h" // For g_SMBus
+#include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 
 #include <algorithm> // for std::replace
@@ -568,7 +568,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we need to change our corresponding
 		// paths if we want to emulate all the possible fatal errors
 
-		xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
+		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 		char szArgsBuffer[4096];
 		char szWorkingDirectoy[MAX_PATH];
 		bool bQuickReboot = true;
@@ -794,7 +794,7 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 	
 	ResetOrShutdownCommandCode = SMC_COMMAND_RESET;
 	ResetOrShutdownDataValue = SMC_RESET_ASSERT_SHUTDOWN;
-	xboxkrnl::HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
+	xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
 
 	RETURN(S_OK);
 }
@@ -829,7 +829,7 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 
 //	HalpSMCScratchRegister = ScratchRegister;
 
-	NTSTATUS Res = HalWriteSMBusValue(SMBUS_SMC_SLAVE_ADDRESS, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
+	NTSTATUS Res = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
 	RETURN(Res);
 }

@@ -97,7 +97,7 @@ void XBVideo::Save(const char *szRegistryKey)
     // ******************************************************************
     // * Save Configuration to Registry
     // ******************************************************************
-    {
+    if (g_SaveOnExit) {
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 

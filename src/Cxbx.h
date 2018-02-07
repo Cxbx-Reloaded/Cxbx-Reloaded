@@ -72,6 +72,7 @@ typedef u32              xbaddr;
 /*! xbnull is the type of null address or value*/
 #define xbnull  0
 
+#ifdef _DEBUG
 /*! define this to track vertex buffers */
 #define _DEBUG_TRACK_VB
 /*! define this to track vertex shaders */
@@ -81,7 +82,6 @@ typedef u32              xbaddr;
 /*! define this to track push buffers */
 #define _DEBUG_TRACK_PB
 /*! define this to track memory allocations */
-#ifdef _DEBUG
 //#define _DEBUG_ALLOC
 #endif
 /*! define this to trace intercepted function calls */
@@ -124,6 +124,9 @@ extern bool g_bIsChihiro;
 
 /*! indicates emulation of a Debug xbe executable */
 extern bool g_bIsDebug;
+
+/*! indicates ability to save on exit (needed for settings reset) */
+extern bool g_SaveOnExit;
 
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256

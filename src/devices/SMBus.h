@@ -78,6 +78,4 @@ class SMBus : public PCIDevice {
 		std::map<uint8_t, SMDevice*> m_Devices;
 };
 
-extern SMBus* g_SMBus;
-
 #endif

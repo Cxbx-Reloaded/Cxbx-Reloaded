@@ -556,7 +556,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 	// to IXACTWaveBank is released.
 
 //	if(pWaveBank)
-//		g_MemoryManager.Free(pWaveBank);
+//		g_VMManager.Deallocate((VAddr)pWaveBank);
 
 	RETURN(S_OK);
 }

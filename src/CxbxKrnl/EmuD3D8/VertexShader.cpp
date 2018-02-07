@@ -2220,7 +2220,10 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 			static const char dummy[] =
 				"vs.1.1\n"
-				"mov oPos, v0\n";
+				"dp4 oPos.x, v0, c96\n"
+				"dp4 oPos.y, v0, c97\n"
+				"dp4 oPos.z, v0, c98\n"
+				"dp4 oPos.w, v0, c99\n";
 
 			hRet = D3DXAssembleShader(dummy,
 				strlen(dummy),

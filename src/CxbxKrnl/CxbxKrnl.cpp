@@ -1047,7 +1047,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	SetupXboxDeviceTypes();
 
-	InitXboxHardware();
+	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);

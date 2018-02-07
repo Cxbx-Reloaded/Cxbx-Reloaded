@@ -64,7 +64,22 @@ typedef UINT_PTR VAddr;
 typedef UINT_PTR PAddr;
 typedef std::uint32_t u32;
 typedef DWORD PTEflags;
+enum class PageType : u32 { 
+	Unknown, // Verified to be called 'Unknown'
+	Stack, // Used by MmCreateKernelStack / VMManager::AllocateStack
+	PageTable, // Not yet used
+	Unknown1, // System-related?
+	Pool, // Used by ExAllocatePoolWithTag
+	VirtualMemory, 
+	SystemMemory, // Used by MmAllocateSystemMemory
+	Image, // Used by XeLoadSection
+	Cache, // Not yet used
+	Contiguous, // Used by MmAllocateContiguousMemoryEx
+	Unknown2, // xbdm-related?
+	COUNT
+};
 
+extern DWORD DefaultPageTypeProtection(const PageType page_type);
 
 /* PhysicalMemory class */
 
@@ -82,6 +97,8 @@ class PhysicalMemory
 		std::map<PAddr, size_t> m_Mem_map;
 		// map tracking the blocks allocated with VirtualAlloc
 		std::map<VAddr, size_t> m_Fragmented_mem_map;
+		// number of allocated pages per type
+		u32 m_PageCount[(int)PageType::COUNT];
 		// current error status code of the PhysicalMemory class
 		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
 		// highest address available for contiguous allocations
@@ -92,27 +109,27 @@ class PhysicalMemory
 		// destructor
 		~PhysicalMemory()
 		{
-			for (auto it = m_Fragmented_mem_map.begin(); it != m_Fragmented_mem_map.end(); ++it)
+			for (auto it = m_Fragmented_mem_map.begin(), end = m_Fragmented_mem_map.end(); it != end; ++it)
 			{
 				VirtualFree((void*)it->first, 0, MEM_RELEASE);
 			}
 		}
 		// allocates a block of the mapped file, returns m_MaxContiguousAddress and sets an error code if unsuccessful
-		PAddr AllocatePhysicalMemory(size_t size);
+		PAddr AllocatePhysicalMemory(const size_t size, const PageType type);
 		// allocates a block of the mapped file between the specified range if possible
-		PAddr AllocatePhysicalMemoryRange(size_t size, PAddr low_addr, PAddr high_addr);
+		PAddr AllocatePhysicalMemoryRange(const size_t size, const PageType type, const PAddr low_addr, const PAddr high_addr);
 		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
-		VAddr AllocateFragmented(size_t size);
+		VAddr AllocateFragmented(const size_t size, const PageType type);
 		// shrinks the size af an allocation
-		void ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart);
+		void ShrinkPhysicalAllocation(const PAddr addr, const size_t offset, const bool bFragmentedMap, const bool bStart);
 		// deallocates a block of the mapped file
-		void DeAllocatePhysicalMemory(PAddr addr);
+		void DeAllocatePhysicalMemory(const PAddr addr);
 		// deallocates a block allocated with VirtualAlloc
-		void DeAllocateFragmented(VAddr addr);
+		void DeAllocateFragmented(const VAddr addr);
 		// retrieves the current error code of the PhysicalMemory class
 		PMEMORY_STATUS GetError() const;
 		// sets the error code of the PhysicalMemory class
-		void SetError(PMEMORY_STATUS err);
+		void SetError(const PMEMORY_STATUS err);
 		// clears the error code of the PhysicalMemory class
 		void ClearError();
 };

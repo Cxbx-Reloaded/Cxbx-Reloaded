@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -7,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->video->nv2a.h
+// *   src->devices->video->MCPXDevice.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,27 +28,52 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
 // *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
+#define _XBOXKRNL_DEFEXTRN_
 
-#include "devices\PCIDevice.h" // For PCIDevice
+#define LOG_PREFIX "MCPX"
 
-#define NV2A_ADDR  0xFD000000
-#define NV2A_SIZE             0x01000000
 
-class NV2ADevice : public PCIDevice {
-public:
-	// PCI Device functions
-	void Init();
-	void Reset();
+#include "MCPXDevice.h"
 
-	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
-	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
-	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
-};
+/* MCPXDevice */
+
+MCPXDevice::MCPXDevice(MCPXRevision revision)
+{
+	m_revision = revision;
+}
+
+// PCI Device functions
+
+void MCPXDevice::Init()
+{
+//	m_DeviceId = ?;
+//	m_VendorId = PCI_VENDOR_ID_NVIDIA;
+}
+
+void MCPXDevice::Reset()
+{
+}
+
+uint32_t MCPXDevice::IORead(int barIndex, uint32_t port, unsigned size)
+{
+	return 0;
+}
+
+void MCPXDevice::IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size)
+{
+}
+
+uint32_t MCPXDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
+{
+	return 0;
+}
+
+void MCPXDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
+{
+	// TODO : Log unexpected bar access
+}

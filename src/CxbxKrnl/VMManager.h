@@ -42,12 +42,8 @@
 
 #define XbAllocateVirtualMemoryStub(addr, zero_bits, size, allocation_type, protect) \
 		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, true)
-#define XbAllocateVirtualMemoryReal(addr, zero_bits, size, allocation_type, protect) \
-		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, false)
 #define XbFreeVirtualMemoryStub(addr, size, free_type) \
 		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, true)
-#define XbFreeVirtualMemoryReal(addr, size, free_type) \
-		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, false)
 
 
 /* VMATypes */
@@ -94,7 +90,9 @@ struct VirtualMemoryArea
 	// vma size
 	size_t size = 0;
 	// vma kind of memory
-	VMAType type = VMAType::Free;
+	VMAType vma_type = VMAType::Free;
+	// the page type of this memory area
+	PageType page_type = PageType::Unknown; // TODO : Move this towards an actual PageTable entry once that get's implemented
 	// vma permissions
 	DWORD permissions = PAGE_NOACCESS;
 	// addr of the memory backing this block, if any
@@ -129,12 +127,12 @@ class VMManager : public PhysicalMemory
 		// initialize chihiro/debug - specifc memory ranges
 		void InitializeChihiroDebug();
 		// maps the virtual memory region used by a device
-		void MapHardwareDevice(VAddr base, size_t size, VMAType type);
+		void MapHardwareDevice(VAddr base, size_t size, VMAType vma_type);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
-		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE,
-			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
+		VAddr Allocate(size_t size, PageType page_type = PageType::VirtualMemory, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG alignment = PAGE_SIZE,
+			DWORD protect = PAGE_READWRITE);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates stack memory
@@ -155,9 +153,9 @@ class VMManager : public PhysicalMemory
 		size_t QuerySize(VAddr addr);
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
-			DWORD protect, bool bStub);
+			DWORD protect, bool bStub = false);
 		// xbox implementation of NtFreeVirtualMemory
-		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub);
+		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub = false);
 
 	
 	private:
@@ -171,15 +169,11 @@ class VMManager : public PhysicalMemory
 		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-		// amount of image virtual memory in use
-		size_t m_ImageMemoryInUse = 0;
-		// amount of non - image virtual memory in use
-		size_t m_NonImageMemoryInUse = 0;
-		// amount of stack virtual memory in use
-		size_t m_StackMemoryInUse = 0;
-	
+		// this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
+		size_t m_VirtualMemoryBytesReserved = 0;
+	private:
 		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment = PAGE_SIZE, bool bNonContiguous = true);
+		VAddr MapMemoryBlock(size_t* size, PageType page_type, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE);
 		// creates a vma representing the memory block to remove
 		void UnmapRange(VAddr target);
 		// changes access permissions for a range of vma's, splitting them if necessary

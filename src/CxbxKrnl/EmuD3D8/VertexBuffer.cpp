@@ -42,6 +42,9 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 
+// TODO: Find somewhere to put this that doesn't conflict with XTL::
+extern void EmuUpdateActiveTextureStages();
+
 #include <ctime>
 
 #define HASH_SEED 0
@@ -1081,6 +1084,7 @@ bool XTL::VertexPatcher::Restore()
 VOID XTL::EmuFlushIVB()
 {
     XTL::EmuUpdateDeferredStates();
+	EmuUpdateActiveTextureStages();
 
     DWORD *pdwVB = (DWORD*)g_pIVBVertexBuffer;
 

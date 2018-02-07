@@ -63,7 +63,7 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
     X_D3DFORMAT Format
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 	LOG_FUNC_ONE_ARG(Format);
 
 	RETURN(FALSE);
@@ -148,7 +148,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
     DWORD            BytesPerPixel
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
@@ -210,7 +210,7 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pResource)
