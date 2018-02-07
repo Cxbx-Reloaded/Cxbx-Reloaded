@@ -60,6 +60,8 @@
 
 static int gameLogoWidth, gameLogoHeight;
 
+bool g_SaveOnExit = true;
+
 void ClearHLECache()
 {
 	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
@@ -86,6 +88,27 @@ void ClearHLECache()
 	}
 
 	printf("Cleared HLE Cache\n");
+}
+
+void WndMain::InitializeSettings() {
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+		for (int v = 0; v < m_dwRecentXbe; v++) {
+			char buffer[32];
+			sprintf(buffer, "RecentXbe%d", v);
+			RegDeleteValue(hKey, buffer);
+		}
+		RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
+		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "KrnlDebug");
+		RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
+		RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
+
+		RegDeleteTree(hKey, "XBVideo"); RegDeleteTree(hKey, "XBAudio"); RegDeleteTree(hKey, "XBController");
+
+		RegCloseKey(hKey);
+
+		g_SaveOnExit = false;
+	}
 }
 
 #define TIMERID_FPS 0
@@ -280,7 +303,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 WndMain::~WndMain()
 {
     // save configuration to registry
-    {
+    if (g_SaveOnExit) {
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
@@ -1078,6 +1101,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				if (DeleteFile(fullpath.c_str())) {
 					MessageBox(m_hwnd, "This title's HLE Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
+				}
+			}
+			break;
+
+			case ID_SETTINGS_INITIALIZE:
+			{
+				int ret = MessageBox(m_hwnd, "Warning: This will reset all Cxbx-Reloaded settings to their default values."
+					"\nAre you sure you want to proceed?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
+
+				if (ret == IDYES) {
+					InitializeSettings();
+					MessageBox(m_hwnd, "Cxbx-Reloaded has been initialized and will now close.", "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+					SendMessage(hwnd, WM_CLOSE, 0, 0);
 				}
 			}
 			break;

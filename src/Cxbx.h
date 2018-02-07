@@ -122,6 +122,9 @@ extern bool g_bIsChihiro;
 /*! indicates emulation of a Debug xbe executable */
 extern bool g_bIsDebug;
 
+/*! indicates ability to save on exit (needed for settings reset) */
+extern bool g_SaveOnExit;
+
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
