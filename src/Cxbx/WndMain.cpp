@@ -1280,7 +1280,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-            case ID_EMULATION_STARTDEBUG:
+            case ID_EMULATION_STARTDEBUGGER:
                 if (m_Xbe != nullptr)
                 {
                     StartEmulation(hwnd, debuggerOn);
@@ -1725,7 +1725,7 @@ void WndMain::RefreshMenus()
             EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
             // enable emulation with debugging
-            EnableMenuItem(emul_menu, ID_EMULATION_STARTDEBUG, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
+            EnableMenuItem(emul_menu, ID_EMULATION_STARTDEBUGGER, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
             // enable emulation stop
             EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
