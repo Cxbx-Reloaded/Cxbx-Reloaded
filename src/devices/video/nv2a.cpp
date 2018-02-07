@@ -618,8 +618,6 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 NV2ADevice::NV2ADevice()
 {
 	m_nv2a_state = new NV2AState();
-
-	m_nv2a_state->pfifo.cache1.cache_lock = std::unique_lock<std::mutex>(m_nv2a_state->pfifo.cache1._cache_lock, std::defer_lock);
 	pgraph_init(m_nv2a_state);
 }
 
