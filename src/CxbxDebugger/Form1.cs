@@ -371,7 +371,7 @@ namespace CxbxDebugger
 
             public void OnThreadExit(DebuggerThread Thread, uint ExitCode)
             {
-                frm.DebugLog(string.Format("Thread exited {0} ({1})", Thread.ThreadID, PrettyExitCode(ExitCode)));
+                frm.DebugLog(string.Format("Thread exited {0} ({1})", Thread.ThreadID, NtStatus.PrettyPrint(ExitCode)));
                 frm.DebugThreads.Remove(Thread);
             }
 
@@ -397,18 +397,18 @@ namespace CxbxDebugger
                 frm.OutputString(Message);
             }
 
-            public bool OnAccessViolation(DebuggerThread Thread, uint Code, IntPtr Address)
+            public bool OnAccessViolation(DebuggerThread Thread, uint Code, uint Address)
             {
                 string ProcessName = "??";
 
-                var Module = frm.DebuggerInst.ResolveModule((uint)Address);
+                var Module = frm.DebuggerInst.ResolveModule(Address);
                 if (Module != null)
                 {
                     ProcessName = Path.GetFileName(Module.Path);
                 }
 
                 // TODO Include GetLastError string
-                string ExceptionMessage = string.Format("Access violation thrown at 0x{0:X8} ({1})", (uint)Address, ProcessName);
+                string ExceptionMessage = string.Format("Access violation thrown at 0x{0:X8} ({1})", Address, ProcessName);
 
                 ExceptionMessage += string.Format("\n\nException code {0:X8}", Code);
 

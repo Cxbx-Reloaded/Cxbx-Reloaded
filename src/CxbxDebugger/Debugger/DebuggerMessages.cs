@@ -163,7 +163,7 @@ namespace CxbxDebugger
         public class ExceptionHandledQuery
         {
             public IntPtr ReponseAddr { get; set; }
-            public IntPtr ExceptionAddress { get; set; }
+            public uint ExceptionAddress { get; set; }
             public uint ExceptionCode { get; set; }
             public uint ParameterCount { get; set; }
             public IntPtr ParameterBase { get; set; }
@@ -174,7 +174,7 @@ namespace CxbxDebugger
             ExceptionHandledQuery Query = new ExceptionHandledQuery();
 
             Query.ReponseAddr = new IntPtr(Data[0]);
-            Query.ExceptionAddress = new IntPtr(Data[1]);
+            Query.ExceptionAddress = Data[1];
             Query.ExceptionCode = Data[2];
             Query.ParameterCount = Data[3];
             Query.ParameterBase = new IntPtr(Data[4]);
