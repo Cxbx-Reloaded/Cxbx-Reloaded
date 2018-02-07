@@ -11,7 +11,6 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using cs_x86;
-using VsChromium.Core.Win32;
 
 namespace CxbxDebugger
 {
@@ -323,45 +322,16 @@ namespace CxbxDebugger
                 frm = main;
             }
 
-            private string PrettyExitCode(uint ExitCode)
-            {
-                string ExitCodeString;
-
-                switch (ExitCode)
-                {
-                    case NtStatus.STATUS_SUCCESS:
-                        ExitCodeString = "Finished";
-                        break;
-
-                    case NtStatus.STATUS_WAIT_1:
-                    case NtStatus.STATUS_WAIT_2:
-                    case NtStatus.STATUS_WAIT_3:
-                        ExitCodeString = "Aborted";
-                        break;
-
-                    case NtStatus.STATUS_CONTROL_C_EXIT:
-                        ExitCodeString = "Debug session ended";
-                        break;
-
-                    default:
-                        ExitCodeString = string.Format("{0:X8}", ExitCode);
-                        break;
-                }
-
-                return ExitCodeString;
-            }
-
             public void OnProcessCreate(DebuggerProcess Process)
             {
                 frm.DebugModules.Add(Process);
             }
-
-
+            
             public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
             {
                 int remainingThreads = Process.Threads.Count;
 
-                frm.DebugLog(string.Format("Process exited {0} ({1})", Process.ProcessID, PrettyExitCode(ExitCode)));
+                frm.DebugLog(string.Format("Process exited {0} ({1})", Process.ProcessID, NtStatus.PrettyPrint(ExitCode)));
                 frm.DebugLog(string.Format("{0} child thread(s) remain open", remainingThreads));
 
                 frm.DebugModules.Clear();
