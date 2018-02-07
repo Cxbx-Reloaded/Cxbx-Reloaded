@@ -445,8 +445,7 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::mutex _cache_lock;
-	std::unique_lock<std::mutex> cache_lock;
+	std::mutex cache_lock;
 	std::condition_variable cache_cond;
 	std::queue<CacheEntry*> cache;
 	std::queue<CacheEntry*> working_cache;
