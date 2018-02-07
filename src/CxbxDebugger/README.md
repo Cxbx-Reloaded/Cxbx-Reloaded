@@ -2,6 +2,8 @@
 
 CxbxDebugger is an experimental tool to aid debugging Xbox executables from within Cxbx.
 
+![Cxbx-Debugger screenshot](https://i.imgur.com/N7hgXwt.png)
+
 The goal is to resolve XBE symbols using the function signatures identified by Cxbx-Reloaded.
 
 This is a workaround for patching or creating PDB files at runtime for Cxbx-Reloaded (where the memory region is pre-allocated - see `virtual_memory_placeholder`). However, in future it may be viable to supporting loading symbols from matching PDB files.
