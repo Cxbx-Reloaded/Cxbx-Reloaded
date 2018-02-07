@@ -111,3 +111,6 @@ src/Version.h
 
 # Last known git hash
 LAST_GIT_VERSION
+
+# git mergetool backup
+*.orig
