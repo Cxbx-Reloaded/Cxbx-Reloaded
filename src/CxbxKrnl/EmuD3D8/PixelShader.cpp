@@ -4892,7 +4892,7 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 	printf("*** PIXEL SHADER CREATION FINISHED!\n");
 	pCodeBuffer = NULL;
 
-	#ifdef _DEBUG
+	#ifdef _DEBUG_TRACK_PS
 		DumpPixelShaderDefToFile(pPSD, szCode);
 	#endif
 
