@@ -11,6 +11,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using cs_x86;
+using VsChromium.Core.Win32;
 
 namespace CxbxDebugger
 {
@@ -328,16 +329,17 @@ namespace CxbxDebugger
 
                 switch (ExitCode)
                 {
-                    case 0:
+                    case NtStatus.STATUS_SUCCESS:
                         ExitCodeString = "Finished";
                         break;
 
-                    case 1:
-                        ExitCodeString = "Forced to exit";
+                    case NtStatus.STATUS_WAIT_1:
+                    case NtStatus.STATUS_WAIT_2:
+                    case NtStatus.STATUS_WAIT_3:
+                        ExitCodeString = "Aborted";
                         break;
 
-                    case 0xC000013A:
-                        // Actual code is STATUS_CONTROL_C_EXIT, but isn't very friendly
+                    case NtStatus.STATUS_CONTROL_C_EXIT:
                         ExitCodeString = "Debug session ended";
                         break;
 
