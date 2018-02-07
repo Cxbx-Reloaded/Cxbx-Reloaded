@@ -115,7 +115,7 @@ enum PageType {
 	Cache,                     // Not used yet
 	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
 	Debugger,                  // xbdm-related
-	COUNT                      // the array size containing the page usage per type
+	COUNT                      // The size of the array containing the page usage per type
 };
 
 
@@ -125,7 +125,7 @@ typedef struct _XBOX_PFN {
 	{
 		ULONG Default;
 		MMPTE Pte;
-		MMPFNFREE Free;
+		//MMPFNFREE Free;
 		struct {
 			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
 			ULONG Busy : 1;        // If set, PFN is in use
@@ -159,7 +159,7 @@ typedef struct _XBOX_PFN {
 //#define PTE_READWRITE            MM_PTE_WRITE_MASK
 #define PTE_VALID_MASK           0x00000001
 #define PTE_WRITE_MASK           0x00000002
-//#define PTE_OWNER_MASK           0x00000004
+#define PTE_OWNER_MASK           0x00000004
 //#define PTE_WRITE_THROUGH_MASK   0x00000008
 //#define PTE_CACHE_DISABLE_MASK   0x00000010
 #define PTE_ACCESS_MASK          0x00000020
@@ -178,13 +178,15 @@ typedef struct _XBOX_PFN {
 
 
 /* Various macros to manipulate PDE/PTE/PFN */
-#define GetPdeAddress(Va) (PMMPTE)(((Va >> 22) << 2) + PDE_BASE)
+#define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PDE_BASE))
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
 // On real hardware, enabling only the cache disable bit would result in an effective caching type of USWC
 // (uncacheable speculative write combining), so we set both to achieve it
 #define DISABLE_CACHING(Pte) ((Pte).Hardware.CacheDisable = 1); ((Pte).Hardware.WriteThrough = 1)
+#define SET_WRITE_COMBINE(Pte) ((Pte).Hardware.CacheDisable = 0); ((Pte).Hardware.WriteThrough = 1)
 #define ValidKernelPteBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x63
+#define ValidKernelPdeBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_OWNER_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x67
 // This returns the VAddr in the contiguous region
 #define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)SYSTEM_PHYSICAL_MAP + (Pfn << PAGE_SHIFT))
 // This works with both PAddr and VAddr in the contiguous region
@@ -205,8 +207,8 @@ class PhysicalMemory
 		// if the block to allocate is smaller than AllocationThreshold, then it will be mapped starting from the bottom of the memory,
 		// otherwise it's mapped from the top. AllocationThreshold is 64KiB, the allocation granularity of the Xbox
 		const unsigned int m_AllocationThreshold = 1024 * 64;
-		// amount of physical memory in use
-		size_t m_PhysicalPagesInUse = 0;
+		// amount of physical pages in use
+		int m_PhysicalPagesInUse = 0;
 		// max physical memory available on the Xbox/Chihiro
 		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
 		// map tracking the physical memory currently in use
@@ -236,10 +238,8 @@ class PhysicalMemory
 		void InitializePfnDatabase();
 		// set up the pfn database after a quick reboot (a new xbe is launched)
 		void ReinitializePfnDatabase();
-		// inserts a range of pages in the manager free list
-		//void InsertPageRangeInFreeList(PFN_Number Pfn, PFN_Number PfnEndExcluded);
-		// inserts a single page in the manager free list
-		//void InsertPageInFreeList(PFN_Number Pfn, bool InsertAtHead);
+		// set up the page directory
+		void InitializePageDirectory();
 		// allocates a block of the mapped file, returns m_MaxContiguousAddress and sets an error code if unsuccessful
 		PAddr AllocatePhysicalMemory(size_t size);
 		// allocates a block of the mapped file between the specified range if possible

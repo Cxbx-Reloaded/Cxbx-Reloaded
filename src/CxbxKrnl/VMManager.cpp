@@ -77,7 +77,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return true;
 }
 
-void VMManager::Initialize(HANDLE file_view)
+void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 {
 	// This reserves a large enough memory region to map the second physical memory file view
 	uintptr_t start = (uintptr_t)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
@@ -87,7 +87,7 @@ void VMManager::Initialize(HANDLE file_view)
 	}
 	VirtualFree((void*)start, 0, MEM_RELEASE);
 	m_Base = (VAddr)MapViewOfFileEx(
-		file_view,
+		memory_view,
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		0,
 		0,
@@ -99,23 +99,12 @@ void VMManager::Initialize(HANDLE file_view)
 		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
 	}
 
-	// I'm still unsure about this...
-	// Map the page tables
-	void *PageTableAddr = (void *)VirtualAlloc(
-		(void *)PAGE_TABLES_BASE,
-		PAGE_TABLES_END - PAGE_TABLES_BASE + 1,
-		MEM_RESERVE | MEM_COMMIT,
-		PAGE_READWRITE);
-	if (PageTableAddr != (void *)PAGE_TABLES_BASE)
-	{
-		CxbxKrnlCleanup("Couldn't map the page table range to 0xC0000000!");
-	}
-
-	m_hAliasedView = file_view;
+	m_hAliasedView = memory_view;
+	m_hPTFile = PT_view;
 	m_Vma_map.clear();
 
 	// Set up general memory variables according to the xbe type
-	if (!g_IsRetail)
+	if (g_bIsChihiro)
 	{
 		m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
@@ -129,10 +118,14 @@ void VMManager::Initialize(HANDLE file_view)
 		ReinitializePfnDatabase();
 	}
 	else {
+		FillMemoryUlong((void*)PTE_BASE, 4 * ONE_MB, 0); // prevent reusing the the old values of the page tables if we are not quick rebooting
 		InitializePfnDatabase();
 	}
-	::page_table.addresses.fill(NULL);
-	::page_table.attributes.fill(0);
+
+	// Construct the page directory
+	InitializePageDirectory();
+
+
 
 	// Initialize the map with a single free region covering the entire virtual address space, less the first page
 	VirtualMemoryArea initial_vma;

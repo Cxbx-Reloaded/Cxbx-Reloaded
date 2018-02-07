@@ -60,39 +60,9 @@ PMEMORY_STATUS PhysicalMemory::GetError() const
 
 void PhysicalMemory::InitializePfnDatabase()
 {
-	PMMPTE pPde;
-	MMPTE TempPte;
 	XBOX_PFN TempPF;
 	ULONG PFN;
 	ULONG PFN_end;
-
-	// Write the pde's representing the user virtual space (lower 2 GiB) - no page tables
-	for (pPde = GetPdeAddress(0); pPde < GetPdeAddress(CONTIGUOUS_MEMORY_BASE); ++pPde)
-	{
-		WRITE_ZERO_PTE(pPde);
-	}
-
-
-	// Write the pde's of the WC (tiled) memory - no page tables
-	TempPte.Default = ValidKernelPteBits;
-	TempPte.Hardware.LargePage = 1;
-	TempPte.Hardware.WriteThrough = 1;
-	TempPte.Hardware.PFN = XBOX_WRITE_COMBINED_BASE >> PAGE_SHIFT;
-	for (pPde = GetPdeAddress(XBOX_WRITE_COMBINED_BASE); pPde <= GetPdeAddress(XBOX_WRITE_COMBINE_END); ++pPde)
-	{
-		WRITE_PTE(pPde, TempPte);
-		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
-	}
-
-
-	// Write the pde's of the UC memory region - no page tables
-	TempPte.Hardware.PFN = XBOX_UNCACHED_BASE >> PAGE_SHIFT;
-	DISABLE_CACHING(TempPte);
-	for (pPde = GetPdeAddress(XBOX_UNCACHED_BASE); pPde <= GetPdeAddress(XBOX_UNCACHED_END); ++pPde)
-	{
-		WRITE_PTE(pPde, TempPte);
-		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
-	}
 
 
 	// Default initialize the entries of the PFN database
@@ -100,10 +70,10 @@ void PhysicalMemory::InitializePfnDatabase()
 	TempPF.Busy.Busy = 1;
 	TempPF.Busy.LockCount = LOCK_COUNT_MAXIMUM;
 	TempPF.Busy.BusyType = Unknown;
-	if (g_IsRetail) {
+	if (g_bIsRetail) {
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, TempPF.Default); // Xbox: 64 KiB
 	}
-	else if(g_bIsChihiro) { 
+	else if (g_bIsChihiro) { 
 		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Chihiro: 128 KiB
 	} 
 	else { 
@@ -120,7 +90,7 @@ void PhysicalMemory::InitializePfnDatabase()
 	TempPF.Pte.Hardware.GuardOrEnd = 1;
 	TempPF.Pte.Hardware.PFN = PFN;
 
-	if (g_IsRetail || g_bIsDebug) {
+	if (g_bIsRetail || g_bIsDebug) {
 		*XBOX_PFN_ELEMENT(PFN) = TempPF;
 	}
 	else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
@@ -140,7 +110,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		TempPF.Pte.Hardware.Persist = 1;
 		TempPF.Pte.Hardware.PFN = PFN;
 
-		if (g_IsRetail || g_bIsDebug) {
+		if (g_bIsRetail || g_bIsDebug) {
 			*XBOX_PFN_ELEMENT(PFN) = TempPF;
 		}
 		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
@@ -152,7 +122,7 @@ void PhysicalMemory::InitializePfnDatabase()
 
 
 	// Construct the pfn's of the pages holding the pfn database
-	if (g_IsRetail) {
+	if (g_bIsRetail) {
 		PFN = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		PFN_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
 	}
@@ -172,7 +142,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		TempPF.Pte.Hardware.Persist = 1;
 		TempPF.Pte.Hardware.PFN = PFN;
 
-		if (g_IsRetail || g_bIsDebug) {
+		if (g_bIsRetail || g_bIsDebug) {
 			*XBOX_PFN_ELEMENT(PFN) = TempPF;
 		}
 		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
@@ -184,7 +154,7 @@ void PhysicalMemory::InitializePfnDatabase()
 	
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
-	if (g_IsRetail || g_bIsDebug) {
+	if (g_bIsRetail || g_bIsDebug) {
 		PFN = XBOX_INSTANCE_PHYSICAL_PAGE;
 		PFN_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
@@ -200,7 +170,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		DISABLE_CACHING(TempPF.Pte);
 		TempPF.Pte.Hardware.PFN = PFN;
 
-		if (g_IsRetail || g_bIsDebug) {
+		if (g_bIsRetail || g_bIsDebug) {
 			*XBOX_PFN_ELEMENT(PFN) = TempPF;
 		}
 		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
@@ -241,7 +211,7 @@ void PhysicalMemory::InitializePfnDatabase()
 	TempPF.Pte.Hardware.GuardOrEnd = 1;
 	TempPF.Pte.Hardware.PFN = PFN;
 
-	if (g_IsRetail || g_bIsDebug) {
+	if (g_bIsRetail || g_bIsDebug) {
 		*XBOX_PFN_ELEMENT(PFN) = TempPF;
 	}
 	else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
@@ -252,6 +222,74 @@ void PhysicalMemory::InitializePfnDatabase()
 
 void PhysicalMemory::ReinitializePfnDatabase()
 {
+
+}
+
+void PhysicalMemory::InitializePageDirectory()
+{
+	PMMPTE pPde;
+	PMMPTE pPde_end;
+	MMPTE TempPte;
+
+
+	// Write the pde's representing the user virtual space (lower 2 GiB) - no page tables
+	pPde_end = GetPdeAddress(CONTIGUOUS_MEMORY_BASE - 1);
+	for (pPde = GetPdeAddress(0); pPde <= pPde_end; ++pPde)
+	{
+		WRITE_ZERO_PTE(pPde);
+	}
+
+
+	// Write the pde's of the WC (tiled) memory - no page tables
+	TempPte.Default = ValidKernelPteBits;
+	TempPte.Hardware.LargePage = 1;
+	TempPte.Hardware.PFN = XBOX_WRITE_COMBINED_BASE >> PAGE_SHIFT;
+	SET_WRITE_COMBINE(TempPte);
+	pPde_end = GetPdeAddress(XBOX_WRITE_COMBINE_END - 1);
+	for (pPde = GetPdeAddress(XBOX_WRITE_COMBINED_BASE); pPde <= pPde_end; ++pPde)
+	{
+		WRITE_PTE(pPde, TempPte);
+		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
+	}
+
+
+	// Write the pde's of the UC memory region - no page tables
+	TempPte.Hardware.PFN = XBOX_UNCACHED_BASE >> PAGE_SHIFT;
+	DISABLE_CACHING(TempPte);
+	pPde_end = GetPdeAddress(XBOX_UNCACHED_END - 1);
+	for (pPde = GetPdeAddress(XBOX_UNCACHED_BASE); pPde <= pPde_end; ++pPde)
+	{
+		WRITE_PTE(pPde, TempPte);
+		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
+	}
+
+
+	// Map the pde of the page directory (this is actually done by the 2BL on a real Xbox)
+	TempPte.Default = ValidKernelPteBits;
+	TempPte.Hardware.PFN = PAGE_DIRECTORY_PHYSICAL_ADDRESS >> PAGE_SHIFT;
+	pPde = GetPdeAddress(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
+	WRITE_PTE(pPde, TempPte);
+
+
+	// Write the pde's of the contiguous region
+	TempPte.Default = ValidKernelPdeBits;
+	if (g_bIsRetail || g_bIsDebug) {
+		TempPte.Hardware.PFN = (ULONG)XBOX_PFN_ADDRESS;
+		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(XBOX_HIGHEST_PHYSICAL_PAGE));
+	}
+	else {
+		TempPte.Hardware.PFN = (ULONG)CHIHIRO_PFN_ADDRESS;
+		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(CHIHIRO_HIGHEST_PHYSICAL_PAGE));
+	}
+	for (pPde = GetPdeAddress(SYSTEM_PHYSICAL_MAP); pPde <= pPde_end; ++pPde)
+	{
+		WRITE_PTE(pPde, TempPte);
+		TempPte.Hardware.PFN++; // increase PFN
+	}
+
+	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
+	// on the Xbox, which is not present here on Cxbx-Reloaded
+
 
 }
 

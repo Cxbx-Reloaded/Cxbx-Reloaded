@@ -117,13 +117,17 @@ class VMManager : public PhysicalMemory
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hAliasedView);
+			FlushViewOfFile((void*)PTE_BASE, 4 * ONE_MB);
+			FlushFileBuffers(m_hPTFile);
 			UnmapViewOfFile((void *)m_Base);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
-			UnmapViewOfFile((void*)TILED_MEMORY_BASE);
+			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
+			UnmapViewOfFile((void*)PTE_BASE);
 			CloseHandle(m_hAliasedView);
+			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE file_view);
+		void Initialize(HANDLE memory_view, HANDLE PT_view);
 		// maps the virtual memory region used by a device
 		void MapHardwareDevice(VAddr base, size_t size, VMAType vma_type);
 		// retrieves memory statistics
@@ -163,6 +167,8 @@ class VMManager : public PhysicalMemory
 		std::map<VAddr, VirtualMemoryArea> m_Vma_map;
 		// handle of the second file view region
 		HANDLE m_hAliasedView = NULL;
+		// handle of the PT file
+		HANDLE m_hPTFile = NULL;
 		// start address of the memory region to which map non-contiguous allocations in the virtual space
 		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses

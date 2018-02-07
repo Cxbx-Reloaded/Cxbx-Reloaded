@@ -91,6 +91,7 @@ char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
+char szFilePath_page_tables[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -98,12 +99,12 @@ Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
-bool g_IsRetail = false;
+bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
-bool g_IsWine = false;
+bool g_bIsWine = false;
 
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
@@ -364,12 +365,12 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
 
-	size_t tiledMemorySize = TILED_MEMORY_CHIHIRO_SIZE;
-	if (g_IsWine) {
+	size_t tiledMemorySize = XBOX_WRITE_COMBINED_SIZE;
+	if (g_bIsWine) {
 		printf("Wine detected: Using 64MB Tiled Memory Size\n");
 		// TODO: Figure out why Wine needs this and Windows doesn't.
 		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
-		tiledMemorySize = TILED_MEMORY_XBOX_SIZE;
+		tiledMemorySize = XBOX_WRITE_COMBINED_SIZE / 2;
 	}
 
 	// Map memory.bin contents into tiled memory too :
@@ -379,9 +380,9 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 				/* dwFileOffsetHigh */0,
 				/* dwFileOffsetLow */0,
 		tiledMemorySize,
-		(void *)TILED_MEMORY_BASE);
+		(void *)XBOX_WRITE_COMBINED_BASE);
 
-	if (tiled_memory != (void *)TILED_MEMORY_BASE)
+	if (tiled_memory != (void *)XBOX_WRITE_COMBINED_BASE)
 	{
 		if (tiled_memory)
 			UnmapViewOfFile(tiled_memory);
@@ -391,9 +392,94 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	}
 
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
+		GetCurrentThreadId(), XBOX_WRITE_COMBINED_BASE, XBOX_WRITE_COMBINED_BASE + tiledMemorySize - 1);
+
 
 	return hFileMapping;
+}
+
+HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
+{
+	// First, try to open an existing PageTables.bin file :
+	HANDLE hFile = CreateFile(szFilePath_page_tables,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
+
+	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
+	if (NeedsInitialization)
+	{
+		// If the PageTables.bin file doesn't exist yet, create it :
+		hFile = CreateFile(szFilePath_page_tables,
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			/* lpSecurityAttributes */nullptr,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+			/* hTemplateFile */nullptr);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file!\n");
+			return nullptr;
+		}
+	}
+
+	// Make sure memory.bin is at least 4 MB in size
+	SetFilePointer(hFile, 4 * ONE_MB, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFile);
+
+	HANDLE hFileMapping = CreateFileMapping(
+		hFile,
+		/* lpFileMappingAttributes */nullptr,
+		PAGE_READWRITE,
+		/* dwMaximumSizeHigh */0,
+		/* dwMaximumSizeLow */4 * ONE_MB,
+		/**/nullptr);
+	if (hFileMapping == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file mapping!\n");
+		return nullptr;
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFile, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != 4 * ONE_MB)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
+		return nullptr;
+	}
+
+	// Map memory.bin contents into memory :
+	void *memory = (void *)MapViewOfFileEx(
+		hFileMapping,
+		FILE_MAP_READ | FILE_MAP_WRITE,
+		/* dwFileOffsetHigh */0,
+		/* dwFileOffsetLow */0,
+		4 * ONE_MB,
+		(void *)PTE_BASE);
+	if (memory != (void *)PTE_BASE)
+	{
+		if (memory)
+			UnmapViewOfFile(memory);
+
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't map PageTables.bin to 0xC0000000!");
+		return nullptr;
+	}
+
+	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
+		GetCurrentThreadId(), 4, PTE_BASE, PTE_BASE + 4 * ONE_MB - 1);
+
+	if (NeedsInitialization)
+	{
+		memset(memory, 0, 4 * ONE_MB);
+		printf("[0x%.4X] INIT: Initialized page tables memory\n", GetCurrentThreadId());
+	}
+	else
+		printf("[0x%.4X] INIT: Loaded page tables memory.bin\n", GetCurrentThreadId());
 }
 
 #pragma optimize("", off)
@@ -436,7 +522,7 @@ void PrintCurrentConfigurationLog()
 		}
 
 		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
-		if (g_IsWine) {
+		if (g_bIsWine) {
 			printf("Wine %s\n", wine_get_version());
 			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
 		} else {
@@ -635,13 +721,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// Detect Wine
-	g_IsWine = false;
+	g_bIsWine = false;
 	HMODULE hNtDll = GetModuleHandle("ntdll.dll");
 
 	if (hNtDll != nullptr) {
 		wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
 		if (wine_get_version) {
-			g_IsWine = true;
+			g_bIsWine = true;
 		}
 	}
 
@@ -698,6 +784,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
 	// This is wrong: the VMManager is still not initialized here. Persistent memory should be restored by the 
 	// memory manager instead during start up, like the xbox does
 	CxbxRestorePersistentMemoryRegions();
@@ -730,10 +817,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 		g_bIsDebug = (g_XbeType == xtDebug);
-		g_IsRetail = (g_XbeType == xtRetail);
+		g_bIsRetail = (g_XbeType == xtRetail);
 
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin);
+		g_VMManager.Initialize(hMemoryBin, hPageTables);
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -1157,6 +1244,7 @@ void CxbxInitFilePaths()
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
+	snprintf(szFilePath_page_tables, MAX_PATH, "%s\\PageTables.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }

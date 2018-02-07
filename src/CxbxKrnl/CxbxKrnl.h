@@ -73,7 +73,7 @@ extern "C" {
 #define PAGE_SIZE_LARGE             0x400000
 #define PAGE_MASK                   (PAGE_SIZE - 1)
 #define MAX_NUM_OF_PAGES            1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
-#define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to WC and UC regions of NV2A
+#define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to the system RAM physical window 0x80000000 - 0x8FFFFFFF
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)
@@ -136,11 +136,11 @@ extern "C" {
 // The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
 #define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
-#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE - 1
+#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE
 
 #define XBOX_UNCACHED_BASE       0xF8000000 // UC
 #define XBOX_UNCACHED_SIZE       0x07C00000 // - 0xFFBFFFFF
-#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE - 1
+#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE
 
 #define XBOX_NV2A_INIT_VECTOR    0xFF000008
 
@@ -251,7 +251,7 @@ void ConnectWindowsTimersToThunkTable();
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
-extern bool g_IsWine;
+extern bool g_bIsWine;
 
 extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
