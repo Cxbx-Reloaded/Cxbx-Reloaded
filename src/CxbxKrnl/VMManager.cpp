@@ -138,7 +138,7 @@ void VMManager::Initialize(HANDLE file_view)
 	upper_mem_vma.vma_type = VMAType::Allocated;
 	upper_mem_vma.page_type = PageType::SystemMemory;
 	upper_mem_vma.permissions = PAGE_READWRITE;
-	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(32 * PAGE_SIZE, upper_mem_vma.page_type, m_MaxContiguousAddress, XBOX_MEMORY_SIZE);
+	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(32 * PAGE_SIZE, upper_mem_vma.page_type, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
 	UpdatePageTableForVMA(upper_mem_vma);
 
 	// Allocate memory for the dummy kernel
