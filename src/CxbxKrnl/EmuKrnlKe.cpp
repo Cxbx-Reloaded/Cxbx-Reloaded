@@ -570,14 +570,12 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
 (
-	VOID
+    VOID
 )
 {
-	LOG_FUNC();
-
-	// TODO : Disable kernel APCs
-
-	LOG_UNIMPLEMENTED();
+    LOG_FUNC();
+    PKTHREAD thread = KeGetCurrentThread();
+    thread->KernelApcDisable--;
 }
 
 // ******************************************************************
@@ -1039,14 +1037,19 @@ void ConnectKeInterruptTimeToThunkTable()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
 (
-	VOID
+    VOID
 )
 {
-	LOG_FUNC();
+    LOG_FUNC();
 
-	// TODO : Enable kernel APCs
-
-	LOG_UNIMPLEMENTED();
+    PKTHREAD thread = KeGetCurrentThread();
+    thread->KernelApcDisable++;
+    if(thread->KernelApcDisable == 0) {
+        if(thread->ApcState.ApcListHead[0].Flink != &thread->ApcState.ApcListHead[0]) {
+            thread->ApcState.KernelApcPending = 1;
+            HalRequestSoftwareInterrupt(1);
+        }
+    }
 }
 
 XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent

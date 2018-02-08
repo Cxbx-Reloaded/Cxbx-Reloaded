@@ -56,46 +56,81 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuWarning()
 
-// A critical section containing the PC and Xbox equivalent
-struct INTERNAL_CRITICAL_SECTION
-{
-	xboxkrnl::PRTL_CRITICAL_SECTION XboxCriticalSection;
-	NtDll::_RTL_CRITICAL_SECTION NativeCriticalSection;
-};
+#ifdef _WIN32
 
-#define MAX_XBOX_CRITICAL_SECTIONS 1024
-INTERNAL_CRITICAL_SECTION GlobalCriticalSections[MAX_XBOX_CRITICAL_SECTIONS] = { 0 };
+#include <map> // For critical section map
+#include <Synchapi.h> // For native CriticalSections
 
-void InitializeSectionStructures(void)
+static std::map<xboxkrnl::PRTL_CRITICAL_SECTION, CRITICAL_SECTION> critical_sections;
+
+static void add_critical_section(
+    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section,
+    CRITICAL_SECTION host_crit_section
+)
 {
-	ZeroMemory(GlobalCriticalSections, sizeof(GlobalCriticalSections));
+    // Key not found
+    if(critical_sections.find(xbox_crit_section) == critical_sections.end()) {
+        critical_sections[xbox_crit_section] = host_crit_section;
+    }
+    else {
+        EmuWarning("Critical Section key %p already exists\n", xbox_crit_section);
+    }
 }
 
-int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
+static CRITICAL_SECTION* find_critical_section(
+    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section
+)
 {
-	int FreeSection = -1;
-
-	int iSection = 0;
-	for (iSection = 0; iSection < MAX_XBOX_CRITICAL_SECTIONS; ++iSection)
-	{
-		if (GlobalCriticalSections[iSection].XboxCriticalSection == CriticalSection)
-		{
-			FreeSection = iSection;
-			break;
-		}
-		else if (FreeSection < 0 && GlobalCriticalSections[iSection].XboxCriticalSection == NULL)
-		{
-			FreeSection = iSection;
-		}
-	}
-
-	if (FreeSection < 0)
-	{
-		EmuWarning("Too many critical sections in use!\n");
-	}
-
-	return FreeSection;
+    // Key found
+    if(critical_sections.find(xbox_crit_section) != critical_sections.end()) {
+        return &critical_sections[xbox_crit_section];
+    }
+    return NULL;
 }
+
+static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
+{
+    CRITICAL_SECTION host_crit_section;
+    InitializeCriticalSection(&host_crit_section);
+    add_critical_section(xbox_crit_section, host_crit_section);
+}
+
+static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
+{
+    // This is required because it is possible for a game to create a critical
+    // section without calling RtlInitializeCriticalSection, which means that
+    // there is no host critical section. This hack allows us to create the
+    // missing critical section. The real Xbox RtlEnterCriticalSection function
+    // does not create a critical section if it does not exist.
+    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
+    if(host_crit_section == NULL) {
+        InitHostCriticalSection(xbox_crit_section);
+        host_crit_section = find_critical_section(xbox_crit_section);
+    }
+    EnterCriticalSection(host_crit_section);
+}
+
+static void LeaveHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
+{
+    LeaveCriticalSection(find_critical_section(xbox_crit_section));
+}
+
+static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
+{
+    // This is required because it is possible for a game to create a critical
+    // section without calling RtlInitializeCriticalSection, which means that
+    // there is no host critical section. This hack allows us to create the
+    // missing critical section. The real Xbox RtlEnterCriticalSection function
+    // does not create a critical section if it does not exist.
+    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
+    if(host_crit_section == NULL) {
+        InitHostCriticalSection(xbox_crit_section);
+        host_crit_section = find_critical_section(xbox_crit_section);
+    }
+    return TryEnterCriticalSection(host_crit_section);
+}
+
+#endif // _WIN32
 
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
@@ -403,38 +438,36 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 (
-	IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	/** sorta pointless
-	LOG_FUNC_ONE_ARG(CriticalSection);
-	//*/
+    LOG_FUNC_ONE_ARG(CriticalSection);
 
-	//printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
+    HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-	// This seems redundant, but xbox software doesn't always do it
-	if (CriticalSection)
-	{
-		int iSection = FindCriticalSection(CriticalSection);
+    CriticalSection->LockCount++;
+    if(CriticalSection->LockCount == 0) {
+        CriticalSection->OwningThread = thread;
+        CriticalSection->RecursionCount = 1;
+    }
+    else {
+        if(CriticalSection->OwningThread != thread) {
+            KeWaitForSingleObject(
+                (PVOID)CriticalSection,
+                (KWAIT_REASON)0,
+                (KPROCESSOR_MODE)0,
+                (BOOLEAN)0,
+                (PLARGE_INTEGER)0
+            );
+            CriticalSection->OwningThread = thread;
+            CriticalSection->RecursionCount = 1;
+        }
+        else {
+            CriticalSection->RecursionCount++;
+        }
+    }
 
-		if (iSection >= 0)
-		{
-			GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
-			if (CriticalSection->LockCount < 0)
-				NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-			NtDll::RtlEnterCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-			CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
-			CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
-			CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
-		}
-
-		//if(CriticalSection->LockCount == -1)
-		//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
-
-		//NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
-	}
+    EnterHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -442,14 +475,13 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 // ******************************************************************
 XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAndRegion
 (
-	IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(CriticalSection);
 
-	LOG_INCOMPLETE(); // TODO : How to enter region?
-
-	RtlEnterCriticalSection(CriticalSection);
+    KeEnterCriticalRegion();
+    RtlEnterCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -688,29 +720,22 @@ XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 (
-	IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	if (CriticalSection == nullptr) {
-		return;
-	}
+    LOG_FUNC_ONE_ARG(CriticalSection);
 
-	/*
-	LOG_FUNC_ONE_ARG(CriticalSection);
-	//*/
-	int iSection = FindCriticalSection(CriticalSection);
+    CriticalSection->LockCount = -1;
+    // Sets byte 0 = 1, and byte 2 = 4 of Unknown[0] for some reason
+    CriticalSection->Unknown[0] = (CriticalSection->Unknown[0] & ~0xFF) | 0x1;
+    CriticalSection->Unknown[0] = (CriticalSection->Unknown[0] & ~0xFF0000) | 0x40000;
+    CriticalSection->Unknown[1] = 0;
+    CriticalSection->Unknown[3] = (DWORD)&CriticalSection->Unknown[2];
+    CriticalSection->Unknown[2] = (DWORD)&CriticalSection->Unknown[2];
+    CriticalSection->RecursionCount = 0;
+    CriticalSection->OwningThread = 0;
 
-	if (iSection >= 0)
-	{
-		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
-		NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
-		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
-		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
-	}
-
-	//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    InitHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -758,35 +783,25 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
 }
 
 // ******************************************************************
-// * 0x0126 - RtlEnterCriticalSection()
+// * 0x0126 - RtlLeaveCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 (
-	IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	if (CriticalSection == nullptr) {
-		return;
-	}
+    LOG_FUNC_ONE_ARG(CriticalSection);
 
-	/* sorta pointless
-	LOG_FUNC_ONE_ARG(CriticalSection);
-	//*/
+    CriticalSection->RecursionCount--;
+    CriticalSection->LockCount--;
+    if(CriticalSection->RecursionCount == 0) {
+        CriticalSection->OwningThread = 0;
+        if(CriticalSection->LockCount >= 0) {
+            KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (BOOLEAN)0);
+        }
+    }
 
-	int iSection = FindCriticalSection(CriticalSection);
-
-	if (iSection >= 0)
-	{
-		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
-		NtDll::RtlLeaveCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
-		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
-		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
-	}
-
-	// Note: We need to execute this before debug output to avoid trouble
-	//NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    LeaveHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -794,14 +809,13 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 // ******************************************************************
 XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAndRegion
 (
-	IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(CriticalSection);
 
-	RtlLeaveCriticalSection(CriticalSection);
-
-	LOG_INCOMPLETE(); // TODO : How to leave region?
+    RtlLeaveCriticalSection(CriticalSection);
+    KeLeaveCriticalRegion();
 }
 
 // ******************************************************************
@@ -971,33 +985,26 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	// Return on nullptr BEFORE logging!
-	if (CriticalSection == nullptr) {
-		return false;
-	}
-
 	LOG_FUNC_ONE_ARG(CriticalSection);
 
-	BOOL bRet = FALSE;
+    BOOLEAN ret = false;
+    HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-	int iSection = FindCriticalSection(CriticalSection);
+    if(InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
+        CriticalSection->OwningThread = thread;
+        CriticalSection->RecursionCount = 1;
+        ret = true;
+    }
+    else {
+        if(CriticalSection->OwningThread == thread) {
+            CriticalSection->LockCount++;
+            CriticalSection->RecursionCount++;
+            ret = true;
+        }
+    }
 
-	if (iSection >= 0)
-	{
-		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
-		if (CriticalSection->LockCount < 0)
-			NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-		bRet = NtDll::RtlTryEnterCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
-
-		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
-		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
-		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
-	}
-
-	//bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
-
-	RETURN(bRet);
+    // Return the host value until the xbox kernel is fully implemented
+    RETURN(TryEnterHostCriticalSection(CriticalSection));
 }
 
 // ******************************************************************
