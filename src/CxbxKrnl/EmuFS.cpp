@@ -92,10 +92,7 @@ void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
 	// the user data-slot of each Windows thread Cxbx uses for an
 	// Xbox thread.
 	//
-	__asm {
-		mov eax, Pcr
-		mov fs : [TIB_ArbitraryDataSlot], eax
-	}
+	__writefsdword(TIB_ArbitraryDataSlot, (DWORD)Pcr);
 }
 
 __declspec(naked) void EmuFS_CmpEsiFs00()
