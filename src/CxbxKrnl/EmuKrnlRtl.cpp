@@ -88,36 +88,46 @@ static CRITICAL_SECTION* find_critical_section(
     return NULL;
 }
 
-static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
 {
     CRITICAL_SECTION host_crit_section;
     InitializeCriticalSection(&host_crit_section);
-    add_critical_section(xbox_crit_secion, host_crit_section);
+    add_critical_section(xbox_crit_section, host_crit_section);
 }
 
-static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
 {
     // This is required because it is possible for a game to create a critical
     // section without calling RtlInitializeCriticalSection, which means that
     // there is no host critical section. This hack allows us to create the
     // missing critical section. The real Xbox RtlEnterCriticalSection function
     // does not create a critical section if it does not exist.
-    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_secion);
+    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
     if(host_crit_section == NULL) {
-        InitHostCriticalSection(xbox_crit_secion);
-        host_crit_section = find_critical_section(xbox_crit_secion);
+        InitHostCriticalSection(xbox_crit_section);
+        host_crit_section = find_critical_section(xbox_crit_section);
     }
     EnterCriticalSection(host_crit_section);
 }
 
-static void LeaveHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+static void LeaveHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
 {
-    LeaveCriticalSection(find_critical_section(xbox_crit_secion));
+    LeaveCriticalSection(find_critical_section(xbox_crit_section));
 }
 
-static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_secion)
+static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
 {
-    return TryEnterCriticalSection(find_critical_section(xbox_crit_secion));
+    // This is required because it is possible for a game to create a critical
+    // section without calling RtlInitializeCriticalSection, which means that
+    // there is no host critical section. This hack allows us to create the
+    // missing critical section. The real Xbox RtlEnterCriticalSection function
+    // does not create a critical section if it does not exist.
+    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
+    if(host_crit_section == NULL) {
+        InitHostCriticalSection(xbox_crit_section);
+        host_crit_section = find_critical_section(xbox_crit_section);
+    }
+    return TryEnterCriticalSection(host_crit_section);
 }
 
 #endif // _WIN32
