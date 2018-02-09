@@ -59,6 +59,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
+#include <atomic> // for std::atomic
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
 #pragma warning(default:4005)
@@ -235,7 +236,8 @@ XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeSt
 		LOG_FUNC_ARG(Increment)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto &Target = std::atomic<LONGLONG>(Addend->QuadPart);
+	Target.fetch_add(Increment);
 }
 
 // ******************************************************************
@@ -246,20 +248,21 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
-	IN PLONGLONG Comparand,
-	IN PKSPIN_LOCK Lock
+	IN PLONGLONG Comparand
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(Destination)
 		LOG_FUNC_ARG(Exchange)
 		LOG_FUNC_ARG(Comparand)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto &Target = std::atomic<LONGLONG>(*Destination);
 
-	RETURN(0);
+	LONGLONG Result = *Comparand;
+	Target.compare_exchange_strong(Result, *Exchange);
+
+	RETURN(Result);
 }
 
 // ******************************************************************
