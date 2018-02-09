@@ -1361,6 +1361,8 @@ XBSYSAPI EXPORTNUM(134) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveD
 
 	KDEVICE_QUEUE_ENTRY *pEntry;
 
+	// We should lock the device queue here
+
 	if (IsListEmpty(&DeviceQueue->DeviceListHead)) {
 		DeviceQueue->Busy = FALSE;
 		pEntry = NULL;
@@ -1370,6 +1372,8 @@ XBSYSAPI EXPORTNUM(134) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveD
 		pEntry = CONTAINING_RECORD(pListEntry, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
 		pEntry->Inserted = FALSE;
 	}
+
+	// We should unlock the device queue here
 
 	RETURN(pEntry);
 }
@@ -1385,9 +1389,21 @@ XBSYSAPI EXPORTNUM(135) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveEntryDeviceQue
 		LOG_FUNC_ARG(DeviceQueueEntry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
 
-	RETURN(TRUE);
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+	// We should lock the device queue here
+
+	BOOLEAN currentlyInserted = DeviceQueueEntry->Inserted;
+	if (currentlyInserted) {
+		DeviceQueueEntry->Inserted = FALSE;
+		RemoveEntryList(&DeviceQueueEntry->DeviceListEntry);
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+	// We should unlock the device queue here
+
+	RETURN(currentlyInserted);
 }
 
 
@@ -1563,9 +1579,15 @@ XBSYSAPI EXPORTNUM(144) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
 		LOG_FUNC_ARG(Disable)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(0);
+	ULONG prevDisableBoost = Thread->DisableBoost;
+	Thread->DisableBoost = Disable;
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevDisableBoost);
 }
 
 // ******************************************************************
