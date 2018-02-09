@@ -387,7 +387,7 @@ int pfifo_puller_thread(NV2AState *d)
 		}
 		cache_lock.unlock();
 
-		d->pgraph.lock.lock();
+		d->pgraph.pgraph_lock.lock();
 
 		while (!state->working_cache.empty()) {
 			CacheEntry* command = state->working_cache.front();
@@ -456,7 +456,7 @@ int pfifo_puller_thread(NV2AState *d)
 			g_free(command);
 		}
 
-		d->pgraph.lock.unlock();
+		d->pgraph.pgraph_lock.unlock();
 	}
 
 	return 0;

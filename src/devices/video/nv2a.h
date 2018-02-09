@@ -301,8 +301,8 @@ typedef struct GraphicsContext {
 
 
 typedef struct PGRAPHState {
-	std::mutex _lock;
-	std::unique_lock<std::mutex> lock;
+	std::mutex pgraph_mutex;
+	std::unique_lock<std::mutex> pgraph_lock;
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;

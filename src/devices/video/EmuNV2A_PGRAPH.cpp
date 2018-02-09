@@ -391,7 +391,7 @@ static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples)
 /* PGRAPH - accelerated 2d/3d drawing engine */
 DEVICE_READ32(PGRAPH)
 {
-	d->pgraph.lock.lock();
+	d->pgraph.pgraph_lock.lock();
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
@@ -432,7 +432,7 @@ DEVICE_READ32(PGRAPH)
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
-	d->pgraph.lock.unlock();
+	d->pgraph.pgraph_lock.unlock();
 
 //    reg_log_read(NV_PGRAPH, addr, r);
 
@@ -453,7 +453,7 @@ DEVICE_WRITE32(PGRAPH)
 {
 //    reg_log_write(NV_PGRAPH, addr, val);
 
-	d->pgraph.lock.lock();
+	d->pgraph.pgraph_lock.lock();
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
@@ -516,7 +516,7 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	}
 
-	d->pgraph.lock.unlock();
+	d->pgraph.pgraph_lock.unlock();
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
@@ -702,14 +702,14 @@ static void pgraph_method(NV2AState *d,
 				pg->notify_source = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
 				pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
-				pg->lock.unlock();
+				pg->pgraph_lock.unlock();
 				qemu_mutex_lock_iothread();
 				update_irq(d);
-				pg->lock.lock();
+				pg->pgraph_lock.lock();
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					pg->interrupt_cond.wait(pg->lock);
+					pg->interrupt_cond.wait(pg->pgraph_lock);
 				}
 			}
 			break;
@@ -780,7 +780,7 @@ static void pgraph_method(NV2AState *d,
 					break;
 				}
 
-				pg->flip_3d_cond.wait(pg->lock);
+				pg->flip_3d_cond.wait(pg->pgraph_lock);
 			}
 			NV2A_DPRINTF("flip stall done\n");
 			break;
@@ -2290,7 +2290,7 @@ static void pgraph_method(NV2AState *d,
 
 			pgraph_update_surface(d, false, true, true);
 
-			//qemu_mutex_unlock(&d->pg->lock);
+			//qemu_mutex_unlock(&d->pg->pgraph_lock);
 			//qemu_mutex_lock_iothread();
 
 			xbaddr semaphore_dma_len;
@@ -2301,7 +2301,7 @@ static void pgraph_method(NV2AState *d,
 
 			stl_le_p((uint32_t*)semaphore_data, parameter);
 
-			//qemu_mutex_lock(&d->pg->lock);
+			//qemu_mutex_lock(&d->pg->pgraph_lock);
 			//qemu_mutex_unlock_iothread();
 
 			break;
@@ -2576,33 +2576,33 @@ static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 {
 	bool valid;
 
-	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.lock.lock();
+	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.pgraph_lock.lock();
 	valid = d->pgraph.channel_valid && d->pgraph.channel_id == channel_id;
 	if (!valid) {
 		d->pgraph.trapped_channel_id = channel_id;
 	}
-	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.lock.unlock();
+	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.pgraph_lock.unlock();
 
 	if (!valid) {
 		NV2A_DPRINTF("puller needs to switch to ch %d\n", channel_id);
 
-		d->pgraph.lock.unlock();
+		d->pgraph.pgraph_lock.unlock();
 		qemu_mutex_lock_iothread();
 		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
 		update_irq(d);
 
-		d->pgraph.lock.lock();
+		d->pgraph.pgraph_lock.lock();
 		qemu_mutex_unlock_iothread();
 
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			d->pgraph.interrupt_cond.wait(d->pgraph.lock);
+			d->pgraph.interrupt_cond.wait(d->pgraph.pgraph_lock);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
 	while (!d->pgraph.fifo_access) {
-		d->pgraph.fifo_access_cond.wait(d->pgraph.lock);
+		d->pgraph.fifo_access_cond.wait(d->pgraph.pgraph_lock);
 	}
 }
 
@@ -2693,7 +2693,7 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
-	pg->lock = std::unique_lock<std::mutex>(pg->_lock, std::defer_lock);  // was SDL_CreateMutex();
+	pg->pgraph_lock = std::unique_lock<std::mutex>(pg->pgraph_mutex, std::defer_lock);  // was SDL_CreateMutex();
 	//pg->interrupt_cond = SDL_CreateCond();
     //pg->fifo_access_cond = SDL_CreateCond();
     //pg->flip_3d_cond = SDL_CreateCond();
@@ -2781,7 +2781,7 @@ void pgraph_init(NV2AState *d)
 void pgraph_destroy(PGRAPHState *pg)
 {
 #ifdef COMPILE_OPENGL
-    SDL_DestroyMutex(pg->lock);
+    SDL_DestroyMutex(pg->pgraph_lock);
     SDL_DestroyCond(pg->interrupt_cond);
     SDL_DestroyCond(pg->fifo_access_cond);
     SDL_DestroyCond(pg->flip_3d_cond);
