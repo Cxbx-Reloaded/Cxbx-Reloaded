@@ -3896,7 +3896,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 #if 0 // PatrickvL Dxbx pixel shader translation
 	// Attempt to recompile PixelShader
-	hRet = DxbxUpdateActivePixelShader(pPSDef, hostShaderHandle);
+	hRet = DxbxUpdateActivePixelShader(pPSDef, &hostShaderHandle);
 	// redirect to windows d3d
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
 #endif

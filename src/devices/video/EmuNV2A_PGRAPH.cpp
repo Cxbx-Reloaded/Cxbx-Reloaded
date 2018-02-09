@@ -526,7 +526,10 @@ static void pgraph_method(NV2AState *d,
 							unsigned int method,
 							uint32_t parameter)
 {
-//	int i;
+#ifdef COMPILE_OPENGL
+	unsigned int i;
+#endif
+
 	GraphicsSubchannel *subchannel_data;
 	GraphicsObject *object;
 
@@ -3012,7 +3015,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
     ShaderState state = {
         .psh = (PshState){
-            /* register combier stuff */
+            /* register combiner stuff */
             .combiner_control = pg->regs[NV_PGRAPH_COMBINECTL],
             .shader_stage_program = pg->regs[NV_PGRAPH_SHADERPROG],
             .other_stage_input = pg->regs[NV_PGRAPH_SHADERCTL],
