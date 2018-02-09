@@ -775,16 +775,26 @@ XBSYSAPI EXPORTNUM(110) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeMutant
 	// Initialize header :
 	Mutant->Header.Type = MutantObject;
 	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(LONG);
-	Mutant->Header.SignalState = 0;
 	InitializeListHead(&Mutant->Header.WaitListHead);
-	// Initiliaze specific fields :
-	InitializeListHead(&Mutant->MutantListEntry);
-	Mutant->OwnerThread = NULL;
+	// Initialize specific fields :
 	Mutant->Abandoned = FALSE;
-	if (InitialOwner == TRUE)
-		LOG_INCOMPLETE(); // TODO : Set OwnerThread, link into mutant list in thread somehow
-	else
+	if (InitialOwner == TRUE) {
+		PKTHREAD pThread = KeGetCurrentThread();
+		Mutant->Header.SignalState = 0;
+		Mutant->OwnerThread = pThread;
+
+		KIRQL oldIRQL;
+		KiLockDispatcherDatabase(&oldIRQL);
+
+		PLIST_ENTRY pMutantList = pThread->MutantListHead.Blink;
+		InsertHeadList(pMutantList, &Mutant->MutantListEntry);
+
+		KiUnlockDispatcherDatabase(oldIRQL);
+	}
+	else {
 		Mutant->Header.SignalState = 1;
+		Mutant->OwnerThread = NULL;
+	}
 }
 
 // ******************************************************************
@@ -806,7 +816,7 @@ XBSYSAPI EXPORTNUM(111) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeQueue
 	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
 	Queue->Header.SignalState = 0;
 	InitializeListHead(&Queue->Header.WaitListHead);
-	// Initiliaze specific fields :
+	// Initialize specific fields :
 	InitializeListHead(&Queue->EntryListHead);
 	InitializeListHead(&Queue->ThreadListHead);
 	Queue->CurrentCount = 0;
@@ -834,7 +844,7 @@ XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
 	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
 	Semaphore->Header.SignalState = Count;
 	InitializeListHead(&Semaphore->Header.WaitListHead);
-	// Initiliaze specific fields :
+	// Initialize specific fields :
 	Semaphore->Limit = Limit;
 }
 
@@ -858,7 +868,7 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 	Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
 	Timer->Header.SignalState = 0;
 	InitializeListHead(&(Timer->Header.WaitListHead));
-	// Initiliaze specific fields :
+	// Initialize specific fields :
 	Timer->TimerListEntry.Blink = NULL;
 	Timer->TimerListEntry.Flink = NULL;
 	Timer->DueTime.QuadPart = 0;
@@ -878,9 +888,34 @@ XBSYSAPI EXPORTNUM(114) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertByKeyDeviceQue
 		LOG_FUNC_ARG(SortKey)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN Res = FALSE;
 
-	RETURN(STATUS_SUCCESS);
+	// We should lock the device queue here
+
+	DeviceQueueEntry->SortKey = SortKey;
+	if (DeviceQueue->Busy) {
+		LIST_ENTRY *pListEntry = DeviceQueue->DeviceListHead.Flink;
+		while (pListEntry != &DeviceQueue->DeviceListHead) {
+			KDEVICE_QUEUE_ENTRY *pQueueEntry = CONTAINING_RECORD(pListEntry, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
+			if (SortKey < pQueueEntry->SortKey) {
+				break;
+			}
+			pListEntry = pListEntry->Flink;
+		}
+
+		pListEntry = pListEntry->Blink;
+		InsertHeadList(pListEntry, &DeviceQueueEntry->DeviceListEntry);
+		Res = TRUE;
+	}
+	else {
+		DeviceQueue->Busy = TRUE;
+	}
+
+	DeviceQueueEntry->Inserted = Res;
+
+	// We should unlock the device queue here
+
+	RETURN(Res);
 }
 
 // ******************************************************************
@@ -1002,6 +1037,9 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		// TODO : Once that's done, use an apropriate signalling mechanism instead of this :
 		// Signal the Dpc handling code there's work to do
 		SetEvent(g_DpcData.DpcEvent);
+		// OpenXbox has this instead of SetEvent :
+		// if (!pKPRCB->DpcRoutineActive && !pKPRCB->DpcInterruptRequested) {
+		//	pKPRCB->DpcInterruptRequested = TRUE;
 	}
 
 	// Thread-safety is no longer required anymore
@@ -1049,9 +1087,10 @@ XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
     PKTHREAD thread = KeGetCurrentThread();
     thread->KernelApcDisable++;
     if(thread->KernelApcDisable == 0) {
-        if(thread->ApcState.ApcListHead[0].Flink != &thread->ApcState.ApcListHead[0]) {
-            thread->ApcState.KernelApcPending = 1;
-            HalRequestSoftwareInterrupt(1);
+		LIST_ENTRY *apcListHead = &thread->ApcState.ApcListHead[0/*=KernelMode*/];
+        if(apcListHead->Flink != apcListHead) {
+            thread->ApcState.KernelApcPending = 1; // TRUE
+            HalRequestSoftwareInterrupt(1); // APC_LEVEL
         }
     }
 }
@@ -1220,10 +1259,15 @@ XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel(
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
-	// See KfRaiseIrql / KeRaiseIrqlToDpcLevel - use APC_LEVEL?
+	// Inlined KeGetCurrentIrql() :
+	KPCR* Pcr = KeGetPcr();
+	KIRQL OldIrql = (KIRQL)Pcr->Irql;
 
-	RETURN(0);
+	Pcr->Irql = SYNC_LEVEL;
+
+	LOG_INCOMPLETE(); // TODO : Should we call ExecuteDpcQueue, perhaps with SYNC_LEVEL argument??
+
+	RETURN(OldIrql);
 }
 
 XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
@@ -1277,25 +1321,57 @@ XBSYSAPI EXPORTNUM(133) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveB
 		LOG_FUNC_ARG(SortKey)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KDEVICE_QUEUE_ENTRY *pEntry;
 
-	RETURN(NULL);
+	if (IsListEmpty(&DeviceQueue->DeviceListHead)) {
+		DeviceQueue->Busy = FALSE;
+		pEntry = NULL;
+	}
+	else {
+		LIST_ENTRY *pListEntry = DeviceQueue->DeviceListHead.Flink;
+		while (pListEntry != &DeviceQueue->DeviceListHead) {
+			pEntry = CONTAINING_RECORD(pListEntry, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
+			if (SortKey <= pEntry->SortKey) {
+				break;
+			}
+			pListEntry = pListEntry->Flink;
+		}
+
+		if (pListEntry != &DeviceQueue->DeviceListHead) {
+			RemoveEntryList(&pEntry->DeviceListEntry);
+
+		}
+		else {
+			pListEntry = RemoveHeadList(&DeviceQueue->DeviceListHead);
+			pEntry = CONTAINING_RECORD(pListEntry, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
+		}
+
+		pEntry->Inserted = FALSE;
+	}
+
+	RETURN(pEntry);
 }
 
-XBSYSAPI EXPORTNUM(134) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveDeviceQueue
+XBSYSAPI EXPORTNUM(134) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveDeviceQueue
 (
-	IN PKDEVICE_QUEUE DeviceQueue,
-	IN ULONG SortKey
+	IN PKDEVICE_QUEUE DeviceQueue
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DeviceQueue)
-		LOG_FUNC_ARG(SortKey)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(DeviceQueue);
 
-	LOG_UNIMPLEMENTED();
+	KDEVICE_QUEUE_ENTRY *pEntry;
 
-	RETURN(TRUE);
+	if (IsListEmpty(&DeviceQueue->DeviceListHead)) {
+		DeviceQueue->Busy = FALSE;
+		pEntry = NULL;
+	}
+	else {
+		LIST_ENTRY *pListEntry = RemoveHeadList(&DeviceQueue->DeviceListHead);
+		pEntry = CONTAINING_RECORD(pListEntry, KDEVICE_QUEUE_ENTRY, DeviceListEntry);
+		pEntry->Inserted = FALSE;
+	}
+
+	RETURN(pEntry);
 }
 
 XBSYSAPI EXPORTNUM(135) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveEntryDeviceQueue

@@ -1710,6 +1710,7 @@ KINTERRUPT_MODE;
 // ******************************************************************
 #define DISPATCH_LEVEL 2
 #define PROFILE_LEVEL 27
+#define SYNC_LEVEL 28
 
 #define DISPATCH_SIZE 22
 
