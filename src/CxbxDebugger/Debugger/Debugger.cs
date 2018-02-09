@@ -309,8 +309,7 @@ namespace CxbxDebugger
         }
 
         const int VM_PLACEHOLDER_SIZE = 0x3FEF000;
-        const int XBE_IMAGE_BASE = 0x00010000;
-
+        
         private void HandleCreateProcess(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.CreateProcessInfo;
@@ -323,7 +322,7 @@ namespace CxbxDebugger
             Process.Path = ResolveProcessPath(DebugInfo.hFile);
 
             // Skip over allocated Xbox memory
-            Process.ImageBase = DebugInfo.lpStartAddress - VM_PLACEHOLDER_SIZE; 
+            Process.ImageBase = DebugInfo.lpBaseOfImage + VM_PLACEHOLDER_SIZE; 
 
             var MainThread = new DebuggerThread(Process);
 
@@ -351,7 +350,7 @@ namespace CxbxDebugger
             var XboxModule = new DebuggerModule();
             
             XboxModule.Path = Target;
-            XboxModule.ImageBase = new IntPtr(XBE_IMAGE_BASE);
+            XboxModule.ImageBase = DebugInfo.lpBaseOfImage;
             XboxModule.Core = true;
 
             foreach (IDebuggerModuleEvents Event in ModuleEvents)
