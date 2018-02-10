@@ -318,8 +318,6 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 	
 	Pcr->Irql = NewIrql;
 
-	LOG_INCOMPLETE();
-
 	RETURN(OldIrql);
 }
 
