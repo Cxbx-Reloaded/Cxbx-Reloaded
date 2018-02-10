@@ -92,7 +92,7 @@ class PhysicalMemory
 		// amount of physical memory in use
 		size_t m_PhysicalMemoryInUse = 0;
 		// max physical memory available on the Xbox/Chihiro
-		size_t m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
+		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
 		// map tracking the physical memory currently in use
 		std::map<PAddr, size_t> m_Mem_map;
 		// map tracking the blocks allocated with VirtualAlloc
@@ -102,7 +102,7 @@ class PhysicalMemory
 		// current error status code of the PhysicalMemory class
 		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
 		// highest address available for contiguous allocations
-		PAddr m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
+		PAddr m_MaxContiguousAddress = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 	
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};

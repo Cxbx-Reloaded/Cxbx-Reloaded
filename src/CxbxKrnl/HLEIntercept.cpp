@@ -237,7 +237,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					{
 						output << "\t*ADDRESS TOO LOW!*";
 					}
-					else if (location > CHIHIRO_MEMORY_SIZE)
+					else if (location > XBOX_MEMORY_SIZE)
 					{
 						output << "\t*ADDRESS TOO HIGH!*";
 					}
