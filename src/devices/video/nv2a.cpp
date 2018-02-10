@@ -58,7 +58,7 @@ void NV2ADevice::Init()
 
 	// Register physical memory on bar 1
 	r.Memory.address = 0;
-	RegisterBAR(1, CHIHIRO_MEMORY_SIZE, r.value); // TODO : Read g_PhysicalMemory->Size
+	RegisterBAR(1, XBOX_MEMORY_SIZE, r.value); // TODO : Read g_PhysicalMemory->Size
 	/* LukeUsher commented at https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/882#discussion_r162871029
 
 	This is not right: I should have done a better review ;)

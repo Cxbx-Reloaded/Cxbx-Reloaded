@@ -110,7 +110,7 @@ void SetupXboxDeviceTypes()
 			printf("DeviceTable Entires: %u\n", deviceTableEntryCount);
 
 			// Sanity check: Where all these device offsets within Xbox memory
-			if (deviceTableStartOffset >= CHIHIRO_MEMORY_SIZE || deviceTableEndOffset >= CHIHIRO_MEMORY_SIZE) {
+			if (deviceTableStartOffset >= XBOX_MEMORY_SIZE || deviceTableEndOffset >= XBOX_MEMORY_SIZE) {
 				CxbxKrnlCleanup("XAPI DeviceTable Location is outside of Xbox Memory range");
 			}
 
