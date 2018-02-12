@@ -54,16 +54,9 @@ namespace xboxkrnl
 
 NT_TIB *GetNtTib()
 {
-	NT_TIB *NtTib;
-
-	__asm
-	{
-		mov eax, fs : [TIB_LinearSelfAddress]
-		mov NtTib, eax
-	}
-
-	return NtTib;
+	return (NT_TIB *)__readfsdword(TIB_LinearSelfAddress);
 }
+
 
 void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
 {
@@ -478,10 +471,10 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		// TODO : Once we do our own thread-switching (as mentioned above),
 		// we can also start using Prcb->DpcListHead instead of DpcQueue :
 		InitializeListHead(&(Prcb->DpcListHead));
-		Prcb->DpcRoutineActive = 0;
+		Prcb->DpcRoutineActive = FALSE;
 
-		// TODO : Should Irql be set? And if so, to what - PASSIVE_LEVEL, or perhaps better : APC_LEVEL?
-		// NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
+		// TODO : Should Irql be set? And if so, to what - APC_LEVEL?
+		// NewPcr->Irql = APC_LEVEL; // See KeLowerIrql;
 	}
 
 	// Initialize a fake PrcbData.CurrentThread 

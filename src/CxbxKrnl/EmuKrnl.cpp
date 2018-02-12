@@ -312,11 +312,13 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 	PKPCR Pcr = KeGetPcr();
 	KIRQL OldIrql = (KIRQL)Pcr->Irql;
 
-	if (NewIrql < OldIrql)	{
-		KeBugCheck(0x00000009); // IRQL_NOT_GREATER_OR_EQUAL
-	}
-	
+	// Set new before check
 	Pcr->Irql = NewIrql;
+
+	if (NewIrql < OldIrql)	{
+		Pcr->Irql = 0; // Probably to avoid recursion?
+		KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL, (PVOID)OldIrql, (PVOID)NewIrql, 0, 0);
+	}
 
 	RETURN(OldIrql);
 }
@@ -336,7 +338,10 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 	KPCR* Pcr = KeGetPcr();
 
 	if (NewIrql > Pcr->Irql) {
-		KeBugCheck(0x0000000A); // IRQL_NOT_LESS_OR_EQUAL
+		KIRQL OldIrql = Pcr->Irql;
+		Pcr->Irql = HIGH_LEVEL; // Probably to avoid recursion?
+		KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL, (PVOID)OldIrql, (PVOID)NewIrql, 0, 0);
+		return;
 	}
 
 	Pcr->Irql = NewIrql;

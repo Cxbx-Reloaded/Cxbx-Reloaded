@@ -498,6 +498,16 @@ void PrintCurrentConfigurationLog()
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
 }
 
+void TriggerPendingConnectedInterrupts()
+{
+	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+		// If the interrupt is pending and connected, process it
+		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+		}
+	}
+}
+
 static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 {
 	CxbxSetThreadName("CxbxKrnl Interrupts");
@@ -506,13 +516,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	InitXboxThread(g_CPUXbox);
 
 	while (true) {
-		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-			// If the interrupt is pending and connected, process it
-			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
-				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-			}
-		}
-
+		TriggerPendingConnectedInterrupts();
 		SwitchToThread();
 	}
 

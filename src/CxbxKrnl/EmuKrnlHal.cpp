@@ -67,7 +67,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-static DWORD EmuSoftwareInterrupRequestRegister = 0;
+volatile DWORD HalInterruptRequestRegister = APC_LEVEL | DISPATCH_LEVEL;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 // variables used by the SMC to know a reset / shutdown is pending
@@ -122,7 +122,8 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 	LOG_FUNC_ONE_ARG(Request);
 
 	// Mask out this interrupt request
-	EmuSoftwareInterrupRequestRegister &= ~(1 << Request);
+	DWORD InterruptMask = 1 << Request;
+	HalInterruptRequestRegister &= ~InterruptMask;
 }
 
 // ******************************************************************
@@ -433,8 +434,10 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 {
 	LOG_FUNC_ONE_ARG(Request);
 
-	// Set this software interrupt request :
-	EmuSoftwareInterrupRequestRegister |= (1 << Request);
+	DWORD InterruptMask = 1 << Request;
+
+	// Set this interrupt request bit:
+	HalInterruptRequestRegister |= InterruptMask;
 
 	LOG_INCOMPLETE();
 }

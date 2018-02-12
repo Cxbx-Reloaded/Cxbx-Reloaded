@@ -56,9 +56,9 @@ extern "C" {
 #define ONE_MB (1024 * 1024)
 #define X64KB 64 * ONE_KB
 
-// Thread Information Block offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
-#define TIB_ArbitraryDataSlot 0x14
-#define TIB_LinearSelfAddress 0x18
+// NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
+#define TIB_ArbitraryDataSlot  0x14 // = 20 = offsetof(NT_TIB, ArbitraryUserPointer)
+#define TIB_LinearSelfAddress  0x18 // = 24 = offsetof(NT_TIB, Self)
 
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
@@ -141,7 +141,6 @@ extern "C" {
 #define CXBX_BASE_OF_CODE 0x00001000
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
-// MAX_BUS_INTERRUPT_LEVEL = PROFILE_LEVEL = 27
 #define MAX_NUM_INTERRUPTS 256
 #define IRQ_BASE 0x30 
 
@@ -150,7 +149,7 @@ extern "C" {
 // Source : ReactOS halirq.h : https://doxygen.reactos.org/d1/da9/halppc_2include_2halirq_8h_source.html
 #define IRQ2VECTOR(irq)     ((irq)+IRQ_BASE)
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
-#define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
+#define VECTOR2IRQL(vector) (MAX_BUS_INTERRUPT_LEVEL - VECTOR2IRQ(vector))
 
 // Kernel boot flags
 enum {

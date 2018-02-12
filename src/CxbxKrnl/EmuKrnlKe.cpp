@@ -1230,26 +1230,14 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
-	LOG_FUNC();
+	LOG_FORWARD(KfRaiseIrql);
 
-	// Inlined KeGetCurrentIrql() :
-	KPCR* Pcr = KeGetPcr();
-	KIRQL OldIrql = (KIRQL)Pcr->Irql;
-
-	if(OldIrql > DISPATCH_LEVEL)
-		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
-
-	Pcr->Irql = DISPATCH_LEVEL;
-
-#ifdef _DEBUG_TRACE
-	DbgPrintf("KRNL: Raised IRQL to DISPATCH_LEVEL (2).\n");
-	DbgPrintf("Old IRQL is %d.\n", OldIrql);
-#endif
+	KIRQL OldIrql =  KfRaiseIrql(DISPATCH_LEVEL);
 
 	// We reached the DISPATCH_LEVEL, so the queue can be processed now
 	ExecuteDpcQueue();
 	
-	RETURN(OldIrql);
+	return OldIrql;
 }
 
 // ******************************************************************
@@ -1257,17 +1245,9 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel()
 {
-	LOG_FUNC();
+	LOG_FORWARD(KfRaiseIrql);
 
-	// Inlined KeGetCurrentIrql() :
-	KPCR* Pcr = KeGetPcr();
-	KIRQL OldIrql = (KIRQL)Pcr->Irql;
-
-	Pcr->Irql = SYNC_LEVEL;
-
-	LOG_INCOMPLETE(); // TODO : Should we call ExecuteDpcQueue, perhaps with SYNC_LEVEL argument??
-
-	RETURN(OldIrql);
+	return KfRaiseIrql(SYNC_LEVEL);
 }
 
 XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
