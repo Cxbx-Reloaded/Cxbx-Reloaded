@@ -172,6 +172,8 @@ extern Xbe::Certificate *g_pCertificate;
 /*! validate version string match */
 bool CxbxKrnlVerifyVersion(const char *szVersion);
 
+extern bool g_bIsDebugKernel;
+
 /*! Cxbx Kernel Entry Point */
 void CxbxKrnlMain(int argc, char* argv[]);
 

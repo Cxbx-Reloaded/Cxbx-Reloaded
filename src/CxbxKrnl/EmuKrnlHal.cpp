@@ -79,6 +79,12 @@ LIST_ENTRY_INITIALIZE_HEAD(ShutdownRoutineList);
 
 
 // ******************************************************************
+// * Declaring this in a header causes errors with xboxkrnl
+// * namespace, so we must declare it within any file that uses it
+// ******************************************************************
+xboxkrnl::KPCR* KeGetPcr();
+
+// ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
@@ -436,10 +442,26 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 
 	DWORD InterruptMask = 1 << Request;
 
+	bool interrupt_flag = DisableInterrupts();
+
 	// Set this interrupt request bit:
 	HalInterruptRequestRegister |= InterruptMask;
 
-	LOG_INCOMPLETE();
+	// Check for pending software interrupts
+	uint8_t SoftwareInterrupt = HalInterruptRequestRegister & 3;
+
+	// Software interrupt 0,1 = IRQ 0, interrupt 2, 3 = IRQ 1 :
+	KIRQL SoftwareIrql = SoftwareInterrupt >> 1;
+
+	// Inlined KeGetCurrentIrql() :
+	PKPCR Pcr = KeGetPcr();
+	KIRQL CurrentIrql = (KIRQL)Pcr->Irql;
+
+	if (SoftwareIrql > CurrentIrql) {
+		CallSoftwareInterrupt(SoftwareIrql);
+	}
+
+	RestoreInterruptMode(interrupt_flag);
 }
 
 // ******************************************************************

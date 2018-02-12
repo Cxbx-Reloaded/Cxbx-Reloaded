@@ -50,6 +50,7 @@ namespace xboxkrnl
 
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
+#include "EmuKrnl.h" // for HalSystemInterrupts
 #include "CxbxKrnl.h"
 #include "EmuXTL.h"
 
@@ -147,6 +148,82 @@ void xboxkrnl::KiLockDispatcherDatabase
 
 	*(OldIrql) = KeRaiseIrqlToDpcLevel();
 }
+
+// Interrupts
+
+extern volatile DWORD HalInterruptRequestRegister;
+
+volatile bool g_bInterruptsEnabled = true;
+
+bool DisableInterrupts()
+{
+	bool Result = g_bInterruptsEnabled;
+	g_bInterruptsEnabled = false;
+	return Result;
+}
+
+void RestoreInterruptMode(bool value)
+{
+	g_bInterruptsEnabled = value;
+}
+
+extern DWORD ExecuteDpcQueue();
+
+void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
+{
+	switch (SoftwareIrql) {
+	case 0:
+		// unexpected interrupt
+		break;
+	case APC_LEVEL: // = 1
+		// TODO : ExecuteApcQueue();
+		break;
+	case DISPATCH_LEVEL: // = 2
+		ExecuteDpcQueue();
+		break;
+	case APC_LEVEL | DISPATCH_LEVEL: // = 3
+		// unexpected interrupt
+		break;
+	default:
+		HalSystemInterrupts[SoftwareIrql].Assert(true);
+		break;
+	}
+}
+
+const DWORD IrqlMasks[] = {
+	0xFFFFFFFE, // IRQL 0
+	0xFFFFFFFC, // IRQL 1 (APC_LEVEL)
+	0xFFFFFFF8, // IRQL 2 (DISPATCH_LEVEL)
+	0xFFFFFFF0, // IRQL 3
+	0x03FFFFF0, // IRQL 4
+	0x01FFFFF0, // IRQL 5
+	0x00FFFFF0, // IRQL 6
+	0x00EFFFF0, // IRQL 7
+	0x007FFFF0, // IRQL 8
+	0x003FFFF0, // IRQL 9
+	0x001FFFF0, // IRQL 10
+	0x000EFFF0, // IRQL 11
+	0x0007FFF0, // IRQL 12
+	0x0003FFF0, // IRQL 13
+	0x0001FFF0, // IRQL 14
+	0x00017FF0, // IRQL 15
+	0x00013FF0, // IRQL 16
+	0x00011FF0, // IRQL 17
+	0x00011FF0, // IRQL 18
+	0x000117F0, // IRQL 19
+	0x000113F0, // IRQL 20
+	0x000111F0, // IRQL 21
+	0x000110F0, // IRQL 22
+	0x00011070, // IRQL 23
+	0x00011030, // IRQL 24
+	0x00011010, // IRQL 25
+	0x00010010, // IRQL 26 (PROFILE_LEVEL)
+	0x00000010, // IRQL 27
+	0x00000000, // IRQL 28 (SYNC_LEVEL)
+	0x00000000, // IRQL 29
+	0x00000000, // IRQL 30
+	0x00000000, // IRQL 31 (HIGH_LEVEL)
+};
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
@@ -323,6 +400,8 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 	RETURN(OldIrql);
 }
 
+inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); return result; }
+
 // ******************************************************************
 // * 0x00A1 - KfLowerIrql()
 // ******************************************************************
@@ -337,17 +416,32 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 
 	KPCR* Pcr = KeGetPcr();
 
-	if (NewIrql > Pcr->Irql) {
+	if (g_bIsDebugKernel && NewIrql > Pcr->Irql) {
 		KIRQL OldIrql = Pcr->Irql;
 		Pcr->Irql = HIGH_LEVEL; // Probably to avoid recursion?
 		KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL, (PVOID)OldIrql, (PVOID)NewIrql, 0, 0);
 		return;
 	}
 
+	bool interrupt_flag = DisableInterrupts();
 	Pcr->Irql = NewIrql;
 
-	// TODO: Dispatch pending interrupts
-	LOG_INCOMPLETE();
+	DWORD MaskedInterrupts = HalInterruptRequestRegister & IrqlMasks[NewIrql];
+
+	// Are there any interrupts pending?
+	if (MaskedInterrupts > 0) {
+		// Determine the highest IRQ level 
+		KIRQL HighestIrql = (KIRQL)bsr(MaskedInterrupts);
+
+		// Above dispatch level, clear the highest interrupt request bit
+		if (HighestIrql > DISPATCH_LEVEL) {
+			HalInterruptRequestRegister ^= 1 << HighestIrql;
+		}
+
+		CallSoftwareInterrupt(HighestIrql);
+	}
+
+	RestoreInterruptMode(interrupt_flag);
 }
 
 // ******************************************************************

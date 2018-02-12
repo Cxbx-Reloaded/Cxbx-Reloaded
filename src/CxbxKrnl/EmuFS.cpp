@@ -52,6 +52,74 @@ namespace xboxkrnl
 #include <windows.h>
 #include <cstdio>
 
+// NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
+#define TIB_ExceptionList         offsetof(NT_TIB, ExceptionList)         // = 0x00/0
+#define TIB_StackBase             offsetof(NT_TIB, StackBase)             // = 0x04/4
+#define TIB_StackLimit            offsetof(NT_TIB, StackLimit)            // = 0x08/8
+#define TIB_SubSystemTib          offsetof(NT_TIB, SubSystemTib)          // = 0x0C/12
+#define TIB_FiberData             offsetof(NT_TIB, FiberData)             // = 0x10/16
+#define TIB_ArbitraryUserPointer  offsetof(NT_TIB, ArbitraryUserPointer)  // = 0x14/20
+#define TIB_Self                  offsetof(NT_TIB, Self)                  // = 0x18/24
+
+// KPCR (Kernel Processor Control Region) offsets
+#define KPCR_NtTib                offsetof(KPCR, NtTib)                   // = 0x00/0
+#define KPCR_SelfPcr              offsetof(KPCR, SelfPcr)                 // = 0x1C/28
+#define KPCR_Prcb                 offsetof(KPCR, Prcb)                    // = 0x20/32
+#define KPCR_Irql                 offsetof(KPCR, Irql)                    // = 0x24/36
+#define KPCR_PrcbData             offsetof(KPCR, PrcbData)                // = 0x28/40
+
+// KPRCB (Kernel PRocesor Control Block) offsets
+#define KPRCB_CurrentThread       offsetof(KPRCB, CurrentThread)          // = 0x00, KPCR : 0x28/40
+#define KPRCB_NextThread          offsetof(KPRCB, NextThread)             // = 0x04, KPCR : 0x2C/44
+#define KPRCB_IdleThread          offsetof(KPRCB, IdleThread)             // = 0x08, KPCR : 0x30/48
+#define KPRCB_DpcListHead         offsetof(KPRCB, DpcListHead)            // = 0x28, KPCR : 0x50/80
+#define KPRCB_DpcRoutineActive    offsetof(KPRCB, DpcRoutineActive)       // = 0x30, KPCR : 0x58/88
+
+// KTHREAD (Kernel Thread) offsets
+#define KTHREAD_Header            offsetof(KTHREAD, Header)               // = 0x0/0
+#define KTHREAD_MutantListHead    offsetof(KTHREAD, MutantListHead)       // = 0x10/16
+#define KTHREAD_KernelTime        offsetof(KTHREAD, KernelTime)           // = 0x18/24
+#define KTHREAD_StackBase         offsetof(KTHREAD, StackBase)            // = 0x1C/28
+#define KTHREAD_StackLimit        offsetof(KTHREAD, StackLimit)           // = 0x20/32
+#define KTHREAD_KernelStack       offsetof(KTHREAD, KernelStack)          // = 0x24/36
+#define KTHREAD_TlsData           offsetof(KTHREAD, TlsData)              // = 0x28/40
+#define KTHREAD_State             offsetof(KTHREAD, State)                // = 0x2C/44
+#define KTHREAD_Alerted           offsetof(KTHREAD, Alerted)              // = 0x2D/45
+#define KTHREAD_Alertable         offsetof(KTHREAD, Alertable)            // = 0x2F/47
+#define KTHREAD_NpxState          offsetof(KTHREAD, NpxState)             // = 0x30/48
+// = 0x31/49 */ CHAR Saturation;
+// = 0x32/50 */ CHAR Priority;
+// = 0x33/51 */ CHAR Padding;
+// = 0x34/52 */ KAPC_STATE ApcState;
+// = 0x4C/76 */ ULONG ContextSwitches;
+// = 0x50/80 */ ULONG WaitStatus;
+// = 0x54/84 */ CHAR WaitIrql;
+// = 0x55/85 */ CHAR WaitMode;
+// = 0x56/86 */ CHAR WaitNext;
+// = 0x57/87 */ CHAR WaitReason;
+// = 0x58/88 */ PVOID WaitBlockList;
+// = 0x5C/92 */ LIST_ENTRY WaitListEntry;
+// = 0x64/100 */ ULONG WaitTime;
+// = 0x68/104 */ ULONG KernelApcDisable;
+// = 0x6C/108 */ ULONG Quantum;
+// = 0x70/112 */ CHAR BasePriority;
+// = 0x71/113 */ CHAR DecrementCount;
+// = 0x72/114 */ CHAR PriorityDecrement;
+// = 0x73/115 */ CHAR DisableBoost;
+// = 0x74/116 */ CHAR NpxIrql;
+// = 0x75/117 */ CHAR SuspendCount;
+// = 0x76/118 */ CHAR Preempted;
+// = 0x77/119 */ CHAR HasTerminated;
+// = 0x78/120 */ PVOID Queue;
+// = 0x7C/124 */ LIST_ENTRY QueueListEntry;
+// = 0x88/136 */ UCHAR rsvd1[4];
+// = 0x88/136 */ KTIMER Timer;
+// = 0xB0/176 */ KWAIT_BLOCK TimerWaitBlock;
+// = 0xC8/200 */ KAPC SuspendApc;
+// = 0xF0/240 */ KSEMAPHORE SuspendSemaphore;
+// = 0x104/260 */ LIST_ENTRY ThreadListEntry;
+// = 0x10C/268 */ UCHAR _padding[4];
+
 NT_TIB *GetNtTib()
 {
 	return (NT_TIB *)__readfsdword(TIB_LinearSelfAddress);
@@ -473,8 +541,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		InitializeListHead(&(Prcb->DpcListHead));
 		Prcb->DpcRoutineActive = FALSE;
 
-		// TODO : Should Irql be set? And if so, to what - APC_LEVEL?
-		// NewPcr->Irql = APC_LEVEL; // See KeLowerIrql;
+		NewPcr->Irql = APC_LEVEL; // See KeLowerIrql;
 	}
 
 	// Initialize a fake PrcbData.CurrentThread 

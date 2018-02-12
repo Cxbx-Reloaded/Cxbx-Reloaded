@@ -115,4 +115,8 @@ private:
 
 extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
+bool DisableInterrupts();
+void RestoreInterruptMode(bool value);
+void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql);
+
 #endif

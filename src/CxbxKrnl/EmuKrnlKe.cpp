@@ -1232,12 +1232,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FORWARD(KfRaiseIrql);
 
-	KIRQL OldIrql =  KfRaiseIrql(DISPATCH_LEVEL);
-
-	// We reached the DISPATCH_LEVEL, so the queue can be processed now
-	ExecuteDpcQueue();
-	
-	return OldIrql;
+	return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 // ******************************************************************
