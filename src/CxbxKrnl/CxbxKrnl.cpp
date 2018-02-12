@@ -103,6 +103,9 @@ bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+// Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
+size_t g_SystemMaxMemory = 0;
+
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
 bool g_bIsWine = false;
 
@@ -377,8 +380,8 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	void *tiled_memory = (void *)MapViewOfFileEx(
 		hFileMapping,
 		FILE_MAP_READ | FILE_MAP_WRITE,
-				/* dwFileOffsetHigh */0,
-				/* dwFileOffsetLow */0,
+		/* dwFileOffsetHigh */0,
+		/* dwFileOffsetLow */0,
 		tiledMemorySize,
 		(void *)XBOX_WRITE_COMBINED_BASE);
 
@@ -427,8 +430,8 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		}
 	}
 
-	// Make sure memory.bin is at least 4 MB in size
-	SetFilePointer(hFile, 4 * ONE_MB, nullptr, FILE_BEGIN);
+	// Make sure PageTables.bin is at least 4 MB in size
+	SetFilePointer(hFile, PAGE_TABLES_SIZE, nullptr, FILE_BEGIN);
 	SetEndOfFile(hFile);
 
 	HANDLE hFileMapping = CreateFileMapping(
@@ -436,7 +439,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		/* lpFileMappingAttributes */nullptr,
 		PAGE_READWRITE,
 		/* dwMaximumSizeHigh */0,
-		/* dwMaximumSizeLow */4 * ONE_MB,
+		/* dwMaximumSizeLow */PAGE_TABLES_SIZE,
 		/**/nullptr);
 	if (hFileMapping == NULL)
 	{
@@ -447,7 +450,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 	LARGE_INTEGER  len_li;
 	GetFileSizeEx(hFile, &len_li);
 	unsigned int FileSize = len_li.u.LowPart;
-	if (FileSize != 4 * ONE_MB)
+	if (FileSize != PAGE_TABLES_SIZE)
 	{
 		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
 		return nullptr;
@@ -460,8 +463,8 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
 		4 * ONE_MB,
-		(void *)PTE_BASE);
-	if (memory != (void *)PTE_BASE)
+		(void *)PAGE_TABLES_BASE);
+	if (memory != (void *)PAGE_TABLES_BASE)
 	{
 		if (memory)
 			UnmapViewOfFile(memory);
@@ -471,7 +474,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), 4, PTE_BASE, PTE_BASE + 4 * ONE_MB - 1);
+		GetCurrentThreadId(), 4, PAGE_TABLES_BASE, PAGE_TABLES_END);
 
 	if (NeedsInitialization)
 	{

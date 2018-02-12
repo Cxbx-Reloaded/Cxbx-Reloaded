@@ -61,8 +61,8 @@ PMEMORY_STATUS PhysicalMemory::GetError() const
 void PhysicalMemory::InitializePfnDatabase()
 {
 	XBOX_PFN TempPF;
-	ULONG PFN;
-	ULONG PFN_end;
+	PFN pfn;
+	PFN pfn_end;
 
 
 	// Default initialize the entries of the PFN database
@@ -80,141 +80,136 @@ void PhysicalMemory::InitializePfnDatabase()
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Debug: 128 KiB
 	}
 
+	// NOTE: I'm still not completely sure but I believe I should also construct the PTs of the following allocations...
 
 	// Construct the pfn of the page directory
-	PFN = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
+	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
 
-	TempPF.Default = 0;
 	TempPF.Pte.Default = ValidKernelPteBits;
 	TempPF.Pte.Hardware.Persist = 1;
 	TempPF.Pte.Hardware.GuardOrEnd = 1;
-	TempPF.Pte.Hardware.PFN = PFN;
+	TempPF.Pte.Hardware.PFN = pfn;
 
 	if (g_bIsRetail || g_bIsDebug) {
-		*XBOX_PFN_ELEMENT(PFN) = TempPF;
+		*XBOX_PFN_ELEMENT(pfn) = TempPF;
 	}
-	else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
+	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
 	m_PhysicalPagesInUse++;
 	m_PagesByUsage[Contiguous]++; // treat the page of the page directory as contiguous usage
 
 
 	// Construct the pfn's of the kernel pages
-	PFN = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE);
-	PFN_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
+	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE);
+	pfn_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
 
-	while (PFN <= PFN_end)
+	while (pfn <= pfn_end)
 	{
-		TempPF.Default = 0;
 		TempPF.Pte.Default = ValidKernelPteBits;
 		TempPF.Pte.Hardware.Persist = 1;
-		TempPF.Pte.Hardware.PFN = PFN;
+		TempPF.Pte.Hardware.PFN = pfn;
 
 		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(PFN) = TempPF;
+			*XBOX_PFN_ELEMENT(pfn) = TempPF;
 		}
-		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
+		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
 		m_PhysicalPagesInUse++;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the kernel as contiguous usage
-		PFN++;
+		pfn++;
 	}
 
 
 	// Construct the pfn's of the pages holding the pfn database
 	if (g_bIsRetail) {
-		PFN = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
-		PFN_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
+		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
 	}
 	else if (g_bIsDebug) {
-		PFN = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
-		PFN_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
 	else {
-		PFN = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE;
-		PFN_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+		pfn = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
 
-	while (PFN <= PFN_end)
+	while (pfn <= pfn_end)
 	{
-		TempPF.Default = 0;
 		TempPF.Pte.Default = ValidKernelPteBits;
 		TempPF.Pte.Hardware.Persist = 1;
-		TempPF.Pte.Hardware.PFN = PFN;
+		TempPF.Pte.Hardware.PFN = pfn;
 
 		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(PFN) = TempPF;
+			*XBOX_PFN_ELEMENT(pfn) = TempPF;
 		}
-		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
+		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
 		m_PhysicalPagesInUse++;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the pfn as contiguous usage
-		PFN++;
+		pfn++;
 	}
 	
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
 	if (g_bIsRetail || g_bIsDebug) {
-		PFN = XBOX_INSTANCE_PHYSICAL_PAGE;
-		PFN_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
+		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
 	else {
-		PFN = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
-		PFN_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
+		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
 
-	while (PFN <= PFN_end)
+	while (pfn <= pfn_end)
 	{
-		TempPF.Default = 0;
 		TempPF.Pte.Default = ValidKernelPteBits;
 		DISABLE_CACHING(TempPF.Pte);
-		TempPF.Pte.Hardware.PFN = PFN;
+		TempPF.Pte.Hardware.PFN = pfn;
 
 		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(PFN) = TempPF;
+			*XBOX_PFN_ELEMENT(pfn) = TempPF;
 		}
-		else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
+		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
 		m_PhysicalPagesInUse++;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
-		PFN++;
+		pfn++;
 	}
 
 	if (g_bIsDebug)
 	{
 		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
 
-		PFN = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE - 1;
-		PFN_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE - 1;
+		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 
-		while (PFN <= PFN_end)
+		while (pfn <= pfn_end)
 		{
-			TempPF.Default = 0;
 			TempPF.Pte.Default = ValidKernelPteBits;
 			DISABLE_CACHING(TempPF.Pte);
-			TempPF.Pte.Hardware.PFN = PFN;
+			TempPF.Pte.Hardware.PFN = pfn;
 
-			*XBOX_PFN_ELEMENT(PFN) = TempPF;
+			*XBOX_PFN_ELEMENT(pfn) = TempPF;
 
 			m_PhysicalPagesInUse++;
 			m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
-			PFN++;
+			pfn++;
 		}
 	}
 
 	// Construct the pfn of the page used by D3D
-	PFN = D3D_PHYSICAL_PAGE;
+	pfn = D3D_PHYSICAL_PAGE;
 
-	TempPF.Default = 0;
 	TempPF.Pte.Default = ValidKernelPteBits;
 	TempPF.Pte.Hardware.Persist = 1;
 	TempPF.Pte.Hardware.GuardOrEnd = 1;
-	TempPF.Pte.Hardware.PFN = PFN;
+	TempPF.Pte.Hardware.PFN = pfn;
 
 	if (g_bIsRetail || g_bIsDebug) {
-		*XBOX_PFN_ELEMENT(PFN) = TempPF;
+		*XBOX_PFN_ELEMENT(pfn) = TempPF;
 	}
-	else { *CHIHIRO_PFN_ELEMENT(PFN) = TempPF; }
+	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
 	m_PhysicalPagesInUse++;
 	m_PagesByUsage[Contiguous]++; // treat the initialization page of D3D as contiguous usage
@@ -264,13 +259,6 @@ void PhysicalMemory::InitializePageDirectory()
 	}
 
 
-	// Map the pde of the page directory (this is actually done by the 2BL on a real Xbox)
-	TempPte.Default = ValidKernelPteBits;
-	TempPte.Hardware.PFN = PAGE_DIRECTORY_PHYSICAL_ADDRESS >> PAGE_SHIFT;
-	pPde = GetPdeAddress(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
-	WRITE_PTE(pPde, TempPte);
-
-
 	// Write the pde's of the contiguous region
 	TempPte.Default = ValidKernelPdeBits;
 	if (g_bIsRetail || g_bIsDebug) {
@@ -290,225 +278,100 @@ void PhysicalMemory::InitializePageDirectory()
 	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
 	// on the Xbox, which is not present here on Cxbx-Reloaded
 
-
+	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
+	// file cache function is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
+	// correctly implemented. So, for, we keep on ignoring this allocation
 }
 
-PAddr PhysicalMemory::AllocatePhysicalMemory(size_t size)
+bool PhysicalMemory::SearchMap(PFN searchvalue, PFN* result)
 {
-	PAddr addr = m_MaxContiguousAddress;
-	ClearError();
-	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
-	if (size > FreeMemory)
+	auto it = m_PhysicalMap.upper_bound(searchvalue);
+
+	if (it == m_PhysicalMap.begin()) // it->first > searchvalue
+		goto fail;
+
+	--it;  // it->first <= searchvalue
+	if (searchvalue >= it->first && searchvalue <= it->second)
 	{
-		EmuWarning("Out of physical memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return addr;
+		*result = it->first;
+		return true;
 	}
 
-	// Allocate the block wherever possible
-	// This attempts to counter external fragmentation by allocating big blocks top-down and small blocks bottom-up
-	if (size > m_AllocationThreshold)
+	fail:
+		result = nullptr;
+		return false;
+}
+
+void PhysicalMemory::RemoveFree(PFN start, PFN end)
+{
+	PFN result;
+	bool bFound = SearchMap(start, &result); // this function is required in release builds so it cannot be asserted directly
+	assert(bFound);
+	PFN old_end = m_PhysicalMap[result];
+
+	if (start != result)
 	{
-		if (m_Mem_map.empty())
-		{
-			addr = m_MaxContiguousAddress - size;
-			m_Mem_map[addr] = size;
-			m_PhysicalMemoryInUse += size;
-		}
-		else
-		{
-			// Allocate the block starting from the top of memory
-			for (auto rit = m_Mem_map.rbegin(); ; ++rit)
-			{
-				if (std::next(rit) == m_Mem_map.rend())
-				{
-					if (rit->first >= size)
-					{
-						addr = rit->first - size;
-						m_Mem_map[addr] = size;
-						m_PhysicalMemoryInUse += size;
-						break;
-					}
-
-					if (FreeMemory >= size) // fragmentation
-					{
-						addr = AllocateFragmented(size);
-						break;
-					}
-				}
-
-				// Reinstate this if the nv2a instance memory allocation is found to be ever deallocated after being 
-				// mapped during initialization. The only one that could do it is MmClaimGpuInstanceMemory, however it doesn't seem
-				// to deallocate the region, just to repurpose it...
-
-				//u32 offset = std::next(rit)->first + std::next(rit)->second;
-				/*if (rit == max_contiguous_it && m_MaxContiguousAddress - offset >= size)
-				{
-					addr = m_MaxContiguousAddress - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}*/
-
-				if (rit->first - (std::next(rit)->first + std::next(rit)->second) >= size)
-				{
-					addr = rit->first - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
-			}
-		}
+		// split at the beginning
+		m_PhysicalMap[result] = start - 1;
 	}
 	else
 	{
-		if (m_Mem_map.empty())
-		{
-			addr = 0;
-			m_Mem_map[addr] = size;
-			m_PhysicalMemoryInUse += size;
-		}
-		else
-		{
-			// Allocate the block starting from the bottom of memory
-			auto max_contiguous_it = m_Mem_map.lower_bound(m_MaxContiguousAddress); // skip the nv2a/PFN allocation
-			for (auto it = m_Mem_map.begin(); ; ++it)
-			{
-				if (it == m_Mem_map.begin() && it->first >= size)
-				{
-					addr = 0;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
-
-				u32 offset = it->first + it->second;
-				if (std::next(it) == max_contiguous_it)
-				{
-					if (m_MaxContiguousAddress - offset >= size)
-					{
-						addr = offset;
-						m_Mem_map[addr] = size;
-						m_PhysicalMemoryInUse += size;
-						break;
-					}
-
-					if (FreeMemory >= size) // fragmentation
-					{
-						addr = AllocateFragmented(size);
-						break;
-					}
-				}
-
-				if (std::next(it)->first - offset >= size)
-				{
-					addr = offset;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
-			}
-		}
+		// remove the old entry which is now invalid
+		m_PhysicalMap.erase(start);
 	}
-	return addr;
+
+	if (end != old_end)
+	{
+		// split at the end
+		m_PhysicalMap[end + 1] = old_end;
+	}
 }
 
-PAddr PhysicalMemory::AllocatePhysicalMemoryRange(size_t size, PAddr low_addr, PAddr high_addr)
+void PhysicalMemory::InsertFree(PFN start, PFN end)
 {
-	PAddr addr = m_MaxContiguousAddress;
-	ClearError();
-	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
-	if (size > FreeMemory)
+	PFN result;
+	assert(!SearchMap(ranges, start, &result));
+
+	m_PhysicalMap[start] = end;
+
+	if (SearchMap(end + 1, &result))
 	{
-		EmuWarning("Out of physical memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return addr;
+		// merge with the following free region
+		m_PhysicalMap[start] = m_PhysicalMap[result];
+		m_PhysicalMap.erase(result);
 	}
 
-	// TODO: it's a bit complex to properly allocate the blocks inside the requested range using the iterators,
-	// a better approch would be to implement an actual PFN database and search free blocks with that, but unfortunately 
-	// with the current code it's not possible to relocate already allocated blocks
-
-	// Allocate the block inside the specified range if possible, going from the top-down
-	if (m_Mem_map.empty())
+	if (SearchMap(start - 1, &result))
 	{
-		addr = low_addr;
-		m_Mem_map[addr] = size;
-		m_PhysicalMemoryInUse += size;
+		// merge with the previous free region
+		m_PhysicalMap[result] = m_PhysicalMap[start];
+		m_PhysicalMap.erase(start);
 	}
-	else
+}
+
+bool PhysicalMemory::FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low, PFN high)
+{
+	std::map<PFN, PFN>::iterator it;
+
+	if (!m_PhysicalMap.size() || high - low < size || size == 0)
+		goto fail;
+
+	for (it = --(m_PhysicalMap.end()); ; --it)
 	{
-		size_t FreeMemoryInRange = 0;
-
-		auto low_pair = m_Mem_map.emplace(low_addr, 0);
-		PAddr lower_bound = low_addr;
-		if (low_pair.first != m_Mem_map.begin())
+		if (it->second - it->first + 1 >= size && ((low == 0 && high == MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT) || 
+			(low >= it->first && high <= it->second)))
 		{
-			auto low_it = std::prev(low_pair.first);
-			if (low_it->first + low_it->second > low_addr)
-			{
-				lower_bound = low_it->first + low_it->second;
-			}
-		}
-		if (!low_pair.second)
-		{
-			lower_bound = low_addr + low_pair.first->second;
-		}
-		auto high_pair = m_Mem_map.emplace(high_addr, 0);
-		auto high_it = high_pair.first;
-		{
-			auto prev_it = std::prev(high_pair.first);
-			if (prev_it->first + prev_it->second >= high_pair.first->first)
-			{
-				high_it = prev_it;
-				if (high_it == low_pair.first)
-				{
-					SetError(PMEMORY_INSUFFICIENT_MEMORY);
-					EmuWarning("Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
-					if (high_pair.first->second == 0) { m_Mem_map.erase(high_addr); }
-					if (low_pair.first->second == 0) { m_Mem_map.erase(low_addr); }
-					return addr;
-				}
-			}
+			*result = it->first;
+			return true;
 		}
 
-		for (auto it = high_it; ; --it)
-		{
-			if (std::prev(it) == low_pair.first)
-			{
-				if (it->first - lower_bound >= size)
-				{
-					addr = it->first - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
-				FreeMemoryInRange += (it->first - lower_bound);
-
-				if (FreeMemoryInRange >= size) // fragmentation
-				{
-					addr = AllocateFragmented(size);
-					break;
-				}
-				SetError(PMEMORY_INSUFFICIENT_MEMORY);
-				EmuWarning("Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
-				break;
-			}
-
-			size_t FreeBetween = it->first - (std::prev(it)->first + std::prev(it)->second);
-			if (FreeBetween >= size)
-			{
-				addr = it->first - size;
-				m_Mem_map[addr] = size;
-				m_PhysicalMemoryInUse += size;
-				break;
-			}
-			FreeMemoryInRange += FreeBetween;
-		}
-		if (high_pair.first->second == 0) { m_Mem_map.erase(high_addr); }
-		if (low_pair.first->second == 0) { m_Mem_map.erase(low_addr); }
+		if (it == m_PhysicalMap.begin())
+			break;
 	}
-	return addr;
+
+	fail:
+		result = nullptr;
+		return false;
 }
 
 VAddr PhysicalMemory::AllocateFragmented(size_t size)
@@ -565,12 +428,7 @@ void PhysicalMemory::ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bF
 	}
 }
 
-void PhysicalMemory::DeAllocatePhysicalMemory(PAddr addr)
-{
-	auto it = m_Mem_map.lower_bound(addr);
-	m_PhysicalMemoryInUse -= it->second;
-	m_Mem_map.erase(addr);
-}
+
 
 void PhysicalMemory::DeAllocateFragmented(VAddr addr)
 {

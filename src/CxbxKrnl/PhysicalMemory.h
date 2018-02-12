@@ -61,8 +61,8 @@ namespace xboxkrnl
 typedef uintptr_t VAddr;
 typedef uintptr_t PAddr;
 typedef uint32_t u32;
-typedef DWORD PTEflags;
-typedef ULONG PFN_Number;
+typedef unsigned int PFN;
+typedef unsigned int PFN_COUNT;
 
 
 // NOTE: all the bit fields below can have endianess issues...
@@ -93,11 +93,6 @@ typedef struct _MMPTE
 	{
 		ULONG Default;
 		XBOX_PTE Hardware;
-		struct {
-			ULONG Valid : 1;
-			ULONG OneEntry : 1;
-			ULONG NextEntry : 30;
-		} List;
 	};
 } MMPTE, *PMMPTE;
 
@@ -106,13 +101,13 @@ typedef struct _MMPTE
 enum PageType {
 	Unknown,                   // Used by the PFN database
 	Stack,                     // Used by MmCreateKernelStack
-	VirtualPageTable,
-	SystemPageTable,           // Not used yet
+	VirtualPageTable,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
+	SystemPageTable,           // Used by the pages holding the PTs that map the system memory
 	Pool,                      // Used by ExAllocatePoolWithTag
-	VirtualMemory,
-	SystemMemory,              // Used by MmAllocateSystemMemory
+	VirtualMemory,             // Used by NtAllocateVirtualMemory
+	SystemMemory,              // Used by MmAllocateSystemMemory and others
 	Image,                     // Used by XeLoadSection
-	Cache,                     // Not used yet
+	Cache,                     // Used by the file cache related functions
 	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
 	Debugger,                  // xbdm-related
 	COUNT                      // The size of the array containing the page usage per type
@@ -125,27 +120,13 @@ typedef struct _XBOX_PFN {
 	{
 		ULONG Default;
 		MMPTE Pte;
-		//MMPFNFREE Free;
 		struct {
 			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
 			ULONG Busy : 1;        // If set, PFN is in use
-			ULONG Reserved : 1;
-			ULONG PteIndex : 10;
+			ULONG Unused : 1;
+			ULONG PteIndex : 10;   // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
 			ULONG BusyType : 4;    // What the page is used for
 		} Busy;
-		// I'm still unsure about what the others below are used for...
-		/*struct {
-			ULONG LockCount : 16;
-			ULONG Busy : 1;
-			ULONG ElementIndex : 11;
-			ULONG BusyType : 4;
-		} FsCache;
-		struct {
-			ULONG LockCount : 16;
-			ULONG Busy : 1;
-			ULONG NumberOfUsedPtes : 11;
-			ULONG BusyType : 4;
-		} Directory;*/
 	};
 } XBOX_PFN, *PXBOX_PFN;
 
@@ -167,7 +148,6 @@ typedef struct _XBOX_PFN {
 //#define PTE_LARGE_PAGE_MASK      0x00000080
 //#define PTE_GLOBAL_MASK          0x00000100
 //#define PTE_GUARD_MASK           0x00000200
-//#define PTE_NEXT_ENTRY_MASK      0xFFFFFFFC
 
 //#define PTE_NOACCESS             0x000
 //#define PTE_READONLY             0x000
@@ -178,9 +158,11 @@ typedef struct _XBOX_PFN {
 
 
 /* Various macros to manipulate PDE/PTE/PFN */
-#define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PDE_BASE))
+#define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PAGE_DIRECTORY_BASE)) // (Va/4M) * 4 + PDE_BASE
+#define GetPteAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 12) << 2) + PAGE_TABLES_BASE))    // (Va/4K) * 4 + PTE_BASE
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
+#define PTE_PER_PAGE 1024
 // On real hardware, enabling only the cache disable bit would result in an effective caching type of USWC
 // (uncacheable speculative write combining), so we set both to achieve it
 #define DISABLE_CACHING(Pte) ((Pte).Hardware.CacheDisable = 1); ((Pte).Hardware.WriteThrough = 1)
@@ -196,7 +178,14 @@ typedef struct _XBOX_PFN {
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
 
 
-/* Global helper function used to copy an ULONG block of memory to another buffer */
+/* Common rounding operations */
+#define ROUND_UP_4K(size) (((size) + PAGE_MASK) & (~PAGE_MASK))
+#define ROUND_UP(size, alignment) (((size) + (alignment - 1)) & (~(alignment - 1)))
+#define ROUND_DOWN_4K(size) ((size) & (~PAGE_MASK))
+#define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
+
+
+/* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
 
 
@@ -204,25 +193,22 @@ void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
 class PhysicalMemory
 {
 	protected:
-		// if the block to allocate is smaller than AllocationThreshold, then it will be mapped starting from the bottom of the memory,
-		// otherwise it's mapped from the top. AllocationThreshold is 64KiB, the allocation granularity of the Xbox
-		const unsigned int m_AllocationThreshold = 1024 * 64;
-		// amount of physical pages in use
-		int m_PhysicalPagesInUse = 0;
-		// max physical memory available on the Xbox/Chihiro
-		size_t m_MaxPhysicalMemory = XBOX_MEMORY_SIZE;
-		// map tracking the physical memory currently in use
-		std::map<PAddr, size_t> m_Mem_map;
+		// map tracking the free physical memory regions
+		std::map<PFN, PFN> m_PhysicalMap;
 		// map tracking the blocks allocated with VirtualAlloc
-		std::map<VAddr, size_t> m_Fragmented_mem_map;
+		//std::map<VAddr, size_t> m_Fragmented_mem_map;
 		// current error status code of the PhysicalMemory class
 		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
 		// highest address available for contiguous allocations
 		PAddr m_MaxContiguousAddress = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// the size of memory occupied by the PFN/NV2A instance memory
 		size_t m_UpperPMemorySize = 32 * PAGE_SIZE;
+		// max pages available on the Xbox/Chihiro
+		PFN_COUNT m_MaxPagesAvailable = X64M_PHYSICAL_PAGE;
+		// amount of physical pages in use
+		PFN_COUNT m_PhysicalPagesInUse = 0;
 		// array containing the number of pages in use per type
-		int m_PagesByUsage[COUNT] = { 0 };
+		PFN_COUNT m_PagesByUsage[COUNT] = { 0 };
 	
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};
@@ -240,16 +226,20 @@ class PhysicalMemory
 		void ReinitializePfnDatabase();
 		// set up the page directory
 		void InitializePageDirectory();
-		// allocates a block of the mapped file, returns m_MaxContiguousAddress and sets an error code if unsuccessful
-		PAddr AllocatePhysicalMemory(size_t size);
-		// allocates a block of the mapped file between the specified range if possible
-		PAddr AllocatePhysicalMemoryRange(size_t size, PAddr low_addr, PAddr high_addr);
+		// search the free memory regions for the specified pfn
+		bool SearchMap(PFN searchvalue, PFN* result);
+		// commit a contiguous free memory region
+		void RemoveFree(PFN start, PFN end);
+		// release a contiguous memory region
+		void InsertFree(PFN start, PFN end);
+		// locate a free contiguous region if available, specifying also a range if desired
+		bool FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low = 0, PFN high = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
+		// construct a temporary pte with the desired protection (if possible) and return it
+		bool ConvertWinToPteProtection(DWORD perms, PMMPTE pte);
 		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
 		VAddr AllocateFragmented(size_t size);
 		// shrinks the size af an allocation
 		void ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart);
-		// deallocates a block of the mapped file
-		void DeAllocatePhysicalMemory(PAddr addr);
 		// deallocates a block allocated with VirtualAlloc
 		void DeAllocateFragmented(VAddr addr);
 		// retrieves the current error code of the PhysicalMemory class

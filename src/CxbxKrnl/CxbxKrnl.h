@@ -136,11 +136,15 @@ extern "C" {
 // The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
 #define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
-#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE
+#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE // 128 MiB
 
 #define XBOX_UNCACHED_BASE       0xF8000000 // UC
 #define XBOX_UNCACHED_SIZE       0x07C00000 // - 0xFFBFFFFF
-#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE
+#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE // 128 MiB - 4 MiB
+
+#define SYSTEM_MEMORY_BASE       0xD0000000
+#define SYSTEM_MEMORY_SIZE       0x20000000 // 512 MiB
+#define SYSTEM_MEMORY_END        SYSTEM_MEMORY_BASE + SYSTEM_MEMORY_SIZE - 1 // 0xEFFFFFFF
 
 #define XBOX_NV2A_INIT_VECTOR    0xFF000008
 
@@ -150,12 +154,10 @@ extern "C" {
 #define HIGHEST_USER_ADDRESS     0x7FFEFFFF
 #define HIGHEST_VAD_ADDRESS      HIGHEST_USER_ADDRESS - X64KB // for NtAllocateVirtualMemory
 
+#define	PAGE_DIRECTORY_BASE      0xC0300000
 #define PAGE_TABLES_BASE         0xC0000000
-#define PAGE_TABLES_END          0xC03FFFFF
-
-#define PDE_BASE                 0xC0300000
-#define PTE_BASE                 0xC0000000
-
+#define PAGE_TABLES_SIZE         4 * ONE_MB
+#define PAGE_TABLES_END          PAGE_TABLES_BASE + PAGE_TABLES_SIZE - 1
 
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we
@@ -255,6 +257,8 @@ extern bool g_bIsWine;
 
 extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
+
+extern size_t g_SystemMaxMemory;
 
 void InitXboxThread(DWORD_PTR cores);
 

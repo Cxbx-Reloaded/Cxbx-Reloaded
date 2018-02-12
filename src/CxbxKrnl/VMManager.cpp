@@ -50,22 +50,6 @@
 VMManager g_VMManager;
 
 
-/* PTEflags */
-
-#define Present  1 << 0
-
-
-/* Global page table */
-
-static struct PageTable
-{
-	// array of memory pointers backing each page
-	std::array<PAddr, MAX_NUM_OF_PAGES> addresses;
-	// array of fine grained page attributes
-	std::array<PTEflags, MAX_NUM_OF_PAGES> attributes;
-}page_table;
-
-
 bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 {
 	assert(base + size == next.base);
@@ -79,26 +63,13 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 {
-	// This reserves a large enough memory region to map the second physical memory file view
-	uintptr_t start = (uintptr_t)VirtualAlloc(NULL, CHIHIRO_MEMORY_SIZE, MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	if (!start)
-	{
-		CxbxKrnlCleanup("VMManager: VirtualAlloc could not find a suitable region to allocate the second physical memory view!");
-	}
-	VirtualFree((void*)start, 0, MEM_RELEASE);
-	m_Base = (VAddr)MapViewOfFileEx(
-		memory_view,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		0,
-		0,
-		CHIHIRO_MEMORY_SIZE,
-		(void*)start);
-	if (m_Base != start)
-	{
-		UnmapViewOfFile((void*)start);
-		CxbxKrnlCleanup("VMManager: MapViewOfFileEx could not map the second physical memory view!");
-	}
+	// set up the critical section to synchronize access
+	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
 
+	SYSTEM_INFO si;
+	GetSystemInfo(&si);
+	m_AllocationGranularity = si.dwAllocationGranularity;
+	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 	m_hAliasedView = memory_view;
 	m_hPTFile = PT_view;
 	m_Vma_map.clear();
@@ -108,7 +79,8 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	{
 		m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
-		m_MaxPhysicalMemory = CHIHIRO_MEMORY_SIZE;
+		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
+		m_MaxPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
 	}
 
 	// Set up the pfn database
@@ -118,7 +90,8 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 		ReinitializePfnDatabase();
 	}
 	else {
-		FillMemoryUlong((void*)PTE_BASE, 4 * ONE_MB, 0); // prevent reusing the the old values of the page tables if we are not quick rebooting
+		// prevent reusing the the old values of the page tables if we are not quick rebooting
+		FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
 		InitializePfnDatabase();
 	}
 
@@ -296,23 +269,42 @@ VAddr VMManager::AllocateZeroed(size_t size)
 	RETURN(v_addr);
 }
 
-VAddr VMManager::AllocateStack(size_t size)
+VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t size, /*bool bDebugRange,*/ bool bAddGuardPage)
 {
-	LOG_FUNC_ONE_ARG(size);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BusyType);
+		LOG_FUNC_ARG(perms);
+		LOG_FUNC_ARG(size);
+		//LOG_FUNC_ARG(bDebugRange);
+		LOG_FUNC_ARG(bAddGuardPage);
+	LOG_FUNC_END;
+
+	MMPTE Pte;
+	PFN pfn;
+	PFN_COUNT PteNumber;
+	VAddr addr;
+	bool bVAlloc;
+
+	if (!ConvertWinToPteProtection(perms, &Pte)) { RETURN(NULL); } // TODO
 
 	Lock();
-	size_t ReturnedSize = size + PAGE_SIZE;
-	VAddr v_addr = MapMemoryBlock(&ReturnedSize, 0, MAXULONG_PTR);
-	if (v_addr)
-	{
-		m_Vma_map.lower_bound(v_addr)->second.type = VMAType::Stack;
-		ReprotectVMARange(v_addr, PAGE_SIZE, PAGE_NOACCESS); // guard page of the stack
-		v_addr += ReturnedSize;
-		m_StackMemoryInUse += ReturnedSize;
-	}
+
+	PteNumber = ROUND_UP_4K(size) >> PAGE_SHIFT;
+
+	if (bAddGuardPage) { PteNumber++; }
+	if (m_MaxPagesAvailable - m_PhysicalPagesInUse < PteNumber) { goto fail; }
+
+	bVAlloc = true;
+	addr = MapMemoryBlock(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, PteNumber, &bVAlloc, perms);
+	if (!addr) { goto fail; }
+
+	// TODO
+	
 	Unlock();
 
-	RETURN(v_addr);
+	fail:
+		Unlock();
+		RETURN(NULL);
 }
 
 void VMManager::Deallocate(VAddr addr)
@@ -625,6 +617,85 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	RETURN(ret);
 }
 
+VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn, PFN high_pfn)
+{
+	PFN pfn;
+	VAddr addr = low_addr;
+	size_t aligned_size = size << PAGE_SHIFT;
+
+	if (!FindFreeContiguous(size, &pfn, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
+	{
+		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
+		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
+		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
+		// our intended region before we could do.
+
+		// it_end can return end for the mcpx vma but it's not a problem since we won't try to dereference it
+		auto it_start = --(m_Vma_map.upper_bound(low_addr));
+		auto it_end = m_Vma_map.upper_bound(high_addr);
+
+		// Because the vma map covers the entire 4 GiB virtual space and it's without holes since vma's can only be split
+		// or merged but never deleted, the iterator above will always locate the desired address
+
+		assert(m_Vma_map.find(it_start->first) != m_Vma_map.end());
+
+		while (true)
+		{
+			if (it_start->second.type != VMAType::Free) { continue; } // already allocated by the VMManager
+
+			size_t vma_end = it_start->first + it_start->second.size;
+			addr = ROUND_UP(addr, m_AllocationGranularity);
+
+			for (; addr + aligned_size <= vma_end; addr += m_AllocationGranularity)
+			{
+				// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
+				// keep on trying until we succeed or fail entirely.
+
+				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
+				{
+					*bVAllocFlag = true; // allocated with VirtualAlloc
+					return addr;
+				}
+			}
+			if (++it_start == it_end) { break; }
+			else { addr = (++it_start)->first; }
+		}
+	}
+	else // MapViewOfFileEx path
+	{
+		DWORD FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
+
+		ConvertVProtectToMapViewProtection(&perms);
+
+		auto it_start = --(m_Vma_map.upper_bound(low_addr));
+		auto it_end = m_Vma_map.upper_bound(high_addr);
+
+		assert(m_Vma_map.find(it_start->first) != m_Vma_map.end());
+
+		// Note that if MapViewOfFileEx is unsuccessful we won't try VirtualAlloc since it means that the host virtual
+		// space has high fragmentation and because both functions use the same granularity, VirtualAlloc is just as likely
+		// to fail as well
+		while (true)
+		{
+			if (it_start->second.type != VMAType::Free) { continue; }
+
+			size_t vma_end = it_start->first + it_start->second.size;
+			addr = ROUND_UP(addr, m_AllocationGranularity);
+
+			for (; addr + aligned_size <= vma_end; addr += m_AllocationGranularity)
+			{
+				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, size, (void*)addr) == addr)
+				{
+					*bVAllocFlag = false; // allocated with MapViewOfFileEx
+					return addr + (pfn << PAGE_SHIFT); // sum the offset into the file view
+				}
+			}
+			if (++it_start == it_end) { break; }
+			else { addr = (++it_start)->first; }
+		}
+	}
+}
+
 VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
 {
 	// Find a free memory block for the allocation, if any
@@ -712,6 +783,19 @@ void VMManager::UnmapRange(VAddr target)
 	}
 
 	DestructVMA(it, aligned_start, it->second.size);
+}
+
+void VMManager::ConvertVProtectToMapViewProtection(DWORD* perms)
+{
+	// We always grant read / write access to the file view, we just check if we should also grant execute rights
+
+	if (*perms & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE))
+	{
+		*perms = FILE_MAP_EXECUTE | FILE_MAP_READ | FILE_MAP_WRITE;
+		return;
+	}
+
+	*perms = FILE_MAP_READ | FILE_MAP_WRITE;
 }
 
 void VMManager::ReprotectVMARange(VAddr target, size_t size, DWORD new_perms)

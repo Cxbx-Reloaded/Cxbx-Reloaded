@@ -193,7 +193,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	}
 	else
 		*NumberOfPaddingBytes = CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(X64M_PHYSICAL_PAGE) -
-		CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(instance_physical_page + INSTANCE_PAGE_COUNT);
+		CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(instance_physical_page + NV2A_INSTANCE_PAGE_COUNT);
 
 	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
 
@@ -236,7 +236,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 
 	if (NumberOfBytes)
 	{
-		addr = g_VMManager.AllocateStack(NumberOfBytes);
+		addr = g_VMManager.AllocateSystemMemory(SystemMemory, PAGE_READWRITE, NumberOfBytes, true);
 	}
 
 	RETURN((PVOID)addr);

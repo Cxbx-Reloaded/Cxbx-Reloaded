@@ -42,8 +42,12 @@
 
 #define XbAllocateVirtualMemoryStub(addr, zero_bits, size, allocation_type, protect) \
 		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, true)
+#define XbAllocateVirtualMemoryReal(addr, zero_bits, size, allocation_type, protect) \
+		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, false)
 #define XbFreeVirtualMemoryStub(addr, size, free_type) \
 		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, true)
+#define XbFreeVirtualMemoryReal(addr, size, free_type) \
+		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, false)
 
 
 /* VMATypes */
@@ -90,9 +94,7 @@ struct VirtualMemoryArea
 	// vma size
 	size_t size = 0;
 	// vma kind of memory
-	VMAType vma_type = VMAType::Free;
-	// the page type of this memory area
-	PageType page_type = PageType::Unknown; // TODO : Move this towards an actual PageTable entry once that get's implemented
+	VMAType type = VMAType::Free;
 	// vma permissions
 	DWORD permissions = PAGE_NOACCESS;
 	// addr of the memory backing this block, if any
@@ -110,35 +112,34 @@ class VMManager : public PhysicalMemory
 {
 	public:
 		// constructor
-		VMManager() { InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400); };
+		VMManager() {};
 		// destructor
 		~VMManager()
 		{
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
-			FlushFileBuffers(m_hAliasedView);
-			FlushViewOfFile((void*)PTE_BASE, 4 * ONE_MB);
+			FlushFileBuffers(m_hContiguousFile);
+			FlushViewOfFile((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE);
 			FlushFileBuffers(m_hPTFile);
-			UnmapViewOfFile((void *)m_Base);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
 			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
-			UnmapViewOfFile((void*)PTE_BASE);
-			CloseHandle(m_hAliasedView);
+			UnmapViewOfFile((void*)PAGE_TABLES_BASE);
+			CloseHandle(m_hContiguousFile);
 			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
 		void Initialize(HANDLE memory_view, HANDLE PT_view);
 		// maps the virtual memory region used by a device
-		void MapHardwareDevice(VAddr base, size_t size, VMAType vma_type);
+		void MapHardwareDevice(VAddr base, size_t size, VMAType type);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
-		VAddr Allocate(size_t size, PageType page_type = PageType::VirtualMemory, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG alignment = PAGE_SIZE,
-			DWORD protect = PAGE_READWRITE);
+		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE,
+			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
-		// allocates stack memory
-		VAddr AllocateStack(size_t size);
+		// allocates memory in the system region
+		VAddr AllocateSystemMemory(PageType BusyType, DWORD perms, size_t size, /*bool bDebugRange,*/ bool bAddGuardPage);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
 		// deallocate stack memory
@@ -155,31 +156,50 @@ class VMManager : public PhysicalMemory
 		size_t QuerySize(VAddr addr);
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
-			DWORD protect, bool bStub = false);
+			DWORD protect, bool bStub);
 		// xbox implementation of NtFreeVirtualMemory
-		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub = false);
+		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub);
 
 	
 	private:
 		// m_Vma_map iterator
 		typedef std::map<VAddr, VirtualMemoryArea>::iterator VMAIter;
+		// struct representing a particular memory region of interest. Used to speed up searches of free areas
+		/*typedef struct _MemoryRegion
+		{
+			VAddr StartingAddress;
+			VAddr EndingAddress;
+			VMAIter LastFreed;
+		}MemoryRegion, *PMemoryRegion;
+
+		MemoryRegion SystemRegion = {
+			SYSTEM_MEMORY_BASE,
+			SYSTEM_MEMORY_END,
+			m_Vma_map.end();
+		}; I'm still not sure if this is worth the trouble... */
+
 		// map covering the entire 32 bit virtual address space as seen by the guest
 		std::map<VAddr, VirtualMemoryArea> m_Vma_map;
-		// handle of the second file view region
-		HANDLE m_hAliasedView = NULL;
-		// handle of the PT file
+		// handle of the contiguous file mapping
+		HANDLE m_hContiguousFile = NULL;
+		// handle of the PT file mapping
 		HANDLE m_hPTFile = NULL;
-		// start address of the memory region to which map non-contiguous allocations in the virtual space
-		VAddr m_Base = 0;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-		// this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
-		size_t m_VirtualMemoryBytesReserved = 0;
-	private:
-		// creates a vma block to be mapped in memory at the specified VAddr, if requested
-		VAddr MapMemoryBlock(size_t* size, PageType page_type, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE);
+		// amount of image virtual memory in use
+		size_t m_ImageMemoryInUse = 0;
+		// amount of non - image virtual memory in use
+		size_t m_NonImageMemoryInUse = 0;
+		// the allocation granularity of the host. Needed by MapViewOfFileEx and VirtualAlloc
+		DWORD m_AllocationGranularity;
+	
+		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
+		VAddr MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms,
+			PFN low_pfn = 0, PFN high_pfn = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
 		// creates a vma representing the memory block to remove
-		void UnmapRange(VAddr target);
+		void UnMapMemoryBlock(VAddr target);
+		// convert VirtualProtect protection flags to file mapping protection flags
+		void ConvertVProtectToMapViewProtection(DWORD* perms);
 		// changes access permissions for a range of vma's, splitting them if necessary
 		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
 		// checks if a VAddr is valid; returns false if not
