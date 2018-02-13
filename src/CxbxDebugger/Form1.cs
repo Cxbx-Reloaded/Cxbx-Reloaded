@@ -267,7 +267,10 @@ namespace CxbxDebugger
             {
                 if (DebuggerInst != null)
                 {
-                    Suspend("file open");
+                    Invoke(new MethodInvoker(delegate ()
+                    {
+                        Suspend("file open");
+                    }));
                 }
             }
         }
@@ -565,18 +568,22 @@ namespace CxbxDebugger
 
         static private bool ReadAddress(TextBox Source, ref uint Out)
         {
-            if (Source.Text.StartsWith("0x"))
+            try
             {
-                Out = Convert.ToUInt32(Source.Text.Substring(2), 16);
-                return true;
-            }
-            else
-            {
-                if (uint.TryParse(Source.Text, out Out))
+                if (Source.Text.StartsWith("0x"))
                 {
+                    Out = Convert.ToUInt32(Source.Text.Substring(2), 16);
                     return true;
                 }
+                else
+                {
+                    if (uint.TryParse(Source.Text, out Out))
+                    {
+                        return true;
+                    }
+                }
             }
+            catch (Exception) { }
 
             return false;
         }
@@ -632,8 +639,8 @@ namespace CxbxDebugger
 
         public delegate void DisResultOther(string Part);
         public delegate void DisResultAddress(uint Address);
-
-        public static void ExtractSymbols(string Text, DisResultOther ProcessOtherData, DisResultAddress ProcessAddrData)
+        
+        public static void ExtractSymbols(string Text, DisResultOther ProcessOtherData, DisResultAddress ProcessAddrData, DisResultAddress ProcessIndirectAddr)
         {
             // This regex will match addresses in the format "0x123"
             // TODO: Fix ajoined addresses ie "0x1230x123" - treated as 0x1230
@@ -651,13 +658,13 @@ namespace CxbxDebugger
                 string MatchStr = Matches[i].ToString();
                 if( MatchStr.StartsWith("-"))
                 {
-                    uint Address = (uint)Convert.ToInt32(MatchStr.Substring(1), 16);
+                    uint Address = Convert.ToUInt32(MatchStr.Substring(1), 16);
                     Address = ~Address;
                     ProcessAddrData(Address);
                 }
                 else
                 {
-                    uint Address = (uint)Convert.ToInt32(MatchStr, 16);
+                    uint Address = Convert.ToUInt32(MatchStr, 16);
                     ProcessAddrData(Address);
                 }
 
@@ -711,6 +718,10 @@ namespace CxbxDebugger
 
             txDisassembly.Clear();
 
+            // Dump requested after crashing - and read memory handles this silently
+            if(data == null)
+                return;
+
             // TODO: Needs refactoring
 
             var ModuleInfo = new SymbolInfoHelper(DebuggerInst, OffsetAddr);
@@ -729,28 +740,24 @@ namespace CxbxDebugger
                     ExtractSymbols
                     (
                         Instruction.Disassembly,
+
+                        // Regular instruction text
                         delegate (string RegData)
                         {
                             txDisassembly.Add(RegData);
                         },
+
+                        // Raw address
                         delegate (uint address)
                         {
                             var Info = new SymbolInfoHelper(DebuggerInst, address);
                             Info.GenerateLink(txDisassembly, address);
-                            
-                            
-                            //    uint offset = (address - symbol.AddrBegin);
-                            //    uint mbase = info.ModuleBase;
-                            //
-                            //    // Add symbol name
-                            //    disassemblyText.InsertLink(string.Format("{0} +0x{1}", symbol.Name, offset), label);
-                            //
-                            //    //txDisassembly.InsertLink(string.Format("{0}@{1:X8} ({2:X8}/{3:X8})", symbol.Name, symbol.AddrBegin, address, mbase), label);
-                            //}
-                            //else
-                            //{
-                            //    txDisassembly.InsertLink(label);
-                            //}
+                        },
+
+                        // Indirect address
+                        delegate (uint address)
+                        {
+                            // stub
                         });
 
                     txDisassembly.AddLine("");
