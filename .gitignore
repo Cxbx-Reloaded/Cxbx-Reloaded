@@ -48,6 +48,7 @@ build/win32/[Dd]ebug*/
 build/win32/[Rr]elease*/
 Build/win32/ipch/
 Ankh.NoLoad
+*.ChildProcessDbgSettings
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
@@ -110,3 +111,6 @@ src/Version.h
 
 # Last known git hash
 LAST_GIT_VERSION
+
+# git mergetool backup
+*.orig

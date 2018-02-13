@@ -57,6 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "VMManager.h" // For g_VMManager
+#include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -224,9 +225,16 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 
 		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
-	else
-		// close normal handles
-		ret = NtDll::NtClose(Handle);
+    else
+    {
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportFileClosed(Handle);
+        }
+
+        // close normal handles
+        ret = NtDll::NtClose(Handle);
+    }
 
 	RETURN(ret);
 }
@@ -1604,6 +1612,15 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
 	//        _asm int 3
 
+	if (CxbxDebugger::CanReport())
+	{
+		u64 Offset = ~0;
+		if (ByteOffset)
+			Offset = ByteOffset->QuadPart;
+
+		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
+	}
+
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,
 		Event,
@@ -2002,6 +2019,15 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	// Halo..
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
 	//        _asm int 3
+
+	if (CxbxDebugger::CanReport())
+	{
+		u64 Offset = ~0;
+		if (ByteOffset)
+			Offset = ByteOffset->QuadPart;
+		
+		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
+	}
 
 	NTSTATUS ret = NtDll::NtWriteFile(
 		FileHandle,

@@ -220,6 +220,9 @@
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\devices\Xbox.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
@@ -455,6 +458,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
+      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\vga.h">
       <Filter>Hardware</Filter>

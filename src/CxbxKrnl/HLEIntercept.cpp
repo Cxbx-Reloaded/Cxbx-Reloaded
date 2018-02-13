@@ -43,6 +43,7 @@
 #include "EmuFS.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
+#include "CxbxDebugger.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
 #include "xxhash32.h"
@@ -159,6 +160,28 @@ bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
     return false;
 }
 
+// x1nixmzeng: Hack to notify CxbxDebugger of the HLECache file, which is currently a hashed XBE header AND stripped title (see EmuHLEIntercept)
+class CxbxDebuggerScopedMessage
+{
+    std::string& message;
+
+    CxbxDebuggerScopedMessage() = delete;
+    CxbxDebuggerScopedMessage(const CxbxDebuggerScopedMessage&) = delete;
+public:
+
+    CxbxDebuggerScopedMessage(std::string& message_string)
+        : message(message_string)
+    { }
+
+    ~CxbxDebuggerScopedMessage()
+    {
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportHLECacheFile(message.c_str());
+        }
+    }
+};
+
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
@@ -186,6 +209,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
 	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
+
+    // This will fire when we exit this function scope; either after detecting a previous cache file, or when one is created
+    CxbxDebuggerScopedMessage hleCacheFilename(filename);
 
 	if (PathFileExists(filename.c_str())) {
 		printf("Found HLE Cache File: %08X.ini\n", uiHash);
@@ -670,8 +696,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		cacheAddress << std::hex << (*it).second;
 		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
 	}
-
-    return;
 }
 
 inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr, void *Patch)

@@ -57,6 +57,7 @@ namespace NtDll
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
+#include "CxbxDebugger.h"
 
 #ifdef _DEBUG
 #include <Dbghelp.h>
@@ -206,9 +207,6 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
-	int symbolOffset = 0;
-	std::string symbolName = GetDetectedSymbolName(e->ContextRecord->Eip, &symbolOffset);
-
 	char buffer[256];
 	sprintf(buffer,
 		"Received Exception Code 0x%.08X @ EIP := %s\n"
@@ -239,6 +237,13 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
+        // Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
+        if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode))
+        {
+            g_bEmuException = false;
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
 		// Pass the exception to our X86 implementation, to try and execute the failing instruction
 		if (EmuX86_DecodeException(e))
 		{
@@ -246,9 +251,30 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 			g_bEmuException = false;
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
+		
+		// Try to Report this exception to the debugger, which may allow handling of this exception
+		if (CxbxDebugger::CanReport())
+		{
+			bool DebuggerHandled = false;
+			CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
 
-		// notify user
-		EmuExceptionNonBreakpointUnhandledShow(e);
+			if (DebuggerHandled)
+			{
+				// Bypass exception
+				g_bEmuException = false;
+				return EXCEPTION_CONTINUE_SEARCH;
+			}
+			else
+			{
+				// Kill the process immediately without the Cxbx notifier
+				EmuExceptionExitProcess();
+			}
+		}
+		else
+		{
+			// notify user
+			EmuExceptionNonBreakpointUnhandledShow(e);
+		}
 	}
 
 	// Unhandled exception :

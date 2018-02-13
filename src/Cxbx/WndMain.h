@@ -68,7 +68,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * start emulation
         // ******************************************************************
-        void StartEmulation(HWND hwndParent);
+        void StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState = debuggerOff);
 
         // ******************************************************************
         // * stop emulation (close existing child window)

@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
+#include "CxbxDebugger.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -193,7 +194,6 @@ void CxbxLaunchXbe(void(*Entry)())
 	{
 		EmuWarning("Problem with ExceptionFilter");
 	}
-
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -567,11 +567,6 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 void CxbxKrnlMain(int argc, char* argv[])
 {
-	// Treat this instance as the Xbox runtime entry point XBOXStartup()
-	// This is defined in OpenXDK:
-	//   import/OpenXDK/include/xhal/xhal.h
-	CxbxSetThreadName("Cxbx XBOXStartup");
-
 	// Skip '/load' switch
 	// Get XBE Name :
 	std::string xbePath = argv[2];
@@ -776,13 +771,25 @@ void CxbxKrnlMain(int argc, char* argv[])
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
+    const bool SendDebugReports = CxbxDebugger::CanReport();
+
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
 	{
 		uint32_t* kt_tbl = (uint32_t*)kt;
 		int i = 0;
 		while (kt_tbl[i] != 0) {
 			int t = kt_tbl[i] & 0x7FFFFFFF;
+            
 			kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+
+            if (SendDebugReports)
+            {
+                // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
+                std::string importName = "KernelImport_" + std::to_string(t);
+
+                CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
+            }
+
 			i++;
 		}
 	}
@@ -1056,7 +1063,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		}
 	}
 
-	// initialize grapchics
+	// initialize graphics
 	DbgPrintf("INIT: Initializing render window.\n");
 	XTL::CxbxInitWindow(true);
 
@@ -1097,6 +1104,11 @@ __declspec(noreturn) void CxbxKrnlInit
 		DbgPrintf("INIT: Initializing Direct3D.\n");
 		XTL::EmuD3DInit();
 	}
+	
+	if (CxbxDebugger::CanReport())
+	{
+		CxbxDebugger::ReportDebuggerInit(CxbxKrnl_Xbe->m_szAsciiTitle);
+	}
 
 	// Apply Media Patches to bypass Anti-Piracy checks
 	// Required until we perfect emulation of X2 DVD Authentication
@@ -1114,10 +1126,16 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
-    DbgPrintf("INIT: Calling XBE entry point...\n");
+
+	DbgPrintf("INIT: Calling XBE entry point...\n");
 	CxbxLaunchXbe(Entry);
-    DbgPrintf("INIT: XBE entry point returned\n");
-    fflush(stdout);
+
+	// FIXME: Wait for Cxbx to exit or error fatally
+	Sleep(INFINITE);
+
+	DbgPrintf("INIT: XBE entry point returned\n");
+	fflush(stdout);
+
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
 }

@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
+#include "CxbxDebugger.h"
 
 // ******************************************************************
 // * 0x003B - IoAllocateIrp()
@@ -278,20 +279,27 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	// Force ShareAccess to all 
 	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
-	if (SUCCEEDED(ret))
-		// redirect to NtCreateFile
-		ret = NtDll::NtCreateFile(
-			FileHandle, 
-			DesiredAccess | GENERIC_READ, 
-			nativeObjectAttributes.NtObjAttrPtr, 
-			NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
-			NtDll::PLARGE_INTEGER(AllocationSize), 
-			FileAttributes, 
-			ShareAccess, 
-			Disposition, 
-			CreateOptions, 
-			NULL, 
-			0);
+    if (SUCCEEDED(ret))
+    {
+        // redirect to NtCreateFile
+        ret = NtDll::NtCreateFile(
+            FileHandle,
+            DesiredAccess | GENERIC_READ,
+            nativeObjectAttributes.NtObjAttrPtr,
+            NtDll::PIO_STATUS_BLOCK(IoStatusBlock),
+            NtDll::PLARGE_INTEGER(AllocationSize),
+            FileAttributes,
+            ShareAccess,
+            Disposition,
+            CreateOptions,
+            NULL,
+            0);
+        
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportFileOpened(*FileHandle, nativeObjectAttributes.NtUnicodeString.Buffer, SUCCEEDED(ret));
+        }
+    }
 
 	if (FAILED(ret))
 	{
