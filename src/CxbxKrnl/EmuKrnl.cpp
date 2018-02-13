@@ -169,23 +169,33 @@ void RestoreInterruptMode(bool value)
 
 extern DWORD ExecuteDpcQueue();
 
+void KiUnexpectedInterrupt()
+{
+	xboxkrnl::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
+	CxbxKrnlCleanup("Unexpected Software Interrupt!");
+}
+
 void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
 {
 	switch (SoftwareIrql) {
 	case 0:
-		// unexpected interrupt
+		KiUnexpectedInterrupt();
 		break;
-	case APC_LEVEL: // = 1
-		// TODO : ExecuteApcQueue();
+	case APC_LEVEL: // = 1 // HalpApcInterrupt        
+		EmuWarning("Unimplemented Software Interrupt (APC)"); // TODO : ExecuteApcQueue();
 		break;
 	case DISPATCH_LEVEL: // = 2
 		ExecuteDpcQueue();
 		break;
 	case APC_LEVEL | DISPATCH_LEVEL: // = 3
-		// unexpected interrupt
+		KiUnexpectedInterrupt();
 		break;
 	default:
-		HalSystemInterrupts[SoftwareIrql].Assert(true);
+		// Software Interrupts > 3 map to Hardware Interrupts [4 = IRQ0]
+		// This is used to trigger hardware interrupt routines from software
+		if (EmuInterruptList[SoftwareIrql]->Connected) {
+			HalSystemInterrupts[SoftwareIrql].Trigger(EmuInterruptList[SoftwareIrql]);
+		}
 		break;
 	}
 }

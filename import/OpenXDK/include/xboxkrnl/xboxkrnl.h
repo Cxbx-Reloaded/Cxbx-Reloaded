@@ -1716,8 +1716,12 @@ KINTERRUPT_MODE;
 
 #define DISPATCH_SIZE 22
 
+// ******************************************************************
+// * KeBugCheck BugCheckCode's :
+// ******************************************************************
 #define IRQL_NOT_GREATER_OR_EQUAL 0x00000009
 #define IRQL_NOT_LESS_OR_EQUAL 0x0000000A
+#define TRAP_CAUSE_UNKNOWN 0x00000012
 
 // ******************************************************************
 // * KINTERRUPR
