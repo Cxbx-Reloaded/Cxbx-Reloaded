@@ -16,6 +16,7 @@ set EXPORT_ZIP=export\%1.zip
 @call %ZIP_APP% a %EXPORT_ZIP% COPYING README.md
 cd %BUILD_PATH%
 @call ..\..\..\%ZIP_APP% u ..\..\..\%EXPORT_ZIP% Cxbx.exe glew32.dll subhook.dll
+@call ..\..\..\%ZIP_APP% u ..\..\..\%EXPORT_ZIP% CxbxDebugger.exe capstone.dll cs_x86.dll
 cd /d %~dp0
 echo Finished packaging %EXPORT_ZIP%!
 goto eof
