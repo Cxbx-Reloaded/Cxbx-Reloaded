@@ -67,7 +67,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-static DWORD EmuSoftwareInterrupRequestRegister = 0;
+volatile DWORD HalInterruptRequestRegister = APC_LEVEL | DISPATCH_LEVEL;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 // variables used by the SMC to know a reset / shutdown is pending
@@ -77,6 +77,12 @@ uint32_t ResetOrShutdownDataValue = 0;
 // global list of routines executed during a reboot
 LIST_ENTRY_INITIALIZE_HEAD(ShutdownRoutineList);
 
+
+// ******************************************************************
+// * Declaring this in a header causes errors with xboxkrnl
+// * namespace, so we must declare it within any file that uses it
+// ******************************************************************
+xboxkrnl::KPCR* KeGetPcr();
 
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
@@ -122,7 +128,8 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 	LOG_FUNC_ONE_ARG(Request);
 
 	// Mask out this interrupt request
-	EmuSoftwareInterrupRequestRegister &= ~(1 << Request);
+	DWORD InterruptMask = 1 << Request;
+	HalInterruptRequestRegister &= ~InterruptMask;
 }
 
 // ******************************************************************
@@ -433,10 +440,28 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 {
 	LOG_FUNC_ONE_ARG(Request);
 
-	// Set this software interrupt request :
-	EmuSoftwareInterrupRequestRegister |= (1 << Request);
+	DWORD InterruptMask = 1 << Request;
 
-	LOG_INCOMPLETE();
+	bool interrupt_flag = DisableInterrupts();
+
+	// Set this interrupt request bit:
+	HalInterruptRequestRegister |= InterruptMask;
+
+	// Check for pending software interrupts
+	uint8_t SoftwareInterrupt = HalInterruptRequestRegister & 3;
+
+	// Software interrupt 0,1 = IRQ 0, interrupt 2, 3 = IRQ 1 :
+	KIRQL SoftwareIrql = SoftwareInterrupt >> 1;
+
+	// Inlined KeGetCurrentIrql() :
+	PKPCR Pcr = KeGetPcr();
+	KIRQL CurrentIrql = (KIRQL)Pcr->Irql;
+
+	if (SoftwareIrql > CurrentIrql) {
+		CallSoftwareInterrupt(SoftwareIrql);
+	}
+
+	RestoreInterruptMode(interrupt_flag);
 }
 
 // ******************************************************************

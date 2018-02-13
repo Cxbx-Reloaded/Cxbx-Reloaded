@@ -81,6 +81,9 @@ void *CxbxKrnl_TLSData = NULL;
 Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 /*! parent window handle */
 
+/*! indicates a debug kernel */
+bool g_bIsDebugKernel = false;
+
 HWND CxbxKrnl_hEmuParent = NULL;
 DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
 std::string CxbxKrnl_DebugFileName = "";
@@ -498,6 +501,51 @@ void PrintCurrentConfigurationLog()
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
 }
 
+#if 0
+BOOLEAN ApcInterrupt
+(
+	IN struct _KINTERRUPT *Interrupt,
+	IN PVOID ServiceContext
+)
+{
+
+}
+
+BOOLEAN DispatchInterrupt
+(
+	IN struct _KINTERRUPT *Interrupt,
+	IN PVOID ServiceContext
+)
+{
+	ExecuteDpcQueue();
+}
+
+void InitSoftwareInterrupts()
+{
+	// Init software interrupt 1 (for APC dispatching)
+	xboxkrnl::KINTERRUPT SoftwareInterrupt_1;
+	SoftwareInterrupt_1.BusInterruptLevel = 1;
+	SoftwareInterrupt_1.ServiceRoutine = ApcInterrupt;
+	xboxkrnl::KeConnectInterrupt(&SoftwareInterrupt_1);
+
+	// Init software interrupt 2 (for DPC dispatching)
+	xboxkrnl::KINTERRUPT SoftwareInterrupt_2;
+	SoftwareInterrupt_2.BusInterruptLevel = 2;
+	SoftwareInterrupt_2.ServiceRoutine = DispatchInterrupt;
+	xboxkrnl::KeConnectInterrupt(&SoftwareInterrupt_2);
+}
+#endif
+
+void TriggerPendingConnectedInterrupts()
+{
+	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+		// If the interrupt is pending and connected, process it
+		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+		}
+	}
+}
+
 static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 {
 	CxbxSetThreadName("CxbxKrnl Interrupts");
@@ -505,14 +553,12 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	// Make sure Xbox1 code runs on one core :
 	InitXboxThread(g_CPUXbox);
 
-	while (true) {
-		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-			// If the interrupt is pending and connected, process it
-			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
-				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-			}
-		}
+#if 0
+	InitSoftwareInterrupts();
+#endif
 
+	while (true) {
+		TriggerPendingConnectedInterrupts();
 		SwitchToThread();
 	}
 

@@ -1708,11 +1708,20 @@ KINTERRUPT_MODE;
 // ******************************************************************
 // * IRQ (Interrupt ReQuest) Priority Levels
 // ******************************************************************
+#define APC_LEVEL 1
 #define DISPATCH_LEVEL 2
-#define PROFILE_LEVEL 27
+#define PROFILE_LEVEL 26
 #define SYNC_LEVEL 28
+#define HIGH_LEVEL 31
 
 #define DISPATCH_SIZE 22
+
+// ******************************************************************
+// * KeBugCheck BugCheckCode's :
+// ******************************************************************
+#define IRQL_NOT_GREATER_OR_EQUAL 0x00000009
+#define IRQL_NOT_LESS_OR_EQUAL 0x0000000A
+#define TRAP_CAUSE_UNKNOWN 0x00000012
 
 // ******************************************************************
 // * KINTERRUPR

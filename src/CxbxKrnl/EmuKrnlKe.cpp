@@ -67,7 +67,6 @@ namespace NtDll
 // TODO : Move towards thread-simulation based Dpc emulation
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
-	HANDLE DpcThread;
 	HANDLE DpcEvent;
 	xboxkrnl::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
 	xboxkrnl::LIST_ENTRY TimerQueue;
@@ -273,33 +272,6 @@ DWORD ExecuteDpcQueue()
 	return dwWait;
 }
 
-DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
-{
-	CxbxSetThreadName("DPC Handler");
-
-	DbgPrintf("KRNL: DPC thread is running\n");
-
-	// Make sure DPC callbacks run on the same core as the one that runs Xbox1 code :
-	// Note : This function runs on the Xbox core to somewhat approximate
-	// CPU locking (the prevention of interrupts to avoid thread-switches)
-	// so that callbacks don't get preempted. This needs more work.
-	InitXboxThread(g_CPUXbox);
-
-	while (true)
-	{
-		DWORD dwWait = ExecuteDpcQueue();
-
-		// TODO : Wait for shutdown too here
-		WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
-
-		SwitchToThread();
-	} // while
-
-	DbgPrintf("KRNL: DPC thread is finished\n");
-
-	return S_OK;
-}
-
 void InitDpcAndTimerThread()
 {
 	DWORD dwThreadId = 0;
@@ -310,10 +282,6 @@ void InitDpcAndTimerThread()
 
 	DbgPrintf("INIT: Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
-
-	g_DpcData.DpcThread = CreateThread(/*lpThreadAttributes=*/nullptr, /*dwStackSize=*/0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, /*lpParameter=*/nullptr, /*dwCreationFlags=*/0, &dwThreadId);
-	DbgPrintf("INIT: Created DPC thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", g_DpcData.DpcThread, dwThreadId);
-	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
 }
 
 // Xbox Performance Counter Frequency = 337F98 = ACPI timer frequency (3.375000 Mhz)
@@ -1034,10 +1002,9 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		Dpc->SystemArgument2 = SystemArgument2;
 		InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
 		// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
-		// TODO : Once that's done, use an apropriate signalling mechanism instead of this :
 		// Signal the Dpc handling code there's work to do
-		SetEvent(g_DpcData.DpcEvent);
-		// OpenXbox has this instead of SetEvent :
+		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		// OpenXbox has this instead:
 		// if (!pKPRCB->DpcRoutineActive && !pKPRCB->DpcInterruptRequested) {
 		//	pKPRCB->DpcInterruptRequested = TRUE;
 	}
@@ -1230,26 +1197,9 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
-	LOG_FUNC();
+	LOG_FORWARD(KfRaiseIrql);
 
-	// Inlined KeGetCurrentIrql() :
-	KPCR* Pcr = KeGetPcr();
-	KIRQL OldIrql = (KIRQL)Pcr->Irql;
-
-	if(OldIrql > DISPATCH_LEVEL)
-		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
-
-	Pcr->Irql = DISPATCH_LEVEL;
-
-#ifdef _DEBUG_TRACE
-	DbgPrintf("KRNL: Raised IRQL to DISPATCH_LEVEL (2).\n");
-	DbgPrintf("Old IRQL is %d.\n", OldIrql);
-#endif
-
-	// We reached the DISPATCH_LEVEL, so the queue can be processed now
-	ExecuteDpcQueue();
-	
-	RETURN(OldIrql);
+	return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 // ******************************************************************
@@ -1257,17 +1207,9 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel()
 {
-	LOG_FUNC();
+	LOG_FORWARD(KfRaiseIrql);
 
-	// Inlined KeGetCurrentIrql() :
-	KPCR* Pcr = KeGetPcr();
-	KIRQL OldIrql = (KIRQL)Pcr->Irql;
-
-	Pcr->Irql = SYNC_LEVEL;
-
-	LOG_INCOMPLETE(); // TODO : Should we call ExecuteDpcQueue, perhaps with SYNC_LEVEL argument??
-
-	RETURN(OldIrql);
+	return KfRaiseIrql(SYNC_LEVEL);
 }
 
 XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
