@@ -127,22 +127,6 @@ namespace CxbxDebugger
 				Add(wszString);
 			}
 		};
-
-		uint32 GetVirtualFrameBuffer()
-		{
-			const xbaddr FrameBufferAddr = TILED_MEMORY_BASE + 0x40000;
-
-			uint32 VirtualFrameBufferAddr;
-
-			__asm
-			{
-				mov eax, [FrameBufferAddr];
-				mov eax, [eax];
-				mov VirtualFrameBufferAddr, eax;
-			}
-
-			return VirtualFrameBufferAddr;
-		}
 	}
 
 	bool IsDebuggerException(DWORD ExceptionCode)
@@ -173,7 +157,7 @@ namespace CxbxDebugger
 	{
 		Internal::ReportHelper Report(Internal::DEBUGGER_INIT);
 
-		Report.Add(Internal::GetVirtualFrameBuffer());
+		Report.Add(0); // unused
 		Report.AddString(XbeTitle);
 
 		Report.Send();

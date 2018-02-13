@@ -185,14 +185,13 @@ namespace CxbxDebugger
         public class DebuggerInit
         {
             public string Title { get; set; }
-            public IntPtr ScreenBuffer { get; set; }
         }
 
         public static DebuggerInit GetDebuggerInitReport(DebuggerThread Context, uint[] Data)
         {
             DebuggerInit Report = new DebuggerInit();
 
-            Report.ScreenBuffer = new IntPtr(Data[0]);
+            // Data[0] is free
 
             StringType Type = (StringType)Data[1];
 

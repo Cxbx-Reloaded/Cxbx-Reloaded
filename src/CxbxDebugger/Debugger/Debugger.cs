@@ -720,10 +720,5 @@ namespace CxbxDebugger
             IDebuggerFileEvents FileListener = EventClass as IDebuggerFileEvents;
             if (FileListener != null) FileEvents.Add(FileListener);
         }
-
-        public IntPtr GetScreenBuffer()
-        {
-            return InitParams.ScreenBuffer;
-        }
     }
 }

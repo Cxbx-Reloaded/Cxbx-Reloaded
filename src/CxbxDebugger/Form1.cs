@@ -6,9 +6,6 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using cs_x86;
 
@@ -520,28 +517,7 @@ namespace CxbxDebugger
         {
             Resume();
         }
-
-        private Bitmap DumpFramebuffer()
-        {
-            // NOTE: This does not work yet
-
-            IntPtr BufferAddr = DebuggerInst.GetScreenBuffer();
-            uint BufferSize = 640 * 480 * 4;
-
-            var buff = DebugThreads[0].OwningProcess.ReadMemoryBlock(BufferAddr, BufferSize);
-
-            // todo: convert this buffer into (RGBA from BGRA)
-            var bmp = new Bitmap(640, 480, PixelFormat.Format32bppRgb);
-
-            BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
-            {
-                Marshal.Copy(buff, 0, bmpData.Scan0, buff.Length);
-            }
-            bmp.UnlockBits(bmpData);
-
-            return bmp;
-        }
-
+        
         struct CallstackInfo
         {
             public uint InstructionPointer;
@@ -629,14 +605,7 @@ namespace CxbxDebugger
 
             txMemoryDump.Text = hexData;
         }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            // TODO Fix the frame buffer lookup
-            // TODO Investigate querying the D3D backbuffer surface
-            //pictureBox1.Image = DumpFramebuffer();
-        }
-
+        
         public delegate void DisResultOther(string Part);
         public delegate void DisResultAddress(uint Address);
         
