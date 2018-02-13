@@ -41,13 +41,17 @@ namespace CxbxDebugger
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
+        private const int WM_SETREDRAW = 0x0b;
         private const int WM_USER = 0x0400;
         private const int EM_GETCHARFORMAT = WM_USER + 58;
         private const int EM_SETCHARFORMAT = WM_USER + 68;
+        private const int EM_SETEVENTMASK = WM_USER + 69;
 
         private const int SCF_SELECTION = 0x0001;
         private const int SCF_WORD = 0x0002;
         private const int SCF_ALL = 0x0004;
+        
+        private IntPtr OldEventMask;
 
         #region CHARFORMAT2 Flags
         private const uint CFE_BOLD = 0x0001;
@@ -226,6 +230,18 @@ namespace CxbxDebugger
 
             Marshal.FreeCoTaskMem(lpar);
             return state;
+        }
+
+        public void BeginUpdate()
+        {
+            SendMessage(Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+            OldEventMask = SendMessage(Handle, EM_SETEVENTMASK, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        public void EndUpdate()
+        {
+            SendMessage(Handle, WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+            SendMessage(Handle, EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
         }
     }
     
