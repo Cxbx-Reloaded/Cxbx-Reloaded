@@ -8,6 +8,9 @@ image:
 configuration:
 - Release
 - Debug
+platform:
+  - Any CPU
+  - Win32
 build:
   project: build/win32/Cxbx.sln
   parallel: true
