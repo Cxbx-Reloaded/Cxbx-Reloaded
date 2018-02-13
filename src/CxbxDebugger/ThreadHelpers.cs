@@ -439,26 +439,22 @@ namespace CxbxDebugger
     {
         public static void FlashWindowTray(IntPtr Handle)
         {
-            // TODO: Why does this hang explorer.exe?
+            var FlashParams = new NativeMethods.FLASHWINFO();
+            FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
+            FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_TRAY;
+            FlashParams.hwnd = Handle;
 
-            //var FlashParams = new NativeMethods.FLASHWINFO();
-            //FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
-            //FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_TRAY;
-            //FlashParams.hwnd = Handle;
-
-            //NativeMethods.FlashWindowEx(ref FlashParams);
+            NativeMethods.FlashWindowEx(ref FlashParams);
         }
 
         public static void FlashWindowTitlebar(IntPtr Handle)
         {
-            // TODO: Why does this hang explorer.exe?
+            var FlashParams = new NativeMethods.FLASHWINFO();
+            FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
+            FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_CAPTION;
+            FlashParams.hwnd = Handle;
 
-            //var FlashParams = new NativeMethods.FLASHWINFO();
-            //FlashParams.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.FLASHWINFO));
-            //FlashParams.dwFlags = (uint)FlashWindowFlags.FLASHW_CAPTION;
-            //FlashParams.hwnd = Handle;
-
-            //NativeMethods.FlashWindowEx(ref FlashParams);
+            NativeMethods.FlashWindowEx(ref FlashParams);
         }
     }
 }
