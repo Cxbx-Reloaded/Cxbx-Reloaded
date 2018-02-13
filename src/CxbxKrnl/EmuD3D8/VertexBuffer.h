@@ -55,8 +55,8 @@ VertexPatchDesc;
 
 typedef struct _PATCHEDSTREAM
 {
-    IDirect3DVertexBuffer8 *pOriginalStream;
-    IDirect3DVertexBuffer8 *pPatchedStream;
+    XTL::X_D3DVertexBuffer *pOriginalStream;
+    XTL::IDirect3DVertexBuffer8 *pPatchedStream;
     UINT                    uiOrigStride;
     UINT                    uiNewStride;
     bool                    bUsedCached;

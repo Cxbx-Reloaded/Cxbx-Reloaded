@@ -154,6 +154,10 @@ static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
+// Active D3D Vertex Streams (and strides)
+XTL::X_D3DVertexBuffer*g_D3DStreams[16];
+UINT g_D3DStreamStrides[16];
+
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 
@@ -4718,6 +4722,13 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					goto fail;*/
                 }
 
+				// Dirty hack: Verex buffers shouldn't be this big..
+				// Until we solve the root cause, this will have to do for now
+				// TODO: Fix this before PR is possible/safe
+				if (dwSize > ONE_MB) {
+					dwSize = ONE_MB;
+				}
+
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
                     dwSize, 0, 0, D3DPOOL_MANAGED,
@@ -4730,7 +4741,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					char szString[256];
 					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: \nDesc: ", dwSize/*,
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
-					
+
 					EmuWarning( szString );
 				}
 
@@ -4743,9 +4754,9 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 BYTE *pNativeData = nullptr;
 
                 hRet = pNewHostVertexBuffer->Lock(
-					/*OffsetToLock=*/0, 
-					/*SizeToLock=*/0/*=entire buffer*/, 
-					&pNativeData, 
+					/*OffsetToLock=*/0,
+					/*SizeToLock=*/0/*=entire buffer*/,
+					&pNativeData,
 					/*Flags=*/0);
 				DEBUG_D3DRESULT(hRet, "pNewHostVertexBuffer->Lock");
 
@@ -6525,103 +6536,6 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	ForceResourceRehash(pPixelContainer);
 }
 
-
-// ******************************************************************
-// * patch: IDirect3DVertexBuffer8_Lock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
-(
-    X_D3DVertexBuffer  *pVertexBuffer,
-    UINT                OffsetToLock,
-    UINT                SizeToLock,
-    BYTE              **ppbData,
-    DWORD               Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pVertexBuffer)
-		LOG_FUNC_ARG(OffsetToLock)
-		LOG_FUNC_ARG(SizeToLock)
-		LOG_FUNC_ARG(ppbData)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-
-	// Pass through to the Xbox implementation of this function
-	XB_trampoline(VOID, WINAPI, D3DVertexBuffer_Lock, (X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD));
-
-	XB_D3DVertexBuffer_Lock(pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
-
-	// Mark the resource as modified
-	ForceResourceRehash(pVertexBuffer);
-}
-
-// ******************************************************************
-// * patch: IDirect3DVertexBuffer8_Lock2
-// ******************************************************************
-BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
-(
-    X_D3DVertexBuffer  *pVertexBuffer,
-    DWORD               Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pVertexBuffer)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	// Pass through to the Xbox implementation of this function
-	XB_trampoline(BYTE*, WINAPI, D3DVertexBuffer_Lock2, (X_D3DVertexBuffer*, DWORD));
-
-	BYTE* pRet = XB_D3DVertexBuffer_Lock2(pVertexBuffer, Flags);
-
-	// Mark the resource as modified
-	ForceResourceRehash(pVertexBuffer);
-
-	RETURN(pRet);
-}
-
-XTL::X_D3DVertexBuffer*g_D3DStreams[16];
-UINT g_D3DStreamStrides[16];
-
-// ******************************************************************
-// * patch: D3DDevice_GetStreamSource2
-// ******************************************************************
-XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
-(
-    UINT  StreamNumber,
-    UINT *pStride
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(StreamNumber)
-		LOG_FUNC_ARG(pStride)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
-
-	X_D3DVertexBuffer* pVertexBuffer = NULL;
-	*pStride = 0;
-
-	if (StreamNumber <= 15)
-	{ 
-		pVertexBuffer = g_D3DStreams[StreamNumber];
-		if (pVertexBuffer)
-		{
-			pVertexBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
-			*pStride = g_D3DStreamStrides[StreamNumber];
-		}
-	}
-
-    return pVertexBuffer;
-}
-
 // ******************************************************************
 // * patch: D3DDevice_SetStreamSource
 // ******************************************************************
@@ -6640,48 +6554,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 		LOG_FUNC_ARG(Stride)
 		LOG_FUNC_END;
 
-	// Cache stream number
-	g_dwLastSetStream = StreamNumber;
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource, (UINT, X_D3DVertexBuffer*, UINT));
+	XB_D3DDevice_SetStreamSource(StreamNumber, pStreamData, Stride);
 
-    if(StreamNumber == 0)
-        g_pVertexBuffer = pStreamData;
-
-	// Test for a non-zero stream source.  Unreal Championship gives us
-	// some funky number when going ingame.
-//	if(StreamNumber != 0)
-//	{
-//		EmuWarning( "StreamNumber: = %d", StreamNumber );
-//		EmuWarning( "pStreamData: = 0x%.08X (0x%.08X)", pStreamData, GetHostVertexBuffer(pStreamData));
-////		__asm int 3;
-//	}
-
-	if (StreamNumber < 16)
-	{
-		// Remember these for D3DDevice_GetStreamSource2 to read:
+	if (StreamNumber < 16) {
 		g_D3DStreams[StreamNumber] = pStreamData;
 		g_D3DStreamStrides[StreamNumber] = Stride;
 	}
-
-    IDirect3DVertexBuffer8 *pHostVertexBuffer = NULL;
-
-    if(pStreamData != NULL)
-    {
-        pHostVertexBuffer = GetHostVertexBuffer(pStreamData);
-        pHostVertexBuffer->Unlock();
-    }
-
-    #ifdef _DEBUG_TRACK_VB
-    if(pStreamData != NULL)
-    {
-        g_bVBSkipStream = g_VBTrackDisable.exists(pHostVertexBuffer);
-    }
-    #endif
-
-    HRESULT hRet = g_pD3DDevice8->SetStreamSource(StreamNumber, pHostVertexBuffer, Stride);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetStreamSource");
-
-	if(FAILED(hRet))
-        CxbxKrnlCleanup("SetStreamSource Failed!");
 }
 
 // ******************************************************************
