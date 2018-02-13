@@ -542,18 +542,18 @@ namespace CxbxDebugger
             return false;
         }
 
-        static private bool ReadAddress(TextBox Source, ref uint Out)
+        static private bool ReadAddress(string Source, ref uint Out)
         {
             try
             {
-                if (Source.Text.StartsWith("0x"))
+                if (Source.StartsWith("0x"))
                 {
-                    Out = Convert.ToUInt32(Source.Text.Substring(2), 16);
+                    Out = Convert.ToUInt32(Source.Substring(2), 16);
                     return true;
                 }
                 else
                 {
-                    if (uint.TryParse(Source.Text, out Out))
+                    if (uint.TryParse(Source, out Out))
                     {
                         return true;
                     }
@@ -564,10 +564,27 @@ namespace CxbxDebugger
             return false;
         }
 
+        static private bool ReadAddress(ComboBox Source, ref uint Out)
+        {
+            string SelString = Source.Text;
+            
+            if ( ReadAddress(SelString, ref Out) )
+            {
+                // Only add new addresses
+                if (Source.SelectedIndex == -1)
+                {
+                    Source.Items.Insert(0, SelString);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         private byte[] ReadMemory()
         {
             uint addr = 0;
-            if (!ReadAddress(txAddress, ref addr))
+            if (!ReadAddress(txAddress.Text, ref addr))
             {
                 return null;
             }
@@ -666,7 +683,7 @@ namespace CxbxDebugger
                 if (EP != 0)
                 {
                     string LinkName = string.Format("{0} +{1:x}", Name, Address - EP);
-                    string Link = string.Format("{0:x8}", Address);
+                    string Link = string.Format("0x{0:x8}", Address);
 
                     tb.InsertLink(LinkName, Link);
                 }
@@ -679,17 +696,22 @@ namespace CxbxDebugger
         
         private void DumpDisassembly(uint DisAddress)
         {
+            // No threads
+            if (DebugThreads.Count == 0)
+                return;
+
             // Read preceeding bytes for more context
             // TODO: This MUST align with a previous instruction or our disassembler will fail
             uint OffsetAddr = DisAddress; // -16
 
             byte[] data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(OffsetAddr), 64);
 
-            txDisassembly.Clear();
-
             // Dump requested after crashing - and read memory handles this silently
-            if(data == null)
+            if (data == null)
                 return;
+            
+            txDisassembly.BeginUpdate();
+            txDisassembly.Clear();
 
             // TODO: Needs refactoring
 
@@ -733,6 +755,7 @@ namespace CxbxDebugger
                 });
             }
 
+            txDisassembly.EndUpdate();
             txDisassembly.Select(0, 0);
         }
 
@@ -858,20 +881,14 @@ namespace CxbxDebugger
         private void ShowDisassemblyAt(string Address)
         {
             tabContainer.SelectedTab = tabDisassembly;
-            txDisassemblyAddr.Text = string.Format("0x{0}", Address);
-
+            
             uint addr = 0;
-            if (ReadAddress(txDisassemblyAddr, ref addr))
+            if (ReadAddress(Address, ref addr))
             {
-                DumpDisassembly(addr);
-            }
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-            uint addr = 0;
-            if (ReadAddress(txDisassemblyAddr, ref addr))
-            {
+                // Insert disassembly history
+                // TODO: Keep symbol name
+                cbDisAddr.Items.Insert(0, Address);
+                cbDisAddr.Text = Address;
                 DumpDisassembly(addr);
             }
         }
@@ -907,6 +924,57 @@ namespace CxbxDebugger
             }
 
             return false;
+        }
+
+        private void HandleDisasmGo()
+        {
+            uint addr = 0;
+            if (ReadAddress(cbDisAddr, ref addr))
+            {
+                DumpDisassembly(addr);
+            }
+        }
+
+        private void HandleDisasmGo(int Offset)
+        {
+            int TargetIndex = cbDisAddr.SelectedIndex + Offset;
+
+            if (TargetIndex < 0)
+                return;
+
+            if (TargetIndex < cbDisAddr.Items.Count)
+            {
+                cbDisAddr.SelectedIndex = TargetIndex;
+                HandleDisasmGo();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            HandleDisasmGo();
+        }
+
+        private void comboBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if( e.KeyCode == Keys.Enter )
+            {
+                HandleDisasmGo();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            HandleDisasmGo(1);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            HandleDisasmGo(-1);
+        }
+
+        private void cbDisAddr_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            HandleDisasmGo();
         }
     }
 }
