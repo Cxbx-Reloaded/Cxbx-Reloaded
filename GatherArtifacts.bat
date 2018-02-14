@@ -7,22 +7,22 @@
 @set ARTIFACT_PATH=%cd%\export\%1.zip
 
 :: Add generic resources
-@call %ZIP_APP% u %ARTIFACT_PATH% COPYING 1> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% README.md 1> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% COPYING
+@call %ZIP_APP% u %ARTIFACT_PATH% README.md
 
 :: Check for build resources
 @if not exist %BUILD_PATH% goto missing_build
 @pushd %BUILD_PATH%
 
-:: Add Cxbx binaries
-@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe 1> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% glew32.dll 1> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% subhook.dll 1> nul
+:: Add Cxbx binaries, ignoring errors
+@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% glew32.dll 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% subhook.dll 2> nul
 
-:: Add debugger binaries
-@call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe 1> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% capstone.dll 1> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% cs_x86.dll 1> nul
+:: Add debugger binaries, ignoring errors
+@call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% capstone.dll 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% cs_x86.dll 2> nul
 
 @popd
 @goto eof
@@ -36,4 +36,5 @@
 @goto eof
 
 :eof
+@echo Gather complete
 
