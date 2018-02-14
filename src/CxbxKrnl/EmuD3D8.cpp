@@ -6565,6 +6565,66 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 	}
 }
 
+
+// ******************************************************************
+// * patch: IDirect3DVertexBuffer8_Lock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
+(
+    X_D3DVertexBuffer  *pVertexBuffer,
+    UINT                OffsetToLock,
+    UINT                SizeToLock,
+    BYTE              **ppbData,
+    DWORD               Flags
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pVertexBuffer)
+		LOG_FUNC_ARG(OffsetToLock)
+		LOG_FUNC_ARG(SizeToLock)
+		LOG_FUNC_ARG(ppbData)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+
+	// Pass through to the Xbox implementation of this function
+	XB_trampoline(VOID, WINAPI, D3DVertexBuffer_Lock, (X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD));
+
+	XB_D3DVertexBuffer_Lock(pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
+
+	// Mark the resource as modified
+	ForceResourceRehash(pVertexBuffer);
+}
+
+// ******************************************************************
+// * patch: IDirect3DVertexBuffer8_Lock2
+// ******************************************************************
+BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
+(
+    X_D3DVertexBuffer  *pVertexBuffer,
+    DWORD               Flags
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pVertexBuffer)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+
+	// Pass through to the Xbox implementation of this function
+	XB_trampoline(BYTE*, WINAPI, D3DVertexBuffer_Lock2, (X_D3DVertexBuffer*, DWORD));
+
+	BYTE* pRet = XB_D3DVertexBuffer_Lock2(pVertexBuffer, Flags);
+
+	// Mark the resource as modified
+	ForceResourceRehash(pVertexBuffer);
+
+	RETURN(pRet);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShader
 // ******************************************************************
