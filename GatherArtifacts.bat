@@ -2,9 +2,9 @@
 
 @if "%1"=="" goto no_arg
 
-@set ZIP_APP=%cd%\import\7za\7za.exe
-@set BUILD_PATH=%cd%\build\win32\%1\
-@set ARTIFACT_PATH=%cd%\export\%1.zip
+@set ZIP_APP="%cd%\import\7za\7za.exe"
+@set BUILD_PATH="%cd%\build\win32\%1\"
+@set ARTIFACT_PATH="%cd%\export\%1.zip"
 
 :: Add generic resources
 @call %ZIP_APP% u %ARTIFACT_PATH% COPYING
