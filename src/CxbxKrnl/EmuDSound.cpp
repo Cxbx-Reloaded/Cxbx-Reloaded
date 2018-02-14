@@ -934,20 +934,40 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pvBufferData)
-		LOG_FUNC_ARG(dwBufferBytes)
-		LOG_FUNC_END;
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pvBufferData)
+        LOG_FUNC_ARG(dwBufferBytes)
+        LOG_FUNC_END;
 
     //TODO: Current workaround method since dwBufferBytes do set to zero. Otherwise it will produce lock error message.
     if (dwBufferBytes == 0) {
+
+
+        // Release old buffer if exists, this is needed in order to set lock pointer buffer to nullptr.
+        if (pThis->EmuLockPtr1 != xbnullptr) {
+
+            DSoundGenericUnlock(pThis->EmuFlags,
+                                pThis->EmuDirectSoundBuffer8,
+                                pThis->EmuBufferDesc,
+                                pThis->EmuLockOffset,
+                                pThis->EmuLockPtr1,
+                                pThis->EmuLockBytes1,
+                                pThis->EmuLockPtr2,
+                                pThis->EmuLockBytes2,
+                                pThis->EmuLockFlags);
+        }
+
         leaveCriticalSection;
         return DS_OK;
     }
+    if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
+        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
+        DSoundBufferRegionRelease(pThis);
+    }
+
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
                              pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8);
-    DSoundBufferRegionRelease(pThis);
 
     XTL::EMUPATCH(IDirectSoundBuffer_Lock)(pThis, 0, dwBufferBytes, &pThis->EmuLockPtr1,
                                            &pThis->EmuLockBytes1, nullptr, NULL, pThis->EmuLockFlags);
@@ -1461,15 +1481,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
     HRESULT hRet = D3D_OK;
 
     if (pThis != nullptr) {
-        if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-            // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-            hRet = pThis->EmuDirectSoundBuffer8Region->Stop();
-            pThis->EmuDirectSoundBuffer8Region->SetCurrentPosition(0);
-        } else if (pThis->EmuDirectSoundBuffer8 != nullptr) {
-            // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-            hRet = pThis->EmuDirectSoundBuffer8->Stop();
-            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-        }
+        // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+        hRet = DSoundBufferSelectionT(pThis)->Stop();
+        DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
     }
 
     leaveCriticalSection;
