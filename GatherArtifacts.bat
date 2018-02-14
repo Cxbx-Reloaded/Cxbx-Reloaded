@@ -15,14 +15,10 @@
 @pushd %BUILD_PATH%
 
 :: Add Cxbx binaries, ignoring errors
-@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe 2> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% glew32.dll 2> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% subhook.dll 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe glew32.dll subhook.dll
 
 :: Add debugger binaries, ignoring errors
-@call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe 2> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% capstone.dll 2> nul
-@call %ZIP_APP% u %ARTIFACT_PATH% cs_x86.dll 2> nul
+@call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe capstone.dll cs_x86.dll
 
 @popd
 @goto eof
@@ -36,5 +32,6 @@
 @goto eof
 
 :eof
+@set ERRORLEVEL=0
 @echo Gather complete
 
