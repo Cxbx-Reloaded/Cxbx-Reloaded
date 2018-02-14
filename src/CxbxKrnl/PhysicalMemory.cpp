@@ -80,8 +80,6 @@ void PhysicalMemory::InitializePfnDatabase()
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Debug: 128 KiB
 	}
 
-	// NOTE: I'm still not completely sure but I believe I should also construct the PTs of the following allocations...
-
 	// Construct the pfn of the page directory
 	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
 
@@ -95,7 +93,7 @@ void PhysicalMemory::InitializePfnDatabase()
 	}
 	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
-	m_PhysicalPagesInUse++;
+	m_PhysicalPagesAvailable--;
 	m_PagesByUsage[Contiguous]++; // treat the page of the page directory as contiguous usage
 
 
@@ -114,7 +112,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		}
 		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
-		m_PhysicalPagesInUse++;
+		m_PhysicalPagesAvailable--;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the kernel as contiguous usage
 		pfn++;
 	}
@@ -145,7 +143,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		}
 		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
-		m_PhysicalPagesInUse++;
+		m_PhysicalPagesAvailable--;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the pfn as contiguous usage
 		pfn++;
 	}
@@ -172,7 +170,7 @@ void PhysicalMemory::InitializePfnDatabase()
 		}
 		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
-		m_PhysicalPagesInUse++;
+		m_PhysicalPagesAvailable--;
 		m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
 		pfn++;
 	}
@@ -192,7 +190,7 @@ void PhysicalMemory::InitializePfnDatabase()
 
 			*XBOX_PFN_ELEMENT(pfn) = TempPF;
 
-			m_PhysicalPagesInUse++;
+			m_PhysicalPagesAvailable--;
 			m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
 			pfn++;
 		}
@@ -211,7 +209,7 @@ void PhysicalMemory::InitializePfnDatabase()
 	}
 	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
 
-	m_PhysicalPagesInUse++;
+	m_PhysicalPagesAvailable--;
 	m_PagesByUsage[Contiguous]++; // treat the initialization page of D3D as contiguous usage
 }
 
@@ -325,6 +323,8 @@ void PhysicalMemory::RemoveFree(PFN start, PFN end)
 		// split at the end
 		m_PhysicalMap[end + 1] = old_end;
 	}
+
+	m_PhysicalPagesAvailable -= (end - start + 1);
 }
 
 void PhysicalMemory::InsertFree(PFN start, PFN end)
@@ -347,6 +347,8 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 		m_PhysicalMap[result] = m_PhysicalMap[start];
 		m_PhysicalMap.erase(start);
 	}
+
+	m_PhysicalPagesAvailable += (end - start + 1);
 }
 
 bool PhysicalMemory::FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low, PFN high)
@@ -372,6 +374,86 @@ bool PhysicalMemory::FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low, PF
 	fail:
 		result = nullptr;
 		return false;
+}
+
+bool PhysicalMemory::AllocatePtes(PFN_COUNT PteNumber, VAddr addr)
+{
+	PMMPTE pPde;
+	MMPTE TempPte;
+	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
+	PFN_COUNT PTtoCommit = 0;
+	PageType BusyType = SystemPageTable;
+	int PdeMappedSizeIncrement = 0;
+
+	assert(PteNumber);
+	assert(addr);
+
+	for (int i = 0; i < PdeNumber; ++i)
+	{
+		if (GetPdeAddress(addr += PdeMappedSizeIncrement)->Hardware.Valid == 0)
+		{
+			PTtoCommit++;
+		}
+		PdeMappedSizeIncrement += (4 * ONE_MB);
+	}
+
+	if (m_PhysicalPagesAvailable < PTtoCommit)
+	{
+		// We don't have enough memory for PT's mapping this allocation
+
+		return false;
+	}
+	if (addr < HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTable; }
+	PdeMappedSizeIncrement = 0;
+
+	// Now actually commit the PT's
+	for (int i = 0; i < PdeNumber; ++i)
+	{
+		pPde = GetPdeAddress(addr += PdeMappedSizeIncrement);
+		if (pPde->Hardware.Valid == 0)
+		{
+			// We grab one page at a time to avoid fragmentation issues
+
+			TempPte.Default = ValidKernelPdeBits;
+			TempPte.Hardware.PFN = RemoveAndZeroAnyFreePage(BusyType, pPde);
+			m_PhysicalPagesAvailable--;
+		}
+		PdeMappedSizeIncrement += (4 * ONE_MB);
+	}
+
+	return true;
+}
+
+PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
+{
+	XBOX_PFN TempPF;
+	PFN pfn;
+
+	assert(BusyType < COUNT);
+	assert(pPte);
+
+	FindFreeContiguous(1, &pfn);
+	RemoveFree(pfn, pfn);
+
+	// Fill the page with zeros
+	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
+
+	// Construct the pfn for the page
+	TempPF.Default = 0;
+	TempPF.Busy.Busy = 1;
+	TempPF.Busy.BusyType = BusyType;
+	if (BusyType != VirtualPageTable) {
+		TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
+	}
+
+	if (g_bIsRetail || g_bIsDebug) {
+		*XBOX_PFN_ELEMENT(pfn) = TempPF;
+	}
+	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
+
+	m_PagesByUsage[BusyType]++;
+
+	return pfn;
 }
 
 VAddr PhysicalMemory::AllocateFragmented(size_t size)

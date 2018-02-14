@@ -97,23 +97,6 @@ typedef struct _MMPTE
 } MMPTE, *PMMPTE;
 
 
-/* enum describing the usage type of the memory pages */
-enum PageType {
-	Unknown,                   // Used by the PFN database
-	Stack,                     // Used by MmCreateKernelStack
-	VirtualPageTable,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
-	SystemPageTable,           // Used by the pages holding the PTs that map the system memory
-	Pool,                      // Used by ExAllocatePoolWithTag
-	VirtualMemory,             // Used by NtAllocateVirtualMemory
-	SystemMemory,              // Used by MmAllocateSystemMemory and others
-	Image,                     // Used by XeLoadSection
-	Cache,                     // Used by the file cache related functions
-	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
-	Debugger,                  // xbdm-related
-	COUNT                      // The size of the array containing the page usage per type
-};
-
-
 /* PFN entry used by the memory manager */
 typedef struct _XBOX_PFN {
 	union
@@ -129,6 +112,23 @@ typedef struct _XBOX_PFN {
 		} Busy;
 	};
 } XBOX_PFN, *PXBOX_PFN;
+
+
+/* enum describing the usage type of the memory pages */
+enum PageType {
+	Unknown,                   // Used by the PFN database
+	Stack,                     // Used by MmCreateKernelStack
+	VirtualPageTable,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
+	SystemPageTable,           // Used by the pages holding the PTs that map the system memory
+	Pool,                      // Used by ExAllocatePoolWithTag
+	VirtualMemory,             // Used by NtAllocateVirtualMemory
+	SystemMemory,              // Used by MmAllocateSystemMemory and others
+	Image,                     // Used by XeLoadSection
+	Cache,                     // Used by the file cache related functions
+	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
+	Debugger,                  // xbdm-related
+	COUNT                      // The size of the array containing the page usage per type
+};
 
 
 /* Lock count variables for the PFN database */
@@ -160,6 +160,8 @@ typedef struct _XBOX_PFN {
 /* Various macros to manipulate PDE/PTE/PFN */
 #define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PAGE_DIRECTORY_BASE)) // (Va/4M) * 4 + PDE_BASE
 #define GetPteAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 12) << 2) + PAGE_TABLES_BASE))    // (Va/4K) * 4 + PTE_BASE
+#define GetVAddrMappedByPte(Pte) ((VAddr)((ULONG)(Pte) << 10))
+#define GetPteOffset(Va) ((((ULONG)(Va)) << 10) >> 22)
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
 #define PTE_PER_PAGE 1024
@@ -203,10 +205,8 @@ class PhysicalMemory
 		PAddr m_MaxContiguousAddress = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// the size of memory occupied by the PFN/NV2A instance memory
 		size_t m_UpperPMemorySize = 32 * PAGE_SIZE;
-		// max pages available on the Xbox/Chihiro
-		PFN_COUNT m_MaxPagesAvailable = X64M_PHYSICAL_PAGE;
-		// amount of physical pages in use
-		PFN_COUNT m_PhysicalPagesInUse = 0;
+		// amount of physical pages free
+		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[COUNT] = { 0 };
 	
@@ -236,6 +236,10 @@ class PhysicalMemory
 		bool FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low = 0, PFN high = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
 		// construct a temporary pte with the desired protection (if possible) and return it
 		bool ConvertWinToPteProtection(DWORD perms, PMMPTE pte);
+		// commit ptes (if necessary)
+		bool AllocatePtes(PFN_COUNT PteNumber, VAddr addr);
+		// commit whatever free page is available and zero it
+		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
 		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
 		VAddr AllocateFragmented(size_t size);
 		// shrinks the size af an allocation

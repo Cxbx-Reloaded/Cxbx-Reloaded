@@ -44,7 +44,6 @@
 #include "Logging.h"
 #include "EmuShared.h"
 #include <assert.h>
-#include <array>
 
 
 VMManager g_VMManager;
@@ -70,7 +69,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	GetSystemInfo(&si);
 	m_AllocationGranularity = si.dwAllocationGranularity;
 	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
-	m_hAliasedView = memory_view;
+	m_hContiguousFile = memory_view;
 	m_hPTFile = PT_view;
 	m_Vma_map.clear();
 
@@ -80,7 +79,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 		m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
-		m_MaxPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
+		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
 	}
 
 	// Set up the pfn database
@@ -280,10 +279,11 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	LOG_FUNC_END;
 
 	MMPTE Pte;
+	PMMPTE Pde;
 	PFN pfn;
 	PFN_COUNT PteNumber;
 	VAddr addr;
-	bool bVAlloc;
+	bool bVAlloc = true;
 
 	if (!ConvertWinToPteProtection(perms, &Pte)) { RETURN(NULL); } // TODO
 
@@ -292,13 +292,44 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	PteNumber = ROUND_UP_4K(size) >> PAGE_SHIFT;
 
 	if (bAddGuardPage) { PteNumber++; }
-	if (m_MaxPagesAvailable - m_PhysicalPagesInUse < PteNumber) { goto fail; }
+	if (m_PhysicalPagesAvailable < PteNumber) { goto fail; }
 
-	bVAlloc = true;
 	addr = MapMemoryBlock(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, PteNumber, &bVAlloc, perms);
 	if (!addr) { goto fail; }
 
-	// TODO
+	// check if we have to construct the PT's for this allocation
+	if (!AllocatePtes(PteNumber, addr))
+	{
+		// If we reach here it means we had enough memory for the allocation but not for PT's mapping it, so this
+		// allocation must fail instead.
+
+		if (bVAlloc) { VirtualFree((void*)addr, 0, MEM_RELEASE); }
+		else
+		{
+			// recalculate pfn allocated from addr and do removefree here instead of inside MapBlock
+			PFN start = (addr - ROUND_DOWN(addr, m_AllocationGranularity)) >> PAGE_SHIFT;
+			UnmapViewOfFile((void*)ROUND_DOWN(addr, m_AllocationGranularity));
+			InsertFree(start, start + )
+		}
+	}
+	
+	// check again to see if we have enough physical memory for allocating the PT's that may be necessary
+	if (m_PhysicalPagesAvailable < PteNumber)
+	{
+		// If we reach here it means we had enough memory for the allocation but not for PT's mapping it, so this
+		// allocation must fail instead. Note that we cannot do this check before the call to MapMemoryBlock because,
+		// even if we reserve the pte's, there is no guarantee that we can place our allocation on the virtual memory
+		// mapped by those pte's because the host could have buffers there (annoying...)
+
+		if (bVAlloc) { VirtualFree((void*)addr, 0, MEM_RELEASE); }
+		else
+		{
+			// recalculate pfn allocated from addr and do removefree here instead of inside MapBlock
+			PFN start = (addr - SYSTEM_MEMORY_BASE) >> PAGE_SHIFT;
+			UnmapViewOfFile((void*)ROUND_DOWN(addr,m_AllocationGranularity));
+			InsertFree(start, start + )
+		}
+	}
 	
 	Unlock();
 
@@ -638,10 +669,15 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 		// or merged but never deleted, the iterator above will always locate the desired address
 
 		assert(m_Vma_map.find(it_start->first) != m_Vma_map.end());
+		assert(it_start->first <= low_addr && low_addr <= it_start->first + it_start->second.size);
 
-		while (true)
+		while (it_start != it_end)
 		{
-			if (it_start->second.type != VMAType::Free) { continue; } // already allocated by the VMManager
+			if (it_start->second.type != VMAType::Free) // already allocated by the VMManager
+			{
+				if(it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
+				continue;
+			}
 
 			size_t vma_end = it_start->first + it_start->second.size;
 			addr = ROUND_UP(addr, m_AllocationGranularity);
@@ -653,17 +689,18 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 
 				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
 				{
+					RemoveFree(pfn, pfn + size - 1);
 					*bVAllocFlag = true; // allocated with VirtualAlloc
 					return addr;
 				}
 			}
-			if (++it_start == it_end) { break; }
-			else { addr = (++it_start)->first; }
+			if (it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
 		}
 	}
 	else // MapViewOfFileEx path
 	{
 		DWORD FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
+		size_t FileViewSize = (pfn << PAGE_SHIFT) - FileOffsetLow;
 
 		ConvertVProtectToMapViewProtection(&perms);
 
@@ -671,29 +708,35 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 		auto it_end = m_Vma_map.upper_bound(high_addr);
 
 		assert(m_Vma_map.find(it_start->first) != m_Vma_map.end());
+		assert(it_start->first <= low_addr && low_addr <= it_start->first + it_start->second.size);
 
 		// Note that if MapViewOfFileEx is unsuccessful we won't try VirtualAlloc since it means that the host virtual
 		// space has high fragmentation and because both functions use the same granularity, VirtualAlloc is just as likely
 		// to fail as well
-		while (true)
+		while (it_start != it_end)
 		{
-			if (it_start->second.type != VMAType::Free) { continue; }
+			if (it_start->second.type != VMAType::Free)
+			{ 
+				if (it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
+				continue;
+			}
 
 			size_t vma_end = it_start->first + it_start->second.size;
 			addr = ROUND_UP(addr, m_AllocationGranularity);
 
 			for (; addr + aligned_size <= vma_end; addr += m_AllocationGranularity)
 			{
-				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, size, (void*)addr) == addr)
+				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize + size, (void*)addr) == addr)
 				{
+					RemoveFree(pfn, pfn + size - 1);
 					*bVAllocFlag = false; // allocated with MapViewOfFileEx
 					return addr + (pfn << PAGE_SHIFT); // sum the offset into the file view
 				}
 			}
-			if (++it_start == it_end) { break; }
-			else { addr = (++it_start)->first; }
+			if (it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
 		}
 	}
+	return NULL; // fail
 }
 
 VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
