@@ -126,6 +126,8 @@ NT_TIB *GetNtTib()
 }
 
 
+xboxkrnl::KPCR* KeGetPcr();
+
 void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
 {
 	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
@@ -156,11 +158,30 @@ void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
 	__writefsdword(TIB_ArbitraryDataSlot, (DWORD)Pcr);
 }
 
+__declspec(naked) void EmuFS_RefreshKPCR()
+{
+	// Backup all registers, call KeGetPcr and then restore all registers
+	// KeGetPcr makes sure a valid KPCR exists for the current thread
+	// and creates it if missing, we backup and restore all registers
+	// to keep it safe to cal in our patches
+	// This function can be later expanded to do nice things 
+	// like setup the per-thread KPCR values for us too!
+	__asm {
+		pushfd
+		pushad
+		call KeGetPcr
+		popad
+		popfd
+		ret
+	}
+}
+
 __declspec(naked) void EmuFS_CmpEsiFs00()
 {
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		cmp esi, [eax]
@@ -173,6 +194,7 @@ __declspec(naked) void EmuFS_MovEaxFs00()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax]
 		ret
@@ -183,6 +205,7 @@ __declspec(naked) void EmuFS_MovEaxFs20()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 20h]
 		ret
@@ -193,6 +216,7 @@ __declspec(naked) void EmuFS_MovEaxFs28()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 28h]
 		ret
@@ -203,6 +227,7 @@ __declspec(naked) void EmuFS_MovEaxFs58()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 58h]
 		ret
@@ -213,6 +238,7 @@ __declspec(naked) void EmuFS_MovEbxFs00()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov ebx, [ebx]
 		ret
@@ -223,6 +249,7 @@ __declspec(naked) void EmuFS_MovEcxFs00()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx]
 		ret
@@ -233,6 +260,7 @@ __declspec(naked) void EmuFS_MovEcxFs04()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx + 04h]
 		ret
@@ -243,6 +271,7 @@ __declspec(naked) void EmuFS_MovEdiFs00()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi]
 		ret
@@ -253,6 +282,7 @@ __declspec(naked) void EmuFS_MovEdiFs04()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi + 04h]
 		ret
@@ -263,6 +293,7 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 {
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov esi, fs : [TIB_ArbitraryDataSlot]
 		mov esi, [esi]
 		ret
@@ -274,6 +305,7 @@ __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 	// Note : Inlined KeGetCurrentIrql()
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		movzx eax, byte ptr[eax + 24h]
 		ret
@@ -285,6 +317,7 @@ __declspec(naked) void EmuFS_MovFs00Eax()
 	// Note : ebx must be preserved here, hence the push/pop
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		push ebx
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov [ebx], eax
@@ -298,6 +331,7 @@ __declspec(naked) void EmuFS_MovFs00Ebx()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], ebx
@@ -311,6 +345,7 @@ __declspec(naked) void EmuFS_MovFs00Ecx()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], ecx
@@ -324,6 +359,7 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], esp
@@ -339,6 +375,7 @@ __declspec(naked) void EmuFS_PushDwordPtrFs00()
 
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		pop returnAddr
 		mov temp, eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
@@ -356,6 +393,7 @@ __declspec(naked) void EmuFS_PopDwordPtrFs00()
 
 	__asm
 	{
+		call EmuFS_RefreshKPCR
 		pop returnAddr
 		mov temp, eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
