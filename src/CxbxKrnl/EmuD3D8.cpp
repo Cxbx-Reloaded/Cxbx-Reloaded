@@ -3006,7 +3006,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
 // ******************************************************************
 // * patch: D3DDevice_GetBackBuffer2
 // ******************************************************************
-// #define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
+#define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 (
     INT                 BackBuffer
@@ -3064,8 +3064,11 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-	if (BackBuffer == -1)
-		BackBuffer = 0;
+	 STATUS_SUCCESS;
+
+	 if (BackBuffer == -1) {
+		 BackBuffer = 0;
+	 }
 
 	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
@@ -3083,7 +3086,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
-	XB_trampoline(X_D3DSurface *, WINAPI, D3DDevice_GetBackBuffer2, (INT));
+	XB_trampoline(X_D3DSurface*, WINAPI, D3DDevice_GetBackBuffer2, (INT));
 
 	XB_trampoline(VOID, WINAPI, D3DDevice_GetBackBuffer, (INT, D3DBACKBUFFER_TYPE, X_D3DSurface**));
 
@@ -3104,10 +3107,14 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Now we can fetch the host backbuffer
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-	if (BackBuffer == -1)
-		BackBuffer = 0;
 
-	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	HRESULT hRet = STATUS_SUCCESS;
+
+	if (BackBuffer == -1) {
+		BackBuffer = 0;
+	}
+
+	hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
 
 	if (FAILED(hRet)) {
