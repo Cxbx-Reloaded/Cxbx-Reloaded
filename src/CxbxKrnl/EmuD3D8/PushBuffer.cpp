@@ -39,6 +39,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
+#include "devices/video/nv2a_int.h" // For NV** defines
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
@@ -574,11 +575,11 @@ extern void XTL::EmuExecutePushBufferRaw
             }
 
             pdwPushData--;
-        }
+        } 
         else
         {
-            CxbxKrnlCleanup("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
-            return;
+            //EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+			pdwPushData++;
         }
 
         pdwPushData++;

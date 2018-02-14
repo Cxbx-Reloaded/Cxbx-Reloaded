@@ -753,7 +753,8 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 
     if((pPatchDesc->PrimitiveType < X_D3DPT_POINTLIST) || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
     {
-        CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pPatchDesc->PrimitiveType);
+        EmuWarning("Unknown primitive type: 0x%.02X\n", pPatchDesc->PrimitiveType);
+		return false;
     }
 
     // Unsupported primitives that don't need deep patching.
