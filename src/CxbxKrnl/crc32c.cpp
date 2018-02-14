@@ -330,5 +330,9 @@ void __crc32_init()
 
 extern "C" CRC32C_API uint32_t crc32c_append(uint32_t crc, buffer input, size_t length)
 {
+	if (append_func == NULL) {
+		__crc32_init();
+	}
+
 	return append_func(crc, input, length);
 }

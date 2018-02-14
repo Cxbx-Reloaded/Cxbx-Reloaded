@@ -127,8 +127,9 @@ public:
 		// This significantly reduces the impact of hashing on CPUs supporting SSE4.2
 		// but also keeps xxHash present as a fast fallback, for those who don't support it
 		static bool bHardwareCrc32 = crc32c_hw_available();	// Cache the result in a static variable to avoid _cpuid every call
+		static bool bCrc32Init = false;
 		if (bHardwareCrc32) {
-			return crc32c_append_hw(seed, (uint8_t*)input, (size_t)length);
+			return crc32c_append(seed, (uint8_t*)input, (size_t)length);
 		}
 	
 		XXHash32 hasher(seed);
