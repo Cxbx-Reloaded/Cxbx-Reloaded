@@ -7,17 +7,16 @@
 @set ARTIFACT_PATH="%cd%\export\%1.zip"
 
 :: Add generic resources
-@call %ZIP_APP% u %ARTIFACT_PATH% COPYING
-@call %ZIP_APP% u %ARTIFACT_PATH% README.md
+@call %ZIP_APP% u %ARTIFACT_PATH% COPYING README.md
 
 :: Check for build resources
 @if not exist %BUILD_PATH% goto missing_build
 @pushd %BUILD_PATH%
 
-:: Add Cxbx binaries, ignoring errors
+:: Add Cxbx binaries
 @call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe glew32.dll subhook.dll
 
-:: Add debugger binaries, ignoring errors
+:: Add debugger binaries
 @call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe capstone.dll cs_x86.dll
 
 @popd

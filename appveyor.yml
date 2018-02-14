@@ -28,11 +28,11 @@ build:
   parallel: true
   verbosity: minimal
 
-before_package:
-  # Pass in the build configuration
+after_build:
   - cmd: GatherArtifacts.bat %CONFIGURATION%
 
 artifacts:
+  # Note this publishes after building each platform, not after each configuration
   - path: export/*.zip
 
 install:
