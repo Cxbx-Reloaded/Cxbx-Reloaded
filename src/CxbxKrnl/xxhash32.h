@@ -5,6 +5,7 @@
 //
 #pragma once
 #include <stdint.h> // for uint32_t and uint64_t
+#include "crc32c.h"
 /// XXHash (32 bit), based on Yann Collet's descriptions, see http://cyan4973.github.io/xxHash/
 /** How to use:
 uint32_t myseed = 0;
@@ -120,6 +121,16 @@ public:
 	@return 32 bit XXHash **/
 	static uint32_t hash(const void* input, uint64_t length, uint32_t seed)
 	{
+		// Some modern CPUs support hardware accellerated CRC32
+		// This is significantly faster than xxHash, in some cases, by more than double
+		// So now we check for this capability and use it if it exists.
+		// This significantly reduces the impact of hashing on CPUs supporting SSE4.2
+		// but also keeps xxHash present as a fast fallback, for those who don't support it
+		static bool bHardwareCrc32 = crc32c_hw_available();	// Cache the result in a static variable to avoid _cpuid every call
+		if (bHardwareCrc32) {
+			return crc32c_append_hw(seed, (uint8_t*)input, (size_t)length);
+		}
+	
 		XXHash32 hasher(seed);
 		hasher.add(input, length);
 		return hasher.hash();
