@@ -333,13 +333,21 @@ UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
         }
         else
         {
-            return 1; // Could be more, but it doesn't matter as we're not going to patch the types
+			int lastStreamIndex;
+			for (int i = 0; i < 16; i++) {
+				if (g_D3DStreams[i] != nullptr) {
+					lastStreamIndex = i;
+				}
+			}
+			
+			return lastStreamIndex + 1;
         }
     }
     else if(pPatchDesc->hVertexShader)
     {
         return 1;
     }
+
     return 0;
 }
 
@@ -360,7 +368,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         }
     }
 
-    if(!m_pDynamicPatch || !m_pDynamicPatch->pStreamPatches[uiStream].NeedPatch)
+    if(!m_pDynamicPatch || m_pDynamicPatch->NbrStreams < uiStream || !m_pDynamicPatch->pStreamPatches[uiStream].NeedPatch)
     {
         return false;
     }
@@ -942,6 +950,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     bool Patched = false;
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pPatchDesc);
+	EmuWarning("Stream Count: %d", m_uiNbrStreams);
     if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
     {
         m_pDynamicPatch = &((VERTEX_SHADER *)VshHandleGetVertexShader(pPatchDesc->hVertexShader)->Handle)->VertexDynamicPatch;

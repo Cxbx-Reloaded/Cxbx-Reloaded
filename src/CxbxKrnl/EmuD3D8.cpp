@@ -6704,9 +6704,9 @@ void EmuUpdateActiveTextureStages()
 
 void CxbxUpdateNativeD3DResources()
 {
-	XTL::EmuUpdateDeferredStates();
+	EmuUnswizzleTextureStages(); 
 	EmuUpdateActiveTextureStages();
-	EmuUnswizzleTextureStages();
+	XTL::EmuUpdateDeferredStates();
 /* TODO : Port these :
 	DxbxUpdateActiveVertexShader();
 	DxbxUpdateActiveTextures();
