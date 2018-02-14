@@ -424,6 +424,17 @@ inline void DSoundBufferRegionRelease(XTL::X_CDirectSoundBuffer *pThis)
     // NOTE: DSB Buffer8Region and 3DBuffer8Region are set
     // to nullptr inside DSoundBufferRegionSetDefault function.
     if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
+        if (pThis->EmuLockPtr1 != xbnullptr) {
+            DSoundGenericUnlock(pThis->EmuFlags,
+                                pThis->EmuDirectSoundBuffer8Region,
+                                pThis->EmuBufferDesc,
+                                pThis->EmuLockOffset,
+                                pThis->EmuLockPtr1,
+                                pThis->EmuLockBytes1,
+                                pThis->EmuLockPtr2,
+                                pThis->EmuLockBytes2,
+                                pThis->EmuLockFlags);
+        }
         pThis->EmuDirectSoundBuffer8Region->Release();
 
         if (pThis->EmuDirectSound3DBuffer8Region != nullptr) {
