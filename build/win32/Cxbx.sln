@@ -13,9 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CxbxDebugger", "..\..\src\C
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cs_x86", "..\..\import\cs_x86\cs_x86\cs_x86.csproj", "{9131B025-5019-4DEE-84A3-86D2703A81C0}"
-	ProjectSection(ProjectDependencies) = postProject
-		{2171C0E8-4915-49B9-AC23-A484FA08C126} = {2171C0E8-4915-49B9-AC23-A484FA08C126}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "capstone_dll_2015", "..\..\import\cs_x86\capstone_2015\capstone_dll_2015.vcxproj", "{2171C0E8-4915-49B9-AC23-A484FA08C126}"
 EndProject
