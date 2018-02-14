@@ -1,24 +1,41 @@
+# Documentation is here: https://www.appveyor.com/docs/appveyor-yml/
+
 init:
   - ps: Update-AppveyorBuild -Version "$env:appveyor_repo_commit"
+
 branches:
   only:
-  - master
+    - master
+
 image: 
-- Visual Studio 2017  
+  - Visual Studio 2017
+
 configuration:
-- Release
-- Debug
+  # The builds are run in this order
+  # Each configuration will compile all below platforms
+  - Release
+  - Debug
+
 platform:
+  # Build the debugger and managed deps
+  # This must be done first!
   - Any CPU
+  # Build native binaries
   - Win32
+
 build:
   project: build/win32/Cxbx.sln
   parallel: true
   verbosity: minimal
+
 after_build:
-  - cmd: PackageBuild.bat %CONFIGURATION%
+  # Pass in the build configuration and current platform
+  # The packager script does not need to gather during the "Any CPU" stage and will early-out
+  - cmd: PackageBuild.bat %CONFIGURATION% "%PLATFORM%"
+
 artifacts:
-- path: export/*.zip
+  - path: export/*.zip
+
 install:
-  # Git clone happens between init and install 
+  # Git clone happens between init and install
   - cmd: git submodule update --init --recursive

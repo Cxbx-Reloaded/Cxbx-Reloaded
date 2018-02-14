@@ -1,6 +1,7 @@
 @echo off
 
 @if "%1"=="" goto no_arg
+@if "%~2"=="Any CPU" goto eof
 
 set BUILD_PATH=build\win32\%1\
 
