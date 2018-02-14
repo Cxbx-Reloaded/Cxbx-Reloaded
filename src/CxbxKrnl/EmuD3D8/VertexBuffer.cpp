@@ -950,7 +950,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     bool Patched = false;
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pPatchDesc);
-	EmuWarning("Stream Count: %d", m_uiNbrStreams);
+
     if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
     {
         m_pDynamicPatch = &((VERTEX_SHADER *)VshHandleGetVertexShader(pPatchDesc->hVertexShader)->Handle)->VertexDynamicPatch;
