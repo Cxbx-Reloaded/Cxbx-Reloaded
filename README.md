@@ -20,7 +20,7 @@ Cxbx-Reloaded is early in development and still pretty unstable, so don't expect
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can always be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master) service:
 
 * [Latest build (Release-mode)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release;%20Platform:%20Win32)
-* [Latest build (Debug-mode)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug;%20Platform:%20Win322)
+* [Latest build (Debug-mode)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug;%20Platform:%20Win32)
 * [Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)
 
 ## Compatibility
