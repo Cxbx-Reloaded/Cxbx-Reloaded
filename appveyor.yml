@@ -7,32 +7,22 @@ branches:
   only:
     - master
 
-image: 
+image:
+  # If this is modified, please also update the build script
   - Visual Studio 2017
 
 configuration:
-  # The builds are run in this order
-  # Each configuration will compile all below platforms
+  # The builds will be run in this order
   - Release
   - Debug
 
-platform:
-  # Build the debugger and managed deps
-  # This must be done first!
-  - Any CPU
-  # Build native binaries
-  - Win32
-
-build:
-  project: build/win32/Cxbx.sln
-  parallel: true
-  verbosity: minimal
+build_script:
+  - cmd: appveyor-build.bat %CONFIGURATION%
 
 after_build:
-  - cmd: GatherArtifacts.bat %CONFIGURATION%
+  - cmd: appveyor-gather.bat %CONFIGURATION%
 
 artifacts:
-  # Note this publishes after building each platform, not after each configuration
   - path: export/*.zip
 
 install:
