@@ -61,12 +61,6 @@ namespace xboxkrnl
 #include <locale>
 #include <codecvt>
 
-// prevent name collisions
-namespace NtDll
-{
-#include "EmuNtDll.h"
-};
-
 volatile DWORD HalInterruptRequestRegister = APC_LEVEL | DISPATCH_LEVEL;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 

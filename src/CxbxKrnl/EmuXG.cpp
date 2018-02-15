@@ -43,15 +43,6 @@
 #include "Emu.h"
 #include "EmuFS.h"
 #include "Logging.h"
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace NtDll
-{
-    #include "EmuNtDll.h"
-};
-
 #include "EmuXTL.h"
 #include "EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 

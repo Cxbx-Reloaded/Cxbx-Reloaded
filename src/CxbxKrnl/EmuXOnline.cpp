@@ -40,15 +40,6 @@
 #include "Emu.h"
 #include "Logging.h"
 #include "EmuFS.h"
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace NtDll
-{
-    #include "EmuNtDll.h"
-};
-
 #include "EmuXTL.h"
 
 /*
