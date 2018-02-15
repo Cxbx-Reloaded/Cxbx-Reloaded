@@ -1479,7 +1479,7 @@ XBSYSAPI EXPORTNUM(144) xboxkrnl::ULONG NTAPI xboxkrnl::KeSetDisableBoostThread
 	KiLockDispatcherDatabase(&oldIRQL);
 
 	ULONG prevDisableBoost = Thread->DisableBoost;
-	Thread->DisableBoost = Disable;
+	Thread->DisableBoost = (CHAR)Disable;
 
 	KiUnlockDispatcherDatabase(oldIRQL);
 

@@ -74,7 +74,7 @@ XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
 // * compare block of memory, return number of equivalent bytes.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) BOOLEAN NTAPI RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) SIZE_T NTAPI RtlCompareMemory
 (
   IN CONST VOID *Source1,
   IN CONST VOID *Source2,
@@ -183,7 +183,7 @@ XBSYSAPI EXPORTNUM(279) BOOLEAN NTAPI RtlEqualString
 (
   IN PSTRING String1,
   IN PSTRING String2,
-  IN BOOLEAN CaseSensitive
+  IN BOOLEAN CaseInsensitive
 );
 
 // ******************************************************************
@@ -193,7 +193,7 @@ XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseSensitive
+	IN BOOLEAN CaseInSensitive
 );
 
 // ******************************************************************
@@ -279,7 +279,7 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI RtlInitAnsiString
 XBSYSAPI EXPORTNUM(290) VOID NTAPI RtlInitUnicodeString
 (
   IN OUT PUNICODE_STRING DestinationString,
-  IN     PSTRING         SourceString
+  IN     PCWSTR          SourceString
 );
 
 // ******************************************************************

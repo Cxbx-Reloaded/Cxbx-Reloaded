@@ -58,6 +58,11 @@ namespace NtDll
 
 #ifdef _WIN32
 
+// Prevent errors compiling
+#undef RtlFillMemory
+#undef RtlMoveMemory
+#undef RtlZeroMemory
+
 #include <map> // For critical section map
 #include <Synchapi.h> // For native CriticalSections
 
@@ -132,6 +137,12 @@ static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_cri
 
 #endif // _WIN32
 
+DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
+{
+	DWORD ret = mbstowcs(nullptr, str->Buffer, str->Length);
+	return ret + sizeof(WCHAR); // + for the terminating null character
+}
+
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
@@ -148,9 +159,25 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
+	DWORD total = RtlAnsiStringToUnicodeSize(SourceString);
 
-	RETURN(ret);
+	if (total > 0xffff)
+		return STATUS_INVALID_PARAMETER_2;
+
+	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
+	if (AllocateDestinationString) {
+		DestinationString->MaximumLength = (USHORT)total;
+		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS')))
+			return STATUS_NO_MEMORY;
+	}
+	else
+		if (total > DestinationString->MaximumLength)
+			return STATUS_BUFFER_OVERFLOW;
+
+	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
+	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -167,7 +194,21 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlAppendStringToString((NtDll::PSTRING)Destination, (NtDll::PSTRING)Source);
+	NTSTATUS result = STATUS_SUCCESS;
+
+	USHORT dstLen = Destination->Length;
+	USHORT srcLen = Source->Length;
+	if (srcLen > 0) {
+		if ((srcLen + dstLen) > Destination->MaximumLength) {
+			result = STATUS_BUFFER_TOO_SMALL;
+		}
+		else {
+			CHAR *dstBuf = Destination->Buffer + Destination->Length;
+			CHAR *srcBuf = Source->Buffer;
+			memmove(dstBuf, srcBuf, srcLen);
+			Destination->Length += srcLen;
+		}
+	}
 
 	RETURN(result);
 }
@@ -186,7 +227,24 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlAppendUnicodeStringToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PUNICODE_STRING)Source);
+	NTSTATUS result = STATUS_SUCCESS;
+
+	USHORT dstLen = Destination->Length;
+	USHORT srcLen = Source->Length;
+	if (srcLen > 0) {
+		if ((srcLen + dstLen) > Destination->MaximumLength) {
+			result = STATUS_BUFFER_TOO_SMALL;
+		}
+		else {
+			CHAR *dstBuf = (CHAR*)(Destination->Buffer + (Destination->Length / sizeof(WCHAR)));
+			CHAR *srcBuf = (CHAR*)(Source->Buffer);
+			memmove(dstBuf, srcBuf, srcLen);
+			Destination->Length += srcLen;
+			if (Destination->Length < Destination->MaximumLength) {
+				dstBuf[srcLen / sizeof(WCHAR)] = UNICODE_NULL;
+			}
+		}
+	}
 
 	RETURN(result);
 }
@@ -205,7 +263,13 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlAppendUnicodeToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PCWSTR)Source);
+	NTSTATUS result = STATUS_SUCCESS;
+	if (Source != NULL) {
+		UNICODE_STRING unicodeString;
+		RtlInitUnicodeString(&unicodeString, Source);
+
+		result = RtlAppendUnicodeStringToString(Destination, &unicodeString);
+	}
 
 	RETURN(result);
 }
@@ -248,19 +312,83 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlCharToInteger((NtDll::PCSZ)String, (NtDll::ULONG)Base, (NtDll::PULONG)Value);
+    char bMinus = 0;
 
-	RETURN(result);
+    // skip leading whitespaces
+	while (*String != '\0' && *String <= ' ') {
+		String++;
+	}
+
+    // Check for +/-
+    if (*String == '+') {
+		String++;
+    }
+    else if (*String == '-') {
+        bMinus = 1;
+		String++;
+    }
+
+    // base = 0 means autobase
+	if (Base == 0) {
+		Base = 10;
+		if (String[0] == '0') {
+			if (String[1] == 'b') {
+				String += 2;
+				Base = 2;
+			}
+			else if (String[1] == 'o') {
+				String += 2;
+				Base = 8;
+			}
+			else if (String[1] == 'x') {
+				String += 2;
+				Base = 16;
+			}
+		}
+	}
+	else if (Base != 2 && Base != 8 && Base != 10 && Base != 16) {
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	if (Value == NULL) {
+		return STATUS_ACCESS_VIOLATION;
+	}
+
+    ULONG RunningTotal = 0;
+	while (*String != '\0') {
+		CHAR chCurrent = *String;
+		int digit;
+
+		if (chCurrent >= '0' && chCurrent <= '9') {
+			digit = chCurrent - '0';
+		}
+		else if (chCurrent >= 'A' && chCurrent <= 'Z') {
+			digit = chCurrent - 'A' + 10;
+		}
+		else if (chCurrent >= 'a' && chCurrent <= 'z') {
+			digit = chCurrent - 'a' + 10;
+		}
+		else {
+			digit = -1;
+		}
+
+		if (digit < 0 || digit >= (int)Base)
+			break;
+
+		RunningTotal = RunningTotal * Base + digit;
+		String++;
+	}
+
+    *Value = bMinus ? (0 - RunningTotal) : RunningTotal;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
 // * 0x010C - RtlCompareMemory()
 // ******************************************************************
-// *
 // * compare block of memory, return number of equivalent bytes.
-// *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemory
 (
 	IN CONST VOID *Source1,
 	IN CONST VOID *Source2,
@@ -273,7 +401,16 @@ XBSYSAPI EXPORTNUM(268) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCompareMemory
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_END;
 
-	BOOL result = NtDll::RtlCompareMemory(Source1, Source2, Length);
+	SIZE_T result = Length;
+
+	uint8_t *pBytes1 = (uint8_t *)Source1;
+	uint8_t *pBytes2 = (uint8_t *)Source2;
+	for (uint32_t i = 0; i < Length; i++) {
+		if (pBytes1[i] != pBytes2[i]) {
+			result = i;
+			break;
+		}
+	}
 
 	RETURN(result);
 }
@@ -294,7 +431,18 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 		LOG_FUNC_ARG(Pattern)
 		LOG_FUNC_END;
 
-	SIZE_T result = NtDll::RtlCompareMemoryUlong(Source, Length, Pattern);
+	SIZE_T result = Length;
+
+	// Compare 32 bits at a time
+	// Any extra bytes are ignored
+	uint32_t numDwords = Length >> 2;
+	uint32_t *pDwords = (uint32_t *)Source;
+	for (uint32_t i = 0; i < numDwords; i++) {
+		if (pDwords[i] != Pattern) {
+			result = i;
+			break;
+		}
+	}
 
 	RETURN(result);
 }
@@ -315,7 +463,21 @@ XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result = NtDll::RtlCompareString((NtDll::STRING *)String1, (NtDll::STRING *)String2, CaseInSensitive);
+	LONG result;
+
+	USHORT l1 = String1->Length;
+	USHORT l2 = String2->Length;
+	USHORT maxLen = l1 <= l2 ? l1 : l2;
+
+	CHAR *str1 = String1->Buffer;
+	CHAR *str2 = String2->Buffer;
+
+	if (CaseInSensitive) {
+		result = _strnicmp(str1, str2, maxLen);
+	}
+	else {
+		result = strncmp(str1, str2, maxLen);
+	}
 
 	RETURN(result);
 }
@@ -336,7 +498,21 @@ XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result = NtDll::RtlCompareUnicodeString((NtDll::PUNICODE_STRING)String1, (NtDll::PUNICODE_STRING)String2, CaseInSensitive);
+	LONG result;
+
+	USHORT l1 = String1->Length;
+	USHORT l2 = String2->Length;
+	USHORT maxLen = l1 <= l2 ? l1 : l2;
+
+	WCHAR *str1 = (WCHAR*)(String1->Buffer);
+	WCHAR *str2 = (WCHAR*)(String2->Buffer);
+
+	if (CaseInSensitive) {
+		result = _wcsnicmp(str1, str2, maxLen);
+	}
+	else {
+		result = wcsncmp(str1, str2, maxLen);
+	}
 
 	RETURN(result);
 }
@@ -355,7 +531,20 @@ XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	NtDll::RtlCopyString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
+	if (SourceString == NULL) {
+		DestinationString->Length = 0;
+		return;
+	}
+
+	CHAR *pd = DestinationString->Buffer;
+	CHAR *ps = SourceString->Buffer;
+	USHORT len = SourceString->Length;
+	if ((USHORT)len > DestinationString->MaximumLength) {
+		len = DestinationString->MaximumLength;
+	}
+
+	DestinationString->Length = (USHORT)len;
+	memcpy(pd, ps, len);
 }
 
 // ******************************************************************
@@ -372,7 +561,20 @@ XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	NtDll::RtlCopyUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PUNICODE_STRING)SourceString);
+	if (SourceString == NULL) {
+		DestinationString->Length = 0;
+		return;
+	}
+
+	CHAR *pd = (CHAR*)(DestinationString->Buffer);
+	CHAR *ps = (CHAR*)(SourceString->Buffer);
+	USHORT len = SourceString->Length;
+	if ((USHORT)len > DestinationString->MaximumLength) {
+		len = DestinationString->MaximumLength;
+	}
+
+	DestinationString->Length = (USHORT)len;
+	memcpy(pd, ps, len);
 }
 
 // ******************************************************************
@@ -389,7 +591,18 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	BOOLEAN result = NtDll::RtlCreateUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
+	BOOLEAN result = TRUE;
+
+	ULONG bufferSize = (wcslen(SourceString) + 1) * sizeof(WCHAR);
+	DestinationString->Buffer = (USHORT *)ExAllocatePoolWithTag(bufferSize, 'grtS');
+	if (!DestinationString->Buffer) {
+		result = FALSE;
+	}
+	else {
+		RtlMoveMemory(DestinationString->Buffer, SourceString, bufferSize);
+		DestinationString->MaximumLength = (USHORT)bufferSize;
+		DestinationString->Length = (USHORT)(bufferSize - sizeof(UNICODE_NULL));
+	}
 
 	RETURN(result);
 }
@@ -404,7 +617,7 @@ XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
 {
 	LOG_FUNC_ONE_ARG(SourceCharacter);
 
-	WCHAR result = NtDll::RtlDowncaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+	WCHAR result = towlower(SourceCharacter);
 
 	RETURN(result);
 }
@@ -425,10 +638,29 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlDowncaseUnicodeString(
-		(NtDll::PUNICODE_STRING)DestinationString,
-		(NtDll::PUNICODE_STRING)SourceString,
-		AllocateDestinationString);
+	NTSTATUS result = STATUS_SUCCESS;
+
+	if (AllocateDestinationString) {
+		DestinationString->MaximumLength = SourceString->Length;
+		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		if (DestinationString->Buffer == NULL) {
+			return STATUS_NO_MEMORY;
+		}
+	}
+	else {
+		if (SourceString->Length > DestinationString->MaximumLength) {
+			return STATUS_BUFFER_OVERFLOW;
+		}
+	}
+
+	ULONG length = ((ULONG)SourceString->Length) / sizeof(WCHAR);
+	WCHAR *pDst = (WCHAR*)(DestinationString->Buffer);
+	WCHAR *pSrc = (WCHAR*)(SourceString->Buffer);
+	for (ULONG i = 0; i < length; i++) {
+		pDst[i] = (WCHAR)towlower(pSrc[i]);
+	}
+
+	DestinationString->Length = SourceString->Length;
 
 	RETURN(result);
 }
@@ -491,16 +723,48 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
-	IN BOOLEAN CaseSensitive
+	IN BOOLEAN CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
-		LOG_FUNC_ARG(CaseSensitive)
+		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = NtDll::RtlEqualString((NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive);
+	BOOLEAN bRet = TRUE;
+
+	USHORT l1 = String1->Length;
+	USHORT l2 = String2->Length;
+	if (l1 != l2) {
+		return FALSE;
+	}
+
+	CHAR *p1 = String1->Buffer;
+	CHAR *p2 = String2->Buffer;
+	CHAR *last = p1 + l1;
+
+	if (CaseInSensitive) {
+		while (p1 < last) {
+			CHAR c1 = *p1++;
+			CHAR c2 = *p2++;
+			if (c1 != c2) {
+				c1 = RtlUpperChar(c1);
+				c2 = RtlUpperChar(c2);
+				if (c1 != c2) {
+					return FALSE;
+				}
+			}
+		}
+		return TRUE;
+	}
+
+	while (p1 < last) {
+		if (*p1++ != *p2++) {
+			bRet = FALSE;
+			break;
+		}
+	}
 
 	RETURN(bRet);
 }
@@ -512,16 +776,49 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseSensitive
+	IN BOOLEAN CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
-		LOG_FUNC_ARG(CaseSensitive)
+		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = NtDll::RtlEqualUnicodeString((NtDll::PUNICODE_STRING)String1, (NtDll::PUNICODE_STRING)String2, (NtDll::BOOLEAN)CaseSensitive);
+	BOOLEAN bRet = TRUE;
+
+	USHORT l1 = String1->Length;
+	USHORT l2 = String2->Length;
+	if (l1 != l2) {
+		return FALSE;
+	}
+
+	WCHAR *p1 = (WCHAR*)(String1->Buffer);
+	WCHAR *p2 = (WCHAR*)(String2->Buffer);
+	WCHAR *last = p1 + l1;
+
+	if (CaseInSensitive) {
+		while (p1 < last) {
+			WCHAR c1 = *p1++;
+			WCHAR c2 = *p2++;
+			if (c1 != c2) {
+				c1 = towupper(c1);
+				c2 = towupper(c2);
+				if (c1 != c2) {
+					return FALSE;
+				}
+			}
+		}
+
+		return TRUE;
+	}
+
+	while (p1 < last) {
+		if (*p1++ != *p2++) {
+			bRet = FALSE;
+			break;
+		}
+	}
 
 	RETURN(bRet);
 }
@@ -542,13 +839,7 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 
 	LARGE_INTEGER ret;
 
-	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
-	// and back, just copy the only member manually :
-	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
-	NtDll::LARGE_INTEGER NtMultiplicand;
-	NtMultiplicand.QuadPart = Multiplicand.QuadPart;
-
-	ret.QuadPart = NtDll::RtlExtendedIntegerMultiply(NtMultiplicand, (NtDll::LONG)Multiplier).QuadPart;
+	ret.QuadPart = Multiplicand.QuadPart* (LONGLONG)Multiplier;
 
 	RETURN(ret);
 }
@@ -571,16 +862,16 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 
 	LARGE_INTEGER ret;
 
-	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
-	// and back, just copy the only member manually :
-	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
-	NtDll::LARGE_INTEGER NtDividend;
-	NtDividend.QuadPart = Dividend.QuadPart;
+	if (Remainder)
+		*Remainder = (ULONG)(Dividend.QuadPart % Divisor);
 
-	ret.QuadPart = NtDll::RtlExtendedLargeIntegerDivide(NtDividend, (NtDll::ULONG)Divisor, (NtDll::PULONG)Remainder).QuadPart;
+	ret.QuadPart = Dividend.QuadPart / (LONGLONG)Divisor;
 
 	RETURN(ret);
 }
+
+#define LOWER_32(A) ((A) & 0xffffffff)
+#define UPPER_32(A) ((A) >> 32)
 
 // ******************************************************************
 // * 0x011B - RtlExtendedMagicDivide()
@@ -598,24 +889,47 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 		LOG_FUNC_ARG(ShiftCount)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER ret;
+	LARGE_INTEGER result;
 
-	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
-	// and back, just copy the only member manually :
-	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
-	NtDll::LARGE_INTEGER NtDividend;
-	NtDividend.QuadPart = Dividend.QuadPart;
+	ULONGLONG dividend_high;
+	ULONGLONG dividend_low;
+	ULONGLONG inverse_divisor_high;
+	ULONGLONG inverse_divisor_low;
+	ULONGLONG ah_bl;
+	ULONGLONG al_bh;
+	BOOLEAN positive;
+	
+	if (Dividend.QuadPart < 0)
+	{
+	   dividend_high = UPPER_32((ULONGLONG) -Dividend.QuadPart);
+	   dividend_low =  LOWER_32((ULONGLONG) -Dividend.QuadPart);
+	   positive = FALSE;
+	}
+	else
+	{
+	   dividend_high = UPPER_32((ULONGLONG) Dividend.QuadPart);
+	   dividend_low =  LOWER_32((ULONGLONG) Dividend.QuadPart);
+	   positive = TRUE;
+	}
+	inverse_divisor_high = UPPER_32((ULONGLONG) MagicDivisor.QuadPart);
+	inverse_divisor_low =  LOWER_32((ULONGLONG) MagicDivisor.QuadPart);
+	
+	ah_bl = dividend_high * inverse_divisor_low;
+	al_bh = dividend_low * inverse_divisor_high;
+	
+	result.QuadPart =
+	   (LONGLONG) ((dividend_high * inverse_divisor_high +
+	                UPPER_32(ah_bl) +
+	                UPPER_32(al_bh) +
+	                UPPER_32(LOWER_32(ah_bl) + LOWER_32(al_bh) +
+	                         UPPER_32(dividend_low * inverse_divisor_low))) >> ShiftCount);
+	if (!positive)
+	{
+	   result.QuadPart = -result.QuadPart;
+	}
 
-	NtDll::LARGE_INTEGER NtMagicDivisor;
-	NtMagicDivisor.QuadPart = MagicDivisor.QuadPart;
-
-	ret.QuadPart = NtDll::RtlExtendedMagicDivide(NtDividend, NtMagicDivisor, (NtDll::CCHAR)ShiftCount).QuadPart;
-
-	RETURN(ret);
+	RETURN(result);
 }
-
-// Prevent errors compiling RtlFillMemory (TODO : How should we really do this?)
-#undef RtlFillMemory
 
 // ******************************************************************
 // * 0x011C - RtlFillMemory()
@@ -633,7 +947,7 @@ XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
 		LOG_FUNC_ARG(Fill)
 		LOG_FUNC_END;
 
-	NtDll::RtlFillMemory(Destination, Length, Fill);
+	memset(Destination, Fill, Length);
 }
 
 // ******************************************************************
@@ -652,7 +966,13 @@ XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
 		LOG_FUNC_ARG(Pattern)
 		LOG_FUNC_END;
 
-	NtDll::RtlFillMemoryUlong(Destination, Length, Pattern);
+	// Fill 32 bits at a time
+	// Any extra bytes are ignored
+	uint32_t numDwords = Length / sizeof(ULONG);
+	uint32_t *lastAddr = (uint32_t *)Destination + numDwords;
+	for (uint32_t *p = (uint32_t *)Destination; p < lastAddr; p++) {
+		*p = Pattern;
+	}
 }
 
 // ******************************************************************
@@ -665,7 +985,10 @@ XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 {
 	LOG_FUNC_ONE_ARG(AnsiString);
 
-	NtDll::RtlFreeAnsiString((NtDll::PANSI_STRING)AnsiString);
+	if (AnsiString->Buffer) {
+		ExFreePool(AnsiString->Buffer);
+		memset(AnsiString, 0, sizeof(*AnsiString));
+	}
 }
 
 // ******************************************************************
@@ -678,7 +1001,10 @@ XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
 {
 	LOG_FUNC_ONE_ARG(UnicodeString);
 
-	NtDll::RtlFreeUnicodeString((NtDll::PUNICODE_STRING)UnicodeString);
+	if (UnicodeString->Buffer) {
+		ExFreePool(UnicodeString->Buffer);
+		memset(UnicodeString, 0, sizeof(*UnicodeString));
+	}
 }
 
 // ******************************************************************
@@ -695,7 +1021,16 @@ XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	NtDll::RtlInitAnsiString((NtDll::PANSI_STRING)DestinationString, (NtDll::PCSZ)SourceString);
+	DestinationString->Buffer = SourceString;
+	if (SourceString != NULL) {
+		CCHAR *pSourceString = (CCHAR*)(SourceString);
+		DestinationString->Buffer = SourceString;
+		DestinationString->Length = (USHORT)strlen(pSourceString);
+		DestinationString->MaximumLength = DestinationString->Length + 1;
+	}
+	else {
+		DestinationString->Length = DestinationString->MaximumLength = 0;
+	}
 }
 
 // ******************************************************************
@@ -704,7 +1039,7 @@ XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 (
 	IN OUT PUNICODE_STRING DestinationString,
-	IN     PSTRING         SourceString
+	IN     PCWSTR         SourceString
 )
 {
 	LOG_FUNC_BEGIN
@@ -712,7 +1047,15 @@ XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	NtDll::RtlInitUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
+	DestinationString->Buffer = (USHORT*)SourceString;
+	if (SourceString != NULL) {
+		DestinationString->Buffer = (USHORT*)SourceString;
+		DestinationString->Length = (USHORT)wcslen(SourceString) * 2;
+		DestinationString->MaximumLength = DestinationString->Length + 2;
+	}
+	else {
+		DestinationString->Length = DestinationString->MaximumLength = 0;
+	}
 }
 
 // ******************************************************************
@@ -756,9 +1099,45 @@ XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
 		LOG_FUNC_ARG(String)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlIntegerToChar(Value, Base, OutputLength, String);
+	if (Base == 0) {
+        Base = 10;
+    }
+    else if (Base != 2 && Base != 8 && Base != 10 && Base != 16) {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-	RETURN(result);
+	CHAR buffer[33];
+	PCHAR pos = &buffer[32];
+
+	*pos = '\0';   
+	do {
+		pos--;
+		CHAR digit = (CHAR)(Value % Base);
+		Value /= Base;
+
+		if (digit < 10) {
+			*pos = '0' + digit;
+		}
+		else {
+			*pos = 'A' + digit - 10;
+		}
+	} while (Value != 0L);
+
+	SIZE_T len = &buffer[32] - pos;   
+	if (len > (SIZE_T)OutputLength) {
+		return STATUS_BUFFER_OVERFLOW;
+	}
+	else if (String == NULL) {
+		return STATUS_ACCESS_VIOLATION;
+	}
+	else if (len == OutputLength) {
+		RtlCopyMemory(String, pos, len);
+	}
+	else {
+		RtlCopyMemory(String, pos, len + 1);
+	}
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -777,9 +1156,21 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
 		LOG_FUNC_ARG_OUT(String)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlIntegerToUnicodeString(Value, Base, (NtDll::PUNICODE_STRING)String);
+    CHAR Buffer[33];
+    NTSTATUS Status = RtlIntegerToChar(Value, Base, sizeof(Buffer), Buffer);
 
-	RETURN(result);
+    if (NT_SUCCESS(Status))
+    {
+		ANSI_STRING AnsiString;
+
+        AnsiString.Buffer = Buffer;
+        AnsiString.Length = (USHORT)strlen(Buffer);
+        AnsiString.MaximumLength = sizeof(Buffer);
+
+        Status = RtlAnsiStringToUnicodeString(String, &AnsiString, FALSE);
+    }
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -847,11 +1238,21 @@ XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
 		LOG_FUNC_ARG(GenericMapping)
 		LOG_FUNC_END;
 
-	NtDll::RtlMapGenericMask(AccessMask, (NtDll::PGENERIC_MAPPING)GenericMapping);
-}
+	if (*AccessMask & GENERIC_READ) {
+		*AccessMask |= GenericMapping->GenericRead;
+	}
+	if (*AccessMask & GENERIC_WRITE) {
+		*AccessMask |= GenericMapping->GenericWrite;
+	}
+	if (*AccessMask & GENERIC_EXECUTE) {
+		*AccessMask |= GenericMapping->GenericExecute;
+	}
+	if (*AccessMask & GENERIC_ALL) {
+		*AccessMask |= GenericMapping->GenericAll;
+	}
 
-// Prevent errors compiling RtlMoveMemory (TODO : How should we really do this?)
-#undef RtlMoveMemory
+	*AccessMask &= ~(GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL);
+}
 
 // ******************************************************************
 // * 0x012A - RtlMoveMemory()
@@ -869,7 +1270,7 @@ XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_END;
 
-	::memmove(Destination, Source, Length);
+	memmove(Destination, Source, Length);
 }
 
 // ******************************************************************
@@ -892,14 +1293,22 @@ XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 		LOG_FUNC_ARG(BytesInMultiByteString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlMultiByteToUnicodeN(
-		UnicodeString,
-		MaxBytesInUnicodeString,
-		BytesInUnicodeString,
-		MultiByteString,
-		BytesInMultiByteString);
+	ULONG maxUnicodeChars = MaxBytesInUnicodeString / sizeof(WCHAR);
+	ULONG numChars = (maxUnicodeChars < BytesInMultiByteString) ? maxUnicodeChars : BytesInMultiByteString;
 
-	RETURN(result);
+	if (BytesInUnicodeString != NULL) {
+		*BytesInUnicodeString = numChars * sizeof(WCHAR);
+	}
+
+	while (numChars) {
+		*UnicodeString = (WCHAR)(*MultiByteString);
+
+		UnicodeString++;
+		MultiByteString++;
+		numChars--;
+	}
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -918,12 +1327,9 @@ XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 		LOG_FUNC_ARG(BytesInMultiByteString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlMultiByteToUnicodeSize(
-		BytesInUnicodeString,
-		MultiByteString,
-		BytesInMultiByteString);
+	*BytesInUnicodeString = BytesInMultiByteString * sizeof(WCHAR);
 
-	RETURN(result);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -937,8 +1343,84 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 	LOG_FUNC_ONE_ARG(Status);
 
 	ULONG ret = NtDll::RtlNtStatusToDosError(Status);
+/* https://doxygen.reactos.org/de/ddc/sdk_2lib_2rtl_2error_8c.html#aaad43f3dbf8784c2ca1ef07748199f20
+	struct error_table {
+		DWORD       start;
+		DWORD       end;
+		const DWORD *table;
+	};
 
+	static const struct error_table error_table[20];
+
+	const struct error_table *table = error_table;
+
+    if (!Status || (Status & 0x20000000))
+		return Status;
+
+    // 0xd... is equivalent to 0xc...
+    if ((Status & 0xf0000000) == 0xd0000000)
+		Status &= ~0x10000000;
+
+    while (table->start) {
+        if ((ULONG)Status < table->start)
+			break;
+
+        if ((ULONG)Status < table->end) {
+            DWORD ret = table->table[Status - table->start];
+            // unknown entries are 0
+            if (!ret)
+				goto no_mapping;
+
+            return ret;
+        }
+
+        table++;
+    }
+
+    // now some special cases
+    if (HIWORD(Status) == 0xc001)
+		return LOWORD(Status);
+
+    if (HIWORD(Status) == 0x8007)
+		return LOWORD(Status);
+
+no_mapping:
+    DbgPrintf("no mapping for %08x\n", Status);
+	ret = ERROR_MR_MID_NOT_FOUND;
+*/
 	RETURN(ret);
+}
+
+#define TICKSPERSEC        10000000
+#define TICKSPERMSEC       10000
+#define SECSPERDAY         86400
+#define SECSPERHOUR        3600
+#define SECSPERMIN         60
+#define MINSPERHOUR        60
+#define HOURSPERDAY        24
+#define EPOCHWEEKDAY       1  /* Jan 1, 1601 was Monday */
+#define DAYSPERWEEK        7
+#define MONSPERYEAR        12
+#define DAYSPERQUADRICENTENNIUM (365 * 400 + 97)
+#define DAYSPERNORMALQUADRENNIUM (365 * 4 + 1)
+
+/* 1601 to 1970 is 369 years plus 89 leap days */
+#define SECS_1601_TO_1970  ((369 * 365 + 89) * (ULONGLONG)SECSPERDAY)
+#define TICKS_1601_TO_1970 (SECS_1601_TO_1970 * TICKSPERSEC)
+/* 1601 to 1980 is 379 years plus 91 leap days */
+#define SECS_1601_TO_1980  ((379 * 365 + 91) * (ULONGLONG)SECSPERDAY)
+#define TICKS_1601_TO_1980 (SECS_1601_TO_1980 * TICKSPERSEC)
+
+
+static const int MonthLengths[2][MONSPERYEAR] =
+{
+	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+};
+
+static inline BOOL IsLeapYear(int Year)
+{
+    return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0);
 }
 
 // ******************************************************************
@@ -955,9 +1437,50 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 		LOG_FUNC_ARG_OUT(Time)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
+	int month, year, cleaps, day;
 
-	RETURN(bRet);
+	/* FIXME: normalize the TIME_FIELDS structure here */
+	/* No, native just returns 0 (error) if the fields are not */
+	if (TimeFields->Millisecond < 0 || TimeFields->Millisecond > 999 ||
+		TimeFields->Second < 0 || TimeFields->Second > 59 ||
+		TimeFields->Minute < 0 || TimeFields->Minute > 59 ||
+		TimeFields->Hour < 0 || TimeFields->Hour > 23 ||
+		TimeFields->Month < 1 || TimeFields->Month > 12 ||
+		TimeFields->Day < 1 ||
+		TimeFields->Day > MonthLengths
+			[TimeFields->Month == 2 || IsLeapYear(TimeFields->Year)]
+			[TimeFields->Month - 1] ||
+		TimeFields->Year < 1601)
+		return FALSE;
+
+	/* now calculate a day count from the date
+	* First start counting years from March. This way the leap days
+	* are added at the end of the year, not somewhere in the middle.
+	* Formula's become so much less complicate that way.
+	* To convert: add 12 to the month numbers of Jan and Feb, and
+	* take 1 from the year */
+	if (TimeFields->Month < 3) {
+		month = TimeFields->Month + 13;
+		year = TimeFields->Year - 1;
+	}
+	else {
+		month = TimeFields->Month + 1;
+		year = TimeFields->Year;
+	}
+	cleaps = (3 * (year / 100) + 3) / 4;   /* nr of "century leap years"*/
+	day = (36525 * year) / 100 - cleaps + /* year * dayperyr, corrected */
+			(1959 * month) / 64 +         /* months * daypermonth */
+			TimeFields->Day -				/* day of the month */
+			584817;							/* zero that on 1601-01-01 */
+	/* done */
+
+	Time->QuadPart = (((((LONGLONG)day * HOURSPERDAY +
+		TimeFields->Hour) * MINSPERHOUR +
+		TimeFields->Minute) * SECSPERMIN +
+		TimeFields->Second) * 1000 +
+		TimeFields->Millisecond) * TICKSPERMSEC;
+
+	RETURN(TRUE);
 }
 
 // ******************************************************************
@@ -974,7 +1497,53 @@ XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 		LOG_FUNC_ARG_OUT(TimeFields)
 		LOG_FUNC_END;
 
-	NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
+	int SecondsInDay;
+	long int cleaps, years, yearday, months;
+	long int Days;
+	LONGLONG _Time;
+
+	/* Extract millisecond from time and convert time into seconds */
+	TimeFields->Millisecond =
+		(CSHORT)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
+	_Time = Time->QuadPart / TICKSPERSEC;
+
+	/* The native version of RtlTimeToTimeFields does not take leap seconds
+	* into account */
+
+	/* Split the time into days and seconds within the day */
+	Days = (long int )(_Time / SECSPERDAY);
+	SecondsInDay = _Time % SECSPERDAY;
+
+	/* compute time of day */
+	TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
+	SecondsInDay = SecondsInDay % SECSPERHOUR;
+	TimeFields->Minute = (CSHORT)(SecondsInDay / SECSPERMIN);
+	TimeFields->Second = (CSHORT)(SecondsInDay % SECSPERMIN);
+
+	/* compute day of week */
+	TimeFields->Weekday = (CSHORT)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
+
+	/* compute year, month and day of month. */
+	cleaps = (3 * ((4 * Days + 1227) / DAYSPERQUADRICENTENNIUM) + 3) / 4;
+	Days += 28188 + cleaps;
+	years = (20 * Days - 2442) / (5 * DAYSPERNORMALQUADRENNIUM);
+	yearday = Days - (years * DAYSPERNORMALQUADRENNIUM) / 4;
+	months = (64 * yearday) / 1959;
+	/* the result is based on a year starting on March.
+	* To convert take 12 from Januari and Februari and
+	* increase the year by one. */
+	if (months < 14) {
+		TimeFields->Month = (USHORT)(months - 1);
+		TimeFields->Year = (USHORT)(years + 1524);
+	}
+	else {
+		TimeFields->Month = (USHORT)(months - 13);
+		TimeFields->Year = (USHORT)(years + 1525);
+	}
+	/* calculation of day of month is based on the wonderful
+	* sequence of INT( n * 30.6): it reproduces the
+	* 31-30-31-30-31-31 month lengths exactly for small n's */
+	TimeFields->Day = (USHORT)(yearday - (1959 * months) / 64);
 }
 
 // ******************************************************************
@@ -1017,9 +1586,16 @@ XBSYSAPI EXPORTNUM(307) xboxkrnl::ULONG FASTCALL xboxkrnl::RtlUlongByteSwap
 {
 	LOG_FUNC_ONE_ARG(Source);
 
-	ULONG ret = NtDll::RtlUlongByteSwap(Source);
+	ULONG ret = (Source >> 24) | ((Source & 0xFF0000) >> 8) | ((Source & 0xFF00) << 8) | ((Source & 0xFF) << 24);
 
 	RETURN(ret);
+}
+
+DWORD WINAPI RtlUnicodeStringToAnsiSize(const xboxkrnl::UNICODE_STRING *str)
+{
+	const wchar_t *src = (const wchar_t *)(str->Buffer);
+	DWORD ret = wcsrtombs(nullptr, &src, (size_t)str->Length, nullptr);
+	return ret + 1; // +1 for the terminating null character
 }
 
 // ******************************************************************
@@ -1038,7 +1614,25 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
+    NTSTATUS ret = STATUS_SUCCESS;
+    DWORD len = RtlUnicodeStringToAnsiSize(SourceString);
+
+	DestinationString->Length = (USHORT)(len - 1);
+    if (AllocateDestinationString)
+    {
+		DestinationString->MaximumLength = (USHORT)len;
+        if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS')))
+            return STATUS_NO_MEMORY;
+    }
+    else if (DestinationString->MaximumLength < len)
+    {
+        if (!DestinationString->MaximumLength) return STATUS_BUFFER_OVERFLOW;
+		DestinationString->Length = DestinationString->MaximumLength - 1;
+        ret = STATUS_BUFFER_OVERFLOW;
+    }
+
+    RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
+	DestinationString->Buffer[DestinationString->Length] = 0;
 
 	RETURN(ret);
 }
@@ -1059,9 +1653,86 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::RtlUnicodeStringToInteger((NtDll::PUNICODE_STRING)String, Base, Value);
+	LPWSTR lpwstr = (LPWSTR)String->Buffer;
+	USHORT CharsRemaining = String->Length / sizeof(WCHAR);
+	char bMinus = 0;
+ 
+	while (CharsRemaining >= 1 && *lpwstr <= ' ') {
+		lpwstr++;
+		CharsRemaining--;
+	}
+ 
+	if (CharsRemaining >= 1) {
+		if (*lpwstr == '+') {
+			lpwstr++;
+			CharsRemaining--;
+		}
+		else if (*lpwstr == '-') {
+			bMinus = 1;
+			lpwstr++;
+			CharsRemaining--;
+		}
+	}
+ 
+	if (Base == 0) {
+		Base = 10;
+ 
+		if (CharsRemaining >= 2 && lpwstr[0] == '0') {
+			if (lpwstr[1] == 'b') {
+				lpwstr += 2;
+				CharsRemaining -= 2;
+				Base = 2;
+			}
+			else if (lpwstr[1] == 'o') {
+				lpwstr += 2;
+				CharsRemaining -= 2;
+				Base = 8;
+			}
+			else if (lpwstr[1] == 'x') {
+				lpwstr += 2;
+				CharsRemaining -= 2;
+				Base = 16;
+			}
+		}
+	}
+	else if (Base != 2 && Base != 8 && Base != 10 && Base != 16) {
+		return STATUS_INVALID_PARAMETER;
+	}
+ 
+	if (Value == NULL) {
+		return STATUS_ACCESS_VIOLATION;
+	}
+ 
+	ULONG RunningTotal = 0;
 
-	RETURN(ret);
+	while (CharsRemaining >= 1) {
+		WCHAR wchCurrent = *lpwstr;
+		int digit;
+ 
+		if (wchCurrent >= '0' && wchCurrent <= '9') {
+			digit = wchCurrent - '0';
+		}
+		else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
+			digit = wchCurrent - 'A' + 10;
+		}
+		else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
+			digit = wchCurrent - 'a' + 10;
+		}
+		else {
+			digit = -1;
+		}
+ 
+		if (digit < 0 || (ULONG)digit >= Base)
+			break;
+ 
+		RunningTotal = RunningTotal * Base + digit;
+		lpwstr++;
+		CharsRemaining--;
+	}
+ 
+	*Value = bMinus ? (0 - RunningTotal) : RunningTotal;
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1084,14 +1755,22 @@ XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 		LOG_FUNC_ARG(BytesInUnicodeString)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::RtlUnicodeToMultiByteN(
-		MultiByteString,
-		MaxBytesInMultiByteString,
-		BytesInMultiByteString,
-		UnicodeString,
-		BytesInUnicodeString);
+	ULONG maxUnicodeChars = BytesInUnicodeString / sizeof(WCHAR);
+	ULONG numChars = (maxUnicodeChars < MaxBytesInMultiByteString) ? maxUnicodeChars : MaxBytesInMultiByteString;
 
-	RETURN(ret);
+	if (BytesInMultiByteString != NULL) {
+		*BytesInMultiByteString = numChars;
+	}
+
+	while (numChars) {
+		*MultiByteString = (*UnicodeString < 0xff) ? (CHAR)(*UnicodeString) : '?';
+
+		UnicodeString++;
+		MultiByteString++;
+		numChars--;
+	}
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1110,12 +1789,9 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 		LOG_FUNC_ARG(BytesInUnicodeString)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::RtlUnicodeToMultiByteSize(
-		BytesInMultiByteString,
-		UnicodeString,
-		BytesInUnicodeString);
+	*BytesInMultiByteString = BytesInUnicodeString * sizeof(WCHAR);
 
-	RETURN(ret);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1128,7 +1804,7 @@ XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
 {
 	LOG_FUNC_ONE_ARG(SourceCharacter);
 
-	WCHAR result = NtDll::RtlUpcaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+	WCHAR result = towupper(SourceCharacter);
 
 	RETURN(result);
 }
@@ -1149,12 +1825,29 @@ XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeStrin
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlUpcaseUnicodeString(
-		(NtDll::PUNICODE_STRING)DestinationString,
-		(NtDll::PUNICODE_STRING)SourceString,
-		AllocateDestinationString);
+	if (AllocateDestinationString) {
+		DestinationString->MaximumLength = SourceString->Length;
+		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		if (DestinationString->Buffer == NULL) {
+			return STATUS_NO_MEMORY;
+		}
+	}
+	else {
+		if (SourceString->Length > DestinationString->MaximumLength) {
+			return STATUS_BUFFER_OVERFLOW;
+		}
+	}
 
-	RETURN(result);
+	ULONG length = ((ULONG)SourceString->Length) / sizeof(WCHAR);
+	WCHAR *pDst = (WCHAR*)(DestinationString->Buffer);
+	WCHAR *pSrc = (WCHAR*)(SourceString->Buffer);
+	for (ULONG i = 0; i < length; i++) {
+		pDst[i] = (WCHAR)towupper(pSrc[i]);
+	}
+
+	DestinationString->Length = SourceString->Length;
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1177,14 +1870,25 @@ XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMul
 		LOG_FUNC_ARG(BytesInUnicodeString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = NtDll::RtlUpcaseUnicodeToMultiByteN(
-		MultiByteString,
-		MaxBytesInMultiByteString,
-		BytesInMultiByteString,
-		UnicodeString,
-		BytesInUnicodeString);
-		
-	RETURN(result);
+	ULONG maxUnicodeChars = BytesInUnicodeString / sizeof(WCHAR);
+	ULONG numChars = (maxUnicodeChars < MaxBytesInMultiByteString) ? maxUnicodeChars : MaxBytesInMultiByteString;
+
+	if (BytesInMultiByteString != NULL) {
+		*BytesInMultiByteString = numChars;
+	}
+
+	while (numChars > 0) {
+		WCHAR unicodeChar = (*UnicodeString < 256) ? *UnicodeString : L'?';
+		unicodeChar = towupper(unicodeChar);
+
+		*MultiByteString = (unicodeChar < 256) ? unicodeChar : '?';
+
+		UnicodeString++;
+		MultiByteString++;
+		numChars--;
+	}
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1216,7 +1920,18 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	NtDll::RtlUpperString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
+	CHAR *pDst = DestinationString->Buffer;
+	CHAR *pSrc = SourceString->Buffer;
+	ULONG length = SourceString->Length;
+	if ((USHORT)length > DestinationString->MaximumLength) {
+		length = DestinationString->MaximumLength;
+	}
+
+	DestinationString->Length = (USHORT)length;
+	while (length > 0) {
+		*pDst++ = toupper(*pSrc++);
+		length--;
+	}
 }
 
 // ******************************************************************
@@ -1229,13 +1944,10 @@ XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
 {
 	LOG_FUNC_ONE_ARG(Source);
 
-	USHORT ret = NtDll::RtlUshortByteSwap(Source);
+	USHORT ret = (Source >> 8) | ((Source & 0xFF) << 8);
 
 	RETURN(ret);
 }
-
-// Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
-#undef RtlZeroMemory
 
 // ******************************************************************
 // * 0x0140 - RtlZeroMemory()
@@ -1251,7 +1963,7 @@ XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_END;
 
-	memset(Destination, 0, Length); // Don't bother with NtDll::RtlZeroMemory
+	memset(Destination, 0, Length);
 }
 
 // ******************************************************************
