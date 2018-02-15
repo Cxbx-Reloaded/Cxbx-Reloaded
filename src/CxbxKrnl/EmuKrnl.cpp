@@ -51,6 +51,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "EmuKrnl.h" // for HalSystemInterrupts
+#include "EmuKrnlKi.h" // for KiLockDispatcherDatabase
 #include "CxbxKrnl.h"
 #include "EmuXTL.h"
 
@@ -131,23 +132,6 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
 xboxkrnl::KPCR* KeGetPcr();
-
-// ******************************************************************
-// * KiLockDispatcherDatabase()
-// ******************************************************************
-// * Not exported in kernel thunk table
-// * NOTE: This is a macro on the Xbox, however we implement it 
-// * as a function because a macro doesn't compile this: *(&OldIrql)
-// ******************************************************************
-void xboxkrnl::KiLockDispatcherDatabase
-(
-	OUT KIRQL* OldIrql
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(OldIrql);
-
-	*(OldIrql) = KeRaiseIrqlToDpcLevel();
-}
 
 // Interrupts
 

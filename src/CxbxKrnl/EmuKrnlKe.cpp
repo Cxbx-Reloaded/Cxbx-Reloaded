@@ -56,6 +56,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
+#include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
@@ -81,53 +82,6 @@ xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 	// Weird construction because there doesn't seem to exist an implicit
 	// conversion of LARGE_INTEGER to ULONGLONG :
 	return *((PULONGLONG)&value);
-}
-
-// TODO : Move all Ki* functions to EmuKrnlKi.h/cpp :
-
-#define KiRemoveTreeTimer(Timer)               \
-    (Timer)->Header.Inserted = FALSE;          \
-    RemoveEntryList(&(Timer)->TimerListEntry)
-
-BOOLEAN KiInsertTimerTable(
-	IN xboxkrnl::LARGE_INTEGER Interval,
-	xboxkrnl::ULONGLONG,
-	IN xboxkrnl::PKTIMER Timer
-)
-{
-	// TODO
-	return TRUE;
-}
-
-BOOLEAN KiInsertTreeTimer(
-	IN xboxkrnl::PKTIMER Timer,
-	IN xboxkrnl::LARGE_INTEGER Interval
-)
-{
-	// Is the given time absolute (indicated by a positive number)?
-	if (Interval.u.HighPart >= 0) {
-		// Convert absolute time to a time relative to the system time :
-		xboxkrnl::LARGE_INTEGER SystemTime;
-		xboxkrnl::KeQuerySystemTime(&SystemTime);
-		Interval.QuadPart = SystemTime.QuadPart - Interval.QuadPart;
-		if (Interval.u.HighPart >= 0) {
-			// If the relative time is already passed, return without inserting :
-			Timer->Header.Inserted = FALSE;
-			Timer->Header.SignalState = TRUE;
-			return FALSE;
-		}
-
-		Timer->Header.Absolute = TRUE;
-	}
-	else
-		// Negative intervals are relative, not absolute :
-		Timer->Header.Absolute = FALSE;
-
-	if (Timer->Period == 0)
-		Timer->Header.SignalState = FALSE;
-
-	Timer->Header.Inserted = TRUE;
-	return KiInsertTimerTable(Interval, xboxkrnl::KeQueryInterruptTime(), Timer);
 }
 
 // ******************************************************************

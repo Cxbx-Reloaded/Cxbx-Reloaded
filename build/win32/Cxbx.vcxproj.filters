@@ -241,6 +241,9 @@
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKi.cpp">
+      <Filter>Kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -470,6 +473,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\MCPXDevice.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h">
+      <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\swizzle.h">
       <Filter>Hardware</Filter>
