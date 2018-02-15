@@ -90,6 +90,7 @@ static CRITICAL_SECTION* find_critical_section(
     if(critical_sections.find(xbox_crit_section) != critical_sections.end()) {
         return &critical_sections[xbox_crit_section];
     }
+
     return NULL;
 }
 
@@ -112,6 +113,7 @@ static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_s
         InitHostCriticalSection(xbox_crit_section);
         host_crit_section = find_critical_section(xbox_crit_section);
     }
+
     EnterCriticalSection(host_crit_section);
 }
 
@@ -132,6 +134,7 @@ static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_cri
         InitHostCriticalSection(xbox_crit_section);
         host_crit_section = find_critical_section(xbox_crit_section);
     }
+
     return TryEnterCriticalSection(host_crit_section);
 }
 
@@ -161,18 +164,22 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 
 	DWORD total = RtlAnsiStringToUnicodeSize(SourceString);
 
-	if (total > 0xffff)
+	if (total > 0xffff) {
 		return STATUS_INVALID_PARAMETER_2;
+	}
 
 	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)total;
-		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS')))
+		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS'))) {
 			return STATUS_NO_MEMORY;
+		}
 	}
-	else
-		if (total > DestinationString->MaximumLength)
+	else {
+		if (total > DestinationString->MaximumLength) {
 			return STATUS_BUFFER_OVERFLOW;
+		}
+	}
 
 	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
 	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
@@ -899,32 +906,30 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 	ULONGLONG al_bh;
 	BOOLEAN positive;
 	
-	if (Dividend.QuadPart < 0)
-	{
+	if (Dividend.QuadPart < 0) {
 	   dividend_high = UPPER_32((ULONGLONG) -Dividend.QuadPart);
 	   dividend_low =  LOWER_32((ULONGLONG) -Dividend.QuadPart);
 	   positive = FALSE;
 	}
-	else
-	{
+	else {
 	   dividend_high = UPPER_32((ULONGLONG) Dividend.QuadPart);
 	   dividend_low =  LOWER_32((ULONGLONG) Dividend.QuadPart);
 	   positive = TRUE;
 	}
+
 	inverse_divisor_high = UPPER_32((ULONGLONG) MagicDivisor.QuadPart);
 	inverse_divisor_low =  LOWER_32((ULONGLONG) MagicDivisor.QuadPart);
-	
+
 	ah_bl = dividend_high * inverse_divisor_low;
 	al_bh = dividend_low * inverse_divisor_high;
-	
+
 	result.QuadPart =
 	   (LONGLONG) ((dividend_high * inverse_divisor_high +
 	                UPPER_32(ah_bl) +
 	                UPPER_32(al_bh) +
 	                UPPER_32(LOWER_32(ah_bl) + LOWER_32(al_bh) +
 	                         UPPER_32(dividend_low * inverse_divisor_low))) >> ShiftCount);
-	if (!positive)
-	{
+	if (!positive) {
 	   result.QuadPart = -result.QuadPart;
 	}
 
@@ -1159,8 +1164,7 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
     CHAR Buffer[33];
     NTSTATUS Status = RtlIntegerToChar(Value, Base, sizeof(Buffer), Buffer);
 
-    if (NT_SUCCESS(Status))
-    {
+    if (NT_SUCCESS(Status)) {
 		ANSI_STRING AnsiString;
 
         AnsiString.Buffer = Buffer;
@@ -1618,15 +1622,17 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
     DWORD len = RtlUnicodeStringToAnsiSize(SourceString);
 
 	DestinationString->Length = (USHORT)(len - 1);
-    if (AllocateDestinationString)
-    {
+    if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)len;
-        if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS')))
-            return STATUS_NO_MEMORY;
+		if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS'))) {
+			return STATUS_NO_MEMORY;
+		}
     }
-    else if (DestinationString->MaximumLength < len)
-    {
-        if (!DestinationString->MaximumLength) return STATUS_BUFFER_OVERFLOW;
+    else if (DestinationString->MaximumLength < len) {
+		if (!DestinationString->MaximumLength) {
+			return STATUS_BUFFER_OVERFLOW;
+		}
+
 		DestinationString->Length = DestinationString->MaximumLength - 1;
         ret = STATUS_BUFFER_OVERFLOW;
     }
@@ -1722,8 +1728,9 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
 			digit = -1;
 		}
  
-		if (digit < 0 || (ULONG)digit >= Base)
+		if (digit < 0 || (ULONG)digit >= Base) {
 			break;
+		}
  
 		RunningTotal = RunningTotal * Base + digit;
 		lpwstr++;
@@ -1985,4 +1992,3 @@ XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
 	EmuWarning("RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
 		ApiName, Expression, Message);
 }
-
