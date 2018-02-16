@@ -38,7 +38,7 @@ DEVICE_READ32(PFIFO)
 		SET_MASK(result, NV_PFIFO_CACHE1_PUSH1_MODE, d->pfifo.cache1.mode);
 		break;
 	case NV_PFIFO_CACHE1_STATUS: {
-		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 
 		if (d->pfifo.cache1.cache.empty()) {
 			result |= NV_PFIFO_CACHE1_STATUS_LOW_MARK; /* low mark empty */
@@ -79,12 +79,12 @@ DEVICE_READ32(PFIFO)
 			| d->pfifo.cache1.subroutine_active;
 		break;
 	case NV_PFIFO_CACHE1_PULL0: {
-		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 		result = d->pfifo.cache1.pull_enabled;
 		break;
 	}
 	case NV_PFIFO_CACHE1_ENGINE: {
-		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+		std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 		for (int i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 			result |= d->pfifo.cache1.bound_engines[i] << (i * 2);
 		}
@@ -171,7 +171,7 @@ DEVICE_WRITE32(PFIFO)
 				(value & NV_PFIFO_CACHE1_DMA_SUBROUTINE_STATE);
 			break;
 		case NV_PFIFO_CACHE1_PULL0: {
-			std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+			std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 
 			if ((value & NV_PFIFO_CACHE1_PULL0_ACCESS)
 				&& !d->pfifo.cache1.pull_enabled) {
@@ -188,7 +188,7 @@ DEVICE_WRITE32(PFIFO)
 			break;
 		}
 		case NV_PFIFO_CACHE1_ENGINE: {
-			std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+			std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 
 			for (i = 0; i < NV2A_NUM_SUBCHANNELS; i++) {
 				d->pfifo.cache1.bound_engines[i] = (FIFOEngine)((value >> (i * 2)) & 3);
@@ -234,7 +234,8 @@ static void pfifo_run_pusher(NV2AState *d) {
 	channel_id = state->channel_id;
 	control = &d->user.channel_control[channel_id];
 
-	if (!state->push_enabled) return;
+	if (!state->push_enabled)
+		return;
 
 
 	/* only handling DMA for now... */
@@ -244,8 +245,10 @@ static void pfifo_run_pusher(NV2AState *d) {
 	assert(channel_modes & (1 << channel_id));
 	assert(state->mode == FIFO_DMA);
 
-	if (!state->dma_push_enabled) return;
-	if (state->dma_push_suspended) return;
+	if (!state->dma_push_enabled)
+		return;
+	if (state->dma_push_suspended)
+		return;
 
 	/* We're running so there should be no pending errors... */
 	assert(state->error == NV_PFIFO_CACHE1_DMA_STATE_ERROR_NONE);
@@ -370,8 +373,11 @@ int pfifo_puller_thread(NV2AState *d)
 	std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock, std::defer_lock);
 
 	while (true) {
+
+		cache_unique_lock.lock();
+
 		while (state->cache.empty() || !state->pull_enabled) {
-			state->cache_cond.wait(cache_unique_lock); // UNTESTED
+			state->cache_cond.wait(cache_unique_lock);
 
 			if (d->exiting) {
 				cache_unique_lock.unlock(); // UNTESTED
@@ -435,9 +441,9 @@ int pfifo_puller_thread(NV2AState *d)
 					//qemu_mutex_unlock_iothread();
 				}
 
-				// qemu_mutex_lock(&state->cache_lock);
+				// state->cache_lock.lock();
 				enum FIFOEngine engine = state->bound_engines[command->subchannel];
-				// qemu_mutex_unlock(&state->cache_lock);
+				// state->cache_lock.unlock();
 
 				switch (engine) {
 				case ENGINE_GRAPHICS:
@@ -450,9 +456,9 @@ int pfifo_puller_thread(NV2AState *d)
 					break;
 				}
 
-				// qemu_mutex_lock(&state->cache_lock);
+				// state->cache_lock.lock();
 				state->last_engine = state->bound_engines[command->subchannel];
-				// qemu_mutex_unlock(&state->cache_lock);
+				// state->cache_lock.unlock();
 			}
 
 			g_free(command);
