@@ -178,7 +178,7 @@ void KiUnexpectedInterrupt()
 void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
 {
 	switch (SoftwareIrql) {
-	case 0:
+	case PASSIVE_LEVEL:
 		KiUnexpectedInterrupt();
 		break;
 	case APC_LEVEL: // = 1 // HalpApcInterrupt        

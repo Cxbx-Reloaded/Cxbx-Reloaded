@@ -541,7 +541,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		InitializeListHead(&(Prcb->DpcListHead));
 		Prcb->DpcRoutineActive = FALSE;
 
-		NewPcr->Irql = APC_LEVEL; // See KeLowerIrql;
+		NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
 	}
 
 	// Initialize a fake PrcbData.CurrentThread 

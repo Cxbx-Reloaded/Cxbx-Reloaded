@@ -1708,6 +1708,7 @@ KINTERRUPT_MODE;
 // ******************************************************************
 // * IRQ (Interrupt ReQuest) Priority Levels
 // ******************************************************************
+#define PASSIVE_LEVEL 0
 #define APC_LEVEL 1
 #define DISPATCH_LEVEL 2
 #define PROFILE_LEVEL 26
