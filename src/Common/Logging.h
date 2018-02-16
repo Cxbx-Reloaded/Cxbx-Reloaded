@@ -231,6 +231,10 @@ extern thread_local std::string _logPrefix;
 #define LOG_FUNC_RESULT(r) \
 	std::cout << _logFuncPrefix << " returns " << r << "\n";
 
+// LOG_FUNC_RESULT_TYPE logs the function return result using the overloaded << operator of the given type
+#define LOG_FUNC_RESULT_TYPE(type, r) \
+	std::cout << _logFuncPrefix << " returns " << (type)r << "\n";
+
 // LOG_FORWARD indicates that an api is implemented by a forward to another API
 #define LOG_FORWARD(api) \
 	LOG_INIT \
@@ -275,6 +279,7 @@ extern thread_local std::string _logPrefix;
 #define LOG_FUNC_ARG_OUT(arg)
 #define LOG_FUNC_END
 #define LOG_FUNC_RESULT(r)
+#define LOG_FUNC_RESULT_TYPE(type, r)
 #define LOG_FORWARD(arg)
 #define LOG_IGNORED()
 #define LOG_UNIMPLEMENTED()
@@ -302,6 +307,9 @@ extern thread_local std::string _logPrefix;
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
+
+// RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
+#define RETURN_TYPE(type, r) do { LOG_FUNC_RESULT_TYPE(type, r) return r; } while (0)
 
 #define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
 
