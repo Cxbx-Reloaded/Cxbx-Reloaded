@@ -61,7 +61,7 @@
 
 typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
-#define NV2A_DPRINTF printf // Compatibility; TODO : Replace this by something equivalent
+#define NV2A_DPRINTF(...) printf("[0x????] NV2A: " ## __VA_ARGS__) // Compatibility; TODO : Replace this by something equivalent
 #define NV2A_GL_DPRINTF EmuWarning // Compatibility; TODO : Replace this by something equivalent
 #define VSH_TOKEN_SIZE 4 // Compatibility; TODO : Move this to nv2a_vsh.h
 #define MAX(a,b) ((a)>(b) ? (a) : (b)) // Compatibility

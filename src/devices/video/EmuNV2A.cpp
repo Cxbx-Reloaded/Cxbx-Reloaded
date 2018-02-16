@@ -180,7 +180,7 @@ static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
 	DMAObject dma = nv_dma_load(d, dma_obj_address);
 
 	/* TODO: Handle targets and classes properly */
-	printf("dma_map %x, %x, %x %x\n",
+	NV2A_DPRINTF("dma_map %x, %x, %x %x\n",
 		dma.dma_class, dma.dma_target, dma.address, dma.limit);
 
 	dma.address &= 0x07FFFFFF;
