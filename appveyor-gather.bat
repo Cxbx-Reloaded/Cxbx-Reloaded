@@ -1,6 +1,6 @@
-:: Cxbx-Reloaded artifact script
+:: Cxbx-Reloaded gather script
 
-@if "%1"=="" goto no_arg
+@if "%1"=="" goto show_usage
 
 @set ZIP_APP="%cd%\import\7za\7za.exe"
 @set BUILD_PATH="%cd%\build\win32\%1\"
@@ -24,13 +24,13 @@
 
 :missing_build
 @echo Missing build directory %BUILD_PATH%
+@set ERRORLEVEL=1
 @goto eof
 
-:no_arg
-@echo Usage: %0 build_configuration
+:show_usage
+@echo Usage: %~0% build_config
 @goto eof
 
 :eof
-@set ERRORLEVEL=0
 @echo Gather complete
 
