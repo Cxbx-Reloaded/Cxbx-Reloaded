@@ -229,9 +229,6 @@
     <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -239,6 +236,9 @@
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
   </ItemGroup>
@@ -453,9 +453,6 @@
     <ClInclude Include="..\..\src\devices\EmuNVNet.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\EmuNV2A.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
       <Filter>Hardware</Filter>
     </ClInclude>
@@ -472,6 +469,9 @@
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\MCPXDevice.h">
+      <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\swizzle.h">
       <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>
@@ -727,6 +727,69 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.OOVPA.inl">
       <Filter>HLEDatabase\XOnline</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PBUS.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PCOUNTER.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PCRTC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PFB.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PFIFO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PGRAPH.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PMC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMDAC.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMIN.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMA.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMCIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMDIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMFB.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMVIO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PSTRAPS.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PTIMER.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PTV.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PVIDEO.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_PVPE.cpp">
+      <Filter>Hardware</Filter>
+    </None>
+    <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp">
+      <Filter>Hardware</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

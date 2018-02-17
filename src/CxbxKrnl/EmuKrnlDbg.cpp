@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX "DBG "
 
 // prevent name collisions
 namespace xboxkrnl
@@ -115,8 +115,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		LOG_FUNC_ARG("...")
 		LOG_FUNC_END;
 
-	if (Format != NULL)
-	{
+	if (Format != NULL) {
 		char szBuffer[MAX_PATH];
 
 		va_list argp;
@@ -125,10 +124,8 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		vsprintf(szBuffer, Format, argp);
 		va_end(argp);
 
-		//LogPrintf("[EmuKrnl] DbgPrint: %s", szBuffer);
-
-		EmuWarning(szBuffer);
-		//DbgPrintf(szBuffer);
+		printf(szBuffer); // Note : missing newlines can occur
+		fflush(stdout);
 	}
 
 	RETURN(STATUS_SUCCESS);

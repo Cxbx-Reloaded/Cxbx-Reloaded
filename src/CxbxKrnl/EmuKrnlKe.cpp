@@ -560,7 +560,7 @@ XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 	KPCR* Pcr = KeGetPcr();
 	KIRQL Irql = (KIRQL)Pcr->Irql;
 
-	RETURN(Irql);
+	RETURN_TYPE(KIRQL_TYPE, Irql);
 }
 
 // ******************************************************************
@@ -706,7 +706,7 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(ServiceRoutine)
 		LOG_FUNC_ARG(ServiceContext)
 		LOG_FUNC_ARG(Vector)
-		LOG_FUNC_ARG(Irql)
+		LOG_FUNC_ARG_TYPE(KIRQL_TYPE, Irql)
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_ARG(ShareVector) 
 		LOG_FUNC_END;

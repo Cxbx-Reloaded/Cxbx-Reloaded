@@ -262,9 +262,9 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
-    <ClInclude Include="..\..\src\devices\video\EmuNV2A.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
+    <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
   </ItemGroup>
@@ -355,6 +355,27 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.OOVPA.inl" />
+    <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PBUS.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PCOUNTER.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PCRTC.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PFB.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PFIFO.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PGRAPH.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PMC.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMDAC.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRAMIN.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMA.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMCIO.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMDIO.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMFB.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PRMVIO.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PSTRAPS.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PTIMER.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PTV.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PVIDEO.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_PVPE.cpp" />
+    <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
@@ -607,8 +628,8 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
-    <ClCompile Include="..\..\src\devices\video\EmuNV2A.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
+    <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
   </ItemGroup>
   <ItemGroup>

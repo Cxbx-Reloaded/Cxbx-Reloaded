@@ -178,7 +178,7 @@ void KiUnexpectedInterrupt()
 void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
 {
 	switch (SoftwareIrql) {
-	case 0:
+	case PASSIVE_LEVEL:
 		KiUnexpectedInterrupt();
 		break;
 	case APC_LEVEL: // = 1 // HalpApcInterrupt        
@@ -393,7 +393,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
     IN KIRQL NewIrql
 )
 {
-	LOG_FUNC_ONE_ARG(NewIrql);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
 
 	// Inlined KeGetCurrentIrql() :
 	PKPCR Pcr = KeGetPcr();
@@ -407,7 +407,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 		KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL, (PVOID)OldIrql, (PVOID)NewIrql, 0, 0);
 	}
 
-	RETURN(OldIrql);
+	RETURN_TYPE(KIRQL_TYPE, OldIrql);
 }
 
 inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); return result; }
@@ -422,7 +422,7 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
     IN KIRQL NewIrql
 )
 {
-	LOG_FUNC_ONE_ARG(NewIrql);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
 
 	KPCR* Pcr = KeGetPcr();
 
@@ -470,7 +470,7 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 	IN KIRQL OldIrql
 )
 {
-	LOG_FUNC_ONE_ARG(OldIrql);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, OldIrql);
 
 	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) // Avoid KeIsExecutingDpc(), as that logs
 		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);

@@ -3079,7 +3079,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
-	XB_trampoline(X_D3DSurface, WINAPI, D3DDevice_GetBackBuffer2, (INT));
+	XB_trampoline(X_D3DSurface *, WINAPI, D3DDevice_GetBackBuffer2, (INT));
 
 	XB_trampoline(VOID, WINAPI, D3DDevice_GetBackBuffer, (INT, D3DBACKBUFFER_TYPE, X_D3DSurface**));
 
@@ -3896,7 +3896,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 
 #if 0 // PatrickvL Dxbx pixel shader translation
 	// Attempt to recompile PixelShader
-	hRet = DxbxUpdateActivePixelShader(pPSDef, hostShaderHandle);
+	hRet = DxbxUpdateActivePixelShader(pPSDef, &hostShaderHandle);
 	// redirect to windows d3d
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreatePixelShader");
 #endif

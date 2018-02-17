@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 	KIRQL Request
 )
 {
-	LOG_FUNC_ONE_ARG(Request);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, Request);
 
 	// Mask out this interrupt request
 	DWORD InterruptMask = 1 << Request;
@@ -438,7 +438,7 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 	IN KIRQL Request
 )
 {
-	LOG_FUNC_ONE_ARG(Request);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, Request);
 
 	DWORD InterruptMask = 1 << Request;
 

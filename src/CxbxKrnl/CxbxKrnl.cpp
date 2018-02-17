@@ -64,7 +64,7 @@ namespace xboxkrnl
 #include <sstream> // For std::ostringstream
 
 #include "devices\EEPROMDevice.h" // For g_EEPROM
-#include "devices\video\EmuNV2A.h" // For InitOpenGLContext
+#include "devices\video\nv2a.h" // For InitOpenGLContext
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 
@@ -540,7 +540,7 @@ void TriggerPendingConnectedInterrupts()
 {
 	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
 		// If the interrupt is pending and connected, process it
-		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i]->Connected) {
+		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
 			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}
