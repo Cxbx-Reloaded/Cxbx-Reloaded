@@ -4730,7 +4730,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 }
 
 				// Dirty hack: Vetrex buffers shouldn't be this big... so cap the size
-				// Until we solve the root cause (which is the same memory region containing multiple smaller buffers,
+				// TODO: Until we solve the root cause (which is the same memory region containing multiple smaller buffers,
 				// or Vertex buffers embedded in the XBE instead of allocated at runtime) this has to stay...
 				// This is one of two tweaks that prevents memory usage spiralling out of control  (the other is VertexPatcher changes)
 				// Some titles ended up allocating multiple > 50MB buffers because of this!
