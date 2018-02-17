@@ -154,6 +154,10 @@ static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
+// Active D3D Vertex Streams (and strides)
+XTL::X_D3DVertexBuffer*g_D3DStreams[16];
+UINT g_D3DStreamStrides[16];
+
 // cached palette pointer
 static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
 
@@ -3002,7 +3006,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
 // ******************************************************************
 // * patch: D3DDevice_GetBackBuffer2
 // ******************************************************************
-// #define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
+#define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 (
     INT                 BackBuffer
@@ -3060,8 +3064,11 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-	if (BackBuffer == -1)
-		BackBuffer = 0;
+	 STATUS_SUCCESS;
+
+	 if (BackBuffer == -1) {
+		 BackBuffer = 0;
+	 }
 
 	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
@@ -3079,7 +3086,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
-	XB_trampoline(X_D3DSurface *, WINAPI, D3DDevice_GetBackBuffer2, (INT));
+	XB_trampoline(X_D3DSurface*, WINAPI, D3DDevice_GetBackBuffer2, (INT));
 
 	XB_trampoline(VOID, WINAPI, D3DDevice_GetBackBuffer, (INT, D3DBACKBUFFER_TYPE, X_D3DSurface**));
 
@@ -3100,10 +3107,14 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Now we can fetch the host backbuffer
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-	if (BackBuffer == -1)
-		BackBuffer = 0;
 
-	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	HRESULT hRet = STATUS_SUCCESS;
+
+	if (BackBuffer == -1) {
+		BackBuffer = 0;
+	}
+
+	hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
 
 	if (FAILED(hRet)) {
@@ -4718,6 +4729,17 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					goto fail;*/
                 }
 
+				// Dirty hack: Vetrex buffers shouldn't be this big... so cap the size
+				// TODO: Until we solve the root cause (which is the same memory region containing multiple smaller buffers,
+				// or Vertex buffers embedded in the XBE instead of allocated at runtime) this has to stay...
+				// This is one of two tweaks that prevents memory usage spiralling out of control  (the other is VertexPatcher changes)
+				// Some titles ended up allocating multiple > 50MB buffers because of this!
+				// Once VertexPatcher is updated to create it's own host buffers for unpatched resources (with VertexCount being known at that point)
+				// this will no longer be required, and we can create a correctly sized vertex buffer at that point.
+				if (dwSize > ONE_MB) {
+					dwSize = ONE_MB;
+				}
+
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
                     dwSize, 0, 0, D3DPOOL_MANAGED,
@@ -4730,7 +4752,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					char szString[256];
 					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: \nDesc: ", dwSize/*,
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
-					
+
 					EmuWarning( szString );
 				}
 
@@ -4743,9 +4765,9 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
                 BYTE *pNativeData = nullptr;
 
                 hRet = pNewHostVertexBuffer->Lock(
-					/*OffsetToLock=*/0, 
-					/*SizeToLock=*/0/*=entire buffer*/, 
-					&pNativeData, 
+					/*OffsetToLock=*/0,
+					/*SizeToLock=*/0/*=entire buffer*/,
+					&pNativeData,
 					/*Flags=*/0);
 				DEBUG_D3DRESULT(hRet, "pNewHostVertexBuffer->Lock");
 
@@ -6525,6 +6547,35 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	ForceResourceRehash(pPixelContainer);
 }
 
+// ******************************************************************
+// * patch: D3DDevice_SetStreamSource
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
+(
+    UINT                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    UINT                Stride
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StreamNumber)
+		LOG_FUNC_ARG(pStreamData)
+		LOG_FUNC_ARG(Stride)
+		LOG_FUNC_END;
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource, (UINT, X_D3DVertexBuffer*, UINT));
+	XB_D3DDevice_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+	if (StreamNumber < 16) {
+		g_D3DStreams[StreamNumber] = pStreamData;
+		g_D3DStreamStrides[StreamNumber] = Stride;
+	}
+}
+
 
 // ******************************************************************
 // * patch: IDirect3DVertexBuffer8_Lock
@@ -6583,105 +6634,6 @@ BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 	ForceResourceRehash(pVertexBuffer);
 
 	RETURN(pRet);
-}
-
-XTL::X_D3DVertexBuffer*g_D3DStreams[16];
-UINT g_D3DStreamStrides[16];
-
-// ******************************************************************
-// * patch: D3DDevice_GetStreamSource2
-// ******************************************************************
-XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
-(
-    UINT  StreamNumber,
-    UINT *pStride
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(StreamNumber)
-		LOG_FUNC_ARG(pStride)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
-
-	X_D3DVertexBuffer* pVertexBuffer = NULL;
-	*pStride = 0;
-
-	if (StreamNumber <= 15)
-	{ 
-		pVertexBuffer = g_D3DStreams[StreamNumber];
-		if (pVertexBuffer)
-		{
-			pVertexBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
-			*pStride = g_D3DStreamStrides[StreamNumber];
-		}
-	}
-
-    return pVertexBuffer;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetStreamSource
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
-(
-    UINT                StreamNumber,
-    X_D3DVertexBuffer  *pStreamData,
-    UINT                Stride
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(StreamNumber)
-		LOG_FUNC_ARG(pStreamData)
-		LOG_FUNC_ARG(Stride)
-		LOG_FUNC_END;
-
-	// Cache stream number
-	g_dwLastSetStream = StreamNumber;
-
-    if(StreamNumber == 0)
-        g_pVertexBuffer = pStreamData;
-
-	// Test for a non-zero stream source.  Unreal Championship gives us
-	// some funky number when going ingame.
-//	if(StreamNumber != 0)
-//	{
-//		EmuWarning( "StreamNumber: = %d", StreamNumber );
-//		EmuWarning( "pStreamData: = 0x%.08X (0x%.08X)", pStreamData, GetHostVertexBuffer(pStreamData));
-////		__asm int 3;
-//	}
-
-	if (StreamNumber < 16)
-	{
-		// Remember these for D3DDevice_GetStreamSource2 to read:
-		g_D3DStreams[StreamNumber] = pStreamData;
-		g_D3DStreamStrides[StreamNumber] = Stride;
-	}
-
-    IDirect3DVertexBuffer8 *pHostVertexBuffer = NULL;
-
-    if(pStreamData != NULL)
-    {
-        pHostVertexBuffer = GetHostVertexBuffer(pStreamData);
-        pHostVertexBuffer->Unlock();
-    }
-
-    #ifdef _DEBUG_TRACK_VB
-    if(pStreamData != NULL)
-    {
-        g_bVBSkipStream = g_VBTrackDisable.exists(pHostVertexBuffer);
-    }
-    #endif
-
-    HRESULT hRet = g_pD3DDevice8->SetStreamSource(StreamNumber, pHostVertexBuffer, Stride);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetStreamSource");
-
-	if(FAILED(hRet))
-        CxbxKrnlCleanup("SetStreamSource Failed!");
 }
 
 // ******************************************************************
@@ -6763,9 +6715,9 @@ void EmuUpdateActiveTextureStages()
 
 void CxbxUpdateNativeD3DResources()
 {
-	XTL::EmuUpdateDeferredStates();
+	EmuUnswizzleTextureStages(); 
 	EmuUpdateActiveTextureStages();
-	EmuUnswizzleTextureStages();
+	XTL::EmuUpdateDeferredStates();
 /* TODO : Port these :
 	DxbxUpdateActiveVertexShader();
 	DxbxUpdateActiveTextures();

@@ -442,7 +442,7 @@ size_t VMManager::QuerySize(VAddr addr)
 					--prev_it;
 				}
 				it = std::next(prev_it);
-				EmuWarning(LOG_PREFIX ": QuerySize : querying not the start address of an allocation");
+				//EmuWarning(LOG_PREFIX ": QuerySize : querying not the start address of an allocation");
 			}
 			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
 			// we must check the corresponding physical allocation size

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
@@ -238,6 +238,9 @@
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
@@ -473,6 +476,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\MCPXDevice.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h">
+      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h">
       <Filter>Kernel</Filter>

@@ -1958,3 +1958,39 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDeviceCaps)
 		CxbxKrnlCleanup("EmuD3DDevice_GetDeviceCaps failed!");
 }
 #endif
+
+
+// ******************************************************************
+// * patch: D3DDevice_GetStreamSource2
+// ******************************************************************
+XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
+(
+    UINT  StreamNumber,
+    UINT *pStride
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StreamNumber)
+		LOG_FUNC_ARG(pStride)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	X_D3DVertexBuffer* pVertexBuffer = NULL;
+	*pStride = 0;
+
+	if (StreamNumber <= 15)
+	{ 
+		pVertexBuffer = g_D3DStreams[StreamNumber];
+		if (pVertexBuffer)
+		{
+			pVertexBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pVertexBuffer);
+			*pStride = g_D3DStreamStrides[StreamNumber];
+		}
+	}
+
+    return pVertexBuffer;
+
+

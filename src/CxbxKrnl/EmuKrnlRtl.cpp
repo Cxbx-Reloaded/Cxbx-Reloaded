@@ -78,7 +78,7 @@ static void add_critical_section(
         critical_sections[xbox_crit_section] = host_crit_section;
     }
     else {
-        EmuWarning("Critical Section key %p already exists\n", xbox_crit_section);
+        DbgPrintf("Critical Section key %p already exists\n", xbox_crit_section);
     }
 }
 
