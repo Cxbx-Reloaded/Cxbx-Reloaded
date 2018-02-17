@@ -60,6 +60,44 @@ const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 	return nullptr;
 }
 
+// From http://xboxdevwiki.net/EEPROM
+static void EepromCRC(unsigned char *crc, unsigned char *data, long dataLen) {
+    unsigned char* CRC_Data = (unsigned char *)malloc(dataLen+4);
+    int pos=0;
+    memset(crc,0x00,4);
+                                 
+    memset(CRC_Data,0x00, dataLen+4);
+    //Circle shift input data one byte right
+    memcpy(CRC_Data + 0x01 , data, dataLen-1);
+    memcpy(CRC_Data, data + dataLen-1, 0x01);
+
+    for (pos=0; pos<4; ++pos) {
+        unsigned short CRCPosVal = 0xFFFF;
+        unsigned long l;
+        for (l=pos; l<(unsigned long)dataLen; l+=4) {
+            CRCPosVal -= *(unsigned short*)(&CRC_Data[l]);
+        }
+        CRCPosVal &= 0xFF00;
+        crc[pos] = (unsigned char) (CRCPosVal >> 8);
+    }
+    free(CRC_Data);
+}
+
+void gen_section_CRCs(xboxkrnl::XBOX_EEPROM* eeprom) {
+    const long Factory_size = sizeof(eeprom->FactorySettings) - sizeof(eeprom->FactorySettings.Checksum);
+    const long User_size = sizeof(eeprom->UserSettings) - sizeof(eeprom->UserSettings.Checksum);
+    EepromCRC(
+        (unsigned char*)&eeprom->FactorySettings.Checksum,
+        (unsigned char*)&eeprom->FactorySettings.SerialNumber[0],
+        Factory_size
+    );
+    EepromCRC(
+        (unsigned char*)&eeprom->UserSettings.Checksum,
+        (unsigned char*)&eeprom->UserSettings.TimeZoneBias,
+        User_size
+    );
+}
+
 xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 {
 	xboxkrnl::XBOX_EEPROM *pEEPROM;
@@ -118,6 +156,10 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		return nullptr;
 	}
 
+    // Recalculates the checksum field for User and Factory settings each time
+    // so that users do not need to delete their EEPROM.bin from older versions
+    gen_section_CRCs(pEEPROM);
+
 	// TODO : Verify checksums
 
 	// Check for (and fix) invalid fields that were set by previous versions of Cxbx-Reloaded
@@ -145,6 +187,8 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 
 		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
+        // This must be done last to include all initialized data in the CRC
+        gen_section_CRCs(pEEPROM);
 
 		DbgPrintf("INIT: Initialized default EEPROM\n");
 	}

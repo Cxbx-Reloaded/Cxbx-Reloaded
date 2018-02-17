@@ -99,6 +99,8 @@ extern xboxkrnl::XBOX_EEPROM *EEPROM;
 
 extern xboxkrnl::ULONG XboxFactoryGameRegion;
 
+void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
+
 #if defined(__cplusplus)
 }
 #endif
