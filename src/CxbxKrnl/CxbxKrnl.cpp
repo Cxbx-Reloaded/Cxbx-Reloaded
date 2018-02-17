@@ -68,12 +68,6 @@ namespace xboxkrnl
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 
-/* prevent name collisions */
-namespace NtDll
-{
-    #include "EmuNtDll.h"
-};
-
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
 /*! thread local storage data */

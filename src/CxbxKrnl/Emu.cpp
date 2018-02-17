@@ -46,13 +46,6 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuFS.h"
-
-// prevent name collisions
-namespace NtDll
-{
-    #include "EmuNtDll.h"
-};
-
 #include "EmuXTL.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"

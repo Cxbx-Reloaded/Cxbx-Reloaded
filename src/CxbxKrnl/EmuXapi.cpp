@@ -64,14 +64,6 @@ bool g_bXInputOpenCalled = false;
 
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace NtDll
-{
-    #include "EmuNtDll.h"
-};
-
 #include "EmuXTL.h"
 
 

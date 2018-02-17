@@ -153,11 +153,14 @@ typedef long                            NTSTATUS;
 #define STATUS_PENDING                   ((DWORD   )0x00000103L)
 #endif
 #define STATUS_TIMER_RESUME_IGNORED      ((DWORD   )0x40000025L)
+#define STATUS_BUFFER_OVERFLOW           ((DWORD   )0x80000005L)
 #define STATUS_UNSUCCESSFUL              ((DWORD   )0xC0000001)
 #define STATUS_UNRECOGNIZED_MEDIA        ((DWORD   )0xC0000014)
 #ifndef STATUS_NO_MEMORY
 #define STATUS_NO_MEMORY                 ((DWORD   )0xC0000017L)
 #endif
+#define STATUS_BUFFER_TOO_SMALL          ((DWORD   )0xC0000023L)
+#define STATUS_INVALID_PARAMETER_2       ((DWORD   )0xC00000F0L)
 #define STATUS_ALERTED                   ((DWORD   )0x00000101)
 #define STATUS_USER_APC                  ((DWORD   )0x000000C0L)
 // The SCSI input buffer was too large (not necessarily an error!)
