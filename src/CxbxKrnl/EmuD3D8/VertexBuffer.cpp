@@ -368,7 +368,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         }
     }
 
-    if(!m_pDynamicPatch || m_pDynamicPatch->NbrStreams < uiStream || !m_pDynamicPatch->pStreamPatches[uiStream].NeedPatch)
+    if(!m_pDynamicPatch || m_pDynamicPatch->NbrStreams <= uiStream || !m_pDynamicPatch->pStreamPatches[uiStream].NeedPatch)
     {
         return false;
     }
