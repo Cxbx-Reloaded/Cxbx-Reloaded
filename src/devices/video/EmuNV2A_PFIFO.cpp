@@ -280,7 +280,7 @@ static void pfifo_run_pusher(NV2AState *d) {
 			command->parameter = word;
 
 			{
-				std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock); // UNTESTED
+				std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock);
 				state->cache.push(command);
 				state->cache_cond.notify_all();
 			} // end of cache_unique_lock scope
@@ -393,9 +393,9 @@ int pfifo_puller_thread(NV2AState *d)
 			state->working_cache.push(state->cache.front());
 			state->cache.pop();
 		}
-		cache_unique_lock.unlock(); // UNTESTED
+		cache_unique_lock.unlock();
 
-		d->pgraph.pgraph_lock.lock(); // UNTESTED
+		d->pgraph.pgraph_lock.lock();
 
 		while (!state->working_cache.empty()) {
 			CacheEntry* command = state->working_cache.front();
@@ -421,10 +421,10 @@ int pfifo_puller_thread(NV2AState *d)
 				}
 
 				/* the engine is bound to the subchannel */
-				cache_unique_lock.lock(); // UNTESTED
+				cache_unique_lock.lock();
 				state->bound_engines[command->subchannel] = entry.engine;
 				state->last_engine = entry.engine;
-				cache_unique_lock.unlock(); // UNTESTED
+				cache_unique_lock.unlock();
 			} else if (command->method >= 0x100) {
 				/* method passed to engine */
 
