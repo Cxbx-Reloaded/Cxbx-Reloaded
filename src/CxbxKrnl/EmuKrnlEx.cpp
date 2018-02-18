@@ -64,6 +64,82 @@ namespace NtDll
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
 #pragma warning(default:4005)
 
+static xboxkrnl::RTL_CRITICAL_SECTION eeprom_crit_section;
+
+static xboxkrnl::PRTL_CRITICAL_SECTION get_eeprom_crit_section()
+{
+    static xboxkrnl::PRTL_CRITICAL_SECTION crit_sec_ptr = NULL;
+    if(crit_sec_ptr == NULL) {
+        crit_sec_ptr = &eeprom_crit_section;
+        RtlInitializeCriticalSection(crit_sec_ptr);
+    }
+    return crit_sec_ptr;
+}
+
+static bool section_does_not_require_checksum(
+    xboxkrnl::XC_VALUE_INDEX index
+)
+{
+    switch(index) {
+        case xboxkrnl::XC_FACTORY_GAME_REGION:
+            return true;
+        case xboxkrnl::XC_ENCRYPTED_SECTION:
+            return true;
+        case xboxkrnl::XC_MAX_ALL:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static uint32_t eeprom_section_checksum(
+    const uint32_t* section_data,
+    uint32_t section_data_length
+)
+{
+    const uint32_t bitmask = 0xFFFFFFFF;
+    const uint32_t num_dwords = section_data_length >> 2;
+    uint64_t checksum = 0;
+    uint32_t carry_count = 0;
+
+    for(uint32_t loop_count = num_dwords; loop_count > 0; loop_count--) {
+        checksum += *section_data;
+        if(checksum > bitmask) {
+            carry_count++;
+            checksum &= bitmask;
+        }
+        section_data++;
+    }
+    checksum += carry_count;
+    if(checksum > bitmask) {
+        checksum += 1;
+    }
+    return (uint32_t)(checksum & bitmask);
+}
+
+static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
+{
+    const ULONG valid_checksum = 0xFFFFFFFF;
+    const uint32_t* UserSettings_data = (uint32_t*)&EEPROM->UserSettings;
+    const uint32_t* FactorySettings_data = (uint32_t*)&EEPROM->FactorySettings;
+    ULONG checksum = 0;
+
+    if(section_does_not_require_checksum(index)) {
+        return true;
+    }
+
+    if((index >= xboxkrnl::XC_TIMEZONE_BIAS) && (index <= xboxkrnl::XC_MAX_OS)) {
+        checksum = eeprom_section_checksum(UserSettings_data, sizeof(EEPROM->UserSettings));
+    }
+    else if((index >= xboxkrnl::XC_FACTORY_START_INDEX) && (index <= xboxkrnl::XC_MAX_FACTORY)) {
+        checksum = eeprom_section_checksum(FactorySettings_data, sizeof(EEPROM->FactorySettings));
+    }
+    else {
+        EmuWarning("WARNING: Eeprom ValueIndex 0x%X does not have a checksum\n", index);
+    }
+    return checksum == valid_checksum;
+}
+
 // ******************************************************************
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
@@ -300,11 +376,11 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
-	OUT PVOID               Value,
-	IN  SIZE_T              ValueLength,
-	OUT PSIZE_T             ResultLength OPTIONAL
+	IN  DWORD   ValueIndex,
+	OUT DWORD   *Type,
+	OUT PVOID   Value,
+	IN  SIZE_T  ValueLength,
+	OUT PSIZE_T ResultLength OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -319,51 +395,52 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	void * value_addr = nullptr;
 	int value_type;
 	int result_length;
+	xboxkrnl::XC_VALUE_INDEX index = (XC_VALUE_INDEX)ValueIndex;
 
 	// handle eeprom read
-	if (ValueIndex == XC_FACTORY_GAME_REGION)
-	{
+	if (index == XC_FACTORY_GAME_REGION) {
 		value_addr = &XboxFactoryGameRegion;
 		value_type = REG_DWORD;
 		result_length = sizeof(ULONG);
 	}
-	else
-	{
-		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
-		if (info != nullptr)
-		{
+	else {
+		const EEPROMInfo* info = EmuFindEEPROMInfo(index);
+		if (info != nullptr) {
 			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
 			value_type = info->value_type;
 			result_length = info->value_length;
-		};
-	}
-
-	if (value_addr != nullptr)
-	{
-		if (ResultLength != nullptr)
-			*ResultLength = result_length;
-
-		if ((int)ValueLength >= result_length)
-		{
-			// TODO : Make EEPROM-access thread-safe
-
-			// TODO : Except for XC_FACTORY_GAME_REGION, check if the
-			// section being accessed has a valid checksum. If not,
-			// return STATUS_DEVICE_DATA_ERROR. (The checksum is a
-			// 32-bit 1's complement sum, that must equal 0xFFFFFFFF)
-
-			// Set the output value type :
-			*Type = value_type;
-			// Clear the output value buffer :
-			memset(Value, 0, ValueLength);
-			// Copy the emulated EEPROM value into the output value buffer :
-			memcpy(Value, value_addr, result_length);
 		}
-		else
-			Status = STATUS_BUFFER_TOO_SMALL;
 	}
-	else
+
+	if (value_addr != nullptr) {
+		if (ResultLength != nullptr) {
+			*ResultLength = result_length;
+		}
+
+		if ((int)ValueLength >= result_length) {
+			// FIXME - Entering the critical region causes an exception because
+			// the current thread returns as 0.
+			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
+			if(eeprom_data_is_valid(index)) {
+				// Set the output value type :
+				*Type = value_type;
+				// Clear the output value buffer :
+				memset(Value, 0, ValueLength);
+				// Copy the emulated EEPROM value into the output value buffer :
+				memcpy(Value, value_addr, result_length);
+			}
+			else {
+				Status = STATUS_DEVICE_DATA_ERROR;
+			}
+			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
+		}
+		else {
+			Status = STATUS_BUFFER_TOO_SMALL;
+		}
+	}
+	else {
 		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+	}
 
 	RETURN(Status);
 }
@@ -497,10 +574,10 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	IN  DWORD               Type,
-	IN  PVOID               Value,
-	IN  SIZE_T              ValueLength
+	IN  DWORD			   ValueIndex,
+	IN  DWORD			   Type,
+	IN  PVOID			   Value,
+	IN  SIZE_T			  ValueLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -515,16 +592,13 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	DWORD result_length;
 
 	// handle eeprom write
-	if (ValueIndex == XC_FACTORY_GAME_REGION)
-	{
+	if (ValueIndex == XC_FACTORY_GAME_REGION) {
 		value_addr = &XboxFactoryGameRegion;
 		result_length = sizeof(ULONG);
 	}
-	else
-	{
+	else {
 		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
-		if (info != nullptr)
-		{
+		if (info != nullptr) {
 			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
 			result_length = info->value_length;
 		};
@@ -532,13 +606,12 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 
 	// TODO : Only allow writing to factory section contents when running
 	// in DEVKIT mode, otherwise, nil the info pointer.
-	if (value_addr != nullptr)
-	{
+	if (value_addr != nullptr) {
 		// Note : Type could be verified against info->value_type here, but the orginal kernel doesn't even bother
-
-		if (ValueLength <= result_length)
-		{
-			// TODO : Make EEPROM-access thread-safe
+		if (ValueLength <= result_length) {
+			// FIXME - Entering the critical region causes an exception because
+			// the current thread returns as 0.
+			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
 
 			// Clear the emulated EEMPROM value :
 			memset(value_addr, 0, result_length);
@@ -549,13 +622,16 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			// mode), set XboxFactoryGameRegion to FactorySettings.GameRegion,
 			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
 
-			// TODO : For each section being accessed, recalculate it's checksum
+			gen_section_CRCs(EEPROM);
+			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
 		}
-		else
+		else {
 			Status = STATUS_INVALID_PARAMETER;
+		}
 	}
-	else
+	else {
 		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+	}
 
 	RETURN(Status);
 }
