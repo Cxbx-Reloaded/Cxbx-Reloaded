@@ -850,6 +850,34 @@ bool EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_MOVSX(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// MOVSX reads value from source :
+	uint32_t value = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
+		return false;
+
+	// Do MOVSX sign-extension
+	switch (info.ops[1].size) {
+	case 8:
+		if (value & 0x80)
+			value |= 0xFFFFFF00;
+		break;
+	case 16:
+		if (value & 0x8000)
+			value |= 0xFFFF0000;
+		break;
+	}
+
+	// MOVSX writes value to destination :
+	if (!EmuX86_Operand_Write(e, info, 0, value))
+		return false;
+
+	// Note : MOVSX instructions never update CPU flags
+
+	return true;
+}
+
 bool EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// MOVZX reads value from source :
@@ -1055,6 +1083,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		break; // We can safely ignore this
 	case I_MOV:
 		if (EmuX86_Opcode_MOV(e, info)) break;
+		goto opcode_error;
+	case I_MOVSX:
+		if (EmuX86_Opcode_MOVSX(e, info)) break;
 		goto opcode_error;
 	case I_MOVZX:			
 		if (EmuX86_Opcode_MOVZX(e, info)) break;
