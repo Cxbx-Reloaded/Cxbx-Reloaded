@@ -825,16 +825,18 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
-	assert(BaseAddress); // Must be assigned
-	// FreeSize may be unassigned
+	NTSTATUS ret = STATUS_INVALID_PARAMETER;
 
-	ULONG RegionSize = (FreeSize) ? *FreeSize : 0;
+	if (BaseAddress) { // Must be assigned
+		// FreeSize may be unassigned
+		ULONG RegionSize = (FreeSize) ? *FreeSize : 0;
 
-	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)&RegionSize, FreeType);
+		ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)&RegionSize, FreeType);
 
-	if (SUCCEEDED(ret)) {
-		if (FreeSize != xbnullptr)
-			*FreeSize = RegionSize;
+		if (SUCCEEDED(ret)) {
+			if (FreeSize != xbnullptr)
+				*FreeSize = RegionSize;
+		}
 	}
 
 	RETURN(ret);
