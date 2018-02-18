@@ -705,12 +705,14 @@ static void pgraph_method(NV2AState *d,
 				pg->pgraph_lock.unlock();
 				qemu_mutex_lock_iothread();
 				update_irq(d);
-				pg->pgraph_lock.lock();
+				std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					pg->interrupt_cond.wait(pg->pgraph_lock);
+					pg->interrupt_cond.wait(unique_pgraph_lock);
 				}
+
+				unique_pgraph_lock.release(); // detach unique_lock from the mutex
 			}
 			break;
 
@@ -780,7 +782,9 @@ static void pgraph_method(NV2AState *d,
 					break;
 				}
 
-				pg->flip_3d_cond.wait(pg->pgraph_lock);
+				std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
+				pg->flip_3d_cond.wait(unique_pgraph_lock);
+				unique_pgraph_lock.release(); // detach unique_lock from the mutex
 			}
 			NV2A_DPRINTF("flip stall done\n");
 			break;
@@ -2591,19 +2595,24 @@ static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
 		update_irq(d);
 
-		d->pgraph.pgraph_lock.lock();
+		std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
 		qemu_mutex_unlock_iothread();
 
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			d->pgraph.interrupt_cond.wait(d->pgraph.pgraph_lock);
+			d->pgraph.interrupt_cond.wait(unique_pgraph_lock);
 		}
+
+		unique_pgraph_lock.release(); // detach unique_lock from the mutex
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
+	std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock, std::defer_lock);
 	while (!d->pgraph.fifo_access) {
-		d->pgraph.fifo_access_cond.wait(d->pgraph.pgraph_lock);
+		d->pgraph.fifo_access_cond.wait(unique_pgraph_lock);
 	}
+
+	unique_pgraph_lock.release(); // detach unique_lock from the mutex
 }
 
 static void pgraph_method_log(unsigned int subchannel,
@@ -2693,7 +2702,7 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
-	pg->pgraph_lock = std::unique_lock<std::mutex>(pg->pgraph_mutex, std::defer_lock);  // was SDL_CreateMutex();
+	//pg->pgraph_lock = SDL_CreateMutex();
 	//pg->interrupt_cond = SDL_CreateCond();
     //pg->fifo_access_cond = SDL_CreateCond();
     //pg->flip_3d_cond = SDL_CreateCond();
