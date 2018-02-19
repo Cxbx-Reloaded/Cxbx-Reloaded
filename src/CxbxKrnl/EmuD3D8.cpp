@@ -753,6 +753,7 @@ typedef struct {
 	bool forceRehash = false;
 	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } host_resource_info_t;
 
 std::map <resource_key_t, host_resource_info_t> g_HostResources;
@@ -878,8 +879,9 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 		if (it->second.hash != oldHash) {
 			// The data changed, so reset the hash lifetime
 			it->second.hashLifeTime = 1ms;
+            it->second.lastUpdate = now;
 			modified = true;
-		} else {
+		} else if (it->second.lastUpdate + 1000ms < now) {
 			// The data did not change, so increase the hash lifetime
 			// TODO: choose a sensible upper limit
 			if (it->second.hashLifeTime < 1000ms) {
@@ -911,7 +913,8 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	hostResourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
 	hostResourceInfo.hashLifeTime = 1ms;
-	hostResourceInfo.nextHashTime = std::chrono::high_resolution_clock::now() + hostResourceInfo.hashLifeTime;
+    hostResourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
+	hostResourceInfo.nextHashTime = hostResourceInfo.lastUpdate + hostResourceInfo.hashLifeTime;
 	hostResourceInfo.forceRehash = false;
 
 	g_HostResources[key] = hostResourceInfo;
