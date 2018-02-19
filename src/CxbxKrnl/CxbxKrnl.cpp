@@ -1083,17 +1083,18 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	SetupXboxDeviceTypes();
 
-	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
-
-	// Now the hardware devices exist, couple the EEPROM buffer to it's device
-	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
-
 	if (bLLE_GPU)
 	{
 		DbgPrintf("INIT: Initializing OpenGL.\n");
 		InitOpenGLContext();
 	}
-	else
+
+	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
+
+	// Now the hardware devices exist, couple the EEPROM buffer to it's device
+	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
+
+	if (!bLLE_GPU)
 	{
 		DbgPrintf("INIT: Initializing Direct3D.\n");
 		XTL::EmuD3DInit();
