@@ -1691,8 +1691,10 @@ static void pgraph_method(NV2AState *d,
 			 *        the report memory block?
 			 */
 			if (pg->gl_zpass_pixel_count_query_count) {
-				glDeleteQueries(pg->gl_zpass_pixel_count_query_count,
-								pg->gl_zpass_pixel_count_queries);
+				if (pg->opengl_enabled) {
+					glDeleteQueries(pg->gl_zpass_pixel_count_query_count,
+									pg->gl_zpass_pixel_count_queries);
+				}
 				pg->gl_zpass_pixel_count_query_count = 0;
 			}
 			pg->zpass_pixel_count_result = 0;
@@ -4014,6 +4016,8 @@ static unsigned int pgraph_bind_inline_array(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
+	assert(pg->opengl_enabled);
+
     unsigned int offset = 0;
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         VertexAttribute *attribute = &pg->vertex_attributes[i];
@@ -4183,6 +4187,8 @@ static void upload_gl_texture(GLenum gl_target,
                               const uint8_t *texture_data,
                               const uint8_t *palette_data)
 {
+	//assert(pg->opengl_enabled);
+
     ColorFormatInfo f = kelvin_color_format_map[s.color_format];
 
     switch(gl_target) {
@@ -4323,6 +4329,8 @@ static TextureBinding* generate_texture(const TextureShape s,
                                         const uint8_t *texture_data,
                                         const uint8_t *palette_data)
 {
+	// assert(pg->opengl_enabled);
+
     ColorFormatInfo f = kelvin_color_format_map[s.color_format];
 
     /* Create a new opengl texture */
@@ -4447,6 +4455,9 @@ static void texture_key_destroy(gpointer data)
 static void texture_binding_destroy(gpointer data)
 {
     TextureBinding *binding = (TextureBinding *)data;
+
+	// assert(pg->opengl_enabled);
+
     assert(binding->refcnt > 0);
     binding->refcnt--;
     if (binding->refcnt == 0) {
