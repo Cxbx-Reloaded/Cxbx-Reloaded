@@ -42,9 +42,6 @@
 
 #define LOG_PREFIX "NV2A"
 
-//#define COMPILE_OPENGL // Compatibility; define this to include all OpenGL calls
-#undef COMPILE_OPENGL
-
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -76,7 +73,6 @@ namespace xboxkrnl
 #include <cassert>
 //#include <gl\glut.h>
 
-#ifdef COMPILE_OPENGL
 // glib types
 typedef char gchar;
 typedef int gint;
@@ -98,8 +94,6 @@ struct _GError
 };
 
 #include "glextensions.h" // for glextensions_init
-
-#endif // COMPILE_OPENGL
 
 
 static void update_irq(NV2AState *d)
@@ -650,6 +644,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 NV2ADevice::NV2ADevice()
 {
 	m_nv2a_state = new NV2AState();
+	m_nv2a_state->pgraph.opengl_enabled = bLLE_GPU;
 	pgraph_init(m_nv2a_state);
 }
 

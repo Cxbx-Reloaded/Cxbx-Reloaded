@@ -47,10 +47,8 @@
 #include "swizzle.h"
 #include "nv2a_int.h"
 #include "nv2a_debug.h" // For HWADDR_PRIx, NV2A_DPRINTF, NV2A_GL_DPRINTF, etc.
-#ifdef COMPILE_OPENGL
 #include "gloffscreen.h" // For glo_readpixels
 #include "nv2a_shaders.h" // For ShaderBinding
-#endif // COMPILE_OPENGL
 
 #define NV2A_ADDR  0xFD000000
 #define NV2A_SIZE             0x01000000
@@ -320,6 +318,7 @@ typedef struct GraphicsContext {
 
 
 typedef struct PGRAPHState {
+	bool opengl_enabled; // == bLLE_GPU
 	std::mutex pgraph_lock;
 
 	uint32_t pending_interrupts;
@@ -358,10 +357,8 @@ typedef struct PGRAPHState {
 	bool texture_dirty[NV2A_MAX_TEXTURES];
 	TextureBinding *texture_binding[NV2A_MAX_TEXTURES];
 
-#ifdef COMPILE_OPENGL
 	//GHashTable *shader_cache;
 	ShaderBinding *shader_binding;
-#endif // COMPILE_OPENGL
 
 	bool texture_matrix_enable[NV2A_MAX_TEXTURES];
 
