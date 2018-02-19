@@ -92,9 +92,15 @@ ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
 
 #undef USE_TEXTURE_CACHE
 
+#if __cplusplus >= 201402L
+#  define NV2A_CONSTEXPR constexpr
+#else
+#  define NV2A_CONSTEXPR static
+#endif
+
 // Public Domain ffs Implementation
 // See: http://snipplr.com/view/22147/stringsh-implementation/
-constexpr int ffs(int v)
+NV2A_CONSTEXPR int ffs(int v)
 {
 	unsigned int x = v;
 	int c = 1;
