@@ -46,6 +46,11 @@
 
 #include "swizzle.h"
 #include "nv2a_int.h"
+#include "nv2a_debug.h" // For HWADDR_PRIx, NV2A_DPRINTF, NV2A_GL_DPRINTF, etc.
+#ifdef COMPILE_OPENGL
+#include "gloffscreen.h" // For glo_readpixels
+#include "nv2a_shaders.h" // For ShaderBinding
+#endif // COMPILE_OPENGL
 
 #define NV2A_ADDR  0xFD000000
 #define NV2A_SIZE             0x01000000
@@ -61,19 +66,33 @@
 
 typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
-#define NV2A_DPRINTF(...) printf("[0x????] NV2A: " ## __VA_ARGS__) // Compatibility; TODO : Replace this by something equivalent
-#define NV2A_GL_DPRINTF EmuWarning // Compatibility; TODO : Replace this by something equivalent
+
+#ifdef __cplusplus
+template <size_t N> struct ArraySizeHelper { char _[N]; };
+template <typename T, size_t N>
+ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
+#  define ARRAY_SIZE(a)  sizeof(makeArraySizeHelper(a))
+#else
+// The expression ARRAY_SIZE(a) is a compile-time constant of type
+// size_t which represents the number of elements of the given
+// array. You should only use ARRAY_SIZE on statically allocated
+// arrays.
+
+#define ARRAY_SIZE(a)                               \
+  ((sizeof(a) / sizeof(*(a))) /                     \
+  static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+#endif
+
 #define VSH_TOKEN_SIZE 4 // Compatibility; TODO : Move this to nv2a_vsh.h
 #define MAX(a,b) ((a)>(b) ? (a) : (b)) // Compatibility
 #define MIN(a,b) ((a)<(b) ? (a) : (b)) // Compatibility
-#undef COMPILE_OPENGL // Compatibility; define this to include all OpenGL calls
-#define HWADDR_PRIx "p" // Compatibility
+
 #define g_free(x) free(x) // Compatibility
 #define g_malloc(x) malloc(x) // Compatibility
 #define g_malloc0(x) calloc(1, x) // Compatibility
 #define g_realloc(x, y) realloc(x, y) // Compatibility
 
-#define USE_TEXTURE_CACHE
+#undef USE_TEXTURE_CACHE
 
 // Public Domain ffs Implementation
 // See: http://snipplr.com/view/22147/stringsh-implementation/
@@ -333,12 +352,16 @@ typedef struct PGRAPHState {
 	SurfaceShape last_surface_shape;
 
 	xbaddr dma_a, dma_b;
-	//GLruCache *texture_cache;
+#ifdef USE_TEXTURE_CACHE
+	GLruCache *texture_cache;
+#endif
 	bool texture_dirty[NV2A_MAX_TEXTURES];
 	TextureBinding *texture_binding[NV2A_MAX_TEXTURES];
 
+#ifdef COMPILE_OPENGL
 	//GHashTable *shader_cache;
-	//ShaderBinding *shader_binding;
+	ShaderBinding *shader_binding;
+#endif // COMPILE_OPENGL
 
 	bool texture_matrix_enable[NV2A_MAX_TEXTURES];
 

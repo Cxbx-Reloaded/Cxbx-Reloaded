@@ -366,9 +366,7 @@ int pfifo_puller_thread(NV2AState *d)
 
 	Cache1State *state = &(d->pfifo.cache1);
 
-#ifdef COMPILE_OPENGL
-	glo_set_current(d->pgraph.gl_context);
-#endif
+	// glo_set_current(d->pgraph.gl_context);
 
 	std::unique_lock<std::mutex> cache_unique_lock(d->pfifo.cache1.cache_lock, std::defer_lock);
 
@@ -381,9 +379,9 @@ int pfifo_puller_thread(NV2AState *d)
 
 			if (d->exiting) {
 				cache_unique_lock.unlock(); // UNTESTED
-#ifdef COMPILE_OPENGL
-				glo_set_current(NULL);
-#endif
+
+				// glo_set_current(NULL);
+
 				return 0;
 			}
 		}

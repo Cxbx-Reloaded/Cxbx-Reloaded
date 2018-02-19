@@ -25,7 +25,7 @@
 
 #define DEBUG_NV2A
 #ifdef DEBUG_NV2A
-# define NV2A_DPRINTF(format, ...)       printf("nv2a: " format, ## __VA_ARGS__)
+# define NV2A_DPRINTF(format, ...)       printf("[0x????] NV2A: " format, ## __VA_ARGS__)
 #else
 # define NV2A_DPRINTF(format, ...)       do { } while (0)
 #endif

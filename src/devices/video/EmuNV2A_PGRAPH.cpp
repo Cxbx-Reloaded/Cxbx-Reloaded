@@ -495,7 +495,7 @@ DEVICE_WRITE32(PGRAPH)
 	case NV_PGRAPH_CHANNEL_CTX_TRIGGER:
 
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
-			NV2A_DPRINTF("PGRAPH: read channel %d context from %0x08X\n",
+			NV2A_DPRINTF("PGRAPH: read channel %d context from %" HWADDR_PRIx "\n",
 				d->pgraph.channel_id, d->pgraph.context_address);
 
 			uint8_t *context_ptr = d->pramin.ramin_ptr + d->pgraph.context_address;
@@ -613,7 +613,7 @@ static void pgraph_method(NV2AState *d,
 			/* I guess this kicks it off? */
 			if (image_blit->operation == NV09F_SET_OPERATION_SRCCOPY) {
 
-				NV2A_GL_DPRINTF("NV09F_SET_OPERATION_SRCCOPY\n");
+				NV2A_GL_DPRINTF(true, "NV09F_SET_OPERATION_SRCCOPY");
 
 				GraphicsObject *context_surfaces_obj =
 					lookup_graphics_object(pg, image_blit->context_surfaces);
@@ -747,11 +747,11 @@ static void pgraph_method(NV2AState *d,
 				GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_WRITE_3D));
 
-#ifdef COMPILE_OPENGL
+#ifdef __APPLE__
 			if (glFrameTerminatorGREMEDY) {
 				glFrameTerminatorGREMEDY();
 			}
-#endif // COMPILE_OPENGL
+#endif // __APPLE__
 			break;
 		}
 		case NV097_FLIP_STALL:
@@ -760,7 +760,7 @@ static void pgraph_method(NV2AState *d,
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, pg->gl_framebuffer);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBlitFramebuffer(0, 0, 640, 480, 0, 0, 640, 480, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			SDL_GL_SwapWindow(d->sdl_window); // ugh
+			// SDL_GL_SwapWindow(d->sdl_window); // ugh
 			assert(glGetError() == GL_NO_ERROR);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, pg->gl_framebuffer);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg->gl_framebuffer);
@@ -2178,9 +2178,7 @@ static void pgraph_method(NV2AState *d,
 
 			pg->draw_arrays_max_count = MAX(pg->draw_arrays_max_count, start + count);
 
-#ifdef COMPILE_OPENGL
 			assert(pg->draw_arrays_length < ARRAY_SIZE(pg->gl_draw_arrays_start));
-#endif // COMPILE_OPENGL
 
 			/* Attempt to connect primitives */
 			if (pg->draw_arrays_length > 0) {
@@ -2336,7 +2334,7 @@ static void pgraph_method(NV2AState *d,
 				/* FIXME: Put these in some lookup table */
 				const float f16_max = 511.9375f;
 				/* FIXME: 7 bits of mantissa unused. maybe use full buffer? */
-				const float f24_max = 3.4027977E38;
+				const float f24_max = 3.4027977E38f;
 
 				switch(pg->surface_shape.zeta_format) {
 				case NV097_SET_SURFACE_FORMAT_ZETA_Z16: {
@@ -2562,14 +2560,14 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		default:
-			NV2A_GL_DPRINTF("EmuNV2A: Unknown NV_KELVIN_PRIMITIVE Method: 0x%08X\n",
-				method);
+			NV2A_GL_DPRINTF(true, "    unhandled  (0x%02x 0x%08x)",
+					object->graphics_class, method);
 			break;
 		}
 	}
 
 	default:
-		NV2A_GL_DPRINTF("EmuNV2A: Unknown Graphics Class/Method 0x%08X/0x%08X\n",
+		NV2A_GL_DPRINTF(true, "EmuNV2A: Unknown Graphics Class/Method 0x%08X/0x%08X\n",
 						object->graphics_class, method);
 		break;
 	}
@@ -2622,7 +2620,7 @@ static void pgraph_method_log(unsigned int subchannel,
 	static unsigned int count = 0;
 
 	if (last == 0x1800 && method != last) {
-		NV2A_GL_DPRINTF("d->pgraph method (%d) 0x%08X * %d",
+		NV2A_GL_DPRINTF(true, "d->pgraph method (%d) 0x%08X * %d",
 						subchannel, last, count);
 	}
 	if (method != 0x1800) {
@@ -2641,15 +2639,14 @@ static void pgraph_method_log(unsigned int subchannel,
 		/*
 		if (nmethod != 0 && nmethod < ARRAY_SIZE(nv2a_method_names)) {
 			method_name = nv2a_method_names[nmethod];
-		}
+		}*/
 		if (method_name) {
 			NV2A_DPRINTF("d->pgraph method (%d): %s (0x%x)\n",
 				subchannel, method_name, parameter);
 		} else {
-		*/
 			NV2A_DPRINTF("d->pgraph method (%d): 0x%x -> 0x%04x (0x%x)\n",
 				subchannel, graphics_class, method, parameter);
-		//}
+		}
 
 	}
 	if (method == last) { count++; }
@@ -2739,7 +2736,7 @@ void pgraph_init(NV2AState *d)
             == GL_FRAMEBUFFER_COMPLETE);
 
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
+	/*
     pg->texture_cache = g_lru_cache_new_full(
         0,
         NULL,
@@ -2757,7 +2754,7 @@ void pgraph_init(NV2AState *d)
     g_lru_cache_set_max_size(pg->texture_cache, 512);
 
     pg->shader_cache = g_hash_table_new(shader_hash, shader_equal);
-
+	*/
 
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         glGenBuffers(1, &pg->vertex_attributes[i].gl_converted_buffer);
@@ -3136,7 +3133,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
                                & NV_PGRAPH_TEXCTL0_0_ALPHAKILLEN;
     }
 
-    ShaderBinding* cached_shader = (ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
+	ShaderBinding* cached_shader = nullptr;//(ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
     if (cached_shader) {
         pg->shader_binding = cached_shader;
     } else {
@@ -3145,8 +3142,10 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
         /* cache it */
         ShaderState *cache_state = (ShaderState *)g_malloc(sizeof(*cache_state));
         memcpy(cache_state, &state, sizeof(*cache_state));
+#if 0 // TODO
         g_hash_table_insert(pg->shader_cache, cache_state,
                             (gpointer)pg->shader_binding);
+#endif
     }
 
     bool binding_changed = (pg->shader_binding != old_binding);
@@ -3218,8 +3217,8 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
         gl_buffer = &pg->gl_color_buffer;
 
         assert(pg->surface_shape.color_format != 0);
-        //assert(pg->surface_shape.color_format
-        //        < ARRAY_SIZE(kelvin_surface_color_format_map));
+        assert(pg->surface_shape.color_format
+                < ARRAY_SIZE(kelvin_surface_color_format_map));
         SurfaceColorFormatInfo f =
             kelvin_surface_color_format_map[pg->surface_shape.color_format];
         if (f.bytes_per_pixel == 0) {
@@ -3767,7 +3766,6 @@ static void pgraph_bind_textures(NV2AState *d)
 			^ fnv_hash(palette_data, palette_length);
 		key.texture_data = texture_data;
 		key.palette_data = palette_data;
-        };
 
         gpointer cache_key = g_malloc(sizeof(TextureKey));
         memcpy(cache_key, &key, sizeof(TextureKey));
