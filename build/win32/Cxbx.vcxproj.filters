@@ -217,16 +217,10 @@
     <ClCompile Include="..\..\src\devices\SMDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\nv2a.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\Xbox.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp">
@@ -241,11 +235,35 @@
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKi.cpp">
       <Filter>Kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\glextensions.c">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\gloffscreen.c">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a_debug.c">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a_shaders.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a_vsh.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
+      <Filter>Hardware\Video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -447,26 +465,14 @@
     <ClInclude Include="..\..\src\devices\SMDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\nv2a.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\devices\LED.h">
       <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\Xbox.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\devices\EmuNVNet.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
       <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\vga.h">
-      <Filter>Hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\XbePrinter.h">
       <Filter>Shared</Filter>
@@ -483,8 +489,44 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h">
       <Filter>Kernel</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\devices\EmuNVNet.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\glextensions.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\gloffscreen.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_debug.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_int.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_psh.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_shaders.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_shaders_common.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\nv2a_vsh.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\devices\video\swizzle.h">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\vga.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\queue.h">
+      <Filter>Hardware\Video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -741,67 +783,67 @@
       <Filter>HLEDatabase\XOnline</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PBUS.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PCOUNTER.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PCRTC.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PFB.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PFIFO.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PGRAPH.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PMC.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRAMDAC.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRAMIN.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRMA.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRMCIO.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRMDIO.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRMFB.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PRMVIO.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PSTRAPS.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PTIMER.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PTV.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PVIDEO.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_PVPE.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
     <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp">
-      <Filter>Hardware</Filter>
+      <Filter>Hardware\Video</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -846,6 +888,9 @@
     </Filter>
     <Filter Include="Hardware">
       <UniqueIdentifier>{922ab09b-aa8e-41bb-b781-58654160ee3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Video">
+      <UniqueIdentifier>{deba5d3e-9a1a-4099-bc91-12737a48272e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

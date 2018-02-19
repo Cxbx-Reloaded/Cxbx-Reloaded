@@ -264,8 +264,16 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
+    <ClInclude Include="..\..\src\devices\video\glextensions.h" />
+    <ClInclude Include="..\..\src\devices\video\gloffscreen.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_psh.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_shaders.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_shaders_common.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_vsh.h" />
+    <ClInclude Include="..\..\src\devices\video\queue.h" />
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
@@ -632,7 +640,13 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\video\glextensions.c" />
+    <ClCompile Include="..\..\src\devices\video\gloffscreen.c" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
+    <ClCompile Include="..\..\src\devices\video\nv2a_debug.c" />
+    <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp" />
+    <ClCompile Include="..\..\src\devices\video\nv2a_shaders.cpp" />
+    <ClCompile Include="..\..\src\devices\video\nv2a_vsh.cpp" />
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
   </ItemGroup>

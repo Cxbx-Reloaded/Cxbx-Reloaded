@@ -67,12 +67,33 @@ namespace xboxkrnl
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
-
 //#include <gl\glew.h>
 #include <gl\GL.h>
 #include <gl\GLU.h>
 #include <cassert>
 //#include <gl\glut.h>
+
+// glib types
+typedef char gchar;
+typedef int gint;
+typedef unsigned int guint;
+typedef unsigned int guint32;
+typedef const void *gconstpointer;
+typedef gint   gboolean;
+typedef void* gpointer;
+
+typedef guint32 GQuark;
+
+typedef struct _GError GError;
+
+struct _GError
+{
+	GQuark       domain;
+	gint         code;
+	gchar       *message;
+};
+
+#include "glextensions.h" // for glextensions_init
 
 
 static void update_irq(NV2AState *d)
@@ -151,7 +172,12 @@ static inline uint32_t ldl_le_p(const void *p)
 	return *(uint32_t*)p;
 }
 
-static inline void stl_le_p(uint32_t *p, uint32 v)
+static inline void stq_le_p(uint64_t *p, uint64_t v)
+{
+	*p = v;
+}
+
+static inline void stl_le_p(uint32_t *p, uint32_t v)
 {
 	*p = v;
 }
@@ -618,6 +644,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 NV2ADevice::NV2ADevice()
 {
 	m_nv2a_state = new NV2AState();
+	m_nv2a_state->pgraph.opengl_enabled = bLLE_GPU;
 	pgraph_init(m_nv2a_state);
 }
 
