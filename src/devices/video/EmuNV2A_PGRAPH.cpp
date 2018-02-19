@@ -2702,11 +2702,6 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
-	//pg->pgraph_lock = SDL_CreateMutex();
-	//pg->interrupt_cond = SDL_CreateCond();
-    //pg->fifo_access_cond = SDL_CreateCond();
-    //pg->flip_3d_cond = SDL_CreateCond();
-
 #ifdef COMPILE_OPENGL
 	/* fire up opengl */
 
@@ -2790,11 +2785,6 @@ void pgraph_init(NV2AState *d)
 void pgraph_destroy(PGRAPHState *pg)
 {
 #ifdef COMPILE_OPENGL
-    SDL_DestroyMutex(pg->pgraph_lock);
-    SDL_DestroyCond(pg->interrupt_cond);
-    SDL_DestroyCond(pg->fifo_access_cond);
-    SDL_DestroyCond(pg->flip_3d_cond);
-
     // glo_set_current(pg->gl_context);
 
     if (pg->gl_color_buffer) {
@@ -3022,43 +3012,40 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
 	ShaderBinding* old_binding = pg->shader_binding;
 
-    ShaderState state = {
-        .psh = (PshState){
-            /* register combiner stuff */
-            .combiner_control = pg->regs[NV_PGRAPH_COMBINECTL],
-            .shader_stage_program = pg->regs[NV_PGRAPH_SHADERPROG],
-            .other_stage_input = pg->regs[NV_PGRAPH_SHADERCTL],
-            .final_inputs_0 = pg->regs[NV_PGRAPH_COMBINESPECFOG0],
-            .final_inputs_1 = pg->regs[NV_PGRAPH_COMBINESPECFOG1],
+	ShaderState state;
+	/* register combiner stuff */
+	state.psh.combiner_control = pg->regs[NV_PGRAPH_COMBINECTL];
+	state.psh.shader_stage_program = pg->regs[NV_PGRAPH_SHADERPROG];
+	state.psh.other_stage_input = pg->regs[NV_PGRAPH_SHADERCTL];
+	state.psh.final_inputs_0 = pg->regs[NV_PGRAPH_COMBINESPECFOG0];
+	state.psh.final_inputs_1 = pg->regs[NV_PGRAPH_COMBINESPECFOG1];
 
-            .alpha_test = pg->regs[NV_PGRAPH_CONTROL_0]
-                            & NV_PGRAPH_CONTROL_0_ALPHATESTENABLE,
-            .alpha_func = (enum PshAlphaFunc)GET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
-                                   NV_PGRAPH_CONTROL_0_ALPHAFUNC),
-        },
+	state.psh.alpha_test = pg->regs[NV_PGRAPH_CONTROL_0]
+		& NV_PGRAPH_CONTROL_0_ALPHATESTENABLE;
+	state.psh.alpha_func = (enum PshAlphaFunc)GET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
+		NV_PGRAPH_CONTROL_0_ALPHAFUNC);
 
-        /* fixed function stuff */
-        .skinning = (enum VshSkinning)GET_MASK(pg->regs[NV_PGRAPH_CSV0_D],
-                                               NV_PGRAPH_CSV0_D_SKIN),
-        .lighting = GET_MASK(pg->regs[NV_PGRAPH_CSV0_C],
-                             NV_PGRAPH_CSV0_C_LIGHTING),
-        .normalization = pg->regs[NV_PGRAPH_CSV0_C]
-                           & NV_PGRAPH_CSV0_C_NORMALIZATION_ENABLE,
+    /* fixed function stuff */
+	state.skinning = (enum VshSkinning)GET_MASK(pg->regs[NV_PGRAPH_CSV0_D],
+		NV_PGRAPH_CSV0_D_SKIN);
+	state.lighting = GET_MASK(pg->regs[NV_PGRAPH_CSV0_C],
+		NV_PGRAPH_CSV0_C_LIGHTING);
+	state.normalization = pg->regs[NV_PGRAPH_CSV0_C]
+		& NV_PGRAPH_CSV0_C_NORMALIZATION_ENABLE;
 
-        .fixed_function = fixed_function,
+	state.fixed_function = fixed_function;
 
-        /* vertex program stuff */
-        .vertex_program = vertex_program,
-        .z_perspective = pg->regs[NV_PGRAPH_CONTROL_0]
-                            & NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
+    /* vertex program stuff */
+	state.vertex_program = vertex_program;
+	state.z_perspective = pg->regs[NV_PGRAPH_CONTROL_0]
+		& NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE;
 
-        /* geometry shader stuff */
-        .primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode,
-        .polygon_front_mode = (enum ShaderPolygonMode)GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
-                                                               NV_PGRAPH_SETUPRASTER_FRONTFACEMODE),
-        .polygon_back_mode = (enum ShaderPolygonMode)GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
-                                                              NV_PGRAPH_SETUPRASTER_BACKFACEMODE),
-    };
+    /* geometry shader stuff */
+	state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode;
+	state.polygon_front_mode = (enum ShaderPolygonMode)GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
+		NV_PGRAPH_SETUPRASTER_FRONTFACEMODE);
+	state.polygon_back_mode = (enum ShaderPolygonMode)GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
+		NV_PGRAPH_SETUPRASTER_BACKFACEMODE);
 
     state.program_length = 0;
     memset(state.program_data, 0, sizeof(state.program_data));
@@ -3761,26 +3748,25 @@ static void pgraph_bind_textures(NV2AState *d)
             }
         }
 
-        TextureShape state = {
-            .cubemap = cubemap,
-            .dimensionality = dimensionality,
-            .color_format = color_format,
-            .levels = levels,
-            .width = width,
-            .height = height,
-            .depth = depth,
-            .min_mipmap_level = min_mipmap_level,
-            .max_mipmap_level = max_mipmap_level,
-            .pitch = pitch,
-        };
+		TextureShape state;
+		state.cubemap = cubemap;
+		state.dimensionality = dimensionality;
+		state.color_format = color_format;
+		state.levels = levels;
+		state.width = width;
+		state.height = height;
+		state.depth = depth;
+		state.min_mipmap_level = min_mipmap_level;
+		state.max_mipmap_level = max_mipmap_level;
+        state.pitch = pitch;
 
 #ifdef USE_TEXTURE_CACHE
-        TextureKey key = {
-            .state = state,
-            .data_hash = fast_hash(texture_data, length, 5003)
-                            ^ fnv_hash(palette_data, palette_length),
-            .texture_data = texture_data,
-            .palette_data = palette_data,
+		TextureKey key;
+		key.state = state;
+		key.data_hash = fast_hash(texture_data, length, 5003)
+			^ fnv_hash(palette_data, palette_length);
+		key.texture_data = texture_data;
+		key.palette_data = palette_data;
         };
 
         gpointer cache_key = g_malloc(sizeof(TextureKey));
