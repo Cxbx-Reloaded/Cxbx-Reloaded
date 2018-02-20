@@ -528,6 +528,9 @@
     <ClInclude Include="..\..\src\devices\video\queue.h">
       <Filter>Hardware\Video</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnl.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
