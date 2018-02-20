@@ -100,10 +100,10 @@ ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
 
 // Public Domain ffs Implementation
 // See: http://snipplr.com/view/22147/stringsh-implementation/
-NV2A_CONSTEXPR int ffs(int v)
+NV2A_CONSTEXPR unsigned int ffs(const unsigned int v)
 {
 	unsigned int x = v;
-	int c = 1;
+	unsigned int c = 1;
 
 	/*
 	* adapted from from
@@ -143,11 +143,11 @@ NV2A_CONSTEXPR int ffs(int v)
 	return c;
 }
 
-inline int GET_MASK(int v, int mask) {
+inline int GET_MASK(const unsigned int v, const unsigned int mask) {
 	return (((v) & (mask)) >> (ffs(mask) - 1));
 };
 
-inline int SET_MASK(int v, int mask, int val) {  
+inline int SET_MASK(unsigned int v, const unsigned int mask, const unsigned int val) {
     const unsigned int __val = (val);                            
     const unsigned int __mask = (mask);                          
 

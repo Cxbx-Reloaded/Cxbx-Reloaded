@@ -423,7 +423,8 @@ int pfifo_puller_thread(NV2AState *d)
 				state->bound_engines[command->subchannel] = entry.engine;
 				state->last_engine = entry.engine;
 				cache_unique_lock.unlock();
-			} else if (command->method >= 0x100) {
+			}
+			else if (command->method >= 0x100) {
 				/* method passed to engine */
 
 				uint32_t parameter = command->parameter;
@@ -458,6 +459,9 @@ int pfifo_puller_thread(NV2AState *d)
 				state->last_engine = state->bound_engines[command->subchannel];
 				// state->cache_lock.unlock();
 			}
+			else
+				NV2A_DPRINTF("FIFO: Unknown Method - 0x%08X\n",
+						command->method);
 
 			g_free(command);
 		}
@@ -468,13 +472,16 @@ int pfifo_puller_thread(NV2AState *d)
 	return 0;
 }
 
+unsigned int ramht_size(NV2AState *d)
+{
+	return 
+		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
+}
+
 static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 {
-	unsigned int ramht_size =
-		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
-
 	/* XXX: Think this is different to what nouveau calculates... */
-	unsigned int bits = ffs(ramht_size) - 2;
+	unsigned int bits = ffs(ramht_size(d)) - 2;
 
 	uint32_t hash = 0;
 	while (handle) {
@@ -488,11 +495,8 @@ static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 
 static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 {
-	unsigned int ramht_size =
-		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
-
 	uint32_t hash = ramht_hash(d, handle);
-	assert(hash * 8 < ramht_size);
+	assert(hash * 8 < ramht_size(d));
 
 	uint32_t ramht_address =
 		GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT],
