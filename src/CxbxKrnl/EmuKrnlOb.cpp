@@ -218,6 +218,9 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	NTSTATUS Status = STATUS_SUCCESS;
 	int NameBufferSize = 0;
 
+//	NativeObjectAttributes nativeObjectAttributes;
+//	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+
 	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
 		if (ObjectAttributes->ObjectName->Length == 0) {
 			Status = STATUS_OBJECT_NAME_INVALID;
