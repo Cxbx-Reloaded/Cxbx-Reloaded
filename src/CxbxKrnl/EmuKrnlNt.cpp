@@ -1926,6 +1926,8 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlock;
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
 		&Handle,
@@ -1934,7 +1936,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		/*WaitMode=*/KernelMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL
+		&WaitBlock
 	);
 }
 
@@ -1951,6 +1953,8 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlock;
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
 		&Handle,
@@ -1959,7 +1963,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL
+		&WaitBlock
 	);
 }
 
@@ -1978,6 +1982,8 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlockArray[9];
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		Count,
 		Handles,
@@ -1986,7 +1992,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL);
+		WaitBlockArray);
 }
 
 // ******************************************************************
