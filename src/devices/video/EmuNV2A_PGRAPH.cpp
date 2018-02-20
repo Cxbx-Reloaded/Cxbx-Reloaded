@@ -578,7 +578,7 @@ static void pgraph_method(NV2AState *d,
 			context_surfaces_2d->dest_offset = parameter & 0x07FFFFFF;
 			break;
 		default:
-			EmuWarning("EmuNV2A: Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
+			EmuWarning("NV2A: Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
 		}
 	
 		break; 
@@ -671,7 +671,7 @@ static void pgraph_method(NV2AState *d,
 
 			break;
 		default:
-			EmuWarning("EmuNV2A: Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
+			EmuWarning("NV2A: Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
 		}
 		break;
 	}
@@ -2555,15 +2555,20 @@ static void pgraph_method(NV2AState *d,
 			NV2A_DPRINTF("load to %d\n", parameter);
 			break;
 
+		case NV097_SET_FLAT_SHADE_OP: 
+			assert(parameter <= 1);
+			// TODO : value & 1 = first/last? vertex selection for glShaderMode(GL_FLAT)
+			break;
 		default:
 			NV2A_GL_DPRINTF(true, "    unhandled  (0x%02x 0x%08x)",
 					object->graphics_class, method);
 			break;
 		}
+		break;
 	}
 
 	default:
-		NV2A_GL_DPRINTF(true, "EmuNV2A: Unknown Graphics Class/Method 0x%08X/0x%08X\n",
+		NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X\n",
 						object->graphics_class, method);
 		break;
 	}
