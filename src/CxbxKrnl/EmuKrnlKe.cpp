@@ -1836,6 +1836,8 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlock;
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
 		&Object,
@@ -1844,6 +1846,6 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL
+		&WaitBlock
 	);
 }
