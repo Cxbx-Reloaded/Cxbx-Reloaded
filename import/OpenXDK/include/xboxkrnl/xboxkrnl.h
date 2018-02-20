@@ -1640,6 +1640,8 @@ KFLOATING_SAVE, *PKFLOATING_SAVE;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	EventNotificationObject = 0,
+	EventSynchronizationObject = 1, 
 	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
