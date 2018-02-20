@@ -218,6 +218,9 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	NTSTATUS Status = STATUS_SUCCESS;
 	int NameBufferSize = 0;
 
+//	NativeObjectAttributes nativeObjectAttributes;
+//	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+
 	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
 		if (ObjectAttributes->ObjectName->Length == 0) {
 			Status = STATUS_OBJECT_NAME_INVALID;
@@ -313,7 +316,9 @@ XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	*Handle = EmuObCreateObjectHandle(Object);
+
+	LOG_INCOMPLETE();
 
 	RETURN(S_OK);
 }
@@ -463,8 +468,12 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 
 	NTSTATUS Status = EmuObFindObjectByHandle(Handle, ReturnedObject);
 
-	if (NT_SUCCESS(Status))
-		Status = ObReferenceObjectByPointer(ReturnedObject, ObjectType);
+	if (NT_SUCCESS(Status)) {
+		Status = ObReferenceObjectByPointer(*ReturnedObject, ObjectType);
+		if (Status == STATUS_OBJECT_TYPE_MISMATCH) {
+			ObfDereferenceObject(*ReturnedObject);
+		}
+	}
 
 	RETURN(Status);
 }
@@ -491,8 +500,12 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 
 	NTSTATUS Status = EmuObFindObjectByName(ObjectName, Object); 
 
-	if (NT_SUCCESS(Status))
-		Status = ObReferenceObjectByPointer(Object, ObjectType);
+	if (NT_SUCCESS(Status)) {
+		Status = ObReferenceObjectByPointer(*Object, ObjectType);
+		if (Status == STATUS_OBJECT_TYPE_MISMATCH) {
+			ObfDereferenceObject(*Object);
+		}
+	}
 
 	RETURN(Status);
 }
