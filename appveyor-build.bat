@@ -5,21 +5,18 @@
 @set SLN="%cd%\build\win32\Cxbx.sln"
 :: See https://www.appveyor.com/docs/lang/cpp/
 @set VS_ENV32="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-:: See https://www.appveyor.com/docs/build-phase/
-@set VS_LOGGER="C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
 :: Setup build environment
 @if not exist %VS_ENV32% goto missing_env
-@if not exist %VS_LOGGER% goto missing_log
 
 @call %VS_ENV32%
 
 :: Build managed projects (debugger)
-@call MSBuild %SLN% /p:Platform="Any CPU" /p:Configuration=%1% /logger:%VS_LOGGER%
+@call MSBuild %SLN% /p:Platform="Any CPU" /p:Configuration=%1%
 @if %errorlevel% neq 0 goto failure
 
 :: Build native projects (emulator, debugger dlls)
-@call MSBuild %SLN% /p:Platform="Win32" /p:Configuration=%1% /logger:%VS_LOGGER%
+@call MSBuild %SLN% /p:Platform="Win32" /p:Configuration=%1%
 @if %errorlevel% neq 0 goto failure
 
 @goto success
