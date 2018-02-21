@@ -23,7 +23,7 @@
 #endif
 
 #include "crc32c.h"
-#include <smmintrin.h>
+#include <intrin.h>
 
 #define NOMINMAX
 
