@@ -200,8 +200,6 @@
     <ClInclude Include="..\..\import\stb\stb_image.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
-    <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
-    <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\buffered_io.h" />
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
