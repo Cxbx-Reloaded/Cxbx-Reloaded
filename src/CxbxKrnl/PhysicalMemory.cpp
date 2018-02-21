@@ -82,40 +82,17 @@ void PhysicalMemory::InitializePfnDatabase()
 
 	// Construct the pfn of the page directory
 	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
-	TempPF.Pte.Default = ValidKernelPteBits;
-	TempPF.Pte.Hardware.Persist = 1;
-	TempPF.Pte.Hardware.GuardOrEnd = 1;
-	TempPF.Pte.Hardware.PFN = pfn;
-
-	if (g_bIsRetail || g_bIsDebug) {
-		*XBOX_PFN_ELEMENT(pfn) = TempPF;
-	}
-	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
-
-	m_PhysicalPagesAvailable--;
-	m_PagesByUsage[Contiguous]++; // treat the page of the page directory as contiguous usage
+	WritePfn(TempPF, pfn, pfn, TempPF.Pte, Contiguous, true);
 
 
 	// Construct the pfn's of the kernel pages
 	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE);
 	pfn_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
-	while (pfn <= pfn_end)
-	{
-		TempPF.Pte.Default = ValidKernelPteBits;
-		TempPF.Pte.Hardware.Persist = 1;
-		TempPF.Pte.Hardware.PFN = pfn;
-
-		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(pfn) = TempPF;
-		}
-		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
-
-		m_PhysicalPagesAvailable--;
-		m_PagesByUsage[Contiguous]++; // treat the pages of the kernel as contiguous usage
-		pfn++;
-	}
+	WritePfn(TempPF, pfn, pfn_end, TempPF.Pte, Contiguous, true);
 
 
 	// Construct the pfn's of the pages holding the pfn database
@@ -131,22 +108,9 @@ void PhysicalMemory::InitializePfnDatabase()
 		pfn = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
-	while (pfn <= pfn_end)
-	{
-		TempPF.Pte.Default = ValidKernelPteBits;
-		TempPF.Pte.Hardware.Persist = 1;
-		TempPF.Pte.Hardware.PFN = pfn;
-
-		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(pfn) = TempPF;
-		}
-		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
-
-		m_PhysicalPagesAvailable--;
-		m_PagesByUsage[Contiguous]++; // treat the pages of the pfn as contiguous usage
-		pfn++;
-	}
+	WritePfn(TempPF, pfn, pfn_end, TempPF.Pte, Contiguous, true);
 	
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
@@ -158,22 +122,11 @@ void PhysicalMemory::InitializePfnDatabase()
 		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
+	TempPF.Pte.Default = ValidKernelPteBits;
+	DISABLE_CACHING(TempPF.Pte);
 
-	while (pfn <= pfn_end)
-	{
-		TempPF.Pte.Default = ValidKernelPteBits;
-		DISABLE_CACHING(TempPF.Pte);
-		TempPF.Pte.Hardware.PFN = pfn;
+	WritePfn(TempPF, pfn, pfn_end, TempPF.Pte, Contiguous, true);
 
-		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(pfn) = TempPF;
-		}
-		else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
-
-		m_PhysicalPagesAvailable--;
-		m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
-		pfn++;
-	}
 
 	if (g_bIsDebug)
 	{
@@ -181,36 +134,17 @@ void PhysicalMemory::InitializePfnDatabase()
 
 		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE - 1;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		TempPF.Pte.Default = ValidKernelPteBits;
+		DISABLE_CACHING(TempPF.Pte);
 
-		while (pfn <= pfn_end)
-		{
-			TempPF.Pte.Default = ValidKernelPteBits;
-			DISABLE_CACHING(TempPF.Pte);
-			TempPF.Pte.Hardware.PFN = pfn;
-
-			*XBOX_PFN_ELEMENT(pfn) = TempPF;
-
-			m_PhysicalPagesAvailable--;
-			m_PagesByUsage[Contiguous]++; // treat the pages of the nv2a instance memory as contiguous usage
-			pfn++;
-		}
+		WritePfn(TempPF, pfn, pfn_end, TempPF.Pte, Contiguous, true);
 	}
 
 	// Construct the pfn of the page used by D3D
 	pfn = D3D_PHYSICAL_PAGE;
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
-	TempPF.Pte.Default = ValidKernelPteBits;
-	TempPF.Pte.Hardware.Persist = 1;
-	TempPF.Pte.Hardware.GuardOrEnd = 1;
-	TempPF.Pte.Hardware.PFN = pfn;
-
-	if (g_bIsRetail || g_bIsDebug) {
-		*XBOX_PFN_ELEMENT(pfn) = TempPF;
-	}
-	else { *CHIHIRO_PFN_ELEMENT(pfn) = TempPF; }
-
-	m_PhysicalPagesAvailable--;
-	m_PagesByUsage[Contiguous]++; // treat the initialization page of D3D as contiguous usage
+	WritePfn(TempPF, pfn, pfn, TempPF.Pte, Contiguous, true);
 }
 
 void PhysicalMemory::ReinitializePfnDatabase()
@@ -279,6 +213,36 @@ void PhysicalMemory::InitializePageDirectory()
 	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
 	// file cache function is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
 	// correctly implemented. So, for, we keep on ignoring this allocation
+}
+
+void PhysicalMemory::WritePfn(XBOX_PFN Pfn, PFN pfn_start, PFN pfn_end, MMPTE Pte, PageType BusyType, bool bContiguous)
+{
+	XBOX_PFN TempPF;
+
+	if (bContiguous)
+	{
+		// In the contiguous region we construct the pfn as a pte
+
+		while (pfn_start <= pfn_end)
+		{
+			TempPF.Pte = Pte;
+			TempPF.Pte.Hardware.PFN = pfn_start;
+
+			if (g_bIsRetail || g_bIsDebug) {
+				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
+			}
+			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
+
+			m_PhysicalPagesAvailable--;
+			m_PagesByUsage[Contiguous]++;
+			pfn_start++;
+		}
+	}
+	else
+	{
+		// In all the other regions we construct the pfn as a regular entry
+		// TODO
+	}
 }
 
 bool PhysicalMemory::SearchMap(PFN searchvalue, PFN* result)

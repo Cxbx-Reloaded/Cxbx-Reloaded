@@ -137,17 +137,17 @@ enum PageType {
 
 
 /* PTE protection masks */
-//#define PTE_READWRITE            MM_PTE_WRITE_MASK
 #define PTE_VALID_MASK           0x00000001
 #define PTE_WRITE_MASK           0x00000002
 #define PTE_OWNER_MASK           0x00000004
-//#define PTE_WRITE_THROUGH_MASK   0x00000008
-//#define PTE_CACHE_DISABLE_MASK   0x00000010
+#define PTE_WRITE_THROUGH_MASK   0x00000008
+#define PTE_CACHE_DISABLE_MASK   0x00000010
 #define PTE_ACCESS_MASK          0x00000020
 #define PTE_DIRTY_MASK           0x00000040
-//#define PTE_LARGE_PAGE_MASK      0x00000080
-//#define PTE_GLOBAL_MASK          0x00000100
-//#define PTE_GUARD_MASK           0x00000200
+#define PTE_LARGE_PAGE_MASK      0x00000080
+#define PTE_GLOBAL_MASK          0x00000100
+#define PTE_GUARD_END_MASK       0x00000200
+#define PTE_PERSIST_MASK         0x00000400
 
 //#define PTE_NOACCESS             0x000
 //#define PTE_READONLY             0x000
@@ -226,6 +226,8 @@ class PhysicalMemory
 		void ReinitializePfnDatabase();
 		// set up the page directory
 		void InitializePageDirectory();
+		// write pfn
+		void WritePfn(XBOX_PFN Pfn, PFN pfn_start, PFN pfn_end, MMPTE Pte, PageType BusyType, bool bContiguous);
 		// search the free memory regions for the specified pfn
 		bool SearchMap(PFN searchvalue, PFN* result);
 		// commit a contiguous free memory region
