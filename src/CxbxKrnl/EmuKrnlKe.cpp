@@ -1294,7 +1294,30 @@ XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	LONG prevState = Semaphore->Header.SignalState;
+	LONG currState = prevState + Adjustment;
+
+	if (currState > Semaphore->Limit || currState < prevState) {
+		KiUnlockDispatcherDatabase(oldIRQL);
+		ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+	}
+
+	Semaphore->Header.SignalState = currState;
+	if (prevState == 0 && !IsListEmpty(&Semaphore->Header.WaitListHead)) {
+		// TODO : KiWaitTest(Semaphore, Increment);
+	}
+
+	if (Wait) {
+		KTHREAD *thread = KeGetCurrentThread();
+		thread->WaitNext = Wait;
+		thread->WaitIrql = oldIRQL;
+	}
+	else {
+		KiUnlockDispatcherDatabase(oldIRQL);
+	}
 
 	RETURN(0);
 }
