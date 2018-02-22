@@ -121,10 +121,22 @@ public:
 	@return 32 bit XXHash **/
 	static uint32_t hash(const void* input, uint64_t length, uint32_t seed)
 	{
+		// TODO: This is the same hack as vertex buffer size
+		// but here it prevents hashing from destroying performance
+		// in titles like Zapper and Shemnue II.
+		// Like the other occurance of this hack, this could be solved
+		// by properly calculating vertex buffer size at draw time.
+		// But because of index buffers, it's not as easy as using
+		// the vertex count.
+		#define ONE_MB (1024 * 1024)
+		if (length > ONE_MB) {
+			length = ONE_MB;
+		}
+
 		// Some modern CPUs support hardware accellerated CRC32
 		// This is significantly faster than xxHash, in some cases, by more than double
 		// So now we check for this capability and use it if it exists.
-		// This significantly reduces the impact of hashing on CPUs supporting SSE4.2
+		// This significantly reduces the impact	of hashing on CPUs supporting SSE4.2
 		// but also keeps xxHash present as a fast fallback, for those who don't support it
 		static bool bHardwareCrc32 = crc32c_hw_available();	// Cache the result in a static variable to avoid _cpuid every call
 		static bool bCrc32Init = false;
