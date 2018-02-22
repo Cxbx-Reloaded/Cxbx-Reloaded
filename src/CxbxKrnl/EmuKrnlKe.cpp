@@ -1207,7 +1207,7 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
-	LOG_FORWARD(KfRaiseIrql);
+	LOG_FORWARD("KfRaiseIrql");
 
 	return KfRaiseIrql(DISPATCH_LEVEL);
 }
@@ -1217,7 +1217,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel()
 {
-	LOG_FORWARD(KfRaiseIrql);
+	LOG_FORWARD("KfRaiseIrql");
 
 	return KfRaiseIrql(SYNC_LEVEL);
 }
