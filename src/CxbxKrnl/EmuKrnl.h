@@ -48,6 +48,8 @@
 
 void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead);
 bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead);
+#define NextListEntry(pListEntry) ((pListEntry)->Flink)
+#define PrevListEntry(pListEntry) ((pListEntry)->Blink)
 void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
