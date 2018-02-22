@@ -1364,7 +1364,7 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	BootFlags &= ~BOOT_FATAL_ERROR;         // clear the fatal error flag to avoid looping here endlessly
 	g_EmuShared->SetBootFlags(&BootFlags);
 
-	NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
+	xboxkrnl::NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
 
 	if (status == STATUS_SUCCESS)
 	{
@@ -1397,8 +1397,46 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	g_CxbxFatalErrorCode = ErrorCode;
 	g_CxbxPrintUEM = true; // print the UEM
 
+	CxbxPrintUEMInfo(ErrorCode);
+
 	// Sleep forever to prevent continuing the initialization
 	Sleep(INFINITE);
+}
+
+void CxbxPrintUEMInfo(ULONG ErrorCode)
+{
+	// See here for a description of the error codes and their meanings:
+	// https://www.reddit.com/r/originalxbox/wiki/error_codes
+
+	std::map<int, std::string> UEMErrorTable;
+
+	UEMErrorTable.emplace(FATAL_ERROR_CORE_DIGITAL, "General motherboard issue");
+	UEMErrorTable.emplace(FATAL_ERROR_BAD_EEPROM, "General EEPROM issue");
+	UEMErrorTable.emplace(FATAL_ERROR_BAD_RAM, "RAM failure");
+	UEMErrorTable.emplace(FATAL_ERROR_HDD_NOT_LOCKED, "HDD is not locked");
+	UEMErrorTable.emplace(FATAL_ERROR_HDD_CANNOT_UNLOCK, "Unable to unlock HDD (bad password?)");
+	UEMErrorTable.emplace(FATAL_ERROR_HDD_TIMEOUT, "HDD failed to respond");
+	UEMErrorTable.emplace(FATAL_ERROR_HDD_NOT_FOUND, "Missing HDD");
+	UEMErrorTable.emplace(FATAL_ERROR_HDD_BAD_CONFIG, "Invalid / missing HDD parameter(s)");
+	UEMErrorTable.emplace(FATAL_ERROR_DVD_TIMEOUT, "DVD drive failed to respond");
+	UEMErrorTable.emplace(FATAL_ERROR_DVD_NOT_FOUND, "Missing DVD drive");
+	UEMErrorTable.emplace(FATAL_ERROR_DVD_BAD_CONFIG, "Invalid / missing DVD drive parameter(s)");
+	UEMErrorTable.emplace(FATAL_ERROR_XBE_DASH_GENERIC, "Generic MS dashboard issue (dashboard not installed?)");
+	UEMErrorTable.emplace(FATAL_ERROR_XBE_DASH_ERROR, "General MS dashboard issue");
+	UEMErrorTable.emplace(FATAL_ERROR_XBE_DASH_SETTINGS, "MS dashboard issue: cannot reset console clock");
+	UEMErrorTable.emplace(FATAL_ERROR_XBE_DASH_X2_PASS, "General MS dashboard issue, DVD drive authentication was successfull");
+	UEMErrorTable.emplace(FATAL_ERROR_REBOOT_ROUTINE, "The console was instructed to reboot to this error screen");
+
+	auto it = UEMErrorTable.find(ErrorCode);
+	if (it != UEMErrorTable.end())
+	{
+		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it";
+		CxbxPopupMessage(ErrorMessage.c_str());
+	}
+	else
+	{
+		CxbxPopupMessage("Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
+	}
 }
 
 __declspec(noreturn) void CxbxKrnlTerminateThread()
