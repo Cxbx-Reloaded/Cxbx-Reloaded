@@ -1532,7 +1532,27 @@ XBSYSAPI EXPORTNUM(141) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRundownQueue
 {
 	LOG_FUNC_ONE_ARG(Queue);
 
-	LOG_UNIMPLEMENTED();
+	auto pQueue = Queue;
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	PLIST_ENTRY firstEntry = pQueue->EntryListHead.Flink;
+	if (firstEntry == &pQueue->EntryListHead) {
+		firstEntry = NULL;
+	}
+	else {
+		RemoveEntryList(&pQueue->EntryListHead);
+	}
+
+	while (pQueue->ThreadListHead.Flink != &pQueue->ThreadListHead) {
+		auto pEntry = NextListEntry(&pQueue->ThreadListHead);
+		KTHREAD *pThread = CONTAINING_RECORD(pEntry, xboxkrnl::KTHREAD, QueueListEntry);
+		pThread->Queue = NULL;
+		RemoveEntryList(pEntry);
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 
 	RETURN(NULL);
 }
