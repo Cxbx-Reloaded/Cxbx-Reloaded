@@ -198,6 +198,9 @@ void CxbxKrnlShutDown();
 /*! display the fatal error message*/
 void CxbxKrnlPrintUEM(ULONG ErrorCode);
 
+/*! display the cause of the fatal error message*/
+void CxbxPrintUEMInfo(ULONG ErrorCode);
+
 /*! terminate the calling thread */
 __declspec(noreturn) void CxbxKrnlTerminateThread();
 

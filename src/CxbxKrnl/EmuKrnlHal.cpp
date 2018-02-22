@@ -489,8 +489,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 			{
 				// ergo720: I tested this with Tenchu and Dead or Alive Ultimate, both of which register a single shutdown
 				// routine with HalRegisterShutdownNotification. The routines are correctly registered but when invoked they
-				// cause a crash. It's because these routines are registered by and act upon the Xbox hardware, most of it
-				// is not LLEd enough and so, until then, we don't try to execute the shutdown routines
+				// cause a crash. It's because these routines are registered by and act upon the Xbox hardware, but most of
+				// it is not LLEd enough and so, until then, we don't try to execute the shutdown routines
 
 				#if 0
 				KIRQL OldIrql;
