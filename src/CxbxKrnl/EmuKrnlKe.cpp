@@ -1744,9 +1744,22 @@ XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto pThread = Thread;
 
-	RETURN(1);
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	KPRIORITY prevPriority = pThread->Priority;
+	PKPROCESS process = pThread->ApcState.Process;
+	auto pProcess = process;
+	pThread->Quantum = pProcess->ThreadQuantum;
+	pThread->DecrementCount = 0;
+	pThread->PriorityDecrement = 0;
+	// TODO : KiSetPriorityThread(Thread, Priority);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevPriority);
 }
 
 // ******************************************************************
