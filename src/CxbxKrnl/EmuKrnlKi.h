@@ -50,3 +50,10 @@ xboxkrnl::BOOLEAN KiInsertTreeTimer(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::LARGE_INTEGER Interval
 );
+
+xboxkrnl::LONG KiInsertQueue
+(
+	xboxkrnl::PRKQUEUE pQueue,
+	xboxkrnl::PLIST_ENTRY pEntry,
+	xboxkrnl::BOOLEAN Head
+);
