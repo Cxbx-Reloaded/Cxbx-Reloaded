@@ -161,7 +161,7 @@ xboxkrnl::KPCR* KeGetPcr()
 	// See EmuKeSetPcr()
 	Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 
-	if (Pcr == nullptr) {
+	if (Pcr == nullptr || Pcr->SelfPcr != Pcr) {
 		EmuWarning("KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
 		InitXboxThread(g_CPUXbox);
@@ -1446,7 +1446,7 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 
 	// Fetch the host event and signal it
 	LONG PreviousState;
-	NtDll::NtResetEvent(GetNtEvent(Event), &PreviousState);
+	//NtDll::NtResetEvent(GetNtEvent(Event), &PreviousState);
 
 	RETURN(ret);
 }
