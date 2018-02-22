@@ -77,56 +77,27 @@ DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimer
 
 std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
 
-// TODO : GetMode : Existing, ExistingOrNew, Remove
-HANDLE GetNtEvent(xboxkrnl::PRKEVENT Event)
+HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode)
 {
-	HANDLE hostEvent;
+	// TODO : Make g_KeEventHandles accesses thread-safe
+	HANDLE hostEvent = 0;
 
 	auto it = g_KeEventHandles.find(Event);
 	if (it != g_KeEventHandles.end()) {
 		hostEvent = it->second;
+		if (getMode == GetMode::Erase)
+			g_KeEventHandles.erase(it);
 	}
 	else {
-		// Create a Windows event, to be used in KeWaitForObject
-		// TODO: This doesn't check for events that are already initialized
-		// This shouldn't happen, except on shoddily coded titles so we
-		// ignore it for now
-
-		// TODO : Is this the correct ACCESS_MASK? :
-		const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
-
-		NTSTATUS ret;
-#if 0
-		// initialize object attributes
-		NativeObjectAttributes nativeObjectAttributes;
-		CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
-
-		// redirect to Win2k/XP
-		ret = NtDll::NtCreateEvent(
-			/*OUT*/&hostEvent,
-			DesiredAccess,
-			nativeObjectAttributes.NtObjAttrPtr,
-			(NtDll::EVENT_TYPE)Event->Header.Type,
-			Event->Header.SignalState);
-
-		if (FAILED(ret)) {
-			EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
-#else
-						{
-#endif
-			// If it fails, try again but without the object attributes stucture
-			// This fixes Panzer Dragoon games on non-Vista OSes.
-			ret = NtDll::NtCreateEvent(
-				/*OUT*/&hostEvent,
-				DesiredAccess,
-				/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
-				(NtDll::EVENT_TYPE)Event->Header.Type,
-				(BOOLEAN)Event->Header.SignalState);
-
-			//assert(SUCCEEDED(ret));
+		if (getMode == GetMode::ExistingOrNew) {
+			// Create a Windows event, to be used in KeWaitForObject
+			hostEvent = CreateEvent(
+				/*lpEventAttributes=*/nullptr, // TOOD : Retrieve from Xbox ObjectAttributes
+				/*bManualReset=*/FALSE, // TODO : Is this correct?
+				/*bInitialState=*/(BOOL)Event->Header.SignalState,
+				/*lpName=*/nullptr); // TOOD : Retrieve name from Xbox ObjectAttributes
+			g_KeEventHandles[Event] = hostEvent;
 		}
-
-		g_KeEventHandles[Event] = hostEvent;
 	}
 
 	return hostEvent;
@@ -139,7 +110,8 @@ void KeClearEvent
 {
 	Event->Header.SignalState = 0;
 
-	NtDll::NtClearEvent(GetNtEvent(Event));
+	// Fetch the host event and signal it
+	ResetEvent(GetHostEvent(Event));
 }
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
@@ -1111,8 +1083,7 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 	}
 
 	// Fetch the host event and signal it
-	LONG PreviousState;
-	NtDll::NtPulseEvent(GetNtEvent(Event), &PreviousState);
+	PulseEvent(GetHostEvent(Event));
 
 	RETURN(OldState);
 }
@@ -1445,8 +1416,7 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 	KiUnlockDispatcherDatabase(OldIrql);
 
 	// Fetch the host event and signal it
-	LONG PreviousState;
-	//NtDll::NtResetEvent(GetNtEvent(Event), &PreviousState);
+	ResetEvent(GetHostEvent(Event));
 
 	RETURN(ret);
 }
@@ -1612,8 +1582,7 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	}
 
 	// Fetch the host event and signal it
-	LONG PreviousState;
-	NtDll::NtSetEvent(GetNtEvent(Event), &PreviousState);
+	SetEvent(GetHostEvent(Event));
 
 	RETURN(OldState);
 }
@@ -1883,15 +1852,28 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	std::vector<HANDLE> ntdllObjects;
 
 	for (uint i = 0; i < Count; i++) {
+		// Prevent waiting on EmuHandles
+		if (IsEmuHandle(Object[i])) {
+			// EmuHandle *iEmuHandle = HandleToEmuHandle(Object[i]);
+			// TODO : Somehow, ntdllObjects.push_back(iEmuHandle->NtHandle);
+			continue;
+		}
+
+		// Decide per object type in which vector the handle is put
 		switch (((DISPATCHER_HEADER*)(Object[i]))->Type) {
 		case EventNotificationObject:
 		case EventSynchronizationObject: {
-			HANDLE ntEvent = GetNtEvent((PKEVENT)Object[i]);
-			ntdllObjects.push_back(ntEvent);
+			// Host events use native host handles :
+			PKEVENT kernelEvent = (PKEVENT)Object[i];
+			HANDLE hostEvent = GetHostEvent(kernelEvent, GetMode::Existing);
+			if (hostEvent) {
+				nativeObjects.push_back(hostEvent);
+			}
 			break;
 		}
 		default:
-			nativeObjects.push_back(Object[i]);
+			// Assume all other object types (files, threads, etc) use NtDll handles :
+			ntdllObjects.push_back(Object[i]);
 			break;
 		}
 	}
