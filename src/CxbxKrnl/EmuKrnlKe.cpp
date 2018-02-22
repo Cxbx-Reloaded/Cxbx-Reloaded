@@ -1688,7 +1688,29 @@ XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
 		LOG_FUNC_ARG(Thread)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto pEvent = Event;
+	auto pThread = Thread;
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	if (IsListEmpty(&pEvent->Header.WaitListHead)) {
+		pEvent->Header.SignalState = 1;
+	}
+	else {
+		PKTHREAD WaitThread = CONTAINING_RECORD(NextListEntry(&pEvent->Header.WaitListHead), xboxkrnl::KWAIT_BLOCK, WaitListEntry)->Thread;
+		auto pWaitThread = WaitThread;
+		auto pWaitThreadProcess = pWaitThread->ApcState.Process;
+
+		if (Thread != NULL) {
+			*pThread = WaitThread;
+		}
+
+		pWaitThread->Quantum = pWaitThreadProcess->ThreadQuantum;
+		// TODO : KiUnwaitThread(WaitThread, STATUS_SUCCESS, EVENT_INCREMENT);
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 }
 
 XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
