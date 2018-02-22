@@ -237,12 +237,24 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 	}
     else
     {
-        if (CxbxDebugger::CanReport())
-        {
-            CxbxDebugger::ReportFileClosed(Handle);
-        }
+		// Check if this is an event handle
+		PVOID KernelObject; // TODO : Use ObpDestroyObjectHandle()
+		if (SUCCEEDED(EmuObFindObjectByHandle(Handle, &KernelObject))) {			
+			// For now, retrieve the host couterpart event and close that handle
+			HANDLE hostEvent = GetHostEvent((PKEVENT)KernelObject, GetMode::Erase);
+			if (hostEvent) {
+				CloseHandle(hostEvent);
+			}
+		}
+		else {
+			if (CxbxDebugger::CanReport())
+			{
+				CxbxDebugger::ReportFileClosed(Handle);
+			}
 
-		ret = NtDll::NtClose(Handle);
+			// close normal handles
+			ret = NtDll::NtClose(Handle);
+		}
     }
 
 	RETURN(ret);
@@ -980,11 +992,10 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &KernelEvent);		
 	if (SUCCEEDED(ret)) {
 		ret = KePulseEvent((PKEVENT)KernelEvent, (KPRIORITY)1, FALSE);
+		ObfDereferenceObject(KernelEvent);
 		if (PreviousState) {
 			*PreviousState = ret;
 		}
-
-		ObfDereferenceObject(KernelEvent);
 	}
 
 	RETURN(ret);
@@ -1892,7 +1903,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FORWARD("NtWaitForSingleObjectEx");
+	// LOG_FORWARD("NtWaitForSingleObjectEx");
 
 	return NtWaitForSingleObjectEx(
 		Handle,
