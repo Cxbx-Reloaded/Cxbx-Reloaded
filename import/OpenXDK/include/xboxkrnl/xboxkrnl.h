@@ -170,12 +170,12 @@ typedef long                            NTSTATUS;
 // The SCSI input buffer was too large (not necessarily an error!)
 #define STATUS_DATA_OVERRUN              ((DWORD   )0xC000003CL)
 #define STATUS_MUTANT_NOT_OWNED          ((DWORD   )0xC0000046L)
+#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((DWORD   )0xC0000047L)
 #define STATUS_INVALID_IMAGE_FORMAT      ((DWORD   )0xC000007BL)
 #define STATUS_INSUFFICIENT_RESOURCES    ((DWORD   )0xC000009AL)
 #define STATUS_TOO_MANY_SECRETS          ((DWORD   )0xC0000156L)
 #define STATUS_XBE_REGION_MISMATCH       ((DWORD   )0xC0050001L)
 #define STATUS_XBE_MEDIA_MISMATCH        ((DWORD   )0xC0050002L)
-
 
 
 
