@@ -1923,11 +1923,22 @@ XBSYSAPI EXPORTNUM(155) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeTestAlertThread
 {
 	LOG_FUNC_ONE_ARG(AlertMode);
 
-	BOOLEAN ret = TRUE;
+	KTHREAD *pThread = KeGetCurrentThread();
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(ret);
+	BOOLEAN alerted = pThread->Alerted[AlertMode];
+	if (alerted) {
+		pThread->Alerted[AlertMode] = FALSE;
+	}
+	else if (AlertMode == xboxkrnl::UserMode && !IsListEmpty(&pThread->ApcState.ApcListHead[xboxkrnl::UserMode])) {
+		pThread->ApcState.UserApcPending = TRUE;
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(alerted);
 }
 
 // ******************************************************************
