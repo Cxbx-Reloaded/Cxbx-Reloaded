@@ -917,9 +917,14 @@ XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue
 		LOG_FUNC_ARG(Entry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(0);
+	LONG prevState = KiInsertQueue(Queue, Entry, TRUE);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
@@ -933,9 +938,14 @@ XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
 		LOG_FUNC_ARG(Entry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(0);
+	LONG prevState = KiInsertQueue(Queue, Entry, FALSE);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(118) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueApc
