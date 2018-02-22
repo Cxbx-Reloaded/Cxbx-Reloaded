@@ -1227,9 +1227,46 @@ XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-	
-	RETURN(0);
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	LONG prevState = Mutant->Header.SignalState;
+
+	PRKTHREAD pThread = KeGetCurrentThread();
+	if (Abandoned) {
+		Mutant->Header.SignalState = 1;
+		Mutant->Abandoned = TRUE;
+	}
+	else {
+		if (Mutant->OwnerThread != pThread) {
+			KiUnlockDispatcherDatabase(oldIRQL);
+			ExRaiseStatus(Mutant->Abandoned ? STATUS_ABANDONED : STATUS_MUTANT_NOT_OWNED);
+		}
+
+		Mutant->Header.SignalState += 1;
+	}
+
+	if (Mutant->Header.SignalState == 1) {
+		if (prevState <= 0) {
+			RemoveEntryList(&Mutant->MutantListEntry);
+		}
+
+		Mutant->OwnerThread = NULL;
+		if (!IsListEmpty(&Mutant->Header.WaitListHead)) {
+			// TODO : KiWaitTest(Mutant, Increment);
+		}
+	}
+
+	if (Wait) {
+		pThread->WaitNext = Wait;
+		pThread->WaitIrql = oldIRQL;
+	}
+	else {
+		KiUnlockDispatcherDatabase(oldIRQL);
+	}
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
@@ -1692,7 +1729,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	if (!KiInsertTreeTimer(Timer, DueTime)) {
 		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
-			// KiWaitTest(Timer, 0);
+			// TODO : KiWaitTest(Timer, 0);
 		}
 
 		if (Dpc != NULL) {
