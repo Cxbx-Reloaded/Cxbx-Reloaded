@@ -61,9 +61,7 @@ class Xbe : public Error
 
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
-
-        std::string DumpInformation();
-
+		
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
 
@@ -77,7 +75,6 @@ class Xbe : public Error
         const char *GameRegionToString();
 
         // Xbe header
-        #include "AlignPrefix1.h"
         struct Header
         {
             uint32 dwMagic;                         // 0x0000 - magic number [should be "XBEH"]
@@ -129,15 +126,14 @@ class Xbe : public Error
             uint32 dwLogoBitmapAddr;                // 0x0170 - logo bitmap address
             uint32 dwSizeofLogoBitmap;              // 0x0174 - logo bitmap size
         }
-        #include "AlignPosfix1.h"
         m_Header;
+		static_assert(sizeof(Header) == 0x178, "Xbe::Header alignment incorrect");
 
         // Xbe header extra byte (used to preserve unknown data)
         char *m_HeaderEx;
 		uint32 m_ExSize;
 
         // Xbe certificate
-        #include "AlignPrefix1.h"
         struct Certificate
         {
             uint32  dwSize;                               // 0x0000 - size of certificate
@@ -159,11 +155,10 @@ class Xbe : public Error
             uint32  dwSecurityFlags;					  // 0x01D8 - Extra Security Flags
             uint08  bzCodeEncKey[16];					  // 0x01DC - Code Encryption Key?
         }
-        #include "AlignPosfix1.h"
         m_Certificate;
+		static_assert(sizeof(Certificate) == 0x1EC, "Xbe::Certificate alignment incorrect");
 
         // Xbe section header
-        #include "AlignPrefix1.h"
         struct SectionHeader
         {
             typedef struct 
@@ -196,11 +191,10 @@ class Xbe : public Error
             uint32 dwTailSharedRefCountAddr;    // tail shared page reference count address
             uint08 bzSectionDigest[20];         // section digest
         }
-        #include "AlignPosfix1.h"
         *m_SectionHeader;
+		static_assert(sizeof(SectionHeader) == 0x38, "Xbe::SectionHeader alignment incorrect");
 
         // Xbe library versions
-        #include "AlignPrefix1.h"
         struct LibraryVersion
         {
             char   szName[8];                   // library name
@@ -220,11 +214,10 @@ class Xbe : public Error
 				uint16 wFlags_value;
 			};
         }
-        #include "AlignPosfix1.h"
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
+		static_assert(sizeof(LibraryVersion) == 0x10, "Xbe::LibraryVersion alignment incorrect");
 
         // Xbe thread local storage
-        #include "AlignPrefix1.h"
         struct TLS
         {
             uint32 dwDataStartAddr;             // raw start address
@@ -234,8 +227,8 @@ class Xbe : public Error
             uint32 dwSizeofZeroFill;            // size of zero fill
             uint32 dwCharacteristics;           // characteristics
         }
-        #include "AlignPosfix1.h"
         *m_TLS;
+		static_assert(sizeof(TLS) == 0x18, "Xbe::TLS alignment incorrect");
 
         // Xbe section names, stored null terminated
         char (*m_szSectionName)[10];
@@ -290,7 +283,6 @@ class Xbe : public Error
 
 	public:
 		// used to decode game logo bitmap data
-		#include "AlignPrefix1.h"
 		struct X_D3DResourceLoc
 		{
 			uint32 Common;
@@ -298,11 +290,9 @@ class Xbe : public Error
 			uint32 Lock;
 			uint32 Format;
 			uint32 Size;
-		}
-		#include "AlignPosfix1.h"
-		;
+		};
+		static_assert(sizeof(X_D3DResourceLoc) == 0x14, "Xbe::X_D3DResourceLoc alignment incorrect");
 
-		#include "AlignPrefix1.h"
 		// XPR structures
 
 		// Purpose:
@@ -317,10 +307,9 @@ class Xbe : public Error
 			uint32 dwXprTotalSize;
 			uint32 dwXprHeaderSize;
 		}
-		#include "AlignPosfix1.h"
 		*m_xprHeader;
+		static_assert(sizeof(XprHeader) == 0xC, "Xbe::XprHeader alignment incorrect");
 
-		#include "AlignPrefix1.h"
 		// Layout of SaveImage.xbx saved game image file
 		//
 		// File is XPR0 format. Since the XPR will always contain only a single
@@ -331,18 +320,15 @@ class Xbe : public Error
 			X_D3DResourceLoc d3dTexture; // Standard D3D texture struct
 			uint32 dwEndOfHeader; // $FFFFFFFF
 		}
-		#include "AlignPosfix1.h"
 		*m_xprImageHeader;
+		static_assert(sizeof(XprImageHeader) == 0x24, "Xbe::XprImageHeader alignment incorrect");
 
-
-		#include "AlignPrefix1.h"
 		struct XprImage
 		{
 			XprImageHeader xprImageHeader;
 			char strPad[XPR_IMAGE_HDR_SIZE - sizeof(XprImageHeader)];
 			unsigned char pBits;
 		}
-		#include "AlignPosfix1.h"
 		*m_xprImage;
 };
 
