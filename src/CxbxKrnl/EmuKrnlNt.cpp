@@ -227,11 +227,12 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
-
-		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
     else
     {
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
+		LOG_INCOMPLETE(); // TODO : Base this on the Ob* functions, 
 		// Check if this is an event handle
 		PVOID KernelObject; // TODO : Use ObpDestroyObjectHandle()
 		if (SUCCEEDED(EmuObFindObjectByHandle(Handle, &KernelObject))) {			
@@ -250,6 +251,8 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 			// close normal handles
 			ret = NtDll::NtClose(Handle);
 		}
+
+		KeLowerIrql(OldIrql);
     }
 
 	RETURN(ret);
