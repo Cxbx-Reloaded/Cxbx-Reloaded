@@ -57,6 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
+#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent()
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
@@ -150,14 +151,6 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 {
 	return &(KeGetPcr()->PrcbData);
 }
-
-// Forward KeLowerIrql() to KfLowerIrql()
-#define KeLowerIrql(NewIrql) \
-	KfLowerIrql(NewIrql)
-
-// Forward KeRaiseIrql() to KfRaiseIrql()
-#define KeRaiseIrql(NewIrql, OldIrql) \
-	*(OldIrql) = KfRaiseIrql(NewIrql)
 
 ULONGLONG BootTickCount = 0;
 

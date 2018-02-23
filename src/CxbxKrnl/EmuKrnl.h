@@ -60,9 +60,6 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
 
 xboxkrnl::NTSTATUS EmuObFindObjectByHandle(xboxkrnl::HANDLE Handle, PVOID *Object);
 
-enum class GetMode { Existing, ExistingOrNew, Erase }; // TODO : Move to EmuKrnlKe.h
-HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode = GetMode::ExistingOrNew); // TODO : Move to EmuKrnlKe.h
-
 extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
 

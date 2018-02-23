@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
+#include "EmuKrnlKe.h" // For KeLowerIrql()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -58,7 +59,7 @@ namespace xboxkrnl
 #define OB_FLAG_NAMED_OBJECT 1
 #define OB_FLAG_PERMANENT_OBJECT 2
 
-xboxkrnl::HANDLE EmuObCreateObjectHandle
+xboxkrnl::HANDLE ObpCreateObjectHandle
 (
 	IN xboxkrnl::PVOID Object
 )
@@ -321,7 +322,7 @@ XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	*Handle = EmuObCreateObjectHandle(Object);
+	*Handle = ObpCreateObjectHandle(Object);
 
 	LOG_INCOMPLETE();
 
@@ -396,7 +397,7 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		Status = ObReferenceObjectByName(ObjectAttributes->ObjectName, ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 
 		if (NT_SUCCESS(Status)) {
-			new_handle = EmuObCreateObjectHandle(Object);
+			new_handle = ObpCreateObjectHandle(Object);
 			if (new_handle == NULL)
 			{
 				// Detected out of memory
@@ -430,7 +431,10 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 	HANDLE new_handle = NULL;
 
 	if (NT_SUCCESS(Status)) {
-		new_handle = EmuObCreateObjectHandle(Object);
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
+		new_handle = ObpCreateObjectHandle(Object);
+		KeLowerIrql(OldIrql);
 		if(new_handle == NULL)
 		{
 			// Detected out of memory
