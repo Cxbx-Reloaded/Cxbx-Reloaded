@@ -57,7 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
-#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent()
+#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent(), KeQueryMutant()
 #include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
 
@@ -199,12 +199,14 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 {
 	LOG_FUNC_ONE_ARG(EventHandle);
 
-	PVOID KernelEvent;
+	PVOID EventObj;
 
-	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &KernelEvent);
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
 	if (SUCCEEDED(ret)) {
-		KeClearEvent((PKEVENT)KernelEvent);
-		ObfDereferenceObject(KernelEvent);
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		KeClearEvent(KernelEvent);
+		ObfDereferenceObject(EventObj);
 	}
 
 	RETURN(ret);
@@ -402,60 +404,15 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-/*
-	NTSTATUS Status;
+	PKMUTANT Mutant;
 
-	if (!verify arguments) {
-		Status = STATUS_INVALID_PARAMETER;
-	}
-	else {
-		PKMUTANT Mutant;
-
-		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
-		if (NT_SUCCESS(Status)) {
-			KeInitializeMutant(Mutant, InitialOwner);
-			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
-		}
+	NTSTATUS Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
+	if (NT_SUCCESS(Status)) {
+		KeInitializeMutant(Mutant, InitialOwner);
+		Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT*/MutantHandle);
 	}
 
 	RETURN(Status);
-*/
-	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
-
-	// initialize object attributes
-	NativeObjectAttributes nativeObjectAttributes;
-	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
-
-	// TODO : Is this the correct ACCESS_MASK? :
-	const ACCESS_MASK DesiredAccess = MUTANT_ALL_ACCESS;
-
-	// redirect to Windows Nt
-	NTSTATUS ret = NtDll::NtCreateMutant(
-		/*OUT*/MutantHandle, 
-		DesiredAccess,
-		nativeObjectAttributes.NtObjAttrPtr,
-		InitialOwner);
-
-	if (FAILED(ret))
-	{
-		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
-
-		// If it fails, try again but without the object attributes stucture
-		ret = NtDll::NtCreateMutant(
-			/*OUT*/MutantHandle, 
-			DesiredAccess,
-			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
-			InitialOwner);
-
-		if(FAILED(ret))
-			EmuWarning("NtCreateMutant Failed!");
-		else
-			DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
-	}
-	else
-		DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
-
-	RETURN(ret);
 }
 
 // ******************************************************************
@@ -985,12 +942,14 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	PVOID KernelEvent;
+	PVOID EventObj;
 
-	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &KernelEvent);		
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
 	if (SUCCEEDED(ret)) {
-		ret = KePulseEvent((PKEVENT)KernelEvent, (KPRIORITY)1, FALSE);
-		ObfDereferenceObject(KernelEvent);
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		ret = KePulseEvent(KernelEvent, (KPRIORITY)1, FALSE);
+		ObfDereferenceObject(EventObj);
 		if (PreviousState) {
 			*PreviousState = ret;
 		}
@@ -1279,17 +1238,19 @@ XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
 		LOG_FUNC_ARG_OUT(MutantInformation)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryMutant(
-		(NtDll::HANDLE)MutantHandle,
-		/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
-		MutantInformation,
-		sizeof(MUTANT_BASIC_INFORMATION),
-		/*ReturnLength=*/nullptr);
+	PVOID MutantObj;
+	
+	NTSTATUS Status = ObReferenceObjectByHandle(MutantHandle, &ExMutantObjectType, &MutantObj);
 
-	if (ret != STATUS_SUCCESS)
-		EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+	if (NT_SUCCESS(Status)) {
+		PKMUTANT KernelMutant = (PKMUTANT)MutantObj;
 
-	RETURN(ret);
+		KeQueryMutant(KernelMutant, MutantInformation);
+
+		ObfDereferenceObject(MutantObj);
+	}
+
+	RETURN(Status);
 }
 
 // ******************************************************************
