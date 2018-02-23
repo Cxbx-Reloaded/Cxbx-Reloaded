@@ -339,21 +339,19 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 {
 	LOG_FUNC_ONE_ARG(Object);
 
+	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
 	/* Get the header */
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-
-	/* Acquire object lock */
-	//ObpAcquireObjectLock(ObjectHeader);
-	LOG_INCOMPLETE(); // TODO : Lock, etc.
 
 	/* Remove the flag */
 	ObjectHeader->Flags &= ~OB_FLAG_PERMANENT_OBJECT;
 
-	/* Release the lock */
-	// ObpReleaseObjectLock(ObjectHeader);
-
 	/* Check if we should delete the object now */
 	//ObpDeleteNameCheck(ObjectBody);
+	LOG_INCOMPLETE();
+
+	KeLowerIrql(OldIrql);
 }
 
 // ******************************************************************
@@ -435,8 +433,7 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 
 		new_handle = ObpCreateObjectHandle(Object);
 		KeLowerIrql(OldIrql);
-		if(new_handle == NULL)
-		{
+		if(new_handle == NULL) {
 			// Detected out of memory
 			ObfDereferenceObject(Object);
 			Status = STATUS_INSUFFICIENT_RESOURCES;
