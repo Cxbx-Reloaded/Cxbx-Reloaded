@@ -550,7 +550,7 @@ XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType
 	NULL,
 	NULL, // TODO : xboxkrnl::ObpDeleteSymbolicLink,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'bmyS' // = first four characters of "SymbolicLink" in reverse
 };
 
