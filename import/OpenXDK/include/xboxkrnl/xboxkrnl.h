@@ -1651,6 +1651,7 @@ typedef enum _KOBJECTS
 	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
+	ThreadObject = 6,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
 	ApcObject = 0x12,
