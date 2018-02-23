@@ -409,7 +409,7 @@ void CxbxPopupMessage(const char *message, ...)
 	vsprintf(Buffer, message, argp);
 	va_end(argp);
 
-	DbgPrintf("Popup : %s\n", Buffer);
+	EmuWarning("Popup : %s\n", Buffer);
 	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), MB_OK | MB_ICONEXCLAMATION | MB_TOPMOST | MB_SETFOREGROUND);
 }
 
