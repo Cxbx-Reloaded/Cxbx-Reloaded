@@ -57,6 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
+#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent()
 #include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
 
@@ -70,12 +71,6 @@ namespace NtDll
 #define MM_HIGHEST_USER_ADDRESS     0x7FFEFFFF
 #define X64K                        ((ULONG)64*1024)
 #define MM_HIGHEST_VAD_ADDRESS      (MM_HIGHEST_USER_ADDRESS - X64K)
-
-// external declaration, should reside in EmuKrnlKe.h
-void KeClearEvent
-(
-	IN xboxkrnl::PRKEVENT Event
-);
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
