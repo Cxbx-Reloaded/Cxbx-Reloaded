@@ -277,6 +277,18 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	RETURN(Status);
 }
 
+// Declare ObpDefaultObject identical to KeInitializeEvent(&ObpDefaultObject, SynchronizationEvent, TRUE);
+xboxkrnl::KEVENT ObpDefaultObject =
+{
+	/* Header.Type = */ xboxkrnl::EVENT_TYPE::SynchronizationEvent,
+	/* Header.Absolute = */ FALSE,
+	/* Header.Size = */ sizeof(xboxkrnl::KEVENT) / sizeof(xboxkrnl::LONG),
+	/* Header.Inserted = */ FALSE,
+	/* Header.SignalState = */ TRUE,
+	/* Header.WaitListHead.Flink= */ &ObpDefaultObject.Header.WaitListHead,
+	/* Header.WaitListHead.Blink= */ &ObpDefaultObject.Header.WaitListHead // See InitializeListHead()
+};
+
 // ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
 // ******************************************************************
@@ -287,7 +299,7 @@ XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 	NULL,
 	NULL,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
 
