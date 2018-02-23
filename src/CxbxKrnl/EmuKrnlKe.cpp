@@ -1733,10 +1733,10 @@ XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
+XBSYSAPI EXPORTNUM(148) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN LONG  Priority
+    IN KPRIORITY Priority
 )
 {
 	LOG_FUNC_BEGIN
