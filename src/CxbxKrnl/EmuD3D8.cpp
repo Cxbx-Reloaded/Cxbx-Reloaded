@@ -87,7 +87,7 @@ static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
-static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
+static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD dwSize);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
@@ -795,13 +795,13 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 	}
 }
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true)
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true, DWORD dwSize = 0)
 {
 	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
 
 	if (shouldRegister) {
-		EmuVerifyResourceIsRegistered(pXboxResource);
+		EmuVerifyResourceIsRegistered(pXboxResource, dwSize);
 	}
 
 	if (IsSpecialXboxResource(pXboxResource)) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
@@ -859,7 +859,7 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 	
 }
 
-bool HostResourceRequiresUpdate(resource_key_t key)
+bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 {
 	auto it = g_HostResources.find(key);
 	if (it == g_HostResources.end()) {
@@ -871,6 +871,12 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 	DWORD type = GetXboxCommonResourceType(it->second.pXboxResource);
 	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE && type != X_D3DCOMMON_TYPE_VERTEXBUFFER) {
 		return false;
+	}
+
+	// If the resource size got bigger, we need to re-create it
+	// if it got smaller, just hashing will suffice
+	if (dwSize > it->second.szXboxDataSize) {
+		return true;
 	}
 
 	bool modified = false;
@@ -902,7 +908,7 @@ bool HostResourceRequiresUpdate(resource_key_t key)
 	return modified;
 }
 
-void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource)
+void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource, DWORD dwSize = 0)
 {
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_HostResources.find(key);
@@ -914,7 +920,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	hostResourceInfo.pHostResource = pHostResource;
 	hostResourceInfo.pXboxResource = pXboxResource;
 	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
-	hostResourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
+	hostResourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
 	hostResourceInfo.hashLifeTime = 1ms;
     hostResourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
@@ -978,14 +984,14 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);;
 }
 
-XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, DWORD dwSize)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	return (XTL::IDirect3DVertexBuffer8*)GetHostResource(pXboxResource);
+	return (XTL::IDirect3DVertexBuffer8*)GetHostResource(pXboxResource, true, dwSize);
 }
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
@@ -1028,12 +1034,12 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostIndexBuffer);
 }
 
-void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer)
+void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer, DWORD dwSize)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVertexBuffer);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVertexBuffer, dwSize);
 }
 
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
@@ -2188,7 +2194,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 }
 
 // check if a resource has been registered yet (if not, register it)
-static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
+VOID WINAPI CreateHostResource(XTL::X_D3DResource *pThis, DWORD dwSize); // Forward declartion to prevent restructure of code
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD dwSize = 0)
 {
 	// Skip resources without data
 	if (pResource->Data == NULL)
@@ -2200,14 +2207,14 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 
 	auto key = GetHostResourceKey(pResource);
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
-		if (!HostResourceRequiresUpdate(key)) {
+		if (!HostResourceRequiresUpdate(key, dwSize)) {
 			return;
 		}
 
 		FreeHostResource(key);
 	}
 
-	XTL::EMUPATCH(D3DResource_Register)(pResource, /* Base = */NULL);
+	CreateHostResource(pResource, dwSize);
         
 	g_RegisteredResources.push_back(key);
 }
@@ -4682,12 +4689,13 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 // ******************************************************************
 // * patch: IDirect3DResource8_Register
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
+VOID WINAPI CreateHostResource
 (
-    X_D3DResource      *pThis,
-    PVOID               pBase
+    XTL::X_D3DResource      *pThis,
+    DWORD               dwSize
 )
 {
+	using namespace XTL;
 	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
@@ -4721,8 +4729,12 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 
             // create vertex buffer
             {
-                DWORD dwSize = g_VMManager.QuerySize((VAddr)pVirtualAddr);
+				// If we didn't get a size passed in, use QuerySize
+				if (dwSize == 0) {
+					g_VMManager.QuerySize((VAddr)pVirtualAddr);
+				}
 
+				// If we still didn't get a valid size, make a wild guess
                 if(dwSize == 0)
                 {
                     // TODO: once this is known to be working, remove the warning
@@ -4731,17 +4743,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					/*hRet = E_FAIL;
 					goto fail;*/
                 }
-
-				// Dirty hack: Vetrex buffers shouldn't be this big... so cap the size
-				// TODO: Until we solve the root cause (which is the same memory region containing multiple smaller buffers,
-				// or Vertex buffers embedded in the XBE instead of allocated at runtime) this has to stay...
-				// This is one of two tweaks that prevents memory usage spiralling out of control  (the other is VertexPatcher changes)
-				// Some titles ended up allocating multiple > 50MB buffers because of this!
-				// Once VertexPatcher is updated to create it's own host buffers for unpatched resources (with VertexCount being known at that point)
-				// this will no longer be required, and we can create a correctly sized vertex buffer at that point.
-				if (dwSize > ONE_MB) {
-					dwSize = ONE_MB;
-				}
 
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
@@ -4759,7 +4760,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_Register)
 					EmuWarning( szString );
 				}
 
-				SetHostVertexBuffer(pResource, pNewHostVertexBuffer);
+				SetHostVertexBuffer(pResource, pNewHostVertexBuffer, dwSize);
 
                 #ifdef _DEBUG_TRACK_VB
                 g_VBTrackTotal.insert(pNewHostVertexBuffer);
@@ -6921,6 +6922,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     VPDesc.pVertexStreamZeroData = 0;
     VPDesc.uiVertexStreamZeroStride = 0;
     VPDesc.hVertexShader = g_CurrentVertexShader;
+	VPDesc.pIndexData = pIndexData;
 
     VertexPatcher VertPatch;
 	bool FatalError = false;
@@ -7038,6 +7040,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
     VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
     VPDesc.hVertexShader = g_CurrentVertexShader;
+	VPDesc.pIndexData = (PWORD)pIndexData;
 
     VertexPatcher VertPatch;
 
