@@ -263,7 +263,7 @@ extern thread_local std::string _logPrefix;
 // LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
 #define LOG_NOT_SUPPORTED() \
 	do { if(g_bPrintfOn) { \
-		std::cout << _logFuncPrefix << __func__ << " not supported!\n"; \
+		std::cout << _logFuncPrefix << " not supported!\n"; \
 	} } while (0)
 
 #else // _DEBUG_TRACE
