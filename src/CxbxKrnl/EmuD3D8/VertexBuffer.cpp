@@ -102,7 +102,7 @@ void XTL::VertexPatcher::DumpCache(void)
 }
 
 size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData)
-{
+{	
 	// If this is not an indexed draw, the size is simply VertexCount * Stride
 	if (pIndexData == nullptr) {
 		return dwVertexCount * dwStride;
@@ -349,6 +349,11 @@ UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
         }
         else
         {
+			// Draw..Up always have one stream
+			if (pPatchDesc->pVertexStreamZeroData != nullptr) {
+				return 1;
+			}
+
 			int lastStreamIndex;
 			for (int i = 0; i < 16; i++) {
 				if (g_D3DStreams[i] != nullptr) {
