@@ -586,5 +586,7 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
 
-	/*ignore result*/ObReferenceObjectByPointer(Object, /*ObjectType=*/NULL);
+	// Extract from ObReferenceObjectByPointer :
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	InterlockedIncrement(&ObjectHeader->PointerCount);
 }
