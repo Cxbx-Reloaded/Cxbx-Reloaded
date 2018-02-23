@@ -854,6 +854,69 @@ XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
 	Semaphore->Limit = Limit;
 }
 
+namespace XboxTypes = xboxkrnl;
+
+void KeInitializeThread
+(
+	XboxTypes::PKTHREAD Thread,
+	XboxTypes::PVOID KernelStack, 
+	XboxTypes::SIZE_T KernelStackSize, 
+	XboxTypes::SIZE_T TlsDataSize,
+	XboxTypes::PKSYSTEM_ROUTINE SystemRoutine,
+	XboxTypes::PKSTART_ROUTINE StartRoutine,
+	XboxTypes::PVOID StartContext,
+	XboxTypes::PKPROCESS Process
+)
+{
+
+	auto pThread = Thread;
+	auto pProcess = Process;
+
+	pThread->Header.Size = sizeof(XboxTypes::KTHREAD) / sizeof(XboxTypes::LONG);
+	pThread->Header.Type = XboxTypes::ThreadObject;
+	InitializeListHead(&pThread->Header.WaitListHead);
+
+	InitializeListHead(&pThread->MutantListHead);
+
+	InitializeListHead(&pThread->ApcState.ApcListHead[XboxTypes::KernelMode]);
+	InitializeListHead(&pThread->ApcState.ApcListHead[XboxTypes::UserMode]);
+	pThread->ApcState.Process = Process;
+	pThread->ApcState.ApcQueueable = TRUE;
+	// TODO : KeInitializeApc(&pThread->SuspendApc, Thread, (XboxTypes::PKKERNEL_ROUTINE)m_kfuncs->KiSuspendNop, NULL, (XboxTypes::PKNORMAL_ROUTINE)m_kfuncs->KiSuspendThread, XboxTypes::KernelMode, NULL);
+
+	KeInitializeSemaphore(&pThread->SuspendSemaphore, 0, 2);
+
+	KeInitializeTimerEx(&pThread->Timer, XboxTypes::NotificationTimer);
+
+	pThread->TimerWaitBlock.Object = &pThread->Timer;
+	pThread->TimerWaitBlock.WaitKey = (XboxTypes::USHORT)STATUS_TIMEOUT;
+	pThread->TimerWaitBlock.WaitType = XboxTypes::WaitAny;
+	pThread->TimerWaitBlock.Thread = Thread;
+	pThread->TimerWaitBlock.WaitListEntry.Flink = &pThread->Timer.Header.WaitListHead;
+	pThread->TimerWaitBlock.WaitListEntry.Blink = &pThread->Timer.Header.WaitListHead;
+
+	pThread->StackBase = KernelStack;
+	pThread->StackLimit = ((char*)KernelStack) - KernelStackSize;
+	// TODO : KiInitializeContextThread(Thread, TlsDataSize, SystemRoutine, StartRoutine, StartContext);
+
+	/* TODO :
+	pThread->BasePriority = pProcess->BasePriority;
+	pThread->Priority = pThread->BasePriority;
+	pThread->Quantum = pProcess->ThreadQuantum;
+	pThread->State = XboxTypes::Initialized;
+	pThread->DisableBoost = pProcess->DisableBoost;
+
+	XboxTypes::KIRQL oldIrql;
+
+	KiLockDispatcherDatabase(&oldIrql);
+	InsertTailList(&pProcess->ThreadListHead, &pThread->ThreadListEntry);
+	pProcess->StackCount += 1;
+
+	KiUnlockDispatcherDatabase(oldIrql);
+	*/
+	//m_objmgr->RegisterThread(Thread, pThread, Type);
+}
+
 // ******************************************************************
 // * 0x0071 - KeInitializeTimerEx()
 // ******************************************************************

@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "CxbxKrnl.h"
 #include "VMManager.h"
+#include "EmuKrnlKe.h" // For KeInitializeThread
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -582,14 +583,25 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
 	}
 
-	// Initialize a fake PrcbData.CurrentThread 
+	// Initialize PrcbData.CurrentThread 
 	{
 		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
 
+		xboxkrnl::PRKTHREAD KernelThread = (xboxkrnl::KTHREAD*)EThread;
+		KeInitializeThread(KernelThread,
+			/*XboxTypes::PVOID KernelStack=*/0,
+			/*XboxTypes::SIZE_T KernelStackSize=*/0,
+			/*XboxTypes::SIZE_T TlsDataSize=*/0,
+			/*XboxTypes::PKSYSTEM_ROUTINE SystemRoutine=*/0,
+			/*XboxTypes::PKSTART_ROUTINE StartRoutine=*/0,
+			/*XboxTypes::PVOID StartContext=*/0,
+			/*XboxTypes::PKPROCESS Process=*/0);
+
 		EThread->Tcb.TlsData = pNewTLS;
 		EThread->UniqueThread = GetCurrentThreadId();
+
 		// Set PrcbData.CurrentThread
-		Prcb->CurrentThread = (xboxkrnl::KTHREAD*)EThread;
+		Prcb->CurrentThread = KernelThread;
 	}
 
 	// Make the KPCR struct available to KeGetPcr()

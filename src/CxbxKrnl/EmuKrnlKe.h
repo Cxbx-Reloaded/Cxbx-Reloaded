@@ -50,3 +50,16 @@ void KeClearEvent(IN xboxkrnl::PRKEVENT Event);
 
 void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation);
 
+namespace XboxTypes = xboxkrnl;
+
+void KeInitializeThread
+(
+	XboxTypes::PKTHREAD Thread,
+	XboxTypes::PVOID KernelStack,
+	XboxTypes::SIZE_T KernelStackSize,
+	XboxTypes::SIZE_T TlsDataSize,
+	XboxTypes::PKSYSTEM_ROUTINE SystemRoutine,
+	XboxTypes::PKSTART_ROUTINE StartRoutine,
+	XboxTypes::PVOID StartContext,
+	XboxTypes::PKPROCESS Process
+);
