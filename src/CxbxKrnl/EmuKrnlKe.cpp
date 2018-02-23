@@ -1539,7 +1539,7 @@ XBSYSAPI EXPORTNUM(141) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRundownQueue
 	}
 
 	while (pQueue->ThreadListHead.Flink != &pQueue->ThreadListHead) {
-		auto pEntry = NextListEntry(&pQueue->ThreadListHead);
+		auto pEntry = pQueue->ThreadListHead.Flink;
 		KTHREAD *pThread = CONTAINING_RECORD(pEntry, xboxkrnl::KTHREAD, QueueListEntry);
 		pThread->Queue = NULL;
 		RemoveEntryList(pEntry);
@@ -1691,7 +1691,7 @@ XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
 		pEvent->Header.SignalState = 1;
 	}
 	else {
-		PKTHREAD WaitThread = CONTAINING_RECORD(NextListEntry(&pEvent->Header.WaitListHead), xboxkrnl::KWAIT_BLOCK, WaitListEntry)->Thread;
+		PKTHREAD WaitThread = CONTAINING_RECORD(pEvent->Header.WaitListHead.Flink, xboxkrnl::KWAIT_BLOCK, WaitListEntry)->Thread;
 		auto pWaitThread = WaitThread;
 		auto pWaitThreadProcess = pWaitThread->ApcState.Process;
 
