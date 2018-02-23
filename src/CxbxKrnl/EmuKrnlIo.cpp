@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
+#include "EmuKrnlOb.h" // For ObpDefaultObject
 #include "CxbxDebugger.h"
 
 // ******************************************************************
@@ -187,8 +188,6 @@ XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 
 	RETURN(S_OK);
 }
-
-extern xboxkrnl::KEVENT ObpDefaultObject; // TODO : Move to EmuKrnlOb.h
 
 // ******************************************************************
 // * 0x0040 - IoCompletionObjectType

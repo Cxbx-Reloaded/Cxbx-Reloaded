@@ -50,6 +50,7 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
 #include "EmuKrnlKe.h" // For KeLowerIrql()
+#include "EmuKrnlOb.h" // For ObpDefaultObject
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 
 #pragma warning(disable:4005) // Ignore redefined status values
