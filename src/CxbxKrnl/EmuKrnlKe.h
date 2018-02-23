@@ -44,8 +44,9 @@
 enum class GetMode { Existing, ExistingOrNew, Erase };
 
 HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode = GetMode::ExistingOrNew);
+HANDLE GetNtMutant(xboxkrnl::PRKMUTANT pMutant, GetMode getMode, BOOLEAN InitialOwner = FALSE);
 
-void KeClearEvent
-(
-	IN xboxkrnl::PRKEVENT Event
-);
+void KeClearEvent(IN xboxkrnl::PRKEVENT Event);
+
+void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation);
+

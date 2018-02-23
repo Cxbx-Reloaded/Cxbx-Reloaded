@@ -76,6 +76,64 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
+std::map<xboxkrnl::PRKMUTANT, NtDll::HANDLE> g_KeMutantHandles;
+
+NtDll::HANDLE GetNtMutant(xboxkrnl::PRKMUTANT pMutant, GetMode getMode, BOOLEAN InitialOwner)
+{
+	NtDll::HANDLE ntMutant = 0;
+
+	// TODO : Make g_KeMutantHandles accesses thread-safe
+	auto it = g_KeMutantHandles.find(pMutant);
+	if (it != g_KeMutantHandles.end()) {
+		ntMutant = it->second;
+		if (getMode == GetMode::Erase)
+			g_KeMutantHandles.erase(it);
+	}
+	else {
+		if (getMode == GetMode::ExistingOrNew) {
+			// redirect to Windows Nt
+			NTSTATUS ret = NtDll::NtCreateMutant(
+				/*OUT*/&ntMutant,
+				/*DesiredAccess = */MUTANT_ALL_ACCESS, // TODO : Is this the correct ACCESS_MASK?
+				/*nativeObjectAttributes.NtObjAttrPtr*/ nullptr, // TOOD : Retrieve from Xbox ObjectAttributes
+				InitialOwner);				
+			if (SUCCEEDED(ret)) {
+				g_KeMutantHandles[pMutant] = ntMutant;
+			}
+		}
+	}
+
+	return ntMutant;
+}
+
+void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation)
+{
+	NtDll::HANDLE ntMutant = GetNtMutant(pMutant, GetMode::Existing);
+	if (ntMutant) {
+		// NT structure :
+		struct _MUTANT_BASIC_INFORMATION {
+			LONG                    CurrentCount;
+			BOOLEAN                 OwnedByCaller;
+			BOOLEAN                 AbandonedState;
+		} /*MUTANT_BASIC_INFORMATION*/ NtMutantInformation;
+
+		NTSTATUS ret = NtDll::NtQueryMutant(
+			ntMutant,
+			/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
+			&NtMutantInformation,
+			sizeof(NtMutantInformation),
+			/*ReturnLength=*/nullptr);
+		if (SUCCEEDED(ret)) {
+			pMutantInformation->CurrentCount = NtMutantInformation.CurrentCount;
+			pMutantInformation->OwnedByCaller = NtMutantInformation.OwnedByCaller;
+			pMutantInformation->AbandonedState = NtMutantInformation.AbandonedState;
+		}
+		else
+			EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+	}
+}
+
+
 std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
 
 HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode)
@@ -741,6 +799,8 @@ XBSYSAPI EXPORTNUM(110) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeMutant
 		Mutant->Header.SignalState = 1;
 		Mutant->OwnerThread = NULL;
 	}
+
+	GetNtMutant(Mutant, GetMode::ExistingOrNew, InitialOwner);
 }
 
 // ******************************************************************
@@ -1267,6 +1327,11 @@ XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
 	}
 	else {
 		KiUnlockDispatcherDatabase(oldIRQL);
+	}
+
+	NtDll::HANDLE ntMutant = GetNtMutant(Mutant, GetMode::Erase);
+	if (ntMutant) {
+		NtDll::NtClose(ntMutant);
 	}
 
 	RETURN(prevState);
@@ -2001,7 +2066,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			break;
 		}
 		default:
-			// Assume all other object types (files, threads, etc) use NtDll handles :
+			// Assume all other object types (mutant, file, thread, etc) use NtDll handles :
 			ntdllObjects.push_back(Object[i]);
 			break;
 		}
