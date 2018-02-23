@@ -341,6 +341,15 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 	RETURN(Result);
 }
 
+xboxkrnl::VOID NTAPI ExpDeleteMutant(IN xboxkrnl::PVOID Mutant)
+{
+	xboxkrnl::KeReleaseMutant(
+		/* Mutant =    */(xboxkrnl::PKMUTANT)Mutant,
+		/* Increment = */1,
+		/* Abandoned = */TRUE,
+		/* Wait =      */FALSE);
+}
+
 // ******************************************************************
 // * 0x0016 - ExMutantObjectType
 // ******************************************************************
@@ -349,7 +358,7 @@ XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType =
 	xboxkrnl::ExAllocatePoolWithTag,
 	xboxkrnl::ExFreePool,
 	NULL,
-	NULL, // TODO : xboxkrnl::ExpDeleteMutant,
+	ExpDeleteMutant,
 	NULL,
 	(PVOID)offsetof(xboxkrnl::KMUTANT, Header),
 	'atuM' // = first four characters of "Mutant" in reverse
