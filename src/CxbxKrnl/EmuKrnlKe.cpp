@@ -57,6 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
+#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent()
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
@@ -75,7 +76,102 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
+std::map<xboxkrnl::PRKMUTANT, NtDll::HANDLE> g_KeMutantHandles;
+
+NtDll::HANDLE GetNtMutant(xboxkrnl::PRKMUTANT pMutant, GetMode getMode, BOOLEAN InitialOwner)
+{
+	NtDll::HANDLE ntMutant = 0;
+
+	// TODO : Make g_KeMutantHandles accesses thread-safe
+	auto it = g_KeMutantHandles.find(pMutant);
+	if (it != g_KeMutantHandles.end()) {
+		ntMutant = it->second;
+		if (getMode == GetMode::Erase)
+			g_KeMutantHandles.erase(it);
+	}
+	else {
+		if (getMode == GetMode::ExistingOrNew) {
+			// redirect to Windows Nt
+			NTSTATUS ret = NtDll::NtCreateMutant(
+				/*OUT*/&ntMutant,
+				/*DesiredAccess = */MUTANT_ALL_ACCESS, // TODO : Is this the correct ACCESS_MASK?
+				/*nativeObjectAttributes.NtObjAttrPtr*/ nullptr, // TOOD : Retrieve from Xbox ObjectAttributes
+				InitialOwner);				
+			if (SUCCEEDED(ret)) {
+				g_KeMutantHandles[pMutant] = ntMutant;
+			}
+		}
+	}
+
+	return ntMutant;
+}
+
+void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation)
+{
+	NtDll::HANDLE ntMutant = GetNtMutant(pMutant, GetMode::Existing);
+	if (ntMutant) {
+		// NT structure :
+		struct _MUTANT_BASIC_INFORMATION {
+			LONG                    CurrentCount;
+			BOOLEAN                 OwnedByCaller;
+			BOOLEAN                 AbandonedState;
+		} /*MUTANT_BASIC_INFORMATION*/ NtMutantInformation;
+
+		NTSTATUS ret = NtDll::NtQueryMutant(
+			ntMutant,
+			/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
+			&NtMutantInformation,
+			sizeof(NtMutantInformation),
+			/*ReturnLength=*/nullptr);
+		if (SUCCEEDED(ret)) {
+			pMutantInformation->CurrentCount = NtMutantInformation.CurrentCount;
+			pMutantInformation->OwnedByCaller = NtMutantInformation.OwnedByCaller;
+			pMutantInformation->AbandonedState = NtMutantInformation.AbandonedState;
+		}
+		else
+			EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+	}
+}
+
+
 std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
+
+HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode)
+{
+	// TODO : Make g_KeEventHandles accesses thread-safe
+	HANDLE hostEvent = 0;
+
+	auto it = g_KeEventHandles.find(Event);
+	if (it != g_KeEventHandles.end()) {
+		hostEvent = it->second;
+		if (getMode == GetMode::Erase)
+			g_KeEventHandles.erase(it);
+	}
+	else {
+		if (getMode == GetMode::ExistingOrNew) {
+			// Create a Windows event, to be used in KeWaitForObject
+			hostEvent = CreateEvent(
+				/*lpEventAttributes=*/nullptr, // TOOD : Retrieve from Xbox ObjectAttributes
+				/*bManualReset=*/FALSE, // TODO : Is this correct?
+				/*bInitialState=*/(BOOL)Event->Header.SignalState,
+				/*lpName=*/nullptr); // TOOD : Retrieve name from Xbox ObjectAttributes
+			g_KeEventHandles[Event] = hostEvent;
+		}
+	}
+
+	return hostEvent;
+}
+
+void KeClearEvent
+(
+	IN xboxkrnl::PRKEVENT Event
+)
+{
+	Event->Header.SignalState = 0;
+
+	// Fetch the host event and signal it
+	ResetEvent(GetHostEvent(Event));
+}
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
@@ -96,7 +192,7 @@ xboxkrnl::KPCR* KeGetPcr()
 	// See EmuKeSetPcr()
 	Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 
-	if (Pcr == nullptr) {
+	if (Pcr == nullptr || Pcr->SelfPcr != Pcr) {
 		EmuWarning("KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
 		InitXboxThread(g_CPUXbox);
@@ -113,14 +209,6 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 {
 	return &(KeGetPcr()->PrcbData);
 }
-
-// Forward KeLowerIrql() to KfLowerIrql()
-#define KeLowerIrql(NewIrql) \
-	KfLowerIrql(NewIrql)
-
-// Forward KeRaiseIrql() to KfRaiseIrql()
-#define KeRaiseIrql(NewIrql, OldIrql) \
-	*(OldIrql) = KfRaiseIrql(NewIrql)
 
 ULONGLONG BootTickCount = 0;
 
@@ -627,18 +715,12 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 		LOG_FUNC_END;
 
 	// Setup the Xbox event struct
+	// Type 0: NotificationEvent = EventNotificationObject
+	// Type 1: SynchronizationEvent = EventSynchronizationObject
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
 	InitializeListHead(&(Event->Header.WaitListHead)); 
-
-
-	// Create a Windows event, to be used in KeWaitForObject
-	// TODO: This doesn't check for events that are already initialized
-	// This shouldn't happen, except on shoddily coded titles so we
-	// ignore it for now
-	HANDLE hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
-	g_KeEventHandles[Event] = hostEvent;
 }
 
 // ******************************************************************
@@ -717,6 +799,8 @@ XBSYSAPI EXPORTNUM(110) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeMutant
 		Mutant->Header.SignalState = 1;
 		Mutant->OwnerThread = NULL;
 	}
+
+	GetNtMutant(Mutant, GetMode::ExistingOrNew, InitialOwner);
 }
 
 // ******************************************************************
@@ -768,6 +852,69 @@ XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
 	InitializeListHead(&Semaphore->Header.WaitListHead);
 	// Initialize specific fields :
 	Semaphore->Limit = Limit;
+}
+
+namespace XboxTypes = xboxkrnl;
+
+void KeInitializeThread
+(
+	XboxTypes::PKTHREAD Thread,
+	XboxTypes::PVOID KernelStack, 
+	XboxTypes::SIZE_T KernelStackSize, 
+	XboxTypes::SIZE_T TlsDataSize,
+	XboxTypes::PKSYSTEM_ROUTINE SystemRoutine,
+	XboxTypes::PKSTART_ROUTINE StartRoutine,
+	XboxTypes::PVOID StartContext,
+	XboxTypes::PKPROCESS Process
+)
+{
+
+	auto pThread = Thread;
+	auto pProcess = Process;
+
+	pThread->Header.Size = sizeof(XboxTypes::KTHREAD) / sizeof(XboxTypes::LONG);
+	pThread->Header.Type = XboxTypes::ThreadObject;
+	InitializeListHead(&pThread->Header.WaitListHead);
+
+	InitializeListHead(&pThread->MutantListHead);
+
+	InitializeListHead(&pThread->ApcState.ApcListHead[XboxTypes::KernelMode]);
+	InitializeListHead(&pThread->ApcState.ApcListHead[XboxTypes::UserMode]);
+	pThread->ApcState.Process = Process;
+	pThread->ApcState.ApcQueueable = TRUE;
+	// TODO : KeInitializeApc(&pThread->SuspendApc, Thread, (XboxTypes::PKKERNEL_ROUTINE)m_kfuncs->KiSuspendNop, NULL, (XboxTypes::PKNORMAL_ROUTINE)m_kfuncs->KiSuspendThread, XboxTypes::KernelMode, NULL);
+
+	KeInitializeSemaphore(&pThread->SuspendSemaphore, 0, 2);
+
+	KeInitializeTimerEx(&pThread->Timer, XboxTypes::NotificationTimer);
+
+	pThread->TimerWaitBlock.Object = &pThread->Timer;
+	pThread->TimerWaitBlock.WaitKey = (XboxTypes::USHORT)STATUS_TIMEOUT;
+	pThread->TimerWaitBlock.WaitType = XboxTypes::WaitAny;
+	pThread->TimerWaitBlock.Thread = Thread;
+	pThread->TimerWaitBlock.WaitListEntry.Flink = &pThread->Timer.Header.WaitListHead;
+	pThread->TimerWaitBlock.WaitListEntry.Blink = &pThread->Timer.Header.WaitListHead;
+
+	pThread->StackBase = KernelStack;
+	pThread->StackLimit = ((char*)KernelStack) - KernelStackSize;
+	// TODO : KiInitializeContextThread(Thread, TlsDataSize, SystemRoutine, StartRoutine, StartContext);
+
+	/* TODO :
+	pThread->BasePriority = pProcess->BasePriority;
+	pThread->Priority = pThread->BasePriority;
+	pThread->Quantum = pProcess->ThreadQuantum;
+	pThread->State = XboxTypes::Initialized;
+	pThread->DisableBoost = pProcess->DisableBoost;
+
+	XboxTypes::KIRQL oldIrql;
+
+	KiLockDispatcherDatabase(&oldIrql);
+	InsertTailList(&pProcess->ThreadListHead, &pThread->ThreadListEntry);
+	pProcess->StackCount += 1;
+
+	KiUnlockDispatcherDatabase(oldIrql);
+	*/
+	//m_objmgr->RegisterThread(Thread, pThread, Type);
 }
 
 // ******************************************************************
@@ -886,9 +1033,14 @@ XBSYSAPI EXPORTNUM(116) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertHeadQueue
 		LOG_FUNC_ARG(Entry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(0);
+	LONG prevState = KiInsertQueue(Queue, Entry, TRUE);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
@@ -902,9 +1054,14 @@ XBSYSAPI EXPORTNUM(117) xboxkrnl::LONG NTAPI xboxkrnl::KeInsertQueue
 		LOG_FUNC_ARG(Entry)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(0);
+	LONG prevState = KiInsertQueue(Queue, Entry, FALSE);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(118) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueApc
@@ -1029,17 +1186,32 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KePulseEvent called on a non-existant event!");
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
+
+	LONG OldState = Event->Header.SignalState;
+	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
+		Event->Header.SignalState = 1;
+		// TODO : KiWaitTest(Event, Increment);
+	}
+
+	Event->Header.SignalState = 0;
+
+	if (Wait != FALSE) {
+		PKTHREAD Thread = KeGetCurrentThread();
+		Thread->WaitIrql = OldIrql;
+		Thread->WaitNext = Wait;
+
 	}
 	else {
-		PulseEvent(g_KeEventHandles[Event]);
+		KiUnlockDispatcherDatabase(OldIrql);
 	}
 
-	LOG_UNIMPLEMENTED();
+	// Fetch the host event and signal it
+	PulseEvent(GetHostEvent(Event));
 
-	RETURN(0);
+	RETURN(OldState);
 }
 
 XBSYSAPI EXPORTNUM(124) xboxkrnl::LONG NTAPI xboxkrnl::KeQueryBasePriorityThread
@@ -1151,7 +1323,7 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
-	LOG_FORWARD(KfRaiseIrql);
+	LOG_FORWARD("KfRaiseIrql");
 
 	return KfRaiseIrql(DISPATCH_LEVEL);
 }
@@ -1161,7 +1333,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel()
 {
-	LOG_FORWARD(KfRaiseIrql);
+	LOG_FORWARD("KfRaiseIrql");
 
 	return KfRaiseIrql(SYNC_LEVEL);
 }
@@ -1181,9 +1353,51 @@ XBSYSAPI EXPORTNUM(131) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseMutant
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-	
-	RETURN(0);
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	LONG prevState = Mutant->Header.SignalState;
+
+	PRKTHREAD pThread = KeGetCurrentThread();
+	if (Abandoned) {
+		Mutant->Header.SignalState = 1;
+		Mutant->Abandoned = TRUE;
+	}
+	else {
+		if (Mutant->OwnerThread != pThread) {
+			KiUnlockDispatcherDatabase(oldIRQL);
+			ExRaiseStatus(Mutant->Abandoned ? STATUS_ABANDONED : STATUS_MUTANT_NOT_OWNED);
+		}
+
+		Mutant->Header.SignalState += 1;
+	}
+
+	if (Mutant->Header.SignalState == 1) {
+		if (prevState <= 0) {
+			RemoveEntryList(&Mutant->MutantListEntry);
+		}
+
+		Mutant->OwnerThread = NULL;
+		if (!IsListEmpty(&Mutant->Header.WaitListHead)) {
+			// TODO : KiWaitTest(Mutant, Increment);
+		}
+	}
+
+	if (Wait) {
+		pThread->WaitNext = Wait;
+		pThread->WaitIrql = oldIRQL;
+	}
+	else {
+		KiUnlockDispatcherDatabase(oldIRQL);
+	}
+
+	NtDll::HANDLE ntMutant = GetNtMutant(Mutant, GetMode::Erase);
+	if (ntMutant) {
+		NtDll::NtClose(ntMutant);
+	}
+
+	RETURN(prevState);
 }
 
 XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
@@ -1201,7 +1415,30 @@ XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	LONG prevState = Semaphore->Header.SignalState;
+	LONG currState = prevState + Adjustment;
+
+	if (currState > Semaphore->Limit || currState < prevState) {
+		KiUnlockDispatcherDatabase(oldIRQL);
+		ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+	}
+
+	Semaphore->Header.SignalState = currState;
+	if (prevState == 0 && !IsListEmpty(&Semaphore->Header.WaitListHead)) {
+		// TODO : KiWaitTest(Semaphore, Increment);
+	}
+
+	if (Wait) {
+		KTHREAD *thread = KeGetCurrentThread();
+		thread->WaitNext = Wait;
+		thread->WaitIrql = oldIRQL;
+	}
+	else {
+		KiUnlockDispatcherDatabase(oldIRQL);
+	}
 
 	RETURN(0);
 }
@@ -1360,20 +1597,19 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 {
 	LOG_FUNC_ONE_ARG(Event);
 
-	// TODO : Untested & incomplete
+	KIRQL OldIrql;
+
+	KiLockDispatcherDatabase(&OldIrql);
+
 	LONG ret = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KeResetEvent called on a non-existant event!");
-	}
-	else {
-		ResetEvent(g_KeEventHandles[Event]);
-	}
+	KiUnlockDispatcherDatabase(OldIrql);
 
+	// Fetch the host event and signal it
+	ResetEvent(GetHostEvent(Event));
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1417,7 +1653,27 @@ XBSYSAPI EXPORTNUM(141) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::KeRundownQueue
 {
 	LOG_FUNC_ONE_ARG(Queue);
 
-	LOG_UNIMPLEMENTED();
+	auto pQueue = Queue;
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	PLIST_ENTRY firstEntry = pQueue->EntryListHead.Flink;
+	if (firstEntry == &pQueue->EntryListHead) {
+		firstEntry = NULL;
+	}
+	else {
+		RemoveEntryList(&pQueue->EntryListHead);
+	}
+
+	while (pQueue->ThreadListHead.Flink != &pQueue->ThreadListHead) {
+		auto pEntry = pQueue->ThreadListHead.Flink;
+		KTHREAD *pThread = CONTAINING_RECORD(pEntry, xboxkrnl::KTHREAD, QueueListEntry);
+		pThread->Queue = NULL;
+		RemoveEntryList(pEntry);
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 
 	RETURN(NULL);
 }
@@ -1502,20 +1758,44 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	// TODO : Untested & incomplete
-	LONG ret = Event->Header.SignalState;
-	Event->Header.SignalState = TRUE;
+	KIRQL OldIrql;
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KeSetEvent called on a non-existant event. Creating it!");
-		// TODO: Find out why some XDKs do not call KeInitializeEvent first
-		KeInitializeEvent(Event, NotificationEvent, TRUE);
-	} else {
-		SetEvent(g_KeEventHandles[Event]);
+	KiLockDispatcherDatabase(&OldIrql);
+
+	LONG OldState = Event->Header.SignalState;
+
+	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
+		Event->Header.SignalState = TRUE;
+	}
+	else {
+		PKWAIT_BLOCK WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry);
+
+		if ((Event->Header.Type == NotificationEvent) || (WaitBlock->WaitType != WaitAny)) {
+			if (OldState == 0) {
+				Event->Header.SignalState = TRUE;
+				// TODO : KiWaitTest(Event, Increment);
+			}
+
+		}
+		else {
+			// TODO : KiUnwaitThread(WaitBlock->Thread, (NTSTATUS)WaitBlock->WaitKey, Increment);
+		}
 	}
 
-	RETURN(ret);
+	if (Wait != FALSE) {
+		PRKTHREAD Thread = KeGetCurrentThread();
+		Thread->WaitNext = Wait;
+		Thread->WaitIrql = OldIrql;
+
+	}
+	else {
+		KiUnlockDispatcherDatabase(OldIrql);
+	}
+
+	// Fetch the host event and signal it
+	SetEvent(GetHostEvent(Event));
+
+	RETURN(OldState);
 }
 
 XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
@@ -1529,7 +1809,29 @@ XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
 		LOG_FUNC_ARG(Thread)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto pEvent = Event;
+	auto pThread = Thread;
+
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	if (IsListEmpty(&pEvent->Header.WaitListHead)) {
+		pEvent->Header.SignalState = 1;
+	}
+	else {
+		PKTHREAD WaitThread = CONTAINING_RECORD(pEvent->Header.WaitListHead.Flink, xboxkrnl::KWAIT_BLOCK, WaitListEntry)->Thread;
+		auto pWaitThread = WaitThread;
+		auto pWaitThreadProcess = pWaitThread->ApcState.Process;
+
+		if (Thread != NULL) {
+			*pThread = WaitThread;
+		}
+
+		pWaitThread->Quantum = pWaitThreadProcess->ThreadQuantum;
+		// TODO : KiUnwaitThread(WaitThread, STATUS_SUCCESS, EVENT_INCREMENT);
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 }
 
 XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
@@ -1552,10 +1854,10 @@ XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
+XBSYSAPI EXPORTNUM(148) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN LONG  Priority
+    IN KPRIORITY Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -1563,9 +1865,22 @@ XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	auto pThread = Thread;
 
-	RETURN(1);
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	KPRIORITY prevPriority = pThread->Priority;
+	PKPROCESS process = pThread->ApcState.Process;
+	auto pProcess = process;
+	pThread->Quantum = pProcess->ThreadQuantum;
+	pThread->DecrementCount = 0;
+	pThread->PriorityDecrement = 0;
+	// TODO : KiSetPriorityThread(Thread, Priority);
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(prevPriority);
 }
 
 // ******************************************************************
@@ -1623,7 +1938,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	if (!KiInsertTreeTimer(Timer, DueTime)) {
 		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
-			// KiWaitTest(Timer, 0);
+			// TODO : KiWaitTest(Timer, 0);
 		}
 
 		if (Dpc != NULL) {
@@ -1729,11 +2044,22 @@ XBSYSAPI EXPORTNUM(155) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeTestAlertThread
 {
 	LOG_FUNC_ONE_ARG(AlertMode);
 
-	BOOLEAN ret = TRUE;
+	KTHREAD *pThread = KeGetCurrentThread();
 
-	LOG_UNIMPLEMENTED();
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
 
-	RETURN(ret);
+	BOOLEAN alerted = pThread->Alerted[AlertMode];
+	if (alerted) {
+		pThread->Alerted[AlertMode] = FALSE;
+	}
+	else if (AlertMode == xboxkrnl::UserMode && !IsListEmpty(&pThread->ApcState.ApcListHead[xboxkrnl::UserMode])) {
+		pThread->ApcState.UserApcPending = TRUE;
+	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
+
+	RETURN(alerted);
 }
 
 // ******************************************************************
@@ -1783,11 +2109,29 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	std::vector<HANDLE> ntdllObjects;
 
 	for (uint i = 0; i < Count; i++) {
-		DbgPrintf("Object: 0x%08X\n", Object[i]);
-		if (g_KeEventHandles.find((PKEVENT)Object[i]) == g_KeEventHandles.end()) {
+		// Prevent waiting on EmuHandles
+		if (IsEmuHandle(Object[i])) {
+			// EmuHandle *iEmuHandle = HandleToEmuHandle(Object[i]);
+			// TODO : Somehow, ntdllObjects.push_back(iEmuHandle->NtHandle);
+			continue;
+		}
+
+		// Decide per object type in which vector the handle is put
+		switch (((DISPATCHER_HEADER*)(Object[i]))->Type) {
+		case EventNotificationObject:
+		case EventSynchronizationObject: {
+			// Host events use native host handles :
+			PKEVENT kernelEvent = (PKEVENT)Object[i];
+			HANDLE hostEvent = GetHostEvent(kernelEvent, GetMode::Existing);
+			if (hostEvent) {
+				nativeObjects.push_back(hostEvent);
+			}
+			break;
+		}
+		default:
+			// Assume all other object types (mutant, file, thread, etc) use NtDll handles :
 			ntdllObjects.push_back(Object[i]);
-		} else {
-			nativeObjects.push_back(g_KeEventHandles[(PRKEVENT)Object[i]]);
+			break;
 		}
 	}
 
@@ -1808,12 +2152,11 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	}
 	
 	if (nativeObjects.size() > 0) {
-		ret = NtDll::NtWaitForMultipleObjects(
+		ret = WaitForMultipleObjects(
 			nativeObjects.size(),
 			&nativeObjects[0],
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
+			/*WaitAll=*/(WaitType == WAIT_TYPE::WaitAll),
+			Timeout->u.LowPart);
 
 		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
@@ -1836,6 +2179,8 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlock;
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
 		&Object,
@@ -1844,6 +2189,6 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL
+		&WaitBlock
 	);
 }

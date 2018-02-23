@@ -48,6 +48,7 @@
 
 void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead);
 bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead);
+
 void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
@@ -55,6 +56,8 @@ void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntr
 void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry);
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead);
 xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
+
+xboxkrnl::NTSTATUS EmuObFindObjectByHandle(xboxkrnl::HANDLE Handle, PVOID *Object);
 
 extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];

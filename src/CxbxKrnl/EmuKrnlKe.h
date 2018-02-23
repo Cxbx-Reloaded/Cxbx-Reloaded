@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->src->CxbxKrnl->EmuKrnlKi.h
+// *   Cxbx->src->CxbxKrnl->EmuKrnlKe.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,27 +33,33 @@
 // ******************************************************************
 #pragma once
 
-#define KiLockDispatcherDatabase(OldIrql)      \
-	*(OldIrql) = KeRaiseIrqlToDpcLevel()
+// Forward KeLowerIrql() to KfLowerIrql()
+#define KeLowerIrql(NewIrql) \
+	KfLowerIrql(NewIrql)
 
-#define KiLockApcQueue(Thread, OldIrql)        \
-    *(OldIrql) = KeRaiseIrqlToSynchLevel()
+// Forward KeRaiseIrql() to KfRaiseIrql()
+#define KeRaiseIrql(NewIrql, OldIrql) \
+	*(OldIrql) = KfRaiseIrql(NewIrql)
 
-#define KiUnlockApcQueue(Thread, OldIrql)      \
-	KfLowerIrql((OldIrql))
+enum class GetMode { Existing, ExistingOrNew, Erase };
 
-#define KiRemoveTreeTimer(Timer)               \
-    (Timer)->Header.Inserted = FALSE;          \
-    RemoveEntryList(&(Timer)->TimerListEntry)
+HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode = GetMode::ExistingOrNew);
+HANDLE GetNtMutant(xboxkrnl::PRKMUTANT pMutant, GetMode getMode, BOOLEAN InitialOwner = FALSE);
 
-xboxkrnl::BOOLEAN KiInsertTreeTimer(
-	IN xboxkrnl::PKTIMER Timer,
-	IN xboxkrnl::LARGE_INTEGER Interval
-);
+void KeClearEvent(IN xboxkrnl::PRKEVENT Event);
 
-xboxkrnl::LONG KiInsertQueue
+void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation);
+
+namespace XboxTypes = xboxkrnl;
+
+void KeInitializeThread
 (
-	xboxkrnl::PRKQUEUE pQueue,
-	xboxkrnl::PLIST_ENTRY pEntry,
-	xboxkrnl::BOOLEAN Head
+	XboxTypes::PKTHREAD Thread,
+	XboxTypes::PVOID KernelStack,
+	XboxTypes::SIZE_T KernelStackSize,
+	XboxTypes::SIZE_T TlsDataSize,
+	XboxTypes::PKSYSTEM_ROUTINE SystemRoutine,
+	XboxTypes::PKSTART_ROUTINE StartRoutine,
+	XboxTypes::PVOID StartContext,
+	XboxTypes::PKPROCESS Process
 );

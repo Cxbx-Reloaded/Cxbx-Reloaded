@@ -220,8 +220,11 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnl.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKe.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlOb.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />

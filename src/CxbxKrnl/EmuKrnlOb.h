@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->src->CxbxKrnl->EmuKrnlKi.h
+// *   Cxbx->src->CxbxKrnl->EmuKrnlOb.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,27 +33,4 @@
 // ******************************************************************
 #pragma once
 
-#define KiLockDispatcherDatabase(OldIrql)      \
-	*(OldIrql) = KeRaiseIrqlToDpcLevel()
-
-#define KiLockApcQueue(Thread, OldIrql)        \
-    *(OldIrql) = KeRaiseIrqlToSynchLevel()
-
-#define KiUnlockApcQueue(Thread, OldIrql)      \
-	KfLowerIrql((OldIrql))
-
-#define KiRemoveTreeTimer(Timer)               \
-    (Timer)->Header.Inserted = FALSE;          \
-    RemoveEntryList(&(Timer)->TimerListEntry)
-
-xboxkrnl::BOOLEAN KiInsertTreeTimer(
-	IN xboxkrnl::PKTIMER Timer,
-	IN xboxkrnl::LARGE_INTEGER Interval
-);
-
-xboxkrnl::LONG KiInsertQueue
-(
-	xboxkrnl::PRKQUEUE pQueue,
-	xboxkrnl::PLIST_ENTRY pEntry,
-	xboxkrnl::BOOLEAN Head
-);
+extern xboxkrnl::KEVENT ObpDefaultObject;

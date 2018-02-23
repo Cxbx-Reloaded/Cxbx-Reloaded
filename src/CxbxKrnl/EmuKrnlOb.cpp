@@ -49,6 +49,8 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
+#include "EmuKrnlKe.h" // For KeLowerIrql()
+#include "EmuKrnlOb.h" // For ObpDefaultObject
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -58,16 +60,14 @@ namespace xboxkrnl
 #define OB_FLAG_NAMED_OBJECT 1
 #define OB_FLAG_PERMANENT_OBJECT 2
 
-xboxkrnl::HANDLE EmuObCreateObjectHandle
+xboxkrnl::HANDLE ObpCreateObjectHandle
 (
 	IN xboxkrnl::PVOID Object
 )
 {
-	LOG_FUNC_ONE_ARG(Object);
-
 	HANDLE Handle = (HANDLE)Object; // Fake it for now
 
-	LOG_INCOMPLETE(); // TODO : Create an actual handle
+	// LOG_INCOMPLETE(); // TODO : Create an actual handle
 
 	return Handle;
 }
@@ -78,16 +78,11 @@ xboxkrnl::NTSTATUS EmuObFindObjectByHandle
 	OUT PVOID *Object
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG_OUT(Object)
-		LOG_FUNC_END;
-
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	*Object = (PVOID)Handle; // Fake it for now
 	
-	LOG_INCOMPLETE(); // TODO : Lookup an actual handle
+	// LOG_INCOMPLETE(); // TODO : Lookup an actual handle
 
 	if (*Object == NULL)
 		Status = STATUS_INVALID_HANDLE;
@@ -218,6 +213,9 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	NTSTATUS Status = STATUS_SUCCESS;
 	int NameBufferSize = 0;
 
+//	NativeObjectAttributes nativeObjectAttributes;
+//	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+
 	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
 		if (ObjectAttributes->ObjectName->Length == 0) {
 			Status = STATUS_OBJECT_NAME_INVALID;
@@ -281,6 +279,18 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	RETURN(Status);
 }
 
+// Declare ObpDefaultObject identical to KeInitializeEvent(&ObpDefaultObject, SynchronizationEvent, TRUE);
+xboxkrnl::KEVENT ObpDefaultObject =
+{
+	/* Header.Type = */ xboxkrnl::EVENT_TYPE::SynchronizationEvent,
+	/* Header.Absolute = */ FALSE,
+	/* Header.Size = */ sizeof(xboxkrnl::KEVENT) / sizeof(xboxkrnl::LONG),
+	/* Header.Inserted = */ FALSE,
+	/* Header.SignalState = */ TRUE,
+	/* Header.WaitListHead.Flink= */ &ObpDefaultObject.Header.WaitListHead,
+	/* Header.WaitListHead.Blink= */ &ObpDefaultObject.Header.WaitListHead // See InitializeListHead()
+};
+
 // ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
 // ******************************************************************
@@ -291,7 +301,7 @@ XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 	NULL,
 	NULL,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
 
@@ -313,7 +323,9 @@ XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	*Handle = ObpCreateObjectHandle(Object);
+
+	LOG_INCOMPLETE();
 
 	RETURN(S_OK);
 }
@@ -328,21 +340,19 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 {
 	LOG_FUNC_ONE_ARG(Object);
 
+	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
 	/* Get the header */
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-
-	/* Acquire object lock */
-	//ObpAcquireObjectLock(ObjectHeader);
-	LOG_INCOMPLETE(); // TODO : Lock, etc.
 
 	/* Remove the flag */
 	ObjectHeader->Flags &= ~OB_FLAG_PERMANENT_OBJECT;
 
-	/* Release the lock */
-	// ObpReleaseObjectLock(ObjectHeader);
-
 	/* Check if we should delete the object now */
 	//ObpDeleteNameCheck(ObjectBody);
+	LOG_INCOMPLETE();
+
+	KeLowerIrql(OldIrql);
 }
 
 // ******************************************************************
@@ -386,7 +396,7 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		Status = ObReferenceObjectByName(ObjectAttributes->ObjectName, ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 
 		if (NT_SUCCESS(Status)) {
-			new_handle = EmuObCreateObjectHandle(Object);
+			new_handle = ObpCreateObjectHandle(Object);
 			if (new_handle == NULL)
 			{
 				// Detected out of memory
@@ -420,9 +430,11 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 	HANDLE new_handle = NULL;
 
 	if (NT_SUCCESS(Status)) {
-		new_handle = EmuObCreateObjectHandle(Object);
-		if(new_handle == NULL)
-		{
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
+		new_handle = ObpCreateObjectHandle(Object);
+		KeLowerIrql(OldIrql);
+		if(new_handle == NULL) {
 			// Detected out of memory
 			ObfDereferenceObject(Object);
 			Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -463,8 +475,12 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 
 	NTSTATUS Status = EmuObFindObjectByHandle(Handle, ReturnedObject);
 
-	if (NT_SUCCESS(Status))
-		Status = ObReferenceObjectByPointer(ReturnedObject, ObjectType);
+	if (NT_SUCCESS(Status)) {
+		Status = ObReferenceObjectByPointer(*ReturnedObject, ObjectType);
+		if (Status == STATUS_OBJECT_TYPE_MISMATCH) {
+			ObfDereferenceObject(*ReturnedObject);
+		}
+	}
 
 	RETURN(Status);
 }
@@ -491,8 +507,12 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 
 	NTSTATUS Status = EmuObFindObjectByName(ObjectName, Object); 
 
-	if (NT_SUCCESS(Status))
-		Status = ObReferenceObjectByPointer(Object, ObjectType);
+	if (NT_SUCCESS(Status)) {
+		Status = ObReferenceObjectByPointer(*Object, ObjectType);
+		if (Status == STATUS_OBJECT_TYPE_MISMATCH) {
+			ObfDereferenceObject(*Object);
+		}
+	}
 
 	RETURN(Status);
 }
@@ -532,7 +552,7 @@ XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType
 	NULL,
 	NULL, // TODO : xboxkrnl::ObpDeleteSymbolicLink,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'bmyS' // = first four characters of "SymbolicLink" in reverse
 };
 
@@ -568,5 +588,7 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
 
-	/*ignore result*/ObReferenceObjectByPointer(Object, /*ObjectType=*/NULL);
+	// Extract from ObReferenceObjectByPointer :
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	InterlockedIncrement(&ObjectHeader->PointerCount);
 }

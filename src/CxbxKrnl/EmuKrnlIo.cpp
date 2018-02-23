@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
+#include "EmuKrnlOb.h" // For ObpDefaultObject
 #include "CxbxDebugger.h"
 
 // ******************************************************************
@@ -198,7 +199,7 @@ XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType =
 	NULL,
 	NULL, // TODO : xboxkrnl::IopDeleteIoCompletion,
 	NULL,
-	NULL, // &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'pmoC' // = first four characters of "Completion" in reverse
 };
 
@@ -376,7 +377,7 @@ XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType =
 	NULL,
 	NULL,
 	NULL, // TODO : xboxkrnl::IoParseDevice,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	&ObpDefaultObject,
 	'iveD' // = first four characters of "Device" in reverse
 };
 
