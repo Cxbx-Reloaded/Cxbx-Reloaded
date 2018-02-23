@@ -101,7 +101,7 @@ xboxkrnl::LONG KiInsertQueue
 	xboxkrnl::LONG prevState = pQueue->Header.SignalState;
 	xboxkrnl::KTHREAD *pThread = xboxkrnl::KeGetCurrentThread();
 
-	auto pWaitEntry = PrevListEntry(&pQueue->Header.WaitListHead);
+	auto pWaitEntry = pQueue->Header.WaitListHead.Blink;
 	if (pWaitEntry != &pQueue->Header.WaitListHead && pQueue->CurrentCount < pQueue->MaximumCount &&
 		((xboxkrnl::PRKQUEUE)(pThread->Queue) != pQueue || pThread->WaitReason != xboxkrnl::WrQueue)) {
 
