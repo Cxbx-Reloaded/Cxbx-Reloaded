@@ -534,6 +534,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKe.h">
       <Filter>Kernel</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlOb.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
