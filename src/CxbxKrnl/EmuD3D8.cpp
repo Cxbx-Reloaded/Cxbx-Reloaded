@@ -731,14 +731,13 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	DWORD Type = GetXboxCommonResourceType(pXboxResource);
 	switch (Type) {
 	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
-	case X_D3DCOMMON_TYPE_INDEXBUFFER:
 	case X_D3DCOMMON_TYPE_PALETTE:
 	case X_D3DCOMMON_TYPE_TEXTURE:
 	case X_D3DCOMMON_TYPE_SURFACE:
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
+			pData |= MM_SYSTEM_PHYSICAL_MAP;
 		break;
 	case X_D3DCOMMON_TYPE_PUSHBUFFER:
-		break;
+	case X_D3DCOMMON_TYPE_INDEXBUFFER:
 	case X_D3DCOMMON_TYPE_FIXUP:
 		break;
 	default:
@@ -4725,7 +4724,7 @@ VOID WINAPI CreateHostResource
 			XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
 
 			// Vertex buffers live in Physical Memory Region
-			void* pVirtualAddr = (void*)((xbaddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
+			void* pVirtualAddr = GetDataFromXboxResource(pResource);
 
             // create vertex buffer
             {
@@ -4821,7 +4820,7 @@ VOID WINAPI CreateHostResource
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Texture...\n");
             }
 
-			void* pVirtualAddr = (void*)((xbaddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
+			void* pVirtualAddr = GetDataFromXboxResource(pResource);
 
 			X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
@@ -5127,7 +5126,7 @@ VOID WINAPI CreateHostResource
                             }
                         }
 
-                        BYTE *pSrc = (BYTE*)(pThis->Data | MM_SYSTEM_PHYSICAL_MAP); // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
+						BYTE *pSrc = (BYTE*)GetDataFromXboxResource(pResource); // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
                         if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
                          ||( (DWORD)pThis->Data == X_D3DRESOURCE_DATA_BACK_BUFFER))
@@ -7027,7 +7026,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 
 	CxbxUpdateNativeD3DResources();
-	CxbxUpdateActiveIndexBuffer((PWORD)pIndexData, VertexCount);
 
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);

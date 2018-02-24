@@ -104,20 +104,24 @@ void XTL::VertexPatcher::DumpCache(void)
 size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData)
 {	
 	// If this is not an indexed draw, the size is simply VertexCount * Stride
-	if (pIndexData == nullptr) {
-		return dwVertexCount * dwStride;
-	}
+	size_t vertexBufferSize = dwVertexCount * dwStride;
 
-	// We are an indexed draw, so we have to parse the index buffer
-	// The highest index we see can be used to determine the vertex buffer size
-	DWORD highestVertexIndex = 0;
-	for (DWORD i = 0; i < dwVertexCount; i++) {
-		if (pIndexData[i] >= highestVertexIndex) {
-			highestVertexIndex = pIndexData[i] + 1;
+	if (pIndexData != nullptr) {
+		// We are an indexed draw, so we have to parse the index buffer
+		// The highest index we see can be used to determine the vertex buffer size
+		DWORD highestVertexIndex = 0;
+		for (DWORD i = 0; i < dwVertexCount; i++) {
+			if (pIndexData[i] >= highestVertexIndex) {
+				highestVertexIndex = pIndexData[i] + 1;
+			}
 		}
+
+		vertexBufferSize = highestVertexIndex * dwStride;		
 	}
 
-	return highestVertexIndex * dwStride;
+	// Vertex Buffer Size must be a multiple of PAGE_SIZE
+	vertexBufferSize = (((vertexBufferSize + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE);
+	return vertexBufferSize;
 }
 
 void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
@@ -865,7 +869,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         // Retrieve the original buffer size
         {
             // Here we save the full buffer size
-            dwOriginalSizeWR = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pStream->pOriginalStream));
+			dwOriginalSizeWR = GetVertexBufferSize(pPatchDesc->dwVertexCount, pStream->uiOrigStride, pPatchDesc->pIndexData);
 
             // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
             // add it to our new calculated size of the patched buffer
