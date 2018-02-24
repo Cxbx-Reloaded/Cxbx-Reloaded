@@ -663,7 +663,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 		uiStride = g_D3DStreamStrides[uiStream];
 		UINT uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
 
-		uiVertexCount = uiLength / uiLength;
+		uiVertexCount = uiLength / uiStride;
 
 		uint08 *pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
 
