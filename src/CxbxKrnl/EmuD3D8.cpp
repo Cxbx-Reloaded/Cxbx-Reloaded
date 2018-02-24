@@ -8399,7 +8399,6 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 	// create an XRef...
 
 	//__asm int 3;
-	EmuWarning("D3D::BlockOnTime not implemented (tell blueshogun)");
 
 	LOG_UNIMPLEMENTED();
 }
