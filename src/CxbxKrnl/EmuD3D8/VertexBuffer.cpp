@@ -418,7 +418,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 		uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
 
         // Set a new (exact) vertex count
-		uiVertexCount = pPatchDesc->dwVertexCount;
+		uiVertexCount = uiLength / uiStride;
 
 		// Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
@@ -448,9 +448,9 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
 		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
 		pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
-		uiVertexCount = pPatchDesc->dwVertexCount;
-        dwNewSize = GetVertexBufferSize(uiVertexCount, pStreamPatch->ConvertedStride, pPatchDesc->pIndexData);
+		uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
+		uiVertexCount = uiLength / uiStride;
+		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
         pNewData = (uint08*)g_VMManager.Allocate(dwNewSize);
         if(!pNewData)
@@ -653,7 +653,8 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         pNewVertexBuffer = 0;
         pData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         uiStride = pPatchDesc->uiVertexStreamZeroStride;
-        uiVertexCount = pPatchDesc->dwVertexCount;
+		DWORD uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
+        uiVertexCount = uiLength / uiStride;
     }
     else
     {
@@ -662,7 +663,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 		uiStride = g_D3DStreamStrides[uiStream];
 		UINT uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
 
-		uiVertexCount = pPatchDesc->dwVertexCount;
+		uiVertexCount = uiLength / uiLength;
 
 		uint08 *pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
 
