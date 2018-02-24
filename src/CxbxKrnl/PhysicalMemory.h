@@ -65,6 +65,15 @@ typedef unsigned int PFN;
 typedef unsigned int PFN_COUNT;
 
 
+/* An entry of the list tracking the free pages on the system */
+typedef struct _FreeBlock
+{
+	PFN start;                        // starting page of the block
+	PFN_COUNT size;                   // number of pages in the block (edges included)
+	xboxkrnl::LIST_ENTRY ListEntry;
+}FreeBlock, *PFreeBlock;
+
+
 // NOTE: all the bit fields below can have endianess issues...
 
 /* The Xbox PTE, modelled around the Intel 386 PTE specification */
@@ -190,13 +199,14 @@ enum PageType {
 /* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
 
-
 /* PhysicalMemory class */
 class PhysicalMemory
 {
 	protected:
-		// map tracking the free physical memory regions
-		std::map<PFN, PFN> m_PhysicalMap;
+		// doubly linked list tracking the free physical pages. Intellisense seems to treat the struct as a missing function
+		// instead and warns about it. However, it seems to be known behaviour. See below
+		// https://developercommunity.visualstudio.com/content/problem/40898/macro-usage-in-c-structures-appears-to-confuse-int.html
+		LIST_ENTRY_INITIALIZE_HEAD(FreeList);
 		// map tracking the blocks allocated with VirtualAlloc
 		//std::map<VAddr, size_t> m_Fragmented_mem_map;
 		// current error status code of the PhysicalMemory class
@@ -209,6 +219,9 @@ class PhysicalMemory
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[COUNT] = { 0 };
+		// total number of pages on the system
+		PFN_COUNT m_MaxNumberOfPages = XBOX_HIGHEST_PHYSICAL_PAGE;
+
 	
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};
@@ -228,16 +241,12 @@ class PhysicalMemory
 		void InitializePageDirectory();
 		// write pfn
 		void WritePfn(XBOX_PFN Pfn, PFN pfn_start, PFN pfn_end, MMPTE Pte, PageType BusyType, bool bContiguous);
-		// search the free memory regions for the specified pfn
-		bool SearchMap(PFN searchvalue, PFN* result);
-		// commit a contiguous free memory region
-		void RemoveFree(PFN start, PFN end);
-		// release a contiguous memory region
+		// commit a contiguous number of pages
+		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end);
+		// release a contiguous number of pages
 		void InsertFree(PFN start, PFN end);
-		// locate a free contiguous region if available, specifying also a range if desired
-		bool FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low = 0, PFN high = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
 		// construct a temporary pte with the desired protection (if possible) and return it
-		bool ConvertWinToPteProtection(DWORD perms, PMMPTE pte);
+		bool ConvertXboxToPteProtection(DWORD perms, PMMPTE pte);
 		// commit ptes (if necessary)
 		bool AllocatePtes(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it

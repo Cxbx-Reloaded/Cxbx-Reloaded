@@ -245,99 +245,177 @@ void PhysicalMemory::WritePfn(XBOX_PFN Pfn, PFN pfn_start, PFN pfn_end, MMPTE Pt
 	}
 }
 
-bool PhysicalMemory::SearchMap(PFN searchvalue, PFN* result)
+bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end)
 {
-	auto it = m_PhysicalMap.upper_bound(searchvalue);
+	xboxkrnl::PLIST_ENTRY ListEntry;
+	PFN PfnStart;
+	PFN PfnEnd;
+	PFN IntersectionStart;
+	PFN IntersectionEnd;
+	PFN_COUNT PfnCount;
 
-	if (it == m_PhysicalMap.begin()) // it->first > searchvalue
-		goto fail;
+	if (NumberOfPages == 0 || NumberOfPages > m_PhysicalPagesAvailable) { result = nullptr; return false; }
 
-	--it;  // it->first <= searchvalue
-	if (searchvalue >= it->first && searchvalue <= it->second)
+	ListEntry = FreeList.Blink; // search from the top
+
+	while (ListEntry != &FreeList)
 	{
-		*result = it->first;
-		return true;
+		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size >= NumberOfPages)  // not enough space
+		{
+			PfnStart = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start;
+			PfnCount = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
+			PfnEnd = PfnStart + PfnCount - 1;
+			IntersectionStart = start >= PfnStart ? start : PfnStart;
+			IntersectionEnd = end <= PfnEnd ? end : PfnEnd;
+
+			if (IntersectionEnd < IntersectionStart)
+			{
+				// Not inside the requested range, keep searching
+
+				goto InvalidBlock;
+			}
+
+			if (IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
+			{
+				// There is not enough free space inside the free block so this is an invalid block.
+				// We have to check again since the free size could have shrinked because of the intersection
+				// check done above
+
+				goto InvalidBlock;
+			}
+
+			// Now we know that we have a usable free block with enough pages
+
+			if (IntersectionStart == PfnStart)
+			{
+				if (IntersectionEnd == PfnEnd)
+				{
+					// The block is totally inside the range, just shrink its size
+
+					PfnCount -= NumberOfPages;
+					if (!PfnCount)
+					{
+						// delete the entry if there is no free space left
+
+						LIST_ENTRY_REMOVE(ListEntry);
+						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+					}
+					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+					m_PhysicalPagesAvailable -= NumberOfPages;
+					*result = PfnStart + PfnCount;
+					return true;
+				}
+				else
+				{
+					// Create a new block with the remaining pages after the block
+
+					PFreeBlock block = new FreeBlock;
+					block->start = IntersectionEnd + 1;
+					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
+					LIST_ENTRY_INITIALIZE(&block->ListEntry);
+					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+
+					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
+					if (!PfnCount)
+					{
+						// delete the entry if there is no free space left
+
+						LIST_ENTRY_REMOVE(ListEntry);
+						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+					}
+					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+					m_PhysicalPagesAvailable -= NumberOfPages;
+					*result = PfnStart + PfnCount;
+					return true;
+				}
+			}
+			else
+			{
+				// Starting address of the free block is lower than the intersection start
+
+				if (IntersectionEnd == PfnEnd)
+				{
+					// The free block extends before IntersectionStart
+
+					PfnCount -= NumberOfPages;
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+
+					m_PhysicalPagesAvailable -= NumberOfPages;
+					*result = PfnStart + PfnCount;
+					return true;
+				}
+				else
+				{
+					// The free block extends in both directions
+
+					PFreeBlock block = new FreeBlock;
+					block->start = IntersectionEnd + 1;
+					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
+					LIST_ENTRY_INITIALIZE(&block->ListEntry);
+					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+
+					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+
+					m_PhysicalPagesAvailable -= NumberOfPages;
+					*result = PfnStart + PfnCount;
+					return true;
+				}
+			}
+		}
+		InvalidBlock:
+		ListEntry = ListEntry->Blink;
 	}
-
-	fail:
-		result = nullptr;
-		return false;
-}
-
-void PhysicalMemory::RemoveFree(PFN start, PFN end)
-{
-	PFN result;
-	bool bFound = SearchMap(start, &result); // this function is required in release builds so it cannot be asserted directly
-	assert(bFound);
-	PFN old_end = m_PhysicalMap[result];
-
-	if (start != result)
-	{
-		// split at the beginning
-		m_PhysicalMap[result] = start - 1;
-	}
-	else
-	{
-		// remove the old entry which is now invalid
-		m_PhysicalMap.erase(start);
-	}
-
-	if (end != old_end)
-	{
-		// split at the end
-		m_PhysicalMap[end + 1] = old_end;
-	}
-
-	m_PhysicalPagesAvailable -= (end - start + 1);
+	result = nullptr;
+	return false;
 }
 
 void PhysicalMemory::InsertFree(PFN start, PFN end)
 {
-	PFN result;
-	assert(!SearchMap(ranges, start, &result));
+	xboxkrnl::PLIST_ENTRY ListEntry;
+	PFN_COUNT size = end - start + 1;
 
-	m_PhysicalMap[start] = end;
+	ListEntry = FreeList.Blink; // search from the top
 
-	if (SearchMap(end + 1, &result))
+	while (true)
 	{
-		// merge with the following free region
-		m_PhysicalMap[start] = m_PhysicalMap[result];
-		m_PhysicalMap.erase(result);
-	}
-
-	if (SearchMap(start - 1, &result))
-	{
-		// merge with the previous free region
-		m_PhysicalMap[result] = m_PhysicalMap[start];
-		m_PhysicalMap.erase(start);
-	}
-
-	m_PhysicalPagesAvailable += (end - start + 1);
-}
-
-bool PhysicalMemory::FindFreeContiguous(PFN_COUNT size, PFN* result, PFN low, PFN high)
-{
-	std::map<PFN, PFN>::iterator it;
-
-	if (!m_PhysicalMap.size() || high - low < size || size == 0)
-		goto fail;
-
-	for (it = --(m_PhysicalMap.end()); ; --it)
-	{
-		if (it->second - it->first + 1 >= size && ((low == 0 && high == MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT) || 
-			(low >= it->first && high <= it->second)))
+		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start < start || ListEntry == &FreeList)
 		{
-			*result = it->first;
-			return true;
+			PFreeBlock block = new FreeBlock;
+			block->start = start;
+			block->size = size;
+			LIST_ENTRY_INITIALIZE(&block->ListEntry);
+			LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+
+			ListEntry = ListEntry->Flink; // move to the new created block
+
+			// Check if merging is possible
+			if (ListEntry->Flink != &FreeList &&
+				start + size == LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start)
+			{
+				// Merge forward
+				xboxkrnl::PLIST_ENTRY temp = ListEntry->Flink;
+				LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size +=
+					LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry)->size;
+				LIST_ENTRY_REMOVE(temp);
+				delete LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry);
+			}
+			if (ListEntry->Blink != &FreeList &&
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->start +
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size == start)
+			{
+				// Merge backward
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size +=
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
+				LIST_ENTRY_REMOVE(ListEntry);
+				delete block;
+			}
+			m_PhysicalPagesAvailable += size;
+
+			return;
 		}
-
-		if (it == m_PhysicalMap.begin())
-			break;
+		ListEntry = ListEntry->Blink;
 	}
-
-	fail:
-		result = nullptr;
-		return false;
 }
 
 bool PhysicalMemory::AllocatePtes(PFN_COUNT PteNumber, VAddr addr)

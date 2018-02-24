@@ -386,6 +386,8 @@ LIST_ENTRY, *PLIST_ENTRY;
 
 #define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
 
+#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
+
 #define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
 ((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
 

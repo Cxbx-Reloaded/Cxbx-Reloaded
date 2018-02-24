@@ -80,7 +80,16 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
+		m_MaxNumberOfPages = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 	}
+
+	// Insert all the pages available on the system in the free list
+	xboxkrnl::PLIST_ENTRY ListEntry = FreeList.Blink;
+	PFreeBlock block = new FreeBlock;
+	block->start = 0;
+	block->size = m_MaxNumberOfPages + 1;
+	LIST_ENTRY_INITIALIZE(&block->ListEntry);
+	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database
 	bool bQuickReboot;
