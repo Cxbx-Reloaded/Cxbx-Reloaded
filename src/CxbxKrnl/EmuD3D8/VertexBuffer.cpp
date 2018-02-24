@@ -259,7 +259,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
         pCalculateData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
-        uiLength = GetVertexBufferSize(pPatchDesc->dwPrimitiveCount, uiStride, pPatchDesc->pIndexData);
+        uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData);
         uiKey = (uint32)pCalculateData;
         //pCachedStream->bIsUP = true;
         //pCachedStream->pStreamUP = pCalculateData;
