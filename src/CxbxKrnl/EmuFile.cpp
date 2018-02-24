@@ -184,14 +184,14 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 		return;
 	}
 
-	// Format the partition, by deleting it's folder and re-creating it
-	// In this case, experimental means that these functions work and are safe
-	// but not officially in the C++ standard yet
-	// Requires a compiler with C++17 support
+
+	// Format the partition, by iterating through the contents and removing all files/folders within
+	// Previously, we deleted and re-created the folder, but that caused permission issues for some users
 	try
 	{
-		std::experimental::filesystem::remove_all(partitionPath);
-		std::experimental::filesystem::create_directory(partitionPath);
+		for (auto& directoryEntry : std::experimental::filesystem::recursive_directory_iterator(partitionPath)) {
+			std::experimental::filesystem::remove_all(directoryEntry);
+		}
 	}
 	catch (std::experimental::filesystem::filesystem_error fsException)
 	{
