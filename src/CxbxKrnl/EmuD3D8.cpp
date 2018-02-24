@@ -8394,12 +8394,11 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 		LOG_FUNC_ARG(Unknown2)
 		LOG_FUNC_END;
 
-	// NOTE: This function is not meant to me emulated.  Just use it to find out
+	// NOTE: This function is not meant to be emulated.  Just use it to find out
 	// the function that is calling it, and emulate that instead!!!  If necessary,
 	// create an XRef...
 
 	//__asm int 3;
-	EmuWarning("D3D::BlockOnTime not implemented (tell blueshogun)");
 
 	LOG_UNIMPLEMENTED();
 }
