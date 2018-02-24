@@ -755,8 +755,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     {
 		// I honestly don't expect this to happen, but if it does...
         if(g_iThreadNotificationCount >= 16)
-			CxbxKrnlCleanup("Too many thread notification routines installed\n"
-							"If you're reading this message than tell blueshogun you saw it!!!");
+			CxbxKrnlCleanup("Too many thread notification routines installed\n");
 
 		// Find an empty spot in the thread notification array
 		for(int i = 0; i < 16; i++)

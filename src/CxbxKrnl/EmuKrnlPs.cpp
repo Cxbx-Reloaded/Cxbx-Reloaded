@@ -403,8 +403,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 
 	// I honestly don't expect this to happen, but if it does...
 	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
-		CxbxKrnlCleanup("Too many thread notification routines installed\n"
-			"If you're reading this message than tell blueshogun you saw it!!!");
+		CxbxKrnlCleanup("Too many thread notification routines installed\n");
 
 	// Find an empty spot in the thread notification array
 	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)

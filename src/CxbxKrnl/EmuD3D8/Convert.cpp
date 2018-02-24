@@ -1133,7 +1133,7 @@ XTL::D3DMULTISAMPLE_TYPE XTL::EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 		result = D3DMULTISAMPLE_9_SAMPLES;
 		break;
 	default:
-		EmuWarning("Unknown Multisample Type (0x%X)!\x0d\x0a. If this value is greater than 0xFFFF contact blueshogun!", Type);
+		EmuWarning("Unknown Multisample Type (0x%X)!\x0d\x0a.", Type);
 		result = D3DMULTISAMPLE_NONE;
 	}
 	return result;
