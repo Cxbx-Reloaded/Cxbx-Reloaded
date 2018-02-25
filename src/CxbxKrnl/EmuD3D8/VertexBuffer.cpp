@@ -125,7 +125,8 @@ size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData
 }
 
 void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
-                                     UINT             uiStream)
+                                     UINT             uiStream,
+									 uint32_t	      uiHash)
 {
     UINT                       uiStride;
     XTL::X_D3DVertexBuffer    *pOrigVertexBuffer = nullptr;
@@ -195,11 +196,14 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
         uiKey = (uint32)pCalculateData;
     }
 
-    uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+	// If we weren't given a known hash, calculate a new one
+	if (uiHash == 0) {
+		uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+	}
     
     pCachedStream->uiHash = uiHash;
     pCachedStream->Stream = m_pStreams[uiStream];
-    pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
+	pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
     pCachedStream->uiCount = 0;
     pCachedStream->uiLength = uiLength;
     pCachedStream->uiCacheHit = 0;
@@ -231,7 +235,8 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
 
 bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                                            UINT             uiStream,
-										   bool			   *pbFatalError)
+										   bool			   *pbFatalError,
+										   uint32_t		   *pHash)
 {
     UINT                       uiStride;
     XTL::X_D3DVertexBuffer    *pOrigVertexBuffer = nullptr;
@@ -279,6 +284,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
             }
 
             uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+			*pHash = uiHash;
             if(uiHash == pCachedStream->uiHash)
             {
                 // Take a while longer to check
@@ -987,7 +993,8 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     {
         bool LocalPatched = false;
 
-        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError))
+		uint32_t uiHash = 0;
+        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError, &uiHash))
         {
             m_pStreams[uiStream].bUsedCached = true;
             continue;
@@ -998,7 +1005,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
         if(LocalPatched && !pPatchDesc->pVertexStreamZeroData)
         {
             // Insert the patched stream in the cache
-            CacheStream(pPatchDesc, uiStream);
+            CacheStream(pPatchDesc, uiStream, uiHash);
             m_pStreams[uiStream].bUsedCached = true;
         }
         Patched |= LocalPatched;

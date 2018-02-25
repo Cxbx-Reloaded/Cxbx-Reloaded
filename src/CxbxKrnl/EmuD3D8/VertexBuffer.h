@@ -106,7 +106,8 @@ class VertexPatcher
 
         // Caches a patched stream
         void CacheStream(VertexPatchDesc *pPatchDesc,
-                         UINT             uiStream);
+                         UINT             uiStream,
+						 uint32_t		  uiHash);
 
         // Frees a cached, patched stream
         void FreeCachedStream(void *pStream);
@@ -114,7 +115,8 @@ class VertexPatcher
         // Tries to apply a previously patched stream from the cache
         bool ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                                UINT             uiStream,
-							   bool			   *pbFatalError);
+							   bool			   *pbFatalError,
+							   uint32_t        *uiHash);
 
         // Patches the types of the stream
         bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
