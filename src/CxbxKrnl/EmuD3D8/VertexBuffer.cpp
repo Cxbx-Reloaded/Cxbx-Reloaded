@@ -120,7 +120,7 @@ size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData
 	}
 
 	// Vertex Buffer Size must be a multiple of PAGE_SIZE
-	vertexBufferSize = (((vertexBufferSize + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE);
+	//vertexBufferSize = (((vertexBufferSize + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE);
 	return vertexBufferSize;
 }
 
