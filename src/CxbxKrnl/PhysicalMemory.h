@@ -203,10 +203,8 @@ void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
 class PhysicalMemory
 {
 	protected:
-		// doubly linked list tracking the free physical pages. Intellisense seems to treat the struct as a missing function
-		// instead and warns about it. However, it seems to be known behaviour. See below
-		// https://developercommunity.visualstudio.com/content/problem/40898/macro-usage-in-c-structures-appears-to-confuse-int.html
-		LIST_ENTRY_INITIALIZE_HEAD(FreeList);
+		// doubly linked list tracking the free physical pages
+		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
 		// map tracking the blocks allocated with VirtualAlloc
 		//std::map<VAddr, size_t> m_Fragmented_mem_map;
 		// current error status code of the PhysicalMemory class
@@ -219,8 +217,8 @@ class PhysicalMemory
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[COUNT] = { 0 };
-		// total number of pages on the system
-		PFN_COUNT m_MaxNumberOfPages = XBOX_HIGHEST_PHYSICAL_PAGE;
+		// highest page on the system
+		PFN_COUNT m_HighestPage = XBOX_HIGHEST_PHYSICAL_PAGE;
 
 	
 		// protected constructor so PhysicalMemory can only be inherited from
@@ -233,14 +231,10 @@ class PhysicalMemory
 				VirtualFree((void*)it->first, 0, MEM_RELEASE);
 			}
 		}
-		// set up the pfndatabase
-		void InitializePfnDatabase();
-		// set up the pfn database after a quick reboot (a new xbe is launched)
-		void ReinitializePfnDatabase();
 		// set up the page directory
 		void InitializePageDirectory();
 		// write pfn
-		void WritePfn(XBOX_PFN Pfn, PFN pfn_start, PFN pfn_end, MMPTE Pte, PageType BusyType, bool bContiguous);
+		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType BusyType, bool bContiguous);
 		// commit a contiguous number of pages
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end);
 		// release a contiguous number of pages

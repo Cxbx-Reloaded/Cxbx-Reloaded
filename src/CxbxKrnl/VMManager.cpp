@@ -80,14 +80,14 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
-		m_MaxNumberOfPages = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
+		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 	}
 
 	// Insert all the pages available on the system in the free list
 	xboxkrnl::PLIST_ENTRY ListEntry = FreeList.Blink;
 	PFreeBlock block = new FreeBlock;
 	block->start = 0;
-	block->size = m_MaxNumberOfPages + 1;
+	block->size = m_HighestPage + 1;
 	LIST_ENTRY_INITIALIZE(&block->ListEntry);
 	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
@@ -212,6 +212,124 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	else { printf("Page table for Retail console initialized!\n"); }
 }
 
+void VMManager::InitializePfnDatabase()
+{
+	XBOX_PFN TempPF;
+	PFN pfn;
+	PFN pfn_end;
+	PFN result;
+
+
+	// Default initialize all the entries of the PFN database
+	TempPF.Default = 0;
+	TempPF.Busy.Busy = 1;
+	TempPF.Busy.LockCount = LOCK_COUNT_MAXIMUM;
+	TempPF.Busy.BusyType = Unknown;
+	if (g_bIsRetail) {
+		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, TempPF.Default); // Xbox: 64 KiB
+		RemoveFree(X64KB >> PAGE_SHIFT, &result, XBOX_PFN_DATABASE_PHYSICAL_PAGE, XBOX_PFN_DATABASE_PHYSICAL_PAGE + (X64KB >> PAGE_SHIFT));
+		ConstructVMA();
+	}
+	else if (g_bIsChihiro) {
+		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Chihiro: 128 KiB
+		RemoveFree(X64KB * 2 >> PAGE_SHIFT, &result, CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE, CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + (X64KB * 2 >> PAGE_SHIFT));
+		ConstructVMA();
+	}
+	else {
+		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Debug: 128 KiB
+		RemoveFree(X64KB * 2 >> PAGE_SHIFT, &result, XBOX_PFN_DATABASE_PHYSICAL_PAGE, XBOX_PFN_DATABASE_PHYSICAL_PAGE + (X64KB * 2 >> PAGE_SHIFT));
+		ConstructVMA();
+	}
+
+	// Construct the pfn of the page directory
+	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
+
+	RemoveFree(1, &result, pfn, pfn);
+	WritePfn(pfn, pfn, &TempPF.Pte, Contiguous, true);
+	ConstructVMA();
+
+
+	// Construct the pfn's of the kernel pages
+	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE);
+	pfn_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
+
+	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, Contiguous, true);
+	ConstructVMA();
+
+
+	// Construct the pfn's of the pages holding the pfn database
+	if (g_bIsRetail) {
+		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
+	}
+	else if (g_bIsDebug) {
+		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+	}
+	else {
+		pfn = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE;
+		pfn_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+	}
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
+
+	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, Contiguous, true);
+	ConstructVMA();
+
+
+	// Construct the pfn's of the pages holding the nv2a instance memory
+	if (g_bIsRetail || g_bIsDebug) {
+		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
+		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+	}
+	else {
+		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
+		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+	}
+	TempPF.Pte.Default = ValidKernelPteBits;
+	DISABLE_CACHING(TempPF.Pte);
+
+	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, Contiguous, true);
+	ConstructVMA();
+
+
+	if (g_bIsDebug)
+	{
+		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
+
+		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE - 1;
+		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		TempPF.Pte.Default = ValidKernelPteBits;
+		DISABLE_CACHING(TempPF.Pte);
+
+		RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+		WritePfn(pfn, pfn_end, &TempPF.Pte, Contiguous, true);
+		ConstructVMA();
+	}
+
+	// Construct the pfn of the page used by D3D
+	pfn = D3D_PHYSICAL_PAGE;
+	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
+
+	RemoveFree(1, &result, pfn, pfn);
+	WritePfn(pfn, pfn, &TempPF.Pte, Contiguous, true);
+	ConstructVMA();
+}
+
+void VMManager::ReinitializePfnDatabase()
+{
+
+}
+
+void VMManager::ConstructVMA()
+{
+	// TODO
+}
+
 void VMManager::MapHardwareDevice(VAddr base, size_t size, VMAType type)
 {
 	VMAIter vma_handle = CarveVMA(base, size);
@@ -294,7 +412,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	VAddr addr;
 	bool bVAlloc = true;
 
-	if (!ConvertWinToPteProtection(perms, &Pte)) { RETURN(NULL); } // TODO
+	if (!ConvertXboxToPteProtection(perms, &Pte)) { RETURN(NULL); } // TODO
 
 	Lock();
 
@@ -663,7 +781,7 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 	VAddr addr = low_addr;
 	size_t aligned_size = size << PAGE_SHIFT;
 
-	if (!FindFreeContiguous(size, &pfn, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
+	if (!RemoveFree(size, &pfn, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
 	{
 		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
 		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
@@ -737,7 +855,6 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 			{
 				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize + size, (void*)addr) == addr)
 				{
-					RemoveFree(pfn, pfn + size - 1);
 					*bVAllocFlag = false; // allocated with MapViewOfFileEx
 					return addr + (pfn << PAGE_SHIFT); // sum the offset into the file view
 				}

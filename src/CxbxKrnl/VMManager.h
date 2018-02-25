@@ -193,6 +193,12 @@ class VMManager : public PhysicalMemory
 		// the allocation granularity of the host. Needed by MapViewOfFileEx and VirtualAlloc
 		DWORD m_AllocationGranularity;
 	
+		// set up the pfndatabase
+		void InitializePfnDatabase();
+		// set up the pfn database after a quick reboot (a new xbe is launched)
+		void ReinitializePfnDatabase();
+		// construct a vma
+		void ConstructVMA();
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
 		VAddr MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms,
 			PFN low_pfn = 0, PFN high_pfn = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
