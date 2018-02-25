@@ -405,64 +405,91 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 		LOG_FUNC_ARG(bAddGuardPage);
 	LOG_FUNC_END;
 
-	MMPTE Pte;
-	PMMPTE Pde;
+	MMPTE TempPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
 	PFN pfn;
 	PFN_COUNT PteNumber;
 	VAddr addr;
 	bool bVAlloc = true;
 
-	if (!ConvertXboxToPteProtection(perms, &Pte)) { RETURN(NULL); } // TODO
+	if (!ConvertXboxToPteProtection(perms, &TempPte)) { RETURN(NULL); } // TODO
 
 	Lock();
 
 	PteNumber = ROUND_UP_4K(size) >> PAGE_SHIFT;
 
 	if (bAddGuardPage) { PteNumber++; }
-	if (m_PhysicalPagesAvailable < PteNumber) { goto fail; }
+	if (m_PhysicalPagesAvailable < PteNumber) { goto Fail; }
 
-	addr = MapMemoryBlock(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, PteNumber, &bVAlloc, perms);
-	if (!addr) { goto fail; }
+	addr = MapMemoryBlock(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, PteNumber, &bVAlloc, perms, 0, m_HighestPage, &pfn);
+	if (!addr) { goto Fail; }
 
 	// check if we have to construct the PT's for this allocation
-	if (!AllocatePtes(PteNumber, addr))
+	if (!AllocatePT(PteNumber, addr))
 	{
 		// If we reach here it means we had enough memory for the allocation but not for PT's mapping it, so this
 		// allocation must fail instead.
 
-		if (bVAlloc) { VirtualFree((void*)addr, 0, MEM_RELEASE); }
+		if (bVAlloc)
+		{
+			VirtualFree((void*)addr, 0, MEM_RELEASE);
+			m_PhysicalPagesAvailable += PteNumber;
+		}
 		else
 		{
-			// recalculate pfn allocated from addr and do removefree here instead of inside MapBlock
-			PFN start = (addr - ROUND_DOWN(addr, m_AllocationGranularity)) >> PAGE_SHIFT;
+			// Recalculate the pfn allocated from addr free the corresponding pages
 			UnmapViewOfFile((void*)ROUND_DOWN(addr, m_AllocationGranularity));
-			InsertFree(start, start + )
+			InsertFree(pfn, pfn + PteNumber);
 		}
+		goto Fail;
+	}
+
+	// Finally, write the pte's and the pfn's
+	if (bVAlloc)
+	{
+		// With VirtualAlloc we identity map this allocation since it doesn't allocate physical pages
+
+		pfn = addr >> PAGE_SHIFT;
 	}
 	
-	// check again to see if we have enough physical memory for allocating the PT's that may be necessary
-	if (m_PhysicalPagesAvailable < PteNumber)
+	PointerPte = GetPteAddress(addr);
+	if (bAddGuardPage)
 	{
-		// If we reach here it means we had enough memory for the allocation but not for PT's mapping it, so this
-		// allocation must fail instead. Note that we cannot do this check before the call to MapMemoryBlock because,
-		// even if we reserve the pte's, there is no guarantee that we can place our allocation on the virtual memory
-		// mapped by those pte's because the host could have buffers there (annoying...)
+		WRITE_ZERO_PTE(PointerPte);
+		PointerPte++;
+	}
+	EndingPte = PointerPte + PteNumber - 1;
 
-		if (bVAlloc) { VirtualFree((void*)addr, 0, MEM_RELEASE); }
+	while (PointerPte <= EndingPte)
+	{
+		TempPte.Hardware.PFN = pfn;
+		WRITE_PTE(PointerPte, TempPte);
+		if (!bVAlloc)
+		{
+			WritePfn(pfn, pfn, PointerPte, BusyType, false);
+		}
 		else
 		{
-			// recalculate pfn allocated from addr and do removefree here instead of inside MapBlock
-			PFN start = (addr - SYSTEM_MEMORY_BASE) >> PAGE_SHIFT;
-			UnmapViewOfFile((void*)ROUND_DOWN(addr,m_AllocationGranularity));
-			InsertFree(start, start + )
-		}
-	}
-	
-	Unlock();
+			// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
+			// to increase the page type usage
 
-	fail:
-		Unlock();
-		RETURN(NULL);
+			m_PagesByUsage[BusyType]++;
+		}
+		PointerPte++;
+		pfn++;
+	}
+
+	FillMemoryUlong((void*)addr, PteNumber * PAGE_SIZE, 0); // zero the allocated pages
+
+	ConstructVMA();
+
+	Unlock();
+	RETURN(addr);
+
+	Fail:
+	Unlock();
+	RETURN(NULL);
 }
 
 void VMManager::Deallocate(VAddr addr)
@@ -775,7 +802,8 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	RETURN(ret);
 }
 
-VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn, PFN high_pfn)
+VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms,
+	PFN low_pfn, PFN high_pfn, PFN* result)
 {
 	PFN pfn;
 	VAddr addr = low_addr;
@@ -802,7 +830,7 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 		{
 			if (it_start->second.type != VMAType::Free) // already allocated by the VMManager
 			{
-				if(it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
+				if (it_end != m_Vma_map.end()) { addr = (++it_start)->first; }
 				continue;
 			}
 
@@ -816,8 +844,10 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 
 				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
 				{
-					RemoveFree(pfn, pfn + size - 1);
+					// With VirtualAlloc we just consume free pages but we don't remove them from the free list
+					m_PhysicalPagesAvailable -= size;
 					*bVAllocFlag = true; // allocated with VirtualAlloc
+					result = nullptr;
 					return addr;
 				}
 			}
@@ -827,7 +857,7 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 	else // MapViewOfFileEx path
 	{
 		DWORD FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
-		size_t FileViewSize = (pfn << PAGE_SHIFT) - FileOffsetLow;
+		size_t FileViewSize = (pfn << PAGE_SHIFT) + aligned_size - FileOffsetLow;
 
 		ConvertVProtectToMapViewProtection(&perms);
 
@@ -853,10 +883,11 @@ VAddr VMManager::MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size,
 
 			for (; addr + aligned_size <= vma_end; addr += m_AllocationGranularity)
 			{
-				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize + size, (void*)addr) == addr)
+				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize, (void*)addr) == addr)
 				{
 					*bVAllocFlag = false; // allocated with MapViewOfFileEx
-					return addr + (pfn << PAGE_SHIFT); // sum the offset into the file view
+					*result = pfn;
+					return addr + (pfn << PAGE_SHIFT) - FileOffsetLow; // sum the offset into the file view
 				}
 			}
 			if (it_end != m_Vma_map.end()) { addr = (++it_start)->first; }

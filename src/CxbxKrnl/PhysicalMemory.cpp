@@ -100,11 +100,11 @@ void PhysicalMemory::InitializePageDirectory()
 	// Write the pde's of the contiguous region
 	TempPte.Default = ValidKernelPdeBits;
 	if (g_bIsRetail || g_bIsDebug) {
-		TempPte.Hardware.PFN = (ULONG)XBOX_PFN_ADDRESS;
+		TempPte.Hardware.PFN = (ULONG)XBOX_PFN_ADDRESS >> PAGE_SHIFT;
 		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(XBOX_HIGHEST_PHYSICAL_PAGE));
 	}
 	else {
-		TempPte.Hardware.PFN = (ULONG)CHIHIRO_PFN_ADDRESS;
+		TempPte.Hardware.PFN = (ULONG)CHIHIRO_PFN_ADDRESS >> PAGE_SHIFT;
 		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(CHIHIRO_HIGHEST_PHYSICAL_PAGE));
 	}
 	for (pPde = GetPdeAddress(SYSTEM_PHYSICAL_MAP); pPde <= pPde_end; ++pPde)
@@ -337,7 +337,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 	}
 }
 
-bool PhysicalMemory::AllocatePtes(PFN_COUNT PteNumber, VAddr addr)
+bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
 	PMMPTE pPde;
 	MMPTE TempPte;
@@ -377,6 +377,7 @@ bool PhysicalMemory::AllocatePtes(PFN_COUNT PteNumber, VAddr addr)
 
 			TempPte.Default = ValidKernelPdeBits;
 			TempPte.Hardware.PFN = RemoveAndZeroAnyFreePage(BusyType, pPde);
+			WRITE_PTE(pPde, TempPte);
 		}
 		PdeMappedSizeIncrement += (4 * ONE_MB);
 	}

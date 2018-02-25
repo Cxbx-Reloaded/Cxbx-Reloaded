@@ -201,7 +201,7 @@ class VMManager : public PhysicalMemory
 		void ConstructVMA();
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
 		VAddr MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms,
-			PFN low_pfn = 0, PFN high_pfn = MAX_VIRTUAL_ADDRESS >> PAGE_SHIFT);
+			PFN low_pfn, PFN high_pfn, PFN* result);
 		// creates a vma representing the memory block to remove
 		void UnMapMemoryBlock(VAddr target);
 		// convert VirtualProtect protection flags to file mapping protection flags

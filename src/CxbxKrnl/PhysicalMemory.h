@@ -241,8 +241,8 @@ class PhysicalMemory
 		void InsertFree(PFN start, PFN end);
 		// construct a temporary pte with the desired protection (if possible) and return it
 		bool ConvertXboxToPteProtection(DWORD perms, PMMPTE pte);
-		// commit ptes (if necessary)
-		bool AllocatePtes(PFN_COUNT PteNumber, VAddr addr);
+		// commit page tables (if necessary)
+		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
 		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
 		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
