@@ -104,24 +104,20 @@ void XTL::VertexPatcher::DumpCache(void)
 size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData)
 {	
 	// If this is not an indexed draw, the size is simply VertexCount * Stride
-	size_t vertexBufferSize = dwVertexCount * dwStride;
-
-	if (pIndexData != nullptr) {
-		// We are an indexed draw, so we have to parse the index buffer
-		// The highest index we see can be used to determine the vertex buffer size
-		DWORD highestVertexIndex = 0;
-		for (DWORD i = 0; i < dwVertexCount; i++) {
-			if (pIndexData[i] >= highestVertexIndex) {
-				highestVertexIndex = pIndexData[i] + 1;
-			}
-		}
-
-		vertexBufferSize = highestVertexIndex * dwStride;		
+	if (pIndexData == nullptr) {
+		return dwVertexCount * dwStride;
 	}
 
-	// Vertex Buffer Size must be a multiple of PAGE_SIZE
-	//vertexBufferSize = (((vertexBufferSize + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE);
-	return vertexBufferSize;
+	// We are an indexed draw, so we have to parse the index buffer
+	// The highest index we see can be used to determine the vertex buffer size
+	DWORD highestVertexIndex = 0;
+	for (DWORD i = 0; i < dwVertexCount; i++) {
+		if (pIndexData[i] > highestVertexIndex) {
+			highestVertexIndex = pIndexData[i];
+		}
+	}
+
+	return (highestVertexIndex + 1) * dwStride;		
 }
 
 void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
@@ -791,6 +787,20 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 		return false;
     }
 
+	if (pPatchDesc->pVertexStreamZeroData == nullptr)
+	{
+		pStream->pOriginalStream = g_D3DStreams[uiStream];
+		pStream->uiOrigStride = g_D3DStreamStrides[uiStream];
+		pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
+	}
+	else
+	{
+		pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
+	}
+
+	DWORD uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, pStream->uiOrigStride, pPatchDesc->pIndexData);
+	DWORD uiVertexCount = uiLength / pStream->uiOrigStride;
+
     // Unsupported primitives that don't need deep patching.
     switch(pPatchDesc->PrimitiveType)
     {
@@ -807,7 +817,11 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             break;
     }
 
+	// Get render primitive count
     pPatchDesc->dwPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->PrimitiveType, pPatchDesc->dwVertexCount);
+
+	// Get total primitive count
+	DWORD dwTotalPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->PrimitiveType, uiVertexCount);
 
     // Skip primitives that don't need further patching.
     switch(pPatchDesc->PrimitiveType)
@@ -828,8 +842,6 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         CxbxKrnlCleanup("Draw..UP call with more than one stream!\n");
     }
 
-    pStream->uiOrigStride = 0;
-
     // sizes of our part in the vertex buffer
     DWORD dwOriginalSize    = 0;
     DWORD dwNewSize         = 0;
@@ -842,34 +854,25 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     BYTE *pOrigVertexData = nullptr;
     BYTE *pPatchedVertexData = nullptr;
 
-    if(pPatchDesc->pVertexStreamZeroData == nullptr)
-    {
-		pStream->pOriginalStream = g_D3DStreams[uiStream];
-		pStream->uiOrigStride = g_D3DStreamStrides[uiStream];
-        pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
-    }
-    else
-    {
-        pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
-    }
-
     // Quad list
     if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
         pPatchDesc->dwPrimitiveCount *= 2;
+		dwTotalPrimitiveCount *= 2;
 
         // This is a list of sqares/rectangles, so we convert it to a list of triangles
-        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
-        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
+        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride * 2;
+        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride * 3;
     }
     // Line loop
     else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
         pPatchDesc->dwPrimitiveCount += 1;
+		dwTotalPrimitiveCount += 1;
 
         // We will add exactly one more line
-        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride;
-        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
+        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride;
+        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
     }
 
     if(pPatchDesc->pVertexStreamZeroData == nullptr)
@@ -884,7 +887,11 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
         }
 
-        g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+		if (FAILED(hRet)) {
+			EmuWarning("CreateVertexBuffer Failed. Size: %d", dwNewSizeWR);
+		}
+		
 
         if(pStream->pOriginalStream != 0)
         {
@@ -928,7 +935,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         uint08 *pOrig2 = &pOrigVertexData[(pPatchDesc->dwOffset + 2) * pStream->uiOrigStride];
         uint08 *pOrig3 = &pOrigVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
 
-        for(uint32 i = 0;i < pPatchDesc->dwPrimitiveCount/2;i++)
+        for(uint32 i = 0;i < dwTotalPrimitiveCount /2;i++)
         {
 		//	__asm int 3;
 		//	DbgPrintf( "pPatch1 = 0x%.08X pOrig1 = 0x%.08X pStream->uiOrigStride * 3 = 0x%.08X\n", pPatch1, pOrig1, pStream->uiOrigStride * 3 );
