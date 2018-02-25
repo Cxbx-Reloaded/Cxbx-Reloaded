@@ -191,40 +191,6 @@ typedef long                            NTSTATUS;
 #define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
 
 // ******************************************************************
-// * PAGE Masks
-// ******************************************************************
-#define PAGE_NOACCESS          0x01
-#define PAGE_READONLY          0x02
-#define PAGE_READWRITE         0x04
-#define PAGE_WRITECOPY         0x08
-#define PAGE_EXECUTE           0x10
-#define PAGE_EXECUTE_READ      0x20
-#define PAGE_EXECUTE_READWRITE 0x40
-#define PAGE_EXECUTE_WRITECOPY 0x80
-#define PAGE_GUARD             0x100
-#define PAGE_NOCACHE           0x200
-#define PAGE_WRITECOMBINE      0x400
-
-// ******************************************************************
-// * MEM Masks
-// ******************************************************************
-#define MEM_COMMIT                  0x1000      
-#define MEM_RESERVE                 0x2000      
-#define MEM_DECOMMIT                0x4000      
-#define MEM_RELEASE                 0x8000      
-#define MEM_FREE                    0x10000     
-#define MEM_PRIVATE                 0x20000     
-#define MEM_MAPPED                  0x40000     
-//#define MEM_RESET                 0x80000     
-#define MEM_TOP_DOWN                0x100000     
-#define MEM_WRITE_WATCH             0x200000    
-#define MEM_PHYSICAL                0x400000    
-#define MEM_NOZERO                  0x800000 // Replaces MEM_ROTATE on WinXP+
-//#define MEM_IMAGE                 0x1000000 // Declare like below, to prevent warning C4005: 'MEM_IMAGE': macro redefinition
-#define SEC_IMAGE                   0x1000000     
-#define MEM_IMAGE                   SEC_IMAGE    
-
-// ******************************************************************
 // * calling conventions
 // ******************************************************************
 #define NTAPI               __stdcall

@@ -88,32 +88,10 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
 	LOG_FORWARD("MmAllocateContiguousMemoryEx");
 
-	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, PAGE_READWRITE);
+	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, XBOX_PAGE_READWRITE);
 }
 
-#define PAGE_KNOWN_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_NOCACHE | PAGE_WRITECOMBINE)
-
-bool CheckMmProtectFlags(DWORD protect)
-{
-	bool HasReadOnly = protect & PAGE_READONLY;
-	bool HasReadWrite = protect & PAGE_READWRITE;
-	bool HasNoCache = protect & PAGE_NOCACHE;
-	bool HasWriteCombine = protect & PAGE_WRITECOMBINE;
-
-	// Only known flags are allowed
-	if ((protect & ~PAGE_KNOWN_FLAGS) != 0)
-		return false;
-
-	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (HasReadOnly == HasReadWrite)
-		return false;
-
-	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
-	if (HasNoCache && HasWriteCombine)
-		return false;
-
-	return true;
-}
+#define PAGE_KNOWN_FLAGS (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)
 
 // ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx()
@@ -135,16 +113,32 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = (PVOID)xbnullptr;
+	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
+
+	// size must be > 0
+	if (NumberOfBytes == 0)
+		pRet = xbnull;
+
+	if (Alignment < PAGE_SIZE)
+		Alignment = PAGE_SIZE; // page boundary at least
+
+	// Only known flags are allowed
+	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
+		pRet = xbnull;
+
+	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
+	if (((ProtectionType & XBOX_PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
+		pRet = xbnull;
+
+	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
+	if ((ProtectionType & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)) == (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+		pRet = xbnull;
 
 	// Allocate when input arguments are valid
-	if ((NumberOfBytes > 0) && CheckMmProtectFlags(ProtectionType))
+	if (pRet != xbnull)
 	{
-		if (Alignment < PAGE_SIZE)
-			Alignment = PAGE_SIZE; // page boundary at least
-
 		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::Contiguous, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
+		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType, false);
 	}
 
 	RETURN(pRet);
@@ -161,11 +155,11 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
+		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
 	// TODO: this should probably allocate the memory at a specific system virtual address region...
-	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::SystemMemory, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
+	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
 
 	RETURN(pRet);
 }
@@ -236,7 +230,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 
 	if (NumberOfBytes)
 	{
-		addr = g_VMManager.AllocateSystemMemory(SystemMemory, PAGE_READWRITE, NumberOfBytes, true);
+		addr = g_VMManager.AllocateSystemMemory(SystemMemory, XBOX_PAGE_READWRITE, NumberOfBytes, true);
 	}
 
 	RETURN((PVOID)addr);
@@ -260,12 +254,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	// TODO: Why does this end up trying to deallocate a non-VMManager page
-	// Could be that we don't properly emulate the KPCR? 
-	// The KPCRs stack base / stack limit never get updated by push/pop
-	// as the host stack ends up being used...
-	EmuWarning("xboxkrnl::MmDeleteKernelStack Ignored");
-	//g_VMManager.DeallocateStack(StackBottom);
+	g_VMManager.DeallocateStack(StackBottom);
 }
 
 // ******************************************************************
@@ -361,7 +350,7 @@ XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
+		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
@@ -407,7 +396,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
+		LOG_FUNC_ARG(ProtectionType)
 	LOG_FUNC_END;
 
 	PVOID pRet;
@@ -418,8 +407,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		pRet = (PVOID)PhysicalAddress;
 	}
 	else {
-		// TODO : Research what kind of page type an real Xbox kernel allocates in MmMapIOSpace
-		g_VMManager.Allocate(NumberOfBytes, PageType::SystemMemory, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
+		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
 		LOG_INCOMPLETE();
 	}
 
@@ -565,11 +553,8 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
+		LOG_FUNC_ARG(NewProtect)
 	LOG_FUNC_END;
-
-	if (!CheckMmProtectFlags(NewProtect))
-		return;
 
 	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
 }

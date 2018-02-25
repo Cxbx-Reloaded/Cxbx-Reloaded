@@ -413,7 +413,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	VAddr addr;
 	bool bVAlloc = true;
 
-	if (!ConvertXboxToPteProtection(perms, &TempPte)) { RETURN(NULL); } // TODO
+	if (!ConvertXboxToSystemPteProtection(perms, &TempPte)) { RETURN(NULL); }
 
 	Lock();
 
@@ -479,6 +479,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 		PointerPte++;
 		pfn++;
 	}
+	EndingPte->Hardware.GuardOrEnd = 1;
 
 	FillMemoryUlong((void*)addr, PteNumber * PAGE_SIZE, 0); // zero the allocated pages
 

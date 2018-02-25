@@ -337,6 +337,59 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 	}
 }
 
+bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
+{
+	ULONG Mask = 0;
+
+	if (perms & ~(XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | XBOX_PAGE_READWRITE | PAGE_READONLY))
+	{
+		return false; // unknown or not allowed flag specified
+	}
+
+	switch (perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
+	{
+		case PAGE_READONLY:
+		{
+			Mask = (PTE_VALID_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
+		}
+		break;
+
+		case PAGE_READWRITE:
+		{
+			Mask = (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
+		}
+		break;
+
+		default:
+			return false; // both are specified, wrong
+	}
+
+	switch (perms & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)) {
+
+		case 0:
+			break; // none is specified, ok
+
+		case XBOX_PAGE_NOCACHE:
+		{
+			Mask |= PTE_CACHE_DISABLE_MASK;
+		}
+		break;
+
+		case XBOX_PAGE_WRITECOMBINE:
+		{
+			Mask |= PTE_WRITE_THROUGH_MASK;
+		}
+		break;
+
+		default:
+			return false; // both are specified, wrong
+	}
+
+	pPte->Default = Mask;
+
+	return true;
+}
+
 bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
 	PMMPTE pPde;
