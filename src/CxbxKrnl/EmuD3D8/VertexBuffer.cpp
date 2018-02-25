@@ -278,8 +278,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 				pCalculateData = (void*)GetDataFromXboxResource(pOrigVertexBuffer);
             }
 
-            // Use the cached stream length (which is a must for the UP stream)
-            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
+            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
             if(uiHash == pCachedStream->uiHash)
             {
                 // Take a while longer to check
@@ -342,35 +341,36 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     return bApplied;
 }
 
+int CountActiveD3DStreams()
+{
+	int lastStreamIndex;
+	for (int i = 0; i < 16; i++) {
+		if (g_D3DStreams[i] != nullptr) {
+			lastStreamIndex = i;
+		}
+	}
+
+	return lastStreamIndex + 1;
+}
+
 UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
 {
-    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
-    {
-        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(pPatchDesc->hVertexShader);
-        if(pDynamicPatch)
-        {
-            return pDynamicPatch->NbrStreams;
-        }
-        else
-        {
-			// Draw..Up always have one stream
-			if (pPatchDesc->pVertexStreamZeroData != nullptr) {
-				return 1;
-			}
+	// Draw..Up always have one stream
+	if (pPatchDesc->pVertexStreamZeroData != nullptr) {
+		return 1;
+	}
 
-			int lastStreamIndex;
-			for (int i = 0; i < 16; i++) {
-				if (g_D3DStreams[i] != nullptr) {
-					lastStreamIndex = i;
-				}
-			}
-			
-			return lastStreamIndex + 1;
-        }
-    }
-    else if(pPatchDesc->hVertexShader)
-    {
-        return 1;
+    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader)) {
+        VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(pPatchDesc->hVertexShader);
+		if (pDynamicPatch) {
+			return pDynamicPatch->NbrStreams;
+		}
+
+		return CountActiveD3DStreams();
+    } 
+	
+	if (pPatchDesc->hVertexShader) {
+		return CountActiveD3DStreams();
     }
 
     return 0;
@@ -965,7 +965,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     {
         pStream->pPatchedStream->Unlock();
 
-        g_pD3DDevice8->SetStreamSource(0, pStream->pPatchedStream, pStream->uiOrigStride);
+        g_pD3DDevice8->SetStreamSource(uiStream, pStream->pPatchedStream, pStream->uiOrigStride);
     }
 
     m_bPatched = true;
