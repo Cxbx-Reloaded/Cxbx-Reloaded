@@ -283,9 +283,13 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 				pCalculateData = (void*)GetDataFromXboxResource(pOrigVertexBuffer);
             }
 
-            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
 			*pHash = uiHash;
-            if(uiHash == pCachedStream->uiHash)
+			
+			// If the hash didn't change and the length didn't increase, use the cached stream
+			// If the length increased,we have more data then before and we must re-create the
+			// vertex buffer
+            if(uiHash == pCachedStream->uiHash && uiLength <= pCachedStream->uiLength)
             {
                 // Take a while longer to check
                 if(pCachedStream->uiCheckFrequency < 32*1024)
