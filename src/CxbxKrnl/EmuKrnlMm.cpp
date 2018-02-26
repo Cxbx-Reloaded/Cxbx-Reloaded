@@ -260,7 +260,12 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	g_VMManager.DeallocateStack(StackBottom);
+	// TODO: Why does this end up trying to deallocate a non-VMManager page
+	// Could be that we don't properly emulate the KPCR? 
+	// The KPCRs stack base / stack limit never get updated by push/pop
+	// as the host stack ends up being used...
+	EmuWarning("xboxkrnl::MmDeleteKernelStack Ignored");
+	//g_VMManager.DeallocateStack(StackBottom);
 }
 
 // ******************************************************************

@@ -64,7 +64,7 @@ extern DWORD				XTL::g_dwPrimPerFrame = 0;
 extern XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 extern UINT g_D3DStreamStrides[16];
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
-extern XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource);
+extern XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, DWORD dwSize);
 
 XTL::VertexPatcher::VertexPatcher()
 {
@@ -101,12 +101,35 @@ void XTL::VertexPatcher::DumpCache(void)
     }
 }
 
+size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData, DWORD dwOffset)
+{	
+	// If we are drawing from an offset, we know that the vertex count must have offset vertices
+	// before the first drawn vertices
+	dwVertexCount += dwOffset;
+
+	// If this is not an indexed draw, the size is simply VertexCount * Stride
+	if (pIndexData == nullptr) {
+		return dwVertexCount * dwStride;
+	}
+
+	// We are an indexed draw, so we have to parse the index buffer
+	// The highest index we see can be used to determine the vertex buffer size
+	DWORD highestVertexIndex = 0;
+	for (DWORD i = 0; i < dwVertexCount; i++) {
+		if (pIndexData[i] > highestVertexIndex) {
+			highestVertexIndex = pIndexData[i];
+		}
+	}
+
+	return (highestVertexIndex + 1) * dwStride;		
+}
+
 void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
-                                     UINT             uiStream)
+                                     UINT             uiStream,
+									 uint32_t	      uiHash)
 {
     UINT                       uiStride;
     XTL::X_D3DVertexBuffer    *pOrigVertexBuffer = nullptr;
-    XTL::D3DVERTEXBUFFER_DESC  Desc;
     void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
@@ -154,7 +177,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
 
 		pCalculateData = (void*)GetDataFromXboxResource(pOrigVertexBuffer);
 
-        uiLength = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pOrigVertexBuffer));
+		uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, g_D3DStreamStrides[uiStream], pPatchDesc->pIndexData, pPatchDesc->dwOffset);
         pCachedStream->bIsUP = false;
         uiKey = (uint32)pOrigVertexBuffer;
     }
@@ -167,18 +190,20 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
         }
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
         pCalculateData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
-        uiLength = pPatchDesc->dwVertexCount * pPatchDesc->uiVertexStreamZeroStride;
+        uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
         pCachedStream->bIsUP = true;
         pCachedStream->pStreamUP = pCalculateData;
         uiKey = (uint32)pCalculateData;
     }
 
-    uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+	// If we weren't given a known hash, calculate a new one
+	if (uiHash == 0) {
+		uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+	}
     
     pCachedStream->uiHash = uiHash;
     pCachedStream->Stream = m_pStreams[uiStream];
-    pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
+	pCachedStream->uiCheckFrequency = 1; // Start with checking every 1th Draw..
     pCachedStream->uiCount = 0;
     pCachedStream->uiLength = uiLength;
     pCachedStream->uiCacheHit = 0;
@@ -210,7 +235,8 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
 
 bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
                                            UINT             uiStream,
-										   bool			   *pbFatalError)
+										   bool			   *pbFatalError,
+										   uint32_t		   *pHash)
 {
     UINT                       uiStride;
     XTL::X_D3DVertexBuffer    *pOrigVertexBuffer = nullptr;
@@ -224,7 +250,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     {
 		pOrigVertexBuffer = g_D3DStreams[uiStream];
 		uiStride = g_D3DStreamStrides[uiStream];
-        uiLength = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pOrigVertexBuffer));
+        uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
         uiKey = (uint32)pOrigVertexBuffer;
         //pCachedStream->bIsUP = false;
     }
@@ -238,8 +264,7 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
         pCalculateData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
-        uiLength = pPatchDesc->dwVertexCount * pPatchDesc->uiVertexStreamZeroStride;
+        uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
         uiKey = (uint32)pCalculateData;
         //pCachedStream->bIsUP = true;
         //pCachedStream->pStreamUP = pCalculateData;
@@ -258,8 +283,9 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
 				pCalculateData = (void*)GetDataFromXboxResource(pOrigVertexBuffer);
             }
 
-            // Use the cached stream length (which is a must for the UP stream)
-            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, pCachedStream->uiLength, HASH_SEED);
+            uint32_t uiHash = XXHash32::hash((void *)pCalculateData, uiLength, HASH_SEED);
+			*pHash = uiHash;
+			
             if(uiHash == pCachedStream->uiHash)
             {
                 // Take a while longer to check
@@ -322,30 +348,36 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     return bApplied;
 }
 
+int CountActiveD3DStreams()
+{
+	int lastStreamIndex;
+	for (int i = 0; i < 16; i++) {
+		if (g_D3DStreams[i] != nullptr) {
+			lastStreamIndex = i;
+		}
+	}
+
+	return lastStreamIndex + 1;
+}
+
 UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
 {
-    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader))
-    {
+	// Draw..Up always have one stream
+	if (pPatchDesc->pVertexStreamZeroData != nullptr) {
+		return 1;
+	}
+
+    if(VshHandleIsVertexShader(pPatchDesc->hVertexShader)) {
         VERTEX_DYNAMIC_PATCH *pDynamicPatch = VshGetVertexDynamicPatch(pPatchDesc->hVertexShader);
-        if(pDynamicPatch)
-        {
-            return pDynamicPatch->NbrStreams;
-        }
-        else
-        {
-			int lastStreamIndex;
-			for (int i = 0; i < 16; i++) {
-				if (g_D3DStreams[i] != nullptr) {
-					lastStreamIndex = i;
-				}
-			}
-			
-			return lastStreamIndex + 1;
-        }
-    }
-    else if(pPatchDesc->hVertexShader)
-    {
-        return 1;
+		if (pDynamicPatch) {
+			return pDynamicPatch->NbrStreams;
+		}
+
+		return CountActiveD3DStreams();
+    } 
+	
+	if (pPatchDesc->hVertexShader) {
+		return CountActiveD3DStreams();
     }
 
     return 0;
@@ -390,10 +422,11 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
     {
 		pOrigVertexBuffer = g_D3DStreams[uiStream];
 		uiStride = g_D3DStreamStrides[uiStream];
-		uiLength = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pOrigVertexBuffer));
+		uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
 
         // Set a new (exact) vertex count
 		uiVertexCount = uiLength / uiStride;
+
 		// Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
@@ -422,9 +455,9 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         uiStride  = pPatchDesc->uiVertexStreamZeroStride;
 		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
 		pOrigData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
-        // TODO: This is sometimes the number of indices, which isn't too good
-		uiVertexCount = pPatchDesc->dwVertexCount;
-        dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
+		uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
+		uiVertexCount = uiLength / uiStride;
+		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
         pNewVertexBuffer = NULL;
         pNewData = (uint08*)g_VMManager.Allocate(dwNewSize);
         if(!pNewData)
@@ -627,17 +660,18 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         pNewVertexBuffer = 0;
         pData = (uint08 *)pPatchDesc->pVertexStreamZeroData;
         uiStride = pPatchDesc->uiVertexStreamZeroStride;
-        uiVertexCount = pPatchDesc->dwVertexCount;
+		DWORD uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
+        uiVertexCount = uiLength / uiStride;
     }
     else
     {
         // Copy stream for patching and caching.
 		pOrigVertexBuffer = g_D3DStreams[uiStream];
 		uiStride = g_D3DStreamStrides[uiStream];
-		UINT uiLength = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pOrigVertexBuffer));
+		UINT uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, uiStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
 
-        uiVertexCount = uiLength / uiStride;
-        
+		uiVertexCount = uiLength / uiStride;
+
 		uint08 *pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
 
         g_pD3DDevice8->CreateVertexBuffer(uiLength, 0, 0, XTL::D3DPOOL_MANAGED, &pNewVertexBuffer);
@@ -757,6 +791,20 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 		return false;
     }
 
+	if (pPatchDesc->pVertexStreamZeroData == nullptr)
+	{
+		pStream->pOriginalStream = g_D3DStreams[uiStream];
+		pStream->uiOrigStride = g_D3DStreamStrides[uiStream];
+		pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
+	}
+	else
+	{
+		pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
+	}
+
+	DWORD uiLength = GetVertexBufferSize(pPatchDesc->dwVertexCount, pStream->uiOrigStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
+	DWORD uiVertexCount = uiLength / pStream->uiOrigStride;
+
     // Unsupported primitives that don't need deep patching.
     switch(pPatchDesc->PrimitiveType)
     {
@@ -773,7 +821,11 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             break;
     }
 
+	// Get render primitive count
     pPatchDesc->dwPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->PrimitiveType, pPatchDesc->dwVertexCount);
+
+	// Get total primitive count
+	DWORD dwTotalPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->PrimitiveType, uiVertexCount);
 
     // Skip primitives that don't need further patching.
     switch(pPatchDesc->PrimitiveType)
@@ -794,8 +846,6 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         CxbxKrnlCleanup("Draw..UP call with more than one stream!\n");
     }
 
-    pStream->uiOrigStride = 0;
-
     // sizes of our part in the vertex buffer
     DWORD dwOriginalSize    = 0;
     DWORD dwNewSize         = 0;
@@ -808,34 +858,25 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     BYTE *pOrigVertexData = nullptr;
     BYTE *pPatchedVertexData = nullptr;
 
-    if(pPatchDesc->pVertexStreamZeroData == nullptr)
-    {
-		pStream->pOriginalStream = g_D3DStreams[uiStream];
-		pStream->uiOrigStride = g_D3DStreamStrides[uiStream];
-        pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
-    }
-    else
-    {
-        pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
-    }
-
     // Quad list
     if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
         pPatchDesc->dwPrimitiveCount *= 2;
+		dwTotalPrimitiveCount *= 2;
 
         // This is a list of sqares/rectangles, so we convert it to a list of triangles
-        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
-        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
+        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride * 2;
+        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride * 3;
     }
     // Line loop
     else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
         pPatchDesc->dwPrimitiveCount += 1;
+		dwTotalPrimitiveCount += 1;
 
         // We will add exactly one more line
-        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride;
-        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
+        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride;
+        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
     }
 
     if(pPatchDesc->pVertexStreamZeroData == nullptr)
@@ -843,14 +884,18 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         // Retrieve the original buffer size
         {
             // Here we save the full buffer size
-            dwOriginalSizeWR = g_VMManager.QuerySize((VAddr)GetDataFromXboxResource(pStream->pOriginalStream));
+			dwOriginalSizeWR = GetVertexBufferSize(pPatchDesc->dwVertexCount, pStream->uiOrigStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
 
             // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
             // add it to our new calculated size of the patched buffer
             dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
         }
 
-        g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+		if (FAILED(hRet)) {
+			EmuWarning("CreateVertexBuffer Failed. Size: %d", dwNewSizeWR);
+		}
+		
 
         if(pStream->pOriginalStream != 0)
         {
@@ -894,7 +939,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         uint08 *pOrig2 = &pOrigVertexData[(pPatchDesc->dwOffset + 2) * pStream->uiOrigStride];
         uint08 *pOrig3 = &pOrigVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
 
-        for(uint32 i = 0;i < pPatchDesc->dwPrimitiveCount/2;i++)
+        for(uint32 i = 0;i < dwTotalPrimitiveCount /2;i++)
         {
 		//	__asm int 3;
 		//	DbgPrintf( "pPatch1 = 0x%.08X pOrig1 = 0x%.08X pStream->uiOrigStride * 3 = 0x%.08X\n", pPatch1, pOrig1, pStream->uiOrigStride * 3 );
@@ -938,7 +983,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     {
         pStream->pPatchedStream->Unlock();
 
-        g_pD3DDevice8->SetStreamSource(0, pStream->pPatchedStream, pStream->uiOrigStride);
+        g_pD3DDevice8->SetStreamSource(uiStream, pStream->pPatchedStream, pStream->uiOrigStride);
     }
 
     m_bPatched = true;
@@ -960,7 +1005,8 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     {
         bool LocalPatched = false;
 
-        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError))
+		uint32_t uiHash = 0;
+        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError, &uiHash))
         {
             m_pStreams[uiStream].bUsedCached = true;
             continue;
@@ -971,7 +1017,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
         if(LocalPatched && !pPatchDesc->pVertexStreamZeroData)
         {
             // Insert the patched stream in the cache
-            CacheStream(pPatchDesc, uiStream);
+            CacheStream(pPatchDesc, uiStream, uiHash);
             m_pStreams[uiStream].bUsedCached = true;
         }
         Patched |= LocalPatched;
@@ -979,8 +1025,9 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 		// If we didn't patch the stream, use a non-patched stream
 		// TODO: Update the converion/patching code to make a host copy even when no patching is required
 		// Doing this will fully remove the need to call _Register on Vertex Buffers
-		if (!Patched) {
-			g_pD3DDevice8->SetStreamSource(uiStream, GetHostVertexBuffer(g_D3DStreams[uiStream]), g_D3DStreamStrides[uiStream]);
+		if (!Patched && pPatchDesc->pVertexStreamZeroData == nullptr) {
+			DWORD dwSize = GetVertexBufferSize(pPatchDesc->dwVertexCount, g_D3DStreamStrides[uiStream], pPatchDesc->pIndexData, pPatchDesc->dwOffset);
+			g_pD3DDevice8->SetStreamSource(uiStream, GetHostVertexBuffer(g_D3DStreams[uiStream], dwSize), g_D3DStreamStrides[uiStream]);
 		}
     }
 
