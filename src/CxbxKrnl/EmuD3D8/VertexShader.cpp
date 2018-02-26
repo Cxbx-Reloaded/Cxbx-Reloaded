@@ -1780,7 +1780,7 @@ static void VshConverToken_TESSELATOR(DWORD   *pToken,
 
 static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
 {
-    int CurrentStream = pPatchData->StreamPatchData.NbrStreams - 1; // TODO : Should we use pPatchData->CurrentStreamNumber?
+    int CurrentStream = pPatchData->CurrentStreamNumber;
 
     if(CurrentStream >= 0)
     {
@@ -1816,6 +1816,7 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
     {
         XTL::DWORD StreamNumber = VshGetVertexStream(*pToken);
         DbgVshPrintf("\tD3DVSD_STREAM(%d),\n", StreamNumber);
+		pPatchData->CurrentStreamNumber = (WORD)StreamNumber;
 
         // new stream
         // copy current data to structure
@@ -1829,9 +1830,9 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
 			pPatchData->StreamPatchData.NbrStreams = 0; // Dxbx addition
 		}
 
-		pPatchData->CurrentStreamNumber = (WORD)StreamNumber;
-		
-		pPatchData->StreamPatchData.NbrStreams++;
+		if (StreamNumber >= pPatchData->StreamPatchData.NbrStreams) {
+			pPatchData->StreamPatchData.NbrStreams = StreamNumber + 1;
+		}	
     }
 }
 
