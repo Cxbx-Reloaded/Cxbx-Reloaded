@@ -232,8 +232,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
             CxbxDebugger::ReportFileClosed(Handle);
         }
 
-        // close normal handles
-        ret = NtDll::NtClose(Handle);
+		__try {			ret = NtDll::NtClose(Handle);		} __except (EXCEPTION_EXECUTE_HANDLER) {			EmuWarning("NtClose: Invalid Handle 0x%08X", Handle);			ret = STATUS_SUCCESS;		}
     }
 
 	RETURN(ret);
