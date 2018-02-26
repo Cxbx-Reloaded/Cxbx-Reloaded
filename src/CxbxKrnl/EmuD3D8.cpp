@@ -4699,7 +4699,7 @@ VOID WINAPI CreateHostResource
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pBase)
+		LOG_FUNC_ARG(dwSize)
 		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
