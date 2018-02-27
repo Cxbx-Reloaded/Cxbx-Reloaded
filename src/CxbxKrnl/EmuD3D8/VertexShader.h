@@ -66,7 +66,8 @@ extern HRESULT EmuRecompileVshFunction
     LPD3DXBUFFER *ppRecompiled,
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants,
-	boolean		 *pbUseDeclarationOnly
+	boolean		 *pbUseDeclarationOnly,
+	DWORD		 *pRecompiledDeclaration
 );
 
 extern void FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader);

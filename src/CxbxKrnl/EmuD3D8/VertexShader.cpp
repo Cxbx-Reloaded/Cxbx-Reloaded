@@ -1355,9 +1355,30 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     }
 }
 
+static void VshRemoveUndeclaredRegisters(VSH_XBOX_SHADER *pShader, bool	*pDeclaredRegisters)
+{
+	for (int i = 0; i < pShader->IntermediateCount; i++) {
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
+		for (int p = 0; p < 3; p++) {
+			// Skip parameters that are either inactive, or not vX registers
+			if (!pIntermediate->Parameters[p].Active || pIntermediate->Parameters[p].Parameter.ParameterType != PARAM_V) {
+				continue;
+			}
+
+			bool used = pDeclaredRegisters[pIntermediate->Parameters[p].Parameter.Address];
+			if (!used) {
+				EmuWarning("Deleting usage of undeclared register v%d", pIntermediate->Parameters[p].Parameter.Address);
+				VshDeleteIntermediate(pShader, i);
+			}
+		}
+	}
+}
+
 // Converts the intermediate format vertex shader to DirectX 8 format
 static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
-                                boolean         bNoReservedConstants)
+                                boolean         bNoReservedConstants,
+								bool			*pDeclaredRegisters
+)
 {
     boolean RUsage[13] = { FALSE };
     // TODO: What about state shaders and such?
@@ -1368,6 +1389,8 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
     {
         VshRemoveScreenSpaceInstructions(pShader);
     }
+
+	VshRemoveUndeclaredRegisters(pShader, pDeclaredRegisters);
 
     // TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
 
@@ -2138,7 +2161,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
     LPD3DXBUFFER *ppRecompiled,
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants,
-	boolean		 *pbUseDeclarationOnly
+	boolean		 *pbUseDeclarationOnly,
+	DWORD		 *pRecompiledDeclaration
 )
 {
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
@@ -2147,6 +2171,17 @@ extern HRESULT XTL::EmuRecompileVshFunction
     VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
 	LPD3DXBUFFER		pErrors = NULL;
     HRESULT             hRet = 0;
+
+	// Build an array of registers that are declared
+	// This is used to remove instructions that haven't been declared
+	// as they cause CreateVertexShader to fail
+	bool declaredRegisters[13];
+	DWORD* pDeclToken = pRecompiledDeclaration;
+	do {
+		DWORD regNum = *pDeclToken & D3DVSD_VERTEXREGMASK;
+		declaredRegisters[regNum] = true;
+		pDeclToken++;
+	} while (*pDeclToken != D3DVSD_END());
 
     // TODO: support this situation..
     if(pFunction == NULL)
@@ -2197,7 +2232,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		// Do not attempt to compile empty shaders
 		if (pShader->IntermediateCount == 0) {
-			EmuWarning("Skipped empty Pixel Shader");
+			EmuWarning("Skipped empty Vertex Shader");
 			return STATUS_INVALID_PARAMETER;
 		}
 
@@ -2207,7 +2242,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         DbgVshPrintf("%s", pShaderDisassembly);
         DbgVshPrintf("-----------------------\n");
 
-        VshConvertShader(pShader, bNoReservedConstants);
+        VshConvertShader(pShader, bNoReservedConstants, declaredRegisters);
         VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
         DbgVshPrintf("-- After conversion ---\n");

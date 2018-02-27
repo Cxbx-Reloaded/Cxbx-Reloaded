@@ -3516,7 +3516,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
                                             g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
-											&bUseDeclarationOnly);
+											&bUseDeclarationOnly,
+											pRecompiledDeclaration);
         if(SUCCEEDED(hRet))
         {
 			if(!bUseDeclarationOnly)
