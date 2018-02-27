@@ -113,52 +113,6 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	InitializePageDirectory();
 
 
-	// Initialize the map with a single free region covering the entire virtual address space, less the first page
-	VirtualMemoryArea initial_vma;
-	initial_vma.base = FIRST_PAGE_ADDR;
-	initial_vma.size = MAX_VIRTUAL_ADDRESS - PAGE_SIZE + 1;
-	m_Vma_map.emplace(initial_vma.base, initial_vma);
-	UpdatePageTableForVMA(initial_vma);
-
-	// Initialize the vma's representing the first page, which is used as guard page
-	VirtualMemoryArea first_page_vma;
-	first_page_vma.base = ZERO_PAGE_ADDR;
-	first_page_vma.size = PAGE_SIZE;
-	first_page_vma.permissions = PAGE_GUARD;
-	m_Vma_map.emplace(first_page_vma.base, first_page_vma);
-	UpdatePageTableForVMA(first_page_vma);
-
-	// D3D uses the first physical page to initialize the push buffer. At the moment, this doesn't seem to be emulated though
-	Allocate(PAGE_SIZE, 0, PAGE_SIZE - 1, PAGE_SIZE, PAGE_EXECUTE_READWRITE, false);
-
-	// Allocate the nv2a instance memory and the memory holding the PFN database
-	// REMARK: I Can't simply call Allocate here since MapMemoryBlock checks if the high addr is higher than m_MaxContiguousAddress,
-	// which is the case here, so we must call AllocatePhysicalMemoryRange directly to bypass the check
-	VMAIter upper_mem_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress, 32 * PAGE_SIZE);
-	VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
-	upper_mem_vma.type = VMAType::Allocated;
-	upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
-	upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(32 * PAGE_SIZE, m_MaxContiguousAddress, XBOX_MEMORY_SIZE);
-	UpdatePageTableForVMA(upper_mem_vma);
-	m_ImageMemoryInUse += 32 * PAGE_SIZE;
-
-	// Allocate memory for the dummy kernel
-	// NOTE: change PAGE_SIZE if the size of the dummy kernel increases!
-	Allocate(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + PAGE_SIZE - 1, KERNEL_SIZE & ~PAGE_MASK, PAGE_EXECUTE_READWRITE, false);
-
-	if (g_bIsChihiro || g_bIsDebug)
-	{
-		UnmapRange(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress);
-
-		// Allocate the nv2a instance memory and the memory holding the PFN database
-		VMAIter upper_mem_vma_handle = CarveVMA(CONTIGUOUS_MEMORY_BASE + m_MaxContiguousAddress, 48 * PAGE_SIZE);
-		VirtualMemoryArea& upper_mem_vma = upper_mem_vma_handle->second;
-		upper_mem_vma.type = VMAType::Allocated;
-		upper_mem_vma.permissions = PAGE_EXECUTE_READWRITE;
-		upper_mem_vma.backing_block = AllocatePhysicalMemoryRange(48 * PAGE_SIZE, m_MaxContiguousAddress, CHIHIRO_MEMORY_SIZE);
-		UpdatePageTableForVMA(upper_mem_vma);
-		m_ImageMemoryInUse += 48 * PAGE_SIZE;
-	}
 
 	if (g_bIsChihiro) {
 		printf("Page table for Chihiro initialized!\n");
@@ -189,21 +143,15 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Default = 0;
 	TempPF.Busy.Busy = 1;
 	TempPF.Busy.LockCount = LOCK_COUNT_MAXIMUM;
-	TempPF.Busy.BusyType = Unknown;
+	TempPF.Busy.BusyType = PageType::Unknown;
 	if (g_bIsRetail) {
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, TempPF.Default); // Xbox: 64 KiB
-		RemoveFree(X64KB >> PAGE_SHIFT, &result, XBOX_PFN_DATABASE_PHYSICAL_PAGE, XBOX_PFN_DATABASE_PHYSICAL_PAGE + (X64KB >> PAGE_SHIFT));
-		ConstructVMA();
 	}
 	else if (g_bIsChihiro) {
 		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Chihiro: 128 KiB
-		RemoveFree(X64KB * 2 >> PAGE_SHIFT, &result, CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE, CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + (X64KB * 2 >> PAGE_SHIFT));
-		ConstructVMA();
 	}
 	else {
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Debug: 128 KiB
-		RemoveFree(X64KB * 2 >> PAGE_SHIFT, &result, XBOX_PFN_DATABASE_PHYSICAL_PAGE, XBOX_PFN_DATABASE_PHYSICAL_PAGE + (X64KB * 2 >> PAGE_SHIFT));
-		ConstructVMA();
 	}
 
 	// Construct the pfn of the page directory
@@ -212,7 +160,8 @@ void VMManager::InitializePfnDatabase()
 
 	RemoveFree(1, &result, pfn, pfn);
 	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
-	ConstructVMA();
+	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), PAGE_SIZE, MemoryRegionType::Contiguous,
+		VMAType::Allocated, false);
 
 
 	// Construct the pfn's of the kernel pages
@@ -222,7 +171,8 @@ void VMManager::InitializePfnDatabase()
 
 	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
-	ConstructVMA();
+	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
+		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
 	// Construct the pfn's of the pages holding the pfn database
@@ -242,7 +192,8 @@ void VMManager::InitializePfnDatabase()
 
 	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
-	ConstructVMA();
+	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
+		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
@@ -259,22 +210,25 @@ void VMManager::InitializePfnDatabase()
 
 	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
-	ConstructVMA();
+	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
+		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
 	if (g_bIsDebug)
 	{
 		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
 
-		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE - 1;
+		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 		TempPF.Pte.Default = ValidKernelPteBits;
 		DISABLE_CACHING(TempPF.Pte);
 
 		RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
 		WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
-		ConstructVMA();
+		ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
+			MemoryRegionType::Contiguous, VMAType::Allocated, false);
 	}
+
 
 	// Construct the pfn of the page used by D3D
 	pfn = D3D_PHYSICAL_PAGE;
@@ -282,7 +236,7 @@ void VMManager::InitializePfnDatabase()
 
 	RemoveFree(1, &result, pfn, pfn);
 	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
-	ConstructVMA();
+	ConstructVMA(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 }
 
 void VMManager::ReinitializePfnDatabase()
@@ -290,18 +244,44 @@ void VMManager::ReinitializePfnDatabase()
 
 }
 
-void VMManager::ConstructVMA()
+void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD perms)
 {
-	// TODO
-}
+	VMAIter it_begin = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
+	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
+	VMAIter it;
 
-void VMManager::MapHardwareDevice(VAddr base, size_t size, VMAType type)
-{
-	VMAIter vma_handle = CarveVMA(base, size);
+	VMAIter vma_handle = CarveVMA(Start, Size, Type);
 	VirtualMemoryArea& vma = vma_handle->second;
-	vma.type = type;
-	UpdatePageTableForVMA(vma);
-	m_NonImageMemoryInUse += size;
+	vma.type = VMAType;
+	vma.permissions = perms;
+	if (bFragFlag) { vma.bFragmented = true; }
+
+	// Depending on the splitting done by CarveVMA, there is no guarantee that the next or previous vma's are free.
+	// We are just going to iterate forward and backward until we find one.
+
+	it = std::next(vma_handle);
+
+	while (it != it_end)
+	{
+		if (it->second.type == VMAType::Free)
+		{
+			m_MemoryRegionArray[Type].LastFree = it;
+			return;
+		}
+		++it;
+	}
+
+	it = std::prev(vma_handle);
+
+	while (it != it_begin)
+	{
+		if (it->second.type == VMAType::Free)
+		{
+			m_MemoryRegionArray[Type].LastFree = it;
+			return;
+		}
+		--it;
+	}
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
@@ -384,7 +364,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 
 	PteNumber = ROUND_UP_4K(size) >> PAGE_SHIFT;
 
-	if (bAddGuardPage) { PteNumber++; }
+	if (bAddGuardPage) { PteNumber++; size += PAGE_SIZE; }
 	if (m_PhysicalPagesAvailable < PteNumber) { goto Fail; }
 
 	addr = MapMemoryBlock(MemoryRegionType::System, PteNumber, &bVAlloc, perms, 0, m_HighestPage, &pfn);
@@ -448,7 +428,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 
 	FillMemoryUlong((void*)addr, PteNumber * PAGE_SIZE, 0); // zero the allocated pages
 
-	ConstructVMA();
+	ConstructVMA(addr, size, MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
 
 	Unlock();
 	RETURN(addr);
@@ -782,7 +762,8 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
 		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
 		// our intended region before we could do.
-		auto end_it = m_MemoryRegionArray[Type].RegionMap.end();
+
+		VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
 
 		while (it != end_it)
 		{
@@ -822,20 +803,18 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 		// LastFree iterator and going backwards, since there could be holes created by deallocation operations...
 
 		it = std::prev(m_MemoryRegionArray[Type].LastFree);
-		auto begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
+		VMAIter begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
 
 		while (it != begin_it)
 		{
-			if (it->second.type != VMAType::Free) // already allocated by the VMManager
+			if (it->second.type != VMAType::Free)
 			{
 				--it;
 				continue;
 			}
 			addr = it->first;
-			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity)) // free vma
+			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity))
 			{
-				// addr is not aligned with the granularity of the host, jump to the next granularity boundary
-
 				addr = ROUND_UP(addr, m_AllocationGranularity);
 			}
 
@@ -843,14 +822,10 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 
 			for (; addr + aligned_size - 1 < vma_end; addr += m_AllocationGranularity)
 			{
-				// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
-				// keep on trying until we succeed or fail entirely.
-
 				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
 				{
-					// With VirtualAlloc we just consume free pages but we don't remove them from the free list
 					m_PhysicalPagesAvailable -= size;
-					*bVAllocFlag = true; // allocated with VirtualAlloc
+					*bVAllocFlag = true;
 					result = nullptr;
 					return addr;
 				}
@@ -865,7 +840,7 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 
 		ConvertVProtectToMapViewProtection(&perms);
 
-		auto end_it = m_MemoryRegionArray[Type].RegionMap.end();
+		VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
 
 		// Note that if MapViewOfFileEx is unsuccessful we won't try VirtualAlloc since it means that the host virtual
 		// space has high fragmentation and because both functions use the same granularity, VirtualAlloc is just as likely
@@ -901,7 +876,7 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 		// We are going backwards...
 
 		it = std::prev(m_MemoryRegionArray[Type].LastFree);
-		auto begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
+		VMAIter begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
 
 		while (it != begin_it)
 		{
@@ -1087,22 +1062,6 @@ void VMManager::Unlock()
 	LeaveCriticalSection(&m_CriticalSection);
 }
 
-void VMManager::MapMemoryRegion(VAddr base, size_t size, PAddr target)
-{
-	assert((base & PAGE_MASK) == 0); // unaligned address
-	assert((size & PAGE_MASK) == 0); // unaligned size
-
-	MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, Present);
-}
-
-void VMManager::UnmapRegion(VAddr base, size_t size)
-{
-	assert((base & PAGE_MASK) == 0); // unaligned address
-	assert((size & PAGE_MASK) == 0); // unaligned size
-
-	MapPages(base / PAGE_SIZE, size / PAGE_SIZE, NULL, Present ^ Present);
-}
-
 VMAIter VMManager::Unmap(VMAIter vma_handle)
 {
 	VirtualMemoryArea& vma = vma_handle->second;
@@ -1115,29 +1074,12 @@ VMAIter VMManager::Unmap(VMAIter vma_handle)
 	return MergeAdjacentVMA(vma_handle);
 }
 
-void VMManager::MapPages(u32 page_num, u32 page_count, PAddr memory, PTEflags type)
+VMAIter VMManager::CarveVMA(VAddr base, size_t size, MemoryRegionType Type)
 {
-	u32 end_page_num = page_num + page_count;
-	while (page_num != end_page_num)
-	{
-		assert(page_num < MAX_NUM_OF_PAGES); // out of virtual pages
+	VMAIter vma_handle = GetVMAIterator(base, Type);
 
-		::page_table.addresses[page_num] = memory;
-		::page_table.attributes[page_num] = type;
-
-		page_num += 1;
-
-		if (type & Present)
-			memory += PAGE_SIZE;
-	}
-}
-
-VMAIter VMManager::CarveVMA(VAddr base, size_t size)
-{
-	VMAIter vma_handle = GetVMAIterator(base);
-
-	// base address is outside the range managed by the kernel
-	assert(vma_handle != m_Vma_map.end());
+	// base address is outside the range managed by this memory region
+	assert(vma_handle != m_MemoryRegionArray[Type].RegionMap.end());
 
 	VirtualMemoryArea& vma = vma_handle->second;
 
@@ -1153,12 +1095,12 @@ VMAIter VMManager::CarveVMA(VAddr base, size_t size)
 	if (end_in_vma != vma.size)
 	{
 		// split vma at the end of the allocated region
-		SplitVMA(vma_handle, end_in_vma);
+		SplitVMA(vma_handle, end_in_vma, Type);
 	}
 	if (start_in_vma != 0)
 	{
 		// split vma at the start of the allocated region
-		vma_handle = SplitVMA(vma_handle, start_in_vma);
+		vma_handle = SplitVMA(vma_handle, start_in_vma, Type);
 	}
 
 	return vma_handle;
@@ -1192,12 +1134,12 @@ VMAIter VMManager::CarveVMARange(VAddr base, size_t size)
 	return begin_vma;
 }
 
-VMAIter VMManager::GetVMAIterator(VAddr target)
+VMAIter VMManager::GetVMAIterator(VAddr target, MemoryRegionType Type)
 {
-	return std::prev(m_Vma_map.upper_bound(target));
+	return std::prev(m_MemoryRegionArray[Type].RegionMap.upper_bound(target));
 }
 
-VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma)
+VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type)
 {
 	VirtualMemoryArea& old_vma = vma_handle->second;
 	VirtualMemoryArea new_vma = old_vma; // make a copy of the vma
@@ -1211,7 +1153,7 @@ VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma)
 	new_vma.size -= offset_in_vma;
 
 	// add the new splitted vma to m_Vma_map
-	return m_Vma_map.emplace_hint(std::next(vma_handle), new_vma.base, new_vma);
+	return m_MemoryRegionArray[Type].RegionMap.emplace_hint(std::next(vma_handle), new_vma.base, new_vma);
 }
 
 VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle)

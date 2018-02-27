@@ -265,7 +265,7 @@ class PhysicalMemory
 		// set up the page directory
 		void InitializePageDirectory();
 		// write pfn
-		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType BusyType, bool bContiguous);
+		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous);
 		// commit a contiguous number of pages
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end);
 		// release a contiguous number of pages
@@ -276,12 +276,8 @@ class PhysicalMemory
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
 		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
-		// allocates a block of memory with VirtualAlloc when the main memory is fragmented and sets an error code
-		VAddr AllocateFragmented(size_t size);
 		// shrinks the size af an allocation
 		void ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart);
-		// deallocates a block allocated with VirtualAlloc
-		void DeAllocateFragmented(VAddr addr);
 		// retrieves the current error code of the PhysicalMemory class
 		PMEMORY_STATUS GetError() const;
 		// sets the error code of the PhysicalMemory class

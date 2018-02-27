@@ -121,7 +121,7 @@ void PhysicalMemory::InitializePageDirectory()
 	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
-void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType BusyType, bool bContiguous)
+void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous)
 {
 	// Usage notes: if it writes a pfn in the contiguous region, Pte is expected to be the address of a dereferencable pte.
 	// In the other case, Pte holds a pte address returned by GetPdeAddress or GetPteAddress
@@ -134,7 +134,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType B
 
 		while (pfn_start <= pfn_end)
 		{
-			TempPF.Pte = *Pte;
+			TempPF.Pte = *pPte;
 			TempPF.Pte.Hardware.PFN = pfn_start;
 
 			if (g_bIsRetail || g_bIsDebug) {
@@ -152,7 +152,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType B
 		TempPF.Busy.Busy = 1;
 		TempPF.Busy.BusyType = BusyType;
 		if (BusyType != PageType::VirtualPageTable) {
-			TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(Pte));
+			TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 		}
 
 		if (g_bIsRetail || g_bIsDebug) {
@@ -450,7 +450,7 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	XBOX_PFN TempPF;
 	PFN pfn;
 
-	assert(BusyType < COUNT);
+	assert(BusyType < PageType::COUNT);
 	assert(pPte);
 
 	// NOTE: for now this doesn't require a check for success but if called from other callers it will...
@@ -463,24 +463,6 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	WritePfn(0, 0, pPte, BusyType, false); // at the moment I'm not sure if this needs a check or not...
 
 	return pfn;
-}
-
-VAddr PhysicalMemory::AllocateFragmented(size_t size)
-{
-	PAddr addr_ptr = (PAddr)VirtualAlloc(NULL, size + PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	if (!addr_ptr)
-	{
-		EmuWarning("AllocateFragmented: VirtualAlloc could not allocate the memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return m_MaxContiguousAddress;
-	}
-	VAddr aligned_start = addr_ptr & ~(UINT_PTR)PAGE_MASK;
-
-	m_Fragmented_mem_map[addr_ptr] = size;
-	EmuWarning("Warning: allocated memory via AllocateFragmented.");
-	SetError(PMEMORY_ALLOCATE_FRAGMENTED);
-	m_PhysicalMemoryInUse += size;
-	return aligned_start;
 }
 
 void PhysicalMemory::ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart)
@@ -517,16 +499,6 @@ void PhysicalMemory::ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bF
 
 		m_PhysicalMemoryInUse -= offset;
 	}
-}
-
-
-
-void PhysicalMemory::DeAllocateFragmented(VAddr addr)
-{
-	auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
-	VirtualFree((void*)it->first, 0, MEM_RELEASE);
-	m_PhysicalMemoryInUse -= it->second;
-	m_Fragmented_mem_map.erase(it->first);
 }
 
 void PhysicalMemory::SetError(PMEMORY_STATUS err)

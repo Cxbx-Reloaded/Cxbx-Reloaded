@@ -126,10 +126,6 @@ class VMManager : public PhysicalMemory
 		}
 		// initializes the memory manager to the default configuration
 		void Initialize(HANDLE memory_view, HANDLE PT_view);
-		// initialize a memory region struct
-		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
-		// maps the virtual memory region used by a device
-		void MapHardwareDevice(VAddr base, size_t size, VMAType type);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates a block of memory
@@ -181,7 +177,9 @@ class VMManager : public PhysicalMemory
 		// set up the pfn database after a quick reboot (a new xbe is launched)
 		void ReinitializePfnDatabase();
 		// construct a vma
-		void ConstructVMA();
+		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD perms = XBOX_PAGE_NOACCESS);
+		// initialize a memory region struct
+		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
 		VAddr MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn,
 			PFN high_pfn, PFN* result);
@@ -195,28 +193,20 @@ class VMManager : public PhysicalMemory
 		bool IsValidVirtualAddress(const VAddr addr);
 		// translates a VAddr to its corresponding PAddr; it must be valid
 		PAddr TranslateVAddrToPAddr(const VAddr addr);
-		// maps a new allocation in the virtual address space
-		void MapMemoryRegion(VAddr base, size_t size, PAddr target);
-		// removes an allocation from the virtual address space
-		void UnmapRegion(VAddr base, size_t size);
 		// removes a vma block from the mapped memory
 		VMAIter Unmap(VMAIter vma_handle);
-		// updates the page table with a new vma entry
-		void MapPages(u32 page_num, u32 page_count, PAddr memory, PTEflags type);
 		// carves a vma of a specific size at the specified address by splitting free vma's
-		VMAIter CarveVMA(VAddr base, size_t size);
+		VMAIter CarveVMA(VAddr base, size_t size, MemoryRegionType Type);
 		// splits the edges of the given range of non-free vma's so that there is a vma split at each end of the range
 		VMAIter CarveVMARange(VAddr base, size_t size);
 		// gets the iterator of a vma in m_Vma_map
-		VMAIter GetVMAIterator(VAddr target);
+		VMAIter GetVMAIterator(VAddr target, MemoryRegionType Type);
 		// splits a parent vma into two children
-		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma);
+		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle);
 		// changes access permissions for a vma
 		VMAIter ReprotectVMA(VMAIter vma_handle, DWORD new_perms);
-		// updates the page table
-		void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 		// acquires the critical section
 		void Lock();
 		// releases the critical section
