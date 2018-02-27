@@ -435,8 +435,6 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	}
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	FillMemoryUlong((void*)addr, PteNumber * PAGE_SIZE, 0); // zero the allocated pages
-
 	ConstructVMA(addr, size, MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
 
 	Unlock();

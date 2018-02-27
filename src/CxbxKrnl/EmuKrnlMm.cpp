@@ -158,10 +158,14 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
-	// TODO: this should probably allocate the memory at a specific system virtual address region...
-	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
+	PVOID addr = xbnullptr;
 
-	RETURN(pRet);
+	if (NumberOfBytes)
+	{
+		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, Protect, NumberOfBytes, false);
+	}
+
+	RETURN(addr);
 }
 
 // ******************************************************************
@@ -221,7 +225,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
-	VAddr addr = xbnull;
+	PVOID addr = xbnullptr;
 
 	/**
 	* Function at present does not:
@@ -230,10 +234,10 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 
 	if (NumberOfBytes)
 	{
-		addr = g_VMManager.AllocateSystemMemory(SystemMemory, XBOX_PAGE_READWRITE, NumberOfBytes, true);
+		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, XBOX_PAGE_READWRITE, NumberOfBytes, true);
 	}
 
-	RETURN((PVOID)addr);
+	RETURN(addr);
 }
 
 // ******************************************************************
