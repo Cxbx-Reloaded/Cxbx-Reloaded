@@ -2201,7 +2201,7 @@ XBOX_EEPROM;
 typedef struct _XBOX_UEM_INFO
 {
 	UCHAR ErrorCode;
-	UCHAR Reserved;
+	UCHAR Unused;
 	USHORT History;
 }
 XBOX_UEM_INFO;

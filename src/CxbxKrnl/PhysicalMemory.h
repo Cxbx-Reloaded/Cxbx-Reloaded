@@ -141,28 +141,29 @@ enum PageType {
 
 
 /* Lock count variables for the PFN database */
-#define LOCK_COUNT_UNIT         2
-#define LOCK_COUNT_MAXIMUM      0xFFFE
+#define LOCK_COUNT_UNIT             2
+#define LOCK_COUNT_MAXIMUM          0xFFFE
 
 
 /* PTE protection masks */
-#define PTE_VALID_MASK           0x00000001
-#define PTE_WRITE_MASK           0x00000002
-#define PTE_OWNER_MASK           0x00000004
-#define PTE_WRITE_THROUGH_MASK   0x00000008
-#define PTE_CACHE_DISABLE_MASK   0x00000010
-#define PTE_ACCESS_MASK          0x00000020
-#define PTE_DIRTY_MASK           0x00000040
-#define PTE_LARGE_PAGE_MASK      0x00000080
-#define PTE_GLOBAL_MASK          0x00000100
-#define PTE_GUARD_END_MASK       0x00000200
-#define PTE_PERSIST_MASK         0x00000400
-#define PTE_NOACCESS             0x000
-#define PTE_READONLY             0x000
-#define PTE_READWRITE            PTE_WRITE_MASK
-#define PTE_NOCACHE              PTE_CACHE_DISABLE_MASK
-#define PTE_GUARD                PTE_GUARD_END_MASK
-#define PTE_CACHE                0x000
+#define PTE_VALID_MASK              0x00000001
+#define PTE_WRITE_MASK              0x00000002
+#define PTE_OWNER_MASK              0x00000004
+#define PTE_WRITE_THROUGH_MASK      0x00000008
+#define PTE_CACHE_DISABLE_MASK      0x00000010
+#define PTE_ACCESS_MASK             0x00000020
+#define PTE_DIRTY_MASK              0x00000040
+#define PTE_LARGE_PAGE_MASK         0x00000080
+#define PTE_GLOBAL_MASK             0x00000100
+#define PTE_GUARD_END_MASK          0x00000200
+#define PTE_PERSIST_MASK            0x00000400
+#define PTE_NOACCESS                0x000
+#define PTE_READONLY                0x000
+#define PTE_READWRITE               PTE_WRITE_MASK
+#define PTE_NOCACHE                 PTE_CACHE_DISABLE_MASK
+#define PTE_GUARD                   PTE_GUARD_END_MASK
+#define PTE_CACHE                   0x000
+#define PTE_VALID_PROTECTION_MASK   0x0000021B
 
 
 /* Xbox PAGE Masks */
@@ -223,6 +224,7 @@ enum PageType {
 #define ROUND_UP(size, alignment) (((size) + (alignment - 1)) & (~(alignment - 1)))
 #define ROUND_DOWN_4K(size) ((size) & (~PAGE_MASK))
 #define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
+#define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 
 
 /* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
@@ -245,7 +247,7 @@ class PhysicalMemory
 		// amount of physical pages free
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
 		// array containing the number of pages in use per type
-		PFN_COUNT m_PagesByUsage[COUNT] = { 0 };
+		PFN_COUNT m_PagesByUsage[PageType::COUNT] = { 0 };
 		// highest page on the system
 		PFN_COUNT m_HighestPage = XBOX_HIGHEST_PHYSICAL_PAGE;
 
@@ -268,7 +270,7 @@ class PhysicalMemory
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end);
 		// release a contiguous number of pages
 		void InsertFree(PFN start, PFN end);
-		// construct a temporary pte with the desired system protection (if possible) and return it
+		// convert from Xbox to the desired system pte protection (if possible) and return it
 		bool ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte);
 		// commit page tables (if necessary)
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);

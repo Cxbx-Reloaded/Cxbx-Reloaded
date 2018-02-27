@@ -127,7 +127,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		pRet = xbnull;
 
 	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (((ProtectionType & XBOX_PAGE_READONLY) > 0) == ((ProtectionType & PAGE_READWRITE) > 0))
+	if (((ProtectionType & XBOX_PAGE_READONLY) > 0) == ((ProtectionType & XBOX_PAGE_READWRITE) > 0))
 		pRet = xbnull;
 
 	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed

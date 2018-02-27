@@ -51,42 +51,20 @@
 
 
 /* VMATypes */
-
-enum class VMAType : u32
+enum VMAType
 {
 	// vma represents an unmapped region of the address space
 	Free,
+	// memory reserved by XbAllocateVirtualMemory
+	Reserved,
 	// vma represents allocated memory
 	Allocated,
-	// stack allocation
-	Stack,
-	// tiled memory
-	MemTiled,
-	// nv2a
-	IO_DeviceNV2A,
-	// nv2a pramin memory
-	MemNV2A_PRAMIN,
-	// apu
-	IO_DeviceAPU,
-	// ac97
-	IO_DeviceAC97,
-	// usb0
-	IO_DeviceUSB0,
-	// usb1
-	IO_DeviceUSB1,
-	// ethernet controller
-	IO_DeviceNVNet,
-	// bios
-	DeviceBIOS,
-	// mcpx rom (retail xbox only)
-	DeviceMCPX,
 	// mark this vma as non-mergeable
 	Lock,
 };
 
 
 /* VirtualMemoryArea struct */
-
 struct VirtualMemoryArea
 {
 	// vma starting address
@@ -95,10 +73,8 @@ struct VirtualMemoryArea
 	size_t size = 0;
 	// vma kind of memory
 	VMAType type = VMAType::Free;
-	// vma permissions
-	DWORD permissions = PAGE_NOACCESS;
-	// addr of the memory backing this block, if any
-	PAddr backing_block = NULL;
+	// initial vma permissions for user allocations, only used by NtQueryVirtualMemory
+	DWORD permissions = XBOX_PAGE_NOACCESS;
 	// this allocation was served by VirtualAlloc
 	bool bFragmented = false;
 	// tests if this area can be merged to the right with 'next'
@@ -106,8 +82,29 @@ struct VirtualMemoryArea
 };
 
 
-/* VMManager class */
+typedef std::map<VAddr, VirtualMemoryArea>::iterator VMAIter;
 
+
+/* struct representing a particular memory region of interest. Used to track and speed up searches of free areas */
+typedef struct _MemoryRegion
+{
+	VMAIter LastFree;
+	std::map<VAddr, VirtualMemoryArea> RegionMap;
+}MemoryRegion, *PMemoryRegion;
+
+
+/* enum describing the memory regions available for allocations on the Xbox */
+enum MemoryRegionType
+{
+	User,
+	Contiguous,
+	System,
+	Devkit,
+	COUNT,
+};
+
+
+/* VMManager class */
 class VMManager : public PhysicalMemory
 {
 	public:
@@ -129,6 +126,8 @@ class VMManager : public PhysicalMemory
 		}
 		// initializes the memory manager to the default configuration
 		void Initialize(HANDLE memory_view, HANDLE PT_view);
+		// initialize a memory region struct
+		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
 		// maps the virtual memory region used by a device
 		void MapHardwareDevice(VAddr base, size_t size, VMAType type);
 		// retrieves memory statistics
@@ -162,24 +161,8 @@ class VMManager : public PhysicalMemory
 
 	
 	private:
-		// m_Vma_map iterator
-		typedef std::map<VAddr, VirtualMemoryArea>::iterator VMAIter;
-		// struct representing a particular memory region of interest. Used to speed up searches of free areas
-		/*typedef struct _MemoryRegion
-		{
-			VAddr StartingAddress;
-			VAddr EndingAddress;
-			VMAIter LastFreed;
-		}MemoryRegion, *PMemoryRegion;
-
-		MemoryRegion SystemRegion = {
-			SYSTEM_MEMORY_BASE,
-			SYSTEM_MEMORY_END,
-			m_Vma_map.end();
-		}; I'm still not sure if this is worth the trouble... */
-
-		// map covering the entire 32 bit virtual address space as seen by the guest
-		std::map<VAddr, VirtualMemoryArea> m_Vma_map;
+		// an array of structs used to track the free/allocated vma's in the various memory regions
+		MemoryRegion m_MemoryRegionArray[MemoryRegionType::COUNT];
 		// handle of the contiguous file mapping
 		HANDLE m_hContiguousFile = NULL;
 		// handle of the PT file mapping
@@ -200,8 +183,8 @@ class VMManager : public PhysicalMemory
 		// construct a vma
 		void ConstructVMA();
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
-		VAddr MapMemoryBlock(VAddr low_addr, VAddr high_addr, PFN_COUNT size, bool* bVAllocFlag, DWORD perms,
-			PFN low_pfn, PFN high_pfn, PFN* result);
+		VAddr MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn,
+			PFN high_pfn, PFN* result);
 		// creates a vma representing the memory block to remove
 		void UnMapMemoryBlock(VAddr target);
 		// convert VirtualProtect protection flags to file mapping protection flags

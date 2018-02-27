@@ -41,8 +41,8 @@
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
 {
 	assert(Length != 0);
-	assert(Length % sizeof(ULONG) == 0);                 // Length must be a multiple of ULONG
-	assert((uintptr_t)Destination % sizeof(ULONG) == 0); // Destination must be 4-byte aligned
+	assert(CHECK_ALIGNMENT(Length, sizeof(ULONG)));                   // Length must be a multiple of ULONG
+	assert(CHECK_ALIGNMENT((uintptr_t)Destination, sizeof(ULONG)));   // Destination must be 4-byte aligned
 
 	int NumOfRepeats = Length / sizeof(ULONG);
 	ULONG* d = (ULONG*)Destination;
@@ -118,7 +118,7 @@ void PhysicalMemory::InitializePageDirectory()
 
 	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
 	// file cache function is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
-	// correctly implemented. So, for, we keep on ignoring this allocation
+	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
 void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType BusyType, bool bContiguous)
@@ -142,7 +142,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType B
 			}
 			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
 
-			m_PagesByUsage[Contiguous]++;
+			m_PagesByUsage[PageType::Contiguous]++;
 			pfn_start++;
 		}
 	}
@@ -151,7 +151,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE Pte, PageType B
 		TempPF.Default = 0;
 		TempPF.Busy.Busy = 1;
 		TempPF.Busy.BusyType = BusyType;
-		if (BusyType != VirtualPageTable) {
+		if (BusyType != PageType::VirtualPageTable) {
 			TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(Pte));
 		}
 
@@ -341,20 +341,20 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 {
 	ULONG Mask = 0;
 
-	if (perms & ~(XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | XBOX_PAGE_READWRITE | PAGE_READONLY))
+	if (perms & ~(XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | XBOX_PAGE_READWRITE | XBOX_PAGE_READONLY))
 	{
 		return false; // unknown or not allowed flag specified
 	}
 
 	switch (perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
 	{
-		case PAGE_READONLY:
+		case XBOX_PAGE_READONLY:
 		{
 			Mask = (PTE_VALID_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
 		}
 		break;
 
-		case PAGE_READWRITE:
+		case XBOX_PAGE_READWRITE:
 		{
 			Mask = (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
 		}
@@ -364,8 +364,8 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 			return false; // both are specified, wrong
 	}
 
-	switch (perms & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)) {
-
+	switch (perms & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+	{
 		case 0:
 			break; // none is specified, ok
 
@@ -396,7 +396,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	MMPTE TempPte;
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
 	PFN_COUNT PTtoCommit = 0;
-	PageType BusyType = SystemPageTable;
+	PageType BusyType = PageType::SystemPageTable;
 	int PdeMappedSizeIncrement = 0;
 
 	assert(PteNumber);
@@ -411,13 +411,20 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 		PdeMappedSizeIncrement += (4 * ONE_MB);
 	}
 
+	if (!PTtoCommit)
+	{
+		// We don't need to commit any new page table, so exit now
+
+		return true;
+	}
+
 	if (m_PhysicalPagesAvailable < PTtoCommit)
 	{
 		// We don't have enough memory for PT's mapping this allocation
 
 		return false;
 	}
-	if (addr < HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTable; }
+	if (addr < HIGHEST_USER_ADDRESS) { BusyType = PageType::VirtualPageTable; }
 	PdeMappedSizeIncrement = 0;
 
 	// Now actually commit the PT's
