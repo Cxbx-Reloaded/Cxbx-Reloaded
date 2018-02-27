@@ -561,8 +561,12 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 			// Relaunch Cxbx, to load another Xbe
 			{
-				bool bQuickReboot = true;
-				g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
+				bool bMultiXbe = true;
+				int QuickReboot;
+				g_EmuShared->GetBootFlags(&QuickReboot);
+				QuickReboot |= BOOT_QUICK_REBOOT;
+				g_EmuShared->SetBootFlags(&QuickReboot);
+				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
 
 				char szArgsBuffer[4096];
 
@@ -590,16 +594,12 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 		char szArgsBuffer[4096];
 		char szWorkingDirectoy[MAX_PATH];
-		bool bQuickReboot = true;
-		g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
+		bool bMultiXbe = true;
+		g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
 		g_EmuShared->GetXbePath(szWorkingDirectoy);
 		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 		if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
-		{
-			int BootFlags = 0;
-			g_EmuShared->SetBootFlags(&BootFlags); // clear all boot flags in the case of failure
-			CxbxKrnlCleanup("Could not reboot");
-		}
+			CxbxKrnlCleanup("Could not launch %s", szWorkingDirectoy);
 		break;
 	}
 

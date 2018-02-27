@@ -30,7 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
-// *  (c) 2017 ergo720
+// *  (c) 2017-2018 ergo720
 // *
 // *  All rights reserved
 // *

@@ -28,7 +28,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017      ergo720
+// *  (c) 2017-2018      ergo720
 // *
 // *  All rights reserved
 // *
@@ -36,7 +36,7 @@
 
 // Acknowledgment:
 // The core logic of the VMManager class is based on the virtual management code of the citra emulator (GPLv2 license),
-// with some changes and adaptions to suit Cxbx-Reloaded and Xbox emulation.
+// with heavy changes and the addition of real page tables to better suit Cxbx-Reloaded and Xbox emulation.
 // Citra website: https://citra-emu.org/
 
 
@@ -98,9 +98,9 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database
-	bool bQuickReboot;
-	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
-	if (bQuickReboot) {
+	int QuickReboot;
+	g_EmuShared->GetBootFlags(&QuickReboot);
+	if (QuickReboot & BOOT_QUICK_REBOOT) {
 		ReinitializePfnDatabase();
 	}
 	else {

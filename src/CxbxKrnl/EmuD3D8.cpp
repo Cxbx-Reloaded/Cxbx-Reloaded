@@ -1369,12 +1369,12 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
     }
 
 	bool bQuickReboot;
-	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
+	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 
 	// precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
 	while (bQuickReboot)
 	{
-		g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
+		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 	}
 
 	HANDLE hCrashMutex = CreateMutex(NULL, TRUE, "CrashMutex");
