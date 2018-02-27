@@ -750,6 +750,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 typedef struct {
 	XTL::IDirect3DResource8* pHostResource = nullptr;
 	XTL::X_D3DResource* pXboxResource = nullptr;
+	DWORD dwXboxResourceType = 0;
 	void* pXboxData = nullptr;
 	size_t szXboxDataSize = 0;
 	uint32_t hash = 0;
@@ -781,6 +782,7 @@ void FreeHostResource(resource_key_t key)
 		if (hostResourceIterator->second.pHostResource) {
 			(hostResourceIterator->second.pHostResource)->Release();
 		}
+
 		g_HostResources.erase(hostResourceIterator);
 	}
 }
@@ -878,6 +880,11 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 		return true;
 	}
 
+	// If the resource type changed, we need to re-create it
+	if (it->second.dwXboxResourceType != GetXboxCommonResourceType(it->second.pXboxResource)) {
+		return true;
+	}
+
 	bool modified = false;
 
 	auto now = std::chrono::high_resolution_clock::now();
@@ -918,6 +925,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 	host_resource_info_t hostResourceInfo;
 	hostResourceInfo.pHostResource = pHostResource;
 	hostResourceInfo.pXboxResource = pXboxResource;
+	hostResourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
 	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
 	hostResourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
 	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
@@ -3508,7 +3516,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
                                             g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
-											&bUseDeclarationOnly);
+											&bUseDeclarationOnly,
+											pRecompiledDeclaration);
         if(SUCCEEDED(hRet))
         {
 			if(!bUseDeclarationOnly)
@@ -4101,7 +4110,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture, (DWORD, X_D3DBaseTexture*));
-
 	XB_D3DDevice_SetTexture(Stage, pTexture);
 
 	EmuD3DActiveTexture[Stage] = pTexture;

@@ -1549,7 +1549,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
                 // TODO: How to mock up "release phase"?
                 break;
             default:
-                CxbxKrnlCleanup("Unknown dwFlags from IDirectSoundBuffer_StopEx: %8X", dwFlags);
+                EmuWarning("Unknown dwFlags from IDirectSoundBuffer_StopEx: %8X", dwFlags);
         }
     }
 
