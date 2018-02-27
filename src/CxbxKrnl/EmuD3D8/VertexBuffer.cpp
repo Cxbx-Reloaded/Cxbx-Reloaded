@@ -846,15 +846,11 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         CxbxKrnlCleanup("Draw..UP call with more than one stream!\n");
     }
 
-    // sizes of our part in the vertex buffer
+    // sizes of the vertex buffer
     DWORD dwOriginalSize    = 0;
     DWORD dwNewSize         = 0;
 
-    // sizes with the rest of the buffer
-    DWORD dwOriginalSizeWR  = 0;
-    DWORD dwNewSizeWR       = 0;
-
-    // vertex data arrays
+	// vertex data arrays
     BYTE *pOrigVertexData = nullptr;
     BYTE *pPatchedVertexData = nullptr;
 
@@ -881,19 +877,9 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 
     if(pPatchDesc->pVertexStreamZeroData == nullptr)
     {
-        // Retrieve the original buffer size
-        {
-            // Here we save the full buffer size
-			dwOriginalSizeWR = GetVertexBufferSize(pPatchDesc->dwVertexCount, pStream->uiOrigStride, pPatchDesc->pIndexData, pPatchDesc->dwOffset);
-
-            // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
-            // add it to our new calculated size of the patched buffer
-            dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
-        }
-
-        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSize, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
 		if (FAILED(hRet)) {
-			EmuWarning("CreateVertexBuffer Failed. Size: %d", dwNewSizeWR);
+			EmuWarning("CreateVertexBuffer Failed. Size: %d", dwNewSize);
 		}
 		
 
@@ -909,10 +895,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     }
     else
     {
-        dwOriginalSizeWR = dwOriginalSize;
-        dwNewSizeWR = dwNewSize;
-
-        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSizeWR);
+        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSize);
         m_bAllocatedStreamZeroData = true;
 
         pPatchedVertexData = (uint08*)m_pNewVertexStreamZeroData;
@@ -922,22 +905,19 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     }
 
     // Copy the nonmodified data
-    memcpy(pPatchedVertexData, pOrigVertexData, pPatchDesc->dwOffset);
-    memcpy(&pPatchedVertexData[pPatchDesc->dwOffset+dwNewSize],
-           &pOrigVertexData[pPatchDesc->dwOffset+dwOriginalSize],
-           dwOriginalSizeWR - pPatchDesc->dwOffset - dwOriginalSize);
+    memcpy(pPatchedVertexData, pOrigVertexData, dwOriginalSize);
 
     // Quad list
     if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
-        uint08 *pPatch1 = &pPatchedVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
-        uint08 *pPatch2 = &pPatchedVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
-        uint08 *pPatch3 = &pPatchedVertexData[(pPatchDesc->dwOffset + 4) * pStream->uiOrigStride];
-        uint08 *pPatch4 = &pPatchedVertexData[(pPatchDesc->dwOffset + 5) * pStream->uiOrigStride];
+        uint08 *pPatch1 = &pPatchedVertexData[0];
+        uint08 *pPatch2 = &pPatchedVertexData[3 * pStream->uiOrigStride];
+        uint08 *pPatch3 = &pPatchedVertexData[4 * pStream->uiOrigStride];
+        uint08 *pPatch4 = &pPatchedVertexData[5 * pStream->uiOrigStride];
 
-        uint08 *pOrig1 = &pOrigVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
-        uint08 *pOrig2 = &pOrigVertexData[(pPatchDesc->dwOffset + 2) * pStream->uiOrigStride];
-        uint08 *pOrig3 = &pOrigVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
+        uint08 *pOrig1 = &pOrigVertexData[0];
+        uint08 *pOrig2 = &pOrigVertexData[2 * pStream->uiOrigStride];
+        uint08 *pOrig3 = &pOrigVertexData[3 * pStream->uiOrigStride];
 
         for(uint32 i = 0;i < dwTotalPrimitiveCount /2;i++)
         {
@@ -964,10 +944,10 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             {
                 for(int z = 0; z < 6; z++)
                 {
-                    if(((FLOAT*)&pPatchedVertexData[pPatchDesc->dwOffset + i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] == 0.0f)
-                        ((FLOAT*)&pPatchedVertexData[pPatchDesc->dwOffset + i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] = 1.0f;
-                    if(((FLOAT*)&pPatchedVertexData[pPatchDesc->dwOffset + i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] == 0.0f)
-                        ((FLOAT*)&pPatchedVertexData[pPatchDesc->dwOffset + i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] = 1.0f;
+                    if(((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] == 0.0f)
+                        ((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] = 1.0f;
+                    if(((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] == 0.0f)
+                        ((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] = 1.0f;
                 }
             }
         }
@@ -975,8 +955,8 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     // Line loop
     else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
-        memcpy(&pPatchedVertexData[pPatchDesc->dwOffset], &pOrigVertexData[pPatchDesc->dwOffset], dwOriginalSize);
-	    memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
+        memcpy(&pPatchedVertexData[0], &pOrigVertexData[0], dwOriginalSize);
+	    memcpy(&pPatchedVertexData[dwOriginalSize], &pOrigVertexData[0], pStream->uiOrigStride);
     }
 
     if(pPatchDesc->pVertexStreamZeroData == nullptr)
