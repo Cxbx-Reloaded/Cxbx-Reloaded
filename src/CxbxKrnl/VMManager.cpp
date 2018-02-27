@@ -282,6 +282,15 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 		}
 		--it;
 	}
+
+	// ergo720: I don't expect this to happen since it would mean we have exhausted the virtual space in the memory region,
+	// but it's just in case
+
+	EmuWarning("Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+
+	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
+
+	return;
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
