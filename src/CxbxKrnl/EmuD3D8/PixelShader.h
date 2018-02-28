@@ -45,18 +45,8 @@ void PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pDSDef );
 // Recompile Xbox PixelShader def
 HRESULT EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompiled );
 
-/*
- * Kingofc's pixel shader functions
- */
-// Pixel Shader Stuff
-HRESULT CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* ppRecompiled);
-
 // PatrickvL's Dxbx pixel shader translation
-HRESULT DxbxUpdateActivePixelShader(X_D3DPIXELSHADERDEF *pPSDef, DWORD *pHandle); // NOPATCH
-
-// check
-bool IsValidPixelShader(void);
-
+VOID DxbxUpdateActivePixelShader(); // NOPATCH
 
 #ifdef _DEBUG_TRACK_PS
 #define DbgPshPrintf if(g_bPrintfOn) printf
