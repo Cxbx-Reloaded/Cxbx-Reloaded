@@ -287,13 +287,14 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		LOG_FUNC_ARG(SystemRoutine)
 		LOG_FUNC_END;
 
-	// TODO : Arguments to use : KernelStackSize, TlsDataSize, DebuggerThread
+	// TODO : Arguments to use : TlsDataSize, DebuggerThread
 
-	// TODO : Fill KernelStackSize like this :
-	//	if (KernelStackSize < KERNEL_STACK_SIZE) 
-	//		KernelStackSize = KERNEL_STACK_SIZE;
-	//	else
-	//		KernelStackSize = round up;
+	// use default kernel stack size if none specified
+	if (KernelStackSize < KERNEL_STACK_SIZE)
+		KernelStackSize = KERNEL_STACK_SIZE;
+
+	// round up to the next page boundary if un-aligned
+	KernelStackSize = KernelStackSize + 0xFFF & 0xFFFFF000;
 
     static bool bFirstTime = false;
 
@@ -316,7 +317,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         iPCSTProxyParam->StartSuspended = CreateSuspended;
         iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
-        *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+        *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
 		// Give the thread chance to start
