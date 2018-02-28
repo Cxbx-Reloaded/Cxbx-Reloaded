@@ -559,7 +559,11 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 {
 	LOG_FUNC_ONE_ARG(Status);
 
-	LOG_UNIMPLEMENTED();
+	RaiseException(
+		Status,
+		0, // continuable exception
+		0, NULL); // no arguments
+	LOG_INCOMPLETE(); // TODO : Implement real xbox software exception
 }
 
 // ******************************************************************
