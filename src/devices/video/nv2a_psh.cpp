@@ -321,7 +321,7 @@ static std::string* get_var(struct PixelShader *ps, int reg, bool is_dest)
                                 qstring_get_str(ps->varF));
     default:
         assert(false);
-        break;
+		return new std::string("");
     }
 }
 
