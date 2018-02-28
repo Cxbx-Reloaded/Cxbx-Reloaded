@@ -71,7 +71,7 @@ XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL
 // the xbox kernel. Kernel code accessses this as a normal variable.
 // XAPI code however, reference to the address of this kernel variable,
 // thus use indirection (*LaunchDataPage) to get to the same contents.
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnull;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnullptr;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -90,8 +90,6 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, XBOX_PAGE_READWRITE);
 }
-
-#define PAGE_KNOWN_FLAGS (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)
 
 // ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx()
@@ -113,32 +111,14 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = (PVOID)1; // Marker, never returned, overwritten with NULL on input error
-
-	// size must be > 0
-	if (NumberOfBytes == 0)
-		pRet = xbnull;
+	PVOID pRet = xbnullptr;
 
 	if (Alignment < PAGE_SIZE)
 		Alignment = PAGE_SIZE; // page boundary at least
 
-	// Only known flags are allowed
-	if ((ProtectionType & ~PAGE_KNOWN_FLAGS) != 0)
-		pRet = xbnull;
-
-	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (((ProtectionType & XBOX_PAGE_READONLY) > 0) == ((ProtectionType & XBOX_PAGE_READWRITE) > 0))
-		pRet = xbnull;
-
-	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
-	if ((ProtectionType & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE)) == (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
-		pRet = xbnull;
-
-	// Allocate when input arguments are valid
-	if (pRet != xbnull)
+	if (NumberOfBytes)
 	{
-		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType, false);
+		pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 	}
 
 	RETURN(pRet);

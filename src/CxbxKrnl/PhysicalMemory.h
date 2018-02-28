@@ -236,12 +236,10 @@ class PhysicalMemory
 	protected:
 		// doubly linked list tracking the free physical pages
 		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
-		// map tracking the blocks allocated with VirtualAlloc
-		//std::map<VAddr, size_t> m_Fragmented_mem_map;
 		// current error status code of the PhysicalMemory class
 		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
-		// highest address available for contiguous allocations
-		PAddr m_MaxContiguousAddress = XBOX_CONTIGUOUS_MEMORY_LIMIT;
+		// highest pfn available for contiguous allocations
+		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// the size of memory occupied by the PFN/NV2A instance memory
 		size_t m_UpperPMemorySize = 32 * PAGE_SIZE;
 		// amount of physical pages free

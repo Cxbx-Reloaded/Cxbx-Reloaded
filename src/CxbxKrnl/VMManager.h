@@ -134,7 +134,9 @@ class VMManager : public PhysicalMemory
 		// allocates a block of memory and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates memory in the system region
-		VAddr AllocateSystemMemory(PageType BusyType, DWORD perms, size_t size, /*bool bDebugRange,*/ bool bAddGuardPage);
+		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage);
+		// allocates memory in the contiguous region
+		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
 		// deallocate stack memory
@@ -174,10 +176,10 @@ class VMManager : public PhysicalMemory
 	
 		// set up the pfndatabase
 		void InitializePfnDatabase();
-		// set up the pfn database after a quick reboot (a new xbe is launched)
+		// set up the pfn database after a quick reboot
 		void ReinitializePfnDatabase();
 		// construct a vma
-		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD perms = XBOX_PAGE_NOACCESS);
+		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// initialize a memory region struct
 		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed

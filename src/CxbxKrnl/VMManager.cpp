@@ -81,7 +81,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	// Set up general memory variables according to the xbe type
 	if (g_bIsChihiro)
 	{
-		m_MaxContiguousAddress = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
+		m_MaxContiguousPfn = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 		m_UpperPMemorySize = 48 * PAGE_SIZE;
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
@@ -244,7 +244,7 @@ void VMManager::ReinitializePfnDatabase()
 
 }
 
-void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD perms)
+void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD Perms)
 {
 	VMAIter it_begin = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
 	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
@@ -253,7 +253,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	VMAIter vma_handle = CarveVMA(Start, Size, Type);
 	VirtualMemoryArea& vma = vma_handle->second;
 	vma.type = VMAType;
-	vma.permissions = perms;
+	vma.permissions = Perms;
 	if (bFragFlag) { vma.bFragmented = true; }
 
 	// Depending on the splitting done by CarveVMA, there is no guarantee that the next or previous vma's are free.
@@ -284,7 +284,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	}
 
 	// ergo720: I don't expect this to happen since it would mean we have exhausted the virtual space in the memory region,
-	// but it's just in case
+	// but it's just in case it does
 
 	EmuWarning("Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
@@ -349,12 +349,12 @@ VAddr VMManager::AllocateZeroed(size_t size)
 	RETURN(v_addr);
 }
 
-VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t size, /*bool bDebugRange,*/ bool bAddGuardPage)
+VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusyType);
-		LOG_FUNC_ARG(perms);
-		LOG_FUNC_ARG(size);
+		LOG_FUNC_ARG(Perms);
+		LOG_FUNC_ARG(Size);
 		//LOG_FUNC_ARG(bDebugRange);
 		LOG_FUNC_ARG(bAddGuardPage);
 	LOG_FUNC_END;
@@ -367,16 +367,16 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	VAddr addr;
 	bool bVAlloc = true;
 
-	if (!ConvertXboxToSystemPteProtection(perms, &TempPte)) { RETURN(NULL); }
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	Lock();
 
-	PteNumber = ROUND_UP_4K(size) >> PAGE_SHIFT;
+	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
 
-	if (bAddGuardPage) { PteNumber++; size += PAGE_SIZE; }
+	if (bAddGuardPage) { PteNumber++; Size += PAGE_SIZE; }
 	if (m_PhysicalPagesAvailable < PteNumber) { goto Fail; }
 
-	addr = MapMemoryBlock(MemoryRegionType::System, PteNumber, &bVAlloc, perms, 0, m_HighestPage, &pfn);
+	addr = MapMemoryBlock(MemoryRegionType::System, PteNumber, &bVAlloc, Perms, 0, m_HighestPage, &pfn);
 	if (!addr) { goto Fail; }
 
 	// check if we have to construct the PT's for this allocation
@@ -435,7 +435,76 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD perms, size_t siz
 	}
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	ConstructVMA(addr, size, MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
+	ConstructVMA(addr, Size, MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
+
+	Unlock();
+	RETURN(addr);
+
+	Fail:
+	Unlock();
+	RETURN(NULL);
+}
+
+VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Size);
+		LOG_FUNC_ARG(LowerAddress);
+		LOG_FUNC_ARG(HigherAddress);
+		LOG_FUNC_ARG(Alignment);
+		LOG_FUNC_ARG(Perms);
+	LOG_FUNC_END;
+
+	MMPTE TempPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PFN PfnAlignment;
+	PFN LowerPfn;
+	PFN HigherPfn;
+	PFN pfn;
+	PFN_COUNT PteNumber;
+	VAddr addr;
+
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
+
+	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
+	LowerPfn = LowerAddress >> PAGE_SHIFT;
+	HigherPfn = HigherAddress >> PAGE_SHIFT;
+	PfnAlignment = Alignment >> PAGE_SHIFT;
+
+	if (HigherPfn > m_MaxContiguousPfn) { HigherPfn = m_MaxContiguousPfn; }
+	if (LowerPfn > HigherPfn) { LowerPfn = HigherPfn; }
+	if (!PfnAlignment) { PfnAlignment = 1; }
+
+	Lock();
+
+	if (!RemoveFree(PteNumber, &pfn, PfnAlignment, LowerPfn, HigherPfn)) { goto Fail; }
+	addr = CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT);
+
+	assert(CHECK_ALIGNMENT(pfn, PfnAlignment)); // check if the page alignment is correct
+
+	// check if we have to construct the PT's for this allocation
+	if (!AllocatePT(PteNumber, addr))
+	{
+		InsertFree(pfn, pfn + PteNumber - 1);
+		goto Fail;
+	}
+
+	// Finally, write the pte's and the pfn's
+	PointerPte = GetPteAddress(addr);
+	EndingPte = PointerPte + PteNumber - 1;
+
+	while (PointerPte <= EndingPte)
+	{
+		TempPte.Hardware.PFN = pfn;
+		WRITE_PTE(PointerPte, TempPte);
+		WritePfn(pfn, pfn, PointerPte, PageType::Contiguous, true);
+		PointerPte++;
+		pfn++;
+	}
+	EndingPte->Hardware.GuardOrEnd = 1;
+
+	ConstructVMA(addr, Size, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 	Unlock();
 	RETURN(addr);

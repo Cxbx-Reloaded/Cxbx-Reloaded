@@ -123,9 +123,6 @@ void PhysicalMemory::InitializePageDirectory()
 
 void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous)
 {
-	// Usage notes: if it writes a pfn in the contiguous region, Pte is expected to be the address of a dereferencable pte.
-	// In the other case, Pte holds a pte address returned by GetPdeAddress or GetPteAddress
-
 	XBOX_PFN TempPF;
 
 	if (bContiguous)

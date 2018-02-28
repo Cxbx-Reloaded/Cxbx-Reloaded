@@ -97,10 +97,8 @@ extern "C" {
 #define D3D_PHYSICAL_PAGE                       0x00000
 #define DEBUGKIT_FIRST_UPPER_HALF_PAGE          0x04000
 #define NV2A_INSTANCE_PAGE_COUNT                16
-// upper limit available for contiguous allocations (xbox)
-#define XBOX_CONTIGUOUS_MEMORY_LIMIT            XBOX_MEMORY_SIZE - 32 * PAGE_SIZE
-// upper limit available for contiguous allocations (chihiro)
-#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT         CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT            0x03FDF
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT         0x07FCF
 #define ZERO_PAGE_ADDR                          0
 #define FIRST_PAGE_ADDR                         PAGE_SIZE
 #define CONTIGUOUS_MEMORY_BASE                  SYSTEM_PHYSICAL_MAP // = 0x80000000
