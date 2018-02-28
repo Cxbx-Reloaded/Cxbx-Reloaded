@@ -37,6 +37,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"
+#include <CxbxUtil.h>
 
 // prevent name collisions
 namespace xboxkrnl
@@ -289,12 +290,12 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 	// TODO : Arguments to use : TlsDataSize, DebuggerThread
 
-	// use default kernel stack size if none specified
+	// use default kernel stack size if lesser specified
 	if (KernelStackSize < KERNEL_STACK_SIZE)
 		KernelStackSize = KERNEL_STACK_SIZE;
 
 	// round up to the next page boundary if un-aligned
-	KernelStackSize = KernelStackSize + 0xFFF & 0xFFFFF000;
+	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
 
     static bool bFirstTime = false;
 
