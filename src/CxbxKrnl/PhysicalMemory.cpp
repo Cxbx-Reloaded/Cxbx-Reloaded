@@ -164,7 +164,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 	}
 }
 
-bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end)
+bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end)
 {
 	xboxkrnl::PLIST_ENTRY ListEntry;
 	PFN PfnStart;
@@ -172,8 +172,18 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start,
 	PFN IntersectionStart;
 	PFN IntersectionEnd;
 	PFN_COUNT PfnCount;
+	PFN_COUNT PfnAlignmentMask;
+	PFN_COUNT PfnAlignmentSubtraction;
 
 	if (NumberOfPages == 0 || NumberOfPages > m_PhysicalPagesAvailable) { result = nullptr; return false; }
+
+	if (PfnAlignment)
+	{
+		// Calculate some alignment parameters if one is requested
+
+		PfnAlignmentMask = ~(PfnAlignment - 1);
+		PfnAlignmentSubtraction = ((NumberOfPages + PfnAlignment - 1) & PfnAlignmentMask) - NumberOfPages + 1;
+	}
 
 	ListEntry = FreeList.Blink; // search from the top
 
@@ -201,6 +211,18 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start,
 				// check done above
 
 				goto InvalidBlock;
+			}
+
+			if (PfnAlignment)
+			{
+				IntersectionEnd = (IntersectionEnd & PfnAlignmentMask) - PfnAlignmentSubtraction;
+
+				if (IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
+				{
+					// This free block doesn't honor the alignment requested, so this is another invalid block
+
+					goto InvalidBlock;
+				}
 			}
 
 			// Now we know that we have a usable free block with enough pages

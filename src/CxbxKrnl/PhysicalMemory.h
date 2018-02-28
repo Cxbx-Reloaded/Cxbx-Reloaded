@@ -131,7 +131,7 @@ enum PageType {
 	SystemPageTable,           // Used by the pages holding the PTs that map the system memory
 	Pool,                      // Used by ExAllocatePoolWithTag
 	VirtualMemory,             // Used by NtAllocateVirtualMemory
-	SystemMemory,              // Used by MmAllocateSystemMemory and others
+	SystemMemory,              // Used by MmAllocateSystemMemory
 	Image,                     // Used by XeLoadSection
 	Cache,                     // Used by the file cache related functions
 	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
@@ -267,7 +267,7 @@ class PhysicalMemory
 		// write pfn
 		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous);
 		// commit a contiguous number of pages
-		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN start, PFN end);
+		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end);
 		// release a contiguous number of pages
 		void InsertFree(PFN start, PFN end);
 		// convert from Xbox to the desired system pte protection (if possible) and return it

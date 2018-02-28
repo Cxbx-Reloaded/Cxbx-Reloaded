@@ -158,7 +158,7 @@ void VMManager::InitializePfnDatabase()
 	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
-	RemoveFree(1, &result, pfn, pfn);
+	RemoveFree(1, &result, 0, pfn, pfn);
 	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), PAGE_SIZE, MemoryRegionType::Contiguous,
 		VMAType::Allocated, false);
@@ -169,7 +169,7 @@ void VMManager::InitializePfnDatabase()
 	pfn_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
-	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -190,7 +190,7 @@ void VMManager::InitializePfnDatabase()
 	}
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
-	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -208,7 +208,7 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Pte.Default = ValidKernelPteBits;
 	DISABLE_CACHING(TempPF.Pte);
 
-	RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
 	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -223,7 +223,7 @@ void VMManager::InitializePfnDatabase()
 		TempPF.Pte.Default = ValidKernelPteBits;
 		DISABLE_CACHING(TempPF.Pte);
 
-		RemoveFree(pfn_end - pfn + 1, &result, pfn, pfn_end);
+		RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
 		WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
 		ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
 			MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -234,7 +234,7 @@ void VMManager::InitializePfnDatabase()
 	pfn = D3D_PHYSICAL_PAGE;
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
-	RemoveFree(1, &result, pfn, pfn);
+	RemoveFree(1, &result, 0, pfn, pfn);
 	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 }
@@ -763,7 +763,8 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 	VMAIter it = m_MemoryRegionArray[Type].LastFree;
 	size_t aligned_size = size << PAGE_SHIFT;
 
-	if (!RemoveFree(size, &pfn, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
+	// NOTE: at the moment I'm not sure if this requires an alignment parameter to be passed...
+	if (!RemoveFree(size, &pfn, 0, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
 	{
 		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
 		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into

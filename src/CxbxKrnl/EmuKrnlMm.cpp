@@ -234,7 +234,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 
 	if (NumberOfBytes)
 	{
-		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, XBOX_PAGE_READWRITE, NumberOfBytes, true);
+		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Stack, XBOX_PAGE_READWRITE, NumberOfBytes, true);
 	}
 
 	RETURN(addr);
