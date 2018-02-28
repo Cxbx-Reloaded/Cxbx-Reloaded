@@ -404,12 +404,12 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-	PKMUTANT Mutant;
+	PVOID MutantObj;
 
-	NTSTATUS Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
+	NTSTATUS Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), &MutantObj);
 	if (NT_SUCCESS(Status)) {
-		KeInitializeMutant(Mutant, InitialOwner);
-		Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT*/MutantHandle);
+		KeInitializeMutant((PKMUTANT)MutantObj, InitialOwner);
+		Status = ObInsertObject(MutantObj, ObjectAttributes, 0, /*OUT*/MutantHandle);
 	}
 
 	RETURN(Status);
@@ -1582,6 +1582,32 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 // ******************************************************************
 // * 0x00DD - NtReleaseMutant()
 // ******************************************************************
+xboxkrnl::NTSTATUS NTAPI NtReleaseMutant_SEH
+(
+	IN  HANDLE  MutantHandle,
+	OUT PLONG   PreviousCount
+)
+{
+	using namespace xboxkrnl;
+
+	PVOID MutantObj;
+	NTSTATUS ret = ObReferenceObjectByHandle(MutantHandle, &ExMutantObjectType, &MutantObj);
+	if (NT_SUCCESS(ret)) {
+		__try {
+			LONG Count = KeReleaseMutant((PKMUTANT)MutantObj, 1, FALSE, FALSE);
+			ObfDereferenceObject(MutantObj);
+			if (PreviousCount) {
+				*PreviousCount = Count;
+			}
+		} __except(EXCEPTION_EXECUTE_HANDLER) {
+			ObfDereferenceObject(MutantObj);
+			ret = GetExceptionCode();
+		}
+	}
+
+	return ret;
+}
+
 XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 (
 	IN  HANDLE  MutantHandle,
@@ -1593,13 +1619,11 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 		LOG_FUNC_ARG_OUT(PreviousCount)
 		LOG_FUNC_END;
 
-	// redirect to NtCreateMutant
-	NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+	// Note : Forward to separate function so that can use Structured Exception Handling (SEH)
+	// which isn't possible here because of the object unwinding that results from our logging.
+	NTSTATUS ret = NtReleaseMutant_SEH(MutantHandle, PreviousCount);
 
-	if (FAILED(ret))
-		EmuWarning("NtReleaseMutant Failed!");
-
-	RETURN(STATUS_SUCCESS); // TODO : RETURN(ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1896,7 +1920,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 			WaitObject = (PVOID)((PCHAR)Object + (ULONG_PTR)WaitObject);
 		}
 
-		//try {
+		//__try {
 			KWAIT_BLOCK WaitBlock;
 
 			Status = xboxkrnl::KeWaitForMultipleObjects(
@@ -1909,7 +1933,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 				Timeout,
 				&WaitBlock
 			);
-		//} except(EXCEPTION_EXECUTE_HANDLER) {
+		//} __except(EXCEPTION_EXECUTE_HANDLER) {
 		//	Status = GetExceptionCode();
 		//}
 
