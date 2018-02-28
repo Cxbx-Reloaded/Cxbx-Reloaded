@@ -4122,18 +4122,19 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         // Read the color from the corresponding render state slot :
         switch (i) {
           case PSH_XBOX_CONSTANT_FOG:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
 	    default:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+			dwColor = 0;
         }
 
         // Convert it back to 4 floats  :
