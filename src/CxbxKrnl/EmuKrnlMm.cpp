@@ -111,15 +111,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = xbnullptr;
-
-	if (Alignment < PAGE_SIZE)
-		Alignment = PAGE_SIZE; // page boundary at least
-
-	if (NumberOfBytes)
-	{
-		pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
-	}
+	PVOID pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 
 	RETURN(pRet);
 }
@@ -138,12 +130,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
-	PVOID addr = xbnullptr;
-
-	if (NumberOfBytes)
-	{
-		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, Protect, NumberOfBytes, false);
-	}
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, Protect, NumberOfBytes, false);
 
 	RETURN(addr);
 }
@@ -205,17 +192,12 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
-	PVOID addr = xbnullptr;
-
 	/**
 	* Function at present does not:
 	* - Treat DebuggerThread any differently
 	*/
 
-	if (NumberOfBytes)
-	{
-		addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Stack, XBOX_PAGE_READWRITE, NumberOfBytes, true);
-	}
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Stack, XBOX_PAGE_READWRITE, NumberOfBytes, true);
 
 	RETURN(addr);
 }

@@ -35,7 +35,7 @@
 // ******************************************************************
 
 // Acknowledgment:
-// The core logic of the VMManager class is based on the virtual management code of the citra emulator (GPLv2 license),
+// The core logic of the VMManager class is based on the virtual page management code of the citra emulator (GPLv2 license),
 // with heavy changes and the addition of real page tables to better suit Cxbx-Reloaded and Xbox emulation.
 // Citra website: https://citra-emu.org/
 
@@ -244,15 +244,15 @@ void VMManager::ReinitializePfnDatabase()
 
 }
 
-void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD Perms)
+void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms)
 {
-	VMAIter it_begin = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
+	VMAIter it_begin = m_MemoryRegionArray[Type].RegionMap.begin();
 	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
 	VMAIter it;
 
 	VMAIter vma_handle = CarveVMA(Start, Size, Type);
 	VirtualMemoryArea& vma = vma_handle->second;
-	vma.type = VMAType;
+	vma.type = VmaType;
 	vma.permissions = Perms;
 	if (bFragFlag) { vma.bFragmented = true; }
 
@@ -271,15 +271,26 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 		++it;
 	}
 
+	if (vma_handle == it_begin)
+	{
+		// Already at the beginning of the map, bail out immediately
+
+		EmuWarning("Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
+		return;
+	}
+
 	it = std::prev(vma_handle);
 
-	while (it != it_begin)
+	while (true)
 	{
 		if (it->second.type == VMAType::Free)
 		{
 			m_MemoryRegionArray[Type].LastFree = it;
 			return;
 		}
+
+		if (it == it_begin) { break; }
 		--it;
 	}
 
@@ -365,7 +376,8 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PFN pfn;
 	PFN_COUNT PteNumber;
 	VAddr addr;
-	bool bVAlloc = true;
+	MappingFn MappingRoutine;
+	bool bVAlloc = false;
 
 	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
@@ -376,8 +388,33 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	if (bAddGuardPage) { PteNumber++; Size += PAGE_SIZE; }
 	if (m_PhysicalPagesAvailable < PteNumber) { goto Fail; }
 
-	addr = MapMemoryBlock(MemoryRegionType::System, PteNumber, &bVAlloc, Perms, 0, m_HighestPage, &pfn);
-	if (!addr) { goto Fail; }
+	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
+	{
+		MappingRoutine = &MapBlockWithMapViewOfFileEx;
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, pfn);
+
+		if (!addr)
+		{
+			InsertFree(pfn, pfn + PteNumber - 1);
+			goto Fail;
+		}
+	}
+	else // VirtualAlloc path
+	{
+		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
+		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
+		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
+		// our intended region before we could do.
+
+		bVAlloc = true;
+		MappingRoutine = &MapBlockWithVirtualAlloc;
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, 0);
+
+		if (!addr) { goto Fail; }
+
+		// With VirtualAlloc we just consume free pages but we don't remove them from the free list
+		m_PhysicalPagesAvailable -= PteNumber;
+	}
 
 	// check if we have to construct the PT's for this allocation
 	if (!AllocatePT(PteNumber, addr))
@@ -392,7 +429,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		}
 		else
 		{
-			// Recalculate the granularity - aligned addr
+			// Recalculate the granularity aligned addr
 			UnmapViewOfFile((void*)ROUND_DOWN(addr, m_AllocationGranularity));
 			InsertFree(pfn, pfn + PteNumber - 1);
 		}
@@ -824,145 +861,71 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	RETURN(ret);
 }
 
-VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn,
-	PFN high_pfn, PFN* result)
+VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, DWORD perms, PFN pfn)
 {
 	PFN pfn;
 	VAddr addr;
 	VMAIter it = m_MemoryRegionArray[Type].LastFree;
-	size_t aligned_size = size << PAGE_SHIFT;
+	size_t Size = PteNumber << PAGE_SHIFT;
+	DWORD FileOffsetLow = 0;
 
-	// NOTE: at the moment I'm not sure if this requires an alignment parameter to be passed...
-	if (!RemoveFree(size, &pfn, 0, low_pfn, high_pfn) && *bVAllocFlag) // VirtualAlloc path
+	if (pfn) // MapViewOfFileEx specific
 	{
-		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
-		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
-		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
-		// our intended region before we could do.
-
-		VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
-
-		while (it != end_it)
-		{
-			if (it->second.type != VMAType::Free) // already allocated by the VMManager
-			{
-				++it;
-				continue;
-			}
-			addr = it->first;
-			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity)) // free vma
-			{
-				// addr is not aligned with the granularity of the host, jump to the next granularity boundary
-
-				addr = ROUND_UP(addr, m_AllocationGranularity);
-			}
-
-			size_t vma_end = it->first + it->second.size;
-
-			for (; addr + aligned_size - 1 < vma_end; addr += m_AllocationGranularity)
-			{
-				// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
-				// keep on trying until we succeed or fail entirely.
-
-				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
-				{
-					// With VirtualAlloc we just consume free pages but we don't remove them from the free list
-					m_PhysicalPagesAvailable -= size;
-					*bVAllocFlag = true; // allocated with VirtualAlloc
-					result = nullptr;
-					return addr;
-				}
-			}
-			++it;
-		}
-
-		// If we are here, it means we reached the end of the memory region. In desperation, we also try to map it from the
-		// LastFree iterator and going backwards, since there could be holes created by deallocation operations...
-
-		it = std::prev(m_MemoryRegionArray[Type].LastFree);
-		VMAIter begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
-
-		while (it != begin_it)
-		{
-			if (it->second.type != VMAType::Free)
-			{
-				--it;
-				continue;
-			}
-			addr = it->first;
-			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity))
-			{
-				addr = ROUND_UP(addr, m_AllocationGranularity);
-			}
-
-			size_t vma_end = it->first + it->second.size;
-
-			for (; addr + aligned_size - 1 < vma_end; addr += m_AllocationGranularity)
-			{
-				if ((VAddr)VirtualAlloc((void*)addr, aligned_size, MEM_RESERVE | MEM_COMMIT, perms) == addr)
-				{
-					m_PhysicalPagesAvailable -= size;
-					*bVAllocFlag = true;
-					result = nullptr;
-					return addr;
-				}
-			}
-			--it;
-		}
-	}
-	else // MapViewOfFileEx path
-	{
-		DWORD FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
-		size_t FileViewSize = (pfn << PAGE_SHIFT) + aligned_size - FileOffsetLow;
-
 		ConvertVProtectToMapViewProtection(&perms);
+		FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
+		Size = (pfn << PAGE_SHIFT) + Size - FileOffsetLow;
+	}
 
-		VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
+	VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
 
-		// Note that if MapViewOfFileEx is unsuccessful we won't try VirtualAlloc since it means that the host virtual
-		// space has high fragmentation and because both functions use the same granularity, VirtualAlloc is just as likely
-		// to fail as well
-
-		while (it != end_it)
+	while (it != end_it)
+	{
+		if (it->second.type != VMAType::Free) // already allocated by the VMManager
 		{
-			if (it->second.type != VMAType::Free)
-			{
-				++it;
-				continue;
-			}
-			addr = it->first;
-			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity))
-			{
-				addr = ROUND_UP(addr, m_AllocationGranularity);
-			}
-
-			size_t vma_end = it->first + it->second.size;
-
-			for (; addr + aligned_size - 1 < vma_end; addr += m_AllocationGranularity)
-			{
-				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize, (void*)addr) == addr)
-				{
-					*bVAllocFlag = false; // allocated with MapViewOfFileEx
-					*result = pfn;
-					return addr + (pfn << PAGE_SHIFT) - FileOffsetLow; // sum the offset into the file view
-				}
-			}
 			++it;
+			continue;
+		}
+		addr = it->first;
+		if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity)) // free vma
+		{
+			// addr is not aligned with the granularity of the host, jump to the next granularity boundary
+
+			addr = ROUND_UP(addr, m_AllocationGranularity);
 		}
 
-		// We are going backwards...
+		// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
+		// keep on trying until we succeed or fail entirely.
 
-		it = std::prev(m_MemoryRegionArray[Type].LastFree);
-		VMAIter begin_it = std::prev(m_MemoryRegionArray[Type].RegionMap.begin());
+		size_t vma_end = it->first + it->second.size;
 
-		while (it != begin_it)
+		addr = (this->*MappingRoutine)(addr, Size, vma_end, perms, FileOffsetLow, pfn);
+
+		if (addr) { return addr; }
+
+		++it;
+	}
+
+	// If we are here, it means we reached the end of the memory region. In desperation, we also try to map it from the
+	// LastFree iterator and going backwards, since there could be holes created by deallocation operations...
+
+	auto begin_it = m_MemoryRegionArray[Type].RegionMap.begin();
+
+	if (m_MemoryRegionArray[Type].LastFree == begin_it)
+	{
+		// We are already at the beginning of the map, so bail out immediately
+
+		EmuWarning("Failed to map a memory block in the virtual region %d!", Type);
+		return NULL;
+	}
+
+	it = std::prev(m_MemoryRegionArray[Type].LastFree);
+
+	while (true)
+	{
+		if (it->second.type == VMAType::Free)
 		{
-			if (it->second.type != VMAType::Free)
-			{
-				--it;
-				continue;
-			}
 			addr = it->first;
+
 			if (!CHECK_ALIGNMENT(addr, m_AllocationGranularity))
 			{
 				addr = ROUND_UP(addr, m_AllocationGranularity);
@@ -970,17 +933,13 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 
 			size_t vma_end = it->first + it->second.size;
 
-			for (; addr + aligned_size - 1 < vma_end; addr += m_AllocationGranularity)
-			{
-				if ((VAddr)MapViewOfFileEx(m_hContiguousFile, perms, 0, FileOffsetLow, FileViewSize, (void*)addr) == addr)
-				{
-					*bVAllocFlag = false;
-					*result = pfn;
-					return addr + (pfn << PAGE_SHIFT) - FileOffsetLow;
-				}
-			}
-			--it;
+			addr = (this->*MappingRoutine)(addr, Size, vma_end, perms, FileOffsetLow, pfn);
+
+			if (addr) { return addr; }
 		}
+
+		if (it == begin_it) { break; }
+		--it;
 	}
 
 	// We have failed to map the block. This is likely because the virtual space is fragmented or there are too many
@@ -991,80 +950,43 @@ VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVA
 	return NULL;
 }
 
-VAddr VMManager::MapMemoryBlock(size_t* size, PAddr low_addr, PAddr high_addr, ULONG Alignment, bool bNonContiguous)
+VAddr VMManager::MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD Perms,
+	DWORD OffsetLow, PFN pfn)
 {
-	// Find a free memory block for the allocation, if any
-	VAddr addr;
-	u32 offset;
-	size_t aligned_size = (*size + PAGE_MASK) & ~PAGE_MASK;
-
-	if (high_addr == MAXULONG_PTR)
+	for (; StartingAddr + ViewSize - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		offset = AllocatePhysicalMemory(aligned_size);
+		if ((VAddr)MapViewOfFileEx(m_hContiguousFile, Perms, 0, OffsetLow, ViewSize, (void*)StartingAddr) == StartingAddr)
+		{
+			return StartingAddr + (pfn << PAGE_SHIFT) - OffsetLow; // sum the offset into the file view
+		}
 	}
-	else
+	return NULL;
+}
+
+VAddr VMManager::MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Perms,
+	DWORD Unused, PFN Unused2)
+{
+	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		PAddr aligned_low = low_addr & ~(UINT_PTR)(Alignment - 1);
-		PAddr aligned_high = (high_addr + PAGE_SIZE) & ~(UINT_PTR)(Alignment - 1);
-		if (aligned_high > m_MaxContiguousAddress) { aligned_high = m_MaxContiguousAddress; }
-		if (aligned_low > aligned_high) { aligned_low = aligned_high - PAGE_SIZE; }
-
-		if (aligned_size > aligned_high - aligned_low) { return NULL; }
-
-		offset = AllocatePhysicalMemoryRange(aligned_size, aligned_low, aligned_high);
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE | MEM_COMMIT, Perms) == StartingAddr)
+		{
+			return StartingAddr;
+		}
 	}
+	return NULL;
+}
 
-	switch (GetError())
+VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused,
+	DWORD Unused2, PFN Unused3)
+{
+	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		case PMEMORY_SUCCESS:
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE, XBOX_PAGE_NOACCESS) == StartingAddr)
 		{
-			if (bNonContiguous) {
-				addr = m_Base + offset;
-			}
-			else { addr = CONTIGUOUS_MEMORY_BASE + offset; } // VAddr is simply the offset from the base of the contiguous memory
-			
-			VMAIter vma_handle = CarveVMA(addr, aligned_size);
-
-			VirtualMemoryArea& final_vma = vma_handle->second;
-			final_vma.type = VMAType::Allocated;
-			final_vma.permissions = PAGE_EXECUTE_READWRITE;
-			final_vma.backing_block = offset;
-
-			UpdatePageTableForVMA(final_vma);
-
-			MergeAdjacentVMA(vma_handle);
+			return StartingAddr;
 		}
-		break;
-
-		case PMEMORY_ALLOCATE_FRAGMENTED:
-		{
-			addr = offset; // VAddr is the aligned address returned by VirtualAlloc
-
-			VMAIter vma_handle = CarveVMA(addr, aligned_size);
-
-			VirtualMemoryArea& final_vma = vma_handle->second;
-			final_vma.type = VMAType::Allocated;
-			final_vma.bFragmented = true;
-			final_vma.permissions = PAGE_EXECUTE_READWRITE;
-			final_vma.backing_block = offset;
-
-			UpdatePageTableForVMA(final_vma);
-
-			MergeAdjacentVMA(vma_handle);
-		}
-		break;
-
-		case PMEMORY_INSUFFICIENT_MEMORY:
-		{
-			return NULL;
-		}
-
-		default:
-			CxbxKrnlCleanup("Unknown error code in Physical Memory class.");
 	}
-
-	*size = aligned_size;
-	return addr;
+	return NULL;
 }
 
 void VMManager::UnmapRange(VAddr target)

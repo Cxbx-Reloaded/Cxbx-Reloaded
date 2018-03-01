@@ -159,6 +159,8 @@ class VMManager : public PhysicalMemory
 
 	
 	private:
+		// typedef of pointer to a member function mapping a memory block
+		typedef VAddr (VMManager::*MappingFn) (VAddr, size_t, size_t, DWORD, DWORD, PFN);
 		// an array of structs used to track the free/allocated vma's in the various memory regions
 		MemoryRegion m_MemoryRegionArray[MemoryRegionType::COUNT];
 		// handle of the contiguous file mapping
@@ -179,12 +181,17 @@ class VMManager : public PhysicalMemory
 		// set up the pfn database after a quick reboot
 		void ReinitializePfnDatabase();
 		// construct a vma
-		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VMAType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
+		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// initialize a memory region struct
 		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
 		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
-		VAddr MapMemoryBlock(MemoryRegionType Type, PFN_COUNT size, bool* bVAllocFlag, DWORD perms, PFN low_pfn,
-			PFN high_pfn, PFN* result);
+		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, DWORD perms, PFN pfn);
+		// helper function which maps a block with VirtualAlloc
+		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Perms, DWORD Unused, PFN Unused2);
+		// helper function which reserves a block of virtual memory with VirtualAlloc
+		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, DWORD Unused2, PFN Unused3);
+		// helper function which maps a block with MapViewOfFileEx
+		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD Perms, DWORD OffsetLow, PFN pfn);
 		// creates a vma representing the memory block to remove
 		void UnMapMemoryBlock(VAddr target);
 		// convert VirtualProtect protection flags to file mapping protection flags
