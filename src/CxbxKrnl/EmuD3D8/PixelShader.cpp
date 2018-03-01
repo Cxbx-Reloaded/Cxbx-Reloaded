@@ -3981,7 +3981,7 @@ static const
   if (pShader == nullptr)
   {
     EmuWarning("Could not create pixel shader");
-    // TODO EmuWarning(string(AnsiString(PAnsiChar(LPD3DXBUFFER(pErrors).GetBufferPointer())))); // Dxbx addition
+	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
     hRet = D3DXAssembleShader(
       szDiffusePixelShader,
