@@ -373,6 +373,14 @@ typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
 }
 X_D3DPIXELSHADERDEF;
 
+
+typedef struct _X_PixelShader
+{
+	DWORD RefCount;
+	DWORD D3DOwned;
+	X_D3DPIXELSHADERDEF *pPSDef;
+} X_PixelShader;
+
 // These structures are used by Cxbx, not by the Xbox!!!
 typedef struct _PixelShader_ 
 {

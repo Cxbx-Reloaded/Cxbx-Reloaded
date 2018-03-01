@@ -4038,9 +4038,12 @@ DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the uns
 
 PPSH_RECOMPILED_SHADER RecompiledShaders_Head = nullptr;
 
-HRESULT XTL::DxbxUpdateActivePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef, DWORD *pHandle) // NOPATCH
+// Temporary...
+DWORD XTL::TemporaryPixelShaderConstants[XTL::X_D3DRS_PSINPUTTEXTURE + 1];
+
+VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 {
-// REENABLE TODO  XTL::X_D3DPIXELSHADERDEF *pPSDef;
+  XTL::X_D3DPIXELSHADERDEF *pPSDef;
   PPSH_RECOMPILED_SHADER RecompiledPixelShader;
   DWORD ConvertedPixelShaderHandle;
   DWORD CurrentPixelShader;
@@ -4050,24 +4053,16 @@ HRESULT XTL::DxbxUpdateActivePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef, DWORD
   XTL::D3DXCOLOR fColor;
 
   HRESULT Result = D3D_OK;
-// TODO : Do Dxbx post-translation on these two declarations :
-bool g_EmuD3DActivePixelShader = (pPSDef != NULL);
 
-  // Our SetPixelShader patch remembered the latest set pixel shader, see if it's assigned :
-  if (g_EmuD3DActivePixelShader)
+  // TODO: Is this even right? he first RenderState is PSAlpha,
+  // The pixel shader is stored in pDevice->m_pPixelShader
+  // For now, we still patch SetPixleShader and read from there...
+  //DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
+  //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
+	  pPSDef = g_D3DActivePixelShader != nullptr ? g_D3DActivePixelShader->pPSDef : nullptr;
+ 
+  if (pPSDef != nullptr)
   {
-/* TODO : Do Dxbx post-translation on this code :
-	DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
-
-    // We could read g_EmuD3DActivePixelShader.PshDef, but since this is copied into
-    // D3D__RenderState (which contents might have been changed after the call to
-    // SetPixelShader), we use the address of XTL_D3D__RenderState as the real pixel
-    // shader definition :
-    pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState); 
-    if (pPSDef == NULL)
-      // If we haven't found the symbol, then we can fall back to the given definition :
-      pPSDef = g_EmuD3DActivePixelShader.PshDef;
-*/
     // Now, see if we already have a shader compiled for this declaration :
     RecompiledPixelShader = RecompiledShaders_Head;
     while (RecompiledPixelShader)
@@ -4128,20 +4123,26 @@ bool g_EmuD3DActivePixelShader = (pPSDef != NULL);
       if (RecompiledPixelShader->ConstInUse[i])
 	  {
         // Read the color from the corresponding render state slot :
+		// TODO: These should read from EmuMappedD3DRenderState, but it doesn't exist yet
+		// The required code needs o be ported from Wip_LessVertexPatching or Dxbx
         switch (i) {
-          case PSH_XBOX_CONSTANT_FOG:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
+          //case PSH_XBOX_CONSTANT_FOG:
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
+			g_pD3DDevice8->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+			  dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
 	    default:
-            dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSCONSTANT0_0 + i];
         }
 
         // Convert it back to 4 floats  :
@@ -4167,40 +4168,6 @@ bool g_EmuD3DActivePixelShader = (pPSDef != NULL);
 	g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
   }
-
-  if (g_bFakePixelShaderLoaded)
-  {
-    g_pD3DDevice8->SetRenderState(XTL::D3DRS_FOGENABLE, FALSE);
-
-    // programmable pipeline
-    /* Dxbx note : If the following is enabled, Sokoban loses it's textures, so disable it for now :
-    for (v := 0; i < X_D3DTS_STAGECOUNT; i++)
-    {
-      g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
-      g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-    }
-    */
-
-    // fixed pipeline
-    /* Cxbx has this disabled :
-    for (v := 0; v < X_D3DTS_STAGECOUNT; v++)
-    {
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLOROP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_COLORARG2, D3DTA_CURRENT);
-
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-      IDirect3DDevice_SetTextureStageState(g_pD3DDevice, v, X_D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-    }
-
-    g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, BOOL_TRUE);
-    g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,BOOL_TRUE);
-    g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
-    */
-  }
-  *pHandle = ConvertedPixelShaderHandle; // TODO : Do Dxbx post-translation on this
-  return Result;
 }
 
 // End of Dxbx code
@@ -4324,632 +4291,6 @@ BOOL bLastOpRGB = FALSE;
 
 BOOL bEFProduct = FALSE;
 BOOL bV1R0Reg = FALSE;
-
-HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* ppRecompiled)
-{
-	char szCode[9000] = {0};
-
-	pCodeBuffer = szCode;
-	pCodeBuffer[0] = 0;
-
-	ClearConstRegVars();
-
-	#ifdef _DEBUG_TRACE
-	printf("*** D3DPIXELSHADERDEF: \n");
-	int i=0;
-	for(int i=0; i<8; i++)
-		printf("pPSD->PSAlphaInputs[%d]				: 0x%08X\n", i, pPSD->PSAlphaInputs[i]);
-	printf("pPSD->PSFinalCombinerInputsABCD			: 0x%08X\n", pPSD->PSFinalCombinerInputsABCD);
-	printf("pPSD->PSFinalCombinerInputsEFG			: 0x%08X\n", pPSD->PSFinalCombinerInputsEFG);
-	for(i=0; i<8; i++)
-		printf("pPSD->PSConstant0[%d]				: 0x%08X\n", i, pPSD->PSConstant0[i]);
-	for(i=0; i<8; i++)
-		printf("pPSD->PSConstant1[%d]				: 0x%08X\n", i, pPSD->PSConstant1[i]);
-	for(i=0; i<8; i++)
-		printf("pPSD->PSAlphaOutputs[%d]				: 0x%08X\n", i, pPSD->PSAlphaOutputs[i]);
-	for(i=0; i<8; i++)
-		printf("pPSD->PSRGBInputs[%d]				: 0x%08X\n", i, pPSD->PSRGBInputs[i]);
-
-	printf("pPSD->PSCompareMode				: 0x%08X\n", pPSD->PSCompareMode);
-	printf("pPSD->PSFinalCombinerConstant0			: 0x%08X\n", pPSD->PSFinalCombinerConstant0);
-	printf("pPSD->PSFinalCombinerConstant1			: 0x%08X\n", pPSD->PSFinalCombinerConstant1);
-
-	for(i=0; i<8; i++)
-		printf("pPSD->PSRGBOutputs[%d]				: 0x%08X\n", i, pPSD->PSRGBOutputs[i]);
-
-	printf("pPSD->PSCombinerCount				: 0x%08X\n", pPSD->PSCombinerCount);
-	printf("pPSD->PSTextureModes				: 0x%08X\n", pPSD->PSTextureModes);
-	printf("pPSD->PSDotMapping				: 0x%08X\n", pPSD->PSDotMapping);
-	printf("pPSD->PSInputTexture				: 0x%08X\n", pPSD->PSInputTexture);
-	printf("pPSD->PSC0Mapping				: 0x%08X\n", pPSD->PSC0Mapping);
-	printf("pPSD->PSC1Mapping				: 0x%08X\n", pPSD->PSC1Mapping);
-	printf("pPSD->PSFinalCombinerConstants			: 0x%08X\n", pPSD->PSFinalCombinerConstants);
-	printf("*** END\n");
-	#endif
-
-	iPreRunLen=0;
-	bR0Written=FALSE;
-	bR0AWritten=FALSE;
-	bR0WAccess=FALSE;
-	bR0AlphaOutput=FALSE;
-	bLastOpRGB=FALSE;
-
-	bEFProduct = FALSE;
-	bV1R0Reg = FALSE;
-/*
-	bR1WAccess=FALSE;
-	bR1AWAccess=FALSE;
-	bR1RGBWAccess=FALSE;
-
-	bR1AWritten=FALSE;
-	bR1RGBWritten=FALSE;
-	bR1Written=FALSE;
-*/
-	// ps.1.3
-	WriteCode("ps.1.3\n");
-
-	printf("\n// Xbox hard coded pixel shader\n\n");
-
-	// Combiner Count
-	WORD wCombinerStages = (WORD) ( pPSD->PSCombinerCount     & 0xFF);
-	WORD wCombinerFlags  = (WORD) ((pPSD->PSCombinerCount>>8) & 0xFF);
-
-	// Constant mapping
-	int iPSC0[8] = {0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
-	int iPSC1[8] = {0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
-	bool bMappedCn[16] = {false};
-
-	int j=0;
-
-	// Constants for all stages
-	printf("// --------------------------\n");
-	printf("// Constants\n");
-	printf("// --------------------------\n");
-
-	int iMap=0;
-	for(j=0; j<wCombinerStages; j++)
-	{
-		/*print_bin(dwC0); printf("\n");
-		print_bin(dwC1); printf("\n");
-		float fC00 = FtoDW(dwC0);
-		printf("fC0: %03.2f\n", fC00);*/
-
-		iPSC0[j] = (pPSD->PSC0Mapping>>(j*4)) & 0x0F;
-		iPSC1[j] = (pPSD->PSC1Mapping>>(j*4)) & 0x0F;
-
-		if (j != 0)
-		{
-			if ((wCombinerFlags & 0x0010) == 0)
-			{
-				iPSC0[j] = iPSC0[0];
-			}
-			if ((wCombinerFlags & 0x0100) == 0)
-			{
-				iPSC1[j] = iPSC1[0];
-			}
-		}
-
-		if (iPSC0[j] != 15)
-		{
-			// def cx, xval0, xval1, xval2, xval3
-			DWORD dwC0 = pPSD->PSConstant0[j];
-			printf("pPSD.PSConstant0[%d] = 0x%08X;\n", j, dwC0);
-
-			float fC0[4];
-			DWORD dwFloat0_0 = ((dwC0>>16) & 0xFF);
-			DWORD dwFloat0_1 = ((dwC0>> 8) & 0xFF);
-			DWORD dwFloat0_2 = ( dwC0      & 0xFF);
-			DWORD dwFloat0_3 = ((dwC0>>24) & 0xFF);
-
-			fC0[0] = ((float)dwFloat0_0) / 255.0f;
-			fC0[1] = ((float)dwFloat0_1) / 255.0f;
-			fC0[2] = ((float)dwFloat0_2) / 255.0f;
-			fC0[3] = ((float)dwFloat0_3) / 255.0f;
-
-			//WriteCode("def c%d, %ff, %ff, %ff, %ff\n", iPSC0[j], fC0[0],fC0[1],fC0[2],fC0[3]);
-
-			bMappedCn[iPSC0[j]] = true;
-		}
-
-		if (iPSC1[j] != 15)
-		{
-			DWORD dwC1 = pPSD->PSConstant1[j];
-			printf("pPSD.PSConstant1[%d] = 0x%08X;\n", j, dwC1);
-
-			float fC1[4];
-			DWORD dwFloat1_0 = ((dwC1>>16) & 0xFF);
-			DWORD dwFloat1_1 = ((dwC1>> 8) & 0xFF);
-			DWORD dwFloat1_2 = ( dwC1      & 0xFF);
-			DWORD dwFloat1_3 = ((dwC1>>24) & 0xFF);
-
-			fC1[0] = ((float)dwFloat1_0) / 255.0f;
-			fC1[1] = ((float)dwFloat1_1) / 255.0f;
-			fC1[2] = ((float)dwFloat1_2) / 255.0f;
-			fC1[3] = ((float)dwFloat1_3) / 255.0f;
-
-			//WriteCode("def c%d, %ff, %ff, %ff, %ff\n", iPSC1[j], fC1[0],fC1[1],fC1[2],fC1[3]);
-
-			bMappedCn[iPSC1[j]] = true;
-		}
-	}
-
-	int iFinalC0 = 0;
-	int iFinalC1 = 1;
-
-	if(pPSD->PSFinalCombinerConstants)
-	{
-		iFinalC0 = (int)( pPSD->PSFinalCombinerConstants       & 0x0F);
-		iFinalC1 = (int)((pPSD->PSFinalCombinerConstants >> 4) & 0x0F);
-
-// 		if(iFinalC0 == 15) {
-// 			iFinalC0=iMap;
-// 			iMap++;
-// 		}
-// 		if(iFinalC1 == 15)
-// 			iFinalC1=iMap;
-
-		DWORD dwFinalConstFlags = (pPSD->PSFinalCombinerConstants >> 8);
-
-		printf("pPSD.PSFinalCombinerConstants = PS_FINALCOMBINERCONSTANTS(%d,%d,",
-			iFinalC0, iFinalC1);
-
-		if(dwFinalConstFlags & 0x01)
-			printf("PS_GLOBALFLAGS_TEXMODE_ADJUST");
-		else
-			printf("PS_GLOBALFLAGS_NO_TEXMODE_ADJUST");
-
-		printf(");\n");
-
-		if(iFinalC0 != 0xF) // pPSD->PSFinalCombinerConstant0)
-		{
-			printf("\n// --------------------------\n");
-			printf("// Final Combiner C0\n");
-			printf("// --------------------------\n");
-			printf("pPSD.PSFinalCombinerConstant0 = 0x%08X\n", pPSD->PSFinalCombinerConstant0);
-
-			float fC0[4];
-			DWORD dwFloat0_0 = ((pPSD->PSFinalCombinerConstant0>>16) & 0xFF);
-			DWORD dwFloat0_1 = ((pPSD->PSFinalCombinerConstant0>> 8) & 0xFF);
-			DWORD dwFloat0_2 = ( pPSD->PSFinalCombinerConstant0      & 0xFF);
-			DWORD dwFloat0_3 = ((pPSD->PSFinalCombinerConstant0>>24) & 0xFF);
-
-			fC0[0] = dwFloat0_0 / 255.0f;
-			fC0[1] = dwFloat0_1 / 255.0f;
-			fC0[2] = dwFloat0_2 / 255.0f;
-			fC0[3] = dwFloat0_3 / 255.0f;
-
-			//if(pPSD->PSFinalCombinerConstant0)
-			//	WriteCode("def c%d, %ff, %ff, %ff, %ff\n", iFinalC0, fC0[0],fC0[1],fC0[2],fC0[3]);
-
-			bMappedCn[iFinalC0] = true;
-		}
-		if(iFinalC1 != 0xF) //pPSD->PSFinalCombinerConstant1)
-		{
-			printf("\n// --------------------------\n");
-			printf("// Final Combiner C1\n");
-			printf("// --------------------------\n");
-			printf("pPSD.PSFinalCombinerConstant1 = 0x%08X\n", pPSD->PSFinalCombinerConstant1);
-
-			float fC1[4];
-			DWORD dwFloat1_0 = ((pPSD->PSFinalCombinerConstant1>>16) & 0xFF);
-			DWORD dwFloat1_1 = ((pPSD->PSFinalCombinerConstant1>> 8) & 0xFF);
-			DWORD dwFloat1_2 = ( pPSD->PSFinalCombinerConstant1      & 0xFF);
-			DWORD dwFloat1_3 = ((pPSD->PSFinalCombinerConstant1>>24) & 0xFF);
-
-			fC1[0] = dwFloat1_0 / 255.0f;
-			fC1[1] = dwFloat1_1 / 255.0f;
-			fC1[2] = dwFloat1_2 / 255.0f;
-			fC1[3] = dwFloat1_3 / 255.0f;
-
-			//if(pPSD->PSFinalCombinerConstant1)
-			//	WriteCode("def c%d, %ff, %ff, %ff, %ff\n", iFinalC1, fC1[0],fC1[1],fC1[2],fC1[3]);
-
-			bMappedCn[iFinalC1] = true;
-		}
-	}
-
-	for (j = 0; j < 16; ++j)
-	{
-		if (bMappedCn[j])
-			WriteCode("def c%d, 0.0f, 0.0f, 0.0f, 0.0f\n", j);
-	}
-
-	// Texture input for all stages (0 - 3)
-	WORD wTexInput[4];
-	wTexInput[0] = 0;
-	wTexInput[1] = 0; // here the only possible previous stage is 0
-	wTexInput[2] = (WORD) ((pPSD->PSInputTexture >> 16) & 0xF);
-	wTexInput[3] = (WORD) ((pPSD->PSInputTexture >> 20) & 0xF);
-
-	printf("\n// --------------------------\n");
-	printf("// Input Textures\n");
-	printf("// --------------------------\n");
-	printf("pPSD.PSInputTexture = PS_INPUTTEXTURE(%d,%d,%d,%d);\n",
-		wTexInput[0],wTexInput[1],wTexInput[2],wTexInput[3]);
-
-	printf("\n// --------------------------\n");
-	printf("// Texture Modes\n");
-	printf("// --------------------------\n");
-	printf("pPSD.PSTextureModes = PS_TEXTUREMODES(\n");
-
-	WORD wTexModes[4];
-
-	wTexModes[0] = (WORD) ( pPSD->PSTextureModes & 0x1F);
-	wTexModes[1] = (WORD) ((pPSD->PSTextureModes>>5) & 0x1F);
-	wTexModes[2] = (WORD) ((pPSD->PSTextureModes>>10) & 0x1F);
-	wTexModes[3] = (WORD) ((pPSD->PSTextureModes>>15) & 0x1F);
-
-	//char szTmp[256]="\0";
-	//char szPhaseInit[256]="\0";
-
-	// The cases were reordered to get best performance during 
-	// the switch.
-	// The texture modes are not in all stages valid, so the
-	// ones which are only in stage three allowed can be 
-	// compared at the and of the switch/case.
-	for(j=0; j<4; j++)
-	{
-		switch(wTexModes[j])
-		{
-			// tex can be used on 2D, 3D and cubemap textures
-			case 0x00:
-				printf("PS_TEXTUREMODES_NONE");
-				break;
-			case 0x01:
-				printf("PS_TEXTUREMODES_PROJECT2D");
-				WriteCode("tex t%d\n", j);
-
-				//WriteCode("texld r%d, t%d\n", j+2, j);
-				//sprintf(szTmp, "texld r%d, t%d\n", j+2, j);
-				//strcat(szPhaseInit, szTmp);
-				break;
-			case 0x02:
-				printf("PS_TEXTUREMODES_PROJECT3D");
-				WriteCode("tex t%d\n", j);
-
-				//WriteCode("texld r%d, t%d\n", j+2, j);
-				//sprintf(szTmp, "texld r%d, t%d\n", j+2, j);
-				//strcat(szPhaseInit, szTmp);
-				break;
-			case 0x03:
-				printf("PS_TEXTUREMODES_CUBEMAP");
-				WriteCode("tex t%d\n", j);
-
-				//WriteCode("texld r%d, t%d\n", j+2, j);
-				//sprintf(szTmp, "texld r%d, t%d\n", j+2, j);
-				//strcat(szPhaseInit, szTmp);
-				break;
-			case 0x04:
-				printf("PS_TEXTUREMODES_PASSTHRU");
-				WriteCode("texcoord t%d\n", j);
-				break;
-			case 0x05:
-				printf("PS_TEXTUREMODES_CLIPPLANE");
-				WriteCode("texkill t%d\n", j);
-				break;
-			case 0x06:
-				printf("PS_TEXTUREMODES_BUMPENVMAP");
-				WriteCode("texbem t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x07:
-				printf("PS_TEXTUREMODES_BUMPENVMAP_LUM");
-				WriteCode("texbeml t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x11:
-				printf("PS_TEXTUREMODES_DOTPRODUCT");
-
-				// PS_TEXTUREMODES_DOT_RFLCT_SPEC
-				// PS_TEXTUREMODES_DOT_STR_3D
-				// PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST
-				//  are only on stage 3 valid
-				if((wTexModes[3] == 0x0C) ||
-				   (wTexModes[3] == 0x0D) ||
-				   (wTexModes[3] == 0x12)) 
-					WriteCode("texm3x3pad");
-				else		   
-					WriteCode("texm3x2pad");
-
-				WriteCode(" t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x08:
-				printf("PS_TEXTUREMODES_BRDF");
-				WriteCode("texbrdf t%d\n", j);
-				break;
-			case 0x09:
-				printf("PS_TEXTUREMODES_DOT_ST");
-				WriteCode("texm3x2tex t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x0A:
-				printf("PS_TEXTUREMODES_DOT_ZW");
-				//WriteCode("texm3x2depth t%d, t%d\n", j, wTexInput[j]);
-				WriteCode("texm3x2tex t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x0F:
-				printf("PS_TEXTUREMODES_DPNDNT_AR");
-				WriteCode("texreg2ar t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x10:
-				printf("PS_TEXTUREMODES_DPNDNT_GB");
-				WriteCode("texreg2gb t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x0B:
-				// TODO: third param!!!
-				printf("PS_TEXTUREMODES_DOT_RFLCT_DIFF");
-				WriteCode("texm3x3diff t%d, t%d, c0\n", j, wTexInput[j]);
-				break;
-			case 0x0C:
-				// TODO: third param!!!
-				printf("PS_TEXTUREMODES_DOT_RFLCT_SPEC");
-				WriteCode("texm3x3spec t%d, t%d, c0\n", j, wTexInput[j]);
-				break;
-			case 0x0D:
-				printf("PS_TEXTUREMODES_DOT_STR_3D");
-				WriteCode("texm3x3tex t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x0E:
-				printf("PS_TEXTUREMODES_DOT_STR_CUBE");
-				WriteCode("texm3x3vspec t%d, t%d\n", j, wTexInput[j]);
-				break;
-			case 0x12:
-				// TODO: third param!!!
-				printf("PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST");
-				WriteCode("texm3x3spec t%d, t%d, c0\n", j, wTexInput[j]);
-				break;
-			default:
-				printf("Unknown texture mode %d for stage %d!\n", wTexModes[j], j);
-				break;
-		}
-		if(j!=3)
-			printf(", ");
-	}
-	printf(");\n");
-
-	//WriteCode(szPhaseInit);
-
-	//WriteCode("mov r1, t1.a\n");
-
-	// Handle stage code
-	// Save the length of the tex/def stuff
-	iPreRunLen = strlen(szCode);
-
-	printf("\n// --------------------------\n");
-	printf("// Combiner Count\n");
-	printf("// --------------------------\n");
-	printf("pPSD.PSCombinerCount = PS_COMBINERCOUNT(%d, ", wCombinerStages);
-
-	// MSB/LSB
-	if(wCombinerFlags & 0x0001)
-		printf("PS_COMBINERCOUNT_MUX_MSB");
-	else
-		printf("PS_COMBINERCOUNT_MUX_LSB");
-	printf(" | ");
-
-	// C0
-	if(wCombinerFlags & 0x0010) {
-		printf("PS_COMBINERCOUNT_UNIQUE_C0");
-	} else
-		printf("PS_COMBINERCOUNT_SAME_C0");
-	printf(" | ");
-
-	// C1
-	if(wCombinerFlags & 0x0100)
-		printf("PS_COMBINERCOUNT_UNIQUE_C1");
-	else
-		printf("PS_COMBINERCOUNT_SAME_C1");
-	printf(");\n");
-
-	// print constant mapping
-	printf("\n// --------------------------\n");
-	printf("// Constant Mappings\n");
-	printf("// --------------------------\n");
-	printf("pPSD.PSC0Mapping = PS_CONSTANTMAPPING(%d,%d,%d,%d,%d,%d,%d,%d);\n"
-		   "pPSD.PSC1Mapping = PS_CONSTANTMAPPING(%d,%d,%d,%d,%d,%d,%d,%d);\n",
-		   iPSC0[0],iPSC0[1],iPSC0[2],iPSC0[3],iPSC0[4],iPSC0[5],iPSC0[6],iPSC0[7],
-		   iPSC1[0],iPSC1[1],iPSC1[2],iPSC1[3],iPSC1[4],iPSC1[5],iPSC1[6],iPSC1[7]);
-
-	for(j=0; j<wCombinerStages; j++)
-	{
-		/*if(j==4)
-		{
-			WriteCode("phase\n");
-			WriteCode("texld r0, r0\n");
-			WriteCode("texld r1, r1\n");
-			WriteCode(szPhaseInit);
-		}*/
-
-		WriteCode("\n; Stage %d\n", j);
-
-		// Compare the RGB with alpha operation.
-		// If both is the same do it only for one and leave out the masks.
-		// 
-		// the mask removes the channel
-		if(
-			((pPSD->PSRGBInputs[j] & 0xEFEFEFEF) == (pPSD->PSAlphaInputs[j] & 0xEFEFEFEF)) &&
-			(pPSD->PSRGBOutputs[j] == pPSD->PSAlphaOutputs[j])
-			)
-		{
-			printf("\n// --------------------------\n");
-			printf("// RGB/Alpha\n");
-			printf("// --------------------------\n");
-
-			HandleInputOutput(
-			pPSD->PSRGBInputs[j], 
-			pPSD->PSRGBOutputs[j], 
-			FALSE, 
-			j, 
-			wCombinerFlags & 0x0010 ? 1 : 0,
-			wCombinerFlags & 0x0100 ? 1 : 0,
-			iPSC0,
-			iPSC1,
-			
-			TRUE,
-
-			FALSE);
-		} else {
-
-			printf("\n// --------------------------\n");
-			printf("// RGB\n");
-			printf("// --------------------------\n");
-
-			// PSRGBInputs/Outputs
-			HandleInputOutput(
-				pPSD->PSRGBInputs[j], 
-				pPSD->PSRGBOutputs[j], 
-				FALSE, 
-				j, 
-				wCombinerFlags & 0x0010 ? 1 : 0,
-				wCombinerFlags & 0x0100 ? 1 : 0,
-				iPSC0,
-				iPSC1,
-				FALSE,
-				FALSE);
-
-			printf("\n// --------------------------\n");
-			printf("// Alpha\n");
-			printf("// --------------------------\n");
-
-			// PSAlphaInputs/Outputs
-			HandleInputOutput(
-				pPSD->PSAlphaInputs[j], 
-				pPSD->PSAlphaOutputs[j], 
-				TRUE, 
-				j, 
-				wCombinerFlags & 0x0010 ? 1 : 0,
-				wCombinerFlags & 0x0100 ? 1 : 0,
-				iPSC0,
-				iPSC1,
-				FALSE,
-				FALSE);
-		}
-	}
-
-	if(pPSD->PSFinalCombinerInputsABCD || pPSD->PSFinalCombinerInputsEFG)
-	{
-		printf("\n// --------------------------\n");
-		printf("// Final Combiner\n");
-		printf("// --------------------------\n");
-
-		HandleInputOutput(
-			pPSD->PSFinalCombinerInputsABCD, 
-			pPSD->PSFinalCombinerInputsEFG, 
-			FALSE, 
-			0, 
-			wCombinerFlags & 0x0010 ? 1 : 0,
-			wCombinerFlags & 0x0100 ? 1 : 0,
-			&iFinalC0,
-			&iFinalC1,
-			FALSE,
-			TRUE);
-	}
-
-	if(!bR0AlphaOutput && !bR0WAccess)
-	{
-		//char szNull[20] = "0";
-		//CorrectConstToReg(szNull, iPSC0, iPSC1);
-
-		// pair only if final combiner,
-		// this one would write to rgb or the last instruction wrote to rgb (bLastOpRGB=TRUE)
-		if(bLastOpRGB || (pPSD->PSFinalCombinerInputsABCD || pPSD->PSFinalCombinerInputsEFG))
-			WriteCode("+ ");
-
-		//WriteCode("mov r0.a, r2.a\n");
-		WriteCode("mov r0.a, t0.a\n");
-	}
-
-	// and this:
-	// The Xbox sets r0 to the alpha channel of texture 0, so it can be read before written!
-	if(bR0WAccess)
-	{
-		char *szNewCodeBuffer = (char*)malloc((strlen(szCode)+20)*sizeof(char));
-		strncpy(szNewCodeBuffer, szCode, iPreRunLen);
-		strcat(szNewCodeBuffer, "mov r0, t0.a\n");
-		strcat(szNewCodeBuffer, &szCode[iPreRunLen]);
-		strcpy(szCode, szNewCodeBuffer);
-
-		free(szNewCodeBuffer);
-	}
-	/*DbgPrintf("r1 case! ... ");
-	if(bR1WAccess || bR1AWAccess || bR1RGBWAccess)
-	{
-		char szChannel[6]="\0";
-		char szCat[24]="\0";
-
-		if(!bR1WAccess && bR1AWAccess) strcpy(szChannel, ".a");
-		else if(!bR1WAccess && bR1RGBWAccess) strcpy(szChannel, ".rgb");
-
-		sprintf(szCat, "mov r1%s, t1%s\n", szChannel, szChannel);
-
-		char *szNewCodeBuffer = (char *)malloc((strlen(szCode)+50)*sizeof(char));
-		strncpy(szNewCodeBuffer, szCode, iPreRunLen);
-		strcat(szNewCodeBuffer, szCat);
-		strcat(szNewCodeBuffer, &szCode[iPreRunLen]);
-		strcpy(szCode, szNewCodeBuffer);
-		free(szNewCodeBuffer);
-	}
-	DbgPrintf("end\n");*/
-
-	printf("\n*** RESULT: \n%s\n", szCode);
-	printf("*** PIXEL SHADER CREATION FINISHED!\n");
-	pCodeBuffer = NULL;
-
-	#ifdef _DEBUG_TRACK_PS
-		DumpPixelShaderDefToFile(pPSD, szCode);
-	#endif
-
-	//if(bR1WAccess || bR1AWAccess || bR1RGBWAccess)
-	//	Sleep(3000);
-
-	XTL::LPD3DXBUFFER pCompilationErrors = NULL;
-
-	HRESULT hRet = D3D_OK;
-
-	__try
-	{
-		szCode[5] = '4';
-		hRet = D3DXAssembleShader(szCode,
-			strlen(szCode),
-			0, //D3DXASM_SKIPVALIDATION,
-			NULL,
-			ppRecompiled,
-			&pCompilationErrors);
-
-		if (FAILED(hRet))
-		{
-			if (pCompilationErrors)
-			{
-				pCompilationErrors->Release();
-				pCompilationErrors = NULL;
-			}
-
-			szCode[5] = '3';
-			hRet = D3DXAssembleShader(szCode,
-				strlen(szCode),
-				0, //D3DXASM_SKIPVALIDATION,
-				NULL,
-				ppRecompiled,
-				&pCompilationErrors);
-		}
-
-		if (FAILED(hRet))
-		{
-			EmuWarning("Couldn't assemble recompiled pixel shader");
-			if (pCompilationErrors)
-			{
-				EmuWarning((const char*)pCompilationErrors->GetBufferPointer());
-			}
-		}
-	}
-	__except(EXCEPTION_EXECUTE_HANDLER)
-	{
-		DbgPrintf("Pixel Shader : Exception while creating pixel shader 0x%.8X\n", pPSD);
-	}
-	if (pCompilationErrors)
-	{
-		pCompilationErrors->Release();
-	}
-
-	return hRet;
-}
 
 #define DEF_VAR_TABLE_LEN	7
 char szVar[][10] =
@@ -6764,14 +6105,6 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 		}
 	}
 CorrectConstToReg_done:;
-}
-
-// check
-bool XTL::IsValidPixelShader(void)
-{
-	if(g_CurrentPixelShader && (g_CurrentPixelShader->dwStatus != 0))
-		return false;
-	return true;
 }
 
 void XTL::DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode /*= NULL*/ )
