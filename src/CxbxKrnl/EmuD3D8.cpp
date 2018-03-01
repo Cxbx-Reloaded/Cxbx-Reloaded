@@ -74,7 +74,7 @@ XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_CurrentVertexShader = 0;
-XTL::X_PixelShader*					g_D3DActiveVertexShader = nullptr;
+XTL::X_PixelShader*					g_D3DActivePixelShader = nullptr;
 BOOL                                g_bIsFauxFullscreen = FALSE;
 BOOL								g_bHackUpdateSoftwareOverlay = FALSE;
 DWORD								g_CurrentFillMode = XTL::D3DFILL_SOLID;	// Used to backup/restore the fill mode when WireFrame is enabled
@@ -2921,78 +2921,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetGammaRamp)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_BeginStateBlock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginStateBlock)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-
-    ULONG ret = g_pD3DDevice8->BeginStateBlock();
-	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->BeginStateBlock");
-}
-
-/*// ******************************************************************
-// * patch: D3DDevice_BeginStateBig
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginStateBig)()
-{
-    FUNC_EXPORTS
-
-   	LOG_FUNC();
-
-    //ULONG hRet = g_pD3DDevice8->BeginStateBlock();
-	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->BeginStateBlock");
-
-	LOG_UNIMPLEMENTED();
-    CxbxKrnlCleanup("BeginStateBig is not implemented");    
-
-    return hRet;
-}*/
-
-// ******************************************************************
-// * patch: D3DDevice_CaptureStateBlock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_CaptureStateBlock)(DWORD Token)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(Token);
-
-    ULONG ret = g_pD3DDevice8->CaptureStateBlock(Token);
-	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->CaptureStateBlock");
-}
-
-// ******************************************************************
-// * patch: D3DDevice_ApplyStateBlock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_ApplyStateBlock)(DWORD Token)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(Token);
-
-    ULONG ret = g_pD3DDevice8->ApplyStateBlock(Token);
-	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->ApplyStateBlock");
-}
-
-// ******************************************************************
-// * patch: D3DDevice_EndStateBlock
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndStateBlock)(DWORD *pToken)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pToken);
-
-    ULONG ret = g_pD3DDevice8->EndStateBlock(pToken);
-	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->EndStateBlock");
-
-    return ret;
-}
-
-// ******************************************************************
 // * patch: D3DDevice_GetGammaRamp
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
@@ -5676,6 +5604,30 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
         }
     }
 
+	// Special Case: Handle PixelShader related Render States
+	// TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
+	// After this, we don't need to do this part anymore
+	switch (Method & 0x00001FFC) {
+		case /*0x00000a60*/NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_0] = Value; return;
+		case /*0x00000a64*/NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_1] = Value; return;
+		case /*0x00000a68*/NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_2] = Value; return;
+		case /*0x00000a6c*/NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_3] = Value; return;
+		case /*0x00000a70*/NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_4] = Value; return;
+		case /*0x00000a74*/NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_5] = Value; return;
+		case /*0x00000a78*/NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_6] = Value; return;
+		case /*0x00000a7c*/NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_7] = Value; return;
+		case /*0x00000a80*/NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_0] = Value; return;
+		case /*0x00000a84*/NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_1] = Value; return;
+		case /*0x00000a88*/NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_2] = Value; return;
+		case /*0x00000a8c*/NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_3] = Value; return;
+		case /*0x00000a90*/NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_4] = Value; return;
+		case /*0x00000a94*/NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_5] = Value; return;
+		case /*0x00000a98*/NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_6] = Value; return;
+		case /*0x00000a9c*/NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_7] = Value; return;
+		case /*0x00001e20*/NV2A_RC_COLOR0: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
+		case /*0x00001e24*/NV2A_RC_COLOR1: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+	}
+
     if(State == -1)
         EmuWarning("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!", Method, Value);
     else
@@ -6453,7 +6405,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	XB_D3DDevice_SetPixelShader(Handle);
 
 	// Update the global pixel shader
-	g_D3DActiveVertexShader = (X_PixelShader*)Handle;
+	g_D3DActivePixelShader = (X_PixelShader*)Handle;
 }
 
 
@@ -7962,23 +7914,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Deferred)
 
 		
 }
-
-// ******************************************************************
-// * patch: D3DDevice_DeleteStateBlock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteStateBlock)
-(
-	DWORD Token
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(Token);
-
-	HRESULT hRet = g_pD3DDevice8->DeleteStateBlock(Token);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeleteStateBlock");
-}
-
 
 // ******************************************************************
 // * patch: D3DDevice_SetModelView

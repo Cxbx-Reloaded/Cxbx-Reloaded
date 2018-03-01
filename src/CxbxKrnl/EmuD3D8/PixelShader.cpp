@@ -4038,6 +4038,9 @@ DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the uns
 
 PPSH_RECOMPILED_SHADER RecompiledShaders_Head = nullptr;
 
+// Temporary...
+DWORD XTL::TemporaryPixelShaderConstants[XTL::X_D3DRS_PSINPUTTEXTURE + 1];
+
 VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 {
   XTL::X_D3DPIXELSHADERDEF *pPSDef;
@@ -4056,7 +4059,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   // For now, we still patch SetPixleShader and read from there...
   //DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
   //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
-	  pPSDef = g_D3DActiveVertexShader != nullptr ? g_D3DActiveVertexShader->pPSDef : nullptr;
+	  pPSDef = g_D3DActivePixelShader != nullptr ? g_D3DActivePixelShader->pPSDef : nullptr;
  
   if (pPSDef != nullptr)
   {
@@ -4120,21 +4123,26 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
       if (RecompiledPixelShader->ConstInUse[i])
 	  {
         // Read the color from the corresponding render state slot :
+		// TODO: These should read from EmuMappedD3DRenderState, but it doesn't exist yet
+		// The required code needs o be ported from Wip_LessVertexPatching or Dxbx
         switch (i) {
-          case PSH_XBOX_CONSTANT_FOG:
+          //case PSH_XBOX_CONSTANT_FOG:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
+			g_pD3DDevice8->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+			  dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
 	    default:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
-			dwColor = 0;
+			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSCONSTANT0_0 + i];
         }
 
         // Convert it back to 4 floats  :

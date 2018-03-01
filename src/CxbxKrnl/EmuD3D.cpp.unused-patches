@@ -2364,3 +2364,94 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant)
         hRet = D3D_OK;
     }
 }
+
+
+// ******************************************************************
+// * patch: D3DDevice_BeginStateBlock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginStateBlock)()
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC();
+
+	ULONG ret = g_pD3DDevice8->BeginStateBlock();
+	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->BeginStateBlock");
+}
+
+/*// ******************************************************************
+// * patch: D3DDevice_BeginStateBig
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginStateBig)()
+{
+FUNC_EXPORTS
+
+LOG_FUNC();
+
+//ULONG hRet = g_pD3DDevice8->BeginStateBlock();
+//DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->BeginStateBlock");
+
+LOG_UNIMPLEMENTED();
+CxbxKrnlCleanup("BeginStateBig is not implemented");
+
+return hRet;
+}*/
+
+// ******************************************************************
+// * patch: D3DDevice_CaptureStateBlock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_CaptureStateBlock)(DWORD Token)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Token);
+
+	ULONG ret = g_pD3DDevice8->CaptureStateBlock(Token);
+	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->CaptureStateBlock");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_ApplyStateBlock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_ApplyStateBlock)(DWORD Token)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Token);
+
+	ULONG ret = g_pD3DDevice8->ApplyStateBlock(Token);
+	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->ApplyStateBlock");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_EndStateBlock
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndStateBlock)(DWORD *pToken)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pToken);
+
+	ULONG ret = g_pD3DDevice8->EndStateBlock(pToken);
+	DEBUG_D3DRESULT(ret, "g_pD3DDevice8->EndStateBlock");
+
+	return ret;
+}
+
+
+// ******************************************************************
+// * patch: D3DDevice_DeleteStateBlock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteStateBlock)
+(
+	DWORD Token
+)
+{
+	//FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Token);
+
+	HRESULT hRet = g_pD3DDevice8->DeleteStateBlock(Token);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeleteStateBlock");
+}
+

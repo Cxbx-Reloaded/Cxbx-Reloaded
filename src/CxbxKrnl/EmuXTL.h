@@ -54,7 +54,7 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
 extern DWORD                    g_CurrentVertexShader;
-extern XTL::X_PixelShader*		g_D3DActiveVertexShader;
+extern XTL::X_PixelShader*		g_D3DActivePixelShader;
 extern BOOL                     g_bIsFauxFullscreen;
 
 #endif
