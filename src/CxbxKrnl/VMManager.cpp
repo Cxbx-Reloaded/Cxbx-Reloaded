@@ -374,6 +374,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PFN pfn;
+	PFN EndingPfn;
 	PFN_COUNT PteNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
@@ -451,26 +452,22 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		PointerPte++;
 	}
 	EndingPte = PointerPte + PteNumber - 1;
+	EndingPfn = pfn + (EndingPte - PointerPte);
 
-	while (PointerPte <= EndingPte)
-	{
-		TempPte.Hardware.PFN = pfn;
-		WRITE_PTE(PointerPte, TempPte);
-		if (!bVAlloc)
-		{
-			WritePfn(pfn, pfn, PointerPte, BusyType, false);
-		}
-		else
-		{
-			// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
-			// to increase the page type usage
-
-			m_PagesByUsage[BusyType]++;
-		}
-		PointerPte++;
-		pfn++;
-	}
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	EndingPte->Hardware.GuardOrEnd = 1;
+
+	if (!bVAlloc)
+	{
+		WritePfn(pfn, EndingPfn, PointerPte, BusyType, false);
+	}
+	else
+	{
+		// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
+		// to increase the page type usage
+
+		m_PagesByUsage[BusyType] += (EndingPte - PointerPte);
+	}
 
 	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
 
@@ -499,6 +496,7 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	PFN LowerPfn;
 	PFN HigherPfn;
 	PFN pfn;
+	PFN EndingPfn;
 	PFN_COUNT PteNumber;
 	VAddr addr;
 
@@ -530,15 +528,10 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	// Finally, write the pte's and the pfn's
 	PointerPte = GetPteAddress(addr);
 	EndingPte = PointerPte + PteNumber - 1;
+	EndingPfn = pfn + (EndingPte - PointerPte);
 
-	while (PointerPte <= EndingPte)
-	{
-		TempPte.Hardware.PFN = pfn;
-		WRITE_PTE(PointerPte, TempPte);
-		WritePfn(pfn, pfn, PointerPte, PageType::Contiguous, true);
-		PointerPte++;
-		pfn++;
-	}
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
+	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
 	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -605,13 +598,7 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	EndingPte = PointerPte + PteNumber - 1;
 	pfn = Paddr >> PAGE_SHIFT;
 
-	while (PointerPte <= EndingPte)
-	{
-		TempPte.Hardware.PFN = pfn;
-		WRITE_PTE(PointerPte, TempPte);
-		PointerPte++;
-		pfn++;
-	}
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
 
 	ConstructVMA(addr, PAGES_SPANNED(Paddr, Size) << PAGE_SHIFT, MemoryRegionType::System, VMAType::Reserved, true);
 

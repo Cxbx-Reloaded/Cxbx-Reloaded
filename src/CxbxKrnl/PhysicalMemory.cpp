@@ -145,19 +145,35 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 	}
 	else
 	{
-		TempPF.Default = 0;
-		TempPF.Busy.Busy = 1;
-		TempPF.Busy.BusyType = BusyType;
-		if (BusyType != PageType::VirtualPageTable) {
-			TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
-		}
+		while (pfn_start <= pfn_end)
+		{
+			TempPF.Default = 0;
+			TempPF.Busy.Busy = 1;
+			TempPF.Busy.BusyType = BusyType;
+			if (BusyType != PageType::VirtualPageTable) {
+				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
+			}
 
-		if (g_bIsRetail || g_bIsDebug) {
-			*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
-		}
-		else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
+			if (g_bIsRetail || g_bIsDebug) {
+				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
+			}
+			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
 
-		m_PagesByUsage[BusyType]++;
+			m_PagesByUsage[BusyType]++;
+			pfn_start++;
+			pPte++;
+		}
+	}
+}
+
+void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn)
+{
+	while (pPteStart <= pPteEnd)
+	{
+		Pte.Hardware.PFN = pfn;
+		WRITE_PTE(pPteStart, Pte);
+		pPteStart++;
+		pfn++;
 	}
 }
 
