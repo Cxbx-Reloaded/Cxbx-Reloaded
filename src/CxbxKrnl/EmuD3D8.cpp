@@ -6116,6 +6116,29 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTransform)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_MultiplyTransform
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_MultiplyTransform)
+(
+	D3DTRANSFORMSTATETYPE State,
+	CONST D3DMATRIX      *pMatrix
+)
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(State)
+		LOG_FUNC_ARG(pMatrix)
+		LOG_FUNC_END;
+
+	State = EmuXB2PC_D3DTS(State);
+
+	HRESULT hRet = g_pD3DDevice8->MultiplyTransform(State, pMatrix);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->MultiplyTransform");
+}
+
+
+// ******************************************************************
 // * patch: D3DDevice_GetTransform
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)

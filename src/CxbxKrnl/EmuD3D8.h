@@ -1212,6 +1212,15 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTransform)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_MultiplyTransform
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_MultiplyTransform)
+(
+	D3DTRANSFORMSTATETYPE State,
+	CONST D3DMATRIX      *pMatrix
+);
+
+// ******************************************************************
 // * patch: D3DDevice_GetTransform
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetTransform)

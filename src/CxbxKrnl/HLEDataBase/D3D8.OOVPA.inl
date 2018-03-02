@@ -364,6 +364,7 @@ OOVPATable D3D8_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 3911, 4034, 4242, 4627),
 	REGISTER_OOVPAS(D3DDevice_SetTile, PATCH, 3911, 4034, 4627), // Then it has changed calls ?SetTileNoWait@D3D@@YGXKPBU_D3DTILE@@@Z in XDK 4627 and higher.
 	REGISTER_OOVPAS(D3DDevice_SetTransform, PATCH, 3911, 4034, 5344, 5558), // Was 4134 (from 5344's comment)
+	REGISTER_OOVPAS(D3DDevice_MultiplyTransform, PATCH, 3911, 4034), // TODO: Verify 4034 is correct
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2f, PATCH, 3911, 4039), // Was 4627 (from 5344's comment)
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2s, PATCH, 3911, 4134),
 	REGISTER_OOVPAS(D3DDevice_SetVertexData4f, PATCH, 3911, 4039),
