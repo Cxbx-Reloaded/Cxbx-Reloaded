@@ -122,7 +122,7 @@ extern "C" {
 #define USB1_SIZE                               0x1000
 #define NVNet_BASE                              0xFEF00000
 #define NVNet_SIZE                              0x400
-#define BIOS_BASE                               0xFF000000
+#define BIOS_BASE                               0xFF000000 // this takes into account that the bios covers the top 16 MiB of memory
 #define BIOS_XBOX_SIZE                          0xFFFE00
 #define BIOS_CHIHIRO_SIZE                       0x1000000
 #define MCPX_BASE                               0xFFFFFE00
@@ -138,7 +138,7 @@ extern "C" {
 
 #define XBOX_UNCACHED_BASE       0xF8000000 // UC
 #define XBOX_UNCACHED_SIZE       0x07C00000 // - 0xFFBFFFFF
-#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE // 128 MiB - 4 MiB
+#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE - 1 // 128 MiB - 4 MiB
 
 #define SYSTEM_MEMORY_BASE       0xD0000000
 #define SYSTEM_MEMORY_SIZE       0x20000000 // 512 MiB

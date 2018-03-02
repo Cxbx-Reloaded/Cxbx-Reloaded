@@ -365,17 +365,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 		LOG_FUNC_ARG(ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet;
-
-	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
-	if (PhysicalAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
-		// Return physical address as virtual (accesses will go through EmuException) :
-		pRet = (PVOID)PhysicalAddress;
-	}
-	else {
-		g_VMManager.Allocate(NumberOfBytes, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
-		LOG_INCOMPLETE();
-	}
+	PVOID pRet = (PVOID)g_VMManager.MapDeviceMemory(PhysicalAddress, NumberOfBytes, ProtectionType);
 
 	RETURN(pRet);
 }

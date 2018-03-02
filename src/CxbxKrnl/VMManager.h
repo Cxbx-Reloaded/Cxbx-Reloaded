@@ -137,6 +137,8 @@ class VMManager : public PhysicalMemory
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage);
 		// allocates memory in the contiguous region
 		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
+		// maps device memory in the system memory region
+		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
 		// deallocate stack memory

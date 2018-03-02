@@ -219,12 +219,14 @@ enum PageType {
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
 
 
-/* Common rounding operations */
+/* Common page calculations */
 #define ROUND_UP_4K(size) (((size) + PAGE_MASK) & (~PAGE_MASK))
 #define ROUND_UP(size, alignment) (((size) + (alignment - 1)) & (~(alignment - 1)))
 #define ROUND_DOWN_4K(size) ((size) & (~PAGE_MASK))
 #define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
+#define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
+#define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
 
 
 /* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */

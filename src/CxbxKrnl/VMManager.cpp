@@ -472,7 +472,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	}
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	ConstructVMA(addr, Size, MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
+	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
 
 	Unlock();
 	RETURN(addr);
@@ -541,10 +541,82 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	}
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	ConstructVMA(addr, Size, MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 	Unlock();
 	RETURN(addr);
+
+	Fail:
+	Unlock();
+	RETURN(NULL);
+}
+
+VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Paddr);
+		LOG_FUNC_ARG(Size);
+		LOG_FUNC_ARG(Perms);
+	LOG_FUNC_END;
+
+	MMPTE TempPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PFN_COUNT PteNumber;
+	VAddr addr;
+	MappingFn MappingRoutine;
+
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
+
+	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
+	if (Paddr >= XBOX_WRITE_COMBINED_BASE /*&& Paddr + Size <= XBOX_UNCACHED_END*/)
+	{
+		// Return physical address as virtual (accesses will go through EmuException)
+		// ergo720: actually, at the moment CxbxReserveNV2AMemory reserves only the region FD000000 - FE000000 but the
+		// entire WC - UC region ending at FFBFFFFF is not. This means that is theoretically possible that the supplied
+		// Paddr overlaps with some host allocations here. In practice, I don't expect to find them this high in
+		// memory though
+
+		RETURN(Paddr);
+	}
+
+	// The requested address is not a known device address so we have to create a mapping for it. Even though this won't
+	// allocate any physical allocation for it, we still need to reserve the memory with VirtualAlloc. If we don't, then
+	// we are likely to collide with other system allocations in the region at some point, which will overwrite and corrupt
+	// the affected allocation. We only reserve the memory so that the access will trigger an access violation and it will
+	// be handled by EmuException. However, RegisterBAR doesn't register any known device in the system region and so
+	// EmuX86_Read/Write are going to fail with the error "Unknown address" and resume execution as it is...
+
+	PteNumber = PAGES_SPANNED(Paddr, Size);
+
+	Lock();
+
+	MappingRoutine = &ReserveBlockWithVirtualAlloc;
+	addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, 0);
+
+	if (!addr) { goto Fail; }
+
+	// check if we have to construct the PT's for this allocation
+	if (!AllocatePT(PteNumber, addr)) { goto Fail; }
+
+	// Finally, write the pte's
+	PointerPte = GetPteAddress(addr);
+	EndingPte = PointerPte + PteNumber - 1;
+	pfn = Paddr >> PAGE_SHIFT;
+
+	while (PointerPte <= EndingPte)
+	{
+		TempPte.Hardware.PFN = pfn;
+		WRITE_PTE(PointerPte, TempPte);
+		PointerPte++;
+		pfn++;
+	}
+
+	ConstructVMA(addr, PAGES_SPANNED(Paddr, Size) << PAGE_SHIFT, MemoryRegionType::System, VMAType::Reserved, true);
+
+	Unlock();
+	RETURN(addr + BYTE_OFFSET(Paddr));
 
 	Fail:
 	Unlock();
