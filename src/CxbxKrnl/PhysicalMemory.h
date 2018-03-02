@@ -238,8 +238,6 @@ class PhysicalMemory
 	protected:
 		// doubly linked list tracking the free physical pages
 		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
-		// current error status code of the PhysicalMemory class
-		PMEMORY_STATUS m_Status = PMEMORY_SUCCESS;
 		// highest pfn available for contiguous allocations
 		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// the size of memory occupied by the PFN/NV2A instance memory
@@ -265,9 +263,9 @@ class PhysicalMemory
 		// set up the page directory
 		void InitializePageDirectory();
 		// write a contiguous range of pfn's
-		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous);
+		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous, bool bZero = false);
 		// write a contiguous range of pte's
-		void WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn);
+		void WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero = false);
 		// commit a contiguous number of pages
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end);
 		// release a contiguous number of pages
@@ -278,14 +276,6 @@ class PhysicalMemory
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
 		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
-		// shrinks the size af an allocation
-		void ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart);
-		// retrieves the current error code of the PhysicalMemory class
-		PMEMORY_STATUS GetError() const;
-		// sets the error code of the PhysicalMemory class
-		void SetError(PMEMORY_STATUS err);
-		// clears the error code of the PhysicalMemory class
-		void ClearError();
 };
 
 #endif

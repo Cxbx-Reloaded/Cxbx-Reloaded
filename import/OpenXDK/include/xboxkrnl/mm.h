@@ -86,7 +86,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI MmFreeContiguousMemory
 // ******************************************************************
 // * MmFreeSystemMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(172) NTSTATUS NTAPI MmFreeSystemMemory
+XBSYSAPI EXPORTNUM(172) ULONG NTAPI MmFreeSystemMemory
 (
     PVOID BaseAddress,
     ULONG NumberOfBytes

@@ -55,12 +55,10 @@ enum VMAType
 {
 	// vma represents an unmapped region of the address space
 	Free,
-	// memory reserved by XbAllocateVirtualMemory
+	// memory reserved by XbAllocateVirtualMemory or by MmMapIoSpace
 	Reserved,
 	// vma represents allocated memory
 	Allocated,
-	// mark this vma as non-mergeable
-	Lock,
 };
 
 
@@ -139,10 +137,10 @@ class VMManager : public PhysicalMemory
 		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system memory region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
+		// deallocates memory in the system region
+		PFN_COUNT DeAllocateSystemMemory(VAddr addr, size_t Size /*MemoryRegionType Type*/);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
-		// deallocate stack memory
-		void DeallocateStack(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr target, size_t size, DWORD new_perms);
 		// query if a VAddr is valid

@@ -619,14 +619,57 @@ void VMManager::Deallocate(VAddr addr)
 	Unlock();
 }
 
-void VMManager::DeallocateStack(VAddr addr)
+PFN_COUNT VMManager::DeAllocateSystemMemory(VAddr addr, size_t Size /*MemoryRegionType Type*/)
 {
-	LOG_FUNC_ONE_ARG(addr);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Size);
+	LOG_FUNC_END;
+
+	MMPTE TempPte;
+	PMMPTE StartingPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PFN EndingPfn;
+	PFN_COUNT PteNumber;
+
+	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses from the system region are page aligned
 
 	Lock();
-	ReprotectVMARange(addr, PAGE_SIZE, PAGE_EXECUTE_READWRITE);
-	UnmapRange(addr);
+
+	StartingPte = GetPteAddress(addr);
+
+	if (Size != 0)
+	{
+		EndingPte = StartingPte + (ROUND_UP_4K(Size) >> PAGE_SHIFT) - 1;
+	}
+	else
+	{
+		VMAIter it = GetVMAIterator(addr, MemoryRegionType::System);
+		if (it->second.type != VMAType::Free && it->first <= addr && it->first + it->second.size > addr)
+		{
+			Size = it->second.size;
+			EndingPte = StartingPte + (ROUND_UP_4K(Size) >> PAGE_SHIFT) - 1;
+		}
+		else
+		{
+			DbgPrintf("Failed to locate the requested system allocation\n");
+			Unlock();
+			RETURN(NULL);
+		}
+	}
+
+	pfn = StartingPte->Hardware.PFN;
+	EndingPfn = pfn + (EndingPte - StartingPte);
+
+	InsertFree(pfn, EndingPfn);
+	WritePte(StartingPte, EndingPte, TempPte, 0, true);
+	WritePfn(pfn, EndingPfn, StartingPte, PageType::SystemMemory, false, true);
+
+	PteNumber = EndingPte - StartingPte + 1;
+
 	Unlock();
+	RETURN(PteNumber);
 }
 
 void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)

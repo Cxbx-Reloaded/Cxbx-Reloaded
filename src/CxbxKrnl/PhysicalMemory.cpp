@@ -53,11 +53,6 @@ void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
 	}
 }
 
-PMEMORY_STATUS PhysicalMemory::GetError() const
-{
-	return m_Status;
-}
-
 void PhysicalMemory::InitializePageDirectory()
 {
 	PMMPTE pPde;
@@ -121,9 +116,25 @@ void PhysicalMemory::InitializePageDirectory()
 	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
-void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous)
+void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous, bool bZero)
 {
 	XBOX_PFN TempPF;
+
+	if (bZero)
+	{
+		TempPF.Default = 0;
+		while (pfn_start <= pfn_end)
+		{
+			if (g_bIsRetail || g_bIsDebug) {
+				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
+			}
+			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
+
+			m_PagesByUsage[BusyType]--;
+			pfn_start++;
+		}
+		return;
+	}
 
 	if (bContiguous)
 	{
@@ -166,8 +177,18 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 	}
 }
 
-void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn)
+void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero)
 {
+	if (bZero)
+	{
+		while (pPteStart <= pPteEnd)
+		{
+			WRITE_ZERO_PTE(pPteStart);
+			pPteStart++;
+		}
+		return;
+	}
+
 	while (pPteStart <= pPteEnd)
 	{
 		Pte.Hardware.PFN = pfn;
@@ -489,7 +510,7 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	assert(pPte);
 
 	// NOTE: for now this doesn't require a check for success but if called from other callers it will...
-	RemoveFree(1, &pfn, 0, m_HighestPage);
+	RemoveFree(1, &pfn, 0, 0, m_HighestPage);
 
 	// Fill the page with zeros
 	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
@@ -500,48 +521,3 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	return pfn;
 }
 
-void PhysicalMemory::ShrinkPhysicalAllocation(PAddr addr, size_t offset, bool bFragmentedMap, bool bStart)
-{
-	if (!offset) { return; } // nothing to do
-
-	if (bFragmentedMap)
-	{
-		auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
-		PAddr old_base = it->first;
-		size_t old_size = it->second;
-		m_Fragmented_mem_map.erase(old_base);
-
-		if (old_size - offset)
-		{
-			if (bStart) { m_Fragmented_mem_map.emplace(old_base + offset, old_size - offset); }
-			else { m_Fragmented_mem_map.emplace(old_base, old_size - offset); }
-		}
-
-		m_PhysicalMemoryInUse -= offset;
-	}
-	else
-	{
-		auto it = m_Mem_map.lower_bound(addr);
-		PAddr old_base = it->first;
-		size_t old_size = it->second;
-		m_Mem_map.erase(old_base);
-
-		if (old_size - offset)
-		{
-			if (bStart) { m_Mem_map.emplace(old_base + offset, old_size - offset); }
-			else { m_Mem_map.emplace(old_base, old_size - offset); }
-		}
-
-		m_PhysicalMemoryInUse -= offset;
-	}
-}
-
-void PhysicalMemory::SetError(PMEMORY_STATUS err)
-{
-	m_Status = err;
-}
-
-void PhysicalMemory::ClearError()
-{
-	m_Status = PMEMORY_SUCCESS;
-}

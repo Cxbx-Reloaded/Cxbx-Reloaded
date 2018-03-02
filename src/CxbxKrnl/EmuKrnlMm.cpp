@@ -220,7 +220,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	g_VMManager.DeallocateStack(StackBottom);
+	g_VMManager.DeAllocateSystemMemory(StackBottom, ActualSize);
 }
 
 // ******************************************************************
@@ -247,7 +247,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 // ******************************************************************
 // * 0x00AC - MmFreeSystemMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
+XBSYSAPI EXPORTNUM(172) xboxkrnl::ULONG NTAPI xboxkrnl::MmFreeSystemMemory
 (
 	PVOID BaseAddress,
 	ULONG NumberOfBytes
@@ -258,9 +258,9 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	g_VMManager.Deallocate((VAddr)BaseAddress);
+	ULONG FreedPagesNumber = g_VMManager.DeAllocateSystemMemory((VAddr)BaseAddress, NumberOfBytes);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(FreedPagesNumber);
 }
 
 // ******************************************************************
