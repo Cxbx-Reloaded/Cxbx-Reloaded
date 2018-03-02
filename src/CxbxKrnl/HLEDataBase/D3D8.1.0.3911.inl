@@ -2191,6 +2191,22 @@ OOVPA_NO_XREF(D3DDevice_SetTransform, 3911, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_MultiplyTransform
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_MultiplyTransform, 3911, 10)
+	{ 0x00, 0x55 },
+	{ 0x01, 0x8B },
+	{ 0x02, 0xEC },
+	{ 0x03, 0x83 },
+	{ 0x04, 0xE4 },
+	{ 0x12, 0x56 },
+	{ 0x13, 0x8B },
+	{ 0x14, 0x7F },
+	{ 0x15, 0x0C },
+	{ 0x16, 0x57 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3DDevice_SetRenderState_FogColor
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_FogColor, 3911, 11)
