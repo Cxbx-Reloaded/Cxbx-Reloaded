@@ -543,3 +543,86 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x0176 - MmDbgAllocateMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
+(
+	IN ULONG NumberOfBytes,
+	IN ULONG Protect
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(NumberOfBytes)
+		LOG_FUNC_ARG(Protect)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+// ******************************************************************
+// * 0x0177 - MmDbgFreeMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
+(
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytes
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BaseAddress)
+		LOG_FUNC_ARG(NumberOfBytes)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+// ******************************************************************
+// * 0x0178 - MmDbgQueryAvailablePages
+// ******************************************************************
+XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages()
+{
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+// ******************************************************************
+// * 0x0179 - MmDbgReleaseAddress
+// ******************************************************************
+XBSYSAPI EXPORTNUM(377) xboxkrnl::VOID NTAPI xboxkrnl::MmDbgReleaseAddress
+(
+	IN PVOID VirtualAddress,
+	IN PULONG Opaque
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(VirtualAddress)
+		LOG_FUNC_ARG(Opaque)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x017A - MmDbgWriteCheck
+// ******************************************************************
+XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
+(
+	IN PVOID VirtualAddress,
+	IN PULONG Opaque
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(VirtualAddress)
+		LOG_FUNC_ARG(Opaque)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}

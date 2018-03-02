@@ -221,9 +221,7 @@ class VMManager : public PhysicalMemory
 		// releases the critical section
 		void Unlock();
 		// destructs a vma if not free already
-		VMAIter DestructVMA(VMAIter vma_handle, VAddr addr, size_t size);
-		// changes the size/base of a vma
-		void ResizeVMA(VMAIter vma_handle, size_t offset, bool bStart);
+		VMAIter DestructVMA(VAddr addr, MemoryRegionType Type);
 };
 
 

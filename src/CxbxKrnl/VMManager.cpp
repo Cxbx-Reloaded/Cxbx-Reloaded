@@ -53,8 +53,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 {
 	assert(base + size == next.base);
 
-	if (permissions != next.permissions || type != next.type ||
-		type == VMAType::Lock || next.type == VMAType::Lock) { return false; }
+	if (permissions != next.permissions || type != next.type) { return false; }
 	if (type == VMAType::Allocated && next.type == VMAType::Allocated) { return false; }
 
 	return true;
@@ -1298,57 +1297,8 @@ VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 	return MergeAdjacentVMA(vma_handle);
 }
 
-void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma)
+VMAIter VMManager::DestructVMA(VAddr addr, MemoryRegionType Type)
 {
-	switch (vma.type)
-	{
-		case VMAType::Free:
-		case VMAType::MemTiled:
-		case VMAType::IO_DeviceNV2A:
-		case VMAType::MemNV2A_PRAMIN:
-		case VMAType::IO_DeviceAPU:
-		case VMAType::IO_DeviceAC97:
-		case VMAType::IO_DeviceUSB0:
-		case VMAType::IO_DeviceUSB1:
-		case VMAType::IO_DeviceNVNet:
-		case VMAType::DeviceBIOS:
-		case VMAType::DeviceMCPX:
-		{
-			UnmapRegion(vma.base, vma.size);
-		}
-		break;
-
-		case VMAType::Allocated:
-		case VMAType::Stack:
-		{
-			MapMemoryRegion(vma.base, vma.size, vma.backing_block);
-		}
-		break;
-
-		default:
-			CxbxKrnlCleanup("VMAType::Lock or Unknown type in UpdatePageTableForVMA");
-	}
-}
-
-VMAIter VMManager::DestructVMA(VMAIter vma_handle, VAddr addr, size_t size)
-{
-	if (vma_handle->second.type == VMAType::Free) { return std::next(vma_handle); }
-
-
-	if (vma_handle->second.type != VMAType::Stack)
-	{
-		vma_handle->second.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
-			m_ImageMemoryInUse -= size : m_NonImageMemoryInUse -= size;
-	}
-	else { m_StackMemoryInUse -= size; }
-
-
-	if (vma_handle->second.type == VMAType::Allocated || vma_handle->second.type == VMAType::Stack)
-	{
-		if (vma_handle->second.bFragmented) { DeAllocateFragmented(vma_handle->second.backing_block); }
-		else { DeAllocatePhysicalMemory(vma_handle->second.backing_block); }
-	}
-
 	VMAIter vma = CarveVMARange(addr, size);
 
 	VAddr target_end = addr + size;
@@ -1361,49 +1311,4 @@ VMAIter VMManager::DestructVMA(VMAIter vma_handle, VAddr addr, size_t size)
 	}
 
 	return vma;
-}
-
-void VMManager::ResizeVMA(VMAIter vma_handle, size_t offset, bool bStart)
-{
-	if (!offset) { return; } // nothing to do
-
-	VirtualMemoryArea& old_vma = vma_handle->second;
-	VirtualMemoryArea new_vma = old_vma;
-
-	if (bStart)
-	{
-		if (offset > old_vma.size) { return; } // sanity check
-		VAddr new_base = old_vma.base + offset;
-		new_vma.base = new_base;
-		new_vma.size = old_vma.size - offset;
-
-		if (old_vma.type == VMAType::Allocated || old_vma.type == VMAType::Stack) {
-			ShrinkPhysicalAllocation(vma_handle->second.backing_block, offset, vma_handle->second.bFragmented, bStart);
-		}
-		m_Vma_map.erase(old_vma.base);
-		if(new_vma.size) { m_Vma_map.emplace(new_base, new_vma); }
-	}
-	else
-	{
-		if (offset > old_vma.size) { return; } // sanity check
-		VAddr new_base = old_vma.base;
-		new_vma.base = new_base;
-		new_vma.size = old_vma.size - offset;
-
-		if (old_vma.type == VMAType::Allocated || old_vma.type == VMAType::Stack) {
-			ShrinkPhysicalAllocation(vma_handle->second.backing_block, offset, vma_handle->second.bFragmented, bStart);
-		}
-		m_Vma_map.erase(old_vma.base);
-		if (new_vma.size) { m_Vma_map.emplace(new_base, new_vma); }
-	}
-
-	if (new_vma.type != VMAType::Free)
-	{
-		if (new_vma.type != VMAType::Stack)
-		{
-			new_vma.permissions & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ?
-				m_ImageMemoryInUse -= offset : m_NonImageMemoryInUse -= offset;
-		}
-		else { m_StackMemoryInUse -= offset; }
-	}
 }
