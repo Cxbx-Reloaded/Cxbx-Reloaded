@@ -2156,7 +2156,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			nativeObjects.size(),
 			&nativeObjects[0],
 			/*WaitAll=*/(WaitType == WAIT_TYPE::WaitAll),
-			Timeout->u.LowPart);
+			Timeout != NULL ? Timeout->u.LowPart : NULL);
 
 		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
