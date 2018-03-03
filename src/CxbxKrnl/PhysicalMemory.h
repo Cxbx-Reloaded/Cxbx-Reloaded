@@ -50,13 +50,6 @@ namespace xboxkrnl
 #include <map>
 
 
-/* PhysicalMemory class error codes */
-#define PMEMORY_STATUS 					unsigned int
-#define PMEMORY_SUCCESS					0x0
-#define PMEMORY_INSUFFICIENT_MEMORY		0x1
-#define PMEMORY_ALLOCATE_FRAGMENTED		0x2
-
-
 /* Global typedefs */
 typedef uintptr_t VAddr;
 typedef uintptr_t PAddr;
@@ -266,6 +259,10 @@ class PhysicalMemory
 		void InsertFree(PFN start, PFN end);
 		// convert from Xbox to the desired system pte protection (if possible) and return it
 		bool ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte);
+		// convert from Xbox to Windows permissions
+		DWORD ConvertXboxToWinProtection(DWORD Perms);
+		// add execute rights if the permission mask doesn't include it
+		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it

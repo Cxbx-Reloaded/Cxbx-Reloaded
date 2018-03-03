@@ -446,6 +446,111 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 	return true;
 }
 
+DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
+{
+	// Usage notes: this routine expects the permissions to be already sanitized by ConvertXboxToSystemPteProtection or
+	// similar. If not, it can produce incorrect results
+
+	// ergo720: this checks if the specified Xbox permission mask has the execute flag enabled. If not, it adds it. This is
+	// necessary because, afaik, the Xbox grants execute rights to all allocations, even if PAGE_EXECUTE was not specified
+
+	if ((Perms >> 4) & 0xF)
+	{
+		// All high nibble flags grant execute rights, nothing to do
+
+		return Perms;
+	}
+
+	if (Perms & XBOX_PAGE_NOACCESS)
+	{
+		// XBOX_PAGE_NOACCESS disables all access, nothing to do
+
+		return Perms;
+	}
+
+	switch (Perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
+	{
+		case XBOX_PAGE_READONLY:
+			return XBOX_PAGE_EXECUTE_READ;
+
+		case XBOX_PAGE_READWRITE:
+			return XBOX_PAGE_EXECUTE_READWRITE;
+
+		default:
+		{
+			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
+			// input is probably invalid
+
+			DbgPrintf("PatchXboxPermissions: Memory permissions bug detected\n");
+			return XBOX_PAGE_EXECUTE_READWRITE;
+		}
+	}
+}
+
+DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
+{
+	// This function assumes that the supplied permissions have been sanitized already
+
+	DWORD Mask = 0;
+
+	if (Perms & XBOX_PAGE_NOACCESS)
+	{
+		// PAGE_NOACCESS cannot be specified with anything else
+
+		return PAGE_NOACCESS;
+	}
+
+	DWORD LowNibble = Perms & 0xF;
+	DWORD HighNibble = (Perms >> 4) & 0xF;
+
+	if (HighNibble)
+	{
+		if (HighNibble == 1) { Mask |= PAGE_EXECUTE; }
+		else if (HighNibble == 2) { Mask |= PAGE_EXECUTE_READ; }
+		else { Mask |= PAGE_EXECUTE_READWRITE; }
+	}
+
+	if (LowNibble)
+	{
+		if (LowNibble == 2) { Mask |= PAGE_READONLY; }
+		else { Mask |= PAGE_READWRITE; }
+	}
+
+	// Even though PAGE_NOCACHE and PAGE_WRITECOMBINE are unsupported on shared memory, that's a limitation on our side,
+	// this function still adds them if they are present
+
+	switch (Perms & (XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+	{
+		case XBOX_PAGE_GUARD:
+		{
+			Mask |= PAGE_GUARD;
+			break;
+		}
+
+		case XBOX_PAGE_NOCACHE:
+		{
+			Mask |= PAGE_NOCACHE;
+			break;
+		}
+
+		case XBOX_PAGE_WRITECOMBINE:
+		{
+			Mask |= PAGE_WRITECOMBINE;
+			break;
+		}
+
+		default:
+		{
+			// If we reach here it means that more than one permission modifier was specified, and so the input is
+			// probably invalid
+
+			DbgPrintf("ConvertXboxToWinProtection: Memory permissions bug detected\n");
+			return PAGE_EXECUTE_READWRITE;
+		}
+	}
+	return Mask;
+}
+
 bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
 	PMMPTE pPde;

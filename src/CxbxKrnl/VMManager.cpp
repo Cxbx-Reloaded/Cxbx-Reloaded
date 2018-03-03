@@ -409,7 +409,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
-		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, pfn);
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, pfn);
 
 		if (!addr)
 		{
@@ -426,7 +426,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 
 		bVAlloc = true;
 		MappingRoutine = &MapBlockWithVirtualAlloc;
-		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, 0);
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, 0);
 
 		if (!addr) { goto Fail; }
 
@@ -469,7 +469,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		PointerPte++;
 	}
 	EndingPte = PointerPte + PteNumber - 1;
-	EndingPfn = pfn + (EndingPte - PointerPte);
+	EndingPfn = pfn + PteNumber;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	EndingPte->Hardware.GuardOrEnd = 1;
@@ -486,7 +486,17 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		m_PagesByUsage[BusyType] += PteNumber;
 	}
 
-	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
+	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc);
+
+	if (bAddGuardPage)
+	{
+		UpdateMemoryPermissions(addr, PAGE_SIZE, XBOX_PAGE_NOACCESS); // guard page of the stack
+		UpdateMemoryPermissions(addr + PAGE_SIZE, ROUND_UP_4K(Size) - PAGE_SIZE, Perms); // actual stack pages
+	}
+	else
+	{
+		UpdateMemoryPermissions(addr, ROUND_UP_4K(Size), Perms);
+	}
 
 	Unlock();
 	RETURN(addr);
@@ -545,13 +555,14 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	// Finally, write the pte's and the pfn's
 	PointerPte = GetPteAddress(addr);
 	EndingPte = PointerPte + PteNumber - 1;
-	EndingPfn = pfn + (EndingPte - PointerPte);
+	EndingPfn = pfn + PteNumber;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
 	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	UpdateMemoryPermissions(addr, ROUND_UP_4K(Size), Perms);
 
 	Unlock();
 	RETURN(addr);
@@ -603,7 +614,7 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	Lock();
 
 	MappingRoutine = &ReserveBlockWithVirtualAlloc;
-	addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, Perms, 0);
+	addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, 0);
 
 	if (!addr) { goto Fail; }
 
@@ -980,7 +991,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* size, DWO
 	RETURN(ret);
 }
 
-VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, DWORD perms, PFN pfn)
+VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn)
 {
 	PFN pfn;
 	VAddr addr;
@@ -990,7 +1001,6 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 
 	if (pfn) // MapViewOfFileEx specific
 	{
-		ConvertVProtectToMapViewProtection(&perms);
 		FileOffsetLow = ROUND_DOWN(pfn << PAGE_SHIFT, m_AllocationGranularity);
 		Size = (pfn << PAGE_SHIFT) + Size - FileOffsetLow;
 	}
@@ -1017,7 +1027,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 
 		size_t vma_end = it->first + it->second.size;
 
-		addr = (this->*MappingRoutine)(addr, Size, vma_end, perms, FileOffsetLow, pfn);
+		addr = (this->*MappingRoutine)(addr, Size, vma_end, FileOffsetLow, pfn);
 
 		if (addr) { return addr; }
 
@@ -1027,7 +1037,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	// If we are here, it means we reached the end of the memory region. In desperation, we also try to map it from the
 	// LastFree iterator and going backwards, since there could be holes created by deallocation operations...
 
-	auto begin_it = m_MemoryRegionArray[Type].RegionMap.begin();
+	VMAIter begin_it = m_MemoryRegionArray[Type].RegionMap.begin();
 
 	if (m_MemoryRegionArray[Type].LastFree == begin_it)
 	{
@@ -1052,7 +1062,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 
 			size_t vma_end = it->first + it->second.size;
 
-			addr = (this->*MappingRoutine)(addr, Size, vma_end, perms, FileOffsetLow, pfn);
+			addr = (this->*MappingRoutine)(addr, Size, vma_end, FileOffsetLow, pfn);
 
 			if (addr) { return addr; }
 		}
@@ -1069,12 +1079,12 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	return NULL;
 }
 
-VAddr VMManager::MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD Perms,
-	DWORD OffsetLow, PFN pfn)
+VAddr VMManager::MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD OffsetLow, PFN pfn)
 {
 	for (; StartingAddr + ViewSize - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		if ((VAddr)MapViewOfFileEx(m_hContiguousFile, Perms, 0, OffsetLow, ViewSize, (void*)StartingAddr) == StartingAddr)
+		if ((VAddr)MapViewOfFileEx(m_hContiguousFile, FILE_MAP_EXECUTE | FILE_MAP_READ | FILE_MAP_WRITE, 0, OffsetLow,
+			ViewSize, (void*)StartingAddr) == StartingAddr)
 		{
 			return StartingAddr + (pfn << PAGE_SHIFT) - OffsetLow; // sum the offset into the file view
 		}
@@ -1082,12 +1092,11 @@ VAddr VMManager::MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize
 	return NULL;
 }
 
-VAddr VMManager::MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Perms,
-	DWORD Unused, PFN Unused2)
+VAddr VMManager::MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2)
 {
 	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, Perms) == StartingAddr)
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE) == StartingAddr)
 		{
 			return StartingAddr;
 		}
@@ -1095,30 +1104,16 @@ VAddr VMManager::MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_
 	return NULL;
 }
 
-VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused,
-	DWORD Unused2, PFN Unused3)
+VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2)
 {
 	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, XBOX_MEM_RESERVE, XBOX_PAGE_NOACCESS) == StartingAddr)
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE, PAGE_NOACCESS) == StartingAddr)
 		{
 			return StartingAddr;
 		}
 	}
 	return NULL;
-}
-
-void VMManager::ConvertVProtectToMapViewProtection(DWORD* perms)
-{
-	// We always grant read / write access to the file view, we just check if we should also grant execute rights
-
-	if (*perms & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE))
-	{
-		*perms = FILE_MAP_EXECUTE | FILE_MAP_READ | FILE_MAP_WRITE;
-		return;
-	}
-
-	*perms = FILE_MAP_READ | FILE_MAP_WRITE;
 }
 
 void VMManager::ReprotectVMARange(VAddr target, size_t size, DWORD new_perms)
@@ -1282,22 +1277,19 @@ VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type)
 	return vma_handle;
 }
 
-VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
+void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 {
 	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
 	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
 	// it's probably safe to ignore these flags
 
-	VirtualMemoryArea& vma = vma_handle->second;
-	DWORD dummy;
-	vma.permissions = new_perms;
-	if (!VirtualProtect((void*)vma.base, vma.size, vma.permissions & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
-	{
-		CxbxKrnlCleanup("ReprotectVMA: VirtualProtect could not protect the vma! The error code was %d", GetLastError());
-	}
-	UpdatePageTableForVMA(vma);
+	DWORD WindowsPerms = ConvertXboxToWinProtection(PatchXboxPermissions(Perms));
 
-	return MergeAdjacentVMA(vma_handle);
+	DWORD dummy;
+	if (!VirtualProtect((void*)addr, Size, WindowsPerms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
+	{
+		DbgPrintf("VirtualProtect failed. The error code was %d\n", GetLastError());
+	}
 }
 
 VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size)

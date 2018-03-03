@@ -161,7 +161,7 @@ class VMManager : public PhysicalMemory
 	
 	private:
 		// typedef of pointer to a member function mapping a memory block
-		typedef VAddr (VMManager::*MappingFn) (VAddr, size_t, size_t, DWORD, DWORD, PFN);
+		typedef VAddr (VMManager::*MappingFn) (VAddr, size_t, size_t, DWORD, PFN);
 		// an array of structs used to track the free/allocated vma's in the various memory regions
 		MemoryRegion m_MemoryRegionArray[MemoryRegionType::COUNT];
 		// handle of the contiguous file mapping
@@ -188,19 +188,17 @@ class VMManager : public PhysicalMemory
 		// clear all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
-		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, DWORD perms, PFN pfn);
+		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn);
 		// helper function which maps a block with VirtualAlloc
-		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Perms, DWORD Unused, PFN Unused2);
+		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which reserves a block of virtual memory with VirtualAlloc
-		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, DWORD Unused2, PFN Unused3);
+		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which maps a block with MapViewOfFileEx
-		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD Perms, DWORD OffsetLow, PFN pfn);
+		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD OffsetLow, PFN pfn);
 		// destruct a vma
 		void DestructVMA(VMAIter it, MemoryRegionType Type);
 		// check if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
-		// convert VirtualProtect protection flags to file mapping protection flags
-		void ConvertVProtectToMapViewProtection(DWORD* perms);
 		// changes access permissions for a range of vma's, splitting them if necessary
 		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
 		// checks if a VAddr is valid; returns false if not
@@ -219,8 +217,8 @@ class VMManager : public PhysicalMemory
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
-		// changes access permissions for a vma
-		VMAIter ReprotectVMA(VMAIter vma_handle, DWORD new_perms);
+		// changes the access permissions of a block of memory
+		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// acquires the critical section
 		void Lock();
 		// releases the critical section
