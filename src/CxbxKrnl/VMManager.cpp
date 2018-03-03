@@ -53,10 +53,9 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 {
 	assert(base + size == next.base);
 
-	if (permissions != next.permissions || type != next.type) { return false; }
-	if (type == VMAType::Allocated && next.type == VMAType::Allocated) { return false; }
+	if (type == VMAType::Free && next.type == VMAType::Free) { return true; }
 
-	return true;
+	return false;
 }
 
 void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
@@ -465,7 +464,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
 		// to increase the page type usage
 
-		m_PagesByUsage[BusyType] += (EndingPte - PointerPte);
+		m_PagesByUsage[BusyType] += PteNumber;
 	}
 
 	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc ? true : false);
@@ -574,7 +573,7 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	}
 
 	// The requested address is not a known device address so we have to create a mapping for it. Even though this won't
-	// allocate any physical allocation for it, we still need to reserve the memory with VirtualAlloc. If we don't, then
+	// create any physical allocation for it, we still need to reserve the memory with VirtualAlloc. If we don't, then
 	// we are likely to collide with other system allocations in the region at some point, which will overwrite and corrupt
 	// the affected allocation. We only reserve the memory so that the access will trigger an access violation and it will
 	// be handled by EmuException. However, RegisterBAR doesn't register any known device in the system region and so
@@ -618,7 +617,7 @@ void VMManager::Deallocate(VAddr addr)
 	Unlock();
 }
 
-PFN_COUNT VMManager::DeAllocateSystemMemory(VAddr addr, size_t Size /*MemoryRegionType Type*/)
+PFN_COUNT VMManager::DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr);
@@ -631,41 +630,41 @@ PFN_COUNT VMManager::DeAllocateSystemMemory(VAddr addr, size_t Size /*MemoryRegi
 	PFN pfn;
 	PFN EndingPfn;
 	PFN_COUNT PteNumber;
+	VMAIter it;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses from the system region are page aligned
 
 	Lock();
 
-	StartingPte = GetPteAddress(addr);
+	it = CheckExistenceVMA(addr, MemoryRegionType::System, ROUND_UP_4K(Size));
 
-	if (Size != 0)
+	if (it == m_MemoryRegionArray[MemoryRegionType::System].RegionMap.end() || it->second.type == VMAType::Free)
 	{
-		EndingPte = StartingPte + (ROUND_UP_4K(Size) >> PAGE_SHIFT) - 1;
+		Unlock();
+		RETURN(NULL);
 	}
-	else
-	{
-		VMAIter it = GetVMAIterator(addr, MemoryRegionType::System);
-		if (it->second.type != VMAType::Free && it->first <= addr && it->first + it->second.size > addr)
-		{
-			Size = it->second.size;
-			EndingPte = StartingPte + (ROUND_UP_4K(Size) >> PAGE_SHIFT) - 1;
-		}
-		else
-		{
-			DbgPrintf("Failed to locate the requested system allocation\n");
-			Unlock();
-			RETURN(NULL);
-		}
-	}
+
+	StartingPte = GetPteAddress(addr);
+	EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
 
 	pfn = StartingPte->Hardware.PFN;
 	EndingPfn = pfn + (EndingPte - StartingPte);
 
-	InsertFree(pfn, EndingPfn);
-	WritePte(StartingPte, EndingPte, TempPte, 0, true);
-	WritePfn(pfn, EndingPfn, StartingPte, PageType::SystemMemory, false, true);
-
 	PteNumber = EndingPte - StartingPte + 1;
+
+	if (it->second.bFragmented)
+	{
+		m_PhysicalPagesAvailable += PteNumber;
+		m_PagesByUsage[BusyType] -= PteNumber;
+	}
+	else
+	{
+		InsertFree(pfn, EndingPfn);
+		WritePfn(pfn, EndingPfn, StartingPte, BusyType, false, true);
+	}
+
+	WritePte(StartingPte, EndingPte, TempPte, 0, true);
+	DestructVMA(it, MemoryRegionType::System);
 
 	Unlock();
 	RETURN(PteNumber);
@@ -1090,19 +1089,6 @@ VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, s
 	return NULL;
 }
 
-void VMManager::UnmapRange(VAddr target)
-{
-	VAddr aligned_start = target & ~(UINT_PTR)PAGE_MASK;
-
-	auto it = m_Vma_map.lower_bound(aligned_start);
-	
-	if (it->second.type == VMAType::Free || it->first != aligned_start) {
-		CxbxKrnlCleanup("An attempt to deallocate a region not allocated by the manager has been detected!"); 
-	}
-
-	DestructVMA(it, aligned_start, it->second.size);
-}
-
 void VMManager::ConvertVProtectToMapViewProtection(DWORD* perms)
 {
 	// We always grant read / write access to the file view, we just check if we should also grant execute rights
@@ -1162,16 +1148,14 @@ void VMManager::Unlock()
 	LeaveCriticalSection(&m_CriticalSection);
 }
 
-VMAIter VMManager::Unmap(VMAIter vma_handle)
+VMAIter VMManager::Unmap(VMAIter vma_handle, MemoryRegionType Type)
 {
 	VirtualMemoryArea& vma = vma_handle->second;
 	vma.type = VMAType::Free;
-	vma.permissions = PAGE_NOACCESS;
-	vma.backing_block = NULL;
+	vma.permissions = XBOX_PAGE_NOACCESS;
+	vma.bFragmented = false;
 
-	UpdatePageTableForVMA(vma);
-
-	return MergeAdjacentVMA(vma_handle);
+	return MergeAdjacentVMA(vma_handle, Type);
 }
 
 VMAIter VMManager::CarveVMA(VAddr base, size_t size, MemoryRegionType Type)
@@ -1206,29 +1190,29 @@ VMAIter VMManager::CarveVMA(VAddr base, size_t size, MemoryRegionType Type)
 	return vma_handle;
 }
 
-VMAIter VMManager::CarveVMARange(VAddr base, size_t size)
+VMAIter VMManager::CarveVMARange(VAddr base, size_t size, MemoryRegionType Type)
 {
 	VAddr target_end = base + size;
 	assert(target_end >= base);
 	assert(target_end <= MAX_VIRTUAL_ADDRESS);
 	assert(size > 0);
 
-	VMAIter begin_vma = GetVMAIterator(base);
-	VMAIter it_end = m_Vma_map.lower_bound(target_end);
-	for (auto i = begin_vma; i != it_end; ++i)
+	VMAIter begin_vma = GetVMAIterator(base, Type);
+	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.lower_bound(target_end);
+	for (auto it = begin_vma; it != it_end; ++it)
 	{
-		if (i->second.type == VMAType::Free) { assert(0); }
+		if (it->second.type == VMAType::Free) { assert(0); }
 	}
 
 	if (base != begin_vma->second.base)
 	{
-		begin_vma = SplitVMA(begin_vma, base - begin_vma->second.base);
+		begin_vma = SplitVMA(begin_vma, base - begin_vma->second.base, Type);
 	}
 
-	VMAIter end_vma = GetVMAIterator(target_end);
-	if (end_vma != m_Vma_map.end() && target_end != end_vma->second.base)
+	VMAIter end_vma = GetVMAIterator(target_end, Type);
+	if (end_vma != m_MemoryRegionArray[Type].RegionMap.end() && target_end != end_vma->second.base)
 	{
-		end_vma = SplitVMA(end_vma, target_end - end_vma->second.base);
+		end_vma = SplitVMA(end_vma, target_end - end_vma->second.base, Type);
 	}
 
 	return begin_vma;
@@ -1256,22 +1240,22 @@ VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionT
 	return m_MemoryRegionArray[Type].RegionMap.emplace_hint(std::next(vma_handle), new_vma.base, new_vma);
 }
 
-VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle)
+VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type)
 {
 	VMAIter next_vma = std::next(vma_handle);
-	if (next_vma != m_Vma_map.end() && vma_handle->second.CanBeMergedWith(next_vma->second))
+	if (next_vma != m_MemoryRegionArray[Type].RegionMap.end() && vma_handle->second.CanBeMergedWith(next_vma->second))
 	{
 		vma_handle->second.size += next_vma->second.size;
-		m_Vma_map.erase(next_vma);
+		m_MemoryRegionArray[Type].RegionMap.erase(next_vma);
 	}
 
-	if (vma_handle != m_Vma_map.begin())
+	if (vma_handle != m_MemoryRegionArray[Type].RegionMap.begin())
 	{
 		VMAIter prev_vma = std::prev(vma_handle);
 		if (prev_vma->second.CanBeMergedWith(vma_handle->second))
 		{
 			prev_vma->second.size += vma_handle->second.size;
-			m_Vma_map.erase(vma_handle);
+			m_MemoryRegionArray[Type].RegionMap.erase(vma_handle);
 			vma_handle = prev_vma;
 		}
 	}
@@ -1297,18 +1281,89 @@ VMAIter VMManager::ReprotectVMA(VMAIter vma_handle, DWORD new_perms)
 	return MergeAdjacentVMA(vma_handle);
 }
 
-VMAIter VMManager::DestructVMA(VAddr addr, MemoryRegionType Type)
+VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 {
-	VMAIter vma = CarveVMARange(addr, size);
+	// Note that this routine expects an aligned size when specified (since all vma's are allocated size aligned to a page
+	// boundary. The caller should do this.
 
-	VAddr target_end = addr + size;
-	VMAIter end = m_Vma_map.end();
+	VMAIter it = GetVMAIterator(addr, Type);
+	if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->first == addr)
+	{
+		if (Size)
+		{
+			if (it->second.size == Size)
+			{
+				return it;
+			}
+			DbgPrintf("Located vma but sizes don't match\n");
+			return m_MemoryRegionArray[Type].RegionMap.end();
+		}
+		return it;
+	}
+	else
+	{
+		DbgPrintf("Vma not found or doesn't start at the supplied address\n");
+		return m_MemoryRegionArray[Type].RegionMap.end();
+	}
+}
+
+void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
+{
+	VMAIter CarvedVmaIt = CarveVMARange(it->first, it->second.size);
+
+	VAddr target_end = it->first + it->second.size;
+	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
+	VMAIter it_begin = m_MemoryRegionArray[Type].RegionMap.begin();
+
 	// The comparison against the end of the range must be done using addresses since vma's can be
 	// merged during this process, causing invalidation of the iterators
-	while (vma != end && vma->second.base < target_end)
+	while (CarvedVmaIt != it_end && CarvedVmaIt->second.base < target_end)
 	{
-		vma = std::next(Unmap(vma));
+		CarvedVmaIt = std::next(Unmap(CarvedVmaIt));
 	}
 
-	return vma;
+	// If we free an entire vma (which should always be the case), prev(CarvedVmaIt) will be the freed vma. If it is not,
+	// we'll do a standard search
+
+	if (CarvedVmaIt != it_begin && std::prev(CarvedVmaIt)->second.type == VMAType::Free)
+	{
+		m_MemoryRegionArray[Type].LastFree = std::prev(CarvedVmaIt);
+		return;
+	}
+	else
+	{
+		DbgPrintf("std::prev(CarvedVmaIt) was not free\n");
+
+		it = CarvedVmaIt;
+
+		while (it != it_end)
+		{
+			if (it->second.type == VMAType::Free)
+			{
+				m_MemoryRegionArray[Type].LastFree = it;
+				return;
+			}
+			++it;
+		}
+
+		it = std::prev(CarvedVmaIt);
+
+		while (true)
+		{
+			if (it->second.type == VMAType::Free)
+			{
+				m_MemoryRegionArray[Type].LastFree = it;
+				return;
+			}
+
+			if (it == it_begin) { break; }
+			--it;
+		}
+
+		EmuWarning("Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+
+		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
+
+		return;
+	}
 }
