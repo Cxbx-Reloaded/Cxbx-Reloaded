@@ -186,15 +186,16 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 			WRITE_ZERO_PTE(pPteStart);
 			pPteStart++;
 		}
-		return;
 	}
-
-	while (pPteStart <= pPteEnd)
+	else
 	{
-		Pte.Hardware.PFN = pfn;
-		WRITE_PTE(pPteStart, Pte);
-		pPteStart++;
-		pfn++;
+		while (pPteStart <= pPteEnd)
+		{
+			Pte.Hardware.PFN = pfn;
+			WRITE_PTE(pPteStart, Pte);
+			pPteStart++;
+			pfn++;
+		}
 	}
 }
 
@@ -626,3 +627,12 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	return pfn;
 }
 
+bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested)
+{
+	if (m_PhysicalPagesAvailable >= PagesRequested) { return true; }
+	else
+	{
+		EmuWarning("Out of physical memory!");
+		return false;
+	}
+}

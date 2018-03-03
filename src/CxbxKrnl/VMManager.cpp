@@ -136,13 +136,16 @@ void VMManager::DestroyMemoryRegions()
 	{
 		for (auto it = m_MemoryRegionArray[i].RegionMap.begin(); it != m_MemoryRegionArray[i].RegionMap.end(); ++it)
 		{
-			if (it->second.bFragmented)
+			if (it->second.type != VMAType::Free)
 			{
-				VirtualFree((void*)it->first, 0, MEM_RELEASE);
-			}
-			else
-			{
-				UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+				if (it->second.bFragmented)
+				{
+					VirtualFree((void*)it->first, 0, MEM_RELEASE);
+				}
+				else
+				{
+					UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+				}
 			}
 		}
 	}
@@ -404,7 +407,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
 
 	if (bAddGuardPage) { PteNumber++; Size += PAGE_SIZE; }
-	if (m_PhysicalPagesAvailable < PteNumber) { goto Fail; }
+	if (!IsMappable(PteNumber)) { goto Fail; }
 
 	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
 	{
@@ -469,7 +472,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		PointerPte++;
 	}
 	EndingPte = PointerPte + PteNumber - 1;
-	EndingPfn = pfn + PteNumber;
+	EndingPfn = pfn + PteNumber - 1;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	EndingPte->Hardware.GuardOrEnd = 1;
@@ -534,6 +537,7 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	HigherPfn = HigherAddress >> PAGE_SHIFT;
 	PfnAlignment = Alignment >> PAGE_SHIFT;
 
+	if (!IsMappable(PteNumber)) { goto Fail; }
 	if (HigherPfn > m_MaxContiguousPfn) { HigherPfn = m_MaxContiguousPfn; }
 	if (LowerPfn > HigherPfn) { LowerPfn = HigherPfn; }
 	if (!PfnAlignment) { PfnAlignment = 1; }
@@ -545,17 +549,18 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 
 	assert(CHECK_ALIGNMENT(pfn, PfnAlignment)); // check if the page alignment is correct
 
+	EndingPfn = pfn + PteNumber - 1;
+
 	// check if we have to construct the PT's for this allocation
 	if (!AllocatePT(PteNumber, addr))
 	{
-		InsertFree(pfn, pfn + PteNumber - 1);
+		InsertFree(pfn, EndingPfn);
 		goto Fail;
 	}
 
 	// Finally, write the pte's and the pfn's
 	PointerPte = GetPteAddress(addr);
 	EndingPte = PointerPte + PteNumber - 1;
-	EndingPfn = pfn + PteNumber;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
@@ -644,6 +649,45 @@ void VMManager::Deallocate(VAddr addr)
 
 	Lock();
 	UnmapRange(addr);
+	Unlock();
+}
+
+void VMManager::DeAllocateContiguous(VAddr addr)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+	LOG_FUNC_END;
+
+	MMPTE TempPte;
+	PMMPTE StartingPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PFN EndingPfn;
+	VMAIter it;
+
+	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses from the contiguous region are page aligned
+
+	Lock();
+
+	it = CheckExistenceVMA(addr, MemoryRegionType::Contiguous);
+
+	if (it == m_MemoryRegionArray[MemoryRegionType::Contiguous].RegionMap.end() || it->second.type == VMAType::Free)
+	{
+		Unlock();
+		return;
+	}
+
+	StartingPte = GetPteAddress(addr);
+	EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+
+	pfn = StartingPte->Hardware.PFN;
+	EndingPfn = pfn + (EndingPte - StartingPte);
+
+	InsertFree(pfn, EndingPfn);
+	WritePfn(pfn, EndingPfn, StartingPte, PageType::Contiguous, true, true);
+	WritePte(StartingPte, EndingPte, TempPte, 0, true);
+	DestructVMA(it, MemoryRegionType::Contiguous);
+
 	Unlock();
 }
 

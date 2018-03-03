@@ -236,7 +236,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	g_VMManager.Deallocate((VAddr)BaseAddress);
+	g_VMManager.DeAllocateContiguous((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
 	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
