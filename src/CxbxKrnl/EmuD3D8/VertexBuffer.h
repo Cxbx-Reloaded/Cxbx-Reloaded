@@ -51,6 +51,7 @@ typedef struct _VertexPatchDesc
     // The current vertex shader, used to identify the streams
     IN     DWORD                 hVertexShader;
 	IN	   PWORD				 pIndexData = nullptr;
+	IN	   DWORD				 dwIndexBase = 0;
 }
 VertexPatchDesc;
 
