@@ -95,9 +95,9 @@ typedef struct _MemoryRegion
 enum MemoryRegionType
 {
 	User,
-	Contiguous,
 	System,
 	Devkit,
+	Contiguous,
 	COUNT,
 };
 
@@ -111,6 +111,7 @@ class VMManager : public PhysicalMemory
 		// destructor
 		~VMManager()
 		{
+			DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hContiguousFile);
@@ -135,7 +136,7 @@ class VMManager : public PhysicalMemory
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage);
 		// allocates memory in the contiguous region
 		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
-		// maps device memory in the system memory region
+		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
 		PFN_COUNT DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/);
@@ -184,7 +185,9 @@ class VMManager : public PhysicalMemory
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// initialize a memory region struct
 		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
-		// map a memory block with MapViewOfFileEx or VirtualAlloc if allowed
+		// clear all memory region structs
+		void DestroyMemoryRegions();
+		// map a memory block with the supplied allocation routine
 		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, DWORD perms, PFN pfn);
 		// helper function which maps a block with VirtualAlloc
 		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Perms, DWORD Unused, PFN Unused2);

@@ -129,6 +129,25 @@ void VMManager::ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType T
 	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.emplace(Start, vma).first;
 }
 
+void VMManager::DestroyMemoryRegions()
+{
+	// VirtualAlloc and MapViewOfFileEx cannot be used in the contiguous region so skip it
+	for (int i = 0; i < MemoryRegionType::COUNT - 1; ++i)
+	{
+		for (auto it = m_MemoryRegionArray[i].RegionMap.begin(); it != m_MemoryRegionArray[i].RegionMap.end(); ++it)
+		{
+			if (it->second.bFragmented)
+			{
+				VirtualFree((void*)it->first, 0, MEM_RELEASE);
+			}
+			else
+			{
+				UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+			}
+		}
+	}
+}
+
 void VMManager::InitializePfnDatabase()
 {
 	XBOX_PFN TempPF;

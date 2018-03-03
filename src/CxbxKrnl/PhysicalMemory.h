@@ -253,13 +253,7 @@ class PhysicalMemory
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};
 		// destructor
-		~PhysicalMemory()
-		{
-			for (auto it = m_Fragmented_mem_map.begin(); it != m_Fragmented_mem_map.end(); ++it)
-			{
-				VirtualFree((void*)it->first, 0, MEM_RELEASE);
-			}
-		}
+		~PhysicalMemory() {};
 		// set up the page directory
 		void InitializePageDirectory();
 		// write a contiguous range of pfn's
