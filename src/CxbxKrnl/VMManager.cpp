@@ -1068,7 +1068,7 @@ VAddr VMManager::MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_
 {
 	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE | MEM_COMMIT, Perms) == StartingAddr)
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, Perms) == StartingAddr)
 		{
 			return StartingAddr;
 		}
@@ -1081,7 +1081,7 @@ VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, s
 {
 	for (; StartingAddr + Size - 1 < VmaEnd; StartingAddr += m_AllocationGranularity)
 	{
-		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, MEM_RESERVE, XBOX_PAGE_NOACCESS) == StartingAddr)
+		if ((VAddr)VirtualAlloc((void*)StartingAddr, Size, XBOX_MEM_RESERVE, XBOX_PAGE_NOACCESS) == StartingAddr)
 		{
 			return StartingAddr;
 		}
@@ -1309,7 +1309,23 @@ VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t S
 
 void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
 {
-	VMAIter CarvedVmaIt = CarveVMARange(it->first, it->second.size);
+	BOOL ret;
+
+	if (it->second.bFragmented)
+	{
+		ret = VirtualFree((void*)it->first, 0, XBOX_MEM_RELEASE);
+	}
+	else
+	{
+		ret = UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+	}
+
+	if (!ret)
+	{
+		DbgPrintf("Deallocation routine failed with error %d\n", GetLastError());
+	}
+
+	VMAIter CarvedVmaIt = CarveVMARange(it->first, it->second.size, Type);
 
 	VAddr target_end = it->first + it->second.size;
 	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
@@ -1319,7 +1335,7 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
 	// merged during this process, causing invalidation of the iterators
 	while (CarvedVmaIt != it_end && CarvedVmaIt->second.base < target_end)
 	{
-		CarvedVmaIt = std::next(Unmap(CarvedVmaIt));
+		CarvedVmaIt = std::next(Unmap(CarvedVmaIt, Type));
 	}
 
 	// If we free an entire vma (which should always be the case), prev(CarvedVmaIt) will be the freed vma. If it is not,
