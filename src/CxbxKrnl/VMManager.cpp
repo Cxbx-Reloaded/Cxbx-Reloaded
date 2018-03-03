@@ -665,7 +665,7 @@ void VMManager::DeAllocateContiguous(VAddr addr)
 	PFN EndingPfn;
 	VMAIter it;
 
-	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses from the contiguous region are page aligned
+	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the contiguous region are page aligned
 
 	Lock();
 
@@ -706,7 +706,7 @@ PFN_COUNT VMManager::DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_
 	PFN_COUNT PteNumber;
 	VMAIter it;
 
-	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses from the system region are page aligned
+	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
 
 	Lock();
 
@@ -742,6 +742,49 @@ PFN_COUNT VMManager::DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_
 
 	Unlock();
 	RETURN(PteNumber);
+}
+
+void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Size);
+	LOG_FUNC_END;
+
+	if (addr >= SYSTEM_MEMORY_BASE && addr + Size <= SYSTEM_MEMORY_END)
+	{
+		// The allocation is inside the system region, so it must have been mapped by us. Unmap it
+
+		MMPTE TempPte;
+		PMMPTE StartingPte;
+		PMMPTE EndingPte;
+		PFN_COUNT PteNumber;
+		VMAIter it;
+
+		assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
+
+		Lock();
+
+		it = CheckExistenceVMA(addr, MemoryRegionType::System, ROUND_UP_4K(Size));
+
+		if (it == m_MemoryRegionArray[MemoryRegionType::System].RegionMap.end() || it->second.type == VMAType::Free)
+		{
+			Unlock();
+			return;
+		}
+
+		StartingPte = GetPteAddress(addr);
+		EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+		PteNumber = EndingPte - StartingPte + 1;
+
+		WritePte(StartingPte, EndingPte, TempPte, 0, true);
+		DestructVMA(it, MemoryRegionType::System);
+
+		Unlock();
+		return;
+	}
+
+	// Don't free hardware devices (flash, NV2A, etc) -> no operation
 }
 
 void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)

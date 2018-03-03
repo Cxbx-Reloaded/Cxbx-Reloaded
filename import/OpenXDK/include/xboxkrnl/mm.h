@@ -184,7 +184,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI MmSetAddressProtect
 // ******************************************************************
 // * MmUnmapIoSpace
 // ******************************************************************
-XBSYSAPI EXPORTNUM(183) NTSTATUS NTAPI MmUnmapIoSpace
+XBSYSAPI EXPORTNUM(183) VOID NTAPI MmUnmapIoSpace
 (
     IN PVOID BaseAddress,
     IN ULONG NumberOfBytes

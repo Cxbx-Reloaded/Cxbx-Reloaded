@@ -521,7 +521,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 // Unmaps a virtual address mapping made by MmMapIoSpace.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
+XBSYSAPI EXPORTNUM(183) xboxkrnl::VOID NTAPI xboxkrnl::MmUnmapIoSpace
 (
 	IN PVOID BaseAddress,
 	IN ULONG NumberOfBytes
@@ -532,15 +532,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	if ((xbaddr)BaseAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
-		// Don't free hardware devices (flash, NV2A, etc)
-	}
-	else {
-		g_VMManager.Deallocate((VAddr)BaseAddress);
-		LOG_INCOMPLETE();
-	}
-
-	RETURN(STATUS_SUCCESS);
+	g_VMManager.UnmapDeviceMemory((VAddr)BaseAddress, NumberOfBytes);
 }
 
 // ******************************************************************

@@ -142,6 +142,8 @@ class VMManager : public PhysicalMemory
 		PFN_COUNT DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/);
 		// deallocates memory in the contiguous region
 		void DeAllocateContiguous(VAddr addr);
+		// unmaps device memory in the system region
+		void UnmapDeviceMemory(VAddr addr, size_t Size);
 		// deallocate a block of memory
 		void Deallocate(VAddr addr);
 		// changes the protections of a memory region
