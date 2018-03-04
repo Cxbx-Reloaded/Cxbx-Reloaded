@@ -47,6 +47,7 @@ HANDLE GetHostEvent(xboxkrnl::PRKEVENT Event, GetMode getMode = GetMode::Existin
 HANDLE GetNtMutant(xboxkrnl::PRKMUTANT pMutant, GetMode getMode, BOOLEAN InitialOwner = FALSE);
 
 void KeClearEvent(IN xboxkrnl::PRKEVENT Event);
+NTSTATUS KeQueryEvent(IN xboxkrnl::PRKEVENT Event);
 
 void KeQueryMutant(xboxkrnl::PRKMUTANT pMutant, xboxkrnl::PMUTANT_BASIC_INFORMATION pMutantInformation);
 

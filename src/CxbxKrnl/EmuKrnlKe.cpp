@@ -173,6 +173,16 @@ void KeClearEvent
 	ResetEvent(GetHostEvent(Event));
 }
 
+NTSTATUS KeQueryEvent
+(
+	IN xboxkrnl::PRKEVENT Event
+)
+{
+	NTSTATUS ret = Event->Header.SignalState;
+	// TODO : Retrieve state from GetHostEvent(Event) - how?
+	return ret;
+}
+
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
 	// Weird construction because there doesn't seem to exist an implicit

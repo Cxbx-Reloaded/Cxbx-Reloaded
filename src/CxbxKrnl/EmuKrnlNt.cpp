@@ -57,7 +57,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
-#include "EmuKrnlKe.h" // For KeClearEvent(), GetMode, GetHostEvent(), KeQueryMutant()
+#include "EmuKrnlKe.h" // For KeClearEvent(), KeQueryEvent(), GetMode, GetHostEvent(), KeQueryMutant()
 #include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
 
@@ -1144,15 +1144,22 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 		LOG_FUNC_ARG_OUT(EventInformation)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryEvent(
-		(NtDll::HANDLE)EventHandle,
-		/*EventInformationClass*/NtDll::EVENT_INFORMATION_CLASS::EventBasicInformation,
-		EventInformation,
-		sizeof(EVENT_BASIC_INFORMATION),
-		/*ReturnLength=*/nullptr);
+	PVOID EventObj;
 
-	if (ret != STATUS_SUCCESS)
-		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		// Read event type and signal state before potential destruction
+		EVENT_TYPE EventType = (EVENT_TYPE)(KernelEvent->Header.Type);
+		ret = KeQueryEvent(KernelEvent); // Allow Ke-level intervention (for GetHostEvent)
+		ObfDereferenceObject(EventObj);
+		// Avoid exceptions when argument is absent
+		if (EventInformation) {
+			EventInformation->EventType = EventType;
+			EventInformation->EventState = ret;
+		}
+	}
 
 	RETURN(ret);
 }
@@ -1692,12 +1699,18 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtSetEvent(
-		EventHandle, 
-		PreviousState);
+	PVOID EventObj;
 
-	if (FAILED(ret))
-		EmuWarning("NtSetEvent Failed!");
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		ret = KeSetEvent(KernelEvent, (KPRIORITY)1, FALSE);
+		ObfDereferenceObject(EventObj);
+		if (PreviousState) {
+			*PreviousState = ret;
+		}
+	}
 
 	RETURN(ret);
 }
@@ -1899,15 +1912,15 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 // ******************************************************************
 // * 0x00EA - NtWaitForSingleObjectEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
+xboxkrnl::NTSTATUS NTAPI NtWaitForSingleObjectEx_SEH
 (
-	IN  HANDLE          Handle,
-	IN  KPROCESSOR_MODE WaitMode,
-	IN  BOOLEAN         Alertable,
-	IN  PLARGE_INTEGER  Timeout
+	IN  xboxkrnl::HANDLE          Handle,
+	IN  xboxkrnl::KPROCESSOR_MODE WaitMode,
+	IN  xboxkrnl::BOOLEAN         Alertable,
+	IN  xboxkrnl::PLARGE_INTEGER  Timeout
 )
 {
-	//LOG_FORWARD("KeWaitForMultipleObjects");
+	using namespace xboxkrnl;
 
 	PVOID Object;
 	NTSTATUS Status = ObReferenceObjectByHandle(Handle, NULL, &Object);
@@ -1922,13 +1935,13 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		// addresses (such as &ObpDefaultObject) must be checked by a limit
 		// on offsetof values (the other contents of OBJECT_TYPE.DefaultObject)
 		if ((uintptr_t)WaitObject < PAGE_SIZE) {
-			WaitObject = (PVOID)((PCHAR)Object + (ULONG_PTR)WaitObject);
+			WaitObject = (PVOID)((PCHAR)Object + (uintptr_t)WaitObject);
 		}
 
 		__try {
 			KWAIT_BLOCK WaitBlock;
 
-			Status = xboxkrnl::KeWaitForMultipleObjects(
+			Status = KeWaitForMultipleObjects(
 				/*Count=*/1,
 				&WaitObject,
 				/*WaitType=*/WaitAll,
@@ -1946,6 +1959,26 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	}
 
 	return Status;
+}
+
+XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
+(
+	IN  HANDLE          Handle,
+	IN  KPROCESSOR_MODE WaitMode,
+	IN  BOOLEAN         Alertable,
+	IN  PLARGE_INTEGER  Timeout
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtWaitForSingleObjectEx_SEH(Handle, WaitMode, Alertable, Timeout);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
