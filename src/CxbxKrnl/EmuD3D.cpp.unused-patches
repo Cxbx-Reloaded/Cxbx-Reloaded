@@ -2455,3 +2455,51 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteStateBlock)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeleteStateBlock");
 }
 
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette)
+(
+	X_D3DPALETTESIZE    Size,
+	X_D3DPalette      **ppPalette
+	)
+{
+	FUNC_EXPORTS
+
+	LOG_FORWARD("D3DDevice_CreatePalette2");
+
+	*ppPalette = EMUPATCH(D3DDevice_CreatePalette2)(Size);
+
+	return D3D_OK;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_CreatePalette2
+// ******************************************************************
+XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
+(
+	X_D3DPALETTESIZE    Size
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(Size);
+
+	X_D3DPalette *pPalette = EmuNewD3DPalette();
+
+	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+	pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size), PageType::Contiguous, 0, (~((::ULONG_PTR)0)), PAGE_SIZE, PAGE_EXECUTE_READWRITE);
+	pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
+
+												 // TODO: Should't we register the palette with a call to
+												 // EmuIDirect3DResource8_Register? So far, it doesn't look
+												 // like the palette registration code gets used.  If not, then we
+												 // need to cache the palette manually during any calls to
+												 // EmuD3DDevice_SetPalette for 8-bit textures to work properly.
+
+	DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
+
+
+
+	return pPalette;
+}
