@@ -90,17 +90,6 @@ xboxkrnl::NTSTATUS EmuObFindObjectByHandle
 	return Status;
 }
 
-xboxkrnl::POBJECT_HEADER
-EmuObHeaderFromObject
-(
-	IN PVOID Object
-)
-{
-	//assert(Object);
-	return (xboxkrnl::POBJECT_HEADER)((uintptr_t)Object - offsetof(xboxkrnl::OBJECT_HEADER, Body));
-	// Note : Can't use OBJECT_TO_OBJECT_HEADER, it leads to ambiguous symbol errors
-}
-
 int
 EmuObStringPadding
 (
@@ -150,7 +139,7 @@ EmuObStringFromObject
 {
 	//assert(Object);
 
-	xboxkrnl::POBJECT_HEADER ObjectHeader = EmuObHeaderFromObject(Object);
+	xboxkrnl::POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	return EmuObStringFromObjectHeader(ObjectHeader);
 }
 
@@ -162,7 +151,7 @@ EmuObjectToBasePointer
 {
 	//assert(Object);
 
-	xboxkrnl::POBJECT_HEADER ObjectHeader = EmuObHeaderFromObject(Object);
+	xboxkrnl::POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	uintptr_t Base = (uintptr_t)ObjectHeader;
 	xboxkrnl::POBJECT_STRING Name = EmuObStringFromObjectHeader(ObjectHeader);
 	if (Name != xbnullptr) {
