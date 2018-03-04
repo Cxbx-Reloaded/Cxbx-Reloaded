@@ -336,48 +336,114 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
-VAddr VMManager::Allocate(size_t size, PAddr low_addr, PAddr high_addr, ULONG Alignment, DWORD protect, bool bNonContiguous)
+VAddr VMManager::Allocate(size_t Size)
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(size);
-		LOG_FUNC_ARG(low_addr);
-		LOG_FUNC_ARG(high_addr);
-		LOG_FUNC_ARG(Alignment);
-		LOG_FUNC_ARG(protect);
-		LOG_FUNC_ARG(bNonContiguous);
-	LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(Size);
+
+	MMPTE TempPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PFN EndingPfn;
+	PFN_COUNT PteNumber;
+	VAddr addr;
+	MappingFn MappingRoutine;
+	bool bVAlloc = false;
+
+	// ergo720: I'm not sure why this routine is needed at all, but its usage (together with AllocateZeroed) is quite
+	// widespread in the D3D patches. I think that most of thoses functions should use the Nt or the heap functions instead,
+	// but, until those are properly implemented, this routine is here to stay
+
+	if (!Size) { RETURN(NULL); }
 
 	Lock();
-	size_t ReturnedSize = size;
-	VAddr v_addr = MapMemoryBlock(&ReturnedSize, low_addr, high_addr, Alignment, bNonContiguous);
-	if (v_addr)
-	{
-		ReprotectVMARange(v_addr, ReturnedSize, protect);
-		protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY) ? 
-			m_ImageMemoryInUse += ReturnedSize : m_NonImageMemoryInUse += ReturnedSize;
-	}
-	Unlock();
 
-	RETURN(v_addr);
+	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
+
+	if (!IsMappable(PteNumber)) { goto Fail; }
+
+	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
+	{
+		MappingRoutine = &MapBlockWithMapViewOfFileEx;
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::User, PteNumber, pfn);
+
+		if (!addr)
+		{
+			InsertFree(pfn, pfn + PteNumber - 1);
+			goto Fail;
+		}
+	}
+	else // VirtualAlloc path
+	{
+		bVAlloc = true;
+		MappingRoutine = &MapBlockWithVirtualAlloc;
+		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::User, PteNumber, 0);
+
+		if (!addr) { goto Fail; }
+
+		m_PhysicalPagesAvailable -= PteNumber;
+	}
+
+	// check if we have to construct the PT's for this allocation
+	if (!AllocatePT(PteNumber, addr))
+	{
+		if (bVAlloc)
+		{
+			VirtualFree((void*)addr, 0, MEM_RELEASE);
+			m_PhysicalPagesAvailable += PteNumber;
+		}
+		else
+		{
+			UnmapViewOfFile((void*)ROUND_DOWN(addr, m_AllocationGranularity));
+			InsertFree(pfn, pfn + PteNumber - 1);
+		}
+		goto Fail;
+	}
+
+	// Finally, write the pte's and the pfn's
+	if (bVAlloc)
+	{
+		// With VirtualAlloc we identity map this allocation since it doesn't allocate physical pages
+
+		pfn = addr >> PAGE_SHIFT;
+	}
+
+	PointerPte = GetPteAddress(addr);
+	EndingPte = PointerPte + PteNumber - 1;
+	EndingPfn = pfn + PteNumber - 1;
+
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
+
+	if (!bVAlloc)
+	{
+		WritePfn(pfn, EndingPfn, PointerPte, PageType::VirtualMemory, false);
+	}
+	else
+	{
+		m_PagesByUsage[PageType::VirtualMemory] += PteNumber;
+	}
+
+	m_ImageMemoryInUse += (PteNumber << PAGE_SHIFT);
+
+	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::User, VMAType::Allocated, bVAlloc);
+	UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, XBOX_PAGE_EXECUTE_READWRITE);
+
+	Unlock();
+	RETURN(addr);
+
+	Fail:
+	Unlock();
+	RETURN(NULL);
 }
 
-VAddr VMManager::AllocateZeroed(size_t size)
+VAddr VMManager::AllocateZeroed(size_t Size)
 {
-	LOG_FUNC_ONE_ARG(size);
+	LOG_FORWARD("g_VMManager.Allocate")
 
-	Lock();
-	size_t ReturnedSize = size;
-	VAddr v_addr = MapMemoryBlock(&ReturnedSize, 0, MAXULONG_PTR);
-	if (v_addr)
-	{
-		ReprotectVMARange(v_addr, ReturnedSize, PAGE_EXECUTE_READWRITE);
-		m_ImageMemoryInUse += ReturnedSize;
+	VAddr addr = Allocate(Size);
+	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
 
-		memset((void*)v_addr, 0, ReturnedSize);
-	}
-	Unlock();
-
-	RETURN(v_addr);
+	RETURN(addr);
 }
 
 VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage)
@@ -489,16 +555,16 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		m_PagesByUsage[BusyType] += PteNumber;
 	}
 
-	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::System, VMAType::Allocated, bVAlloc);
+	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::System, VMAType::Allocated, bVAlloc);
 
 	if (bAddGuardPage)
 	{
 		UpdateMemoryPermissions(addr, PAGE_SIZE, XBOX_PAGE_NOACCESS); // guard page of the stack
-		UpdateMemoryPermissions(addr + PAGE_SIZE, ROUND_UP_4K(Size) - PAGE_SIZE, Perms); // actual stack pages
+		UpdateMemoryPermissions(addr + PAGE_SIZE, (PteNumber - 1) << PAGE_SHIFT, Perms); // actual stack pages
 	}
 	else
 	{
-		UpdateMemoryPermissions(addr, ROUND_UP_4K(Size), Perms);
+		UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, Perms);
 	}
 
 	Unlock();
@@ -566,8 +632,8 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	ConstructVMA(addr, ROUND_UP_4K(Size), MemoryRegionType::Contiguous, VMAType::Allocated, false);
-	UpdateMemoryPermissions(addr, ROUND_UP_4K(Size), Perms);
+	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, Perms);
 
 	Unlock();
 	RETURN(addr);
@@ -633,7 +699,7 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 
-	ConstructVMA(addr, PAGES_SPANNED(Paddr, Size) << PAGE_SHIFT, MemoryRegionType::System, VMAType::Reserved, true);
+	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::System, VMAType::Reserved, true);
 
 	Unlock();
 	RETURN(addr + BYTE_OFFSET(Paddr));
@@ -645,14 +711,58 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 
 void VMManager::Deallocate(VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(addr);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+	LOG_FUNC_END;
+
+	MMPTE TempPte;
+	PMMPTE StartingPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PFN EndingPfn;
+	PFN_COUNT PteNumber;
+	VMAIter it;
+
+	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the user region are page aligned
 
 	Lock();
-	UnmapRange(addr);
+
+	it = CheckExistenceVMA(addr, MemoryRegionType::User);
+
+	if (it == m_MemoryRegionArray[MemoryRegionType::User].RegionMap.end() || it->second.type == VMAType::Free)
+	{
+		Unlock();
+		return;
+	}
+
+	StartingPte = GetPteAddress(addr);
+	EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+
+	pfn = StartingPte->Hardware.PFN;
+	EndingPfn = pfn + (EndingPte - StartingPte);
+
+	PteNumber = EndingPte - StartingPte + 1;
+
+	if (it->second.bFragmented)
+	{
+		m_PhysicalPagesAvailable += PteNumber;
+		m_PagesByUsage[PageType::VirtualMemory] -= PteNumber;
+	}
+	else
+	{
+		InsertFree(pfn, EndingPfn);
+		WritePfn(pfn, EndingPfn, StartingPte, PageType::VirtualMemory, false, true);
+	}
+
+	m_ImageMemoryInUse -= it->second.size;
+
+	WritePte(StartingPte, EndingPte, TempPte, 0, true);
+	DestructVMA(it, MemoryRegionType::User);
+
 	Unlock();
 }
 
-void VMManager::DeAllocateContiguous(VAddr addr)
+void VMManager::DeallocateContiguous(VAddr addr)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr);
@@ -691,7 +801,7 @@ void VMManager::DeAllocateContiguous(VAddr addr)
 	Unlock();
 }
 
-PFN_COUNT VMManager::DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/)
+PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr);
@@ -765,7 +875,7 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 
 		Lock();
 
-		it = CheckExistenceVMA(addr, MemoryRegionType::System, ROUND_UP_4K(Size));
+		it = CheckExistenceVMA(addr, MemoryRegionType::System, PAGES_SPANNED(addr, Size));
 
 		if (it == m_MemoryRegionArray[MemoryRegionType::System].RegionMap.end() || it->second.type == VMAType::Free)
 		{
@@ -1382,7 +1492,7 @@ void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 {
 	// Note that this routine expects an aligned size when specified (since all vma's are allocated size aligned to a page
-	// boundary. The caller should do this.
+	// boundary). The caller should do this.
 
 	VMAIter it = GetVMAIterator(addr, Type);
 	if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->first == addr)
@@ -1411,7 +1521,7 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
 
 	if (it->second.bFragmented)
 	{
-		ret = VirtualFree((void*)it->first, 0, XBOX_MEM_RELEASE);
+		ret = VirtualFree((void*)it->first, 0, MEM_RELEASE);
 	}
 	else
 	{

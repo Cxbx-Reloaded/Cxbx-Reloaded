@@ -220,7 +220,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	g_VMManager.DeAllocateSystemMemory(PageType::Stack, StackBottom, ActualSize);
+	g_VMManager.DeallocateSystemMemory(PageType::Stack, StackBottom, ActualSize);
 }
 
 // ******************************************************************
@@ -236,7 +236,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	g_VMManager.DeAllocateContiguous((VAddr)BaseAddress);
+	g_VMManager.DeallocateContiguous((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
 	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
@@ -258,7 +258,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::ULONG NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	ULONG FreedPagesNumber = g_VMManager.DeAllocateSystemMemory(PageType::SystemMemory, (VAddr)BaseAddress, NumberOfBytes);
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(PageType::SystemMemory, (VAddr)BaseAddress, NumberOfBytes);
 
 	RETURN(FreedPagesNumber);
 }

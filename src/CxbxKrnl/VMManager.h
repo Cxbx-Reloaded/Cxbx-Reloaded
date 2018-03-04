@@ -127,10 +127,9 @@ class VMManager : public PhysicalMemory
 		void Initialize(HANDLE memory_view, HANDLE PT_view);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
-		// allocates a block of memory
-		VAddr Allocate(size_t size, PAddr low_addr = 0, PAddr high_addr = MAXULONG_PTR, ULONG Alignment = PAGE_SIZE,
-			DWORD protect = PAGE_EXECUTE_READWRITE, bool bNonContiguous = true);
-		// allocates a block of memory and zeros it
+		// allocates memory in the user region
+		VAddr Allocate(size_t Size);
+		// allocates memory in the user region and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates memory in the system region
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage);
@@ -139,12 +138,12 @@ class VMManager : public PhysicalMemory
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
-		PFN_COUNT DeAllocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/);
+		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/);
 		// deallocates memory in the contiguous region
-		void DeAllocateContiguous(VAddr addr);
+		void DeallocateContiguous(VAddr addr);
 		// unmaps device memory in the system region
 		void UnmapDeviceMemory(VAddr addr, size_t Size);
-		// deallocate a block of memory
+		// deallocates memory in the user region
 		void Deallocate(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr target, size_t size, DWORD new_perms);
@@ -185,11 +184,11 @@ class VMManager : public PhysicalMemory
 		void InitializePfnDatabase();
 		// set up the pfn database after a quick reboot
 		void ReinitializePfnDatabase();
-		// construct a vma
+		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
-		// initialize a memory region struct
+		// initializes a memory region struct
 		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
-		// clear all memory region structs
+		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
 		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn);
@@ -199,9 +198,9 @@ class VMManager : public PhysicalMemory
 		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which maps a block with MapViewOfFileEx
 		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD OffsetLow, PFN pfn);
-		// destruct a vma
+		// destructs a vma
 		void DestructVMA(VMAIter it, MemoryRegionType Type);
-		// check if a vma exists at the supplied address. Also checks its size if specified
+		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// changes access permissions for a range of vma's, splitting them if necessary
 		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
@@ -215,7 +214,7 @@ class VMManager : public PhysicalMemory
 		VMAIter CarveVMA(VAddr base, size_t size, MemoryRegionType Type);
 		// splits the edges of the given range of non-free vma's so that there is a vma split at each end of the range
 		VMAIter CarveVMARange(VAddr base, size_t size, MemoryRegionType Type);
-		// gets the iterator of a vma in m_Vma_map
+		// gets the iterator of a vma in the specified memory region
 		VMAIter GetVMAIterator(VAddr target, MemoryRegionType Type);
 		// splits a parent vma into two children
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
