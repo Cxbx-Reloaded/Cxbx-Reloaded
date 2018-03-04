@@ -1916,7 +1916,12 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 		PVOID WaitObject = ObjectHeader->Type->DefaultObject;
 
-		if ((intptr_t)WaitObject >= 0) {
+		// Note : The real kernel is loaded at 0x80000000, and as such,
+		// can check for absolute addresses on DefaultObject, by checking
+		// the sign-bit. Since our kernel doesn't reside there, absolute
+		// addresses (such as &ObpDefaultObject) must be checked by a limit
+		// on offsetof values (the other contents of OBJECT_TYPE.DefaultObject)
+		if ((uintptr_t)WaitObject < PAGE_SIZE) {
 			WaitObject = (PVOID)((PCHAR)Object + (ULONG_PTR)WaitObject);
 		}
 
