@@ -474,6 +474,12 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									Decrement = 0x200;
 									Increment = 82 * 4;
 									patchOffset = 142 * 4;
+								} else if (BuildVersion > 4361 && BuildVersion < 4432) { // fill the gap
+									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
+									// Unsure about these (although this entire codeblock should be removed)
+									Decrement = 0x204;
+									Increment = 83 * 4;
+									patchOffset = 143 * 4;
 								} else if (BuildVersion >= 4432 && BuildVersion < 4627) {
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
 									Decrement = 0x204;
