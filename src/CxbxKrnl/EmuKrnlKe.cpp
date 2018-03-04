@@ -1202,7 +1202,6 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 		PKTHREAD Thread = KeGetCurrentThread();
 		Thread->WaitIrql = OldIrql;
 		Thread->WaitNext = Wait;
-
 	}
 	else {
 		KiUnlockDispatcherDatabase(OldIrql);
@@ -1786,7 +1785,6 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 		PRKTHREAD Thread = KeGetCurrentThread();
 		Thread->WaitNext = Wait;
 		Thread->WaitIrql = OldIrql;
-
 	}
 	else {
 		KiUnlockDispatcherDatabase(OldIrql);
@@ -2109,29 +2107,43 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	std::vector<HANDLE> ntdllObjects;
 
 	for (uint i = 0; i < Count; i++) {
+		HANDLE Handle = Object[i];
+
 		// Prevent waiting on EmuHandles
-		if (IsEmuHandle(Object[i])) {
-			// EmuHandle *iEmuHandle = HandleToEmuHandle(Object[i]);
+		if (IsEmuHandle(Handle)) {
+			// EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 			// TODO : Somehow, ntdllObjects.push_back(iEmuHandle->NtHandle);
 			continue;
 		}
 
-		// Decide per object type in which vector the handle is put
-		switch (((DISPATCHER_HEADER*)(Object[i]))->Type) {
-		case EventNotificationObject:
-		case EventSynchronizationObject: {
-			// Host events use native host handles :
-			PKEVENT kernelEvent = (PKEVENT)Object[i];
-			HANDLE hostEvent = GetHostEvent(kernelEvent, GetMode::Existing);
-			if (hostEvent) {
-				nativeObjects.push_back(hostEvent);
-			}
-			break;
+		// First, query the WinApi to see if we have a valid Windows handle
+		// This function will fail and return 0 when called on an invalid handle
+		// so we just need to check for a non-zero value
+		DWORD handleFlags = 0;
+		if (GetHandleInformation(Handle, &handleFlags) != 0) {
+			// This was a Windows handle, so we treat it like that
+			nativeObjects.push_back(Handle);
 		}
-		default:
-			// Assume all other object types (mutant, file, thread, etc) use NtDll handles :
-			ntdllObjects.push_back(Object[i]);
-			break;
+		else {
+			DISPATCHER_HEADER* DispatchHeader = (DISPATCHER_HEADER*)Handle;
+
+			// Decide per object type in which vector the handle is put
+			switch (DispatchHeader->Type) {
+			case EventNotificationObject:
+			case EventSynchronizationObject: {
+				// Host events use native host handles :
+				PKEVENT kernelEvent = (PKEVENT)Handle;
+				HANDLE hostEvent = GetHostEvent(kernelEvent, GetMode::Existing);
+				if (hostEvent) {
+					nativeObjects.push_back(hostEvent);
+				}
+				break;
+			}
+			default:
+				// Assume all other object types (mutant, file, thread, etc) use NtDll handles :
+				ntdllObjects.push_back(Handle);
+				break;
+			}
 		}
 	}
 
