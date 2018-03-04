@@ -3197,56 +3197,6 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 }
 
 // ******************************************************************
-// * patch: D3DDevice_CreatePalette
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette)
-(
-	X_D3DPALETTESIZE    Size,
-	X_D3DPalette      **ppPalette
-	)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("D3DDevice_CreatePalette2");
-
-	*ppPalette = EMUPATCH(D3DDevice_CreatePalette2)(Size);
-
-	return D3D_OK;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_CreatePalette2
-// ******************************************************************
-XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
-(
-	X_D3DPALETTESIZE    Size
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(Size);
-
-	X_D3DPalette *pPalette = EmuNewD3DPalette();
-
-	pPalette->Common |= (Size << X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
-	pPalette->Data = (DWORD)g_VMManager.Allocate(XboxD3DPaletteSizeToBytes(Size), PageType::Contiguous, 0, (~((::ULONG_PTR)0)), PAGE_SIZE, PAGE_EXECUTE_READWRITE);
-	pPalette->Lock = X_D3DRESOURCE_LOCK_PALETTE; // emulated reference count for palettes
-
-												 // TODO: Should't we register the palette with a call to
-												 // EmuIDirect3DResource8_Register? So far, it doesn't look
-												 // like the palette registration code gets used.  If not, then we
-												 // need to cache the palette manually during any calls to
-												 // EmuD3DDevice_SetPalette for 8-bit textures to work properly.
-
-	DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
-
-
-
-	return pPalette;
-}
-
-
-// ******************************************************************
 // * patch: D3DDevice_CreateVertexShader
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
@@ -4653,7 +4603,7 @@ VOID WINAPI CreateHostResource
 								DWORD dwDataSize = dwMipWidth*dwMipHeight;
 								DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
 
-								uint8 *pSrc = pPixelData;
+								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
 								uint8 *pDest = (uint8 *)pExpandedTexture;
 
 								DWORD dwSrcPitch = dwMipWidth * dwBPP;//sizeof(DWORD);
@@ -4879,23 +4829,7 @@ VOID WINAPI CreateHostResource
         }
         break;
 
-        case X_D3DCOMMON_TYPE_PALETTE:
-        {
-            DbgPrintf("EmuIDirect3DResource8_Register :-> Palette...\n");
-
-            X_D3DPalette *pPalette = (X_D3DPalette*)pResource;
-
-            // create palette
-            {
-				DWORD dwSize = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette));
-
-                g_pCurrentPalette[TextureStage] = (PVOID)pThis->Data;
-            }
-
-            //DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Palette (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pResource->Size, pResource->AllocationSize);
-        }
-        break;
-
+        case X_D3DCOMMON_TYPE_PALETTE: break;
         case X_D3DCOMMON_TYPE_FIXUP:
         {
             X_D3DFixup *pFixup = (X_D3DFixup*)pResource;
@@ -6798,9 +6732,74 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	if (Stage < TEXTURE_STAGES)
+	if (Stage < TEXTURE_STAGES) {
+		if (g_pCurrentPalette[Stage] != GetDataFromXboxResource(pPalette) && XTL::EmuD3DActiveTexture[Stage] != nullptr) {
+			// If the palette for a texture has changed, we need to re-convert the texture
+			FreeHostResource(GetHostResourceKey(XTL::EmuD3DActiveTexture[Stage]));
+		}
+
 		// Cache palette data and size
 		g_pCurrentPalette[Stage] = GetDataFromXboxResource(pPalette);
+	}
+}
+
+
+// ******************************************************************
+// * patch: IDirect3DPalette8_Lock
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
+(
+	X_D3DPalette   *pThis,
+	D3DCOLOR      **ppColors,
+	DWORD           Flags
+)
+{
+	FUNC_EXPORTS
+	
+	LOG_FUNC_BEGIN
+	LOG_FUNC_ARG(pThis)
+	LOG_FUNC_ARG_OUT(ppColors)
+	LOG_FUNC_ARG(Flags)
+	LOG_FUNC_END;
+
+	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, D3DCOLOR**, DWORD));
+	XB_D3DPalette_Lock(pThis, ppColors, Flags);
+
+	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
+	for (int i = 0; i < TEXTURE_STAGES; i++) {
+		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
+			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
+		}
+	}
+}
+
+// ******************************************************************
+// * patch: IDirect3DPalette8_Lock2
+// ******************************************************************
+XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
+(
+	X_D3DPalette   *pThis,
+	DWORD           Flags
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+	LOG_FUNC_ARG(pThis)
+	LOG_FUNC_ARG(Flags)
+	LOG_FUNC_END;
+
+	XB_trampoline(XTL::D3DCOLOR*, WINAPI, D3DPalette_Lock2, (X_D3DPalette*, DWORD));
+	XTL::D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
+
+	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
+	for (int i = 0; i < TEXTURE_STAGES; i++) {
+		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
+			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
+		}
+	}
+
+	RETURN(pData);
 }
 
 // ******************************************************************
@@ -6831,60 +6830,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 	LOG_FUNC_ONE_ARG(Enable);
 
 	LOG_IGNORED();
-}
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
-(
-    X_D3DPalette   *pThis,
-    D3DCOLOR      **ppColors,
-    DWORD           Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("D3DPalette_Lock2");
-
-	HRESULT hRet = D3D_OK;
-
-	if( pThis )
-		*ppColors = EMUPATCH(D3DPalette_Lock2)(pThis, Flags);
-	else
-	{
-		EmuWarning( "EmuIDirect3DPalette8_Lock: pThis == NULL!" );
-		hRet = E_FAIL;
-	}
-}
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock2
-// ******************************************************************
-XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
-(
-    X_D3DPalette   *pThis,
-    DWORD           Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-    // If X_D3DLOCK_READONLY and X_D3DLOCK_NOOVERWRITE bitflags not set
-    if( !(Flags & (X_D3DLOCK_READONLY | X_D3DLOCK_NOOVERWRITE)) )
-    {
-		EMUPATCH(D3DResource_BlockUntilNotBusy)(pThis);
-    }
-
-    D3DCOLOR *pColors = (D3DCOLOR*)pThis->Data;
-
-    
-
-    return pColors;
 }
 
 // ******************************************************************
