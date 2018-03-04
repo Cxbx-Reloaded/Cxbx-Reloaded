@@ -1907,7 +1907,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	//LOG_FORWARD("KeWaitForMultipleObjects");
 
 	PVOID Object;
 	NTSTATUS Status = ObReferenceObjectByHandle(Handle, NULL, &Object);
@@ -1920,7 +1920,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 			WaitObject = (PVOID)((PCHAR)Object + (ULONG_PTR)WaitObject);
 		}
 
-		//__try {
+		__try {
 			KWAIT_BLOCK WaitBlock;
 
 			Status = xboxkrnl::KeWaitForMultipleObjects(
@@ -1933,9 +1933,9 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 				Timeout,
 				&WaitBlock
 			);
-		//} __except(EXCEPTION_EXECUTE_HANDLER) {
-		//	Status = GetExceptionCode();
-		//}
+		} __except(EXCEPTION_EXECUTE_HANDLER) {
+			Status = GetExceptionCode();
+		}
 
 		ObfDereferenceObject(Object);
 	}
