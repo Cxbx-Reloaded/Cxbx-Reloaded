@@ -446,13 +446,12 @@ VAddr VMManager::AllocateZeroed(size_t Size)
 	RETURN(addr);
 }
 
-VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage)
+VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusyType);
 		LOG_FUNC_ARG(Perms);
 		LOG_FUNC_ARG(Size);
-		//LOG_FUNC_ARG(bDebugRange);
 		LOG_FUNC_ARG(bAddGuardPage);
 	LOG_FUNC_END;
 
@@ -461,10 +460,12 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PMMPTE EndingPte;
 	PFN pfn;
 	PFN EndingPfn;
+	PFN_COUNT LowerAcceptablePfn = 0;
 	PFN_COUNT PteNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
 	bool bVAlloc = false;
+	MemoryRegionType MemoryType = MemoryRegionType::System;
 
 	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
@@ -474,11 +475,19 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 
 	if (bAddGuardPage) { PteNumber++; Size += PAGE_SIZE; }
 	if (!IsMappable(PteNumber)) { goto Fail; }
+	if (BusyType == PageType::Debugger)
+	{
+		// Debugger pages are only allocated from the extra 64 Mib available on devkits and are mapped in the
+		// devkit system region
 
-	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
+		LowerAcceptablePfn = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		MemoryType = MemoryRegionType::Devkit;
+	}
+
+	if (RemoveFree(PteNumber, &pfn, 0, LowerAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
-		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, pfn);
+		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, pfn);
 
 		if (!addr)
 		{
@@ -495,7 +504,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 
 		bVAlloc = true;
 		MappingRoutine = &MapBlockWithVirtualAlloc;
-		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::System, PteNumber, 0);
+		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, 0);
 
 		if (!addr) { goto Fail; }
 
@@ -555,7 +564,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		m_PagesByUsage[BusyType] += PteNumber;
 	}
 
-	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::System, VMAType::Allocated, bVAlloc);
+	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryType, VMAType::Allocated, bVAlloc);
 
 	if (bAddGuardPage)
 	{
@@ -801,7 +810,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 	Unlock();
 }
 
-PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/)
+PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr);
@@ -815,21 +824,41 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	PFN EndingPfn;
 	PFN_COUNT PteNumber;
 	VMAIter it;
+	MemoryRegionType MemoryType = MemoryRegionType::System;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
 
 	Lock();
 
-	it = CheckExistenceVMA(addr, MemoryRegionType::System, ROUND_UP_4K(Size));
+	if (BusyType == PageType::Debugger)
+	{
+		// ergo720: I'm not sure but MmDbgFreeMemory seems to be able to deallocate only a part of an allocation done by
+		// MmDbgAllocateMemory. This is not a problem since CarveVMARange supports freeing only a part of an allocated
+		// vma, but we won't pass its size to CheckExistenceVMA because it would fail the size check
 
-	if (it == m_MemoryRegionArray[MemoryRegionType::System].RegionMap.end() || it->second.type == VMAType::Free)
+		MemoryType = MemoryRegionType::Devkit;
+		it = CheckExistenceVMA(addr, MemoryType);
+	}
+	else
+	{
+		it = CheckExistenceVMA(addr, MemoryType, ROUND_UP_4K(Size));
+	}
+
+	if (it == m_MemoryRegionArray[MemoryType].RegionMap.end() || it->second.type == VMAType::Free)
 	{
 		Unlock();
 		RETURN(NULL);
 	}
 
 	StartingPte = GetPteAddress(addr);
-	EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+	if (BusyType == PageType::Debugger)
+	{
+		EndingPte = StartingPte + (ROUND_UP_4K(Size) >> PAGE_SHIFT) - 1;
+	}
+	else
+	{
+		EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+	}
 
 	pfn = StartingPte->Hardware.PFN;
 	EndingPfn = pfn + (EndingPte - StartingPte);
@@ -848,7 +877,7 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	}
 
 	WritePte(StartingPte, EndingPte, TempPte, 0, true);
-	DestructVMA(it, MemoryRegionType::System);
+	DestructVMA(it, MemoryType);
 
 	Unlock();
 	RETURN(PteNumber);
@@ -871,7 +900,8 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 		PFN_COUNT PteNumber;
 		VMAIter it;
 
-		assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
+		// The starting address of a device can be unaligned since MapDeviceMemory returns an offset from the aligned
+		// mapped address, so we won't assert the address here
 
 		Lock();
 

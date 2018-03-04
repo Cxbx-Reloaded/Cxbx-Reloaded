@@ -52,6 +52,7 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
 #include "EmuShared.h"
+#include <assert.h>
 
 // prevent name collisions
 namespace NtDll
@@ -462,14 +463,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	NTSTATUS ret;
 
-#ifdef _DEBUG_TRACE
-	if (!MemoryStatistics)
-	{
-		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
-		LOG_IGNORED();
-		RETURN(STATUS_SUCCESS);
-	}
-#endif
+	assert(MemoryStatistics);
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
@@ -549,9 +543,13 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
 
-	RETURN(NULL);
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Debugger, Protect, NumberOfBytes, false);
+	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
+
+	RETURN(addr);
 }
 
 // ******************************************************************
@@ -568,9 +566,12 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
 
-	RETURN(NULL);
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(PageType::Debugger, (VAddr)BaseAddress, NumberOfBytes);
+
+	RETURN(FreedPagesNumber);
 }
 
 // ******************************************************************

@@ -132,13 +132,13 @@ class VMManager : public PhysicalMemory
 		// allocates memory in the user region and zeros it
 		VAddr AllocateZeroed(size_t size);
 		// allocates memory in the system region
-		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, /*bool bDebugRange,*/ bool bAddGuardPage);
+		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
 		// allocates memory in the contiguous region
 		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
-		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size /*MemoryRegionType Type*/);
+		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size);
 		// deallocates memory in the contiguous region
 		void DeallocateContiguous(VAddr addr);
 		// unmaps device memory in the system region
