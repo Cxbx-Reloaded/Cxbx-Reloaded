@@ -145,25 +145,6 @@ void SetupXboxDeviceTypes()
 		}
 
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
-
-		// Set the device as connected
-		// We need to set the ChangeConnected attribute so that titles calling
-		// XGetDeviceChanges before calling XGetDevices work as expected
-		// This fixes input in Far Cry Instincts
-		gDeviceType_Gamepad->CurrentConnected = 1;
-		gDeviceType_Gamepad->ChangeConnected = 1;
-		gDeviceType_Gamepad->PreviousConnected = 0;
-
-		// JSRF Hack: Don't set the ChangeConnected flag. 
-		// Without this, JSRF hard crashes 
-		// TODO: Why is this still needed? 
-		// TODO: Perhaps we should implement LLE for OHCI/USB much sooner than planned
-		// TitleID 0x49470018 = JSRF NTSC-U
-		// TitleID 0x5345000A = JSRF PAL, NTSC-J
-		// TitleID 0x53450016 = JSRF NTSC-J (Demo)
-		if (g_pCertificate->dwTitleId == 0x49470018 || g_pCertificate->dwTitleId == 0x5345000A || g_pCertificate->dwTitleId == 0x53450016) {
-			gDeviceType_Gamepad->ChangeConnected = 0;
-		}
 	}
 }
 
@@ -196,6 +177,56 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
     }
 }
 
+bool TitleIsJSRF()
+{
+	static bool detected = false;
+	static bool result = false;
+
+	// Prevent running the check every time this function is called
+	if (detected) {
+		return result;
+	}
+
+	// Array of known JSRF title IDs, must be 0 terminated
+	DWORD titleIds[] = {
+		0x49470018, // JSRF NTSC-U
+		0x5345000A, // JSRF PAL, NTSC-J
+		0x53450016, // JSRF NTSC - J(Demo)
+		0
+	};
+
+	DWORD* pTitleId = &titleIds[0];
+	while (*pTitleId != 0) {
+		if (g_pCertificate->dwTitleId == *pTitleId) {
+			result = true;
+			break;
+		}
+
+		pTitleId++;
+	}
+
+	// We didn't find a known JSRF title id, fallback to checking the title
+	// This isn't 100% effective, but could work for some versions of JSRF
+	// Because of this, we log a message to say that the title_id should be added
+	if (!result) {
+		char tAsciiTitle[40] = "Unknown";
+		setlocale(LC_ALL, "English");
+		wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
+
+		if (_strnicmp(tAsciiTitle, "Jet Set Radio", 13) == 0) {
+			CxbxPopupMessage("Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
+			result = true;
+		}
+	}
+
+	if (result) {
+		EmuWarning("Applying JSRF Hack");
+	}
+
+	detected = true;
+	return result;
+}
+
 // ******************************************************************
 // * patch: XGetDevices
 // * Note: This could be unpatched however,
@@ -217,6 +248,18 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	DWORD ret = DeviceType->CurrentConnected;
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
+
+	// If this is a gamepad, and no gamepad was previously detected, connect one
+	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
+		ret = DeviceType->CurrentConnected = 1;
+		DeviceType->ChangeConnected = 1;
+	}
+
+	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
+	// TODO: Why is this still needed? 
+	if (TitleIsJSRF()) {
+		DeviceType->ChangeConnected = 0;
+	}
 
 	xboxkrnl::KfLowerIrql(oldIrql);
 
@@ -246,6 +289,18 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	LOG_FUNC_END;
 
 	BOOL ret = FALSE;
+
+	// If this is a gamepad, and no gamepad was previously detected, connect one
+	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
+		DeviceType->CurrentConnected = 1;
+		DeviceType->ChangeConnected = 1;		
+	}
+
+	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
+	// TODO: Why is this still needed? 
+	if (TitleIsJSRF()) {
+		DeviceType->ChangeConnected = 0;
+	}
 
     if(!DeviceType->ChangeConnected)
     {
