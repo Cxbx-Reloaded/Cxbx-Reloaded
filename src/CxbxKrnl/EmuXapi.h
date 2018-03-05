@@ -607,6 +607,15 @@ LPVOID WINAPI EMUPATCH(ConvertThreadToFiber)
 VOID WINAPI EMUPATCH(XapiFiberStartup)(DWORD dwDummy);
 #endif
 
+
+// ******************************************************************
+// * patch: QueryPerformanceCounter
+// ******************************************************************
+BOOL WINAPI EMUPATCH(QueryPerformanceCounter)
+(
+	LARGE_INTEGER *lpPerformanceCount
+);
+
 // ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************

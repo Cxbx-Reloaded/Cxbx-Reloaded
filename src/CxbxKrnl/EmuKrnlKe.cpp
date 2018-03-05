@@ -238,8 +238,8 @@ void InitDpcAndTimerThread()
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 
-// Xbox Performance Counter Frequency = 337F98 = ACPI timer frequency (3.375000 Mhz)
-#define XBOX_PERFORMANCE_FREQUENCY 3375000 
+// Xbox Performance Counter Frequency = 733333333 (CPU Clock)
+#define XBOX_PERFORMANCE_FREQUENCY 733333333
 
 LARGE_INTEGER NativePerformanceCounter = { 0 };
 LARGE_INTEGER NativePerformanceFrequency = { 0 };
