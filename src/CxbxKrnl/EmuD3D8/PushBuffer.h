@@ -34,9 +34,14 @@
 #ifndef PUSHBUFFER_H
 #define PUSHBUFFER_H
 
-extern int DxbxFVF_GetTextureSize(DWORD dwFVF, int aTextureIndex);
+typedef VertexPatchDesc CxbxDrawContext; // TODO : Temporary
+typedef VertexPatcher CxbxVertexBufferConverter; // TODO : Temporary
 
+extern int DxbxFVF_GetTextureSize(DWORD dwFVF, int aTextureIndex);
 extern UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures);
+
+extern void CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData);
+extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
 
 extern void EmuExecutePushBuffer
 (

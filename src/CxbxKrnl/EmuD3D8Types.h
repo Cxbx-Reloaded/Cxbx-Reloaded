@@ -1178,6 +1178,8 @@ const int X_D3DVSDT_NONE        = 0x02; // xbox ext. nsp
 
 const int MAX_NBR_STREAMS = 16;
 
+typedef WORD INDEX16;
+
 #define X_D3DVSD_TOKENTYPESHIFT   29
 #define X_D3DVSD_TOKENTYPEMASK    (7 << X_D3DVSD_TOKENTYPESHIFT)
 
