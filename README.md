@@ -27,9 +27,7 @@ Cxbx-Reloaded is not yet ready for general release, but the latest development b
 Cxbx-Reloaded has a separate [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues). If you have something to report on a title, please create or update the issue for it over there. (Please, read the [Read-me file](https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md) first!)
 
 ## Bug Reports
-As Cxbx-Reloaded is in early stages of development right now, most software will either crash or do nothing. Please do not submit issues for this.
-
-Software that actually does something (for example, it outputs graphics or audio before crashing), can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues).
+Game or software specific issues can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues).
 
 For emulation issues that are suspected to be generic (NOT specific to any single piece of software), a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
 
