@@ -1820,16 +1820,31 @@ void WndMain::UpdateCaption()
 			i += sprintf(AsciiTitle + i, " : Loaded ");
 		}
 
-		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);		
+		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);
+
+		// Append FPS menu text
+		HMENU hMenu = GetMenu(m_hwnd);
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof mii;
+		mii.fMask = MIIM_STRING;
+		char sMenu[32];
+		mii.dwTypeData = &sMenu[0];
+
 		if (m_bIsStarted) {
 			if (g_EmuShared != NULL) {
 				float currentFPSVal = 0;
 				float currentMSpFVal = 0;
 				g_EmuShared->GetCurrentFPS(&currentFPSVal);
 				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
-				i += sprintf(AsciiTitle + i, " - FPS: %.2f  MS/F: %.2f", currentFPSVal, currentMSpFVal);
+				sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", currentFPSVal, currentMSpFVal);
 			}
 		}
+		else {
+			// Hide FPS if we're not currently emulating
+			sprintf(sMenu, " ");
+		}
+
+		SetMenuItemInfo(hMenu, ID_FPS, FALSE, &mii);
 	}
 
 	SetWindowText(m_hwnd, AsciiTitle);
