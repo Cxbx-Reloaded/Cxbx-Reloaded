@@ -6080,6 +6080,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+
 	CxbxUpdateNativeD3DResources();
 
 	VertexPatchDesc VPDesc;
@@ -6151,6 +6158,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_ARG(pVertexStreamZeroData)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
+
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
 
@@ -6239,6 +6253,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_END;
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+
 	CxbxUpdateNativeD3DResources();
 	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
 
@@ -6360,6 +6382,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
 
