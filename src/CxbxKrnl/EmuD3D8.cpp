@@ -7280,8 +7280,36 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_ARG(pRectPatchInfo)
 		LOG_FUNC_END;
 
+	CxbxUpdateNativeD3DResources();
+
 	HRESULT hRet = g_pD3DDevice8->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawRectPatch");
+
+	return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_DrawTriPatch
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawTriPatch)
+(
+	UINT					Handle,
+	CONST FLOAT				*pNumSegs,
+	CONST D3DTRIPATCH_INFO* pTriPatchInfo
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pNumSegs)
+		LOG_FUNC_ARG(pTriPatchInfo)
+		LOG_FUNC_END;
+
+	CxbxUpdateNativeD3DResources();
+
+	HRESULT hRet = g_pD3DDevice8->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawTriPatch");
 
 	return hRet;
 }
