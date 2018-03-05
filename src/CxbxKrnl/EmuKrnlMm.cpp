@@ -430,8 +430,6 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 	LOG_FUNC_ONE_ARG(VirtualAddress);
 
 	 ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
-
-	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
 	
 	RETURN(Result);
 }

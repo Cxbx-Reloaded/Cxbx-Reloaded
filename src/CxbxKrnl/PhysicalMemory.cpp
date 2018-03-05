@@ -447,6 +447,25 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 	return true;
 }
 
+DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
+{
+	ULONG Protect;
+
+	if (PteMask & PTE_READWRITE) { Protect = XBOX_PAGE_READWRITE; }
+	else { Protect = XBOX_PAGE_READONLY; }
+
+	if ((PteMask & PTE_VALID_MASK) == 0)
+	{
+		if (PteMask & PTE_GUARD) { Protect |= XBOX_PAGE_GUARD; }
+		else { Protect = XBOX_PAGE_NOACCESS; }
+	}
+
+	if (PteMask & PTE_CACHE_DISABLE_MASK) { Protect |= XBOX_PAGE_NOCACHE; }
+	else if (PteMask & PTE_WRITE_THROUGH_MASK) { Protect |= XBOX_PAGE_WRITECOMBINE; }
+
+	return Protect;
+}
+
 DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 {
 	// Usage notes: this routine expects the permissions to be already sanitized by ConvertXboxToSystemPteProtection or

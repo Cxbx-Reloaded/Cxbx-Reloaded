@@ -462,19 +462,26 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PFN EndingPfn;
 	PFN_COUNT LowestAcceptablePfn = 0;
 	PFN_COUNT PteNumber;
+	PFN_COUNT PagesNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
 	bool bVAlloc = false;
 	MemoryRegionType MemoryType = MemoryRegionType::System;
+
+	// NOTE: AllocateSystemMemory won't allocate a physical page for the guard page (if requested) and just adds an extra
+	// unallocated virtual page in front of the mapped allocation. This means we need to only allocate the actual pages of
+	// the allocation but still construct the vma with the extra page, otherwise successive mapping operations can put another
+	// allocation next the this block, which will defeat the guard page purpose.
 
 	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	Lock();
 
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
+	PagesNumber = PteNumber;
 
-	if (bAddGuardPage) { PteNumber++; Size += PAGE_SIZE; }
-	if (!IsMappable(PteNumber)) { goto Fail; }
+	if (bAddGuardPage) { PteNumber++; }
+	if (!IsMappable(PagesNumber)) { goto Fail; }
 	if (BusyType == PageType::Debugger)
 	{
 		// Debugger pages are only allocated from the extra 64 MiB available on devkits and are mapped in the
@@ -484,14 +491,14 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		MemoryType = MemoryRegionType::Devkit;
 	}
 
-	if (RemoveFree(PteNumber, &pfn, 0, LowestAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
+	if (RemoveFree(PagesNumber, &pfn, 0, LowestAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
-		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, pfn);
+		addr = MapMemoryBlock(MappingRoutine, MemoryType, PagesNumber, pfn);
 
 		if (!addr)
 		{
-			InsertFree(pfn, pfn + PteNumber - 1);
+			InsertFree(pfn, pfn + PagesNumber - 1);
 			goto Fail;
 		}
 	}
@@ -504,12 +511,12 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 
 		bVAlloc = true;
 		MappingRoutine = &MapBlockWithVirtualAlloc;
-		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, 0);
+		addr = MapMemoryBlock(MappingRoutine, MemoryType, PagesNumber, 0);
 
 		if (!addr) { goto Fail; }
 
 		// With VirtualAlloc we just consume free pages but we don't remove them from the free list
-		m_PhysicalPagesAvailable -= PteNumber;
+		m_PhysicalPagesAvailable -= PagesNumber;
 	}
 
 	// check if we have to construct the PT's for this allocation
@@ -521,13 +528,13 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		if (bVAlloc)
 		{
 			VirtualFree((void*)addr, 0, MEM_RELEASE);
-			m_PhysicalPagesAvailable += PteNumber;
+			m_PhysicalPagesAvailable += PagesNumber;
 		}
 		else
 		{
 			// Recalculate the granularity aligned addr
 			UnmapViewOfFile((void*)ROUND_DOWN(addr, m_AllocationGranularity));
-			InsertFree(pfn, pfn + PteNumber - 1);
+			InsertFree(pfn, pfn + PagesNumber - 1);
 		}
 		goto Fail;
 	}
@@ -546,8 +553,8 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		WRITE_ZERO_PTE(PointerPte);
 		PointerPte++;
 	}
-	EndingPte = PointerPte + PteNumber - 1;
-	EndingPfn = pfn + PteNumber - 1;
+	EndingPte = PointerPte + PagesNumber - 1;
+	EndingPfn = pfn + PagesNumber - 1;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	EndingPte->Hardware.GuardOrEnd = 1;
@@ -561,20 +568,14 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
 		// to increase the page type usage
 
-		m_PagesByUsage[BusyType] += PteNumber;
+		m_PagesByUsage[BusyType] += PagesNumber;
 	}
+
+	UpdateMemoryPermissions(addr, PagesNumber << PAGE_SHIFT, Perms);
+
+	if (bAddGuardPage) { addr -= PAGE_SIZE; }
 
 	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryType, VMAType::Allocated, bVAlloc);
-
-	if (bAddGuardPage)
-	{
-		UpdateMemoryPermissions(addr, PAGE_SIZE, XBOX_PAGE_NOACCESS); // guard page of the stack
-		UpdateMemoryPermissions(addr + PAGE_SIZE, (PteNumber - 1) << PAGE_SHIFT, Perms); // actual stack pages
-	}
-	else
-	{
-		UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, Perms);
-	}
 
 	Unlock();
 	RETURN(addr);
@@ -588,8 +589,8 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Size);
-		LOG_FUNC_ARG(LowerAddress);
-		LOG_FUNC_ARG(HigherAddress);
+		LOG_FUNC_ARG(LowestAddress);
+		LOG_FUNC_ARG(HighestAddress);
 		LOG_FUNC_ARG(Alignment);
 		LOG_FUNC_ARG(Perms);
 	LOG_FUNC_END;
@@ -1009,18 +1010,46 @@ DWORD VMManager::QueryProtection(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
-	DWORD protect = PAGE_NOACCESS;
+	PMMPTE PointerPte;
+	MMPTE TempPte;
+	DWORD Protect;
+
+	// This function can query any virtual address, even invalid ones, so we won't do any vma checks here
 
 	Lock();
-	auto it = m_Vma_map.lower_bound(addr);
-	if (it != m_Vma_map.end() && addr >= it->second.base)
+
+	PointerPte = GetPdeAddress(addr);
+	TempPte = *PointerPte;
+
+	if (TempPte.Hardware.Valid != 0)
 	{
-		assert(addr <= it->second.base + it->second.size - 1);
-		protect = it->second.permissions;
+		if (TempPte.Hardware.LargePage == 0)
+		{
+			PointerPte = GetPteAddress(addr);
+			TempPte = *PointerPte;
+
+			if ((TempPte.Hardware.Valid != 0) || ((TempPte.Default != 0) && (addr <= HIGHEST_USER_ADDRESS)))
+			{
+				Protect = ConvertPteToXboxProtection(TempPte.Default);
+			}
+			else
+			{
+				Protect = 0; // invalid page, return failure
+			}
+		}
+		else
+		{
+			Protect = ConvertPteToXboxProtection(TempPte.Default); // large page, query it immediately
+		}
 	}
+	else
+	{
+		Protect = 0; // invalid page, return failure
+	}
+
 	Unlock();
 
-	RETURN(protect);
+	RETURN(Protect);
 }
 
 size_t VMManager::QuerySize(VAddr addr)

@@ -150,12 +150,12 @@ enum PageType {
 #define PTE_GLOBAL_MASK             0x00000100
 #define PTE_GUARD_END_MASK          0x00000200
 #define PTE_PERSIST_MASK            0x00000400
-#define PTE_NOACCESS                0x000
-#define PTE_READONLY                0x000
+#define PTE_NOACCESS                0x00000000
+#define PTE_READONLY                0x00000000
 #define PTE_READWRITE               PTE_WRITE_MASK
 #define PTE_NOCACHE                 PTE_CACHE_DISABLE_MASK
 #define PTE_GUARD                   PTE_GUARD_END_MASK
-#define PTE_CACHE                   0x000
+#define PTE_CACHE                   0x00000000
 #define PTE_VALID_PROTECTION_MASK   0x0000021B
 #define PTE_SYSTEM_PROTECTION_MASK  0x0000001B // valid, write, write-through, cache
 
@@ -267,6 +267,8 @@ class PhysicalMemory
 		void InsertFree(PFN start, PFN end);
 		// convert from Xbox to the desired system pte protection (if possible) and return it
 		bool ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte);
+		// convert from pte permissions to the corresponding Xbox protection code
+		DWORD ConvertPteToXboxProtection(ULONG PteMask);
 		// convert from Xbox to Windows permissions
 		DWORD ConvertXboxToWinProtection(DWORD Perms);
 		// add execute rights if the permission mask doesn't include it
