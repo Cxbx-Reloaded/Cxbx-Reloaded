@@ -4288,11 +4288,6 @@ VOID WINAPI CreateHostResource
 			// Let's try using some 16-bit format instead...
 			if(X_Format == X_D3DFMT_X1R5G5B5 )
 			{
-#ifdef OLD_COLOR_CONVERSION // Current approach
-				EmuWarning( "X_D3DFMT_X1R5G5B5 -> D3DFMT_R5GB5" );
-				X_Format = X_D3DFMT_R5G6B5;
-				PCFormat = D3DFMT_R5G6B5;
-#else // Later, convert to ARGB :
 				CacheFormat = PCFormat;       // Save this for later
 				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
 			}
@@ -4301,7 +4296,6 @@ VOID WINAPI CreateHostResource
 			if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 				CacheFormat = PCFormat;       // Save this for later
 				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
-#endif // !OLD_COLOR_CONVERSION
 			}
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
@@ -4458,22 +4452,6 @@ VOID WINAPI CreateHostResource
                     dwMipMapLevels = 3;
                 }
 
-    #ifdef OLD_COLOR_CONVERSION // Current palette approach - Later, use ______P8ToARGBRow_C()                // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
-                    // Since most modern graphics cards does not support
-                    // palette based textures we need to expand it to
-                    // ARGB texture format
-					if ((PCFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8]) || EmuXBFormatRequiresConversionToARGB(X_Format))
-                    {
-						if (PCFormat == D3DFMT_P8) //Palette
-							EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
-						else
-							EmuWarning("X_Format RequiresConversionToARGB");
-
-                    CacheFormat = PCFormat;       // Save this for later
-                    PCFormat = D3DFMT_A8R8G8B8;   // ARGB
-                }
-#endif // OLD_COLOR_CONVERSION
-
                 if(bCubemap)
                 {
                     DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
@@ -4594,7 +4572,6 @@ VOID WINAPI CreateHostResource
 							{
 								// TODO: Fix or handle this situation..?
 							}
-#ifndef OLD_COLOR_CONVERSION // Later, use ConvertD3DTextureToARGBBuffer
 							else if (CacheFormat != 0) // Do we need to convert to ARGB?
 							{
 								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
@@ -4626,7 +4603,6 @@ VOID WINAPI CreateHostResource
 								// Flush unused data buffers
 								free(pExpandedTexture);
 							}
-#endif // !OLD_COLOR_CONVERSION
 							else
 							{
 								if (bSwizzled)
@@ -4683,84 +4659,6 @@ VOID WINAPI CreateHostResource
 										}
 									}
 								}
-
-#ifdef OLD_COLOR_CONVERSION // Currently, convert here. Later, use ConvertD3DTextureToARGBBuffer above
-								if (CacheFormat != 0) // Do we need to convert to ARGB?
-								{
-									EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
-
-									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
-									DWORD dwDataSize = dwMipWidth*dwMipHeight;
-									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-
-									//__asm int 3;
-									unsigned int w = 0;
-									unsigned int x = 0;
-									if (CacheFormat == D3DFMT_P8) // Palette
-									{
-										DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
-
-										for (unsigned int y = 0;y < dwDataSize;y++)
-										{
-											if (pTexturePalette != nullptr) {
-												// Read P8 pixel :
-												unsigned char p = (unsigned char)pPixelData[w++];
-
-												// Read the corresponding ARGB from the palette and store it in the new texture :
-												// HACK: Prevent crash if a pallete has not been loaded yet
-												pExpandedTexture[y] = pTexturePalette[p];
-											} else {
-												pExpandedTexture[y] = 0;
-											}
-
-											// are we at the end of a line?
-											if (++x == dwMipWidth)
-											{
-												x = 0;
-												// Since P8 contains byte pixels instead of dword ARGB pixels,
-												// the next line resides 3 bytes additional per pixel further :
-												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
-											}
-										}
-									}
-									else
-									{
-										const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
-
-										for (unsigned int y = 0; y < dwDataSize; y++)
-										{
-											uint32 value = 0;
-
-											switch (dwBPP) {
-											case 1:
-												value = pPixelData[w++];
-												break;
-											case 2:
-												value = ((WORD *)pPixelData)[w++];
-												break;
-											case 4:
-												value = ((DWORD *)pPixelData)[w++];
-												break;
-											}
-
-											pExpandedTexture[y] = DecodeUInt32ToColor(encoding, value);
-											// are we at the end of a line?
-											if(++x == dwMipWidth)
-											{
-												x = 0;
-												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
-											}
-										}
-									}
-
-									//__asm int 3;
-									// Copy the expanded texture back to the buffer
-									memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
-
-									// Flush unused data buffers
-									free(pExpandedTexture);
-								}
-#endif // !OLD_COLOR_CONVERSION
 							}
 						}
 
