@@ -6091,11 +6091,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 	VertexPatchDesc VPDesc;
 
-    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.XboxPrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = StartVertex;
-    VPDesc.pVertexStreamZeroData = 0;
-    VPDesc.uiVertexStreamZeroStride = 0;
+    VPDesc.dwStartVertex = StartVertex;
+    VPDesc.pXboxVertexStreamZeroData = 0;
+    VPDesc.uiXboxVertexStreamZeroStride = 0;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
@@ -6111,13 +6111,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
         HRESULT hRet = g_pD3DDevice8->DrawPrimitive
         (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+            EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
             StartVertex,
-            VPDesc.dwPrimitiveCount
+            VPDesc.dwHostPrimitiveCount
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitive");
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
         #ifdef _DEBUG_TRACK_VB
         }
@@ -6183,11 +6183,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 
     VertexPatchDesc VPDesc;
 
-    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.XboxPrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
-    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
+    VPDesc.dwStartVertex = 0;
+    VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
@@ -6202,14 +6202,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
         {
 			HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP
 			(
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
-				VPDesc.dwPrimitiveCount,
-				VPDesc.pVertexStreamZeroData,
-				VPDesc.uiVertexStreamZeroStride
+				EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
+				VPDesc.dwHostPrimitiveCount,
+				VPDesc.pXboxVertexStreamZeroData,
+				VPDesc.uiXboxVertexStreamZeroStride
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitiveUP");
 
-			g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
         }
     }
 
@@ -6272,11 +6272,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 	indexBase = *pdwXboxD3D_IndexBase;
     
 	VertexPatchDesc VPDesc;	
-    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.XboxPrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = 0;
-    VPDesc.uiVertexStreamZeroStride = 0;
+    VPDesc.dwStartVertex = 0;
+    VPDesc.pXboxVertexStreamZeroData = 0;
+    VPDesc.uiXboxVertexStreamZeroStride = 0;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 	VPDesc.pIndexData = pIndexData;
 	VPDesc.dwIndexBase = indexBase;
@@ -6292,7 +6292,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     {
 		VertexCount = VPDesc.dwVertexCount; // Dxbx addition : Use the new VertexCount
 
-		if (VPDesc.PrimitiveType == X_D3DPT_QUADLIST)
+		if (VPDesc.XboxPrimitiveType == X_D3DPT_QUADLIST)
 		{
 			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
 			// 4 vertices are just enough for two triangles (a fan starts with 3 vertices for 1 triangle,
@@ -6321,15 +6321,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			HRESULT hRet;
 			// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
 			hRet = g_pD3DDevice8->DrawIndexedPrimitive(
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+				EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
 				/* MinVertexIndex = */0,
 				/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 				// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 				uiStartIndex,
-				VPDesc.dwPrimitiveCount);
+				VPDesc.dwHostPrimitiveCount);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive");
 
-			if (VPDesc.PrimitiveType == X_D3DPT_LINELOOP)
+			if (VPDesc.XboxPrimitiveType == X_D3DPT_LINELOOP)
 			{
 				EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 				//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
@@ -6337,7 +6337,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			}
 		}
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
     }
 
     VertPatch.Restore();
@@ -6396,11 +6396,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
     VertexPatchDesc VPDesc;
 
-    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.XboxPrimitiveType = PrimitiveType;
     VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
-    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
+    VPDesc.dwStartVertex = 0;
+    VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
     VPDesc.hVertexShader = g_CurrentVertexShader;
 	VPDesc.pIndexData = (PWORD)pIndexData;
 
@@ -6417,11 +6417,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     {
         HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+            EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwHostPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pXboxVertexStreamZeroData, VPDesc.uiXboxVertexStreamZeroStride
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitiveUP");
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
     }
 
     #ifdef _DEBUG_TRACK_VB

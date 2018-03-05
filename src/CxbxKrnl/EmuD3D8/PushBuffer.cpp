@@ -273,11 +273,11 @@ extern void XTL::EmuExecutePushBufferRaw
                 VertexPatchDesc VPDesc;
 
                 VPDesc.dwVertexCount = VertexCount;
-                VPDesc.PrimitiveType = XBPrimitiveType;
-                VPDesc.dwPrimitiveCount = PrimitiveCount;
-                VPDesc.dwOffset = 0;
-                VPDesc.pVertexStreamZeroData = pVertexData;
-                VPDesc.uiVertexStreamZeroStride = dwStride;
+                VPDesc.XboxPrimitiveType = XBPrimitiveType;
+                VPDesc.dwHostPrimitiveCount = PrimitiveCount;
+                VPDesc.dwStartVertex = 0;
+                VPDesc.pXboxVertexStreamZeroData = pVertexData;
+                VPDesc.uiXboxVertexStreamZeroStride = dwStride;
                 VPDesc.hVertexShader = dwVertexShader;
 
                 VertexPatcher VertPatch;
@@ -287,12 +287,12 @@ extern void XTL::EmuExecutePushBufferRaw
                 g_pD3DDevice8->DrawPrimitiveUP
                 (
                     PCPrimitiveType,
-                    VPDesc.dwPrimitiveCount,
-                    VPDesc.pVertexStreamZeroData,
-                    VPDesc.uiVertexStreamZeroStride
+                    VPDesc.dwHostPrimitiveCount,
+                    VPDesc.pXboxVertexStreamZeroData,
+                    VPDesc.uiXboxVertexStreamZeroStride
                 );
 
-				g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+				g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
                 VertPatch.Restore();
             }
@@ -370,11 +370,11 @@ extern void XTL::EmuExecutePushBufferRaw
                     VertexPatchDesc VPDesc;
 
                     VPDesc.dwVertexCount = dwCount;
-                    VPDesc.PrimitiveType = XBPrimitiveType;
-                    VPDesc.dwPrimitiveCount = PrimitiveCount;
-                    VPDesc.dwOffset = 0;
-                    VPDesc.pVertexStreamZeroData = 0;
-                    VPDesc.uiVertexStreamZeroStride = 0;
+                    VPDesc.XboxPrimitiveType = XBPrimitiveType;
+                    VPDesc.dwHostPrimitiveCount = PrimitiveCount;
+                    VPDesc.dwStartVertex = 0;
+                    VPDesc.pXboxVertexStreamZeroData = 0;
+                    VPDesc.uiXboxVertexStreamZeroStride = 0;
                     // TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader = g_CurrentVertexShader;
 
@@ -535,11 +535,11 @@ extern void XTL::EmuExecutePushBufferRaw
                     VertexPatchDesc VPDesc;
 
                     VPDesc.dwVertexCount = dwCount;
-                    VPDesc.PrimitiveType = XBPrimitiveType;
-                    VPDesc.dwPrimitiveCount = PrimitiveCount;
-                    VPDesc.dwOffset = 0;
-                    VPDesc.pVertexStreamZeroData = 0;
-                    VPDesc.uiVertexStreamZeroStride = 0;
+                    VPDesc.XboxPrimitiveType = XBPrimitiveType;
+                    VPDesc.dwHostPrimitiveCount = PrimitiveCount;
+                    VPDesc.dwStartVertex = 0;
+                    VPDesc.pXboxVertexStreamZeroData = 0;
+                    VPDesc.uiXboxVertexStreamZeroStride = 0;
                     // TODO: Set the current shader and let the patcher handle it..
                     VPDesc.hVertexShader = g_CurrentVertexShader;
 
