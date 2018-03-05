@@ -152,6 +152,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(GetTypeInformation, XREF, 4134), // TODO: Actually introduced in some unknown XDK between 4134 and 4361
 	REGISTER_OOVPAS(OutputDebugStringA, PATCH, 3911),
 	REGISTER_OOVPAS(QueueUserAPC, PATCH, 3911),
+	REGISTER_OOVPAS(QueryPerformanceCounter, PATCH, 3911),
 	REGISTER_OOVPAS(RaiseException, PATCH, 3911),
 	REGISTER_OOVPAS(SetThreadPriority, PATCH, 3911),
 	REGISTER_OOVPAS(SetThreadPriorityBoost, PATCH, 3911),

@@ -993,6 +993,20 @@ VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 #endif
 
 // ******************************************************************
+// * patch: QueryPerformanceCounter
+// ******************************************************************
+BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
+(
+	LARGE_INTEGER *lpPerformanceCount
+)
+{
+	FUNC_EXPORTS;
+
+	lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+	return TRUE;
+}
+
+// ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
