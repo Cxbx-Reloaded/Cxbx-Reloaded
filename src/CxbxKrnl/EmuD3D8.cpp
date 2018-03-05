@@ -1266,6 +1266,7 @@ bool ConvertD3DTextureToARGBBuffer(
 	return true;
 }
 
+// Called by WndMain::LoadGameLogo() to load game logo bitmap
 uint8 *XTL::ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
 	uint8 *pSrc,
@@ -4576,16 +4577,11 @@ VOID WINAPI CreateHostResource
 							{
 								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
-								BYTE *pPixelData = (BYTE*)LockedRect.pBits;
-								DWORD dwDataSize = dwMipWidth*dwMipHeight;
-								DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-
 								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
-								uint8 *pDest = (uint8 *)pExpandedTexture;
+								uint8 *pDest = (uint8 *)LockedRect.pBits;
 
 								DWORD dwSrcPitch = dwMipWidth * dwBPP;//sizeof(DWORD);
 								DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
-								DWORD dwMipSizeInBytes = dwDataSize;
 
 								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
@@ -4595,13 +4591,6 @@ VOID WINAPI CreateHostResource
 									TextureStage)) {
 									CxbxKrnlCleanup("Unhandled conversion!");
 								}
-
-								//__asm int 3;
-								// Copy the expanded texture back to the buffer
-								memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
-
-								// Flush unused data buffers
-								free(pExpandedTexture);
 							}
 							else
 							{
