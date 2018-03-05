@@ -52,7 +52,7 @@ typedef struct _VertexPatchDesc
     IN PVOID                     pXboxVertexStreamZeroData;
     IN UINT                      uiXboxVertexStreamZeroStride;
 	// Values to be used on host
-    IN     DWORD                 dwHostPrimitiveCount;
+    OUT DWORD                    dwHostPrimitiveCount;
 }
 VertexPatchDesc;
 
