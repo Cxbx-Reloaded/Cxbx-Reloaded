@@ -571,7 +571,7 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	// Arithmetic opcodes :
 	{/* PO_ADD */ /*mn:*/"add",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0+s1" },
 	{/* PO_CMP */ /*mn:*/"cmp",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0={s0>=0?s1:s2}" },
-	{/* PO_CND */ /*mn:*/"cnd",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d1={s0.a>0.5?s1:s2}" }, // 1st input must be "r0.a"
+	{/* PO_CND */ /*mn:*/"cnd",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0={s0.a>0.5?s1:s2}" }, // 1st input must be "r0.a"
 	{/* PO_DP3 */ /*mn:*/"dp3",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0 dot3 s1" },
 	{/* PO_DP4 */ /*mn:*/"dp4",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0 dot4 s1" },
 	{/* PO_LRP */ /*mn:*/"lrp",  /*_Out: */ 1, /*_In: */ 3, /*note:*/"d0=s0*s1+{1-s0}*s2=s0*{s1-s2}+s2" },
@@ -922,7 +922,7 @@ struct PSH_XBOX_SHADER {
 */
 
 // PS Texture Modes
-char* PS_TextureModes[/*PS_TEXTUREMODES*/] =
+char* PS_TextureModesStr[/*PS_TEXTUREMODES*/] =
 {
 	"PS_TEXTUREMODES_NONE",						// 0x00
 	"PS_TEXTUREMODES_PROJECT2D",				// 0x01
@@ -959,7 +959,7 @@ char* PS_TextureModes[/*PS_TEXTUREMODES*/] =
 };
 
 // PS DotMapping
-char* PS_DotMapping[/*PS_DOTMAPPING*/] =
+char* PS_DotMappingStr[/*PS_DOTMAPPING*/] =
 {
 	"PS_DOTMAPPING_ZERO_TO_ONE",		// 0x00
 	"PS_DOTMAPPING_MINUS1_TO_1_D3D",	// 0x01
@@ -971,9 +971,9 @@ char* PS_DotMapping[/*PS_DOTMAPPING*/] =
 	"PS_DOTMAPPING_HILO_HEMISPHERE",	// 0x07
 };
 
-#if 0 // array unusable for bitflags
+#if 1 // array unusable for bitflags
 // PS CompareMode
-char* PS_CompareMode[/*PS_COMPAREMODE*/] =
+char* PS_CompareModeStr[/*PS_COMPAREMODE*/] =
 {
 	"PS_COMPAREMODE_S_LT", // 0x00L
 	"PS_COMPAREMODE_S_GE", // 0x01L
@@ -997,7 +997,7 @@ char* PS_CompareMode[/*PS_COMPAREMODE*/] =
 
 #if 1 // array unfit for bitflags
 // PS CombinerCountFlags
-char* PS_CombinerCountFlags[/*PS_COMBINERCOUNTFLAGS*/] =
+char* PS_CombinerCountFlagsStr[/*PS_COMBINERCOUNTFLAGS*/] =
 {
 	"PS_COMBINERCOUNT_MUX_LSB",		// 0x0000L, // mux on r0.a lsb
 	"PS_COMBINERCOUNT_MUX_MSB",		// 0x0001L, // mux on r0.a msb
@@ -1161,25 +1161,25 @@ float PSH_IMD_ARGUMENT::GetConstValue()
   float Result = Multiplier;
 
   // y = 1-x     -> 0..1 >    1..0
-  if ((Modifiers & ARGMOD_INVERT) > 0)    Result = 1.0f-Result;
+  if ((Modifiers & (1 << ARGMOD_INVERT)) > 0)    Result = 1.0f-Result;
 
   // y = -x      -> 0..1 >    0..-1
-  if ((Modifiers & ARGMOD_NEGATE) > 0)    Result = -Result;
+  if ((Modifiers & (1 << ARGMOD_NEGATE)) > 0)    Result = -Result;
 
   // y =  x-0.5  -> 0..1 > -0.5..0.5
-  if ((Modifiers & ARGMOD_BIAS) > 0)      Result = Result-0.5f;
+  if ((Modifiers & (1 << ARGMOD_BIAS)) > 0)      Result = Result-0.5f;
 
   // y =  x*2    -> 0..1 >    0..2
-  if ((Modifiers & ARGMOD_SCALE_X2) > 0)  Result = Result*2.0f;
+  if ((Modifiers & (1 << ARGMOD_SCALE_X2)) > 0)  Result = Result*2.0f;
 
   // y = (x*2)-1 -> 0..1 >   -1..1
-  if ((Modifiers & ARGMOD_SCALE_BX2) > 0) Result = (Result*2.0f)-1.0f;
+  if ((Modifiers & (1 << ARGMOD_SCALE_BX2)) > 0) Result = (Result*2.0f)-1.0f;
 
   // y =  x*4    -> 0..1 >    0..4
-  if ((Modifiers & ARGMOD_SCALE_X4) > 0)  Result = Result*4.0f;
+  if ((Modifiers & (1 << ARGMOD_SCALE_X4)) > 0)  Result = Result*4.0f;
 
   // y =  x/2    -> 0..1 >    0..0.5
-  if ((Modifiers & ARGMOD_SCALE_D2) > 0)  Result = Result/2.0f;
+  if ((Modifiers & (1 << ARGMOD_SCALE_D2)) > 0)  Result = Result/2.0f;
 
   return Result;
 } // GetConstValue
@@ -1230,7 +1230,7 @@ std::string PSH_IMD_ARGUMENT::ToString()
   if (UsesRegister())
   {
     for (DWORD Modifier = ARGMOD_IDENTITY; Modifier < ARGMOD_BLUE_REPLICATE; Modifier++)
-      if (Modifier & Modifiers) {
+      if ((1 << Modifier) & Modifiers) {
 		char buffer[256];
 		Result = std::string(buffer, sprintf(buffer, PSH_ARG_MODIFIER_Str[Modifier], Result.c_str()));
 	  }
@@ -1256,7 +1256,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
   bool Result = true;
   Address = 0;
   Mask = aMask;
-  Modifiers = ARGMOD_IDENTITY;
+  Modifiers = (1 << ARGMOD_IDENTITY);
   Multiplier = 1.0;
 
   // Determine PS_REGISTER for this argument type :
@@ -1389,7 +1389,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
       Type = PARAM_EF_PROD;
 	  break;
   default :
-    DbgPrintf("INVALID ARGUMENT!");
+    DbgPrintf("INVALID ARGUMENT!\n");
 
     Result = false;
   }
@@ -1427,35 +1427,35 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
 
   switch (InputMapping) {
     case PS_INPUTMAPPING_UNSIGNED_IDENTITY:
-      Modifiers = ARGMOD_IDENTITY;
+      Modifiers = (1 << ARGMOD_IDENTITY);
 	  break;
     case PS_INPUTMAPPING_UNSIGNED_INVERT:
-      Modifiers = ARGMOD_INVERT;
+      Modifiers = (1 << ARGMOD_INVERT);
 	  break;
     case PS_INPUTMAPPING_EXPAND_NORMAL:
     {
-      Modifiers = ARGMOD_SCALE_BX2;
+      Modifiers = (1 << ARGMOD_SCALE_BX2);
       Multiplier = 2.0f * Multiplier;
 	  break;
     }
     case PS_INPUTMAPPING_EXPAND_NEGATE:
     {
-      Modifiers = ARGMOD_NEGATE;
+      Modifiers = (1 << ARGMOD_NEGATE);
       Multiplier = -Multiplier;
 	  break;
 	}
     case PS_INPUTMAPPING_HALFBIAS_NORMAL:
-      Modifiers = ARGMOD_BIAS;
+      Modifiers = (1 << ARGMOD_BIAS);
 	  break;
 //    case PS_INPUTMAPPING_HALFBIAS_NEGATE:
 //      Modifiers = ARGMOD_IDENTITY; ???
 //      break;
     case PS_INPUTMAPPING_SIGNED_IDENTITY:
-      Modifiers = ARGMOD_IDENTITY;
+      Modifiers = (1 << ARGMOD_IDENTITY);
 	  break;
     case PS_INPUTMAPPING_SIGNED_NEGATE:
     {
-      Modifiers = ARGMOD_NEGATE;
+      Modifiers = (1 << ARGMOD_NEGATE);
       Multiplier = -Multiplier;
 	  break;
 	}
@@ -1465,18 +1465,18 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
 
 void PSH_IMD_ARGUMENT::Invert()
 {
-  if ((Modifiers & ARGMOD_INVERT) == 0)
-    Modifiers = Modifiers | ARGMOD_INVERT;
+  if ((Modifiers & (1 << ARGMOD_INVERT)) == 0)
+    Modifiers = Modifiers | (1 << ARGMOD_INVERT);
   else
-    Modifiers = Modifiers & ~ARGMOD_INVERT;
+    Modifiers = Modifiers & ~(1 << ARGMOD_INVERT);
 }
 
 void PSH_IMD_ARGUMENT::Negate()
 {
-  if ((Modifiers & ARGMOD_NEGATE) == 0)
-    Modifiers = Modifiers | ARGMOD_NEGATE;
+  if ((Modifiers & (1 << ARGMOD_NEGATE)) == 0)
+    Modifiers = Modifiers | (1 << ARGMOD_NEGATE);
   else
-    Modifiers = Modifiers & ~ARGMOD_NEGATE;
+    Modifiers = Modifiers & ~(1 << ARGMOD_NEGATE);
 }
 
 /* PSH_INTERMEDIATE_FORMAT */
@@ -1808,7 +1808,7 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
       // And if this is true, how do the blue-to-alpha flags behave if present on both AB and CD?
 
       // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect and not allowed)
-      Output[0].Modifiers = Output[0].Modifiers | ARGMOD_BLUE_REPLICATE;
+      Output[0].Modifiers = Output[0].Modifiers | (1 << ARGMOD_BLUE_REPLICATE);
       Output[0].Mask = MASK_B;
       // TODO Handle blue-to-alpha flag (only valid for RGB)
       // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
@@ -1817,7 +1817,7 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWOR
 
     if ((CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0) // false=Alpha-to-Alpha, true=Blue-to-Alpha
     {
-      Output[1].Modifiers = Output[1].Modifiers | ARGMOD_BLUE_REPLICATE;
+      Output[1].Modifiers = Output[1].Modifiers | (1 << ARGMOD_BLUE_REPLICATE);
       Output[1].Mask = MASK_B;
     }
 
@@ -1894,8 +1894,8 @@ void PSH_XBOX_SHADER::Log(const char *PhaseStr)
 {
   //if (MayLog(lfUnit))
   {
-    DbgPrintf("New decoding - %s :", PhaseStr);
-	DbgPrintf("%s", ToString().c_str());
+    DbgPrintf("New decoding - %s :\n", PhaseStr);
+	DbgPrintf("%s\n", ToString().c_str());
   }
 }
 
@@ -2074,7 +2074,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   //if (MayLog(LogFlags))
   {
     // print relevant contents to the debug console
-    DbgPrintf("%s", DecodedToString(pPSDef).c_str());
+    DbgPrintf("%s\n", DecodedToString(pPSDef).c_str());
   }
 
   // TODO:
@@ -2117,7 +2117,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (FixCoIssuedOpcodes())
     Log("FixCoIssuedOpcodes");
 
-  Log("} result");
+  Log("End result");
 
   Result.NewShaderStr = ToString();
   return Result;
@@ -2126,60 +2126,60 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 // print relevant contents to the debug console
 
-  #define _AddStr(aStr) \
+  #define _AddStr1(aStr) \
   \
     Result = Result + aStr + "\n";
 
-  #define _AddStr2(aStr, ...) \
+  #define _AddStr(aStr, ...) \
   {\
-    _AddStr(DxbxFormat(aStr, Args)); \
+    _AddStr1(std::string(buf, sprintf(buf, aStr, __VA_ARGS__))); \
   }
 {
-//  int i;
+  char buf[256];
+  int i;
 
   std::string Result = "";
   // Show the contents to the user
-  _AddStr("\n-----PixelShader Definition Contents-----");
-  _AddStr(OriginalToString(pPSDef));
+  _AddStr1("\n-----PixelShader Definition Contents-----");
+  _AddStr1(OriginalToString(pPSDef));
 
-#if 0 // TODO
   if (pPSDef->PSTextureModes > 0) 
   {
-    _AddStr("\nPSTextureModes ->"); // Texture addressing modes
+    _AddStr1("\nPSTextureModes ->"); // Texture addressing modes
     _AddStr("Stage 0: %s", PS_TextureModesStr[PSTextureModes[0]]);
     _AddStr("Stage 1: %s", PS_TextureModesStr[PSTextureModes[1]]);
     _AddStr("Stage 2: %s", PS_TextureModesStr[PSTextureModes[2]]);
     _AddStr("Stage 3: %s", PS_TextureModesStr[PSTextureModes[3]]);
   }
 
-  if (pPSDEF->PSDotMapping > 0)  // Input mapping for dot product modes
+  if (pPSDef->PSDotMapping > 0)  // Input mapping for dot product modes
   {
-    _AddStr("\nPSDotMapping ->");
+    _AddStr1("\nPSDotMapping ->");
     _AddStr("Stage 1: %s", PS_DotMappingStr[PSDotMapping[1]]);
     _AddStr("Stage 2: %s", PS_DotMappingStr[PSDotMapping[2]]);
     _AddStr("Stage 3: %s", PS_DotMappingStr[PSDotMapping[3]]);
   }
 
-  if (pPSDEF->PSCompareMode > 0)  // Compare modes for clipplane texture mode
+  if (pPSDef->PSCompareMode > 0)  // Compare modes for clipplane texture mode
   {
-    _AddStr("\nPSCompareMode ->");
+    _AddStr1("\nPSCompareMode ->");
     _AddStr("Stage 0: %s", PS_CompareModeStr[(PSCompareMode[0] == 0) ? 0 : 1]);
     _AddStr("Stage 1: %s", PS_CompareModeStr[(PSCompareMode[1] == 0) ? 2 : 3]);
     _AddStr("Stage 2: %s", PS_CompareModeStr[(PSCompareMode[2] == 0) ? 4 : 5]);
     _AddStr("Stage 3: %s", PS_CompareModeStr[(PSCompareMode[3] == 0) ? 6 : 7]);
   }
 
-  if (pPSDEF->PSInputTexture > 0)  // Texture source for some texture modes
+  if (pPSDef->PSInputTexture > 0)  // Texture source for some texture modes
   {
-    _AddStr("\nPSInputTexture ->");
+    _AddStr1("\nPSInputTexture ->");
     _AddStr("Stage 1: %d", PSInputTexture[1]);
     _AddStr("Stage 2: %d", PSInputTexture[2]);
     _AddStr("Stage 3: %d", PSInputTexture[3]);
   }
 
-  if (pPSDEF->PSCombinerCount > 0)  // Active combiner count (Stages 0-7)
+  if (pPSDef->PSCombinerCount > 0)  // Active combiner count (Stages 0-7)
   {
-    _AddStr("\nPSCombinerCount ->");
+    _AddStr1("\nPSCombinerCount ->");
     _AddStr("Combiners: %d", NumberOfCombiners);
     _AddStr("Mux:       %s", PS_CombinerCountFlagsStr[(CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) == 0 ? 0 : 1]);
     _AddStr("C0:        %s", PS_CombinerCountFlagsStr[(CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) == 0 ? 2 : 3]);
@@ -2190,34 +2190,34 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   for (i = 0; i < NumberOfCombiners; i++) // Loop over all combiner stages
   {
-    _AddStr("\n");
+    _AddStr1("\n");
 
-    _AddStr("PSRGBOutputs[%d] AB: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.DecodedToString());
-    _AddStr("PSRGBOutputs[%d] CD: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.DecodedToString());
-    _AddStr("PSRGBOutputs[%d] SUM: %s", i, Combiners[i].RGB.OutputSUM.DecodedToString());
-    _AddStr("PSRGBOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, /*IsAlpha=*/false));
+    _AddStr("PSRGBOutputs[%d] AB: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.DecodedToString().c_str());
+    _AddStr("PSRGBOutputs[%d] CD: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.DecodedToString().c_str());
+    _AddStr("PSRGBOutputs[%d] SUM: %s", i, Combiners[i].RGB.OutputSUM.DecodedToString().c_str());
+    _AddStr("PSRGBOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, /*IsAlpha=*/false).c_str());
 
-	_AddStr("\n");
-    _AddStr("PSRGBInputs[%d] A: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input1.DecodedToString());
-    _AddStr("PSRGBInputs[%d] B: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input2.DecodedToString());
-    _AddStr("PSRGBInputs[%d] C: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input1.DecodedToString());
-    _AddStr("PSRGBInputs[%d] D: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input2.DecodedToString());
+	_AddStr1("\n");
+    _AddStr("PSRGBInputs[%d] A: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input1.DecodedToString().c_str());
+    _AddStr("PSRGBInputs[%d] B: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input2.DecodedToString().c_str());
+    _AddStr("PSRGBInputs[%d] C: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input1.DecodedToString().c_str());
+    _AddStr("PSRGBInputs[%d] D: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.Input2.DecodedToString().c_str());
 
-	_AddStr("\n");
-    _AddStr("PSAlphaOutputs[%d] AB: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.DecodedToString());
-    _AddStr("PSAlphaOutputs[%d] CD: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.DecodedToString());
-    _AddStr("PSAlphaOutputs[%d] SUM: %s", i, Combiners[i].Alpha.OutputSUM.DecodedToString());
-    _AddStr("PSAlphaOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, /*IsAlpha=*/true));
+	_AddStr1("\n");
+    _AddStr("PSAlphaOutputs[%d] AB: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.DecodedToString().c_str());
+    _AddStr("PSAlphaOutputs[%d] CD: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.DecodedToString().c_str());
+    _AddStr("PSAlphaOutputs[%d] SUM: %s", i, Combiners[i].Alpha.OutputSUM.DecodedToString().c_str());
+    _AddStr("PSAlphaOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, /*IsAlpha=*/true).c_str());
 
-	_AddStr("\n");
-    _AddStr("PSAlphaInputs[%d] A: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input1.DecodedToString());
-    _AddStr("PSAlphaInputs[%d] B: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input2.DecodedToString());
-    _AddStr("PSAlphaInputs[%d] C: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input1.DecodedToString());
-    _AddStr("PSAlphaInputs[%d] D: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input2.DecodedToString());
+	_AddStr1("\n");
+    _AddStr("PSAlphaInputs[%d] A: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input1.DecodedToString().c_str());
+    _AddStr("PSAlphaInputs[%d] B: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input2.DecodedToString().c_str());
+    _AddStr("PSAlphaInputs[%d] C: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input1.DecodedToString().c_str());
+    _AddStr("PSAlphaInputs[%d] D: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.Input2.DecodedToString().c_str());
 
-	_AddStr("\n");
-    _AddStr("PSConstant0[%d] : %x", i, pPSDEF->PSConstant0[i]); // C0 for each stage
-    _AddStr("PSConstant1[%d] : %x", i, pPSDEF->PSConstant1[i]); // C1 for each stage
+	_AddStr1("\n");
+    _AddStr("PSConstant0[%d] : %x", i, pPSDef->PSConstant0[i]); // C0 for each stage
+    _AddStr("PSConstant1[%d] : %x", i, pPSDef->PSConstant1[i]); // C1 for each stage
   }
 
   if ((pPSDef->PSFinalCombinerInputsABCD > 0)
@@ -2226,33 +2226,32 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr("\nPSFinalCombinerConstant0 : %x", pPSDef->PSFinalCombinerConstant0); // C0 in final combiner
     _AddStr("PSFinalCombinerConstant1 : %x", pPSDef->PSFinalCombinerConstant1); // C1 in final combiner
 
-    _AddStr("\nPSFinalCombinerInputsABCD ->");
-    _AddStr("Input A: %s", FinalCombiner.InputA.DecodedToString());
-    _AddStr("Input B: %s", FinalCombiner.InputB.DecodedToString());
-    _AddStr("Input C: %s", FinalCombiner.InputC.DecodedToString());
-    _AddStr("Input D: %s", FinalCombiner.InputD.DecodedToString());
+    _AddStr1("\nPSFinalCombinerInputsABCD ->");
+    _AddStr("Input A: %s", FinalCombiner.InputA.DecodedToString().c_str());
+    _AddStr("Input B: %s", FinalCombiner.InputB.DecodedToString().c_str());
+    _AddStr("Input C: %s", FinalCombiner.InputC.DecodedToString().c_str());
+    _AddStr("Input D: %s", FinalCombiner.InputD.DecodedToString().c_str());
 
-    _AddStr("\nPSFinalCombinerInputsEFG ->");
-    _AddStr("Input E: %s", FinalCombiner.InputE.DecodedToString());
-    _AddStr("Input F: %s", FinalCombiner.InputF.DecodedToString());
-    _AddStr("Input G: %s", FinalCombiner.InputG.DecodedToString());
-    _AddStr("Final combiner setting: %s", PSFinalCombinerSettingToStr(Ord(FinalCombiner.FinalCombinerFlags)));
+    _AddStr1("\nPSFinalCombinerInputsEFG ->");
+    _AddStr("Input E: %s", FinalCombiner.InputE.DecodedToString().c_str());
+    _AddStr("Input F: %s", FinalCombiner.InputF.DecodedToString().c_str());
+    _AddStr("Input G: %s", FinalCombiner.InputG.DecodedToString().c_str());
+    _AddStr("Final combiner setting: %s", PSFinalCombinerSettingToStr((DWORD)(FinalCombiner.FinalCombinerFlags)).c_str());
 
-    _AddStr("\nPSFinalCombinerConstants ->"); // Final combiner constant mapping
+    _AddStr1("\nPSFinalCombinerConstants ->"); // Final combiner constant mapping
     _AddStr("Offset of D3D constant for (C0: %d", FinalCombiner.FinalCombinerC0Mapping);
     _AddStr("Offset of D3D constant for (C1: %d", FinalCombiner.FinalCombinerC1Mapping);
     _AddStr("Adjust texture flag: %s", PS_GlobalFlagsStr[PS_GLOBALFLAGS(FinalCombiner.dwPS_GLOBALFLAGS)]);
   }
-#endif
 
-  _AddStr("\n");
+  _AddStr1("\n");
   return Result;
 }
 
   bool PSH_XBOX_SHADER::_NextIs2D(int Stage)
   {
     if (Stage < XTL::X_D3DTS_STAGECOUNT-1)
-      return (PSTextureModes[Stage + 1] & (PS_TEXTUREMODES_DOT_ST | PS_TEXTUREMODES_DOT_ZW)) > 0;
+      return (PSTextureModes[Stage + 1] == PS_TEXTUREMODES_DOT_ST) || (PSTextureModes[Stage + 1] == PS_TEXTUREMODES_DOT_ZW);
     else
       return false;
   }
@@ -2329,7 +2328,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
       switch (PSDotMapping[Stage]) {
         case PS_DOTMAPPING_MINUS1_TO_1_D3D:
-          Ins.Parameters[0].Modifiers = ARGMOD_SCALE_BX2;
+          Ins.Parameters[0].Modifiers = (1 << ARGMOD_SCALE_BX2);
 		  break;
       }
     }
@@ -2615,13 +2614,13 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       CurArg = &(Cur->Output[j]);
 
       // Remove useless flag, to ease up later comparisions :
-      CurArg->Modifiers = CurArg->Modifiers & ~ARGMOD_IDENTITY;
+      CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Discard useless writes :
       if ( (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
       && ((RegUsage[CurArg->Type][CurArg->Address] & CurArg->Mask) == 0))
       {
-        DbgPrintf("; Removed useless assignment to register %s", CurArg->ToString().c_str());
+        DbgPrintf("; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
         CurArg->Type = PARAM_DISCARD;
         Result = true;
       }
@@ -2636,7 +2635,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
         continue;
 
       // Remove useless flag, to ease up later comparisions :
-      CurArg->Modifiers = CurArg->Modifiers & ~ARGMOD_IDENTITY;
+      CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Keep track of all register reads, so that we can discard useless writes :
       if (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
@@ -2781,7 +2780,7 @@ void PSH_XBOX_SHADER::ConvertXMMCToNative(int  i)
     Cur->Modifier = INSMOD_NONE;
     // Begin the input of CND with the required r0.a parameter :
     Cur->Parameters[0].SetRegister(PARAM_R, 0, MASK_A);
-    Cur->Parameters[0].Modifiers = ARGMOD_IDENTITY;
+    Cur->Parameters[0].Modifiers = (1 << ARGMOD_IDENTITY);
     Cur->Parameters[0].Multiplier = 1.0;
     // Follow that with the 2 selection registers :
     Cur->Parameters[1] = Cur->Output[0];
@@ -2899,15 +2898,15 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 
     // Take the FinalCombinerFlags that influence this result into account :
     if ((FinalCombinerFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_R0) > 0)
-      Ins.Parameters[0].Modifiers = ARGMOD_INVERT; // (1-r0) is used as an input to the sum rather than r0
+      Ins.Parameters[0].Modifiers = (1 << ARGMOD_INVERT); // (1-r0) is used as an input to the sum rather than r0
     if ((FinalCombinerFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_V1) > 0)
-      Ins.Parameters[1].Modifiers = ARGMOD_INVERT; // (1-v1) is used as an input to the sum rather than v1
+      Ins.Parameters[1].Modifiers = (1 << ARGMOD_INVERT); // (1-v1) is used as an input to the sum rather than v1
     if ((FinalCombinerFlags & PS_FINALCOMBINERSETTING_CLAMP_SUM) > 0)
       Ins.Modifier = INSMOD_SAT; // V1+R0 sum clamped to [0,1]
 
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf("; Inserted final combiner calculation of V1R0_sum register");
+    DbgPrintf("; Inserted final combiner calculation of V1R0_sum register\n");
   }
 
   if (NeedsProd)
@@ -2919,7 +2918,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf("; Inserted final combiner calculation of EF_prod register");
+    DbgPrintf("; Inserted final combiner calculation of EF_prod register\n");
   }
 
   // The final combiner calculates : r0.rgb=s0*s1 + (1-s0)*s2 + s3
@@ -2975,7 +2974,7 @@ bool PSH_XBOX_SHADER::RemoveNops()
     Cur = &(Intermediate[i]);
 
     // Skip opcodes that have no output, but should stay anyway :
-    if ((Cur->Opcode & (PO_COMMENT | PO_XFC)) > 0)
+    if ((Cur->Opcode == PO_COMMENT) || (Cur->Opcode == PO_XFC))
       continue;
 
     // See if this opcode writes to any of it's outputs :
@@ -3049,15 +3048,15 @@ void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
 	PPSH_IMD_ARGUMENT ParamLeft, ParamRight;
 
 	// Check if Left and Right are the same register :
-    ParamLeft = &Mul1->Parameters[Left];
-    ParamRight = &Mul2->Parameters[Right];
+    ParamLeft = &(Mul1->Parameters[Left]);
+    ParamRight = &(Mul2->Parameters[Right]);
     if ((ParamLeft->Type != ParamRight->Type)
     || (ParamLeft->Address != ParamRight->Address)
     || (ParamLeft->Mask != ParamRight->Mask))
       return false;
 
     // Is the left argument inverted and the right not (or the other way around) ?
-    if ((ParamLeft->Modifiers & ARGMOD_INVERT) != (ParamRight->Modifiers & ARGMOD_INVERT))
+    if ((ParamLeft->Modifiers & (1 << ARGMOD_INVERT)) != (ParamRight->Modifiers & (1 << ARGMOD_INVERT)))
     {
       // In that case, already move the arguments over to AddOpcode so we create a LRP :
       AddOpcode->Parameters[0] = *ParamLeft;
@@ -3114,7 +3113,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       if (Op2->Opcode == PO_CND)
       {
         if ( (Op0->Opcode == PO_MOV)
-        && (Op1->Opcode == Op0->Opcode)
+        && (Op1->Opcode == PO_MOV)
         && (Op1->Modifier == Op0->Modifier))
         {
           Op2->Modifier = Op0->Modifier;
@@ -3122,7 +3121,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[2] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf("; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND");
+          DbgPrintf("; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND\n");
           Result = true;
           continue;
         }
@@ -3132,7 +3131,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       if (Op2->Opcode == PO_ADD)
       {
         if ( (Op0->Opcode == PO_MUL)
-        && (Op1->Opcode == Op0->Opcode)
+        && (Op1->Opcode == PO_MUL)
         && (Op1->Modifier == Op0->Modifier))
         {
           // Check if we can lerp - we just need the same register on both sides that's inverted on the other :
@@ -3147,7 +3146,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single LRP");
+            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single LRP\n");
             Result = true;
             continue;
           }
@@ -3164,7 +3163,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single MAD");
+            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single MAD\n");
             Result = true;
             continue;
           }
@@ -3179,7 +3178,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op1->Parameters[2] = Op0->Output[0];
           // Remove the trailing ADD :
           DeleteIntermediate(i+2);
-          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL,MAD");
+          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL,MAD\n");
           Result = true;
           continue;
         }
@@ -3196,7 +3195,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[1] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL");
+          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL\n");
           Result = true;
           continue;
         }
@@ -3221,7 +3220,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op0->Opcode = PO_MAD;
           Op0->Parameters[2] = Op1->Parameters[1];
           DeleteIntermediate(i+1);
-          DbgPrintf("; Changed MUL,ADD into a single MAD");
+          DbgPrintf("; Changed MUL,ADD into a single MAD\n");
           Result = true;
           continue;
         }
@@ -3254,7 +3253,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       {
         // Don't optimize if the output is needed for CND or CMP (which must read from r0) :
         // This fixes : "(Validation Error) First source for cnd instruction must be 'r0.a'" in Modify Pixel Shader XDK sample.
-        if ( ((Intermediate[j].Opcode & (PO_CND | PO_CMP)) > 0)
+        if ( ((Intermediate[j].Opcode == PO_CND) || (Intermediate[j].Opcode == PO_CMP))
         && (Op0->Output[0].IsRegister(PARAM_R, 0)))
           break;
 
@@ -3292,7 +3291,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         if (CanOptimize)
         {
           DeleteIntermediate(i);
-          DbgPrintf("; Moved MOV input into following instructions");
+          DbgPrintf("; Moved MOV input into following instructions\n3");
           Result = true;
         }
       }
@@ -3312,7 +3311,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         // > mul r0.rgb, r0,t0
         Op0->Output[0] = Op1->Output[0];
         DeleteIntermediate(i+1);
-        DbgPrintf("; Changed temporary MUL,MOV into a MUL");
+        DbgPrintf("; Changed temporary MUL,MOV into a MUL\n");
         Result = true;
         continue;
       }
@@ -3325,7 +3324,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
       {
         ReplaceRegisterFromIndexOnwards(i, Op0->Output[0].Type, Op0->Output[0].Address, PARAM_R, 1);
-        DbgPrintf("; Changed fake register by r1");
+        DbgPrintf("; Changed fake register by r1\n");
         Result = true;
         continue;
       }
@@ -3353,7 +3352,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     if (CanSimplify)
     {
       Cur->Opcode = PO_NOP; // This nop will be removed in a recursive fixup
-      DbgPrintf("; Changed MOV into a NOP");
+      DbgPrintf("; Changed MOV into a NOP\n");
       return true;
     }
   }
@@ -3369,7 +3368,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Parameters[0].Address = 0;
     Cur->Parameters[0].Modifiers = 0;
     Cur->Parameters[1] = Cur->Parameters[0];
-    DbgPrintf("; Changed MOV 0 into a SUB v0,v0");
+    DbgPrintf("; Changed MOV 0 into a SUB v0,v0\n");
     return true;
   }
 
@@ -3388,9 +3387,9 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     {
       // Simulate -1 by calculating it via a (guaranteed) register :
       // We follow this : (-v0) - (1-v0) = -v0 - 1 + v0 = -1
-      Cur->Parameters[0].Modifiers = ARGMOD_NEGATE;
+      Cur->Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
       Cur->Parameters[1] = Cur->Parameters[0];
-      Cur->Parameters[1].Modifiers = ARGMOD_INVERT;
+      Cur->Parameters[1].Modifiers = (1 << ARGMOD_INVERT);
       // Go on with a positive factor, to ease the scaling :
       Factor = -Factor;
     }
@@ -3398,15 +3397,15 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     {
       // Simulate 1 by calculating it via a (guaranteed) register :
       // We follow this : (1-v0) - (-v0) = (1-v0) + v0 = 1
-      Cur->Parameters[0].Modifiers = ARGMOD_INVERT;
+      Cur->Parameters[0].Modifiers = (1 << ARGMOD_INVERT);
       Cur->Parameters[1] = Cur->Parameters[0];
-      Cur->Parameters[1].Modifiers = ARGMOD_NEGATE;
+      Cur->Parameters[1].Modifiers = (1 << ARGMOD_NEGATE);
     }
 
     // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
     Cur->ScaleOutput(Factor);
 
-	DbgPrintf("; Changed MOV {const} into a SUB_factor 1-v0,-v0");
+	DbgPrintf("; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
 	return true;
   }
   return false;
@@ -3419,7 +3418,7 @@ bool PSH_XBOX_SHADER::SimplifyADD(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf("; Changed ADD s0,0 into a MOV s0");
+    DbgPrintf("; Changed ADD s0,0 into a MOV s0\n");
     return true;
   }
   return false;
@@ -3433,7 +3432,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into s2 :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,0 into a MOV s0");
+    DbgPrintf("; Changed MAD s0,0 into a MOV s0\n");
     return true;
   }
 
@@ -3443,7 +3442,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into s0+s2 :
     Cur->Opcode = PO_ADD;
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,1,s2 into a ADD s0,s2");
+    DbgPrintf("; Changed MAD s0,1,s2 into a ADD s0,s2\n");
     return true;
   }
 
@@ -3454,7 +3453,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_SUB;
     Cur->Parameters[1] = Cur->Parameters[0];
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,-1,s2 into a SUB s2,s0");
+    DbgPrintf("; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
     return true;
   }
   return false;
@@ -3467,7 +3466,7 @@ bool PSH_XBOX_SHADER::SimplifySUB(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf("; Changed SUB x, 0 into a MOV x");
+    DbgPrintf("; Changed SUB x, 0 into a MOV x\n");
     return true;
   }
   return false;
@@ -3481,7 +3480,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a MOV (the 0 argument will be resolve in a recursive MOV fixup) :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0].SetConstValue(0.0);
-    DbgPrintf("; Changed MUL s0,0 into a MOV 0");
+    DbgPrintf("; Changed MUL s0,0 into a MOV 0\n");
     return true;
   }
 
@@ -3491,7 +3490,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a simple MOV and scale the output instead :
     Cur->Opcode = PO_MOV;
     Cur->ScaleOutput(Cur->Parameters[1].GetConstValue());
-    DbgPrintf("; Changed MUL s0,{const} into a MOV_factor s0");
+    DbgPrintf("; Changed MUL s0,{const} into a MOV_factor s0\n");
     return true;
   }
   return false;
@@ -3506,7 +3505,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MUL (calculating the left part : s0*s1 :
     Cur->Opcode = PO_MUL;
-    DbgPrintf("; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1");
+    DbgPrintf("; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1\n");
     return true;
   }
 
@@ -3517,7 +3516,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_MUL;
     Cur->Parameters[0].Invert();
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf("; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2");
+    DbgPrintf("; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2\n");
     return true;
   }
 
@@ -3528,7 +3527,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_MAD;
     Cur->Parameters[2] = Cur->Parameters[0];
     Cur->Parameters[2].Invert();
-    DbgPrintf("; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0");
+    DbgPrintf("; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
 	return true;
   }
   return false;
@@ -4126,7 +4125,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 		// TODO: These should read from EmuMappedD3DRenderState, but it doesn't exist yet
 		// The required code needs o be ported from Wip_LessVertexPatching or Dxbx
         switch (i) {
-          //case PSH_XBOX_CONSTANT_FOG:
+          case PSH_XBOX_CONSTANT_FOG:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
@@ -4134,7 +4133,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
-			  dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
@@ -4143,6 +4142,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 	    default:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
 			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+			break;
         }
 
         // Convert it back to 4 floats  :
@@ -6184,10 +6184,10 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			DWORD dwPSTexMode3 = ( pPSDef->PSTextureModes >> 15 ) & 0x1F;
 
 			DbgPshPrintf( "PSTextureModes ->\n" );
-			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModes[dwPSTexMode0] );
-			DbgPshPrintf( "Stage 1: %s\n", PS_TextureModes[dwPSTexMode1] );
-			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModes[dwPSTexMode2] );
-			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModes[dwPSTexMode3] );
+			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModesStr[dwPSTexMode0] );
+			DbgPshPrintf( "Stage 1: %s\n", PS_TextureModesStr[dwPSTexMode1] );
+			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModesStr[dwPSTexMode2] );
+			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModesStr[dwPSTexMode3] );
 		}
 
 		if( pPSDef->PSDotMapping )
@@ -6197,9 +6197,9 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			DWORD dwPSDMStage3 = ( pPSDef->PSDotMapping >> 8 ) & 0x7;
 
 			DbgPshPrintf( "PSDotMapping ->\n" );
-			DbgPshPrintf( "Stage 1: %s\n", PS_DotMapping[dwPSDMStage1] );
-			DbgPshPrintf( "Stage 2: %s\n", PS_DotMapping[dwPSDMStage2] );
-			DbgPshPrintf( "Stage 3: %s\n", PS_DotMapping[dwPSDMStage3] );
+			DbgPshPrintf( "Stage 1: %s\n", PS_DotMappingStr[dwPSDMStage1] );
+			DbgPshPrintf( "Stage 2: %s\n", PS_DotMappingStr[dwPSDMStage2] );
+			DbgPshPrintf( "Stage 3: %s\n", PS_DotMappingStr[dwPSDMStage3] );
 		}
 
 		if( pPSDef->PSCompareMode )
@@ -6210,10 +6210,10 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			DWORD dwPSCMStage3 = ( pPSDef->PSCompareMode >> 12 ) & 0xF;
 
 			DbgPshPrintf( "PSCompareMode ->\n" );
-			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModes[dwPSCMStage0 == 0 ? 0 : 1] );
-			DbgPshPrintf( "Stage 1: %s\n", PS_TextureModes[dwPSCMStage1 == 0 ? 2 : 3] );
-			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModes[dwPSCMStage2 == 0 ? 4 : 5] );
-			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModes[dwPSCMStage3 == 0 ? 6 : 7] );
+			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModesStr[dwPSCMStage0 == 0 ? 0 : 1] );
+			DbgPshPrintf( "Stage 1: %s\n", PS_TextureModesStr[dwPSCMStage1 == 0 ? 2 : 3] );
+			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModesStr[dwPSCMStage2 == 0 ? 4 : 5] );
+			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModesStr[dwPSCMStage3 == 0 ? 6 : 7] );
 		}
 
 		if( pPSDef->PSInputTexture )
@@ -6222,8 +6222,8 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			DWORD dwPSITStage3 = ( pPSDef->PSInputTexture >> 20 ) & 0x3;
 
 			DbgPshPrintf( "PSInputTexture ->\n" );
-			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModes[dwPSITStage2] );
-			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModes[dwPSITStage3] );
+			DbgPshPrintf( "Stage 2: %s\n", PS_TextureModesStr[dwPSITStage2] );
+			DbgPshPrintf( "Stage 3: %s\n", PS_TextureModesStr[dwPSITStage3] );
 		}
 
 		if( pPSDef->PSCombinerCount )
@@ -6235,9 +6235,9 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 
 			DbgPshPrintf( "PSCombinerCount ->\n" );
 			DbgPshPrintf( "Combiners: %d\n", dwPSCCNumCombiners );
-			DbgPshPrintf( "Mux:       %s\n", PS_CombinerCountFlags[dwPSCCMux] );
-			DbgPshPrintf( "C0:        %s\n", PS_CombinerCountFlags[dwPSCCC0 == 0 ? 2 : 3] );
-			DbgPshPrintf( "C1:        %s\n", PS_CombinerCountFlags[dwPSCCC1 == 0 ? 4 : 5] );
+			DbgPshPrintf( "Mux:       %s\n", PS_CombinerCountFlagsStr[dwPSCCMux] );
+			DbgPshPrintf( "C0:        %s\n", PS_CombinerCountFlagsStr[dwPSCCC0 == 0 ? 2 : 3] );
+			DbgPshPrintf( "C1:        %s\n", PS_CombinerCountFlagsStr[dwPSCCC1 == 0 ? 4 : 5] );
 		}
 
 		/*for( int i = 0; i > 7; i++ )
