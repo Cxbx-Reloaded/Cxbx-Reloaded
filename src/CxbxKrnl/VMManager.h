@@ -134,7 +134,7 @@ class VMManager : public PhysicalMemory
 		// allocates memory in the system region
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
 		// allocates memory in the contiguous region
-		VAddr AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms);
+		VAddr AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
@@ -146,7 +146,7 @@ class VMManager : public PhysicalMemory
 		// deallocates memory in the user region
 		void Deallocate(VAddr addr);
 		// changes the protections of a memory region
-		void Protect(VAddr target, size_t size, DWORD new_perms);
+		void Protect(VAddr addr, size_t Size, DWORD NewPerms);
 		// query if a VAddr is valid
 		bool QueryVAddr(VAddr addr);
 		// translate a VAddr
@@ -202,8 +202,6 @@ class VMManager : public PhysicalMemory
 		void DestructVMA(VMAIter it, MemoryRegionType Type);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
-		// changes access permissions for a range of vma's, splitting them if necessary
-		void ReprotectVMARange(VAddr target, size_t size, DWORD new_perms);
 		// checks if a VAddr is valid; returns false if not
 		bool IsValidVirtualAddress(const VAddr addr);
 		// translates a VAddr to its corresponding PAddr; it must be valid

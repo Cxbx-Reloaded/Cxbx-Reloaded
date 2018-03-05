@@ -84,7 +84,6 @@ extern "C" {
 #define KSEG0_BASE                  0x80000000
 
 // Define virtual base addresses used by the system.
-#define SYSTEM_PHYSICAL_MAP                     KSEG0_BASE // = 0x80000000
 #define KERNEL_PHYSICAL_ADDRESS                 XBE_IMAGE_BASE // = 0x10000
 #define XBOX_HIGHEST_PHYSICAL_PAGE              0x03FFF
 #define CHIHIRO_HIGHEST_PHYSICAL_PAGE           0x07FFF
@@ -99,11 +98,11 @@ extern "C" {
 #define D3D_PHYSICAL_PAGE                       0x00000
 #define DEBUGKIT_FIRST_UPPER_HALF_PAGE          X64M_PHYSICAL_PAGE // = 0x4000
 #define NV2A_INSTANCE_PAGE_COUNT                16
-#define CONTIGUOUS_MEMORY_BASE                  SYSTEM_PHYSICAL_MAP // = 0x80000000
+#define CONTIGUOUS_MEMORY_BASE                  KSEG0_BASE // = 0x80000000
 #define CONTIGUOUS_MEMORY_XBOX_SIZE             (64 * ONE_MB)
 #define CONTIGUOUS_MEMORY_CHIHIRO_SIZE          (128 * ONE_MB)
-#define XBOX_PFN_ADDRESS                        ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)SYSTEM_PHYSICAL_MAP)
-#define CHIHIRO_PFN_ADDRESS                     ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)SYSTEM_PHYSICAL_MAP)
+#define XBOX_PFN_ADDRESS                        ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
+#define CHIHIRO_PFN_ADDRESS                     ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
 #define NV2A_MEMORY_BASE                        0xFD000000 // See NV2A_ADDR
 #define NV2A_MEMORY_SIZE                        0x01000000 // See NV2A_SIZE
 #define NV2A_PRAMIN_ADDR                        0xFD700000
@@ -128,7 +127,6 @@ extern "C" {
 #define MAX_VIRTUAL_ADDRESS                     0xFFFFFFFF
 
 /*! base addresses of various components */
-#define XBOX_KERNEL_BASE (SYSTEM_PHYSICAL_MAP + XBE_IMAGE_BASE)
 // The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
 #define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
@@ -146,6 +144,10 @@ extern "C" {
 #define DEVKIT_MEMORY_SIZE       0x10000000 // 256 MiB
 #define DEVKIT_MEMORY_END        DEVKIT_MEMORY_BASE + DEVKIT_MEMORY_SIZE - 1 // 0xBFFFFFFF
 
+#define PHYSICAL_MAP_BASE        0x80000000
+#define PHYSICAL_MAP_SIZE        0x10000000 // 256 MiB
+#define PHYSICAL_MAP_END         PHYSICAL_MAP_BASE + PHYSICAL_MAP_SIZE - 1 // 0x8FFFFFFF
+
 #define XBOX_NV2A_INIT_VECTOR    0xFF000008
 
 #define XBOX_FLASH_ROM_BASE      0xFFF00000
@@ -159,6 +161,8 @@ extern "C" {
 #define PAGE_TABLES_BASE         0xC0000000
 #define PAGE_TABLES_SIZE         4 * ONE_MB
 #define PAGE_TABLES_END          PAGE_TABLES_BASE + PAGE_TABLES_SIZE - 1
+
+#define XBOX_KERNEL_BASE (PHYSICAL_MAP_BASE + XBE_IMAGE_BASE)
 
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we

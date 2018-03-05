@@ -463,7 +463,14 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	NTSTATUS ret;
 
-	assert(MemoryStatistics);
+	#ifdef _DEBUG_TRACE
+	 if (!MemoryStatistics)
+	{
+		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		LOG_IGNORED();
+		RETURN(STATUS_SUCCESS);
+	}
+	#endif
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{

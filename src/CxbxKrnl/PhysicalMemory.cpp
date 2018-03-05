@@ -102,7 +102,7 @@ void PhysicalMemory::InitializePageDirectory()
 		TempPte.Hardware.PFN = (ULONG)CHIHIRO_PFN_ADDRESS >> PAGE_SHIFT;
 		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(CHIHIRO_HIGHEST_PHYSICAL_PAGE));
 	}
-	for (pPde = GetPdeAddress(SYSTEM_PHYSICAL_MAP); pPde <= pPde_end; ++pPde)
+	for (pPde = GetPdeAddress(PHYSICAL_MAP_BASE); pPde <= pPde_end; ++pPde)
 	{
 		WRITE_PTE(pPde, TempPte);
 		TempPte.Hardware.PFN++; // increase PFN
@@ -615,14 +615,13 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	assert(BusyType < PageType::COUNT);
 	assert(pPte);
 
-	// NOTE: for now this doesn't require a check for success but if called from other callers it will...
 	RemoveFree(1, &pfn, 0, 0, m_HighestPage);
 
 	// Fill the page with zeros
 	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
 
 	// Construct the pfn for the page
-	WritePfn(0, 0, pPte, BusyType, false); // at the moment I'm not sure if this needs a check or not...
+	WritePfn(pfn, pfn, pPte, BusyType, false);
 
 	return pfn;
 }

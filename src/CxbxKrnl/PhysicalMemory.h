@@ -157,6 +157,7 @@ enum PageType {
 #define PTE_GUARD                   PTE_GUARD_END_MASK
 #define PTE_CACHE                   0x000
 #define PTE_VALID_PROTECTION_MASK   0x0000021B
+#define PTE_SYSTEM_PROTECTION_MASK  0x0000001B // valid, write, write-through, cache
 
 
 /* Xbox PAGE Masks */
@@ -204,7 +205,7 @@ enum PageType {
 #define ValidKernelPteBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x63
 #define ValidKernelPdeBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_OWNER_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x67
 // This returns the VAddr in the contiguous region
-#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)SYSTEM_PHYSICAL_MAP + (Pfn << PAGE_SHIFT))
+#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)PHYSICAL_MAP_BASE + (Pfn << PAGE_SHIFT))
 // This works with both PAddr and VAddr in the contiguous region
 #define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) ((Va & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
 // This returns the address of the PFN entry for Xbox/Chihiro
@@ -220,6 +221,13 @@ enum PageType {
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 #define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
+
+
+/* These macros check if the supplied address is inside a known range */
+#define IS_PHYSICAL_ADDRESS(Va) (((VAddr)(Va) - PHYSICAL_MAP_BASE) <= (PHYSICAL_MAP_END - PHYSICAL_MAP_BASE))
+#define IS_SYSTEM_ADDRESS(Va) (((VAddr)(Va) - SYSTEM_MEMORY_BASE) <= (SYSTEM_MEMORY_END - SYSTEM_MEMORY_BASE))
+#define IS_DEVKIT_ADDRESS(Va) (((VAddr)(Va) - DEVKIT_MEMORY_BASE) <= (DEVKIT_MEMORY_END - DEVKIT_MEMORY_BASE))
+#define IS_USER_ADDRESS(Va) (((VAddr)(Va) - LOWEST_USER_ADDRESS) <= (HIGHEST_USER_ADDRESS - LOWEST_USER_ADDRESS))
 
 
 /* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
@@ -267,7 +275,7 @@ class PhysicalMemory
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
 		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
-		// checks if enough free page are available for the allocation (doesn't account for fragmentation)
+		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)
 		bool IsMappable(PFN_COUNT PagesRequested);
 };
 

@@ -460,7 +460,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PMMPTE EndingPte;
 	PFN pfn;
 	PFN EndingPfn;
-	PFN_COUNT LowerAcceptablePfn = 0;
+	PFN_COUNT LowestAcceptablePfn = 0;
 	PFN_COUNT PteNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
@@ -477,14 +477,14 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	if (!IsMappable(PteNumber)) { goto Fail; }
 	if (BusyType == PageType::Debugger)
 	{
-		// Debugger pages are only allocated from the extra 64 Mib available on devkits and are mapped in the
+		// Debugger pages are only allocated from the extra 64 MiB available on devkits and are mapped in the
 		// devkit system region
 
-		LowerAcceptablePfn = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		LowestAcceptablePfn = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
 		MemoryType = MemoryRegionType::Devkit;
 	}
 
-	if (RemoveFree(PteNumber, &pfn, 0, LowerAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
+	if (RemoveFree(PteNumber, &pfn, 0, LowestAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
 		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, pfn);
@@ -584,7 +584,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	RETURN(NULL);
 }
 
-VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr HigherAddress, ULONG Alignment, DWORD Perms)
+VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Size);
@@ -608,8 +608,8 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowerAddress, PAddr Highe
 	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
-	LowerPfn = LowerAddress >> PAGE_SHIFT;
-	HigherPfn = HigherAddress >> PAGE_SHIFT;
+	LowerPfn = LowestAddress >> PAGE_SHIFT;
+	HigherPfn = HighestAddress >> PAGE_SHIFT;
 	PfnAlignment = Alignment >> PAGE_SHIFT;
 
 	if (!IsMappable(PteNumber)) { goto Fail; }
@@ -733,6 +733,7 @@ void VMManager::Deallocate(VAddr addr)
 	VMAIter it;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the user region are page aligned
+	assert(IS_USER_ADDRESS(addr));
 
 	Lock();
 
@@ -785,6 +786,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 	VMAIter it;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the contiguous region are page aligned
+	assert(IS_PHYSICAL_ADDRESS(addr));
 
 	Lock();
 
@@ -836,11 +838,13 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 		// MmDbgAllocateMemory. This is not a problem since CarveVMARange supports freeing only a part of an allocated
 		// vma, but we won't pass its size to CheckExistenceVMA because it would fail the size check
 
+		assert(IS_DEVKIT_ADDRESS(addr));
 		MemoryType = MemoryRegionType::Devkit;
 		it = CheckExistenceVMA(addr, MemoryType);
 	}
 	else
 	{
+		assert(IS_SYSTEM_ADDRESS(addr));
 		it = CheckExistenceVMA(addr, MemoryType, ROUND_UP_4K(Size));
 	}
 
@@ -890,7 +894,7 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 		LOG_FUNC_ARG(Size);
 	LOG_FUNC_END;
 
-	if (addr >= SYSTEM_MEMORY_BASE && addr + Size <= SYSTEM_MEMORY_END)
+	if (IS_SYSTEM_ADDRESS(addr))
 	{
 		// The allocation is inside the system region, so it must have been mapped by us. Unmap it
 
@@ -927,16 +931,55 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 	// Don't free hardware devices (flash, NV2A, etc) -> no operation
 }
 
-void VMManager::Protect(VAddr target, size_t size, DWORD new_perms)
+void VMManager::Protect(VAddr addr, size_t Size, DWORD NewPerms)
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(target);
-		LOG_FUNC_ARG(size);
-		LOG_FUNC_ARG(new_perms);
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Size);
+		LOG_FUNC_ARG(NewPerms);
 	LOG_FUNC_END;
 
+	MMPTE TempPte;
+	MMPTE NewPermsPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+
+	assert(IS_PHYSICAL_ADDRESS(addr) || IS_SYSTEM_ADDRESS(addr));
+
+	if (!Size || !ConvertXboxToSystemPteProtection(NewPerms, &NewPermsPte)) { return; }
+
 	Lock();
-	ReprotectVMARange(target, size, new_perms);
+
+	// This routine is allowed to change the protections of only a part of the pages of an allocation, and the supplied
+	// address doesn't necessarily need to be the starting address of the vma, meaning we can't check the vma existence
+	// with CheckExistenceVMA
+
+	#ifdef _DEBUG_TRACE
+	MemoryRegionType MemoryType = IS_PHYSICAL_ADDRESS(addr) ? MemoryRegionType::Contiguous : MemoryRegionType::System;
+	VMAIter it = GetVMAIterator(addr, MemoryType);
+	assert(it != m_MemoryRegionArray[MemoryType].RegionMap.end() && addr >= it->first &&
+		addr < it->first + it->second.size && it->second.type != VMAType::Free);
+	#endif
+
+	PointerPte = GetPteAddress(addr);
+	EndingPte = GetPteAddress(addr + Size - 1);
+
+	while (PointerPte <= EndingPte)
+	{
+		TempPte = *PointerPte;
+
+		if ((TempPte.Default & PTE_SYSTEM_PROTECTION_MASK) != NewPermsPte.Default)
+		{
+			// This zeroes the existent bit protections and applies the new ones
+
+			TempPte.Default = ((TempPte.Default & ~PTE_SYSTEM_PROTECTION_MASK) | NewPermsPte.Default);
+			WRITE_PTE(PointerPte, TempPte);
+		}
+		PointerPte++;
+	}
+
+	UpdateMemoryPermissions(addr, Size, NewPerms);
+
 	Unlock();
 }
 
@@ -1341,23 +1384,6 @@ VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, s
 		}
 	}
 	return NULL;
-}
-
-void VMManager::ReprotectVMARange(VAddr target, size_t size, DWORD new_perms)
-{
-	VAddr aligned_start = target & ~(UINT_PTR)PAGE_MASK;
-	size_t aligned_size = (size + PAGE_MASK) & ~PAGE_MASK;
-
-	VMAIter vma = CarveVMARange(aligned_start, aligned_size);
-	VAddr target_end = aligned_start + aligned_size;
-
-	VMAIter end = m_Vma_map.end();
-	// The comparison against the end of the range must be done using addresses since vma's can be
-	// merged during this process, causing invalidation of the iterators.
-	while (vma != end && vma->second.base < target_end)
-	{
-		vma = std::next(ReprotectVMA(vma, new_perms));
-	}
 }
 
 bool VMManager::IsValidVirtualAddress(const VAddr addr)
