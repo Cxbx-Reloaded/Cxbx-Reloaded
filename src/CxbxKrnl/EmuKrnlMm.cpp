@@ -444,9 +444,9 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	ULONG uiSize = g_VMManager.QuerySize((VAddr)BaseAddress);
+	ULONG Size = g_VMManager.QuerySize((VAddr)BaseAddress);
 
-	RETURN(uiSize);
+	RETURN(Size);
 }
 
 // ******************************************************************

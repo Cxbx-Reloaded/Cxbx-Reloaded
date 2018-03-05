@@ -491,6 +491,11 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		MemoryType = MemoryRegionType::Devkit;
 	}
 
+	// ergo720: if a guard page is requested, because we only commit the actual stack pages, there is the remote possibility
+	// that the stack is mapped immediately after the end of a host allocation, since those will appear as free areas and
+	// the VMManager can't know anything about those. In practice, I wouldn't worry about this case since, if emulation is
+	// done properly, a game will never try to write beyond the stack bottom since that would imply a stack overflow
+
 	if (RemoveFree(PagesNumber, &pfn, 0, LowestAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
@@ -1056,46 +1061,47 @@ size_t VMManager::QuerySize(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
 
-	// The Xbox returns at least PAGE_SIZE even for invalid addresses
-	size_t size = PAGE_SIZE;
+	PMMPTE PointerPte;
+	PFN_COUNT PagesNumber;
+	size_t Size = 0;
 
 	Lock();
-	auto it = m_Vma_map.lower_bound(addr);
-	if (it != m_Vma_map.end())
+
+	if (IS_USER_ADDRESS(addr))
 	{
-		if (it->second.type == VMAType::Free)
+		// This is designed to handle Cxbx callers that provide an offset instead of the beginning of the allocation. Such
+		// callers should only allocate the corresponding memory with the generic Allocate or AllocateZeroed functions, or
+		// else this will fail. At the moment this is indeed the case
+
+		VMAIter it = GetVMAIterator(addr, MemoryRegionType::User);
+
+		if (it != m_MemoryRegionArray[MemoryRegionType::User].RegionMap.end() && it->second.type != VMAType::Free)
 		{
-			size = 0;
-			EmuWarning("VMManager: QuerySize : queried a free region!\n");
-		}
-		else
-		{
-			if (it->second.base != addr)
-			{
-				// This shouldn't happen for MmQueryAllocationSize, but if this function is called by other callers then it's possible
-				auto prev_it = std::prev(it);
-				PAddr prev_backing_block = prev_it->second.backing_block;
-				while (prev_it != m_Vma_map.begin() && prev_backing_block == prev_it->second.backing_block)
-				{
-					--prev_it;
-				}
-				it = std::next(prev_it);
-				EmuWarning("VMManager: QuerySize : quering not the start address of an allocation\n");
-			}
-			// We can't just return the size of the vma because it could have been split by ReprotectVMARange so, instead,
-			// we must check the corresponding physical allocation size
-			size = it->second.size;
-			auto next_it = std::next(it);
-			while (next_it != m_Vma_map.end() && it->second.backing_block == next_it->second.backing_block)
-			{
-				size += next_it->second.size;
-				++next_it;
-			}
+			Size = it->second.size;
 		}
 	}
+	else
+	{
+		// This will only work for allocations made by MmAllocateContiguousMemory(Ex), MmAllocateSystemMemory and
+		// MmCreateKernelStack which is what MmQueryAllocationSize expects. If they are not, this will either fault
+		// or return an incorrect size of at least PAGE_SIZE
+
+		PagesNumber = 1;
+		PointerPte = GetPteAddress(addr);
+
+		while (PointerPte->Hardware.GuardOrEnd == 0)
+		{
+			assert(PointerPte->Hardware.Valid != 0); // pte must be valid
+
+			PagesNumber++;
+			PointerPte++;
+		}
+		Size = PagesNumber << PAGE_SHIFT;
+	}
+
 	Unlock();
 
-	RETURN(size);
+	RETURN(Size);
 }
 
 xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,

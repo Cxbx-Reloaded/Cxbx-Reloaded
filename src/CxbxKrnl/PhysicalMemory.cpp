@@ -449,6 +449,9 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 
 DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
 {
+	// This routine assumes that the pte has valid protection bits. If it doesn't, it can produce invalid
+	// access permissions
+
 	ULONG Protect;
 
 	if (PteMask & PTE_READWRITE) { Protect = XBOX_PAGE_READWRITE; }
