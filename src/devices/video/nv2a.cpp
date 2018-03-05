@@ -52,6 +52,7 @@ namespace xboxkrnl
 #  pragma comment(lib, "opengl32.lib")  // Compiler-specific directive to avoid manually configuration
 //#  pragma comment(lib, "glu32.lib")     // Link libraries
 #  pragma comment(lib, "glew32.lib")
+#pragma warning(disable : 4065) // Avoid "switch statement contains 'default' but no 'case' labels" warnings
 #endif
 
 #include <string> // For std::string
