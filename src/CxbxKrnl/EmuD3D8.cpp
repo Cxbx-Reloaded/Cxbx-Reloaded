@@ -653,7 +653,7 @@ inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
 
 // This can be used to determine if resource Data adddresses
 // need the MM_SYSTEM_PHYSICAL_MAP bit set or cleared
-inline boolean IsResourceTypeGPUReadable(const DWORD ResourceType)
+inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 {
 	switch (ResourceType) {
 	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
@@ -726,21 +726,9 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 		}
 	}
 
-	DWORD Type = GetXboxCommonResourceType(pXboxResource);
-	switch (Type) {
-	case X_D3DCOMMON_TYPE_VERTEXBUFFER:
-	case X_D3DCOMMON_TYPE_PALETTE:
-	case X_D3DCOMMON_TYPE_TEXTURE:
-	case X_D3DCOMMON_TYPE_SURFACE:
-			pData |= MM_SYSTEM_PHYSICAL_MAP;
-		break;
-	case X_D3DCOMMON_TYPE_PUSHBUFFER:
-	case X_D3DCOMMON_TYPE_INDEXBUFFER:
-	case X_D3DCOMMON_TYPE_FIXUP:
-		break;
-	default:
-		CxbxKrnlCleanup("Unhandled resource type");
-	}
+	DWORD dwCommonType = GetXboxCommonResourceType(pXboxResource);
+	if (IsResourceTypeGPUReadable(dwCommonType))
+		pData |= MM_SYSTEM_PHYSICAL_MAP;
 
 	return (uint08*)pData;
 }
@@ -1089,48 +1077,6 @@ XTL::X_D3DSurface *EmuNewD3DSurface()
 	return result;
 }
 
-XTL::X_D3DTexture *EmuNewD3DTexture()
-{
-	XTL::X_D3DTexture *result = (XTL::X_D3DTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DTexture));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
-	return result;
-}
-
-XTL::X_D3DVolumeTexture *EmuNewD3DVolumeTexture()
-{
-	XTL::X_D3DVolumeTexture *result = (XTL::X_D3DVolumeTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DVolumeTexture));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
-	return result;
-}
-
-XTL::X_D3DCubeTexture *EmuNewD3DCubeTexture()
-{
-	XTL::X_D3DCubeTexture *result = (XTL::X_D3DCubeTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DCubeTexture));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
-	return result;
-}
-
-XTL::X_D3DIndexBuffer *EmuNewD3DIndexBuffer()
-{
-	XTL::X_D3DIndexBuffer *result = (XTL::X_D3DIndexBuffer *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DIndexBuffer));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_INDEXBUFFER | 1; // Set refcount to 1
-	return result;
-}
-
-XTL::X_D3DVertexBuffer *EmuNewD3DVertexBuffer()
-{
-	XTL::X_D3DVertexBuffer *result = (XTL::X_D3DVertexBuffer *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DVertexBuffer));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_VERTEXBUFFER | 1; // Set refcount to 1
-	return result;
-}
-
-XTL::X_D3DPalette *EmuNewD3DPalette()
-{
-	XTL::X_D3DPalette *result = (XTL::X_D3DPalette *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DPalette));
-	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_PALETTE | 1; // Set refcount to 1
-	return result;
-}
-
 VOID XTL::CxbxSetPixelContainerHeader
 (
 	XTL::X_D3DPixelContainer* pPixelContainer,
@@ -1266,6 +1212,7 @@ bool ConvertD3DTextureToARGBBuffer(
 	return true;
 }
 
+// Called by WndMain::LoadGameLogo() to load game logo bitmap
 uint8 *XTL::ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
 	uint8 *pSrc,
@@ -4288,11 +4235,6 @@ VOID WINAPI CreateHostResource
 			// Let's try using some 16-bit format instead...
 			if(X_Format == X_D3DFMT_X1R5G5B5 )
 			{
-#ifdef OLD_COLOR_CONVERSION // Current approach
-				EmuWarning( "X_D3DFMT_X1R5G5B5 -> D3DFMT_R5GB5" );
-				X_Format = X_D3DFMT_R5G6B5;
-				PCFormat = D3DFMT_R5G6B5;
-#else // Later, convert to ARGB :
 				CacheFormat = PCFormat;       // Save this for later
 				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
 			}
@@ -4301,7 +4243,6 @@ VOID WINAPI CreateHostResource
 			if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 				CacheFormat = PCFormat;       // Save this for later
 				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
-#endif // !OLD_COLOR_CONVERSION
 			}
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
@@ -4458,22 +4399,6 @@ VOID WINAPI CreateHostResource
                     dwMipMapLevels = 3;
                 }
 
-    #ifdef OLD_COLOR_CONVERSION // Current palette approach - Later, use ______P8ToARGBRow_C()                // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
-                    // Since most modern graphics cards does not support
-                    // palette based textures we need to expand it to
-                    // ARGB texture format
-					if ((PCFormat == D3DFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8]) || EmuXBFormatRequiresConversionToARGB(X_Format))
-                    {
-						if (PCFormat == D3DFMT_P8) //Palette
-							EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
-						else
-							EmuWarning("X_Format RequiresConversionToARGB");
-
-                    CacheFormat = PCFormat;       // Save this for later
-                    PCFormat = D3DFMT_A8R8G8B8;   // ARGB
-                }
-#endif // OLD_COLOR_CONVERSION
-
                 if(bCubemap)
                 {
                     DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
@@ -4594,21 +4519,15 @@ VOID WINAPI CreateHostResource
 							{
 								// TODO: Fix or handle this situation..?
 							}
-#ifndef OLD_COLOR_CONVERSION // Later, use ConvertD3DTextureToARGBBuffer
 							else if (CacheFormat != 0) // Do we need to convert to ARGB?
 							{
 								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
-								BYTE *pPixelData = (BYTE*)LockedRect.pBits;
-								DWORD dwDataSize = dwMipWidth*dwMipHeight;
-								DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-
 								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
-								uint8 *pDest = (uint8 *)pExpandedTexture;
+								uint8 *pDest = (uint8 *)LockedRect.pBits;
 
 								DWORD dwSrcPitch = dwMipWidth * dwBPP;//sizeof(DWORD);
 								DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
-								DWORD dwMipSizeInBytes = dwDataSize;
 
 								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
@@ -4618,15 +4537,7 @@ VOID WINAPI CreateHostResource
 									TextureStage)) {
 									CxbxKrnlCleanup("Unhandled conversion!");
 								}
-
-								//__asm int 3;
-								// Copy the expanded texture back to the buffer
-								memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
-
-								// Flush unused data buffers
-								free(pExpandedTexture);
 							}
-#endif // !OLD_COLOR_CONVERSION
 							else
 							{
 								if (bSwizzled)
@@ -4683,84 +4594,6 @@ VOID WINAPI CreateHostResource
 										}
 									}
 								}
-
-#ifdef OLD_COLOR_CONVERSION // Currently, convert here. Later, use ConvertD3DTextureToARGBBuffer above
-								if (CacheFormat != 0) // Do we need to convert to ARGB?
-								{
-									EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
-
-									BYTE *pPixelData = (BYTE*)LockedRect.pBits;
-									DWORD dwDataSize = dwMipWidth*dwMipHeight;
-									DWORD* pExpandedTexture = (DWORD*)malloc(dwDataSize * sizeof(DWORD));
-
-									//__asm int 3;
-									unsigned int w = 0;
-									unsigned int x = 0;
-									if (CacheFormat == D3DFMT_P8) // Palette
-									{
-										DWORD* pTexturePalette = (DWORD*)g_pCurrentPalette[TextureStage]; // For D3DFMT_P8
-
-										for (unsigned int y = 0;y < dwDataSize;y++)
-										{
-											if (pTexturePalette != nullptr) {
-												// Read P8 pixel :
-												unsigned char p = (unsigned char)pPixelData[w++];
-
-												// Read the corresponding ARGB from the palette and store it in the new texture :
-												// HACK: Prevent crash if a pallete has not been loaded yet
-												pExpandedTexture[y] = pTexturePalette[p];
-											} else {
-												pExpandedTexture[y] = 0;
-											}
-
-											// are we at the end of a line?
-											if (++x == dwMipWidth)
-											{
-												x = 0;
-												// Since P8 contains byte pixels instead of dword ARGB pixels,
-												// the next line resides 3 bytes additional per pixel further :
-												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
-											}
-										}
-									}
-									else
-									{
-										const ComponentEncodingInfo *encoding = EmuXBFormatComponentEncodingInfo(X_Format);
-
-										for (unsigned int y = 0; y < dwDataSize; y++)
-										{
-											uint32 value = 0;
-
-											switch (dwBPP) {
-											case 1:
-												value = pPixelData[w++];
-												break;
-											case 2:
-												value = ((WORD *)pPixelData)[w++];
-												break;
-											case 4:
-												value = ((DWORD *)pPixelData)[w++];
-												break;
-											}
-
-											pExpandedTexture[y] = DecodeUInt32ToColor(encoding, value);
-											// are we at the end of a line?
-											if(++x == dwMipWidth)
-											{
-												x = 0;
-												w += dwMipWidth * (sizeof(DWORD) - dwBPP);
-											}
-										}
-									}
-
-									//__asm int 3;
-									// Copy the expanded texture back to the buffer
-									memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
-
-									// Flush unused data buffers
-									free(pExpandedTexture);
-								}
-#endif // !OLD_COLOR_CONVERSION
 							}
 						}
 
@@ -6247,53 +6080,54 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+
 	CxbxUpdateNativeD3DResources();
 
-	VertexPatchDesc VPDesc;
+    if(IsValidCurrentShader()) {
+		VertexPatchDesc VPDesc;
 
-    VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = StartVertex;
-    VPDesc.pVertexStreamZeroData = 0;
-    VPDesc.uiVertexStreamZeroStride = 0;
-    VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.XboxPrimitiveType = PrimitiveType;
+		VPDesc.dwVertexCount = VertexCount;
+		VPDesc.dwStartVertex = StartVertex;
+		VPDesc.pXboxVertexStreamZeroData = 0;
+		VPDesc.uiXboxVertexStreamZeroStride = 0;
+		VPDesc.hVertexShader = g_CurrentVertexShader;
 
-    VertexPatcher VertPatch;
+		VertexPatcher VertPatch;
 
-    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
+		bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-    if(IsValidCurrentShader())
-    {
         #ifdef _DEBUG_TRACK_VB
-        if(!g_bVBSkipStream)
-        {
+        if(!g_bVBSkipStream) {
         #endif
 
         HRESULT hRet = g_pD3DDevice8->DrawPrimitive
         (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
+            EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
             StartVertex,
-            VPDesc.dwPrimitiveCount
+            VPDesc.dwHostPrimitiveCount
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitive");
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
         #ifdef _DEBUG_TRACK_VB
         }
         #endif
+
+	    VertPatch.Restore();
     }
 
-    VertPatch.Restore();
-
 	// Execute callback procedure
-	if( g_CallbackType == X_D3DCALLBACK_WRITE )
-	{
-		if( g_pCallback )
-		{
-			
+	if (g_CallbackType == X_D3DCALLBACK_WRITE) {
+		if (g_pCallback) {
 			g_pCallback(g_CallbackParam);
-
 			// TODO: Reset pointer?
 		}
 	}
@@ -6319,64 +6153,52 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
-	CxbxUpdateNativeD3DResources();
-
-/*#if 0
-	// HACK: Phantom Crash...
-//	if( (*(DWORD*)&pVertexStreamZeroData) == 0x81FC3080 || (*(DWORD*)&pVertexStreamZeroData) == 0x8191E080 )
-	if( ((*(DWORD*)&pVertexStreamZeroData) & 0xFF000FFF) == 0x81000080 )
-	{
-//		EmuWarning( "Invalid vertex data! (0x%.08X)", pVertexStreamZeroData );
-		EmuWarning( "Phantom Crash hack applied!" );
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
-#else
-	return;
-#endif*/
 
-    VertexPatchDesc VPDesc;
+	// TODO : Call unpatched D3DDevice_SetStateUP();
 
-    VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
-    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
-    VPDesc.hVertexShader = g_CurrentVertexShader;
+	CxbxUpdateNativeD3DResources();
 
-    VertexPatcher VertPatch;
+    if (IsValidCurrentShader()) {
+		VertexPatchDesc VPDesc;
 
-    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
+		VPDesc.XboxPrimitiveType = PrimitiveType;
+		VPDesc.dwVertexCount = VertexCount;
+		VPDesc.dwStartVertex = 0;
+		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
+		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
+		VPDesc.hVertexShader = g_CurrentVertexShader;
 
-    if (IsValidCurrentShader())
-    {
+		VertexPatcher VertPatch;
+
+		bool bPatched = VertPatch.Apply(&VPDesc, NULL);
+
         #ifdef _DEBUG_TRACK_VB
         if(!g_bVBSkipStream)
         #endif
         {
 			HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP
 			(
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
-				VPDesc.dwPrimitiveCount,
-				VPDesc.pVertexStreamZeroData,
-				VPDesc.uiVertexStreamZeroStride
+				EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
+				VPDesc.dwHostPrimitiveCount,
+				VPDesc.pXboxVertexStreamZeroData,
+				VPDesc.uiXboxVertexStreamZeroStride
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitiveUP");
 
-			g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
+			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
         }
+
+	    VertPatch.Restore();
     }
 
-    VertPatch.Restore();
-
 	// Execute callback procedure
-	if( g_CallbackType == X_D3DCALLBACK_WRITE )
-	{
-		if( g_pCallback )
-		{
-			
+	if (g_CallbackType == X_D3DCALLBACK_WRITE) {
+		if (g_pCallback) {
 			g_pCallback(g_CallbackParam);
-			
-
 			// TODO: Reset pointer?
 		}
 	}
@@ -6406,98 +6228,103 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_END;
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+
 	CxbxUpdateNativeD3DResources();
-	CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
+	if (IsValidCurrentShader()) {
+		CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
 
-	// Determine active the vertex index
-	// This reads from g_pDevice->m_IndexBase in Xbox D3D
-	// TODO: Move this into a global symbol, similar to RenderState/Texture State
-	static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
-	DWORD indexBase = 0;
-	indexBase = *pdwXboxD3D_IndexBase;
-    
-	VertexPatchDesc VPDesc;	
-    VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = 0;
-    VPDesc.uiVertexStreamZeroStride = 0;
-    VPDesc.hVertexShader = g_CurrentVertexShader;
-	VPDesc.pIndexData = pIndexData;
-	VPDesc.dwIndexBase = indexBase;
+		// Determine active the vertex index
+		// This reads from g_pDevice->m_IndexBase in Xbox D3D
+		// TODO: Move this into a global symbol, similar to RenderState/Texture State
+		static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
+		DWORD indexBase = 0;
+		indexBase = *pdwXboxD3D_IndexBase;
 
-    VertexPatcher VertPatch;
-	bool FatalError = false;
-    VertPatch.Apply(&VPDesc, &FatalError);
+		VertexPatchDesc VPDesc;
+		VPDesc.XboxPrimitiveType = PrimitiveType;
+		VPDesc.dwVertexCount = VertexCount;
+		VPDesc.dwStartVertex = 0;
+		VPDesc.pXboxVertexStreamZeroData = 0;
+		VPDesc.uiXboxVertexStreamZeroStride = 0;
+		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.pIndexData = pIndexData;
+		VPDesc.dwIndexBase = indexBase;
 
-	UINT uiStartIndex = 0;
-	UINT uiNumVertices = VertexCount;
+		VertexPatcher VertPatch;
+		bool FatalError = false;
+		VertPatch.Apply(&VPDesc, &FatalError);
 
-    if(IsValidCurrentShader() && !FatalError)
-    {
-		VertexCount = VPDesc.dwVertexCount; // Dxbx addition : Use the new VertexCount
+		UINT uiStartIndex = 0;
+		UINT uiNumVertices = VertexCount;
 
-		if (VPDesc.PrimitiveType == X_D3DPT_QUADLIST)
+		if (!FatalError)
 		{
-			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
-			// 4 vertices are just enough for two triangles (a fan starts with 3 vertices for 1 triangle,
-			// and adds 1 triangle via 1 additional vertex)
-			// This is slower (because of call-overhead) but doesn't require any index buffer patching at all!
-			// Note : XDK samples reaching this case are : DisplacementMap, Ripple
-			while ((int)VertexCount >= VERTICES_PER_QUAD)
+			VertexCount = VPDesc.dwVertexCount; // Dxbx addition : Use the new VertexCount
+
+			if (VPDesc.XboxPrimitiveType == X_D3DPT_QUADLIST)
 			{
-				HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitive
-				(
-					D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
-					//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
+				// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
+				// 4 vertices are just enough for two triangles (a fan starts with 3 vertices for 1 triangle,
+				// and adds 1 triangle via 1 additional vertex)
+				// This is slower (because of call-overhead) but doesn't require any index buffer patching at all!
+				// Note : XDK samples reaching this case are : DisplacementMap, Ripple
+				while ((int)VertexCount >= VERTICES_PER_QUAD)
+				{
+					HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitive
+					(
+						D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
+						//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
+						/* MinVertexIndex = */0,
+						/* NumVertices = */VERTICES_PER_QUAD, // Use all 4 vertices of 1 quad
+						uiStartIndex,
+						/* primCount = */TRIANGLES_PER_QUAD // Draw 2 triangles with that
+					);
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
+
+					uiStartIndex += VERTICES_PER_QUAD;
+					VertexCount -= VERTICES_PER_QUAD;
+				}
+			}
+			else
+			{
+				HRESULT hRet;
+				// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
+				hRet = g_pD3DDevice8->DrawIndexedPrimitive(
+					EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
 					/* MinVertexIndex = */0,
-					/* NumVertices = */VERTICES_PER_QUAD, // Use all 4 vertices of 1 quad
+					/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
+					// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 					uiStartIndex,
-					/* primCount = */TRIANGLES_PER_QUAD // Draw 2 triangles with that
-				);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
+					VPDesc.dwHostPrimitiveCount);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive");
 
-				uiStartIndex += VERTICES_PER_QUAD;
-				VertexCount -= VERTICES_PER_QUAD;
+				if (VPDesc.XboxPrimitiveType == X_D3DPT_LINELOOP)
+				{
+					EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+					//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
+					// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
+				}
 			}
-		}
-		else
-		{
-			HRESULT hRet;
-			// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
-			hRet = g_pD3DDevice8->DrawIndexedPrimitive(
-				EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType),
-				/* MinVertexIndex = */0,
-				/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
-				// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
-				uiStartIndex,
-				VPDesc.dwPrimitiveCount);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive");
 
-			if (VPDesc.PrimitiveType == X_D3DPT_LINELOOP)
-			{
-				EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-				//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
-				// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
-			}
+			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 		}
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
-    }
+		VertPatch.Restore();
 
-    VertPatch.Restore();
-
-	g_pD3DDevice8->SetIndices(NULL, 0);
+		g_pD3DDevice8->SetIndices(NULL, 0);
+	}
 
 	// Execute callback procedure
-	if( g_CallbackType == X_D3DCALLBACK_WRITE )
-	{
-		if( g_pCallback )
-		{
-			
+	if (g_CallbackType == X_D3DCALLBACK_WRITE) {
+		if (g_pCallback) {
 			g_pCallback(g_CallbackParam);
-			
-
 			// TODO: Reset pointer?
 		}
 	}
@@ -6527,56 +6354,56 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
+	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
+
+	// TODO : Call unpatched D3DDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
 
     if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
-    VertexPatchDesc VPDesc;
+    if (IsValidCurrentShader()) {
+		VertexPatchDesc VPDesc;
 
-    VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwVertexCount = VertexCount;
-    VPDesc.dwOffset = 0;
-    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
-    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
-    VPDesc.hVertexShader = g_CurrentVertexShader;
-	VPDesc.pIndexData = (PWORD)pIndexData;
+		VPDesc.XboxPrimitiveType = PrimitiveType;
+		VPDesc.dwVertexCount = VertexCount;
+		VPDesc.dwStartVertex = 0;
+		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
+		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
+		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.pIndexData = (PWORD)pIndexData;
 
-    VertexPatcher VertPatch;
+		VertexPatcher VertPatch;
 
-    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
+		bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    {
-    #endif
+		#ifdef _DEBUG_TRACK_VB
+		if(!g_bVBSkipStream) {
+		#endif
 
-    if (IsValidCurrentShader())
-    {
         HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            EmuXB2PC_D3DPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+            EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwHostPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pXboxVertexStreamZeroData, VPDesc.uiXboxVertexStreamZeroStride
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitiveUP");
 
-		g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
-    }
+		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
-    #ifdef _DEBUG_TRACK_VB
-    }
-    #endif
+		#ifdef _DEBUG_TRACK_VB
+		}
+		#endif
 
-    VertPatch.Restore();
+		VertPatch.Restore();
+    }
 
 	// Execute callback procedure
-	if( g_CallbackType == X_D3DCALLBACK_WRITE )
-	{
-		if( g_pCallback )
-		{
-			
+	if (g_CallbackType == X_D3DCALLBACK_WRITE) {
+		if (g_pCallback) {
 			g_pCallback(g_CallbackParam);
-			
 			// TODO: Reset pointer?
 		}
 	}
@@ -7453,8 +7280,36 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_ARG(pRectPatchInfo)
 		LOG_FUNC_END;
 
+	CxbxUpdateNativeD3DResources();
+
 	HRESULT hRet = g_pD3DDevice8->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawRectPatch");
+
+	return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_DrawTriPatch
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawTriPatch)
+(
+	UINT					Handle,
+	CONST FLOAT				*pNumSegs,
+	CONST D3DTRIPATCH_INFO* pTriPatchInfo
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pNumSegs)
+		LOG_FUNC_ARG(pTriPatchInfo)
+		LOG_FUNC_END;
+
+	CxbxUpdateNativeD3DResources();
+
+	HRESULT hRet = g_pD3DDevice8->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawTriPatch");
 
 	return hRet;
 }

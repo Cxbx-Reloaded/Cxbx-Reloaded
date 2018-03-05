@@ -1725,6 +1725,16 @@ HRESULT WINAPI EMUPATCH(D3DDevice_DrawRectPatch)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_DrawTriPatch
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(D3DDevice_DrawTriPatch)
+(
+	UINT					Handle,
+	CONST FLOAT				*pNumSegs,
+	CONST D3DTRIPATCH_INFO* pTriPatchInfo
+);
+
+// ******************************************************************
 // * patch: D3DDevice_GetProjectionViewportMatrix
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetProjectionViewportMatrix)

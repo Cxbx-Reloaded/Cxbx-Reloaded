@@ -41,17 +41,18 @@
 
 typedef struct _VertexPatchDesc
 {
-    IN     X_D3DPRIMITIVETYPE    PrimitiveType;
+    IN     X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
-    IN     DWORD                 dwPrimitiveCount;
-    IN     DWORD                 dwOffset;
-    // Data if Draw...UP call
-    IN OUT PVOID                 pVertexStreamZeroData;
-    IN     UINT                  uiVertexStreamZeroStride;
+    IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
     // The current vertex shader, used to identify the streams
     IN     DWORD                 hVertexShader;
 	IN	   PWORD				 pIndexData = nullptr;
 	IN	   DWORD				 dwIndexBase = 0;
+    // Data if Draw...UP call
+    IN PVOID                     pXboxVertexStreamZeroData;
+    IN UINT                      uiXboxVertexStreamZeroStride;
+	// Values to be used on host
+    OUT DWORD                    dwHostPrimitiveCount;
 }
 VertexPatchDesc;
 
@@ -74,7 +75,7 @@ typedef struct _CACHEDSTREAM
     void          *pStreamUP;           // Draw..UP (instead of pOriginalStream)
     uint32         uiLength;            // The length of the stream
     uint32         uiCount;             // XXHash32::hash() check count
-    uint32         dwPrimitiveCount;
+    uint32         dwHostPrimitiveCount;
     long           lLastUsed;           // For cache removal purposes
 } CACHEDSTREAM;
 
