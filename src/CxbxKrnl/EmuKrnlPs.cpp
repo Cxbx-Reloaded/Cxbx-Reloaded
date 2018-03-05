@@ -74,6 +74,7 @@ PCSTProxyParam;
 // Global Variable(s)
 extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
 extern int g_iThreadNotificationCount = 0;
+//extern xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType; // forward
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
@@ -296,6 +297,29 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 	// round up to the next page boundary if un-aligned
 	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
+
+/*	TODO : The real kernel creates a thread object, like this :
+
+	PVOID ThreadObj = NULL;
+	ULONG ThreadObjectSize = sizeof(ETHREAD) + ThreadExtensionSize;
+
+	NTSTATUS ret = ObCreateObject((POBJECT_TYPE)&PsThreadObjectType, NULL, ThreadObjectSize, &ThreadObj);
+	if (FAILED(ret)) {
+		return ret;
+	}
+
+	memset(ThreadObj, 0, ThreadObjectSize);
+	PETHREAD pThread = (PETHREAD)ThreadObj;
+
+	KeInitializeThread(&Thread->Tcb,
+		KernelStack,
+		KernelStackSize,
+		TlsDataSize,
+		SystemRoutine,
+		StartRoutine,
+		StartContext,
+		&KiSystemProcess);
+*/
 
     static bool bFirstTime = false;
 

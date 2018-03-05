@@ -2091,8 +2091,9 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
-	ULONG            Unknown1[7];                                   // 0x0C, KPCR : 0x34
+	ULONG            Unknown1[6];                                   // 0x0C, KPCR : 0x34
 
+	ULONG            DpcInterruptRequested;                         // 0x24, KPCR : 0x4C
 	LIST_ENTRY       DpcListHead;                                   // 0x28, KPCR : 0x50
 	ULONG            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 

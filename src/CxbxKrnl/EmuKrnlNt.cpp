@@ -1922,6 +1922,13 @@ xboxkrnl::NTSTATUS NTAPI NtWaitForSingleObjectEx_SEH
 {
 	using namespace xboxkrnl;
 
+	// Temporary work-around : detect Windows handle
+	DWORD handleFlags = 0;
+	if (GetHandleInformation(Handle, &handleFlags) != 0) {
+		// This was a Windows handle, so we treat it like that
+		return WaitForSingleObjectEx(Handle, Timeout ? Timeout->u.LowPart : 0, (BOOL)Alertable);
+	}
+
 	PVOID Object;
 	NTSTATUS Status = ObReferenceObjectByHandle(Handle, NULL, &Object);
 
