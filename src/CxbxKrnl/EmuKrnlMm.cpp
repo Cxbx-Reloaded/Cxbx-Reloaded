@@ -279,9 +279,8 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
-	LOG_INCOMPLETE();
 
-	return g_VMManager.TranslateVAddr((VAddr)BaseAddress);
+	RETURN(g_VMManager.TranslateVAddrToPAddr((PAddr)BaseAddress));
 }
 
 // ******************************************************************
@@ -296,10 +295,7 @@ XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
 
 	BOOLEAN Ret = FALSE;
 
-	if (g_VMManager.QueryVAddr((VAddr)VirtualAddress))
-	{
-		Ret = TRUE;
-	}
+	if (g_VMManager.IsValidVirtualAddress((VAddr)VirtualAddress)) { Ret = TRUE; }
 
 	RETURN(Ret);
 }

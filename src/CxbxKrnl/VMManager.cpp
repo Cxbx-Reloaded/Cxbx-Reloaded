@@ -989,28 +989,6 @@ void VMManager::Protect(VAddr addr, size_t Size, DWORD NewPerms)
 	Unlock();
 }
 
-bool VMManager::QueryVAddr(VAddr addr)
-{
-	LOG_FUNC_ONE_ARG(addr);
-
-	Lock();
-	bool bValid = IsValidVirtualAddress(addr);
-	Unlock();
-
-	RETURN(bValid);
-}
-
-PAddr VMManager::TranslateVAddr(VAddr addr)
-{
-	LOG_FUNC_ONE_ARG(addr);
-
-	Lock();
-	PAddr p_addr = TranslateVAddrToPAddr(addr);
-	Unlock();
-
-	RETURN(p_addr);
-}
-
 DWORD VMManager::QueryProtection(VAddr addr)
 {
 	LOG_FUNC_ONE_ARG(addr);
@@ -1423,21 +1401,78 @@ VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, s
 
 bool VMManager::IsValidVirtualAddress(const VAddr addr)
 {
-	if (::page_table.attributes[addr >> PAGE_SHIFT] & Present) { return true; }
+	LOG_FUNC_ONE_ARG(addr);
 
-	return false;
+	PMMPTE PointerPte;
+
+	Lock();
+
+	PointerPte = GetPdeAddress(addr);
+	if (PointerPte->Hardware.Valid == 0) // invalid pde -> addr is invalid
+		goto InvalidAddress;
+
+	if (PointerPte->Hardware.LargePage != 0) // addr is backed by a large page
+		goto ValidAddress;
+
+	PointerPte = GetPteAddress(addr);
+	if (PointerPte->Hardware.Valid == 0) // invalid pte -> addr is invalid
+		goto InvalidAddress;
+
+	// The following check is needed to handle the special case where the address being queried falls inside the PTs region.
+	// The first-level pte is also a second-level pte for the pages in the 0xC0000000 region, that is, the pte's of the PTs
+	// are the pde's themselves. The check makes sure that we are not fooled into thinking that the PT to which addr falls
+	// into is valid because the corresponding pde is valid. Addr could still be invalid but the pde is marked valid simply
+	// because it's mapping a large page instead of the queried PT.
+
+	if (PointerPte->Hardware.LargePage != 0) // pte is actually a pde and it's mapping a large page -> addr is invalid
+		goto InvalidAddress;
+
+	// If we reach here, we have a valid pte -> addr is backed by a 4K page
+
+	ValidAddress:
+	Unlock();
+	RETURN(true);
+
+	InvalidAddress:
+	Unlock();
+	RETURN(false);
 }
 
 PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 {
-	if (IsValidVirtualAddress(addr))
-	{
-		PAddr page_address = ::page_table.addresses[addr >> PAGE_SHIFT];
-		u32 page_offset = addr & PAGE_MASK;
-		return page_address += page_offset;
+	LOG_FUNC_ONE_ARG(addr);
+
+	PAddr PAddr;
+	PMMPTE PointerPte;
+
+	Lock();
+
+	PointerPte = GetPdeAddress(addr);
+	if (PointerPte->Hardware.Valid == 0) { // invalid pde -> addr is invalid
+		goto InvalidAddress;
 	}
 
-	return NULL;
+	if (PointerPte->Hardware.LargePage == 0)
+	{
+		PointerPte = GetPteAddress(addr);
+		if (PointerPte->Hardware.Valid == 0) { // invalid pte -> addr is invalid
+			goto InvalidAddress;
+		}
+		PAddr = BYTE_OFFSET(addr); // valid pte -> addr is valid
+	}
+	else
+	{
+		PAddr = BYTE_OFFSET_LARGE(addr); // this is a large page, translate it immediately
+	}
+
+	PAddr += (PointerPte->Hardware.PFN << PAGE_SHIFT);
+
+	Unlock();
+	RETURN(PAddr);
+
+	InvalidAddress:
+	Unlock();
+	RETURN(NULL);
 }
 
 void VMManager::Lock()
@@ -1450,7 +1485,7 @@ void VMManager::Unlock()
 	LeaveCriticalSection(&m_CriticalSection);
 }
 
-VMAIter VMManager::Unmap(VMAIter vma_handle, MemoryRegionType Type)
+VMAIter VMManager::UnmapVMA(VMAIter vma_handle, MemoryRegionType Type)
 {
 	VirtualMemoryArea& vma = vma_handle->second;
 	vma.type = VMAType::Free;
@@ -1634,7 +1669,7 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
 	// merged during this process, causing invalidation of the iterators
 	while (CarvedVmaIt != it_end && CarvedVmaIt->second.base < target_end)
 	{
-		CarvedVmaIt = std::next(Unmap(CarvedVmaIt, Type));
+		CarvedVmaIt = std::next(UnmapVMA(CarvedVmaIt, Type));
 	}
 
 	// If we free an entire vma (which should always be the case), prev(CarvedVmaIt) will be the freed vma. If it is not,

@@ -147,10 +147,10 @@ class VMManager : public PhysicalMemory
 		void Deallocate(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr addr, size_t Size, DWORD NewPerms);
-		// query if a VAddr is valid
-		bool QueryVAddr(VAddr addr);
-		// translate a VAddr
-		PAddr TranslateVAddr(VAddr addr);
+		// checks if a VAddr is valid
+		bool IsValidVirtualAddress(const VAddr addr);
+		// translates a VAddr to its corresponding PAddr if valid
+		PAddr TranslateVAddrToPAddr(const VAddr addr);
 		// retrieves the protection status of an address
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
@@ -202,12 +202,8 @@ class VMManager : public PhysicalMemory
 		void DestructVMA(VMAIter it, MemoryRegionType Type);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
-		// checks if a VAddr is valid; returns false if not
-		bool IsValidVirtualAddress(const VAddr addr);
-		// translates a VAddr to its corresponding PAddr; it must be valid
-		PAddr TranslateVAddrToPAddr(const VAddr addr);
 		// removes a vma block from the mapped memory
-		VMAIter Unmap(VMAIter vma_handle, MemoryRegionType Type);
+		VMAIter UnmapVMA(VMAIter vma_handle, MemoryRegionType Type);
 		// carves a vma of a specific size at the specified address by splitting free vma's
 		VMAIter CarveVMA(VAddr base, size_t size, MemoryRegionType Type);
 		// splits the edges of the given range of non-free vma's so that there is a vma split at each end of the range

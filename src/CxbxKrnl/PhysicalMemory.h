@@ -221,6 +221,7 @@ enum PageType {
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 #define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
+#define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)))
 
 
 /* These macros check if the supplied address is inside a known range */
