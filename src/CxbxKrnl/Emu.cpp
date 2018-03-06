@@ -65,6 +65,7 @@ volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_XInputEnabled = false;
 bool g_DisablePixelShaders = false;
+bool g_UncapFramerate = false;
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 LARGE_INTEGER	HostSystemTimeDelta = {};

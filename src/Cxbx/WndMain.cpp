@@ -181,6 +181,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "HackUncapFrameRate", NULL, &dwType, (PBYTE)&m_UncapFramerate, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_UncapFramerate = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_CxbxDebug = DebugMode::DM_NONE;
@@ -1296,6 +1302,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_HACKS_UNCAPFRAMERATE:
+				m_UncapFramerate = !m_UncapFramerate;
+				RefreshMenus();
+				break;
+
+
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1715,6 +1727,9 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
+
+			chk_flag = (m_UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_UNCAPFRAMERATE, chk_flag);
 		}
 
         // emulation menu
@@ -2070,6 +2085,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register Hacks with emulator process
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
+	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
 
 	// shell exe
     {
