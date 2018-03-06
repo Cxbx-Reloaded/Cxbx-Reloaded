@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Work\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\Luke\Desktop\Projects\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -109,6 +109,7 @@
 #define ID_SETTINGS_INITIALIZE          40091
 #define ID_EMULATION_STARTDEBUGGER      40092
 #define ID_FPS                          40096
+#define ID_HACKS_UNCAPFRAMERATE         40097
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

@@ -124,6 +124,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
 		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
+		void GetUncapFramerate(int* value) { Lock(); *value = m_UncapFramerate; Unlock(); }
+		void SetUncapFramerate(int* value) { Lock(); m_UncapFramerate = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
@@ -196,6 +198,7 @@ class EmuShared : public Mutex
 		int          m_FlagsLLE;
 		int			 m_XInputEnabled;
 		int			 m_DisablePixelShaders;
+		int			 m_UncapFramerate;
 		float		 m_MSpF;
 		float        m_FPS;
 		bool		 m_bKeQuickReboot;

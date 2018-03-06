@@ -3982,36 +3982,47 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Present)
 	EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
 
+std::chrono::time_point<std::chrono::high_resolution_clock> frameStartTime;
+
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 (
-    DWORD Flags
-)
+	DWORD Flags
+	)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(Flags);
+		LOG_FUNC_ONE_ARG(Flags);
 
 	static clock_t lastDrawFunctionCallTime = 0;
 
-    // TODO: Ensure this flag is always the same across library versions
-    if(Flags != 0)
+	// TODO: Ensure this flag is always the same across library versions
+	if (Flags != 0)
 		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
 			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
-	CxbxReleaseBackBufferLock();	
-
-	// TODO: Make a video option to wait for VBlank before calling Present.
-	// Makes syncing to 30fps easier (which is the native frame rate for Azurik
-	// and Halo).
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
-//	g_pDD7->WaitForVerticalBlank( DDWAITVB_BLOCKEND, NULL );
+	CxbxReleaseBackBufferLock();
 
 	clock_t currentDrawFunctionCallTime = clock();
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
+
+
+	if (!g_UncapFramerate) {
+		// If the last frame completed faster than the Xbox VBlank period, wait for it
+		// TODO: Read the frame rate target from the Xbox display mode
+		// See comments in GetNextVblankTime();
+		auto targetDuration = 16.6666666667ms;
+		while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
+			// We use an empty while loop because actually sleeping is too unstable
+			// Sleeping causes the frame duration to jitter...
+			;
+		}
+
+		frameStartTime = std::chrono::high_resolution_clock::now();
+	}
 
 	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
 	lastDrawFunctionCallTime = currentDrawFunctionCallTime;

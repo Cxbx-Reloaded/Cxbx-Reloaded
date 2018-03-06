@@ -212,6 +212,7 @@ class WndMain : public Wnd
 		// * Hack Flags
 		// ******************************************************************	
 		int		m_DisablePixelShaders;
+		int		m_UncapFramerate;
 
         // ******************************************************************
         // * debug output filenames

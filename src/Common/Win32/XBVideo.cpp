@@ -40,7 +40,7 @@
 // ******************************************************************
 // * func: XBVideo::XBVideo
 // ******************************************************************
-XBVideo::XBVideo() : m_bVSync(true), m_bFullscreen(false), m_bHardwareYUV(false)
+XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false), m_bHardwareYUV(false)
 {
     strcpy(m_szVideoResolution, "Automatic (Default)");
 }
