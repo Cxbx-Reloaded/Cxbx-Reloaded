@@ -40,14 +40,16 @@
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
 // See http://stackoverflow.com/questions/8240273/a-portable-way-to-calculate-pointer-to-the-whole-structure-using-pointer-to-a-fi
-//#define CONTAINING_RECORD(ptr, type, field) \
-//	(((type) *)((char *)(ptr) - offsetof((type), member)))
+#undef CONTAINING_RECORD
+#define CONTAINING_RECORD(ptr, type, field) \
+	((type *)((char *)(ptr) - offsetof(type, field)))
 
 #define OBJECT_TO_OBJECT_HEADER(Object) \
-    CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
+    CONTAINING_RECORD(Object, xboxkrnl::OBJECT_HEADER, Body)
 
 void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead);
 bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead);
+
 void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
@@ -55,6 +57,8 @@ void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntr
 void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry);
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead);
 xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
+
+xboxkrnl::NTSTATUS EmuObFindObjectByHandle(xboxkrnl::HANDLE Handle, PVOID *Object);
 
 extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];

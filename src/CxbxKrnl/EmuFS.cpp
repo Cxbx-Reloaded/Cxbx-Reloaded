@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "CxbxKrnl.h"
 #include "VMManager.h"
+#include "EmuKrnlKe.h" // For KeInitializeThread
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -163,7 +164,7 @@ __declspec(naked) void EmuFS_RefreshKPCR()
 	// Backup all registers, call KeGetPcr and then restore all registers
 	// KeGetPcr makes sure a valid KPCR exists for the current thread
 	// and creates it if missing, we backup and restore all registers
-	// to keep it safe to cal in our patches
+	// to keep it safe to call in our patches
 	// This function can be later expanded to do nice things 
 	// like setup the per-thread KPCR values for us too!
 	__asm {
@@ -184,7 +185,7 @@ __declspec(naked) void EmuFS_CmpEsiFs00()
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		cmp esi, [eax]
+		cmp esi, [eax] // KPCR.NtTib
 		pop eax
 		ret
 	}
@@ -196,7 +197,7 @@ __declspec(naked) void EmuFS_MovEaxFs00()
 	{
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov eax, [eax]
+		mov eax, [eax] // KPCR.NtTib
 		ret
 	}
 }
@@ -207,7 +208,7 @@ __declspec(naked) void EmuFS_MovEaxFs20()
 	{
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov eax, [eax + 20h]
+		mov eax, [eax + 20h] // KPCR.Prcb
 		ret
 	}
 }
@@ -218,7 +219,7 @@ __declspec(naked) void EmuFS_MovEaxFs28()
 	{
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov eax, [eax + 28h]
+		mov eax, [eax + 28h] // KPCR.PrcbData.CurrentThread
 		ret
 	}
 }
@@ -229,7 +230,7 @@ __declspec(naked) void EmuFS_MovEaxFs58()
 	{
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov eax, [eax + 58h]
+		mov eax, [eax + 58h] // KPCR.PrcbData.DpcRoutineActive
 		ret
 	}
 }
@@ -240,7 +241,7 @@ __declspec(naked) void EmuFS_MovEbxFs00()
 	{
 		call EmuFS_RefreshKPCR
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
-		mov ebx, [ebx]
+		mov ebx, [ebx] // KPCR.NtTib
 		ret
 	}
 }
@@ -251,7 +252,7 @@ __declspec(naked) void EmuFS_MovEcxFs00()
 	{
 		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
-		mov ecx, [ecx]
+		mov ecx, [ecx] // KPCR.NtTib
 		ret
 	}
 }
@@ -262,7 +263,7 @@ __declspec(naked) void EmuFS_MovEcxFs04()
 	{
 		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
-		mov ecx, [ecx + 04h]
+		mov ecx, [ecx + 04h] // KPCR.NtTib.StackBase
 		ret
 	}
 }
@@ -273,7 +274,7 @@ __declspec(naked) void EmuFS_MovEdiFs00()
 	{
 		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
-		mov edi, [edi]
+		mov edi, [edi] // KPCR.NtTib
 		ret
 	}
 }
@@ -284,7 +285,7 @@ __declspec(naked) void EmuFS_MovEdiFs04()
 	{
 		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
-		mov edi, [edi + 04h]
+		mov edi, [edi + 04h] // KPCR.NtTib.StackBase
 		ret
 	}
 }
@@ -295,7 +296,7 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 	{
 		call EmuFS_RefreshKPCR
 		mov esi, fs : [TIB_ArbitraryDataSlot]
-		mov esi, [esi]
+		mov esi, [esi] // KPCR.NtTib
 		ret
 	}
 }
@@ -307,7 +308,7 @@ __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 	{
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		movzx eax, byte ptr[eax + 24h]
+		movzx eax, byte ptr[eax + 24h] // KPCR.Irql
 		ret
 	}
 }
@@ -320,7 +321,7 @@ __declspec(naked) void EmuFS_MovFs00Eax()
 		call EmuFS_RefreshKPCR
 		push ebx
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
-		mov [ebx], eax
+		mov [ebx], eax // KPCR.NtTib
 		pop ebx
 		ret
 	}
@@ -334,7 +335,7 @@ __declspec(naked) void EmuFS_MovFs00Ebx()
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov [eax], ebx
+		mov [eax], ebx // KPCR.NtTib
 		pop eax
 		ret
 	}
@@ -348,7 +349,7 @@ __declspec(naked) void EmuFS_MovFs00Ecx()
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov [eax], ecx
+		mov [eax], ecx // KPCR.NtTib
 		pop eax
 		ret
 	}
@@ -362,7 +363,7 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
-		mov [eax], esp
+		mov [eax], esp // KPCR.NtTib
 		pop eax
 		ret
 	}
@@ -370,6 +371,7 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 
 __declspec(naked) void EmuFS_PushDwordPtrFs00()
 {
+#if 1
 	uint32 returnAddr;
 	uint32 temp;
 
@@ -384,6 +386,20 @@ __declspec(naked) void EmuFS_PushDwordPtrFs00()
 		push returnAddr
 		ret
 	}
+#else // TODO : Alternative implementation, not requireing local variables
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		push 0									// Reserve a slot at [esp-4] (return address will be copied to here)
+		push eax								// Backup the original EAX value (we don't want to overwrite it!)
+		mov eax, [esp - 8]						// Read current return addr
+		mov[esp - 4], eax						// Write it to the reserved slot
+		mov eax, fs : [TIB_ArbitraryDataSlot]	// Read the KPCR.NtTib pointer into EAX
+		mov[esp - 8], eax						// Overwrite the return address
+		pop eax									// Restore the original EAX value - stack now points to the slot where we moved our return address
+		ret
+	}
+#endif
 }
 
 __declspec(naked) void EmuFS_PopDwordPtrFs00()
@@ -394,12 +410,12 @@ __declspec(naked) void EmuFS_PopDwordPtrFs00()
 	__asm
 	{
 		call EmuFS_RefreshKPCR
-		pop returnAddr
-		mov temp, eax
-		mov eax, fs : [TIB_ArbitraryDataSlot]
-		pop dword ptr [eax]
-		mov eax, temp
-		push returnAddr
+		pop returnAddr							// Backup the return address
+		mov temp, eax							// Store the original EAX value (we don't want to overwrite it!)
+		mov eax, fs : [TIB_ArbitraryDataSlot]	// Read the KPCR.NtTib pointer into EAX
+		pop dword ptr [eax]						// Pop from the stack to FS:0
+		mov eax, temp							// Restore the original EAX value
+		push returnAddr							// Restore the return address
 		ret
 	}
 }
@@ -582,14 +598,26 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
 	}
 
-	// Initialize a fake PrcbData.CurrentThread 
+	// Initialize PrcbData.CurrentThread 
 	{
-		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
+		ULONG ThreadObjSize = sizeof(xboxkrnl::ETHREAD); // TODO : Do this in PsCreateSystemThreadEx and add ThreadExtensionSize
+		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(ThreadObjSize); // Clear, to prevent side-effects on random contents
+
+		xboxkrnl::PRKTHREAD KernelThread = (xboxkrnl::KTHREAD*)&(EThread->Tcb);
+		KeInitializeThread(KernelThread,
+			/*XboxTypes::PVOID KernelStack=*/0,
+			/*XboxTypes::SIZE_T KernelStackSize=*/0,
+			/*XboxTypes::SIZE_T TlsDataSize=*/0,
+			/*XboxTypes::PKSYSTEM_ROUTINE SystemRoutine=*/0,
+			/*XboxTypes::PKSTART_ROUTINE StartRoutine=*/0,
+			/*XboxTypes::PVOID StartContext=*/0,
+			/*XboxTypes::PKPROCESS Process=*/0);
 
 		EThread->Tcb.TlsData = pNewTLS;
 		EThread->UniqueThread = GetCurrentThreadId();
+
 		// Set PrcbData.CurrentThread
-		Prcb->CurrentThread = (xboxkrnl::KTHREAD*)EThread;
+		Prcb->CurrentThread = KernelThread;
 	}
 
 	// Make the KPCR struct available to KeGetPcr()

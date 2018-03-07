@@ -2811,7 +2811,7 @@ static void pgraph_shader_update_constants(PGRAPHState *pg,
 {
 	assert(pg->opengl_enabled);
 
-	int i, j;
+	unsigned int i, j;
 
     /* update combiner constants */
     for (i = 0; i<= 8; i++) {
@@ -2943,8 +2943,8 @@ static void pgraph_shader_update_constants(PGRAPHState *pg,
 
         /* estimate the viewport by assuming it matches the surface ... */
         //FIXME: Get surface dimensions?
-        float m11 = 0.5 * pg->surface_shape.clip_width;
-        float m22 = -0.5 * pg->surface_shape.clip_height;
+        float m11 = 0.5f * pg->surface_shape.clip_width;
+        float m22 = -0.5f * pg->surface_shape.clip_height;
         float m33 = zclip_max - zclip_min;
         //float m41 = m11;
         //float m42 = -m22;
@@ -2995,7 +2995,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 {
 	assert(pg->opengl_enabled);
 
-	int i, j;
+	unsigned int i, j;
 
     bool vertex_program = GET_MASK(pg->regs[NV_PGRAPH_CSV0_D],
                                    NV_PGRAPH_CSV0_D_MODE) == 2;
@@ -3716,7 +3716,7 @@ static void pgraph_bind_textures(NV2AState *d)
         } else {
             if (dimensionality >= 2) {
                 unsigned int w = width, h = height;
-                int level;
+                unsigned int level;
                 if (f.gl_format != 0) {
                     for (level = 0; level < levels; level++) {
                         w = MAX(w, 1); h = MAX(h, 1);
@@ -3899,7 +3899,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                                           bool inline_data,
                                           unsigned int inline_stride)
 {
-	int i, j;
+	unsigned int i, j;
     PGRAPHState *pg = &d->pgraph;
 
 	assert(pg->opengl_enabled);
@@ -4233,7 +4233,7 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int width = s.width, height = s.height;
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             if (f.gl_format == 0) { /* compressed */
 
@@ -4292,7 +4292,7 @@ static void upload_gl_texture(GLenum gl_target,
         assert(f.gl_format != 0); /* FIXME: compressed not supported yet */
         assert(f.linear == false);
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
 
             unsigned int row_pitch = width * f.bytes_per_pixel;
@@ -4383,7 +4383,7 @@ static TextureBinding* generate_texture(const TextureShape s,
 
         size_t length = 0;
         unsigned int w = s.width, h = s.height;
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             /* FIXME: This is wrong for compressed textures and textures with 1x? non-square mipmaps */
             length += w * h * f.bytes_per_pixel;

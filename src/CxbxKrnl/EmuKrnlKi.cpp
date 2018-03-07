@@ -47,7 +47,8 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
-//#include "EmuKrnl.h" // For InitializeListHead(), etc.
+#include "EmuKrnl.h" // For CONTAINING_RECORD, InitializeListHead(), etc.
+#include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 
 xboxkrnl::BOOLEAN KiInsertTimerTable(
 	IN xboxkrnl::LARGE_INTEGER Interval,
@@ -88,4 +89,47 @@ xboxkrnl::BOOLEAN KiInsertTreeTimer(
 
 	Timer->Header.Inserted = TRUE;
 	return KiInsertTimerTable(Interval, xboxkrnl::KeQueryInterruptTime(), Timer);
+}
+
+xboxkrnl::LONG KiInsertQueue
+(
+	xboxkrnl::PRKQUEUE pQueue, 
+	xboxkrnl::PLIST_ENTRY pEntry, 
+	xboxkrnl::BOOLEAN Head
+)
+{
+	xboxkrnl::LONG prevState = pQueue->Header.SignalState;
+	xboxkrnl::KTHREAD *pThread = xboxkrnl::KeGetCurrentThread();
+
+	auto pWaitEntry = pQueue->Header.WaitListHead.Blink;
+	if (pWaitEntry != &pQueue->Header.WaitListHead && pQueue->CurrentCount < pQueue->MaximumCount &&
+		((xboxkrnl::PRKQUEUE)(pThread->Queue) != pQueue || pThread->WaitReason != xboxkrnl::WrQueue)) {
+
+		RemoveEntryList(pWaitEntry);
+		xboxkrnl::KWAIT_BLOCK *pWaitBlock = CONTAINING_RECORD(pWaitEntry, xboxkrnl::KWAIT_BLOCK, WaitListEntry);
+		pThread = (xboxkrnl::KTHREAD*)(pWaitBlock->Thread);
+
+		pThread->WaitStatus = (xboxkrnl::LONG_PTR)pEntry;
+		RemoveEntryList(&pThread->WaitListEntry);
+		pQueue->CurrentCount += 1;
+		pThread->WaitReason = 0;
+
+		xboxkrnl::KTIMER *Timer = &pThread->Timer;
+		if (Timer->Header.Inserted == TRUE) {
+			KiRemoveTreeTimer(Timer);
+		}
+
+		// TODO : KiReadyThread(pThread);
+	}
+	else {
+		pQueue->Header.SignalState += 1;
+		if (Head != FALSE) {
+			InsertHeadList(&pQueue->EntryListHead, pEntry);
+		}
+		else {
+			InsertTailList(&pQueue->EntryListHead, pEntry);
+		}
+	}
+
+	return prevState;
 }

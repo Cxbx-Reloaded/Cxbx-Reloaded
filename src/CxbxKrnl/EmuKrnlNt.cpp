@@ -56,6 +56,8 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
+#include "EmuKrnlKe.h" // For KeClearEvent(), KeQueryEvent(), GetMode, GetHostEvent(), KeQueryMutant()
 #include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
 
@@ -197,10 +199,15 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 {
 	LOG_FUNC_ONE_ARG(EventHandle);
 
-	NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
+	PVOID EventObj;
 
-	if (FAILED(ret))
-		EmuWarning("NtClearEvent Failed!");
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		KeClearEvent(KernelEvent);
+		ObfDereferenceObject(EventObj);
+	}
 
 	RETURN(ret);
 }
@@ -222,17 +229,32 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
-
-		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
     else
     {
-        if (CxbxDebugger::CanReport())
-        {
-            CxbxDebugger::ReportFileClosed(Handle);
-        }
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
 
-		ret = NtDll::NtClose(Handle);
+		LOG_INCOMPLETE(); // TODO : Base this on the Ob* functions, 
+		// Check if this is an event handle
+		PVOID KernelObject; // TODO : Use ObpDestroyObjectHandle()
+		if (SUCCEEDED(EmuObFindObjectByHandle(Handle, &KernelObject))) {			
+			// For now, retrieve the host couterpart event and close that handle
+			HANDLE hostEvent = GetHostEvent((PKEVENT)KernelObject, GetMode::Erase);
+			if (hostEvent) {
+				CloseHandle(hostEvent);
+			}
+		}
+		else {
+			if (CxbxDebugger::CanReport())
+			{
+				CxbxDebugger::ReportFileClosed(Handle);
+			}
+
+			// close normal handles
+			ret = NtDll::NtClose(Handle);
+		}
+
+		KeLowerIrql(OldIrql);
     }
 
 	RETURN(ret);
@@ -295,7 +317,6 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
 
-/*
 	NTSTATUS Status;
 
 	if ((EventType != NotificationEvent) && (EventType != SynchronizationEvent)) {
@@ -312,49 +333,6 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	}
 
 	RETURN(Status);
-*/
-	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
-
-	// initialize object attributes
-	NativeObjectAttributes nativeObjectAttributes;
-	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
-
-	// TODO : Is this the correct ACCESS_MASK? :
-	const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
-
-	// redirect to Win2k/XP
-	NTSTATUS ret = NtDll::NtCreateEvent(
-		/*OUT*/EventHandle,
-		DesiredAccess,
-		nativeObjectAttributes.NtObjAttrPtr,
-		(NtDll::EVENT_TYPE)EventType,
-		InitialState);
-
-	// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
-	// that would require us to create the event's kernel object with the Ob* api's too!
-
-	if (FAILED(ret))
-	{
-		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
-
-		// If it fails, try again but without the object attributes stucture
-		// This fixes Panzer Dragoon games on non-Vista OSes.
-		ret = NtDll::NtCreateEvent(
-			/*OUT*/EventHandle,
-			DesiredAccess,
-			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
-			(NtDll::EVENT_TYPE)EventType,
-			InitialState);
-
-		if(FAILED(ret))
-			EmuWarning("NtCreateEvent Failed!");
-		else
-			DbgPrintf("KRNL: NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
-	}
-	else
-		DbgPrintf("KRNL: NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
-
-	RETURN(ret);
 }
 
 // ******************************************************************
@@ -426,60 +404,15 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-/*
-	NTSTATUS Status;
+	PVOID MutantObj;
 
-	if (!verify arguments) {
-		Status = STATUS_INVALID_PARAMETER;
-	}
-	else {
-		PKMUTANT Mutant;
-
-		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
-		if (NT_SUCCESS(Status)) {
-			KeInitializeMutant(Mutant, InitialOwner);
-			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
-		}
+	NTSTATUS Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), &MutantObj);
+	if (NT_SUCCESS(Status)) {
+		KeInitializeMutant((PKMUTANT)MutantObj, InitialOwner);
+		Status = ObInsertObject(MutantObj, ObjectAttributes, 0, /*OUT*/MutantHandle);
 	}
 
 	RETURN(Status);
-*/
-	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
-
-	// initialize object attributes
-	NativeObjectAttributes nativeObjectAttributes;
-	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
-
-	// TODO : Is this the correct ACCESS_MASK? :
-	const ACCESS_MASK DesiredAccess = MUTANT_ALL_ACCESS;
-
-	// redirect to Windows Nt
-	NTSTATUS ret = NtDll::NtCreateMutant(
-		/*OUT*/MutantHandle, 
-		DesiredAccess,
-		nativeObjectAttributes.NtObjAttrPtr,
-		InitialOwner);
-
-	if (FAILED(ret))
-	{
-		EmuWarning("Trying fallback (without object attributes)...\nError code 0x%X", ret);
-
-		// If it fails, try again but without the object attributes stucture
-		ret = NtDll::NtCreateMutant(
-			/*OUT*/MutantHandle, 
-			DesiredAccess,
-			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
-			InitialOwner);
-
-		if(FAILED(ret))
-			EmuWarning("NtCreateMutant Failed!");
-		else
-			DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
-	}
-	else
-		DbgPrintf("KRNL: NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
-
-	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1009,14 +942,18 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	// redirect to Windows NT
-	// TODO : Untested
-	NTSTATUS ret = NtDll::NtPulseEvent(
-		EventHandle, 
-		/*OUT*/PreviousState);
+	PVOID EventObj;
 
-	if (FAILED(ret))
-		EmuWarning("NtPulseEvent failed!");
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		ret = KePulseEvent(KernelEvent, (KPRIORITY)1, FALSE);
+		ObfDereferenceObject(EventObj);
+		if (PreviousState) {
+			*PreviousState = ret;
+		}
+	}
 
 	RETURN(ret);
 }
@@ -1207,15 +1144,22 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 		LOG_FUNC_ARG_OUT(EventInformation)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryEvent(
-		(NtDll::HANDLE)EventHandle,
-		/*EventInformationClass*/NtDll::EVENT_INFORMATION_CLASS::EventBasicInformation,
-		EventInformation,
-		sizeof(EVENT_BASIC_INFORMATION),
-		/*ReturnLength=*/nullptr);
+	PVOID EventObj;
 
-	if (ret != STATUS_SUCCESS)
-		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		// Read event type and signal state before potential destruction
+		EVENT_TYPE EventType = (EVENT_TYPE)(KernelEvent->Header.Type);
+		ret = KeQueryEvent(KernelEvent); // Allow Ke-level intervention (for GetHostEvent)
+		ObfDereferenceObject(EventObj);
+		// Avoid exceptions when argument is absent
+		if (EventInformation) {
+			EventInformation->EventType = EventType;
+			EventInformation->EventState = ret;
+		}
+	}
 
 	RETURN(ret);
 }
@@ -1301,17 +1245,19 @@ XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
 		LOG_FUNC_ARG_OUT(MutantInformation)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryMutant(
-		(NtDll::HANDLE)MutantHandle,
-		/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
-		MutantInformation,
-		sizeof(MUTANT_BASIC_INFORMATION),
-		/*ReturnLength=*/nullptr);
+	PVOID MutantObj;
+	
+	NTSTATUS Status = ObReferenceObjectByHandle(MutantHandle, &ExMutantObjectType, &MutantObj);
 
-	if (ret != STATUS_SUCCESS)
-		EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+	if (NT_SUCCESS(Status)) {
+		PKMUTANT KernelMutant = (PKMUTANT)MutantObj;
 
-	RETURN(ret);
+		KeQueryMutant(KernelMutant, MutantInformation);
+
+		ObfDereferenceObject(MutantObj);
+	}
+
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -1643,6 +1589,32 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 // ******************************************************************
 // * 0x00DD - NtReleaseMutant()
 // ******************************************************************
+xboxkrnl::NTSTATUS NTAPI NtReleaseMutant_SEH
+(
+	IN  HANDLE  MutantHandle,
+	OUT PLONG   PreviousCount
+)
+{
+	using namespace xboxkrnl;
+
+	PVOID MutantObj;
+	NTSTATUS ret = ObReferenceObjectByHandle(MutantHandle, &ExMutantObjectType, &MutantObj);
+	if (NT_SUCCESS(ret)) {
+		__try {
+			LONG Count = KeReleaseMutant((PKMUTANT)MutantObj, 1, FALSE, FALSE);
+			ObfDereferenceObject(MutantObj);
+			if (PreviousCount) {
+				*PreviousCount = Count;
+			}
+		} __except(EXCEPTION_EXECUTE_HANDLER) {
+			ObfDereferenceObject(MutantObj);
+			ret = GetExceptionCode();
+		}
+	}
+
+	return ret;
+}
+
 XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 (
 	IN  HANDLE  MutantHandle,
@@ -1654,13 +1626,11 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 		LOG_FUNC_ARG_OUT(PreviousCount)
 		LOG_FUNC_END;
 
-	// redirect to NtCreateMutant
-	NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+	// Note : Forward to separate function so that can use Structured Exception Handling (SEH)
+	// which isn't possible here because of the object unwinding that results from our logging.
+	NTSTATUS ret = NtReleaseMutant_SEH(MutantHandle, PreviousCount);
 
-	if (FAILED(ret))
-		EmuWarning("NtReleaseMutant Failed!");
-
-	RETURN(STATUS_SUCCESS); // TODO : RETURN(ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1729,12 +1699,18 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtSetEvent(
-		EventHandle, 
-		PreviousState);
+	PVOID EventObj;
 
-	if (FAILED(ret))
-		EmuWarning("NtSetEvent Failed!");
+	NTSTATUS ret = ObReferenceObjectByHandle(EventHandle, &ExEventObjectType, &EventObj);
+	if (SUCCEEDED(ret)) {
+		PKEVENT KernelEvent = (PKEVENT)EventObj;
+
+		ret = KeSetEvent(KernelEvent, (KPRIORITY)1, FALSE);
+		ObfDereferenceObject(EventObj);
+		if (PreviousState) {
+			*PreviousState = ret;
+		}
+	}
 
 	RETURN(ret);
 }
@@ -1923,23 +1899,75 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	// LOG_FORWARD("NtWaitForSingleObjectEx");
 
-	return xboxkrnl::KeWaitForMultipleObjects(
-		/*Count=*/1,
-		&Handle,
-		/*WaitType=*/WaitAll,
-		/*WaitReason=*/WrUserRequest,
+	return NtWaitForSingleObjectEx(
+		Handle,
 		/*WaitMode=*/KernelMode,
 		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL
+		Timeout
 	);
 }
 
 // ******************************************************************
 // * 0x00EA - NtWaitForSingleObjectEx()
 // ******************************************************************
+xboxkrnl::NTSTATUS NTAPI NtWaitForSingleObjectEx_SEH
+(
+	IN  xboxkrnl::HANDLE          Handle,
+	IN  xboxkrnl::KPROCESSOR_MODE WaitMode,
+	IN  xboxkrnl::BOOLEAN         Alertable,
+	IN  xboxkrnl::PLARGE_INTEGER  Timeout
+)
+{
+	using namespace xboxkrnl;
+
+	// Temporary work-around : detect Windows handle
+	DWORD handleFlags = 0;
+	if (GetHandleInformation(Handle, &handleFlags) != 0) {
+		// This was a Windows handle, so we treat it like that
+		return WaitForSingleObjectEx(Handle, Timeout ? Timeout->u.LowPart : 0, (BOOL)Alertable);
+	}
+
+	PVOID Object;
+	NTSTATUS Status = ObReferenceObjectByHandle(Handle, NULL, &Object);
+
+	if (NT_SUCCESS(Status)) {
+		POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+		PVOID WaitObject = ObjectHeader->Type->DefaultObject;
+
+		// Note : The real kernel is loaded at 0x80000000, and as such,
+		// can check for absolute addresses on DefaultObject, by checking
+		// the sign-bit. Since our kernel doesn't reside there, absolute
+		// addresses (such as &ObpDefaultObject) must be checked by a limit
+		// on offsetof values (the other contents of OBJECT_TYPE.DefaultObject)
+		if ((uintptr_t)WaitObject < PAGE_SIZE) {
+			WaitObject = (PVOID)((PCHAR)Object + (uintptr_t)WaitObject);
+		}
+
+		__try {
+			KWAIT_BLOCK WaitBlock;
+
+			Status = KeWaitForMultipleObjects(
+				/*Count=*/1,
+				&WaitObject,
+				/*WaitType=*/WaitAll,
+				/*WaitReason=*/WrUserRequest,
+				WaitMode,
+				Alertable,
+				Timeout,
+				&WaitBlock
+			);
+		} __except(EXCEPTION_EXECUTE_HANDLER) {
+			Status = GetExceptionCode();
+		}
+
+		ObfDereferenceObject(Object);
+	}
+
+	return Status;
+}
+
 XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 (
 	IN  HANDLE          Handle,
@@ -1948,18 +1976,16 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
 
-	return xboxkrnl::KeWaitForMultipleObjects(
-		/*Count=*/1,
-		&Handle,
-		/*WaitType=*/WaitAll,
-		/*WaitReason=*/WrUserRequest,
-		WaitMode,
-		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL
-	);
+	NTSTATUS ret = NtWaitForSingleObjectEx_SEH(Handle, WaitMode, Alertable, Timeout);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1977,6 +2003,8 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
 
+	KWAIT_BLOCK WaitBlockArray[9];
+
 	return xboxkrnl::KeWaitForMultipleObjects(
 		Count,
 		Handles,
@@ -1985,7 +2013,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL);
+		WaitBlockArray);
 }
 
 // ******************************************************************

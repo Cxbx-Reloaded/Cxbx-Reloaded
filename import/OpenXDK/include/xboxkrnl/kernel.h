@@ -434,10 +434,10 @@ XBSYSAPI EXPORTNUM(147) KPRIORITY NTAPI KeSetPriorityProcess
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(148) BOOLEAN NTAPI KeSetPriorityThread
+XBSYSAPI EXPORTNUM(148) KPRIORITY NTAPI KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN LONG  Priority
+    IN KPRIORITY Priority
 );
 
 // ******************************************************************
