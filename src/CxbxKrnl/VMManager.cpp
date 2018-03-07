@@ -179,7 +179,7 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
 	RemoveFree(1, &result, 0, pfn, pfn);
-	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
+	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), PAGE_SIZE, MemoryRegionType::Contiguous,
 		VMAType::Allocated, false);
 
@@ -190,7 +190,7 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
 	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
@@ -211,7 +211,7 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
 	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
@@ -229,7 +229,7 @@ void VMManager::InitializePfnDatabase()
 	DISABLE_CACHING(TempPF.Pte);
 
 	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
+	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
 		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
@@ -244,7 +244,7 @@ void VMManager::InitializePfnDatabase()
 		DISABLE_CACHING(TempPF.Pte);
 
 		RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-		WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous, true);
+		WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
 		ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
 			MemoryRegionType::Contiguous, VMAType::Allocated, false);
 	}
@@ -255,7 +255,7 @@ void VMManager::InitializePfnDatabase()
 	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
 	RemoveFree(1, &result, 0, pfn, pfn);
-	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous, true);
+	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous);
 	ConstructVMA(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 }
 
@@ -416,7 +416,7 @@ VAddr VMManager::Allocate(size_t Size)
 
 	if (!bVAlloc)
 	{
-		WritePfn(pfn, EndingPfn, PointerPte, PageType::VirtualMemory, false);
+		WritePfn(pfn, EndingPfn, PointerPte, PageType::VirtualMemory);
 	}
 	else
 	{
@@ -566,7 +566,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 
 	if (!bVAlloc)
 	{
-		WritePfn(pfn, EndingPfn, PointerPte, BusyType, false);
+		WritePfn(pfn, EndingPfn, PointerPte, BusyType);
 	}
 	else
 	{
@@ -644,7 +644,7 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 	EndingPte = PointerPte + PteNumber - 1;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
-	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
+	WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
 	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
@@ -767,7 +767,7 @@ void VMManager::Deallocate(VAddr addr)
 	else
 	{
 		InsertFree(pfn, EndingPfn);
-		WritePfn(pfn, EndingPfn, StartingPte, PageType::VirtualMemory, false, true);
+		WritePfn(pfn, EndingPfn, StartingPte, PageType::VirtualMemory, true);
 	}
 
 	m_ImageMemoryInUse -= it->second.size;
@@ -811,7 +811,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 	EndingPfn = pfn + (EndingPte - StartingPte);
 
 	InsertFree(pfn, EndingPfn);
-	WritePfn(pfn, EndingPfn, StartingPte, PageType::Contiguous, true, true);
+	WritePfn(pfn, EndingPfn, StartingPte, PageType::Contiguous, true);
 	WritePte(StartingPte, EndingPte, TempPte, 0, true);
 	DestructVMA(it, MemoryRegionType::Contiguous);
 
@@ -883,7 +883,7 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	else
 	{
 		InsertFree(pfn, EndingPfn);
-		WritePfn(pfn, EndingPfn, StartingPte, BusyType, false, true);
+		WritePfn(pfn, EndingPfn, StartingPte, BusyType, true);
 	}
 
 	WritePte(StartingPte, EndingPte, TempPte, 0, true);

@@ -259,7 +259,7 @@ class PhysicalMemory
 		// set up the page directory
 		void InitializePageDirectory();
 		// write a contiguous range of pfn's
-		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous, bool bZero = false);
+		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero = false);
 		// write a contiguous range of pte's
 		void WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero = false);
 		// commit a contiguous number of pages

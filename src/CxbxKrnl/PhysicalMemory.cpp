@@ -116,7 +116,7 @@ void PhysicalMemory::InitializePageDirectory()
 	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
-void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bContiguous, bool bZero)
+void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero)
 {
 	XBOX_PFN TempPF;
 
@@ -131,26 +131,6 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
 
 			m_PagesByUsage[BusyType]--;
-			pfn_start++;
-		}
-		return;
-	}
-
-	if (bContiguous)
-	{
-		// In the contiguous region we construct the pfn as a pte
-
-		while (pfn_start <= pfn_end)
-		{
-			TempPF.Pte = *pPte;
-			TempPF.Pte.Hardware.PFN = pfn_start;
-
-			if (g_bIsRetail || g_bIsDebug) {
-				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
-			}
-			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
-
-			m_PagesByUsage[PageType::Contiguous]++;
 			pfn_start++;
 		}
 	}
@@ -643,7 +623,9 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
 
 	// Construct the pfn for the page
-	WritePfn(pfn, pfn, pPte, BusyType, false);
+	WritePfn(pfn, pfn, pPte, BusyType);
+
+	// NOTE: construct vma here or in AllocatePT? (depends on future NtAllocateVirtualMemory implementation)
 
 	return pfn;
 }
