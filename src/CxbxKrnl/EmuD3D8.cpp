@@ -2895,7 +2895,8 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	D3DXLoadSurfaceFromMemory(pCopySrcSurface, NULL, NULL, lockedRect.pBits, hostSurfaceDesc.Format, lockedRect.Pitch, NULL, NULL, 0, 0);
 	pNewHostSurface->UnlockRect();
 
-	if (pNewHostSurface->GetDesc(&hostSurfaceDesc) != D3D_OK) {
+	D3DSURFACE_DESC copySurfaceDesc;
+	if (pCopySrcSurface->GetDesc(&copySurfaceDesc) != D3D_OK) {
 		EmuWarning("Could not get Xbox Back Buffer Host Surface Desc");
 		goto skip_backbuffer_copy;
 	}
@@ -2907,7 +2908,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		goto skip_backbuffer_copy;
 	}
 	
-	memcpy(pXboxBackBuffer, lockedRect.pBits, hostSurfaceDesc.Size);
+	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, copySurfaceDesc.Size);
 
 	pCopySrcSurface->UnlockRect();
 	
@@ -4006,9 +4007,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	CxbxReleaseBackBufferLock();
 
 	clock_t currentDrawFunctionCallTime = clock();
+	g_pD3DDevice8->EndScene();
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
-
+	hRet = g_pD3DDevice8->BeginScene();
 
 	if (!g_UncapFramerate) {
 		// If the last frame completed faster than the Xbox VBlank period, wait for it
