@@ -60,8 +60,6 @@
 	  if necessary as mov_sat x, y
 */
 
-#define CXBX_USE_PS_3_0
-
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -3983,6 +3981,8 @@ static const
   {
     EmuWarning("Could not create pixel shader");
 	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+
+	EmuWarning(ConvertedPixelShaderStr.c_str());
 
     hRet = D3DXAssembleShader(
       szDiffusePixelShader,
