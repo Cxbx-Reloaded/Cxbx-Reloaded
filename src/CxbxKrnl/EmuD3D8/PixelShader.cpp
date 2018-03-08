@@ -501,9 +501,7 @@ enum PSH_OPCODE
 	PO_COMMENT,
 	PO_PS,
 	PO_DEF,
-#ifdef CXBX_USE_PS_2_0
-	PO_DCL,
-#endif
+	PO_DCL, // Note : ps.2.0 and up only
 	PO_TEX,
 	PO_TEXBEM,
 	PO_TEXBEML,
@@ -547,9 +545,7 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	{/* PO_COMMENT */  /*mn:*/";", /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, //
 	{/* PO_PS */  /*mn:*/"ps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, // Must occur once, Xbox needs an x prefix {xps}, Native needs a 1.3 suffix {ps.1.3}
 	{/* PO_DEF */ /*mn:*/"def",  /*_Out: */ 1, /*_In: */ 4, /*note:*/"" }, // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-#ifdef CXBX_USE_PS_2_0
-	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
-#endif
+	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
 	{/* PO_TEX */ /*mn:*/"tex",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
 	{/* PO_TEXBEM */ /*mn:*/"texbem",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBEML */ /*mn:*/"texbeml",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
@@ -630,29 +626,6 @@ constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
 constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
-
-#ifdef CXBX_USE_PS_3_0
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 32; // ps 3.0
-constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 3.0
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 10; // ps 3.0
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 224;
-#else
-#ifdef CXBX_USE_PS_2_0
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 32; // ps 2.0
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 12; // ps 2.0
-constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 2.0
-constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 8; // ps 2.0
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 2.0
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 32;
-#else // CXBX_USE_PS_1_3
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 8; // ps 1.3
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 2; // ps 1.3
-constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 4; // ps 1.3
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 1.3
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 8;
-#endif
-#endif
 
 enum PSH_INST_MODIFIER {
 	INSMOD_NONE, // y =  x
@@ -854,6 +827,14 @@ typedef struct _PSH_RECOMPILED_SHADER {
 *PPSH_RECOMPILED_SHADER;
 
 struct PSH_XBOX_SHADER {
+	int m_PSVersion; // 10 = ps.1.0, etc
+	int MaxConstantFloatRegisters;
+	int MaxTemporaryRegisters;
+	int MaxSamplerRegisters; // Sampler (Direct3D 9 asm-ps)
+	int MaxTextureCoordinateRegisters;
+	int MaxInputColorRegisters;
+	int PSH_PC_MAX_REGISTER_COUNT;
+
 	// Reserve enough slots for all shaders, so we need space for 2 constants, 4 texture addressing codes and 5 lines per opcode : :
 	PSH_INTERMEDIATE_FORMAT Intermediate[2 + XTL::X_D3DTS_STAGECOUNT + (XTL::X_PSH_COMBINECOUNT * 5) + 1];
 	int IntermediateCount;
@@ -874,6 +855,9 @@ struct PSH_XBOX_SHADER {
 	bool CombinerMuxesOnMsb;
 	bool CombinerHasUniqueC0;
 	bool CombinerHasUniqueC1;
+
+	// constructor
+	PSH_XBOX_SHADER(const int PSVersion);
 
 	std::string ToString();
 	void Log(const char *PhaseStr);
@@ -1866,6 +1850,83 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
 
 /* PSH_XBOX_SHADER */
 
+PSH_XBOX_SHADER::PSH_XBOX_SHADER(const int PSVersion)
+{
+	ZeroMemory(this, sizeof(PSH_XBOX_SHADER));
+
+	m_PSVersion = PSVersion;
+
+	// Source : https://en.wikipedia.org/wiki/High-Level_Shading_Language#Pixel_shader_comparison
+	if (m_PSVersion >= 40) {
+		MaxInputColorRegisters = 32;
+		MaxTemporaryRegisters = 4096;
+		MaxConstantFloatRegisters = 16*4096;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 0; // In shader model 4 and up, Dependent texture limit (T) is unlimited
+		// Note : Input Registers (v#) are now fully floating point and the Texture Coordinate Registers (t#) have been consolidated into it.
+
+		PSH_PC_MAX_REGISTER_COUNT = 16 * 4096;
+	}
+	else if (m_PSVersion >= 30) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172920(v=vs.85).aspx
+		MaxInputColorRegisters = 10;
+		MaxTemporaryRegisters = 32;
+		MaxConstantFloatRegisters = 224;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 0; // In shader model 3 and up, Dependent texture limit (T) is unlimited
+
+		PSH_PC_MAX_REGISTER_COUNT = 224;
+	}
+	else if (m_PSVersion >= 20) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172918(v=vs.85).aspx
+		MaxInputColorRegisters = 2;
+		MaxTemporaryRegisters = 12; // 12 min/32 max: The number of r# registers is determined by D3DPSHADERCAPS2_0.NumTemps (which ranges from 12 to 32).
+		MaxConstantFloatRegisters = 32;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 8;
+
+		PSH_PC_MAX_REGISTER_COUNT = 32;
+	}
+	else if (m_PSVersion >= 14) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172917(v=vs.85).aspx
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 6;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2; // 2 in phase 2
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else if (m_PSVersion >= 13) {
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else if (m_PSVersion >= 12) {
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else {
+		// m_PSVersion >= 11
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4; // Some sources say 2?
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+}
+
 std::string PSH_XBOX_SHADER::ToString()
 {
   std::string Result;
@@ -1876,15 +1937,19 @@ std::string PSH_XBOX_SHADER::ToString()
   // 1.3 allows the use of texm3x2depth (which can occur sometimes)
   // 2.0 allows up to r12, c32, t8 and s16 (requires Direct3D9)
   // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 and vFace (which can do two-sided lighting)
-#ifdef CXBX_USE_PS_3_0
-  Result = "ps_3_0\n";
-#else
-  #ifdef CXBX_USE_PS_2_0
-  Result = "ps_2_0\n";
-  #else
-  Result = "ps.1.3\n";
-  #endif
-#endif
+  if (m_PSVersion >= 30) {
+	  Result = "ps_3_0\n";
+  }
+  else if (m_PSVersion >= 20) {
+	  Result = "ps_2_0\n";
+  }
+  else if (m_PSVersion >= 13) {
+	  Result = "ps.1.3\n";
+  }
+  else {
+	  Result = "ps.1.1\n";
+  }
+
   for (i = 0; i < IntermediateCount; i++)
     Result = Result + Intermediate[i].ToString() + "\n";
   return Result;
@@ -1993,8 +2058,6 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   LogFlags = lfUnit;
   if (IsRunning(TITLEID_AZURIK))
     LogFlags = LogFlags | lfExtreme;*/
-
-  ZeroMemory(this, sizeof(PSH_XBOX_SHADER)); // TODO : Use constructor (to prevent memory leaks)
 
   for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
   {
@@ -2269,19 +2332,19 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	  ++InsertPos;
   } while (Intermediate[InsertPos].Opcode == PO_DEF);
 
-#ifdef CXBX_USE_PS_2_0
-  Ins.Initialize(PO_DCL);
-  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
-  {
-    if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
-    {
-      Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
-      InsertIntermediate(&Ins, InsertPos);
-      ++InsertPos;
-      Result = true;
-    }
+  if (m_PSVersion >= 20) {
+	  Ins.Initialize(PO_DCL);
+	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
+	  {
+		if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
+		{
+		  Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
+		  InsertIntermediate(&Ins, InsertPos);
+		  ++InsertPos;
+		  Result = true;
+		}
+	  }
   }
-#endif
 
   Ins.Initialize(PO_TEX);
   for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
@@ -2290,11 +2353,17 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
     // Convert the texture mode to a texture addressing instruction :
     switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-#ifndef CXBX_USE_PS_2_0
-      case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
-	  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-	  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb = cubemap(r/q, s/q, t/q)
-#endif
+      case PS_TEXTUREMODES_PROJECT2D:
+	  case PS_TEXTUREMODES_PROJECT3D:
+	  case PS_TEXTUREMODES_CUBEMAP:
+		  if (m_PSVersion >= 20) {
+			  switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
+			  case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+			  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+			  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb = cubemap(r/q, s/q, t/q)
+			  }
+		  }
+		  else continue;
 	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
 	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
 	  case PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode = PO_TEXBEM; break;
@@ -2423,14 +2492,14 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
   int PSH_XBOX_SHADER::_MapConstant(int ConstNr, bool *NativeConstInUse)
   {
     // 1-to-1 mapping for constants that can be supported native (if not used already) :
-    if ((ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) && (!NativeConstInUse[ConstNr]))
+    if ((ConstNr < MaxConstantFloatRegisters) && (!NativeConstInUse[ConstNr]))
     {
       return ConstNr;
     }
 
     // Assign not-yet-defined constants bottom-to-up :
     int Result = 0;
-    while (Result < PSH_PC_MAX_C_REGISTER_COUNT)
+    while (Result < MaxConstantFloatRegisters)
     {
       if (!NativeConstInUse[Result])
         return Result;
@@ -2439,7 +2508,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     }
 
     // Unresolved - fallback to 1st constant :
-    if (Result >= PSH_PC_MAX_C_REGISTER_COUNT)
+    if (Result >= MaxConstantFloatRegisters)
       Result = 0;
 
     EmuWarning("; Too many constants to emulate, this pixel shader will give unexpected output!");
@@ -2471,7 +2540,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
-  bool NativeConstInUse[PSH_PC_MAX_C_REGISTER_COUNT] = {};
+  bool NativeConstInUse[224]; // Note : 224 = highest possible MaxConstantFloatRegisters
   int16 OriginalConstantNr;
   bool EmittedNewConstant = false;
   PSH_INTERMEDIATE_FORMAT NewIns;
@@ -2479,7 +2548,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   bool Result = false;
 
   // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
-  for (i = 0; i < PSH_PC_MAX_C_REGISTER_COUNT; i++)
+  for (i = 0; i < MaxConstantFloatRegisters; i++)
     NativeConstInUse[i] = false;
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
@@ -2590,7 +2659,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
-  DWORD RegUsage[/*PSH_ARGUMENT_TYPE*/PARAM_C - PARAM_VALUE + 1][PSH_PC_MAX_REGISTER_COUNT] = {};
+  DWORD RegUsage[/*PSH_ARGUMENT_TYPE*/PARAM_C - PARAM_VALUE + 1][224] = {}; // 224 = highest possible PSH_PC_MAX_REGISTER_COUNT
 
   // TODO : In Polynomial Texture Maps, one extra opcode could be deleted (sub r1.rgb, v0,v0), why doesn't it?
   bool Result = false;
@@ -2617,7 +2686,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Discard useless writes :
-      if ( (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
+      if ( (CurArg->Address < MaxTemporaryRegisters)
       && ((RegUsage[CurArg->Type][CurArg->Address] & CurArg->Mask) == 0))
       {
         DbgPrintf("; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
@@ -2638,7 +2707,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Keep track of all register reads, so that we can discard useless writes :
-      if (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
+      if (CurArg->Address < MaxTemporaryRegisters)
         RegUsage[CurArg->Type][CurArg->Address] = RegUsage[CurArg->Type][CurArg->Address] | CurArg->Mask;
     }
   }
@@ -3937,7 +4006,7 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	PSH_XBOX_SHADER PSH;
+	PSH_XBOX_SHADER PSH(13); // TODO : Make the Pixel shader version configurable
 	return PSH.Decode(pPSDef);
 }
 
