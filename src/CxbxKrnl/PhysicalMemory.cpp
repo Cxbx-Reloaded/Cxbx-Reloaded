@@ -588,10 +588,13 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 		return false;
 	}
-	if (addr < HIGHEST_USER_ADDRESS) { BusyType = PageType::VirtualPageTable; }
+	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = PageType::VirtualPageTable; }
 	PdeMappedSizeIncrement = 0;
 
-	// Now actually commit the PT's
+	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
+	// memory regions and also there is no need to track them since they will not be deallocated anyway even when all the
+	// pte's in the PT become invalid (the kernel does this too, BTY)
+
 	for (int i = 0; i < PdeNumber; ++i)
 	{
 		pPde = GetPdeAddress(addr += PdeMappedSizeIncrement);
@@ -624,8 +627,6 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 
 	// Construct the pfn for the page
 	WritePfn(pfn, pfn, pPte, BusyType);
-
-	// NOTE: construct vma here or in AllocatePT? (depends on future NtAllocateVirtualMemory implementation)
 
 	return pfn;
 }

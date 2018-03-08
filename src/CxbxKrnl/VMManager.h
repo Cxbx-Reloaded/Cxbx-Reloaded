@@ -155,6 +155,8 @@ class VMManager : public PhysicalMemory
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
 		size_t QuerySize(VAddr addr);
+		// MmClaimGpuInstanceMemory implementation
+		VAddr ClaimGpuMemory(size_t Size, size_t* BytesToSkip);
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
 			DWORD protect, bool bStub);
@@ -175,7 +177,7 @@ class VMManager : public PhysicalMemory
 		CRITICAL_SECTION m_CriticalSection;
 		// amount of image virtual memory in use
 		size_t m_ImageMemoryInUse = 0;
-		// amount of non - image virtual memory in use
+		// amount of non-image virtual memory in use
 		size_t m_NonImageMemoryInUse = 0;
 		// the allocation granularity of the host. Needed by MapViewOfFileEx and VirtualAlloc
 		DWORD m_AllocationGranularity;

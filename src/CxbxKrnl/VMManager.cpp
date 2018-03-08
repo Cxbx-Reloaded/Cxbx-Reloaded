@@ -80,7 +80,14 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	if (g_bIsChihiro)
 	{
 		m_MaxContiguousPfn = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
-		m_UpperPMemorySize = 48 * PAGE_SIZE;
+		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
+		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
+		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
+		m_NV2AInstancePage = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
+		m_MemoryRegionArray[MemoryRegionType::Contiguous].RegionMap[0].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
+	}
+	else if (g_bIsDebug)
+	{
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
@@ -157,6 +164,10 @@ void VMManager::InitializePfnDatabase()
 	PFN pfn;
 	PFN pfn_end;
 	PFN result;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	MMPTE TempPte;
+	VAddr addr;
 
 
 	// Default initialize all the entries of the PFN database
@@ -174,89 +185,98 @@ void VMManager::InitializePfnDatabase()
 		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, TempPF.Default); // Debug: 128 KiB
 	}
 
-	// Construct the pfn of the page directory
-	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(PAGE_DIRECTORY_PHYSICAL_ADDRESS);
-	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
 
-	RemoveFree(1, &result, 0, pfn, pfn);
-	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous);
-	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), PAGE_SIZE, MemoryRegionType::Contiguous,
-		VMAType::Allocated, false);
+	// Construct the pfn of the page directory
+	AllocateContiguous(PAGE_SIZE, PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_DIRECTORY_PHYSICAL_ADDRESS + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
+	// Make this persistent
 
 
 	// Construct the pfn's of the kernel pages
-	pfn = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE);
-	pfn_end = CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(XBOX_KERNEL_BASE + KERNEL_SIZE - 1);
-	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
+	AllocateContiguous(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + KERNEL_SIZE, 0, XBOX_PAGE_EXECUTE_READWRITE);
+	// Make this persistent
 
-	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
-	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
-		MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
+	// NOTE: we cannot just use AllocateContiguous for the pfn and the instance memory since they both need to do their
+	// allocations above the contiguous limit, which is forbidden by the function. We also don't need to call
+	// UpdateMemoryPermissions since the contiguous region has already R/W/E rights
 
 	// Construct the pfn's of the pages holding the pfn database
 	if (g_bIsRetail) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 	}
 	else if (g_bIsDebug) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 	}
 	else {
 		pfn = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 	}
-	TempPF.Pte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
+	TempPte.Default = ValidKernelPteBits | PTE_PERSIST_MASK;
 
 	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
-	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), (pfn_end - pfn + 1) << PAGE_SHIFT,
-		MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
+	AllocatePT(EndingPte - PointerPte + 1, addr);
+	ConstructVMA(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
 	if (g_bIsRetail || g_bIsDebug) {
 		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 	}
 	else {
 		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 	}
-	TempPF.Pte.Default = ValidKernelPteBits;
-	DISABLE_CACHING(TempPF.Pte);
+	TempPte.Default = ValidKernelPteBits;
+	DISABLE_CACHING(TempPte);
 
 	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
-	ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
-		MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
+	WritePte(PointerPte, EndingPte, TempPte, pfn);
+	AllocatePT(EndingPte - PointerPte + 1, addr);
+	ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
 	if (g_bIsDebug)
 	{
 		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
 
-		pfn = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE;
-		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + DEBUGKIT_FIRST_UPPER_HALF_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
-		TempPF.Pte.Default = ValidKernelPteBits;
-		DISABLE_CACHING(TempPF.Pte);
+		pfn += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		pfn_end += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+		PointerPte = GetPteAddress(addr);
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 
 		RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-		WritePfn(pfn, pfn_end, &TempPF.Pte, PageType::Contiguous);
-		ConstructVMA(CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT), NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT,
-			MemoryRegionType::Contiguous, VMAType::Allocated, false);
+		WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
+		WritePte(PointerPte, EndingPte, TempPte, pfn);
+		AllocatePT(EndingPte - PointerPte + 1, addr);
+		ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 	}
 
 
 	// Construct the pfn of the page used by D3D
-	pfn = D3D_PHYSICAL_PAGE;
-	TempPF.Pte.Default = ValidKernelPteBits | PTE_GUARD_END_MASK | PTE_PERSIST_MASK;
-
-	RemoveFree(1, &result, 0, pfn, pfn);
-	WritePfn(pfn, pfn, &TempPF.Pte, PageType::Contiguous);
-	ConstructVMA(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, MemoryRegionType::Contiguous, VMAType::Allocated, false);
+	AllocateContiguous(PAGE_SIZE, D3D_PHYSICAL_PAGE, D3D_PHYSICAL_PAGE + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
+	// Make this persistent
 }
 
 void VMManager::ReinitializePfnDatabase()
@@ -274,7 +294,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	VirtualMemoryArea& vma = vma_handle->second;
 	vma.type = VmaType;
 	vma.permissions = Perms;
-	if (bFragFlag) { vma.bFragmented = true; }
+	vma.bFragmented = bFragFlag;
 
 	// Depending on the splitting done by CarveVMA, there is no guarantee that the next or previous vma's are free.
 	// We are just going to iterate forward and backward until we find one.
@@ -334,6 +354,72 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	memory_statistics->PoolPagesCommitted = 0; // not implemented
 	memory_statistics->StackPagesCommitted = m_StackMemoryInUse;
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
+}
+
+VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Size);
+		LOG_FUNC_ARG(*BytesToSkip);
+	LOG_FUNC_END;
+
+	// Note that, even though devkits have 128 MiB, there's no need to have a different case for those, since the instance
+	// memory is still located 0x10000 bytes from the top of memory just like retail consoles
+
+	if (g_bIsChihiro)
+		*BytesToSkip = 0;
+	else
+		*BytesToSkip = CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(X64M_PHYSICAL_PAGE) -
+		CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT);
+
+	if (Size != MAXULONG_PTR)
+	{
+		PFN pfn;
+		PFN EndingPfn;
+		PMMPTE PointerPte;
+		PMMPTE EndingPte;
+		MMPTE TempPte;
+
+		// Actually deallocate the requested number of instance pages. Note that we can't just call DeallocateContiguous
+		// since that function will always deallocate the entire original allocation
+
+		Lock();
+
+		Size = ROUND_UP_4K(Size);
+
+		pfn = m_NV2AInstancePage + NV2A_INSTANCE_PAGE_COUNT - (ROUND_UP_4K(m_NV2AInstanceMemoryBytes) >> PAGE_SHIFT);
+		EndingPfn = m_NV2AInstancePage + NV2A_INSTANCE_PAGE_COUNT - (Size >> PAGE_SHIFT) - 1;
+		PointerPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn));
+		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(EndingPfn));
+
+		WritePte(PointerPte, EndingPte, TempPte, 0, true);
+		WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
+		InsertFree(pfn, EndingPfn);
+		DestructVMA(GetVMAIterator((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), MemoryRegionType::Contiguous), MemoryRegionType::Contiguous);
+
+		if (g_bIsDebug)
+		{
+			// Devkits have also another nv2a instance memory at the top of memory, so free also that
+			// 3fe0: nv2a; 3ff0: pfn; 4000 + 3fe0: nv2a; 4000 + 3fe0 + 10: free
+
+			pfn += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+			EndingPfn += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+			PointerPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn));
+			EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(EndingPfn));
+
+			WritePte(PointerPte, EndingPte, TempPte, 0, true);
+			WritePfn(pfn, EndingPfn, PointerPte, PageType::Contiguous, true);
+			InsertFree(pfn, EndingPfn);
+			DestructVMA(GetVMAIterator((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), MemoryRegionType::Contiguous), MemoryRegionType::Contiguous);
+		}
+		m_NV2AInstanceMemoryBytes = Size;
+
+		DbgPrintf("KNRL: MmClaimGpuInstanceMemory : Allocated bytes remaining = 0x%.8X\n", m_NV2AInstanceMemoryBytes);
+
+		Unlock();
+	}
+
+	RETURN((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(m_HighestPage + 1) - *BytesToSkip);
 }
 
 VAddr VMManager::Allocate(size_t Size)
@@ -1645,18 +1731,21 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type)
 {
 	BOOL ret;
 
-	if (it->second.bFragmented)
+	if (Type != MemoryRegionType::Contiguous)
 	{
-		ret = VirtualFree((void*)it->first, 0, MEM_RELEASE);
-	}
-	else
-	{
-		ret = UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
-	}
+		if (it->second.bFragmented)
+		{
+			ret = VirtualFree((void*)it->first, 0, MEM_RELEASE);
+		}
+		else
+		{
+			ret = UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+		}
 
-	if (!ret)
-	{
-		DbgPrintf("Deallocation routine failed with error %d\n", GetLastError());
+		if (!ret)
+		{
+			DbgPrintf("Deallocation routine failed with error %d\n", GetLastError());
+		}
 	}
 
 	VMAIter CarvedVmaIt = CarveVMARange(it->first, it->second.size, Type);

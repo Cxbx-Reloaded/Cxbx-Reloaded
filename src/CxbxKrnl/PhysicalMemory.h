@@ -104,7 +104,6 @@ typedef struct _XBOX_PFN {
 	union
 	{
 		ULONG Default;
-		MMPTE Pte;
 		struct {
 			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
 			ULONG Busy : 1;        // If set, PFN is in use
@@ -242,14 +241,16 @@ class PhysicalMemory
 		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
 		// highest pfn available for contiguous allocations
 		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
-		// the size of memory occupied by the PFN/NV2A instance memory
-		size_t m_UpperPMemorySize = 32 * PAGE_SIZE;
 		// amount of physical pages free
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[PageType::COUNT] = { 0 };
 		// highest page on the system
-		PFN_COUNT m_HighestPage = XBOX_HIGHEST_PHYSICAL_PAGE;
+		PFN m_HighestPage = XBOX_HIGHEST_PHYSICAL_PAGE;
+		// first page of the nv2a instance memory
+		PFN m_NV2AInstancePage = XBOX_INSTANCE_PHYSICAL_PAGE;
+		// number of allocated bytes for the nv2a instance memory
+		size_t m_NV2AInstanceMemoryBytes = NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT;
 
 	
 		// protected constructor so PhysicalMemory can only be inherited from
