@@ -4,3 +4,6 @@
 [submodule "import/cs_x86"]
 	path = import/cs_x86
 	url = https://github.com/x1nixmzeng/cs_x86
+[submodule "import/d3d8to9"]
+	path = import/d3d8to9
+	url = https://github.com/Cxbx-Reloaded/d3d8to9

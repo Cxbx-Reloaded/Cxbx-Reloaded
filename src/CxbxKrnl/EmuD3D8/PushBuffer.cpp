@@ -181,10 +181,10 @@ extern void XTL::EmuExecutePushBufferRaw
             pdwPushData += dwCount;
 
             // retrieve vertex shader
-            g_pD3DDevice8->GetVertexShader(&dwVertexShader);
+			DWORD dwVertexShader = g_CurrentVertexShader;
 
-            if(dwVertexShader > 0xFFFF)
-            {
+			if (VshHandleIsVertexShader(dwVertexShader)) 
+			{
                 CxbxKrnlCleanup("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
                 dwVertexShader = 0;
             }

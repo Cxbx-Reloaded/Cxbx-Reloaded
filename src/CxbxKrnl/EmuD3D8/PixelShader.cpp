@@ -3982,6 +3982,8 @@ static const
     EmuWarning("Could not create pixel shader");
 	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
+	printf(ConvertedPixelShaderStr.c_str());
+
     hRet = D3DXAssembleShader(
       szDiffusePixelShader,
       strlen(szDiffusePixelShader),
