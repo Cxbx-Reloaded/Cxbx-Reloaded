@@ -58,6 +58,9 @@
   - add _sat feature
     * Support as instruction modifier,
 	  if necessary as mov_sat x, y
+
+  - When porting to DirectX 9, expand this to pixel shader model 2.0 or up
+  - Alternatively, translate to HLSL and let D3DXCompileShader/D3DCompile figure it out
 */
 
 // ******************************************************************
@@ -4044,15 +4047,18 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	uint32 PSVersion = D3DPS_VERSION(1, 3); // default
+	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
 
+#if 0 // Once PS.1.4 can be generated, enable this :
 	XTL::D3DCAPS8 g_D3DCaps = {};
 	if (g_pD3DDevice8->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
-		// TODO : Enable this : PSVersion = g_D3DCaps.PixelShaderVersion;
+		PSVersion = g_D3DCaps.PixelShaderVersion;
 	}
+#endif
+	// TODO : Make the pixel shader version configurable
 
 	PSH_XBOX_SHADER PSH = {};
-	PSH.SetPSVersion(PSVersion); // TODO : Make the Pixel shader version configurable
+	PSH.SetPSVersion(PSVersion);
 	return PSH.Decode(pPSDef);
 }
 
