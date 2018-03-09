@@ -621,202 +621,12 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
     return m_bPatched;
 }
 
-bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
-                                        UINT             uiStream)
-{
-    PATCHEDSTREAM *pStream = &m_pStreams[uiStream];
-
-    if((pPatchDesc->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pPatchDesc->XboxPrimitiveType >= X_D3DPT_MAX))
-    {
-        EmuWarning("Unknown primitive type: 0x%.02X\n", pPatchDesc->XboxPrimitiveType);
-		return false;
-    }
-
-	if (pPatchDesc->pXboxVertexStreamZeroData == nullptr)
-	{
-		pStream->pOriginalStream = g_D3DStreams[uiStream];
-		pStream->uiOrigStride = g_D3DStreamStrides[uiStream];
-		pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
-	}
-	else
-	{
-		pStream->uiOrigStride = pPatchDesc->uiXboxVertexStreamZeroStride;
-	}
-
-	DWORD uiLength = pPatchDesc->uiSize;
-	DWORD uiVertexCount = uiLength / pStream->uiOrigStride;
-
-    // Unsupported primitives that don't need deep patching.
-    switch(pPatchDesc->XboxPrimitiveType)
-    {
-        // Quad strip is just like a triangle strip, but requires two
-        // vertices per primitive.
-        case X_D3DPT_QUADSTRIP:
-            pPatchDesc->dwVertexCount -= pPatchDesc->dwVertexCount % 2;
-            pPatchDesc->XboxPrimitiveType = X_D3DPT_TRIANGLESTRIP;
-            break;
-
-        // Convex polygon is the same as a triangle fan.
-        case X_D3DPT_POLYGON:
-            pPatchDesc->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
-            break;
-    }
-
-	// Get render primitive count
-    pPatchDesc->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->XboxPrimitiveType, pPatchDesc->dwVertexCount);
-
-	// Get total primitive count
-	DWORD dwTotalPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->XboxPrimitiveType, uiVertexCount);
-
-    // Skip primitives that don't need further patching.
-    switch(pPatchDesc->XboxPrimitiveType)
-    {
-        case X_D3DPT_QUADLIST:
-			//EmuWarning("VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST");
-			break;
-        case X_D3DPT_LINELOOP:
-			//EmuWarning("VertexPatcher::PatchPrimitive: Processing D3DPT_LINELOOP");
-            break;
-
-        default:
-            return false;
-    }
-
-    if(pPatchDesc->pXboxVertexStreamZeroData && uiStream > 0)
-    {
-        CxbxKrnlCleanup("Draw..UP call with more than one stream!\n");
-    }
-
-    // sizes of the vertex buffer
-    DWORD dwOriginalSize    = 0;
-    DWORD dwNewSize         = 0;
-
-	// vertex data arrays
-    BYTE *pOrigVertexData = nullptr;
-    BYTE *pPatchedVertexData = nullptr;
-
-    // Quad list
-    if(pPatchDesc->XboxPrimitiveType == X_D3DPT_QUADLIST)
-    {
-        pPatchDesc->dwHostPrimitiveCount *= 2;
-		dwTotalPrimitiveCount *= 2;
-
-        // This is a list of sqares/rectangles, so we convert it to a list of triangles
-        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride * 2;
-        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride * 3;
-    }
-    // Line loop
-    else if(pPatchDesc->XboxPrimitiveType == X_D3DPT_LINELOOP)
-    {
-        pPatchDesc->dwHostPrimitiveCount += 1;
-		dwTotalPrimitiveCount += 1;
-
-        // We will add exactly one more line
-        dwOriginalSize  = dwTotalPrimitiveCount * pStream->uiOrigStride;
-        dwNewSize       = dwTotalPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
-    }
-
-    if(pPatchDesc->pXboxVertexStreamZeroData == nullptr)
-    {
-        if(pStream->pOriginalStream != nullptr)
-        {
-			pOrigVertexData = (XTL::BYTE*)GetDataFromXboxResource(pStream->pOriginalStream);
-			GetCachedVertexBufferObject(pStream->pOriginalStream->Data, dwNewSize, &pStream->pPatchedStream);
-        }
-
-        if(pStream->pPatchedStream != nullptr)
-        {
-            pStream->pPatchedStream->Lock(0, 0, &pPatchedVertexData, D3DLOCK_DISCARD);
-        }
-    }
-    else
-    {
-        m_pNewVertexStreamZeroData = (uint08*)malloc(dwNewSize);
-        m_bAllocatedStreamZeroData = true;
-
-        pPatchedVertexData = (uint08*)m_pNewVertexStreamZeroData;
-        pOrigVertexData = (uint08*)pPatchDesc->pXboxVertexStreamZeroData;
-
-        pPatchDesc->pXboxVertexStreamZeroData = pPatchedVertexData;
-    }
-
-    // Quad list
-    if(pPatchDesc->XboxPrimitiveType == X_D3DPT_QUADLIST)
-    {
-        uint08 *pPatch1 = &pPatchedVertexData[0];
-        uint08 *pPatch2 = &pPatchedVertexData[3 * pStream->uiOrigStride];
-        uint08 *pPatch3 = &pPatchedVertexData[4 * pStream->uiOrigStride];
-        uint08 *pPatch4 = &pPatchedVertexData[5 * pStream->uiOrigStride];
-
-        uint08 *pOrig1 = &pOrigVertexData[0];
-        uint08 *pOrig2 = &pOrigVertexData[2 * pStream->uiOrigStride];
-        uint08 *pOrig3 = &pOrigVertexData[3 * pStream->uiOrigStride];
-
-        for(uint32 i = 0;i < dwTotalPrimitiveCount /2;i++)
-        {
-		//	__asm int 3;
-		//	DbgPrintf( "pPatch1 = 0x%.08X pOrig1 = 0x%.08X pStream->uiOrigStride * 3 = 0x%.08X\n", pPatch1, pOrig1, pStream->uiOrigStride * 3 );
-            memcpy(pPatch1, pOrig1, pStream->uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
-		//	__asm int 3;
-            memcpy(pPatch2, pOrig2, pStream->uiOrigStride);     // Vertex 3     := Vertex 2
-		//	__asm int 3;
-            memcpy(pPatch3, pOrig3, pStream->uiOrigStride);     // Vertex 4     := Vertex 3
-		//	__asm int 3;
-            memcpy(pPatch4, pOrig1, pStream->uiOrigStride);     // Vertex 5     := Vertex 0
-
-            pPatch1 += pStream->uiOrigStride * 6;
-            pPatch2 += pStream->uiOrigStride * 6;
-            pPatch3 += pStream->uiOrigStride * 6;
-            pPatch4 += pStream->uiOrigStride * 6;
-
-            pOrig1 += pStream->uiOrigStride * 4;
-            pOrig2 += pStream->uiOrigStride * 4;
-            pOrig3 += pStream->uiOrigStride * 4;
-
-            if(pPatchDesc->hVertexShader & D3DFVF_XYZRHW)
-            {
-                for(int z = 0; z < 6; z++)
-                {
-                    if(((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] == 0.0f)
-                        ((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[2] = 1.0f;
-                    if(((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] == 0.0f)
-                        ((FLOAT*)&pPatchedVertexData[i * pStream->uiOrigStride * 6 + z * pStream->uiOrigStride])[3] = 1.0f;
-                }
-            }
-        }
-    }
-    // Line loop
-    else if(pPatchDesc->XboxPrimitiveType == X_D3DPT_LINELOOP)
-    {
-        memcpy(&pPatchedVertexData[0], &pOrigVertexData[0], dwOriginalSize);
-	    memcpy(&pPatchedVertexData[dwOriginalSize], &pOrigVertexData[0], pStream->uiOrigStride);
-    }
-	else
-	{
-		// Copy the nonmodified data
-		memcpy(pPatchedVertexData, pOrigVertexData, dwOriginalSize);
-	}
-
-    if(pPatchDesc->pXboxVertexStreamZeroData == nullptr)
-    {
-        pStream->pPatchedStream->Unlock();
-
-        g_pD3DDevice->SetStreamSource(
-			uiStream, 
-			pStream->pPatchedStream, 
-#ifdef CXBX_USE_D3D9
-			0, // OffsetInBytes
-#endif
-			pStream->uiOrigStride);
-    }
-
-    m_bPatched = true;
-
-    return true;
-}
-
 bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 {
+	CxbxDrawContext *pDrawContext = pPatchDesc; // Temporary alias to help porting over code from PatrickvL WIP_LessVertexPatching
+	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
+		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
+
     bool Patched = false;
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pPatchDesc);
@@ -839,7 +649,6 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 	
 		// TODO: Check for cached vertex buffer, and use it if possible
 		
-		LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
         LocalPatched |= PatchStream(pPatchDesc, uiStream);
         Patched |= LocalPatched;
 
@@ -869,6 +678,28 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 
 		// TODO: Cache Vertex Buffer Data
     }
+
+	if (pDrawContext->XboxPrimitiveType == X_D3DPT_QUADSTRIP) {
+		// Quad strip is just like a triangle strip, but requires two vertices per primitive.
+		// A quadstrip starts with 4 vertices and adds 2 vertices per additional quad.
+		// This is much like a trianglestrip, which starts with 3 vertices and adds
+		// 1 vertex per additional triangle, so we use that instead. The planar nature
+		// of the quads 'survives' through this change. There's a catch though :
+		// In a trianglestrip, every 2nd triangle has an opposing winding order,
+		// which would cause backface culling - but this seems to be intelligently
+		// handled by d3d :
+		// Test-case : XDK Samples (FocusBlur, MotionBlur, Trees, PaintEffect, PlayField)
+		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLESTRIP;
+		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
+	} else {
+		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
+	}
+
+	if (pDrawContext->XboxPrimitiveType == X_D3DPT_POLYGON) {
+		// Convex polygon is the same as a triangle fan.
+		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
+		LOG_TEST_CASE("X_D3DPT_POLYGON");
+	}
 
     return Patched;
 }

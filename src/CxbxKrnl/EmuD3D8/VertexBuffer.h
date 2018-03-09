@@ -94,9 +94,6 @@ class VertexPatcher
 
         // Normalize texture coordinates in FVF stream if needed
         bool NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream);
-
-        // Patches the primitive of the stream
-        bool PatchPrimitive(VertexPatchDesc *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation

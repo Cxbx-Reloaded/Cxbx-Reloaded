@@ -203,7 +203,6 @@ extern void XTL::EmuExecutePushBufferRaw
     // cache of last 4 indices
 	INDEX16 pIBMem[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
 
-    D3DPRIMITIVETYPE    PCPrimitiveType = (D3DPRIMITIVETYPE)-1;
     X_D3DPRIMITIVETYPE  XboxPrimitiveType = X_D3DPT_INVALID;
 
     // TODO: This technically should be enabled
@@ -289,7 +288,6 @@ extern void XTL::EmuExecutePushBufferRaw
                 #endif
 				//retrieve the D3DPRIMITIVETYPE info in parameter
                 XboxPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType);
 				pdwPushData++;
             }
         }
