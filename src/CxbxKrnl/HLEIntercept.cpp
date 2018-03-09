@@ -460,7 +460,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							// Read address of D3DRS_CULLMODE from D3DDevice_SetRenderState_CullMode
 							// TODO : Simplify this when XREF_D3D_RenderState_CullMode derivation is deemed stable
 							{
-								if (BuildVersion >= 3911 && BuildVersion < 4034) {
+								if (BuildVersion < 4034) {
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x25);
 									Decrement = 0x1FC;  // TODO: Clean up (?)
 									Increment = 82 * 4;
@@ -469,17 +469,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									//Decrement = 0x19F;  // TODO: Clean up (?)
 									//Increment = 72 * 4;
 									//patchOffset = 142*4; // TODO: Verify
-								} else if (BuildVersion >= 4034 && BuildVersion <= 4361) {
+								} else if (BuildVersion <= 4361) {
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
 									Decrement = 0x200;
 									Increment = 82 * 4;
 									patchOffset = 142 * 4;
-								} else if (BuildVersion >= 4432 && BuildVersion < 4627) {
+								} else if (BuildVersion < 4627) {
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
 									Decrement = 0x204;
 									Increment = 83 * 4;
 									patchOffset = 143 * 4;
-								} else if (BuildVersion >= 4627 && BuildVersion <= 5933) {
+								} else { // 4627-5933
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + 0x2B);
 									Decrement = 0x24C;
 									Increment = 92 * 4;
