@@ -2321,6 +2321,21 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   return Result;
 }
 
+  bool _OpcodeMustStayBeforeTextureMode(PSH_OPCODE Opcode, int i)
+  {
+	  // Before texture modes, only keep the first comment (the one mentioning "xps" got converted into "ps") 
+	  if (Opcode == PO_COMMENT)
+		  return (i == 0);
+
+	  if (Opcode == PO_PS)
+		  return true;
+
+	  if (Opcode == PO_DEF)
+		  return true;
+
+	  return false;
+  }
+
   bool PSH_XBOX_SHADER::_NextIs2D(int Stage)
   {
     if (Stage < XTL::X_D3DTS_STAGECOUNT-1)
@@ -2340,7 +2355,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   InsertPos = -1;
   do {
 	  ++InsertPos;
-  } while (Intermediate[InsertPos].Opcode == PO_DEF);
+  } while (_OpcodeMustStayBeforeTextureMode(Intermediate[InsertPos].Opcode, InsertPos));
 
   if (m_PSVersion >= D3DPS_VERSION(2, 0))
   {
@@ -2364,17 +2379,15 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
     // Convert the texture mode to a texture addressing instruction :
     switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-      case PS_TEXTUREMODES_PROJECT2D:
-	  case PS_TEXTUREMODES_PROJECT3D:
-	  case PS_TEXTUREMODES_CUBEMAP:
-		  if (m_PSVersion >= D3DPS_VERSION(2, 0)) {
-			  switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-			  case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
-			  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-			  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb = cubemap(r/q, s/q, t/q)
-			  }
-		  }
-		  else continue;
+      case PS_TEXTUREMODES_PROJECT2D: // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+	  case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+	  case PS_TEXTUREMODES_CUBEMAP: { // argb = cubemap(r/q, s/q, t/q)
+		  if (m_PSVersion >= D3DPS_VERSION(2, 0))
+			  continue;
+
+		  Ins.Opcode = PO_TEX;
+		  break;
+	  }
 	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
 	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
 	  case PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode = PO_TEXBEM; break;
@@ -2655,7 +2668,9 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         else
           _SetColor(NewIns, pPSDef->PSFinalCombinerConstant1);
 
-        InsertIntermediate(&NewIns, 0);
+		// PO_DEF opcodes go after the initial PO_XPS (which is not yet replaced by PO_COMMENT+PO_PS,
+		// see ConvertXboxOpcodesToNative calling ConvertXPSToNative for that)
+        InsertIntermediate(&NewIns, 1);
       }
     } // for arguments
   } // for opcodes
@@ -2753,10 +2768,8 @@ void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDe
 
     if (!CommentString.empty()) {
 		PSH_INTERMEDIATE_FORMAT NewIns = {};
-		NewIns.Initialize(PO_COMMENT);
+		NewIns.Initialize(PO_COMMENT)->CommentString = CommentString;
 		InsertIntermediate(&NewIns, i);
-		Cur = &(Intermediate[i]);
-		Cur->CommentString = CommentString; // Set after InsertIntermediate to avoid corruption
 	}
   }
 } // ConvertXboxOpcodesToNative
@@ -3067,8 +3080,9 @@ bool PSH_XBOX_SHADER::RemoveNops()
     Cur = &(Intermediate[i]);
 
     // Skip opcodes that have no output, but should stay anyway :
-    if ((Cur->Opcode == PO_COMMENT) || (Cur->Opcode == PO_PS) || (Cur->Opcode == PO_XFC) || (Cur->Opcode == PO_XPS))
-      continue;
+    if (PSH_OPCODE_DEFS[Cur->Opcode]._Out == 0)
+	  if (Cur->Opcode != PO_NOP)
+	    continue;
 
     // See if this opcode writes to any of it's outputs :
     {
@@ -3707,7 +3721,7 @@ bool PSH_XBOX_SHADER::FixInvalidSrcSwizzle()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Loop over the input arguments :
       for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._In; j++)
@@ -3790,7 +3804,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Does this instruction write solely to Alpha?
       if (Cur->Output[0].Mask == MASK_A) 
@@ -3825,7 +3839,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
       NewIsCombined = (PrevOpcode != PO_DP3)
