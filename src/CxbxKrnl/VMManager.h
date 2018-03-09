@@ -157,6 +157,8 @@ class VMManager : public PhysicalMemory
 		size_t QuerySize(VAddr addr);
 		// MmClaimGpuInstanceMemory implementation
 		VAddr ClaimGpuMemory(size_t Size, size_t* BytesToSkip);
+		// make contiguous memory persist across a quick reboot
+		void PersistMemory(VAddr addr, size_t Size, bool bPersist);
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
 			DWORD protect, bool bStub);
@@ -184,8 +186,6 @@ class VMManager : public PhysicalMemory
 	
 		// set up the pfndatabase
 		void InitializePfnDatabase();
-		// set up the pfn database after a quick reboot
-		void ReinitializePfnDatabase();
 		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// initializes a memory region struct
@@ -218,6 +218,8 @@ class VMManager : public PhysicalMemory
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
 		// changes the access permissions of a block of memory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
+		// restores persistent memory
+		void RestorePersistentMemory();
 		// acquires the critical section
 		void Lock();
 		// releases the critical section

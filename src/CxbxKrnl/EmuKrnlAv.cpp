@@ -46,6 +46,7 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
+#include "EmuShared.h" // For g_EmuShared
 
 // prevent name collisions
 namespace NtDll
@@ -55,8 +56,9 @@ namespace NtDll
 
 #include "Emu.h" // For EmuWarning()
 
+
 // Global Variable(s)
-PVOID g_pPersistedData = NULL;
+PVOID g_pPersistedData = NULL; // (?? What is this used for?)
 
 ULONG AvQueryAvCapabilities()
 {
@@ -97,12 +99,6 @@ ULONG AvQueryAvCapabilities()
 	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
-// Xbox code will set this address via AvSetSavedDataAddress
-// TODO: This value should be persisted between reboots
-// Xbox code sets this to the contiguous memory region 
-// so data is already persisted.
-PVOID g_AvSavedDataAddress = NULL;
-
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
@@ -110,7 +106,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 {
 	LOG_FUNC();
 
-	RETURN(g_AvSavedDataAddress);
+	RETURN(AvSavedDataAddress);
 }
 
 // ******************************************************************
@@ -229,9 +225,22 @@ XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 	IN  PVOID   Address
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Address)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(Address);
 
-	g_AvSavedDataAddress = Address;
+	AvSavedDataAddress = Address;
+
+	// NOTE: it shouldn't be needed to call MmPersistContiguousMemory since it should have been called by other routines
+	// on the supplied address
+
+	if (Address)
+	{
+		g_EmuShared->SetFrameBufferAddress((uintptr_t*)Address);
+		DbgPrintf("KNRL: Persisting FrameBuffer\n");
+	}
+	else
+	{
+		uintptr_t* pTemp = NULL;
+		g_EmuShared->SetFrameBufferAddress(pTemp);
+		DbgPrintf("KNRL: Forgetting FrameBuffer\n");
+	}
 }

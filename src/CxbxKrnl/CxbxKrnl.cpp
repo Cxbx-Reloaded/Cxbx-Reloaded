@@ -788,9 +788,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
-	// This is wrong: the VMManager is still not initialized here. Persistent memory should be restored by the 
-	// memory manager instead during start up, like the xbox does
-	CxbxRestorePersistentMemoryRegions();
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -1262,29 +1259,6 @@ void CxbxInitFilePaths()
 		0
 	}
 };*/
-
-void CxbxRestoreLaunchDataPage()
-{
-	PAddr LaunchDataPAddr;
-	g_EmuShared->GetLaunchDataPAddress(&LaunchDataPAddr);
-
-	if (LaunchDataPAddr)
-	{
-		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)(CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr);
-		// Mark the launch page as allocated to prevent other allocations from overwriting it
-		xboxkrnl::MmAllocateContiguousMemoryEx(PAGE_SIZE, LaunchDataPAddr, LaunchDataPAddr + PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
-		LaunchDataPAddr = NULL;
-		g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-
-		DbgPrintf("INIT: Restored LaunchDataPage\n");
-	}
-}
-
-void CxbxRestorePersistentMemoryRegions()
-{
-	CxbxRestoreLaunchDataPage();
-	// TODO : Restore all other persistent memory regions here too.
-}
 
 __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 {

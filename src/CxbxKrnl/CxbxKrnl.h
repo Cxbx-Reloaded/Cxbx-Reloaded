@@ -252,8 +252,6 @@ void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 void CxbxInitFilePaths();
 
-void CxbxRestorePersistentMemoryRegions();
-
 void ConnectWindowsTimersToThunkTable();
 
 /*! kernel thunk table */

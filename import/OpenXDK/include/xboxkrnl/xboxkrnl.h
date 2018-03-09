@@ -1273,6 +1273,11 @@ typedef struct _DASH_LAUNCH_DATA
 DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
 
 // ******************************************************************
+// * Persisted Frame Buffer Address
+// ******************************************************************
+PVOID AvSavedDataAddress;
+
+// ******************************************************************
 // * DISPATCHER_HEADER
 // ******************************************************************
 typedef struct _DISPATCHER_HEADER

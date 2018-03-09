@@ -102,21 +102,15 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	LIST_ENTRY_INITIALIZE(&block->ListEntry);
 	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
-	// Set up the pfn database
-	int QuickReboot;
-	g_EmuShared->GetBootFlags(&QuickReboot);
-	if (QuickReboot & BOOT_QUICK_REBOOT) {
-		ReinitializePfnDatabase();
-	}
-	else {
-		// prevent reusing the the old values of the page tables if we are not quick rebooting
-		FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
-		InitializePfnDatabase();
-	}
-
 	// Construct the page directory
 	InitializePageDirectory();
 
+	// Set up the pfn database
+	FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
+	InitializePfnDatabase();
+
+	// Restore persistent memory, if there is any
+	RestorePersistentMemory();
 
 
 	if (g_bIsChihiro) {
@@ -188,12 +182,12 @@ void VMManager::InitializePfnDatabase()
 
 	// Construct the pfn of the page directory
 	AllocateContiguous(PAGE_SIZE, PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_DIRECTORY_PHYSICAL_ADDRESS + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
-	// Make this persistent
+	PersistMemory(CONTIGUOUS_MEMORY_BASE + PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_SIZE, true);
 
 
 	// Construct the pfn's of the kernel pages
 	AllocateContiguous(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + KERNEL_SIZE, 0, XBOX_PAGE_EXECUTE_READWRITE);
-	// Make this persistent
+	PersistMemory(CONTIGUOUS_MEMORY_BASE + XBE_IMAGE_BASE, KERNEL_SIZE, true);
 
 
 	// NOTE: we cannot just use AllocateContiguous for the pfn and the instance memory since they both need to do their
@@ -231,57 +225,58 @@ void VMManager::InitializePfnDatabase()
 	ConstructVMA(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
 
-	// Construct the pfn's of the pages holding the nv2a instance memory
-	if (g_bIsRetail || g_bIsDebug) {
-		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
-		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
-		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
-		PointerPte = GetPteAddress(addr);
-		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
-	}
-	else {
-		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
-		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
-		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
-		PointerPte = GetPteAddress(addr);
-		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
-	}
-	TempPte.Default = ValidKernelPteBits;
-	DISABLE_CACHING(TempPte);
-
-	RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
-	WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
-	WritePte(PointerPte, EndingPte, TempPte, pfn);
-	AllocatePT(EndingPte - PointerPte + 1, addr);
-	ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
-
-
-	if (g_bIsDebug)
+	// The nv2a instance memory is not persisted across quick reboots
+	int QuickReboot;
+	g_EmuShared->GetBootFlags(&QuickReboot);
+	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0)
 	{
-		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
-
-		pfn += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
-		pfn_end += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
-		addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
-		PointerPte = GetPteAddress(addr);
-		EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
+		// Construct the pfn's of the pages holding the nv2a instance memory
+		if (g_bIsRetail || g_bIsDebug) {
+			pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
+			pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+			addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+			PointerPte = GetPteAddress(addr);
+			EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
+		}
+		else {
+			pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
+			pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
+			addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+			PointerPte = GetPteAddress(addr);
+			EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
+		}
+		TempPte.Default = ValidKernelPteBits;
+		DISABLE_CACHING(TempPte);
 
 		RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
 		WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
 		WritePte(PointerPte, EndingPte, TempPte, pfn);
 		AllocatePT(EndingPte - PointerPte + 1, addr);
 		ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
+
+
+		if (g_bIsDebug)
+		{
+			// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
+
+			pfn += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+			pfn_end += DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+			addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+			PointerPte = GetPteAddress(addr);
+			EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
+
+			RemoveFree(pfn_end - pfn + 1, &result, 0, pfn, pfn_end);
+			WritePfn(pfn, pfn_end, &TempPte, PageType::Contiguous);
+			WritePte(PointerPte, EndingPte, TempPte, pfn);
+			AllocatePT(EndingPte - PointerPte + 1, addr);
+			ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
+		}
 	}
 
 
 	// Construct the pfn of the page used by D3D
 	AllocateContiguous(PAGE_SIZE, D3D_PHYSICAL_PAGE, D3D_PHYSICAL_PAGE + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
-	// Make this persistent
-}
-
-void VMManager::ReinitializePfnDatabase()
-{
-
+	PersistMemory(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, true);
 }
 
 void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms)
@@ -346,13 +341,13 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 {
-	memory_statistics->TotalPhysicalPages = m_MaxPhysicalMemory / PAGE_SIZE;
-	memory_statistics->AvailablePages = (m_MaxPhysicalMemory - m_PhysicalMemoryInUse) / PAGE_SIZE;
+	memory_statistics->TotalPhysicalPages = g_SystemMaxMemory >> PAGE_SHIFT;
+	memory_statistics->AvailablePages = m_PhysicalPagesAvailable;
 	memory_statistics->VirtualMemoryBytesCommitted = m_ImageMemoryInUse + m_NonImageMemoryInUse;
 	memory_statistics->VirtualMemoryBytesReserved = 0; // this is the num of bytes reserved with MEM_RESERVE by NtAllocateVirtualMemory
-	memory_statistics->CachePagesCommitted = 0; // not implemented
-	memory_statistics->PoolPagesCommitted = 0; // not implemented
-	memory_statistics->StackPagesCommitted = m_StackMemoryInUse;
+	memory_statistics->CachePagesCommitted = m_PagesByUsage[PageType::Cache];
+	memory_statistics->PoolPagesCommitted = m_PagesByUsage[PageType::Pool];
+	memory_statistics->StackPagesCommitted = m_PagesByUsage[PageType::Stack];
 	memory_statistics->ImagePagesCommitted = m_ImageMemoryInUse;
 }
 
@@ -420,6 +415,84 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 	}
 
 	RETURN((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(m_HighestPage + 1) - *BytesToSkip);
+}
+
+void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Size);
+		LOG_FUNC_ARG(bPersist);
+	LOG_FUNC_END;
+
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+
+	assert(IS_PHYSICAL_ADDRESS(addr)); // only contiguous memory can be made persistent
+
+	Lock();
+
+	PointerPte = GetPteAddress(addr);
+	EndingPte = GetPteAddress(addr + Size - 1);
+
+	while (PointerPte <= EndingPte)
+	{
+		PointerPte->Hardware.Persist = bPersist ? 1 : 0;
+		PointerPte++;
+	}
+
+	if ((xboxkrnl::PVOID)addr == xboxkrnl::LaunchDataPage)
+	{
+		if (bPersist)
+		{
+			g_EmuShared->SetLaunchDataAddress(&addr);
+			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
+		}
+		else
+		{
+			addr = NULL;
+			g_EmuShared->SetLaunchDataAddress(&addr);
+			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
+		}
+	}
+
+	Unlock();
+}
+
+void VMManager::RestorePersistentMemory()
+{
+	VAddr LaunchDataAddr;
+	VAddr FrameBufferAddr;
+	g_EmuShared->GetLaunchDataAddress(&LaunchDataAddr);
+	g_EmuShared->GetFrameBufferAddress(&FrameBufferAddr);
+
+	if (LaunchDataAddr)
+	{
+		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)LaunchDataAddr;
+
+		// Mark the launch page as allocated to prevent other allocations from overwriting it
+		AllocateContiguous(PAGE_SIZE, LaunchDataAddr - CONTIGUOUS_MEMORY_BASE,
+			LaunchDataAddr - CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 1, 0, XBOX_PAGE_READWRITE);
+		LaunchDataAddr = NULL;
+		g_EmuShared->SetLaunchDataAddress(&LaunchDataAddr);
+
+		DbgPrintf("INIT: Restored LaunchDataPage\n");
+	}
+
+	if (FrameBufferAddr)
+	{
+		xboxkrnl::AvSavedDataAddress = (xboxkrnl::PVOID)FrameBufferAddr;
+
+		// Retrive the frame buffer size
+		size_t FrameBufferSize = QuerySize(FrameBufferAddr);
+		// Mark the frame buffer page as allocated to prevent other allocations from overwriting it
+		AllocateContiguous(FrameBufferSize, FrameBufferAddr - CONTIGUOUS_MEMORY_BASE,
+			FrameBufferAddr - CONTIGUOUS_MEMORY_BASE + FrameBufferSize - 1, 0, XBOX_PAGE_READWRITE);
+		FrameBufferAddr = NULL;
+		g_EmuShared->SetLaunchDataAddress(&FrameBufferAddr);
+
+		DbgPrintf("INIT: Restored FrameBufferPage\n");
+	}
 }
 
 VAddr VMManager::Allocate(size_t Size)
@@ -524,7 +597,7 @@ VAddr VMManager::Allocate(size_t Size)
 
 VAddr VMManager::AllocateZeroed(size_t Size)
 {
-	LOG_FORWARD("g_VMManager.Allocate")
+	LOG_FORWARD("g_VMManager.Allocate");
 
 	VAddr addr = Allocate(Size);
 	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }

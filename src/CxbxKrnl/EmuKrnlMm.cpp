@@ -361,36 +361,7 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(Persist)
 	LOG_FUNC_END;
 
-	if (BaseAddress == LaunchDataPage)
-	{
-		PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
-		if (Persist)
-		{
-			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
-		}
-		else
-		{
-			LaunchDataPAddr = NULL;
-			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
-		}
-	}
-	else
-		// TODO : Store/forget other pages to be remembered across a "reboot"
-		LOG_IGNORED();
-
-  // [PatrickvL] Shared memory would be a perfect fit for this,
-  // but the supplied pointer is already allocated. In order to
-  // change the 'shared' state of this memory, we would have to
-  // obtain the complete memory range (via CreateFileMapping)
-  // in one go, and use this for all allocation (much work, this).
-  // Another way would be assume 'contiguous memory' is the
-  // only type of memory being persisted, which would simplify
-  // the allocation procedure significantly.
-  // Another way could be to persist all registered blocks
-  // of memory at application shutdown, but restoring it in
-  // the next run at the same addresses could be troublesome.
+	g_VMManager.PersistMemory((VAddr)BaseAddress, NumberOfBytes, Persist);
 }
 
 // ******************************************************************
