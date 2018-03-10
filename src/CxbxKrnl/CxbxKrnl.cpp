@@ -819,8 +819,19 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
 
+		// Detect if we have to restrict the working memory on a devkit to 64 MiB
+		bool bRestrict64MiB = false;
+		if (CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB)
+		{
+			// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
+			// will still use only the lower 64 MiB and same is true for the debugger pages, meaning they will only
+			// use the upper extra 64 MiB regardless of this flag
+
+			bRestrict64MiB = true;
+		}
+
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables);
+		g_VMManager.Initialize(hMemoryBin, hPageTables, bRestrict64MiB);
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));

@@ -124,7 +124,7 @@ class VMManager : public PhysicalMemory
 			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, HANDLE PT_view);
+		void Initialize(HANDLE memory_view, HANDLE PT_view, bool bRestrict64MiB);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
@@ -159,6 +159,10 @@ class VMManager : public PhysicalMemory
 		VAddr ClaimGpuMemory(size_t Size, size_t* BytesToSkip);
 		// make contiguous memory persist across a quick reboot
 		void PersistMemory(VAddr addr, size_t Size, bool bPersist);
+		// debug function to reset a pte or check if it is writable
+		VAddr DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck);
+		// retrieves the number of free debugger pages
+		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
 		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
 			DWORD protect, bool bStub);
@@ -186,8 +190,6 @@ class VMManager : public PhysicalMemory
 	
 		// set up the pfndatabase
 		void InitializePfnDatabase();
-		// constructs a vma
-		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// initializes a memory region struct
 		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
 		// clears all memory region structs
@@ -200,6 +202,8 @@ class VMManager : public PhysicalMemory
 		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which maps a block with MapViewOfFileEx
 		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD OffsetLow, PFN pfn);
+		// constructs a vma
+		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
 		void DestructVMA(VMAIter it, MemoryRegionType Type);
 		// checks if a vma exists at the supplied address. Also checks its size if specified

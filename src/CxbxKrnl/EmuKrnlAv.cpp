@@ -99,6 +99,8 @@ ULONG AvQueryAvCapabilities()
 	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
+xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbnullptr;
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************

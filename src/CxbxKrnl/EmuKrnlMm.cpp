@@ -63,6 +63,8 @@ namespace NtDll
 // ******************************************************************
 // * 0x0066 - MmGlobalData
 // ******************************************************************
+// ergo720: a couple of this could be implemented, but most cannot. However, I wouldn't bother with these variables
+// since they are just exported but never used by the kernel
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
@@ -171,12 +173,8 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
-	/**
-	* Function at present does not:
-	* - Treat DebuggerThread any differently
-	*/
-
-	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Stack, XBOX_PAGE_READWRITE, NumberOfBytes, true);
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? PageType::Debugger : PageType::Stack,
+		XBOX_PAGE_READWRITE, NumberOfBytes, true);
 
 	RETURN(addr);
 }
@@ -529,9 +527,12 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages()
 {
-	LOG_UNIMPLEMENTED();
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
 
-	RETURN(NULL);
+	ULONG FreeDebuggerPageNumber = g_VMManager.QueryNumberOfFreeDebuggerPages();
+
+	RETURN(FreeDebuggerPageNumber);
 }
 
 // ******************************************************************
@@ -548,7 +549,10 @@ XBSYSAPI EXPORTNUM(377) xboxkrnl::VOID NTAPI xboxkrnl::MmDbgReleaseAddress
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, false);
 }
 
 // ******************************************************************
@@ -565,7 +569,10 @@ XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
 
-	RETURN(NULL);
+	PVOID addr = (PVOID)g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, true);
+
+	RETURN(addr);
 }

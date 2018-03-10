@@ -58,7 +58,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
+void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view, bool bRestrict64MiB)
 {
 	// Set up the critical section to synchronize access
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
@@ -89,9 +89,10 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE PT_view)
 	else if (g_bIsDebug)
 	{
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
-		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
+		m_DebuggerPagesAvailable = X64M_PHYSICAL_PAGE;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 		m_MemoryRegionArray[MemoryRegionType::Contiguous].RegionMap[0].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
+		if (bRestrict64MiB) { m_bAllowNonDebuggerOnTop64MiB = false; }
 	}
 
 	// Insert all the pages available on the system in the free list
@@ -181,18 +182,21 @@ void VMManager::InitializePfnDatabase()
 
 
 	// Construct the pfn of the page directory
-	AllocateContiguous(PAGE_SIZE, PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_DIRECTORY_PHYSICAL_ADDRESS + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
+	AllocateContiguous(PAGE_SIZE, PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_DIRECTORY_PHYSICAL_ADDRESS + PAGE_SIZE - 1, 0, XBOX_PAGE_READWRITE);
 	PersistMemory(CONTIGUOUS_MEMORY_BASE + PAGE_DIRECTORY_PHYSICAL_ADDRESS, PAGE_SIZE, true);
 
 
 	// Construct the pfn's of the kernel pages
-	AllocateContiguous(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + KERNEL_SIZE, 0, XBOX_PAGE_EXECUTE_READWRITE);
+	AllocateContiguous(KERNEL_SIZE, XBE_IMAGE_BASE, XBE_IMAGE_BASE + KERNEL_SIZE - 1, 0, XBOX_PAGE_EXECUTE_READWRITE);
 	PersistMemory(CONTIGUOUS_MEMORY_BASE + XBE_IMAGE_BASE, KERNEL_SIZE, true);
 
 
 	// NOTE: we cannot just use AllocateContiguous for the pfn and the instance memory since they both need to do their
 	// allocations above the contiguous limit, which is forbidden by the function. We also don't need to call
 	// UpdateMemoryPermissions since the contiguous region has already R/W/E rights
+	// ergo720: on devkits, the pfn allocation spans across the retail-debug region boundary (it's 16 pages before and
+	// 16 pages after). I decided to split this 32 pages equally between the retail and debug regions, however, this is
+	// just a guess of mine, I could be wrong on this...
 
 	// Construct the pfn's of the pages holding the pfn database
 	if (g_bIsRetail) {
@@ -224,12 +228,13 @@ void VMManager::InitializePfnDatabase()
 	AllocatePT(EndingPte - PointerPte + 1, addr);
 	ConstructVMA(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 
+	if (g_bIsDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
-	// The nv2a instance memory is not persisted across quick reboots
-	int QuickReboot;
+
+	/*int QuickReboot;
 	g_EmuShared->GetBootFlags(&QuickReboot);
 	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0)
-	{
+	{*/
 		// Construct the pfn's of the pages holding the nv2a instance memory
 		if (g_bIsRetail || g_bIsDebug) {
 			pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
@@ -271,11 +276,11 @@ void VMManager::InitializePfnDatabase()
 			AllocatePT(EndingPte - PointerPte + 1, addr);
 			ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, MemoryRegionType::Contiguous, VMAType::Allocated, false);
 		}
-	}
+	//}
 
 
 	// Construct the pfn of the page used by D3D
-	AllocateContiguous(PAGE_SIZE, D3D_PHYSICAL_PAGE, D3D_PHYSICAL_PAGE + PAGE_SIZE, 0, XBOX_PAGE_READWRITE);
+	AllocateContiguous(PAGE_SIZE, D3D_PHYSICAL_PAGE, D3D_PHYSICAL_PAGE + PAGE_SIZE - 1, 0, XBOX_PAGE_READWRITE);
 	PersistMemory(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, true);
 }
 
@@ -337,6 +342,56 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 
 	return;
+}
+
+VAddr VMManager::DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(addr);
+		LOG_FUNC_ARG(Pte);
+		LOG_FUNC_ARG(bWriteCheck);
+	LOG_FUNC_END;
+
+	PMMPTE PointerPte;
+	VAddr ret = 0;
+
+	Lock();
+
+	if (bWriteCheck)
+	{
+		if (!IsValidVirtualAddress(addr)) { Unlock(); RETURN(ret); }
+
+		Pte->Default = 0;
+		PointerPte = GetPdeAddress(addr);
+		if (PointerPte->Hardware.LargePage == 0) { PointerPte = GetPteAddress(addr); }
+
+		if (PointerPte->Hardware.Write == 0)
+		{
+			MMPTE TempPte = *PointerPte;
+			*Pte = TempPte;
+			TempPte.Hardware.Write = 1;
+			WRITE_PTE(PointerPte, TempPte);
+		}
+		ret = addr;
+	}
+	else
+	{
+		if (Pte->Default != 0)
+		{
+			PointerPte = GetPdeAddress(addr);
+			if (PointerPte->Hardware.LargePage == 0) { PointerPte = GetPteAddress(addr); }
+			WRITE_PTE(PointerPte, *Pte);
+		}
+	}
+
+	Unlock();
+
+	RETURN(ret);
+}
+
+PFN_COUNT VMManager::QueryNumberOfFreeDebuggerPages()
+{
+	return m_DebuggerPagesAvailable;
 }
 
 void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
@@ -483,7 +538,7 @@ void VMManager::RestorePersistentMemory()
 	{
 		xboxkrnl::AvSavedDataAddress = (xboxkrnl::PVOID)FrameBufferAddr;
 
-		// Retrive the frame buffer size
+		// Retrieve the frame buffer size
 		size_t FrameBufferSize = QuerySize(FrameBufferAddr);
 		// Mark the frame buffer page as allocated to prevent other allocations from overwriting it
 		AllocateContiguous(FrameBufferSize, FrameBufferAddr - CONTIGUOUS_MEMORY_BASE,
@@ -491,7 +546,7 @@ void VMManager::RestorePersistentMemory()
 		FrameBufferAddr = NULL;
 		g_EmuShared->SetLaunchDataAddress(&FrameBufferAddr);
 
-		DbgPrintf("INIT: Restored FrameBufferPage\n");
+		DbgPrintf("INIT: Restored FrameBuffer\n");
 	}
 }
 
@@ -510,7 +565,7 @@ VAddr VMManager::Allocate(size_t Size)
 	bool bVAlloc = false;
 
 	// ergo720: I'm not sure why this routine is needed at all, but its usage (together with AllocateZeroed) is quite
-	// widespread in the D3D patches. I think that most of thoses functions should use the Nt or the heap functions instead,
+	// widespread in the D3D patches. I think that most of those functions should use the Nt or the heap functions instead,
 	// but, until those are properly implemented, this routine is here to stay
 
 	if (!Size) { RETURN(NULL); }
@@ -519,9 +574,10 @@ VAddr VMManager::Allocate(size_t Size)
 
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
 
-	if (!IsMappable(PteNumber)) { goto Fail; }
+	if (!IsMappable(PteNumber, true, m_bAllowNonDebuggerOnTop64MiB ? true : false)) { goto Fail; }
 
-	if (RemoveFree(PteNumber, &pfn, 0, 0, m_HighestPage)) // MapViewOfFileEx path
+	if (RemoveFree(PteNumber, &pfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
+		: m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
 		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::User, PteNumber, pfn);
@@ -534,12 +590,20 @@ VAddr VMManager::Allocate(size_t Size)
 	}
 	else // VirtualAlloc path
 	{
+		// We couldn't find a contiguous block to map with MapViewOfFileEx, so we try to salvage this allocation with
+		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
+		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
+		// our intended region before we could do.
+		// With VirtualAlloc we arbitrarily choose to consume pages in the retail region, since we don't grab pages
+		// from the free list here
+
 		bVAlloc = true;
 		MappingRoutine = &MapBlockWithVirtualAlloc;
 		addr = MapMemoryBlock(MappingRoutine, MemoryRegionType::User, PteNumber, 0);
 
 		if (!addr) { goto Fail; }
 
+		// With VirtualAlloc we just consume free pages but we don't remove them from the free list
 		m_PhysicalPagesAvailable -= PteNumber;
 	}
 
@@ -619,12 +683,14 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PMMPTE EndingPte;
 	PFN pfn;
 	PFN EndingPfn;
-	PFN_COUNT LowestAcceptablePfn = 0;
+	PFN LowestAcceptablePfn = 0;
+	PFN HighestAcceptablePfn = XBOX_HIGHEST_PHYSICAL_PAGE;
 	PFN_COUNT PteNumber;
 	PFN_COUNT PagesNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
 	bool bVAlloc = false;
+	bool bDebuggerPage = false;
 	MemoryRegionType MemoryType = MemoryRegionType::System;
 
 	// NOTE: AllocateSystemMemory won't allocate a physical page for the guard page (if requested) and just adds an extra
@@ -640,22 +706,25 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PagesNumber = PteNumber;
 
 	if (bAddGuardPage) { PteNumber++; }
-	if (!IsMappable(PagesNumber)) { goto Fail; }
 	if (BusyType == PageType::Debugger)
 	{
 		// Debugger pages are only allocated from the extra 64 MiB available on devkits and are mapped in the
 		// devkit system region
 
+		if (!IsMappable(PagesNumber, false, true)) { goto Fail; }
 		LowestAcceptablePfn = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		HighestAcceptablePfn = m_HighestPage;
 		MemoryType = MemoryRegionType::Devkit;
+		bDebuggerPage = true;
 	}
+	else { if (!IsMappable(PagesNumber, true, false)) { goto Fail; } }
 
 	// ergo720: if a guard page is requested, because we only commit the actual stack pages, there is the remote possibility
 	// that the stack is mapped immediately after the end of a host allocation, since those will appear as free areas and
 	// the VMManager can't know anything about those. In practice, I wouldn't worry about this case since, if emulation is
 	// done properly, a game will never try to write beyond the stack bottom since that would imply a stack overflow
 
-	if (RemoveFree(PagesNumber, &pfn, 0, LowestAcceptablePfn, m_HighestPage)) // MapViewOfFileEx path
+	if (RemoveFree(PagesNumber, &pfn, 0, LowestAcceptablePfn, HighestAcceptablePfn)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &MapBlockWithMapViewOfFileEx;
 		addr = MapMemoryBlock(MappingRoutine, MemoryType, PagesNumber, pfn);
@@ -672,6 +741,8 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		// VirtualAlloc. Note that we don't try to map contiguous blocks from non-contiguous ones because we could run into
 		// a race condition in which (for example) we can map the 1st block but in the midtime somebody else allocates in
 		// our intended region before we could do.
+		// With VirtualAlloc we arbitrarily choose to consume pages in the retail region, since we don't grab pages
+		// from the free list here
 
 		bVAlloc = true;
 		MappingRoutine = &MapBlockWithVirtualAlloc;
@@ -723,16 +794,16 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
-	if (!bVAlloc)
-	{
-		WritePfn(pfn, EndingPfn, PointerPte, BusyType);
-	}
-	else
+	if (bVAlloc)
 	{
 		// We don't write the pfn entries with VirtualAlloc since we didn't commit pages. However, we still need
 		// to increase the page type usage
 
 		m_PagesByUsage[BusyType] += PagesNumber;
+	}
+	else
+	{
+		WritePfn(pfn, EndingPfn, PointerPte, BusyType);
 	}
 
 	UpdateMemoryPermissions(addr, PagesNumber << PAGE_SHIFT, Perms);
@@ -777,7 +848,7 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 	HigherPfn = HighestAddress >> PAGE_SHIFT;
 	PfnAlignment = Alignment >> PAGE_SHIFT;
 
-	if (!IsMappable(PteNumber)) { goto Fail; }
+	if (!IsMappable(PteNumber, true, false)) { goto Fail; }
 	if (HigherPfn > m_MaxContiguousPfn) { HigherPfn = m_MaxContiguousPfn; }
 	if (LowerPfn > HigherPfn) { LowerPfn = HigherPfn; }
 	if (!PfnAlignment) { PfnAlignment = 1; }

@@ -190,7 +190,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 	PFN_COUNT PfnAlignmentMask;
 	PFN_COUNT PfnAlignmentSubtraction;
 
-	if (NumberOfPages == 0 || NumberOfPages > m_PhysicalPagesAvailable) { result = nullptr; return false; }
+	// The caller should already guarantee that there are enough free pages available
+	if (NumberOfPages == 0) { result = nullptr; return false; }
 
 	if (PfnAlignment)
 	{
@@ -257,7 +258,9 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
-					m_PhysicalPagesAvailable -= NumberOfPages;
+
+					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
 				}
@@ -280,7 +283,9 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
-					m_PhysicalPagesAvailable -= NumberOfPages;
+
+					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
 				}
@@ -296,7 +301,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					PfnCount -= NumberOfPages;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
 
-					m_PhysicalPagesAvailable -= NumberOfPages;
+					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
 				}
@@ -313,7 +319,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
 
-					m_PhysicalPagesAvailable -= NumberOfPages;
+					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
 				}
@@ -366,7 +373,8 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				LIST_ENTRY_REMOVE(ListEntry);
 				delete block;
 			}
-			m_PhysicalPagesAvailable += size;
+			if (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable += size; }
+			else { m_PhysicalPagesAvailable += size; }
 
 			return;
 		}
@@ -603,7 +611,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 			// We grab one page at a time to avoid fragmentation issues
 
 			TempPte.Default = ValidKernelPdeBits;
-			TempPte.Hardware.PFN = RemoveAndZeroAnyFreePage(BusyType, pPde);
+			TempPte.Hardware.PFN = RemoveAndZeroAnyFreePage(BusyType, pPde, true);
 			WRITE_PTE(pPde, TempPte);
 		}
 		PdeMappedSizeIncrement += (4 * ONE_MB);
@@ -612,15 +620,27 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	return true;
 }
 
-PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
+PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte, bool bPhysicalFunction)
 {
 	XBOX_PFN TempPF;
+	PFN LowestAcceptablePage = 0;
+	PFN HighestAcceptablePage;
 	PFN pfn;
 
 	assert(BusyType < PageType::COUNT);
 	assert(pPte);
 
-	RemoveFree(1, &pfn, 0, 0, m_HighestPage);
+	if (bPhysicalFunction) { HighestAcceptablePage = XBOX_HIGHEST_PHYSICAL_PAGE; }
+	else { HighestAcceptablePage = m_bAllowNonDebuggerOnTop64MiB ? m_HighestPage : XBOX_HIGHEST_PHYSICAL_PAGE; }
+
+	// Non-debugger pages only exsist in the first 64 MiB of memory and debbuger pages only in the upper half
+	if (BusyType == PageType::Debugger)
+	{
+		assert(g_bIsDebug);
+		LowestAcceptablePage = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
+		HighestAcceptablePage = m_HighestPage;
+	}
+	RemoveFree(1, &pfn, 0, LowestAcceptablePage, HighestAcceptablePage);
 
 	// Fill the page with zeros
 	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
@@ -631,12 +651,12 @@ PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte)
 	return pfn;
 }
 
-bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested)
+bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion)
 {
-	if (m_PhysicalPagesAvailable >= PagesRequested) { return true; }
-	else
-	{
-		EmuWarning("Out of physical memory!");
-		return false;
-	}
+	bool ret = false;
+	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
+	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
+	if(!ret) { EmuWarning("Out of physical memory!"); }
+
+	return ret;
 }

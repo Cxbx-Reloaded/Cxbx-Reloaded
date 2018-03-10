@@ -241,8 +241,10 @@ class PhysicalMemory
 		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
 		// highest pfn available for contiguous allocations
 		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
-		// amount of physical pages free
+		// amount of free physical pages available for non-debugger usage
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
+		// amount of free physical pages available for usage by the debugger
+		PFN_COUNT m_DebuggerPagesAvailable = 0;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[PageType::COUNT] = { 0 };
 		// highest page on the system
@@ -251,6 +253,8 @@ class PhysicalMemory
 		PFN m_NV2AInstancePage = XBOX_INSTANCE_PHYSICAL_PAGE;
 		// number of allocated bytes for the nv2a instance memory
 		size_t m_NV2AInstanceMemoryBytes = NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT;
+		// boolean that indicates that the extra 64 MiB on a devkit can be used for heap/Nt allocations
+		bool m_bAllowNonDebuggerOnTop64MiB = true;
 
 	
 		// protected constructor so PhysicalMemory can only be inherited from
@@ -278,9 +282,9 @@ class PhysicalMemory
 		// commit page tables (if necessary)
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
-		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte);
+		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte, bool bPhysicalFunction);
 		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)
-		bool IsMappable(PFN_COUNT PagesRequested);
+		bool IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion);
 };
 
 #endif
