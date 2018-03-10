@@ -58,6 +58,9 @@
   - add _sat feature
     * Support as instruction modifier,
 	  if necessary as mov_sat x, y
+
+  - When porting to DirectX 9, expand this to pixel shader model 2.0 or up
+  - Alternatively, translate to HLSL and let D3DXCompileShader/D3DCompile figure it out
 */
 
 // ******************************************************************
@@ -501,9 +504,7 @@ enum PSH_OPCODE
 	PO_COMMENT,
 	PO_PS,
 	PO_DEF,
-#ifdef CXBX_USE_PS_2_0
-	PO_DCL,
-#endif
+	PO_DCL, // Note : ps.2.0 and up only
 	PO_TEX,
 	PO_TEXBEM,
 	PO_TEXBEML,
@@ -539,17 +540,16 @@ enum PSH_OPCODE
 	PO_XMMC,
 	PO_XDM,
 	PO_XDD,
-	PO_XFC
+	PO_XFC,
+	PO_XPS,
 };
 
 const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_OPCODE*/] = {
 	// Pixel shader header opcodes (must be specified in this order) :
 	{/* PO_COMMENT */  /*mn:*/";", /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, //
-	{/* PO_PS */  /*mn:*/"ps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, // Must occur once, Xbox needs an x prefix {xps}, Native needs a 1.3 suffix {ps.1.3}
+	{/* PO_PS */  /*mn:*/"ps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, // Must occur once
 	{/* PO_DEF */ /*mn:*/"def",  /*_Out: */ 1, /*_In: */ 4, /*note:*/"" }, // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
-#ifdef CXBX_USE_PS_2_0
-	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
-#endif
+	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
 	{/* PO_TEX */ /*mn:*/"tex",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
 	{/* PO_TEXBEM */ /*mn:*/"texbem",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBEML */ /*mn:*/"texbeml",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
@@ -585,7 +585,8 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	{/* PO_XMMC */  /*mn:*/"xmmc", /*_Out: */ 3, /*_In: */ 4, /*note:*/"d0=s0*s1, d1=s2*s3, d2={r0.a>0.5}?{s0*s1}:{s2*s3}" },
 	{/* PO_XDM */ /*mn:*/"xdm",  /*_Out: */ 2, /*_In: */ 4, /*note:*/"d0=s0 dot s1, d1=s2*s3" },
 	{/* PO_XDD */ /*mn:*/"xdd",  /*_Out: */ 2, /*_In: */ 4, /*note:*/"d0=s0 dot s1, d1=s2 dot s3" },
-	{/* PO_XFC */ /*mn:*/"xfc",  /*_Out: */ 0, /*_In: */ 7, /*note:*/"r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1" }
+	{/* PO_XFC */ /*mn:*/"xfc",  /*_Out: */ 0, /*_In: */ 7, /*note:*/"r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.a, prod=s4*s5, sum=r0+v1" },
+	{/* PO_XPS */  /*mn:*/"xps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, // Must occur once
 };
 
 enum PSH_ARGUMENT_TYPE
@@ -630,29 +631,6 @@ constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
 constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
-
-#ifdef CXBX_USE_PS_3_0
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 224; // ps 3.0
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 32; // ps 3.0
-constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 3.0
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 10; // ps 3.0
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 224;
-#else
-#ifdef CXBX_USE_PS_2_0
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 32; // ps 2.0
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 12; // ps 2.0
-constexpr int PSH_PC_MAX_S_REGISTER_COUNT = 16; // ps 2.0
-constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 8; // ps 2.0
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 2.0
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 32;
-#else // CXBX_USE_PS_1_3
-constexpr int PSH_PC_MAX_C_REGISTER_COUNT = 8; // ps 1.3
-constexpr int PSH_PC_MAX_R_REGISTER_COUNT = 2; // ps 1.3
-constexpr int PSH_PC_MAX_T_REGISTER_COUNT = 4; // ps 1.3
-constexpr int PSH_PC_MAX_V_REGISTER_COUNT = 2; // ps 1.3
-constexpr int PSH_PC_MAX_REGISTER_COUNT = 8;
-#endif
-#endif
 
 enum PSH_INST_MODIFIER {
 	INSMOD_NONE, // y =  x
@@ -754,7 +732,7 @@ struct RPSCombinerStageChannel {
 	PS_COMBINEROUTPUT CombinerOutputFlags;
 	bool AB_CD_SUM; // True=AB+CD, False=MUX(AB;CD) based on R0.a
 
-	void Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlpha = false);
+	void Decode(DWORD PSInputs, DWORD PSOutputs, bool aIsAlpha = false);
 };
 
 struct RPSCombinerStage {
@@ -825,7 +803,7 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 	PSH_IMD_ARGUMENT Output[3]; // 3 = xmm* output count
 	PSH_IMD_ARGUMENT Parameters[7]; // 7 = xfc parameter count
 
-	void Initialize(const PSH_OPCODE aOpcode);
+	_PSH_INTERMEDIATE_FORMAT *Initialize(const PSH_OPCODE aOpcode);
 	std::string ToString();
 	bool IsArithmetic();
 	void ScaleOutput(float aFactor);
@@ -838,7 +816,7 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 	bool MoveRemovableParametersRight(const int Index1, const int Index2);
 	bool XMoveNonRegisterOutputsRight();
 	void XCopySecondOpcodeToFirst(const PSH_OPCODE aOpcode);
-	bool Decode(DWORD CombinerStageNr, DWORD PSInputs, DWORD PSOutputs, DWORD aMask);
+	bool Decode(DWORD aCombinerStageNr, DWORD PSInputs, DWORD PSOutputs, DWORD aMask);
 	bool DecodeFinalCombiner(DWORD aPSFinalCombinerInputsABCD, DWORD aPSFinalCombinerInputsEFG);
 } PSH_INTERMEDIATE_FORMAT,
 *PPSH_INTERMEDIATE_FORMAT;
@@ -854,6 +832,14 @@ typedef struct _PSH_RECOMPILED_SHADER {
 *PPSH_RECOMPILED_SHADER;
 
 struct PSH_XBOX_SHADER {
+	uint32 m_PSVersion; // see D3DPS_VERSION - https://msdn.microsoft.com/en-us/library/windows/desktop/bb172592(v=vs.85).aspx
+	int MaxConstantFloatRegisters;
+	int MaxTemporaryRegisters;
+	int MaxSamplerRegisters; // Sampler (Direct3D 9 asm-ps)
+	int MaxTextureCoordinateRegisters;
+	int MaxInputColorRegisters;
+	int PSH_PC_MAX_REGISTER_COUNT;
+
 	// Reserve enough slots for all shaders, so we need space for 2 constants, 4 texture addressing codes and 5 lines per opcode : :
 	PSH_INTERMEDIATE_FORMAT Intermediate[2 + XTL::X_D3DTS_STAGECOUNT + (XTL::X_PSH_COMBINECOUNT * 5) + 1];
 	int IntermediateCount;
@@ -874,6 +860,8 @@ struct PSH_XBOX_SHADER {
 	bool CombinerMuxesOnMsb;
 	bool CombinerHasUniqueC0;
 	bool CombinerHasUniqueC1;
+
+	void SetPSVersion(const uint32 PSVersion);
 
 	std::string ToString();
 	void Log(const char *PhaseStr);
@@ -898,6 +886,7 @@ struct PSH_XBOX_SHADER {
 		PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
 		PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress);
 	bool ConvertXMMToNative_Except3RdOutput(int i);
+	void ConvertXPSToNative(int i);
 	void ConvertXMMAToNative(int i);
 	void ConvertXMMCToNative(int i);
 	void ConvertXDMToNative(int i);
@@ -1105,14 +1094,14 @@ const int CONST_POS_ONE = 2;
 
 ///
 
-std::string PSCombinerOutputFlagsToStr(const DWORD dwFlags, bool IsAlpha = false)
+std::string PSCombinerOutputFlagsToStr(const DWORD dwFlags, bool aIsAlpha = false)
 {
 	std::string Result = PS_CombineOutputStr[0 + ((dwFlags & 0x38) >> 3)];
 	Result = Result + " | " + PS_CombineOutputStr[8 + ((dwFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) >> 1)];
 	Result = Result + " | " + PS_CombineOutputStr[10 + ((dwFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) >> 0)];
 	Result = Result + " | " + PS_CombineOutputStr[12 + ((dwFlags & PS_COMBINEROUTPUT_AB_CD_MUX) >> 2)];
 
-	if (!IsAlpha) {
+	if (!aIsAlpha) {
 		if (dwFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA)
 			Result = Result + " | " + PS_CombineOutputStr[6];
 
@@ -1481,28 +1470,51 @@ void PSH_IMD_ARGUMENT::Negate()
 
 /* PSH_INTERMEDIATE_FORMAT */
 
-void PSH_INTERMEDIATE_FORMAT::Initialize(const PSH_OPCODE aOpcode)
+_PSH_INTERMEDIATE_FORMAT *PSH_INTERMEDIATE_FORMAT::Initialize(const PSH_OPCODE aOpcode)
 {
   int i;
 
-  ZeroMemory(this, sizeof(PSH_INTERMEDIATE_FORMAT)); // TODO : Use constructor (to prevent std::string CommentString leaks)
   Opcode = aOpcode;
   for (i = 0; i < 3; i++)
     Output[i].Multiplier = 1.0f;
   for (i = 0; i < 7; i++)
     Parameters[i].Multiplier = 1.0f;
+
+  return this;
 }
 
 std::string PSH_INTERMEDIATE_FORMAT::ToString()
 {
-  std::string Result;
+  std::string Result = {};
   int i;
   char SeparatorChar;
 
-  if (Opcode == PO_COMMENT)
+  switch (Opcode) {
+  case PO_COMMENT:
   {
-    Result = "; " + CommentString;
-    return Result;
+	  Result = "; " + CommentString;
+	  return Result;
+  }
+  case PO_PS: {
+	// 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
+	// 1.3 allows the use of texm3x2depth (which can occur sometimes)
+	// 2.0 allows up to r12, c32, t8 and s16 (requires Direct3D9)
+	// 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 and vFace (which can do two-sided lighting)
+
+	// Use supplied pixel shader version (if any is given)
+	DWORD PSVersion = Parameters[6].Mask;
+
+	// From 2.0 onward, use underscore separators (is this correct?)
+	SeparatorChar = (PSVersion >= D3DPS_VERSION(2, 0)) ? '_' : '.';
+	Result = "ps";
+	Result = Result + SeparatorChar + std::to_string(D3DSHADER_VERSION_MAJOR(PSVersion));
+	Result = Result + SeparatorChar + std::to_string(D3DSHADER_VERSION_MINOR(PSVersion));
+	return Result;
+  }
+  case PO_XPS: {
+	  Result = "xps.1.1";
+	  return Result;
+  }
   }
 
   if (IsCombined)
@@ -1537,6 +1549,7 @@ std::string PSH_INTERMEDIATE_FORMAT::ToString()
   if ((!CommentString.empty())
   || (PSH_OPCODE_DEFS[Opcode].note != "")) 
     Result = Result + " ; " + PSH_OPCODE_DEFS[Opcode].note + " " + CommentString;
+
   return Result;
 } // ToString
 
@@ -1729,13 +1742,13 @@ void PSH_INTERMEDIATE_FORMAT::XCopySecondOpcodeToFirst(const PSH_OPCODE aOpcode)
   Parameters[1] = Parameters[3];
 }
 
-bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD CombinerStageNr, DWORD PSInputs, DWORD PSOutputs, DWORD aMask)
+bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD aCombinerStageNr, DWORD PSInputs, DWORD PSOutputs, DWORD aMask)
 {
   DWORD CombinerOutputFlags;
   int i;
 
   bool Result = false;
-  CombinerStageNr = CombinerStageNr;
+  CombinerStageNr = aCombinerStageNr;
   IsCombined = aMask == MASK_A;
 
   // Decode first two outputs :
@@ -1866,27 +1879,89 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
 
 /* PSH_XBOX_SHADER */
 
+void PSH_XBOX_SHADER::SetPSVersion(const uint32 PSVersion)
+{
+	m_PSVersion = PSVersion;
+
+	// Source : https://en.wikipedia.org/wiki/High-Level_Shading_Language#Pixel_shader_comparison
+	if (m_PSVersion >= D3DPS_VERSION(4, 0)) {
+		MaxInputColorRegisters = 32;
+		MaxTemporaryRegisters = 4096;
+		MaxConstantFloatRegisters = 16*4096;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 0; // In shader model 4 and up, Dependent texture limit (T) is unlimited
+		// Note : Input Registers (v#) are now fully floating point and the Texture Coordinate Registers (t#) have been consolidated into it.
+
+		PSH_PC_MAX_REGISTER_COUNT = 16 * 4096;
+	}
+	else if (m_PSVersion >= D3DPS_VERSION(3, 0)) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172920(v=vs.85).aspx
+		MaxInputColorRegisters = 10;
+		MaxTemporaryRegisters = 32;
+		MaxConstantFloatRegisters = 224;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 0; // In shader model 3 and up, Dependent texture limit (T) is unlimited
+
+		PSH_PC_MAX_REGISTER_COUNT = 224;
+	}
+	else if (m_PSVersion >= D3DPS_VERSION(2, 0)) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172918(v=vs.85).aspx
+		MaxInputColorRegisters = 2;
+		MaxTemporaryRegisters = 12; // 12 min/32 max: The number of r# registers is determined by D3DPSHADERCAPS2_0.NumTemps (which ranges from 12 to 32).
+		MaxConstantFloatRegisters = 32;
+		MaxSamplerRegisters = 16;
+		MaxTextureCoordinateRegisters = 8;
+
+		PSH_PC_MAX_REGISTER_COUNT = 32;
+	}
+	else if (m_PSVersion >= D3DPS_VERSION(1, 4)) {
+		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172917(v=vs.85).aspx
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 6;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2; // 2 in phase 2
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else if (m_PSVersion >= D3DPS_VERSION(1, 3)) {
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else if (m_PSVersion >= D3DPS_VERSION(1, 2)) {
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4;
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+	else {
+		// m_PSVersion >= D3DPS_VERSION(1, 1)
+		MaxConstantFloatRegisters = 8;
+		MaxTemporaryRegisters = 2;
+		MaxTextureCoordinateRegisters = 4; // Some sources say 2?
+		MaxInputColorRegisters = 2;
+		MaxSamplerRegisters = 0; // Not yet in shader model 1
+
+		PSH_PC_MAX_REGISTER_COUNT = 8;
+	}
+}
+
 std::string PSH_XBOX_SHADER::ToString()
 {
   std::string Result;
   int i;
 
-  // First things first, set the pixel shader version
-  // 1.1 allows reading from 2 textures (which we use in 'cnd') and reading from the .b (blue) channel
-  // 1.3 allows the use of texm3x2depth (which can occur sometimes)
-  // 2.0 allows up to r12, c32, t8 and s16 (requires Direct3D9)
-  // 3.0 allows up to r32, c224, v10 (instead of t via dcl), s16 and vFace (which can do two-sided lighting)
-#ifdef CXBX_USE_PS_3_0
-  Result = "ps_3_0\n";
-#else
-  #ifdef CXBX_USE_PS_2_0
-  Result = "ps_2_0\n";
-  #else
-  Result = "ps.1.3\n";
-  #endif
-#endif
   for (i = 0; i < IntermediateCount; i++)
     Result = Result + Intermediate[i].ToString() + "\n";
+
   return Result;
 }
 
@@ -1994,8 +2069,6 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (IsRunning(TITLEID_AZURIK))
     LogFlags = LogFlags | lfExtreme;*/
 
-  ZeroMemory(this, sizeof(PSH_XBOX_SHADER)); // TODO : Use constructor (to prevent memory leaks)
-
   for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
   {
     PSTextureModes[i] = (PS_TEXTUREMODES)((pPSDef->PSTextureModes >> (i*5)) & 0x1F);
@@ -2024,11 +2097,14 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++)
     {
       Combiners[i].RGB.Decode(pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i]);
-      Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*IsAlpha=*/true);
+      Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*aIsAlpha=*/true);
     }
 
     FinalCombiner.Decode(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG, pPSDef->PSFinalCombinerConstants);
   }
+
+  // Use a fluent interface to start with a pixel shader version opcode that knowns the host version
+  NewIntermediate()->Initialize(PO_XPS)->Parameters[6].Mask = m_PSVersion;
 
   for (i = 0; i < NumberOfCombiners; i++)
   {
@@ -2195,7 +2271,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr("PSRGBOutputs[%d] AB: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.DecodedToString().c_str());
     _AddStr("PSRGBOutputs[%d] CD: %s", i, Combiners[i].RGB.OutputSUM.OutputCD.DecodedToString().c_str());
     _AddStr("PSRGBOutputs[%d] SUM: %s", i, Combiners[i].RGB.OutputSUM.DecodedToString().c_str());
-    _AddStr("PSRGBOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, /*IsAlpha=*/false).c_str());
+    _AddStr("PSRGBOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].RGB.CombinerOutputFlags, /*aIsAlpha=*/false).c_str());
 
 	_AddStr1("\n");
     _AddStr("PSRGBInputs[%d] A: %s", i, Combiners[i].RGB.OutputSUM.OutputAB.Input1.DecodedToString().c_str());
@@ -2207,7 +2283,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     _AddStr("PSAlphaOutputs[%d] AB: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.DecodedToString().c_str());
     _AddStr("PSAlphaOutputs[%d] CD: %s", i, Combiners[i].Alpha.OutputSUM.OutputCD.DecodedToString().c_str());
     _AddStr("PSAlphaOutputs[%d] SUM: %s", i, Combiners[i].Alpha.OutputSUM.DecodedToString().c_str());
-    _AddStr("PSAlphaOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, /*IsAlpha=*/true).c_str());
+    _AddStr("PSAlphaOutputs[%d] flags: %s", i, PSCombinerOutputFlagsToStr(Combiners[i].Alpha.CombinerOutputFlags, /*aIsAlpha=*/true).c_str());
 
 	_AddStr1("\n");
     _AddStr("PSAlphaInputs[%d] A: %s", i, Combiners[i].Alpha.OutputSUM.OutputAB.Input1.DecodedToString().c_str());
@@ -2248,6 +2324,21 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   return Result;
 }
 
+  bool _OpcodeMustStayBeforeTextureMode(PSH_OPCODE Opcode, int i)
+  {
+	  // Before texture modes, only keep the first comment (the one mentioning "xps" got converted into "ps") 
+	  if (Opcode == PO_COMMENT)
+		  return (i == 0);
+
+	  if (Opcode == PO_PS)
+		  return true;
+
+	  if (Opcode == PO_DEF)
+		  return true;
+
+	  return false;
+  }
+
   bool PSH_XBOX_SHADER::_NextIs2D(int Stage)
   {
     if (Stage < XTL::X_D3DTS_STAGECOUNT-1)
@@ -2259,7 +2350,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int InsertPos;
-  PSH_INTERMEDIATE_FORMAT Ins;
+  PSH_INTERMEDIATE_FORMAT Ins = {};
   int Stage;
 
   bool Result = false;
@@ -2267,21 +2358,22 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   InsertPos = -1;
   do {
 	  ++InsertPos;
-  } while (Intermediate[InsertPos].Opcode == PO_DEF);
+  } while (_OpcodeMustStayBeforeTextureMode(Intermediate[InsertPos].Opcode, InsertPos));
 
-#ifdef CXBX_USE_PS_2_0
-  Ins.Initialize(PO_DCL);
-  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
+  if (m_PSVersion >= D3DPS_VERSION(2, 0))
   {
-    if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
-    {
-      Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
-      InsertIntermediate(&Ins, InsertPos);
-      ++InsertPos;
-      Result = true;
-    }
+	  Ins.Initialize(PO_DCL);
+	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
+	  {
+		if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
+		{
+		  Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
+		  InsertIntermediate(&Ins, InsertPos);
+		  ++InsertPos;
+		  Result = true;
+		}
+	  }
   }
-#endif
 
   Ins.Initialize(PO_TEX);
   for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
@@ -2290,11 +2382,15 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
     // Convert the texture mode to a texture addressing instruction :
     switch (PSTextureModes[Stage]) { // input = q,s,t,r (same layout as a,r,g,b, also known as w,x,y,z)
-#ifndef CXBX_USE_PS_2_0
-      case PS_TEXTUREMODES_PROJECT2D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
-	  case PS_TEXTUREMODES_PROJECT3D: Ins.Opcode = PO_TEX; break; // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
-	  case PS_TEXTUREMODES_CUBEMAP: Ins.Opcode = PO_TEX; break; // argb = cubemap(r/q, s/q, t/q)
-#endif
+      case PS_TEXTUREMODES_PROJECT2D: // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+	  case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+	  case PS_TEXTUREMODES_CUBEMAP: { // argb = cubemap(r/q, s/q, t/q)
+		  if (m_PSVersion >= D3DPS_VERSION(2, 0))
+			  continue;
+
+		  Ins.Opcode = PO_TEX;
+		  break;
+	  }
 	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
 	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
 	  case PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode = PO_TEXBEM; break;
@@ -2423,14 +2519,14 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
   int PSH_XBOX_SHADER::_MapConstant(int ConstNr, bool *NativeConstInUse)
   {
     // 1-to-1 mapping for constants that can be supported native (if not used already) :
-    if ((ConstNr < PSH_PC_MAX_C_REGISTER_COUNT) && (!NativeConstInUse[ConstNr]))
+    if ((ConstNr < MaxConstantFloatRegisters) && (!NativeConstInUse[ConstNr]))
     {
       return ConstNr;
     }
 
     // Assign not-yet-defined constants bottom-to-up :
     int Result = 0;
-    while (Result < PSH_PC_MAX_C_REGISTER_COUNT)
+    while (Result < MaxConstantFloatRegisters)
     {
       if (!NativeConstInUse[Result])
         return Result;
@@ -2439,7 +2535,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     }
 
     // Unresolved - fallback to 1st constant :
-    if (Result >= PSH_PC_MAX_C_REGISTER_COUNT)
+    if (Result >= MaxConstantFloatRegisters)
       Result = 0;
 
     EmuWarning("; Too many constants to emulate, this pixel shader will give unexpected output!");
@@ -2471,15 +2567,15 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
-  bool NativeConstInUse[PSH_PC_MAX_C_REGISTER_COUNT] = {};
+  bool NativeConstInUse[224]; // Note : 224 = highest possible MaxConstantFloatRegisters
   int16 OriginalConstantNr;
   bool EmittedNewConstant = false;
-  PSH_INTERMEDIATE_FORMAT NewIns;
+  PSH_INTERMEDIATE_FORMAT NewIns = {};
 
   bool Result = false;
 
   // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
-  for (i = 0; i < PSH_PC_MAX_C_REGISTER_COUNT; i++)
+  for (i = 0; i < MaxConstantFloatRegisters; i++)
     NativeConstInUse[i] = false;
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
@@ -2575,7 +2671,9 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
         else
           _SetColor(NewIns, pPSDef->PSFinalCombinerConstant1);
 
-        InsertIntermediate(&NewIns, 0);
+		// PO_DEF opcodes go after the initial PO_XPS (which is not yet replaced by PO_COMMENT+PO_PS,
+		// see ConvertXboxOpcodesToNative calling ConvertXPSToNative for that)
+        InsertIntermediate(&NewIns, 1);
       }
     } // for arguments
   } // for opcodes
@@ -2590,7 +2688,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
-  DWORD RegUsage[/*PSH_ARGUMENT_TYPE*/PARAM_C - PARAM_VALUE + 1][PSH_PC_MAX_REGISTER_COUNT] = {};
+  DWORD RegUsage[/*PSH_ARGUMENT_TYPE*/PARAM_C - PARAM_VALUE + 1][224] = {}; // 224 = highest possible PSH_PC_MAX_REGISTER_COUNT
 
   // TODO : In Polynomial Texture Maps, one extra opcode could be deleted (sub r1.rgb, v0,v0), why doesn't it?
   bool Result = false;
@@ -2617,7 +2715,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Discard useless writes :
-      if ( (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
+      if ( (CurArg->Address < MaxTemporaryRegisters)
       && ((RegUsage[CurArg->Type][CurArg->Address] & CurArg->Mask) == 0))
       {
         DbgPrintf("; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
@@ -2638,7 +2736,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       CurArg->Modifiers = CurArg->Modifiers & ~(1 << ARGMOD_IDENTITY);
 
       // Keep track of all register reads, so that we can discard useless writes :
-      if (CurArg->Address < PSH_PC_MAX_R_REGISTER_COUNT)
+      if (CurArg->Address < MaxTemporaryRegisters)
         RegUsage[CurArg->Type][CurArg->Address] = RegUsage[CurArg->Type][CurArg->Address] | CurArg->Mask;
     }
   }
@@ -2649,7 +2747,7 @@ void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDe
 {
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
-  PSH_INTERMEDIATE_FORMAT NewIns;
+  std::string CommentString;
 
   // Do a bottom-to-top pass, converting all xbox opcodes into a native set of opcodes :
   i = IntermediateCount;
@@ -2659,28 +2757,39 @@ void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDe
     Cur = &(Intermediate[i]);
 
     // Convert all Xbox opcodes into native opcodes :
-    NewIns.Initialize(PO_COMMENT);
-    NewIns.CommentString = Cur->ToString();
+    CommentString = Cur->ToString();
     switch (Cur->Opcode) {
+      case PO_XPS: ConvertXPSToNative(i); break;
       case PO_XMMA: ConvertXMMAToNative(i); break;
 	  case PO_XMMC: ConvertXMMCToNative(i); break;
 	  case PO_XDM: ConvertXDMToNative(i); break;
 	  case PO_XDD: ConvertXDDToNative(i); break;
 	  case PO_XFC: ConvertXFCToNative(i); break; // Can only occur once, as the last instruction
     default:
-      NewIns.CommentString = ""; break;
+      CommentString = ""; break;
     }
 
-    if (!NewIns.CommentString.empty())
-      InsertIntermediate(&NewIns, i);
+    if (!CommentString.empty()) {
+		PSH_INTERMEDIATE_FORMAT NewIns = {};
+		NewIns.Initialize(PO_COMMENT)->CommentString = CommentString;
+		InsertIntermediate(&NewIns, i);
+	}
   }
 } // ConvertXboxOpcodesToNative
+
+void PSH_XBOX_SHADER::ConvertXPSToNative(int i)
+{
+	PPSH_INTERMEDIATE_FORMAT Cur;
+
+	Cur = &(Intermediate[i]);
+	Cur->Opcode = PO_PS;
+}
 
 bool PSH_XBOX_SHADER::ConvertXMMToNative_Except3RdOutput(int i)
 {
   PPSH_INTERMEDIATE_FORMAT Cur;
   int InsertPos;
-  PSH_INTERMEDIATE_FORMAT Ins;
+  PSH_INTERMEDIATE_FORMAT Ins = {};
 
   bool Result = false;
   Cur = &(Intermediate[i]);
@@ -2793,7 +2902,7 @@ void PSH_XBOX_SHADER::ConvertXMMCToNative(int  i)
 void PSH_XBOX_SHADER::ConvertXDMToNative(int i)
 {
   PPSH_INTERMEDIATE_FORMAT Cur;
-  PSH_INTERMEDIATE_FORMAT Ins;
+  PSH_INTERMEDIATE_FORMAT Ins = {};
 
   Cur = &(Intermediate[i]);
 
@@ -2817,7 +2926,7 @@ void PSH_XBOX_SHADER::ConvertXDMToNative(int i)
 void PSH_XBOX_SHADER::ConvertXDDToNative(int i)
 {
   PPSH_INTERMEDIATE_FORMAT Cur;
-  PSH_INTERMEDIATE_FORMAT Ins;
+  PSH_INTERMEDIATE_FORMAT Ins = {};
 
   Cur = &(Intermediate[i]);
 
@@ -2837,12 +2946,12 @@ void PSH_XBOX_SHADER::ConvertXDDToNative(int i)
 
 void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 {
-  PSH_INTERMEDIATE_FORMAT Cur;
+  PSH_INTERMEDIATE_FORMAT Cur = {};
   int InsertPos;
   bool NeedsProd;
   bool NeedsSum;
   PPSH_IMD_ARGUMENT CurArg;
-  PSH_INTERMEDIATE_FORMAT Ins;
+  PSH_INTERMEDIATE_FORMAT Ins = {};
 
   // Get a copy of XFC and remove it already, new instructions will replace it :
   Cur = Intermediate[i];
@@ -2974,8 +3083,9 @@ bool PSH_XBOX_SHADER::RemoveNops()
     Cur = &(Intermediate[i]);
 
     // Skip opcodes that have no output, but should stay anyway :
-    if ((Cur->Opcode == PO_COMMENT) || (Cur->Opcode == PO_XFC))
-      continue;
+    if (PSH_OPCODE_DEFS[Cur->Opcode]._Out == 0)
+	  if (Cur->Opcode != PO_NOP)
+	    continue;
 
     // See if this opcode writes to any of it's outputs :
     {
@@ -3614,7 +3724,7 @@ bool PSH_XBOX_SHADER::FixInvalidSrcSwizzle()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Loop over the input arguments :
       for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._In; j++)
@@ -3640,7 +3750,7 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
   int R0aDefaultInsertPos;
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
-  PSH_INTERMEDIATE_FORMAT NewIns;
+  PSH_INTERMEDIATE_FORMAT NewIns = {};
 
   // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
   R0aDefaultInsertPos = -1;
@@ -3697,7 +3807,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Does this instruction write solely to Alpha?
       if (Cur->Output[0].Mask == MASK_A) 
@@ -3732,7 +3842,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX)
+    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
     {
       // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
       NewIsCombined = (PrevOpcode != PO_DP3)
@@ -3837,13 +3947,13 @@ void RPSCombinerOutput::Decode(uint8 Value, DWORD PSInputs, bool aIsAlpha)
   RPSRegisterObject::Decode(Value, aIsAlpha);
 
   // Decode PSAlphaInputs / PSRGBInputs :
-  Input1.Decode((PSInputs >>  8) & 0xFF, IsAlpha);
-  Input2.Decode((PSInputs >>  0) & 0xFF, IsAlpha);
+  Input1.Decode((PSInputs >>  8) & 0xFF, aIsAlpha);
+  Input2.Decode((PSInputs >>  0) & 0xFF, aIsAlpha);
 }
 
 /* RPSCombinerStageChannel */
 
-void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlpha/* = false*/)
+void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool aIsAlpha/* = false*/)
 {
   // Get the combiner output flags :
   CombinerOutputFlags = (PS_COMBINEROUTPUT)(PSOutputs >> 12);
@@ -3852,16 +3962,16 @@ void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlp
   OutputSUM.OutputAB.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
   OutputSUM.OutputCD.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0; // false=Multiply, true=DotProduct
 
-  if (!IsAlpha)
+  if (!aIsAlpha)
   {
     OutputSUM.OutputAB.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
     OutputSUM.OutputCD.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0; // false=Alpha-to-Alpha, true=Blue-to-Alpha
   }
 
   // Decode PSAlphaOutputs / PSRGBOutputs and PSAlphaInputs / PSRGBInputs :
-  OutputSUM.OutputAB.Decode((PSOutputs >> 4) & 0xF, (PSInputs >> 16) & 0xFFFF, IsAlpha);
-  OutputSUM.OutputCD.Decode((PSOutputs >> 0) & 0xF, (PSInputs >>  0) & 0xFFFF, IsAlpha);
-  OutputSUM.Decode((PSOutputs >> 8) & 0xF, IsAlpha);
+  OutputSUM.OutputAB.Decode((PSOutputs >> 4) & 0xF, (PSInputs >> 16) & 0xFFFF, aIsAlpha);
+  OutputSUM.OutputCD.Decode((PSOutputs >> 0) & 0xF, (PSInputs >>  0) & 0xFFFF, aIsAlpha);
+  OutputSUM.Decode((PSOutputs >> 8) & 0xF, aIsAlpha);
 
   AB_CD_SUM = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_CD_MUX) == 0; // true=AB+CD, false=MUX(AB,CD) based on R0.a
 }
@@ -3902,14 +4012,14 @@ void RPSCombinerStageChannel::Decode(DWORD PSInputs, DWORD PSOutputs, bool IsAlp
 
 void RPSFinalCombiner::Decode(const DWORD PSFinalCombinerInputsABCD, const DWORD PSFinalCombinerInputsEFG, const DWORD PSFinalCombinerConstants)
 {
-  InputA.Decode((PSFinalCombinerInputsABCD >> 24) & 0xFF, /*IsAlpha=*/false);
-  InputB.Decode((PSFinalCombinerInputsABCD >> 16) & 0xFF, /*IsAlpha=*/false);
-  InputC.Decode((PSFinalCombinerInputsABCD >>  8) & 0xFF, /*IsAlpha=*/false);
-  InputD.Decode((PSFinalCombinerInputsABCD >>  0) & 0xFF, /*IsAlpha=*/false);
+  InputA.Decode((PSFinalCombinerInputsABCD >> 24) & 0xFF, /*aIsAlpha=*/false);
+  InputB.Decode((PSFinalCombinerInputsABCD >> 16) & 0xFF, /*aIsAlpha=*/false);
+  InputC.Decode((PSFinalCombinerInputsABCD >>  8) & 0xFF, /*aIsAlpha=*/false);
+  InputD.Decode((PSFinalCombinerInputsABCD >>  0) & 0xFF, /*aIsAlpha=*/false);
 
-  InputE.Decode((PSFinalCombinerInputsEFG  >> 24) & 0xFF, /*IsAlpha=*/false);
-  InputF.Decode((PSFinalCombinerInputsEFG  >> 16) & 0xFF, /*IsAlpha=*/false);
-  InputG.Decode((PSFinalCombinerInputsEFG  >>  8) & 0xFF, /*IsAlpha=*/false);
+  InputE.Decode((PSFinalCombinerInputsEFG  >> 24) & 0xFF, /*aIsAlpha=*/false);
+  InputF.Decode((PSFinalCombinerInputsEFG  >> 16) & 0xFF, /*aIsAlpha=*/false);
+  InputG.Decode((PSFinalCombinerInputsEFG  >>  8) & 0xFF, /*aIsAlpha=*/false);
   FinalCombinerFlags = (PS_FINALCOMBINERSETTING)((PSFinalCombinerInputsEFG >> 0) & 0xFF);
 
   FinalCombinerC0Mapping = (PSFinalCombinerConstants >> 0) & 0xF;
@@ -3937,7 +4047,18 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	PSH_XBOX_SHADER PSH;
+	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
+
+#if 0 // Once PS.1.4 can be generated, enable this :
+	XTL::D3DCAPS8 g_D3DCaps = {};
+	if (g_pD3DDevice8->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
+		PSVersion = g_D3DCaps.PixelShaderVersion;
+	}
+#endif
+	// TODO : Make the pixel shader version configurable
+
+	PSH_XBOX_SHADER PSH = {};
+	PSH.SetPSVersion(PSVersion);
 	return PSH.Decode(pPSDef);
 }
 
@@ -3969,15 +4090,15 @@ static const
 #ifdef CXBX_USE_D3D9
     /*pDefines=*/nullptr,
     /*pInclude=*/nullptr,
-    /*Flags=*/0,
-#else
-    /*Flags=*/0,
+#endif
+    /*Flags=*/0, // D3DXASM_DEBUG,
+#ifndef CXBX_USE_D3D9
     /*ppConstants=*/NULL,
 #endif
     /*ppCompiledShader=*/&pShader,
     /*ppCompilationErrors*/&pErrors);
 
-  if (pShader == nullptr)
+  if (hRet != D3D_OK)
   {
     EmuWarning("Could not create pixel shader");
 	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
@@ -3990,15 +4111,15 @@ static const
 #ifdef CXBX_USE_D3D9
     /*pDefines=*/nullptr,
     /*pInclude=*/nullptr,
-    /*Flags=*/0,
-#else
-    /*Flags=*/0,
-    /*ppConstants=*/NULL,
+#endif
+    /*Flags=*/D3DXASM_SKIPVALIDATION,
+#ifndef CXBX_USE_D3D9
+	/*ppConstants=*/NULL,
 #endif
     /*ppCompiledShader=*/&pShader,
     /*ppCompilationErrors*/&pErrors);
 
-    if (pShader == nullptr)
+	if (hRet != D3D_OK)
       XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
 
     EmuWarning("We're lying about the creation of a pixel shader!");
@@ -4007,10 +4128,9 @@ static const
   if (pShader)
   {
     pFunction = (DWORD*)(pShader->GetBufferPointer());
-
-    if (hRet == D3D_OK)
+    if (hRet == D3D_OK) {
       // redirect to windows d3d
-      /*hRet = */g_pD3DDevice8->CreatePixelShader
+      hRet = g_pD3DDevice8->CreatePixelShader
       (
         pFunction,
 #ifdef CXBX_USE_D3D9
@@ -4020,7 +4140,14 @@ static const
 #endif
       );
 
-    // Dxbx note : We must release pShader here, else we would have a resource leak!
+	  if (hRet != D3D_OK) {
+		  extern const char *D3DErrorString(HRESULT hResult);
+
+		  printf(D3DErrorString(hRet));
+	  }
+	}
+
+	// Dxbx note : We must release pShader here, else we would have a resource leak!
 	pShader->Release();
     pShader = nullptr;
   }
