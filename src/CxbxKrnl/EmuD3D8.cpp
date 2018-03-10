@@ -4864,8 +4864,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 
 		// Update overlay if present was not called since the last call to
 		// EmuD3DDevice_UpdateOverlay.
-		if(g_bHackUpdateSoftwareOverlay)
+		if (g_bHackUpdateSoftwareOverlay) {
+			g_pD3DDevice8->EndScene();
 			g_pD3DDevice8->Present(0, 0, 0, 0);
+			g_pD3DDevice8->BeginScene();
+		}
 
 		g_bHackUpdateSoftwareOverlay = TRUE;
 	}   
