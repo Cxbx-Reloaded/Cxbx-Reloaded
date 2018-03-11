@@ -57,7 +57,7 @@
 //0x03	tray state
 #define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
 #define SMC_COMMAND_CPU_TEMP 0x09 // CPU temperature (°C)
-#define SMC_COMMAND_GPU_TEMP 0x0A // GPU (board?) temperature (°C)
+#define SMC_COMMAND_MOTHERBOARD_TEMP 0x0A // motherboard temperature (°C)
 //0x0F	reads scratch register written with 0x0E
 #define SMC_COMMAND_POWER_FAN_READBACK 0x10 // Current power fan speed (0-50)
 //0x11	interrupt reason

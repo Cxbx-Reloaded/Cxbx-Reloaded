@@ -111,6 +111,12 @@ typedef struct _XBOX_PFN {
 			ULONG PteIndex : 10;   // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
 			ULONG BusyType : 4;    // What the page is used for
 		} Busy;
+		struct {
+			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+			ULONG Busy : 1;        // If set, PFN is in use
+			ULONG PtesUsed : 11;   // Number of used pte's in the PT pointed by the pde
+			ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTable or SystemPageTable)
+		} PTPageFrame;
 	};
 } XBOX_PFN, *PXBOX_PFN;
 
@@ -124,7 +130,7 @@ enum PageType {
 	Pool,                      // Used by ExAllocatePoolWithTag
 	VirtualMemory,             // Used by NtAllocateVirtualMemory
 	SystemMemory,              // Used by MmAllocateSystemMemory
-	Image,                     // Used by XeLoadSection
+	Image,                     // Used to mark executable memory
 	Cache,                     // Used by the file cache related functions
 	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
 	Debugger,                  // xbdm-related
@@ -155,8 +161,8 @@ enum PageType {
 #define PTE_NOCACHE                 PTE_CACHE_DISABLE_MASK
 #define PTE_GUARD                   PTE_GUARD_END_MASK
 #define PTE_CACHE                   0x00000000
-#define PTE_VALID_PROTECTION_MASK   0x0000021B
-#define PTE_SYSTEM_PROTECTION_MASK  0x0000001B // valid, write, write-through, cache
+#define PTE_VALID_PROTECTION_MASK   0x0000021B // valid, write, write-through, no cache, guard/end
+#define PTE_SYSTEM_PROTECTION_MASK  0x0000001B // valid, write, write-through, no cache
 
 
 /* Xbox PAGE Masks */
@@ -192,8 +198,9 @@ enum PageType {
 /* Various macros to manipulate PDE/PTE/PFN */
 #define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PAGE_DIRECTORY_BASE)) // (Va/4M) * 4 + PDE_BASE
 #define GetPteAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 12) << 2) + PAGE_TABLES_BASE))    // (Va/4K) * 4 + PTE_BASE
-#define GetVAddrMappedByPte(Pte) ((VAddr)((ULONG)(Pte) << 10))
+#define GetVAddrMappedByPte(Pte) ((VAddr)((ULONG_PTR)(Pte) << 10))
 #define GetPteOffset(Va) ((((ULONG)(Va)) << 10) >> 22)
+#define IsPteOnPdeBoundary(Pte) (((ULONG_PTR)(Pte) & (PAGE_SIZE - 1)) == 0)
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
 #define PTE_PER_PAGE 1024
@@ -267,20 +274,28 @@ class PhysicalMemory
 		void WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero = false);
 		// write a contiguous range of pte's
 		void WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero = false);
+		// retrieves the pfn entry which maps a PT
+		XBOX_PFN GetPfnOfPT(PMMPTE pPte);
 		// commit a contiguous number of pages
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end);
 		// release a contiguous number of pages
 		void InsertFree(PFN start, PFN end);
 		// convert from Xbox to the desired system pte protection (if possible) and return it
 		bool ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte);
+		// convert from Xbox to non-system pte protection (if possible) and return it
+		bool ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte);
 		// convert from pte permissions to the corresponding Xbox protection code
 		DWORD ConvertPteToXboxProtection(ULONG PteMask);
 		// convert from Xbox to Windows permissions
 		DWORD ConvertXboxToWinProtection(DWORD Perms);
+		// convert from xbox to windows memory allocation type
+		DWORD ConvertXboxToWinAllocType(DWORD AllocType);
 		// add execute rights if the permission mask doesn't include it
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
+		// deallocate a PT if possible
+		void DeallocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// commit whatever free page is available and zero it
 		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte, bool bPhysicalFunction);
 		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)

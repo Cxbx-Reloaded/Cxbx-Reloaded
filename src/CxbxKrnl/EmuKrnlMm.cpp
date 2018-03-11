@@ -63,7 +63,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0066 - MmGlobalData
 // ******************************************************************
-// ergo720: a couple of this could be implemented, but most cannot. However, I wouldn't bother with these variables
+// ergo720: a couple of these could be implemented, but most cannot. However, I wouldn't bother with these variables
 // since they are just exported but never used by the kernel
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
@@ -197,7 +197,8 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	g_VMManager.DeallocateSystemMemory(PageType::Stack, StackBottom, ActualSize);
+	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBottom) ? PageType::Stack : PageType::Debugger,
+		StackBottom, ActualSize);
 }
 
 // ******************************************************************
@@ -256,7 +257,7 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
 
-	RETURN(g_VMManager.TranslateVAddrToPAddr((PAddr)BaseAddress));
+	RETURN(g_VMManager.TranslateVAddrToPAddr((VAddr)BaseAddress));
 }
 
 // ******************************************************************

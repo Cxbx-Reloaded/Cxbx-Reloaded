@@ -90,37 +90,16 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// Copy the section data
 			memcpy(Section->VirtualAddress, sectionData, Section->FileSize);
 
-			// ergo720: I can't just +/- PAGE_SIZE the VirtualAddress and the VirtualSize of a section because some titles have
-			// sections less than PAGE_SIZE, which will cause again an overlap with the next section since both will have the
-			// same aligned starting address. 
+			// REMARK: Some titles have sections less than PAGE_SIZE, which will cause an overlap with the next section
+			// since both will have the same aligned starting address.
 			// Test case: Dead or Alive 3, section XGRPH has a size of 764 bytes
 			// XGRPH										DSOUND
 			// 1F18A0 + 2FC -> aligned_start = 1F1000		1F1BA0 -> aligned_start = 1F1000 <- collision
 
-			// The following just increases the amount of physical/virtual memory consumed but doesn't actually allocate anything
-			// inside the manager. This is done so that, because we now have fewer physical allocations, we also get more free contiguous
-			// space that can be used by MmAllocateContiguousMemoryEx, which is problematic to map in the case of fragmentation. Also
-			// note that the manager physical allocation routines check the free memory left before attempting a new allocation and bail out
-			// immediately if not enough is available, this prevents exceeding the max memory on the Xbox
-
 			VAddr BaseAddress = (VAddr)Section->VirtualAddress;
-			VAddr EndingAddress = (VAddr)Section->VirtualAddress + Section->VirtualSize;
+			size_t SectionSize = (VAddr)Section->VirtualSize;
 
-			if ((*Section->TailReferenceCount) != 0)
-			{
-				EndingAddress &= ~PAGE_MASK;
-			}
-
-			if ((*Section->HeadReferenceCount) != 0)
-			{
-				BaseAddress = (BaseAddress + PAGE_SIZE) & ~PAGE_MASK;
-			}
-
-			if (EndingAddress > BaseAddress)
-			{
-				size_t RegionSize = EndingAddress - BaseAddress;
-				ret = XbAllocateVirtualMemoryStub(&BaseAddress, 0, &RegionSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-			}
+			ret = g_VMManager.XbAllocateVirtualMemory(&BaseAddress, 0, &SectionSize, XBOX_MEM_COMMIT, XBOX_PAGE_EXECUTE_READWRITE);
 
 			// Increment the head/tail page reference counters
 			(*Section->HeadReferenceCount)++;
@@ -172,18 +151,18 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 
 			if ((*Section->TailReferenceCount) != 0)
 			{
-				EndingAddress &= ~PAGE_MASK;
+				EndingAddress = ROUND_DOWN_4K(EndingAddress);
 			}
 
 			if ((*Section->HeadReferenceCount) != 0)
 			{
-				BaseAddress = (BaseAddress + PAGE_SIZE) & ~PAGE_MASK;
+				BaseAddress = ROUND_UP_4K(BaseAddress);
 			}
 
 			if (EndingAddress > BaseAddress)
 			{
 				size_t RegionSize = EndingAddress - BaseAddress;
-				XbFreeVirtualMemoryStub(&BaseAddress, &RegionSize, MEM_DECOMMIT);
+				g_VMManager.XbFreeVirtualMemory(&BaseAddress, &RegionSize, XBOX_MEM_DECOMMIT);
 			}
 		}
 

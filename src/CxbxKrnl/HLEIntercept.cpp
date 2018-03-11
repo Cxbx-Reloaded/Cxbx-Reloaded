@@ -263,7 +263,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					{
 						output << "\t*ADDRESS TOO LOW!*";
 					}
-					else if (location > XBOX_MEMORY_SIZE)
+					else if (location > g_SystemMaxMemory)
 					{
 						output << "\t*ADDRESS TOO HIGH!*";
 					}

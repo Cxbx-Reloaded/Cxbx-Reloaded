@@ -172,6 +172,7 @@ typedef long                            NTSTATUS;
 #define STATUS_XBE_MEDIA_MISMATCH        ((DWORD   )0xC0050002L)
 #define STATUS_OBJECT_NAME_NOT_FOUND     ((DWORD   )0xC0000034L)
 #define STATUS_OBJECT_NAME_COLLISION     ((DWORD   )0xC0000035L)
+#define STATUS_INVALID_PAGE_PROTECTION   ((DWORD   )0xC0000045L)
 
 // ******************************************************************
 // * Registry value types

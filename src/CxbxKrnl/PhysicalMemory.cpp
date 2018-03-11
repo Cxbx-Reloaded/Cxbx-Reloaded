@@ -37,6 +37,8 @@
 #include "PhysicalMemory.h"
 #include <assert.h>
 
+#define LOG_PREFIX "PMEM"
+
 
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
 {
@@ -58,14 +60,6 @@ void PhysicalMemory::InitializePageDirectory()
 	PMMPTE pPde;
 	PMMPTE pPde_end;
 	MMPTE TempPte;
-
-
-	// Write the pde's representing the user virtual space (lower 2 GiB) - no page tables
-	pPde_end = GetPdeAddress(CONTIGUOUS_MEMORY_BASE - 1);
-	for (pPde = GetPdeAddress(0); pPde <= pPde_end; ++pPde)
-	{
-		WRITE_ZERO_PTE(pPde);
-	}
 
 
 	// Write the pde's of the WC (tiled) memory - no page tables
@@ -91,22 +85,6 @@ void PhysicalMemory::InitializePageDirectory()
 		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
 	}
 
-
-	// Write the pde's of the contiguous region
-	TempPte.Default = ValidKernelPdeBits;
-	if (g_bIsRetail || g_bIsDebug) {
-		TempPte.Hardware.PFN = (ULONG)XBOX_PFN_ADDRESS >> PAGE_SHIFT;
-		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(XBOX_HIGHEST_PHYSICAL_PAGE));
-	}
-	else {
-		TempPte.Hardware.PFN = (ULONG)CHIHIRO_PFN_ADDRESS >> PAGE_SHIFT;
-		pPde_end = GetPdeAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(CHIHIRO_HIGHEST_PHYSICAL_PAGE));
-	}
-	for (pPde = GetPdeAddress(PHYSICAL_MAP_BASE); pPde <= pPde_end; ++pPde)
-	{
-		WRITE_PTE(pPde, TempPte);
-		TempPte.Hardware.PFN++; // increase PFN
-	}
 
 	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
 	// on the Xbox, which is not present here on Cxbx-Reloaded
@@ -141,9 +119,10 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			TempPF.Default = 0;
 			TempPF.Busy.Busy = 1;
 			TempPF.Busy.BusyType = BusyType;
-			if (BusyType != PageType::VirtualPageTable) {
+			if (BusyType != PageType::VirtualPageTable && BusyType != PageType::SystemPageTable) {
 				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
+			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
 
 			if (g_bIsRetail || g_bIsDebug) {
 				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
@@ -159,21 +138,41 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 
 void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero)
 {
+	// This function is intended to write pte's, not pde's. To write those, use (De)AllocatePT which will perform
+	// all the necessary housekeeping. Also, the pde's mapping these pte's should have already being commited or else
+	// GetPfnOfPT will assert
+
+	PMMPTE PointerPte = pPteStart;
+	XBOX_PFN PTpfn;
+
 	if (bZero)
 	{
-		while (pPteStart <= pPteEnd)
+		while (PointerPte <= pPteEnd)
 		{
-			WRITE_ZERO_PTE(pPteStart);
-			pPteStart++;
+			if (PointerPte == pPteStart || IsPteOnPdeBoundary(PointerPte))
+			{
+				PTpfn = GetPfnOfPT(PointerPte);
+			}
+			WRITE_ZERO_PTE(PointerPte);
+			PTpfn.PTPageFrame.PtesUsed--;
+			PointerPte++;
 		}
 	}
 	else
 	{
-		while (pPteStart <= pPteEnd)
+		while (PointerPte <= pPteEnd)
 		{
-			Pte.Hardware.PFN = pfn;
-			WRITE_PTE(pPteStart, Pte);
-			pPteStart++;
+			if (PointerPte == pPteStart || IsPteOnPdeBoundary(PointerPte))
+			{
+				PTpfn = GetPfnOfPT(PointerPte);
+			}
+			if (PointerPte->Default == 0)
+			{
+				Pte.Hardware.PFN = pfn;
+				WRITE_PTE(PointerPte, Pte);
+				PTpfn.PTPageFrame.PtesUsed++;
+			}
+			PointerPte++;
 			pfn++;
 		}
 	}
@@ -388,7 +387,7 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 
 	if (perms & ~(XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | XBOX_PAGE_READWRITE | XBOX_PAGE_READONLY))
 	{
-		return false; // unknown or not allowed flag specified
+		goto Fail; // unknown or not allowed flag specified
 	}
 
 	switch (perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
@@ -406,7 +405,7 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 		break;
 
 		default:
-			return false; // both are specified, wrong
+			goto Fail; // both are specified, wrong
 	}
 
 	switch (perms & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
@@ -427,12 +426,83 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 		break;
 
 		default:
-			return false; // both are specified, wrong
+			goto Fail; // both are specified, wrong
 	}
 
 	pPte->Default = Mask;
 
 	return true;
+
+	Fail:
+	pPte = nullptr;
+	return false;
+}
+
+bool PhysicalMemory::ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte)
+{
+	ULONG Mask = 0;
+	ULONG LowNibble;
+	ULONG HighNibble;
+
+	if (perms & ~(XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | 0xFF))
+	{
+		goto Fail; // unknown or not allowed flag specified
+	}
+
+	//
+	// None of the protection attributes are valid for "no access" pages.
+	//
+
+	if (perms & XBOX_PAGE_NOACCESS)
+	{
+		if (perms & (XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+		{
+			goto Fail; // PAGE_NOACCESS cannot be specified together with the other access modifiers
+		}
+	}
+
+	if ((perms & XBOX_PAGE_NOCACHE) && (perms & XBOX_PAGE_WRITECOMBINE))
+	{
+		goto Fail; // PAGE_NOCACHE and PAGE_WRITECOMBINE cannot be specified together
+	}
+
+	LowNibble = perms & 0xF;
+	HighNibble = (perms >> 4) & 0xF;
+
+	if ((LowNibble == 0 && HighNibble == 0) || (LowNibble != 0 && HighNibble != 0))
+	{
+		// High and low permission flags cannot be mixed together
+
+		goto Fail;
+	}
+
+	if (LowNibble | HighNibble == 1 || LowNibble | HighNibble == 2) { Mask = PTE_READONLY; }
+	else if (LowNibble | HighNibble == 4) { Mask = PTE_READWRITE; }
+	else
+	{
+		// ergo720: all the other combinations are invalid. This effectively filters out XBOX_PAGE_WRITECOPY and
+		// XBOX_PAGE_EXECUTE_WRITECOPY which, afaik, are unsupported on the Xbox
+
+		goto Fail;
+	}
+
+	// Apply the rest of the access modifiers to the pte mask
+
+	if ((perms & (XBOX_PAGE_NOACCESS | XBOX_PAGE_GUARD)) == 0) { Mask |= PTE_VALID_MASK; }
+	else if (perms & XBOX_PAGE_GUARD) { Mask |= PTE_GUARD; }
+
+	if (perms & XBOX_PAGE_NOCACHE) { Mask |= PTE_CACHE_DISABLE_MASK; }
+	else if (perms & XBOX_PAGE_WRITECOMBINE) { Mask |= PTE_WRITE_THROUGH_MASK; }
+
+	assert((Mask & ~(PTE_VALID_PROTECTION_MASK)) == 0); // ensure that we've created a valid permission mask
+
+	pPte->Default = Mask;
+
+	return true;
+
+	Fail:
+	pPte = nullptr;
+	return false;
 }
 
 DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
@@ -492,7 +562,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
 			// input is probably invalid
 
-			DbgPrintf("PatchXboxPermissions: Memory permissions bug detected\n");
+			DbgPrintf(LOG_PREFIX "PatchXboxPermissions: Memory permissions bug detected\n");
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -555,12 +625,30 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 			// If we reach here it means that more than one permission modifier was specified, and so the input is
 			// probably invalid
 
-			DbgPrintf("ConvertXboxToWinProtection: Memory permissions bug detected\n");
+			DbgPrintf(LOG_PREFIX "ConvertXboxToWinProtection: Memory permissions bug detected\n");
 			return PAGE_EXECUTE_READWRITE;
 		}
 	}
 	return Mask;
 }
+
+DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
+{
+	// This function assumes that the supplied allocation mask has been sanitized already
+
+	DWORD Mask = 0;
+
+	if (AllocType & XBOX_MEM_COMMIT) { Mask |= MEM_COMMIT; }
+	else if(AllocType & XBOX_MEM_RESERVE) { Mask |= MEM_RESERVE; }
+	else if (AllocType & XBOX_MEM_DECOMMIT) { Mask |= MEM_DECOMMIT; }
+	else if (AllocType & XBOX_MEM_RELEASE) { Mask |= MEM_RELEASE; }
+	else if (AllocType & XBOX_MEM_RESET) { Mask |= MEM_RESET; }
+	else if (AllocType & XBOX_MEM_TOP_DOWN) { Mask |= MEM_TOP_DOWN; }
+	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf(LOG_PREFIX "XBOX_MEM_NOZERO flag is not supported!\n"); }
+
+	return Mask;
+}
+
 
 bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
@@ -570,13 +658,14 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	PFN_COUNT PTtoCommit = 0;
 	PageType BusyType = PageType::SystemPageTable;
 	int PdeMappedSizeIncrement = 0;
+	VAddr StartingAddr = addr;
 
 	assert(PteNumber);
 	assert(addr);
 
 	for (int i = 0; i < PdeNumber; ++i)
 	{
-		if (GetPdeAddress(addr += PdeMappedSizeIncrement)->Hardware.Valid == 0)
+		if (GetPdeAddress(StartingAddr += PdeMappedSizeIncrement)->Hardware.Valid == 0)
 		{
 			PTtoCommit++;
 		}
@@ -585,7 +674,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 	if (!PTtoCommit)
 	{
-		// We don't need to commit any new page table, so exit now
+		// We don't need to commit any new page tables, so exit now
 
 		return true;
 	}
@@ -598,14 +687,14 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	}
 	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = PageType::VirtualPageTable; }
 	PdeMappedSizeIncrement = 0;
+	StartingAddr = addr;
 
 	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
-	// memory regions and also there is no need to track them since they will not be deallocated anyway even when all the
-	// pte's in the PT become invalid (the kernel does this too, BTY)
+	// memory regions
 
 	for (int i = 0; i < PdeNumber; ++i)
 	{
-		pPde = GetPdeAddress(addr += PdeMappedSizeIncrement);
+		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
 		if (pPde->Hardware.Valid == 0)
 		{
 			// We grab one page at a time to avoid fragmentation issues
@@ -618,6 +707,39 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	}
 
 	return true;
+}
+
+void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
+{
+	PMMPTE pPde;
+	XBOX_PFN PTpfn;
+	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
+	PageType BusyType = PageType::SystemPageTable;
+	int PdeMappedSizeIncrement = 0;
+	VAddr StartingAddr = addr;
+
+	assert(PteNumber);
+	assert(addr);
+
+	for (int i = 0; i < PdeNumber; ++i)
+	{
+		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
+		assert(pPde->Hardware.Valid != 0); // pde must be valid at this point
+		if (g_bIsRetail || g_bIsDebug) {
+			PTpfn = *XBOX_PFN_ELEMENT(pPde->Hardware.PFN);
+		}
+		else { PTpfn = *CHIHIRO_PFN_ELEMENT(pPde->Hardware.PFN); }
+		assert(PTpfn.PTPageFrame.BusyType == PageType::SystemPageTable ||
+			PTpfn.PTPageFrame.BusyType == PageType::VirtualPageTable);
+
+		if (PTpfn.PTPageFrame.PtesUsed == 0)
+		{
+			InsertFree(pPde->Hardware.PFN, pPde->Hardware.PFN);
+			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn.PTPageFrame.BusyType, true);
+			WRITE_ZERO_PTE(pPde);
+		}
+		PdeMappedSizeIncrement += (4 * ONE_MB);
+	}
 }
 
 PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte, bool bPhysicalFunction)
@@ -656,7 +778,26 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	bool ret = false;
 	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
 	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
-	if(!ret) { EmuWarning("Out of physical memory!"); }
+	if (!ret) { EmuWarning(LOG_PREFIX "Out of physical memory!"); }
 
 	return ret;
+}
+
+XBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
+{
+	XBOX_PFN PTpfn;
+
+	// GetPteAddress on a pte address will yield the corresponding pde which maps the supplied pte
+	PMMPTE PointerPde = GetPteAddress(pPte);
+	// PointerPde should have already been written to by AllocatePT
+	assert(PointerPde->Hardware.Valid != 0);
+	if (g_bIsRetail || g_bIsDebug) {
+		PTpfn = *XBOX_PFN_ELEMENT(PointerPde->Hardware.PFN);
+	}
+	else { PTpfn = *CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
+	assert(PTpfn.PTPageFrame.Busy == 1);
+	assert(PTpfn.PTPageFrame.BusyType == PageType::SystemPageTable ||
+		PTpfn.PTPageFrame.BusyType == PageType::VirtualPageTable);
+
+	return PTpfn;
 }

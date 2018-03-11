@@ -40,15 +40,6 @@
 
 #include "PhysicalMemory.h"
 
-#define XbAllocateVirtualMemoryStub(addr, zero_bits, size, allocation_type, protect) \
-		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, true)
-#define XbAllocateVirtualMemoryReal(addr, zero_bits, size, allocation_type, protect) \
-		g_VMManager.XbAllocateVirtualMemory(addr, zero_bits, size, allocation_type, protect, false)
-#define XbFreeVirtualMemoryStub(addr, size, free_type) \
-		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, true)
-#define XbFreeVirtualMemoryReal(addr, size, free_type) \
-		g_VMManager.XbFreeVirtualMemory(addr, size, free_type, false)
-
 
 /* VMATypes */
 enum VMAType
@@ -111,7 +102,7 @@ class VMManager : public PhysicalMemory
 		// destructor
 		~VMManager()
 		{
-			DestroyMemoryRegions();
+			//DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hContiguousFile);
@@ -164,10 +155,10 @@ class VMManager : public PhysicalMemory
 		// retrieves the number of free debugger pages
 		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
-		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG zero_bits, size_t* size, DWORD allocation_type,
-			DWORD protect, bool bStub);
+		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType,
+			DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
-		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* size, DWORD free_type, bool bStub);
+		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
 
 	
 	private:
@@ -181,12 +172,10 @@ class VMManager : public PhysicalMemory
 		HANDLE m_hPTFile = NULL;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-		// amount of image virtual memory in use
-		size_t m_ImageMemoryInUse = 0;
-		// amount of non-image virtual memory in use
-		size_t m_NonImageMemoryInUse = 0;
 		// the allocation granularity of the host. Needed by MapViewOfFileEx and VirtualAlloc
-		DWORD m_AllocationGranularity;
+		DWORD m_AllocationGranularity = 0;
+		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
+		size_t m_VirtualMemoryBytesReserved = 0;
 	
 		// set up the pfndatabase
 		void InitializePfnDatabase();
@@ -205,7 +194,7 @@ class VMManager : public PhysicalMemory
 		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
-		void DestructVMA(VMAIter it, MemoryRegionType Type);
+		void DestructVMA(VMAIter it, MemoryRegionType Type, bool bSkipDestruction = false);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// removes a vma block from the mapped memory
@@ -220,10 +209,14 @@ class VMManager : public PhysicalMemory
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
+		// checks if the specified vma overlaps with another
+		//bool CheckConflictingVMA(VAddr addr, size_t Size);
 		// changes the access permissions of a block of memory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// restores persistent memory
 		void RestorePersistentMemory();
+		// checks if any of the EXECUTE flags are set
+		bool HasPageExecutionFlag(DWORD protect);
 		// acquires the critical section
 		void Lock();
 		// releases the critical section

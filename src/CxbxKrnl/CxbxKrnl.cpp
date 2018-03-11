@@ -824,7 +824,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		if (CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB)
 		{
 			// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
-			// will still use only the lower 64 MiB and same is true for the debugger pages, meaning they will only
+			// will still use only the lower 64 MiB and the same is true for the debugger pages, meaning they will only
 			// use the upper extra 64 MiB regardless of this flag
 
 			bRestrict64MiB = true;
@@ -832,6 +832,23 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Initialize the virtual manager
 		g_VMManager.Initialize(hMemoryBin, hPageTables, bRestrict64MiB);
+
+		// Reserve the memory region used by the xbe image and commit the xbe header
+		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;
+		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
+		VAddr XbeBase = XBE_IMAGE_BASE;
+		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &ImageSize, XBOX_MEM_RESERVE, XBOX_PAGE_READWRITE);
+		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
+
+		if (XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE > 0)
+		{
+			// We also reserve the remaining region up to XBE_MAX_VA since we know it's occupied by our memory
+			// placeholder and cannot be allocated anyway. This will result in an increase in the reserved memory
+
+			VAddr ReservedBase = XBE_IMAGE_BASE + ROUND_UP_4K(ImageSize);
+			size_t ReservedSize = XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE;
+			g_VMManager.XbAllocateVirtualMemory(&ReservedBase, 0, &ReservedSize, XBOX_MEM_RESERVE, XBOX_PAGE_NOACCESS);
+		}
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
