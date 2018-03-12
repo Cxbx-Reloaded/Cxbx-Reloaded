@@ -4450,6 +4450,22 @@ VOID WINAPI CreateHostResource
                     );
 					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture");
 
+					// If the above failed, we might be able to use an ARGB texture instead
+					if((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format))
+					{
+						hRet = g_pD3DDevice8->CreateTexture
+						(
+							dwWidth, dwHeight, dwMipMapLevels, 0, D3DFMT_A8R8G8B8,
+							D3DPOOL_MANAGED, &pNewHostTexture
+						);
+						DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DFMT_A8R8G8B8)");
+						if (hRet == D3D_OK) {
+							// Okay, now this works, make sure the texture gets converted
+							CacheFormat = PCFormat;
+							PCFormat = D3DFMT_A8R8G8B8;
+						}
+					}
+
 					/*if(FAILED(hRet))
 					{
 						hRet = g_pD3DDevice8->CreateTexture

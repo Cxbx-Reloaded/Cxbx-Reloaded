@@ -73,6 +73,8 @@ enum _ComponentEncoding {
 	____DXT3,
 	____DXT5,
 	______P8,
+	____YUY2,
+	____UYVY,
 };
 
 // Conversion functions copied from libyuv
@@ -686,6 +688,133 @@ void ______P8ToARGBRow_C(const uint8* src_p8, uint8* dst_argb, int width) {
 	}
 }
 
+static __inline int32 clamp0(int32 v) {
+	return ((-(v) >> 31) & (v));
+}
+
+static __inline int32 clamp255(int32 v) {
+	return (((255 - (v)) >> 31) | (v)) & 255;
+}
+
+static __inline uint32 Clamp(int32 val) {
+	int v = clamp0(val);
+	return (uint32)(clamp255(v));
+}
+
+#if defined(_MSC_VER) && !defined(__CLR_VER)
+#define SIMD_ALIGNED(var) __declspec(align(16)) var
+#define SIMD_ALIGNED32(var) __declspec(align(64)) var
+typedef __declspec(align(32)) int16 lvec16[16];
+typedef __declspec(align(32)) int8 lvec8[32];
+#endif
+
+struct YuvConstants {
+  lvec8 kUVToB;
+  lvec8 kUVToG;
+  lvec8 kUVToR;
+  lvec16 kUVBiasB;
+  lvec16 kUVBiasG;
+  lvec16 kUVBiasR;
+  lvec16 kYToRgb;
+};
+
+// BT.601 YUV to RGB reference
+//  R = (Y - 16) * 1.164              - V * -1.596
+//  G = (Y - 16) * 1.164 - U *  0.391 - V *  0.813
+//  B = (Y - 16) * 1.164 - U * -2.018
+
+// Y contribution to R,G,B.  Scale and bias.
+#define YG 18997 /* round(1.164 * 64 * 256 * 256 / 257) */
+#define YGB -1160 /* 1.164 * 64 * -16 + 64 / 2 */
+
+// U and V contributions to R,G,B.
+#define UB -128 /* max(-128, round(-2.018 * 64)) */
+#define UG 25 /* round(0.391 * 64) */
+#define VG 52 /* round(0.813 * 64) */
+#define VR -102 /* round(-1.596 * 64) */
+
+// Bias values to subtract 16 from Y and 128 from U and V.
+#define BB (UB * 128            + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR            (VR * 128 + YGB)
+
+// BT.601 constants for YUV to RGB.
+const YuvConstants SIMD_ALIGNED(kYuvIConstants) = {
+  { UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0,
+    UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0 },
+  { UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG,
+    UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG },
+  { 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR,
+    0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR },
+  { BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB },
+  { BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG },
+  { BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR },
+  { YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG }
+};
+
+// C reference code that mimics the YUV assembly.
+static __inline void YuvPixel(uint8 y, uint8 u, uint8 v,
+	uint8* b, uint8* g, uint8* r,
+	const struct YuvConstants* yuvconstants) {
+	int ub = yuvconstants->kUVToB[0];
+	int ug = yuvconstants->kUVToG[0];
+	int vg = yuvconstants->kUVToG[1];
+	int vr = yuvconstants->kUVToR[1];
+	int bb = yuvconstants->kUVBiasB[0];
+	int bg = yuvconstants->kUVBiasG[0];
+	int br = yuvconstants->kUVBiasR[0];
+	int yg = yuvconstants->kYToRgb[0];
+
+	uint32 y1 = (uint32)(y * 0x0101 * yg) >> 16;
+	*b = Clamp((int32)(-(u * ub) + y1 + bb) >> 6);
+	*g = Clamp((int32)(-(u * ug + v * vg) + y1 + bg) >> 6);
+	*r = Clamp((int32)(-(v * vr) + y1 + br) >> 6);
+}
+
+void ____YUY2ToARGBRow_C(const uint8* src_yuy2,
+	uint8* rgb_buf,
+	int width) {
+	const struct YuvConstants* yuvconstants = &kYuvIConstants; // hack to avoid another argument
+	int x;
+	for (x = 0; x < width - 1; x += 2) {
+		YuvPixel(src_yuy2[0], src_yuy2[1], src_yuy2[3],
+			rgb_buf + 0, rgb_buf + 1, rgb_buf + 2, yuvconstants);
+		rgb_buf[3] = 255;
+		YuvPixel(src_yuy2[2], src_yuy2[1], src_yuy2[3],
+			rgb_buf + 4, rgb_buf + 5, rgb_buf + 6, yuvconstants);
+		rgb_buf[7] = 255;
+		src_yuy2 += 4;
+		rgb_buf += 8;  // Advance 2 pixels.
+	}
+	if (width & 1) {
+		YuvPixel(src_yuy2[0], src_yuy2[1], src_yuy2[3],
+			rgb_buf + 0, rgb_buf + 1, rgb_buf + 2, yuvconstants);
+		rgb_buf[3] = 255;
+	}
+}
+
+void ____UYVYToARGBRow_C(const uint8* src_uyvy,
+	uint8* rgb_buf,
+	int width) {
+	const struct YuvConstants* yuvconstants = &kYuvIConstants; // hack to avoid another argument
+	int x;
+	for (x = 0; x < width - 1; x += 2) {
+		YuvPixel(src_uyvy[1], src_uyvy[0], src_uyvy[2],
+			rgb_buf + 0, rgb_buf + 1, rgb_buf + 2, yuvconstants);
+		rgb_buf[3] = 255;
+		YuvPixel(src_uyvy[3], src_uyvy[0], src_uyvy[2],
+			rgb_buf + 4, rgb_buf + 5, rgb_buf + 6, yuvconstants);
+		rgb_buf[7] = 255;
+		src_uyvy += 4;
+		rgb_buf += 8;  // Advance 2 pixels.
+	}
+	if (width & 1) {
+		YuvPixel(src_uyvy[1], src_uyvy[0], src_uyvy[2],
+			rgb_buf + 0, rgb_buf + 1, rgb_buf + 2, yuvconstants);
+		rgb_buf[3] = 255;
+	}
+}
+
 static const XTL::FormatToARGBRow ComponentConverters[] = {
 	nullptr, // NoCmpnts,
 	ARGB1555ToARGBRow_C, // A1R5G5B5,
@@ -711,6 +840,8 @@ static const XTL::FormatToARGBRow ComponentConverters[] = {
 	____DXT3ToARGBRow_C, // ____DXT3
 	____DXT5ToARGBRow_C, // ____DXT5
 	______P8ToARGBRow_C, // ______P8
+	____YUY2ToARGBRow_C, // ____YUY2
+	____UYVYToARGBRow_C, // ____UYVY
 };
 
 enum _FormatStorage {
@@ -782,8 +913,8 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x21 undefined             */ {},
 	/* 0x22 undefined             */ {},
 	/* 0x23 undefined             */ {},
-	/* 0x24 X_D3DFMT_YUY2         */ { 16, Undfnd, NoCmpnts, XTL::D3DFMT_YUY2      },
-	/* 0x25 X_D3DFMT_UYVY         */ { 16, Undfnd, NoCmpnts, XTL::D3DFMT_UYVY      },
+	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, XTL::D3DFMT_YUY2      },
+	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, XTL::D3DFMT_UYVY      },
 	/* 0x26 undefined             */ {},
 	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, XTL::D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
 	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, XTL::D3DFMT_V8U8      }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
