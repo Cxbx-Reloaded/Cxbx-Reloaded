@@ -401,88 +401,17 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	return hFileMapping;
 }
 
-HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
+void CxbxRestorePageTablesMemory()
 {
-	// First, try to open an existing PageTables.bin file :
-	HANDLE hFile = CreateFile(szFilePath_page_tables,
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		/* lpSecurityAttributes */nullptr,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-		/* hTemplateFile */nullptr);
+	void* memory = VirtualAlloc((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
-	if (NeedsInitialization)
-	{
-		// If the PageTables.bin file doesn't exist yet, create it :
-		hFile = CreateFile(szFilePath_page_tables,
-			GENERIC_READ | GENERIC_WRITE,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			/* lpSecurityAttributes */nullptr,
-			OPEN_ALWAYS,
-			FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-			/* hTemplateFile */nullptr);
-		if (hFile == INVALID_HANDLE_VALUE)
-		{
-			CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file!\n");
-			return nullptr;
-		}
-	}
-
-	// Make sure PageTables.bin is at least 4 MB in size
-	SetFilePointer(hFile, PAGE_TABLES_SIZE, nullptr, FILE_BEGIN);
-	SetEndOfFile(hFile);
-
-	HANDLE hFileMapping = CreateFileMapping(
-		hFile,
-		/* lpFileMappingAttributes */nullptr,
-		PAGE_READWRITE,
-		/* dwMaximumSizeHigh */0,
-		/* dwMaximumSizeLow */PAGE_TABLES_SIZE,
-		/**/nullptr);
-	if (hFileMapping == NULL)
-	{
-		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file mapping!\n");
-		return nullptr;
-	}
-
-	LARGE_INTEGER  len_li;
-	GetFileSizeEx(hFile, &len_li);
-	unsigned int FileSize = len_li.u.LowPart;
-	if (FileSize != PAGE_TABLES_SIZE)
-	{
-		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
-		return nullptr;
-	}
-
-	// Map memory.bin contents into memory :
-	void *memory = (void *)MapViewOfFileEx(
-		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		4 * ONE_MB,
-		(void *)PAGE_TABLES_BASE);
 	if (memory != (void *)PAGE_TABLES_BASE)
 	{
-		if (memory)
-			UnmapViewOfFile(memory);
-
-		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't map PageTables.bin to 0xC0000000!");
-		return nullptr;
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't allocate the page tables at 0xC0000000!");
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), 4, PAGE_TABLES_BASE, PAGE_TABLES_END);
-
-	if (NeedsInitialization)
-	{
-		memset(memory, 0, 4 * ONE_MB);
-		printf("[0x%.4X] INIT: Initialized page tables memory\n", GetCurrentThreadId());
-	}
-	else
-		printf("[0x%.4X] INIT: Loaded page tables memory.bin\n", GetCurrentThreadId());
 }
 
 #pragma optimize("", off)
@@ -787,7 +716,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
-	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
+	CxbxRestorePageTablesMemory();
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -831,7 +760,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		}
 
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables, bRestrict64MiB);
+		g_VMManager.Initialize(hMemoryBin, bRestrict64MiB);
 
 		// Reserve the memory region used by the xbe image and commit the xbe header
 		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;
@@ -846,7 +775,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// placeholder and cannot be allocated anyway. This will result in an increase in the reserved memory
 
 			VAddr ReservedBase = XBE_IMAGE_BASE + ROUND_UP_4K(ImageSize);
-			size_t ReservedSize = XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE;
+			size_t ReservedSize = ROUND_DOWN_4K(XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE);
 			g_VMManager.XbAllocateVirtualMemory(&ReservedBase, 0, &ReservedSize, XBOX_MEM_RESERVE, XBOX_PAGE_NOACCESS);
 		}
 

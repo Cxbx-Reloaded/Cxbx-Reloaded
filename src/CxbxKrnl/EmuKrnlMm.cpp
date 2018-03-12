@@ -133,7 +133,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
-	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::SystemMemory, Protect, NumberOfBytes, false);
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(SystemMemoryType, Protect, NumberOfBytes, false);
 
 	RETURN(addr);
 }
@@ -173,7 +173,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
-	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? PageType::Debugger : PageType::Stack,
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? DebuggerType : StackType,
 		XBOX_PAGE_READWRITE, NumberOfBytes, true);
 
 	RETURN(addr);
@@ -197,7 +197,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 
 	VAddr StackBottom = (VAddr)StackBase - ActualSize;
 
-	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBottom) ? PageType::Stack : PageType::Debugger,
+	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBottom) ? StackType : DebuggerType,
 		StackBottom, ActualSize);
 }
 
@@ -236,7 +236,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::ULONG NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(PageType::SystemMemory, (VAddr)BaseAddress, NumberOfBytes);
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(SystemMemoryType, (VAddr)BaseAddress, NumberOfBytes);
 
 	RETURN(FreedPagesNumber);
 }
@@ -495,7 +495,7 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 	// This should only be called by debug xbe's
 	assert(g_bIsDebug);
 
-	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(PageType::Debugger, Protect, NumberOfBytes, false);
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
 	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
 
 	RETURN(addr);
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 	// This should only be called by debug xbe's
 	assert(g_bIsDebug);
 
-	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(PageType::Debugger, (VAddr)BaseAddress, NumberOfBytes);
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(DebuggerType, (VAddr)BaseAddress, NumberOfBytes);
 
 	RETURN(FreedPagesNumber);
 }
@@ -526,8 +526,10 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 // ******************************************************************
 // * 0x0178 - MmDbgQueryAvailablePages
 // ******************************************************************
-XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages()
+XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages(void)
 {
+	LOG_FUNC();
+
 	// This should only be called by debug xbe's
 	assert(g_bIsDebug);
 

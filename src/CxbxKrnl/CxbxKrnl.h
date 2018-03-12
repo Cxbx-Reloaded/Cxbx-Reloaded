@@ -197,6 +197,34 @@ enum {
 	BOOT_QUICK_REBOOT =   1 << 4,
 };
 
+/* Xbox PAGE Masks */
+#define XBOX_PAGE_NOACCESS          0x01
+#define XBOX_PAGE_READONLY          0x02
+#define XBOX_PAGE_READWRITE         0x04
+#define XBOX_PAGE_WRITECOPY         0x08 // ?
+#define XBOX_PAGE_EXECUTE           0x10
+#define XBOX_PAGE_EXECUTE_READ      0x20
+#define XBOX_PAGE_EXECUTE_READWRITE 0x40
+#define XBOX_PAGE_EXECUTE_WRITECOPY 0x80 // ?
+#define XBOX_PAGE_GUARD             0x100
+#define XBOX_PAGE_NOCACHE           0x200
+#define XBOX_PAGE_WRITECOMBINE      0x400
+
+/* Xbox MEM Masks */
+#define XBOX_MEM_COMMIT             0x1000
+#define XBOX_MEM_RESERVE            0x2000
+#define XBOX_MEM_DECOMMIT           0x4000
+#define XBOX_MEM_RELEASE            0x8000
+#define XBOX_MEM_FREE               0x10000
+#define XBOX_MEM_PRIVATE            0x20000
+#define XBOX_MEM_MAPPED             0x40000 // ?
+#define XBOX_MEM_RESET              0x80000
+#define XBOX_MEM_TOP_DOWN           0x100000
+#define XBOX_MEM_WRITE_WATCH        0x200000 // ?
+#define XBOX_MEM_PHYSICAL           0x400000 // ?
+#define XBOX_MEM_NOZERO             0x800000 // Replaces MEM_ROTATE on WinXP+
+#define XBOX_MEM_IMAGE              0x1000000 // ?
+
 void CxbxPopupMessage(const char *message, ...);
 
 #define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \

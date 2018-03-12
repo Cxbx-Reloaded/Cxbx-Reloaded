@@ -211,7 +211,7 @@ XBSYSAPI EXPORTNUM(375) ULONG NTAPI MmDbgFreeMemory
 // ******************************************************************
 // * MmDbgQueryAvailablePages
 // ******************************************************************
-XBSYSAPI EXPORTNUM(376) ULONG NTAPI MmDbgQueryAvailablePages();
+XBSYSAPI EXPORTNUM(376) ULONG NTAPI MmDbgQueryAvailablePages(void);
 
 // ******************************************************************
 // * MmDbgReleaseAddress

@@ -34,10 +34,11 @@
 // *
 // ******************************************************************
 
-#include "PhysicalMemory.h"
-#include <assert.h>
 
 #define LOG_PREFIX "PMEM"
+
+#include "PhysicalMemory.h"
+#include <assert.h>
 
 
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
@@ -119,7 +120,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			TempPF.Default = 0;
 			TempPF.Busy.Busy = 1;
 			TempPF.Busy.BusyType = BusyType;
-			if (BusyType != PageType::VirtualPageTable && BusyType != PageType::SystemPageTable) {
+			if (BusyType != PageType::VirtualPageTableType && BusyType != SystemPageTableType) {
 				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
 			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
@@ -476,8 +477,8 @@ bool PhysicalMemory::ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte)
 		goto Fail;
 	}
 
-	if (LowNibble | HighNibble == 1 || LowNibble | HighNibble == 2) { Mask = PTE_READONLY; }
-	else if (LowNibble | HighNibble == 4) { Mask = PTE_READWRITE; }
+	if ((LowNibble | HighNibble) == 1 || (LowNibble | HighNibble) == 2) { Mask = PTE_READONLY; }
+	else if ((LowNibble | HighNibble) == 4) { Mask = PTE_READWRITE; }
 	else
 	{
 		// ergo720: all the other combinations are invalid. This effectively filters out XBOX_PAGE_WRITECOPY and
@@ -562,7 +563,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
 			// input is probably invalid
 
-			DbgPrintf(LOG_PREFIX "PatchXboxPermissions: Memory permissions bug detected\n");
+			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -625,7 +626,7 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 			// If we reach here it means that more than one permission modifier was specified, and so the input is
 			// probably invalid
 
-			DbgPrintf(LOG_PREFIX "ConvertXboxToWinProtection: Memory permissions bug detected\n");
+			DbgPrintf("PMEM: ConvertXboxToWinProtection: Memory permissions bug detected\n");
 			return PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -644,7 +645,7 @@ DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
 	else if (AllocType & XBOX_MEM_RELEASE) { Mask |= MEM_RELEASE; }
 	else if (AllocType & XBOX_MEM_RESET) { Mask |= MEM_RESET; }
 	else if (AllocType & XBOX_MEM_TOP_DOWN) { Mask |= MEM_TOP_DOWN; }
-	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf(LOG_PREFIX "XBOX_MEM_NOZERO flag is not supported!\n"); }
+	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf("PMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
 
 	return Mask;
 }
@@ -656,14 +657,14 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	MMPTE TempPte;
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
 	PFN_COUNT PTtoCommit = 0;
-	PageType BusyType = PageType::SystemPageTable;
+	PageType BusyType = SystemPageTableType;
 	int PdeMappedSizeIncrement = 0;
 	VAddr StartingAddr = addr;
 
 	assert(PteNumber);
 	assert(addr);
 
-	for (int i = 0; i < PdeNumber; ++i)
+	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
 		if (GetPdeAddress(StartingAddr += PdeMappedSizeIncrement)->Hardware.Valid == 0)
 		{
@@ -685,14 +686,14 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 		return false;
 	}
-	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = PageType::VirtualPageTable; }
+	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTableType; }
 	PdeMappedSizeIncrement = 0;
 	StartingAddr = addr;
 
 	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
 	// memory regions
 
-	for (int i = 0; i < PdeNumber; ++i)
+	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
 		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
 		if (pPde->Hardware.Valid == 0)
@@ -714,14 +715,13 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 	PMMPTE pPde;
 	XBOX_PFN PTpfn;
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
-	PageType BusyType = PageType::SystemPageTable;
 	int PdeMappedSizeIncrement = 0;
 	VAddr StartingAddr = addr;
 
 	assert(PteNumber);
 	assert(addr);
 
-	for (int i = 0; i < PdeNumber; ++i)
+	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
 		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
 		assert(pPde->Hardware.Valid != 0); // pde must be valid at this point
@@ -729,8 +729,8 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 			PTpfn = *XBOX_PFN_ELEMENT(pPde->Hardware.PFN);
 		}
 		else { PTpfn = *CHIHIRO_PFN_ELEMENT(pPde->Hardware.PFN); }
-		assert(PTpfn.PTPageFrame.BusyType == PageType::SystemPageTable ||
-			PTpfn.PTPageFrame.BusyType == PageType::VirtualPageTable);
+		assert(PTpfn.PTPageFrame.BusyType == SystemPageTableType ||
+			PTpfn.PTPageFrame.BusyType == VirtualPageTableType);
 
 		if (PTpfn.PTPageFrame.PtesUsed == 0)
 		{
@@ -744,19 +744,18 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte, bool bPhysicalFunction)
 {
-	XBOX_PFN TempPF;
 	PFN LowestAcceptablePage = 0;
 	PFN HighestAcceptablePage;
 	PFN pfn;
 
-	assert(BusyType < PageType::COUNT);
+	assert(BusyType < COUNTtype);
 	assert(pPte);
 
 	if (bPhysicalFunction) { HighestAcceptablePage = XBOX_HIGHEST_PHYSICAL_PAGE; }
 	else { HighestAcceptablePage = m_bAllowNonDebuggerOnTop64MiB ? m_HighestPage : XBOX_HIGHEST_PHYSICAL_PAGE; }
 
 	// Non-debugger pages only exsist in the first 64 MiB of memory and debbuger pages only in the upper half
-	if (BusyType == PageType::Debugger)
+	if (BusyType == DebuggerType)
 	{
 		assert(g_bIsDebug);
 		LowestAcceptablePage = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
@@ -796,8 +795,8 @@ XBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
 	}
 	else { PTpfn = *CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
 	assert(PTpfn.PTPageFrame.Busy == 1);
-	assert(PTpfn.PTPageFrame.BusyType == PageType::SystemPageTable ||
-		PTpfn.PTPageFrame.BusyType == PageType::VirtualPageTable);
+	assert(PTpfn.PTPageFrame.BusyType == SystemPageTableType ||
+		PTpfn.PTPageFrame.BusyType == VirtualPageTableType);
 
 	return PTpfn;
 }

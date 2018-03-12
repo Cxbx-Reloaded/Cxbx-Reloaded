@@ -42,15 +42,15 @@
 
 
 /* VMATypes */
-enum VMAType
+typedef enum _VMAType
 {
 	// vma represents an unmapped region of the address space
-	Free,
+	FreeVma,
 	// memory reserved by XbAllocateVirtualMemory or by MmMapIoSpace
-	Reserved,
+	ReservedVma,
 	// vma represents allocated memory
-	Allocated,
-};
+	AllocatedVma,
+}VMAType;
 
 
 /* VirtualMemoryArea struct */
@@ -61,7 +61,7 @@ struct VirtualMemoryArea
 	// vma size
 	size_t size = 0;
 	// vma kind of memory
-	VMAType type = VMAType::Free;
+	VMAType type = FreeVma;
 	// initial vma permissions for user allocations, only used by NtQueryVirtualMemory
 	DWORD permissions = XBOX_PAGE_NOACCESS;
 	// this allocation was served by VirtualAlloc
@@ -83,14 +83,14 @@ typedef struct _MemoryRegion
 
 
 /* enum describing the memory regions available for allocations on the Xbox */
-enum MemoryRegionType
+typedef enum _MemoryRegionType
 {
-	User,
-	System,
-	Devkit,
-	Contiguous,
-	COUNT,
-};
+	UserRegion,
+	SystemRegion,
+	DevkitRegion,
+	ContiguousRegion,
+	COUNTRegion,
+}MemoryRegionType;
 
 
 /* VMManager class */
@@ -106,16 +106,13 @@ class VMManager : public PhysicalMemory
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
 			FlushFileBuffers(m_hContiguousFile);
-			FlushViewOfFile((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE);
-			FlushFileBuffers(m_hPTFile);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
 			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
-			UnmapViewOfFile((void*)PAGE_TABLES_BASE);
+			VirtualFree((void*)PAGE_TABLES_BASE, 0, MEM_RELEASE);
 			CloseHandle(m_hContiguousFile);
-			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, HANDLE PT_view, bool bRestrict64MiB);
+		void Initialize(HANDLE memory_view, bool bRestrict64MiB);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
@@ -165,7 +162,7 @@ class VMManager : public PhysicalMemory
 		// typedef of pointer to a member function mapping a memory block
 		typedef VAddr (VMManager::*MappingFn) (VAddr, size_t, size_t, DWORD, PFN);
 		// an array of structs used to track the free/allocated vma's in the various memory regions
-		MemoryRegion m_MemoryRegionArray[MemoryRegionType::COUNT];
+		MemoryRegion m_MemoryRegionArray[COUNTRegion];
 		// handle of the contiguous file mapping
 		HANDLE m_hContiguousFile = NULL;
 		// handle of the PT file mapping

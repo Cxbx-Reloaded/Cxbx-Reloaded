@@ -115,27 +115,28 @@ typedef struct _XBOX_PFN {
 			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
 			ULONG Busy : 1;        // If set, PFN is in use
 			ULONG PtesUsed : 11;   // Number of used pte's in the PT pointed by the pde
-			ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTable or SystemPageTable)
+			ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTableType or SystemPageTableType)
 		} PTPageFrame;
 	};
 } XBOX_PFN, *PXBOX_PFN;
 
 
 /* enum describing the usage type of the memory pages */
-enum PageType {
-	Unknown,                   // Used by the PFN database
-	Stack,                     // Used by MmCreateKernelStack
-	VirtualPageTable,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
-	SystemPageTable,           // Used by the pages holding the PTs that map the system memory
-	Pool,                      // Used by ExAllocatePoolWithTag
-	VirtualMemory,             // Used by NtAllocateVirtualMemory
-	SystemMemory,              // Used by MmAllocateSystemMemory
-	Image,                     // Used to mark executable memory
-	Cache,                     // Used by the file cache related functions
-	Contiguous,                // Used by MmAllocateContiguousMemoryEx and others
-	Debugger,                  // xbdm-related
-	COUNT                      // The size of the array containing the page usage per type
-};
+typedef enum _PageType
+{
+	UnknownType,                   // Used by the PFN database
+	StackType,                     // Used by MmCreateKernelStack
+	VirtualPageTableType,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
+	SystemPageTableType,           // Used by the pages holding the PTs that map the system memory
+	PoolType,                      // Used by ExAllocatePoolWithTag
+	VirtualMemoryType,             // Used by NtAllocateVirtualMemory
+	SystemMemoryType,              // Used by MmAllocateSystemMemory
+	ImageType,                     // Used to mark executable memory
+	CacheType,                     // Used by the file cache related functions
+	ContiguousType,                // Used by MmAllocateContiguousMemoryEx and others
+	DebuggerType,                  // xbdm-related
+	COUNTtype                      // The size of the array containing the page usage per type
+}PageType;
 
 
 /* Lock count variables for the PFN database */
@@ -165,36 +166,6 @@ enum PageType {
 #define PTE_SYSTEM_PROTECTION_MASK  0x0000001B // valid, write, write-through, no cache
 
 
-/* Xbox PAGE Masks */
-#define XBOX_PAGE_NOACCESS          0x01
-#define XBOX_PAGE_READONLY          0x02
-#define XBOX_PAGE_READWRITE         0x04
-#define XBOX_PAGE_WRITECOPY         0x08 // ?
-#define XBOX_PAGE_EXECUTE           0x10
-#define XBOX_PAGE_EXECUTE_READ      0x20
-#define XBOX_PAGE_EXECUTE_READWRITE 0x40
-#define XBOX_PAGE_EXECUTE_WRITECOPY 0x80 // ?
-#define XBOX_PAGE_GUARD             0x100
-#define XBOX_PAGE_NOCACHE           0x200
-#define XBOX_PAGE_WRITECOMBINE      0x400
-
-
-/* Xbox MEM Masks */
-#define XBOX_MEM_COMMIT             0x1000
-#define XBOX_MEM_RESERVE            0x2000
-#define XBOX_MEM_DECOMMIT           0x4000
-#define XBOX_MEM_RELEASE            0x8000
-#define XBOX_MEM_FREE               0x10000
-#define XBOX_MEM_PRIVATE            0x20000
-#define XBOX_MEM_MAPPED             0x40000 // ?
-#define XBOX_MEM_RESET              0x80000
-#define XBOX_MEM_TOP_DOWN           0x100000
-#define XBOX_MEM_WRITE_WATCH        0x200000 // ?
-#define XBOX_MEM_PHYSICAL           0x400000 // ?
-#define XBOX_MEM_NOZERO             0x800000 // Replaces MEM_ROTATE on WinXP+
-#define XBOX_MEM_IMAGE              0x1000000 // ?
-
-
 /* Various macros to manipulate PDE/PTE/PFN */
 #define GetPdeAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 22) << 2) + PAGE_DIRECTORY_BASE)) // (Va/4M) * 4 + PDE_BASE
 #define GetPteAddress(Va) ((PMMPTE)(((((ULONG)(Va)) >> 12) << 2) + PAGE_TABLES_BASE))    // (Va/4K) * 4 + PTE_BASE
@@ -211,9 +182,9 @@ enum PageType {
 #define ValidKernelPteBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x63
 #define ValidKernelPdeBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_OWNER_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x67
 // This returns the VAddr in the contiguous region
-#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)PHYSICAL_MAP_BASE + (Pfn << PAGE_SHIFT))
+#define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)PHYSICAL_MAP_BASE + ((Pfn) << PAGE_SHIFT))
 // This works with both PAddr and VAddr in the contiguous region
-#define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) ((Va & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
+#define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) (((Va) & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
 // This returns the address of the PFN entry for Xbox/Chihiro
 #define XBOX_PFN_ELEMENT(pfn) (&((PXBOX_PFN)XBOX_PFN_ADDRESS)[pfn])
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
@@ -253,7 +224,7 @@ class PhysicalMemory
 		// amount of free physical pages available for usage by the debugger
 		PFN_COUNT m_DebuggerPagesAvailable = 0;
 		// array containing the number of pages in use per type
-		PFN_COUNT m_PagesByUsage[PageType::COUNT] = { 0 };
+		PFN_COUNT m_PagesByUsage[COUNTtype] = { 0 };
 		// highest page on the system
 		PFN m_HighestPage = XBOX_HIGHEST_PHYSICAL_PAGE;
 		// first page of the nv2a instance memory
