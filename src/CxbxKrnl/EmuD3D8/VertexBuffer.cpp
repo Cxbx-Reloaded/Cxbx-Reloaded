@@ -145,7 +145,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 	return true;
 }
 
-XTL::VertexPatcher::VertexPatcher()
+XTL::CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 {
     this->m_uiNbrStreams = 0;
     ZeroMemory(this->m_pStreams, sizeof(PATCHEDSTREAM) * MAX_NBR_STREAMS);
@@ -155,7 +155,7 @@ XTL::VertexPatcher::VertexPatcher()
     this->m_pDynamicPatch = NULL;
 }
 
-XTL::VertexPatcher::~VertexPatcher()
+XTL::CxbxVertexBufferConverter::~CxbxVertexBufferConverter()
 {
 }
 
@@ -194,7 +194,7 @@ int CountActiveD3DStreams()
 	return lastStreamIndex + 1;
 }
 
-UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
+UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pPatchDesc)
 {
 	// Draw..Up always have one stream
 	if (pPatchDesc->pXboxVertexStreamZeroData != nullptr) {
@@ -217,7 +217,7 @@ UINT XTL::VertexPatcher::GetNbrStreams(VertexPatchDesc *pPatchDesc)
     return 0;
 }
 
-bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
+bool XTL::CxbxVertexBufferConverter::PatchStream(CxbxDrawContext *pPatchDesc,
                                      UINT             uiStream)
 {
     // FVF buffers doesn't have Xbox extensions, but texture coordinates may
@@ -463,7 +463,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
     return true;
 }
 
-bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream)
+bool XTL::CxbxVertexBufferConverter::NormalizeTexCoords(CxbxDrawContext *pPatchDesc, UINT uiStream)
 {
     // Check for active linear textures.
 	bool bHasLinearTex = false, bTexIsLinear[4] = { false };
@@ -621,7 +621,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
     return m_bPatched;
 }
 
-bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
+bool XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pPatchDesc, bool *pbFatalError)
 {
 	CxbxDrawContext *pDrawContext = pPatchDesc; // Temporary alias to help porting over code from PatrickvL WIP_LessVertexPatching
 	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
@@ -861,46 +861,24 @@ VOID XTL::EmuFlushIVB()
 		}
 	}
 
-	VertexPatchDesc VPDesc = {};
-    VPDesc.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
-    VPDesc.dwVertexCount = g_InlineVertexBuffer_TableOffset;
-    VPDesc.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
-    VPDesc.uiXboxVertexStreamZeroStride = uiStride;
-    VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
+    CxbxDrawContext DrawContext;
+    DrawContext.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
+    DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
+    DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
+	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
+	DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
-    VertexPatcher VertPatch;
+	HRESULT hRet;
 
-    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
+	if (bFVF) {
+		hRet = g_pD3DDevice->SetVertexShader(dwCurFVF);
+		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+	}
 
-    if(bFVF)
-    {
-#ifdef CXBX_USE_D3D9
-        g_pD3DDevice->SetVertexShader(nullptr);
-        g_pD3DDevice->SetFVF(dwCurFVF);
-#else
-        g_pD3DDevice->SetVertexShader(dwCurFVF);
-#endif
-    }
-
-    g_pD3DDevice->DrawPrimitiveUP(
-		EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
-        VPDesc.dwHostPrimitiveCount,
-        VPDesc.pXboxVertexStreamZeroData,
-        VPDesc.uiXboxVertexStreamZeroStride);
-
-	g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
-
-    if(bFVF)
-    {
-#ifdef CXBX_USE_D3D9
-		g_pD3DDevice->SetVertexShader(nullptr);
-		g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
-#else
-        g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
-#endif
-    }
-
-    g_InlineVertexBuffer_TableOffset = 0;
-
-    return;
+	CxbxDrawPrimitiveUP(DrawContext);
+	if (bFVF) {
+		hRet = g_pD3DDevice->SetVertexShader(g_CurrentVertexShader);
+		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+	}
+    g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)
 }

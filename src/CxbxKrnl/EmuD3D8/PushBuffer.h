@@ -34,9 +34,6 @@
 #ifndef PUSHBUFFER_H
 #define PUSHBUFFER_H
 
-typedef VertexPatchDesc CxbxDrawContext; // TODO : Temporary
-typedef VertexPatcher CxbxVertexBufferConverter; // TODO : Temporary
-
 extern int DxbxFVF_GetTextureSize(DWORD dwFVF, int aTextureIndex);
 extern UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures);
 

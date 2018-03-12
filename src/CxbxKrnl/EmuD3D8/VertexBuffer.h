@@ -39,7 +39,7 @@
 
 #define MAX_NBR_STREAMS 16
 
-typedef struct _VertexPatchDesc
+typedef struct _CxbxDrawContext
 {
     IN     X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
@@ -57,7 +57,7 @@ typedef struct _VertexPatchDesc
 	OUT UINT                     uiHostVertexStreamZeroStride;
     OUT DWORD                    dwHostPrimitiveCount;
 }
-VertexPatchDesc;
+CxbxDrawContext;
 
 typedef struct _PATCHEDSTREAM
 {
@@ -67,13 +67,13 @@ typedef struct _PATCHEDSTREAM
     UINT                    uiNewStride;
 } PATCHEDSTREAM;
 
-class VertexPatcher
+class CxbxVertexBufferConverter
 {
     public:
-        VertexPatcher();
-       ~VertexPatcher();
+        CxbxVertexBufferConverter();
+       ~CxbxVertexBufferConverter();
 
-        bool Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError);
+        bool Apply(CxbxDrawContext *pPatchDesc, bool *pbFatalError);
     private:
 
         UINT m_uiNbrStreams;
@@ -87,13 +87,14 @@ class VertexPatcher
         VERTEX_DYNAMIC_PATCH *m_pDynamicPatch;
 
         // Returns the number of streams of a patch
-        UINT GetNbrStreams(VertexPatchDesc *pPatchDesc);
+        UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
+        void CacheStream(VertexPatchDesc *pPatchDesc,
 
         // Patches the types of the stream
-        bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
+        bool PatchStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
 
         // Normalize texture coordinates in FVF stream if needed
-        bool NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream);
+        bool NormalizeTexCoords(CxbxDrawContext *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation
