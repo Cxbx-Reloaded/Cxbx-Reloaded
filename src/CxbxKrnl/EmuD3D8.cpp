@@ -62,6 +62,7 @@ namespace xboxkrnl
 #include <assert.h>
 #include <process.h>
 #include <clocale>
+#include <unordered_map>
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -746,7 +747,7 @@ typedef struct {
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } host_resource_info_t;
 
-std::map <resource_key_t, host_resource_info_t> g_HostResources;
+std::unordered_map <resource_key_t, host_resource_info_t> g_HostResources;
 
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 {
@@ -2325,7 +2326,7 @@ typedef struct {
 	XTL::IDirect3DIndexBuffer8* pHostIndexBuffer = nullptr;
 } ConvertedIndexBuffer;
 
-std::map<PWORD, ConvertedIndexBuffer> g_ConvertedIndexBuffers;
+std::unordered_map<PWORD, ConvertedIndexBuffer> g_ConvertedIndexBuffers;
 	
 void CxbxRemoveIndexBuffer(PWORD pData)
 {
@@ -6990,7 +6991,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
 // Maps pFunction defintions to pre-compiled shaders
 // to reduce the speed impact of LoadVertexShaderProgram
 typedef uint64_t load_shader_program_key_t;
-std::map<load_shader_program_key_t, DWORD> g_LoadVertexShaderProgramCache;
+std::unordered_map<load_shader_program_key_t, DWORD> g_LoadVertexShaderProgramCache;
 
 // ******************************************************************
 // * patch: D3DDevice_LoadVertexShaderProgram
