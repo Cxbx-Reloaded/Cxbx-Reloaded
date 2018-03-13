@@ -3638,6 +3638,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
+	uint FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
 
     switch(Register)
     {
@@ -3649,8 +3650,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			g_InlineVertexBuffer_Table[o].Position.z = c;
 			g_InlineVertexBuffer_Table[o].Rhw = d; // Was : 1.0f; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
 
-			if ((g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) == 0) {
-				g_InlineVertexBuffer_FVF = D3DFVF_XYZRHW;
+			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
+			case 0:
+				// No position mask given yet, set it now :
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZRHW;
+				break;
+			case D3DFVF_XYZRHW:
+				// This one is alright
+				break;
+			default:
+				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZRHW : %x", g_InlineVertexBuffer_FVF);
+				// TODO : How to resolve this?
 			}
 
 			// Start a new vertex
@@ -3674,9 +3684,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			// TODO: Test the above. 
 			// TODO: Does or doesn't Xbox support five blendweights? And if so, how is the fifth set?
 
-			if ((g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) == 0) {
-				g_InlineVertexBuffer_FVF = D3DFVF_XYZB1;
+			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
+			case 0:
+				// No position mask given yet, set it now :
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
 				// TODO: How to select blendweight D3DFVF_XYZB2 or up?
+				break;
+			case D3DFVF_XYZB1:
+				// This one is alright
+				break;
+			default:
+				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when processing X_D3DVSDE_BLENDWEIGHT : %x", g_InlineVertexBuffer_FVF);
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_POSITION_MASK; // for now, remove prior position mask, leading to blending below
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
+				// TODO : How to resolve this?
 			}
 
 			break;
