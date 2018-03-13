@@ -1049,10 +1049,10 @@ const int X_D3DVSDE_FOG          = 5; // Xbox extension
 const int X_D3DVSDE_POINTSIZE    = 6; // Dxbx addition
 const int X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
 const int X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
-const int X_D3DVSDE_TEXCOORD0    = 9; // "Corresponds to D3DFVF_TEX0" says the docs, but 0 means no textures, so probably D3DFVF_TEX1!
-const int X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to D3DFVF_TEX{above}+1
-const int X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to D3DFVF_TEX{above}+2
-const int X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to D3DFVF_TEX{above}+3
+const int X_D3DVSDE_TEXCOORD0    = 9; // Corresponds to D3DFVF_TEX1 (not D3DFVF_TEX0, which means no textures are present)
+const int X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to D3DFVF_TEX2
+const int X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to D3DFVF_TEX3
+const int X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to D3DFVF_TEX4
 const int X_D3DVSDE_VERTEX       = 0xFFFFFFFF; // Xbox extension for Begin/End drawing (data is a D3DVSDT_FLOAT4)
 
 //typedef X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to make overloads possible;

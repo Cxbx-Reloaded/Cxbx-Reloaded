@@ -3772,10 +3772,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			break;
 		}
 
-		// TODO case X_D3DVSDE_BACKDIFFUSE: ; // Xbox extension
-
-		// TODO case X_D3DVSDE_BACKSPECULAR: ; // Xbox extension
-
 		case X_D3DVSDE_TEXCOORD0:
         {
             g_InlineVertexBuffer_Table[o].TexCoord[0].x = a;
