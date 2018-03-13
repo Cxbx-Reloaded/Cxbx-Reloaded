@@ -3551,18 +3551,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Begin)
 
 	LOG_FUNC_ONE_ARG(PrimitiveType);
 
-    g_IVBPrimitiveType = PrimitiveType;
-
-    g_IVBTblOffs = 0;
-    g_IVBFVF = 0;
-
-    // default values
-    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*IVB_TABLE_SIZE);
-
-    if(g_pIVBVertexBuffer == nullptr)
-    {
-        g_pIVBVertexBuffer = (DWORD*)g_VMManager.Allocate(IVB_BUFFER_SIZE);
-    }
+    g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
+    g_InlineVertexBuffer_TableOffset = 0;
+    g_InlineVertexBuffer_FVF = 0;
 }
 
 // ******************************************************************
@@ -3628,51 +3619,96 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
     HRESULT hRet = D3D_OK;
 
-	int o = g_IVBTblOffs;
+	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
+	if (g_InlineVertexBuffer_TableLength <= g_InlineVertexBuffer_TableOffset + 1) {
+		if (g_InlineVertexBuffer_TableLength == 0) {
+			g_InlineVertexBuffer_TableLength = PAGE_SIZE / sizeof(struct _D3DIVB);
+		} else {
+			g_InlineVertexBuffer_TableLength *= 2;
+		}
 
-	if (o >= IVB_TABLE_SIZE) {
-		CxbxKrnlCleanup("Overflow g_IVBTblOffs : %d", o);
+		g_InlineVertexBuffer_Table = (struct _D3DIVB*)realloc(g_InlineVertexBuffer_Table, sizeof(struct _D3DIVB) * g_InlineVertexBuffer_TableLength);
+		DbgPrintf("Reallocated g_InlineVertexBuffer_Table to %d entries\n", g_InlineVertexBuffer_TableLength);
 	}
+
+	// Is this the initial call after D3DDevice_Begin() ?
+	if (g_InlineVertexBuffer_FVF == 0) {
+		// Set first vertex to zero (preventing leaks from prior Begin/End calls)
+		g_InlineVertexBuffer_Table[0] = {};
+	}
+
+	int o = g_InlineVertexBuffer_TableOffset;
+	uint FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
 
     switch(Register)
     {
-        // TODO: Blend weight.
-
+        case X_D3DVSDE_VERTEX:
         case X_D3DVSDE_POSITION:
         {
-            g_IVBTable[o].Position.x = a;
-            g_IVBTable[o].Position.y = b;
-            g_IVBTable[o].Position.z = c;
-            g_IVBTable[o].Rhw = 1.0f;
+            g_InlineVertexBuffer_Table[o].Position.x = a;
+            g_InlineVertexBuffer_Table[o].Position.y = b;
+			g_InlineVertexBuffer_Table[o].Position.z = c;
+			g_InlineVertexBuffer_Table[o].Rhw = d; // Was : 1.0f; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
 
-            g_IVBTblOffs++;
+			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
+			case 0:
+				// No position mask given yet, set it now :
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZRHW;
+				break;
+			case D3DFVF_XYZRHW:
+				// This one is alright
+				break;
+			default:
+				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZRHW : %x", g_InlineVertexBuffer_FVF);
+				// TODO : How to resolve this?
+			}
 
-            g_IVBFVF |= D3DFVF_XYZRHW;
-	        break;
+			// Start a new vertex
+			g_InlineVertexBuffer_TableOffset++;
+			// Copy all attributes of the previous vertex (if any) to the new vertex
+			static UINT uiPreviousOffset = ~0; // Can't use 0, as that may be copied too
+			if (uiPreviousOffset != ~0) {
+				g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset] = g_InlineVertexBuffer_Table[uiPreviousOffset];
+			}
+			uiPreviousOffset = g_InlineVertexBuffer_TableOffset;
+	
+			break;
         }
 
 		case X_D3DVSDE_BLENDWEIGHT:
 		{
-            g_IVBTable[o].Position.x = a;
-            g_IVBTable[o].Position.y = b;
-            g_IVBTable[o].Position.z = c;
-			g_IVBTable[o].Blend1 = d;
+            g_InlineVertexBuffer_Table[o].Blend[0] = a;
+            g_InlineVertexBuffer_Table[o].Blend[1] = b;
+            g_InlineVertexBuffer_Table[o].Blend[2] = c;
+			g_InlineVertexBuffer_Table[o].Blend[3] = d;
+			// TODO: Test the above. 
+			// TODO: Does or doesn't Xbox support five blendweights? And if so, how is the fifth set?
 
-            g_IVBTblOffs++;
+			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
+			case 0:
+				// No position mask given yet, set it now :
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
+				// TODO: How to select blendweight D3DFVF_XYZB2 or up?
+				break;
+			case D3DFVF_XYZB1:
+				// This one is alright
+				break;
+			default:
+				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when processing X_D3DVSDE_BLENDWEIGHT : %x", g_InlineVertexBuffer_FVF);
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_POSITION_MASK; // for now, remove prior position mask, leading to blending below
+				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
+				// TODO : How to resolve this?
+			}
 
-            g_IVBFVF |= D3DFVF_XYZB1;
-		    break;
+			break;
         }
 
 		case X_D3DVSDE_NORMAL:
         {
-            g_IVBTable[o].Normal.x = a;
-            g_IVBTable[o].Normal.y = b;
-            g_IVBTable[o].Normal.z = c;
-
-            g_IVBTblOffs++;
-
-            g_IVBFVF |= D3DFVF_NORMAL;
+            g_InlineVertexBuffer_Table[o].Normal.x = a;
+            g_InlineVertexBuffer_Table[o].Normal.y = b;
+			g_InlineVertexBuffer_Table[o].Normal.z = c;
+            g_InlineVertexBuffer_FVF |= D3DFVF_NORMAL;
 			break;
         }
 
@@ -3683,9 +3719,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             DWORD cg = FtoDW(b) << 8;
             DWORD cb = FtoDW(c) << 0;
 
-            g_IVBTable[o].dwDiffuse = ca | cr | cg | cb;
-
-            g_IVBFVF |= D3DFVF_DIFFUSE;
+            g_InlineVertexBuffer_Table[o].Diffuse = ca | cr | cg | cb;
+            g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
 			break;
         }
 
@@ -3696,20 +3731,35 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             DWORD cg = FtoDW(b) << 8;
             DWORD cb = FtoDW(c) << 0;
 
-            g_IVBTable[o].dwSpecular = ca | cr | cg | cb;
-
-            g_IVBFVF |= D3DFVF_SPECULAR;
+            g_InlineVertexBuffer_Table[o].Specular = ca | cr | cg | cb;
+            g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
 			break;
         }
 
+		// TODO case X_D3DVSDE_FOG: ; // Xbox extension
+
+		case X_D3DVSDE_POINTSIZE: {
+			g_InlineVertexBuffer_Table[o].PointSize = a;
+			g_InlineVertexBuffer_FVF |= D3DFVF_PSIZE;
+			break;
+		}
+
+		// TODO case X_D3DVSDE_BACKDIFFUSE: ; // Xbox extension
+
+		// TODO case X_D3DVSDE_BACKSPECULAR: ; // Xbox extension
+
 		case X_D3DVSDE_TEXCOORD0:
         {
-            g_IVBTable[o].TexCoord1.x = a;
-            g_IVBTable[o].TexCoord1.y = b;
-
-            if( (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1)
-            {
-                g_IVBFVF |= D3DFVF_TEX1;
+            g_InlineVertexBuffer_Table[o].TexCoord[0].x = a;
+			g_InlineVertexBuffer_Table[o].TexCoord[0].y = b;
+			g_InlineVertexBuffer_Table[o].TexCoord[0].z = c;
+			g_InlineVertexBuffer_Table[o].TexCoord[0].w = d;
+            if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) {
+				// Dxbx fix : Use mask, else the format might get expanded incorrectly :
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_TEXCOUNT_MASK;
+				g_InlineVertexBuffer_FVF |= D3DFVF_TEX1;
+				// Dxbx note : Correct usage of D3DFVF_TEX1 (and the other cases below)
+				// can be tested with "Daphne Xbox" (the Laserdisc Arcade Game Emulator).
             }
 
 			break;
@@ -3717,59 +3767,44 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
 		case X_D3DVSDE_TEXCOORD1:
         {
-            g_IVBTable[o].TexCoord2.x = a;
-            g_IVBTable[o].TexCoord2.y = b;
-
-            if( (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2)
-            {
-                g_IVBFVF |= D3DFVF_TEX2;
-            }
+            g_InlineVertexBuffer_Table[o].TexCoord[1].x = a;
+			g_InlineVertexBuffer_Table[o].TexCoord[1].y = b;
+			g_InlineVertexBuffer_Table[o].TexCoord[1].z = c;
+			g_InlineVertexBuffer_Table[o].TexCoord[1].w = d;
+			if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX2) {
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_TEXCOUNT_MASK;
+				g_InlineVertexBuffer_FVF |= D3DFVF_TEX2;
+			}
 
 			break;
         }
 
 		case X_D3DVSDE_TEXCOORD2:
         {
-            g_IVBTable[o].TexCoord3.x = a;
-            g_IVBTable[o].TexCoord3.y = b;
-
-            if( (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3)
-            {
-                g_IVBFVF |= D3DFVF_TEX3;
-            }
+            g_InlineVertexBuffer_Table[o].TexCoord[2].x = a;
+			g_InlineVertexBuffer_Table[o].TexCoord[2].y = b;
+			g_InlineVertexBuffer_Table[o].TexCoord[2].z = c;
+			g_InlineVertexBuffer_Table[o].TexCoord[2].w = d;
+			if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX3) {
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_TEXCOUNT_MASK;
+				g_InlineVertexBuffer_FVF |= D3DFVF_TEX3;
+			}
 
 			break;
         }
 
 		case X_D3DVSDE_TEXCOORD3:
         {
-            g_IVBTable[o].TexCoord4.x = a;
-            g_IVBTable[o].TexCoord4.y = b;
-
-            if( (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4)
-            {
-                g_IVBFVF |= D3DFVF_TEX4;
-            }
+            g_InlineVertexBuffer_Table[o].TexCoord[3].x = a;
+			g_InlineVertexBuffer_Table[o].TexCoord[3].y = b;
+			g_InlineVertexBuffer_Table[o].TexCoord[3].z = c;
+			g_InlineVertexBuffer_Table[o].TexCoord[3].w = d;
+			if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX4) {
+				g_InlineVertexBuffer_FVF &= ~D3DFVF_TEXCOUNT_MASK;
+				g_InlineVertexBuffer_FVF |= D3DFVF_TEX4;
+			}
 
 	        break;
-        }
-
-        case X_D3DVSDE_VERTEX:
-        {
-            g_IVBTable[o].Position.x = a;
-            g_IVBTable[o].Position.y = b;
-            g_IVBTable[o].Position.z = c;
-            g_IVBTable[o].Rhw = d;
-
-            // Copy current color to next vertex
-            g_IVBTable[o+1].dwDiffuse  = g_IVBTable[o].dwDiffuse;
-            g_IVBTable[o+1].dwSpecular = g_IVBTable[o].dwSpecular;
-
-            g_IVBTblOffs++;
-
-            g_IVBFVF |= D3DFVF_XYZRHW;
-
-			break;
         }
 
         default:
@@ -3849,12 +3884,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_End)()
 
 	LOG_FUNC();
 
-    if(g_IVBTblOffs != 0)
+    if(g_InlineVertexBuffer_TableOffset > 0)
         EmuFlushIVB();
 
     // TODO: Should technically clean this up at some point..but on XP doesnt matter much
-//    g_VMManager.Deallocate((VAddr)g_pIVBVertexBuffer);
-//    g_VMManager.Deallocate((VAddr)g_IVBTable);
+//    g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_pData);
+//    g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_Table);
 }
 
 // ******************************************************************

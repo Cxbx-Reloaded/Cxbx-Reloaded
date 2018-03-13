@@ -131,33 +131,29 @@ class VertexPatcher
 };
 
 // inline vertex buffer emulation
-extern DWORD                  *g_pIVBVertexBuffer;
-extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
-extern DWORD                   g_IVBFVF;
+extern X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
+extern DWORD                   g_InlineVertexBuffer_FVF;
 
-#define IVB_TABLE_SIZE  4096 // This should be more than enough. Tweak as necessary if it overflows or the resulting VertexBuffer fails to allocate
-#define IVB_BUFFER_SIZE sizeof(_D3DIVB) * IVB_TABLE_SIZE
-
-// TODO : Enlarge IVB_TABLE_SIZE and IVB_BUFFER_SIZE
-// TODO : Calculate IVB_BUFFER_SIZE using sizeof(DWORD)
-
-struct _D3DIVB
+extern struct _D3DIVB
 {
-    XTL::D3DXVECTOR3 Position;   // Position
-    FLOAT            Rhw;        // Rhw
-	FLOAT			 Blend1;	 // Blend1		
-    XTL::DWORD       dwSpecular; // Specular
-    XTL::DWORD       dwDiffuse;  // Diffuse
-    XTL::D3DXVECTOR3 Normal;     // Normal
-    XTL::D3DXVECTOR2 TexCoord1;  // TexCoord1
-    XTL::D3DXVECTOR2 TexCoord2;  // TexCoord2
-    XTL::D3DXVECTOR2 TexCoord3;  // TexCoord3
-    XTL::D3DXVECTOR2 TexCoord4;  // TexCoord4
-};
+    XTL::D3DXVECTOR3 Position;
+    FLOAT            Rhw;
+	FLOAT			 Blend[4];	 // Blend1, Blend2, Blend3, Blend4 (TODO : Blend5 ?)
+    XTL::D3DXVECTOR3 Normal;
+	FLOAT            PointSize;
+	D3DCOLOR         Diffuse;
+	D3DCOLOR         Specular;
+#if 0
+	FLOAT            Fog; // TODO : Handle
+	XTL::D3DCOLOR	BackDiffuse; // TODO : Handle
+	XTL::D3DCOLOR	BackSpecular; // TODO  : Handle
+#endif
+    XTL::D3DXVECTOR4 TexCoord[4];  // TexCoord1, TexCoord2, TexCoord3, TexCoord4
+}
+*g_InlineVertexBuffer_Table;
 
-extern _D3DIVB g_IVBTable[IVB_TABLE_SIZE];
-
-extern UINT g_IVBTblOffs;
+extern UINT g_InlineVertexBuffer_TableLength;
+extern UINT g_InlineVertexBuffer_TableOffset;
 
 extern VOID EmuFlushIVB();
 
