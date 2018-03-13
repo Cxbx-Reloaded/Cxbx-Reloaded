@@ -438,8 +438,8 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
 
         pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
-        g_pD3DDevice8->CreateVertexBuffer(dwNewSize, 0, 0, XTL::D3DPOOL_MANAGED, &pNewVertexBuffer);
-        if(FAILED(pNewVertexBuffer->Lock(0, 0, &pNewData, 0)))
+        g_pD3DDevice8->CreateVertexBuffer(dwNewSize, D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &pNewVertexBuffer);
+        if(FAILED(pNewVertexBuffer->Lock(0, 0, &pNewData, D3DLOCK_DISCARD)))
         {
             CxbxKrnlCleanup("Couldn't lock the new buffer");
         }
@@ -678,8 +678,8 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 
 		uint08 *pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
 
-        g_pD3DDevice8->CreateVertexBuffer(uiLength, 0, 0, XTL::D3DPOOL_MANAGED, &pNewVertexBuffer);
-        if(FAILED(pNewVertexBuffer->Lock(0, 0, &pData, 0)))
+        g_pD3DDevice8->CreateVertexBuffer(uiLength, D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &pNewVertexBuffer);
+        if(FAILED(pNewVertexBuffer->Lock(0, 0, &pData, D3DLOCK_DISCARD)))
         {
             CxbxKrnlCleanup("Couldn't lock new FVF buffer.");
         }
@@ -881,7 +881,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 
     if(pPatchDesc->pXboxVertexStreamZeroData == nullptr)
     {
-        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSize, 0, 0, XTL::D3DPOOL_MANAGED, &pStream->pPatchedStream);
+        HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(dwNewSize, D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &pStream->pPatchedStream);
 		if (FAILED(hRet)) {
 			EmuWarning("CreateVertexBuffer Failed. Size: %d", dwNewSize);
 		}
@@ -894,7 +894,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 
         if(pStream->pPatchedStream != 0)
         {
-            pStream->pPatchedStream->Lock(0, 0, &pPatchedVertexData, 0);
+            pStream->pPatchedStream->Lock(0, 0, &pPatchedVertexData, D3DLOCK_DISCARD);
         }
     }
     else
@@ -990,20 +990,22 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
         bool LocalPatched = false;
 
 		uint32_t uiHash = 0;
-        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError, &uiHash))
+        /*if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError, &uiHash))
         {
             m_pStreams[uiStream].bUsedCached = true;
             continue;
-        }
+        }*/
 
         LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
         LocalPatched |= PatchStream(pPatchDesc, uiStream);
+		/*
         if(LocalPatched && !pPatchDesc->pXboxVertexStreamZeroData)
         {
             // Insert the patched stream in the cache
             CacheStream(pPatchDesc, uiStream, uiHash);
             m_pStreams[uiStream].bUsedCached = true;
         }
+		*/
         Patched |= LocalPatched;
 
 		// If we didn't patch the stream, use a non-patched stream
