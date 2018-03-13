@@ -1062,10 +1062,8 @@ VOID XTL::EmuFlushIVB()
 
     DbgPrintf("g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
 
-    DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
-
 	// Check the given FVF
-	switch (dwPos) {
+	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
 	case 0: // No position ?
 		if (bFVF) {
 			EmuWarning("EmuFlushIVB(): g_CurrentVertexShader isn't a valid FVF - using D3DFVF_XYZRHW instead!");
@@ -1086,6 +1084,7 @@ VOID XTL::EmuFlushIVB()
 		break;
 	}
 
+	DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 	size_t TexSize[X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures (TEXTURE_STAGES)
 
