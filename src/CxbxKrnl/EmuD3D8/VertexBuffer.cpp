@@ -1059,30 +1059,33 @@ VOID XTL::EmuFlushIVB()
     // Parse IVB table with current FVF shader if possible.
     bool bFVF = VshHandleIsFVF(g_CurrentVertexShader);
     DWORD dwCurFVF = (bFVF) ? g_CurrentVertexShader : g_InlineVertexBuffer_FVF;
-    if (bFVF)
-    {
-        dwCurFVF = g_CurrentVertexShader;
-
-		// HACK: Halo...
-		if (dwCurFVF == 0)
-		{
-			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
-			dwCurFVF = g_InlineVertexBuffer_FVF;
-		}
-		else
-		if ((dwCurFVF & D3DFVF_POSITION_MASK) == 0) {
-			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
-			dwCurFVF = g_InlineVertexBuffer_FVF;
-		}
-    }
-    else
-    {
-        dwCurFVF = g_InlineVertexBuffer_FVF;
-    }
 
     DbgPrintf("g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
 
     DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+
+	// Check the given FVF
+	switch (dwPos) {
+	case 0: // No position ?
+		if (bFVF) {
+			EmuWarning("EmuFlushIVB(): g_CurrentVertexShader isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			dwCurFVF |= D3DFVF_XYZRHW;
+		}
+		else {
+			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
+			dwCurFVF = g_InlineVertexBuffer_FVF;
+		}
+		break;
+	case D3DFVF_XYZRHW:
+		// D3DFVF_NORMAL isn't allowed in combination with D3DFVF_XYZRHW 
+		if (dwCurFVF & D3DFVF_NORMAL) {
+			EmuWarning("EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
+			dwCurFVF &= ~D3DFVF_POSITION_MASK;
+			dwCurFVF |= D3DFVF_XYZ;
+		}
+		break;
+	}
+
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 	size_t TexSize[X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures (TEXTURE_STAGES)
 
@@ -1160,23 +1163,21 @@ VOID XTL::EmuFlushIVB()
 		}
 
 		if (dwCurFVF & D3DFVF_NORMAL) {
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.x;
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.y;
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.z;
-            DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.x;
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.y;
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.z;
+			DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
         }
 
-        if(dwCurFVF & D3DFVF_SPECULAR)
-        {
-            *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
-
-            DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
+        if (dwCurFVF & D3DFVF_DIFFUSE) {
+            *(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Diffuse;
+            DbgPrintf("IVB Diffuse := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Diffuse);
         }
 
-        if (dwCurFVF & D3DFVF_SPECULAR) {
-            *(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Specular;
-            DbgPrintf("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
-        }
+		if (dwCurFVF & D3DFVF_SPECULAR) {
+			*(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Specular;
+			DbgPrintf("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
+		}
 
 		for (uint i = 0; i < dwTexN; i++) {
             *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].TexCoord[i].x;
