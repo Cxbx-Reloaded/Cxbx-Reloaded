@@ -305,7 +305,7 @@ struct X_CDirectSoundBuffer
     };
 
     BYTE                    UnknownB[0x0C];     // Offset: 0x24
-    PVOID                   EmuBuffer;          // Offset: 0x28
+    PVOID                   X_BufferCache;      // Offset: 0x28
     DSBUFFERDESC*           EmuBufferDesc;      // Offset: 0x2C
     PVOID                   EmuLockPtr1;        // Offset: 0x30
     DWORD                   EmuLockBytes1;      // Offset: 0x34
@@ -324,6 +324,7 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuRegionPlayLength;
     LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
+    DWORD                   X_BufferCacheSize;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
@@ -439,7 +440,7 @@ class X_CDirectSoundStream
         // cached data
         LPDIRECTSOUNDBUFFER8        EmuDirectSoundBuffer8;
         LPDIRECTSOUND3DBUFFER8      EmuDirectSound3DBuffer8;
-        PVOID                       EmuBuffer;
+        PVOID                       X_BufferCache;
         LPDSBUFFERDESC              EmuBufferDesc;
         PVOID                       EmuLockPtr1;
         DWORD                       EmuLockBytes1;
@@ -447,6 +448,7 @@ class X_CDirectSoundStream
         DWORD                       EmuLockBytes2;
         DWORD                       EmuPlayFlags;
         DWORD                       EmuFlags;
+        DWORD                       X_BufferCacheSize;
 };
 
 // ******************************************************************

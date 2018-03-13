@@ -89,9 +89,9 @@ void DSoundBufferXboxAdpcmDecoder(
     }
     // Attempt to decode Xbox ADPCM data to PCM
     //EmuWarning( "Guessing output size to be 0x%X bytes as opposed to 0x%X bytes.", TXboxAdpcmDecoder_guess_output_size(dwAudioBytes), dwAudioBytes );
-    TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr, dwAudioBytes, &buffer1[0], pDSBufferDesc->lpwfxFormat->nChannels);
+    TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr, dwAudioBytes, buffer1, pDSBufferDesc->lpwfxFormat->nChannels);
     if (dwAudioBytes2 != 0) {
-        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr2, dwAudioBytes2, &buffer2[0], pDSBufferDesc->lpwfxFormat->nChannels);
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr2, dwAudioBytes2, buffer2, pDSBufferDesc->lpwfxFormat->nChannels);
     }
     // Lock this Xbox ADPCM buffer
     void* pPtrX = xbnullptr, *pPtrX2 = xbnullptr;
@@ -132,6 +132,22 @@ void DSoundBufferXboxAdpcmDecoder(
     // Clean up our mess
     if (buffer1) free(buffer1);
     if (buffer2) free(buffer2);
+}
+
+#define DSoundBufferGetPCMBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
+
+void DSoundBufferOutputXBtoPC(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
+    if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
+        DWORD dwDecodedAudioBytes = TXboxAdpcmDecoder_guess_output_size(dwXBAudioBytes) * pDSBufferDesc->lpwfxFormat->nChannels;
+
+        if (dwDecodedAudioBytes > dwPCMAudioBytes) dwDecodedAudioBytes = dwPCMAudioBytes;
+
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes / pDSBufferDesc->lpwfxFormat->nChannels, (uint8_t*)pPCaudioPtr, pDSBufferDesc->lpwfxFormat->nChannels);
+
+    // PCM format, no changes requirement.
+    } else {
+        memcpy_s(pPCaudioPtr, dwPCMAudioBytes, pXBaudioPtr, dwPCMAudioBytes);
+    }
 }
 
 // Convert XADPCM to PCM format helper function
@@ -399,14 +415,15 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
 #define DSoundBufferSetDefault(pThis, pdsd, dwEmuFlags, dwEmuPlayFlags) \
     pThis->EmuDirectSoundBuffer8 = nullptr; \
     pThis->EmuDirectSound3DBuffer8 = nullptr; \
-    pThis->EmuBuffer = xbnullptr; \
+    pThis->X_BufferCache = xbnullptr; \
     pThis->EmuBufferDesc = pdsd; \
     pThis->EmuLockPtr1 = xbnullptr; \
     pThis->EmuLockBytes1 = 0; \
     pThis->EmuLockPtr2 = xbnullptr; \
     pThis->EmuLockBytes2 = 0; \
     pThis->EmuFlags = dwEmuFlags; \
-    pThis->EmuPlayFlags = dwEmuPlayFlags;
+    pThis->EmuPlayFlags = dwEmuPlayFlags; \
+    pThis->X_BufferCacheSize = 0;
 
 inline void DSoundBufferRegionSetDefault(XTL::X_CDirectSoundBuffer *pThis) {
     pThis->EmuBufferToggle = XTL::X_DSB_TOGGLE_DEFAULT;
