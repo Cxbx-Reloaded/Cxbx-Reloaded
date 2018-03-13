@@ -2017,9 +2017,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    LOG_UNIMPLEMENTED_DSOUND();
-
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    pThis->EmuDirectSoundBuffer8->Play(0, 0, 0);
+    DWORD dwStatus;
+    do {
+        pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    } while((dwStatus & DSBSTATUS_PLAYING) > 0);
 
     leaveCriticalSection;
 
