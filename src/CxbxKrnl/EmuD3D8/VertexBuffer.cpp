@@ -94,7 +94,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 		newBuffer.uiSize = size;
 		newBuffer.lastUsed = std::chrono::high_resolution_clock::now();
 
-		HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &newBuffer.pHostVertexBuffer);
+		HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &newBuffer.pHostVertexBuffer);
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to create vertex buffer");
 		}
@@ -117,7 +117,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 	// If execution reached here, we need to release and re-create the vertex buffer..
 	buffer->pHostVertexBuffer->Release();
 	buffer->uiSize = size;
-	HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &buffer->pHostVertexBuffer);
+	HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &buffer->pHostVertexBuffer);
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("Failed to create vertex buffer");
 	}
