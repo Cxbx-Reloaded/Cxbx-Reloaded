@@ -788,7 +788,13 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++)
     {
         bool LocalPatched = false;
-		pPatchDesc->uiSize = GetVertexBufferSize(pPatchDesc->dwVertexCount, g_D3DStreamStrides[uiStream], pPatchDesc->pIndexData, pPatchDesc->dwStartVertex, pPatchDesc->dwIndexBase);
+		pPatchDesc->uiSize = GetVertexBufferSize(
+			pPatchDesc->dwVertexCount, 
+			pPatchDesc->pXboxVertexStreamZeroData == nullptr ? g_D3DStreamStrides[uiStream] : pPatchDesc->uiXboxVertexStreamZeroStride,
+			pPatchDesc->pIndexData, 
+			pPatchDesc->dwStartVertex,
+			pPatchDesc->dwIndexBase
+		);
 
 		LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
         LocalPatched |= PatchStream(pPatchDesc, uiStream);
@@ -798,7 +804,6 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 		// TODO: Update the converion/patching code to make a host copy even when no patching is required
 		// Doing this will fully remove the need to call _Register on Vertex Buffers
 		if (!Patched && pPatchDesc->pXboxVertexStreamZeroData == nullptr) {
-			
 			g_pD3DDevice8->SetStreamSource(uiStream, GetHostVertexBuffer(g_D3DStreams[uiStream], pPatchDesc->uiSize), g_D3DStreamStrides[uiStream]);
 		}
     }
