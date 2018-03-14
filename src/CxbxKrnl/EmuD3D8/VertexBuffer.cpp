@@ -71,7 +71,6 @@ extern UINT g_D3DStreamStrides[16];
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
 extern XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, DWORD dwSize);
 
-
 typedef struct {
 	XTL::IDirect3DVertexBuffer8* pHostVertexBuffer;
 	size_t uiSize;
@@ -83,7 +82,8 @@ std::unordered_map<DWORD, cached_vertex_buffer_object> g_HostVertexBuffers;
 // This caches Vertex Buffer Objects, but not the containing data
 // This prevents unnecessary allocation and releasing of Vertex Buffers when
 // we can use an existing just fine. This gives a (slight) performance boost
-XTL::IDirect3DVertexBuffer8* GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size)
+// Returns true if the existing vertex buffer was trashed/made invalid
+bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DVertexBuffer8** pVertexBuffer)
 {
 	// TODO: If the vertex buffer object cache becomes too large, 
 	// free the least recently used vertex buffers
@@ -102,7 +102,8 @@ XTL::IDirect3DVertexBuffer8* GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWO
 		
 		g_HostVertexBuffers[pXboxDataPtr] = newBuffer;
 
-		return newBuffer.pHostVertexBuffer;
+		*pVertexBuffer = newBuffer.pHostVertexBuffer;
+		return false;
 	}
 
 	auto buffer = &it->second;
@@ -110,7 +111,8 @@ XTL::IDirect3DVertexBuffer8* GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWO
 
 	// Return the existing vertex buffer, if possible
 	if (size <= buffer->uiSize) {
-		return buffer->pHostVertexBuffer;
+		*pVertexBuffer = buffer->pHostVertexBuffer;
+		return false;
 	}
 
 	// If execution reached here, we need to release and re-create the vertex buffer..
@@ -121,7 +123,8 @@ XTL::IDirect3DVertexBuffer8* GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWO
 		CxbxKrnlCleanup("Failed to create vertex buffer");
 	}
 
-	return buffer->pHostVertexBuffer;
+	*pVertexBuffer = buffer->pHostVertexBuffer;
+	return true;
 }
 
 XTL::VertexPatcher::VertexPatcher()
@@ -247,7 +250,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
 
         pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
-		pNewVertexBuffer = GetCachedVertexBufferObject(pOrigVertexBuffer->Data, dwNewSize);
+		GetCachedVertexBufferObject(pOrigVertexBuffer->Data, dwNewSize, &pNewVertexBuffer);
 
         if(FAILED(pNewVertexBuffer->Lock(0, 0, &pNewData, D3DLOCK_DISCARD)))
         {
@@ -484,7 +487,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
 
 		uint08 *pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
 
-		pNewVertexBuffer = GetCachedVertexBufferObject(pOrigVertexBuffer->Data, uiLength);
+		GetCachedVertexBufferObject(pOrigVertexBuffer->Data, uiLength, &pNewVertexBuffer);
         if(FAILED(pNewVertexBuffer->Lock(0, 0, &pData, D3DLOCK_DISCARD)))
         {
             CxbxKrnlCleanup("Couldn't lock new FVF buffer.");
@@ -686,7 +689,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         if(pStream->pOriginalStream != nullptr)
         {
 			pOrigVertexData = (XTL::BYTE*)GetDataFromXboxResource(pStream->pOriginalStream);
-			pStream->pPatchedStream = GetCachedVertexBufferObject(pStream->pOriginalStream->Data, dwNewSize);
+			GetCachedVertexBufferObject(pStream->pOriginalStream->Data, dwNewSize, &pStream->pPatchedStream);
         }
 
         if(pStream->pPatchedStream != nullptr)
@@ -786,18 +789,15 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     {
         bool LocalPatched = false;
 
-		uint32_t uiHash = 0;
-
-        LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
+		LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
         LocalPatched |= PatchStream(pPatchDesc, uiStream);
-
         Patched |= LocalPatched;
 
 		// If we didn't patch the stream, use a non-patched stream
 		// TODO: Update the converion/patching code to make a host copy even when no patching is required
 		// Doing this will fully remove the need to call _Register on Vertex Buffers
 		if (!Patched && pPatchDesc->pXboxVertexStreamZeroData == nullptr) {
-			DWORD dwSize = GetVertexBufferSize(pPatchDesc->dwVertexCount, g_D3DStreamStrides[uiStream], pPatchDesc->pIndexData, pPatchDesc->dwStartVertex, pPatchDesc->dwIndexBase);
+			
 			g_pD3DDevice8->SetStreamSource(uiStream, GetHostVertexBuffer(g_D3DStreams[uiStream], dwSize), g_D3DStreamStrides[uiStream]);
 		}
     }
