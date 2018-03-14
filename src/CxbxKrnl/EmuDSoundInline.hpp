@@ -766,7 +766,8 @@ inline HRESULT HybridDirectSoundBuffer_Lock(
 inline HRESULT HybridDirectSoundBuffer_Pause(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     DWORD                   dwPause,
-    DWORD                  &dwEmuFlags)
+    DWORD                  &dwEmuFlags,
+    DWORD                   dwEmuPlayFlags)
 {
 
     enterCriticalSection;
@@ -775,7 +776,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     HRESULT hRet = DS_OK, hStatus;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
-            pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
+            pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             break;
         case X_DSSPAUSE_PAUSE:

@@ -1685,7 +1685,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, dwEmuFlags);
 
-    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, DSBPLAY_LOOPING);
+    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, 0);
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
@@ -2085,7 +2085,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
 }
 
 // ******************************************************************
@@ -2879,7 +2879,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
                         pThis->EmuLockBytes2,
                         pThis->EmuLockFlags);
 
-    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
 }
 
 // ******************************************************************
@@ -2904,7 +2904,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
     // This function wasn't part of the XDK until 4721.
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
 
     leaveCriticalSection;
 
@@ -3919,7 +3919,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
 
     leaveCriticalSection;
 
