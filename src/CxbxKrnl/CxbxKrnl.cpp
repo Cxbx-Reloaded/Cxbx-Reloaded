@@ -401,17 +401,86 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	return hFileMapping;
 }
 
-void CxbxRestorePageTablesMemory()
+HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 {
-	void* memory = VirtualAlloc((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	// First, try to open an existing PageTables.bin file :
+	HANDLE hFile = CreateFile(szFilePath_page_tables,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
 
+	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
+	if (NeedsInitialization)
+	{
+		// If the PageTables.bin file doesn't exist yet, create it :
+		hFile = CreateFile(szFilePath_page_tables,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file!\n");
+		}
+	}
+
+	// Make sure PageTables.bin is at least 4 MB in size
+	SetFilePointer(hFile, PAGE_TABLES_SIZE, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFile);
+
+	HANDLE hFileMapping = CreateFileMapping(
+	hFile,
+	/* lpFileMappingAttributes */nullptr,
+	PAGE_READWRITE,
+	/* dwMaximumSizeHigh */0,
+	/* dwMaximumSizeLow */PAGE_TABLES_SIZE,
+	/**/nullptr);
+	if (hFileMapping == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file mapping!\n");
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFile, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != PAGE_TABLES_SIZE)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
+	}
+
+	// Map memory.bin contents into memory :
+	void *memory = (void *)MapViewOfFileEx(
+	hFileMapping,
+	FILE_MAP_READ | FILE_MAP_WRITE,
+	/* dwFileOffsetHigh */0,
+	/* dwFileOffsetLow */0,
+	4 * ONE_MB,
+	(void *)PAGE_TABLES_BASE);
 	if (memory != (void *)PAGE_TABLES_BASE)
 	{
-		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't allocate the page tables at 0xC0000000!");
+		if (memory)
+			UnmapViewOfFile(memory);
+
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't map PageTables.bin to 0xC0000000!");
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), 4, PAGE_TABLES_BASE, PAGE_TABLES_END);
+
+	if (NeedsInitialization)
+	{
+		memset(memory, 0, 4 * ONE_MB);
+		printf("[0x%.4X] INIT: Initialized page tables memory\n", GetCurrentThreadId());
+	}
+	else
+		printf("[0x%.4X] INIT: Loaded PageTables.bin\n", GetCurrentThreadId());
+
+	return hFileMapping;
 }
 
 #pragma optimize("", off)
@@ -716,7 +785,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
-	CxbxRestorePageTablesMemory();
+	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -748,19 +817,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
 
-		// Detect if we have to restrict the working memory on a devkit to 64 MiB
-		bool bRestrict64MiB = false;
-		if (CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB)
-		{
-			// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
-			// will still use only the lower 64 MiB and the same is true for the debugger pages, meaning they will only
-			// use the upper extra 64 MiB regardless of this flag
-
-			bRestrict64MiB = true;
-		}
-
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, bRestrict64MiB);
+		g_VMManager.Initialize(hMemoryBin, hPageTables, CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB);
 
 		// Reserve the memory region used by the xbe image and commit the xbe header
 		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;

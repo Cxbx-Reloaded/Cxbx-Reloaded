@@ -105,14 +105,17 @@ class VMManager : public PhysicalMemory
 			//DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
+			FlushViewOfFile((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE);
 			FlushFileBuffers(m_hContiguousFile);
+			FlushFileBuffers(m_hPTFile);
 			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
+			UnmapViewOfFile((void *)PAGE_TABLES_BASE);
 			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
 			VirtualFree((void*)PAGE_TABLES_BASE, 0, MEM_RELEASE);
 			CloseHandle(m_hContiguousFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, bool bRestrict64MiB);
+		void Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRestrict64MiB);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
@@ -174,10 +177,12 @@ class VMManager : public PhysicalMemory
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
 	
-		// set up the pfndatabase
+		// set up the pfn database
 		void InitializePfnDatabase();
+		// set up the pfn database after a quick reboot
+		void ReinitializePfnDatabase();
 		// initializes a memory region struct
-		void ConstructMemoryRegion(VAddr Start, VAddr End, MemoryRegionType Type);
+		void ConstructMemoryRegion(VAddr Start, size_t Size, MemoryRegionType Type);
 		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine

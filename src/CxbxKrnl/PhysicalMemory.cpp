@@ -231,7 +231,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 			if (PfnAlignment)
 			{
-				IntersectionEnd = (IntersectionEnd & PfnAlignmentMask) - PfnAlignmentSubtraction;
+				IntersectionEnd = ((IntersectionEnd + 1) & PfnAlignmentMask) - PfnAlignmentSubtraction;
 
 				if (IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
 				{
@@ -259,7 +259,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
 
-					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
+						{ m_DebuggerPagesAvailable -= NumberOfPages; }
 					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
@@ -284,7 +285,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
 
-					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
+						{ m_DebuggerPagesAvailable -= NumberOfPages; }
 					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
@@ -301,7 +303,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					PfnCount -= NumberOfPages;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
 
-					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
+						{ m_DebuggerPagesAvailable -= NumberOfPages; }
 					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
@@ -319,7 +322,8 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
 
-					if (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable -= NumberOfPages; }
+					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
+						{ m_DebuggerPagesAvailable -= NumberOfPages; }
 					else { m_PhysicalPagesAvailable -= NumberOfPages; }
 					*result = PfnStart + PfnCount;
 					return true;
@@ -373,7 +377,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				LIST_ENTRY_REMOVE(ListEntry);
 				delete block;
 			}
-			if (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE) { m_DebuggerPagesAvailable += size; }
+			if (g_bIsDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) { m_DebuggerPagesAvailable += size; }
 			else { m_PhysicalPagesAvailable += size; }
 
 			return;
@@ -401,7 +405,7 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 
 		case XBOX_PAGE_READWRITE:
 		{
-			Mask = (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
+			Mask = ValidKernelPteBits;
 		}
 		break;
 
@@ -553,10 +557,16 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 	switch (Perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
 	{
 		case XBOX_PAGE_READONLY:
-			return XBOX_PAGE_EXECUTE_READ;
+		{
+			Perms |= (~XBOX_PAGE_READONLY);
+			return Perms | XBOX_PAGE_EXECUTE_READ;
+		}
 
 		case XBOX_PAGE_READWRITE:
-			return XBOX_PAGE_EXECUTE_READWRITE;
+		{
+			Perms |= (~XBOX_PAGE_READWRITE);
+			return Perms | XBOX_PAGE_EXECUTE_READWRITE;
+		}
 
 		default:
 		{
@@ -564,7 +574,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// input is probably invalid
 
 			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
-			return XBOX_PAGE_EXECUTE_READWRITE;
+			return Perms | XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
 }
@@ -653,6 +663,7 @@ DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
 
 bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
+	PFN pfn;
 	PMMPTE pPde;
 	MMPTE TempPte;
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
@@ -698,11 +709,14 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
 		if (pPde->Hardware.Valid == 0)
 		{
-			// We grab one page at a time to avoid fragmentation issues
+			// We grab one page at a time to avoid fragmentation issues. The maximum allowed page is m_MaxContiguousPfn
+			// to keep AllocatePT from stealing nv2a/pfn pages during initialization
 
+			RemoveFree(1, &pfn, 0, 0, m_MaxContiguousPfn);
 			TempPte.Default = ValidKernelPdeBits;
-			TempPte.Hardware.PFN = RemoveAndZeroAnyFreePage(BusyType, pPde, true);
+			TempPte.Hardware.PFN = pfn;
 			WRITE_PTE(pPde, TempPte);
+			WritePfn(pfn, pfn, pPde, BusyType);
 		}
 		PdeMappedSizeIncrement += (4 * ONE_MB);
 	}
@@ -740,36 +754,6 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 		}
 		PdeMappedSizeIncrement += (4 * ONE_MB);
 	}
-}
-
-PFN PhysicalMemory::RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pPte, bool bPhysicalFunction)
-{
-	PFN LowestAcceptablePage = 0;
-	PFN HighestAcceptablePage;
-	PFN pfn;
-
-	assert(BusyType < COUNTtype);
-	assert(pPte);
-
-	if (bPhysicalFunction) { HighestAcceptablePage = XBOX_HIGHEST_PHYSICAL_PAGE; }
-	else { HighestAcceptablePage = m_bAllowNonDebuggerOnTop64MiB ? m_HighestPage : XBOX_HIGHEST_PHYSICAL_PAGE; }
-
-	// Non-debugger pages only exsist in the first 64 MiB of memory and debbuger pages only in the upper half
-	if (BusyType == DebuggerType)
-	{
-		assert(g_bIsDebug);
-		LowestAcceptablePage = DEBUGKIT_FIRST_UPPER_HALF_PAGE;
-		HighestAcceptablePage = m_HighestPage;
-	}
-	RemoveFree(1, &pfn, 0, LowestAcceptablePage, HighestAcceptablePage);
-
-	// Fill the page with zeros
-	FillMemoryUlong((void*)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), PAGE_SIZE, 0);
-
-	// Construct the pfn for the page
-	WritePfn(pfn, pfn, pPte, BusyType);
-
-	return pfn;
 }
 
 bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion)

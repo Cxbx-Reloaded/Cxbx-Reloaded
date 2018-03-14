@@ -267,8 +267,6 @@ class PhysicalMemory
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// deallocate a PT if possible
 		void DeallocatePT(PFN_COUNT PteNumber, VAddr addr);
-		// commit whatever free page is available and zero it
-		PFN RemoveAndZeroAnyFreePage(PageType BusyType, PMMPTE pte, bool bPhysicalFunction);
 		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)
 		bool IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion);
 };

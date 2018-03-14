@@ -230,19 +230,4 @@ XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 	LOG_FUNC_ONE_ARG(Address);
 
 	AvSavedDataAddress = Address;
-
-	// NOTE: it shouldn't be needed to call MmPersistContiguousMemory since it should have been called by other routines
-	// on the supplied address
-
-	if (Address)
-	{
-		g_EmuShared->SetFrameBufferAddress((uintptr_t*)Address);
-		DbgPrintf("KNRL: Persisting FrameBuffer\n");
-	}
-	else
-	{
-		uintptr_t* pTemp = NULL;
-		g_EmuShared->SetFrameBufferAddress(pTemp);
-		DbgPrintf("KNRL: Forgetting FrameBuffer\n");
-	}
 }
