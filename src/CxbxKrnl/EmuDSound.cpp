@@ -487,25 +487,57 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             (*pDSBuffer)->EmuLockFlags);
     }
 
-    // Bypass Update buffer, audio appear to be working just fine without need to update audio.
-    /*
+    //TODO: Find a way to seemlessly play audio between two packets...
+    // Actually, DirectSoundStream need to process buffer packets here.
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->X_BufferCache == nullptr) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        DSoundBufferUpdate((*pDSStream)->EmuDirectSoundBuffer8,
-                            (*pDSStream)->EmuBufferDesc,
-                            (*pDSStream)->X_BufferCache,
-                            (*pDSStream)->EmuFlags,
-                            0,
-                            (*pDSStream)->EmuLockPtr1,
-                            (*pDSStream)->EmuLockBytes1,
-                            (*pDSStream)->EmuLockPtr2,
-                            (*pDSStream)->EmuLockBytes2,
-                            0);
+        XTL::X_CDirectSoundStream* pThis = *pDSStream;
+
+        DWORD dwAudioBytes;
+        HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
+        if (hRet == DS_OK) {
+            if ((dwAudioBytes & DSBSTATUS_PLAYING) == 0) {
+                getNewBuffer:
+                std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
+                if (buffer->size == 0) {
+                    if (buffer->pBuffer_data != nullptr) {
+                        free(buffer->pBuffer_data);
+                    }
+                    // Tell title a packet is available to fill in.
+                    if (buffer->pdwStatus != xbnullptr) {
+                        *buffer->pdwStatus = XMP_STATUS_SUCCESS;
+                    }
+                    pThis->Host_BufferPacketArray.erase(buffer);
+
+                    if ((*pDSStream)->Host_BufferPacketArray.size() == 0) {
+                        continue;
+                    }
+                    buffer = pThis->Host_BufferPacketArray.begin();
+                }
+                ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
+                                         pThis->EmuPlayFlags, buffer->size, pThis->EmuDirectSound3DBuffer8);
+
+                PVOID pAudioPtr;
+
+                hRet = pThis->EmuDirectSoundBuffer8->Lock(0, buffer->size, &pAudioPtr, &dwAudioBytes,
+                                                          nullptr, nullptr, 0);
+
+                if (hRet == DS_OK) {
+
+                    if (pAudioPtr != 0) {
+                        memcpy_s(pAudioPtr, dwAudioBytes, buffer->pBuffer_data, buffer->size);
+                    }
+                    pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
+                }
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+                pThis->EmuDirectSoundBuffer8->Play(0, 0, 0);
+                buffer->size = 0;
+            }
+        }
     }
-    */
     leaveCriticalSection;
 
     return;
@@ -1684,6 +1716,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     pDSBufferDesc->lpwfxFormat = nullptr;
 
     GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, dwEmuFlags);
+    (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
+    (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
 
     DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, 0);
 
@@ -1693,11 +1727,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
         DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
     }
-
-    (*ppStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-    //Apparently DirectSoundStream do not wait, let's go ahead start play "nothing".
-    (*ppStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING); 
-
         // cache this sound stream
     {
         int v = 0;
@@ -1933,44 +1962,47 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
+    // Research data:
+    // * Max packet size permitted is 0x2000 (or 8,192 decimal) of buffer.
+    //   * Somehow other titles are using more than 0x2000 for max size. Am using a hacky host method for now (see pBuffer_data).
+
     if (pThis->EmuDirectSoundBuffer8 != nullptr) {
-        // update buffer data cache
-        pThis->X_BufferCache = pInputBuffer->pvBuffer;
 
-        ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
-                                 pThis->EmuPlayFlags, DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize), pThis->EmuDirectSound3DBuffer8);
+        if (pInputBuffer != xbnullptr) {
 
-        if (pInputBuffer->pdwStatus != 0) {
-            *pInputBuffer->pdwStatus = S_OK;
-        }
+            // Add packets from title until it gets full.
+            if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
+                host_voice_packet packet_input;
+                packet_input.size = DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize);
+                packet_input.pdwStatus = pInputBuffer->pdwStatus;
+                if (packet_input.size == 0) {
+                    packet_input.pBuffer_data = nullptr;
+                } else {
+                    packet_input.pBuffer_data = malloc(packet_input.size);
+                }
+                //TODO: will compressed audio be a problem?
+                DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pInputBuffer->pvBuffer, pInputBuffer->dwMaxSize, packet_input.pBuffer_data, packet_input.size);
+                pThis->Host_BufferPacketArray.push_back(packet_input);
 
-        PVOID pAudioPtr;
-        DWORD dwAudioBytes;
-        HRESULT hRet;
-
-
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(0, DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize), &pAudioPtr, &dwAudioBytes,
-                                                    nullptr, nullptr, 0);
-
-        if (hRet == DS_OK) {
-
-            if (pAudioPtr != 0) {
-                DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pThis->X_BufferCache, pInputBuffer->dwMaxSize, pAudioPtr, dwAudioBytes);
-            }
-            pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
-        }
-        //TODO: RadWolfie - If remove this part, XADPCM audio will stay running, Rayman Arena, except...
-        //...PCM audio does not for rest of titles. However it should not be here, so this is currently a workaround fix for now.
-        hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
-        if (hRet == DS_OK) {
-            if ((dwAudioBytes & DSBSTATUS_PLAYING)) {
-                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-                pThis->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
+                if (pInputBuffer->pdwStatus != xbnullptr) {
+                    (*pInputBuffer->pdwStatus) = XMP_STATUS_PENDING;
+                }
+            // Once full it needs to change status to flushed when cannot hold any more packets.
+            } else {
+                if (pInputBuffer->pdwStatus != xbnullptr) {
+                    (*pInputBuffer->pdwStatus) = XMP_STATUS_FLUSHED;
+                }
             }
         }
+
+        //TODO: What to do with output buffer audio variable? Need test case or functional source code.
+        if (pOutputBuffer != xbnullptr) {
+
+        }
+
     } else {
-        if (pInputBuffer->pdwStatus != 0) {
-            *pInputBuffer->pdwStatus = S_OK;
+        if (pInputBuffer != xbnullptr && pInputBuffer->pdwStatus != xbnullptr) {
+            (*pInputBuffer->pdwStatus) = XMP_STATUS_SUCCESS;
         }
     }
 

@@ -34,6 +34,8 @@
 #ifndef EMUXTL_H
 #define EMUXTL_H
 
+#include <vector>  // Needed for EmuDSound.h file, must be outside of XTL namespace.
+
 namespace XTL
 {
     #include "EmuXapi.h"

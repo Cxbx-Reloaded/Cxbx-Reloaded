@@ -121,6 +121,11 @@ typedef struct _XMEDIAPACKET
 }
 XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 
+#define XMP_STATUS_SUCCESS             S_OK
+#define XMP_STATUS_PENDING             E_PENDING
+#define XMP_STATUS_FLUSHED             E_ABORT
+#define XMP_STATUS_FAILURE             E_FAIL
+
 // ******************************************************************
 // * XMEDIAINFO
 // ******************************************************************
@@ -375,6 +380,13 @@ class X_CMcpxStream
         class X_CDirectSoundStream *pParentStream;
 };
 
+// host_voice_packet is needed for DirectSoundStream packet handling internally.
+struct host_voice_packet {
+    DWORD   size;
+    PDWORD  pdwStatus;
+    PVOID   pBuffer_data;
+};
+
 // ******************************************************************
 // * X_CDirectSoundStream
 // ******************************************************************
@@ -438,17 +450,19 @@ class X_CDirectSoundStream
 
     public:
         // cached data
-        LPDIRECTSOUNDBUFFER8        EmuDirectSoundBuffer8;
-        LPDIRECTSOUND3DBUFFER8      EmuDirectSound3DBuffer8;
-        PVOID                       X_BufferCache;
-        LPDSBUFFERDESC              EmuBufferDesc;
-        PVOID                       EmuLockPtr1;
-        DWORD                       EmuLockBytes1;
-        PVOID                       EmuLockPtr2;
-        DWORD                       EmuLockBytes2;
-        DWORD                       EmuPlayFlags;
-        DWORD                       EmuFlags;
-        DWORD                       X_BufferCacheSize;
+        LPDIRECTSOUNDBUFFER8                    EmuDirectSoundBuffer8;
+        LPDIRECTSOUND3DBUFFER8                  EmuDirectSound3DBuffer8;
+        PVOID                                   X_BufferCache; // Not really needed...
+        LPDSBUFFERDESC                          EmuBufferDesc;
+        PVOID                                   EmuLockPtr1;
+        DWORD                                   EmuLockBytes1;
+        PVOID                                   EmuLockPtr2;
+        DWORD                                   EmuLockBytes2;
+        DWORD                                   EmuPlayFlags;
+        DWORD                                   EmuFlags;
+        DWORD                                   X_BufferCacheSize; // Not really needed...
+        DWORD                                   X_MaxAttachedPackets;
+        std::vector<struct host_voice_packet>   Host_BufferPacketArray;
 };
 
 // ******************************************************************
