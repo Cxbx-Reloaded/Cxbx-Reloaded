@@ -1949,29 +1949,15 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         HRESULT hRet;
 
 
-        //NOTE : XADPCM audio has occurred in Rayman Arena first intro video, all other title's intro videos are PCM so far.
-        if (pThis->EmuFlags & DSB_FLAG_XADPCM) {
+        hRet = pThis->EmuDirectSoundBuffer8->Lock(0, DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize), &pAudioPtr, &dwAudioBytes,
+                                                    nullptr, nullptr, 0);
 
-            DSoundBufferXboxAdpcmDecoder(pThis->EmuDirectSoundBuffer8,
-                                         pThis->EmuBufferDesc,
-                                         0,
-                                         pThis->X_BufferCache,
-                                         pInputBuffer->dwMaxSize,
-                                         0,
-                                         0,
-                                         false);
+        if (hRet == DS_OK) {
 
-        } else {
-            hRet = pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes,
-                                                      nullptr, nullptr, 0);
-
-            if (hRet == DS_OK) {
-
-                if (pAudioPtr != 0) {
-                    DSoundBufferOutputXBtoPC(pThis->EmuFlags, pThis->EmuBufferDesc, pThis->X_BufferCache, pInputBuffer->dwMaxSize, pAudioPtr, dwAudioBytes);
-                }
-                pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
+            if (pAudioPtr != 0) {
+                DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pThis->X_BufferCache, pInputBuffer->dwMaxSize, pAudioPtr, dwAudioBytes);
             }
+            pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
         }
         //TODO: RadWolfie - If remove this part, XADPCM audio will stay running, Rayman Arena, except...
         //...PCM audio does not for rest of titles. However it should not be here, so this is currently a workaround fix for now.

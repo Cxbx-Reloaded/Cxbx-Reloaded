@@ -136,13 +136,10 @@ void DSoundBufferXboxAdpcmDecoder(
 
 #define DSoundBufferGetPCMBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
 
-void DSoundBufferOutputXBtoPC(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
+void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
-        DWORD dwDecodedAudioBytes = TXboxAdpcmDecoder_guess_output_size(dwXBAudioBytes) * pDSBufferDesc->lpwfxFormat->nChannels;
 
-        if (dwDecodedAudioBytes > dwPCMAudioBytes) dwDecodedAudioBytes = dwPCMAudioBytes;
-
-        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes / pDSBufferDesc->lpwfxFormat->nChannels, (uint8_t*)pPCaudioPtr, pDSBufferDesc->lpwfxFormat->nChannels);
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes, (uint8_t*)pPCaudioPtr, pDSBufferDesc->lpwfxFormat->nChannels);
 
     // PCM format, no changes requirement.
     } else {
