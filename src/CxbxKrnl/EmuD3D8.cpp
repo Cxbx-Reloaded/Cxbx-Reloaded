@@ -6212,8 +6212,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
         #ifdef _DEBUG_TRACK_VB
         }
         #endif
-
-	    VertPatch.Restore();
     }
 
 	// Execute callback procedure
@@ -6283,8 +6281,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
         }
-
-	    VertPatch.Restore();
     }
 
 	// Execute callback procedure
@@ -6408,8 +6404,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 		}
 
-		VertPatch.Restore();
-
 		g_pD3DDevice8->SetIndices(NULL, 0);
 	}
 
@@ -6488,8 +6482,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		#ifdef _DEBUG_TRACK_VB
 		}
 		#endif
-
-		VertPatch.Restore();
     }
 
 	// Execute callback procedure

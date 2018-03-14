@@ -330,8 +330,6 @@ extern void XTL::EmuExecutePushBufferRaw
                 );
 
 				g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
-
-                VertPatch.Restore();
             }
 
             pdwPushData--;
@@ -443,8 +441,6 @@ extern void XTL::EmuExecutePushBufferRaw
                     #ifdef _DEBUG_TRACK_PB
                     }
                     #endif
-
-                    VertPatch.Restore();
 
                     g_pD3DDevice8->SetIndices(0, 0);
                 }
@@ -604,8 +600,6 @@ extern void XTL::EmuExecutePushBufferRaw
                     #ifdef _DEBUG_TRACK_PB
                     }
                     #endif
-
-                    VertPatch.Restore();
 
                     g_pD3DDevice8->SetIndices(0, 0);
                 }

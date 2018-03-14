@@ -62,22 +62,7 @@ typedef struct _PATCHEDSTREAM
     XTL::IDirect3DVertexBuffer8 *pPatchedStream;
     UINT                    uiOrigStride;
     UINT                    uiNewStride;
-    bool                    bUsedCached;
 } PATCHEDSTREAM;
-
-typedef struct _CACHEDSTREAM
-{
-    uint32_t       uiHash;
-    uint32         uiCheckFrequency;
-    uint32         uiCacheHit;
-    bool           bIsUP;
-    PATCHEDSTREAM  Stream;
-    void          *pStreamUP;           // Draw..UP (instead of pOriginalStream)
-    uint32         uiLength;            // The length of the stream
-    uint32         uiCount;             // XXHash32::hash() check count
-    uint32         dwHostPrimitiveCount;
-    long           lLastUsed;           // For cache removal purposes
-} CACHEDSTREAM;
 
 class VertexPatcher
 {
@@ -86,11 +71,6 @@ class VertexPatcher
        ~VertexPatcher();
 
         bool Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError);
-        bool Restore();
-
-        // Dumps the cache to the console
-        static void DumpCache(void);
-
     private:
 
         UINT m_uiNbrStreams;
@@ -105,20 +85,6 @@ class VertexPatcher
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(VertexPatchDesc *pPatchDesc);
-
-        // Caches a patched stream
-        void CacheStream(VertexPatchDesc *pPatchDesc,
-                         UINT             uiStream,
-						 uint32_t		  uiHash);
-
-        // Frees a cached, patched stream
-        void FreeCachedStream(void *pStream);
-
-        // Tries to apply a previously patched stream from the cache
-        bool ApplyCachedStream(VertexPatchDesc *pPatchDesc,
-                               UINT             uiStream,
-							   bool			   *pbFatalError,
-							   uint32_t        *uiHash);
 
         // Patches the types of the stream
         bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
