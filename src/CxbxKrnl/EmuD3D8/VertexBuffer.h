@@ -48,6 +48,7 @@ typedef struct _VertexPatchDesc
     IN     DWORD                 hVertexShader;
 	IN	   PWORD				 pIndexData = nullptr;
 	IN	   DWORD				 dwIndexBase = 0;
+	IN	   size_t				 uiSize;
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
     IN UINT                      uiXboxVertexStreamZeroStride;
