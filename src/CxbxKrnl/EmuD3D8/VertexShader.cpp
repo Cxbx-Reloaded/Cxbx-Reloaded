@@ -2315,7 +2315,7 @@ extern boolean XTL::IsValidCurrentShader(void)
 {
 	// Dxbx addition : There's no need to call
 	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentVertexShader :
-	return VshHandleIsValidShader(g_CurrentVertexShader);
+	return VshHandleIsValidShader(g_CurrentXboxVertexShaderHandle);
 }
 
 // Checks for failed vertex shaders, and shaders that would need patching

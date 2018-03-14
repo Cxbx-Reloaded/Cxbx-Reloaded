@@ -74,7 +74,7 @@ HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
-DWORD                               g_CurrentVertexShader = 0;
+DWORD                               g_CurrentXboxVertexShaderHandle = 0;
 XTL::X_PixelShader*					g_D3DActivePixelShader = nullptr;
 BOOL                                g_bIsFauxFullscreen = FALSE;
 BOOL								g_bHackUpdateSoftwareOverlay = FALSE;
@@ -2643,7 +2643,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
 	HRESULT hRet;
 	
-	g_CurrentVertexShader = Handle;
+	g_CurrentXboxVertexShaderHandle = Handle;
 
     if(VshHandleIsVertexShader(Handle))
     {
@@ -5901,7 +5901,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
     HRESULT hRet = D3D_OK;
 
-    g_CurrentVertexShader = Handle;
+    g_CurrentXboxVertexShaderHandle = Handle;
 
     // Store viewport offset and scale in constant registers 58 (c-38) and
     // 59 (c-37) used for screen space transformation.
@@ -6041,7 +6041,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		VPDesc.dwStartVertex = StartVertex;
 		VPDesc.pXboxVertexStreamZeroData = 0;
 		VPDesc.uiXboxVertexStreamZeroStride = 0;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		VertexPatcher VertPatch;
 
@@ -6112,7 +6112,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		VertexPatcher VertPatch;
 
@@ -6193,7 +6193,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = 0;
 		VPDesc.uiXboxVertexStreamZeroStride = 0;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		VPDesc.pIndexData = pIndexData;
 		VPDesc.dwIndexBase = indexBase;
 
@@ -6312,7 +6312,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		VPDesc.pIndexData = (PWORD)pIndexData;
 
 		VertexPatcher VertPatch;
@@ -6713,7 +6713,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShader)
 
     if(pHandle)
     {
-        (*pHandle) = g_CurrentVertexShader;
+        (*pHandle) = g_CurrentXboxVertexShaderHandle;
     }
 }
 
@@ -6853,7 +6853,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	DWORD hCurrentShader = g_CurrentVertexShader;
+	DWORD hCurrentShader = g_CurrentXboxVertexShaderHandle;
 
 
 	load_shader_program_key_t shaderCacheKey = ((load_shader_program_key_t)hCurrentShader << 32) | (DWORD)pFunction;

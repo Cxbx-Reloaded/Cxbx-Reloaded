@@ -250,7 +250,7 @@ extern void XTL::EmuExecutePushBufferRaw
             pdwPushData += dwCount;
 
             // retrieve vertex shader
-			DWORD dwVertexShader = g_CurrentVertexShader;
+			DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
 
 			if (VshHandleIsVertexShader(dwVertexShader)) 
 			{
@@ -411,7 +411,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     VPDesc.pXboxVertexStreamZeroData = 0;
                     VPDesc.uiXboxVertexStreamZeroStride = 0;
                     // TODO: Set the current shader and let the patcher handle it..
-                    VPDesc.hVertexShader = g_CurrentVertexShader;
+                    VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
                     VertexPatcher VertPatch;
 
@@ -574,7 +574,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     VPDesc.pXboxVertexStreamZeroData = 0;
                     VPDesc.uiXboxVertexStreamZeroStride = 0;
                     // TODO: Set the current shader and let the patcher handle it..
-                    VPDesc.hVertexShader = g_CurrentVertexShader;
+                    VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
                     VertexPatcher VertPatch;
 
@@ -795,7 +795,7 @@ void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
 	// Write pushbuffer data to the file.
 	// TODO: Cache the 32-bit XXHash32::hash() of each pushbuffer to ensure that the same
 	// pushbuffer is not written twice within a given emulation session.
-	WriteFile( hFile, &g_CurrentVertexShader, sizeof( DWORD ), &dwBytesWritten, NULL );
+	WriteFile( hFile, &g_CurrentXboxVertexShaderHandle, sizeof( DWORD ), &dwBytesWritten, NULL );
 	WriteFile( hFile, PBData, dwSize, &dwBytesWritten, NULL );
 
 	// Close handle

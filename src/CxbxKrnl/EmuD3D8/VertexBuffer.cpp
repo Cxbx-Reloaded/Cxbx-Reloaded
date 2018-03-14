@@ -203,7 +203,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 {
     // FVF buffers doesn't have Xbox extensions, but texture coordinates may
     // need normalization if used with linear textures.
-    if(!VshHandleIsVertexShader(pPatchDesc->hVertexShader))
+    if(VshHandleIsFVF(pPatchDesc->hVertexShader))
     {
         if(pPatchDesc->hVertexShader & D3DFVF_TEXCOUNT_MASK)
         {
@@ -834,8 +834,8 @@ VOID XTL::EmuFlushIVB()
 	EmuUpdateActiveTextureStages();
 
     // Parse IVB table with current FVF shader if possible.
-    bool bFVF = VshHandleIsFVF(g_CurrentVertexShader);
-    DWORD dwCurFVF = (bFVF) ? g_CurrentVertexShader : g_InlineVertexBuffer_FVF;
+    bool bFVF = VshHandleIsFVF(g_CurrentXboxVertexShaderHandle);
+    DWORD dwCurFVF = (bFVF) ? g_CurrentXboxVertexShaderHandle : g_InlineVertexBuffer_FVF;
 
     DbgPrintf("g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
 
@@ -990,7 +990,7 @@ VOID XTL::EmuFlushIVB()
     VPDesc.dwVertexCount = g_InlineVertexBuffer_TableOffset;
     VPDesc.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
     VPDesc.uiXboxVertexStreamZeroStride = uiStride;
-    VPDesc.hVertexShader = g_CurrentVertexShader;
+    VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
     VertexPatcher VertPatch;
 
@@ -1011,7 +1011,7 @@ VOID XTL::EmuFlushIVB()
 
     if(bFVF)
     {
-        g_pD3DDevice8->SetVertexShader(g_CurrentVertexShader);
+        g_pD3DDevice8->SetVertexShader(g_CurrentXboxVertexShaderHandle);
     }
 
     g_InlineVertexBuffer_TableOffset = 0;
