@@ -69,7 +69,6 @@ extern DWORD				XTL::g_dwPrimPerFrame = 0;
 extern XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 extern UINT g_D3DStreamStrides[16];
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
-extern XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, DWORD dwSize);
 
 typedef struct {
 	XTL::IDirect3DVertexBuffer8* pHostVertexBuffer;
@@ -785,6 +784,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
     {
         m_pDynamicPatch = &((VERTEX_SHADER *)VshHandleGetVertexShader(pPatchDesc->hVertexShader)->Handle)->VertexDynamicPatch;
     }
+
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++)
     {
         bool LocalPatched = false;
@@ -795,17 +795,32 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 			pPatchDesc->dwStartVertex,
 			pPatchDesc->dwIndexBase
 		);
-
+	
+		// TODO: Check for cached vertex buffer, and use it if possible
+		
 		LocalPatched |= PatchPrimitive(pPatchDesc, uiStream);
         LocalPatched |= PatchStream(pPatchDesc, uiStream);
         Patched |= LocalPatched;
 
-		// If we didn't patch the stream, use a non-patched stream
-		// TODO: Update the converion/patching code to make a host copy even when no patching is required
-		// Doing this will fully remove the need to call _Register on Vertex Buffers
 		if (!Patched && pPatchDesc->pXboxVertexStreamZeroData == nullptr) {
-			g_pD3DDevice8->SetStreamSource(uiStream, GetHostVertexBuffer(g_D3DStreams[uiStream], pPatchDesc->uiSize), g_D3DStreamStrides[uiStream]);
+			// Fetch or Create the host Vertex Buffer
+			XTL::IDirect3DVertexBuffer8* pHostVertexBuffer;
+			GetCachedVertexBufferObject(g_D3DStreams[uiStream]->Data, pPatchDesc->uiSize, &pHostVertexBuffer);
+
+			// Copy xbox data to the host vertex buffer
+			BYTE* pVertexDataData;
+			if (FAILED(pHostVertexBuffer->Lock(0, 0, &pVertexDataData, D3DLOCK_DISCARD))) {
+				CxbxKrnlCleanup("Couldn't lock Vertex Buffer");
+			}
+
+			memcpy(pVertexDataData, GetDataFromXboxResource(g_D3DStreams[uiStream]), pPatchDesc->uiSize);
+			pHostVertexBuffer->Unlock();
+			
+			// Set the buffer as a stream source
+			g_pD3DDevice8->SetStreamSource(uiStream, pHostVertexBuffer, g_D3DStreamStrides[uiStream]);
 		}
+
+		// TODO: Cache Vertex Buffer Data
     }
 
     return Patched;
