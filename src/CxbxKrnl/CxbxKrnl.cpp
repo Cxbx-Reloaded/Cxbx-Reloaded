@@ -36,9 +36,6 @@
 
 #define _XBOXKRNL_DEFEXTRN_
 
-// Default to High Performance Mode on machines with dual graphics
-extern "C" {	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;	// AMD	__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;		// NVIDIA}
-
 /* prevent name collisions */
 namespace xboxkrnl
 {
