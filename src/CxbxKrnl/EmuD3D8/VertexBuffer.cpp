@@ -707,9 +707,6 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         pPatchDesc->pXboxVertexStreamZeroData = pPatchedVertexData;
     }
 
-    // Copy the nonmodified data
-    memcpy(pPatchedVertexData, pOrigVertexData, dwOriginalSize);
-
     // Quad list
     if(pPatchDesc->XboxPrimitiveType == X_D3DPT_QUADLIST)
     {
@@ -761,6 +758,11 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         memcpy(&pPatchedVertexData[0], &pOrigVertexData[0], dwOriginalSize);
 	    memcpy(&pPatchedVertexData[dwOriginalSize], &pOrigVertexData[0], pStream->uiOrigStride);
     }
+	else
+	{
+		// Copy the nonmodified data
+		memcpy(pPatchedVertexData, pOrigVertexData, dwOriginalSize);
+	}
 
     if(pPatchDesc->pXboxVertexStreamZeroData == nullptr)
     {
