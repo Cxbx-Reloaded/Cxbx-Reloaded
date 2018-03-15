@@ -4522,7 +4522,7 @@ VOID WINAPI CreateHostResource
 							}
 							else if (CacheFormat != 0) // Do we need to convert to ARGB?
 							{
-								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
+								DbgPrintf("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
 								uint8 *pDest = (uint8 *)LockedRect.pBits;

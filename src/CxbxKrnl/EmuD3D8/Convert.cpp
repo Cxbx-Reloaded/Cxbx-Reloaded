@@ -1037,7 +1037,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr)
-			EmuWarning(info->warning);
+			DbgPrintf(info->warning);
 
 		return info->pc;
 	}
