@@ -3595,6 +3595,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), 0.0f, 1.0f);
 }
 
+DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
+{
+	DWORD ca = (FtoDW(d) << 24);
+	DWORD cr = (FtoDW(a) << 16) & 0x00FF0000;
+	DWORD cg = (FtoDW(b) << 8) & 0x0000FF00;
+	DWORD cb = (FtoDW(c) << 0) & 0x000000FF;
+
+	return ca | cr | cg | cb;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexData4f
 // ******************************************************************
@@ -3645,6 +3655,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
         case X_D3DVSDE_VERTEX:
         case X_D3DVSDE_POSITION:
         {
+			// Note : Setting position signals completion of a vertex
             g_InlineVertexBuffer_Table[o].Position.x = a;
             g_InlineVertexBuffer_Table[o].Position.y = b;
 			g_InlineVertexBuffer_Table[o].Position.z = c;
@@ -3653,13 +3664,24 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
 			case 0:
 				// No position mask given yet, set it now :
-				g_InlineVertexBuffer_FVF |= D3DFVF_XYZRHW;
+				if (g_InlineVertexBuffer_FVF & D3DFVF_NORMAL) {
+					// See https://msdn.microsoft.com/ru-ru/library/windows/desktop/bb172559(v=vs.85).aspx and DxbxFVFToVertexSizeInBytes 
+					// D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW :
+					g_InlineVertexBuffer_FVF |= D3DFVF_XYZ;
+					g_InlineVertexBuffer_Table[o].Rhw = 1.0f; // This, just to stay close to prior behaviour
+				}
+				else {
+					// Without D3DFVF_NORMAL, assume D3DFVF_XYZRHW
+					g_InlineVertexBuffer_FVF |= D3DFVF_XYZRHW;
+				}
 				break;
+			case D3DFVF_XYZ:
 			case D3DFVF_XYZRHW:
-				// This one is alright
+			case D3DFVF_XYZB1:
+				// These are alright
 				break;
 			default:
-				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZRHW : %x", g_InlineVertexBuffer_FVF);
+				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZ(RHW) : %x", g_InlineVertexBuffer_FVF);
 				// TODO : How to resolve this?
 			}
 
@@ -3682,7 +3704,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_InlineVertexBuffer_Table[o].Blend[2] = c;
 			g_InlineVertexBuffer_Table[o].Blend[3] = d;
 			// TODO: Test the above. 
-			// TODO: Does or doesn't Xbox support five blendweights? And if so, how is the fifth set?
+			// Xbox supports up to 4 blendweights
 
 			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
 			case 0:
@@ -3691,12 +3713,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 				// TODO: How to select blendweight D3DFVF_XYZB2 or up?
 				break;
 			case D3DFVF_XYZB1:
-				// This one is alright
+				// These are alright
 				break;
 			default:
 				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when processing X_D3DVSDE_BLENDWEIGHT : %x", g_InlineVertexBuffer_FVF);
 				g_InlineVertexBuffer_FVF &= ~D3DFVF_POSITION_MASK; // for now, remove prior position mask, leading to blending below
 				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
+				// TODO: How to select blendweight D3DFVF_XYZB2 or up?
 				// TODO : How to resolve this?
 			}
 
@@ -3714,39 +3737,40 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
         case X_D3DVSDE_DIFFUSE:
         {
-            DWORD ca = FtoDW(d) << 24;
-            DWORD cr = FtoDW(a) << 16;
-            DWORD cg = FtoDW(b) << 8;
-            DWORD cb = FtoDW(c) << 0;
-
-            g_InlineVertexBuffer_Table[o].Diffuse = ca | cr | cg | cb;
+            g_InlineVertexBuffer_Table[o].Diffuse = FloatsToDWORD(d, a, b, c);
             g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
 			break;
         }
 
 		case X_D3DVSDE_SPECULAR:
         {
-            DWORD ca = FtoDW(d) << 24;
-            DWORD cr = FtoDW(a) << 16;
-            DWORD cg = FtoDW(b) << 8;
-            DWORD cb = FtoDW(c) << 0;
-
-            g_InlineVertexBuffer_Table[o].Specular = ca | cr | cg | cb;
+            g_InlineVertexBuffer_Table[o].Specular = FloatsToDWORD(d, a, b, c);
             g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
 			break;
         }
 
-		// TODO case X_D3DVSDE_FOG: ; // Xbox extension
-
-		case X_D3DVSDE_POINTSIZE: {
-			g_InlineVertexBuffer_Table[o].PointSize = a;
-			g_InlineVertexBuffer_FVF |= D3DFVF_PSIZE;
+		case X_D3DVSDE_FOG: // Xbox extension
+		{
+			g_InlineVertexBuffer_Table[o].Fog = a; // TODO : What about the other (b, c and d) arguments?
+			EmuWarning("Host Direct3D8 doesn''t support FVF FOG");
 			break;
 		}
 
-		// TODO case X_D3DVSDE_BACKDIFFUSE: ; // Xbox extension
+		// Note : X_D3DVSDE_POINTSIZE: Maps to D3DFVF_PSIZE, which is not available on Xbox FVF's
 
-		// TODO case X_D3DVSDE_BACKSPECULAR: ; // Xbox extension
+		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
+		{
+			g_InlineVertexBuffer_Table[o].BackDiffuse = FloatsToDWORD(d, a, b, c);
+			EmuWarning("Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+			break;
+		}
+
+		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
+		{
+			g_InlineVertexBuffer_Table[o].BackSpecular = FloatsToDWORD(d, a, b, c);
+			EmuWarning("Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+			break;
+		}
 
 		case X_D3DVSDE_TEXCOORD0:
         {

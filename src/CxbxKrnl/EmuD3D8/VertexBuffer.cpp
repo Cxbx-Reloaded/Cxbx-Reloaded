@@ -1057,29 +1057,36 @@ VOID XTL::EmuFlushIVB()
 	EmuUpdateActiveTextureStages();
 
     // Parse IVB table with current FVF shader if possible.
-    bool bFVF = !VshHandleIsVertexShader(g_CurrentVertexShader);
-    DWORD dwCurFVF;
-    if(bFVF && ((g_CurrentVertexShader & D3DFVF_POSITION_MASK) != D3DFVF_XYZRHW))
-    {
-        dwCurFVF = g_CurrentVertexShader;
-
-		// HACK: Halo...
-		if(dwCurFVF == 0)
-		{
-			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
-			dwCurFVF = g_InlineVertexBuffer_FVF;
-		}
-    }
-    else
-    {
-        dwCurFVF = g_InlineVertexBuffer_FVF;
-    }
+    bool bFVF = VshHandleIsFVF(g_CurrentVertexShader);
+    DWORD dwCurFVF = (bFVF) ? g_CurrentVertexShader : g_InlineVertexBuffer_FVF;
 
     DbgPrintf("g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
 
-    DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
+	// Check the given FVF
+	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
+	case 0: // No position ?
+		if (bFVF) {
+			EmuWarning("EmuFlushIVB(): g_CurrentVertexShader isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			dwCurFVF |= D3DFVF_XYZRHW;
+		}
+		else {
+			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
+			dwCurFVF = g_InlineVertexBuffer_FVF;
+		}
+		break;
+	case D3DFVF_XYZRHW:
+		// D3DFVF_NORMAL isn't allowed in combination with D3DFVF_XYZRHW 
+		if (dwCurFVF & D3DFVF_NORMAL) {
+			EmuWarning("EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
+			dwCurFVF &= ~D3DFVF_POSITION_MASK;
+			dwCurFVF |= D3DFVF_XYZ;
+		}
+		break;
+	}
+
+	DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-	size_t TexSize[4];
+	size_t TexSize[X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures (TEXTURE_STAGES)
 
 	for (uint i = 0; i < dwTexN; i++) {
 		TexSize[i] = DxbxFVF_GetTextureSize(dwCurFVF, i);
@@ -1149,45 +1156,27 @@ VOID XTL::EmuFlushIVB()
 			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[3];
 			DbgPrintf("IVB Position := {%f, %f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3]);
 			break;
-#if 0 // TODO : Does or doesn't Xbox support five blendweights?
-		case D3DFVF_XYZB5:
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Position.x;
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Position.y;
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Position.z;
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[0];
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[1];
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[2];
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[3];
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Blend[4];
-			DbgPrintf("IVB Position := {%f, %f, %f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3], g_InlineVertexBuffer_Table[v].Blend[4]);
-			break;
-#endif
 		default:
 			CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
 			break;
 		}
 
 		if (dwCurFVF & D3DFVF_NORMAL) {
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.x;
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.y;
-            *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.z;
-            DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.x;
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.y;
+			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].Normal.z;
+			DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
         }
 
-		if (dwCurFVF & D3DFVF_PSIZE) {
-			*(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].PointSize;
-			DbgPrintf("IVB PointSize := %f\n", g_InlineVertexBuffer_Table[v].PointSize);
-		}
-
-		if (dwCurFVF & D3DFVF_DIFFUSE) {
+        if (dwCurFVF & D3DFVF_DIFFUSE) {
             *(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Diffuse;
             DbgPrintf("IVB Diffuse := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Diffuse);
         }
 
-        if (dwCurFVF & D3DFVF_SPECULAR) {
-            *(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Specular;
-            DbgPrintf("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
-        }
+		if (dwCurFVF & D3DFVF_SPECULAR) {
+			*(DWORD*)pdwVB++ = g_InlineVertexBuffer_Table[v].Specular;
+			DbgPrintf("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
+		}
 
 		for (uint i = 0; i < dwTexN; i++) {
             *(FLOAT*)pdwVB++ = g_InlineVertexBuffer_Table[v].TexCoord[i].x;

@@ -98,6 +98,7 @@ UINT XTL::DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 
 	// Express the size in bytes, instead of floats :
 	Result *= sizeof(FLOAT);
+
 	// D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW :
 	if ((dwFVF & D3DFVF_POSITION_MASK) != D3DFVF_XYZRHW) {
 		if (dwFVF & D3DFVF_NORMAL) {
@@ -161,7 +162,6 @@ extern void XTL::EmuExecutePushBufferRaw
     PVOID pVertexData = 0;
 
     DWORD dwVertexShader = -1;
-    DWORD dwStride = -1;
 
     // cache of last 4 indices
     WORD pIBMem[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
@@ -262,41 +262,6 @@ extern void XTL::EmuExecutePushBufferRaw
                 EmuWarning("FVF Vertex Shader is null");
                 dwVertexShader = -1;
             }
-			/*else if(dwVertexShader == 0x6)
-			{
-				dwVertexShader = (D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-			}*/
-
-		//	printf( "EmuExecutePushBufferRaw: FVF = 0x%.08X\n" );
-
-            //
-            // calculate stride
-            //
-
-            dwStride = 0;
-
-            if(!VshHandleIsVertexShader(dwVertexShader))
-            {
-                /*if(dwVertexShader & D3DFVF_XYZRHW)	{ dwStride += sizeof(FLOAT)*4; }
-				if(dwVertexShader & D3DFVF_XYZ)		{ dwStride += sizeof(FLOAT)*3; }
-				if(dwVertexShader & D3DFVF_XYZB1)	{ dwStride += sizeof(FLOAT); }
-				if(dwVertexShader & D3DFVF_XYZB2)	{ dwStride += sizeof(FLOAT)*2; }
-				if(dwVertexShader & D3DFVF_XYZB3)	{ dwStride += sizeof(FLOAT)*3; }
-				if(dwVertexShader & D3DFVF_XYZB4)	{ dwStride += sizeof(FLOAT)*4; }*/
-
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW){ dwStride += sizeof(FLOAT)*4; }
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZ)   { dwStride += sizeof(FLOAT)*3; }
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB1)	{ dwStride += sizeof(FLOAT)*4; }
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB2)	{ dwStride += sizeof(FLOAT)*5; }
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB3)	{ dwStride += sizeof(FLOAT)*6; }
-				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB4)	{ dwStride += sizeof(FLOAT)*7; }
-
-				if(dwVertexShader & D3DFVF_NORMAL)  { dwStride += sizeof(FLOAT)*3; }
-                if(dwVertexShader & D3DFVF_DIFFUSE) { dwStride += sizeof(DWORD); }
-                if(dwVertexShader & D3DFVF_SPECULAR) { dwStride += sizeof(DWORD); }
-
-                dwStride += ((dwVertexShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2;
-            }
 
             /*
             // create cached vertex buffer only once, with maxed out size
@@ -336,6 +301,9 @@ extern void XTL::EmuExecutePushBufferRaw
             // render vertices
             if(dwVertexShader != -1)
             {
+				// assert(VshHandleIsVertexFVF(dwVertexShader));
+
+				DWORD dwStride = DxbxFVFToVertexSizeInBytes(dwVertexShader, /*bIncludeTextures=*/true);
                 UINT VertexCount = (dwCount*sizeof(DWORD)) / dwStride;
                 UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
 
