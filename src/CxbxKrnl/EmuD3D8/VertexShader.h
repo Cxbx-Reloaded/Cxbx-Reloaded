@@ -56,7 +56,7 @@ extern DWORD EmuRecompileVshDeclaration
     DWORD               **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,
-    VERTEX_DYNAMIC_PATCH *pVertexDynamicPatch
+    CxbxVertexShaderDynamicPatch *pVertexDynamicPatch
 );
 
 // recompile xbox vertex shader function
@@ -70,7 +70,7 @@ extern HRESULT EmuRecompileVshFunction
 	DWORD		 *pRecompiledDeclaration
 );
 
-extern void FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader);
+extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
 
 // Checks for failed vertex shaders, and shaders that would need patching
 extern boolean IsValidCurrentShader(void);
@@ -84,7 +84,7 @@ extern boolean VshHandleIsValidShader(DWORD Handle);
 inline boolean VshHandleIsFVF(DWORD Handle) { return (Handle > NULL) && (Handle <= XBE_MAX_VA); }
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle > XBE_MAX_VA) ? TRUE : FALSE; }
 inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return VshHandleIsVertexShader(Handle) ? (X_D3DVertexShader *)Handle : nullptr; }
-VERTEX_DYNAMIC_PATCH *VshGetVertexDynamicPatch(DWORD Handle);
+CxbxVertexShaderDynamicPatch *VshGetVertexDynamicPatch(DWORD Handle);
 
 #ifdef _DEBUG_TRACK_VS
 #define DbgVshPrintf if(g_bPrintfOn) printf

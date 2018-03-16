@@ -481,7 +481,7 @@ DWORD VshHandleGetRealHandle(DWORD aHandle)
 		X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(aHandle);
 		// assert(pD3DVertexShader);
 
-		VERTEX_SHADER *pVertexShader = (VERTEX_SHADER*)(pD3DVertexShader->Handle);
+		CxbxVertexShader *pVertexShader = (CxbxVertexShader*)(pD3DVertexShader->Handle);
 		// assert(pVertexShader);
 
 		return pVertexShader->Handle;
@@ -1615,7 +1615,7 @@ VSH_TYPE_PATCH_DATA;
 typedef struct _VSH_STREAM_PATCH_DATA
 {
     DWORD                     NbrStreams;
-    XTL::STREAM_DYNAMIC_PATCH pStreamPatches[256];
+    XTL::CxbxStreamDynamicPatch pStreamPatches[256];
 }
 VSH_STREAM_PATCH_DATA;
 
@@ -1869,7 +1869,7 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
     {
         DbgVshPrintf("NeedPatching: %d\n", pPatchData->NeedPatching);
 
-        XTL::STREAM_DYNAMIC_PATCH* pStreamPatch = &pPatchData->StreamPatchData.pStreamPatches[CurrentStream];
+        XTL::CxbxStreamDynamicPatch* pStreamPatch = &pPatchData->StreamPatchData.pStreamPatches[CurrentStream];
 
         pStreamPatch->ConvertedStride = pPatchData->ConvertedStride;
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
@@ -2168,7 +2168,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     DWORD               **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,
-    VERTEX_DYNAMIC_PATCH *pVertexDynamicPatch
+    CxbxVertexShaderDynamicPatch *pVertexDynamicPatch
 )
 {
     // First of all some info:
@@ -2210,9 +2210,9 @@ DWORD XTL::EmuRecompileVshDeclaration
     DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatchData.NbrStreams);
 
     // Copy the patches to the vertex shader struct
-    DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
+    DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(CxbxStreamDynamicPatch);
     pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
-    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)malloc(StreamsSize);
+    pVertexDynamicPatch->pStreamPatches = (CxbxStreamDynamicPatch *)malloc(StreamsSize);
     memcpy(pVertexDynamicPatch->pStreamPatches,
            PatchData.StreamPatchData.pStreamPatches,
            StreamsSize);
@@ -2362,19 +2362,19 @@ extern HRESULT XTL::EmuRecompileVshFunction
     return hRet;
 }
 
-extern void XTL::FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader)
+extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 {
-    for (DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+    for (DWORD i = 0; i < pVertexShader->VertexShaderDynamicPatch.NbrStreams; i++)
     {
-        free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
-		pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes = nullptr;
-		free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pSizes);
-		pVertexShader->VertexDynamicPatch.pStreamPatches[i].pSizes = nullptr;
+        free(pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].pTypes);
+		pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].pTypes = nullptr;
+		free(pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].pSizes);
+		pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].pSizes = nullptr;
     }
 
-    free(pVertexShader->VertexDynamicPatch.pStreamPatches);
-    pVertexShader->VertexDynamicPatch.pStreamPatches = NULL;
-    pVertexShader->VertexDynamicPatch.NbrStreams = 0;
+    free(pVertexShader->VertexShaderDynamicPatch.pStreamPatches);
+    pVertexShader->VertexShaderDynamicPatch.pStreamPatches = NULL;
+    pVertexShader->VertexShaderDynamicPatch.NbrStreams = 0;
 }
 
 extern boolean XTL::IsValidCurrentShader(void)
@@ -2392,15 +2392,15 @@ boolean XTL::VshHandleIsValidShader(DWORD Handle)
     if (VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
         if (pVertexShader->Status != 0)
         {
             return FALSE;
         }
         /*
-        for (uint32 i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+        for (uint32 i = 0; i < pVertexShader->VertexShaderDynamicPatch.NbrStreams; i++)
         {
-            if (pVertexShader->VertexDynamicPatch.pStreamPatches[i].NeedPatch)
+            if (pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].NeedPatch)
             {
                 // Just for caching purposes
                 pVertexShader->Status = 0x80000001;
@@ -2412,16 +2412,16 @@ boolean XTL::VshHandleIsValidShader(DWORD Handle)
     return TRUE;
 }
 
-extern XTL::VERTEX_DYNAMIC_PATCH *XTL::VshGetVertexDynamicPatch(DWORD Handle)
+extern XTL::CxbxVertexShaderDynamicPatch *XTL::VshGetVertexDynamicPatch(DWORD Handle)
 {
     X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
-    VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+    CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
 
-    for (uint32 i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+    for (uint32 i = 0; i < pVertexShader->VertexShaderDynamicPatch.NbrStreams; i++)
     {
-        if (pVertexShader->VertexDynamicPatch.pStreamPatches[i].NeedPatch)
+        if (pVertexShader->VertexShaderDynamicPatch.pStreamPatches[i].NeedPatch)
         {
-            return &pVertexShader->VertexDynamicPatch;
+            return &pVertexShader->VertexShaderDynamicPatch;
         }
     }
     return NULL;

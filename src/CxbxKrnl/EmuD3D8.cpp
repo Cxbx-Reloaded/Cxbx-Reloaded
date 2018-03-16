@@ -2835,7 +2835,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
     if(Address < 136 && VshHandleIsVertexShader(Handle))
     {
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
         for (DWORD i = Address; i < pVertexShader->Size; i++)
         {
             // TODO: This seems very fishy
@@ -2908,7 +2908,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
     if(VshHandleIsVertexShader(Handle))
     {
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
         hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
     }
@@ -2928,7 +2928,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
         if(pVertexShader != NULL)
         {
-			hRet = g_pD3DDevice->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
+			hRet = g_pD3DDevice->SetVertexShader(((CxbxVertexShader *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(pVertexShader)");
 		}
         else
@@ -3585,7 +3585,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_VMManager.AllocateZeroed(sizeof(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)g_VMManager.AllocateZeroed(sizeof(VERTEX_SHADER));
+    CxbxVertexShader     *pVertexShader = (CxbxVertexShader*)g_VMManager.AllocateZeroed(sizeof(CxbxVertexShader));
 
     // TODO: Intelligently fill out these fields as necessary
 
@@ -3610,7 +3610,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
                                                    &pRecompiledDeclaration,
                                                    &DeclarationSize,
                                                    pFunction == NULL,
-                                                   &pVertexShader->VertexDynamicPatch);
+                                                   &pVertexShader->VertexShaderDynamicPatch);
 
     if(SUCCEEDED(hRet) && pFunction)
     {
@@ -6835,7 +6835,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     DWORD RealHandle;
     if(VshHandleIsVertexShader(Handle))
     {
-        RealHandle = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Handle;
+        RealHandle = ((CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle)->Handle;
     }
     else
     {
@@ -7914,7 +7914,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
     if(pSize  && VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
         *pSize = pVertexShader->Size;
     }
     else if(pSize)
@@ -7964,7 +7964,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
     if(VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
 
         RealHandle = pVertexShader->Handle;
 		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
@@ -8203,7 +8203,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
     {
 		DWORD hNewShader = 0;
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(hCurrentShader & 0x7FFFFFFF);
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
 
 		// Save the contents of the existing vertex shader program
 		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->DeclarationSize );
@@ -8245,7 +8245,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
 
 	if(pType && VshHandleIsVertexShader(Handle))
     {
-        *pType = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
+        *pType = ((CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
     }
 }
 
@@ -8282,7 +8282,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
         if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
         {
             *pSizeOfData = pVertexShader->DeclarationSize;
@@ -8332,7 +8332,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
         if(*pSizeOfData < pVertexShader->FunctionSize || !pData)
         {
             *pSizeOfData = pVertexShader->FunctionSize;

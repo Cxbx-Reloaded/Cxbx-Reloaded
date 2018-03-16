@@ -84,7 +84,7 @@ class CxbxVertexBufferConverter
         bool m_bPatched;
         bool m_bAllocatedStreamZeroData;
 
-        VERTEX_DYNAMIC_PATCH *m_pDynamicPatch;
+        CxbxVertexShaderDynamicPatch *m_pVertexShaderDynamicPatch;
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);

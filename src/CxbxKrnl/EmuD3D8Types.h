@@ -484,7 +484,7 @@ typedef struct _X_PixelShader
 } X_PixelShader;
 
 // These structures are used by Cxbx, not by the Xbox!!!
-typedef struct _PixelShader_ 
+typedef struct _CxbxPixelShader 
 {
 	//IDirect3DPixelShader9* pShader;
 	//ID3DXConstantTable *pConstantTable;
@@ -507,9 +507,9 @@ typedef struct _PixelShader_
 	DWORD dwStageMap[TEXTURE_STAGES];
 
 }
-PIXEL_SHADER;
+CxbxPixelShader;
 
-typedef struct _STREAM_DYNAMIC_PATCH_
+typedef struct _CxbxStreamDynamicPatch
 {
     BOOL  NeedPatch;       // This is to know whether it's data which must be patched
     DWORD ConvertedStride;
@@ -517,16 +517,16 @@ typedef struct _STREAM_DYNAMIC_PATCH_
     UINT  *pTypes;         // The stream data types (xbox)
 	UINT  *pSizes;         // The stream data sizes (pc)
 }
-STREAM_DYNAMIC_PATCH;
+CxbxStreamDynamicPatch;
 
-typedef struct _VERTEX_DYNAMIC_PATCH_
+typedef struct _CxbxVertexDynamicPatch
 {
     UINT                         NbrStreams; // The number of streams the vertex shader uses
-    STREAM_DYNAMIC_PATCH        *pStreamPatches;
+    CxbxStreamDynamicPatch        *pStreamPatches;
 }
-VERTEX_DYNAMIC_PATCH;
+CxbxVertexShaderDynamicPatch;
 
-typedef struct _VERTEX_SHADER
+typedef struct _CxbxVertexShader
 {
     DWORD Handle;
 
@@ -541,9 +541,9 @@ typedef struct _VERTEX_SHADER
     DWORD                 Status;
 
     // Needed for dynamic stream patching
-    VERTEX_DYNAMIC_PATCH  VertexDynamicPatch;
+    CxbxVertexShaderDynamicPatch  VertexShaderDynamicPatch;
 }
-VERTEX_SHADER;
+CxbxVertexShader;
 
 struct X_D3DResource
 {
