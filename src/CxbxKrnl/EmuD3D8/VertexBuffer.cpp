@@ -861,10 +861,10 @@ VOID XTL::EmuFlushIVB()
 		}
 	}
 
-    CxbxDrawContext DrawContext;
-    DrawContext.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
-    DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
-    DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
+	CxbxDrawContext DrawContext;
+	DrawContext.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
+	DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
+	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
 	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
 	DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 

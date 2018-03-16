@@ -88,7 +88,6 @@ class CxbxVertexBufferConverter
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
-        void CacheStream(VertexPatchDesc *pPatchDesc,
 
         // Patches the types of the stream
         bool PatchStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
