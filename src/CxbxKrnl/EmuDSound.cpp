@@ -86,10 +86,10 @@ uint32_t GetAPUTime()
 // TODO: Tasks need to do for DirectSound HLE
 // * Need create patches
 //   * Ac97CreateMediaObject (Need OOVPA)
-//   * WmaCreateDecoder (Need OOVPA)
-//   * WmaCreateDecoderEx (Is just a forward to WmaCreateDecoder, nothing else)
-//   * WmaCreateInMemoryDecoder (Need OOVPA)
-//   * WmaCreateInMemoryDecoderEx (Is just a forward to WmaCreateInMemoryDecoder, nothing else)
+//   - WmaCreateDecoder (Need OOVPA, not require) Test case: WMAStream sample
+//   - WmaCreateDecoderEx (Is just a forward to WmaCreateDecoder, nothing else)
+//   - WmaCreateInMemoryDecoder (Need OOVPA, not require) Test case: WMAInMemory sample
+//   - WmaCreateInMemoryDecoderEx (Is just a forward to WmaCreateInMemoryDecoder, nothing else)
 //   * XWmaDecoderCreateMediaObject (Need OOVPA)
 // * Missing CDirectSoundStream patch
 //   * CDirectSoundStream_Set3DVoiceData (new, undocument)
