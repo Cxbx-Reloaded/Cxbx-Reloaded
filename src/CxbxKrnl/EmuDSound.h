@@ -463,6 +463,9 @@ class X_CDirectSoundStream
         DWORD                                   X_BufferCacheSize; // Not really needed...
         DWORD                                   X_MaxAttachedPackets;
         std::vector<struct host_voice_packet>   Host_BufferPacketArray;
+        LPDIRECTSOUNDBUFFER8                    EmuDirectSoundBuffer8Next;
+        HANDLE                                  Host_PacketEventHandle;
+        DSBPOSITIONNOTIFY                       Host_NotifyPosition;
 };
 
 // ******************************************************************

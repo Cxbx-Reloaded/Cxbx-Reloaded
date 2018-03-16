@@ -487,7 +487,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             (*pDSBuffer)->EmuLockFlags);
     }
 
-    //TODO: Find a way to seemlessly play audio between two packets...
+    //TODO: Find a way to seamlessly play audio between two packets...
     // Actually, DirectSoundStream need to process buffer packets here.
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
@@ -495,46 +495,79 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             continue;
         }
         XTL::X_CDirectSoundStream* pThis = *pDSStream;
-
         DWORD dwAudioBytes;
         HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
         if (hRet == DS_OK) {
-            if ((dwAudioBytes & DSBSTATUS_PLAYING) == 0) {
-                getNewBuffer:
-                std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
-                if (buffer->size == 0) {
-                    if (buffer->pBuffer_data != nullptr) {
-                        free(buffer->pBuffer_data);
-                    }
-                    // Tell title a packet is available to fill in.
-                    if (buffer->pdwStatus != xbnullptr) {
-                        *buffer->pdwStatus = XMP_STATUS_SUCCESS;
-                    }
-                    pThis->Host_BufferPacketArray.erase(buffer);
+            std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
+            //if ((dwAudioBytes & DSBSTATUS_PLAYING) == 0) {
+            if (pThis->Host_PacketEventHandle == INVALID_HANDLE_VALUE) {
+                //printf("DEBUG: audio was stop.\n");
+            useNextBufferPacket:
 
-                    if ((*pDSStream)->Host_BufferPacketArray.size() == 0) {
-                        continue;
-                    }
-                    buffer = pThis->Host_BufferPacketArray.begin();
+                LPDIRECTSOUNDBUFFER8 pDSBPacketOld = pThis->EmuDirectSoundBuffer8;
+                static LPDIRECTSOUND3DBUFFER8 pDS3DBufferDummy = nullptr;
+
+                if (pThis->EmuDirectSoundBuffer8Next == nullptr) {
+                    DSoundBufferPrepare(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuPlayFlags,
+                                        buffer->pBuffer_data, buffer->size);
+                } else {
+                    pThis->EmuDirectSoundBuffer8 = pThis->EmuDirectSoundBuffer8Next;
+                    pThis->EmuDirectSoundBuffer8Next = nullptr;
                 }
-                ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
-                                         pThis->EmuPlayFlags, buffer->size, pThis->EmuDirectSound3DBuffer8);
 
-                PVOID pAudioPtr;
+                DSoundBufferTransferSettings(pDSBPacketOld, pThis->EmuDirectSoundBuffer8, pDS3DBufferDummy, pDS3DBufferDummy);
 
-                hRet = pThis->EmuDirectSoundBuffer8->Lock(0, buffer->size, &pAudioPtr, &dwAudioBytes,
-                                                          nullptr, nullptr, 0);
-
-                if (hRet == DS_OK) {
-
-                    if (pAudioPtr != 0) {
-                        memcpy_s(pAudioPtr, dwAudioBytes, buffer->pBuffer_data, buffer->size);
-                    }
-                    pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
+                if (pThis->Host_PacketEventHandle == INVALID_HANDLE_VALUE) {
+                    pThis->Host_PacketEventHandle = CreateEvent(nullptr, false, false, nullptr);
+                    pThis->Host_NotifyPosition.hEventNotify = pThis->Host_PacketEventHandle;
                 }
+                float fSize = (float)buffer->size;
+                float fNAvgBytesPerSec = (float)pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec;
+                float fNSamplesPerSec = (float)pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec;
+                float fWBitsPerSample = (float)pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample;
+
+
+                // TODO: Find out if we can use Notification accurate enough to trigger (or is it both notification and get current position not accurate?).
+                //printf("decimal test = %d\n", DWORD(fSize - ((fSize / fNAvgBytesPerSec) *  (fNSamplesPerSec / fWBitsPerSample))));
+                pThis->Host_NotifyPosition.dwOffset = DWORD(fSize - (((fSize / fNAvgBytesPerSec) *  (fNSamplesPerSec / fWBitsPerSample)) * pThis->EmuBufferDesc->lpwfxFormat->nChannels));
+                pThis->Host_NotifyPosition.hEventNotify = pThis->Host_PacketEventHandle;
+                LPDIRECTSOUNDNOTIFY8 pDSBNotify8;
+                pThis->EmuDirectSoundBuffer8->QueryInterface(IID_IDirectSoundNotify8, (PVOID*)&pDSBNotify8);
+                pDSBNotify8->SetNotificationPositions(1, &pThis->Host_NotifyPosition);
+                pDSBNotify8->Release();
+
                 pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
                 pThis->EmuDirectSoundBuffer8->Play(0, 0, 0);
-                buffer->size = 0;
+                pDSBPacketOld->Release();
+
+                free(buffer->pBuffer_data);
+                if (buffer->pdwStatus != xbnullptr) {
+                    (*buffer->pdwStatus) = XMP_STATUS_SUCCESS;
+                }
+                pThis->Host_BufferPacketArray.erase(buffer);
+            } else {
+                // Prepare next packet data to be played.
+                if (pThis->EmuDirectSoundBuffer8Next == nullptr) {
+
+                    if (pThis->Host_BufferPacketArray.size() == 0) {
+                        continue;
+                    }
+                    DSoundBufferPrepare(pThis->EmuDirectSoundBuffer8Next, pThis->EmuBufferDesc, pThis->EmuPlayFlags,
+                                        buffer->pBuffer_data, buffer->size);
+                }
+
+                hRet = WaitForSingleObject(pThis->Host_PacketEventHandle, 0);
+                if (hRet == 0) {
+                    //printf("DEBUG: Notification found, playing next packet\n");
+                    CloseHandle(pThis->Host_PacketEventHandle);
+                    pThis->Host_PacketEventHandle = INVALID_HANDLE_VALUE;
+                    goto useNextBufferPacket;
+                }
+                /* // For debug real time info.
+                DWORD playPos, writePos;
+                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&playPos, &writePos);
+                printf("DEBUG: playPos - %08d | writePos - %08d | bufferSize - %08d | nAvgBytesPerSec - %08d | nSamplesPerSec - %08d | wBitsPerSample - %08d | nBlockAlign - %08d\n", playPos, writePos, buffer->size, pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec, pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec, pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample, pThis->EmuBufferDesc->lpwfxFormat->nBlockAlign);
+                //*/
             }
         }
     }
@@ -1711,13 +1744,15 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     }
     pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
     //pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-    pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY; //aka DSBCAPS_DEFAULT
+    pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT
     pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
     pDSBufferDesc->lpwfxFormat = nullptr;
 
     GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, dwEmuFlags);
     (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
     (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
+    (*ppStream)->EmuDirectSoundBuffer8Next = nullptr;
+    (*ppStream)->Host_PacketEventHandle = INVALID_HANDLE_VALUE;
 
     DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, 0);
 
