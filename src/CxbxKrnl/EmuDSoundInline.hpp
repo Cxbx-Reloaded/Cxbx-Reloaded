@@ -575,34 +575,26 @@ inline void ResizeIDirectSoundBuffer(
     DSoundBufferReplace(pDSBuffer, pDSBufferDesc, PlayFlags, pDS3DBuffer);
 }
 
-inline void DSoundBufferPrepare(
+inline void DSoundBufferWriteToBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
-    LPDSBUFFERDESC              pDSBufferDesc,
-    DWORD                       dwPlayFlags,
+    DWORD                       dwOffset,
     PVOID                       pBufferData,
     DWORD                       dwBufferSize) {
 
+    LPVOID pAudioPtr, pAudioPtr2;
+    DWORD dwAudioBytes, dwAudioBytes2;
 
-    DWORD dwTempHolder = pDSBufferDesc->dwBufferBytes;
-
-    DSoundBufferCreate(pDSBufferDesc, pDSBuffer);
-
-    LPDIRECTSOUND3DBUFFER8 pDummy3DBuffer = nullptr;
-
-    ResizeIDirectSoundBuffer(pDSBuffer, pDSBufferDesc,
-                             dwPlayFlags, dwBufferSize, pDummy3DBuffer);
-
-    PVOID pAudioPtr;
-    DWORD dwAudioBytes;
-
-    HRESULT hRet = pDSBuffer->Lock(0, 0, &pAudioPtr, &dwAudioBytes,
-                                              nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    HRESULT hRet = pDSBuffer->Lock(dwOffset, dwBufferSize, &pAudioPtr, &dwAudioBytes,
+                                   &pAudioPtr2, &dwAudioBytes2, 0);
 
     if (hRet == DS_OK) {
 
-        if (pAudioPtr != 0) {
-            memcpy_s(pAudioPtr, dwAudioBytes, pBufferData, dwBufferSize);
-            pDSBuffer->Unlock(pAudioPtr, dwAudioBytes, nullptr, 0);
+        if (pAudioPtr != nullptr) {
+            memcpy_s(pAudioPtr, dwAudioBytes, pBufferData, dwAudioBytes);
+            if (pAudioPtr2 != nullptr) {
+                memcpy_s(pAudioPtr2, dwAudioBytes2, (PUCHAR)pBufferData + dwAudioBytes, dwAudioBytes2);
+            }
+            pDSBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
         }
     }
 }
