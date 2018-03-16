@@ -188,6 +188,11 @@ void CxbxInitAudio()
 }
 #endif
 
+#define DSOUND_PERFORMANCE_FREQUENCY	48000	// GetSampleTime needs to tick at 48Khz
+extern LARGE_INTEGER NativePerformanceFrequency;
+LARGE_INTEGER DSoundInitialPerformanceCounter;
+double NativeToXboxDSound_FactorForPerformanceFrequency = 0;
+
 // ******************************************************************
 // * patch: DirectSoundCreate
 // ******************************************************************
@@ -214,6 +219,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     }
 
     enterCriticalSection;
+
+	// Measure current host performance counter and frequency
+	QueryPerformanceCounter(&DSoundInitialPerformanceCounter);
+	NativeToXboxDSound_FactorForPerformanceFrequency = (double)DSOUND_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
 
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;
@@ -3163,19 +3172,19 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 
 	LOG_FUNC();
 
-    // FIXME: This is the best I could think of for now.
-    // Check the XDK documentation for the description of what this function 
-    // can actually do.  BTW, this function accesses the NVIDIA SoundStorm APU
-    // register directly (0xFE80200C).
+	DWORD dwRet;
+	::LARGE_INTEGER PerformanceCounter;
+	QueryPerformanceCounter(&PerformanceCounter);
 
-    // TODO: Handle reset at certain event?
-    // TODO: Wait until a DirectSoundBuffer/Stream is being played?
-    static DWORD dwStart = GetTickCount();
-    DWORD dwRet = GetTickCount() - dwStart;
+	// Re-Base on the time DirectSoundCreate was called
+	PerformanceCounter.QuadPart -= DSoundInitialPerformanceCounter.QuadPart;
+	// Apply a delta to make it appear to tick at 48khz
+	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxDSound_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
+	dwRet = PerformanceCounter.QuadPart;
 
     leaveCriticalSection;
 
-    return 0;
+    return dwRet;
 }
 
 // ******************************************************************

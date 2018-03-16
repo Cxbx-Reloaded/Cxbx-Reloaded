@@ -62,6 +62,7 @@ namespace xboxkrnl
 #include <assert.h>
 #include <process.h>
 #include <clocale>
+#include <unordered_map>
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -746,7 +747,7 @@ typedef struct {
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } host_resource_info_t;
 
-std::map <resource_key_t, host_resource_info_t> g_HostResources;
+std::unordered_map <resource_key_t, host_resource_info_t> g_HostResources;
 
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 {
@@ -856,7 +857,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 	// Currently, we only dynamically update Textures and Surfaces, so if our resource
 	// isn't of these types, do nothing
 	DWORD type = GetXboxCommonResourceType(it->second.pXboxResource);
-	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE && type != X_D3DCOMMON_TYPE_VERTEXBUFFER) {
+	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE) {
 		return false;
 	}
 
@@ -977,16 +978,6 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);;
 }
 
-XTL::IDirect3DVertexBuffer8 *GetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, DWORD dwSize)
-{
-	if (pXboxResource == NULL)
-		return nullptr;
-
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
-
-	return (XTL::IDirect3DVertexBuffer8*)GetHostResource(pXboxResource, true, dwSize);
-}
-
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
 {
 	assert(pXboxResource != NULL);
@@ -1026,15 +1017,6 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 
 	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostIndexBuffer);
 }
-
-void SetHostVertexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVertexBuffer8 *pHostVertexBuffer, DWORD dwSize)
-{
-	assert(pXboxResource != NULL);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_VERTEXBUFFER);
-
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVertexBuffer, dwSize);
-}
-
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 {
 	static int lk[4] =
@@ -2325,7 +2307,7 @@ typedef struct {
 	XTL::IDirect3DIndexBuffer8* pHostIndexBuffer = nullptr;
 } ConvertedIndexBuffer;
 
-std::map<PWORD, ConvertedIndexBuffer> g_ConvertedIndexBuffers;
+std::unordered_map<PWORD, ConvertedIndexBuffer> g_ConvertedIndexBuffers;
 	
 void CxbxRemoveIndexBuffer(PWORD pData)
 {
@@ -4175,76 +4157,7 @@ VOID WINAPI CreateHostResource
     {
 		// 
 		case X_D3DCOMMON_TYPE_INDEXBUFFER:	return;
-        case X_D3DCOMMON_TYPE_VERTEXBUFFER:
-        {
-            DbgPrintf("EmuIDirect3DResource8_Register : Creating VertexBuffer...\n");
-
-            X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
-			XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
-
-			// Vertex buffers live in Physical Memory Region
-			void* pVirtualAddr = GetDataFromXboxResource(pResource);
-
-            // create vertex buffer
-            {
-				// If we didn't get a size passed in, use QuerySize
-				if (dwSize == 0) {
-					g_VMManager.QuerySize((VAddr)pVirtualAddr);
-				}
-
-				// If we still didn't get a valid size, make a wild guess
-                if(dwSize == 0)
-                {
-                    // TODO: once this is known to be working, remove the warning
-                    EmuWarning("Vertex buffer allocation size unknown");
-                    dwSize = PAGE_SIZE;  // temporarily assign a small buffer, which will be increased later
-					/*hRet = E_FAIL;
-					goto fail;*/
-                }
-
-                hRet = g_pD3DDevice8->CreateVertexBuffer
-                (
-                    dwSize, 0, 0, D3DPOOL_MANAGED,
-                    &pNewHostVertexBuffer
-                );
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVertexBuffer");
-
-				if(FAILED(hRet))
-				{
-					char szString[256];
-					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: \nDesc: ", dwSize/*,
-						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
-
-					EmuWarning( szString );
-				}
-
-				SetHostVertexBuffer(pResource, pNewHostVertexBuffer, dwSize);
-
-                #ifdef _DEBUG_TRACK_VB
-                g_VBTrackTotal.insert(pNewHostVertexBuffer);
-                #endif
-
-                BYTE *pNativeData = nullptr;
-
-                hRet = pNewHostVertexBuffer->Lock(
-					/*OffsetToLock=*/0,
-					/*SizeToLock=*/0/*=entire buffer*/,
-					&pNativeData,
-					/*Flags=*/0);
-				DEBUG_D3DRESULT(hRet, "pNewHostVertexBuffer->Lock");
-
-				if(FAILED(hRet))
-                    CxbxKrnlCleanup("VertexBuffer Lock Failed!\n\nError: \nDesc: "/*,
-						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
-
-                memcpy(pNativeData, (void*)pVirtualAddr, dwSize);
-                pNewHostVertexBuffer->Unlock();
-			}
-
-            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pNewHostVertexBuffer);
-        }
-        break;
-
+		case X_D3DCOMMON_TYPE_VERTEXBUFFER: return;
         case X_D3DCOMMON_TYPE_PUSHBUFFER:
         {
             DbgPrintf("EmuIDirect3DResource8_Register :-> PushBuffer...\n");
@@ -4609,7 +4522,7 @@ VOID WINAPI CreateHostResource
 							}
 							else if (CacheFormat != 0) // Do we need to convert to ARGB?
 							{
-								EmuWarning("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
+								DbgPrintf("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
 								uint8 *pDest = (uint8 *)LockedRect.pBits;
@@ -5974,66 +5887,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 	}
 }
 
-
-// ******************************************************************
-// * patch: IDirect3DVertexBuffer8_Lock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
-(
-    X_D3DVertexBuffer  *pVertexBuffer,
-    UINT                OffsetToLock,
-    UINT                SizeToLock,
-    BYTE              **ppbData,
-    DWORD               Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pVertexBuffer)
-		LOG_FUNC_ARG(OffsetToLock)
-		LOG_FUNC_ARG(SizeToLock)
-		LOG_FUNC_ARG(ppbData)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-
-	// Pass through to the Xbox implementation of this function
-	XB_trampoline(VOID, WINAPI, D3DVertexBuffer_Lock, (X_D3DVertexBuffer*, UINT, UINT, BYTE**, DWORD));
-
-	XB_D3DVertexBuffer_Lock(pVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
-
-	// Mark the resource as modified
-	ForceResourceRehash(pVertexBuffer);
-}
-
-// ******************************************************************
-// * patch: IDirect3DVertexBuffer8_Lock2
-// ******************************************************************
-BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
-(
-    X_D3DVertexBuffer  *pVertexBuffer,
-    DWORD               Flags
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pVertexBuffer)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	// Pass through to the Xbox implementation of this function
-	XB_trampoline(BYTE*, WINAPI, D3DVertexBuffer_Lock2, (X_D3DVertexBuffer*, DWORD));
-
-	BYTE* pRet = XB_D3DVertexBuffer_Lock2(pVertexBuffer, Flags);
-
-	// Mark the resource as modified
-	ForceResourceRehash(pVertexBuffer);
-
-	RETURN(pRet);
-}
-
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShader
 // ******************************************************************
@@ -6211,8 +6064,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
         #ifdef _DEBUG_TRACK_VB
         }
         #endif
-
-	    VertPatch.Restore();
     }
 
 	// Execute callback procedure
@@ -6282,8 +6133,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
         }
-
-	    VertPatch.Restore();
     }
 
 	// Execute callback procedure
@@ -6407,8 +6256,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 		}
 
-		VertPatch.Restore();
-
 		g_pD3DDevice8->SetIndices(NULL, 0);
 	}
 
@@ -6487,8 +6334,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		#ifdef _DEBUG_TRACK_VB
 		}
 		#endif
-
-		VertPatch.Restore();
     }
 
 	// Execute callback procedure
@@ -6990,7 +6835,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
 // Maps pFunction defintions to pre-compiled shaders
 // to reduce the speed impact of LoadVertexShaderProgram
 typedef uint64_t load_shader_program_key_t;
-std::map<load_shader_program_key_t, DWORD> g_LoadVertexShaderProgramCache;
+std::unordered_map<load_shader_program_key_t, DWORD> g_LoadVertexShaderProgramCache;
 
 // ******************************************************************
 // * patch: D3DDevice_LoadVertexShaderProgram

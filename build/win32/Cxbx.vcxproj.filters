@@ -265,6 +265,7 @@
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp">
       <Filter>Hardware\Video</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">

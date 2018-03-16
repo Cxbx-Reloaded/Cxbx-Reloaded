@@ -654,6 +654,7 @@
     <ClCompile Include="..\..\src\devices\video\nv2a_vsh.cpp" />
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
+    <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="subhook.vcxproj">

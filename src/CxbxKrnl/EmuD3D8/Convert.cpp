@@ -1036,8 +1036,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	if (Format <= X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
-		if (info->warning != nullptr)
-			EmuWarning(info->warning);
+		if (info->warning != nullptr) {
+			DbgPrintf("%s", info->warning);
+		}
 
 		return info->pc;
 	}
