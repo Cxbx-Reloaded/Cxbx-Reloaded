@@ -2707,13 +2707,11 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
+    //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
 	LOG_FUNC();
 
     LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
 }
 
 // ******************************************************************
@@ -2725,13 +2723,11 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
+    //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
 	LOG_FUNC();
 
     LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
 }
 
 // ******************************************************************
@@ -2743,13 +2739,11 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
+    //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
 	LOG_FUNC();
 
     LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
 }
 
 // ******************************************************************
@@ -2761,13 +2755,11 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
+    //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
 	LOG_FUNC();
 
     LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
 }
 
 // ******************************************************************
