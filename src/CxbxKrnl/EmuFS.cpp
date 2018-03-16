@@ -370,8 +370,8 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 
 __declspec(naked) void EmuFS_PushDwordPtrFs00()
 {
-	uint32 returnAddr;
-	uint32 temp;
+	static uint32 returnAddr;
+	static uint32 temp;
 
 	__asm
 	{
@@ -388,8 +388,8 @@ __declspec(naked) void EmuFS_PushDwordPtrFs00()
 
 __declspec(naked) void EmuFS_PopDwordPtrFs00()
 {
-	uint32 returnAddr;
-	uint32 temp;
+	static uint32 returnAddr;
+	static uint32 temp;
 
 	__asm
 	{
