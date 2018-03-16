@@ -74,7 +74,7 @@ HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
-DWORD                               g_CurrentVertexShader = 0;
+DWORD                               g_CurrentXboxVertexShaderHandle = 0;
 XTL::X_PixelShader*					g_D3DActivePixelShader = nullptr;
 BOOL                                g_bIsFauxFullscreen = FALSE;
 BOOL								g_bHackUpdateSoftwareOverlay = FALSE;
@@ -2614,6 +2614,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
+	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
+	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
     if(Address < 136 && VshHandleIsVertexShader(Handle))
     {
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
@@ -2642,8 +2646,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		LOG_FUNC_END;
 
 	HRESULT hRet;
-	
-	g_CurrentVertexShader = Handle;
+
+	// Address always indicates a previously loaded vertex shader slot (from where the program is used).
+	// Handle can be null if the current Xbox VertexShader is assigned
+	// Handle can be an address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// If Handle is assigned, it becomes the new current Xbox VertexShader,
+	// which resets a bit of state (nv2a execution mode, viewport, ?)
+	// Either way, the given address slot is selected as the start of the current vertex shader program
+	g_CurrentXboxVertexShaderHandle = Handle;
 
     if(VshHandleIsVertexShader(Handle))
     {
@@ -3145,6 +3155,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_ARG(pHandle)
 		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
 		LOG_FUNC_END;
+
+	// Allocates an Xbox VertexShader struct
+	// Sets reference count to 1
+	// Puts Usage in VertexShader->Flags
+	// If pFunction is not null, it points to DWORDS shader type, length and a binary compiled xbox vertex shader
+	// If pDeclaration is not null, it's parsed, resulting in a number of constants
+	// Parse results are pushed to the push buffer
+	// Sets other fields
+	// pHandle recieves the addres of the new shader, or-ed with 1 (D3DFVF_RESERVED0)
 
     // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_VMManager.AllocateZeroed(sizeof(X_D3DVertexShader));
@@ -5899,9 +5918,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
 	LOG_FUNC_ONE_ARG(Handle);
 
+	// Checks if the Handle has bit 0 set - if not, it's a FVF
+	// which is converted to a global Xbox Vertex Shader struct
+	// Otherwise bit 0 is cleared and the resulting address is
+	// validated to be a valid Xbox Vertex Shader
+	// D3D state fields are updated.
+	// If the shader contains a program, the handle is passed to
+	// D3DDevice_LoadVertexShader and D3DDevice_SelectVertexShader.
+	// Otherwise the shader is send using push buffer commands.
+
     HRESULT hRet = D3D_OK;
 
-    g_CurrentVertexShader = Handle;
+    g_CurrentXboxVertexShaderHandle = Handle;
 
     // Store viewport offset and scale in constant registers 58 (c-38) and
     // 59 (c-37) used for screen space transformation.
@@ -6041,7 +6069,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		VPDesc.dwStartVertex = StartVertex;
 		VPDesc.pXboxVertexStreamZeroData = 0;
 		VPDesc.uiXboxVertexStreamZeroStride = 0;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		VertexPatcher VertPatch;
 
@@ -6112,7 +6140,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		VertexPatcher VertPatch;
 
@@ -6193,7 +6221,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = 0;
 		VPDesc.uiXboxVertexStreamZeroStride = 0;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		VPDesc.pIndexData = pIndexData;
 		VPDesc.dwIndexBase = indexBase;
 
@@ -6312,7 +6340,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		VPDesc.dwStartVertex = 0;
 		VPDesc.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		VPDesc.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		VPDesc.hVertexShader = g_CurrentVertexShader;
+		VPDesc.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		VPDesc.pIndexData = (PWORD)pIndexData;
 
 		VertexPatcher VertPatch;
@@ -6611,6 +6639,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
 		LOG_FUNC_ARG(pSize)
 		LOG_FUNC_END;
 
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+
     if(pSize  && VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
@@ -6637,7 +6667,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 
 	LOG_FUNC_ONE_ARG(Handle);
 
-    DWORD RealHandle = 0;
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
+
+	DWORD RealHandle = 0;
 
     if(VshHandleIsVertexShader(Handle))
     {
@@ -6713,7 +6746,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShader)
 
     if(pHandle)
     {
-        (*pHandle) = g_CurrentVertexShader;
+        (*pHandle) = g_CurrentXboxVertexShaderHandle;
     }
 }
 
@@ -6763,6 +6796,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
 
+	// If pVAF is given, it's copied into a global Xbox VertexBuffer struct and
+	// D3DDevice_SetVertexShaderInput is called with Handle set to that address, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// Otherwise, D3DDevice_SetVertexShaderInput is called with Handle 0.
+
     LOG_UNIMPLEMENTED(); 
 }
 
@@ -6806,6 +6843,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		LOG_FUNC_ARG(StreamCount)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
+
+	// If Handle is NULL, all VertexShader input state is cleared.
+	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+
 
     LOG_UNIMPLEMENTED(); 
 
@@ -6853,8 +6894,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	DWORD hCurrentShader = g_CurrentVertexShader;
+	DWORD hCurrentShader = g_CurrentXboxVertexShaderHandle;
 
+	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
 
 	load_shader_program_key_t shaderCacheKey = ((load_shader_program_key_t)hCurrentShader << 32) | (DWORD)pFunction;
 
@@ -6909,7 +6951,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
 		LOG_FUNC_ARG(pType)
 		LOG_FUNC_END;
 
-    if(pType && VshHandleIsVertexShader(Handle))
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// *pType is set according to flags in the VertexShader struct
+
+	if(pType && VshHandleIsVertexShader(Handle))
     {
         *pType = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
     }
@@ -6933,7 +6978,18 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 		LOG_FUNC_ARG(pSizeOfData)
 		LOG_FUNC_END;
 
-    HRESULT hRet = D3DERR_INVALIDCALL;
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// If the pData buffer pointer is given, pSizeOfData is the address of it's size (in bytes)
+	// If pData is null, pSizeOfData is still given (to receive the required data size)
+
+
+	// The VertexShader is converted back into the contained program and it's size.
+	// In any case, *pSizeOfData will be set to the program size.
+	// If the pData is null, no further action it taken.
+	// If the pData buffer pointer is given, but the given *pSizeOfData is smaller than the program size, an error is returned.
+	// Otherwise, the program is unbatched and copied into the pData buffer.
+
+	HRESULT hRet = D3DERR_INVALIDCALL;
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
@@ -6973,7 +7029,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 		LOG_FUNC_ARG(pSizeOfData)
 		LOG_FUNC_END;
 
-    HRESULT hRet = D3DERR_INVALIDCALL;
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// If the pData buffer pointer is given, pSizeOfData is the address of it's size (in bytes)
+	// If pData is null, pSizeOfData is still given (to receive the required data size)
+
+	// The VertexShader is parsed and converted back into the underlying declaration and it's size.
+	// In any case, *pSizeOfData will be set to the declaration size.
+	// If the pData is null, no further action it taken.
+	// If the pData buffer pointer is given, but the given *pSizeOfData is smaller than the declaration size, an error is returned.
+	// Otherwise, the declaration is copied into the pData buffer.
+
+	HRESULT hRet = D3DERR_INVALIDCALL;
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
