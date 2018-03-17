@@ -827,15 +827,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &ImageSize, XBOX_MEM_RESERVE, XBOX_PAGE_READWRITE);
 		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
 
-		if (XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE > 0)
-		{
-			// We also reserve the remaining region up to XBE_MAX_VA since we know it's occupied by our memory
-			// placeholder and cannot be allocated anyway. This will result in an increase in the reserved memory
-
-			VAddr ReservedBase = XBE_IMAGE_BASE + ROUND_UP_4K(ImageSize);
-			size_t ReservedSize = ROUND_DOWN_4K(XBE_MAX_VA - ImageSize - XBE_IMAGE_BASE);
-			g_VMManager.XbAllocateVirtualMemory(&ReservedBase, 0, &ReservedSize, XBOX_MEM_RESERVE, XBOX_PAGE_NOACCESS);
-		}
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));

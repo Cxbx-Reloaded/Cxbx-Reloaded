@@ -246,7 +246,7 @@ class PhysicalMemory
 		// write a contiguous range of pte's
 		void WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero = false);
 		// retrieves the pfn entry which maps a PT
-		XBOX_PFN GetPfnOfPT(PMMPTE pPte);
+		PXBOX_PFN GetPfnOfPT(PMMPTE pPte);
 		// commit a contiguous number of pages
 		bool RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end);
 		// release a contiguous number of pages
@@ -265,7 +265,7 @@ class PhysicalMemory
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)
 		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
-		// deallocate a PT if possible
+		// deallocate page tables (if possible)
 		void DeallocatePT(PFN_COUNT PteNumber, VAddr addr);
 		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)
 		bool IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion);

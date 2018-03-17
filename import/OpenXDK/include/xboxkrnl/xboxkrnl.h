@@ -173,6 +173,9 @@ typedef long                            NTSTATUS;
 #define STATUS_OBJECT_NAME_NOT_FOUND     ((DWORD   )0xC0000034L)
 #define STATUS_OBJECT_NAME_COLLISION     ((DWORD   )0xC0000035L)
 #define STATUS_INVALID_PAGE_PROTECTION   ((DWORD   )0xC0000045L)
+#define STATUS_CONFLICTING_ADDRESSES     ((DWORD   )0xC0000018L)
+#define STATUS_UNABLE_TO_FREE_VM         ((DWORD   )0xC000001AL)
+#define STATUS_MEMORY_NOT_ALLOCATED      ((DWORD   )0xC00000A0L)
 
 // ******************************************************************
 // * Registry value types

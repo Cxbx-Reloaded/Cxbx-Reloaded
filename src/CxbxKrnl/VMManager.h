@@ -211,12 +211,14 @@ class VMManager : public PhysicalMemory
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
-		// checks if the specified vma overlaps with another
-		//bool CheckConflictingVMA(VAddr addr, size_t Size);
+		// checks if the specified range is completely inside a vma
+		VMAIter CheckConflictingVMA(VAddr addr, size_t Size);
 		// changes the access permissions of a block of memory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// restores persistent memory
 		void RestorePersistentMemory();
+		// restores a persistent allocation
+		void RestorePersistentAllocation(VAddr addr, PFN StartingPfn, PFN EndingPfn, PageType Type);
 		// checks if any of the EXECUTE flags are set
 		bool HasPageExecutionFlag(DWORD protect);
 		// acquires the critical section

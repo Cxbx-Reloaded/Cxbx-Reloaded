@@ -144,7 +144,7 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 	// GetPfnOfPT will assert
 
 	PMMPTE PointerPte = pPteStart;
-	XBOX_PFN PTpfn;
+	PXBOX_PFN PTpfn;
 
 	if (bZero)
 	{
@@ -155,7 +155,7 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 				PTpfn = GetPfnOfPT(PointerPte);
 			}
 			WRITE_ZERO_PTE(PointerPte);
-			PTpfn.PTPageFrame.PtesUsed--;
+			PTpfn->PTPageFrame.PtesUsed--;
 			PointerPte++;
 		}
 	}
@@ -171,7 +171,7 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 			{
 				Pte.Hardware.PFN = pfn;
 				WRITE_PTE(PointerPte, Pte);
-				PTpfn.PTPageFrame.PtesUsed++;
+				PTpfn->PTPageFrame.PtesUsed++;
 			}
 			PointerPte++;
 			pfn++;
@@ -556,15 +556,23 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 
 	switch (Perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
 	{
+		case 0:
+		{
+			// One of XBOX_PAGE_READONLY or XBOX_PAGE_READWRITE must be specified
+
+			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
+			return XBOX_PAGE_EXECUTE_READWRITE;
+		}
+
 		case XBOX_PAGE_READONLY:
 		{
-			Perms |= (~XBOX_PAGE_READONLY);
+			Perms &= (~XBOX_PAGE_READONLY);
 			return Perms | XBOX_PAGE_EXECUTE_READ;
 		}
 
 		case XBOX_PAGE_READWRITE:
 		{
-			Perms |= (~XBOX_PAGE_READWRITE);
+			Perms &= (~XBOX_PAGE_READWRITE);
 			return Perms | XBOX_PAGE_EXECUTE_READWRITE;
 		}
 
@@ -574,7 +582,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// input is probably invalid
 
 			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
-			return Perms | XBOX_PAGE_EXECUTE_READWRITE;
+			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
 }
@@ -613,6 +621,9 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 
 	switch (Perms & (XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
 	{
+		case 0:
+			break;
+
 		case XBOX_PAGE_GUARD:
 		{
 			Mask |= PAGE_GUARD;
@@ -669,7 +680,6 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
 	PFN_COUNT PTtoCommit = 0;
 	PageType BusyType = SystemPageTableType;
-	int PdeMappedSizeIncrement = 0;
 	VAddr StartingAddr = addr;
 
 	assert(PteNumber);
@@ -677,11 +687,11 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
-		if (GetPdeAddress(StartingAddr += PdeMappedSizeIncrement)->Hardware.Valid == 0)
+		if (GetPdeAddress(StartingAddr)->Hardware.Valid == 0)
 		{
 			PTtoCommit++;
 		}
-		PdeMappedSizeIncrement += (4 * ONE_MB);
+		StartingAddr += (4 * ONE_MB);
 	}
 
 	if (!PTtoCommit)
@@ -698,7 +708,6 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 		return false;
 	}
 	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTableType; }
-	PdeMappedSizeIncrement = 0;
 	StartingAddr = addr;
 
 	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
@@ -706,7 +715,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
-		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
+		pPde = GetPdeAddress(StartingAddr);
 		if (pPde->Hardware.Valid == 0)
 		{
 			// We grab one page at a time to avoid fragmentation issues. The maximum allowed page is m_MaxContiguousPfn
@@ -718,7 +727,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 			WRITE_PTE(pPde, TempPte);
 			WritePfn(pfn, pfn, pPde, BusyType);
 		}
-		PdeMappedSizeIncrement += (4 * ONE_MB);
+		StartingAddr += (4 * ONE_MB);
 	}
 
 	return true;
@@ -727,9 +736,8 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 {
 	PMMPTE pPde;
-	XBOX_PFN PTpfn;
+	PXBOX_PFN PTpfn;
 	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
-	int PdeMappedSizeIncrement = 0;
 	VAddr StartingAddr = addr;
 
 	assert(PteNumber);
@@ -737,22 +745,16 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 
 	for (unsigned int i = 0; i < PdeNumber; ++i)
 	{
-		pPde = GetPdeAddress(StartingAddr += PdeMappedSizeIncrement);
-		assert(pPde->Hardware.Valid != 0); // pde must be valid at this point
-		if (g_bIsRetail || g_bIsDebug) {
-			PTpfn = *XBOX_PFN_ELEMENT(pPde->Hardware.PFN);
-		}
-		else { PTpfn = *CHIHIRO_PFN_ELEMENT(pPde->Hardware.PFN); }
-		assert(PTpfn.PTPageFrame.BusyType == SystemPageTableType ||
-			PTpfn.PTPageFrame.BusyType == VirtualPageTableType);
+		pPde = GetPdeAddress(StartingAddr);
+		PTpfn = GetPfnOfPT(GetPteAddress(StartingAddr));
 
-		if (PTpfn.PTPageFrame.PtesUsed == 0)
+		if (PTpfn->PTPageFrame.PtesUsed == 0)
 		{
 			InsertFree(pPde->Hardware.PFN, pPde->Hardware.PFN);
-			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn.PTPageFrame.BusyType, true);
+			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn->PTPageFrame.BusyType, true);
 			WRITE_ZERO_PTE(pPde);
 		}
-		PdeMappedSizeIncrement += (4 * ONE_MB);
+		StartingAddr += (4 * ONE_MB);
 	}
 }
 
@@ -766,21 +768,21 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	return ret;
 }
 
-XBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
+PXBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
 {
-	XBOX_PFN PTpfn;
+	PXBOX_PFN PTpfn;
 
 	// GetPteAddress on a pte address will yield the corresponding pde which maps the supplied pte
 	PMMPTE PointerPde = GetPteAddress(pPte);
 	// PointerPde should have already been written to by AllocatePT
 	assert(PointerPde->Hardware.Valid != 0);
 	if (g_bIsRetail || g_bIsDebug) {
-		PTpfn = *XBOX_PFN_ELEMENT(PointerPde->Hardware.PFN);
+		PTpfn = XBOX_PFN_ELEMENT(PointerPde->Hardware.PFN);
 	}
-	else { PTpfn = *CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
-	assert(PTpfn.PTPageFrame.Busy == 1);
-	assert(PTpfn.PTPageFrame.BusyType == SystemPageTableType ||
-		PTpfn.PTPageFrame.BusyType == VirtualPageTableType);
+	else { PTpfn = CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
+	assert(PTpfn->PTPageFrame.Busy == 1);
+	assert(PTpfn->PTPageFrame.BusyType == SystemPageTableType ||
+		PTpfn->PTPageFrame.BusyType == VirtualPageTableType);
 
 	return PTpfn;
 }
