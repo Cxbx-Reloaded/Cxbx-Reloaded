@@ -1213,7 +1213,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Unlock)
         LOG_FUNC_ARG(pdwAudioBytes2)
         LOG_FUNC_END;
 
-    if (pThis->X_BufferCache != xbnullptr) {
+    // TODO: Find out why pThis->EmuLockPtr1 is nullptr... (workaround atm is to check if it is not a nullptr.)
+    if (pThis->X_BufferCache != xbnullptr && pThis->EmuLockPtr1 != nullptr) {
         memcpy_s((PBYTE)pThis->X_BufferCache + pThis->EmuLockOffset,
                  pThis->EmuBufferDesc->dwBufferBytes - pThis->EmuLockOffset,
                  pThis->EmuLockPtr1,
