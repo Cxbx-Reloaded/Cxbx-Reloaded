@@ -322,7 +322,8 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
 		// Give the thread chance to start
-		Sleep(100);
+		// Note: Shikigami no Shiro will be able to wait until 10 ms
+		Sleep(10);
 
         EmuWarning("KRNL: Waiting for Xbox proxy thread to start...\n");
 
