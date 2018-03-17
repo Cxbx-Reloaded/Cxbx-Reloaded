@@ -333,13 +333,13 @@ struct X_CDirectSoundBuffer
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
-//Custom flags?
+//Custom flags (4 bytes support up to 31 shifts,starting from 0)
 #define DSB_FLAG_PCM                    (1 << 0)
 #define DSB_FLAG_XADPCM                 (1 << 1)
 #define DSB_FLAG_PCM_UNKNOWN            (1 << 2)
-#define DSB_FLAG_SYNCHPLAYBACK_CONTROL  (2 << 0)
-#define DSB_FLAG_PAUSE                  (2 << 1)
-#define DSB_FLAG_RECIEVEDATA            (5 << 0)
+#define DSB_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
+#define DSB_FLAG_PAUSE                  (1 << 11)
+#define DSB_FLAG_RECIEVEDATA            (1 << 20)
 #define DSB_FLAG_AUDIO_CODECS           (DSB_FLAG_PCM | DSB_FLAG_XADPCM | DSB_FLAG_PCM_UNKNOWN)
 
 // ******************************************************************
