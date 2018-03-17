@@ -156,10 +156,9 @@ void XTL::EmuUpdateDeferredStates()
         //**/
     }
 
-	// For 3925, the actual D3DTSS flags have different values.
-	bool bHack3925 = (g_BuildVersion == 3925) ? true : false;
-	int Adjust1 = bHack3925 ? 12 : 0;
-	int Adjust2 = bHack3925 ? 10 : 0;
+	// For below XDK 3948, the actual D3DTSS flags have different values.
+	int Adjust1 = (g_BuildVersion <= 3948) ? 12 : 0;
+	int Adjust2 = (g_BuildVersion <= 3948) ? 10 : 0;
 
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
     if(EmuD3DDeferredTextureState != 0)
