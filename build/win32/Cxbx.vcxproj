@@ -78,10 +78,10 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;..\..\import\stb;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <BrowseInformation>true</BrowseInformation>
+      <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -140,11 +140,11 @@
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;..\..\import\stb;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <BrowseInformation>true</BrowseInformation>
+      <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -225,6 +225,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
@@ -236,6 +237,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXInput.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
@@ -270,8 +273,6 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
-    <ClInclude Include="..\..\src\devices\video\glextensions.h" />
-    <ClInclude Include="..\..\src\devices\video\gloffscreen.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
@@ -279,6 +280,7 @@
     <ClInclude Include="..\..\src\devices\video\nv2a_shaders.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_shaders_common.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_vsh.h" />
+    <ClInclude Include="..\..\src\devices\video\qemu-thread.h" />
     <ClInclude Include="..\..\src\devices\video\queue.h" />
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
@@ -549,6 +551,9 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\HLEDataBase.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -647,13 +652,12 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
-    <ClCompile Include="..\..\src\devices\video\glextensions.c" />
-    <ClCompile Include="..\..\src\devices\video\gloffscreen.c" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
-    <ClCompile Include="..\..\src\devices\video\nv2a_debug.c" />
+    <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_shaders.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_vsh.cpp" />
+    <ClCompile Include="..\..\src\devices\video\qemu-thread-win32.cpp" />
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
     <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />

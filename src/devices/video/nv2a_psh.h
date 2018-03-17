@@ -22,7 +22,7 @@
 #ifndef HW_NV2A_PSH_H
 #define HW_NV2A_PSH_H
 
-#include <stdint.h>
+#include "qstring.h"
 
 enum PshAlphaFunc {
     ALPHA_FUNC_NEVER,
@@ -54,6 +54,6 @@ typedef struct PshState {
     enum PshAlphaFunc alpha_func;
 } PshState;
 
-std::string *psh_translate(const PshState state);
+QString *psh_translate(const PshState state);
 
 #endif

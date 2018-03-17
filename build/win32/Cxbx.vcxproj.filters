@@ -196,9 +196,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\devices\EEPROMDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
@@ -241,16 +238,7 @@
     <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
       <Filter>Hardware\Video</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\glextensions.c">
-      <Filter>Hardware\Video</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\gloffscreen.c">
-      <Filter>Hardware\Video</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp">
-      <Filter>Hardware\Video</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\devices\video\nv2a_debug.c">
       <Filter>Hardware\Video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp">
@@ -268,6 +256,24 @@
     <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />
     <ClCompile Include="..\..\src\devices\ADM1032Device.cpp">
       <Filter>Hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp">
+      <Filter>Hardware\Video\gloffscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp">
+      <Filter>Hardware\Video\gloffscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp">
+      <Filter>Hardware\Video\gloffscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\qemu-thread-win32.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp">
+      <Filter>Hardware\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
+      <Filter>Hardware\X86</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -448,9 +454,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
@@ -496,12 +499,6 @@
     <ClInclude Include="..\..\src\devices\EmuNVNet.h">
       <Filter>Hardware\Video</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\glextensions.h">
-      <Filter>Hardware\Video</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\devices\video\gloffscreen.h">
-      <Filter>Hardware\Video</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\devices\video\nv2a.h">
       <Filter>Hardware\Video</Filter>
     </ClInclude>
@@ -532,8 +529,23 @@
     <ClInclude Include="..\..\src\devices\video\queue.h">
       <Filter>Hardware\Video</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h">
+      <Filter>Hardware\Video\gloffscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h">
+      <Filter>Hardware\Video\gloffscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\video\qemu-thread.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\devices\ADM1032Device.h">
       <Filter>Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
+      <Filter>Hardware\X86</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -898,6 +910,12 @@
     </Filter>
     <Filter Include="Hardware\Video">
       <UniqueIdentifier>{deba5d3e-9a1a-4099-bc91-12737a48272e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Video\gloffscreen">
+      <UniqueIdentifier>{5532aa9d-9e81-4f24-afb1-27e3ce626b6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\X86">
+      <UniqueIdentifier>{9efb9cfc-2731-4edb-8dd0-36950b0263df}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

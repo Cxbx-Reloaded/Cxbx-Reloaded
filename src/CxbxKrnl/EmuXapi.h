@@ -85,7 +85,7 @@ typedef INT_PTR            *PINT_PTR;
 // Workaround for MAXULONG_PTR: in XTL, ULONG_PTR is defined as a pointer type instead of being an integer
 static constexpr unsigned int XTL_MAXULONG_PTR = ~((::ULONG_PTR)0);
 #ifndef VOID
-#define VOID void
+	#define VOID void
 #endif
 typedef VOID               *PVOID, *LPVOID;
 typedef void               *HANDLE;

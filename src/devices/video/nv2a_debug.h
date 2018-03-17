@@ -23,19 +23,22 @@
 
 #define HWADDR_PRIx "x"
 
-#define DEBUG_NV2A
+// Enable for NV2A Debug logging (Warning: Slow!)
+// #define DEBUG_NV2A
+#include "CxbxKrnl/gloffscreen/gloffscreen.h"
+#include "CxbxKrnl/gloffscreen/glextensions.h"
+
 #ifdef DEBUG_NV2A
 # define NV2A_DPRINTF(format, ...)       printf("[0x????] NV2A: " format, ## __VA_ARGS__)
 #else
 # define NV2A_DPRINTF(format, ...)       do { } while (0)
 #endif
 
-// #define DEBUG_NV2A_GL
+// Enable for OpenGL Debugging (Requires OpenGL 4.3..)
+//#define DEBUG_NV2A_GL
 #ifdef DEBUG_NV2A_GL
 
 #include <stdbool.h>
-// #include "gl/gloffscreen.h"
-
 void gl_debug_message(bool cc, const char *fmt, ...);
 void gl_debug_group_begin(const char *fmt, ...);
 void gl_debug_group_end(void);

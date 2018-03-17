@@ -37,8 +37,6 @@
 #include "Cxbx.h" // For xbaddr
 #include "devices\PCIDevice.h" // For PCIDevice
 
-#include <mutex>
-#include <condition_variable>
 #include <queue>
 #include <thread>
 
@@ -47,7 +45,8 @@
 #include "swizzle.h"
 #include "nv2a_int.h"
 #include "nv2a_debug.h" // For HWADDR_PRIx, NV2A_DPRINTF, NV2A_GL_DPRINTF, etc.
-#include "gloffscreen.h" // For glo_readpixels
+#include "CxbxKrnl/gloffscreen/gloffscreen.h"
+#include "qemu-thread.h" // For qemu_mutex, etc
 #include "nv2a_shaders.h" // For ShaderBinding
 
 #define NV2A_ADDR  0xFD000000
@@ -143,17 +142,12 @@ NV2A_CONSTEXPR unsigned int ffs(const unsigned int v)
 	return c;
 }
 
-inline int GET_MASK(const unsigned int v, const unsigned int mask) {
-	return (((v) & (mask)) >> (ffs(mask) - 1));
-};
-
-inline int SET_MASK(unsigned int v, const unsigned int mask, const unsigned int val) {
-    const unsigned int __val = (val);                            
-    const unsigned int __mask = (mask);                          
-
-    (v) &= ~(__mask);                                            
-    return (v) |= ((__val) << (ffs(__mask)-1)) & (__mask);              
-}
+#define GET_MASK(v, mask) (((v) & (mask)) >> (ffs(mask)-1))
+#define SET_MASK(v, mask, val)                                   \
+	do {														 \
+	(v) &= ~(mask);                                              \
+	(v) |= ((val) << (ffs(mask) - 1)) & (mask);                  \
+} while (0)
 
 // Power-of-two CASE statements
 #define CASE_1(v, step) case (v)
@@ -325,11 +319,11 @@ typedef struct GraphicsContext {
 
 typedef struct PGRAPHState {
 	bool opengl_enabled; // == bLLE_GPU
-	std::mutex pgraph_lock;
+	QemuMutex lock;
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
-	std::condition_variable interrupt_cond;
+	QemuCond interrupt_cond;
 
 	xbaddr context_table;
 	xbaddr context_address;
@@ -342,9 +336,9 @@ typedef struct PGRAPHState {
 	uint32_t notify_source;
 
 	bool fifo_access;
-	std::condition_variable fifo_access_cond;
+	QemuCond fifo_access_cond;
 
-	std::condition_variable flip_3d_cond; // Was flip_3d
+	QemuCond flip_3d;
 
 	unsigned int channel_id;
 	bool channel_valid;
@@ -371,7 +365,9 @@ typedef struct PGRAPHState {
 	/* FIXME: Move to NV_PGRAPH_BUMPMAT... */
 	float bump_env_matrix[NV2A_MAX_TEXTURES - 1][4]; /* 3 allowed stages with 2x2 matrix each */
 
-	// wglContext *gl_context;
+	GloContext *gl_context;
+	QemuMutex gl_lock;
+
 	GLuint gl_framebuffer;
 	GLuint gl_color_buffer, gl_zeta_buffer;
 	GraphicsSubchannel subchannel_data[NV2A_NUM_SUBCHANNELS];
@@ -433,6 +429,19 @@ typedef struct PGRAPHState {
 	uint32_t regs[NV_PGRAPH_SIZE]; // TODO : union
 } PGRAPHState;
 
+#define lockGL(x) lockGL_(x, __LINE__)
+static void lockGL_(PGRAPHState* pg, unsigned int line) {
+	//printf("Locking from line %d\n", line);
+	qemu_mutex_lock(&pg->gl_lock);
+	glo_set_current(pg->gl_context);
+}
+
+#define unlockGL(x) unlockGL_(x, __LINE__)
+static void unlockGL_(PGRAPHState* pg, unsigned int line) {
+	//printf("Unlocking from line %d\n", line);
+	glo_set_current(NULL);
+	qemu_mutex_unlock(&pg->gl_lock);
+}
 
 typedef struct CacheEntry {
 	//QSIMPLEQ_ENTRY(CacheEntry) entry;
@@ -470,8 +479,8 @@ typedef struct Cache1State {
 	enum FIFOEngine last_engine;
 
 	/* The actual command queue */
-	std::mutex cache_lock;
-	std::condition_variable cache_cond;
+	QemuMutex cache_lock;
+	QemuCond cache_cond;
 	std::queue<CacheEntry*> cache;
 	std::queue<CacheEntry*> working_cache;
 } Cache1State;
@@ -561,10 +570,6 @@ typedef struct NV2AState {
 		uint8_t cr_index;
 		uint8_t cr[256]; /* CRT registers */
 	} prmcio; // Not in xqemu/openxbox?
-
-	std::mutex io_lock;
-    //SDL_Window *sdl_window;
-
 } NV2AState;
 
 typedef value_t(*read_func)(NV2AState *d, hwaddr addr); //, unsigned int size);
@@ -641,8 +646,6 @@ inline void D3DPUSH_DECODE(const DWORD dwPushCommand, DWORD &dwMethod, DWORD &dw
 
 void CxbxReserveNV2AMemory(NV2AState *d);
 
-void InitOpenGLContext();
-
 class NV2ADevice : public PCIDevice {
 public:
 	// constructor
@@ -658,6 +661,8 @@ public:
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
+
+	static void SwapBuffers(NV2AState *d);
 private:
 	NV2AState *m_nv2a_state;
 };

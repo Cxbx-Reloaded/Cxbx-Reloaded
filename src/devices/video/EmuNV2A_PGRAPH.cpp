@@ -1,19 +1,12 @@
 // FIXME
-#if 1
-#define qemu_mutex_lock_iothread(...) do { \
-    d->io_lock.lock(); \
-} while (0)
-#define qemu_mutex_unlock_iothread(...)  do { \
-    d->io_lock.unlock(); \
-} while (0)
-#else
 #define qemu_mutex_lock_iothread()
 #define qemu_mutex_unlock_iothread()
-#endif
 
 // Xbox uses 4 KiB pages
-#define TARGET_PAGE_MASK 0xfff
-#define TARGET_PAGE_ALIGN(x) (((x) + 0xfff) & ~0xfff)
+#define TARGET_PAGE_BITS 12
+#define TARGET_PAGE_SIZE (1 << TARGET_PAGE_BITS)
+#define TARGET_PAGE_MASK ~(TARGET_PAGE_SIZE - 1)
+#define TARGET_PAGE_ALIGN(addr) (((addr) + TARGET_PAGE_SIZE - 1) & TARGET_PAGE_MASK)
 
 static const GLenum pgraph_texture_min_filter_map[] = {
     0,
@@ -387,7 +380,7 @@ static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples)
 /* PGRAPH - accelerated 2d/3d drawing engine */
 DEVICE_READ32(PGRAPH)
 {
-	d->pgraph.pgraph_lock.lock();
+	qemu_mutex_lock(&d->pgraph.lock);
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
@@ -428,7 +421,7 @@ DEVICE_READ32(PGRAPH)
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
-	d->pgraph.pgraph_lock.unlock();
+	qemu_mutex_unlock(&d->pgraph.lock);
 
 //    reg_log_read(NV_PGRAPH, addr, r);
 
@@ -449,12 +442,12 @@ DEVICE_WRITE32(PGRAPH)
 {
 //    reg_log_write(NV_PGRAPH, addr, val);
 
-	d->pgraph.pgraph_lock.lock();
+	qemu_mutex_lock(&d->pgraph.lock);
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
 		d->pgraph.pending_interrupts &= ~value;
-		d->pgraph.interrupt_cond.notify_all();
+		qemu_cond_broadcast(&d->pgraph.interrupt_cond);
 		break;
 	case NV_PGRAPH_INTR_EN:
 		d->pgraph.enabled_interrupts = value;
@@ -473,12 +466,14 @@ DEVICE_WRITE32(PGRAPH)
 					NV_PGRAPH_SURFACE_READ_3D) + 1)
 				% GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_MODULO_3D));
-			d->pgraph.flip_3d_cond.notify_all();
+			qemu_cond_broadcast(&d->pgraph.flip_3d);
+
+			NV2ADevice::SwapBuffers(d);
 		}
 		break;
 	case NV_PGRAPH_FIFO:
 		d->pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
-		d->pgraph.fifo_access_cond.notify_all();
+		qemu_cond_broadcast(&d->pgraph.fifo_access_cond);
 		break;
 	case NV_PGRAPH_CHANNEL_CTX_TABLE:
 		d->pgraph.context_table =
@@ -512,10 +507,12 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	}
 
-	d->pgraph.pgraph_lock.unlock();
+	qemu_mutex_unlock(&d->pgraph.lock);
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
+
+extern HDC g_EmuWindowsDC;
 
 static void pgraph_method(NV2AState *d,
 							unsigned int subchannel,
@@ -541,8 +538,8 @@ static void pgraph_method(NV2AState *d,
 	KelvinState *kelvin = &object->data.kelvin;
 
 
-
-	pgraph_method_log(subchannel, object->graphics_class, method, parameter);
+	// Logging is slow.. disable for now..
+	//pgraph_method_log(subchannel, object->graphics_class, method, parameter);
 
 	if (method == NV_SET_OBJECT) {
 		subchannel_data->object_instance = parameter;
@@ -696,22 +693,23 @@ static void pgraph_method(NV2AState *d,
 				pg->notify_source = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
 				pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
-				pg->pgraph_lock.unlock();
+				qemu_mutex_unlock(&d->pgraph.lock);
 				qemu_mutex_lock_iothread();
 				update_irq(d);
-				std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
+
+				qemu_mutex_lock(&d->pgraph.lock);
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					pg->interrupt_cond.wait(unique_pgraph_lock);
+					qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
 				}
-
-				unique_pgraph_lock.release(); // detach unique_lock from the mutex
 			}
 			break;
 
 		case NV097_WAIT_FOR_IDLE:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 			break;
 
 
@@ -728,6 +726,7 @@ static void pgraph_method(NV2AState *d,
 				parameter);
 			break;
 		case NV097_FLIP_INCREMENT_WRITE: {
+			lockGL(pg);
 			NV2A_DPRINTF("flip increment write %d -> ",
 				GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_WRITE_3D));
@@ -746,25 +745,15 @@ static void pgraph_method(NV2AState *d,
 				glFrameTerminatorGREMEDY();
 			}
 #endif // __APPLE__
+			unlockGL(pg);
 			break;
 		}
 		case NV097_FLIP_STALL:
-			if (pg->opengl_enabled) {
-				// HACK HACK HACK
-				glBindFramebuffer(GL_READ_FRAMEBUFFER, pg->gl_framebuffer);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-				glBlitFramebuffer(0, 0, 640, 480, 0, 0, 640, 480, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-				// SDL_GL_SwapWindow(d->sdl_window); // ugh
-				assert(glGetError() == GL_NO_ERROR);
-				glBindFramebuffer(GL_READ_FRAMEBUFFER, pg->gl_framebuffer);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pg->gl_framebuffer);
-				glBindFramebuffer(GL_FRAMEBUFFER, pg->gl_framebuffer);
-				// HACK HACK HACK
-			}
-
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
-			while (true) {
+			/* while (true) */ {
 				NV2A_DPRINTF("flip stall read: %d, write: %d, modulo: %d\n",
 					GET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_READ_3D),
 					GET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_WRITE_3D),
@@ -776,9 +765,7 @@ static void pgraph_method(NV2AState *d,
 					break;
 				}
 
-				std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
-				pg->flip_3d_cond.wait(unique_pgraph_lock);
-				unique_pgraph_lock.release(); // detach unique_lock from the mutex
+				qemu_cond_wait(&pg->flip_3d, &pg->lock);
 			}
 			NV2A_DPRINTF("flip stall done\n");
 			break;
@@ -797,7 +784,9 @@ static void pgraph_method(NV2AState *d,
 			break;
 		case NV097_SET_CONTEXT_DMA_COLOR:
 			/* try to get any straggling draws in before the surface's changed :/ */
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->dma_color = parameter;
 			break;
@@ -818,7 +807,9 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_SET_SURFACE_CLIP_HORIZONTAL:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->surface_shape.clip_x =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
@@ -826,15 +817,19 @@ static void pgraph_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
 			break;
 		case NV097_SET_SURFACE_CLIP_VERTICAL:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-
+			unlockGL(pg);
+			
 			pg->surface_shape.clip_y =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
 			pg->surface_shape.clip_height =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_FORMAT:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->surface_shape.color_format =
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_COLOR);
@@ -850,7 +845,9 @@ static void pgraph_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_PITCH:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->surface_color.pitch =
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_COLOR);
@@ -858,12 +855,16 @@ static void pgraph_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_ZETA);
 			break;
 		case NV097_SET_SURFACE_COLOR_OFFSET:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->surface_color.offset = parameter;
 			break;
 		case NV097_SET_SURFACE_ZETA_OFFSET:
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			pg->surface_zeta.offset = parameter;
 			break;
@@ -886,7 +887,9 @@ static void pgraph_method(NV2AState *d,
 			pg->regs[NV_PGRAPH_TEXADDRESS0 + slot * 4] = parameter;
 			break;
 		case NV097_SET_CONTROL0: {
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			bool stencil_write_enable =
 				parameter & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
@@ -1687,6 +1690,8 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_CLEAR_REPORT_VALUE:
+			lockGL(pg);
+
 			/* FIXME: Does this have a value in parameter? Also does this (also?) modify
 			 *        the report memory block?
 			 */
@@ -1698,6 +1703,8 @@ static void pgraph_method(NV2AState *d,
 				pg->gl_zpass_pixel_count_query_count = 0;
 			}
 			pg->zpass_pixel_count_result = 0;
+
+			unlockGL(pg);
 			break;
 
 		case NV097_SET_ZPASS_PIXEL_COUNT_ENABLE:
@@ -1705,6 +1712,8 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_GET_REPORT: {
+			lockGL(pg);
+
 			/* FIXME: This was first intended to be watchpoint-based. However,
 			 *        qemu / kvm only supports virtual-address watchpoints.
 			 *        This'll do for now, but accuracy and performance with other
@@ -1746,6 +1755,7 @@ static void pgraph_method(NV2AState *d,
 				stl_le_p((uint32_t*)&report_data[12], done);
 			}
 
+			unlockGL(pg);
 			break;
 		}
 
@@ -1756,6 +1766,8 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_SET_BEGIN_END: {
+			lockGL(pg);
+
 			bool depth_test =
 				pg->regs[NV_PGRAPH_CONTROL_0] & NV_PGRAPH_CONTROL_0_ZENABLE;
 			bool stencil_test = pg->regs[NV_PGRAPH_CONTROL_1]
@@ -2049,6 +2061,8 @@ static void pgraph_method(NV2AState *d,
 			}
 
 			pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
+
+			unlockGL(pg);
 			break;
 		}
 		CASE_4(NV097_SET_TEXTURE_OFFSET, 64):
@@ -2285,8 +2299,9 @@ static void pgraph_method(NV2AState *d,
 			kelvin->semaphore_offset = parameter;
 			break;
 		case NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: {
-
+			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
+			unlockGL(pg);
 
 			//qemu_mutex_unlock(&d->pg->pgraph_lock);
 			//qemu_mutex_lock_iothread();
@@ -2313,6 +2328,7 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_CLEAR_SURFACE: {
+			lockGL(pg);
 			NV2A_DPRINTF("---------PRE CLEAR ------\n");
 			GLbitfield gl_mask = 0;
 
@@ -2486,6 +2502,8 @@ static void pgraph_method(NV2AState *d,
 			}
 
 			pgraph_set_surface_dirty(pg, write_color, write_zeta);
+
+			unlockGL(pg);
 			break;
 		}
 
@@ -2589,29 +2607,24 @@ static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
 	if (!valid) {
 		NV2A_DPRINTF("puller needs to switch to ch %d\n", channel_id);
 
-		d->pgraph.pgraph_lock.unlock();
+		qemu_mutex_unlock(&d->pgraph.lock);
 		qemu_mutex_lock_iothread();
 		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
 		update_irq(d);
 
-		std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock);
+		qemu_mutex_lock(&d->pgraph.lock);
 		qemu_mutex_unlock_iothread();
 
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			d->pgraph.interrupt_cond.wait(unique_pgraph_lock);
+			qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
 		}
-
-		unique_pgraph_lock.release(); // detach unique_lock from the mutex
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
-	std::unique_lock<std::mutex> unique_pgraph_lock(d->pgraph.pgraph_lock, std::defer_lock);
 	while (!d->pgraph.fifo_access) {
-		d->pgraph.fifo_access_cond.wait(unique_pgraph_lock);
+		qemu_cond_wait(&d->pgraph.fifo_access_cond, &d->pgraph.lock);
 	}
-
-	unique_pgraph_lock.release(); // detach unique_lock from the mutex
 }
 
 static void pgraph_method_log(unsigned int subchannel,
@@ -2700,13 +2713,21 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
+	qemu_mutex_init(&pg->lock);
+	qemu_mutex_init(&pg->gl_lock);
+	qemu_cond_init(&pg->interrupt_cond);
+	qemu_cond_init(&pg->fifo_access_cond);
+	qemu_cond_init(&pg->flip_3d);
+
 	if (!(pg->opengl_enabled))
 		return;
 
 	/* fire up opengl */
 
-    // pg->gl_context = glo_context_create();
-    // assert(pg->gl_context);
+	lockGL(pg);
+
+    pg->gl_context = glo_context_create();
+    assert(pg->gl_context);
 
 #ifdef DEBUG_NV2A_GL
     glEnable(GL_DEBUG_OUTPUT);
@@ -2715,17 +2736,16 @@ void pgraph_init(NV2AState *d)
     glextensions_init();
 
     /* DXT textures */
-    // assert(glo_check_extension("GL_EXT_texture_compression_s3tc"));
+    assert(glo_check_extension("GL_EXT_texture_compression_s3tc"));
     /*  Internal RGB565 texture format */
-    // assert(glo_check_extension("GL_ARB_ES2_compatibility"));
+    assert(glo_check_extension("GL_ARB_ES2_compatibility"));
 
     GLint max_vertex_attributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attributes);
     assert(max_vertex_attributes >= NV2A_VERTEXSHADER_ATTRIBUTES);
 
-
     glGenFramebuffers(1, &pg->gl_framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, pg->gl_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, pg->gl_framebuffer);
 
     /* need a valid framebuffer to start with */
     glGenTextures(1, &pg->gl_color_buffer);
@@ -2739,6 +2759,7 @@ void pgraph_init(NV2AState *d)
             == GL_FRAMEBUFFER_COMPLETE);
 
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
 	/*
     pg->texture_cache = g_lru_cache_new_full(
         0,
@@ -2778,13 +2799,15 @@ void pgraph_init(NV2AState *d)
 
     assert(glGetError() == GL_NO_ERROR);
 
-    // glo_set_current(NULL);
+	unlockGL(&d->pgraph);
 }
 
 void pgraph_destroy(PGRAPHState *pg)
 {
 	if (pg->opengl_enabled) {
-		// glo_set_current(pg->gl_context);
+		lockGL(pg);
+
+		glo_set_current(pg->gl_context);
 
 		if (pg->gl_color_buffer) {
 			glDeleteTextures(1, &pg->gl_color_buffer);
@@ -2797,9 +2820,11 @@ void pgraph_destroy(PGRAPHState *pg)
 		// TODO: clear out shader cached
 		// TODO: clear out texture cache
 
-		// glo_set_current(NULL);
+		glo_set_current(NULL);
 
-		// glo_context_destroy(pg->gl_context);
+		glo_context_destroy(pg->gl_context);
+
+		unlockGL(pg);
 	}
 }
 
@@ -3300,6 +3325,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
     bool dirty = surface->buffer_dirty;
     if (color) {
 #if 1
+		// HACK: Always mark as dirty
         dirty |= 1;
 #else
         dirty |= memory_region_test_and_clear_dirty(d->vram,
@@ -3311,9 +3337,9 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
     if (upload && dirty) {
         /* surface modified (or moved) by the cpu.
          * copy it into the opengl renderbuffer */
-        assert(!surface->draw_dirty);
-
-        assert(surface->pitch % bytes_per_pixel == 0);
+        // TODO: Why does this assert?
+		//assert(!surface->draw_dirty);
+		assert(surface->pitch % bytes_per_pixel == 0);
 
         if (swizzle) {
             unswizzle_rect(data + surface->offset,
@@ -3406,6 +3432,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
 						   bytes_per_pixel, surface->pitch,
 						   width, height,
 						   buf);
+
 			assert(glGetError() == GL_NO_ERROR);
 		}
 
@@ -3883,15 +3910,20 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
 
 	glBindBuffer(GL_ARRAY_BUFFER, d->pgraph.gl_memory_buffer);
 
-    hwaddr end = TARGET_PAGE_ALIGN(addr + size);
-    addr &= TARGET_PAGE_MASK;
-    assert(end < d->vram_size);
+	hwaddr end = TARGET_PAGE_ALIGN(addr + size);
+	addr &= TARGET_PAGE_MASK;
+
+	assert(end < d->vram_size);
+
     // if (f || memory_region_test_and_clear_dirty(d->vram,
     //                                             addr,
     //                                             end - addr,
     //                                             DIRTY_MEMORY_NV2A)) {
-        glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
+		glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
     // }
+
+		auto error = glGetError();
+		assert(error == GL_NO_ERROR);
 }
 
 static void pgraph_bind_vertex_attributes(NV2AState *d,
@@ -4003,7 +4035,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                     attribute->gl_type,
                     attribute->gl_normalize,
                     attribute->stride,
-                    (void*)(uint64_t)addr);
+                    (void*)(uint64_t)(addr));
             }
             glEnableVertexAttribArray(i);
         } else {

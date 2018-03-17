@@ -21,8 +21,8 @@
 #ifndef HW_NV2A_SHADERS_H
 #define HW_NV2A_SHADERS_H
 
-//#include <SDL.h>
-#include <GL/glew.h>
+#include "qstring.h"
+#include "CxbxKrnl/gloffscreen/gloffscreen.h"
 
 #include "nv2a_vsh.h"
 #include "nv2a_psh.h"

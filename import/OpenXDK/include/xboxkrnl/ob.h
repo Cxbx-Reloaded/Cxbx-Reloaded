@@ -12,6 +12,82 @@
 #ifndef XBOXKRNL_OB_H
 #define XBOXKRNL_OB_H
 
+#define OBJ_NAME_PATH_SEPARATOR ((CHAR)L'\\')
+
+#define OB_NUMBER_HASH_BUCKETS          11
+typedef struct _OBJECT_DIRECTORY {
+	struct _OBJECT_HEADER_NAME_INFO *HashBuckets[OB_NUMBER_HASH_BUCKETS];
+} OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
+
+typedef struct _OBJECT_SYMBOLIC_LINK {
+	PVOID LinkTargetObject;
+	OBJECT_STRING LinkTarget;
+} OBJECT_SYMBOLIC_LINK, *POBJECT_SYMBOLIC_LINK;
+
+typedef struct _OBJECT_HEADER_NAME_INFO {
+	struct _OBJECT_HEADER_NAME_INFO *ChainLink;
+	struct _OBJECT_DIRECTORY *Directory;
+	OBJECT_STRING Name;
+} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
+
+#define ObDosDevicesDirectory()         ((HANDLE)-3)
+#define ObWin32NamedObjectsDirectory()  ((HANDLE)-4)
+
+#define ObpIsFlagSet(flagset, flag) (((flagset) & (flag)) != 0)
+#define ObpIsFlagClear(flagset, flag) (((flagset) & (flag)) == 0)
+#define ObpEncodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) | 1)
+#define ObpDecodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) & (~1))
+#define ObpIsFreeHandleLink(Link) (((ULONG_PTR)(Link)) & 1)
+#define ObpGetTableByteOffsetFromHandle(Handle) (HandleToUlong(Handle) & (OB_HANDLES_PER_TABLE * sizeof(PVOID) - 1))
+#define ObpGetTableFromHandle(Handle) ObpObjectHandleTable.RootTable[HandleToUlong(Handle) >> (OB_HANDLES_PER_TABLE_SHIFT + 2)]
+#define ObpGetHandleContentsPointer(Handle) ((PVOID*)((PUCHAR)ObpGetTableFromHandle(Handle) + ObpGetTableByteOffsetFromHandle(Handle)))
+#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ULONG_PTR)(Handle)) & ~(sizeof(ULONG) - 1)))
+
+#define OB_FLAG_NAMED_OBJECT            0x01
+#define OB_FLAG_PERMANENT_OBJECT        0x02
+#define OB_FLAG_ATTACHED_OBJECT         0x04
+
+#define OBJECT_TO_OBJECT_HEADER(Object) CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
+#define OBJECT_TO_OBJECT_HEADER_NAME_INFO(Object) ((POBJECT_HEADER_NAME_INFO)OBJECT_TO_OBJECT_HEADER(Object) - 1)
+#define OBJECT_HEADER_NAME_INFO_TO_OBJECT_HEADER(ObjectHeaderNameInfo) ((POBJECT_HEADER)((POBJECT_HEADER_NAME_INFO)(ObjectHeaderNameInfo)+1))
+#define OBJECT_HEADER_TO_OBJECT_HEADER_NAME_INFO(ObjectHeader) ((POBJECT_HEADER_NAME_INFO)(ObjectHeader)-1)
+#define OBJECT_HEADER_NAME_INFO_TO_OBJECT(ObjectHeaderNameInfo) (&OBJECT_HEADER_NAME_INFO_TO_OBJECT_HEADER(ObjectHeaderNameInfo)->Body)
+
+HANDLE ObpCreateObjectHandle(PVOID Object);
+BOOLEAN ObpCreatePermanentDirectoryObject(
+	IN POBJECT_STRING DirectoryName OPTIONAL,
+	OUT POBJECT_DIRECTORY *DirectoryObject
+);
+
+NTSTATUS ObpReferenceObjectByName(
+	IN HANDLE RootDirectoryHandle,
+	IN POBJECT_STRING ObjectName,
+	IN ULONG Attributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PVOID *ReturnedObject
+);
+
+#define XB_InitializeObjectAttributes(p, n, a, r, s){\
+	(p)->RootDirectory = r;   \
+	(p)->Attributes = a;      \
+	(p)->ObjectName = n;      \
+}
+
+BOOLEAN ObInitSystem();
+BOOLEAN ObpExtendObjectHandleTable();
+VOID ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
+PVOID ObpGetObjectHandleContents(HANDLE Handle);
+PVOID ObpGetObjectHandleReference(HANDLE Handle);
+ULONG FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
+
+BOOLEAN ObpLookupElementNameInDirectory(
+	IN POBJECT_DIRECTORY Directory,
+	IN POBJECT_STRING ElementName,
+	IN BOOLEAN ResolveSymbolicLink,
+	OUT PVOID *ReturnedObject
+);
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -68,10 +144,23 @@ XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
 	OUT PHANDLE Handle
 );
 
+#define OB_HANDLES_PER_TABLE_SHIFT      6
+#define OB_HANDLES_PER_TABLE            (1 << OB_HANDLES_PER_TABLE_SHIFT)
+#define OB_TABLES_PER_SEGMENT           8
+#define OB_HANDLES_PER_SEGMENT          (OB_TABLES_PER_SEGMENT * OB_HANDLES_PER_TABLE)
+
+typedef struct _OBJECT_HANDLE_TABLE {
+	LONG HandleCount;
+	LONG_PTR FirstFreeTableEntry;
+	HANDLE NextHandleNeedingPool;
+	PVOID **RootTable;
+	PVOID *BuiltinRootTable[OB_TABLES_PER_SEGMENT];
+} OBJECT_HANDLE_TABLE, *POBJECT_HANDLE_TABLE;
+
 // ******************************************************************
 // * 0x00F5 - ObpObjectHandleTable
 // ******************************************************************
-XBSYSAPI EXPORTNUM(245) DWORD ObpObjectHandleTable[1];
+XBSYSAPI EXPORTNUM(245) OBJECT_HANDLE_TABLE ObpObjectHandleTable;
 
 // ******************************************************************
 // * 0x00F6 - ObReferenceObjectByHandle()

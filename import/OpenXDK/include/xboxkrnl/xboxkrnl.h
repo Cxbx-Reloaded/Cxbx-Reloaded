@@ -688,6 +688,11 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
+#define ALIGN_DOWN(length, type) ((ULONG)(length) & ~(sizeof(type) - 1))
+#define ALIGN_UP(length, type) (ALIGN_DOWN(((ULONG)(length) + sizeof(type) - 1), type))
+#define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ULONG_PTR)(address) & ~((ULONG_PTR)sizeof(type) - 1)))
+#define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ULONG_PTR)(address) + sizeof(type) - 1), type))
+
 // ******************************************************************
 // * EXCEPTION_RECORD
 // ******************************************************************

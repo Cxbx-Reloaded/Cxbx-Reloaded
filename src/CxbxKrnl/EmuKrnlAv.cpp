@@ -54,10 +54,68 @@ namespace NtDll
 };
 
 #include "Emu.h" // For EmuWarning()
+#include "EmuXTL.h"
+#include "EmuX86.h"
+
+#include "EmuKrnlAvModes.h"
+#include "devices\video\nv2a_int.h"
+
+#ifndef VOID
+#define VOID void
+#endif
+
+// HW Register helper functions
+xboxkrnl::UCHAR REG_RD08(VOID* Ptr, xboxkrnl::ULONG Addr)
+{
+	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint8_t));
+}
+
+VOID REG_WR08(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::UCHAR Val)
+{
+	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint8_t));
+}
+
+xboxkrnl::ULONG REG_RD32(VOID* Ptr, xboxkrnl::ULONG Addr)
+{
+	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint32_t));
+}
+
+VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
+{
+	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint32_t));
+}
+
+VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+{
+	REG_WR08(Ptr, NV_PRMCIO_CRX__COLOR, i);
+	REG_WR08(Ptr, NV_PRMCIO_CR__COLOR, d);
+}
+
+VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+
+{
+	REG_WR08(Ptr, NV_PRMVIO_SRX, i);
+	REG_WR08(Ptr, NV_PRMVIO_SR, (d));
+}
+
+VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+{
+	REG_WR08(Ptr, NV_PRMVIO_GRX, i);
+	REG_WR08(Ptr, NV_PRMVIO_GX, (d));
+}
+
+VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+{
+	REG_WR08(Ptr, NV_PRMCIO_ARX, i);
+	REG_WR08(Ptr, NV_PRMCIO_ARX, (d));
+}
+
+
 
 
 // Global Variable(s)
-PVOID g_pPersistedData = NULL; // (?? What is this used for?)
+PVOID g_pPersistedData = NULL;
+ULONG AvpCurrentMode = 0;
 
 ULONG AvQueryAvCapabilities()
 {
@@ -113,7 +171,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -189,6 +247,9 @@ XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	}
 }
 
+// Cached Display Mode format, used by NV2A to deermine framebuffer format
+ULONG g_AvDisplayModeFormat = 0;
+
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
@@ -211,17 +272,136 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		LOG_FUNC_ARG(FrameBuffer)
 		LOG_FUNC_END;
 
-	ULONG result = S_OK;
+	if (Mode == AV_MODE_OFF) {
+		Mode = AV_MODE_640x480_TO_NTSC_M_YC	| AV_MODE_FLAGS_DACA_DISABLE | AV_MODE_FLAGS_DACB_DISABLE
+			| AV_MODE_FLAGS_DACC_DISABLE | AV_MODE_FLAGS_DACD_DISABLE;
+	}
 
-	LOG_UNIMPLEMENTED();
+	ULONG OutputMode = Mode & AV_MODE_OUT_MASK;
+	ULONG iRegister = (Mode & 0x00FF0000) >> 16;
+	ULONG iCRTC = (Mode & 0x0000FF00) >> 8;
+	ULONG iTV = (Mode & 0x0000007F);
+	UCHAR DACs = (UCHAR)((Mode & 0x0F000000) >> 24);
 
-	RETURN(result);
+	ULONG GeneralControl = 0;
+	UCHAR CR28Depth = 0;
+
+	switch (Format)
+	{
+	case XTL::X_D3DFMT_LIN_A1R5G5B5:
+	case XTL::X_D3DFMT_LIN_X1R5G5B5:
+		GeneralControl = 0x00100030;
+		CR28Depth = 2;
+		break;
+	case XTL::X_D3DFMT_LIN_R5G6B5:
+		GeneralControl = 0x00101030;
+		CR28Depth = 2;
+		break;
+	case XTL::X_D3DFMT_LIN_A8R8G8B8:
+	case XTL::X_D3DFMT_LIN_X8R8G8B8:
+		GeneralControl = 0x00100030;
+		CR28Depth = 3;
+		break;
+	}
+
+	// HACK: Store D3D format that was set, so we can decode it in nv2a swap
+	// TODO: Fix this so nv2a state is used to get these values...
+	g_AvDisplayModeFormat = Format;
+
+	Pitch /= 8;
+
+	if (AvpCurrentMode == Mode)
+	{
+		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
+		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX, NV_CIO_SR_UNLOCK_RW_VALUE);
+		CRTC_WR(RegisterBase, 0x13, (UCHAR)(Pitch & 0xFF));
+		CRTC_WR(RegisterBase, 0x19, (UCHAR)((Pitch & 0x700) >> 3));
+		CRTC_WR(RegisterBase, 0x28, 0x80 | CR28Depth);
+		REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
+
+		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
+		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
+		AvpCurrentMode = Mode;
+
+		RETURN(STATUS_SUCCESS);
+	}
+
+	// TODO: Lots of setup/TV encoder configuration
+	// Ignored for now since we don't emulate that stuff yet...
+
+	LOG_INCOMPLETE();
+
+	REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
+
+	const ULONG* pLong = AvpRegisters[iRegister];
+	const ULONG* pLongMax = pLong + sizeof(AvpRegisters[0]) / sizeof(ULONG);
+
+	for (long i = 0; pLong < pLongMax; pLong++, i++)	{
+		REG_WR32(RegisterBase, AvpRegisters[0][i], *pLong);
+	}
+
+	if (Mode & AV_MODE_FLAGS_SCART)	{
+		REG_WR32(RegisterBase, 0x680630, 0);
+		REG_WR32(RegisterBase, 0x6808C4, 0);
+		REG_WR32(RegisterBase, 0x68084C, 0);
+	}
+
+	const UCHAR* pByte = AvpSRXRegisters;
+	const UCHAR* pByteMax = pByte + sizeof(AvpSRXRegisters);
+
+	for (long i = 0; pByte < pByteMax; pByte++, i++) {
+		SRX_WR(RegisterBase, (UCHAR)i, *pByte);
+	}
+
+	pByte = AvpGRXRegisters;
+	pByteMax = pByte + sizeof(AvpGRXRegisters);
+
+	for (long i = 0; pByte < pByteMax; pByte++, i++)	{
+		GRX_WR(RegisterBase, (UCHAR)i, *pByte);
+	}
+
+	REG_RD08(RegisterBase, NV_PRMCIO_INP0__COLOR);
+
+	pByte = AvpARXRegisters;
+	pByteMax = pByte + sizeof(AvpARXRegisters);
+
+	for (long i = 0; pByte < pByteMax; pByte++, i++)	{
+		ARX_WR(RegisterBase, (UCHAR)i, *pByte);
+	}
+
+	REG_WR08(RegisterBase, NV_PRMCIO_ARX, 0x20);
+
+	CRTC_WR(RegisterBase, 0x11, 0x00);
+	pByte = AvpCRTCRegisters[iCRTC];
+	pByteMax = pByte + sizeof(AvpCRTCRegisters[0]);
+
+	for (long i = 0; pByte < pByteMax; pByte++, i++) {
+		UCHAR Register = AvpCRTCRegisters[0][i];
+		UCHAR Data = *pByte;
+
+		if (Register == 0x13) {
+			Data = (UCHAR)(Pitch & 0xFF);
+		} else if (Register == 0x19) {
+			Data |= (UCHAR)((Pitch & 0x700) >> 3);
+		} else if (Register == 0x25) {
+			Data |= (UCHAR)((Pitch & 0x800) >> 6);
+		}
+
+		CRTC_WR(RegisterBase, AvpCRTCRegisters[0][i], Data);
+	}
+
+	// TODO: More TV Encoder stuff...
+
+	REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
+	AvpCurrentMode = Mode;
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

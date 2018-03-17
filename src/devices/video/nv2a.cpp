@@ -93,7 +93,7 @@ struct _GError
 	gchar       *message;
 };
 
-#include "glextensions.h" // for glextensions_init
+#include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
 
 
 static void update_irq(NV2AState *d)
@@ -202,8 +202,6 @@ static DMAObject nv_dma_load(NV2AState *d, xbaddr dma_obj_address)
 
 static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
 {
-	assert(dma_obj_address < d->pramin.ramin_size);
-
 	DMAObject dma = nv_dma_load(d, dma_obj_address);
 
 	/* TODO: Handle targets and classes properly */
@@ -467,128 +465,119 @@ void DxbxCompileShader(std::string Shader)
 																			   }
 																			   */
 }
-void InitOpenGLContext()
-{
-	HGLRC RC;
-	std::string szCode;
-
-	g_EmuWindowsDC = GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
-	SetupPixelFormat(g_EmuWindowsDC);
-
-	RC = wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
-	wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
-										  //ReadImplementationProperties(); // Determine a set of booleans indicating which OpenGL extensions are available
-										  //ReadExtensions(); // Assign all OpenGL extension API's (DON'T call them if the extension is not available!)
-
-										  // Initialize the viewport :
-										  //Viewport.X = 0;
-										  //Viewport.Y = 0;
-										  //Viewport.Width = g_EmuCDPD.pXboxPresentationParameters.BackBufferWidth;
-										  //Viewport.Height = g_EmuCDPD.pXboxPresentationParameters.BackBufferHeight;
-										  //Viewport.MinZ = -1.0;
-										  //Viewport.MaxZ = 1.0;
-
-										  //DxbxUpdateTransformProjection();
-										  //DxbxUpdateViewport();
-
-
-										  //glutInit();
-	{ // rb_init_context();
-	  /* link in gl functions at runtime */
-		glewExperimental = GL_TRUE;
-		GLenum err = glewInit();
-		if (err != GLEW_OK) {
-			EmuWarning("GLEW initialization failed: %s", glewGetErrorString(err));
-			return;
-		}
-	}
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	// Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
-	//  glScalef(1.0, 1.0, -1.0);
-
-	// Set some defaults :
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
-
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glAlphaFunc(GL_GEQUAL, 0.5);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE for wireframe
-
-											   /*
-											   // TODO : The following code only works on cards that support the
-											   // vertex program extensions (NVidia cards mainly); So for ATI we
-											   // have to come up with another solution !!!
-											   glGenProgramsARB(4, &VertexProgramIDs[0]);
-											   */
-
-#ifdef DXBX_OPENGL_CONVENTIONAL
-	if (GL_ARB_vertex_blend)
-		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "weight");
-	else
-		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "attrib[1]");
-#endif
-
-	// Precompiled shader for the fixed function pipeline :
-	szCode = DxbxVertexShaderHeader +
-		"# This part adjusts the vertex position by the super-sampling scale & offset :\n"
-		"MOV R0, v0;\n"
-		"RCP R0.w, R0.w;\n"
-		"MUL R0, R0, c[0];\n" // c[-96] in D3D speak - applies SuperSampleScale
-							  // Note : Use R12 instead of oPos because this is not yet the final assignment :
-		"ADD R12, R0, c[1];\n" // c[-95] in D3D speak - applies SuperSampleOffset
-
-		"# This part just reads all other components and passes them to the output :\n"
-		"MOV oD0, v3;\n"
-		"MOV oD1, v4;\n"
-		"MOV oFog, v4.w;\n" // specular fog
-							//    "MOV oFog, v0.z;\n" // z fog
-							//    "RCP oFog, v0.w;\n" // w fog
-		"MOV oPts, v1.x;\n"
-		"MOV oB0, v7;\n"
-		"MOV oB1, v8;\n"
-		"MOV oT0, v9;\n"
-		"MOV oT1, v10;\n"
-		"MOV oT2, v11;\n"
-		"MOV oT3, v12;\n"
-
-		"# This part applies the screen-space transform (not present when '#pragma screenspace' was used) :\n"
-		"MUL R12.xyz, R12, c[58];\n" // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
-		"RCP R1.x, R12.w;\n" // Originally RCC, but that"s not supported in ARBvp1.0 (use "MIN R1, R1, 0" and "MAX R1, R1, 1"?)
-		"MAD R12.xyz, R12, R1.x, c[59];\n" // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
-
-		"# Dxbx addition : Transform the vertex to clip coordinates :\n"
-		"DP4 R0.x, mvp[0], R12;\n"
-		"DP4 R0.y, mvp[1], R12;\n"
-		"DP4 R0.z, mvp[2], R12;\n"
-		"DP4 R0.w, mvp[3], R12;\n"
-		"MOV R12, R0;\n"
-
-		"# Apply Z coord mapping\n"
-		"ADD R12.z, R12.z, R12.z;\n"
-		"ADD R12.z, R12.z, -R12.w;\n"
-
-		"# Here""s the final assignment to oPos :\n"
-		"MOV oPos, R12;\n"
-		"END\n"; // TODO : Check if newline is required?
-
-				 //	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
-	DxbxCompileShader(szCode);
-}
 
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
 std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
+
+extern ULONG g_AvDisplayModeFormat;
+
+void AvDisplayModeToGL(ULONG displayMode, GLenum* internalFormat, GLenum* format, GLenum* type)
+{
+#define D3DFMT_LIN_A1R5G5B5   0x00000010
+#define D3DFMT_LIN_X1R5G5B5   0x0000001C
+#define D3DFMT_LIN_R5G6B5     0x00000011
+#define D3DFMT_LIN_A8R8G8B8   0x00000012
+#define D3DFMT_LIN_X8R8G8B8   0x0000001E
+
+	switch (displayMode) {
+	case D3DFMT_LIN_A1R5G5B5:
+		*internalFormat = GL_RGB5_A1;
+		*format = GL_BGRA;
+		*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+		break;
+	case D3DFMT_LIN_X1R5G5B5:
+		*internalFormat = GL_RGB5;
+		*format = GL_BGRA;
+		*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+		break;
+	case D3DFMT_LIN_R5G6B5:
+		*internalFormat = GL_RGB;
+		*format = GL_RGB;
+		*type = GL_UNSIGNED_SHORT_5_6_5;
+		break;
+	case D3DFMT_LIN_X8R8G8B8:
+		*internalFormat = GL_RGB8;
+		*format = GL_BGRA;
+		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+		break;
+	case D3DFMT_LIN_A8R8G8B8:
+		*internalFormat = GL_RGBA8;
+		*format = GL_BGRA;
+		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+		break;
+	default:
+		*internalFormat = GL_RGBA;
+		*format = GL_RGBA;
+		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	}
+}
+
+void NV2ADevice::SwapBuffers(NV2AState *d)
+{
+	// TODO: Use source framebuffer size from Display Mode, use destination size from Window size
+	// Currently, both are hardcoded to 640x480
+	lockGL(&d->pgraph);
+
+	NV2A_GL_DGROUP_BEGIN("VGA Frame");
+
+	static ULONG PreviousAvDisplayModeFormat = 0;
+	static GLenum internalFormat = GL_RGBA;
+	static GLenum format = GL_RGBA;
+	static GLenum type = GL_UNSIGNED_INT_8_8_8_8;
+
+	static GLuint texture = -1;
+
+	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
+	// This is requried for titles that use a non ARGB framebuffer, such was Beats of Rage
+	if (g_AvDisplayModeFormat != PreviousAvDisplayModeFormat) {
+		AvDisplayModeToGL(g_AvDisplayModeFormat, &internalFormat, &format, &type);
+		if (texture != -1) {
+			glDeleteTextures(1, &texture);
+			texture = -1;
+		}
+	}
+
+	// If we need to create a new texture, do so, otherwise, update the existing
+	if (texture == -1) {
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 640, 480, 0, format, type, (void*)(0x80000000 | d->pcrtc.start));
+	} else {
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 640, 480, format, type, (void*)(0x80000000 | d->pcrtc.start));
+	}
+
+	PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
+
+	// If we need to create an OpenGL framebuffer, do so
+	static GLuint framebuffer = -1;
+	if (framebuffer == -1) {
+		glGenFramebuffers(1, &framebuffer);
+	}
+
+	// Draw to screen..
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBlitFramebuffer(0, 0, 640, 480, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glo_swap(d->pgraph.gl_context);
+
+	// Restore previous framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
+
+	NV2A_GL_DGROUP_END();
+	unlockGL(&d->pgraph);
+
+}
+
+// TODO: Fix this properl
 static void nv2a_vblank_thread(NV2AState *d)
 {
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
-
 	auto nextVBlankTime = GetNextVBlankTime();
 
 	while (true) {
@@ -645,7 +634,6 @@ NV2ADevice::NV2ADevice()
 {
 	m_nv2a_state = new NV2AState();
 	m_nv2a_state->pgraph.opengl_enabled = bLLE_GPU;
-	pgraph_init(m_nv2a_state);
 }
 
 NV2ADevice::~NV2ADevice()
@@ -676,7 +664,7 @@ void NV2ADevice::Init()
 	CxbxReserveNV2AMemory(d);
 
 	d->pcrtc.start = 0;
-	
+
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
 	d->vram_size = g_SystemMaxMemory;
 
@@ -685,12 +673,18 @@ void NV2ADevice::Init()
 	d->pramdac.memory_clock_coeff = 0;
 	d->pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
-	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
+	// Setup the conditions/mutexes
+	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
+	qemu_cond_init(&d->pfifo.cache1.cache_cond);
+
+	pgraph_init(m_nv2a_state);
 
 	// Only spawn VBlank thread when LLE is enabled
 	if (bLLE_GPU) {
-		vblank_thread = std::thread(nv2a_vblank_thread, d);
+		vblank_thread = std::thread(nv2a_vblank_thread, m_nv2a_state);
 	}
+
+	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
 }
 
 void NV2ADevice::Reset()

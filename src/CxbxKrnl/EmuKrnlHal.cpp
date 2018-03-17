@@ -426,6 +426,11 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 	KfLowerIrql(OldIrql);
 }
 
+// Table of Software Interrupt Priority Valu	es
+uint8_t SoftwareInterruptLookupTable[] = {
+	0, 0, 1, 1, 2, 2, 2, 2
+};
+
 // ******************************************************************
 // * 0x0030 - HalRequestSoftwareInterrupt()
 // ******************************************************************
@@ -438,24 +443,24 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, Request);
 
 	DWORD InterruptMask = 1 << Request;
-
 	bool interrupt_flag = DisableInterrupts();
 
 	// Set this interrupt request bit:
 	HalInterruptRequestRegister |= InterruptMask;
 
-	// Check for pending software interrupts
-	uint8_t SoftwareInterrupt = HalInterruptRequestRegister & 3;
-
-	// Software interrupt 0,1 = IRQ 0, interrupt 2, 3 = IRQ 1 :
-	KIRQL SoftwareIrql = SoftwareInterrupt >> 1;
-
-	// Inlined KeGetCurrentIrql() :
+	// Get current IRQL
 	PKPCR Pcr = KeGetPcr();
 	KIRQL CurrentIrql = (KIRQL)Pcr->Irql;
 
+	// Get pending Software Interrupts (by masking of the HW interrupt bits)
+	uint8_t SoftwareInterrupt = HalInterruptRequestRegister & 3;
+
+	// Get the highest pending software interrupt level
+	KIRQL SoftwareIrql = SoftwareInterruptLookupTable[SoftwareInterrupt];
+	
 	if (SoftwareIrql > CurrentIrql) {
-		CallSoftwareInterrupt(SoftwareIrql);
+		// TODO: This is not completely correct, but it fixes an issue where DPCQueue's weren't running
+		CallSoftwareInterrupt(Request);
 	}
 
 	RestoreInterruptMode(interrupt_flag);

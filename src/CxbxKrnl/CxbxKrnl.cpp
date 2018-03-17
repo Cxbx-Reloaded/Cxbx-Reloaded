@@ -64,7 +64,6 @@ namespace xboxkrnl
 #include <sstream> // For std::ostringstream
 
 #include "devices\EEPROMDevice.h" // For g_EEPROM
-#include "devices\video\nv2a.h" // For InitOpenGLContext
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 
@@ -531,6 +530,9 @@ void PrintCurrentConfigurationLog()
 		}
 	}
 
+	// HACK: For API TRace..
+	// bLLE_GPU = true;
+
 	// Print current LLE configuration
 	{
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
@@ -545,8 +547,8 @@ void PrintCurrentConfigurationLog()
 		printf("Using %s\n", g_XInputEnabled ? "XInput" : "DirectInput");
 	}
 
-	// Print current video configuration
-	{
+	// Print current video configuration (DirectX/HLE)
+	if (!bLLE_GPU) {
 		XBVideo XBVideoConf;
 		g_EmuShared->GetXBVideo(&XBVideoConf);
 
@@ -639,7 +641,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 	while (true) {
 		TriggerPendingConnectedInterrupts();
-		SwitchToThread();
+		Sleep(1);
 	}
 
 	return 0;
@@ -1178,12 +1180,6 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	SetupXboxDeviceTypes();
 
-	if (bLLE_GPU)
-	{
-		DbgPrintf("INIT: Initializing OpenGL.\n");
-		InitOpenGLContext();
-	}
-
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
@@ -1211,6 +1207,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuInitFS();
 
 	InitXboxThread(g_CPUXbox);
+	xboxkrnl::ObInitSystem();
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
