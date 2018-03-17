@@ -802,6 +802,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
         case X_DSSPAUSE_RESUME:
             pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
+            dwEmuFlags ^= DSB_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_PAUSE:
             hStatus = pDSBuffer->GetStatus(&dwStatus);
@@ -809,6 +810,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Stop();
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
+            dwEmuFlags |= DSB_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
