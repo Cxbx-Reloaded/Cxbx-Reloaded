@@ -3646,6 +3646,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	if (g_InlineVertexBuffer_FVF == 0) {
 		// Set first vertex to zero (preventing leaks from prior Begin/End calls)
 		g_InlineVertexBuffer_Table[0] = {};
+		// Set default diffuse color to white
+		g_InlineVertexBuffer_Table[0].Diffuse = D3DCOLOR_ARGB(255, 255, 255, 255);
+		// TODO : Handle D3DUSAGE_PERSISTENTDIFFUSE, D3DUSAGE_PERSISTENTSPECULAR,
+		// D3DUSAGE_PERSISTENTBACKDIFFUSE, and D3DUSAGE_PERSISTENTBACKSPECULAR 
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
