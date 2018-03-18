@@ -7415,7 +7415,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		DrawContext.hVertexShader = g_CurrentVertexShader;
+		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		CxbxDrawPrimitiveUP(DrawContext);
     }

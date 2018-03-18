@@ -739,7 +739,7 @@ VOID XTL::EmuFlushIVB()
 	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
 	case 0: // No position ?
 		if (bFVF) {
-			EmuWarning("EmuFlushIVB(): g_CurrentVertexShader isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			EmuWarning("EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
 			dwCurFVF |= D3DFVF_XYZRHW;
 		}
 		else {
@@ -897,7 +897,7 @@ VOID XTL::EmuFlushIVB()
 
 	CxbxDrawPrimitiveUP(DrawContext);
 	if (bFVF) {
-		hRet = g_pD3DDevice->SetVertexShader(g_CurrentVertexShader);
+		hRet = g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)

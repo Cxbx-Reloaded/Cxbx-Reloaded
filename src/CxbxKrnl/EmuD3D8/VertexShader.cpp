@@ -2380,7 +2380,7 @@ extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 extern boolean XTL::IsValidCurrentShader(void)
 {
 	// Dxbx addition : There's no need to call
-	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentVertexShader :
+	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentXboxVertexShaderHandle :
 	return VshHandleIsValidShader(g_CurrentXboxVertexShaderHandle);
 }
 
