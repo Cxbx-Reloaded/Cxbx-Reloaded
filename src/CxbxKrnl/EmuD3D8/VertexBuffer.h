@@ -59,13 +59,14 @@ typedef struct _CxbxDrawContext
 }
 CxbxDrawContext;
 
-typedef struct _PATCHEDSTREAM
+typedef struct _CxbxPatchedStream
 {
-    XTL::X_D3DVertexBuffer *pOriginalStream;
-    XTL::IDirect3DVertexBuffer *pPatchedStream;
-    UINT                    uiOrigStride;
-    UINT                    uiNewStride;
-} PATCHEDSTREAM;
+    UINT                    uiCachedXboxVertexStride;
+    UINT                    uiCachedHostVertexStride;
+    bool                    bCacheIsStreamZeroDrawUP;
+    void                   *pCachedHostVertexStreamZeroData;
+    XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer;
+} CxbxPatchedStream;
 
 class CxbxVertexBufferConverter
 {
@@ -73,15 +74,14 @@ class CxbxVertexBufferConverter
         CxbxVertexBufferConverter();
        ~CxbxVertexBufferConverter();
 
-        bool Apply(CxbxDrawContext *pPatchDesc, bool *pbFatalError);
+        void Apply(CxbxDrawContext *pPatchDesc);
     private:
 
         UINT m_uiNbrStreams;
-        PATCHEDSTREAM m_pStreams[MAX_NBR_STREAMS];
+        CxbxPatchedStream m_PatchedStreams[MAX_NBR_STREAMS];
 
         PVOID m_pNewVertexStreamZeroData;
 
-        bool m_bPatched;
         bool m_bAllocatedStreamZeroData;
 
         CxbxVertexShaderDynamicPatch *m_pVertexShaderDynamicPatch;
@@ -90,10 +90,7 @@ class CxbxVertexBufferConverter
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
 
         // Patches the types of the stream
-        bool PatchStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
-
-        // Normalize texture coordinates in FVF stream if needed
-        bool NormalizeTexCoords(CxbxDrawContext *pPatchDesc, UINT uiStream);
+        bool ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation

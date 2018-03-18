@@ -7059,7 +7059,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 
 	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
 	CxbxVertexBufferConverter VertexBufferConverter;
-	VertexBufferConverter.Apply(&DrawContext, NULL);
+	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		UINT uiStartIndex = 0;
 		int iNumVertices = (int)DrawContext.dwVertexCount;
@@ -7141,7 +7141,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
 
 	CxbxVertexBufferConverter VertexBufferConverter;
-	VertexBufferConverter.Apply(&DrawContext, NULL);
+	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
@@ -7319,7 +7319,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		}
 
 		CxbxVertexBufferConverter VertexBufferConverter;
-		VertexBufferConverter.Apply(&DrawContext, NULL);
+		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
@@ -7529,7 +7529,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
 		CxbxVertexBufferConverter VertexBufferConverter;
-		VertexBufferConverter.Apply(&DrawContext, NULL);
+		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
 			// Those 4 vertices are just enough for two triangles (a fan starts with 3 vertices for 1 triangle,

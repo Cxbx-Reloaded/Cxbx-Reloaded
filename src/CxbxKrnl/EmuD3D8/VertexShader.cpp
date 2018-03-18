@@ -1604,30 +1604,30 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 // * Vertex shader declaration recompiler
 // ****************************************************************************
 
-typedef struct _VSH_TYPE_PATCH_DATA
+typedef struct _CxbxVertexShaderTypePatchData
 {
     DWORD NbrTypes;
     UINT  Types[256];
 	UINT  NewSizes[256];
 }
-VSH_TYPE_PATCH_DATA;
+CxbxVertexShaderTypePatchData;
 
-typedef struct _VSH_STREAM_PATCH_DATA
+typedef struct _CxbxVertexStreamPatchData
 {
     DWORD                     NbrStreams;
     XTL::CxbxStreamDynamicPatch pStreamPatches[256];
 }
-VSH_STREAM_PATCH_DATA;
+CxbxVertexStreamPatchData;
 
-typedef struct _VSH_PATCH_DATA
+typedef struct _CxbxVertexShaderPatchData
 {
     boolean              NeedPatching;
 	WORD                 CurrentStreamNumber;
 	DWORD                ConvertedStride;
-    VSH_TYPE_PATCH_DATA  TypePatchData;
-    VSH_STREAM_PATCH_DATA StreamPatchData;
+    CxbxVertexShaderTypePatchData  TypePatchData;
+    CxbxVertexStreamPatchData StreamPatchData;
 }
-VSH_PATCH_DATA;
+CxbxVertexShaderPatchData;
 
 // VERTEX SHADER
 #define DEF_VSH_END 0xFFFFFFFF
@@ -1861,7 +1861,7 @@ static void VshConverToken_TESSELATOR(DWORD   *pToken,
     }
 }
 
-static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
+static boolean VshAddStreamPatch(CxbxVertexShaderPatchData *pPatchData)
 {
     int CurrentStream = pPatchData->CurrentStreamNumber;
 
@@ -1875,8 +1875,8 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
         pStreamPatch->NeedPatch = pPatchData->NeedPatching;
 		// 2010/01/12 - revel8n - fixed allocated data size and type
-        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
-        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
+        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //CxbxVertexShaderTypePatchData));
+        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //CxbxVertexShaderTypePatchData));
         // 2010/12/06 - PatrickvL - do the same for new sizes :
 		pStreamPatch->pSizes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT));
 		memcpy(pStreamPatch->pSizes, pPatchData->TypePatchData.NewSizes, pPatchData->TypePatchData.NbrTypes * sizeof(UINT));
@@ -1887,7 +1887,7 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
 }
 
 static void VshConvertToken_STREAM(DWORD          *pToken,
-                                   VSH_PATCH_DATA *pPatchData)
+                                   CxbxVertexShaderPatchData *pPatchData)
 {
     // D3DVSD_STREAM_TESS
     if(*pToken & D3DVSD_STREAMTESSMASK)
@@ -1942,7 +1942,7 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(DWORD *pToken)
 
 static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
                                            boolean         IsFixedFunction,
-                                           VSH_PATCH_DATA *pPatchData)
+                                           CxbxVertexShaderPatchData *pPatchData)
 {
     using namespace XTL;
 
@@ -2103,7 +2103,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 
 static void VshConvertToken_STREAMDATA(DWORD          *pToken,
                                        boolean         IsFixedFunction,
-                                       VSH_PATCH_DATA *pPatchData)
+                                       CxbxVertexShaderPatchData *pPatchData)
 {
     using namespace XTL;
 	if (*pToken & D3DVSD_MASK_SKIP)
@@ -2123,7 +2123,7 @@ static void VshConvertToken_STREAMDATA(DWORD          *pToken,
 
 static DWORD VshRecompileToken(DWORD          *pToken,
                                boolean         IsFixedFunction,
-                               VSH_PATCH_DATA *pPatchData)
+                               CxbxVertexShaderPatchData *pPatchData)
 {
     using namespace XTL;
 
@@ -2188,7 +2188,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     *pDeclarationSize = DeclarationSize;
 
     // TODO: Put these in one struct
-    VSH_PATCH_DATA       PatchData = { 0 };
+    CxbxVertexShaderPatchData       PatchData = { 0 };
 
     DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
