@@ -321,7 +321,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
-			pHostVertexData = (uint08*)g_VMManager.Allocate(dwHostVertexDataSize);
+			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
 			if (pHostVertexData == nullptr) {
 				CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
 			}
@@ -629,9 +629,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 	pPatchedStream->bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != NULL);
 	if (pPatchedStream->bCacheIsStreamZeroDrawUP) {
 		pPatchedStream->pCachedHostVertexStreamZeroData = pHostVertexData;
-#if 0 // new
 		pPatchedStream->bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
-#endif
 	}
 	else {
 		// assert(pNewHostVertexBuffer != nullptr);

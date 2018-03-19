@@ -65,6 +65,7 @@ typedef struct _CxbxPatchedStream
     UINT                    uiCachedHostVertexStride;
     bool                    bCacheIsStreamZeroDrawUP;
     void                   *pCachedHostVertexStreamZeroData;
+    bool                    bCachedHostVertexStreamZeroDataIsAllocated;
     XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer;
 } CxbxPatchedStream;
 
