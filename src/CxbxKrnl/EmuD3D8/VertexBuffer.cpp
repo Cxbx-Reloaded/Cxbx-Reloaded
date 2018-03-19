@@ -301,7 +301,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 	UINT uiXboxVertexStride;
 	UINT uiXboxVertexDataSize;
 	UINT uiVertexCount;
-	UINT uiHostVertexStride;
+	UINT uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
 	DWORD dwHostVertexDataSize;
 	uint08 *pHostVertexData;
 	IDirect3DVertexBuffer8 *pNewHostVertexBuffer = nullptr;
@@ -318,7 +318,6 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 		uiXboxVertexDataSize = pDrawContext->uiSize;
 		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
 
-		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
 			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
@@ -348,14 +347,11 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 
         // Set a new (exact) vertex count
 		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
-
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
-		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
-		//pStreamDynamicPatch->ConvertedStride = std::max((uint32_t)pStreamDynamicPatch->ConvertedStride, (uint32_t)uiXboxVertexStride); // ??
-		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 
+		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(pNewHostVertexBuffer->Lock(0, 0, &pHostVertexData, D3DLOCK_DISCARD))) {

@@ -46,8 +46,8 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
     // The current vertex shader, used to identify the streams
     IN     DWORD                 hVertexShader;
-	IN	   PWORD				 pIndexData = nullptr;
-	IN	   DWORD				 dwIndexBase = 0;
+	IN	   PWORD				 pIndexData;
+	IN	   DWORD				 dwIndexBase;
 	IN	   size_t				 uiSize;
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
