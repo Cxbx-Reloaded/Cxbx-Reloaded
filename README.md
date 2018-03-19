@@ -12,7 +12,7 @@ Cxbx-Reloaded is early in development, however it is progressing almost daily: W
 ## System Requirements
 ### Minimum
   * OS: Windows 7 64-bit or newer. 32-bit installations are not supported.
-  * Video card: anything that supports Direct3D 8.
+  * Video card: anything that supports Direct3D 9.
 ### Prerequisites
   * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
