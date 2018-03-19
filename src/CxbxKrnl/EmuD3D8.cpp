@@ -7381,41 +7381,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 #pragma warning(default:4244)
 
 // ******************************************************************
-// * patch: D3DDevice_GetTexture2
-// ******************************************************************
-XTL::X_D3DBaseTexture* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(Stage);
-	
-	// Get the active texture from this stage
-	X_D3DBaseTexture* pRet = EmuD3DActiveTexture[Stage];
-
-	if (pRet) {
-		pRet->Common++; // EMUPATCH(D3DResource_AddRef)(pRet);
-	}
-
-	return pRet;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetTexture
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTexture)
-(
-	DWORD           Stage,
-	XTL::X_D3DBaseTexture  **pTexture
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("D3DDevice_GetTexture2");
-
-	*pTexture = EMUPATCH(D3DDevice_GetTexture2)(Stage);
-}
-
-// ******************************************************************
 // * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStateVB)( ULONG Unknown1 )
