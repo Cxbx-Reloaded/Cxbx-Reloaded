@@ -178,6 +178,16 @@ void ActivatePatchedStream
 	}
 }
 
+void ReleasePatchedStream(XTL::CxbxPatchedStream *pPatchedStream)
+{
+	if (pPatchedStream->bCachedHostVertexStreamZeroDataIsAllocated) {
+		free(pPatchedStream->pCachedHostVertexStreamZeroData);
+		pPatchedStream->bCachedHostVertexStreamZeroDataIsAllocated = false;
+	}
+	pPatchedStream->pCachedHostVertexStreamZeroData = nullptr;
+	pPatchedStream->pCachedHostVertexBuffer = nullptr; // g_HostVertexBuffers owns these nowadays
+}
+
 XTL::CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 {
     this->m_uiNbrStreams = 0;
@@ -189,6 +199,9 @@ XTL::CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 
 XTL::CxbxVertexBufferConverter::~CxbxVertexBufferConverter()
 {
+	for (int i = 0; i < MAX_NBR_STREAMS; i++) {
+		ReleasePatchedStream(&m_PatchedStreams[i]);
+	}
 }
 
 size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData, DWORD dwOffset, DWORD dwIndexBase)
@@ -301,7 +314,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 	UINT uiXboxVertexStride;
 	UINT uiXboxVertexDataSize;
 	UINT uiVertexCount;
-	UINT uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
+	UINT uiHostVertexStride;
 	DWORD dwHostVertexDataSize;
 	uint08 *pHostVertexData;
 	IDirect3DVertexBuffer8 *pNewHostVertexBuffer = nullptr;
@@ -318,6 +331,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 		uiXboxVertexDataSize = pDrawContext->uiSize;
 		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
 
+		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
 			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
@@ -351,6 +365,7 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
 
+		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->ConvertedStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
