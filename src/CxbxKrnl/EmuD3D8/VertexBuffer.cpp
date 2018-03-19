@@ -216,14 +216,14 @@ size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData
 
 int CountActiveD3DStreams()
 {
-	int lastStreamIndex = -1;
+	int lastStreamIndex = 0;
 	for (int i = 0; i < 16; i++) {
 		if (g_D3DStreams[i] != nullptr) {
-			lastStreamIndex = i;
+			lastStreamIndex = i + 1;
 		}
 	}
 
-	return lastStreamIndex + 1;
+	return lastStreamIndex;
 }
 
 UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
@@ -631,13 +631,13 @@ bool XTL::CxbxVertexBufferConverter::ConvertStream
 		pPatchedStream->pCachedHostVertexStreamZeroData = pHostVertexData;
 #if 0 // new
 		pPatchedStream->bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
+#endif
 	}
 	else {
-		assert(pNewHostVertexBuffer != nullptr);
+		// assert(pNewHostVertexBuffer != nullptr);
 
 		pNewHostVertexBuffer->Unlock();
 		pPatchedStream->pCachedHostVertexBuffer = pNewHostVertexBuffer;
-#endif
 	}
 
 	ActivatePatchedStream(pDrawContext, uiStream, pPatchedStream, 
