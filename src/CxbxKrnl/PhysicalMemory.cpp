@@ -205,7 +205,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 	while (ListEntry != &FreeList)
 	{
-		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size >= NumberOfPages)  // not enough space
+		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size >= NumberOfPages) // search for a block with enough pages
 		{
 			PfnStart = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start;
 			PfnCount = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
@@ -233,7 +233,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 			{
 				IntersectionEnd = ((IntersectionEnd + 1) & PfnAlignmentMask) - PfnAlignmentSubtraction;
 
-				if (IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
+				if (IntersectionEnd < IntersectionStart || IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
 				{
 					// This free block doesn't honor the alignment requested, so this is another invalid block
 
@@ -258,12 +258,6 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
-
-					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
-						{ m_DebuggerPagesAvailable -= NumberOfPages; }
-					else { m_PhysicalPagesAvailable -= NumberOfPages; }
-					*result = PfnStart + PfnCount;
-					return true;
 				}
 				else
 				{
@@ -284,12 +278,6 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
-
-					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
-						{ m_DebuggerPagesAvailable -= NumberOfPages; }
-					else { m_PhysicalPagesAvailable -= NumberOfPages; }
-					*result = PfnStart + PfnCount;
-					return true;
 				}
 			}
 			else
@@ -302,12 +290,6 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 					PfnCount -= NumberOfPages;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
-
-					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
-						{ m_DebuggerPagesAvailable -= NumberOfPages; }
-					else { m_PhysicalPagesAvailable -= NumberOfPages; }
-					*result = PfnStart + PfnCount;
-					return true;
 				}
 				else
 				{
@@ -321,14 +303,18 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
-
-					if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE))
-						{ m_DebuggerPagesAvailable -= NumberOfPages; }
-					else { m_PhysicalPagesAvailable -= NumberOfPages; }
-					*result = PfnStart + PfnCount;
-					return true;
 				}
 			}
+			if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+				m_DebuggerPagesAvailable -= NumberOfPages;
+				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
+			}
+			else {
+				m_PhysicalPagesAvailable -= NumberOfPages;
+				assert(m_PhysicalPagesAvailable <= m_HighestPage + 1);
+			}
+			*result = PfnStart + PfnCount;
+			return true;
 		}
 		InvalidBlock:
 		ListEntry = ListEntry->Blink;
@@ -354,7 +340,18 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 			LIST_ENTRY_INITIALIZE(&block->ListEntry);
 			LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
+			// Ensure that we are not freeing a part of the previous block
+			if (ListEntry != &FreeList) {
+				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start +
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size - 1 < start);
+			}
+
 			ListEntry = ListEntry->Flink; // move to the new created block
+
+			// Ensure that we are not freeing a part of the next block
+			if (ListEntry->Flink != &FreeList) {
+				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start > end);
+			}
 
 			// Check if merging is possible
 			if (ListEntry->Flink != &FreeList &&
@@ -377,8 +374,15 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				LIST_ENTRY_REMOVE(ListEntry);
 				delete block;
 			}
-			if (g_bIsDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) { m_DebuggerPagesAvailable += size; }
-			else { m_PhysicalPagesAvailable += size; }
+
+			if (g_bIsDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+				m_DebuggerPagesAvailable += size;
+				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
+			}
+			else {
+				m_PhysicalPagesAvailable += size;
+				assert(m_PhysicalPagesAvailable <= m_HighestPage + 1);
+			}
 
 			return;
 		}
@@ -672,17 +676,17 @@ DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
 }
 
 
-bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
+bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 {
 	PFN pfn;
 	PMMPTE pPde;
 	MMPTE TempPte;
-	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
+	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
 	PFN_COUNT PTtoCommit = 0;
 	PageType BusyType = SystemPageTableType;
 	VAddr StartingAddr = addr;
 
-	assert(PteNumber);
+	assert(Size);
 	assert(addr);
 
 	for (unsigned int i = 0; i < PdeNumber; ++i)
@@ -691,7 +695,7 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 		{
 			PTtoCommit++;
 		}
-		StartingAddr += (4 * ONE_MB);
+		StartingAddr += PAGE_SIZE_LARGE;
 	}
 
 	if (!PTtoCommit)
@@ -727,20 +731,20 @@ bool PhysicalMemory::AllocatePT(PFN_COUNT PteNumber, VAddr addr)
 			WRITE_PTE(pPde, TempPte);
 			WritePfn(pfn, pfn, pPde, BusyType);
 		}
-		StartingAddr += (4 * ONE_MB);
+		StartingAddr += PAGE_SIZE_LARGE;
 	}
 
 	return true;
 }
 
-void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
+void PhysicalMemory::DeallocatePT(size_t Size, VAddr addr)
 {
 	PMMPTE pPde;
 	PXBOX_PFN PTpfn;
-	PFN_COUNT PdeNumber = ROUND_UP(PteNumber, PTE_PER_PAGE) / PTE_PER_PAGE;
+	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
 	VAddr StartingAddr = addr;
 
-	assert(PteNumber);
+	assert(Size);
 	assert(addr);
 
 	for (unsigned int i = 0; i < PdeNumber; ++i)
@@ -754,7 +758,7 @@ void PhysicalMemory::DeallocatePT(PFN_COUNT PteNumber, VAddr addr)
 			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn->PTPageFrame.BusyType, true);
 			WRITE_ZERO_PTE(pPde);
 		}
-		StartingAddr += (4 * ONE_MB);
+		StartingAddr += PAGE_SIZE_LARGE;
 	}
 }
 

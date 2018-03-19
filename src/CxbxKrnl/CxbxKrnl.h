@@ -66,13 +66,13 @@ extern "C" {
 // Miscellaneous memory variables
 #define KERNEL_STACK_SIZE           12288 // 0x03000, needed by PsCreateSystemThreadEx, however the current implementation doesn't use it
 #define KERNEL_SIZE                 sizeof(DUMMY_KERNEL)
-#define PAGE_SHIFT                  12
+#define PAGE_SHIFT                  12 // 2^12 = 4K
+#define PAGE_SHIFT_LARGE            22 // 2^22 = 4M
 // Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size. Large pages are 4 MiB instead
 // NOTE: PAGE_SIZE is also defined in xfile.h (oxdk) and linux_wrapper.h (oxdk)
 #define PAGE_SIZE                   (1 << PAGE_SHIFT)
 #define PAGE_SIZE_LARGE             0x400000
 #define PAGE_MASK                   (PAGE_SIZE - 1)
-#define MAX_NUM_OF_PAGES            1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
 #define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to the system RAM physical window 0x80000000 - 0x8FFFFFFF
 
 /*! memory size per system */

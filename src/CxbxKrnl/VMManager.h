@@ -113,6 +113,7 @@ class VMManager : public PhysicalMemory
 			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
 			VirtualFree((void*)PAGE_TABLES_BASE, 0, MEM_RELEASE);
 			CloseHandle(m_hContiguousFile);
+			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
 		void Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRestrict64MiB);
@@ -145,7 +146,7 @@ class VMManager : public PhysicalMemory
 		// retrieves the protection status of an address
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
-		size_t QuerySize(VAddr addr);
+		size_t QuerySize(VAddr addr, bool bCxbxCaller = true);
 		// MmClaimGpuInstanceMemory implementation
 		VAddr ClaimGpuMemory(size_t Size, size_t* BytesToSkip);
 		// make contiguous memory persist across a quick reboot
@@ -196,7 +197,7 @@ class VMManager : public PhysicalMemory
 		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
-		void DestructVMA(VMAIter it, MemoryRegionType Type, bool bSkipDestruction = false);
+		void DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool bSkipDestruction = false);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// removes a vma block from the mapped memory

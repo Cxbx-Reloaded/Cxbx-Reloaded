@@ -174,7 +174,6 @@ typedef enum _PageType
 #define IsPteOnPdeBoundary(Pte) (((ULONG_PTR)(Pte) & (PAGE_SIZE - 1)) == 0)
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
-#define PTE_PER_PAGE 1024
 // On real hardware, enabling only the cache disable bit would result in an effective caching type of USWC
 // (uncacheable speculative write combining), so we set both to achieve it
 #define DISABLE_CACHING(Pte) ((Pte).Hardware.CacheDisable = 1); ((Pte).Hardware.WriteThrough = 1)
@@ -197,6 +196,7 @@ typedef enum _PageType
 #define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 #define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
+#define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)) + (Size) + (PAGE_SIZE_LARGE - 1)) >> PAGE_SHIFT_LARGE))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
 #define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)))
 
@@ -221,7 +221,7 @@ class PhysicalMemory
 		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// amount of free physical pages available for non-debugger usage
 		PFN_COUNT m_PhysicalPagesAvailable = X64M_PHYSICAL_PAGE;
-		// amount of free physical pages available for usage by the debugger
+		// amount of free physical pages available for usage by the debugger (devkit only)
 		PFN_COUNT m_DebuggerPagesAvailable = 0;
 		// array containing the number of pages in use per type
 		PFN_COUNT m_PagesByUsage[COUNTtype] = { 0 };
@@ -264,9 +264,9 @@ class PhysicalMemory
 		// add execute rights if the permission mask doesn't include it
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)
-		bool AllocatePT(PFN_COUNT PteNumber, VAddr addr);
+		bool AllocatePT(size_t Size, VAddr addr);
 		// deallocate page tables (if possible)
-		void DeallocatePT(PFN_COUNT PteNumber, VAddr addr);
+		void DeallocatePT(size_t Size, VAddr addr);
 		// checks if enough free pages are available for the allocation (doesn't account for fragmentation)
 		bool IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion);
 };

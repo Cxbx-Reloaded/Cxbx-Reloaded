@@ -229,7 +229,7 @@ extern thread_local std::string _logPrefix;
 
 // LOG_FUNC_RESULT logs the function return result
 #define LOG_FUNC_RESULT(r) \
-	std::cout << _logFuncPrefix << " returns " << r << "\n";
+	std::cout << _logFuncPrefix << " returns " << _log_sanitize(r) << "\n";
 
 // LOG_FUNC_RESULT_TYPE logs the function return result using the overloaded << operator of the given type
 #define LOG_FUNC_RESULT_TYPE(type, r) \

@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	LOG_FUNC_ONE_ARG(PoolBlock);
 
 	// Not strictly correct, but it will do for now
-	ULONG ret = MmQueryAllocationSize(PoolBlock);
+	ULONG ret = g_VMManager.QuerySize((VAddr)PoolBlock);
 
 	RETURN(ret);
 }
