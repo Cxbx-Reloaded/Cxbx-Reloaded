@@ -64,11 +64,6 @@ namespace NtDll
 #pragma warning(default:4005)
 #include <assert.h>
 
-#define MEM_KNOWN_FLAGS (MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN | MEM_RESET | MEM_NOZERO)
-
-#define MM_HIGHEST_USER_ADDRESS     0x7FFEFFFF
-#define X64K                        ((ULONG)64*1024)
-#define MM_HIGHEST_VAD_ADDRESS      (MM_HIGHEST_USER_ADDRESS - X64K)
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -88,75 +83,10 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
 		LOG_FUNC_ARG(Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	// BaseAddress may be unassigned
-	assert(AllocationSize != xbnullptr); // AllocationSize must be assigned
-
-	NTSTATUS ret = 0;
-
-	ULONG_PTR RequestedBaseAddress = (BaseAddress) ? (ULONG_PTR)*BaseAddress : 0;
-	ULONG RequestedAllocationSize = *AllocationSize;
-
-	DbgPrintf("KNRL: NtAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", RequestedBaseAddress, RequestedBaseAddress + RequestedAllocationSize);
-
-	// Don't allow base address to exceed highest virtual address
-	if (RequestedBaseAddress > MM_HIGHEST_VAD_ADDRESS)
-		ret = STATUS_INVALID_PARAMETER;
-
-	// Limit number of zero bits upto 20
-	if (ZeroBits > 21)
-		ret = STATUS_INVALID_PARAMETER;
-
-	// No empty allocation allowed
-	if (RequestedAllocationSize == 0)
-		ret = STATUS_INVALID_PARAMETER;
-
-	// Allocation should fit in remaining address range
-	if (RequestedBaseAddress > 0)
-		if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - RequestedBaseAddress + 1) < RequestedAllocationSize)
-			ret = STATUS_INVALID_PARAMETER;
-
-	// Only known flags are allowed
-	if ((AllocationType & ~MEM_KNOWN_FLAGS) != 0)
-		ret = STATUS_INVALID_PARAMETER;
-
-	// No other flags allowed in combination with MEM_RESET
-	if (AllocationType & MEM_RESET)
-	{
-		if (AllocationType != MEM_RESET)
-			ret = STATUS_INVALID_PARAMETER;
-	}
-	else
-		// At least MEM_RESET, MEM_COMMIT or MEM_RESERVE must be set
-		if ((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == 0)
-			ret = STATUS_INVALID_PARAMETER;
-
-	if (ret == 0)
-	{
-		ret = g_VMManager.XbAllocateVirtualMemory(
-			(VAddr*)&RequestedBaseAddress,
-			ZeroBits,
-			(size_t*)&RequestedAllocationSize,
-			AllocationType,
-			Protect);
-
-		if (NT_SUCCESS(ret))
-		{
-			ULONG_PTR ResultingBaseAddress = RequestedBaseAddress;
-			ULONG ResultingAllocationSize = RequestedAllocationSize;
-
-			DbgPrintf("KNRL: NtAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", ResultingBaseAddress, ResultingBaseAddress + ResultingAllocationSize - 1);
-
-			if (BaseAddress)
-				*BaseAddress = (PVOID*)ResultingBaseAddress;
-
-			*AllocationSize = RequestedAllocationSize;
-		}
-		else
-			if (ret == STATUS_INVALID_PARAMETER_5) // = 0xC00000F3
-				EmuWarning("Invalid Param!");
-	}
+	NTSTATUS ret = g_VMManager.XbAllocateVirtualMemory((VAddr*)BaseAddress, ZeroBits, (size_t*)AllocationSize,
+		AllocationType, Protect);
 
 	RETURN(ret);
 }
@@ -390,6 +320,9 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 		0);
 }
 
+// ******************************************************************
+// * 0x00BF - NtCreateIoCompletion()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(191) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
 (
 	OUT PHANDLE IoCompletionHandle,
@@ -824,19 +757,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_INVALID_PARAMETER;
-
-	if (BaseAddress) { // Must be assigned
-		// FreeSize may be unassigned
-		ULONG RegionSize = (FreeSize) ? *FreeSize : 0;
-
-		ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)&RegionSize, FreeType);
-
-		if (SUCCEEDED(ret)) {
-			if (FreeSize != xbnullptr)
-				*FreeSize = RegionSize;
-		}
-	}
+	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)FreeSize, FreeType);
 
 	RETURN(ret);
 }

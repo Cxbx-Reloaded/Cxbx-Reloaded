@@ -74,7 +74,6 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
 	m_AllocationGranularity = si.dwAllocationGranularity;
-	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 	m_hContiguousFile = memory_view;
 	m_hPTFile = pagetables_view;
 
@@ -88,17 +87,16 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 	if (g_bIsChihiro)
 	{
 		m_MaxContiguousPfn = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
-		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
-		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
+		m_PhysicalPagesAvailable = CHIHIRO_MEMORY_SIZE >> PAGE_SHIFT;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 		m_NV2AInstancePage = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 	}
 	else if (g_bIsDebug)
 	{
-		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_DebuggerPagesAvailable = X64M_PHYSICAL_PAGE;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
+		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 
 		// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
 		// will still use only the lower 64 MiB and the same is true for the debugger pages, meaning they will only
@@ -495,7 +493,7 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 {
 	Lock();
 
-	memory_statistics->TotalPhysicalPages = g_SystemMaxMemory >> PAGE_SHIFT;
+	memory_statistics->TotalPhysicalPages = g_bIsRetail ? XBOX_MEMORY_SIZE >> PAGE_SHIFT : CHIHIRO_MEMORY_SIZE >> PAGE_SHIFT;
 	memory_statistics->AvailablePages = g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ?
 		m_PhysicalPagesAvailable + m_DebuggerPagesAvailable : m_PhysicalPagesAvailable;
 	memory_statistics->VirtualMemoryBytesCommitted = (m_PagesByUsage[VirtualMemoryType] +
@@ -1059,10 +1057,6 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	if (Paddr >= XBOX_WRITE_COMBINED_BASE /*&& Paddr + Size <= XBOX_UNCACHED_END*/)
 	{
 		// Return physical address as virtual (accesses will go through EmuException)
-		// ergo720: actually, at the moment CxbxReserveNV2AMemory reserves only the region FD000000 - FE000000 but the
-		// entire WC - UC region ending at FFBFFFFF is not. This means that is theoretically possible that the supplied
-		// Paddr overlaps with some host allocations here. In practice, I don't expect to find them this high in
-		// memory though
 
 		RETURN(Paddr);
 	}
@@ -1215,26 +1209,22 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	PFN_COUNT PteNumber;
 	VMAIter it;
 	MemoryRegionType MemoryType = SystemRegion;
+	bool bGuardPageAdded = false;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
 
 	Lock();
 
+	// We cannot do the size check because the functions that call this can provide 0 as size, meaning 
+	// that we have to calculate it ourselves
 	if (BusyType == DebuggerType)
 	{
-		// ergo720: I'm not sure but MmDbgFreeMemory seems to be able to deallocate only a part of an allocation done by
-		// MmDbgAllocateMemory. This is not a problem since CarveVMARange supports freeing only a part of an allocated
-		// vma, but we won't call CheckExistenceVMA because it can fail the size and/or the address check
-
 		assert(IS_DEVKIT_ADDRESS(addr));
 		MemoryType = DevkitRegion;
-		it = GetVMAIterator(addr, MemoryType);
 	}
-	else
-	{
-		assert(IS_SYSTEM_ADDRESS(addr));
-		it = CheckExistenceVMA(addr, MemoryType, ROUND_UP_4K(Size));
-	}
+	else { assert(IS_SYSTEM_ADDRESS(addr)); }
+
+	it = GetVMAIterator(addr, MemoryType);
 
 	if (it == m_MemoryRegionArray[MemoryType].RegionMap.end() || it->second.type == FreeVma)
 	{
@@ -1242,23 +1232,19 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 		RETURN(NULL);
 	}
 
+	// Calculate the size of the original allocation
+	if (Size) { Size = ROUND_UP_4K(Size); }
+	else { Size = it->second.size; }
+
 	StartingPte = GetPteAddress(addr);
 	if (StartingPte->Hardware.Valid == 0) {
 		WritePte(StartingPte, StartingPte, *StartingPte, 0, true); // this is the guard page of the stack
 		StartingPte++;
+		Size -= PAGE_SIZE;
+		bGuardPageAdded = true;
 	}
 
-	if (BusyType == DebuggerType)
-	{
-		Size = ROUND_UP_4K(Size);
-		EndingPte = StartingPte + (Size >> PAGE_SHIFT) - 1;
-	}
-	else
-	{
-		Size = it->second.size;
-		EndingPte = StartingPte + (Size >> PAGE_SHIFT) - 1;
-	}
-
+	EndingPte = StartingPte + (Size >> PAGE_SHIFT) - 1;
 	PteNumber = EndingPte - StartingPte + 1;
 
 	if (it->second.bFragmented)
@@ -1282,11 +1268,11 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	}
 
 	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it, MemoryType, Size);
-	DeallocatePT(PteNumber << PAGE_SHIFT, addr);
+	DestructVMA(it, MemoryType, bGuardPageAdded ? Size + PAGE_SIZE : Size);
+	DeallocatePT(bGuardPageAdded ? Size + PAGE_SIZE : Size, addr);
 
 	Unlock();
-	RETURN(PteNumber);
+	RETURN(bGuardPageAdded ? ++PteNumber : PteNumber);
 }
 
 void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
@@ -1310,7 +1296,7 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 
 		Lock();
 
-		it = CheckExistenceVMA(addr, SystemRegion, PAGES_SPANNED(addr, Size));
+		it = CheckExistenceVMA(addr, SystemRegion, PAGES_SPANNED(addr, Size) << PAGE_SHIFT);
 
 		if (it == m_MemoryRegionArray[SystemRegion].RegionMap.end() || it->second.type == FreeVma)
 		{

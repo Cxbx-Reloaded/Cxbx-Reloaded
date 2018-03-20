@@ -125,6 +125,9 @@ extern bool g_bIsChihiro;
 /*! indicates emulation of a Debug xbe executable */
 extern bool g_bIsDebug;
 
+/*! indicates emulation of a Retail xbe executable*/
+extern bool g_bIsRetail;
+
 /*! indicates ability to save on exit (needed for settings reset) */
 extern bool g_SaveOnExit;
 

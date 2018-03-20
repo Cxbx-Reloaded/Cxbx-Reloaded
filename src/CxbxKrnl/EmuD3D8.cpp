@@ -653,7 +653,7 @@ inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
 }
 
 // This can be used to determine if resource Data adddresses
-// need the MM_SYSTEM_PHYSICAL_MAP bit set or cleared
+// need the PHYSICAL_MAP_BASE  bit set or cleared
 inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 {
 	switch (ResourceType) {
@@ -729,7 +729,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 
 	DWORD dwCommonType = GetXboxCommonResourceType(pXboxResource);
 	if (IsResourceTypeGPUReadable(dwCommonType))
-		pData |= MM_SYSTEM_PHYSICAL_MAP;
+		pData |= PHYSICAL_MAP_BASE;
 
 	return (uint08*)pData;
 }
@@ -3304,7 +3304,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     pD3DVertexShader->Handle = (DWORD)pVertexShader;
 
-	*pHandle = (DWORD)pD3DVertexShader; // DON'T collide with MM_SYSTEM_PHYSICAL_MAP (see VshHandleIsFVF and VshHandleIsVertexShader)
+	*pHandle = (DWORD)pD3DVertexShader; // DON'T collide with PHYSICAL_MAP_BASE (see VshHandleIsFVF and VshHandleIsVertexShader)
 
     if(FAILED(hRet))
     {
@@ -4189,7 +4189,7 @@ VOID WINAPI CreateHostResource
 
             // create push buffer
             {
-                DWORD dwSize = g_VMManager.QuerySize((VAddr)pThis->Data | MM_SYSTEM_PHYSICAL_MAP);
+                DWORD dwSize = g_VMManager.QuerySize((VAddr)pThis->Data | PHYSICAL_MAP_BASE);
 
                 if(dwSize == 0)
                 {

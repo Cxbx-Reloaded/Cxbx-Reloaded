@@ -193,12 +193,8 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 		LOG_FUNC_ARG(StackLimit)
 	LOG_FUNC_END;
 
-	size_t ActualSize = ((VAddr)StackBase - (VAddr)StackLimit) + PAGE_SIZE;
-
-	VAddr StackBottom = (VAddr)StackBase - ActualSize;
-
-	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBottom) ? StackType : DebuggerType,
-		StackBottom, ActualSize);
+	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBase) ? StackType : DebuggerType,
+		(VAddr)StackBase, (VAddr)StackBase - (VAddr)StackLimit + PAGE_SIZE);
 }
 
 // ******************************************************************

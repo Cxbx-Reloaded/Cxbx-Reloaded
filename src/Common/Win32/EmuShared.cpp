@@ -136,9 +136,8 @@ void EmuShared::Cleanup()
 EmuShared::EmuShared()
 {
 	Load();
-	m_bKeQuickReboot = false;
 	m_bDebugging = false;
-	m_LaunchDataPAddress = NULL;
+	m_bMultiXbeFlag = false;
 }
 
 // ******************************************************************

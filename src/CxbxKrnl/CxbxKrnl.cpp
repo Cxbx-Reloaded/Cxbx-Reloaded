@@ -103,8 +103,6 @@ bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
-// Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
-size_t g_SystemMaxMemory = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
 bool g_bIsWine = false;
@@ -1298,11 +1296,7 @@ __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
             freopen("nul", "w", stdout);
     }
 
-    if(CxbxKrnl_hEmuParent != NULL)
-        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-	EmuShared::Cleanup();
-    TerminateProcess(g_CurrentProcessHandle, 0);
+	CxbxKrnlShutDown();
 }
 
 void CxbxKrnlRegisterThread(HANDLE hThread)
@@ -1418,6 +1412,10 @@ void CxbxKrnlResume()
 
 void CxbxKrnlShutDown()
 {
+	// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
+	int BootFlags = 0;
+	g_EmuShared->SetBootFlags(&BootFlags);
+
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
@@ -1430,11 +1428,6 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	ULONG Type;
 	xboxkrnl::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
-
-	int BootFlags;
-	g_EmuShared->GetBootFlags(&BootFlags);
-	BootFlags &= ~BOOT_FATAL_ERROR;         // clear the fatal error flag to avoid looping here endlessly
-	g_EmuShared->SetBootFlags(&BootFlags);
 
 	xboxkrnl::NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
 

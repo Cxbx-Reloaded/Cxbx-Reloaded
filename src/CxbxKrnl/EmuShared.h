@@ -54,8 +54,6 @@ enum {
 	LLE_JIT = 1 << 2,
 };
 
-typedef UINT_PTR PAddr;
-
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
@@ -140,22 +138,16 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
-		// * Kernel quick reboot flag Accessors
+		// * MultiXbe flag Accessors
 		// ******************************************************************
-		void GetQuickRebootFlag(bool *value) { Lock(); *value = m_bKeQuickReboot; Unlock(); }
-		void SetQuickRebootFlag(bool *value) { Lock(); m_bKeQuickReboot = *value; Unlock(); }
+		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbeFlag; Unlock(); }
+		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbeFlag = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
 		void SetDebuggingFlag(bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
-
-		// ******************************************************************
-		// * Launch data physical address Accessors
-		// ******************************************************************
-		void GetLaunchDataPAddress(PAddr *value) { Lock(); *value = m_LaunchDataPAddress; Unlock(); }
-		void SetLaunchDataPAddress(PAddr *value) { Lock(); m_LaunchDataPAddress = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox LED values Accessors
@@ -201,9 +193,8 @@ class EmuShared : public Mutex
 		int			 m_UncapFramerate;
 		float		 m_MSpF;
 		float        m_FPS;
-		bool		 m_bKeQuickReboot;
+		bool		 m_bMultiXbeFlag;
 		bool		 m_bDebugging;
-		PAddr		 m_LaunchDataPAddress;
 		int          m_LedSequence[4];
 };
 
