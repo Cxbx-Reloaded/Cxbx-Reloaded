@@ -431,7 +431,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					break;
 				}
 				case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
-					LOG_TEST_CASE("X_D3DVSDT_NORMSHORT1"); // UNTESTED - Need test-case!
+					// Test-cases : Halo - Combat Evolved
 
 					((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
 					//((FLOAT *)pNewDataPos)[1] = 0.0f; // Would be needed for FLOAT2
@@ -440,7 +440,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 #if !DXBX_USE_D3D9 // No need for patching in D3D9
 				case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
-					LOG_TEST_CASE("X_D3DVSDT_NORMSHORT2"); // UNTESTED - Need test-case!
+					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
 					((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
 					pOrigVertex += 2 * sizeof(SHORT);
@@ -448,7 +448,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 #endif
 				case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
-					LOG_TEST_CASE("X_D3DVSDT_NORMSHORT3"); // UNTESTED - Need test-case!
+					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
 					((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
 					((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
 					((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
