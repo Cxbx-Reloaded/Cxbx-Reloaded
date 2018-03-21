@@ -6949,13 +6949,13 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 			pQuadToTriangleD3DIndexBuffer = nullptr;
 		}
 
-		hRet = g_pD3DDevice8->CreateIndexBuffer(
+		hRet = g_pD3DDevice->CreateIndexBuffer(
 			uiIndexBufferSize,
 			D3DUSAGE_WRITEONLY,
 			XTL::D3DFMT_INDEX16,
 			XTL::D3DPOOL_MANAGED,
 			&pQuadToTriangleD3DIndexBuffer);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
@@ -6963,7 +6963,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		XTL::INDEX16* pIndexBufferData = nullptr;
 		hRet = pQuadToTriangleD3DIndexBuffer->Lock(0, uiIndexBufferSize, (BYTE **)&pIndexBufferData, D3DLOCK_DISCARD);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (pIndexBufferData == nullptr)
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
@@ -6974,8 +6974,8 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 	}
 
 	// Activate the new native index buffer :
-	hRet = g_pD3DDevice8->SetIndices(pQuadToTriangleD3DIndexBuffer, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
+	hRet = g_pD3DDevice->SetIndices(pQuadToTriangleD3DIndexBuffer, 0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
@@ -6991,7 +6991,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 
 	const UINT uiIndexBufferSize = sizeof(XTL::INDEX16) * 2; // 4 bytes needed for 2 indices
 	if (pClosingLineLoopIndexBuffer == nullptr) {
-		hRet = g_pD3DDevice8->CreateIndexBuffer(uiIndexBufferSize, D3DUSAGE_WRITEONLY, XTL::D3DFMT_INDEX16, XTL::D3DPOOL_DEFAULT, &pClosingLineLoopIndexBuffer);
+		hRet = g_pD3DDevice->CreateIndexBuffer(uiIndexBufferSize, D3DUSAGE_WRITEONLY, XTL::D3DFMT_INDEX16, XTL::D3DPOOL_DEFAULT, &pClosingLineLoopIndexBuffer);
 		if (FAILED(hRet))
 			CxbxKrnlCleanup("Unable to create pClosingLineLoopIndexBuffer for D3DPT_LINELOOP emulation");
 	}
@@ -7006,10 +7006,10 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 	hRet = pClosingLineLoopIndexBuffer->Unlock();
 	DEBUG_D3DRESULT(hRet, "pClosingLineLoopIndexBuffer->Unlock");
 
-	hRet = g_pD3DDevice8->SetIndices(pClosingLineLoopIndexBuffer, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetIndices");
+	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer, 0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
-	hRet = g_pD3DDevice8->DrawIndexedPrimitive
+	hRet = g_pD3DDevice->DrawIndexedPrimitive
 	(
 		XTL::D3DPT_LINELIST,
 		LowIndex, // minIndex
@@ -7017,7 +7017,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 		0, // startIndex
 		1 // primCount
 	);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive(CxbxDrawIndexedClosingLine)");
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(CxbxDrawIndexedClosingLine)");
 
 	g_dwPrimPerFrame++;
 }
@@ -7029,7 +7029,7 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 
 	XTL::INDEX16 CxbxClosingLineIndices[2] = { LowIndex, HighIndex };
 
-	HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitiveUP(
+	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 		XTL::D3DPT_LINELIST,
 		LowIndex, // MinVertexIndex
 		HighIndex - LowIndex + 1, // NumVertexIndices,
@@ -7039,7 +7039,7 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 		pHostVertexStreamZeroData,
 		uiHostVertexStreamZeroStride
 	);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitiveUP(CxbxDrawIndexedClosingLineUP)");
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP(CxbxDrawIndexedClosingLineUP)");
 
 	g_dwPrimPerFrame++;
 }
@@ -7082,7 +7082,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 					HighIndex = Index;
 			}
 			// Emulate a quad by drawing each as a fan of 2 triangles
-			HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitive(
+			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 				D3DPT_TRIANGLEFAN,
 //{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
 				LowIndex, // minIndex
@@ -7090,7 +7090,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 				uiStartIndex,
 				TRIANGLES_PER_QUAD // primCount = Draw 2 triangles
 			);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
 
 			uiStartIndex += VERTICES_PER_QUAD;
 			iNumVertices -= VERTICES_PER_QUAD;
@@ -7099,14 +7099,14 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 	}
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
-		HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitive(
+		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 			/* MinVertexIndex = */0,
 			/* NumVertices = */DrawContext.dwVertexCount, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 			// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 			DrawContext.dwStartVertex,
 			DrawContext.dwHostPrimitiveCount);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive");
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
@@ -7139,6 +7139,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	assert(DrawContext.dwStartVertex == 0);
 	assert(DrawContext.pXboxVertexStreamZeroData != NULL);
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
+	assert(DrawContext.dwIndexBase == 0); // No IndexBase under Draw*UP
 
 	CxbxVertexBufferConverter VertexBufferConverter;
 	VertexBufferConverter.Apply(&DrawContext);
@@ -7148,7 +7149,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
-		HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitiveUP(
+		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
 			0, // MinVertexIndex
 			DrawContext.dwVertexCount, // NumVertexIndices
@@ -7158,19 +7159,19 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
 
 		g_dwPrimPerFrame += PrimitiveCount;
 	}
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
-		HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP(
+		HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 			DrawContext.dwHostPrimitiveCount,
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitiveUP");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitiveUP");
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
@@ -7471,6 +7472,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+		DrawContext.dwIndexBase = indexBase; // Used by GetVertexBufferSize
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
 		// using X_D3DPT_TRIANGLELIST and X_D3DPT_TRIANGLESTRIP PrimitiveType
@@ -7564,7 +7566,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 					DrawContext.pHostVertexStreamZeroData,
 					DrawContext.uiHostVertexStreamZeroStride
 				);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitiveUP(X_D3DPT_QUADLIST)");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP(X_D3DPT_QUADLIST)");
 
 				pWalkIndexData += VERTICES_PER_QUAD;
 				iNumVertices -= VERTICES_PER_QUAD;
