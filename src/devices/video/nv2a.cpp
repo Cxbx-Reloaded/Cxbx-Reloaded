@@ -666,7 +666,7 @@ void NV2ADevice::Init()
 
 	// Register physical memory on bar 1
 	r.Memory.address = 0xF0000000 >> 4;
-	RegisterBAR(1, XBOX_MEMORY_SIZE, r.value); // TODO : Read g_PhysicalMemory->Size
+	RegisterBAR(1, (g_bIsRetail ? XBOX_MEMORY_SIZE : CHIHIRO_MEMORY_SIZE), r.value);
 	
 	m_DeviceId = 0x02A5;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
@@ -676,9 +676,9 @@ void NV2ADevice::Init()
 	CxbxReserveNV2AMemory(d);
 
 	d->pcrtc.start = 0;
-
-	d->vram_ptr = (uint8_t*)MM_SYSTEM_PHYSICAL_MAP;
-	d->vram_size = (g_bIsChihiro || g_bIsDebug) ? CONTIGUOUS_MEMORY_CHIHIRO_SIZE : CONTIGUOUS_MEMORY_XBOX_SIZE;
+	
+	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
+	d->vram_size = (g_bIsRetail ? CONTIGUOUS_MEMORY_XBOX_SIZE : CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
 
 	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
 	d->pramdac.core_clock_freq = 189000000;

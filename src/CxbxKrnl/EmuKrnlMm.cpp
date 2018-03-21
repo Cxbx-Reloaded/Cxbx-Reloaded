@@ -30,7 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
-// *  (c) 2017 ergo720
+// *  (c) 2017-2018 ergo720
 // *
 // *  All rights reserved
 // *
@@ -52,6 +52,7 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
 #include "EmuShared.h"
+#include <assert.h>
 
 // prevent name collisions
 namespace NtDll
@@ -62,6 +63,8 @@ namespace NtDll
 // ******************************************************************
 // * 0x0066 - MmGlobalData
 // ******************************************************************
+// ergo720: a couple of these could be implemented, but most cannot. However, I wouldn't bother with these variables
+// since they are just exported but never used by the kernel
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
@@ -71,7 +74,7 @@ XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL
 // the xbox kernel. Kernel code accessses this as a normal variable.
 // XAPI code however, reference to the address of this kernel variable,
 // thus use indirection (*LaunchDataPage) to get to the same contents.
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnull;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnullptr;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()
@@ -88,31 +91,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
 	LOG_FORWARD("MmAllocateContiguousMemoryEx");
 
-	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, PAGE_READWRITE);
-}
-
-#define PAGE_KNOWN_FLAGS (PAGE_READONLY | PAGE_READWRITE | PAGE_NOCACHE | PAGE_WRITECOMBINE)
-
-bool CheckMmProtectFlags(DWORD protect)
-{
-	bool HasReadOnly = protect & PAGE_READONLY;
-	bool HasReadWrite = protect & PAGE_READWRITE;
-	bool HasNoCache = protect & PAGE_NOCACHE;
-	bool HasWriteCombine = protect & PAGE_WRITECOMBINE;
-
-	// Only known flags are allowed
-	if ((protect & ~PAGE_KNOWN_FLAGS) != 0)
-		return false;
-
-	// Either PAGE_READONLY or PAGE_READWRITE must be set (not both, nor none)
-	if (HasReadOnly == HasReadWrite)
-		return false;
-
-	// Combining PAGE_NOCACHE and PAGE_WRITECOMBINE isn't allowed
-	if (HasNoCache && HasWriteCombine)
-		return false;
-
-	return true;
+	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, XBOX_PAGE_READWRITE);
 }
 
 // ******************************************************************
@@ -135,17 +114,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = (PVOID)xbnullptr;
-
-	// Allocate when input arguments are valid
-	if ((NumberOfBytes > 0) && CheckMmProtectFlags(ProtectionType))
-	{
-		if (Alignment < PAGE_SIZE)
-			Alignment = PAGE_SIZE; // page boundary at least
-
-		// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
-		pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::Contiguous, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
-	}
+	PVOID pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 
 	RETURN(pRet);
 }
@@ -161,13 +130,12 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
+		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
-	// TODO: this should probably allocate the memory at a specific system virtual address region...
-	PVOID pRet = (PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::SystemMemory, 0, MAXULONG_PTR, PAGE_SIZE, Protect);
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(SystemMemoryType, Protect, NumberOfBytes, false);
 
-	RETURN(pRet);
+	RETURN(addr);
 }
 
 // ******************************************************************
@@ -184,29 +152,7 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
 	LOG_FUNC_END;
 
-	unsigned int highest_physical_page = MM_XBOX_HIGHEST_PHYSICAL_PAGE;
-	unsigned int instance_physical_page = MM_XBOX_INSTANCE_PHYSICAL_PAGE;
-	if (g_bIsChihiro || g_bIsDebug)
-	{
-		*NumberOfPaddingBytes = 0;
-		highest_physical_page = MM_CHIHIRO_HIGHEST_PHYSICAL_PAGE;
-	}
-	else
-		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
-		MI_CONVERT_PFN_TO_PHYSICAL(instance_physical_page + MM_INSTANCE_PAGE_COUNT);
-
-	DbgPrintf("KNRL: MmClaimGpuInstanceMemory : *NumberOfPaddingBytes = 0x%.8X\n", *NumberOfPaddingBytes);
-
-#ifdef _DEBUG_TRACE
-	if (NumberOfBytes != MAXULONG_PTR)
-	{
-		if (NumberOfBytes != 20480)
-			LOG_IGNORED();
-	}
-#endif
-
-	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(highest_physical_page + 1)
-		- *NumberOfPaddingBytes;
+	PVOID Result = (PVOID)g_VMManager.ClaimGpuMemory(NumberOfBytes, (size_t*)NumberOfPaddingBytes);
 
 	RETURN(Result);
 }
@@ -227,19 +173,10 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
-	VAddr addr = xbnull;
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? DebuggerType : StackType,
+		XBOX_PAGE_READWRITE, NumberOfBytes, true);
 
-	/**
-	* Function at present does not:
-	* - Treat DebuggerThread any differently
-	*/
-
-	if (NumberOfBytes)
-	{
-		addr = g_VMManager.AllocateStack(NumberOfBytes);
-	}
-
-	RETURN((PVOID)addr);
+	RETURN(addr);
 }
 
 // ******************************************************************
@@ -256,16 +193,8 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 		LOG_FUNC_ARG(StackLimit)
 	LOG_FUNC_END;
 
-	size_t ActualSize = ((VAddr)StackBase - (VAddr)StackLimit) + PAGE_SIZE;
-
-	VAddr StackBottom = (VAddr)StackBase - ActualSize;
-
-	// TODO: Why does this end up trying to deallocate a non-VMManager page
-	// Could be that we don't properly emulate the KPCR? 
-	// The KPCRs stack base / stack limit never get updated by push/pop
-	// as the host stack ends up being used...
-	EmuWarning("xboxkrnl::MmDeleteKernelStack Ignored");
-	//g_VMManager.DeallocateStack(StackBottom);
+	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBase) ? StackType : DebuggerType,
+		(VAddr)StackBase, (VAddr)StackBase - (VAddr)StackLimit + PAGE_SIZE);
 }
 
 // ******************************************************************
@@ -281,7 +210,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	g_VMManager.Deallocate((VAddr)BaseAddress);
+	g_VMManager.DeallocateContiguous((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
 	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
@@ -292,7 +221,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 // ******************************************************************
 // * 0x00AC - MmFreeSystemMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
+XBSYSAPI EXPORTNUM(172) xboxkrnl::ULONG NTAPI xboxkrnl::MmFreeSystemMemory
 (
 	PVOID BaseAddress,
 	ULONG NumberOfBytes
@@ -303,9 +232,9 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	g_VMManager.Deallocate((VAddr)BaseAddress);
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(SystemMemoryType, (VAddr)BaseAddress, NumberOfBytes);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(FreedPagesNumber);
 }
 
 // ******************************************************************
@@ -323,9 +252,10 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
-	LOG_INCOMPLETE();
 
-	return g_VMManager.TranslateVAddr((VAddr)BaseAddress);
+	PAddr addr = g_VMManager.TranslateVAddrToPAddr((VAddr)BaseAddress);
+
+	RETURN(addr);
 }
 
 // ******************************************************************
@@ -340,10 +270,7 @@ XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
 
 	BOOLEAN Ret = FALSE;
 
-	if (g_VMManager.QueryVAddr((VAddr)VirtualAddress))
-	{
-		Ret = TRUE;
-	}
+	if (g_VMManager.IsValidVirtualAddress((VAddr)VirtualAddress)) { Ret = TRUE; }
 
 	RETURN(Ret);
 }
@@ -361,7 +288,7 @@ XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
+		LOG_FUNC_ARG(Protect)
 	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
@@ -407,21 +334,10 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
+		LOG_FUNC_ARG(ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet;
-
-	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
-	if (PhysicalAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
-		// Return physical address as virtual (accesses will go through EmuException) :
-		pRet = (PVOID)PhysicalAddress;
-	}
-	else {
-		// TODO : Research what kind of page type an real Xbox kernel allocates in MmMapIOSpace
-		g_VMManager.Allocate(NumberOfBytes, PageType::SystemMemory, 0, MAXULONG_PTR, PAGE_SIZE, ProtectionType);
-		LOG_INCOMPLETE();
-	}
+	PVOID pRet = (PVOID)g_VMManager.MapDeviceMemory(PhysicalAddress, NumberOfBytes, ProtectionType);
 
 	RETURN(pRet);
 }
@@ -442,36 +358,7 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_ARG(Persist)
 	LOG_FUNC_END;
 
-	if (BaseAddress == LaunchDataPage)
-	{
-		PAddr LaunchDataPAddr = g_VMManager.TranslateVAddr((VAddr)BaseAddress);
-		if (Persist)
-		{
-			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-			DbgPrintf("KNRL: Persisting LaunchDataPage\n");
-		}
-		else
-		{
-			LaunchDataPAddr = NULL;
-			g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-			DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
-		}
-	}
-	else
-		// TODO : Store/forget other pages to be remembered across a "reboot"
-		LOG_IGNORED();
-
-  // [PatrickvL] Shared memory would be a perfect fit for this,
-  // but the supplied pointer is already allocated. In order to
-  // change the 'shared' state of this memory, we would have to
-  // obtain the complete memory range (via CreateFileMapping)
-  // in one go, and use this for all allocation (much work, this).
-  // Another way would be assume 'contiguous memory' is the
-  // only type of memory being persisted, which would simplify
-  // the allocation procedure significantly.
-  // Another way could be to persist all registered blocks
-  // of memory at application shutdown, but restoring it in
-  // the next run at the same addresses could be troublesome.
+	g_VMManager.PersistMemory((VAddr)BaseAddress, NumberOfBytes, Persist);
 }
 
 // ******************************************************************
@@ -484,9 +371,7 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 {
 	LOG_FUNC_ONE_ARG(VirtualAddress);
 
-	 ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
-
-	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
+	ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
 	
 	RETURN(Result);
 }
@@ -501,9 +386,9 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	ULONG uiSize = g_VMManager.QuerySize((VAddr)BaseAddress);
+	ULONG Size = g_VMManager.QuerySize((VAddr)BaseAddress, false);
 
-	RETURN(uiSize);
+	RETURN(Size);
 }
 
 // ******************************************************************
@@ -518,14 +403,14 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	NTSTATUS ret;
 
-#ifdef _DEBUG_TRACE
-	if (!MemoryStatistics)
+	#ifdef _DEBUG_TRACE
+	 if (!MemoryStatistics)
 	{
 		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
 		RETURN(STATUS_SUCCESS);
 	}
-#endif
+	#endif
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
@@ -565,11 +450,8 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
+		LOG_FUNC_ARG(NewProtect)
 	LOG_FUNC_END;
-
-	if (!CheckMmProtectFlags(NewProtect))
-		return;
 
 	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
 }
@@ -580,7 +462,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 // Unmaps a virtual address mapping made by MmMapIoSpace.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
+XBSYSAPI EXPORTNUM(183) xboxkrnl::VOID NTAPI xboxkrnl::MmUnmapIoSpace
 (
 	IN PVOID BaseAddress,
 	IN ULONG NumberOfBytes
@@ -591,14 +473,107 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	if ((xbaddr)BaseAddress >= XBOX_WRITE_COMBINED_BASE) { // 0xF0000000
-		// Don't free hardware devices (flash, NV2A, etc)
-	}
-	else {
-		g_VMManager.Deallocate((VAddr)BaseAddress);
-		LOG_INCOMPLETE();
-	}
-
-	RETURN(STATUS_SUCCESS);
+	g_VMManager.UnmapDeviceMemory((VAddr)BaseAddress, NumberOfBytes);
 }
 
+// ******************************************************************
+// * 0x0176 - MmDbgAllocateMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
+(
+	IN ULONG NumberOfBytes,
+	IN ULONG Protect
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(NumberOfBytes)
+		LOG_FUNC_ARG(Protect)
+	LOG_FUNC_END;
+
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
+	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
+
+	RETURN(addr);
+}
+
+// ******************************************************************
+// * 0x0177 - MmDbgFreeMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
+(
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytes
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BaseAddress)
+		LOG_FUNC_ARG(NumberOfBytes)
+	LOG_FUNC_END;
+
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(DebuggerType, (VAddr)BaseAddress, NumberOfBytes);
+
+	RETURN(FreedPagesNumber);
+}
+
+// ******************************************************************
+// * 0x0178 - MmDbgQueryAvailablePages
+// ******************************************************************
+XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages(void)
+{
+	LOG_FUNC();
+
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	ULONG FreeDebuggerPageNumber = g_VMManager.QueryNumberOfFreeDebuggerPages();
+
+	RETURN(FreeDebuggerPageNumber);
+}
+
+// ******************************************************************
+// * 0x0179 - MmDbgReleaseAddress
+// ******************************************************************
+XBSYSAPI EXPORTNUM(377) xboxkrnl::VOID NTAPI xboxkrnl::MmDbgReleaseAddress
+(
+	IN PVOID VirtualAddress,
+	IN PULONG Opaque
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(VirtualAddress)
+		LOG_FUNC_ARG(Opaque)
+	LOG_FUNC_END;
+
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, false);
+}
+
+// ******************************************************************
+// * 0x017A - MmDbgWriteCheck
+// ******************************************************************
+XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
+(
+	IN PVOID VirtualAddress,
+	IN PULONG Opaque
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(VirtualAddress)
+		LOG_FUNC_ARG(Opaque)
+	LOG_FUNC_END;
+
+	// This should only be called by debug xbe's
+	assert(g_bIsDebug);
+
+	PVOID addr = (PVOID)g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, true);
+
+	RETURN(addr);
+}

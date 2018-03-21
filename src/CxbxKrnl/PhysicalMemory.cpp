@@ -28,350 +28,765 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017      ergo720
+// *  (c) 2017-2018      ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
+
 
 #define LOG_PREFIX "PMEM"
 
 #include "PhysicalMemory.h"
 #include <assert.h>
 
-DWORD DefaultPageTypeProtection(const PageType page_type)
+
+void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
 {
-	switch (page_type) {
-	case PageType::Image: return PAGE_EXECUTE_READWRITE;
-	default: return PAGE_READWRITE;
+	assert(Length != 0);
+	assert(CHECK_ALIGNMENT(Length, sizeof(ULONG)));                   // Length must be a multiple of ULONG
+	assert(CHECK_ALIGNMENT((uintptr_t)Destination, sizeof(ULONG)));   // Destination must be 4-byte aligned
+
+	int NumOfRepeats = Length / sizeof(ULONG);
+	ULONG* d = (ULONG*)Destination;
+
+	for (int i = 0; i < NumOfRepeats; ++i)
+	{
+		d[i] = Long; // copy an ULONG at a time
 	}
 }
 
-PMEMORY_STATUS PhysicalMemory::GetError() const
+void PhysicalMemory::InitializePageDirectory()
 {
-	return m_Status;
-}
+	PMMPTE pPde;
+	PMMPTE pPde_end;
+	MMPTE TempPte;
 
-PAddr PhysicalMemory::AllocatePhysicalMemory(const size_t size, const PageType type)
-{
-	PAddr addr = m_MaxContiguousAddress;
-	ClearError();
-	assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
 
-	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
-	if (size > FreeMemory)
+	// Write the pde's of the WC (tiled) memory - no page tables
+	TempPte.Default = ValidKernelPteBits;
+	TempPte.Hardware.LargePage = 1;
+	TempPte.Hardware.PFN = XBOX_WRITE_COMBINED_BASE >> PAGE_SHIFT;
+	SET_WRITE_COMBINE(TempPte);
+	pPde_end = GetPdeAddress(XBOX_WRITE_COMBINE_END - 1);
+	for (pPde = GetPdeAddress(XBOX_WRITE_COMBINED_BASE); pPde <= pPde_end; ++pPde)
 	{
-		EmuWarning(LOG_PREFIX ": Out of physical memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return addr;
+		WRITE_PTE(pPde, TempPte);
+		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
 	}
 
-	// Allocate the block wherever possible
-	// This attempts to counter external fragmentation by allocating big blocks top-down and small blocks bottom-up
-	const bool bTopDown = size > m_AllocationThreshold;
-	if (m_Mem_map.empty())
+
+	// Write the pde's of the UC memory region - no page tables
+	TempPte.Hardware.PFN = XBOX_UNCACHED_BASE >> PAGE_SHIFT;
+	DISABLE_CACHING(TempPte);
+	pPde_end = GetPdeAddress(XBOX_UNCACHED_END - 1);
+	for (pPde = GetPdeAddress(XBOX_UNCACHED_BASE); pPde <= pPde_end; ++pPde)
 	{
-		addr = bTopDown ? (m_MaxContiguousAddress - size) : 0;
-		m_Mem_map[addr] = size;
-		m_PhysicalMemoryInUse += size;
+		WRITE_PTE(pPde, TempPte);
+		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
+	}
+
+
+	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
+	// on the Xbox, which is not present here on Cxbx-Reloaded
+
+	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
+	// file cache function is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
+	// correctly implemented. So, for now, we keep on ignoring this allocation
+}
+
+void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero)
+{
+	XBOX_PFN TempPF;
+
+	if (bZero)
+	{
+		TempPF.Default = 0;
+		while (pfn_start <= pfn_end)
+		{
+			if (g_bIsRetail || g_bIsDebug) {
+				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
+			}
+			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
+
+			m_PagesByUsage[BusyType]--;
+			pfn_start++;
+		}
 	}
 	else
 	{
-		if (bTopDown)
+		while (pfn_start <= pfn_end)
 		{
-			// Allocate the block starting from the top of memory
-			for (auto rit = m_Mem_map.rbegin(); ; ++rit)
-			{
-				if (std::next(rit) == m_Mem_map.rend())
-				{
-					if (rit->first >= size)
-					{
-						addr = rit->first - size;
-						m_Mem_map[addr] = size;
-						m_PhysicalMemoryInUse += size;
-						break;
-					}
-
-					if (FreeMemory >= size) // fragmentation
-					{
-						addr = AllocateFragmented(size, type);
-						break;
-					}
-				}
-
-				// Reinstate this if the nv2a instance memory allocation is found to be ever deallocated after being 
-				// mapped during initialization. The only one that could do it is MmClaimGpuInstanceMemory, however it doesn't seem
-				// to deallocate the region, just to repurpose it...
-
-				//u32 offset = std::next(rit)->first + std::next(rit)->second;
-				/*if (rit == max_contiguous_it && m_MaxContiguousAddress - offset >= size)
-				{
-					addr = m_MaxContiguousAddress - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}*/
-
-				if (rit->first - (std::next(rit)->first + std::next(rit)->second) >= size)
-				{
-					addr = rit->first - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
+			TempPF.Default = 0;
+			TempPF.Busy.Busy = 1;
+			TempPF.Busy.BusyType = BusyType;
+			if (BusyType != PageType::VirtualPageTableType && BusyType != SystemPageTableType) {
+				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
-		}
-		else // !bTopDown
-		{
-			// Allocate the block starting from the bottom of memory
-			auto max_contiguous_it = m_Mem_map.lower_bound(m_MaxContiguousAddress); // skip the nv2a/PFN allocation
-			for (auto it = m_Mem_map.begin(); ; ++it)
-			{
-				if (it == m_Mem_map.begin() && it->first >= size)
-				{
-					addr = 0;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
+			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
 
-				u32 offset = it->first + it->second;
-				if (std::next(it) == max_contiguous_it)
-				{
-					if (m_MaxContiguousAddress - offset >= size)
-					{
-						addr = offset;
-						m_Mem_map[addr] = size;
-						m_PhysicalMemoryInUse += size;
-						break;
-					}
-
-					if (FreeMemory >= size) // fragmentation
-					{
-						addr = AllocateFragmented(size, type);
-						break;
-					}
-				}
-
-				if (std::next(it)->first - offset >= size)
-				{
-					addr = offset;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
+			if (g_bIsRetail || g_bIsDebug) {
+				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
 			}
+			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
+
+			m_PagesByUsage[BusyType]++;
+			pfn_start++;
+			pPte++;
 		}
 	}
-
-	m_PageCount[(int)type] += size / PAGE_SIZE;
-	return addr;
 }
 
-PAddr PhysicalMemory::AllocatePhysicalMemoryRange(const size_t size, const PageType type, const PAddr low_addr, const PAddr high_addr)
+void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero)
 {
-	PAddr addr = m_MaxContiguousAddress;
-	ClearError();
-	assert(m_MaxContiguousAddress >= m_PhysicalMemoryInUse);
+	// This function is intended to write pte's, not pde's. To write those, use (De)AllocatePT which will perform
+	// all the necessary housekeeping. Also, the pde's mapping these pte's should have already being commited or else
+	// GetPfnOfPT will assert
 
-	size_t FreeMemory = m_MaxContiguousAddress - m_PhysicalMemoryInUse;
-	if (size > FreeMemory)
+	PMMPTE PointerPte = pPteStart;
+	PXBOX_PFN PTpfn;
+
+	if (bZero)
 	{
-		EmuWarning(LOG_PREFIX ": Out of physical memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return addr;
-	}
-
-	// TODO: it's a bit complex to properly allocate the blocks inside the requested range using the iterators,
-	// a better approch would be to implement an actual PFN database and search free blocks with that, but unfortunately 
-	// with the current code it's not possible to relocate already allocated blocks
-
-	// Allocate the block inside the specified range if possible, going from the top-down
-	if (m_Mem_map.empty())
-	{
-		addr = low_addr;
-		m_Mem_map[addr] = size;
-		m_PhysicalMemoryInUse += size;
+		while (PointerPte <= pPteEnd)
+		{
+			if (PointerPte == pPteStart || IsPteOnPdeBoundary(PointerPte))
+			{
+				PTpfn = GetPfnOfPT(PointerPte);
+			}
+			WRITE_ZERO_PTE(PointerPte);
+			PTpfn->PTPageFrame.PtesUsed--;
+			PointerPte++;
+		}
 	}
 	else
 	{
-		size_t FreeMemoryInRange = 0;
-
-		auto low_pair = m_Mem_map.emplace(low_addr, 0);
-		PAddr lower_bound = low_addr;
-		if (low_pair.first != m_Mem_map.begin())
+		while (PointerPte <= pPteEnd)
 		{
-			auto low_it = std::prev(low_pair.first);
-			if (low_it->first + low_it->second > low_addr)
+			if (PointerPte == pPteStart || IsPteOnPdeBoundary(PointerPte))
 			{
-				lower_bound = low_it->first + low_it->second;
+				PTpfn = GetPfnOfPT(PointerPte);
 			}
-		}
-		if (!low_pair.second)
-		{
-			lower_bound = low_addr + low_pair.first->second;
-		}
-		auto high_pair = m_Mem_map.emplace(high_addr, 0);
-		auto high_it = high_pair.first;
-		{
-			auto prev_it = std::prev(high_pair.first);
-			if (prev_it->first + prev_it->second >= high_pair.first->first)
+			if (PointerPte->Default == 0)
 			{
-				high_it = prev_it;
-				if (high_it == low_pair.first)
-				{
-					SetError(PMEMORY_INSUFFICIENT_MEMORY);
-					EmuWarning(LOG_PREFIX ": Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
-					if (high_pair.first->second == 0) { m_Mem_map.erase(high_addr); }
-					if (low_pair.first->second == 0) { m_Mem_map.erase(low_addr); }
-					return addr;
-				}
+				Pte.Hardware.PFN = pfn;
+				WRITE_PTE(PointerPte, Pte);
+				PTpfn->PTPageFrame.PtesUsed++;
 			}
+			PointerPte++;
+			pfn++;
 		}
-
-		for (auto it = high_it; ; --it)
-		{
-			if (std::prev(it) == low_pair.first)
-			{
-				if (it->first - lower_bound >= size)
-				{
-					addr = it->first - size;
-					m_Mem_map[addr] = size;
-					m_PhysicalMemoryInUse += size;
-					break;
-				}
-				FreeMemoryInRange += (it->first - lower_bound);
-
-				if (FreeMemoryInRange >= size) // fragmentation
-				{
-					addr = AllocateFragmented(size, type);
-					break;
-				}
-				SetError(PMEMORY_INSUFFICIENT_MEMORY);
-				EmuWarning(LOG_PREFIX ": Not enough memory in range 0x%.8X - 0x%.8X", low_addr, high_addr);
-				break;
-			}
-
-			size_t FreeBetween = it->first - (std::prev(it)->first + std::prev(it)->second);
-			if (FreeBetween >= size)
-			{
-				addr = it->first - size;
-				m_Mem_map[addr] = size;
-				m_PhysicalMemoryInUse += size;
-				break;
-			}
-			FreeMemoryInRange += FreeBetween;
-		}
-		if (high_pair.first->second == 0) { m_Mem_map.erase(high_addr); }
-		if (low_pair.first->second == 0) { m_Mem_map.erase(low_addr); }
 	}
-
-	m_PageCount[(int)type] += size / PAGE_SIZE;
-	return addr;
 }
 
-VAddr PhysicalMemory::AllocateFragmented(const size_t size, const PageType type)
+bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end)
 {
-	if (type == PageType::Contiguous)
+	xboxkrnl::PLIST_ENTRY ListEntry;
+	PFN PfnStart;
+	PFN PfnEnd;
+	PFN IntersectionStart;
+	PFN IntersectionEnd;
+	PFN_COUNT PfnCount;
+	PFN_COUNT PfnAlignmentMask;
+	PFN_COUNT PfnAlignmentSubtraction;
+
+	// The caller should already guarantee that there are enough free pages available
+	if (NumberOfPages == 0) { result = nullptr; return false; }
+
+	if (PfnAlignment)
 	{
-		EmuWarning(LOG_PREFIX ": Fragmentation prevented allocation of contiguous memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return 0;
+		// Calculate some alignment parameters if one is requested
+
+		PfnAlignmentMask = ~(PfnAlignment - 1);
+		PfnAlignmentSubtraction = ((NumberOfPages + PfnAlignment - 1) & PfnAlignmentMask) - NumberOfPages + 1;
 	}
 
-	PAddr addr_ptr = (PAddr)VirtualAlloc(NULL, size + PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, DefaultPageTypeProtection(type));
-	if (!addr_ptr)
-	{
-		EmuWarning(LOG_PREFIX ": AllocateFragmented: VirtualAlloc could not allocate the memory!");
-		SetError(PMEMORY_INSUFFICIENT_MEMORY);
-		return m_MaxContiguousAddress;
-	}
-	VAddr aligned_start = addr_ptr & ~(UINT_PTR)PAGE_MASK;
+	ListEntry = FreeList.Blink; // search from the top
 
-	m_Fragmented_mem_map[addr_ptr] = size;
-	EmuWarning(LOG_PREFIX ": Warning: allocated memory via AllocateFragmented.");
-	SetError(PMEMORY_ALLOCATE_FRAGMENTED);
-	m_PhysicalMemoryInUse += size;
-	return aligned_start;
+	while (ListEntry != &FreeList)
+	{
+		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size >= NumberOfPages) // search for a block with enough pages
+		{
+			PfnStart = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start;
+			PfnCount = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
+			PfnEnd = PfnStart + PfnCount - 1;
+			IntersectionStart = start >= PfnStart ? start : PfnStart;
+			IntersectionEnd = end <= PfnEnd ? end : PfnEnd;
+
+			if (IntersectionEnd < IntersectionStart)
+			{
+				// Not inside the requested range, keep searching
+
+				goto InvalidBlock;
+			}
+
+			if (IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
+			{
+				// There is not enough free space inside the free block so this is an invalid block.
+				// We have to check again since the free size could have shrinked because of the intersection
+				// check done above
+
+				goto InvalidBlock;
+			}
+
+			if (PfnAlignment)
+			{
+				IntersectionEnd = ((IntersectionEnd + 1) & PfnAlignmentMask) - PfnAlignmentSubtraction;
+
+				if (IntersectionEnd < IntersectionStart || IntersectionEnd - IntersectionStart + 1 < NumberOfPages)
+				{
+					// This free block doesn't honor the alignment requested, so this is another invalid block
+
+					goto InvalidBlock;
+				}
+			}
+
+			// Now we know that we have a usable free block with enough pages
+
+			if (IntersectionStart == PfnStart)
+			{
+				if (IntersectionEnd == PfnEnd)
+				{
+					// The block is totally inside the range, just shrink its size
+
+					PfnCount -= NumberOfPages;
+					if (!PfnCount)
+					{
+						// delete the entry if there is no free space left
+
+						LIST_ENTRY_REMOVE(ListEntry);
+						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+					}
+					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+				}
+				else
+				{
+					// Create a new block with the remaining pages after the block
+
+					PFreeBlock block = new FreeBlock;
+					block->start = IntersectionEnd + 1;
+					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
+					LIST_ENTRY_INITIALIZE(&block->ListEntry);
+					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+
+					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
+					if (!PfnCount)
+					{
+						// delete the entry if there is no free space left
+
+						LIST_ENTRY_REMOVE(ListEntry);
+						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+					}
+					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+				}
+			}
+			else
+			{
+				// Starting address of the free block is lower than the intersection start
+
+				if (IntersectionEnd == PfnEnd)
+				{
+					// The free block extends before IntersectionStart
+
+					PfnCount -= NumberOfPages;
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+				}
+				else
+				{
+					// The free block extends in both directions
+
+					PFreeBlock block = new FreeBlock;
+					block->start = IntersectionEnd + 1;
+					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
+					LIST_ENTRY_INITIALIZE(&block->ListEntry);
+					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+
+					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+				}
+			}
+			if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+				m_DebuggerPagesAvailable -= NumberOfPages;
+				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
+			}
+			else {
+				m_PhysicalPagesAvailable -= NumberOfPages;
+				assert(m_PhysicalPagesAvailable <= m_HighestPage + 1);
+			}
+			*result = PfnStart + PfnCount;
+			return true;
+		}
+		InvalidBlock:
+		ListEntry = ListEntry->Blink;
+	}
+	result = nullptr;
+	return false;
 }
 
-void PhysicalMemory::ShrinkPhysicalAllocation(const PAddr addr, const size_t offset, const bool bFragmentedMap, const bool bStart)
+void PhysicalMemory::InsertFree(PFN start, PFN end)
 {
-	if (!offset) { return; } // nothing to do
+	xboxkrnl::PLIST_ENTRY ListEntry;
+	PFN_COUNT size = end - start + 1;
 
-	if (bFragmentedMap)
+	ListEntry = FreeList.Blink; // search from the top
+
+	while (true)
 	{
-		auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
-		if (it == m_Fragmented_mem_map.end()) { return; }
-
-		PAddr old_base = it->first;
-		size_t old_size = it->second;
-		m_Fragmented_mem_map.erase(old_base);
-
-		if (old_size - offset)
+		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start < start || ListEntry == &FreeList)
 		{
-			if (bStart) { m_Fragmented_mem_map.emplace(old_base + offset, old_size - offset); }
-			else { m_Fragmented_mem_map.emplace(old_base, old_size - offset); }
-		}
+			PFreeBlock block = new FreeBlock;
+			block->start = start;
+			block->size = size;
+			LIST_ENTRY_INITIALIZE(&block->ListEntry);
+			LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
-		m_PhysicalMemoryInUse -= offset;
+			// Ensure that we are not freeing a part of the previous block
+			if (ListEntry != &FreeList) {
+				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start +
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size - 1 < start);
+			}
+
+			ListEntry = ListEntry->Flink; // move to the new created block
+
+			// Ensure that we are not freeing a part of the next block
+			if (ListEntry->Flink != &FreeList) {
+				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start > end);
+			}
+
+			// Check if merging is possible
+			if (ListEntry->Flink != &FreeList &&
+				start + size == LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start)
+			{
+				// Merge forward
+				xboxkrnl::PLIST_ENTRY temp = ListEntry->Flink;
+				LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size +=
+					LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry)->size;
+				LIST_ENTRY_REMOVE(temp);
+				delete LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry);
+			}
+			if (ListEntry->Blink != &FreeList &&
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->start +
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size == start)
+			{
+				// Merge backward
+				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size +=
+					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
+				LIST_ENTRY_REMOVE(ListEntry);
+				delete block;
+			}
+
+			if (g_bIsDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+				m_DebuggerPagesAvailable += size;
+				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
+			}
+			else {
+				m_PhysicalPagesAvailable += size;
+				assert(m_PhysicalPagesAvailable <= m_HighestPage + 1);
+			}
+
+			return;
+		}
+		ListEntry = ListEntry->Blink;
 	}
+}
+
+bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
+{
+	ULONG Mask = 0;
+
+	if (perms & ~(XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | XBOX_PAGE_READWRITE | XBOX_PAGE_READONLY))
+	{
+		goto Fail; // unknown or not allowed flag specified
+	}
+
+	switch (perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
+	{
+		case XBOX_PAGE_READONLY:
+		{
+			Mask = (PTE_VALID_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK);
+		}
+		break;
+
+		case XBOX_PAGE_READWRITE:
+		{
+			Mask = ValidKernelPteBits;
+		}
+		break;
+
+		default:
+			goto Fail; // both are specified, wrong
+	}
+
+	switch (perms & (XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+	{
+		case 0:
+			break; // none is specified, ok
+
+		case XBOX_PAGE_NOCACHE:
+		{
+			Mask |= PTE_CACHE_DISABLE_MASK;
+		}
+		break;
+
+		case XBOX_PAGE_WRITECOMBINE:
+		{
+			Mask |= PTE_WRITE_THROUGH_MASK;
+		}
+		break;
+
+		default:
+			goto Fail; // both are specified, wrong
+	}
+
+	pPte->Default = Mask;
+
+	return true;
+
+	Fail:
+	pPte = nullptr;
+	return false;
+}
+
+bool PhysicalMemory::ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte)
+{
+	ULONG Mask = 0;
+	ULONG LowNibble;
+	ULONG HighNibble;
+
+	if (perms & ~(XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE | 0xFF))
+	{
+		goto Fail; // unknown or not allowed flag specified
+	}
+
+	//
+	// None of the protection attributes are valid for "no access" pages.
+	//
+
+	if (perms & XBOX_PAGE_NOACCESS)
+	{
+		if (perms & (XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+		{
+			goto Fail; // PAGE_NOACCESS cannot be specified together with the other access modifiers
+		}
+	}
+
+	if ((perms & XBOX_PAGE_NOCACHE) && (perms & XBOX_PAGE_WRITECOMBINE))
+	{
+		goto Fail; // PAGE_NOCACHE and PAGE_WRITECOMBINE cannot be specified together
+	}
+
+	LowNibble = perms & 0xF;
+	HighNibble = (perms >> 4) & 0xF;
+
+	if ((LowNibble == 0 && HighNibble == 0) || (LowNibble != 0 && HighNibble != 0))
+	{
+		// High and low permission flags cannot be mixed together
+
+		goto Fail;
+	}
+
+	if ((LowNibble | HighNibble) == 1 || (LowNibble | HighNibble) == 2) { Mask = PTE_READONLY; }
+	else if ((LowNibble | HighNibble) == 4) { Mask = PTE_READWRITE; }
 	else
 	{
-		auto it = m_Mem_map.lower_bound(addr);
+		// ergo720: all the other combinations are invalid. This effectively filters out XBOX_PAGE_WRITECOPY and
+		// XBOX_PAGE_EXECUTE_WRITECOPY which, afaik, are unsupported on the Xbox
 
-		// ShrinkPhysicalAllocation is called from ResizeVMA which in turn is called from XbFreeVirtualMemory.
-		// The iterator passed is std::prev(auto it = m_Vma_map.lower_bound(AlignedCapturedBase);),
-		// which could only become end() if lower_bound is called on an address > MCPX_BASE,
-		// which is forbidden by the check if (CapturedBase > HIGHEST_USER_ADDRESS)
-		// { ret = STATUS_INVALID_PARAMETER; RETURN(ret); }.
-		// Also, ShrinkPhysicalAllocation is only called if the vma found is of type Allocated or Stack,
-		// meaning a corresponding physical allocation exists, and so it can never be end()
-		assert(it != m_Mem_map.end());
+		goto Fail;
+	}
 
-		PAddr old_base = it->first;
-		size_t old_size = it->second;
-		m_Mem_map.erase(old_base);
+	// Apply the rest of the access modifiers to the pte mask
 
-		if (old_size - offset)
+	if ((perms & (XBOX_PAGE_NOACCESS | XBOX_PAGE_GUARD)) == 0) { Mask |= PTE_VALID_MASK; }
+	else if (perms & XBOX_PAGE_GUARD) { Mask |= PTE_GUARD; }
+
+	if (perms & XBOX_PAGE_NOCACHE) { Mask |= PTE_CACHE_DISABLE_MASK; }
+	else if (perms & XBOX_PAGE_WRITECOMBINE) { Mask |= PTE_WRITE_THROUGH_MASK; }
+
+	assert((Mask & ~(PTE_VALID_PROTECTION_MASK)) == 0); // ensure that we've created a valid permission mask
+
+	pPte->Default = Mask;
+
+	return true;
+
+	Fail:
+	pPte = nullptr;
+	return false;
+}
+
+DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
+{
+	// This routine assumes that the pte has valid protection bits. If it doesn't, it can produce invalid
+	// access permissions
+
+	ULONG Protect;
+
+	if (PteMask & PTE_READWRITE) { Protect = XBOX_PAGE_READWRITE; }
+	else { Protect = XBOX_PAGE_READONLY; }
+
+	if ((PteMask & PTE_VALID_MASK) == 0)
+	{
+		if (PteMask & PTE_GUARD) { Protect |= XBOX_PAGE_GUARD; }
+		else { Protect = XBOX_PAGE_NOACCESS; }
+	}
+
+	if (PteMask & PTE_CACHE_DISABLE_MASK) { Protect |= XBOX_PAGE_NOCACHE; }
+	else if (PteMask & PTE_WRITE_THROUGH_MASK) { Protect |= XBOX_PAGE_WRITECOMBINE; }
+
+	return Protect;
+}
+
+DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
+{
+	// Usage notes: this routine expects the permissions to be already sanitized by ConvertXboxToSystemPteProtection or
+	// similar. If not, it can produce incorrect results
+
+	// ergo720: this checks if the specified Xbox permission mask has the execute flag enabled. If not, it adds it. This is
+	// necessary because, afaik, the Xbox grants execute rights to all allocations, even if PAGE_EXECUTE was not specified
+
+	if ((Perms >> 4) & 0xF)
+	{
+		// All high nibble flags grant execute rights, nothing to do
+
+		return Perms;
+	}
+
+	if (Perms & XBOX_PAGE_NOACCESS)
+	{
+		// XBOX_PAGE_NOACCESS disables all access, nothing to do
+
+		return Perms;
+	}
+
+	switch (Perms & (XBOX_PAGE_READONLY | XBOX_PAGE_READWRITE))
+	{
+		case 0:
 		{
-			if (bStart) { m_Mem_map.emplace(old_base + offset, old_size - offset); }
-			else { m_Mem_map.emplace(old_base, old_size - offset); }
+			// One of XBOX_PAGE_READONLY or XBOX_PAGE_READWRITE must be specified
+
+			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
+			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 
-		m_PhysicalMemoryInUse -= offset;
+		case XBOX_PAGE_READONLY:
+		{
+			Perms &= (~XBOX_PAGE_READONLY);
+			return Perms | XBOX_PAGE_EXECUTE_READ;
+		}
+
+		case XBOX_PAGE_READWRITE:
+		{
+			Perms &= (~XBOX_PAGE_READWRITE);
+			return Perms | XBOX_PAGE_EXECUTE_READWRITE;
+		}
+
+		default:
+		{
+			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
+			// input is probably invalid
+
+			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
+			return XBOX_PAGE_EXECUTE_READWRITE;
+		}
 	}
 }
 
-void PhysicalMemory::DeAllocatePhysicalMemory(const PAddr addr)
+DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 {
-	auto it = m_Mem_map.lower_bound(addr);
+	// This function assumes that the supplied permissions have been sanitized already
 
-	// DeAllocatePhysicalMemory is only called in DestructVMA,
-	// which checks if the vma type is Allocated or Stack and,
-	// if so, calls the function and so the allocation must exist
-	assert(it != m_Mem_map.end());
+	DWORD Mask = 0;
 
-	m_PhysicalMemoryInUse -= it->second;
-	m_Mem_map.erase(addr);
+	if (Perms & XBOX_PAGE_NOACCESS)
+	{
+		// PAGE_NOACCESS cannot be specified with anything else
+
+		return PAGE_NOACCESS;
+	}
+
+	DWORD LowNibble = Perms & 0xF;
+	DWORD HighNibble = (Perms >> 4) & 0xF;
+
+	if (HighNibble)
+	{
+		if (HighNibble == 1) { Mask |= PAGE_EXECUTE; }
+		else if (HighNibble == 2) { Mask |= PAGE_EXECUTE_READ; }
+		else { Mask |= PAGE_EXECUTE_READWRITE; }
+	}
+
+	if (LowNibble)
+	{
+		if (LowNibble == 2) { Mask |= PAGE_READONLY; }
+		else { Mask |= PAGE_READWRITE; }
+	}
+
+	// Even though PAGE_NOCACHE and PAGE_WRITECOMBINE are unsupported on shared memory, that's a limitation on our side,
+	// this function still adds them if they are present
+
+	switch (Perms & (XBOX_PAGE_GUARD | XBOX_PAGE_NOCACHE | XBOX_PAGE_WRITECOMBINE))
+	{
+		case 0:
+			break;
+
+		case XBOX_PAGE_GUARD:
+		{
+			Mask |= PAGE_GUARD;
+			break;
+		}
+
+		case XBOX_PAGE_NOCACHE:
+		{
+			Mask |= PAGE_NOCACHE;
+			break;
+		}
+
+		case XBOX_PAGE_WRITECOMBINE:
+		{
+			Mask |= PAGE_WRITECOMBINE;
+			break;
+		}
+
+		default:
+		{
+			// If we reach here it means that more than one permission modifier was specified, and so the input is
+			// probably invalid
+
+			DbgPrintf("PMEM: ConvertXboxToWinProtection: Memory permissions bug detected\n");
+			return PAGE_EXECUTE_READWRITE;
+		}
+	}
+	return Mask;
 }
 
-void PhysicalMemory::DeAllocateFragmented(const VAddr addr)
+DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
 {
-	auto it = std::prev(m_Fragmented_mem_map.upper_bound(addr));
-	if (it == m_Fragmented_mem_map.end()) { EmuWarning(LOG_PREFIX ": DeAllocateFragmented : addr unknown!");  return; }
+	// This function assumes that the supplied allocation mask has been sanitized already
 
-	VirtualFree((void*)it->first, 0, MEM_RELEASE);
-	m_PhysicalMemoryInUse -= it->second;
-	m_Fragmented_mem_map.erase(it->first);
+	DWORD Mask = 0;
+
+	if (AllocType & XBOX_MEM_COMMIT) { Mask |= MEM_COMMIT; }
+	else if(AllocType & XBOX_MEM_RESERVE) { Mask |= MEM_RESERVE; }
+	else if (AllocType & XBOX_MEM_DECOMMIT) { Mask |= MEM_DECOMMIT; }
+	else if (AllocType & XBOX_MEM_RELEASE) { Mask |= MEM_RELEASE; }
+	else if (AllocType & XBOX_MEM_RESET) { Mask |= MEM_RESET; }
+	else if (AllocType & XBOX_MEM_TOP_DOWN) { Mask |= MEM_TOP_DOWN; }
+	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf("PMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
+
+	return Mask;
 }
 
-void PhysicalMemory::SetError(const PMEMORY_STATUS err)
+
+bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 {
-	m_Status = err;
+	PFN pfn;
+	PMMPTE pPde;
+	MMPTE TempPte;
+	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
+	PFN_COUNT PTtoCommit = 0;
+	PageType BusyType = SystemPageTableType;
+	VAddr StartingAddr = addr;
+
+	assert(Size);
+	assert(addr);
+
+	for (unsigned int i = 0; i < PdeNumber; ++i)
+	{
+		if (GetPdeAddress(StartingAddr)->Hardware.Valid == 0)
+		{
+			PTtoCommit++;
+		}
+		StartingAddr += PAGE_SIZE_LARGE;
+	}
+
+	if (!PTtoCommit)
+	{
+		// We don't need to commit any new page tables, so exit now
+
+		return true;
+	}
+
+	if (m_PhysicalPagesAvailable < PTtoCommit)
+	{
+		// We don't have enough memory for PT's mapping this allocation
+
+		return false;
+	}
+	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTableType; }
+	StartingAddr = addr;
+
+	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
+	// memory regions
+
+	for (unsigned int i = 0; i < PdeNumber; ++i)
+	{
+		pPde = GetPdeAddress(StartingAddr);
+		if (pPde->Hardware.Valid == 0)
+		{
+			// We grab one page at a time to avoid fragmentation issues. The maximum allowed page is m_MaxContiguousPfn
+			// to keep AllocatePT from stealing nv2a/pfn pages during initialization
+
+			RemoveFree(1, &pfn, 0, 0, m_MaxContiguousPfn);
+			TempPte.Default = ValidKernelPdeBits;
+			TempPte.Hardware.PFN = pfn;
+			WRITE_PTE(pPde, TempPte);
+			WritePfn(pfn, pfn, pPde, BusyType);
+		}
+		StartingAddr += PAGE_SIZE_LARGE;
+	}
+
+	return true;
 }
 
-void PhysicalMemory::ClearError()
+void PhysicalMemory::DeallocatePT(size_t Size, VAddr addr)
 {
-	m_Status = PMEMORY_SUCCESS;
+	PMMPTE pPde;
+	PXBOX_PFN PTpfn;
+	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
+	VAddr StartingAddr = addr;
+
+	assert(Size);
+	assert(addr);
+
+	for (unsigned int i = 0; i < PdeNumber; ++i)
+	{
+		pPde = GetPdeAddress(StartingAddr);
+		PTpfn = GetPfnOfPT(GetPteAddress(StartingAddr));
+
+		if (PTpfn->PTPageFrame.PtesUsed == 0)
+		{
+			InsertFree(pPde->Hardware.PFN, pPde->Hardware.PFN);
+			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn->PTPageFrame.BusyType, true);
+			WRITE_ZERO_PTE(pPde);
+		}
+		StartingAddr += PAGE_SIZE_LARGE;
+	}
+}
+
+bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion)
+{
+	bool ret = false;
+	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
+	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
+	if (!ret) { EmuWarning(LOG_PREFIX "Out of physical memory!"); }
+
+	return ret;
+}
+
+PXBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
+{
+	PXBOX_PFN PTpfn;
+
+	// GetPteAddress on a pte address will yield the corresponding pde which maps the supplied pte
+	PMMPTE PointerPde = GetPteAddress(pPte);
+	// PointerPde should have already been written to by AllocatePT
+	assert(PointerPde->Hardware.Valid != 0);
+	if (g_bIsRetail || g_bIsDebug) {
+		PTpfn = XBOX_PFN_ELEMENT(PointerPde->Hardware.PFN);
+	}
+	else { PTpfn = CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
+	assert(PTpfn->PTPageFrame.Busy == 1);
+	assert(PTpfn->PTPageFrame.BusyType == SystemPageTableType ||
+		PTpfn->PTPageFrame.BusyType == VirtualPageTableType);
+
+	return PTpfn;
 }

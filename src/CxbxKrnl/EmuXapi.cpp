@@ -102,7 +102,8 @@ void SetupXboxDeviceTypes()
 			printf("DeviceTable Entires: %u\n", deviceTableEntryCount);
 
 			// Sanity check: Where all these device offsets within Xbox memory
-			if (deviceTableStartOffset >= XBOX_MEMORY_SIZE || deviceTableEndOffset >= XBOX_MEMORY_SIZE) {
+			if ((deviceTableStartOffset >= (g_bIsRetail ? XBOX_MEMORY_SIZE : CHIHIRO_MEMORY_SIZE)) ||
+				(deviceTableEndOffset >= (g_bIsRetail ? XBOX_MEMORY_SIZE : CHIHIRO_MEMORY_SIZE))) {
 				CxbxKrnlCleanup("XAPI DeviceTable Location is outside of Xbox Memory range");
 			}
 
@@ -1101,7 +1102,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 	// Update the kernel's LaunchDataPage :
 	{
-		if (xboxkrnl::LaunchDataPage == xbnull)
+		if (xboxkrnl::LaunchDataPage == xbnullptr)
 		{
 			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
@@ -1117,11 +1118,11 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 		xboxkrnl::MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, PAGE_SIZE, TRUE);
 
-		if (pLaunchData != xbnull)
+		if (pLaunchData != xbnullptr)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath == xbnull)
+		if (lpTitlePath == xbnullptr)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };

@@ -440,11 +440,11 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::XProfpGetData),                       // 0x0173 (371) PROFILING
 	(uint32)FUNC(&xboxkrnl::IrtClientInitFast),                   // 0x0174 (372) PROFILING
 	(uint32)FUNC(&xboxkrnl::IrtSweep),                            // 0x0175 (373) PROFILING
-	(uint32)PANIC(0x0176),                                        // 0x0177 (374) DEVKIT MmDbgAllocateMemory
-	(uint32)PANIC(0x0177),                                        // 0x0178 (375) DEVKIT MmDbgFreeMemory - Returns number of pages released.
-	(uint32)PANIC(0x0178),                                        // 0x0179 (376) DEVKIT MmDbgQueryAvailablePages
-	(uint32)PANIC(0x0179),                                        // 0x017A (377) DEVKIT MmDbgReleaseAddress
-	(uint32)PANIC(0x017A),                                        // 0x017A (378) DEVKIT MmDbgWriteCheck
+	(uint32)FUNC(&xboxkrnl::MmDbgAllocateMemory),                 // 0x0176 (374) DEVKIT ONLY!
+	(uint32)FUNC(&xboxkrnl::MmDbgFreeMemory),                     // 0x0177 (375) DEVKIT ONLY!
+	(uint32)FUNC(&xboxkrnl::MmDbgQueryAvailablePages),            // 0x0178 (376) DEVKIT ONLY!
+	(uint32)FUNC(&xboxkrnl::MmDbgReleaseAddress),                 // 0x0179 (377) DEVKIT ONLY!
+	(uint32)FUNC(&xboxkrnl::MmDbgWriteCheck),                     // 0x017A (378) DEVKIT ONLY!
 };
 
 /* prevent name collisions */

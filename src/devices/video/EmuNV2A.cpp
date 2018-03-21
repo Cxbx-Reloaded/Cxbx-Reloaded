@@ -187,7 +187,7 @@ static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
 
 	// assert(dma.address + dma.limit < memory_region_size(d->vram));
 	*len = dma.limit;
-	return (void*)(MM_SYSTEM_PHYSICAL_MAP + dma.address);
+	return (void*)(PHYSICAL_MAP_BASE  + dma.address);
 }
 
 #include "EmuNV2A_PBUS.cpp"
@@ -686,8 +686,8 @@ void EmuNV2A_Init()
 
 	d->pcrtc.start = 0;
 
-	d->vram_ptr = (uint8_t*)MM_SYSTEM_PHYSICAL_MAP;
-	d->vram_size = (g_bIsChihiro || g_bIsDebug) ? CONTIGUOUS_MEMORY_CHIHIRO_SIZE : CONTIGUOUS_MEMORY_XBOX_SIZE;
+	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
+	d->vram_size = (g_bIsRetail ? CONTIGUOUS_MEMORY_XBOX_SIZE : CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
 
 	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
 	d->pramdac.core_clock_freq = 189000000;

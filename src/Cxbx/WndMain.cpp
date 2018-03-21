@@ -2175,7 +2175,7 @@ void WndMain::CrashMonitor()
 
 	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
 
-	g_EmuShared->GetQuickRebootFlag(&bQuickReboot);
+	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 
 	if (state == WAIT_OBJECT_0) // StopEmulation
 	{
@@ -2203,7 +2203,7 @@ void WndMain::CrashMonitor()
 	// destroy this thread and start a new one
 	CloseHandle(hCrashMutex);
 	bQuickReboot = false;
-	g_EmuShared->SetQuickRebootFlag(&bQuickReboot);
+	g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
 
 	return;
 }

@@ -110,7 +110,7 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	//case 0x03: // tray state
 	//case SMC_COMMAND_AV_PACK: // 0x04	// A / V Pack state
 	//case SMC_COMMAND_CPU_TEMP: // 0x09 // CPU temperature (°C)
-	//case SMC_COMMAND_GPU_TEMP: // 0x0A // GPU (board?) temperature (°C)
+	//case SMC_COMMAND_MOTHERBOARD_TEMP: // 0x0A // motherboard temperature (°C)
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
 	//case SMC_COMMAND_POWER_FAN_READBACK: // 0x10 // Current power fan speed (0-50)
@@ -179,8 +179,6 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		return;
 		}
 	case SMC_COMMAND_LED_SEQUENCE: // 0x08 LED flashing sequence
-		// ergo720: if WriteWord is true the Xbox still sets the LED correctly but it errors with ntstatus
-		// STATUS_IO_DEVICE_ERROR, however WriteWord is not accessible from here
 		// The LED flashing sequence is stored in the buffer of the SMCDevice class, so there's nothing to do here
 		break;
 	//case 0x0C: // tray eject(0 = eject; 1 = load)

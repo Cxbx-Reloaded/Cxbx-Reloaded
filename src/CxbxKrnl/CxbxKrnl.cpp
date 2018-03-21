@@ -91,6 +91,7 @@ char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
+char szFilePath_page_tables[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -98,11 +99,13 @@ Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
+bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
-bool g_IsWine = false;
+bool g_bIsWine = false;
 
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
@@ -280,7 +283,7 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 	return result;
 }
 
-void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
+HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 {
 	// First, try to open an existing memory.bin file :
 	HANDLE hFile = CreateFile(szFilePath_memory_bin,
@@ -363,24 +366,24 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	else
 		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
 
-	size_t tiledMemorySize = TILED_MEMORY_CHIHIRO_SIZE;
-	if (g_IsWine) {
+	size_t tiledMemorySize = XBOX_WRITE_COMBINED_SIZE;
+	if (g_bIsWine) {
 		printf("Wine detected: Using 64MB Tiled Memory Size\n");
 		// TODO: Figure out why Wine needs this and Windows doesn't.
 		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
-		tiledMemorySize = TILED_MEMORY_XBOX_SIZE;
+		tiledMemorySize = XBOX_WRITE_COMBINED_SIZE / 2;
 	}
 
 	// Map memory.bin contents into tiled memory too :
 	void *tiled_memory = (void *)MapViewOfFileEx(
 		hFileMapping,
 		FILE_MAP_READ | FILE_MAP_WRITE,
-				/* dwFileOffsetHigh */0,
-				/* dwFileOffsetLow */0,
+		/* dwFileOffsetHigh */0,
+		/* dwFileOffsetLow */0,
 		tiledMemorySize,
-		(void *)TILED_MEMORY_BASE);
+		(void *)XBOX_WRITE_COMBINED_BASE);
 
-	if (tiled_memory != (void *)TILED_MEMORY_BASE)
+	if (tiled_memory != (void *)XBOX_WRITE_COMBINED_BASE)
 	{
 		if (tiled_memory)
 			UnmapViewOfFile(tiled_memory);
@@ -390,12 +393,92 @@ void *CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	}
 
 	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), TILED_MEMORY_BASE, TILED_MEMORY_BASE + TILED_MEMORY_CHIHIRO_SIZE - 1);
+		GetCurrentThreadId(), XBOX_WRITE_COMBINED_BASE, XBOX_WRITE_COMBINED_BASE + tiledMemorySize - 1);
 
-	// Initialize the virtual manager :
-	g_VMManager.Initialize(hFileMapping);
 
-	return memory;
+	return hFileMapping;
+}
+
+HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
+{
+	// First, try to open an existing PageTables.bin file :
+	HANDLE hFile = CreateFile(szFilePath_page_tables,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
+
+	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
+	if (NeedsInitialization)
+	{
+		// If the PageTables.bin file doesn't exist yet, create it :
+		hFile = CreateFile(szFilePath_page_tables,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		/* lpSecurityAttributes */nullptr,
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
+		/* hTemplateFile */nullptr);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file!\n");
+		}
+	}
+
+	// Make sure PageTables.bin is at least 4 MB in size
+	SetFilePointer(hFile, PAGE_TABLES_SIZE, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFile);
+
+	HANDLE hFileMapping = CreateFileMapping(
+	hFile,
+	/* lpFileMappingAttributes */nullptr,
+	PAGE_READWRITE,
+	/* dwMaximumSizeHigh */0,
+	/* dwMaximumSizeLow */PAGE_TABLES_SIZE,
+	/**/nullptr);
+	if (hFileMapping == NULL)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : Couldn't create PageTables.bin file mapping!\n");
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFile, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != PAGE_TABLES_SIZE)
+	{
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
+	}
+
+	// Map memory.bin contents into memory :
+	void *memory = (void *)MapViewOfFileEx(
+	hFileMapping,
+	FILE_MAP_READ | FILE_MAP_WRITE,
+	/* dwFileOffsetHigh */0,
+	/* dwFileOffsetLow */0,
+	4 * ONE_MB,
+	(void *)PAGE_TABLES_BASE);
+	if (memory != (void *)PAGE_TABLES_BASE)
+	{
+		if (memory)
+			UnmapViewOfFile(memory);
+
+		CxbxKrnlCleanup("CxbxRestorePageTablesMemory: Couldn't map PageTables.bin to 0xC0000000!");
+	}
+
+	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
+		GetCurrentThreadId(), 4, PAGE_TABLES_BASE, PAGE_TABLES_END);
+
+	if (NeedsInitialization)
+	{
+		memset(memory, 0, 4 * ONE_MB);
+		printf("[0x%.4X] INIT: Initialized page tables memory\n", GetCurrentThreadId());
+	}
+	else
+		printf("[0x%.4X] INIT: Loaded PageTables.bin\n", GetCurrentThreadId());
+
+	return hFileMapping;
 }
 
 #pragma optimize("", off)
@@ -438,7 +521,7 @@ void PrintCurrentConfigurationLog()
 		}
 
 		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
-		if (g_IsWine) {
+		if (g_bIsWine) {
 			printf("Wine %s\n", wine_get_version());
 			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
 		} else {
@@ -637,13 +720,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// Detect Wine
-	g_IsWine = false;
+	g_bIsWine = false;
 	HMODULE hNtDll = GetModuleHandle("ntdll.dll");
 
 	if (hNtDll != nullptr) {
 		wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
 		if (wine_get_version) {
-			g_IsWine = true;
+			g_bIsWine = true;
 		}
 	}
 
@@ -699,8 +782,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 		RestoreExeImageHeader();
 	}
 
-	CxbxRestoreContiguousMemory(szFilePath_memory_bin);
-	CxbxRestorePersistentMemoryRegions();
+	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
+	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
 
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
@@ -727,15 +810,21 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-		// Register if we're running an Chihiro executable or a debug xbe (otherwise it's an Xbox retail executable)
+		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 		g_bIsDebug = (g_XbeType == xtDebug);
+		g_bIsRetail = (g_XbeType == xtRetail);
 
-		if (g_bIsChihiro || g_bIsDebug)
-		{
-			// Initialize the Chihiro/Debug - specific memory ranges
-			g_VMManager.InitializeChihiroDebug();
-		}
+		// Initialize the virtual manager
+		g_VMManager.Initialize(hMemoryBin, hPageTables, CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB);
+
+		// Reserve the memory region used by the xbe image and commit the xbe header
+		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;
+		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
+		VAddr XbeBase = XBE_IMAGE_BASE;
+		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &ImageSize, XBOX_MEM_RESERVE, XBOX_PAGE_READWRITE);
+		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
+
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -1159,6 +1248,7 @@ void CxbxInitFilePaths()
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
+	snprintf(szFilePath_page_tables, MAX_PATH, "%s\\PageTables.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
@@ -1173,29 +1263,6 @@ void CxbxInitFilePaths()
 		0
 	}
 };*/
-
-void CxbxRestoreLaunchDataPage()
-{
-	PAddr LaunchDataPAddr;
-	g_EmuShared->GetLaunchDataPAddress(&LaunchDataPAddr);
-
-	if (LaunchDataPAddr)
-	{
-		xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)(CONTIGUOUS_MEMORY_BASE + LaunchDataPAddr);
-		// Mark the launch page as allocated to prevent other allocations from overwriting it
-		xboxkrnl::MmAllocateContiguousMemoryEx(PAGE_SIZE, LaunchDataPAddr, LaunchDataPAddr + PAGE_SIZE - 1, PAGE_SIZE, PAGE_READWRITE);
-		LaunchDataPAddr = NULL;
-		g_EmuShared->SetLaunchDataPAddress(&LaunchDataPAddr);
-
-		DbgPrintf("INIT: Restored LaunchDataPage\n");
-	}
-}
-
-void CxbxRestorePersistentMemoryRegions()
-{
-	CxbxRestoreLaunchDataPage();
-	// TODO : Restore all other persistent memory regions here too.
-}
 
 __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 {
@@ -1229,11 +1296,7 @@ __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
             freopen("nul", "w", stdout);
     }
 
-    if(CxbxKrnl_hEmuParent != NULL)
-        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-	EmuShared::Cleanup();
-    TerminateProcess(g_CurrentProcessHandle, 0);
+	CxbxKrnlShutDown();
 }
 
 void CxbxKrnlRegisterThread(HANDLE hThread)
@@ -1349,6 +1412,10 @@ void CxbxKrnlResume()
 
 void CxbxKrnlShutDown()
 {
+	// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
+	int BootFlags = 0;
+	g_EmuShared->SetBootFlags(&BootFlags);
+
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
@@ -1361,11 +1428,6 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	ULONG Type;
 	xboxkrnl::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
-
-	int BootFlags;
-	g_EmuShared->GetBootFlags(&BootFlags);
-	BootFlags &= ~BOOT_FATAL_ERROR;         // clear the fatal error flag to avoid looping here endlessly
-	g_EmuShared->SetBootFlags(&BootFlags);
 
 	xboxkrnl::NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
 

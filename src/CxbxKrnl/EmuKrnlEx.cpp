@@ -204,11 +204,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 		LOG_FUNC_END;
 
-	PVOID pRet = (xboxkrnl::PVOID)g_VMManager.Allocate(NumberOfBytes, PageType::Pool);
-
-	if (pRet) {
-		memset(pRet, 0, NumberOfBytes); // Clear, to prevent side-effects on random contents
-	}
+	PVOID pRet = (xboxkrnl::PVOID)g_VMManager.AllocateZeroed(NumberOfBytes); // Clear, to prevent side-effects on random contents
 
 	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
 
@@ -366,7 +362,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	LOG_FUNC_ONE_ARG(PoolBlock);
 
 	// Not strictly correct, but it will do for now
-	ULONG ret = MmQueryAllocationSize(PoolBlock);
+	ULONG ret = g_VMManager.QuerySize((VAddr)PoolBlock);
 
 	RETURN(ret);
 }

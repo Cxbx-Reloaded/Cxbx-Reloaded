@@ -172,6 +172,10 @@ typedef long                            NTSTATUS;
 #define STATUS_XBE_MEDIA_MISMATCH        ((DWORD   )0xC0050002L)
 #define STATUS_OBJECT_NAME_NOT_FOUND     ((DWORD   )0xC0000034L)
 #define STATUS_OBJECT_NAME_COLLISION     ((DWORD   )0xC0000035L)
+#define STATUS_INVALID_PAGE_PROTECTION   ((DWORD   )0xC0000045L)
+#define STATUS_CONFLICTING_ADDRESSES     ((DWORD   )0xC0000018L)
+#define STATUS_UNABLE_TO_FREE_VM         ((DWORD   )0xC000001AL)
+#define STATUS_MEMORY_NOT_ALLOCATED      ((DWORD   )0xC00000A0L)
 
 // ******************************************************************
 // * Registry value types
@@ -189,63 +193,6 @@ typedef long                            NTSTATUS;
 #define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
 #define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
 #define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
-
-// ******************************************************************
-// * PAGE Masks
-// ******************************************************************
-#define PAGE_NOACCESS          0x01
-#define PAGE_READONLY          0x02
-#define PAGE_READWRITE         0x04
-#define PAGE_WRITECOPY         0x08
-#define PAGE_EXECUTE           0x10
-#define PAGE_EXECUTE_READ      0x20
-#define PAGE_EXECUTE_READWRITE 0x40
-#define PAGE_EXECUTE_WRITECOPY 0x80
-#define PAGE_GUARD             0x100
-#define PAGE_NOCACHE           0x200
-#define PAGE_WRITECOMBINE      0x400
-
-// ******************************************************************
-// * MEM Masks
-// ******************************************************************
-#define MEM_COMMIT                  0x1000      
-#define MEM_RESERVE                 0x2000      
-#define MEM_DECOMMIT                0x4000      
-#define MEM_RELEASE                 0x8000      
-#define MEM_FREE                    0x10000     
-#define MEM_PRIVATE                 0x20000     
-#define MEM_MAPPED                  0x40000     
-//#define MEM_RESET                 0x80000     
-#define MEM_TOP_DOWN                0x100000     
-#define MEM_WRITE_WATCH             0x200000    
-#define MEM_PHYSICAL                0x400000    
-#define MEM_NOZERO                  0x800000 // Replaces MEM_ROTATE on WinXP+
-//#define MEM_IMAGE                 0x1000000 // Declare like below, to prevent warning C4005: 'MEM_IMAGE': macro redefinition
-#define SEC_IMAGE                   0x1000000     
-#define MEM_IMAGE                   SEC_IMAGE    
-
-// ******************************************************************
-// * memory
-// ******************************************************************
-
-#define PAGE_SHIFT                  12
-
-// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size.
-#define PAGE_SIZE                   (1 << PAGE_SHIFT)
-#define PAGE_MASK                   (PAGE_SIZE - 1)
-#define MAX_NUM_OF_PAGES 1 << (32 - PAGE_SHIFT) // 1048576 (1024^2) max virtual pages possible, = 4GiB / 4096
-#define XBOX_CONTIGUOUS_MEMORY_LIMIT XBOX_MEMORY_SIZE - 32 * PAGE_SIZE // upper limit available for contiguous allocations (xbox)
-#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT CHIHIRO_MEMORY_SIZE - 48 * PAGE_SIZE // upper limit available for contiguous allocations (chihiro)
-#define ZERO_PAGE_ADDR 0
-#define FIRST_PAGE_ADDR PAGE_SIZE
-
-// Convert a physical frame number to its corresponding physical address.
-#define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
-	((PCHAR)MM_SYSTEM_PHYSICAL_MAP + ((ULONG)(Pfn) << PAGE_SHIFT))
-
-#define KERNEL_STACK_SIZE			12288 /* = 0x03000 */
-
-#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
 
 // ******************************************************************
 // * calling conventions
@@ -408,6 +355,8 @@ LIST_ENTRY, *PLIST_ENTRY;
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
 
 #define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
+
+#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
 #define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
 ((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
@@ -1326,6 +1275,11 @@ typedef struct _DASH_LAUNCH_DATA
 	BYTE  Reserved[3072 - 16];
 }
 DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
+
+// ******************************************************************
+// * Persisted Frame Buffer Address
+// ******************************************************************
+extern PVOID AvSavedDataAddress;
 
 // ******************************************************************
 // * DISPATCHER_HEADER
@@ -2256,7 +2210,7 @@ XBOX_EEPROM;
 typedef struct _XBOX_UEM_INFO
 {
 	UCHAR ErrorCode;
-	UCHAR Reserved;
+	UCHAR Unused;
 	USHORT History;
 }
 XBOX_UEM_INFO;

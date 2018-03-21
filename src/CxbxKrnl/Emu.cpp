@@ -110,7 +110,7 @@ std::string EIPToString(xbaddr EIP)
 {
 	char buffer[256];
 	
-	if (EIP < XBOX_MEMORY_SIZE) {
+	if (EIP < (g_bIsRetail ? XBOX_MEMORY_SIZE : CHIHIRO_MEMORY_SIZE)) {
 		int symbolOffset = 0;
 		std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
 		sprintf(buffer, "0x%.08X(=%s+0x%x)", EIP, symbolName.c_str(), symbolOffset);
