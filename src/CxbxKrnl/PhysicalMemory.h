@@ -211,6 +211,7 @@ typedef enum _PageType
 /* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
 void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
 
+
 /* PhysicalMemory class */
 class PhysicalMemory
 {

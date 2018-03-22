@@ -103,6 +103,8 @@ bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+// Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
+size_t g_SystemMaxMemory = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
 bool g_bIsWine = false;
@@ -451,7 +453,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		CxbxKrnlCleanup("CxbxRestorePageTablesMemory : PageTables.bin file is not 4 MiB large!\n");
 	}
 
-	// Map memory.bin contents into memory :
+	// Map PageTables.bin contents into memory :
 	void *memory = (void *)MapViewOfFileEx(
 	hFileMapping,
 	FILE_MAP_READ | FILE_MAP_WRITE,
@@ -815,8 +817,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
 
+
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables, CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB);
+		g_VMManager.Initialize(hMemoryBin, hPageTables);
 
 		// Reserve the memory region used by the xbe image and commit the xbe header
 		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;

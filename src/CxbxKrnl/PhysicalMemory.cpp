@@ -91,7 +91,7 @@ void PhysicalMemory::InitializePageDirectory()
 	// on the Xbox, which is not present here on Cxbx-Reloaded
 
 	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
-	// file cache function is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
+	// file cache functions is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
 	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
@@ -767,7 +767,7 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	bool ret = false;
 	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
 	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
-	if (!ret) { EmuWarning(LOG_PREFIX "Out of physical memory!"); }
+	if (!ret) { EmuWarning(LOG_PREFIX " Out of physical memory!"); }
 
 	return ret;
 }
