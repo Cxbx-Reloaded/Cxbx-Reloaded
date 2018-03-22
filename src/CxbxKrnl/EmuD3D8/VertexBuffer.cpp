@@ -270,7 +270,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 {
 	bool bVshHandleIsFVF = VshHandleIsFVF(pDrawContext->hVertexShader);
 	bool bNeedTextureNormalization = false;
-	struct { bool bTexIsLinear; int Width; int Height; } pActivePixelContainer[X_D3DTS_STAGECOUNT] = { 0 };
+	struct { int Dimensions; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[X_D3DTS_STAGECOUNT] = { 0 };
 
 	if (bVshHandleIsFVF) {
 		DWORD dwTexN = (pDrawContext->hVertexShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
@@ -278,8 +278,8 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		//X_D3DBaseTexture *pLinearBaseTexture[X_D3DTS_STAGECOUNT];
 		for (uint i = 0; i < X_D3DTS_STAGECOUNT; i++) {
 			// Only normalize coordinates used by the FVF shader :
-			pActivePixelContainer[i].bTexIsLinear = false;
 			if (i + 1 <= dwTexN) {
+				pActivePixelContainer[i].Dimensions = DxbxFVF_GetTextureSize(pDrawContext->hVertexShader, i);
 				// TODO : Use GetXboxBaseTexture()
 				X_D3DBaseTexture *pXboxBaseTexture = EmuD3DActiveTexture[i];
 				if (pXboxBaseTexture != xbnullptr) {
@@ -293,13 +293,14 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						// TODO : Use DecodeD3DSize
 						pActivePixelContainer[i].Width = (pXboxBaseTexture->Size & X_D3DSIZE_WIDTH_MASK) + 1;
 						pActivePixelContainer[i].Height = ((pXboxBaseTexture->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+						// TODO : Support 3D textures
 					}
 				}
 			}
 		}
 	}
 
-    CxbxStreamDynamicPatch    *pStreamDynamicPatch = (m_pVertexShaderDynamicPatch != nullptr) ? (&m_pVertexShaderDynamicPatch->pStreamPatches[uiStream]) : nullptr;
+    CxbxStreamDynamicPatch *pStreamDynamicPatch = (m_pVertexShaderDynamicPatch != nullptr) ? (&m_pVertexShaderDynamicPatch->pStreamPatches[uiStream]) : nullptr;
 	bool bNeedVertexPatching = (pStreamDynamicPatch != nullptr && pStreamDynamicPatch->NeedPatch);
 	bool bNeedRHWReset = bVshHandleIsFVF && ((pDrawContext->hVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
@@ -337,7 +338,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		}
 	}
 	else {
-		XTL::X_D3DVertexBuffer    *pXboxVertexBuffer = g_D3DStreams[uiStream];
+		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_D3DStreams[uiStream];
         pXboxVertexData = (uint08*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == NULL) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0);
@@ -528,17 +529,20 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 			// Handle pre-transformed vertices (which bypass the vertex shader pipeline)
 			if (bNeedRHWReset) {
+#if 0
 				// Check Z. TODO : Why reset Z from 0.0 to 1.0 ? (Maybe fog-related?)
 				if (pVertexDataAsFloat[2] == 0.0f) {
 					// LOG_TEST_CASE("D3DFVF_XYZRHW (Z)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
 					pVertexDataAsFloat[2] = 1.0f;
 				}
-
+#endif
+#if 1
 				// Check RHW. TODO : Why reset from 0.0 to 1.0 ? (Maybe 1.0 indicates that the vertices are not to be transformed)
 				if (pVertexDataAsFloat[3] == 0.0f) {
 					// LOG_TEST_CASE("D3DFVF_XYZRHW (RHW)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
 					pVertexDataAsFloat[3] = 1.0f;
 				}
+#endif
 			}
 
 			// Normalize texture coordinates in FVF stream if needed
@@ -546,9 +550,31 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				FLOAT *pVertexUVData = (FLOAT*)((uintptr_t)pVertexDataAsFloat + uiUVOffset);
 				for (uint i = 0; i < X_D3DTS_STAGECOUNT; i++) {
 					if (pActivePixelContainer[i].bTexIsLinear) {
-						pVertexUVData[(i * 2) + 0] /= pActivePixelContainer[i].Width;
-						pVertexUVData[(i * 2) + 1] /= pActivePixelContainer[i].Height;
+						switch (pActivePixelContainer[i].Dimensions) {
+						case 0:
+							LOG_TEST_CASE("Normalize 0D?");
+							break;
+						case 1:
+							LOG_TEST_CASE("Normalize 1D");
+							pVertexUVData[0] /= pActivePixelContainer[i].Width;
+							break;
+						case 2:
+							pVertexUVData[0] /= pActivePixelContainer[i].Width;
+							pVertexUVData[1] /= pActivePixelContainer[i].Height;
+							break;
+						case 3:
+							LOG_TEST_CASE("Normalize 3D");
+							pVertexUVData[0] /= pActivePixelContainer[i].Width;
+							pVertexUVData[1] /= pActivePixelContainer[i].Height;
+							pVertexUVData[2] /= pActivePixelContainer[i].Depth;
+							break;
+						default:
+							LOG_TEST_CASE("Normalize ?D");
+							break;
+						}
 					}
+
+					pVertexUVData += pActivePixelContainer[i].Dimensions;
 				}
 			}
 		}
