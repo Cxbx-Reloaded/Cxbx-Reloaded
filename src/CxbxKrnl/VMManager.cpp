@@ -66,7 +66,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRestrict64MiB)
+void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 {
 	// Set up the critical section to synchronize access
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
@@ -74,6 +74,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
 	m_AllocationGranularity = si.dwAllocationGranularity;
+	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 	m_hContiguousFile = memory_view;
 	m_hPTFile = pagetables_view;
 
@@ -83,17 +84,44 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 	ConstructMemoryRegion(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_SIZE, SystemRegion);
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
+	int QuickReboot;
+	g_EmuShared->GetBootFlags(&QuickReboot);
+	if ((QuickReboot & BOOT_QUICK_REBOOT) != 0)
+	{
+		ULONG PreviousXbeType = *(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12);
+		if (PreviousXbeType != g_XbeType)
+		{
+			// We cannot handle the case where we rebooted to an xbe type different then the previous one we came from, since the RestorePersistentMemory
+			// expects the memory layout to always be the same between reboots (like it should be). The only legit case is when a chihiro xbe
+			// reboots to the dashboard, but even then it should actually reboot to a chihiro-specific xbe loader. Another possibility is that
+			// the xbe has been tampered with: the entry point and the kernel thunk addresses have been xored with a different key to make it
+			// appear to be of a different type.
+
+			CxbxKrnlCleanup("Rebooted xbe type doesn't match with the xbe type that performed the reboot. Tampered xbe or rebooting to the \
+dashboard from non-retail xbe?");
+		}
+	}
+	else
+	{
+		// Save the type of xbe we are emulating in this emulation session. This information will be needed if the current xbe performs
+		// a quick reboot
+
+		*(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12) = g_XbeType;
+	}
+
 	// Set up general memory variables according to the xbe type
 	if (g_bIsChihiro)
 	{
 		m_MaxContiguousPfn = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
-		m_PhysicalPagesAvailable = CHIHIRO_MEMORY_SIZE >> PAGE_SHIFT;
+		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
+		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 		m_NV2AInstancePage = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 	}
 	else if (g_bIsDebug)
 	{
+		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_DebuggerPagesAvailable = X64M_PHYSICAL_PAGE;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
@@ -101,7 +129,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 		// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
 		// will still use only the lower 64 MiB and the same is true for the debugger pages, meaning they will only
 		// use the upper extra 64 MiB regardless of this flag
-		if (bRestrict64MiB) { m_bAllowNonDebuggerOnTop64MiB = false; }
+		if (CxbxKrnl_Xbe->m_Header.dwInitFlags.bLimit64MB) { m_bAllowNonDebuggerOnTop64MiB = false; }
 	}
 
 	// Insert all the pages available on the system in the free list
@@ -113,8 +141,6 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRes
 	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database
-	int QuickReboot;
-	g_EmuShared->GetBootFlags(&QuickReboot);
 	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0) {
 		FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
 		InitializePfnDatabase();
@@ -410,7 +436,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	{
 		// Already at the beginning of the map, bail out immediately
 
-		EmuWarning(LOG_PREFIX "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 		return;
 	}
@@ -432,7 +458,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	// ergo720: I don't expect this to happen since it would mean we have exhausted the virtual space in the memory region,
 	// but it's just in case it does
 
-	EmuWarning(LOG_PREFIX "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+	EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 
@@ -493,7 +519,7 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 {
 	Lock();
 
-	memory_statistics->TotalPhysicalPages = g_bIsRetail ? XBOX_MEMORY_SIZE >> PAGE_SHIFT : CHIHIRO_MEMORY_SIZE >> PAGE_SHIFT;
+	memory_statistics->TotalPhysicalPages = g_SystemMaxMemory >> PAGE_SHIFT;
 	memory_statistics->AvailablePages = g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ?
 		m_PhysicalPagesAvailable + m_DebuggerPagesAvailable : m_PhysicalPagesAvailable;
 	memory_statistics->VirtualMemoryBytesCommitted = (m_PagesByUsage[VirtualMemoryType] +
@@ -1744,7 +1770,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	{
 		// We are already at the beginning of the map, so bail out immediately
 
-		EmuWarning(LOG_PREFIX "Failed to map a memory block in the virtual region %d!", Type);
+		EmuWarning(LOG_PREFIX " Failed to map a memory block in the virtual region %d!", Type);
 		return NULL;
 	}
 
@@ -1775,7 +1801,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	// We have failed to map the block. This is likely because the virtual space is fragmented or there are too many
 	// host allocations in the memory region. Log this error and bail out
 
-	EmuWarning(LOG_PREFIX "Failed to map a memory block in the virtual region %d!", Type);
+	EmuWarning(LOG_PREFIX " Failed to map a memory block in the virtual region %d!", Type);
 
 	return NULL;
 }
@@ -2109,8 +2135,7 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool
 		CarvedVmaIt = std::next(UnmapVMA(CarvedVmaIt, Type));
 	}
 
-	// If we free an entire vma (which should always be the case), prev(CarvedVmaIt) will be the freed vma. If it is not,
-	// we'll do a standard search
+	// If we free an entire vma, prev(CarvedVmaIt) will be the freed vma. If it is not, we'll do a standard search
 
 	if (CarvedVmaIt != it_begin && std::prev(CarvedVmaIt)->second.type == FreeVma)
 	{
@@ -2147,7 +2172,7 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool
 			--it;
 		}
 
-		EmuWarning(LOG_PREFIX "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 

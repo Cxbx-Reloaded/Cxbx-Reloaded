@@ -666,7 +666,7 @@ void NV2ADevice::Init()
 
 	// Register physical memory on bar 1
 	r.Memory.address = 0xF0000000 >> 4;
-	RegisterBAR(1, (g_bIsRetail ? XBOX_MEMORY_SIZE : CHIHIRO_MEMORY_SIZE), r.value);
+	RegisterBAR(1, g_SystemMaxMemory, r.value);
 	
 	m_DeviceId = 0x02A5;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
@@ -678,7 +678,7 @@ void NV2ADevice::Init()
 	d->pcrtc.start = 0;
 	
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
-	d->vram_size = (g_bIsRetail ? CONTIGUOUS_MEMORY_XBOX_SIZE : CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
+	d->vram_size = g_SystemMaxMemory;
 
 	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
 	d->pramdac.core_clock_freq = 189000000;
@@ -744,7 +744,7 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 {
 	switch (barIndex) {
 	case 0: {
-		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
+		// Access NV2A regardless whether HLE is disabled or not (ignoring bLLE_GPU)
 		const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 		if (block != nullptr) {

@@ -291,6 +291,8 @@ extern bool g_bIsWine;
 extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
 
+extern size_t g_SystemMaxMemory;
+
 void InitXboxThread(DWORD_PTR cores);
 
 /*! thread local storage structure */

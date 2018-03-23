@@ -116,7 +116,7 @@ class VMManager : public PhysicalMemory
 			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, HANDLE pagetables_view, bool bRestrict64MiB);
+		void Initialize(HANDLE memory_view, HANDLE pagetables_view);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
@@ -177,6 +177,7 @@ class VMManager : public PhysicalMemory
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
+
 	
 		// set up the pfn database
 		void InitializePfnDatabase();
