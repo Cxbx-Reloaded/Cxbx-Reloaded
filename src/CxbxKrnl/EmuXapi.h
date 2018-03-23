@@ -202,18 +202,8 @@ typedef struct _XINPUT_CAPABILITIES
 {
     BYTE SubType;
     WORD Reserved;
-
-    union
-    {
-        XINPUT_GAMEPAD Gamepad;
-    }
-    In;
-
-    union
-    {
-        XINPUT_RUMBLE Rumble;
-    }
-    Out;
+	XINPUT_GAMEPAD Gamepad;
+	XINPUT_RUMBLE Rumble;
 }
 XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 
@@ -269,6 +259,7 @@ XINPUT_STATE, *PXINPUT_STATE;
 // ******************************************************************
 // * XINPUT_FEEDBACK_HEADER
 // ******************************************************************
+#pragma pack(1)
 typedef struct _XINPUT_FEEDBACK_HEADER
 {
     DWORD           dwStatus;
@@ -276,18 +267,15 @@ typedef struct _XINPUT_FEEDBACK_HEADER
     BYTE            Reserved[58];
 }
 XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
+#pragma pack()
 
 // ******************************************************************
 // * XINPUT_FEEDBACK
 // ******************************************************************
 typedef struct _XINPUT_FEEDBACK
 {
-    XINPUT_FEEDBACK_HEADER Header;
-
-    union
-    {
-        XINPUT_RUMBLE Rumble;
-    };
+	XINPUT_FEEDBACK_HEADER Header;
+	XINPUT_RUMBLE Rumble;
 }
 XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 

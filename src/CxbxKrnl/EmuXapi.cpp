@@ -521,7 +521,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
         if(dwPort == 0)
         {
             pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
-			ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
+			ZeroMemory(&pCapabilities->Gamepad, sizeof(XINPUT_GAMEPAD));
+			ZeroMemory(&pCapabilities->Rumble, sizeof(XINPUT_RUMBLE));
+
             ret = ERROR_SUCCESS;
         }
     }
@@ -609,57 +611,15 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 
     if(pph != NULL)
     {
-        int v;
+		if (pph->dwPort == 0)
+		{
+			if (g_XInputEnabled)
+			{
+				XTL::EmuXInputSetState(pFeedback);
+			}
 
-        //
-        // Check if this device is already being polled
-        //
-
-        bool found = false;
-
-        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-        {
-            if(g_pXInputSetStateStatus[v].hDevice == hDevice)
-            {
-                found = true;
-
-                if(pFeedback->Header.dwStatus == ERROR_SUCCESS)
-                {
-                    ret = ERROR_SUCCESS;
-
-                    // remove from slot
-                    g_pXInputSetStateStatus[v].hDevice = NULL;
-                    g_pXInputSetStateStatus[v].pFeedback = NULL;
-                    g_pXInputSetStateStatus[v].dwLatency = 0;
-                }
-            }
-        }
-
-        //
-        // If device was not already slotted, queue it
-        //
-
-        if(!found)
-        {
-            for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-            {
-                if(g_pXInputSetStateStatus[v].hDevice == 0)
-                {
-                    g_pXInputSetStateStatus[v].hDevice = hDevice;
-                    g_pXInputSetStateStatus[v].dwLatency = 0;
-                    g_pXInputSetStateStatus[v].pFeedback = pFeedback;
-
-                    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
-
-                    break;
-                }
-            }
-
-            if(v == XINPUT_SETSTATE_SLOTS)
-            {
-                CxbxKrnlCleanup("Ran out of XInputSetStateStatus slots!");
-            }
-        }
+			ret = ERROR_SUCCESS;
+		}
     }
 
 	RETURN(ret);

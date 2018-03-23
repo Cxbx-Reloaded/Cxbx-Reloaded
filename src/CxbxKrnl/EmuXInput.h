@@ -39,4 +39,9 @@
 // ******************************************************************
 void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
 
+// ******************************************************************
+// * Native implementation of XInputSetState
+// ******************************************************************
+void EmuXInputSetState(XTL::PXINPUT_FEEDBACK Feedback);
+
 #endif
