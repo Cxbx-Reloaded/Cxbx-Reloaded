@@ -28,7 +28,8 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  Copyright (c) 2013 espes
+// *  Copyright (c) 2015 Matt Borgerson
 // *  (c) 2017 Luke Usher <luke.usher@outlook.com>
 // * 
 // * This file is based on code from the XQEMU Project
