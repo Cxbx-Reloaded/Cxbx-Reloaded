@@ -33,7 +33,7 @@
 // *  (c) 2017 Luke Usher <luke.usher@outlook.com>
 // * 
 // * This file is based on code from the XQEMU Project
-// * https://github.com/espes/xqemu/blob/xbox/hw/xbox/nvnet.c
+// * https://github.com/xqemy/xqemu/blob/xbox/hw/xbox/nvnet.c
 // *
 // *  All rights reserved
 // *
