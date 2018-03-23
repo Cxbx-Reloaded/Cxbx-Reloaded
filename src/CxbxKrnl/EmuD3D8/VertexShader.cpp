@@ -1482,9 +1482,18 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
 				TmpIntermediate.Parameters[0].Parameter.Address = outRegister;
 				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
-				//VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
 				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				//VshSetOutputMask(&TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
+				// Is this output register a scalar
+				if (TmpIntermediate.Output.Type == IMD_OUTPUT_O) {
+					if ((TmpIntermediate.Output.Address == OREG_OFOG) || (TmpIntermediate.Output.Address == OREG_OPTS)) {
+						// This fixes test case "Namco Museum 50th Anniversary"
+						// The PC shader assembler doesn't like masks on scalar registers
+						VshSetOutputMask(&TmpIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
+						// Make the first source parameter use the w swizzle too
+						VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+					}
+				}
+
 				VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
             }
 			else
