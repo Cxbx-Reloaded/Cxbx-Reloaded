@@ -120,7 +120,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			TempPF.Default = 0;
 			TempPF.Busy.Busy = 1;
 			TempPF.Busy.BusyType = BusyType;
-			if (BusyType != PageType::VirtualPageTableType && BusyType != SystemPageTableType) {
+			if (BusyType != VirtualPageTableType && BusyType != SystemPageTableType) {
 				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
 			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT

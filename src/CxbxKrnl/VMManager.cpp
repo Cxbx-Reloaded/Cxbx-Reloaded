@@ -88,7 +88,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 	g_EmuShared->GetBootFlags(&QuickReboot);
 	if ((QuickReboot & BOOT_QUICK_REBOOT) != 0)
 	{
-		ULONG PreviousXbeType = *(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12);
+		UCHAR PreviousXbeType = *(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
 		if (PreviousXbeType != g_XbeType)
 		{
 			// We cannot handle the case where we rebooted to an xbe type different then the previous one we came from, since the RestorePersistentMemory
@@ -106,7 +106,7 @@ dashboard from non-retail xbe?");
 		// Save the type of xbe we are emulating in this emulation session. This information will be needed if the current xbe performs
 		// a quick reboot
 
-		*(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12) = g_XbeType;
+		*(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = g_XbeType;
 	}
 
 	// Set up general memory variables according to the xbe type
@@ -1515,18 +1515,25 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	xboxkrnl::NTSTATUS status;
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
+	VAddr MaxAllowedAddress;
+	MappingFn MappingRoutine;
+	VAddr AlignedCapturedBase;
+	size_t AlignedCapturedSize;
+	VMAIter it;
+	DWORD WindowsPerms;
+	DWORD WindowsAllocType;
 
 	// Invalid base address
-	if (CapturedBase > HIGHEST_VAD_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
+	if (CapturedBase > HIGHEST_VMA_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Invalid region size
-	if (((HIGHEST_VAD_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
+	if (((HIGHEST_VMA_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Size cannot be zero
 	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	// Limit number of zero bits upto 20
-	if (ZeroBits > 21) { RETURN(STATUS_INVALID_PARAMETER); }
+	// Limit number of zero bits upto 21
+	if (ZeroBits > MAXIMUM_ZERO_BITS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Check for unknown MEM flags
 	if(AllocationType & ~(XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_TOP_DOWN | XBOX_MEM_RESET
@@ -1542,28 +1549,78 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	DbgPrintf("VMEM: XbAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", CapturedBase, CapturedBase + CapturedSize);
 
-	// On the Xbox, blocks reserved by NtAllocateVirtualMemory are 64K aligned and the size is rounded up on a 4K boundary
-	// This can lead to unaligned blocks if the host granularity is not 64K. Fortunately, Windows uses that
-	VAddr AlignedCapturedBase;
-	size_t AlignedCapturedSize;
-	VMAIter it;
-
 	Lock();
 
 	if (AllocationType & XBOX_MEM_RESERVE || CapturedBase == 0)
 	{
-		AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
-		AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
-
-		if (CapturedBase != 0)
+		if (CapturedBase == 0)
 		{
-			// The specified region must be completely inside a free vma
+			// We are free to decide where to put this block
 
-			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
-			if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != FreeVma) { status = STATUS_CONFLICTING_ADDRESSES; goto Exit; }
+			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
+
+			if (ZeroBits != 0)
+			{
+				MaxAllowedAddress = MAX_VIRTUAL_ADDRESS >> ZeroBits;
+				if (MaxAllowedAddress > HIGHEST_USER_ADDRESS) { status = STATUS_INVALID_PARAMETER; goto Exit; }
+			}
+			else
+			{
+				MaxAllowedAddress = HIGHEST_USER_ADDRESS;
+			}
+
+			// With XBOX_MEM_TOP_DOWN we will always set the LastFree iterator to the vma containing MaxAllowedAddress in order to map the
+			// block at the highest possible address. This can become quite slow if a title repeatedly allocates virtual memory with this flag.
+			// See here: https://randomascii.wordpress.com/2011/08/05/making-virtualalloc-arbitrarily-slower/
+
+			if (AllocationType & XBOX_MEM_TOP_DOWN) { m_MemoryRegionArray[UserRegion].LastFree = GetVMAIterator(MaxAllowedAddress, UserRegion); }
+
+			// On the Xbox, blocks reserved by NtAllocateVirtualMemory are 64K aligned and the size is rounded up on a 4K boundary.
+			// This can lead to unaligned blocks if the host granularity is not 64K. Fortunately, Windows uses that
+
+			MappingRoutine = &VMManager::ReserveBlockWithVirtualAlloc;
+			AlignedCapturedBase = MapMemoryBlock(MappingRoutine, UserRegion, AlignedCapturedSize >> PAGE_SHIFT, 0, MaxAllowedAddress);
+
+			if (!AlignedCapturedBase) { status = STATUS_NO_MEMORY; goto Exit; }
 		}
-		CapturedBase = AlignedCapturedBase;
+		else
+		{
+			// A base address was specified. We could check with CheckConflictingVMA to see if it's already allocated but even it is free, there
+			// could still be host allocations in the vma. So we just attempt to map the block and see if it fails or not
+
+			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
+			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
+
+			// Only allocate memory if the base address is higher than our memory placeholder
+
+			if (AlignedCapturedBase > XBE_MAX_VA &&
+				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
+			{
+				// Something else is already mapped at the specified address, report an error and bail out
+
+				status = STATUS_CONFLICTING_ADDRESSES;
+				goto Exit;
+			}
+		}
+
+		m_VirtualMemoryBytesReserved += AlignedCapturedSize;
+		ConstructVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, ReservedVma, true, Protect);
+
+		if ((AllocationType & XBOX_MEM_COMMIT) == 0)
+		{
+			// XBOX_MEM_COMMIT was not specified, so we are done with the allocation
+
+			*addr = AlignedCapturedBase;
+			*Size = AlignedCapturedSize;
+
+			status = STATUS_SUCCESS;
+			goto Exit;
+		}
 	}
+
+
+
+
 	if (AllocationType & XBOX_MEM_COMMIT)
 	{
 		if (CapturedBase != 0)
@@ -1580,8 +1637,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	if (AllocationType != XBOX_MEM_RESET)
 	{
-		DWORD WindowsPerms = ConvertXboxToWinProtection(PatchXboxPermissions(Protect));
-		DWORD WindowsAllocType = ConvertXboxToWinAllocType(AllocationType);
+		WindowsPerms = ConvertXboxToWinProtection(PatchXboxPermissions(Protect));
+		WindowsAllocType = ConvertXboxToWinAllocType(AllocationType);
 
 		// Only allocate memory if the base address is higher than our memory placeholder
 		if (AlignedCapturedBase > XBE_MAX_VA || AlignedCapturedBase == 0)
@@ -1719,7 +1776,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	RETURN(status);
 }
 
-VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn)
+VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress)
 {
 	VAddr addr;
 	VMAIter it = m_MemoryRegionArray[Type].LastFree;
@@ -1733,6 +1790,11 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	}
 
 	VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
+
+	if (HighestAddress) // XbAllocateVirtualMemory specific
+	{
+		end_it = std::next(GetVMAIterator(HighestAddress, Type));
+	}
 
 	while (it != end_it)
 	{
@@ -1752,7 +1814,9 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 		// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
 		// keep on trying until we succeed or fail entirely.
 
-		size_t vma_end = it->first + it->second.size;
+		size_t vma_end;
+		if (HighestAddress && (it->first + it->second.size > HighestAddress + 1)) { vma_end = HighestAddress + 1; }
+		else { vma_end = it->first + it->second.size; }
 
 		addr = (this->*MappingRoutine)(addr, Size, vma_end, FileOffsetLow, pfn);
 

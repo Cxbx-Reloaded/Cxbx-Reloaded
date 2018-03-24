@@ -188,7 +188,7 @@ class VMManager : public PhysicalMemory
 		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
-		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn);
+		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress = 0);
 		// helper function which maps a block with VirtualAlloc
 		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which reserves a block of virtual memory with VirtualAlloc
