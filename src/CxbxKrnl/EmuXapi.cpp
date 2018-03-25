@@ -520,7 +520,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
         if(dwPort == 0)
         {
             pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
-			ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
+			pCapabilities->In.Gamepad = {};
+			pCapabilities->Out.Rumble = {};
+
             ret = ERROR_SUCCESS;
         }
     }
@@ -659,6 +661,14 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                 CxbxKrnlCleanup("Ran out of XInputSetStateStatus slots!");
             }
         }
+
+		if (pph->dwPort == 0)
+		{
+			if (g_XInputEnabled)
+			{
+				XTL::EmuXInputSetState(pFeedback);
+			}
+		}
     }
 
 	RETURN(ret);

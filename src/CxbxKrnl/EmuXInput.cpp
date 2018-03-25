@@ -49,7 +49,6 @@
 // * Static Variable(s)
 // ******************************************************************
 static XINPUT_STATE		g_Controller;
-static XINPUT_VIBRATION g_Vibration;
 static BOOL				g_bXInputInitialized = FALSE;
 
 
@@ -132,4 +131,22 @@ void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 	} else {
 		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_RIGHT;
 	}
+}
+
+
+// ******************************************************************
+// * Native implementation of XInputSetState
+// ******************************************************************
+void XTL::EmuXInputSetState(XTL::PXINPUT_FEEDBACK Feedback)
+{
+	XINPUT_VIBRATION FrameVibration =
+	{
+		Feedback->Rumble.wLeftMotorSpeed,
+		Feedback->Rumble.wRightMotorSpeed
+	};
+	
+	//
+	// Set the PC XInput state
+
+	XInputSetState(0, &FrameVibration);
 }
