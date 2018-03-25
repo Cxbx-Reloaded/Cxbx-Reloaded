@@ -909,11 +909,14 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 		LOG_FUNC_ARG(RegionSize)
 		LOG_FUNC_ARG(NewProtect)
 		LOG_FUNC_ARG_OUT(OldProtect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_IGNORED();
 
-	RETURN(STATUS_SUCCESS);
+	DWORD Perms = NewProtect;
+	NTSTATUS ret = g_VMManager.XbProtect((VAddr*)BaseAddress, (size_t*)RegionSize, &Perms);
+	*OldProtect = Perms;
+
+	RETURN(ret);
 }
 
 // ******************************************************************

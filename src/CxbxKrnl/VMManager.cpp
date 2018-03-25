@@ -1709,7 +1709,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	// If some pte's were detected to have different permissions in the above check, we need to update those as well
 
-	if (bUpdatePteProtections) {} // TODO
+	if (bUpdatePteProtections)
+	{
+		VAddr TempAddr = AlignedCapturedBase;
+		size_t TempSize = AlignedCapturedSize;
+		DWORD TempProtect = Protect;
+		XbProtect(&TempAddr, &TempSize, &TempProtect);
+	}
 
 	DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
 		AlignedCapturedBase + AlignedCapturedSize);
@@ -1746,6 +1752,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	PMMPTE StartingPte;
 	PFN TempPfn;
 	PageType BusyType;
+	VMAIter it;
 
 
 	// Only MEM_DECOMMIT and MEM_RELEASE are valid
@@ -1768,7 +1775,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	Lock();
 
-	VMAIter it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
 
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
 	{
@@ -1871,6 +1878,123 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
+	status = STATUS_SUCCESS;
+
+	Exit:
+	Unlock();
+	RETURN(status);
+}
+
+xboxkrnl::NTSTATUS VMManager::XbProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(*addr)
+		LOG_FUNC_ARG(*Size)
+		LOG_FUNC_ARG(*Protect)
+	LOG_FUNC_END;
+
+	DWORD NewPerms = *Protect;
+	VAddr CapturedBase = *addr;
+	size_t CapturedSize = *Size;
+	VAddr AlignedCapturedBase;
+	size_t AlignedCapturedSize;
+	xboxkrnl::NTSTATUS status;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PMMPTE PointerPde;
+	MMPTE TempPte;
+	MMPTE NewPermsPte;
+	MMPTE OldPermsPte;
+	VMAIter it;
+
+
+	// Invalid base address
+	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	// Invalid region size
+	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	// Size cannot be zero
+	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	if (!ConvertXboxToPteProtection(NewPerms, &NewPermsPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
+
+	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
+	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
+
+	Lock();
+
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
+	{
+		// Vma not found, report an error
+
+		status = STATUS_CONFLICTING_ADDRESSES;
+		goto Exit;
+	}
+
+	PointerPte = GetPteAddress(AlignedCapturedBase);
+	EndingPte = GetPteAddress(AlignedCapturedBase + AlignedCapturedSize -1);
+	StartingPte = PointerPte;
+
+	// Ensure that we are not trying to change the permissions of non-committed pages
+
+	while (PointerPte <= EndingPte)
+	{
+		if ((PointerPte == StartingPte) || (IsPteOnPdeBoundary(PointerPte)))
+		{
+			PointerPde = GetPteAddress(PointerPte);
+
+			if (PointerPde->Hardware.Valid == 0)
+			{
+				// Pde is not committed, report an error
+
+				status = STATUS_NOT_COMMITTED;
+				goto Exit;
+			}
+		}
+
+		if (PointerPte->Default == 0)
+		{
+			// Pte is not committed, report an error
+
+			status = STATUS_NOT_COMMITTED;
+			goto Exit;
+		}
+
+		PointerPte++;
+	}
+
+	PointerPte = StartingPte;
+	OldPermsPte = NewPermsPte;
+
+	while (PointerPte <= EndingPte)
+	{
+		TempPte = *PointerPte;
+
+		if ((TempPte.Default & PTE_VALID_PROTECTION_MASK) != NewPermsPte.Default)
+		{
+			// The following trick ensures we save only the first page with non-matching pte permissions we encounter
+
+			if (OldPermsPte.Default == NewPermsPte.Default)
+				OldPermsPte.Default = (TempPte.Default & PTE_VALID_PROTECTION_MASK);
+
+			// This zeroes the existent bit protections and applies the new ones
+
+			TempPte.Default = ((TempPte.Default & ~PTE_VALID_PROTECTION_MASK) | NewPermsPte.Default);
+			WRITE_PTE(PointerPte, TempPte);
+		}
+
+		PointerPte++;
+	}
+
+	UpdateMemoryPermissions(AlignedCapturedBase, AlignedCapturedSize, NewPerms);
+
+	*addr = AlignedCapturedBase;
+	*Size = AlignedCapturedSize;
+	*Protect = ConvertPteToXboxProtection(OldPermsPte.Default);
 	status = STATUS_SUCCESS;
 
 	Exit:

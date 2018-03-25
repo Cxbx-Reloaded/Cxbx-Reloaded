@@ -177,6 +177,7 @@ typedef long                            NTSTATUS;
 #define STATUS_UNABLE_TO_FREE_VM         ((DWORD   )0xC000001AL)
 #define STATUS_FREE_VM_NOT_AT_BASE       ((DWORD   )0xC000009FL)
 #define STATUS_MEMORY_NOT_ALLOCATED      ((DWORD   )0xC00000A0L)
+#define STATUS_NOT_COMMITTED             ((DWORD   )0xC000002DL)
 
 // ******************************************************************
 // * Registry value types

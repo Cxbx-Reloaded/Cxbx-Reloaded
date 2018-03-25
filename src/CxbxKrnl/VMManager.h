@@ -156,10 +156,11 @@ class VMManager : public PhysicalMemory
 		// retrieves the number of free debugger pages
 		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
-		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType,
-			DWORD Protect);
+		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
 		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
+		// xbox implementation of NtProtectVirtualMemory
+		xboxkrnl::NTSTATUS XbProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 
 	
 	private:
