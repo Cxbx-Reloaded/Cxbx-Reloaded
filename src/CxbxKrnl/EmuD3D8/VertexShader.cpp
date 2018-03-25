@@ -42,6 +42,8 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DVSDE_*
 
+#include <unordered_map>
+
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
@@ -470,6 +472,14 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
+/* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
+std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
+
+void CxbxUpdateVertexShader(DWORD XboxVertexShaderHandle)
+{
+	CxbxVertexShader &VertexShader = g_CxbxVertexShaders[XboxVertexShaderHandle];
+}*/
+
 // Dxbx note : This tooling function is never used, but clearly illustrates the relation
 // between vertex shader's being passed around, and the actual handle value used on PC.
 DWORD VshHandleGetRealHandle(DWORD aHandle)
@@ -478,10 +488,7 @@ DWORD VshHandleGetRealHandle(DWORD aHandle)
 
 	if (VshHandleIsVertexShader(aHandle))
 	{
-		X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(aHandle);
-		// assert(pD3DVertexShader);
-
-		CxbxVertexShader *pVertexShader = (CxbxVertexShader*)(pD3DVertexShader->Handle);
+		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(aHandle);
 		// assert(pVertexShader);
 
 		return pVertexShader->Handle;
@@ -1898,8 +1905,7 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
     else
     {
         XTL::DWORD StreamNumber = VshGetVertexStream(*pToken);
-        DbgVshPrintf("\tD3DVSD_STREAM(%d),\n", StreamNumber);
-		pPatchData->CurrentStreamNumber = (WORD)StreamNumber;
+        DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
 
         // new stream
         // copy current data to structure
@@ -1907,15 +1913,16 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
 		if(VshAddStreamPatch(pPatchData))
         {
 			// Reset fields for next patch :
+			pPatchData->NeedPatching = FALSE;
+			// pPatchData->CurrentStreamNumber = 0; // already set below
 			pPatchData->ConvertedStride = 0;
-            pPatchData->TypePatchData.NbrTypes = 0;
-            pPatchData->NeedPatching = FALSE;
-			pPatchData->StreamPatchData.NbrStreams = 0; // Dxbx addition
+			pPatchData->TypePatchData.NbrTypes = 0;
+			// NOTE : pPatchData->StreamPatchData.NbrStreams must not be reset, as it's incremented below
 		}
 
-		if (StreamNumber >= pPatchData->StreamPatchData.NbrStreams) {
-			pPatchData->StreamPatchData.NbrStreams = StreamNumber + 1;
-		}	
+		pPatchData->CurrentStreamNumber = (WORD)StreamNumber;
+		
+		pPatchData->StreamPatchData.NbrStreams++;
     }
 }
 
@@ -2391,8 +2398,7 @@ boolean XTL::VshHandleIsValidShader(DWORD Handle)
 
     if (VshHandleIsVertexShader(Handle))
     {
-        X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         if (pVertexShader->Status != 0)
         {
             return FALSE;
@@ -2414,8 +2420,7 @@ boolean XTL::VshHandleIsValidShader(DWORD Handle)
 
 extern XTL::CxbxVertexShaderDynamicPatch *XTL::VshGetVertexDynamicPatch(DWORD Handle)
 {
-    X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
-    CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
+    CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 
     for (uint32 i = 0; i < pVertexShader->VertexShaderDynamicPatch.NbrStreams; i++)
     {

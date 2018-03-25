@@ -301,6 +301,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	}
 
     CxbxStreamDynamicPatch *pStreamDynamicPatch = (m_pVertexShaderDynamicPatch != nullptr) ? (&m_pVertexShaderDynamicPatch->pStreamPatches[uiStream]) : nullptr;
+
 	bool bNeedVertexPatching = (pStreamDynamicPatch != nullptr && pStreamDynamicPatch->NeedPatch);
 	bool bNeedRHWReset = bVshHandleIsFVF && ((pDrawContext->hVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
@@ -615,7 +616,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
-        m_pVertexShaderDynamicPatch = &((CxbxVertexShader *)VshHandleGetVertexShader(pDrawContext->hVertexShader)->Handle)->VertexShaderDynamicPatch;
+        m_pVertexShaderDynamicPatch = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderDynamicPatch);
     }
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {

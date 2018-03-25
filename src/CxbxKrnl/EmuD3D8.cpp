@@ -2835,7 +2835,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
     if(Address < 136 && VshHandleIsVertexShader(Handle))
     {
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         for (DWORD i = Address; i < pVertexShader->Size; i++)
         {
             // TODO: This seems very fishy
@@ -2908,7 +2908,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
     if(VshHandleIsVertexShader(Handle))
     {
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
     }
@@ -6832,27 +6832,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 #endif
     }
 
-    DWORD RealHandle;
+    DWORD HostVertexShaderHandle;
     if(VshHandleIsVertexShader(Handle))
     {
-        RealHandle = ((CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle)->Handle;
+        HostVertexShaderHandle = MapXboxVertexShaderHandleToCxbxVertexShader(Handle)->Handle;
     }
     else
     {
-        RealHandle = Handle;
-		RealHandle &= ~D3DFVF_XYZ;
-		RealHandle &= ~D3DFVF_XYZRHW;
-		RealHandle &= ~D3DFVF_XYZB1;
-		RealHandle &= ~D3DFVF_XYZB2;
-		RealHandle &= ~D3DFVF_XYZB3;
-		RealHandle &= ~D3DFVF_XYZB4;
-		RealHandle &= ~D3DFVF_DIFFUSE;
-		RealHandle &= ~D3DFVF_NORMAL;
-		RealHandle &= ~D3DFVF_SPECULAR;
-		RealHandle &= 0x00FF;
-		if( RealHandle != 0 )
-			EmuWarning("EmuD3DDevice_SetVertexShader Handle = 0x%.08X", RealHandle );
-		RealHandle = Handle;
+        HostVertexShaderHandle = Handle;
+		HostVertexShaderHandle &= ~D3DFVF_XYZ;
+		HostVertexShaderHandle &= ~D3DFVF_XYZRHW;
+		HostVertexShaderHandle &= ~D3DFVF_XYZB1;
+		HostVertexShaderHandle &= ~D3DFVF_XYZB2;
+		HostVertexShaderHandle &= ~D3DFVF_XYZB3;
+		HostVertexShaderHandle &= ~D3DFVF_XYZB4;
+		HostVertexShaderHandle &= ~D3DFVF_DIFFUSE;
+		HostVertexShaderHandle &= ~D3DFVF_NORMAL;
+		HostVertexShaderHandle &= ~D3DFVF_SPECULAR;
+		HostVertexShaderHandle &= 0x00FF;
+		if( HostVertexShaderHandle != 0 )
+			EmuWarning("EmuD3DDevice_SetVertexShader Handle = 0x%.08X", HostVertexShaderHandle );
+		HostVertexShaderHandle = Handle;
     }
 
 #ifdef CXBX_USE_D3D9
@@ -7058,7 +7058,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		return;
 
 	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
-	CxbxVertexBufferConverter VertexBufferConverter;
+	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		UINT uiStartIndex = 0;
@@ -7141,7 +7141,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
 	assert(DrawContext.dwIndexBase == 0); // No IndexBase under Draw*UP
 
-	CxbxVertexBufferConverter VertexBufferConverter;
+	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
@@ -7319,7 +7319,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
 		}
 
-		CxbxVertexBufferConverter VertexBufferConverter;
+		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
@@ -7532,7 +7532,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 
-		CxbxVertexBufferConverter VertexBufferConverter;
+		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :
@@ -7917,8 +7917,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
 
     if(pSize  && VshHandleIsVertexShader(Handle))
     {
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         *pSize = pVertexShader->Size;
     }
     else if(pSize)
@@ -7963,14 +7962,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
 
-	DWORD RealHandle = 0;
+	DWORD HostVertexShaderHandle = 0;
 
     if(VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 
-        RealHandle = pVertexShader->Handle;
+        HostVertexShaderHandle = pVertexShader->Handle;
 		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
 
         if(pVertexShader->pFunction)
@@ -7984,7 +7983,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
         g_VMManager.Deallocate((VAddr)pD3DVertexShader);
     }
 
-    HRESULT hRet = g_pD3DDevice->DeleteVertexShader(RealHandle);
+    HRESULT hRet = g_pD3DDevice->DeleteVertexShader(HostVertexShaderHandle);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");    
 }
 
@@ -8203,11 +8202,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		return;
 	}
 
-	if( VshHandleIsVertexShader(hCurrentShader) )
+	CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(hCurrentShader);
+	if (pVertexShader != nullptr)
     {
 		DWORD hNewShader = 0;
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(hCurrentShader & 0x7FFFFFFF);
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)pD3DVertexShader->Handle;
 
 		// Save the contents of the existing vertex shader program
 		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->DeclarationSize );
@@ -8249,7 +8247,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
 
 	if(pType && VshHandleIsVertexShader(Handle))
     {
-        *pType = ((CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
+        *pType = MapXboxVertexShaderHandleToCxbxVertexShader(Handle)->Type;
     }
 }
 
@@ -8286,7 +8284,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
         {
             *pSizeOfData = pVertexShader->DeclarationSize;
@@ -8336,7 +8334,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
-        CxbxVertexShader *pVertexShader = (CxbxVertexShader *)(VshHandleGetVertexShader(Handle))->Handle;
+        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         if(*pSizeOfData < pVertexShader->FunctionSize || !pData)
         {
             *pSizeOfData = pVertexShader->FunctionSize;
