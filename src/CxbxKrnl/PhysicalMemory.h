@@ -261,7 +261,7 @@ class PhysicalMemory
 		// convert from Xbox to Windows permissions
 		DWORD ConvertXboxToWinProtection(DWORD Perms);
 		// convert from xbox to windows memory allocation type
-		DWORD ConvertXboxToWinAllocType(DWORD AllocType);
+		//DWORD ConvertXboxToWinAllocType(DWORD AllocType);
 		// add execute rights if the permission mask doesn't include it
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)
