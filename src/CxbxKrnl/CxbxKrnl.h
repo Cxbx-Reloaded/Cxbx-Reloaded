@@ -74,7 +74,7 @@ extern "C" {
 #define PAGE_SIZE_LARGE             0x400000
 #define PAGE_MASK                   (PAGE_SIZE - 1)
 #define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to the system RAM physical window 0x80000000 - 0x8FFFFFFF
-#define MAXIMUM_ZERO_BITS           21 // for NtAllocateVirtualMemory
+#define MAXIMUM_ZERO_BITS           21 // for XbAllocateVirtualMemory
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE (64 * ONE_MB)

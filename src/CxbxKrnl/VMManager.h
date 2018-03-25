@@ -200,7 +200,7 @@ class VMManager : public PhysicalMemory
 		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
-		void DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size);
+		void DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// removes a vma block from the mapped memory

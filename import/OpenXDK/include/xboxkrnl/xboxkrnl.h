@@ -175,6 +175,7 @@ typedef long                            NTSTATUS;
 #define STATUS_INVALID_PAGE_PROTECTION   ((DWORD   )0xC0000045L)
 #define STATUS_CONFLICTING_ADDRESSES     ((DWORD   )0xC0000018L)
 #define STATUS_UNABLE_TO_FREE_VM         ((DWORD   )0xC000001AL)
+#define STATUS_FREE_VM_NOT_AT_BASE       ((DWORD   )0xC000009FL)
 #define STATUS_MEMORY_NOT_ALLOCATED      ((DWORD   )0xC00000A0L)
 
 // ******************************************************************

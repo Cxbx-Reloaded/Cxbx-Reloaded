@@ -154,8 +154,11 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 			{
 				PTpfn = GetPfnOfPT(PointerPte);
 			}
-			WRITE_ZERO_PTE(PointerPte);
-			PTpfn->PTPageFrame.PtesUsed--;
+			if (PointerPte->Default != 0)
+			{
+				WRITE_ZERO_PTE(PointerPte);
+				PTpfn->PTPageFrame.PtesUsed--;
+			}
 			PointerPte++;
 		}
 	}
@@ -657,24 +660,6 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 	}
 	return Mask;
 }
-
-DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
-{
-	// This function assumes that the supplied allocation mask has been sanitized already
-
-	DWORD Mask = 0;
-
-	if (AllocType & XBOX_MEM_COMMIT) { Mask |= MEM_COMMIT; }
-	else if(AllocType & XBOX_MEM_RESERVE) { Mask |= MEM_RESERVE; }
-	else if (AllocType & XBOX_MEM_DECOMMIT) { Mask |= MEM_DECOMMIT; }
-	else if (AllocType & XBOX_MEM_RELEASE) { Mask |= MEM_RELEASE; }
-	else if (AllocType & XBOX_MEM_RESET) { Mask |= MEM_RESET; }
-	else if (AllocType & XBOX_MEM_TOP_DOWN) { Mask |= MEM_TOP_DOWN; }
-	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf("PMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
-
-	return Mask;
-}
-
 
 bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 {
