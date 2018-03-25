@@ -1633,6 +1633,9 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	// If we reach here then XBOX_MEM_COMMIT was specified, so we will also have to allocate physical memory for the allocation and
 	// write the pte/pfn
 
+	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
+	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
+
 	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
 
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
@@ -1711,6 +1714,9 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	// If some pte's were detected to have different permissions in the above check, we need to update those as well
 
 	if (bUpdatePteProtections) {} // TODO
+
+	DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
+		AlignedCapturedBase + AlignedCapturedSize);
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
