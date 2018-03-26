@@ -41,21 +41,6 @@
 #include <assert.h>
 
 
-void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
-{
-	assert(Length != 0);
-	assert(CHECK_ALIGNMENT(Length, sizeof(ULONG)));                   // Length must be a multiple of ULONG
-	assert(CHECK_ALIGNMENT((uintptr_t)Destination, sizeof(ULONG)));   // Destination must be 4-byte aligned
-
-	int NumOfRepeats = Length / sizeof(ULONG);
-	ULONG* d = (ULONG*)Destination;
-
-	for (int i = 0; i < NumOfRepeats; ++i)
-	{
-		d[i] = Long; // copy an ULONG at a time
-	}
-}
-
 void PhysicalMemory::InitializePageDirectory()
 {
 	PMMPTE pPde;

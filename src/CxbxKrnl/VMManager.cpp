@@ -136,7 +136,7 @@ dashboard from non-retail xbe?");
 
 	// Set up the pfn database
 	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0) {
-		FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
+		xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
 		InitializePfnDatabase();
 	}
 	else {
@@ -213,13 +213,13 @@ void VMManager::InitializePfnDatabase()
 
 	// Zero all the entries of the PFN database
 	if (g_bIsRetail) {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
 	}
 	else if (g_bIsChihiro) {
-		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
 	}
 	else {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
 	}
 
 
@@ -692,18 +692,18 @@ void VMManager::RestorePersistentMemory()
 
 	// Zero all the remaining pte's
 	EndingPte += 1;
-	FillMemoryUlong((void*)PAGE_TABLES_BASE, (VAddr)GetPteAddress(CONTIGUOUS_MEMORY_BASE) - PAGE_TABLES_BASE, 0);
-	FillMemoryUlong((void*)EndingPte, PAGE_TABLES_END + 1 - (VAddr)EndingPte, 0);
+	xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, (VAddr)GetPteAddress(CONTIGUOUS_MEMORY_BASE) - PAGE_TABLES_BASE, 0);
+	xboxkrnl::RtlFillMemoryUlong((void*)EndingPte, PAGE_TABLES_END + 1 - (VAddr)EndingPte, 0);
 
 	// Zero all the entries of the PFN database
 	if (g_bIsRetail) {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
 	}
 	else if (g_bIsChihiro) {
-		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
 	}
 	else {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
 	}
 
 	// Now we need to restore the launch data page and the frame buffer pointers to their correct values
@@ -844,7 +844,7 @@ VAddr VMManager::AllocateZeroed(size_t Size)
 	LOG_FORWARD("g_VMManager.Allocate");
 
 	VAddr addr = Allocate(Size);
-	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
+	if (addr) { xboxkrnl::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
 
 	RETURN(addr);
 }

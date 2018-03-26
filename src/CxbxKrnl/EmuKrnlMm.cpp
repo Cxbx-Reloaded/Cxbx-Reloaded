@@ -494,7 +494,7 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 	assert(g_bIsDebug);
 
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
-	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
+	if (addr) { RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
 
 	RETURN(addr);
 }

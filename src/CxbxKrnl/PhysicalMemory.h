@@ -208,10 +208,6 @@ typedef enum _PageType
 #define IS_USER_ADDRESS(Va) (((VAddr)(Va) - LOWEST_USER_ADDRESS) <= (HIGHEST_USER_ADDRESS - LOWEST_USER_ADDRESS))
 
 
-/* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
-void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
-
-
 /* PhysicalMemory class */
 class PhysicalMemory
 {
