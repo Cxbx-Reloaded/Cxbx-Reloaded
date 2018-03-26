@@ -2833,14 +2833,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
 	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
-    if(Address < 136 && VshHandleIsVertexShader(Handle))
-    {
+    if(Address < 136) {
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-        for (DWORD i = Address; i < pVertexShader->Size; i++)
-        {
-            // TODO: This seems very fishy
-            g_VertexShaderSlots[i] = Handle;
-        }
+		if (pVertexShader) {
+			for (DWORD i = Address; i < pVertexShader->Size; i++) {
+				// TODO: This seems very fishy
+				g_VertexShaderSlots[i] = Handle;
+			}
+		}
     }
 }
 
@@ -6839,20 +6839,50 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     }
     else
     {
-        HostVertexShaderHandle = Handle;
-		HostVertexShaderHandle &= ~D3DFVF_XYZ;
-		HostVertexShaderHandle &= ~D3DFVF_XYZRHW;
-		HostVertexShaderHandle &= ~D3DFVF_XYZB1;
-		HostVertexShaderHandle &= ~D3DFVF_XYZB2;
-		HostVertexShaderHandle &= ~D3DFVF_XYZB3;
-		HostVertexShaderHandle &= ~D3DFVF_XYZB4;
-		HostVertexShaderHandle &= ~D3DFVF_DIFFUSE;
-		HostVertexShaderHandle &= ~D3DFVF_NORMAL;
-		HostVertexShaderHandle &= ~D3DFVF_SPECULAR;
-		HostVertexShaderHandle &= 0x00FF;
-		if( HostVertexShaderHandle != 0 )
-			EmuWarning("EmuD3DDevice_SetVertexShader Handle = 0x%.08X", HostVertexShaderHandle );
 		HostVertexShaderHandle = Handle;
+
+		const DWORD AllXboxD3DFVF = 0
+			| D3DFVF_XYZ
+			| D3DFVF_XYZRHW
+			| D3DFVF_XYZB1
+			| D3DFVF_XYZB2
+			| D3DFVF_XYZB3
+			| D3DFVF_XYZB4
+			| D3DFVF_DIFFUSE
+			| D3DFVF_NORMAL
+			| D3DFVF_SPECULAR
+			| D3DFVF_TEXCOUNT_MASK
+			| D3DFVF_TEXCOORDSIZE1(0)
+			| D3DFVF_TEXCOORDSIZE2(0)
+			| D3DFVF_TEXCOORDSIZE3(0)
+			| D3DFVF_TEXCOORDSIZE4(0)
+			| D3DFVF_TEXCOORDSIZE1(1)
+			| D3DFVF_TEXCOORDSIZE2(1)
+			| D3DFVF_TEXCOORDSIZE3(1)
+			| D3DFVF_TEXCOORDSIZE4(1)
+			| D3DFVF_TEXCOORDSIZE1(2)
+			| D3DFVF_TEXCOORDSIZE2(2)
+			| D3DFVF_TEXCOORDSIZE3(2)
+			| D3DFVF_TEXCOORDSIZE4(2)
+			| D3DFVF_TEXCOORDSIZE1(3)
+			| D3DFVF_TEXCOORDSIZE2(3)
+			| D3DFVF_TEXCOORDSIZE3(3)
+			| D3DFVF_TEXCOORDSIZE4(3)
+			;
+
+		if ((HostVertexShaderHandle & D3DFVF_TEXCOUNT_MASK) > D3DFVF_TEX4) {
+			EmuWarning("EmuD3DDevice_SetVertexShader : FVF contains too many textures! Handle = 0x%.08X", HostVertexShaderHandle);
+			// Set maximum number of textures (so following code doens't throw a fit) :
+			HostVertexShaderHandle = (HostVertexShaderHandle & ~D3DFVF_TEXCOUNT_MASK) | D3DFVF_TEX4;
+			// TODO : Instead of changing the FVF here, strenghthen users against this situation.
+		}
+
+		if ((HostVertexShaderHandle & ~AllXboxD3DFVF) > 0) {
+			EmuWarning("EmuD3DDevice_SetVertexShader : FVF contains unknown flags! Handle = 0x%.08X", HostVertexShaderHandle);
+			// Mask away all bits that aren't valid on Xbox :
+			HostVertexShaderHandle &= AllXboxD3DFVF;
+			// TODO : Instead of changing the FVF here, see if (and which) users need to be updated.
+		}
     }
 
 #ifdef CXBX_USE_D3D9
@@ -7053,9 +7083,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 
 	assert(DrawContext.dwStartVertex == 0);
 	assert(pIndexData != nullptr);
-
-	if (!IsValidCurrentShader())
-		return;
+	assert(IsValidCurrentShader());
 
 	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
 	CxbxVertexBufferConverter VertexBufferConverter = {};
@@ -7307,7 +7335,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
     #ifdef _DEBUG_TRACK_VB
     if(!g_bVBSkipStream)
     #endif
-    if(IsValidCurrentShader()) {
+    if (IsValidCurrentShader()) {
 		CxbxDrawContext DrawContext = {};
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
@@ -7469,6 +7497,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, VertexCount);
 
 		CxbxDrawContext DrawContext = {};
+
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
@@ -7526,6 +7555,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     #endif
 	if (IsValidCurrentShader()) {
 		CxbxDrawContext DrawContext = {};
+
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
@@ -7915,17 +7945,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 
-    if(pSize  && VshHandleIsVertexShader(Handle))
-    {
+    if (pSize) {
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-        *pSize = pVertexShader->Size;
+        *pSize = pVertexShader ? pVertexShader->Size : 0;
     }
-    else if(pSize)
-    {
-        *pSize = 0;
-    }
-
-    
 }
 
 // LTCG specific D3DDevice_DeleteVertexShader function...
@@ -8245,9 +8268,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// *pType is set according to flags in the VertexShader struct
 
-	if(pType && VshHandleIsVertexShader(Handle))
-    {
-        *pType = MapXboxVertexShaderHandleToCxbxVertexShader(Handle)->Type;
+	if (pType) {
+		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+		if (pVertexShader) {
+			*pType = pVertexShader->Type;
+		}
     }
 }
 
@@ -8282,22 +8307,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 
 	HRESULT hRet = D3DERR_INVALIDCALL;
 
-    if(pSizeOfData && VshHandleIsVertexShader(Handle))
-    {
+    if (pSizeOfData) {
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-        if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
-        {
-            *pSizeOfData = pVertexShader->DeclarationSize;
-
-            hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
-        }
-        else
-        {
-            memcpy(pData, pVertexShader->pDeclaration, pVertexShader->DeclarationSize);
-            hRet = D3D_OK;
-        }
+		if (pVertexShader) {
+			if (*pSizeOfData < pVertexShader->DeclarationSize || !pData) {
+				*pSizeOfData = pVertexShader->DeclarationSize;
+				hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
+			}
+			else {
+				memcpy(pData, pVertexShader->pDeclaration, pVertexShader->DeclarationSize);
+				hRet = D3D_OK;
+			}
+		}
     }
-
     
     return hRet;
 }
@@ -8332,22 +8354,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 
 	HRESULT hRet = D3DERR_INVALIDCALL;
 
-    if(pSizeOfData && VshHandleIsVertexShader(Handle))
-    {
+    if(pSizeOfData) {
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-        if(*pSizeOfData < pVertexShader->FunctionSize || !pData)
-        {
-            *pSizeOfData = pVertexShader->FunctionSize;
-
-            hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
-        }
-        else
-        {
-            memcpy(pData, pVertexShader->pFunction, pVertexShader->FunctionSize);
-            hRet = D3D_OK;
-        }
+		if (pVertexShader) {
+			if (*pSizeOfData < pVertexShader->FunctionSize || !pData) {
+				*pSizeOfData = pVertexShader->FunctionSize;
+				hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
+			}
+			else {
+				memcpy(pData, pVertexShader->pFunction, pVertexShader->FunctionSize);
+				hRet = D3D_OK;
+			}
+		}
     }
-
     
     return hRet;
 }

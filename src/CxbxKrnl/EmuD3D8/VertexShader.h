@@ -74,7 +74,6 @@ extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
 
 // Checks for failed vertex shaders, and shaders that would need patching
 extern boolean IsValidCurrentShader(void);
-extern boolean VshHandleIsValidShader(DWORD Handle);
 
 // NOTE: Comparing with 0xFFFF breaks some titles (like Kingdom Under Fire)
 // The real Xbox checks the D3DFVF_RESERVED0 flag but we can't do that without 
@@ -86,13 +85,14 @@ inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle > XBE_MAX_
 
 inline CxbxVertexShader *MapXboxVertexShaderHandleToCxbxVertexShader(DWORD Handle)
 {
-	X_D3DVertexShader *pD3DVertexShader = VshHandleIsVertexShader(Handle) ? (X_D3DVertexShader *)Handle : nullptr;
-	if (pD3DVertexShader != nullptr)
+	if (VshHandleIsVertexShader(Handle)) {
+		X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)Handle;
+		//assert(pD3DVertexShader != nullptr);
 		return (CxbxVertexShader *)(pD3DVertexShader->Handle);
+	}
 
 	return nullptr;
 }
-CxbxVertexShaderDynamicPatch *VshGetVertexDynamicPatch(DWORD Handle);
 
 #ifdef _DEBUG_TRACK_VS
 #define DbgVshPrintf if(g_bPrintfOn) printf

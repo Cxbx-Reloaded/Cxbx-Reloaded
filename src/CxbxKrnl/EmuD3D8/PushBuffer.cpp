@@ -58,9 +58,9 @@ bool g_bPBSkipPusher = false;
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 
-// Determine the size (in floats) of the texture format (indexed 0 .. 3).
+// Determine the size (in number of floating point texture coordinates) of the texture format (indexed 0 .. 3).
 // This is the reverse of the D3DFVF_TEXCOORDSIZE[0..3] macros.
-int XTL::DxbxFVF_GetTextureSize(DWORD dwFVF, int aTextureIndex)
+int XTL::DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex)
 {
 	// See D3DFVF_TEXCOORDSIZE1()
 	switch ((dwFVF >> ((aTextureIndex * 2) + 16)) & 3) {
@@ -69,7 +69,7 @@ int XTL::DxbxFVF_GetTextureSize(DWORD dwFVF, int aTextureIndex)
 	case D3DFVF_TEXTUREFORMAT3: return 3; // Three floating point values
 	case D3DFVF_TEXTUREFORMAT4: return 4; // Four floating point values
 	default:
-		//assert(false || "DxbxFVF_GetTextureSize : Unhandled case");
+		//assert(false || "DxbxFVF_GetNumberOfTextureCoordinates : Unhandled case");
 		return 0;
 	}
 }
@@ -121,7 +121,7 @@ UINT XTL::DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 		int NrTextures = ((dwFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT);
 		while (NrTextures > 0) {
 			NrTextures--;
-			Result += DxbxFVF_GetTextureSize(dwFVF, NrTextures) * sizeof(FLOAT);
+			Result += DxbxFVF_GetNumberOfTextureCoordinates(dwFVF, NrTextures) * sizeof(FLOAT);
 		}
 	}
 
@@ -366,6 +366,7 @@ extern void XTL::EmuExecutePushBufferRaw
 				DWORD dwVertexStride = DxbxFVFToVertexSizeInBytes(dwVertexShader, /*bIncludeTextures=*/true);
                 UINT VertexCount = (dwCount * sizeof(DWORD)) / dwVertexStride;
 				CxbxDrawContext DrawContext = {};
+
                 DrawContext.XboxPrimitiveType = XboxPrimitiveType;
                 DrawContext.dwVertexCount = VertexCount;
                 DrawContext.pXboxVertexStreamZeroData = pVertexData;
@@ -414,6 +415,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     if (!g_bPBSkipPusher) {
                         if (IsValidCurrentShader()) {
 							CxbxDrawContext DrawContext = {};
+
 							DrawContext.XboxPrimitiveType = XboxPrimitiveType;
 							DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, uiIndexCount);
 							DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
@@ -521,6 +523,7 @@ extern void XTL::EmuExecutePushBufferRaw
 					if (!g_bPBSkipPusher) {
 						if (IsValidCurrentShader()) {
 							CxbxDrawContext DrawContext = {};
+
 							DrawContext.XboxPrimitiveType = XboxPrimitiveType;
 							DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, dwIndexCount);
 							DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
@@ -577,7 +580,10 @@ extern void XTL::EmuExecutePushBufferRaw
 #ifdef _DEBUG_TRACK_PB
 void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
 {
-    if(!XTL::IsValidCurrentShader() || (dwCount == 0))
+	if (dwCount == 0)
+		return;
+
+	if(!XTL::IsValidCurrentShader())
         return;
 
     XTL::IDirect3DVertexBuffer *pActiveVB = NULL;

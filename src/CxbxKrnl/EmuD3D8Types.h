@@ -509,20 +509,37 @@ typedef struct _CxbxPixelShader
 }
 CxbxPixelShader;
 
+typedef struct _CxbxVertexElement
+{
+	UINT XboxType; // The stream data types (xbox)
+	UINT HostByteSize; // The stream data sizes (pc)
+}
+CxbxVertexElement;
+
+/* See typedef struct _D3DVERTEXELEMENT9
+{
+	WORD    Stream;     // Stream index
+	WORD    Offset;     // Offset in the stream in bytes
+	BYTE    Type;       // Data type
+	BYTE    Method;     // Processing method
+	BYTE    Usage;      // Semantics
+	BYTE    UsageIndex; // Semantic index
+} D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
+*/
+
 typedef struct _CxbxStreamDynamicPatch
 {
     BOOL  NeedPatch;       // This is to know whether it's data which must be patched
-    DWORD ConvertedStride;
-    DWORD NbrTypes;        // Number of the stream data types
-    UINT  *pTypes;         // The stream data types (xbox)
-	UINT  *pSizes;         // The stream data sizes (pc)
+    DWORD HostVertexStride;
+    DWORD NumberOfVertexElements;        // Number of the stream data types
+	CxbxVertexElement VertexElements[32];
 }
 CxbxStreamDynamicPatch;
 
 typedef struct _CxbxVertexDynamicPatch
 {
-    UINT                         NbrStreams; // The number of streams the vertex shader uses
-    CxbxStreamDynamicPatch        *pStreamPatches;
+    UINT                         NumberOfVertexStreams; // The number of streams the vertex shader uses
+    CxbxStreamDynamicPatch       StreamPatches[16];
 }
 CxbxVertexShaderDynamicPatch;
 
