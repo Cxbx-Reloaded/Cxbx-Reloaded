@@ -1595,7 +1595,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			// Only reserve memory if the base address is higher than XBE_IMAGE_BASE
 
 			if ((AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && AlignedCapturedBase < XBE_MAX_VA) ||
-				(AlignedCapturedBase > XBE_IMAGE_BASE &&
+				(AlignedCapturedBase >= XBE_MAX_VA &&
 				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase))
 			{
 				// Something else is already mapped at the specified address, report an error and bail out
@@ -1622,6 +1622,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			goto Exit;
 		}
 		bDestructVmaOnFailure = true;
+		CapturedBase = AlignedCapturedBase;
+		CapturedSize = AlignedCapturedSize;
 	}
 
 
@@ -1648,6 +1650,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		*addr = AlignedCapturedBase;
 		*Size = AlignedCapturedSize;
 
+		Unlock();
 		RETURN(STATUS_SUCCESS);
 	}
 
@@ -1661,7 +1664,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	while (PointerPte <= EndingPte)
 	{
 		if (PointerPte->Default == 0) { PteNumber++; }
-		if ((PointerPte->Default & PTE_VALID_PROTECTION_MASK) != TempPte.Default) { bUpdatePteProtections = true; }
+		else if ((PointerPte->Default & PTE_VALID_PROTECTION_MASK) != TempPte.Default) { bUpdatePteProtections = true; }
 
 		PointerPte++;
 	}
@@ -1696,11 +1699,16 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		PointerPte++;
 	}
 
-	// Actually commit the requested range. Because of the check done by CheckConflictingVMA, this call cannot fail now
+	// Actually commit the requested range. Because of the check done by CheckConflictingVMA, this call shouldn't fail now but we still
+	// check to see if it succeeds or not...
 
-	if (AlignedCapturedBase >= XBE_MAX_VA) {
-		VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
-			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
+	if (AlignedCapturedBase >= XBE_MAX_VA)
+	{
+		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
+			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
+		{
+			DbgPrintf("VMEM: XbAllocateVirtualMemory: VirtualAlloc failed to commit the memory! The error was %d\n", GetLastError());
+		}
 	}
 
 	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
@@ -1722,6 +1730,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
+	Unlock();
 	RETURN(STATUS_SUCCESS);
 
 	Exit:
@@ -1873,7 +1882,10 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	{
 		// With XBOX_MEM_DECOMMIT DestructVMA is not called and so we have to call VirtualFree ourselves
 
-		VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT);
+		if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
+		{
+			DbgPrintf("VMEM: XbFreeVirtualMemory: VirtualFree failed to decommit the memory! The error was %d\n", GetLastError());
+		}
 	}
 
 	*addr = AlignedCapturedBase;
@@ -2035,7 +2047,7 @@ xboxkrnl::NTSTATUS VMManager::VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEM
 	// TODO: should allocations made by Allocate be visible to this function or not?
 
 	if (addr < LOWEST_USER_ADDRESS || (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
-		|| it->second.type == FreeVma)
+		|| (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma))
 	{
 		if (addr < LOWEST_USER_ADDRESS)
 		{
@@ -2525,7 +2537,13 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 	{
 			if (it->second.bFragmented)
 			{
-				ret = VirtualFree((void*)addr, Size, MEM_RELEASE);
+				// NOTE: unlike NtFreeVirtualMemory, VirtualFree cannot release a committed region only partially, the size must always be 0
+				// with MEM_RELEASE. This is a problem because some games can call us from XbFreeVirtualMemory with XBOX_MEM_RELEASE and a
+				// size != 0, so, in this case, we can only decommit the region to avoid memory leaks. This essentially means that we will
+				// leave behind reserved areas, which will decrease the total amount of host virtual space available...
+
+				if (addr == it->first && Size == it->second.size) { ret = VirtualFree((void*)addr, 0, MEM_RELEASE); }
+				else { ret = VirtualFree((void*)addr, Size, MEM_DECOMMIT); }
 			}
 			else
 			{

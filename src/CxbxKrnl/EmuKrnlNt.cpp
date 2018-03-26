@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
-		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbAllocateVirtualMemory((VAddr*)BaseAddress, ZeroBits, (size_t*)AllocationSize,
@@ -754,8 +754,8 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(FreeSize)
-		LOG_FUNC_ARG(FreeType)
-		LOG_FUNC_END;
+		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, FreeType)
+	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)FreeSize, FreeType);
 
@@ -907,7 +907,7 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(RegionSize)
-		LOG_FUNC_ARG(NewProtect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
 		LOG_FUNC_ARG_OUT(OldProtect)
 	LOG_FUNC_END;
 
