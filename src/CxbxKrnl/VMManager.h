@@ -160,7 +160,7 @@ class VMManager : public PhysicalMemory
 		// xbox implementation of NtFreeVirtualMemory
 		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
 		// xbox implementation of NtProtectVirtualMemory
-		xboxkrnl::NTSTATUS XbProtect(VAddr* addr, size_t* Size, DWORD* Protect);
+		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
 		xboxkrnl::NTSTATUS VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
 

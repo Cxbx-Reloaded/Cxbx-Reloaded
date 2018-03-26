@@ -1715,7 +1715,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		VAddr TempAddr = AlignedCapturedBase;
 		size_t TempSize = AlignedCapturedSize;
 		DWORD TempProtect = Protect;
-		XbProtect(&TempAddr, &TempSize, &TempProtect);
+		XbVirtualProtect(&TempAddr, &TempSize, &TempProtect);
 	}
 
 	DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
@@ -1886,7 +1886,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	RETURN(status);
 }
 
-xboxkrnl::NTSTATUS VMManager::XbProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
