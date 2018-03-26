@@ -408,7 +408,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	{
 		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
-		RETURN(STATUS_SUCCESS);
+		RETURN(STATUS_INVALID_PARAMETER);
 	}
 	#endif
 

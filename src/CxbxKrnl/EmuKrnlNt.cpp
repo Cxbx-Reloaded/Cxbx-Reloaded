@@ -1357,16 +1357,31 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG_OUT(Buffer)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		BaseAddress,
-		(NtDll::MEMORY_INFORMATION_CLASS)NtDll::MemoryBasicInformation,
-		(NtDll::PMEMORY_BASIC_INFORMATION)Buffer,
-		/*Length=*/sizeof(MEMORY_BASIC_INFORMATION),
-		/*ResultLength=*/nullptr);
+	#ifdef _DEBUG_TRACE
+		if (!Buffer)
+		{
+			DbgPrintf("KNRL: NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
+			LOG_IGNORED();
+			RETURN(STATUS_INVALID_PARAMETER);
+		}
+	#endif
 
+	NTSTATUS ret = g_VMManager.VirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
+
+	if (ret == STATUS_SUCCESS)
+	{
+		DbgPrintf("   Buffer->AllocationBase    = 0x%.08X\n", Buffer->AllocationBase);
+		DbgPrintf("   Buffer->AllocationProtect = 0x%.08X\n", Buffer->AllocationProtect);
+		DbgPrintf("   Buffer->BaseAddress       = 0x%.08X\n", Buffer->BaseAddress);
+		DbgPrintf("   Buffer->RegionSize        = 0x%.08X\n", Buffer->RegionSize);
+		DbgPrintf("   Buffer->State             = 0x%.08X\n", Buffer->State);
+		DbgPrintf("   Buffer->Protect           = 0x%.08X\n", Buffer->Protect);
+		DbgPrintf("   Buffer->Type              = 0x%.08X\n", Buffer->Type);
+	}
+
+	#if 0
 	if (FAILED(ret)) {
 		EmuWarning("NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
 
@@ -1390,6 +1405,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 			DbgPrintf("KRNL: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
 		}
 	}
+	#endif
 
 	RETURN(ret);
 }

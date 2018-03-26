@@ -71,7 +71,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 	m_hContiguousFile = memory_view;
 	m_hPTFile = pagetables_view;
-	m_ReservedBytesOfXbeImage = XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE;
+	m_ReservedBytesAfterXbeImage = XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE;
 
 	// Set up the structs tracking the memory regions
 	ConstructMemoryRegion(LOWEST_USER_ADDRESS, USER_MEMORY_SIZE, UserRegion);
@@ -154,10 +154,10 @@ dashboard from non-retail xbe?");
 	// since that would result in an increase in the reserved memory usage and also, with XBOX_MEM_RESERVE, the starting
 	// address will be rounded down to a 64K boundary, which will likely result in an incorrect base address
 
-	if (m_ReservedBytesOfXbeImage > 0)
+	if (m_ReservedBytesAfterXbeImage > 0)
 	{
 		ConstructVMA(XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage),
-			ROUND_DOWN_4K(m_ReservedBytesOfXbeImage), UserRegion, ReservedVma,
+			ROUND_DOWN_4K(m_ReservedBytesAfterXbeImage), UserRegion, ReservedVma,
 			false);
 	}
 
@@ -1596,7 +1596,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			// Only allocate memory if the base address is higher than the xbe image size (not the memory placeholder size, otherwise
 			// memory allocations on the remaining reserved area will succeed!)
 
-			if (AlignedCapturedBase > (XBE_IMAGE_BASE + m_ReservedBytesOfXbeImage - 1) &&
+			if (AlignedCapturedBase > (XBE_IMAGE_BASE + m_ReservedBytesAfterXbeImage - 1) &&
 				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
 			{
 				// Something else is already mapped at the specified address, report an error and bail out
@@ -1700,7 +1700,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	// Actually commit the requested range. Because of the check done by CheckConflictingVMA, this call cannot fail now
 
 	if (AlignedCapturedBase >= XBE_MAX_VA) {
-		VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT, ConvertXboxToWinProtection(PatchXboxPermissions(Protect)));
+		VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
+			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE));
 	}
 
 	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
@@ -2000,6 +2001,133 @@ xboxkrnl::NTSTATUS VMManager::XbProtect(VAddr* addr, size_t* Size, DWORD* Protec
 	Exit:
 	Unlock();
 	RETURN(status);
+}
+
+xboxkrnl::NTSTATUS VMManager::VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
+{
+	VMAIter it;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PMMPTE PointerPde;
+	DWORD CurrentProtect;
+	DWORD InitialProtect;
+	DWORD CurrentState;
+	DWORD PermissionsOfFirstPte;
+	size_t RegionSize;
+
+
+	if (addr > HIGHEST_VMA_ADDRESS)
+	{
+		// The memory in the user region is allocated in multiples of 64K, so this means that the last possible vma cannot start beyond
+		// HIGHEST_VMA_ADDRESS. This is true for allocations done by both XbAllocateVirtualMemory and Allocate, which both will be counted.
+		// The allocations done by the host are invisible here (like they should be)
+
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	Lock();
+
+	// Locate the vma containing the supplied address
+
+	it = GetVMAIterator(addr, UserRegion);
+
+	// NOTE: we count the first 64K block below 0x10000 and the reserved area in the memory placeholder after the xbe image as free areas
+	// TODO: should allocations made by Allocate be visible to this function or not?
+
+	if (addr < LOWEST_USER_ADDRESS || (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
+		|| it->second.type == FreeVma)
+	{
+		if (addr < LOWEST_USER_ADDRESS)
+		{
+			RegionSize = LOWEST_USER_ADDRESS - ROUND_DOWN_4K(addr);
+		}
+		else { RegionSize = it->first + it->second.size - ROUND_DOWN_4K(addr); }
+
+		memory_statistics->AllocationBase = NULL;
+		memory_statistics->AllocationProtect = 0;
+		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+		memory_statistics->RegionSize = RegionSize;
+		memory_statistics->State = XBOX_MEM_FREE;
+		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
+		memory_statistics->Type = 0;
+
+		Unlock();
+		return STATUS_SUCCESS;
+	}
+
+	// The vma is in the reserved or allocated state
+
+	PointerPte = GetPteAddress(addr);
+	EndingPte = GetPteAddress(it->first + it->second.size - 1);
+	PointerPde = GetPteAddress(PointerPte);
+	StartingPte = PointerPte;
+	CurrentProtect = 0;
+	InitialProtect = it->second.permissions;
+
+	if (PointerPde->Hardware.Valid != 0)
+	{
+		if (PointerPte->Default != 0)
+		{
+			CurrentState = XBOX_MEM_COMMIT;
+			PermissionsOfFirstPte = (PointerPte->Default & PTE_VALID_PROTECTION_MASK);
+			CurrentProtect = ConvertPteToXboxProtection(PointerPte->Default);
+		}
+		CurrentState = XBOX_MEM_RESERVE;
+	}
+	else { CurrentState = XBOX_MEM_RESERVE; }
+
+	while (PointerPte <= EndingPte)
+	{
+		if ((PointerPte == StartingPte) || IsPteOnPdeBoundary(PointerPte))
+		{
+			PointerPde = GetPteAddress(PointerPte);
+
+			if (PointerPde->Hardware.Valid == 0)
+			{
+				// Pde is invalid but we are looking for committed memory, so stop now
+				if (CurrentState == XBOX_MEM_COMMIT) { break; }
+
+				// Pde is invalid and we are looking for reserved memory, so skip this pde and keep searching if we are not at EndingPte yet
+				PointerPte = (PMMPTE)GetVAddrMappedByPte(PointerPde + 1);
+				continue;
+			}
+		}
+
+		if (PointerPte->Default != 0)
+		{
+			// Pte is valid but we are looking for reserved memory, so stop now
+			if (CurrentState == XBOX_MEM_RESERVE) { break; }
+
+			// Pte is valid but its permissions are different, so stop now
+			if ((PointerPte->Default & PTE_VALID_PROTECTION_MASK) != PermissionsOfFirstPte) { break; }
+		}
+		else
+		{
+			// Pte is invalid but we are looking for committed memory, so stop now
+			if (CurrentState == XBOX_MEM_COMMIT) { break; }
+		}
+
+		PointerPte++;
+	}
+
+	// This can happen if we reach EndingPte in loop above (and PointerPte will be EndingPte + 1) or if we are looking for reserved memory and
+	// PointerPte/EndingPte are inside a single page: in this case, GetVAddrMappedByPte(PointerPde + 1) will make PointerPte much larger than
+	// EndingPte, hence this check
+	if (PointerPte > EndingPte) { PointerPte = EndingPte + 1; }
+
+	RegionSize = GetVAddrMappedByPte(EndingPte) - ROUND_DOWN_4K(addr);
+
+	memory_statistics->AllocationBase = (void*)it->first;
+	memory_statistics->AllocationProtect = InitialProtect;
+	memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+	memory_statistics->RegionSize = RegionSize;
+	memory_statistics->State = CurrentState;
+	memory_statistics->Protect = CurrentProtect;
+	memory_statistics->Type = XBOX_MEM_PRIVATE;
+
+	Unlock();
+	return STATUS_SUCCESS;
 }
 
 VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress)
