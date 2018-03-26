@@ -180,8 +180,6 @@ class VMManager : public PhysicalMemory
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
-		// number of bytes reserved for the memory placeholder after the xbe image
-		size_t m_ReservedBytesAfterXbeImage = 0;
 
 	
 		// set up the pfn database

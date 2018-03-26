@@ -913,7 +913,7 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 
 
 	DWORD Perms = NewProtect;
-	NTSTATUS ret = g_VMManager.XbProtect((VAddr*)BaseAddress, (size_t*)RegionSize, &Perms);
+	NTSTATUS ret = g_VMManager.XbVirtualProtect((VAddr*)BaseAddress, (size_t*)RegionSize, &Perms);
 	*OldProtect = Perms;
 
 	RETURN(ret);

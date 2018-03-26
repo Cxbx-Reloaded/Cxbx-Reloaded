@@ -71,7 +71,6 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 	m_hContiguousFile = memory_view;
 	m_hPTFile = pagetables_view;
-	m_ReservedBytesAfterXbeImage = XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE;
 
 	// Set up the structs tracking the memory regions
 	ConstructMemoryRegion(LOWEST_USER_ADDRESS, USER_MEMORY_SIZE, UserRegion);
@@ -154,10 +153,10 @@ dashboard from non-retail xbe?");
 	// since that would result in an increase in the reserved memory usage and also, with XBOX_MEM_RESERVE, the starting
 	// address will be rounded down to a 64K boundary, which will likely result in an incorrect base address
 
-	if (m_ReservedBytesAfterXbeImage > 0)
+	if (XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE > 0)
 	{
 		ConstructVMA(XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage),
-			ROUND_DOWN_4K(m_ReservedBytesAfterXbeImage), UserRegion, ReservedVma,
+			ROUND_DOWN_4K(XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE), UserRegion, ReservedVma,
 			false);
 	}
 
@@ -1593,11 +1592,11 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
 
-			// Only allocate memory if the base address is higher than the xbe image size (not the memory placeholder size, otherwise
-			// memory allocations on the remaining reserved area will succeed!)
+			// Only reserve memory if the base address is higher than XBE_IMAGE_BASE
 
-			if (AlignedCapturedBase > (XBE_IMAGE_BASE + m_ReservedBytesAfterXbeImage - 1) &&
-				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
+			if ((AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && AlignedCapturedBase < XBE_MAX_VA) ||
+				(AlignedCapturedBase > XBE_IMAGE_BASE &&
+				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase))
 			{
 				// Something else is already mapped at the specified address, report an error and bail out
 
