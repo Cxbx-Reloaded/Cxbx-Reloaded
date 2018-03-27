@@ -135,6 +135,7 @@ void DSoundBufferXboxAdpcmDecoder(
 }
 
 #define DSoundBufferGetPCMBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
+#define DSoundBufferGetXboxBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? ((size / XBOX_ADPCM_DSTSIZE) * XBOX_ADPCM_SRCSIZE) : size
 
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {

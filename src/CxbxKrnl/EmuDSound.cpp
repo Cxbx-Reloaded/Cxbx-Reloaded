@@ -508,75 +508,112 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             continue;
         }
 
-        //TODO: Remove me when done
-        DWORD writePos = 0, playPos = 0;
-        DWORD rangeStart = 0, rangeEnd = 0;
-
         DWORD dwAudioBytes;
         HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
         if (hRet == DS_OK) {
             std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
-            if (pThis->Host_isProcessing == false) {
+            if (buffer->isWritten == false) {
 
-            useNextBufferPacket:
-                DSoundBufferWriteToBuffer(pThis->EmuDirectSoundBuffer8, pThis->Host_dwWriteOffsetNext, buffer->pBuffer_data, buffer->size);
-
-                pThis->Host_dwWriteOffsetNext += buffer->size;
-                if (pThis->EmuBufferDesc->dwBufferBytes < pThis->Host_dwWriteOffsetNext) {
-                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc->dwBufferBytes;
-                }
-
-                if (pThis->Host_isProcessing == false) {
-                    pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-                }
+            prepareNextBufferPacket:
+                DSoundBufferWriteToBuffer(pThis->EmuDirectSoundBuffer8, pThis->Host_dwWriteOffsetNext, buffer->pBuffer_data, buffer->xmp_data.dwMaxSize);
 
                 // Debug area begin
-                printf("DEBUG: playPos - %08d | writePos - %08d | dwTriggerRange = %08d | rangeStart = %08d | rangeEnd = %08d | dwWriteOffsetNext = %08d | bufferSize - %08d | nAvgBytesPerSec - %08d | nSamplesPerSec - %08d | wBitsPerSample - %08d | nBlockAlign - %08d\n", playPos, writePos, pThis->Host_dwTriggerRange, rangeStart, rangeEnd, pThis->Host_dwWriteOffsetNext, buffer->size, pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec, pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec, pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample, pThis->EmuBufferDesc->lpwfxFormat->nBlockAlign);
+                printf("DEBUG: next packet process | pThis = %08X | rangeStart = %08d | bufferSize - %08d | dwBufferBytes = %08d | dwWriteOffsetNext = %08d\n", pThis, buffer->rangeStart, buffer->xmp_data.dwMaxSize, pThis->EmuBufferDesc->dwBufferBytes, pThis->Host_dwWriteOffsetNext);
+                //printf("DEBUG: process next packet | pThis = %08X | packet capacity = %08d | packet size = %08d | playPos - %08d | writePos - %08d | dwTriggerRange = %08d | rangeStart = %08d | rangeEnd = %08d | dwWriteOffsetNext = %08d | bufferSize - %08d | nAvgBytesPerSec - %08d | nSamplesPerSec - %08d | wBitsPerSample - %08d | nBlockAlign - %08d\n", pThis, pThis->Host_BufferPacketArray.capacity(), pThis->Host_BufferPacketArray.size(), playPos, writePos, pThis->Host_dwTriggerRange, rangeStart, rangeEnd, pThis->Host_dwWriteOffsetNext, buffer->size, pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec, pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec, pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample, pThis->EmuBufferDesc->lpwfxFormat->nBlockAlign);
                 // Debug area end
 
-                free(buffer->pBuffer_data);
-                if (buffer->pdwStatus != xbnullptr) {
-                    (*buffer->pdwStatus) = XMP_STATUS_SUCCESS;
+                if (pThis->Host_isProcessing == false) {
+                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+                    pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+                    pThis->Host_isProcessing = true;
                 }
-                pThis->Host_BufferPacketArray.erase(buffer);
-                pThis->Host_isProcessing = true;
+                buffer->isWritten = true;
+                /*
+                // This is CORRECT, base on test cases: Battlestar Galactica and Rayman Arena
+                //free(buffer->pBuffer_data);
+                if (buffer->xmp_data.pdwStatus != xbnullptr) {
+                    (*buffer->xmp_data.pdwStatus) = XMP_STATUS_SUCCESS;
+                }
+                //pThis->Host_BufferPacketArray.erase(buffer);//*/
+
             } else {
-                // Prepare next packet data to be played.
-                //DWORD writePos, playPos;
+                DWORD writePos = 0, playPos = 0;
                 hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&playPos, &writePos);
                 if (hRet == DS_OK) {
-                    /*DWORD*/ rangeStart = pThis->Host_dwWriteOffsetNext - pThis->Host_dwTriggerRange;
-                    /*DWORD*/ rangeEnd = pThis->Host_dwWriteOffsetNext;
 
-                    if (rangeStart > INT_MAX) {
-                        rangeStart = pThis->EmuBufferDesc->dwBufferBytes - DWORD((int)rangeStart * -1);
+                    // Buffer was not played, therefore ignore it.
+                    /*
+                    if (playPos == 0 && writePos == 0) {
+                        continue;
+                    }//*/
+
+                    int bufPlayed = playPos - buffer->rangeStart;
+                    int bufNextOffset = writePos - (buffer->rangeStart + buffer->xmp_data.dwMaxSize);
+
+                    // Correct it if buffer was playing and is at beginning.
+                    if (bufPlayed < 0 && (buffer->isPlayed || (playPos + pThis->EmuBufferDesc->dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
+                        bufPlayed = pThis->EmuBufferDesc->dwBufferBytes - (bufPlayed * -1);
                     }
 
-                    // Within range check
-                    if (rangeStart < rangeEnd) {
+                    printf("DEBUG: test packet process | pThis = %08X | playPos - %08d | writePos - %08d | rangeStart = %08d | bufPlayed = %08d | bufferSize - %08d | dwBufferBytes = %08d | dwWriteOffsetNext = %08d\n", pThis, playPos, writePos, buffer->rangeStart, bufPlayed, buffer->xmp_data.dwMaxSize, pThis->EmuBufferDesc->dwBufferBytes, pThis->Host_dwWriteOffsetNext);
 
-                        if (writePos >= rangeStart && writePos <= rangeEnd) {
-                            goto useNextBufferPacket;
+                    if (bufPlayed >= 0) {
+                        if (buffer->isPlayed == false) {
+                            buffer->isPlayed = true;
+                            /*
+                            if (buffer->xmp_data.pdwStatus != xbnullptr) {
+                            (*buffer->xmp_data.pdwStatus) = XMP_STATUS_SUCCESS;
+                            }
+                            //*/
                         }
-                    // Outside range check
-                    } else {
-                        if ((writePos >= rangeStart && writePos <= pThis->EmuBufferDesc->dwBufferBytes) || (writePos >= 0 && writePos <= rangeEnd)) {
-                            goto useNextBufferPacket;
+                        if (bufPlayed >= (int)buffer->xmp_data.dwMaxSize) {
+                            free(buffer->pBuffer_data);
+                            //*
+                            if (buffer->xmp_data.pdwStatus != xbnullptr) {
+                                (*buffer->xmp_data.pdwStatus) = XMP_STATUS_SUCCESS;
+                            }
+                            //*/
+                            if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
+                                (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis, buffer->xmp_data.dwMaxSize);
+                            }
+                            if (buffer->xmp_data.hCompletionEvent != 0) {
+                                SetEvent(buffer->xmp_data.hCompletionEvent);
+                            }
+                            buffer = pThis->Host_BufferPacketArray.erase(buffer);
+                            if (pThis->Host_BufferPacketArray.size() == 0) {
+                                continue;
+                            }
+                            if (buffer->isWritten == false) {
+                                goto prepareNextBufferPacket;
+                            }
+                        }
+                        if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
+                            (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis, bufPlayed);
+                        }
+                        if (pThis->Host_BufferPacketArray.size() > 1) {
+                            if ((buffer + 1)->isWritten == false) {
+                                buffer++;
+                                goto prepareNextBufferPacket;
+                            }
                         }
                     }
                 }
-                /* // For debug real time info.
-                DWORD playPos, writePos;
-                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&playPos, &writePos);
-                printf("DEBUG: playPos - %08d | writePos - %08d | bufferSize - %08d | nAvgBytesPerSec - %08d | nSamplesPerSec - %08d | wBitsPerSample - %08d | nBlockAlign - %08d\n", playPos, writePos, buffer->size, pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec, pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec, pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample, pThis->EmuBufferDesc->lpwfxFormat->nBlockAlign);
-                //*/
             }
+
+                // Debug area begin
+                //printf("DEBUG: skip packet process | pThis = %08X | playPos - %08d | writePos - %08d | dwTriggerRange = %08d | rangeStart = %08d | rangeEnd = %08d | dwWriteOffsetNext = %08d | bufferSize - %08d | nAvgBytesPerSec - %08d | nSamplesPerSec - %08d | wBitsPerSample - %08d | nBlockAlign - %08d\n", pThis, playPos, writePos, pThis->Host_dwTriggerRange, buffer->rangeStart, buffer->rangeEnd, pThis->Host_dwWriteOffsetNext, buffer->size, pThis->EmuBufferDesc->lpwfxFormat->nAvgBytesPerSec, pThis->EmuBufferDesc->lpwfxFormat->nSamplesPerSec, pThis->EmuBufferDesc->lpwfxFormat->wBitsPerSample, pThis->EmuBufferDesc->lpwfxFormat->nBlockAlign);
+                // Debug area end
+            //}
         }
     }
+
     leaveCriticalSection;
 
     return;
 }
+
+// Kismet given name for RadWolfie's experiment major issue in the mutt.
+#define DirectSuicideWork XTL::EMUPATCH(DirectSoundDoWork)
 
 // ******************************************************************
 // * patch: IDirectSound_SetOrientation
@@ -1754,8 +1791,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, DSBPLAY_LOOPING);
 
-    // Allocate at least 1 second worth of bytes in PCM format.
-    pDSBufferDesc->dwBufferBytes = pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;
+    // Allocate at least 5 second worth of bytes in PCM format.
+    pDSBufferDesc->dwBufferBytes = pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
     (*ppStream)->Host_dwTriggerRange = (pDSBufferDesc->lpwfxFormat->nSamplesPerSec / pDSBufferDesc->lpwfxFormat->wBitsPerSample);
 
     (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
@@ -2015,19 +2052,31 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
             // Add packets from title until it gets full.
             if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
                 host_voice_packet packet_input;
-                packet_input.size = DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize);
-                packet_input.pdwStatus = pInputBuffer->pdwStatus;
-                if (packet_input.size == 0) {
+                packet_input.xmp_data = *pInputBuffer;
+                packet_input.xmp_data.dwMaxSize = DSoundBufferGetPCMBufferSize(pThis, pInputBuffer->dwMaxSize);
+                if (packet_input.xmp_data.dwMaxSize == 0) {
                     packet_input.pBuffer_data = nullptr;
                 } else {
-                    packet_input.pBuffer_data = malloc(packet_input.size);
+                    packet_input.pBuffer_data = malloc(packet_input.xmp_data.dwMaxSize);
                 }
+                packet_input.rangeStart = pThis->Host_dwWriteOffsetNext;
+                pThis->Host_dwWriteOffsetNext += packet_input.xmp_data.dwMaxSize;
+                if (pThis->EmuBufferDesc->dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
+                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc->dwBufferBytes;
+                }
+                packet_input.isWritten = false;
+                packet_input.isPlayed = false;
+
                 //TODO: will compressed audio be a problem?
-                DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pInputBuffer->pvBuffer, pInputBuffer->dwMaxSize, packet_input.pBuffer_data, packet_input.size);
+                DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pInputBuffer->pvBuffer, pInputBuffer->dwMaxSize, packet_input.pBuffer_data, packet_input.xmp_data.dwMaxSize);
                 pThis->Host_BufferPacketArray.push_back(packet_input);
 
+                //*
                 if (pInputBuffer->pdwStatus != xbnullptr) {
                     (*pInputBuffer->pdwStatus) = XMP_STATUS_PENDING;
+                }//*/
+                if (pInputBuffer->pdwCompletedSize != xbnullptr) {
+                    (*pInputBuffer->pdwCompletedSize) = 0;
                 }
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
@@ -2087,11 +2136,25 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 	LOG_FUNC_ONE_ARG(pThis);
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
-    pThis->EmuDirectSoundBuffer8->Play(0, 0, 0);
-    DWORD dwStatus;
+
+    /*host_voice_packet packetSilence;
+    packetSilence.size = pThis->Host_dwTriggerRange;
+    packetSilence.pBuffer_data = malloc(packetSilence.size);
+    memset(packetSilence.pBuffer_data, 0, packetSilence.size);
+    packetSilence.pdwStatus = nullptr;
+    pThis->Host_BufferPacketArray.push_back(packetSilence);*/
+    /*
     do {
-        pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
-    } while((dwStatus & DSBSTATUS_PLAYING) > 0);
+        XTL::EMUPATCH(DirectSoundDoWork)();
+    } while (pThis->Host_BufferPacketArray.size() > 0);*/
+    for (std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end(); ) {
+        free(buffer->pBuffer_data);
+        (*buffer->xmp_data.pdwStatus) = XMP_STATUS_FLUSHED;
+        buffer = pThis->Host_BufferPacketArray.erase(buffer);
+    }
+
+
+    pThis->EmuDirectSoundBuffer8->Stop();
 
     leaveCriticalSection;
 

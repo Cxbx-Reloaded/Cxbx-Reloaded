@@ -383,9 +383,11 @@ class X_CMcpxStream
 
 // host_voice_packet is needed for DirectSoundStream packet handling internally.
 struct host_voice_packet {
-    DWORD   size;
-    PDWORD  pdwStatus;
+    XTL::XMEDIAPACKET xmp_data;
     PVOID   pBuffer_data;
+    DWORD   rangeStart;
+    bool    isWritten;
+    bool    isPlayed;
 };
 
 // ******************************************************************
