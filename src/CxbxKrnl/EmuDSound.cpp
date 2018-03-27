@@ -515,7 +515,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
             if (buffer->isWritten == false) {
 
             prepareNextBufferPacket:
-                DSoundBufferWriteToBuffer(pThis->EmuDirectSoundBuffer8, pThis->Host_dwWriteOffsetNext, buffer->pBuffer_data, buffer->xmp_data.dwMaxSize);
+                DSoundBufferWriteToBuffer(pThis->EmuDirectSoundBuffer8, buffer->rangeStart, buffer->pBuffer_data, buffer->xmp_data.dwMaxSize);
 
                 // Debug area begin
                 printf("DEBUG: next packet process | pThis = %08X | rangeStart = %08d | bufferSize - %08d | dwBufferBytes = %08d | dwWriteOffsetNext = %08d\n", pThis, buffer->rangeStart, buffer->xmp_data.dwMaxSize, pThis->EmuBufferDesc->dwBufferBytes, pThis->Host_dwWriteOffsetNext);
