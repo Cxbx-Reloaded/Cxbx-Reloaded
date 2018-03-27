@@ -185,7 +185,7 @@ void VMManager::DestroyMemoryRegions()
 	{
 		for (auto it = m_MemoryRegionArray[i].RegionMap.begin(); it != m_MemoryRegionArray[i].RegionMap.end(); ++it)
 		{
-			if (it->second.type != FreeVma)
+			if (it->second.type != FreeVma && it->first >= XBE_MAX_VA)
 			{
 				if (it->second.bFragmented)
 				{

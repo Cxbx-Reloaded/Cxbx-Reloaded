@@ -102,6 +102,8 @@ class VMManager : public PhysicalMemory
 		// destructor
 		~VMManager()
 		{
+			// DestroyMemoryRegions is not called when emulation ends, but only when the GUI process ends. This is probably because the emu
+			// process is killed with TerminateProcess and so it doesn't have a chance to perform a cleanup...
 			//DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
