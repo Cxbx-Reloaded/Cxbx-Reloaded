@@ -44,17 +44,6 @@ namespace xboxkrnl
 #include "Cxbx.h" // For CxbxKrnl_KernelThunkTable
 #include "CxbxKrnl.h" // For UINT
 
-//
-// Enable "#define PANIC(numb) numb" if you wish to find out what
-// kernel export the application is attempting to call. The app
-// will crash at the thunk number (i.e. PsQueryStatistics:0x0100)
-//
-// For general use, you should probably just enable the other
-// option "#define PANIC(numb) cxbx_panic"
-//
-//#define PANIC(numb) CxbxKrnlPanic
-#define PANIC(numb) numb
-
 #define FUNC(f) f
 #define VARIABLE(v) v
 
@@ -66,7 +55,7 @@ namespace xboxkrnl
 // Note : Names that collide with other symbols, use the KRNL() macro.
 uint32 CxbxKrnl_KernelThunkTable[379] =
 {
-	(uint32)PANIC(0x0000),                                        // 0x0000 (0)   NULL
+	(uint32)FUNC(xbnullptr),                                      // 0x0000 (0) "Undefined", this function doesn't exist
 	(uint32)FUNC(&xboxkrnl::AvGetSavedDataAddress),               // 0x0001 (1)
 	(uint32)FUNC(&xboxkrnl::AvSendTVEncoderOption),               // 0x0002 (2)
 	(uint32)FUNC(&xboxkrnl::AvSetDisplayMode),                    // 0x0003 (3)
