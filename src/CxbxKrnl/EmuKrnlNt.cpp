@@ -1078,43 +1078,6 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 }
 
 // ******************************************************************
-// * 0x00D2 - NtQueryFullAttributesFile()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
-(
-	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_ARG_OUT(Attributes)
-		LOG_FUNC_END;
-
-	//	__asm int 3;
-	NativeObjectAttributes nativeObjectAttributes;
-	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
-
-	NTSTATUS ret = CxbxObjectAttributesToNT(
-		ObjectAttributes, 
-		/*var*/nativeObjectAttributes, 
-		"NtQueryFullAttributesFile");
-
-	if (ret == STATUS_SUCCESS)
-		ret = NtDll::NtQueryFullAttributesFile(
-			nativeObjectAttributes.NtObjAttrPtr, 
-			&nativeNetOpenInfo);
-	
-	// Convert Attributes to Xbox
-	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
-
-	if (FAILED(ret))
-		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)", ret);
-
-	RETURN(ret);
-}
-
-// ******************************************************************
 // * 0x00D0 - NtQueryDirectoryObject
 // ******************************************************************
 XBSYSAPI EXPORTNUM(208) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryObject
@@ -1164,6 +1127,43 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 
 	if (ret != STATUS_SUCCESS)
 		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D2 - NtQueryFullAttributesFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
+(
+	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG_OUT(Attributes)
+		LOG_FUNC_END;
+
+	//	__asm int 3;
+	NativeObjectAttributes nativeObjectAttributes;
+	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+
+	NTSTATUS ret = CxbxObjectAttributesToNT(
+		ObjectAttributes,
+		/*var*/nativeObjectAttributes,
+		"NtQueryFullAttributesFile");
+
+	if (ret == STATUS_SUCCESS)
+		ret = NtDll::NtQueryFullAttributesFile(
+			nativeObjectAttributes.NtObjAttrPtr,
+			&nativeNetOpenInfo);
+
+	// Convert Attributes to Xbox
+	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
+
+	if (FAILED(ret))
+		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)", ret);
 
 	RETURN(ret);
 }
