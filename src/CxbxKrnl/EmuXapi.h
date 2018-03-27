@@ -269,12 +269,14 @@ XINPUT_STATE, *PXINPUT_STATE;
 // ******************************************************************
 // * XINPUT_FEEDBACK_HEADER
 // ******************************************************************
+#include "AlignPrefix1.h"
 typedef struct _XINPUT_FEEDBACK_HEADER
 {
     DWORD           dwStatus;
     HANDLE OPTIONAL hEvent;
     BYTE            Reserved[58];
 }
+#include "AlignPosfix1.h"
 XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
 
 // ******************************************************************
