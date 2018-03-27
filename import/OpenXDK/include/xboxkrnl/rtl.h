@@ -54,8 +54,24 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
     PCHAR   Message
 );
 
-XBSYSAPI VOID *RtlCaptureContext;
-XBSYSAPI VOID *RtlCaptureStackBackTrace;
+// ******************************************************************
+// * 0x0109 - RtlCaptureContext()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(265) VOID NTAPI RtlCaptureContext
+(
+	IN PCONTEXT ContextRecord
+);
+
+// ******************************************************************
+// * 0x010A - RtlCaptureStackBackTrace()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(266) USHORT NTAPI RtlCaptureStackBackTrace
+(
+	IN ULONG FramesToSkip,
+	IN ULONG FramesToCapture,
+	OUT PVOID *BackTrace,
+	OUT PULONG BackTraceHash
+);
 
 // ******************************************************************
 // * RtlCharToInteger
@@ -261,7 +277,14 @@ XBSYSAPI EXPORTNUM(287) VOID NTAPI RtlFreeUnicodeString
 	IN OUT PUNICODE_STRING UnicodeString
 );
 
-XBSYSAPI VOID *RtlGetCallersAddress;
+// ******************************************************************
+// * 0x0120 - RtlGetCallersAddress()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(288) VOID NTAPI RtlGetCallersAddress
+(
+	OUT PVOID *CallersAddress,
+	OUT PVOID *CallersCaller
+);
 
 // ******************************************************************
 // * RtlInitAnsiString
@@ -386,8 +409,21 @@ XBSYSAPI EXPORTNUM(301) ULONG NTAPI RtlNtStatusToDosError
     IN NTSTATUS Status
 );
 
-XBSYSAPI VOID *RtlRaiseException;
-XBSYSAPI VOID *RtlRaiseStatus;
+// ******************************************************************
+// * 0x012E - RtlRaiseException()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(302) VOID NTAPI RtlRaiseException
+(
+	IN PEXCEPTION_RECORD ExceptionRecord
+);
+
+// ******************************************************************
+// * 0x012F - RtlRaiseStatus()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(303) VOID NTAPI RtlRaiseStatus
+(
+	IN NTSTATUS Status
+);
 
 // ******************************************************************
 // * RtlTimeFieldsToTime
@@ -465,7 +501,16 @@ XBSYSAPI EXPORTNUM(311) NTSTATUS NTAPI RtlUnicodeToMultiByteSize
 	IN ULONG BytesInUnicodeString
 );
 
-XBSYSAPI VOID *RtlUnwind;
+// ******************************************************************
+// * 0x0138 - RtlUnwind()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(312) VOID NTAPI RtlUnwind
+(
+	IN PVOID TargetFrame OPTIONAL,
+	IN PVOID TargetIp OPTIONAL,
+	IN PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
+	IN PVOID ReturnValue
+);
 
 // ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
@@ -522,10 +567,18 @@ XBSYSAPI EXPORTNUM(318) USHORT FASTCALL RtlUshortByteSwap
 	IN USHORT Source
 );
 
-XBSYSAPI VOID *RtlWalkFrameChain;
+// ******************************************************************
+// * 0x013F - RtlWalkFrameChain
+// ******************************************************************
+XBSYSAPI EXPORTNUM(319) ULONG NTAPI RtlWalkFrameChain
+(
+	OUT PVOID *Callers,
+	IN ULONG Count,
+	IN ULONG Flags
+);
 
 // ******************************************************************
-// * RtlZeroMemory
+// * 0x0140 - RtlZeroMemory
 // ******************************************************************
 // *
 // * Fill a block of memory with zeros.

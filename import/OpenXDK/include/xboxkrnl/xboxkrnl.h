@@ -2594,6 +2594,53 @@ typedef struct _DISK_GEOMETRY {
 	DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
+// This is modeled around the Windows definition
+typedef struct _FLOATING_SAVE_AREA {
+	DWORD   ControlWord;
+	DWORD   StatusWord;
+	DWORD   TagWord;
+	DWORD   ErrorOffset;
+	DWORD   ErrorSelector;
+	DWORD   DataOffset;
+	DWORD   DataSelector;
+	BYTE    RegisterArea[80];
+	DWORD   Cr0NpxState;
+} FLOATING_SAVE_AREA;
+
+// This is modeled around the Windows definition
+typedef struct _CONTEXT {
+	DWORD ContextFlags;
+	DWORD   Dr0;
+	DWORD   Dr1;
+	DWORD   Dr2;
+	DWORD   Dr3;
+	DWORD   Dr6;
+	DWORD   Dr7;
+	FLOATING_SAVE_AREA FloatSave;
+	DWORD   SegGs;
+	DWORD   SegFs;
+	DWORD   SegEs;
+	DWORD   SegDs;
+	DWORD   Edi;
+	DWORD   Esi;
+	DWORD   Ebx;
+	DWORD   Edx;
+	DWORD   Ecx;
+	DWORD   Eax;
+	DWORD   Ebp;
+	DWORD   Eip;
+	DWORD   SegCs;
+	DWORD   EFlags;
+	DWORD   Esp;
+	DWORD   SegSs;
+	BYTE    ExtendedRegisters[512];
+} CONTEXT, *PCONTEXT;
+
+// This is modeled around the Windows definition
+typedef struct _IO_COMPLETION_BASIC_INFORMATION {
+	LONG Depth;
+} IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
+
 // ******************************************************************
 // * Debug
 // ******************************************************************

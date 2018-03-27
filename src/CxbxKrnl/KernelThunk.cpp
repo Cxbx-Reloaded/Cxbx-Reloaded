@@ -274,11 +274,11 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtPulseEvent),                        // 0x00CD (205)
 	(uint32)FUNC(&xboxkrnl::NtQueueApcThread),                    // 0x00CE (206)
 	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryFile),                // 0x00CF (207)
-	(uint32)PANIC(0x00D0),                                        // 0x00D0 (208) NtQueryDirectoryObject
+	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryObject),              // 0x00D0 (208)
 	(uint32)FUNC(&xboxkrnl::NtQueryEvent),                        // 0x00D1 (209)
 	(uint32)FUNC(&xboxkrnl::NtQueryFullAttributesFile),           // 0x00D2 (210)
 	(uint32)FUNC(&xboxkrnl::NtQueryInformationFile),              // 0x00D3 (211)
-	(uint32)PANIC(0x00D4),                                        // 0x00D4 (212) NtQueryIoCompletion
+	(uint32)FUNC(&xboxkrnl::NtQueryIoCompletion),                 // 0x00D4 (212)
 	(uint32)FUNC(&xboxkrnl::NtQueryMutant),                       // 0x00D5 (213)
 	(uint32)FUNC(&xboxkrnl::NtQuerySemaphore),                    // 0x00D6 (214)
 	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),           // 0x00D7 (215)
@@ -286,24 +286,24 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtQueryVirtualMemory),                // 0x00D9 (217)
 	(uint32)FUNC(&xboxkrnl::NtQueryVolumeInformationFile),        // 0x00DA (218)
 	(uint32)FUNC(&xboxkrnl::NtReadFile),                          // 0x00DB (219)
-	(uint32)PANIC(0x00DC),                                        // 0x00DC (220) NtReadFileScatter
+	(uint32)FUNC(&xboxkrnl::NtReadFileScatter),                   // 0x00DC (220)
 	(uint32)FUNC(&xboxkrnl::NtReleaseMutant),                     // 0x00DD (221)
 	(uint32)FUNC(&xboxkrnl::NtReleaseSemaphore),                  // 0x00DE (222)
-	(uint32)PANIC(0x00DF),                                        // 0x00DF (223) NtRemoveIoCompletion
+	(uint32)FUNC(&xboxkrnl::NtRemoveIoCompletion),                // 0x00DF (223)
 	(uint32)FUNC(&xboxkrnl::NtResumeThread),                      // 0x00E0 (224)
 	(uint32)FUNC(&xboxkrnl::NtSetEvent),                          // 0x00E1 (225)
 	(uint32)FUNC(&xboxkrnl::NtSetInformationFile),                // 0x00E2 (226)
-	(uint32)PANIC(0x00E3),                                        // 0x00E3 (227) NtSetIoCompletion
+	(uint32)FUNC(&xboxkrnl::NtSetIoCompletion),                   // 0x00E3 (227)
 	(uint32)FUNC(&xboxkrnl::NtSetSystemTime),                     // 0x00E4 (228)
 	(uint32)FUNC(&xboxkrnl::NtSetTimerEx),                        // 0x00E5 (229)
-	(uint32)PANIC(0x00E6),                                        // 0x00E6 (230) NtSignalAndWaitForSingleObjectEx
+	(uint32)FUNC(&xboxkrnl::NtSignalAndWaitForSingleObjectEx),    // 0x00E6 (230)
 	(uint32)FUNC(&xboxkrnl::NtSuspendThread),                     // 0x00E7 (231)
 	(uint32)FUNC(&xboxkrnl::NtUserIoApcDispatcher),               // 0x00E8 (232)
 	(uint32)FUNC(&xboxkrnl::NtWaitForSingleObject),               // 0x00E9 (233)
 	(uint32)FUNC(&xboxkrnl::NtWaitForSingleObjectEx),             // 0x00EA (234)
 	(uint32)FUNC(&xboxkrnl::NtWaitForMultipleObjectsEx),          // 0x00EB (235)
 	(uint32)FUNC(&xboxkrnl::NtWriteFile),                         // 0x00EC (236)
-	(uint32)PANIC(0x00ED),                                        // 0x00ED (237) NtWriteFileGather
+	(uint32)FUNC(&xboxkrnl::NtWriteFileGather),                   // 0x00ED (237)
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                    // 0x00EE (238)
 	(uint32)FUNC(&xboxkrnl::ObCreateObject),                      // 0x00EF (239)
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),           // 0x00F0 (240)
@@ -331,8 +331,8 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeStringToString),      // 0x0106 (262)
 	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeToString),            // 0x0107 (263)
 	(uint32)FUNC(&xboxkrnl::RtlAssert),                           // 0x0108 (264)
-	(uint32)PANIC(0x0109),                                        // 0x0109 (265) RtlCaptureContext
-	(uint32)PANIC(0x010A),                                        // 0x010A (266) RtlCaptureStackBackTrace
+	(uint32)FUNC(&xboxkrnl::RtlCaptureContext),                   // 0x0109 (265)
+	(uint32)FUNC(&xboxkrnl::RtlCaptureStackBackTrace),            // 0x010A (266)
 	(uint32)FUNC(&xboxkrnl::RtlCharToInteger),                    // 0x010B (267)
 	(uint32)FUNC(&xboxkrnl::RtlCompareMemory),                    // 0x010C (268)
 	(uint32)FUNC(&xboxkrnl::RtlCompareMemoryUlong),               // 0x010D (269)
@@ -354,7 +354,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlFillMemoryUlong),                  // 0x011D (285)
 	(uint32)FUNC(&xboxkrnl::RtlFreeAnsiString),                   // 0x011E (286)
 	(uint32)FUNC(&xboxkrnl::RtlFreeUnicodeString),                // 0x011F (287)
-	(uint32)PANIC(0x0120),                                        // 0x0120 (288) RtlGetCallersAddress
+	(uint32)FUNC(&xboxkrnl::RtlGetCallersAddress),                // 0x0120 (288)
 	(uint32)FUNC(&xboxkrnl::RtlInitAnsiString),                   // 0x0121 (289)
 	(uint32)FUNC(&xboxkrnl::RtlInitUnicodeString),                // 0x0122 (290)
 	(uint32)FUNC(&xboxkrnl::RtlInitializeCriticalSection),        // 0x0123 (291)
@@ -368,8 +368,8 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeN),              // 0x012B (299)
 	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeSize),           // 0x012C (300)
 	(uint32)FUNC(&xboxkrnl::RtlNtStatusToDosError),               // 0x012D (301)
-	(uint32)PANIC(0x012E),                                        // 0x012E (302) RtlRaiseException
-	(uint32)PANIC(0x012F),                                        // 0x012F (303) RtlRaiseStatus
+	(uint32)FUNC(&xboxkrnl::RtlRaiseException),                   // 0x012E (302)
+	(uint32)FUNC(&xboxkrnl::RtlRaiseStatus),                      // 0x012F (303)
 	(uint32)FUNC(&xboxkrnl::RtlTimeFieldsToTime),                 // 0x0130 (304)
 	(uint32)FUNC(&xboxkrnl::RtlTimeToTimeFields),                 // 0x0131 (305)
 	(uint32)FUNC(&xboxkrnl::RtlTryEnterCriticalSection),          // 0x0132 (306)
@@ -378,14 +378,14 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlUnicodeStringToInteger),           // 0x0135 (309)
 	(uint32)FUNC(&xboxkrnl::RtlUnicodeToMultiByteN),              // 0x0136 (310)
 	(uint32)FUNC(&xboxkrnl::RtlUnicodeToMultiByteSize),           // 0x0137 (311)
-	(uint32)PANIC(0x0138),                                        // 0x0138 (312) RtlUnwind
+	(uint32)FUNC(&xboxkrnl::RtlUnwind),                           // 0x0138 (312)
 	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeChar),                // 0x0139 (313)
 	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeString),              // 0x013A (314)
 	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeToMultiByteN),        // 0x013B (315)
 	(uint32)FUNC(&xboxkrnl::RtlUpperChar),                        // 0x013C (316)
 	(uint32)FUNC(&xboxkrnl::RtlUpperString),                      // 0x013D (317)
 	(uint32)FUNC(&xboxkrnl::RtlUshortByteSwap),                   // 0x013E (318)
-	(uint32)PANIC(0x013F),                                        // 0x013F (319) RtlWalkFrameChain
+	(uint32)FUNC(&xboxkrnl::RtlWalkFrameChain),                   // 0x013F (319)
 	(uint32)FUNC(&xboxkrnl::RtlZeroMemory),                       // 0x0140 (320)
 	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),                   // 0x0141 (321)
 	(uint32)VARIABLE(&xboxkrnl::XboxHardwareInfo),                // 0x0142 (322)
