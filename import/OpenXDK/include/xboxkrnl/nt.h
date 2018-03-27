@@ -274,7 +274,17 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
     IN  BOOLEAN                     RestartScan
 );
 
-XBSYSAPI VOID *NtQueryDirectoryObject;
+// ******************************************************************
+// * 0x00D0 - NtQueryDirectoryObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(208) NTSTATUS NTAPI NtQueryDirectoryObject(
+	IN HANDLE DirectoryHandle,
+	OUT PVOID Buffer,
+	IN ULONG Length,
+	IN BOOLEAN RestartScan,
+	IN OUT PULONG Context,
+	OUT PULONG ReturnedLength OPTIONAL
+);
 
 // ******************************************************************
 // * 0x00D1  - NtQueryEvent()
@@ -310,7 +320,14 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
     IN  FILE_INFORMATION_CLASS      FileInfo
 );
 
-XBSYSAPI VOID *NtQueryIoCompletion;
+// ******************************************************************
+// * 0x00D4 - NtQueryIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(212) NTSTATUS NTAPI NtQueryIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	OUT PIO_COMPLETION_BASIC_INFORMATION IoCompletionInformation
+);
 
 // ******************************************************************
 // * 0x00D5 - NtQueryMutant()
@@ -389,7 +406,20 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI NtReadFile
     IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
-XBSYSAPI VOID *NtReadFileScatter;
+// ******************************************************************
+// * 0x00DC - NtReadFileScatter
+// ******************************************************************
+XBSYSAPI EXPORTNUM(220) NTSTATUS NTAPI NtReadFileScatter
+(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_SEGMENT_ELEMENT SegmentArray,
+	IN ULONG Length,
+	IN PLARGE_INTEGER ByteOffset OPTIONAL
+);
 
 // ******************************************************************
 // * NtReleaseMutant
@@ -410,7 +440,17 @@ XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
     OUT PULONG  PreviousCount OPTIONAL
 );
 
-XBSYSAPI VOID *NtRemoveIoCompletion;
+// ******************************************************************
+// * 0x00DF - NtRemoveIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(223) NTSTATUS NTAPI NtRemoveIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	OUT PVOID *KeyContext,
+	OUT PVOID *ApcContext,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+);
 
 // ******************************************************************
 // * NtResumeThread
@@ -446,7 +486,17 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
     IN  FILE_INFORMATION_CLASS   FileInformationClass
 );
 
-XBSYSAPI VOID *NtSetIoCompletion;
+// ******************************************************************
+// * 0x00E3 - NtSetIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(227) NTSTATUS NTAPI NtSetIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG_PTR IoStatusInformation
+);
 
 // ******************************************************************
 // * NtSetSystemTime
@@ -472,7 +522,17 @@ XBSYSAPI EXPORTNUM(229) NTSTATUS NTAPI NtSetTimerEx
 	OUT PBOOLEAN PreviousState OPTIONAL
 );
 
-XBSYSAPI VOID *NtSignalAndWaitForSingleObjectEx;
+// ******************************************************************
+// * 0x00E6 - NtSignalAndWaitForSingleObjectEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(230) NTSTATUS NTAPI NtSignalAndWaitForSingleObjectEx
+(
+	IN HANDLE SignalHandle,
+	IN HANDLE WaitHandle,
+	IN KPROCESSOR_MODE WaitMode,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+);
 
 // ******************************************************************
 // * NtSuspendThread
@@ -552,7 +612,20 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI NtWriteFile
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
-XBSYSAPI VOID *NtWriteFileGather;
+// ******************************************************************
+// * 0x00ED - NtWriteFileGather
+// ******************************************************************
+XBSYSAPI EXPORTNUM(237) NTSTATUS NTAPI NtWriteFileGather
+(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_SEGMENT_ELEMENT SegmentArray,
+	IN ULONG Length,
+	IN PLARGE_INTEGER ByteOffset OPTIONAL
+);
 
 // ******************************************************************
 // * NtYieldExecution

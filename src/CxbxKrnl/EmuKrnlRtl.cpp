@@ -304,6 +304,44 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 }
 
 // ******************************************************************
+// * 0x0109 - RtlCaptureContext()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(265) xboxkrnl::VOID NTAPI xboxkrnl::RtlCaptureContext
+(
+	IN PCONTEXT ContextRecord
+)
+{
+	LOG_FUNC_ONE_ARG(ContextRecord);
+
+	// NOTE: this function expects the caller to be __cdecl, or else it fails
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x010A - RtlCaptureStackBackTrace()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(266) xboxkrnl::USHORT NTAPI xboxkrnl::RtlCaptureStackBackTrace
+(
+	IN ULONG FramesToSkip,
+	IN ULONG FramesToCapture,
+	OUT PVOID *BackTrace,
+	OUT PULONG BackTraceHash
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FramesToSkip)
+		LOG_FUNC_ARG(FramesToCapture)
+		LOG_FUNC_ARG_OUT(BackTrace)
+		LOG_FUNC_ARG_OUT(BackTraceHash)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+// ******************************************************************
 // * 0x010B - RtlCharToInteger()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
@@ -1013,6 +1051,23 @@ XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
 }
 
 // ******************************************************************
+// * 0x0120 - RtlGetCallersAddress()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(288) xboxkrnl::VOID NTAPI xboxkrnl::RtlGetCallersAddress
+(
+	OUT PVOID *CallersAddress,
+	OUT PVOID *CallersCaller
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(CallersAddress)
+		LOG_FUNC_ARG_OUT(CallersCaller)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0121 - RtlInitAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
@@ -1428,6 +1483,32 @@ static inline BOOL IsLeapYear(int Year)
 }
 
 // ******************************************************************
+// * 0x012E - RtlRaiseException()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(302) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseException
+(
+	IN PEXCEPTION_RECORD ExceptionRecord
+)
+{
+	LOG_FUNC_ONE_ARG(ExceptionRecord);
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x012F - RtlRaiseStatus()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(303) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseStatus
+(
+	IN NTSTATUS Status
+)
+{
+	LOG_FUNC_ONE_ARG(Status);
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0130 - RtlTimeFieldsToTime()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
@@ -1802,6 +1883,27 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 }
 
 // ******************************************************************
+// * 0x0138 - RtlUnwind()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(312) xboxkrnl::VOID NTAPI xboxkrnl::RtlUnwind
+(
+	IN PVOID TargetFrame OPTIONAL,
+	IN PVOID TargetIp OPTIONAL,
+	IN PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
+	IN PVOID ReturnValue
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TargetFrame)
+		LOG_FUNC_ARG(TargetIp)
+		LOG_FUNC_ARG(ExceptionRecord)
+		LOG_FUNC_ARG(ReturnValue)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
@@ -1954,6 +2056,27 @@ XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
 	USHORT ret = (Source >> 8) | ((Source & 0xFF) << 8);
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x013F - RtlWalkFrameChain()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(319) xboxkrnl::ULONG NTAPI xboxkrnl::RtlWalkFrameChain
+(
+	OUT PVOID *Callers,
+	IN ULONG Count,
+	IN ULONG Flags
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(Callers)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(Flags)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
 }
 
 // ******************************************************************

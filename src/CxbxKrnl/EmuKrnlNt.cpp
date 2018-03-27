@@ -1078,40 +1078,30 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 }
 
 // ******************************************************************
-// * 0x00D2 - NtQueryFullAttributesFile()
+// * 0x00D0 - NtQueryDirectoryObject
 // ******************************************************************
-XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
+XBSYSAPI EXPORTNUM(208) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryObject
 (
-	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
+	IN HANDLE DirectoryHandle,
+	OUT PVOID Buffer,
+	IN ULONG Length,
+	IN BOOLEAN RestartScan,
+	IN OUT PULONG Context,
+	OUT PULONG ReturnedLength OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_ARG_OUT(Attributes)
-		LOG_FUNC_END;
+		LOG_FUNC_ARG(DirectoryHandle)
+		LOG_FUNC_ARG_OUT(Buffer)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(RestartScan)
+		LOG_FUNC_ARG(Context)
+		LOG_FUNC_ARG_OUT(ReturnedLength)
+	LOG_FUNC_END;
 
-	//	__asm int 3;
-	NativeObjectAttributes nativeObjectAttributes;
-	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+	LOG_UNIMPLEMENTED();
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(
-		ObjectAttributes, 
-		/*var*/nativeObjectAttributes, 
-		"NtQueryFullAttributesFile");
-
-	if (ret == STATUS_SUCCESS)
-		ret = NtDll::NtQueryFullAttributesFile(
-			nativeObjectAttributes.NtObjAttrPtr, 
-			&nativeNetOpenInfo);
-	
-	// Convert Attributes to Xbox
-	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
-
-	if (FAILED(ret))
-		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)", ret);
-
-	RETURN(ret);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1137,6 +1127,43 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 
 	if (ret != STATUS_SUCCESS)
 		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D2 - NtQueryFullAttributesFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
+(
+	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG_OUT(Attributes)
+		LOG_FUNC_END;
+
+	//	__asm int 3;
+	NativeObjectAttributes nativeObjectAttributes;
+	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+
+	NTSTATUS ret = CxbxObjectAttributesToNT(
+		ObjectAttributes,
+		/*var*/nativeObjectAttributes,
+		"NtQueryFullAttributesFile");
+
+	if (ret == STATUS_SUCCESS)
+		ret = NtDll::NtQueryFullAttributesFile(
+			nativeObjectAttributes.NtObjAttrPtr,
+			&nativeNetOpenInfo);
+
+	// Convert Attributes to Xbox
+	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
+
+	if (FAILED(ret))
+		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)", ret);
 
 	RETURN(ret);
 }
@@ -1206,6 +1233,25 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		return convRet;
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D4 - NtQueryIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(212) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	OUT PIO_COMPLETION_BASIC_INFORMATION IoCompletionInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(IoCompletionHandle)
+		LOG_FUNC_ARG_OUT(IoCompletionInformation)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1505,7 +1551,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 }
 
 // ******************************************************************
-// * 0x00DA - NtReadFile()
+// * 0x00DB - NtReadFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 (
@@ -1562,6 +1608,37 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 }
 
 // ******************************************************************
+// * 0x00DC - NtReadFileScatter
+// ******************************************************************
+XBSYSAPI EXPORTNUM(220) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFileScatter
+(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_SEGMENT_ELEMENT SegmentArray,
+	IN ULONG Length,
+	IN PLARGE_INTEGER ByteOffset OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FileHandle)
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(ApcRoutine)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
+		LOG_FUNC_ARG(SegmentArray)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(ByteOffset)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
 // * 0x00DD - NtReleaseMutant()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
@@ -1609,6 +1686,31 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 		EmuWarning("NtReleaseSemaphore failed!");
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00DF - NtRemoveIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(223) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtRemoveIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	OUT PVOID *KeyContext,
+	OUT PVOID *ApcContext,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(IoCompletionHandle)
+		LOG_FUNC_ARG_OUT(KeyContext)
+		LOG_FUNC_ARG_OUT(ApcContext)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
+		LOG_FUNC_ARG(Timeout)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1690,6 +1792,31 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 		FileInformationClass);
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00E3 - NtSetIoCompletion
+// ******************************************************************
+XBSYSAPI EXPORTNUM(227) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetIoCompletion
+(
+	IN HANDLE IoCompletionHandle,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG_PTR IoStatusInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(IoCompletionHandle)
+		LOG_FUNC_ARG(KeyContext)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG(IoStatus)
+		LOG_FUNC_ARG(IoStatusInformation)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1776,6 +1903,31 @@ XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 		EmuWarning("NtSetTimerEx failed!");
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00E6 - NtSignalAndWaitForSingleObjectEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(230) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSignalAndWaitForSingleObjectEx
+(
+	IN HANDLE SignalHandle,
+	IN HANDLE WaitHandle,
+	IN KPROCESSOR_MODE WaitMode,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(SignalHandle)
+		LOG_FUNC_ARG(WaitHandle)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1966,6 +2118,37 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 		EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00ED - NtWriteFileGather
+// ******************************************************************
+XBSYSAPI EXPORTNUM(237) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFileGather
+(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PFILE_SEGMENT_ELEMENT SegmentArray,
+	IN ULONG Length,
+	IN PLARGE_INTEGER ByteOffset OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FileHandle)
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(ApcRoutine)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
+		LOG_FUNC_ARG(SegmentArray)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(ByteOffset)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
