@@ -1543,9 +1543,22 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 			}
 		}
 	}
-	else
+	else // lock a single page
 	{
+		pfn = paddr >> PAGE_SHIFT;
+		if (g_bIsRetail || g_bIsDebug) {
+			PfnEntry = XBOX_PFN_ELEMENT(pfn);
+		}
+		else { PfnEntry = CHIHIRO_PFN_ELEMENT(pfn); }
 
+		if (PfnEntry->Busy.BusyType != ContiguousType && pfn <= m_HighestPage)
+		{
+			LockUnit = bUnLock ? -LOCK_COUNT_UNIT : LOCK_COUNT_UNIT;
+
+			assert(PfnEntry->Busy.Busy != 0);
+
+			PfnEntry->Busy.LockCount += LockUnit;
+		}
 	}
 
 	Unlock();

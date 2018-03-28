@@ -311,7 +311,8 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
-	LOG_IGNORED();
+
+	g_VMManager.LockBufferOrSinglePage(PhysicalAddress, 0, 0, UnlockPage);
 }
 
 // ******************************************************************
