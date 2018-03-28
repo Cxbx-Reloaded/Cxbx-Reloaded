@@ -1359,16 +1359,14 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 		LOG_FUNC_ARG_OUT(Buffer)
 	LOG_FUNC_END;
 
-	#ifdef _DEBUG_TRACE
-		if (!Buffer)
-		{
-			DbgPrintf("KNRL: NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
-			LOG_IGNORED();
-			RETURN(STATUS_INVALID_PARAMETER);
-		}
-	#endif
+	if (!Buffer)
+	{
+		EmuWarning("KNRL: NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
+		LOG_IGNORED();
+		RETURN(STATUS_INVALID_PARAMETER);
+	}
 
-	NTSTATUS ret = g_VMManager.VirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
+	NTSTATUS ret = g_VMManager.XbVirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
 
 	if (ret == STATUS_SUCCESS)
 	{

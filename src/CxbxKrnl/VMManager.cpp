@@ -183,17 +183,17 @@ void VMManager::DestroyMemoryRegions()
 	// VirtualAlloc and MapViewOfFileEx cannot be used in the contiguous region so skip it
 	for (int i = 0; i < COUNTRegion - 1; ++i)
 	{
-		for (auto it = m_MemoryRegionArray[i].RegionMap.begin(); it != m_MemoryRegionArray[i].RegionMap.end(); ++it)
+		for (auto& it : m_MemoryRegionArray[i].RegionMap)
 		{
-			if (it->second.type != FreeVma && it->first >= XBE_MAX_VA)
+			if (it.second.type != FreeVma && it.first >= XBE_MAX_VA)
 			{
-				if (it->second.bFragmented)
+				if (it.second.bFragmented)
 				{
-					VirtualFree((void*)it->first, 0, MEM_RELEASE);
+					VirtualFree((void*)it.first, 0, MEM_RELEASE);
 				}
 				else
 				{
-					UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+					UnmapViewOfFile((void*)(ROUND_DOWN(it.first, m_AllocationGranularity)));
 				}
 			}
 		}
@@ -2014,7 +2014,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 	RETURN(status);
 }
 
-xboxkrnl::NTSTATUS VMManager::VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
+xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
 {
 	VMAIter it;
 	PMMPTE PointerPte;
@@ -2122,12 +2122,12 @@ xboxkrnl::NTSTATUS VMManager::VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEM
 		PointerPte++;
 	}
 
-	// This can happen if we reach EndingPte in loop above (and PointerPte will be EndingPte + 1) or if we are looking for reserved memory and
+	// This can happen if we reach EndingPte in the loop above (and PointerPte will be EndingPte + 1) or if we are looking for reserved memory and
 	// PointerPte/EndingPte are inside a single page: in this case, GetVAddrMappedByPte(PointerPde + 1) will make PointerPte much larger than
 	// EndingPte, hence this check
 	if (PointerPte > EndingPte) { PointerPte = EndingPte + 1; }
 
-	RegionSize = GetVAddrMappedByPte(EndingPte) - ROUND_DOWN_4K(addr);
+	RegionSize = GetVAddrMappedByPte(PointerPte) - ROUND_DOWN_4K(addr);
 
 	memory_statistics->AllocationBase = (void*)it->first;
 	memory_statistics->AllocationProtect = InitialProtect;

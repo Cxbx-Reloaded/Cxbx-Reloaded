@@ -62,7 +62,7 @@ struct VirtualMemoryArea
 	size_t size = 0;
 	// vma kind of memory
 	VMAType type = FreeVma;
-	// initial vma permissions of the allocation, only used by VirtualMemoryStatistics
+	// initial vma permissions of the allocation, only used by XbVirtualMemoryStatistics
 	DWORD permissions = XBOX_PAGE_NOACCESS;
 	// this allocation was served by VirtualAlloc
 	bool bFragmented = false;
@@ -164,7 +164,7 @@ class VMManager : public PhysicalMemory
 		// xbox implementation of NtProtectVirtualMemory
 		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
-		xboxkrnl::NTSTATUS VirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
+		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
 
 	
 	private:

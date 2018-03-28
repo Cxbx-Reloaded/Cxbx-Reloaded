@@ -403,14 +403,12 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	NTSTATUS ret;
 
-	#ifdef _DEBUG_TRACE
-	 if (!MemoryStatistics)
+	if (!MemoryStatistics)
 	{
-		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		EmuWarning("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
 		RETURN(STATUS_INVALID_PARAMETER);
 	}
-	#endif
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
