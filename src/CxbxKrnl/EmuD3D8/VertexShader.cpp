@@ -1611,27 +1611,13 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 // * Vertex shader declaration recompiler
 // ****************************************************************************
 
-typedef struct _CxbxVertexShaderElementPatch
-{
-    DWORD NumberOfVertexElements;
-	XTL::CxbxVertexElement VertexElements[32]; // Was 256
-}
-CxbxVertexShaderElementPatch;
-
-typedef struct _CxbxVertexStreamPatch
-{
-    DWORD                     NumberOfVertexStreams;
-    XTL::CxbxStreamDynamicPatch StreamPatches[16]; // Was 256
-}
-CxbxVertexStreamPatch;
-
 typedef struct _CxbxVertexShaderPatch
 {
     boolean              NeedPatching;
 	WORD                 CurrentStreamNumber;
 	DWORD                HostVertexStride;
-    CxbxVertexShaderElementPatch  ElementPatch;
-    CxbxVertexStreamPatch StreamPatch;
+    XTL::CxbxVertexShaderStreamInfo  StreamsInfo;
+	XTL::CxbxVertexShaderInfo ShaderInfo;
 }
 CxbxVertexShaderPatch;
 
@@ -1871,17 +1857,17 @@ static boolean VshAddStreamPatch(CxbxVertexShaderPatch *pPatchData)
 {
     int CurrentStream = pPatchData->CurrentStreamNumber;
 
-    if(pPatchData->StreamPatch.NumberOfVertexStreams > 0) {
+    if(pPatchData->ShaderInfo.NumberOfVertexStreams > 0) {
 		DbgVshPrintf("\t// NeedPatching: %d\n", pPatchData->NeedPatching);
 
-        XTL::CxbxStreamDynamicPatch *pStreamPatch = &(pPatchData->StreamPatch.StreamPatches[CurrentStream]);
+        XTL::CxbxVertexShaderStreamInfo *pVertexStreamInfo = &(pPatchData->ShaderInfo.VertexStreams[CurrentStream]);
 
-        pStreamPatch->HostVertexStride = pPatchData->HostVertexStride;
-        pStreamPatch->NumberOfVertexElements = pPatchData->ElementPatch.NumberOfVertexElements;
-        pStreamPatch->NeedPatch = pPatchData->NeedPatching;
-		memcpy(&(pStreamPatch->VertexElements[0]),
-			   &(pPatchData->ElementPatch.VertexElements[0]), 
-			   sizeof(pStreamPatch->VertexElements));
+        pVertexStreamInfo->HostVertexStride = pPatchData->HostVertexStride;
+        pVertexStreamInfo->NumberOfVertexElements = pPatchData->StreamsInfo.NumberOfVertexElements;
+        pVertexStreamInfo->NeedPatch = pPatchData->NeedPatching;
+		memcpy(&(pVertexStreamInfo->VertexElements[0]),
+			   &(pPatchData->StreamsInfo.VertexElements[0]), 
+			   sizeof(pVertexStreamInfo->VertexElements));
 
         return TRUE;
     }
@@ -1911,14 +1897,14 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
 			pPatchData->NeedPatching = FALSE;
 			// pPatchData->CurrentStreamNumber = 0; // already set below
 			pPatchData->HostVertexStride = 0;
-			pPatchData->ElementPatch.NumberOfVertexElements = 0;
-			// NOTE : pPatchData->StreamPatch.NumberOfVertexStreams must not be reset, as it's incremented below
+			pPatchData->StreamsInfo.NumberOfVertexElements = 0;
+			// NOTE : pPatchData->ShaderInfo.NumberOfVertexStreams must not be reset, as it's incremented below
 		}
 
         DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
 		pPatchData->CurrentStreamNumber = (WORD)StreamNumber;
 		
-		pPatchData->StreamPatch.NumberOfVertexStreams++;
+		pPatchData->ShaderInfo.NumberOfVertexStreams++;
     }
 }
 
@@ -1951,10 +1937,10 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
     using namespace XTL;
 
     XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-    XTL::DWORD NewVertexRegister;
+    XTL::DWORD HostVertexRegister;
 
     DbgVshPrintf("\t\tD3DVSD_REG(");
-    NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
+    HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
     DbgVshPrintf(", ");
 
     XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
@@ -2084,11 +2070,11 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
     }
 
 	// save patching information
-	pPatchData->ElementPatch.VertexElements[pPatchData->ElementPatch.NumberOfVertexElements].XboxType = XboxVertexElementDataType;
-	pPatchData->ElementPatch.VertexElements[pPatchData->ElementPatch.NumberOfVertexElements].HostByteSize = HostVertexElementByteSize;
-	pPatchData->ElementPatch.NumberOfVertexElements++;
+	pPatchData->StreamsInfo.VertexElements[pPatchData->StreamsInfo.NumberOfVertexElements].XboxType = XboxVertexElementDataType;
+	pPatchData->StreamsInfo.VertexElements[pPatchData->StreamsInfo.NumberOfVertexElements].HostByteSize = HostVertexElementByteSize;
+	pPatchData->StreamsInfo.NumberOfVertexElements++;
 
-    *pToken = D3DVSD_REG(NewVertexRegister, HostVertexElementDataType);
+    *pToken = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
 
     pPatchData->HostVertexStride += HostVertexElementByteSize;
 
@@ -2172,7 +2158,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     DWORD               **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,
-    CxbxVertexShaderDynamicPatch *pVertexDynamicPatch
+    CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
     // First of all some info:
@@ -2191,8 +2177,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     *ppRecompiledDeclaration = pRecompiled;
     *pDeclarationSize = DeclarationSize;
 
-    // TODO: Put these in one struct
-    CxbxVertexShaderPatch       PatchData = { 0 };
+    CxbxVertexShaderPatch PatchData = { 0 };
 
     DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
@@ -2211,13 +2196,13 @@ DWORD XTL::EmuRecompileVshDeclaration
 	VshAddStreamPatch(&PatchData);
     DbgVshPrintf("\tD3DVSD_END()\n};\n");
 
-    DbgVshPrintf("NbrStreams: %d\n", PatchData.StreamPatch.NumberOfVertexStreams);
+    DbgVshPrintf("NbrStreams: %d\n", PatchData.ShaderInfo.NumberOfVertexStreams);
 
     // Copy the patches to the vertex shader struct
-    DWORD StreamsSize = PatchData.StreamPatch.NumberOfVertexStreams * sizeof(CxbxStreamDynamicPatch);
-    pVertexDynamicPatch->NumberOfVertexStreams = PatchData.StreamPatch.NumberOfVertexStreams;
-    memcpy(&(pVertexDynamicPatch->StreamPatches[0]),
-           &(PatchData.StreamPatch.StreamPatches[0]),
+    DWORD StreamsSize = PatchData.ShaderInfo.NumberOfVertexStreams * sizeof(CxbxVertexShaderStreamInfo);
+    pVertexShaderInfo->NumberOfVertexStreams = PatchData.ShaderInfo.NumberOfVertexStreams;
+    memcpy(&(pVertexShaderInfo->VertexStreams[0]),
+           &(PatchData.ShaderInfo.VertexStreams[0]),
            StreamsSize);
 
     return D3D_OK;
@@ -2367,7 +2352,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 {
-    pVertexShader->VertexShaderDynamicPatch.NumberOfVertexStreams = 0;
+    pVertexShader->VertexShaderInfo.NumberOfVertexStreams = 0;
 }
 
 // Checks for failed vertex shaders, and shaders that would need patching
@@ -2382,9 +2367,9 @@ boolean VshHandleIsValidShader(DWORD Handle)
             return FALSE;
         }
         /*
-        for (uint32 i = 0; i < pVertexShader->VertexShaderDynamicPatch.NumberOfVertexStreams; i++)
+        for (uint32 i = 0; i < pVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
         {
-            if (pVertexShader->VertexShaderDynamicPatch.StreamPatches[i].NeedPatch)
+            if (pVertexShader->VertexShaderInfo.VertexStreams[i].NeedPatch)
             {
                 // Just for caching purposes
                 pVertexShader->Status = 0x80000001;
@@ -2403,15 +2388,15 @@ extern boolean XTL::IsValidCurrentShader(void)
 	return VshHandleIsValidShader(g_CurrentXboxVertexShaderHandle);
 }
 
-XTL::CxbxVertexShaderDynamicPatch *VshGetVertexDynamicPatch(DWORD Handle)
+XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD Handle)
 {
     XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 
-    for (uint32 i = 0; i < pVertexShader->VertexShaderDynamicPatch.NumberOfVertexStreams; i++)
+    for (uint32 i = 0; i < pVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
     {
-        if (pVertexShader->VertexShaderDynamicPatch.StreamPatches[i].NeedPatch)
+        if (pVertexShader->VertexShaderInfo.VertexStreams[i].NeedPatch)
         {
-            return &pVertexShader->VertexShaderDynamicPatch;
+            return &pVertexShader->VertexShaderInfo;
         }
     }
     return NULL;

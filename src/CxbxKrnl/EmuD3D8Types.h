@@ -509,12 +509,12 @@ typedef struct _CxbxPixelShader
 }
 CxbxPixelShader;
 
-typedef struct _CxbxVertexElement
+typedef struct _CxbxVertexShaderStreamElement
 {
 	UINT XboxType; // The stream data types (xbox)
 	UINT HostByteSize; // The stream data sizes (pc)
 }
-CxbxVertexElement;
+CxbxVertexShaderStreamElement;
 
 /* See typedef struct _D3DVERTEXELEMENT9
 {
@@ -527,21 +527,21 @@ CxbxVertexElement;
 } D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
 */
 
-typedef struct _CxbxStreamDynamicPatch
+typedef struct _CxbxVertexShaderStreamInfo
 {
     BOOL  NeedPatch;       // This is to know whether it's data which must be patched
     DWORD HostVertexStride;
     DWORD NumberOfVertexElements;        // Number of the stream data types
-	CxbxVertexElement VertexElements[32];
+	CxbxVertexShaderStreamElement VertexElements[32];
 }
-CxbxStreamDynamicPatch;
+CxbxVertexShaderStreamInfo;
 
-typedef struct _CxbxVertexDynamicPatch
+typedef struct _CxbxVertexShaderInfo
 {
-    UINT                         NumberOfVertexStreams; // The number of streams the vertex shader uses
-    CxbxStreamDynamicPatch       StreamPatches[16];
+    UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
+    CxbxVertexShaderStreamInfo VertexStreams[16];
 }
-CxbxVertexShaderDynamicPatch;
+CxbxVertexShaderInfo;
 
 typedef struct _CxbxVertexShader
 {
@@ -558,7 +558,7 @@ typedef struct _CxbxVertexShader
     DWORD                 Status;
 
     // Needed for dynamic stream patching
-    CxbxVertexShaderDynamicPatch  VertexShaderDynamicPatch;
+    CxbxVertexShaderInfo  VertexShaderInfo;
 }
 CxbxVertexShader;
 

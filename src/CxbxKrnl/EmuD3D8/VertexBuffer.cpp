@@ -194,7 +194,7 @@ XTL::CxbxVertexBufferConverter::CxbxVertexBufferConverter()
     ZeroMemory(this->m_PatchedStreams, sizeof(CxbxPatchedStream) * MAX_NBR_STREAMS);
     this->m_bAllocatedStreamZeroData = false;
     this->m_pNewVertexStreamZeroData = NULL;
-    this->m_pVertexShaderDynamicPatch = NULL;
+    this->m_pVertexShaderInfo = NULL;
 }
 
 XTL::CxbxVertexBufferConverter::~CxbxVertexBufferConverter()
@@ -239,7 +239,7 @@ int CountActiveD3DStreams()
 	return lastStreamIndex;
 }
 
-XTL::CxbxVertexShaderDynamicPatch *VshGetVertexDynamicPatch(DWORD Handle); // forward
+XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD Handle); // forward
 
 UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 {
@@ -249,9 +249,9 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
 	}
 
     if(VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
-        CxbxVertexShaderDynamicPatch *pDynamicPatch = VshGetVertexDynamicPatch(pDrawContext->hVertexShader);
-		if (pDynamicPatch) {
-			return pDynamicPatch->NumberOfVertexStreams;
+        CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(pDrawContext->hVertexShader);
+		if (pVertexShaderInfo) {
+			return pVertexShaderInfo->NumberOfVertexStreams;
 		}
 
 		return CountActiveD3DStreams();
@@ -302,9 +302,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		}
 	}
 
-    CxbxStreamDynamicPatch *pStreamDynamicPatch = (m_pVertexShaderDynamicPatch != nullptr) ? (&m_pVertexShaderDynamicPatch->StreamPatches[uiStream]) : nullptr;
+	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
+	if (m_pVertexShaderInfo != nullptr) {
+		pVertexShaderStreamInfo = &(m_pVertexShaderInfo->VertexStreams[uiStream]);
+	}
 
-	bool bNeedVertexPatching = (pStreamDynamicPatch != nullptr && pStreamDynamicPatch->NeedPatch);
+	bool bNeedVertexPatching = (pVertexShaderStreamInfo != nullptr && pVertexShaderStreamInfo->NeedPatch);
 	bool bNeedRHWReset = bVshHandleIsFVF && ((pDrawContext->hVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
 
@@ -329,7 +332,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
 
-		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->HostVertexStride : uiXboxVertexStride;
+		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
 			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
@@ -363,7 +366,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
 
-		uiHostVertexStride = (bNeedVertexPatching) ? pStreamDynamicPatch->HostVertexStride : uiXboxVertexStride;
+		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
@@ -380,10 +383,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			uint08 *pXboxVertex = &pXboxVertexData[uiVertex * uiXboxVertexStride];
 			FLOAT *pHostVertexAsFloat = (FLOAT*)&pHostVertexData[uiVertex * uiHostVertexStride];
-			for (UINT uiElement = 0; uiElement < pStreamDynamicPatch->NumberOfVertexElements; uiElement++) {
+			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
-				switch (pStreamDynamicPatch->VertexElements[uiElement].XboxType) {
+				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
 				case X_D3DVSDT_NORMPACKED3: { // 0x16: // Make it FLOAT3
 					// Hit by Dashboard
 					int32 iPacked = ((int32 *)pXboxVertex)[0];
@@ -395,7 +398,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					break;
 				}
 				case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
-					//memcpy(pHostVertexAsFloat, pXboxVertex, pStreamDynamicPatch->VertexElements[uiElement].HostByteSize);
+					//memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
 					((SHORT *)pHostVertexAsFloat)[0] = ((SHORT*)pXboxVertex)[0];
 					((SHORT *)pHostVertexAsFloat)[1] = 0x00;
 					pXboxVertex += 1 * sizeof(SHORT);
@@ -403,7 +406,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
 					// Hit by Turok
-					//memcpy(pHostVertexAsFloat, pXboxVertex, pStreamDynamicPatch->VertexElements[uiElement].HostByteSize);
+					//memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
 					((SHORT *)pHostVertexAsFloat)[0] = ((SHORT*)pXboxVertex)[0];
 					((SHORT *)pHostVertexAsFloat)[1] = ((SHORT*)pXboxVertex)[1];
 					((SHORT *)pHostVertexAsFloat)[2] = ((SHORT*)pXboxVertex)[2];
@@ -492,14 +495,14 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				*/
 				default: {
 					// Generic 'conversion' - just make a copy :
-					memcpy(pHostVertexAsFloat, pXboxVertex, pStreamDynamicPatch->VertexElements[uiElement].HostByteSize);
-					pXboxVertex += pStreamDynamicPatch->VertexElements[uiElement].HostByteSize;
+					memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
+					pXboxVertex += pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
 					break;
 				}
 				} // switch
 
 				// Increment the new pointer :
-				pHostVertexAsFloat = (FLOAT*)((uintptr_t)pHostVertexAsFloat + pStreamDynamicPatch->VertexElements[uiElement].HostByteSize);
+				pHostVertexAsFloat = (FLOAT*)((uintptr_t)pHostVertexAsFloat + pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
 			} // for NumberOfVertexElements
 		} // for uiVertexCount
     }
@@ -509,7 +512,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		}
 #if 0
 		pDrawContext->pXboxVertexStreamZeroData = pHostVertexData;
-        pDrawContext->uiXboxVertexStreamZeroStride = pStreamDynamicPatch->HostVertexStride;
+        pDrawContext->uiXboxVertexStreamZeroStride = pVertexShaderStreamInfo->HostVertexStride;
         if (!m_bAllocatedStreamZeroData)
         {
             // The stream was not previously patched. We'll need this when restoring
@@ -623,7 +626,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
-        m_pVertexShaderDynamicPatch = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderDynamicPatch);
+        m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
     }
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
