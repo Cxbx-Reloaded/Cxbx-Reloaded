@@ -37,6 +37,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX "KRNL"
+#define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0) // For RtlFillMemoryUlong
 
 // prevent name collisions
 namespace xboxkrnl
@@ -55,6 +56,7 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuWarning()
+#include <assert.h>
 
 #ifdef _WIN32
 
@@ -1007,14 +1009,21 @@ XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(Pattern)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	// Fill 32 bits at a time
 	// Any extra bytes are ignored
-	uint32_t numDwords = Length / sizeof(ULONG);
-	uint32_t *lastAddr = (uint32_t *)Destination + numDwords;
-	for (uint32_t *p = (uint32_t *)Destination; p < lastAddr; p++) {
-		*p = Pattern;
+
+	assert(Length != 0);
+	assert(CHECK_ALIGNMENT(Length, sizeof(ULONG)));                   // Length must be a multiple of ULONG
+	assert(CHECK_ALIGNMENT((uintptr_t)Destination, sizeof(ULONG)));   // Destination must be 4-byte aligned
+
+	int NumOfRepeats = Length / sizeof(ULONG);
+	ULONG* d = (ULONG*)Destination;
+
+	for (int i = 0; i < NumOfRepeats; ++i)
+	{
+		d[i] = Pattern; // copy an ULONG at a time
 	}
 }
 

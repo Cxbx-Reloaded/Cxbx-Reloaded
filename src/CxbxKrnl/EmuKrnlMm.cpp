@@ -130,7 +130,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(SystemMemoryType, Protect, NumberOfBytes, false);
@@ -334,7 +334,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG(ProtectionType)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
 	PVOID pRet = (PVOID)g_VMManager.MapDeviceMemory(PhysicalAddress, NumberOfBytes, ProtectionType);
@@ -403,14 +403,12 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	NTSTATUS ret;
 
-	#ifdef _DEBUG_TRACE
-	 if (!MemoryStatistics)
+	if (!MemoryStatistics)
 	{
-		DbgPrintf("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		EmuWarning("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
-		RETURN(STATUS_SUCCESS);
+		RETURN(STATUS_INVALID_PARAMETER);
 	}
-	#endif
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
 	{
@@ -450,7 +448,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG(NewProtect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
 	LOG_FUNC_END;
 
 	g_VMManager.Protect((VAddr)BaseAddress, NumberOfBytes, NewProtect);
@@ -487,14 +485,14 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
 	// This should only be called by debug xbe's
 	assert(g_bIsDebug);
 
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
-	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
+	if (addr) { RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
 
 	RETURN(addr);
 }

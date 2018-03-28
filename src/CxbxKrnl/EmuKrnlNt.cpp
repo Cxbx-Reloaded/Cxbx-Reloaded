@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
-		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbAllocateVirtualMemory((VAddr*)BaseAddress, ZeroBits, (size_t*)AllocationSize,
@@ -754,8 +754,8 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(FreeSize)
-		LOG_FUNC_ARG(FreeType)
-		LOG_FUNC_END;
+		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, FreeType)
+	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)FreeSize, FreeType);
 
@@ -907,13 +907,16 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(RegionSize)
-		LOG_FUNC_ARG(NewProtect)
+		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
 		LOG_FUNC_ARG_OUT(OldProtect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_IGNORED();
 
-	RETURN(STATUS_SUCCESS);
+	DWORD Perms = NewProtect;
+	NTSTATUS ret = g_VMManager.XbVirtualProtect((VAddr*)BaseAddress, (size_t*)RegionSize, &Perms);
+	*OldProtect = Perms;
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1400,16 +1403,29 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG_OUT(Buffer)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryVirtualMemory(
-		/*ProcessHandle=*/g_CurrentProcessHandle,
-		BaseAddress,
-		(NtDll::MEMORY_INFORMATION_CLASS)NtDll::MemoryBasicInformation,
-		(NtDll::PMEMORY_BASIC_INFORMATION)Buffer,
-		/*Length=*/sizeof(MEMORY_BASIC_INFORMATION),
-		/*ResultLength=*/nullptr);
+	if (!Buffer)
+	{
+		EmuWarning("KNRL: NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
+		LOG_IGNORED();
+		RETURN(STATUS_INVALID_PARAMETER);
+	}
 
+	NTSTATUS ret = g_VMManager.XbVirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
+
+	if (ret == STATUS_SUCCESS)
+	{
+		DbgPrintf("   Buffer->AllocationBase    = 0x%.08X\n", Buffer->AllocationBase);
+		DbgPrintf("   Buffer->AllocationProtect = 0x%.08X\n", Buffer->AllocationProtect);
+		DbgPrintf("   Buffer->BaseAddress       = 0x%.08X\n", Buffer->BaseAddress);
+		DbgPrintf("   Buffer->RegionSize        = 0x%.08X\n", Buffer->RegionSize);
+		DbgPrintf("   Buffer->State             = 0x%.08X\n", Buffer->State);
+		DbgPrintf("   Buffer->Protect           = 0x%.08X\n", Buffer->Protect);
+		DbgPrintf("   Buffer->Type              = 0x%.08X\n", Buffer->Type);
+	}
+
+	#if 0
 	if (FAILED(ret)) {
 		EmuWarning("NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
 
@@ -1433,6 +1449,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 			DbgPrintf("KRNL: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
 		}
 	}
+	#endif
 
 	RETURN(ret);
 }

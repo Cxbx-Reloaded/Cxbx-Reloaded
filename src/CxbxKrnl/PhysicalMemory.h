@@ -208,10 +208,6 @@ typedef enum _PageType
 #define IS_USER_ADDRESS(Va) (((VAddr)(Va) - LOWEST_USER_ADDRESS) <= (HIGHEST_USER_ADDRESS - LOWEST_USER_ADDRESS))
 
 
-/* Global helper function used to copy an ULONG block of memory to another buffer. It mimics RtlFillMemoryUlong */
-void FillMemoryUlong(void* Destination, size_t Length, ULONG Long);
-
-
 /* PhysicalMemory class */
 class PhysicalMemory
 {
@@ -260,8 +256,6 @@ class PhysicalMemory
 		DWORD ConvertPteToXboxProtection(ULONG PteMask);
 		// convert from Xbox to Windows permissions
 		DWORD ConvertXboxToWinProtection(DWORD Perms);
-		// convert from xbox to windows memory allocation type
-		DWORD ConvertXboxToWinAllocType(DWORD AllocType);
 		// add execute rights if the permission mask doesn't include it
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)

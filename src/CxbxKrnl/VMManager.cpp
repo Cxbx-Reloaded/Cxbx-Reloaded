@@ -47,12 +47,6 @@
 #include "EmuShared.h"
 #include <assert.h>
 
-// prevent name collisions
-namespace NtDll
-{
-	#include "EmuNtDll.h" // TODO : Remove dependancy once NtDll::NtAllocateVirtualMemory is gone again
-};
-
 
 VMManager g_VMManager;
 
@@ -88,7 +82,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 	g_EmuShared->GetBootFlags(&QuickReboot);
 	if ((QuickReboot & BOOT_QUICK_REBOOT) != 0)
 	{
-		ULONG PreviousXbeType = *(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12);
+		UCHAR PreviousXbeType = *(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
 		if (PreviousXbeType != g_XbeType)
 		{
 			// We cannot handle the case where we rebooted to an xbe type different then the previous one we came from, since the RestorePersistentMemory
@@ -106,7 +100,7 @@ dashboard from non-retail xbe?");
 		// Save the type of xbe we are emulating in this emulation session. This information will be needed if the current xbe performs
 		// a quick reboot
 
-		*(ULONG*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 12) = g_XbeType;
+		*(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = g_XbeType;
 	}
 
 	// Set up general memory variables according to the xbe type
@@ -142,7 +136,7 @@ dashboard from non-retail xbe?");
 
 	// Set up the pfn database
 	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0) {
-		FillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
+		xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
 		InitializePfnDatabase();
 	}
 	else {
@@ -189,17 +183,17 @@ void VMManager::DestroyMemoryRegions()
 	// VirtualAlloc and MapViewOfFileEx cannot be used in the contiguous region so skip it
 	for (int i = 0; i < COUNTRegion - 1; ++i)
 	{
-		for (auto it = m_MemoryRegionArray[i].RegionMap.begin(); it != m_MemoryRegionArray[i].RegionMap.end(); ++it)
+		for (auto& it : m_MemoryRegionArray[i].RegionMap)
 		{
-			if (it->second.type != FreeVma)
+			if (it.second.type != FreeVma && it.first >= XBE_MAX_VA)
 			{
-				if (it->second.bFragmented)
+				if (it.second.bFragmented)
 				{
-					VirtualFree((void*)it->first, 0, MEM_RELEASE);
+					VirtualFree((void*)it.first, 0, MEM_RELEASE);
 				}
 				else
 				{
-					UnmapViewOfFile((void*)(ROUND_DOWN(it->first, m_AllocationGranularity)));
+					UnmapViewOfFile((void*)(ROUND_DOWN(it.first, m_AllocationGranularity)));
 				}
 			}
 		}
@@ -219,13 +213,13 @@ void VMManager::InitializePfnDatabase()
 
 	// Zero all the entries of the PFN database
 	if (g_bIsRetail) {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
 	}
 	else if (g_bIsChihiro) {
-		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
 	}
 	else {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
 	}
 
 
@@ -575,8 +569,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 			WritePte(PointerPte, EndingPte, *PointerPte, 0, true);
 			WritePfn(pfn, EndingPfn, PointerPte, ContiguousType, true);
 			InsertFree(pfn, EndingPfn);
-			DestructVMA(GetVMAIterator((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), ContiguousRegion), ContiguousRegion,
-				m_NV2AInstanceMemoryBytes - Size);
+			DestructVMA((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), ContiguousRegion, m_NV2AInstanceMemoryBytes - Size);
 
 			if (g_bIsDebug)
 			{
@@ -591,8 +584,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 				WritePte(PointerPte, EndingPte, *PointerPte, 0, true);
 				WritePfn(pfn, EndingPfn, PointerPte, ContiguousType, true);
 				InsertFree(pfn, EndingPfn);
-				DestructVMA(GetVMAIterator((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), ContiguousRegion), ContiguousRegion,
-					m_NV2AInstanceMemoryBytes - Size);
+				DestructVMA((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), ContiguousRegion, m_NV2AInstanceMemoryBytes - Size);
 			}
 		}
 		m_NV2AInstanceMemoryBytes = Size;
@@ -700,18 +692,18 @@ void VMManager::RestorePersistentMemory()
 
 	// Zero all the remaining pte's
 	EndingPte += 1;
-	FillMemoryUlong((void*)PAGE_TABLES_BASE, (VAddr)GetPteAddress(CONTIGUOUS_MEMORY_BASE) - PAGE_TABLES_BASE, 0);
-	FillMemoryUlong((void*)EndingPte, PAGE_TABLES_END + 1 - (VAddr)EndingPte, 0);
+	xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, (VAddr)GetPteAddress(CONTIGUOUS_MEMORY_BASE) - PAGE_TABLES_BASE, 0);
+	xboxkrnl::RtlFillMemoryUlong((void*)EndingPte, PAGE_TABLES_END + 1 - (VAddr)EndingPte, 0);
 
 	// Zero all the entries of the PFN database
 	if (g_bIsRetail) {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
 	}
 	else if (g_bIsChihiro) {
-		FillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
 	}
 	else {
-		FillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
+		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
 	}
 
 	// Now we need to restore the launch data page and the frame buffer pointers to their correct values
@@ -815,8 +807,6 @@ VAddr VMManager::Allocate(size_t Size)
 	PointerPte = GetPteAddress(addr);
 	EndingPte = PointerPte + PteNumber - 1;
 
-	WritePte(PointerPte, EndingPte, TempPte, pfn);
-
 	if (bVAlloc)
 	{
 		PFN TempPfn;
@@ -826,6 +816,8 @@ VAddr VMManager::Allocate(size_t Size)
 			RemoveFree(1, &TempPfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
 				: m_HighestPage);
 			WritePfn(TempPfn, TempPfn, PointerPte, ImageType);
+			WritePte(PointerPte, PointerPte, TempPte, TempPfn);
+
 			PointerPte++;
 		}
 	}
@@ -833,6 +825,7 @@ VAddr VMManager::Allocate(size_t Size)
 	{
 		EndingPfn = pfn + PteNumber - 1;
 		WritePfn(pfn, EndingPfn, PointerPte, ImageType);
+		WritePte(PointerPte, EndingPte, TempPte, pfn);
 	}
 
 	ConstructVMA(addr, PteNumber << PAGE_SHIFT, UserRegion, AllocatedVma, bVAlloc);
@@ -851,7 +844,7 @@ VAddr VMManager::AllocateZeroed(size_t Size)
 	LOG_FORWARD("g_VMManager.Allocate");
 
 	VAddr addr = Allocate(Size);
-	if (addr) { FillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
+	if (addr) { xboxkrnl::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
 
 	RETURN(addr);
 }
@@ -902,7 +895,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	}
 	else { if (!IsMappable(PteNumber, true, false)) { goto Fail; } }
 
-	if (RemoveFree(PteNumber, &pfn, 0, LowestAcceptablePfn, HighestAcceptablePfn)) // MapViewOfFileEx path
+	if ((BusyType != DebuggerType) && (RemoveFree(PteNumber, &pfn, 0, LowestAcceptablePfn, HighestAcceptablePfn))) // MapViewOfFileEx path
 	{
 		MappingRoutine = &VMManager::MapBlockWithMapViewOfFileEx;
 		addr = MapMemoryBlock(MappingRoutine, MemoryType, PteNumber, pfn);
@@ -967,8 +960,9 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 		while (PointerPte <= EndingPte)
 		{
 			RemoveFree(1, &TempPfn, 0, LowestAcceptablePfn, HighestAcceptablePfn);
-			WritePte(PointerPte, PointerPte, TempPte, pfn);
 			WritePfn(TempPfn, TempPfn, PointerPte, BusyType);
+			WritePte(PointerPte, PointerPte, TempPte, TempPfn);
+
 			PointerPte++;
 		}
 	}
@@ -1163,6 +1157,7 @@ void VMManager::Deallocate(VAddr addr)
 			TempPfn = StartingPte->Hardware.PFN;
 			InsertFree(TempPfn, TempPfn);
 			WritePfn(TempPfn, TempPfn, StartingPte, ImageType, true);
+
 			StartingPte++;
 		}
 	}
@@ -1175,7 +1170,7 @@ void VMManager::Deallocate(VAddr addr)
 	}
 
 	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it, UserRegion, it->second.size); // does Deallocate ever attempt to uncommit only a part of the original allocation?
+	DestructVMA(it->first, UserRegion, it->second.size); // does Deallocate ever attempt to decommit only a part of the original allocation?
 	DeallocatePT(PteNumber << PAGE_SHIFT, addr);
 
 	Unlock();
@@ -1215,7 +1210,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 	InsertFree(pfn, EndingPfn);
 	WritePfn(pfn, EndingPfn, StartingPte, ContiguousType, true);
 	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it, ContiguousRegion, it->second.size);
+	DestructVMA(it->first, ContiguousRegion, it->second.size);
 	DeallocatePT((EndingPte - StartingPte + 1) << PAGE_SHIFT, addr);
 
 	Unlock();
@@ -1282,6 +1277,7 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 			TempPfn = StartingPte->Hardware.PFN;
 			InsertFree(TempPfn, TempPfn);
 			WritePfn(TempPfn, TempPfn, StartingPte, BusyType, true);
+
 			StartingPte++;
 		}
 	}
@@ -1294,7 +1290,7 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	}
 
 	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it, MemoryType, bGuardPageAdded ? Size + PAGE_SIZE : Size);
+	DestructVMA(BusyType == DebuggerType ? addr : it->first, MemoryType, bGuardPageAdded ? Size + PAGE_SIZE : Size);
 	DeallocatePT(bGuardPageAdded ? Size + PAGE_SIZE : Size, addr);
 
 	Unlock();
@@ -1335,7 +1331,7 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 		PteNumber = EndingPte - StartingPte + 1;
 
 		WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-		DestructVMA(it, SystemRegion, it->second.size);
+		DestructVMA(it->first, SystemRegion, it->second.size);
 		DeallocatePT(PteNumber << PAGE_SHIFT, addr);
 
 		Unlock();
@@ -1500,8 +1496,7 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 	RETURN(Size);
 }
 
-xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType,
-	DWORD Protect)
+xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1512,21 +1507,34 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	LOG_FUNC_END;
 
 	MMPTE TempPte;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PFN_COUNT PteNumber = 0;
+	PFN TempPfn;
+	PageType BusyType;
 	xboxkrnl::NTSTATUS status;
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
+	VAddr MaxAllowedAddress;
+	MappingFn MappingRoutine;
+	VAddr AlignedCapturedBase;
+	size_t AlignedCapturedSize;
+	VMAIter it;
+	bool bDestructVmaOnFailure = false;
+	bool bUpdatePteProtections = false;
 
 	// Invalid base address
-	if (CapturedBase > HIGHEST_VAD_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
+	if (CapturedBase > HIGHEST_VMA_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Invalid region size
-	if (((HIGHEST_VAD_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
+	if (((HIGHEST_VMA_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Size cannot be zero
 	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	// Limit number of zero bits upto 20
-	if (ZeroBits > 21) { RETURN(STATUS_INVALID_PARAMETER); }
+	// Limit number of zero bits upto 21
+	if (ZeroBits > MAXIMUM_ZERO_BITS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Check for unknown MEM flags
 	if(AllocationType & ~(XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_TOP_DOWN | XBOX_MEM_RESET
@@ -1542,101 +1550,195 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	DbgPrintf("VMEM: XbAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", CapturedBase, CapturedBase + CapturedSize);
 
-	// On the Xbox, blocks reserved by NtAllocateVirtualMemory are 64K aligned and the size is rounded up on a 4K boundary
-	// This can lead to unaligned blocks if the host granularity is not 64K. Fortunately, Windows uses that
-	VAddr AlignedCapturedBase;
-	size_t AlignedCapturedSize;
-	VMAIter it;
-
 	Lock();
 
 	if (AllocationType & XBOX_MEM_RESERVE || CapturedBase == 0)
 	{
-		AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
-		AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
-
-		if (CapturedBase != 0)
+		if (CapturedBase == 0)
 		{
-			// The specified region must be completely inside a free vma
+			// We are free to decide where to put this block
 
-			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
-			if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != FreeVma) { status = STATUS_CONFLICTING_ADDRESSES; goto Exit; }
+			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
+
+			if (ZeroBits != 0)
+			{
+				MaxAllowedAddress = MAX_VIRTUAL_ADDRESS >> ZeroBits;
+				if (MaxAllowedAddress > HIGHEST_USER_ADDRESS) { status = STATUS_INVALID_PARAMETER; goto Exit; }
+			}
+			else
+			{
+				MaxAllowedAddress = HIGHEST_USER_ADDRESS;
+			}
+
+			// With XBOX_MEM_TOP_DOWN we will always set the LastFree iterator to the vma containing MaxAllowedAddress in order to map the
+			// block at the highest possible address. This can become quite slow if a title repeatedly allocates virtual memory with this flag.
+			// See here: https://randomascii.wordpress.com/2011/08/05/making-virtualalloc-arbitrarily-slower/
+
+			if (AllocationType & XBOX_MEM_TOP_DOWN) { m_MemoryRegionArray[UserRegion].LastFree = GetVMAIterator(MaxAllowedAddress, UserRegion); }
+
+			// On the Xbox, blocks reserved by NtAllocateVirtualMemory are 64K aligned and the size is rounded up on a 4K boundary.
+			// This can lead to unaligned blocks if the host granularity is not 64K. Fortunately, Windows uses that
+
+			MappingRoutine = &VMManager::ReserveBlockWithVirtualAlloc;
+			AlignedCapturedBase = MapMemoryBlock(MappingRoutine, UserRegion, AlignedCapturedSize >> PAGE_SHIFT, 0, MaxAllowedAddress);
+
+			if (!AlignedCapturedBase) { status = STATUS_NO_MEMORY; goto Exit; }
 		}
+		else
+		{
+			// A base address was specified. We could check with CheckConflictingVMA to see if it's already allocated but even it is free, there
+			// could still be host allocations in the vma. So we just attempt to map the block and see if it fails or not
+
+			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
+			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
+
+			// Only reserve memory if the base address is higher than XBE_IMAGE_BASE
+
+			if ((AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && AlignedCapturedBase < XBE_MAX_VA) ||
+				(AlignedCapturedBase >= XBE_MAX_VA &&
+				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase))
+			{
+				// Something else is already mapped at the specified address, report an error and bail out
+
+				status = STATUS_CONFLICTING_ADDRESSES;
+				goto Exit;
+			}
+		}
+
+		m_VirtualMemoryBytesReserved += AlignedCapturedSize;
+		ConstructVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, ReservedVma, true, Protect);
+
+		if ((AllocationType & XBOX_MEM_COMMIT) == 0)
+		{
+			// XBOX_MEM_COMMIT was not specified, so we are done with the allocation
+
+			DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
+				AlignedCapturedBase + AlignedCapturedSize);
+
+			*addr = AlignedCapturedBase;
+			*Size = AlignedCapturedSize;
+
+			status = STATUS_SUCCESS;
+			goto Exit;
+		}
+		bDestructVmaOnFailure = true;
 		CapturedBase = AlignedCapturedBase;
+		CapturedSize = AlignedCapturedSize;
 	}
-	if (AllocationType & XBOX_MEM_COMMIT)
+
+
+	// If we reach here then XBOX_MEM_COMMIT was specified, so we will also have to allocate physical memory for the allocation and
+	// write the pte/pfn
+
+	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
+	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
+
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
 	{
-		if (CapturedBase != 0)
-		{
-			AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
-			AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
-			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+		// The specified region is not completely inside a reserved vma
 
-			// The specified region must be completely inside a reserved vma
-			if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma) { status = STATUS_CONFLICTING_ADDRESSES; goto Exit; }
-		}
-		else { AlignedCapturedSize = ROUND_UP_4K(CapturedSize); }
+		status = STATUS_CONFLICTING_ADDRESSES;
+		goto Exit;
 	}
 
-	if (AllocationType != XBOX_MEM_RESET)
-	{
-		DWORD WindowsPerms = ConvertXboxToWinProtection(PatchXboxPermissions(Protect));
-		DWORD WindowsAllocType = ConvertXboxToWinAllocType(AllocationType);
-
-		// Only allocate memory if the base address is higher than our memory placeholder
-		if (AlignedCapturedBase > XBE_MAX_VA || AlignedCapturedBase == 0)
-		{
-			status = NtDll::NtAllocateVirtualMemory(
-				/*ProcessHandle=*/g_CurrentProcessHandle,
-				(NtDll::PVOID *)(&AlignedCapturedBase),
-				ZeroBits,
-				/*RegionSize=*/(NtDll::PULONG)(&AlignedCapturedSize),
-				WindowsAllocType,
-				WindowsPerms);
-		}
-		else { status = STATUS_SUCCESS; }
-	}
-	else
+	if (AllocationType == XBOX_MEM_RESET)
 	{
 		// XBOX_MEM_RESET is a no-operation since it implies having page file support, which the Xbox doesn't have
 
 		*addr = AlignedCapturedBase;
 		*Size = AlignedCapturedSize;
-		status = STATUS_SUCCESS;
+
+		Unlock();
+		RETURN(STATUS_SUCCESS);
+	}
+
+	// Figure out the number of physical pages we need to allocate. Note that NtAllocateVirtualMemory can do overlapped allocations so we
+	// cannot just page-shift the size to know this number, since a part of those pages could already be allocated
+
+	PointerPte = GetPteAddress(AlignedCapturedBase);
+	EndingPte = GetPteAddress(AlignedCapturedBase + AlignedCapturedSize - 1);
+	StartingPte = PointerPte;
+
+	while (PointerPte <= EndingPte)
+	{
+		if (PointerPte->Default == 0) { PteNumber++; }
+		else if ((PointerPte->Default & PTE_VALID_PROTECTION_MASK) != TempPte.Default) { bUpdatePteProtections = true; }
+
+		PointerPte++;
+	}
+
+	if (!IsMappable(PteNumber, true, g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false))
+	{
+		status = STATUS_NO_MEMORY;
 		goto Exit;
 	}
 
-	if (NT_SUCCESS(status))
+	// Check if we have to construct the PT's for this allocation
+
+	if (!AllocatePT(AlignedCapturedSize, AlignedCapturedBase))
 	{
-		DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
-			AlignedCapturedBase + AlignedCapturedSize);
-
-		if (AllocationType & XBOX_MEM_RESERVE || (AllocationType & XBOX_MEM_COMMIT && CapturedBase == 0))
-		{
-			m_VirtualMemoryBytesReserved += AlignedCapturedSize;
-			ConstructVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, ReservedVma, true, Protect);
-		}
-
-		// We cannot keep track of any of the page counter statistics because NtFreeVirtualMemory doesn't return the
-		// actual number of decommited bytes with MEM_DECOMMIT, but just the rounded number of bytes of the supplied
-		// input region, even if not all the bytes are commited. The same is true with MEM_RELEASE, which just returns
-		// the entire size of the original allocation. This can lead to deallocating more pages than we should and can
-		// potentially underflow. This essentialy means that the title will be able to allocate more memory than it should
-		// with this function. Until pte/pfn are implemented also here, this will stay in this state
-		#if 0
-		if (Protect & XBOX_MEM_COMMIT)
-		{
-			m_PhysicalPagesAvailable -= (AlignedCapturedSize >> PAGE_SHIFT);
-			m_PagesByUsage[VirtualMemory] += (AlignedCapturedSize >> PAGE_SHIFT);
-		}
-		#endif
-		// TODO: actually write the pte/pde/pfn and don't rely on NtDll
-
-		*addr = AlignedCapturedBase;
-		*Size = AlignedCapturedSize;
+		status = STATUS_NO_MEMORY;
+		goto Exit;
 	}
 
+	// With VirtualAlloc we grab one page at a time to avoid fragmentation issues
+
+	BusyType = HasPageExecutionFlag(Protect) ? ImageType : VirtualMemoryType;
+	PointerPte = StartingPte;
+	while (PointerPte <= EndingPte)
+	{
+		if (PointerPte->Default == 0)
+		{
+			RemoveFree(1, &TempPfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE : m_HighestPage);
+			WritePfn(TempPfn, TempPfn, PointerPte, BusyType);
+			WritePte(PointerPte, PointerPte, TempPte, TempPfn);
+		}
+
+		PointerPte++;
+	}
+
+	// Actually commit the requested range. Because of the check done by CheckConflictingVMA, this call shouldn't fail now but we still
+	// check to see if it succeeds or not...
+
+	if (AlignedCapturedBase >= XBE_MAX_VA)
+	{
+		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
+			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
+		{
+			DbgPrintf("VMEM: XbAllocateVirtualMemory: VirtualAlloc failed to commit the memory! The error was %d\n", GetLastError());
+		}
+	}
+
+	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
+
+	if (AllocationType & XBOX_MEM_NOZERO) { DbgPrintf("VMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
+
+	// If some pte's were detected to have different permissions in the above check, we need to update those as well
+
+	if (bUpdatePteProtections)
+	{
+		VAddr TempAddr = AlignedCapturedBase;
+		size_t TempSize = AlignedCapturedSize;
+		DWORD TempProtect = Protect;
+		XbVirtualProtect(&TempAddr, &TempSize, &TempProtect);
+	}
+
+	DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
+		AlignedCapturedBase + AlignedCapturedSize);
+
+	*addr = AlignedCapturedBase;
+	*Size = AlignedCapturedSize;
+	Unlock();
+	RETURN(STATUS_SUCCESS);
+
 	Exit:
+	if (bDestructVmaOnFailure)
+	{
+		m_VirtualMemoryBytesReserved -= AlignedCapturedSize;
+		DestructVMA(AlignedCapturedBase, UserRegion, AlignedCapturedSize);
+	}
 	Unlock();
 	RETURN(status);
 }
@@ -1651,7 +1753,16 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
+	VAddr AlignedCapturedBase;
+	size_t AlignedCapturedSize;
 	xboxkrnl::NTSTATUS status;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PFN TempPfn;
+	PageType BusyType;
+	VMAIter it;
+
 
 	// Only MEM_DECOMMIT and MEM_RELEASE are valid
 	if ((FreeType & ~(XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE)) != 0) { RETURN(STATUS_INVALID_PARAMETER); }
@@ -1668,58 +1779,369 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	// Invalid region size
 	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	VAddr AlignedCapturedBase = CapturedBase;
-	size_t AlignedCapturedSize = CapturedSize;
-
-	if (FreeType == XBOX_MEM_DECOMMIT)
-	{
-		AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
-		AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
-	}
+	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
+	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
 
 	Lock();
 
-	VMAIter it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma) { status = STATUS_MEMORY_NOT_ALLOCATED; goto Exit; }
-
-	if (it->first + it->second.size - 1 < AlignedCapturedBase + AlignedCapturedSize - 1) { status = STATUS_UNABLE_TO_FREE_VM; goto Exit; }
-
-	// Don't free our memory placeholder
-	if (AlignedCapturedBase > XBE_MAX_VA)
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
 	{
-		status = NtDll::NtFreeVirtualMemory(
-			/*ProcessHandle=*/g_CurrentProcessHandle,
-			(NtDll::PVOID *)(&AlignedCapturedBase),
-			/*RegionSize=*/(PULONG)(&AlignedCapturedSize),
-			ConvertXboxToWinAllocType(FreeType));
-	}
-	else { status = STATUS_SUCCESS; }
+		// Vma not found, report an error
 
-	if (NT_SUCCESS(status))
+		status = STATUS_MEMORY_NOT_ALLOCATED;
+		goto Exit;
+	}
+
+	if (it->first + it->second.size - 1 < AlignedCapturedBase + AlignedCapturedSize - 1)
 	{
-		if (FreeType & XBOX_MEM_RELEASE)
-		{
-			m_VirtualMemoryBytesReserved -= AlignedCapturedSize;
-			DestructVMA(it, UserRegion, it->second.size, true);
-		}
-		#if 0
-		if (FreeType & XBOX_MEM_DECOMMIT)
-		{
+		// The provided ending adddress spans beyond the end of the vma, report an error
 
-		}
-		#endif
-
-		*addr = AlignedCapturedBase;
-		*Size = AlignedCapturedSize;
+		status = STATUS_UNABLE_TO_FREE_VM;
+		goto Exit;
 	}
+
+	if (FreeType & XBOX_MEM_RELEASE)
+	{
+		if (AlignedCapturedSize == 0)
+		{
+			// Size is 0, so just delete the entire vma
+
+			if (it->first != AlignedCapturedBase)
+			{
+				// The provided base address is not the starting address of the vma, report an error
+
+				status = STATUS_FREE_VM_NOT_AT_BASE;
+				goto Exit;
+			}
+
+			AlignedCapturedSize = it->second.size;
+			DestructVMA(it->first, UserRegion, it->second.size);
+		}
+		else
+		{
+			if (AlignedCapturedBase == it->first)
+			{
+				if (AlignedCapturedBase + AlignedCapturedSize == it->first + it->second.size)
+				{
+					// The range specified covers the entire vma, just delete it
+
+					DestructVMA(it->first, UserRegion, it->second.size);
+				}
+				else
+				{
+					// Split the vma at the edge specified and keep the remaining memory up until the end of the vma in the reserved state
+
+					DestructVMA(it->first, UserRegion, AlignedCapturedSize);
+				}
+			}
+			else { DestructVMA(AlignedCapturedBase, UserRegion, AlignedCapturedSize); }
+		}
+		m_VirtualMemoryBytesReserved -= AlignedCapturedSize;
+	}
+
+
+	// The decommit path will always be executed, even if only XBOX_MEM_RELEASE was specified, because releasing the memory implies
+	// deallocating all the physical pages currently commited in the vma
+
+	if ((AlignedCapturedSize == 0) && (AlignedCapturedBase == it->first))
+	{
+		// This can only happen if XBOX_MEM_RELEASE was not specified, since that path would set AlignedCapturedSize to the size of the vma
+		// if 0. This means we have to decommit all the physical pages allocated in the vma but still keep the memory reserved
+
+		AlignedCapturedSize = it->second.size;
+	}
+
+	PointerPte = GetPteAddress(AlignedCapturedBase);
+	EndingPte = GetPteAddress(AlignedCapturedBase + AlignedCapturedSize - 1);
+	StartingPte = PointerPte;
+
+	// With VirtualAlloc we free one page at a time since the allocated pfn's are not contiguous
+
+	while (PointerPte <= EndingPte)
+	{
+		if (PointerPte->Default != 0)
+		{
+			TempPfn = PointerPte->Hardware.PFN;
+			InsertFree(TempPfn, TempPfn);
+			if (g_bIsRetail || g_bIsDebug) {
+				BusyType = (PageType)(XBOX_PFN_ELEMENT(TempPfn)->Busy.BusyType);
+			}
+			else { BusyType = (PageType)(CHIHIRO_PFN_ELEMENT(TempPfn)->Busy.BusyType); }
+			WritePfn(TempPfn, TempPfn, PointerPte, BusyType, true);
+		}
+
+		PointerPte++;
+	}
+
+	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
+	DeallocatePT((EndingPte - StartingPte + 1) << PAGE_SHIFT, AlignedCapturedBase);
+
+	if (FreeType & ~XBOX_MEM_RELEASE)
+	{
+		// With XBOX_MEM_DECOMMIT DestructVMA is not called and so we have to call VirtualFree ourselves
+
+		if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
+		{
+			DbgPrintf("VMEM: XbFreeVirtualMemory: VirtualFree failed to decommit the memory! The error was %d\n", GetLastError());
+		}
+	}
+
+	*addr = AlignedCapturedBase;
+	*Size = AlignedCapturedSize;
+	status = STATUS_SUCCESS;
 
 	Exit:
 	Unlock();
 	RETURN(status);
 }
 
-VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn)
+xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(*addr)
+		LOG_FUNC_ARG(*Size)
+		LOG_FUNC_ARG(*Protect)
+	LOG_FUNC_END;
+
+	DWORD NewPerms = *Protect;
+	VAddr CapturedBase = *addr;
+	size_t CapturedSize = *Size;
+	VAddr AlignedCapturedBase;
+	size_t AlignedCapturedSize;
+	xboxkrnl::NTSTATUS status;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PMMPTE PointerPde;
+	MMPTE TempPte;
+	MMPTE NewPermsPte;
+	MMPTE OldPermsPte;
+	VMAIter it;
+
+
+	// Invalid base address
+	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	// Invalid region size
+	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	// Size cannot be zero
+	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
+
+	if (!ConvertXboxToPteProtection(NewPerms, &NewPermsPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
+
+	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
+	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
+
+	Lock();
+
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
+	{
+		// Vma not found, report an error
+
+		status = STATUS_CONFLICTING_ADDRESSES;
+		goto Exit;
+	}
+
+	PointerPte = GetPteAddress(AlignedCapturedBase);
+	EndingPte = GetPteAddress(AlignedCapturedBase + AlignedCapturedSize -1);
+	StartingPte = PointerPte;
+
+	// Ensure that we are not trying to change the permissions of non-committed pages
+
+	while (PointerPte <= EndingPte)
+	{
+		if ((PointerPte == StartingPte) || (IsPteOnPdeBoundary(PointerPte)))
+		{
+			PointerPde = GetPteAddress(PointerPte);
+
+			if (PointerPde->Hardware.Valid == 0)
+			{
+				// Pde is not committed, report an error
+
+				status = STATUS_NOT_COMMITTED;
+				goto Exit;
+			}
+		}
+
+		if (PointerPte->Default == 0)
+		{
+			// Pte is not committed, report an error
+
+			status = STATUS_NOT_COMMITTED;
+			goto Exit;
+		}
+
+		PointerPte++;
+	}
+
+	PointerPte = StartingPte;
+	OldPermsPte = NewPermsPte;
+
+	while (PointerPte <= EndingPte)
+	{
+		TempPte = *PointerPte;
+
+		if ((TempPte.Default & PTE_VALID_PROTECTION_MASK) != NewPermsPte.Default)
+		{
+			// The following trick ensures we save only the first page with non-matching pte permissions we encounter
+
+			if (OldPermsPte.Default == NewPermsPte.Default)
+				OldPermsPte.Default = (TempPte.Default & PTE_VALID_PROTECTION_MASK);
+
+			// This zeroes the existent bit protections and applies the new ones
+
+			TempPte.Default = ((TempPte.Default & ~PTE_VALID_PROTECTION_MASK) | NewPermsPte.Default);
+			WRITE_PTE(PointerPte, TempPte);
+		}
+
+		PointerPte++;
+	}
+
+	UpdateMemoryPermissions(AlignedCapturedBase, AlignedCapturedSize, NewPerms);
+
+	*addr = AlignedCapturedBase;
+	*Size = AlignedCapturedSize;
+	*Protect = ConvertPteToXboxProtection(OldPermsPte.Default);
+	status = STATUS_SUCCESS;
+
+	Exit:
+	Unlock();
+	RETURN(status);
+}
+
+xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
+{
+	VMAIter it;
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PMMPTE StartingPte;
+	PMMPTE PointerPde;
+	DWORD CurrentProtect;
+	DWORD InitialProtect;
+	DWORD CurrentState;
+	DWORD PermissionsOfFirstPte;
+	size_t RegionSize;
+
+
+	if (addr > HIGHEST_VMA_ADDRESS)
+	{
+		// The memory in the user region is allocated in multiples of 64K, so this means that the last possible vma cannot start beyond
+		// HIGHEST_VMA_ADDRESS. This is true for allocations done by both XbAllocateVirtualMemory and Allocate, which both will be counted.
+		// The allocations done by the host are invisible here (like they should be)
+
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	Lock();
+
+	// Locate the vma containing the supplied address
+
+	it = GetVMAIterator(addr, UserRegion);
+
+	// NOTE: we count the first 64K block below 0x10000 and the reserved area in the memory placeholder after the xbe image as free areas
+	// TODO: should allocations made by Allocate be visible to this function or not?
+
+	if (addr < LOWEST_USER_ADDRESS || (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
+		|| (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma))
+	{
+		if (addr < LOWEST_USER_ADDRESS)
+		{
+			RegionSize = LOWEST_USER_ADDRESS - ROUND_DOWN_4K(addr);
+		}
+		else { RegionSize = it->first + it->second.size - ROUND_DOWN_4K(addr); }
+
+		memory_statistics->AllocationBase = NULL;
+		memory_statistics->AllocationProtect = 0;
+		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+		memory_statistics->RegionSize = RegionSize;
+		memory_statistics->State = XBOX_MEM_FREE;
+		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
+		memory_statistics->Type = 0;
+
+		Unlock();
+		return STATUS_SUCCESS;
+	}
+
+	// The vma is in the reserved or allocated state
+
+	PointerPte = GetPteAddress(addr);
+	EndingPte = GetPteAddress(it->first + it->second.size - 1);
+	PointerPde = GetPteAddress(PointerPte);
+	StartingPte = PointerPte;
+	CurrentProtect = 0;
+	InitialProtect = it->second.permissions;
+
+	if (PointerPde->Hardware.Valid != 0)
+	{
+		if (PointerPte->Default != 0)
+		{
+			CurrentState = XBOX_MEM_COMMIT;
+			PermissionsOfFirstPte = (PointerPte->Default & PTE_VALID_PROTECTION_MASK);
+			CurrentProtect = ConvertPteToXboxProtection(PointerPte->Default);
+		}
+		CurrentState = XBOX_MEM_RESERVE;
+	}
+	else { CurrentState = XBOX_MEM_RESERVE; }
+
+	while (PointerPte <= EndingPte)
+	{
+		if ((PointerPte == StartingPte) || IsPteOnPdeBoundary(PointerPte))
+		{
+			PointerPde = GetPteAddress(PointerPte);
+
+			if (PointerPde->Hardware.Valid == 0)
+			{
+				// Pde is invalid but we are looking for committed memory, so stop now
+				if (CurrentState == XBOX_MEM_COMMIT) { break; }
+
+				// Pde is invalid and we are looking for reserved memory, so skip this pde and keep searching if we are not at EndingPte yet
+				PointerPte = (PMMPTE)GetVAddrMappedByPte(PointerPde + 1);
+				continue;
+			}
+		}
+
+		if (PointerPte->Default != 0)
+		{
+			// Pte is valid but we are looking for reserved memory, so stop now
+			if (CurrentState == XBOX_MEM_RESERVE) { break; }
+
+			// Pte is valid but its permissions are different, so stop now
+			if ((PointerPte->Default & PTE_VALID_PROTECTION_MASK) != PermissionsOfFirstPte) { break; }
+		}
+		else
+		{
+			// Pte is invalid but we are looking for committed memory, so stop now
+			if (CurrentState == XBOX_MEM_COMMIT) { break; }
+		}
+
+		PointerPte++;
+	}
+
+	// This can happen if we reach EndingPte in the loop above (and PointerPte will be EndingPte + 1) or if we are looking for reserved memory and
+	// PointerPte/EndingPte are inside a single page: in this case, GetVAddrMappedByPte(PointerPde + 1) will make PointerPte much larger than
+	// EndingPte, hence this check
+	if (PointerPte > EndingPte) { PointerPte = EndingPte + 1; }
+
+	RegionSize = GetVAddrMappedByPte(PointerPte) - ROUND_DOWN_4K(addr);
+
+	memory_statistics->AllocationBase = (void*)it->first;
+	memory_statistics->AllocationProtect = InitialProtect;
+	memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+	memory_statistics->RegionSize = RegionSize;
+	memory_statistics->State = CurrentState;
+	memory_statistics->Protect = CurrentProtect;
+	memory_statistics->Type = XBOX_MEM_PRIVATE;
+
+	Unlock();
+	return STATUS_SUCCESS;
+}
+
+VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress)
 {
 	VAddr addr;
 	VMAIter it = m_MemoryRegionArray[Type].LastFree;
@@ -1733,6 +2155,11 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	}
 
 	VMAIter end_it = m_MemoryRegionArray[Type].RegionMap.end();
+
+	if (HighestAddress) // XbAllocateVirtualMemory specific
+	{
+		end_it = std::next(GetVMAIterator(HighestAddress, Type));
+	}
 
 	while (it != end_it)
 	{
@@ -1752,7 +2179,9 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 		// Note that, even in free regions, somebody outside the manager could have allocated the memory so we just
 		// keep on trying until we succeed or fail entirely.
 
-		size_t vma_end = it->first + it->second.size;
+		size_t vma_end;
+		if (HighestAddress && (it->first + it->second.size > HighestAddress + 1)) { vma_end = HighestAddress + 1; }
+		else { vma_end = it->first + it->second.size; }
 
 		addr = (this->*MappingRoutine)(addr, Size, vma_end, FileOffsetLow, pfn);
 
@@ -2097,18 +2526,24 @@ VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size)
 	return m_MemoryRegionArray[UserRegion].RegionMap.end(); // no conflict
 }
 
-void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool bSkipDestruction)
+void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 {
 	BOOL ret;
+	VMAIter it = GetVMAIterator(addr, Type); // the caller should already guarantee that the vma exists
 
-	// bSkipDestruction: temporary hack until XbAllocateVirtualMemory is properly implemented
-	if (!bSkipDestruction)
+	// Don't free our memory placeholder and allocations on the contiguous region since they don't use VirtualAlloc and MapViewOfFileEx
+
+	if ((addr >= XBE_MAX_VA) && (Type != ContiguousRegion))
 	{
-		if (Type != ContiguousRegion)
-		{
 			if (it->second.bFragmented)
 			{
-				ret = VirtualFree((void*)it->first, 0, MEM_RELEASE);
+				// NOTE: unlike NtFreeVirtualMemory, VirtualFree cannot release a committed region only partially, the size must always be 0
+				// with MEM_RELEASE. This is a problem because some games can call us from XbFreeVirtualMemory with XBOX_MEM_RELEASE and a
+				// size != 0, so, in this case, we can only decommit the region to avoid memory leaks. This essentially means that we will
+				// leave behind reserved areas, which will decrease the total amount of host virtual space available...
+
+				if (addr == it->first && Size == it->second.size) { ret = VirtualFree((void*)addr, 0, MEM_RELEASE); }
+				else { ret = VirtualFree((void*)addr, Size, MEM_DECOMMIT); }
 			}
 			else
 			{
@@ -2119,12 +2554,11 @@ void VMManager::DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool
 			{
 				DbgPrintf("VMEM: Deallocation routine failed with error %d\n", GetLastError());
 			}
-		}
 	}
 
-	VMAIter CarvedVmaIt = CarveVMARange(it->first, Size, Type);
+	VMAIter CarvedVmaIt = CarveVMARange(addr, Size, Type);
 
-	VAddr target_end = it->first + Size;
+	VAddr target_end = addr + Size;
 	VMAIter it_end = m_MemoryRegionArray[Type].RegionMap.end();
 	VMAIter it_begin = m_MemoryRegionArray[Type].RegionMap.begin();
 

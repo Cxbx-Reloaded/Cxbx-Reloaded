@@ -62,7 +62,7 @@ struct VirtualMemoryArea
 	size_t size = 0;
 	// vma kind of memory
 	VMAType type = FreeVma;
-	// initial vma permissions for user allocations, only used by NtQueryVirtualMemory
+	// initial vma permissions of the allocation, only used by XbVirtualMemoryStatistics
 	DWORD permissions = XBOX_PAGE_NOACCESS;
 	// this allocation was served by VirtualAlloc
 	bool bFragmented = false;
@@ -102,6 +102,8 @@ class VMManager : public PhysicalMemory
 		// destructor
 		~VMManager()
 		{
+			// DestroyMemoryRegions is not called when emulation ends, but only when the GUI process ends. This is probably because the emu
+			// process is killed with TerminateProcess and so it doesn't have a chance to perform a cleanup...
 			//DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
 			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
@@ -156,10 +158,13 @@ class VMManager : public PhysicalMemory
 		// retrieves the number of free debugger pages
 		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
-		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType,
-			DWORD Protect);
+		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
 		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
+		// xbox implementation of NtProtectVirtualMemory
+		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
+		// xbox implementation of NtQueryVirtualMemory
+		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
 
 	
 	private:
@@ -188,7 +193,7 @@ class VMManager : public PhysicalMemory
 		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
-		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn);
+		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress = 0);
 		// helper function which maps a block with VirtualAlloc
 		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
 		// helper function which reserves a block of virtual memory with VirtualAlloc
@@ -198,7 +203,7 @@ class VMManager : public PhysicalMemory
 		// constructs a vma
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
-		void DestructVMA(VMAIter it, MemoryRegionType Type, size_t Size, bool bSkipDestruction = false);
+		void DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size);
 		// checks if a vma exists at the supplied address. Also checks its size if specified
 		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// removes a vma block from the mapped memory
@@ -221,7 +226,7 @@ class VMManager : public PhysicalMemory
 		void RestorePersistentMemory();
 		// restores a persistent allocation
 		void RestorePersistentAllocation(VAddr addr, PFN StartingPfn, PFN EndingPfn, PageType Type);
-		// checks if any of the EXECUTE flags are set
+		// checks if any of the execute flags are set
 		bool HasPageExecutionFlag(DWORD protect);
 		// acquires the critical section
 		void Lock();

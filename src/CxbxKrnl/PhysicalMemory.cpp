@@ -41,21 +41,6 @@
 #include <assert.h>
 
 
-void FillMemoryUlong(void* Destination, size_t Length, ULONG Long)
-{
-	assert(Length != 0);
-	assert(CHECK_ALIGNMENT(Length, sizeof(ULONG)));                   // Length must be a multiple of ULONG
-	assert(CHECK_ALIGNMENT((uintptr_t)Destination, sizeof(ULONG)));   // Destination must be 4-byte aligned
-
-	int NumOfRepeats = Length / sizeof(ULONG);
-	ULONG* d = (ULONG*)Destination;
-
-	for (int i = 0; i < NumOfRepeats; ++i)
-	{
-		d[i] = Long; // copy an ULONG at a time
-	}
-}
-
 void PhysicalMemory::InitializePageDirectory()
 {
 	PMMPTE pPde;
@@ -120,7 +105,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			TempPF.Default = 0;
 			TempPF.Busy.Busy = 1;
 			TempPF.Busy.BusyType = BusyType;
-			if (BusyType != PageType::VirtualPageTableType && BusyType != SystemPageTableType) {
+			if (BusyType != VirtualPageTableType && BusyType != SystemPageTableType) {
 				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
 			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
@@ -154,8 +139,11 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 			{
 				PTpfn = GetPfnOfPT(PointerPte);
 			}
-			WRITE_ZERO_PTE(PointerPte);
-			PTpfn->PTPageFrame.PtesUsed--;
+			if (PointerPte->Default != 0)
+			{
+				WRITE_ZERO_PTE(PointerPte);
+				PTpfn->PTPageFrame.PtesUsed--;
+			}
 			PointerPte++;
 		}
 	}
@@ -657,24 +645,6 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 	}
 	return Mask;
 }
-
-DWORD PhysicalMemory::ConvertXboxToWinAllocType(DWORD AllocType)
-{
-	// This function assumes that the supplied allocation mask has been sanitized already
-
-	DWORD Mask = 0;
-
-	if (AllocType & XBOX_MEM_COMMIT) { Mask |= MEM_COMMIT; }
-	else if(AllocType & XBOX_MEM_RESERVE) { Mask |= MEM_RESERVE; }
-	else if (AllocType & XBOX_MEM_DECOMMIT) { Mask |= MEM_DECOMMIT; }
-	else if (AllocType & XBOX_MEM_RELEASE) { Mask |= MEM_RELEASE; }
-	else if (AllocType & XBOX_MEM_RESET) { Mask |= MEM_RESET; }
-	else if (AllocType & XBOX_MEM_TOP_DOWN) { Mask |= MEM_TOP_DOWN; }
-	else if (AllocType & XBOX_MEM_NOZERO) { DbgPrintf("PMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
-
-	return Mask;
-}
-
 
 bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 {
