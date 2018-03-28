@@ -45,6 +45,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuShared.h"
 
 #include "SMCDevice.h" // For SMCDevice
+#include "ADM1032Device.h" // For ADM1032Device
 #include "LED.h"
 
 void SetLEDSequence(LED::Sequence aLEDSequence)
@@ -109,8 +110,10 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		break;
 	//case 0x03: // tray state
 	//case SMC_COMMAND_AV_PACK: // 0x04	// A / V Pack state
-	//case SMC_COMMAND_CPU_TEMP: // 0x09 // CPU temperature (°C)
-	//case SMC_COMMAND_MOTHERBOARD_TEMP: // 0x0A // motherboard temperature (°C)
+	case SMC_COMMAND_CPU_TEMP: // 0x09 // CPU temperature (°C)
+		return g_ADM1032->ReadByte(0x1);
+	case SMC_COMMAND_MOTHERBOARD_TEMP: // 0x0A // motherboard temperature (°C)
+		return g_ADM1032->ReadByte(0x0);
 	case 0x0F: // reads scratch register written with 0x0E
 		return buffer[0x0E];
 	//case SMC_COMMAND_POWER_FAN_READBACK: // 0x10 // Current power fan speed (0-50)

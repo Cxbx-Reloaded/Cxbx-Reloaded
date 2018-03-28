@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->CxbxKrnl->Xbox.cpp
+// *   src->devices->Xbox.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -42,6 +42,7 @@ SMCDevice* g_SMC;
 EEPROMDevice* g_EEPROM;
 NVNetDevice* g_NVNet;
 NV2ADevice* g_NV2A;
+ADM1032Device* g_ADM1032;
 
 MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
@@ -125,6 +126,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
+	g_ADM1032 = new ADM1032Device();
 
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
@@ -132,7 +134,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// TODO : Other SMBus devices to connect
 	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_MCPX, g_MCPX); // W 0x10 R 0x11 -- TODO : Is MCPX an SMBus and/or PCI device?
-	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_TEMPERATURE_MEASUREMENT, g_TemperatureMeasurement); // W 0x98 R 0x99
+	g_SMBus->ConnectDevice(SMBUS_ADDRESS_TEMPERATURE_MONITOR, g_ADM1032); // W 0x98 R 0x99
 	//g_SMBus->ConnectDevice(SMBUS_ADDRESS_TV_ENCODER, g_TVEncoder); // W 0x88 R 0x89
 	switch (tv_encoder) {
 	case TVEncoder::Conexant:

@@ -45,7 +45,7 @@
 // Datasheet : http://ww1.microchip.com/downloads/en/DeviceDoc/30605D.pdf
 
 // NOTE : Instead of calling this device by it's real name ("PIC16LC63A-04/SO"),
-// we've decided to call this device "SMC", since we don't implementation
+// we've decided to call this device "SMC", since we don't implement
 // the low-level functionality of this PIC, but only the minimum set of
 // high-level commands that are sufficient for the Xbox.
 
