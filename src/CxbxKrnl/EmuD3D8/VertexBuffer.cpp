@@ -510,16 +510,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		if (bNeedStreamCopy) {
 			memcpy(pHostVertexData, pXboxVertexData, dwHostVertexDataSize);
 		}
-#if 0
-		pDrawContext->pXboxVertexStreamZeroData = pHostVertexData;
-        pDrawContext->uiXboxVertexStreamZeroStride = pVertexShaderStreamInfo->HostVertexStride;
-        if (!m_bAllocatedStreamZeroData)
-        {
-            // The stream was not previously patched. We'll need this when restoring
-            m_bAllocatedStreamZeroData = true;
-            m_pNewVertexStreamZeroData = pHostVertexData;
-        }
-#endif
 	}
 
 	// Xbox FVF shaders are identical to host Direct3D 8.1, however
