@@ -296,6 +296,15 @@ enum X_DSB_TOGGLE {
     X_DSB_TOGGLE_LOOP
 };
 
+typedef struct _DSoundBuffer_Lock {
+    PVOID   pLockPtr1;
+    DWORD   dwLockBytes1;
+    PVOID   pLockPtr2;
+    DWORD   dwLockBytes2;
+    DWORD   dwLockOffset;
+    DWORD   dwLockFlags;
+} DSoundBuffer_Lock;
+
 // ******************************************************************
 // * X_CDirectSoundBuffer
 // ******************************************************************
@@ -310,17 +319,17 @@ struct X_CDirectSoundBuffer
     };
 
     BYTE                    UnknownB[0x0C];     // Offset: 0x24
-    PVOID                   X_BufferCache;      // Offset: 0x28
+    LPVOID                  X_BufferCache;      // Offset: 0x28
     DSBUFFERDESC*           EmuBufferDesc;      // Offset: 0x2C
-    PVOID                   EmuLockPtr1;        // Offset: 0x30
+    /*LPVOID                  EmuLockPtr1;        // Offset: 0x30
     DWORD                   EmuLockBytes1;      // Offset: 0x34
-    PVOID                   EmuLockPtr2;        // Offset: 0x38
-    DWORD                   EmuLockBytes2;      // Offset: 0x3C
+    LPVOID                  EmuLockPtr2;        // Offset: 0x38
+    DWORD                   EmuLockBytes2;      // Offset: 0x3C*/
     DWORD                   EmuPlayFlags;       // Offset: 0x40
     DWORD                   EmuFlags;           // Offset: 0x44
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
-    DWORD                   EmuLockOffset;
-    DWORD                   EmuLockFlags;
+    //DWORD                   EmuLockOffset;
+    //DWORD                   EmuLockFlags;
     // Play/Loop Region Section
     X_DSB_TOGGLE            EmuBufferToggle;
     DWORD                   EmuRegionLoopStartOffset;
@@ -330,6 +339,8 @@ struct X_CDirectSoundBuffer
     LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
     DWORD                   X_BufferCacheSize;
+    DSoundBuffer_Lock       Host_lock;
+    DSoundBuffer_Lock       X_lock;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069

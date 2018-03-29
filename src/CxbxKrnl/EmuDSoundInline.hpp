@@ -50,92 +50,8 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
 #define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
 
-//Xbox Audio Decoder by blueshogun96 and revised by RadWolfie
-void DSoundBufferXboxAdpcmDecoder(
-    LPDIRECTSOUNDBUFFER8    pDSBuffer,
-    DSBUFFERDESC*           pDSBufferDesc,
-    DWORD                   dwOffset,
-    LPVOID                  pAudioPtr,
-    DWORD                   dwAudioBytes,
-    LPVOID                  pAudioPtr2,
-    DWORD                   dwAudioBytes2,
-    bool                    isLock)
-{
-
-    if (!pDSBuffer) {
-        return;
-    }
-
-    if (!pDSBufferDesc) {
-        return;
-    }
-    if (!pAudioPtr) {
-        return;
-    }
-
-    // Predict the size of the converted buffers we're going to need
-    DWORD dwDecodedAudioBytes = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes) * pDSBufferDesc->lpwfxFormat->nChannels;
-    DWORD dwDecodedAudioBytes2 = 0;
-    if (dwAudioBytes2 != 0) {
-        dwDecodedAudioBytes2 = TXboxAdpcmDecoder_guess_output_size(dwAudioBytes2) * pDSBufferDesc->lpwfxFormat->nChannels;
-    }
-
-    // Allocate some temp buffers
-    uint8_t* buffer1 = (uint8_t*)malloc(dwDecodedAudioBytes);
-    uint8_t* buffer2 = nullptr;
-
-    if (dwAudioBytes2 != 0) {
-        buffer2 = (uint8_t*)malloc(dwDecodedAudioBytes2);
-    }
-    // Attempt to decode Xbox ADPCM data to PCM
-    //EmuWarning( "Guessing output size to be 0x%X bytes as opposed to 0x%X bytes.", TXboxAdpcmDecoder_guess_output_size(dwAudioBytes), dwAudioBytes );
-    TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr, dwAudioBytes, buffer1, pDSBufferDesc->lpwfxFormat->nChannels);
-    if (dwAudioBytes2 != 0) {
-        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pAudioPtr2, dwAudioBytes2, buffer2, pDSBufferDesc->lpwfxFormat->nChannels);
-    }
-    // Lock this Xbox ADPCM buffer
-    void* pPtrX = xbnullptr, *pPtrX2 = xbnullptr;
-    DWORD dwBytesX = 0, dwBytesX2 = 0;
-
-    HRESULT hr = DS_OK;
-    if (isLock == false) {
-        hr = pDSBuffer->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pPtrX, &dwBytesX, &pPtrX2, &dwBytesX2, 0);
-    }
-    if (hr == DS_OK) {
-        // Write the converted PCM buffer bytes
-
-        if (isLock == false) {
-
-            if (dwDecodedAudioBytes > dwBytesX) dwDecodedAudioBytes = dwBytesX;
-            memcpy(pPtrX, buffer1, dwDecodedAudioBytes);
-
-            if (pPtrX2 != xbnullptr) {
-                if (dwDecodedAudioBytes2 > dwBytesX2) dwDecodedAudioBytes2 = dwBytesX2;
-                memcpy(pPtrX2, buffer2, dwDecodedAudioBytes2);
-            }
-
-            hr = pDSBuffer->Unlock(pPtrX, dwBytesX, pPtrX2, dwBytesX2);
-
-        } else {
-
-            if (dwDecodedAudioBytes > dwAudioBytes) dwDecodedAudioBytes = dwAudioBytes;
-            memcpy(pAudioPtr, buffer1, dwDecodedAudioBytes);
-
-            if (pAudioPtr2 != xbnullptr) {
-                if (dwDecodedAudioBytes2 > dwAudioBytes2) dwDecodedAudioBytes2 = dwAudioBytes2;
-                memcpy(pAudioPtr2, buffer2, dwDecodedAudioBytes2);
-            }
-            hr = pDSBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
-        }
-    }
-
-    // Clean up our mess
-    if (buffer1) free(buffer1);
-    if (buffer2) free(buffer2);
-}
-
-#define DSoundBufferGetPCMBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
-#define DSoundBufferGetXboxBufferSize(pThis, size) (pThis->EmuFlags & DSB_FLAG_XADPCM) > 0 ? ((size / XBOX_ADPCM_DSTSIZE) * XBOX_ADPCM_SRCSIZE) : size
+#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
+#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? ((size / XBOX_ADPCM_DSTSIZE) * XBOX_ADPCM_SRCSIZE) : size
 
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
@@ -225,12 +141,6 @@ inline void GeneratePCMFormat(
 
     // convert from Xbox to PC DSound
     {
-
-        if (pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN) {
-            pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
-        } else if (pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX) {
-            pDSBufferDesc->dwBufferBytes = DSBSIZE_MAX;
-        }
         pDSBufferDesc->dwReserved = 0;
 
         if (lpwfxFormat != xbnullptr) {
@@ -270,6 +180,14 @@ inline void GeneratePCMFormat(
                 default:
                     dwEmuFlags |= DSB_FLAG_PCM_UNKNOWN;
                     break;
+            }
+
+            if (pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN) {
+                pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
+            } else if (pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX) {
+                pDSBufferDesc->dwBufferBytes = DSBSIZE_MAX;
+            } else {
+                pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, pDSBufferDesc->dwBufferBytes);
             }
         } else {
             bIsSpecial = true;
@@ -342,40 +260,32 @@ inline void DSoundGenericUnlock(
     DWORD                   dwEmuFlags,
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     LPDSBUFFERDESC          pDSBufferDesc,
-    DWORD                   dwOffset,
-    LPVOID                 &pLockPtr1,
-    DWORD                   dwLockBytes1,
-    LPVOID                 &pLockPtr2,
-    DWORD                   dwLockBytes2,
-    DWORD                   dwLockFlags)
+    XTL::DSoundBuffer_Lock &Host_lock,
+    LPVOID                  X_BufferCache,
+    DWORD                   X_Offset,
+    DWORD                   X_dwLockBytes1,
+    DWORD                   X_dwLockBytes2)
 {
     // close any existing locks
-    if (pLockPtr1 != xbnullptr) {
-        if (dwEmuFlags & DSB_FLAG_XADPCM) {
+    if (Host_lock.pLockPtr1 != nullptr) {
 
-            //Since it is already locked, don't even need this.
-            /*if (dwLockFlags & DSBLOCK_FROMWRITECURSOR) {
-
-            }*/
-            if (dwLockFlags & DSBLOCK_ENTIREBUFFER) {
-                dwLockBytes1 = pDSBufferDesc->dwBufferBytes;
-            }
+        // TODO: I don't think we need this.
+        /*if (Host_lock.dwLockFlags & DSBLOCK_ENTIREBUFFER) {
+            Host_lock.dwLockBytes1 = pDSBufferDesc->dwBufferBytes;
+        }*/
 
 
-            DSoundBufferXboxAdpcmDecoder(pDSBuffer,
-                                         pDSBufferDesc,
-                                         dwOffset,
-                                         pLockPtr1,
-                                         dwLockBytes1,
-                                         pLockPtr2,
-                                         dwLockBytes2,
-                                         true);
-        } else {
-            pDSBuffer->Unlock(pLockPtr1, dwLockBytes1, pLockPtr2, dwLockBytes2);
+        DSoundBufferOutputXBtoHost(dwEmuFlags, pDSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
+
+        if (Host_lock.pLockPtr2 != nullptr) {
+
+            DSoundBufferOutputXBtoHost(dwEmuFlags, pDSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
         }
 
-        pLockPtr1 = xbnullptr;
-        pLockPtr2 = xbnullptr;
+        pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+
+        Host_lock.pLockPtr1 = nullptr;
+        Host_lock.pLockPtr2 = nullptr;
     }
 
 }
@@ -415,13 +325,14 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->EmuDirectSound3DBuffer8 = nullptr; \
     pThis->X_BufferCache = xbnullptr; \
     pThis->EmuBufferDesc = pdsd; \
-    pThis->EmuLockPtr1 = xbnullptr; \
-    pThis->EmuLockBytes1 = 0; \
-    pThis->EmuLockPtr2 = xbnullptr; \
-    pThis->EmuLockBytes2 = 0; \
     pThis->EmuFlags = dwEmuFlags; \
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
     pThis->X_BufferCacheSize = 0;
+    /*
+    pThis->EmuLockPtr1 = xbnullptr; \
+    pThis->EmuLockBytes1 = 0; \
+    pThis->EmuLockPtr2 = xbnullptr; \
+    pThis->EmuLockBytes2 = 0; \ */
 
 inline void DSoundBufferRegionSetDefault(XTL::X_CDirectSoundBuffer *pThis) {
     pThis->EmuBufferToggle = XTL::X_DSB_TOGGLE_DEFAULT;
@@ -439,16 +350,15 @@ inline void DSoundBufferRegionRelease(XTL::X_CDirectSoundBuffer *pThis)
     // NOTE: DSB Buffer8Region and 3DBuffer8Region are set
     // to nullptr inside DSoundBufferRegionSetDefault function.
     if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-        if (pThis->EmuLockPtr1 != xbnullptr) {
+        if (pThis->Host_lock.pLockPtr1 != nullptr) {
             DSoundGenericUnlock(pThis->EmuFlags,
                                 pThis->EmuDirectSoundBuffer8Region,
                                 pThis->EmuBufferDesc,
-                                pThis->EmuLockOffset,
-                                pThis->EmuLockPtr1,
-                                pThis->EmuLockBytes1,
-                                pThis->EmuLockPtr2,
-                                pThis->EmuLockBytes2,
-                                pThis->EmuLockFlags);
+                                pThis->Host_lock,
+                                pThis->X_BufferCache,
+                                pThis->X_lock.dwLockOffset,
+                                pThis->X_lock.dwLockBytes1,
+                                pThis->X_lock.dwLockBytes2);
         }
         pThis->EmuDirectSoundBuffer8Region->Release();
 
@@ -562,21 +472,32 @@ inline void ResizeIDirectSoundBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
     LPDSBUFFERDESC              pDSBufferDesc,
     DWORD                       PlayFlags,
-    DWORD                       dwBytes,
-    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
+    DWORD                       Xbox_dwBytes,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    DWORD                       EmuFlags,
+    LPVOID                     &X_BufferCache,
+    DWORD                      &X_BufferCacheSize)
 {
-
-    if (dwBytes == pDSBufferDesc->dwBufferBytes || dwBytes == 0) {
+    DWORD pcmSize = DSoundBufferGetPCMBufferSize(EmuFlags, Xbox_dwBytes);
+    if (Xbox_dwBytes == 0 || pcmSize == pDSBufferDesc->dwBufferBytes) {
         return;
     }
-    DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, dwBytes);
+    DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, pcmSize);
 
-    pDSBufferDesc->dwBufferBytes = dwBytes;
+    pDSBufferDesc->dwBufferBytes = pcmSize;
+
+    LPVOID  X_tempBuffer = X_BufferCache;
+    X_BufferCache = malloc(Xbox_dwBytes);
+    if (X_tempBuffer != xbnullptr) {
+        memcpy_s(X_BufferCache, Xbox_dwBytes, X_tempBuffer, X_BufferCacheSize);
+        free(X_tempBuffer);
+    }
+    X_BufferCacheSize = Xbox_dwBytes;
 
     DSoundBufferReplace(pDSBuffer, pDSBufferDesc, PlayFlags, pDS3DBuffer);
 }
 
-inline void DSoundBufferWriteToBuffer(
+inline void DSoundStreamWriteToBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
     DWORD                       dwOffset,
     PVOID                       pBufferData,
@@ -593,58 +514,9 @@ inline void DSoundBufferWriteToBuffer(
         if (pAudioPtr != nullptr) {
             memcpy_s(pAudioPtr, dwAudioBytes, pBufferData, dwAudioBytes);
             if (pAudioPtr2 != nullptr) {
-                memcpy_s(pAudioPtr2, dwAudioBytes2, (PUCHAR)pBufferData + dwAudioBytes, dwAudioBytes2);
+                memcpy_s(pAudioPtr2, dwAudioBytes2, (PBYTE)pBufferData + dwAudioBytes, dwAudioBytes2);
             }
             pDSBuffer->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
-        }
-    }
-}
-
-inline void DSoundBufferUpdate(
-    LPDIRECTSOUNDBUFFER8    pThis,
-    LPDSBUFFERDESC          pDSBufferDesc,
-    LPVOID                  pBuffer,
-    DWORD                   dwEmuFlags,
-    DWORD                   dwOffset,
-    LPVOID                 &pLockPtr1,
-    DWORD                   dwLockBytes1,
-    LPVOID                  pLockPtr2,
-    DWORD                   dwLockBytes2,
-    DWORD                   dwLockFlags)
-{
-
-    PVOID pAudioPtr, pAudioPtr2;
-    DWORD dwAudioBytes, dwAudioBytes2, dwStatus;
-
-    HRESULT hRet = pThis->GetStatus(&dwStatus);
-    if (hRet == DS_OK) {
-        if ((dwStatus & DSBSTATUS_PLAYING)) {
-
-            DSoundGenericUnlock(dwEmuFlags,
-                                pThis,
-                                pDSBufferDesc,
-                                dwOffset,
-                                pLockPtr1,
-                                dwLockBytes1,
-                                pLockPtr2,
-                                dwLockBytes2,
-                                dwLockFlags);
-
-            if (dwEmuFlags & DSB_FLAG_XADPCM) {
-                DSoundBufferXboxAdpcmDecoder(pThis, pDSBufferDesc, dwOffset, pBuffer, pDSBufferDesc->dwBufferBytes, 0, 0, false);
-            } else {
-                HRESULT hRet = pThis->Lock(dwOffset, pDSBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
-
-                if (hRet == DS_OK) {
-                    if (pAudioPtr != nullptr) {
-                        memcpy(pAudioPtr, pBuffer, dwAudioBytes);
-                    }
-                    if (pAudioPtr2 != nullptr) {
-                        memcpy(pAudioPtr2, (PVOID)((DWORD)pBuffer + dwAudioBytes), dwAudioBytes2);
-                    }
-                    pThis->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
-                }
-            }
         }
     }
 }
@@ -735,7 +607,8 @@ inline HRESULT HybridDirectSoundBuffer_GetInfo(
 inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     PDWORD                  pdwCurrentPlayCursor,
-    PDWORD                  pdwCurrentWriteCursor)
+    PDWORD                  pdwCurrentWriteCursor,
+    DWORD                   EmuFlags)
 {
 
     enterCriticalSection;
@@ -747,6 +620,12 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     }
     if (pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0) {
         DbgPrintf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
+    }
+    if (pdwCurrentPlayCursor != xbnullptr) {
+        *pdwCurrentPlayCursor = DSoundBufferGetXboxBufferSize(EmuFlags, *pdwCurrentPlayCursor);
+    }
+    if (pdwCurrentWriteCursor != xbnullptr) {
+        *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, *pdwCurrentWriteCursor);
     }
 
     leaveCriticalSection;
