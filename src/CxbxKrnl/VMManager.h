@@ -149,6 +149,8 @@ class VMManager : public PhysicalMemory
 		DWORD QueryProtection(VAddr addr);
 		// retrieves the size of an allocation
 		size_t QuerySize(VAddr addr, bool bCxbxCaller = true);
+		// locks physical pages in memory (prevents relocations)
+		void LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, bool bUnLock);
 		// MmClaimGpuInstanceMemory implementation
 		VAddr ClaimGpuMemory(size_t Size, size_t* BytesToSkip);
 		// make contiguous memory persist across a quick reboot

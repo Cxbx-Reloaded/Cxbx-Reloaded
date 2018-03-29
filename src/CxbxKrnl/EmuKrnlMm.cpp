@@ -280,19 +280,20 @@ XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
 // ******************************************************************
 XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 (
-	IN PHYSICAL_ADDRESS	BaseAddress,
-	IN ULONG			NumberOfBytes,
-	IN ULONG			Protect
+	IN PVOID	        BaseAddress,
+	IN SIZE_T			NumberOfBytes,
+	IN BOOLEAN			UnlockPages
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
-		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_ARG(UnlockPages)
 	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
-	LOG_IGNORED();
+
+	g_VMManager.LockBufferOrSinglePage(0, (VAddr)BaseAddress, NumberOfBytes, UnlockPages);
 }
 
 // ******************************************************************
@@ -310,7 +311,8 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 	LOG_FUNC_END;
 
 	// REMARK: all the pages inside the main memory pool are non-relocatable so, for the moment, this function is pointless
-	LOG_IGNORED();
+
+	g_VMManager.LockBufferOrSinglePage(PhysicalAddress, 0, 0, UnlockPage);
 }
 
 // ******************************************************************

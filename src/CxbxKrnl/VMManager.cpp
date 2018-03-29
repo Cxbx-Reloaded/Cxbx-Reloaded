@@ -1496,6 +1496,74 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 	RETURN(Size);
 }
 
+void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, bool bUnLock)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(paddr)
+		LOG_FUNC_ARG(addr)
+		LOG_FUNC_ARG(Size)
+		LOG_FUNC_ARG(bUnLock)
+	LOG_FUNC_END;
+
+	PMMPTE PointerPte;
+	PMMPTE EndingPte;
+	PFN pfn;
+	PXBOX_PFN PfnEntry;
+	ULONG LockUnit;
+
+	Lock();
+
+	if (addr) // lock the pages of a buffer
+	{
+		if (!IS_PHYSICAL_ADDRESS(addr) && (GetPdeAddress(addr)->Hardware.LargePage == 0))
+		{
+			LockUnit = bUnLock ? -LOCK_COUNT_UNIT : LOCK_COUNT_UNIT;
+
+			PointerPte = GetPteAddress(addr);
+			EndingPte = GetPteAddress(addr + Size - 1);
+
+			while (PointerPte <= EndingPte)
+			{
+				assert(PointerPte->Hardware.Valid != 0);
+
+				pfn = PointerPte->Hardware.PFN;
+
+				if (pfn <= m_HighestPage)
+				{
+					if (g_bIsRetail || g_bIsDebug) {
+						PfnEntry = XBOX_PFN_ELEMENT(pfn);
+					}
+					else { PfnEntry = CHIHIRO_PFN_ELEMENT(pfn); }
+
+					assert(PfnEntry->Busy.Busy != 0);
+
+					PfnEntry->Busy.LockCount += LockUnit;
+				}
+				PointerPte++;
+			}
+		}
+	}
+	else // lock a single page
+	{
+		pfn = paddr >> PAGE_SHIFT;
+		if (g_bIsRetail || g_bIsDebug) {
+			PfnEntry = XBOX_PFN_ELEMENT(pfn);
+		}
+		else { PfnEntry = CHIHIRO_PFN_ELEMENT(pfn); }
+
+		if (PfnEntry->Busy.BusyType != ContiguousType && pfn <= m_HighestPage)
+		{
+			LockUnit = bUnLock ? -LOCK_COUNT_UNIT : LOCK_COUNT_UNIT;
+
+			assert(PfnEntry->Busy.Busy != 0);
+
+			PfnEntry->Busy.LockCount += LockUnit;
+		}
+	}
+
+	Unlock();
+}
+
 xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
 	LOG_FUNC_BEGIN

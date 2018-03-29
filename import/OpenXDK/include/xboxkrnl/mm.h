@@ -113,9 +113,9 @@ XBSYSAPI EXPORTNUM(174) BOOLEAN NTAPI MmIsAddressValid
 // ******************************************************************
 XBSYSAPI EXPORTNUM(175) VOID NTAPI MmLockUnlockBufferPages
 (
-    IN PHYSICAL_ADDRESS   BaseAddress,
-    IN ULONG            NumberOfBytes,
-    IN ULONG            Protect
+    IN PVOID             BaseAddress,
+    IN SIZE_T            NumberOfBytes,
+    IN BOOLEAN           UnlockPages
 );
 
 // ******************************************************************
