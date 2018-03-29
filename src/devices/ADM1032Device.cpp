@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->Xbox.h
+// *   src->devices->ADM1032Device.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,55 +28,30 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
 
-#include "PCIBus.h" // For PCIBus
-#include "SMBus.h" // For SMBus
-#include "MCPXDevice.h" // For MCPXDevice
-#include "SMCDevice.h" // For SMCDevice
-#include "EEPROMDevice.h" // For EEPROMDevice
-#include "EmuNVNet.h" // For NVNetDevice
-#include "ADM1032Device.h" // For ADM1032
-#include "devices\video\nv2a.h" // For NV2ADevice
+#include "ADM1032Device.h"
+#include "..\CxbxKrnl\Emu.h" // For EmuWarning
 
-#define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
-#define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
-#define SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER 0x20 // = Write; Read = 0x21
-#define SMBUS_ADDRESS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 0x8B
-#define SMBUS_ADDRESS_TEMPERATURE_MONITOR 0x98 // = Write; Read = 0x99
-#define SMBUS_ADDRESS_EEPROM 0xA8 // = Write; Read = 0xA9
-#define SMBUS_ADDRESS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0xD5
-#define SMBUS_ADDRESS_TV_ENCODER_ID_XCALIBUR 0xE0 // = Write; Read = 0xE1
 
-typedef enum {
-	Revision1_0,
-	Revision1_1,
-	Revision1_2,
-	Revision1_3,
-	Revision1_4,
-	Revision1_5,
-	Revision1_6,
-	DebugKit
-} HardwareModel;
+void ADM1032Device::Init()
+{
+	// ergo720: these are the values reported by UnleashX on my modded Xbox after half an hour of playing (in celsius)
 
-typedef enum { // TODO : Move to it's own file
-	// http://xboxdevwiki.net/Hardware_Revisions#Video_encoder
-	Conexant,
-	Focus,
-	XCalibur
-} TVEncoder;
+	m_CPUTemperature = 45;
+	m_MBTemperature = 40;
+}
 
-extern PCIBus* g_PCIBus;
-extern SMBus* g_SMBus;
-extern MCPXDevice* g_MCPX;
-extern SMCDevice* g_SMC;
-extern EEPROMDevice* g_EEPROM;
-extern NVNetDevice* g_NVNet;
-extern NV2ADevice* g_NV2A;
+uint8_t ADM1032Device::ReadByte(uint8_t command)
+{
+	if (command == 0x0) { return m_MBTemperature; }
+	else if(command == 0x1) { return m_CPUTemperature; }
 
-extern void InitXboxHardware(HardwareModel hardwareModel);
+	EmuWarning("Unknown read command sent to the temperature sensor. The command was %d", command);
+
+	return 0;
+}

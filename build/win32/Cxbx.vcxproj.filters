@@ -266,6 +266,9 @@
       <Filter>Hardware\Video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />
+    <ClCompile Include="..\..\src\devices\ADM1032Device.cpp">
+      <Filter>Hardware</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -528,6 +531,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\queue.h">
       <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\ADM1032Device.h">
+      <Filter>Hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

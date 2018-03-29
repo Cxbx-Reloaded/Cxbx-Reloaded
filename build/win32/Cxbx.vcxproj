@@ -260,6 +260,7 @@
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
     <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
+    <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
     <ClInclude Include="..\..\src\devices\EmuNVNet.h" />
     <ClInclude Include="..\..\src\devices\LED.h" />
@@ -637,6 +638,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\ADM1032Device.cpp" />
     <ClCompile Include="..\..\src\devices\EEPROMDevice.cpp" />
     <ClCompile Include="..\..\src\devices\EmuNVNet.cpp" />
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp" />
