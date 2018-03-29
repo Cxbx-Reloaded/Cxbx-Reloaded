@@ -2117,7 +2117,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
     pThis->Host_BufferPacketArray.push_back(packetSilence);
     do {
         XTL::EMUPATCH(DirectSoundDoWork)();
-    } while (pThis->Host_BufferPacketArray.size() > 0);
+    } while (pThis->Host_BufferPacketArray.size() > 1);
+
+    pThis->Host_BufferPacketArray.clear();
 
 
     pThis->EmuDirectSoundBuffer8->Stop();
