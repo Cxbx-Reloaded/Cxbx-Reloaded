@@ -178,9 +178,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
  */
 
 
-
+// TODO: This is more of a hack(?) since certain titles won't go through. Find out why then revert it back to 0x200 as it should be.
 // size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x200
+#define SOUNDBUFFER_CACHE_SIZE 0x800
 
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x200
