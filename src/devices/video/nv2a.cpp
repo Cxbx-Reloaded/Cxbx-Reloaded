@@ -483,8 +483,8 @@ void InitOpenGLContext()
 										  // Initialize the viewport :
 										  //Viewport.X = 0;
 										  //Viewport.Y = 0;
-										  //Viewport.Width = g_EmuCDPD.pPresentationParameters.BackBufferWidth;
-										  //Viewport.Height = g_EmuCDPD.pPresentationParameters.BackBufferHeight;
+										  //Viewport.Width = g_EmuCDPD.pXboxPresentationParameters.BackBufferWidth;
+										  //Viewport.Height = g_EmuCDPD.pXboxPresentationParameters.BackBufferHeight;
 										  //Viewport.MinZ = -1.0;
 										  //Viewport.MaxZ = 1.0;
 
