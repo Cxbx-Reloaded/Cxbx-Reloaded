@@ -4391,21 +4391,23 @@ VOID WINAPI CreateHostResource
             {
                 // TODO: HACK: Figure out why this is necessary!
                 // TODO: This is necessary for DXT1 textures at least (4x4 blocks minimum)
-                if(dwWidth < 4)
-                {
-                    EmuWarning("Expanding texture width (%d->4)", dwWidth);
-                    dwWidth = 4;
+				if (bCompressed) {
+					if (dwWidth < 4)
+					{
+						EmuWarning("Expanding texture width (%d->4)", dwWidth);
+						dwWidth = 4;
 
-                    dwMipMapLevels = 3;
-                }
+						dwMipMapLevels = 3;
+					}
 
-                if(dwHeight < 4)
-                {
-                    EmuWarning("Expanding texture height (%d->4)", dwHeight);
-                    dwHeight = 4;
+					if (dwHeight < 4)
+					{
+						EmuWarning("Expanding texture height (%d->4)", dwHeight);
+						dwHeight = 4;
 
-                    dwMipMapLevels = 3;
-                }
+						dwMipMapLevels = 3;
+					}
+				}
 
                 if(bCubemap)
                 {
