@@ -269,7 +269,10 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
+	// ergo720: the or 1 on the address is necessary because I have seen that UnleashX and RDX dashboard pass 0x20 instead of the
+	// expected 0x21 to this function when reading cpu and m/b temperatures
+
+	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address | 1);
 	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
 	if (ReadWord)
 		g_SMBus->IOWrite(1, SMB_GLOBAL_ENABLE, AMD756_WORD_DATA | GE_HOST_STC);
@@ -278,7 +281,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 	// Note : GE_HOST_STC triggers ExecuteTransaction, which reads the command from the specified address
 
 	// Check if the command was executed successfully
-	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) | GS_PRERR_STS) {
+	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
 		Status = STATUS_UNSUCCESSFUL;
 	}
 	else {
