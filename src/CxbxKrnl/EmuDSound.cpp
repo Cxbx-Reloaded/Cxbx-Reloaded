@@ -1064,11 +1064,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     XTL::EMUPATCH(IDirectSoundBuffer_Lock)(pThis, 0, dwBufferBytes, &pThis->X_lock.pLockPtr1,
                                            &pThis->X_lock.dwLockBytes1, nullptr, NULL, pThis->X_lock.dwLockFlags);
 
-    if (pThis->Host_lock.pLockPtr1 != nullptr) {
-
-        memcpy(pThis->X_BufferCache, pvBufferData, dwBufferBytes);
-        DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pThis->X_BufferCache, dwBufferBytes, pThis->Host_lock.pLockPtr1, pThis->X_lock.dwLockBytes1);
-    }
+    memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
 
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
@@ -1408,7 +1404,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
     dwNewPosition = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwNewPosition);
 
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
+    HRESULT hRet = DSoundBufferSelectionT(pThis)->SetCurrentPosition(dwNewPosition);
 
     if (hRet != DS_OK) {
         EmuWarning("SetCurrentPosition Failed!");
@@ -1523,7 +1519,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
                 free(emuBufferDescRegion);
                 CxbxKrnlCleanup("Unknown TOGGLE region for DirectSoundBuffer class usage.");
         }
-        emuBufferDescRegion->dwBufferBytes = byteLength;
+        emuBufferDescRegion->dwBufferBytes = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, byteLength);
 
         DSoundBufferCreate(emuBufferDescRegion, pThis->EmuDirectSoundBuffer8Region);
         if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
@@ -1540,6 +1536,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
         if (pThis->Host_lock.pLockPtr1 != nullptr) {
             DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, (PVOID)((PBYTE)pThis->X_BufferCache + startOffset), byteLength, pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1);
             pThis->EmuDirectSoundBuffer8Region->Unlock(pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1, nullptr, 0);
+            pThis->Host_lock.pLockPtr1 = nullptr;
         }
         free(emuBufferDescRegion);
     }
@@ -2704,11 +2701,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
+    DSoundBufferRegionRelease(pThis);
+
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, 
                                                      pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8);
-    
-    DSoundBufferRegionRelease(pThis);
 
     leaveCriticalSection;
 
