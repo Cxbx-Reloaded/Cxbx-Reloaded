@@ -2082,23 +2082,26 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
-    host_voice_packet packetSilence;
-    packetSilence.xmp_data = { 0 };
-    packetSilence.xmp_data.dwMaxSize = pThis->Host_dwTriggerRange;
-    packetSilence.pBuffer_data = malloc(packetSilence.xmp_data.dwMaxSize);
-    memset(packetSilence.pBuffer_data, 0, packetSilence.xmp_data.dwMaxSize);
-    packetSilence.rangeStart = pThis->Host_dwWriteOffsetNext;
-    packetSilence.isPlayed = false;
-    packetSilence.isWritten = false;
-    pThis->Host_BufferPacketArray.push_back(packetSilence);
-    do {
-        XTL::EMUPATCH(DirectSoundDoWork)();
-    } while (pThis->Host_BufferPacketArray.size() > 1);
+    // Don't process if stream is paused.
+    if ((pThis->EmuFlags & DSB_FLAG_PAUSE) == 0 && pThis->Host_isProcessing) {
+
+        host_voice_packet packetSilence;
+        packetSilence.xmp_data = { 0 };
+        packetSilence.xmp_data.dwMaxSize = pThis->Host_dwTriggerRange;
+        packetSilence.pBuffer_data = malloc(packetSilence.xmp_data.dwMaxSize);
+        memset(packetSilence.pBuffer_data, 0, packetSilence.xmp_data.dwMaxSize);
+        packetSilence.rangeStart = pThis->Host_dwWriteOffsetNext;
+        packetSilence.isPlayed = false;
+        packetSilence.isWritten = false;
+        pThis->Host_BufferPacketArray.push_back(packetSilence);
+        do {
+            XTL::EMUPATCH(DirectSoundDoWork)();
+        } while (pThis->Host_BufferPacketArray.size() > 1);
+
+        pThis->EmuDirectSoundBuffer8->Stop();
+    }
 
     pThis->Host_BufferPacketArray.clear();
-
-
-    pThis->EmuDirectSoundBuffer8->Stop();
 
     leaveCriticalSection;
 
