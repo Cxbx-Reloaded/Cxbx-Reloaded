@@ -1600,29 +1600,33 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
         LOG_FUNC_ARG(dwFlags)
         LOG_FUNC_END;
 
-    HRESULT hRet = D3D_OK;
+    HRESULT hRet = DS_OK;
 
     //TODO: RadWolfie - Rayman 3 crash at end of first intro for this issue...
     // if only return DS_OK, then it works fine until end of 2nd intro it crashed.
-    if (pThis != nullptr) {
-        // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-        switch (dwFlags) {
-            case X_DSBSTOPEX_IMMEDIATE:
-                hRet = DSoundBufferSelectionT(pThis)->Stop();
-                DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
-                break;
-            case X_DSBSTOPEX_ENVELOPE:
-                // TODO: How to mock up "release phase"?
-                break;
-            case X_DSBSTOPEX_RELEASEWAVEFORM:
 
+    // Do not allow to process - Xbox reject it in theory.
+    if (dwFlags > X_DSBSTOPEX_ALL) {
+        hRet = DSERR_INVALIDPARAM;
+
+    // Only flags can be process here.
+    } else {
+        // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+        if (dwFlags == X_DSBSTOPEX_IMMEDIATE) {
+            hRet = DSoundBufferSelectionT(pThis)->Stop();
+            DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
+        } else {
+            if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
+                // TODO: How to mock up "release phase"?
+            }
+            if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
                 // Release from loop region.
                 DWORD dwValue, dwStatus;
                 if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
                     pThis->EmuDirectSoundBuffer8Region->GetStatus(&dwStatus);
 
                     DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8,
-                                         pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
+                                                    pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
 
                     hRet = pThis->EmuDirectSoundBuffer8Region->Stop();
                     pThis->EmuDirectSoundBuffer8Region->GetCurrentPosition(&dwValue, nullptr);
@@ -1636,16 +1640,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
                     // Finally, release region buffer.
                     DSoundBufferRegionRelease(pThis);
                 }
-                // TODO: How to mock up "release phase"?
-                break;
-            default:
-                EmuWarning("Unknown dwFlags from IDirectSoundBuffer_StopEx: %8X", dwFlags);
+            }
         }
     }
 
     leaveCriticalSection;
 
-    RETURN_RESULT_CHECK(hRet);
+    return hRet;
 }
 
 // ******************************************************************

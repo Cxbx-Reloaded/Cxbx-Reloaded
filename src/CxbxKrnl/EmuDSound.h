@@ -71,6 +71,7 @@ void CxbxInitAudio();
 #define X_DSBSTOPEX_IMMEDIATE         0x00000000
 #define X_DSBSTOPEX_ENVELOPE          0x00000001
 #define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
+#define X_DSBSTOPEX_ALL               (X_DSBSTOPEX_ENVELOPE | X_DSBSTOPEX_RELEASEWAVEFORM)
 
 
 // ******************************************************************
