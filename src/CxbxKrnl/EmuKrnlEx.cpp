@@ -427,6 +427,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
 			// We temporarily bypass the problem of above we a host critical section
+			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
 			LockEeprom();
 			if(eeprom_data_is_valid(index)) {
 				// Set the output value type :
@@ -439,6 +440,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 			else {
 				Status = STATUS_DEVICE_DATA_ERROR;
 			}
+			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
 			UnlockEeprom();
 		}
 		else {
@@ -599,7 +601,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	DWORD result_length;
 
 	// handle eeprom write
-	if (ValueIndex == XC_FACTORY_GAME_REGION) {
+	if (g_bIsDebug && ValueIndex == XC_FACTORY_GAME_REGION) {
 		value_addr = &XboxFactoryGameRegion;
 		result_length = sizeof(ULONG);
 	}
@@ -619,6 +621,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
 			// We temporarily bypass the problem of above we a host critical section
+			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
 			LockEeprom();
 
 			// Clear the emulated EEMPROM value :
@@ -631,6 +634,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
 
 			gen_section_CRCs(EEPROM);
+			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
 			UnlockEeprom();
 		}
 		else {
