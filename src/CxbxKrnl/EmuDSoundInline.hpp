@@ -302,13 +302,13 @@ inline void DSoundBufferCreate(LPDSBUFFERDESC &pDSBufferDesc, LPDIRECTSOUNDBUFFE
     LPDIRECTSOUNDBUFFER pTempBuffer;
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
     if (hRetDS != DS_OK) {
-        CxbxKrnlCleanup("CreateSoundBuffer Failed!");
+        CxbxKrnlCleanup("CreateSoundBuffer error: 0x%08X", hRetDS);
         pDSBufferDesc = xbnullptr;
     } else {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
         if (hRetDS != DS_OK) {
-            CxbxKrnlCleanup("Create IDirectSoundBuffer8 Failed!");
+            CxbxKrnlCleanup("Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
         }
     }
 }
