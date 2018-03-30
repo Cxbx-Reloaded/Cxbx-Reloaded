@@ -395,7 +395,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		LOG_FUNC_ARG_OUT(Value)
 		LOG_FUNC_ARG(ValueLength)
 		LOG_FUNC_ARG_OUT(ResultLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
 	void * value_addr = nullptr;
@@ -586,7 +586,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	IN  DWORD			   ValueIndex,
 	IN  DWORD			   Type,
 	IN  PVOID			   Value,
-	IN  SIZE_T			  ValueLength
+	IN  SIZE_T			   ValueLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -594,18 +594,15 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		LOG_FUNC_ARG(Type) // unused (see Note below)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(ValueLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
 	void * value_addr = nullptr;
 	DWORD result_length;
 
 	// handle eeprom write
-	if (g_bIsDebug && ValueIndex == XC_FACTORY_GAME_REGION) {
-		value_addr = &XboxFactoryGameRegion;
-		result_length = sizeof(ULONG);
-	}
-	else {
+	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
+	{
 		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
 		if (info != nullptr) {
 			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
@@ -613,8 +610,6 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		};
 	}
 
-	// TODO : Only allow writing to factory section contents when running
-	// in DEVKIT mode, otherwise, nil the info pointer.
 	if (value_addr != nullptr) {
 		// Note : Type could be verified against info->value_type here, but the orginal kernel doesn't even bother
 		if (ValueLength <= result_length) {
@@ -629,9 +624,12 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			// Copy the input value buffer into the emulated EEPROM value :
 			memcpy(value_addr, Value, ValueLength);
 
-			// TODO : When writing to the factory settings section (thus in DEVKIT
-			// mode), set XboxFactoryGameRegion to FactorySettings.GameRegion,
-			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
+			if (ValueIndex == XC_FACTORY_GAME_REGION)
+			{
+				// Update the global XboxFactoryGameRegion
+
+				XboxFactoryGameRegion = *(xboxkrnl::PULONG)Value;
+			}
 
 			gen_section_CRCs(EEPROM);
 			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());

@@ -49,7 +49,8 @@ namespace xboxkrnl
 
 xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
-xboxkrnl::ULONG XboxFactoryGameRegion = 1; // = North America
+// Default value (NA), overwritten with the actual content in the eeprom by CxbxRestoreEEPROM
+xboxkrnl::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
 
 const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 {
@@ -173,6 +174,12 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 	}
 
+	// Initialize XboxFactoryGameRegion from the value stored in the eeprom
+	/*const EEPROMInfo* info = EmuFindEEPROMInfo(xboxkrnl::XC_ENCRYPTED_SECTION);
+	if (info != nullptr) {
+		XboxFactoryGameRegion = (*((xboxkrnl::XBOX_ENCRYPTED_SETTINGS*)((PBYTE)pEEPROM + info->value_offset))).GameRegion;
+	}*/
+
 	if (NeedsInitialization)
 	{
 		memset(pEEPROM, 0, EEPROM_SIZE);
@@ -185,15 +192,20 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
 
-		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
+		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
+
         // This must be done last to include all initialized data in the CRC
         gen_section_CRCs(pEEPROM);
 
 		DbgPrintf("INIT: Initialized default EEPROM\n");
 	}
 	else
+	{
+		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
 		DbgPrintf("INIT: Loaded EEPROM.bin\n");
+	}
 
 	return pEEPROM;
 }
