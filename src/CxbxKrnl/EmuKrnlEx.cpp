@@ -64,16 +64,26 @@ namespace NtDll
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
 #pragma warning(default:4005)
 
-static xboxkrnl::RTL_CRITICAL_SECTION eeprom_crit_section;
+static CRITICAL_SECTION eeprom_crit_section;
 
-static xboxkrnl::PRTL_CRITICAL_SECTION get_eeprom_crit_section()
+static PCRITICAL_SECTION get_eeprom_crit_section()
 {
-    static xboxkrnl::PRTL_CRITICAL_SECTION crit_sec_ptr = NULL;
-    if(crit_sec_ptr == NULL) {
+    static PCRITICAL_SECTION crit_sec_ptr = nullptr;
+    if(crit_sec_ptr == nullptr) {
         crit_sec_ptr = &eeprom_crit_section;
-        RtlInitializeCriticalSection(crit_sec_ptr);
+		InitializeCriticalSectionAndSpinCount(crit_sec_ptr, 0x400);
     }
     return crit_sec_ptr;
+}
+
+void LockEeprom()
+{
+	EnterCriticalSection(get_eeprom_crit_section());
+}
+
+void UnlockEeprom()
+{
+	LeaveCriticalSection(get_eeprom_crit_section());
 }
 
 static bool section_does_not_require_checksum(
@@ -416,7 +426,8 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		if ((int)ValueLength >= result_length) {
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
-			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
+			// We temporarily bypass the problem of above we a host critical section
+			LockEeprom();
 			if(eeprom_data_is_valid(index)) {
 				// Set the output value type :
 				*Type = value_type;
@@ -428,7 +439,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 			else {
 				Status = STATUS_DEVICE_DATA_ERROR;
 			}
-			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
+			UnlockEeprom();
 		}
 		else {
 			Status = STATUS_BUFFER_TOO_SMALL;
@@ -607,7 +618,8 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		if (ValueLength <= result_length) {
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
-			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
+			// We temporarily bypass the problem of above we a host critical section
+			LockEeprom();
 
 			// Clear the emulated EEMPROM value :
 			memset(value_addr, 0, result_length);
@@ -619,7 +631,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
 
 			gen_section_CRCs(EEPROM);
-			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
+			UnlockEeprom();
 		}
 		else {
 			Status = STATUS_INVALID_PARAMETER;
