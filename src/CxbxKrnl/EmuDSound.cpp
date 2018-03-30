@@ -539,7 +539,10 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
                                 (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, buffer->xmp_data.dwMaxSize);
                             }
-                            if (buffer->xmp_data.hCompletionEvent != 0) {
+                            // If a callback is set, only do the callback instead of event handle.
+                            if (pThis->Xb_lpfnCallback != xbnullptr) {
+                                pThis->Xb_lpfnCallback(pThis->Xb_lpvContext, buffer->xmp_data.pContext, XMP_STATUS_SUCCESS);
+                            } else if (buffer->xmp_data.hCompletionEvent != 0) {
                                 SetEvent(buffer->xmp_data.hCompletionEvent);
                             }
                             buffer = pThis->Host_BufferPacketArray.erase(buffer);
@@ -1744,6 +1747,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
     (*ppStream)->Host_dwWriteOffsetNext = 0;
     (*ppStream)->Host_isProcessing = false;
+    (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
+    (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
+    //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 

@@ -87,6 +87,8 @@ struct X_DSBUFFERDESC
     DWORD           dwInputMixBin;
 };
 
+typedef VOID(CALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
+
 // ******************************************************************
 // * X_DSSTREAMDESC
 // ******************************************************************
@@ -95,9 +97,9 @@ struct X_DSSTREAMDESC
     DWORD                       dwFlags;
     DWORD                       dwMaxAttachedPackets;
     LPWAVEFORMATEX              lpwfxFormat;
-    PVOID                       lpfnCallback;   // TODO: Correct Parameter
+    LPFNXMOCALLBACK             lpfnCallback;
     LPVOID                      lpvContext;
-    PVOID                       lpMixBins;      // TODO: Correct Parameter
+    PVOID                       lpMixBins;      // TODO: Implement
 };
 
 // ******************************************************************
@@ -481,6 +483,8 @@ class X_CDirectSoundStream
         DWORD                                   Host_dwWriteOffsetNext;
         DWORD                                   Host_dwTriggerRange;
         bool                                    Host_isProcessing;
+        LPFNXMOCALLBACK                         Xb_lpfnCallback;
+        LPVOID                                  Xb_lpvContext;
 };
 
 // ******************************************************************
