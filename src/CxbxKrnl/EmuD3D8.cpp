@@ -5101,7 +5101,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					dwDstRowPitch = LockedRect.Pitch;
 					dwDstSlicePitch = 0;
 				}
-
+							else if (CacheFormat != 0) // Do we need to convert to ARGB?
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwMipOffset;
 
 				// Do we need to convert to ARGB?
@@ -5128,6 +5128,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 				else if (bCompressed) {
 					memcpy(pDst, pSrc, dwMipSize);
+									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level * 2));
+									dwCompressedOffset += (dwCompressedSize >> (level * 2));
 				}
 				else {
 					/* TODO : // Let DirectX convert the surface (including palette formats) :
