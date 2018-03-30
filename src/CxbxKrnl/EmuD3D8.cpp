@@ -4012,6 +4012,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		// assert(EmuD3DActiveTexture[Stage] != xbnullptr);
+		LOG_TEST_CASE("Using CxbxActiveTextureCopies");
 
 		// Update data and format separately, instead of via GetDataFromXboxResource()
 		CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
