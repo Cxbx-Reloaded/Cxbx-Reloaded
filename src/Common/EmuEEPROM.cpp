@@ -56,7 +56,7 @@ xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 xboxkrnl::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
 
 // Default eeprom key (all zeros). Used to calculate the checksum of the eeprom header and to encrypt it if desired
-UCHAR EepromKey[20] = { 0 };
+UCHAR EepromKey[16] = { 0 };
 
 const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 {
@@ -230,7 +230,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
 		{
 			// The checksums do not match. Log this error and flash the LED (red, off, red, off)
-			EmuWarning("Stored and calculated checksums don't match: eeprom corrupted");
+			EmuWarning("Stored and calculated checksums don't match. Possible eeprom corruption");
 			SetLEDSequence(0xA0);
 		}
 	}
