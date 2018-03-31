@@ -600,6 +600,10 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	void * value_addr = nullptr;
 	DWORD result_length;
 
+	// Don't allow writing to the eeprom encrypted area
+	if (ValueIndex == XC_ENCRYPTED_SECTION)
+		RETURN(STATUS_OBJECT_NAME_NOT_FOUND);
+
 	// handle eeprom write
 	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
 	{
