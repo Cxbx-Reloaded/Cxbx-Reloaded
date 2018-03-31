@@ -134,10 +134,13 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 inline void GeneratePCMFormat(
     DSBUFFERDESC*   pDSBufferDesc,
     LPCWAVEFORMATEX lpwfxFormat,
-    DWORD          &dwEmuFlags)
+    DWORD          &dwEmuFlags,
+    LPVOID*         X_BufferCache,
+    LPDWORD         X_BufferCacheSize)
 {
     bool bIsSpecial = false;
     DWORD checkAvgBps;
+    DWORD X_BufferSizeRequest = pDSBufferDesc->dwBufferBytes;
 
     // convert from Xbox to PC DSound
     {
@@ -254,6 +257,25 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
         }
     }
+
+    if (X_BufferCache == xbnullptr) {
+        return;
+    }
+
+    // Generate xbox buffer cache size
+    // If the size is the same, don't realloc
+    if (*X_BufferCacheSize == X_BufferSizeRequest) {
+        return;
+    }
+    // Check if buffer cache exist, then copy over old ones.
+    if (*X_BufferCache != xbnullptr) {
+        LPVOID tempBuffer = *X_BufferCache;
+        *X_BufferCache = malloc(X_BufferSizeRequest);
+        memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, *X_BufferCacheSize);
+    } else {
+        *X_BufferCache = malloc(X_BufferSizeRequest);
+    }
+    *X_BufferCacheSize = X_BufferSizeRequest;
 }
 
 inline void DSoundGenericUnlock(
@@ -415,7 +437,10 @@ inline void DSoundBufferReplace(
 
     // NOTE: pDS3DBuffer will be set from almost the end of the function with pDS3DBufferNew.
     if (pDS3DBuffer != nullptr) {
-        pDS3DBuffer->Release();
+        refCount = pDS3DBuffer->Release();
+        if (refCount > 0) {
+            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+        }
     }
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
@@ -989,13 +1014,20 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPDSBUFFERDESC          pBufferDesc,
     DWORD                  &dwEmuFlags,
     DWORD                  &dwPlayFlags,
-    LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer)
+    LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer,
+    bool                    X_BufferAllocate,
+    LPVOID                 &X_BufferCache,
+    DWORD                  &X_BufferCacheSize)
 {
 
     enterCriticalSection;
 
-    GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags);
-
+    if (X_BufferAllocate) {
+        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, &X_BufferCache, &X_BufferCacheSize);
+    // Don't allocate for DS Stream class, it is using straight from the source.
+    } else {
+        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, xbnullptr, xbnullptr);
+    }
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
         hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);

@@ -178,9 +178,8 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
  */
 
 
-// TODO: This is more of a hack(?) since certain titles won't go through. Find out why then revert it back to 0x200 as it should be.
 // size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x800
+#define SOUNDBUFFER_CACHE_SIZE 0x800 //Maximum is 2047 SGE overall
 
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x200
@@ -941,58 +940,56 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 		LOG_FUNC_ARG_OUT(ppBuffer)
 		LOG_FUNC_END;
 
-    DWORD dwEmuFlags = 0;
-
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
-
-    //DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
-    DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
-
-    if (pdsbd->dwFlags & (~dwAcceptableMask)) {
-        EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
+    HRESULT hRet = DS_OK;
+    int v = 0;
+    X_CDirectSoundBuffer** ppDSoundBufferCache = nullptr;
+    for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
+        if (g_pDSoundBufferCache[v] == 0) {
+            ppDSoundBufferCache = &g_pDSoundBufferCache[v];
+            break;
+        }
     }
+    //If out of space, return out of memory.
+    if (ppDSoundBufferCache == nullptr) {
 
-    pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-    pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
-    pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
-    pDSBufferDesc->lpwfxFormat = nullptr;
+        hRet = DSERR_OUTOFMEMORY;
+    } else {
 
-    GeneratePCMFormat(pDSBufferDesc, pdsbd->lpwfxFormat, dwEmuFlags);
+        DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
 
-    // TODO: Garbage Collection
-    *ppBuffer = new X_CDirectSoundBuffer();
+        //DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
+        DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
 
-    DSoundBufferSetDefault((*ppBuffer), pDSBufferDesc, dwEmuFlags, 0);
-    (*ppBuffer)->Host_lock = { 0 };
-    (*ppBuffer)->X_BufferCache = malloc(pdsbd->dwBufferBytes);
-    (*ppBuffer)->X_BufferCacheSize = pdsbd->dwBufferBytes;
-    DSoundBufferRegionSetDefault(*ppBuffer);
-
-    DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, pDSBufferDesc->dwBufferBytes);
-
-    DSoundBufferCreate(pDSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
-    if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
-        DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
-    }
-
-    // cache this sound buffer
-    {
-        int v = 0;
-        for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-            if (g_pDSoundBufferCache[v] == 0) {
-                g_pDSoundBufferCache[v] = *ppBuffer;
-                break;
-            }
+        if (pdsbd->dwFlags & (~dwAcceptableMask)) {
+            EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
         }
 
-        if (v == SOUNDBUFFER_CACHE_SIZE) {
-            CxbxKrnlCleanup("SoundBuffer cache out of slots!");
+        pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
+        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
+        pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
+        pDSBufferDesc->lpwfxFormat = nullptr;
+
+        // TODO: Garbage Collection
+        *ppBuffer = new X_CDirectSoundBuffer();
+
+        DSoundBufferSetDefault((*ppBuffer), pDSBufferDesc, 0, 0);
+        (*ppBuffer)->Host_lock = { 0 };
+
+        GeneratePCMFormat(pDSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, &(*ppBuffer)->X_BufferCache, &(*ppBuffer)->X_BufferCacheSize);
+        DSoundBufferRegionSetDefault(*ppBuffer);
+
+        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, pDSBufferDesc->dwBufferBytes);
+
+        DSoundBufferCreate(pDSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
+            DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
         }
+        *ppDSoundBufferCache = *ppBuffer;
     }
 
     leaveCriticalSection;
 
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1608,7 +1605,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
     //TODO: RadWolfie - Rayman 3 crash at end of first intro for this issue...
     // if only return DS_OK, then it works fine until end of 2nd intro it crashed.
 
-    // Do not allow to process - Xbox reject it in theory.
+    // Do not allow to process - Xbox reject it.
     if (dwFlags > X_DSBSTOPEX_ALL) {
         hRet = DSERR_INVALIDPARAM;
 
@@ -1718,7 +1715,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 		LOG_FUNC_ARG_OUT(ppStream)
 		LOG_FUNC_END;
 
-    DWORD dwEmuFlags = 0;
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
 
@@ -1735,9 +1731,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
     pDSBufferDesc->lpwfxFormat = nullptr;
 
-    GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, dwEmuFlags);
+    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, 0, DSBPLAY_LOOPING);
 
-    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, dwEmuFlags, DSBPLAY_LOOPING);
+    GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, xbnullptr, xbnullptr);
 
     // Allocate at least 5 second worth of bytes in PCM format.
     pDSBufferDesc->dwBufferBytes = pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
@@ -2712,7 +2708,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, 
-                                                     pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8);
+                                                     pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
+                                                     0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
     leaveCriticalSection;
 
@@ -3395,7 +3392,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 		LOG_FUNC_END;
 
     return HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
-                                             pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8);
+                                             pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
+                                             0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
 }
 
 // ******************************************************************
