@@ -290,7 +290,7 @@
     <None Include="..\..\CONTRIBUTORS" />
     <None Include="..\..\COPYING" />
     <None Include="..\..\README.md" />
-    <None Include="..\..\resource\Cxbx.ico" />
+    <None Include="..\..\resource\Cxbx-R.ico" />
     <None Include="..\..\resource\Logo.bmp" />
     <None Include="..\..\resource\Splash.jpg" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3911.inl" />
