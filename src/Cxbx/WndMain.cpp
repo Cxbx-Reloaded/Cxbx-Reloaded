@@ -1810,7 +1810,7 @@ void WndMain::UpdateDebugConsoles()
 void WndMain::UpdateRecentFiles()
 {
     HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
-    HMENU RXbeMenu = GetSubMenu(FileMenu, 6);
+    HMENU RXbeMenu = GetSubMenu(FileMenu, 7);
 
     // clear existing menu items
     {
