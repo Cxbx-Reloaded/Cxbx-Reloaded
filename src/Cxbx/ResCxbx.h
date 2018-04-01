@@ -69,6 +69,7 @@
 #define ID_EMULATION_START              40009
 #define ID_FILE_OPEN_XBE                40013
 #define ID_FILE_CLOSE_XBE               40014
+#define ID_FILE_OPEN_DASHBOARD          40015
 #define ID_HELP_HOMEPAGE                40019
 #define ID_FILE_SAVEXBEFILE             40021
 #define ID_FILE_SAVEXBEFILEAS           40022
