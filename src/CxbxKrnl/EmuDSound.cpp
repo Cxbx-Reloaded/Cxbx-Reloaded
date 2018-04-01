@@ -508,7 +508,6 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                 // Debug area end
 
                 if (pThis->Host_isProcessing == false) {
-                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(buffer->rangeStart);
                     pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
                     pThis->Host_isProcessing = true;
                 }
@@ -2034,6 +2033,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 }
                 if (pInputBuffer->pdwCompletedSize != xbnullptr) {
                     (*pInputBuffer->pdwCompletedSize) = 0;
+                }
+
+                if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
+                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.rangeStart);
                 }
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
