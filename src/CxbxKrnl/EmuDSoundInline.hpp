@@ -50,8 +50,8 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
 #define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
 
-#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? TXboxAdpcmDecoder_guess_output_size(size) : size
-#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? ((size / XBOX_ADPCM_DSTSIZE) * XBOX_ADPCM_SRCSIZE) : size
+#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
+#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
 
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
@@ -131,16 +131,38 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 #endif
 }
 
+inline void GenerateXboxBufferCache(
+    DSBUFFERDESC*   pDSBufferDesc,
+    DWORD          &dwEmuFlags,
+    DWORD           X_BufferSizeRequest,
+    LPVOID*         X_BufferCache,
+    DWORD          &X_BufferCacheSize) {
+
+    // Generate xbox buffer cache size
+    // If the size is the same, don't realloc
+    if (X_BufferCacheSize != X_BufferSizeRequest) {
+        // Check if buffer cache exist, then copy over old ones.
+        if (*X_BufferCache != xbnullptr) {
+            LPVOID tempBuffer = *X_BufferCache;
+            *X_BufferCache = malloc(X_BufferSizeRequest);
+            memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, X_BufferCacheSize);
+        } else {
+            *X_BufferCache = malloc(X_BufferSizeRequest);
+        }
+        X_BufferCacheSize = X_BufferSizeRequest;
+    }
+}
+
 inline void GeneratePCMFormat(
     DSBUFFERDESC*   pDSBufferDesc,
     LPCWAVEFORMATEX lpwfxFormat,
     DWORD          &dwEmuFlags,
+    DWORD           X_BufferSizeRequest,
     LPVOID*         X_BufferCache,
-    LPDWORD         X_BufferCacheSize)
+    DWORD          &X_BufferCacheSize)
 {
     bool bIsSpecial = false;
     DWORD checkAvgBps;
-    DWORD X_BufferSizeRequest = pDSBufferDesc->dwBufferBytes;
 
     // convert from Xbox to PC DSound
     {
@@ -183,14 +205,6 @@ inline void GeneratePCMFormat(
                 default:
                     dwEmuFlags |= DSB_FLAG_PCM_UNKNOWN;
                     break;
-            }
-
-            if (pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN) {
-                pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
-            } else if (pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX) {
-                pDSBufferDesc->dwBufferBytes = DSBSIZE_MAX;
-            } else {
-                pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, pDSBufferDesc->dwBufferBytes);
             }
         } else {
             bIsSpecial = true;
@@ -258,24 +272,16 @@ inline void GeneratePCMFormat(
         }
     }
 
-    if (X_BufferCache == xbnullptr) {
-        return;
+    if (X_BufferSizeRequest < DSBSIZE_MIN) {
+        X_BufferSizeRequest = DSBSIZE_MIN;
+    } else if (X_BufferSizeRequest > DSBSIZE_MAX) {
+        X_BufferSizeRequest = DSBSIZE_MAX;
+    }
+    if (X_BufferCache != nullptr) {
+        GenerateXboxBufferCache(pDSBufferDesc, dwEmuFlags, X_BufferSizeRequest, X_BufferCache, X_BufferCacheSize);
     }
 
-    // Generate xbox buffer cache size
-    // If the size is the same, don't realloc
-    if (*X_BufferCacheSize == X_BufferSizeRequest) {
-        return;
-    }
-    // Check if buffer cache exist, then copy over old ones.
-    if (*X_BufferCache != xbnullptr) {
-        LPVOID tempBuffer = *X_BufferCache;
-        *X_BufferCache = malloc(X_BufferSizeRequest);
-        memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, *X_BufferCacheSize);
-    } else {
-        *X_BufferCache = malloc(X_BufferSizeRequest);
-    }
-    *X_BufferCacheSize = X_BufferSizeRequest;
+    pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
 }
 
 inline void DSoundGenericUnlock(
@@ -503,21 +509,13 @@ inline void ResizeIDirectSoundBuffer(
     LPVOID                     &X_BufferCache,
     DWORD                      &X_BufferCacheSize)
 {
-    DWORD pcmSize = DSoundBufferGetPCMBufferSize(EmuFlags, Xbox_dwBytes);
-    if (Xbox_dwBytes == 0 || pcmSize == pDSBufferDesc->dwBufferBytes) {
+    if (Xbox_dwBytes == 0 || X_BufferCacheSize == Xbox_dwBytes) {
         return;
     }
-    DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pDSBufferDesc->dwBufferBytes, pcmSize);
 
-    pDSBufferDesc->dwBufferBytes = pcmSize;
+    GenerateXboxBufferCache(pDSBufferDesc, EmuFlags, Xbox_dwBytes, &X_BufferCache, X_BufferCacheSize);
 
-    LPVOID  X_tempBuffer = X_BufferCache;
-    X_BufferCache = malloc(Xbox_dwBytes);
-    if (X_tempBuffer != xbnullptr) {
-        memcpy_s(X_BufferCache, Xbox_dwBytes, X_tempBuffer, X_BufferCacheSize);
-        free(X_tempBuffer);
-    }
-    X_BufferCacheSize = Xbox_dwBytes;
+    pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(EmuFlags, X_BufferCacheSize);
 
     DSoundBufferReplace(pDSBuffer, pDSBufferDesc, PlayFlags, pDS3DBuffer);
 }
@@ -1023,10 +1021,10 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     enterCriticalSection;
 
     if (X_BufferAllocate) {
-        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, &X_BufferCache, &X_BufferCacheSize);
+        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
-        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, xbnullptr, xbnullptr);
+        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize);
     }
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
