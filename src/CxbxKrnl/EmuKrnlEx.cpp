@@ -64,16 +64,26 @@ namespace NtDll
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
 #pragma warning(default:4005)
 
-static xboxkrnl::RTL_CRITICAL_SECTION eeprom_crit_section;
+static CRITICAL_SECTION eeprom_crit_section;
 
-static xboxkrnl::PRTL_CRITICAL_SECTION get_eeprom_crit_section()
+static PCRITICAL_SECTION get_eeprom_crit_section()
 {
-    static xboxkrnl::PRTL_CRITICAL_SECTION crit_sec_ptr = NULL;
-    if(crit_sec_ptr == NULL) {
+    static PCRITICAL_SECTION crit_sec_ptr = nullptr;
+    if(crit_sec_ptr == nullptr) {
         crit_sec_ptr = &eeprom_crit_section;
-        RtlInitializeCriticalSection(crit_sec_ptr);
+		InitializeCriticalSectionAndSpinCount(crit_sec_ptr, 0x400);
     }
     return crit_sec_ptr;
+}
+
+void LockEeprom()
+{
+	EnterCriticalSection(get_eeprom_crit_section());
+}
+
+void UnlockEeprom()
+{
+	LeaveCriticalSection(get_eeprom_crit_section());
 }
 
 static bool section_does_not_require_checksum(
@@ -385,7 +395,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		LOG_FUNC_ARG_OUT(Value)
 		LOG_FUNC_ARG(ValueLength)
 		LOG_FUNC_ARG_OUT(ResultLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
 	void * value_addr = nullptr;
@@ -416,7 +426,9 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		if ((int)ValueLength >= result_length) {
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
+			// We temporarily bypass the problem of above we a host critical section
 			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
+			LockEeprom();
 			if(eeprom_data_is_valid(index)) {
 				// Set the output value type :
 				*Type = value_type;
@@ -429,6 +441,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 				Status = STATUS_DEVICE_DATA_ERROR;
 			}
 			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
+			UnlockEeprom();
 		}
 		else {
 			Status = STATUS_BUFFER_TOO_SMALL;
@@ -573,7 +586,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	IN  DWORD			   ValueIndex,
 	IN  DWORD			   Type,
 	IN  PVOID			   Value,
-	IN  SIZE_T			  ValueLength
+	IN  SIZE_T			   ValueLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -581,18 +594,19 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		LOG_FUNC_ARG(Type) // unused (see Note below)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(ValueLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS Status = STATUS_SUCCESS;
 	void * value_addr = nullptr;
 	DWORD result_length;
 
+	// Don't allow writing to the eeprom encrypted area
+	if (ValueIndex == XC_ENCRYPTED_SECTION)
+		RETURN(STATUS_OBJECT_NAME_NOT_FOUND);
+
 	// handle eeprom write
-	if (ValueIndex == XC_FACTORY_GAME_REGION) {
-		value_addr = &XboxFactoryGameRegion;
-		result_length = sizeof(ULONG);
-	}
-	else {
+	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
+	{
 		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
 		if (info != nullptr) {
 			value_addr = (void *)((PBYTE)EEPROM + info->value_offset);
@@ -600,26 +614,30 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		};
 	}
 
-	// TODO : Only allow writing to factory section contents when running
-	// in DEVKIT mode, otherwise, nil the info pointer.
 	if (value_addr != nullptr) {
 		// Note : Type could be verified against info->value_type here, but the orginal kernel doesn't even bother
 		if (ValueLength <= result_length) {
 			// FIXME - Entering the critical region causes an exception because
 			// the current thread returns as 0.
+			// We temporarily bypass the problem of above we a host critical section
 			//RtlEnterCriticalSectionAndRegion(get_eeprom_crit_section());
+			LockEeprom();
 
 			// Clear the emulated EEMPROM value :
 			memset(value_addr, 0, result_length);
 			// Copy the input value buffer into the emulated EEPROM value :
 			memcpy(value_addr, Value, ValueLength);
 
-			// TODO : When writing to the factory settings section (thus in DEVKIT
-			// mode), set XboxFactoryGameRegion to FactorySettings.GameRegion,
-			// so XC_FACTORY_GAME_REGION will reflect the factory settings.
+			if (ValueIndex == XC_FACTORY_GAME_REGION)
+			{
+				// Update the global XboxFactoryGameRegion
+
+				XboxFactoryGameRegion = *(xboxkrnl::PULONG)Value;
+			}
 
 			gen_section_CRCs(EEPROM);
 			//RtlLeaveCriticalSectionAndRegion(get_eeprom_crit_section());
+			UnlockEeprom();
 		}
 		else {
 			Status = STATUS_INVALID_PARAMETER;

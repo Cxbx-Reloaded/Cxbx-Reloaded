@@ -46,10 +46,17 @@ namespace xboxkrnl
 
 #include "Cxbx.h" // For DbgPrintf
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
+#include "..\CxbxKrnl\Emu.h" // For EmuWarning
+#include "..\..\src\devices\LED.h" // For SetLEDSequence
+#include "..\CxbxKrnl\CxbxKrnl.h"
 
 xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
-xboxkrnl::ULONG XboxFactoryGameRegion = 1; // = North America
+// Default value (NA), overwritten with the actual content in the eeprom by CxbxRestoreEEPROM
+xboxkrnl::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
+
+// Default eeprom key (all zeros). Used to calculate the checksum of the eeprom header and to encrypt it if desired
+UCHAR EepromKey[16] = { 0 };
 
 const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 {
@@ -129,7 +136,9 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		}
 	}
 
-	// TODO : Make sure EEPROM.bin is at least 256 bytes in size - FileSeek(hFileEEPROM, EEPROM_SIZE, soFromBeginning);
+	// Make sure EEPROM.bin is at least 256 bytes in size
+	SetFilePointer(hFileEEPROM, 256, nullptr, FILE_BEGIN);
+	SetEndOfFile(hFileEEPROM);
 
 	HANDLE hFileMappingEEPROM = CreateFileMapping(
 		hFileEEPROM,
@@ -141,6 +150,15 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	if (hFileMappingEEPROM == NULL)
 	{
 		DbgPrintf("INIT: Couldn't create EEPROM.bin file mapping!\n");
+		return nullptr;
+	}
+
+	LARGE_INTEGER  len_li;
+	GetFileSizeEx(hFileEEPROM, &len_li);
+	unsigned int FileSize = len_li.u.LowPart;
+	if (FileSize != 256)
+	{
+		CxbxKrnlCleanup("CxbxRestoreEEPROM : EEPROM.bin file is not 256 bytes large!\n");
 		return nullptr;
 	}
 
@@ -159,8 +177,6 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
     // Recalculates the checksum field for User and Factory settings each time
     // so that users do not need to delete their EEPROM.bin from older versions
     gen_section_CRCs(pEEPROM);
-
-	// TODO : Verify checksums
 
 	// Check for (and fix) invalid fields that were set by previous versions of Cxbx-Reloaded
 	// Without this, all users would have to delete their EEPROM.bin
@@ -185,15 +201,39 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
 
-		XboxFactoryGameRegion = 1; // = North America - TODO : This should be derived from EncryptedSection somehow
+		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
+
         // This must be done last to include all initialized data in the CRC
         gen_section_CRCs(pEEPROM);
 
 		DbgPrintf("INIT: Initialized default EEPROM\n");
 	}
 	else
+	{
+		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
 		DbgPrintf("INIT: Loaded EEPROM.bin\n");
+	}
+
+	// Update the existing Checksum if it is all zeros. Without this, all users would have to delete their EEPROM.bin
+	UCHAR Checksum[20] = { 0 };
+	if (!memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
+	{
+		xboxkrnl::XcHMAC(EepromKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20,
+			pEEPROM->EncryptedSettings.Checksum);
+	}
+	else
+	{
+		// Verify the checksum of the eeprom header
+		xboxkrnl::XcHMAC(EepromKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20, Checksum);
+		if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
+		{
+			// The checksums do not match. Log this error and flash the LED (red, off, red, off)
+			EmuWarning("Stored and calculated checksums don't match. Possible eeprom corruption");
+			SetLEDSequence(0xA0);
+		}
+	}
 
 	return pEEPROM;
 }
