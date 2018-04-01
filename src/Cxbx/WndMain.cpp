@@ -651,6 +651,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
+				case VK_F7:
+				{
+					// Try to open the dashboard xbe if none is opened yet :
+					if (!m_bIsStarted)
+					{
+						if (m_Xbe != nullptr) { CloseXbe(); }
+
+						OpenDashboard();
+					}
+				}
+				break;
+
 				case VK_F9:
 				{
 					// Try to open the most recent Xbe if none is opened yet :
@@ -714,6 +726,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_FILE_CLOSE_XBE:
 				CloseXbe();
 				break;
+
+
+			case ID_FILE_OPEN_DASHBOARD:
+			{
+				if (m_Xbe != nullptr) { CloseXbe(); }
+
+				OpenDashboard();
+			}
+			break;
 
 			case ID_FILE_SAVEXBEFILE:
 			{
@@ -1880,11 +1901,20 @@ void WndMain::OpenXbe(const char *x_filename)
 
     if(m_Xbe->HasError())
     {
-        MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+		// Save the error message as a separate string. This fixes a corruption in the message "Disclaimer: Cxbx-Reloaded has no
+		// affiliation with Microsoft" that would occour if loading an xbe and then launching the dashboard with the "Load dashboard"
+		// option but it's not installed
 
-        delete m_Xbe; m_Xbe = nullptr;
+		std::string ErrorMessage = m_Xbe->GetError();
+
+		delete m_Xbe; m_Xbe = nullptr;
+
+		RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+
+        MessageBox(m_hwnd, ErrorMessage.c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
         UpdateCaption();
+
         return;
     }
 
@@ -2011,6 +2041,13 @@ void WndMain::OpenMRU(int mru)
 	char *szFilename = (char*)((uint32)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
 
 	OpenXbe(szFilename);
+}
+
+// Open the dashboard xbe if found
+void WndMain::OpenDashboard()
+{
+	std::string DashboardPath = std::string(XTL::szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	OpenXbe(DashboardPath.c_str());
 }
 
 // save xbe file
