@@ -48,6 +48,7 @@ extern void EmuUpdateActiveTextureStages();
 #include <ctime>
 #include <unordered_map>
 #include <chrono>
+#include <algorithm>
 
 #define HASH_SEED 0
 
@@ -245,7 +246,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 		// Dxbx addition : Don't update pPatchDesc.dwVertexCount because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
-		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+		pStreamPatch->ConvertedStride = std::max((uint32_t)pStreamPatch->ConvertedStride, (uint32_t)uiStride); // ??
 		dwNewSize = uiVertexCount * pStreamPatch->ConvertedStride;
 
         pOrigData = (uint08*)GetDataFromXboxResource(pOrigVertexBuffer);
@@ -269,7 +270,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
         }
         uiStride  = pPatchDesc->uiXboxVertexStreamZeroStride;
-		pStreamPatch->ConvertedStride = max(pStreamPatch->ConvertedStride, uiStride); // ??
+		pStreamPatch->ConvertedStride = std::max((uint32_t)pStreamPatch->ConvertedStride, (uint32_t)uiStride); // ??
 		pOrigData = (uint08 *)pPatchDesc->pXboxVertexStreamZeroData;
 		uiLength = pPatchDesc->uiSize;
 		uiVertexCount = uiLength / uiStride;

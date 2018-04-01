@@ -37,6 +37,7 @@
 
 #define LOG_PREFIX "KRNL"
 
+#ifdef _DEBUG
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -453,3 +454,4 @@ LOGRENDER(UNICODE_STRING)
 }
 
 }; // end of namespace xboxkrnl;
+#endif

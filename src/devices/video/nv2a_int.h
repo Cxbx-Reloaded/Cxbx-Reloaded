@@ -692,6 +692,26 @@
 #define NV_PTIMER_TIME_1                                 0x00000410
 #define NV_PTIMER_ALARM_0                                0x00000420
 
+#define NV_PRMVIO_MISC__WRITE		0x000c03c2
+#define NV_PRMVIO_SRX			0x000c03c4
+#define NV_PRMVIO_SR			0x000c03c5
+#	define NV_VIO_SR_RESET_INDEX		0x00
+#	define NV_VIO_SR_CLOCK_INDEX		0x01
+#	define NV_VIO_SR_PLANE_MASK_INDEX	0x02
+#	define NV_VIO_SR_CHAR_MAP_INDEX		0x03
+#	define NV_VIO_SR_MEM_MODE_INDEX		0x04
+#define NV_PRMVIO_MISC__READ		0x000c03cc
+#define NV_PRMVIO_GRX			0x000c03ce
+#define NV_PRMVIO_GX			0x000c03cf
+#	define NV_VIO_GX_SR_INDEX		0x00
+#	define NV_VIO_GX_SREN_INDEX		0x01
+#	define NV_VIO_GX_CCOMP_INDEX		0x02
+#	define NV_VIO_GX_ROP_INDEX		0x03
+#	define NV_VIO_GX_READ_MAP_INDEX		0x04
+#	define NV_VIO_GX_MODE_INDEX		0x05
+#	define NV_VIO_GX_MISC_INDEX		0x06
+#	define NV_VIO_GX_DONT_CARE_INDEX	0x07
+#	define NV_VIO_GX_BIT_MASK_INDEX		0x08
 
 #define NV_PFB_DEBUG_0                                   0x00000080
 #define NV_PFB_CFG0                                      0x00000200
@@ -764,7 +784,133 @@
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_NVPLL_LOCK              (1 << 29)
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_MPLL_LOCK               (1 << 30)
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_VPLL_LOCK               (1 << 31)
+#define NV_PRAMDAC_GENERAL_CONTROL			0x00680600
+#	define NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON		(3 << 4)
+#	define NV_PRAMDAC_GENERAL_CONTROL_VGA_STATE_SEL		(1 << 8)
+#	define NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL		(1 << 12)
+#	define NV_PRAMDAC_GENERAL_CONTROL_TERMINATION_75OHM	(2 << 16)
+#	define NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS		(1 << 20)
+#	define NV_PRAMDAC_GENERAL_CONTROL_PIPE_LONG		(2 << 28)
 
+#define NV_PRMCIO_ARX			0x006013c0
+#define NV_PRMCIO_AR__WRITE		0x006013c0
+#define NV_PRMCIO_AR__READ		0x006013c1
+#	define NV_CIO_AR_MODE_INDEX		0x10
+#	define NV_CIO_AR_OSCAN_INDEX		0x11
+#	define NV_CIO_AR_PLANE_INDEX		0x12
+#	define NV_CIO_AR_HPP_INDEX		0x13
+#	define NV_CIO_AR_CSEL_INDEX		0x14
+#define NV_PRMCIO_INP0			0x006013c2
+#define NV_PRMCIO_CRX__COLOR		0x006013d4
+#define NV_PRMCIO_CR__COLOR		0x006013d5
+/* Standard VGA CRTC registers */
+#	define NV_CIO_CR_HDT_INDEX		0x00	/* horizontal display total */
+#	define NV_CIO_CR_HDE_INDEX		0x01	/* horizontal display end */
+#	define NV_CIO_CR_HBS_INDEX		0x02	/* horizontal blanking start */
+#	define NV_CIO_CR_HBE_INDEX		0x03	/* horizontal blanking end */
+#		define NV_CIO_CR_HBE_4_0		4:0
+#	define NV_CIO_CR_HRS_INDEX		0x04	/* horizontal retrace start */
+#	define NV_CIO_CR_HRE_INDEX		0x05	/* horizontal retrace end */
+#		define NV_CIO_CR_HRE_4_0		4:0
+#		define NV_CIO_CR_HRE_HBE_5		7:7
+#	define NV_CIO_CR_VDT_INDEX		0x06	/* vertical display total */
+#	define NV_CIO_CR_OVL_INDEX		0x07	/* overflow bits */
+#		define NV_CIO_CR_OVL_VDT_8		0:0
+#		define NV_CIO_CR_OVL_VDE_8		1:1
+#		define NV_CIO_CR_OVL_VRS_8		2:2
+#		define NV_CIO_CR_OVL_VBS_8		3:3
+#		define NV_CIO_CR_OVL_VDT_9		5:5
+#		define NV_CIO_CR_OVL_VDE_9		6:6
+#		define NV_CIO_CR_OVL_VRS_9		7:7
+#	define NV_CIO_CR_RSAL_INDEX		0x08	/* normally "preset row scan" */
+#	define NV_CIO_CR_CELL_HT_INDEX		0x09	/* cell height?! normally "max scan line" */
+#		define NV_CIO_CR_CELL_HT_VBS_9		5:5
+#		define NV_CIO_CR_CELL_HT_SCANDBL	7:7
+#	define NV_CIO_CR_CURS_ST_INDEX		0x0a	/* cursor start */
+#	define NV_CIO_CR_CURS_END_INDEX		0x0b	/* cursor end */
+#	define NV_CIO_CR_SA_HI_INDEX		0x0c	/* screen start address high */
+#	define NV_CIO_CR_SA_LO_INDEX		0x0d	/* screen start address low */
+#	define NV_CIO_CR_TCOFF_HI_INDEX		0x0e	/* cursor offset high */
+#	define NV_CIO_CR_TCOFF_LO_INDEX		0x0f	/* cursor offset low */
+#	define NV_CIO_CR_VRS_INDEX		0x10	/* vertical retrace start */
+#	define NV_CIO_CR_VRE_INDEX		0x11	/* vertical retrace end */
+#		define NV_CIO_CR_VRE_3_0		3:0
+#	define NV_CIO_CR_VDE_INDEX		0x12	/* vertical display end */
+#	define NV_CIO_CR_OFFSET_INDEX		0x13	/* sets screen pitch */
+#	define NV_CIO_CR_ULINE_INDEX		0x14	/* underline location */
+#	define NV_CIO_CR_VBS_INDEX		0x15	/* vertical blank start */
+#	define NV_CIO_CR_VBE_INDEX		0x16	/* vertical blank end */
+#	define NV_CIO_CR_MODE_INDEX		0x17	/* crtc mode control */
+#	define NV_CIO_CR_LCOMP_INDEX		0x18	/* line compare */
+/* Extended VGA CRTC registers */
+#	define NV_CIO_CRE_RPC0_INDEX		0x19	/* repaint control 0 */
+#		define NV_CIO_CRE_RPC0_OFFSET_10_8	7:5
+#	define NV_CIO_CRE_RPC1_INDEX		0x1a	/* repaint control 1 */
+#		define NV_CIO_CRE_RPC1_LARGE		2:2
+#	define NV_CIO_CRE_FF_INDEX		0x1b	/* fifo control */
+#	define NV_CIO_CRE_ENH_INDEX		0x1c	/* enhanced? */
+#	define NV_CIO_SR_LOCK_INDEX		0x1f	/* crtc lock */
+#		define NV_CIO_SR_UNLOCK_RW_VALUE	0x57
+#		define NV_CIO_SR_LOCK_VALUE		0x99
+#	define NV_CIO_CRE_FFLWM__INDEX		0x20	/* fifo low water mark */
+#	define NV_CIO_CRE_21			0x21	/* vga shadow crtc lock */
+#	define NV_CIO_CRE_LSR_INDEX		0x25	/* ? */
+#		define NV_CIO_CRE_LSR_VDT_10		0:0
+#		define NV_CIO_CRE_LSR_VDE_10		1:1
+#		define NV_CIO_CRE_LSR_VRS_10		2:2
+#		define NV_CIO_CRE_LSR_VBS_10		3:3
+#		define NV_CIO_CRE_LSR_HBE_6		4:4
+#	define NV_CIO_CR_ARX_INDEX		0x26	/* attribute index -- ro copy of 0x60.3c0 */
+#	define NV_CIO_CRE_CHIP_ID_INDEX		0x27	/* chip revision */
+#	define NV_CIO_CRE_PIXEL_INDEX		0x28
+#		define NV_CIO_CRE_PIXEL_FORMAT		1:0
+#	define NV_CIO_CRE_HEB__INDEX		0x2d	/* horizontal extra bits? */
+#		define NV_CIO_CRE_HEB_HDT_8		0:0
+#		define NV_CIO_CRE_HEB_HDE_8		1:1
+#		define NV_CIO_CRE_HEB_HBS_8		2:2
+#		define NV_CIO_CRE_HEB_HRS_8		3:3
+#		define NV_CIO_CRE_HEB_ILC_8		4:4
+#	define NV_CIO_CRE_2E			0x2e	/* some scratch or dummy reg to force writes to sink in */
+#	define NV_CIO_CRE_HCUR_ADDR2_INDEX	0x2f	/* cursor */
+#	define NV_CIO_CRE_HCUR_ADDR0_INDEX	0x30		/* pixmap */
+#		define NV_CIO_CRE_HCUR_ADDR0_ADR	6:0
+#		define NV_CIO_CRE_HCUR_ASI		7:7
+#	define NV_CIO_CRE_HCUR_ADDR1_INDEX	0x31			/* address */
+#		define NV_CIO_CRE_HCUR_ADDR1_ENABLE	0:0
+#		define NV_CIO_CRE_HCUR_ADDR1_CUR_DBL	1:1
+#		define NV_CIO_CRE_HCUR_ADDR1_ADR	7:2
+#	define NV_CIO_CRE_LCD__INDEX		0x33
+#		define NV_CIO_CRE_LCD_LCD_SELECT	0:0
+#	define NV_CIO_CRE_DDC0_STATUS__INDEX	0x36
+#	define NV_CIO_CRE_DDC0_WR__INDEX	0x37
+#	define NV_CIO_CRE_ILACE__INDEX		0x39	/* interlace */
+#	define NV_CIO_CRE_SCRATCH3__INDEX	0x3b
+#	define NV_CIO_CRE_SCRATCH4__INDEX	0x3c
+#	define NV_CIO_CRE_DDC_STATUS__INDEX	0x3e
+#	define NV_CIO_CRE_DDC_WR__INDEX		0x3f
+#	define NV_CIO_CRE_EBR_INDEX		0x41	/* extra bits ? (vertical) */
+#		define NV_CIO_CRE_EBR_VDT_11		0:0
+#		define NV_CIO_CRE_EBR_VDE_11		2:2
+#		define NV_CIO_CRE_EBR_VRS_11		4:4
+#		define NV_CIO_CRE_EBR_VBS_11		6:6
+#	define NV_CIO_CRE_43			0x43
+#	define NV_CIO_CRE_44			0x44	/* head control */
+#	define NV_CIO_CRE_CSB			0x45	/* colour saturation boost */
+#	define NV_CIO_CRE_RCR			0x46
+#		define NV_CIO_CRE_RCR_ENDIAN_BIG	7:7
+#	define NV_CIO_CRE_47			0x47	/* extended fifo lwm, used on nv30+ */
+#	define NV_CIO_CRE_49			0x49
+#	define NV_CIO_CRE_4B			0x4b	/* given patterns in 0x[2-3][a-c] regs, probably scratch 6 */
+#	define NV_CIO_CRE_TVOUT_LATENCY		0x52
+#	define NV_CIO_CRE_53			0x53	/* `fp_htiming' according to Haiku */
+#	define NV_CIO_CRE_54			0x54	/* `fp_vtiming' according to Haiku */
+#	define NV_CIO_CRE_57			0x57	/* index reg for cr58 */
+#	define NV_CIO_CRE_58			0x58	/* data reg for cr57 */
+#	define NV_CIO_CRE_59			0x59	/* related to on/off-chip-ness of digital outputs */
+#	define NV_CIO_CRE_5B			0x5B	/* newer colour saturation reg */
+#	define NV_CIO_CRE_85			0x85
+#	define NV_CIO_CRE_86			0x86
+#define NV_PRMCIO_INP0__COLOR		0x006013da
 
 #define NV_USER_DMA_PUT                                  0x40
 #define NV_USER_DMA_GET                                  0x44

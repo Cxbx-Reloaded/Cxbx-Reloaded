@@ -473,7 +473,10 @@ NTSTATUS CxbxObjectAttributesToNT(
 	}
 
 	// Pick up the ObjectName, and let's see what to make of it :
-	std::string ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
+	std::string ObjectName = "";
+	if (ObjectAttributes->ObjectName != NULL) {
+		ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
+	}
 	std::wstring RelativeHostPath;
 	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
 

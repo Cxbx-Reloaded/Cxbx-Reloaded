@@ -22,8 +22,9 @@
 #ifndef HW_NV2A_VSH_H
 #define HW_NV2A_VSH_H
 
+#include <stdbool.h>
 #include <stdint.h>
-#include <string>
+#include "qstring.h"
 
 enum VshLight {
     LIGHT_OFF,
@@ -136,7 +137,7 @@ void vsh_translate(uint16_t version,
                    const uint32_t *tokens,
                    unsigned int length,
                    bool z_perspective,
-                   std::string *header, std::string *body);
+                   QString *header, QString *body);
 
 
 #endif

@@ -38,6 +38,8 @@
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 
+#ifdef _DEBUG
+
 // prevent name collisions
 namespace XTL
 {
@@ -337,3 +339,5 @@ LOGRENDER(X_D3DPixelContainer)
 }
 
 }; // end of namespace XTL
+
+#endif

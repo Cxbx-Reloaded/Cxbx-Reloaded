@@ -1644,7 +1644,7 @@ void WndMain::RefreshMenus()
 
             // recent xbe files menu
             {
-                HMENU rxbe_menu = GetSubMenu(file_menu, 6);
+                HMENU rxbe_menu = GetSubMenu(file_menu, 7);
 
                 int max = m_dwRecentXbe;
                 for(int v=0;v<max;v++)
@@ -1810,7 +1810,7 @@ void WndMain::UpdateDebugConsoles()
 void WndMain::UpdateRecentFiles()
 {
     HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
-    HMENU RXbeMenu = GetSubMenu(FileMenu, 6);
+    HMENU RXbeMenu = GetSubMenu(FileMenu, 7);
 
     // clear existing menu items
     {
@@ -2032,7 +2032,7 @@ void WndMain::OpenMRU(int mru)
 {
 	HMENU menu = GetMenu(m_hwnd);
 	HMENU file_menu = GetSubMenu(menu, 0);
-	HMENU rxbe_menu = GetSubMenu(file_menu, 6);
+	HMENU rxbe_menu = GetSubMenu(file_menu, 7);
 
 	char szBuffer[270];
 

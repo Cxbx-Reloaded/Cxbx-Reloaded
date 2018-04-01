@@ -12,6 +12,8 @@
 #ifndef XBOXKRNL_PS_H
 #define XBOXKRNL_PS_H
 
+#define PsGetCurrentThread() (CONTAINING_RECORD((KeGetCurrentThread()),ETHREAD,Tcb))
+
 // ******************************************************************
 // * PsCreateSystemThread
 // ******************************************************************

@@ -18,26 +18,25 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+//#include "qemu-common.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
-
-#define stringify(x) xstringify(x)
-#define xstringify(x) #x
 
 #include "nv2a_debug.h"
 #include "nv2a_shaders_common.h"
 #include "nv2a_shaders.h"
 
-// fixme: clean this up (i'm a lazy bastard)
-#define qstring_append_fmt(str, ...) do { \
-    char buf[128]; \
-    snprintf(buf, sizeof(buf), __VA_ARGS__); \
-    str->append(buf); \
-} while (0) \
+#ifndef glue
+#define xglue(x, y) x ## y
+#define glue(x, y) xglue(x, y)
+#define stringify(s)	tostring(s)
+#define tostring(s)	#s
+#endif
 
-#define qstring_get_str(str) str->c_str()
-
-static std::string* generate_geometry_shader(
+static QString* generate_geometry_shader(
                                       enum ShaderPolygonMode polygon_front_mode,
                                       enum ShaderPolygonMode polygon_back_mode,
                                       enum ShaderPrimitiveMode primitive_mode,
@@ -179,11 +178,11 @@ static std::string* generate_geometry_shader(
     assert(layout_in);
     assert(layout_out);
     assert(body);
-    std::string* s = new std::string("#version 330\n"
+    QString* s = qstring_from_str("#version 330\n"
                                   "\n");
-    s->append(layout_in);
-    s->append(layout_out);
-    s->append("\n"
+    qstring_append(s, layout_in);
+    qstring_append(s, layout_out);
+    qstring_append(s, "\n"
                       STRUCT_VERTEX_DATA
                       "noperspective in VertexData v_vtx[];\n"
                       "noperspective out VertexData g_vtx;\n"
@@ -196,13 +195,13 @@ static std::string* generate_geometry_shader(
                       "}\n"
                       "\n"
                       "void main() {\n");
-    s->append(body);
-    s->append("}\n");
+    qstring_append(s, body);
+    qstring_append(s, "}\n");
 
     return s;
 }
 
-static void append_skinning_code(std::string* str, bool mix,
+static void append_skinning_code(QString* str, bool mix,
                                  unsigned int count, const char* type,
                                  const char* output, const char* input,
                                  const char* matrix, const char* swizzle)
@@ -228,7 +227,7 @@ static void append_skinning_code(std::string* str, bool mix,
             }
         } else {
             /* Individual matrices */
-			unsigned int i;
+            int i;
             for (i = 0; i < count; i++) {
                 char c = "xyzw"[i];
                 qstring_append_fmt(str, "%s += (%s * %s%d * weight.%c).%s;\n",
@@ -250,12 +249,13 @@ static void append_skinning_code(std::string* str, bool mix,
 #define GLSL_DEFINE(a, b) "#define " stringify(a) " " b "\n"
 
 static void generate_fixed_function(const ShaderState state,
-                                    std::string *header, std::string *body)
+                                    QString *header, QString *body)
 {
     int i, j;
 
     /* generate vertex shader mimicking fixed function */
-    header->append("#define position      v0\n"
+    qstring_append(header,
+"#define position      v0\n"
 "#define weight        v1\n"
 "#define normal        v2.xyz\n"
 "#define diffuse       v3\n"
@@ -365,7 +365,7 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
 
     /* Normalization */
     if (state.normalization) {
-        body->append("tNormal = normalize(tNormal);\n");
+        qstring_append(body, "tNormal = normalize(tNormal);\n");
     }
 
     /* Texgen */
@@ -394,11 +394,11 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 break;
             case TEXGEN_SPHERE_MAP:
                 assert(i < 2);  /* Channels S,T only! */
-                body->append("{\n");
+                qstring_append(body, "{\n");
                 /* FIXME: u, r and m only have to be calculated once */
-                body->append("  vec3 u = normalize(tPosition.xyz);\n");
+                qstring_append(body, "  vec3 u = normalize(tPosition.xyz);\n");
                 //FIXME: tNormal before or after normalization? Always normalize?
-                body->append("  vec3 r = reflect(u, tNormal);\n");
+                qstring_append(body, "  vec3 r = reflect(u, tNormal);\n");
 
                 /* FIXME: This would consume 1 division fewer and *might* be
                  *        faster than length:
@@ -407,21 +407,21 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                  *   float m = inversesqrt(dot(ro,ro))*0.5;
                  */
 
-                body->append("  float invM = 1.0 / (2.0 * length(r + vec3(0.0, 0.0, 1.0)));\n");
+                qstring_append(body, "  float invM = 1.0 / (2.0 * length(r + vec3(0.0, 0.0, 1.0)));\n");
                 qstring_append_fmt(body, "  oT%d.%c = r.%c * invM + 0.5;\n",
                                    i, c, c);
-                body->append("}\n");
+                qstring_append(body, "}\n");
                 assert(false); /* Untested */
                 break;
             case TEXGEN_REFLECTION_MAP:
                 assert(i < 3); /* Channels S,T,R only! */
-                body->append("{\n");
+                qstring_append(body, "{\n");
                 /* FIXME: u and r only have to be calculated once, can share the one from SPHERE_MAP */
-                body->append("  vec3 u = normalize(tPosition.xyz);\n");
-                body->append("  vec3 r = reflect(u, tNormal);\n");
+                qstring_append(body, "  vec3 u = normalize(tPosition.xyz);\n");
+                qstring_append(body, "  vec3 r = reflect(u, tNormal);\n");
                 qstring_append_fmt(body, "  oT%d.%c = r.%c;\n",
                                    i, c, c);
-                body->append("}\n");
+                qstring_append(body, "}\n");
                 break;
             case TEXGEN_NORMAL_MAP:
                 assert(i < 3); /* Channels S,T,R only! */
@@ -448,8 +448,8 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
     if (state.lighting) {
 
         //FIXME: Do 2 passes if we want 2 sided-lighting?
-        body->append("oD0 = vec4(sceneAmbientColor, diffuse.a);\n");
-        body->append("oD1 = vec4(0.0, 0.0, 0.0, specular.a);\n");
+        qstring_append(body, "oD0 = vec4(sceneAmbientColor, diffuse.a);\n");
+        qstring_append(body, "oD1 = vec4(0.0, 0.0, 0.0, specular.a);\n");
 
         for (i = 0; i < NV2A_MAX_LIGHTS; i++) {
             if (state.light[i] == LIGHT_OFF) {
@@ -530,17 +530,23 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 "  vec3 lightSpecular = lightSpecularColor(%d) * pf;\n",
                 i, i, i);
 
-            body->append("  oD0.xyz += lightAmbient;\n");
-            body->append("  oD0.xyz += diffuse.xyz * lightDiffuse;\n");
-            body->append("  oD1.xyz += specular.xyz * lightSpecular;\n");
-            body->append("}\n");
+            qstring_append(body,
+                "  oD0.xyz += lightAmbient;\n");
+
+            qstring_append(body,
+                "  oD0.xyz += diffuse.xyz * lightDiffuse;\n");
+
+            qstring_append(body,
+                "  oD1.xyz += specular.xyz * lightSpecular;\n");
+
+            qstring_append(body, "}\n");
         }
     } else {
-        body->append("  oD0 = diffuse;\n");
-        body->append("  oD1 = specular;\n");
+        qstring_append(body, "  oD0 = diffuse;\n");
+        qstring_append(body, "  oD1 = specular;\n");
     }
-    body->append("  oB0 = backDiffuse;\n");
-    body->append("  oB1 = backSpecular;\n");
+    qstring_append(body, "  oB0 = backDiffuse;\n");
+    qstring_append(body, "  oB1 = backSpecular;\n");
 
     /* Fog */
     if (state.fog_enable) {
@@ -549,20 +555,20 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
         switch(state.foggen) {
         case FOGGEN_SPEC_ALPHA:
             /* FIXME: Do we have to clamp here? */
-            body->append("  float fogDistance = clamp(specular.a, 0.0, 1.0);\n");
+            qstring_append(body, "  float fogDistance = clamp(specular.a, 0.0, 1.0);\n");
             break;
         case FOGGEN_RADIAL:
-            body->append("  float fogDistance = length(tPosition.xyz);\n");
+            qstring_append(body, "  float fogDistance = length(tPosition.xyz);\n");
             break;
         case FOGGEN_PLANAR:
         case FOGGEN_ABS_PLANAR:
-            body->append("  float fogDistance = dot(fogPlane.xyz, tPosition.xyz) + fogPlane.w;\n");
+            qstring_append(body, "  float fogDistance = dot(fogPlane.xyz, tPosition.xyz) + fogPlane.w;\n");
             if (state.foggen == FOGGEN_ABS_PLANAR) {
-                body->append("  fogDistance = abs(fogDistance);\n");
+                qstring_append(body, "  fogDistance = abs(fogDistance);\n");
             }
             break;
         case FOGGEN_FOG_X:
-            body->append("  float fogDistance = fogCoord;\n");
+            qstring_append(body, "  float fogDistance = fogCoord;\n");
             break;
         default:
             assert(false);
@@ -573,22 +579,22 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
 
     /* If skinning is off the composite matrix already includes the MV matrix */
     if (state.skinning == SKINNING_OFF) {
-        body->append("  tPosition = position;\n");
+        qstring_append(body, "  tPosition = position;\n");
     }
 
-    body->append(
-        "   oPos = invViewport * (tPosition * compositeMat);\n"
-        "   oPos.z = oPos.z * 2.0 - oPos.w;\n");
+    qstring_append(body,
+    "   oPos = invViewport * (tPosition * compositeMat);\n"
+    "   oPos.z = oPos.z * 2.0 - oPos.w;\n");
 
-    body->append("  vtx.inv_w = 1.0 / oPos.w;\n");
+    qstring_append(body, "  vtx.inv_w = 1.0 / oPos.w;\n");
 
 }
 
-static std::string *generate_vertex_shader(const ShaderState state,
+static QString *generate_vertex_shader(const ShaderState state,
                                        char vtx_prefix)
 {
     int i;
-    std::string *header = new std::string(
+    QString *header = qstring_from_str(
 "#version 330\n"
 "\n"
 "uniform vec2 clipRange;\n"
@@ -640,13 +646,13 @@ STRUCT_VERTEX_DATA);
                        vtx_prefix);
     qstring_append_fmt(header, "#define vtx %c_vtx\n",
                        vtx_prefix);
-    header->append("\n");
+    qstring_append(header, "\n");
     for(i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         qstring_append_fmt(header, "in vec4 v%d;\n", i);
     }
-    header->append("\n");
+    qstring_append(header, "\n");
 
-    std::string *body = new std::string("void main() {\n");
+    QString *body = qstring_from_str("void main() {\n");
 
     if (state.fixed_function) {
         generate_fixed_function(state, header, body);
@@ -673,7 +679,7 @@ STRUCT_VERTEX_DATA);
              *      state.vertex_program = true; state.foggen == FOGGEN_PLANAR
              *      but expects oFog.x as fogdistance?! Writes oFog.xyzw = v0.z
              */
-            body->append("  float fogDistance = oFog.x;\n");
+            qstring_append(body, "  float fogDistance = oFog.x;\n");
         }
 
         /* FIXME: Do this per pixel? */
@@ -687,8 +693,8 @@ STRUCT_VERTEX_DATA);
              *    fogParam[0] = 1 + end * fogParam[1];
              */
 
-            body->append("  float fogFactor = fogParam[0] + fogDistance * fogParam[1];\n");
-            body->append("  fogFactor -= 1.0;\n"); /* FIXME: WHHYYY?!! */
+            qstring_append(body, "  float fogFactor = fogParam[0] + fogDistance * fogParam[1];\n");
+            qstring_append(body, "  fogFactor -= 1.0;\n"); /* FIXME: WHHYYY?!! */
             break;
         case FOG_MODE_EXP:
         case FOG_MODE_EXP_ABS:
@@ -698,8 +704,8 @@ STRUCT_VERTEX_DATA);
              *    fogParam[0] = 1.5
              */
 
-            body->append("  float fogFactor = fogParam[0] + exp2(fogDistance * fogParam[1] * 16.0);\n");
-            body->append("  fogFactor -= 1.5;\n"); /* FIXME: WHHYYY?!! */
+            qstring_append(body, "  float fogFactor = fogParam[0] + exp2(fogDistance * fogParam[1] * 16.0);\n");
+            qstring_append(body, "  fogFactor -= 1.5;\n"); /* FIXME: WHHYYY?!! */
             break;
         case FOG_MODE_EXP2:
         case FOG_MODE_EXP2_ABS:
@@ -709,8 +715,8 @@ STRUCT_VERTEX_DATA);
              *    fogParam[0] = 1.5
              */
 
-            body->append("  float fogFactor = fogParam[0] + exp2(-fogDistance * fogDistance * fogParam[1] * fogParam[1] * 32.0);\n");
-            body->append("  fogFactor -= 1.5;\n"); /* FIXME: WHHYYY?!! */
+            qstring_append(body, "  float fogFactor = fogParam[0] + exp2(-fogDistance * fogDistance * fogParam[1] * fogParam[1] * 32.0);\n");
+            qstring_append(body, "  fogFactor -= 1.5;\n"); /* FIXME: WHHYYY?!! */
             break;
         default:
             assert(false);
@@ -721,21 +727,21 @@ STRUCT_VERTEX_DATA);
         case FOG_MODE_LINEAR_ABS:
         case FOG_MODE_EXP_ABS:
         case FOG_MODE_EXP2_ABS:
-            body->append("  fogFactor = abs(fogFactor);\n");
+            qstring_append(body, "  fogFactor = abs(fogFactor);\n");
             break;
         default:
             break;
         }
         /* FIXME: What about fog alpha?! */
-        body->append("  oFog.xyzw = vec4(fogFactor);\n");
+        qstring_append(body, "  oFog.xyzw = vec4(fogFactor);\n");
     } else {
         /* FIXME: Is the fog still calculated / passed somehow?!
          */
-        body->append("  oFog.xyzw = vec4(1.0);\n");
+        qstring_append(body, "  oFog.xyzw = vec4(1.0);\n");
     }
 
     /* Set outputs */
-    body->append("\n"
+    qstring_append(body, "\n"
                       "  vtx.D0 = clamp(oD0, 0.0, 1.0) * vtx.inv_w;\n"
                       "  vtx.D1 = clamp(oD1, 0.0, 1.0) * vtx.inv_w;\n"
                       "  vtx.B0 = clamp(oB0, 0.0, 1.0) * vtx.inv_w;\n"
@@ -752,9 +758,10 @@ STRUCT_VERTEX_DATA);
 
 
     /* Return combined header + source */
-    header->append(qstring_get_str(body));
-    delete body;
+    qstring_append(header, qstring_get_str(body));
+    QDECREF(body);
     return header;
+
 }
 
 static GLuint create_gl_shader(GLenum gl_shader_type,
@@ -803,7 +810,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
     /* Create an option geometry shader and find primitive type */
 
     GLenum gl_primitive_mode;
-    std::string* geometry_shader_code =
+    QString* geometry_shader_code =
         generate_geometry_shader(state.polygon_front_mode,
                                  state.polygon_back_mode,
                                  state.primitive_mode,
@@ -817,7 +824,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
                                                   "geometry shader");
         glAttachShader(program, geometry_shader);
 
-        delete geometry_shader_code;
+        QDECREF(geometry_shader_code);
 
         vtx_prefix = 'v';
     } else {
@@ -826,12 +833,12 @@ ShaderBinding* generate_shaders(const ShaderState state)
 
     /* create the vertex shader */
 
-    std::string *vertex_shader_code = generate_vertex_shader(state, vtx_prefix);
+    QString *vertex_shader_code = generate_vertex_shader(state, vtx_prefix);
     GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER,
                                             qstring_get_str(vertex_shader_code),
                                             "vertex shader");
     glAttachShader(program, vertex_shader);
-    delete vertex_shader_code;
+    QDECREF(vertex_shader_code);
 
 
     /* Bind attributes for vertices */
@@ -843,7 +850,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
 
     /* generate a fragment shader from register combiners */
 
-    std::string *fragment_shader_code = psh_translate(state.psh);
+    QString *fragment_shader_code = psh_translate(state.psh);
 
     const char *fragment_shader_code_str = qstring_get_str(fragment_shader_code);
 
@@ -852,7 +859,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
                                               "fragment shader");
     glAttachShader(program, fragment_shader);
 
-    delete fragment_shader_code;
+    QDECREF(fragment_shader_code);
 
 
     /* link the program */
@@ -889,7 +896,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
         abort();
     }
 
-    ShaderBinding* ret = (ShaderBinding*)calloc(1, sizeof(ShaderBinding));
+    ShaderBinding* ret = (ShaderBinding*)malloc(sizeof(ShaderBinding));
     ret->gl_program = program;
     ret->gl_primitive_mode = gl_primitive_mode;
 

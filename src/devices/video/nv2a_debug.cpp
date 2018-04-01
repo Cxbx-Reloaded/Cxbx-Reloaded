@@ -26,8 +26,6 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "gl/glextensions.h"
-
 void gl_debug_message(bool cc, const char *fmt, ...)
 {
     size_t n;
@@ -38,10 +36,14 @@ void gl_debug_message(bool cc, const char *fmt, ...)
     assert(n <= sizeof(buffer));
     va_end(ap);
 
+	// This requires OpenGL 4.3+, but we use 3.3..
+#if 0
     if(glDebugMessageInsert) {
         glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER,
                              0, GL_DEBUG_SEVERITY_NOTIFICATION, n, buffer);
     }
+#endif
+
     if (cc) {
         fwrite(buffer, sizeof(char), n, stdout);
         fputc('\n', stdout);
@@ -61,9 +63,11 @@ void gl_debug_group_begin(const char *fmt, ...)
     /* Check for errors before entering group */
     assert(glGetError() == GL_NO_ERROR);
 
+#if 0
     if (glPushDebugGroup) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, n, buffer);
     }
+#endif
 }
 
 void gl_debug_group_end(void)
@@ -71,9 +75,11 @@ void gl_debug_group_end(void)
     /* Check for errors when leaving group */
     assert(glGetError() == GL_NO_ERROR);
 
+#if 0
     if (glPopDebugGroup) {
         glPopDebugGroup();
     }
+#endif
 }
 
 void gl_debug_label(GLenum target, GLuint name, const char *fmt, ...)
@@ -86,9 +92,11 @@ void gl_debug_label(GLenum target, GLuint name, const char *fmt, ...)
     assert(n <= sizeof(buffer));
     va_end(ap);
 
+#if 0
     if (glObjectLabel) {
         glObjectLabel(target, name, n, buffer);
     }
+#endif
 }
 
 #endif
