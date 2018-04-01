@@ -24,9 +24,6 @@
 
 #include "crc32c.h"
 #include <intrin.h>
-
-#define NOMINMAX
-
 #include <algorithm>
 
 #define POLY 0x82f63b78
