@@ -145,6 +145,11 @@ inline void GenerateXboxBufferCache(
         if (*X_BufferCache != xbnullptr) {
             LPVOID tempBuffer = *X_BufferCache;
             *X_BufferCache = malloc(X_BufferSizeRequest);
+
+            // Don't copy over the limit.
+            if (X_BufferCacheSize > X_BufferSizeRequest) {
+                X_BufferCacheSize = X_BufferSizeRequest;
+            }
             memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, X_BufferCacheSize);
         } else {
             *X_BufferCache = malloc(X_BufferSizeRequest);
@@ -544,6 +549,28 @@ inline void DSoundStreamWriteToBuffer(
     }
 }
 
+inline void DSoundStreamClearPacket(
+    XTL::host_voice_packet* buffer,
+    DWORD                   status,
+    XTL::LPFNXMOCALLBACK    Xb_lpfnCallback,
+    LPVOID                  Xb_lpvContext,
+    DWORD                   EmuFlags) {
+
+    free(buffer->pBuffer_data);
+    if (buffer->xmp_data.pdwStatus != xbnullptr) {
+        (*buffer->xmp_data.pdwStatus) = status;
+    }
+    if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
+        (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(EmuFlags, buffer->xmp_data.dwMaxSize);
+    }
+    // If a callback is set, only do the callback instead of event handle.
+    if (Xb_lpfnCallback != xbnullptr) {
+        Xb_lpfnCallback(Xb_lpvContext, buffer->xmp_data.pContext, status);
+    } else if (buffer->xmp_data.hCompletionEvent != 0) {
+        SetEvent(buffer->xmp_data.hCompletionEvent);
+    }
+}
+
 // Generic force remove synch playback control flag.
 inline void DSoundBufferRemoveSynchPlaybackFlag(
     DWORD                  &dwEmuFlags
@@ -694,7 +721,8 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     DWORD                   dwPause,
     DWORD                  &dwEmuFlags,
-    DWORD                   dwEmuPlayFlags)
+    DWORD                   dwEmuPlayFlags,
+    bool                    triggerPlayPermission)
 {
 
     enterCriticalSection;
@@ -703,9 +731,11 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     HRESULT hRet = DS_OK, hStatus;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
-            pDSBuffer->Play(0, 0, dwEmuPlayFlags);
+            if (triggerPlayPermission) {
+                pDSBuffer->Play(0, 0, dwEmuPlayFlags);
+            }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
-            dwEmuFlags ^= DSB_FLAG_PAUSE;
+            dwEmuFlags &= ~DSB_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_PAUSE:
             hStatus = pDSBuffer->GetStatus(&dwStatus);

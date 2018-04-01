@@ -508,7 +508,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                 // Debug area end
 
                 if (pThis->Host_isProcessing == false) {
-                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(buffer->rangeStart);
                     pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
                     pThis->Host_isProcessing = true;
                 }
@@ -531,22 +531,12 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             buffer->isPlayed = true;
                         }
                         if (bufPlayed >= (int)buffer->xmp_data.dwMaxSize) {
-                            free(buffer->pBuffer_data);
-                            if (buffer->xmp_data.pdwStatus != xbnullptr) {
-                                (*buffer->xmp_data.pdwStatus) = XMP_STATUS_SUCCESS;
-                            }
-                            if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
-                                (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, buffer->xmp_data.dwMaxSize);
-                            }
-                            // If a callback is set, only do the callback instead of event handle.
-                            if (pThis->Xb_lpfnCallback != xbnullptr) {
-                                pThis->Xb_lpfnCallback(pThis->Xb_lpvContext, buffer->xmp_data.pContext, XMP_STATUS_SUCCESS);
-                            } else if (buffer->xmp_data.hCompletionEvent != 0) {
-                                SetEvent(buffer->xmp_data.hCompletionEvent);
-                            }
+
+                            DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
+
                             buffer = pThis->Host_BufferPacketArray.erase(buffer);
                             if (pThis->Host_BufferPacketArray.size() == 0) {
-                                continue;
+                                goto endOfPacket;
                             }
                             if (buffer->isWritten == false) {
                                 goto prepareNextBufferPacket;
@@ -562,6 +552,13 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             }
                         }
                     }
+                }
+                // Out of packets, let's stop it.
+                if (pThis->Host_BufferPacketArray.size() == 0) {
+
+                endOfPacket:
+                    pThis->Host_isProcessing = false;
+                    pThis->EmuDirectSoundBuffer8->Stop();
                 }
             }
         }
@@ -2097,26 +2094,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
-    // Don't process if stream is paused.
-    if ((pThis->EmuFlags & DSB_FLAG_PAUSE) == 0 && pThis->Host_isProcessing) {
 
-        host_voice_packet packetSilence;
-        packetSilence.xmp_data = { 0 };
-        packetSilence.xmp_data.dwMaxSize = pThis->Host_dwTriggerRange;
-        packetSilence.pBuffer_data = malloc(packetSilence.xmp_data.dwMaxSize);
-        memset(packetSilence.pBuffer_data, 0, packetSilence.xmp_data.dwMaxSize);
-        packetSilence.rangeStart = pThis->Host_dwWriteOffsetNext;
-        packetSilence.isPlayed = false;
-        packetSilence.isWritten = false;
-        pThis->Host_BufferPacketArray.push_back(packetSilence);
-        do {
-            XTL::EMUPATCH(DirectSoundDoWork)();
-        } while (pThis->Host_BufferPacketArray.size() > 1);
+    pThis->EmuDirectSoundBuffer8->Stop();
+    pThis->Host_isProcessing = false;
 
-        pThis->EmuDirectSoundBuffer8->Stop();
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
+        buffer = pThis->Host_BufferPacketArray.erase(buffer);
     }
-
-    pThis->Host_BufferPacketArray.clear();
 
     leaveCriticalSection;
 
@@ -2184,7 +2169,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
 }
 
 // ******************************************************************
@@ -2970,7 +2955,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
                         pThis->X_lock.dwLockBytes1,
                         pThis->X_lock.dwLockBytes2);
 
-    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
+    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
 }
 
 // ******************************************************************
@@ -2995,7 +2980,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
     // This function wasn't part of the XDK until 4721.
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
 
     leaveCriticalSection;
 
@@ -4011,7 +3996,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
 
     leaveCriticalSection;
 
