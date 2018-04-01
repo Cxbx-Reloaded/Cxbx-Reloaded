@@ -38,7 +38,7 @@
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 
-#ifdef DEBUG
+#ifdef _DEBUG
 
 // prevent name collisions
 namespace XTL
