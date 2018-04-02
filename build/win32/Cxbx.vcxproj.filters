@@ -448,6 +448,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.OOVPA.h">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
@@ -641,6 +644,51 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl">
       <Filter>HLEDatabase\D3D8</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.OOVPA.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.3911.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4039.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4432.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4531.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4627.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4721.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.4928.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5028.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5120.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5233.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5344.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5455.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5788.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl">
+      <Filter>HLEDatabase\D3D8LTCG</Filter>
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.OOVPA.inl">
       <Filter>HLEDatabase\DSound</Filter>
@@ -889,6 +937,9 @@
     </Filter>
     <Filter Include="HLEDatabase\D3D8">
       <UniqueIdentifier>{e78a3cc3-abce-4577-90aa-b7535bb09768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HLEDatabase\D3D8LTCG">
+      <UniqueIdentifier>{633e29cb-0dd7-4a02-80fc-dfa26c0503b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="HLEDatabase\DSound">
       <UniqueIdentifier>{a942f43a-b405-4c5d-85cd-ffc84b66ad3f}</UniqueIdentifier>

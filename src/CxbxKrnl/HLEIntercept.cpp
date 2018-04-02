@@ -390,13 +390,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				if (strcmp(LibraryName.c_str(), Lib_D3D8LTCG) == 0)
 				{
-					// If LLE GPU is not enabled, show a warning that the title is not supported
-					if (!bLLE_GPU) {
-						CxbxKrnlCleanup("LTCG Title Detected: This game is not supported by HLE");
-					}
-
-					// Skip LTCG libraries as we cannot reliably detect them
+					// Skip LTCG libraries symbols when LLE GPU is selected
+					if (bLLE_GPU)
 					continue;
+
+					// Functions in this library were updated by June 2003 XDK (5558) with Integrated Hotfixes,
+					// However August 2003 XDK (5659) still uses the old function.
+					// Please use updated 5788 instead.
+					if (BuildVersion >= 5558 && BuildVersion <=5659 && QFEVersion > 1) {
+						EmuWarning("D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
+						BuildVersion = 5788;
+					}
 				}
 
 				if (strcmp(LibraryName.c_str(), Lib_D3D8) == 0)
@@ -590,6 +594,251 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             if (BuildVersion >= 4034) {
                                 OOVPA_version = 4034;
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4034, lower, upper);
+                            } else {
+                                OOVPA_version = 3911;
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_3911, lower, upper);
+                                iCodeOffsetFor_g_Stream = 0x23; // verified for 3911
+                            }
+
+                            if (pFunc != NULL) {
+                                printf("HLE: Located 0x%.08X -> D3DDevice_SetStreamSource_%d\n", pFunc, OOVPA_version);
+
+                                // Read address of Xbox_g_Stream from D3DDevice_SetStreamSource
+                                xbaddr Derived_g_Stream = *((xbaddr*)(pFunc + iCodeOffsetFor_g_Stream));
+
+                                // Temporary verification - is XREF_G_STREAM derived correctly?
+                                // TODO : Remove this when XREF_G_STREAM derivation is deemed stable
+                                VerifySymbolAddressAgainstXRef("g_Stream", Derived_g_Stream, XREF_G_STREAM);
+
+                                // Now that both Derived XREF and OOVPA-based function-contents match,
+                                // correct base-address (because "g_Stream" is actually "g_Stream"+8") :
+                                Derived_g_Stream -= offsetof(XTL::X_Stream, pVertexBuffer);
+                                g_SymbolAddresses["g_Stream"] = (xbaddr)Derived_g_Stream;
+                                printf("HLE: Derived 0x%.08X -> g_Stream\n", Derived_g_Stream);
+                            }
+                        }
+                    } else if (strcmp(LibraryName.c_str(), Lib_D3D8LTCG) == 0) {
+						int pXRefOffset = 0; // TODO : Rename into something understandable
+						// Save D3D8 build version
+						g_BuildVersion = BuildVersion;
+
+						xbaddr lower = pXbeHeader->dwBaseAddr;
+						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+						xbaddr pFunc = (xbaddr)nullptr;
+
+                        // Lib_D3D8LTCG
+                        {
+							pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1045, lower, upper);
+							pXRefOffset = 0x2D; // verified for 3925
+							if(pFunc == (xbaddr)nullptr) {
+								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1049, lower, upper);
+								pXRefOffset = 0x31; // verified for 4039
+							}
+							if(pFunc == (xbaddr)nullptr) {
+								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1052, lower, upper);
+								pXRefOffset = 0x34;
+							}
+							if(pFunc == (xbaddr)nullptr) {
+								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1053, lower, upper);
+								pXRefOffset = 0x35;
+							}
+                        }
+                        // locate D3DDeferredRenderState
+                        if(pFunc != (xbaddr)nullptr)
+                        {
+                            // offset for stencil cull enable render state in the deferred render state buffer
+							xbaddr DerivedAddr_D3DRS_CULLMODE = NULL;
+							int Decrement = 0; // TODO : Rename into something understandable
+							int Increment = 0; // TODO : Rename into something understandable
+                            int patchOffset = 0; // TODO : Rename into something understandable
+
+							// Read address of D3DRS_CULLMODE from D3DDevice_SetRenderState_CullMode
+							// TODO : Simplify this when XREF_D3D_RenderState_CullMode derivation is deemed stable
+							{
+								if (BuildVersion < 4034) {
+									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + pXRefOffset);
+									Decrement = 0x1FC;  // TODO: Clean up (?)
+									Increment = 82 * 4;
+									patchOffset = 140 * 4; // Verified 3925 and 3948
+
+									//Decrement = 0x19F;  // TODO: Clean up (?)
+									//Increment = 72 * 4;
+									//patchOffset = 142*4; // TODO: Verify
+								} else if (BuildVersion <= 4361) {
+									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + pXRefOffset);
+									Decrement = 0x200;
+									Increment = 82 * 4;
+									patchOffset = 142 * 4;
+								} else if (BuildVersion < 4627) {
+									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + pXRefOffset);
+									Decrement = 0x204;
+									Increment = 83 * 4;
+									patchOffset = 143 * 4;
+								} else { // 4627-5933
+									// NOTE: LTCG 5849 (Burnout 3(pFunc + 0x34), Black(pFunc + 0x35))
+									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + pXRefOffset);
+									Decrement = 0x24C;
+									Increment = 92 * 4;
+									patchOffset = 162 * 4;
+								}
+
+								// Temporary verification - is XREF_D3DDEVICE derived correctly?
+								xbaddr DerivedAddr_D3DDevice = *(xbaddr*)((xbaddr)pFunc + 0x03);
+								if (XRefDataBase[XREF_D3DDEVICE] != DerivedAddr_D3DDevice) {
+									if (XRefDataBase[XREF_D3DDEVICE] != XREF_ADDR_DERIVE)
+										EmuWarning("Second derived XREF_D3DDEVICE differs from first!");
+
+									XRefDataBase[XREF_D3DDEVICE] = DerivedAddr_D3DDevice;
+								}
+
+								g_SymbolAddresses["D3DDEVICE"] = DerivedAddr_D3DDevice;
+
+								// Temporary verification - is XREF_D3DRS_CULLMODE derived correctly?
+								if (XRefDataBase[XREF_D3DRS_CULLMODE] != DerivedAddr_D3DRS_CULLMODE)
+								{
+									if (XRefDataBase[XREF_D3DRS_CULLMODE] != XREF_ADDR_DERIVE)
+										CxbxPopupMessage("Second derived XREF_D3DRS_CULLMODE differs from first!");
+
+									XRefDataBase[XREF_D3DRS_CULLMODE] = DerivedAddr_D3DRS_CULLMODE;
+								}
+							}
+
+							// Derive address of EmuD3DDeferredRenderState from D3DRS_CULLMODE
+							XTL::EmuD3DDeferredRenderState = (DWORD*)(DerivedAddr_D3DRS_CULLMODE - Decrement + Increment);
+							patchOffset -= Increment;
+
+							// Derive address of a few other deferred render state slots (to help xref-based function location)
+                            // XRefDataBase[XREF_D3DRS_PSTEXTUREMODES]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 11*4; // 0220
+                            // XRefDataBase[XREF_D3DRS_VERTEXBLEND]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 10*4; // 0224
+                            // XRefDataBase[XREF_D3DRS_FOGCOLOR]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 9*4; // 0228
+                            XRefDataBase[XREF_D3DRS_FILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 8*4; // 022C
+                            XRefDataBase[XREF_D3DRS_BACKFILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 7*4; // 0230
+                            XRefDataBase[XREF_D3DRS_TWOSIDEDLIGHTING]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 6*4; // 0234
+                            // XRefDataBase[XREF_D3DRS_NORMALIZENORMALS]        = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 5*4; // 0238
+                            // XRefDataBase[XREF_D3DRS_ZENABLE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 4*4; // 023C
+                            // XRefDataBase[XREF_D3DRS_STENCILENABLE]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 3*4; // 0240
+                            // XRefDataBase[XREF_D3DRS_STENCILFAIL]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 2*4; // 0244
+                            // XRefDataBase[XREF_D3DRS_FRONTFACE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 1*4; // 0248
+                            // XRefDataBase[XREF_D3DRS_CULLMODE]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 0*4; // 024C
+                            // XRefDataBase[XREF_D3DRS_TEXTUREFACTOR]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 1*4; // 0250
+                            XRefDataBase[XREF_D3DRS_ZBIAS]                 = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 2*4; // 0254
+                            XRefDataBase[XREF_D3DRS_LOGICOP]               = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 3*4; // 0258
+                            // XRefDataBase[XREF_D3DRS_EDGEANTIALIAS]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 4*4; // 025C
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEANTIALIAS]  = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 5*4; // 0260
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMASK]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 6*4; // 0264
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 7*4; // 0268
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 8*4; // 026C
+                            // XRefDataBase[XREF_D3DRS_SHADOWFUNC]            = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 9*4; // 0270
+                            // XRefDataBase[XREF_D3DRS_LINEWIDTH]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 10*4; // 0274
+
+                            if (BuildVersion >= 4627 && BuildVersion <= 5933) // Add XDK 4627
+                                XRefDataBase[XREF_D3DRS_SAMPLEALPHA]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 11*4; // 0278
+                            
+                            XRefDataBase[XREF_D3DRS_DXT1NOISEENABLE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 3*4; // 027C
+                            XRefDataBase[XREF_D3DRS_YUVENABLE]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 2*4; // 0280
+                            XRefDataBase[XREF_D3DRS_OCCLUSIONCULLENABLE]   = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 1*4; // 0284
+                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4; // RenderState+648(RenderState+0288)
+                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4; // 028C
+                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4; // 0290
+                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4; // 0294
+
+                            for(int v=0;v<44;v++) {
+                                XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
+                            }
+
+							g_SymbolAddresses["D3DDeferredRenderState"] = (DWORD)XTL::EmuD3DDeferredRenderState;
+							printf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
+							printf("HLE: 0x%.08X -> DerivedAddr_D3DRS_CULLMODE\n", XRefDataBase[XREF_D3DRS_CULLMODE] );
+							printf("HLE: 0x%.08X -> DerivedAddr_D3DDevice\n", XRefDataBase[XREF_D3DDEVICE] );
+						} else {
+                            XTL::EmuD3DDeferredRenderState = nullptr;
+                            EmuWarning("EmuD3DDeferredRenderState was not found!\n");
+                        }
+
+                        // locate D3DDeferredTextureState
+                        {
+                            pFunc = (xbaddr)nullptr;
+
+							{ // verified for 3925
+								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_0_2039, lower, upper);
+								pXRefOffset = 0x08;
+								if (pFunc == (xbaddr)nullptr) { // verified for 4039
+									pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4_2040, lower, upper);
+									pXRefOffset = 0x14;
+								}
+								if (pFunc == (xbaddr)nullptr) { // verified for 4432
+									pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1944, lower, upper);
+									pXRefOffset = 0x19;
+								}
+								if (pFunc == (xbaddr)nullptr) { // verified for 4531
+									pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4_2045, lower, upper);
+									pXRefOffset = 0x14;
+								}
+								if (pFunc == (xbaddr)nullptr) { // verified for 4627 and higher
+									pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4_2058, lower, upper);
+									pXRefOffset = 0x14;
+								}
+								if (pFunc == (xbaddr)nullptr) { // verified for 4627 and higher
+									pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1958, lower, upper);
+									pXRefOffset = 0x19;
+								}
+							}
+
+							if (pFunc != (xbaddr)nullptr) {
+								xbaddr DerivedAddr_D3DTSS_TEXCOORDINDEX = NULL;
+								int Decrement = 0x70; // TODO : Rename into something understandable
+
+								// TODO : Remove this when XREF_D3D_TextureState_TexCoordIndex derivation is deemed stable
+								{
+									//if (BuildVersion >= 3911 && BuildVersion < 4034)
+									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x11);
+									//else if (BuildVersion >= 4034 && BuildVersion < 4242)
+									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x18);
+									//else
+									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x19);
+									DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + pXRefOffset);
+
+									// Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
+									if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != DerivedAddr_D3DTSS_TEXCOORDINDEX) {
+										if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != XREF_ADDR_DERIVE)
+											CxbxPopupMessage("Second derived XREF_D3DTSS_TEXCOORDINDEX differs from first!");
+
+									//	XRefDataBase[XREF_D3DTSS_BUMPENV] = DerivedAddr_D3DTSS_TEXCOORDINDEX - 28*4; // _D3D__TextureState+0000
+										XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = DerivedAddr_D3DTSS_TEXCOORDINDEX; // _D3D__TextureState+0070
+									//	XRefDataBase[XREF_D3DTSS_BORDERCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 1*4; // _D3D__TextureState+0074
+									//	XRefDataBase[XREF_D3DTSS_COLORKEYCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 2*4; // _D3D__TextureState+0078
+
+                                     // XRefDataBase[XREF_D3DTSS_BORDERCOLOR]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 133*4; //074
+                                     // XRefDataBase[XREF_D3DTSS_COLORKEYCOLOR]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 132*4; //078
+									}
+								}
+
+								XTL::EmuD3DDeferredTextureState = (DWORD*)(DerivedAddr_D3DTSS_TEXCOORDINDEX - Decrement);
+
+								for(int s=0;s<4;s++) {
+                                    for(int v=0;v<32;v++) {
+                                        XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
+                                    }
+                                }
+
+								g_SymbolAddresses["D3DDeferredTextureState"] = (DWORD)XTL::EmuD3DDeferredTextureState;
+								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
+                            } else {
+                                XTL::EmuD3DDeferredTextureState = nullptr;
+                                EmuWarning("EmuD3DDeferredTextureState was not found!\n");
+                            }
+                        }
+
+                        // Locate Xbox symbol "g_Stream" and store it's address
+                        {
+                            xbaddr pFunc = NULL;
+                            int OOVPA_version;
+                            int iCodeOffsetFor_g_Stream = 0x22; // verified for 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
+
+                            if (BuildVersion >= 4034) {
+                                OOVPA_version = 4034; // TODO Verify
+                                //pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4034, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1024, lower, upper);
                             } else {
                                 OOVPA_version = 3911;
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_3911, lower, upper);
