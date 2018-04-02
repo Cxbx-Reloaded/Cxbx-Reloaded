@@ -53,12 +53,9 @@
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
-#define STBI_ONLY_JPEG
-#define STBI_NO_LINEAR
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 static int gameLogoWidth, gameLogoHeight;
+static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
@@ -399,7 +396,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 HDC hDC = GetDC(hwnd);
 
-                m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
+                m_SplashBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
 				// create Xbox LED bitmap
 				{
@@ -418,62 +415,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					DrawLedBitmap(hwnd, true);
 				}
 
-                // decompress jpeg, convert to bitmap resource
-                {
-                    HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG");
-                    HGLOBAL hRes = LoadResource(NULL, hSrc);
-
-                    uint08 *jpgData = (uint08*)LockResource(hRes);
-                    uint32 jpgFileSize = SizeofResource(NULL, hSrc);
-                    uint32 bmpFileSize = 0;
-                    uint32 bmpWidth = 0;
-                    uint32 bmpHeight = 0;
-
-                    uint08 *bmpBuff = reinterpret_cast<uint08*>
-                    (
-                        stbi_load_from_memory
-                        (
-                            reinterpret_cast<const stbi_uc*>(jpgData),
-                            static_cast<int>(jpgFileSize),
-                            reinterpret_cast<int*>(&bmpWidth),
-                            reinterpret_cast<int*>(&bmpHeight),
-                            nullptr,
-                            STBI_rgb
-                        )
-                    );
-
-                    // create bitmap
-                    {
-                        BITMAPINFO BmpInfo;
-
-                        BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
-                        BmpInfo.bmiHeader.biWidth         = bmpWidth;
-                        BmpInfo.bmiHeader.biHeight        = 0 - (long)bmpHeight;
-                        BmpInfo.bmiHeader.biPlanes        = 1;
-                        BmpInfo.bmiHeader.biBitCount      = 24;
-                        BmpInfo.bmiHeader.biCompression   = BI_RGB;
-                        BmpInfo.bmiHeader.biSizeImage     = 0;
-                        BmpInfo.bmiHeader.biXPelsPerMeter = 0;
-                        BmpInfo.bmiHeader.biYPelsPerMeter = 0;
-                        BmpInfo.bmiHeader.biClrUsed       = 0;
-                        BmpInfo.bmiHeader.biClrImportant  = 0;
-
-                        SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
-                    }
-					
-                    stbi_image_free(bmpBuff);
-
-                    FreeResource(hRes);
-                    UnlockResource(hRes);
-                }
+                splashLogoWidth = 500;
+                splashLogoHeight = 113;
+                m_SplashBmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDR_JPEG_SPLASH), IMAGE_BITMAP, 0, 0, 0);
 
                 m_LogoBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, 0);
 
-                m_BackDC   = CreateCompatibleDC(hDC);
+                m_SplashDC   = CreateCompatibleDC(hDC);
                 m_LogoDC   = CreateCompatibleDC(hDC);
 				
-                m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
+                m_OrigBmp  = (HBITMAP)SelectObject(m_SplashDC, m_SplashBmp);
                 m_OrigLogo = (HBITMAP)SelectObject(m_LogoDC, m_LogoBmp);
+
+                m_BackgroundColor = CreateSolidBrush(RGB(48, 48, 48));
 
                 if(hDC != NULL)
                     ReleaseDC(hwnd, hDC);
@@ -589,7 +543,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
-                BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
+                RECT bkRect = ps.rcPaint;
+
+                bkRect.bottom -= nLogoBmpH + 10;
+
+                FillRect(hDC, &bkRect, m_BackgroundColor);
+
+                bkRect.top = bkRect.bottom;
+                bkRect.bottom += nLogoBmpH + 10;
+
+                FillRect(hDC, &bkRect, m_Brushes[0]);
+
+                BitBlt(hDC, m_w/2 - splashLogoWidth/2, m_h/2 - splashLogoHeight, splashLogoWidth, splashLogoHeight, m_SplashDC, 0, 0, SRCCOPY);
 
 				BitBlt(hDC, m_w - gameLogoWidth - 3, m_h - nLogoBmpH - 12 - gameLogoHeight, gameLogoWidth, gameLogoHeight, m_GameLogoDC, 0, 0, SRCCOPY);
 
@@ -1361,7 +1326,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			SelectObject(m_LogoDC, m_OrigLogo);
 
-			SelectObject(m_BackDC, m_OrigBmp);
+			SelectObject(m_SplashDC, m_OrigBmp);
 
 			SelectObject(m_GameLogoDC, m_OrigGameLogo);
 
@@ -1369,7 +1334,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			DeleteObject(m_LogoDC);
 
-			DeleteObject(m_BackDC);
+			DeleteObject(m_SplashDC);
 
 			DeleteObject(m_GameLogoDC);
 
@@ -1377,7 +1342,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			DeleteObject(m_LogoBmp);
 
-			DeleteObject(m_BackBmp);
+			DeleteObject(m_SplashBmp);
+
+            DeleteObject(m_BackgroundColor);
 
 			DeleteObject(m_GameLogoBMP);
 
