@@ -378,8 +378,6 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 
 void NV2ADevice::SwapBuffers(NV2AState *d)
 {
-	// TODO: Use source framebuffer size from Display Mode, use destination size from Window size
-	// Currently, both are hardcoded to 640x480
 	lockGL(&d->pgraph);
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
@@ -428,7 +426,8 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glBlitFramebuffer(0, 0, 640, 480, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
+	glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	glo_swap(d->pgraph.gl_context);
 
 	// Restore previous framebuffer
