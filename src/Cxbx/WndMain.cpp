@@ -1869,7 +1869,7 @@ void WndMain::OpenXbe(const char *x_filename)
     if(m_Xbe->HasError())
     {
 		// Save the error message as a separate string. This fixes a corruption in the message "Disclaimer: Cxbx-Reloaded has no
-		// affiliation with Microsoft" that would occour if loading an xbe and then launching the dashboard with the "Load dashboard"
+		// affiliation with Microsoft" that would occur if loading an xbe and then launching the dashboard with the "Open dashboard"
 		// option but it's not installed
 
 		std::string ErrorMessage = m_Xbe->GetError();
