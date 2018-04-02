@@ -1660,16 +1660,15 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
 
-			// Only reserve memory if the base address is higher than XBE_IMAGE_BASE
-
-			if ((AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && AlignedCapturedBase < XBE_MAX_VA) ||
-				(AlignedCapturedBase >= XBE_MAX_VA &&
-				(VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase))
+			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
 			{
-				// Something else is already mapped at the specified address, report an error and bail out
+				// VirtualAlloc failed, check to see if we are reserving the memory for the xbe sections
 
-				status = STATUS_CONFLICTING_ADDRESSES;
-				goto Exit;
+				if (AlignedCapturedBase + AlignedCapturedSize > XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
+				{
+					status = STATUS_CONFLICTING_ADDRESSES;
+					goto Exit;
+				}
 			}
 		}
 
