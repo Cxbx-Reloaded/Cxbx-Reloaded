@@ -611,8 +611,9 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 4034, 7)
+OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 4034, 8)
 
+        { 0x00, 0x56 },
         { 0x13, 0x8B },
         { 0x20, 0x02 },
         { 0x34, 0x85 },

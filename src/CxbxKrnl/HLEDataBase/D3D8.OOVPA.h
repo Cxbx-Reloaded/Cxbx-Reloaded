@@ -39,7 +39,7 @@
 #include "../OOVPA.h"
 
 extern LOOVPA<1 + 11> D3DDevice_SetTextureState_TexCoordIndex_3911;
-extern LOOVPA<2 + 15> D3DDevice_SetRenderState_CullMode_3911;
+extern LOOVPA<2 + 16> D3DDevice_SetRenderState_CullMode_3911;
 
 extern LOOVPA<1 + 12> D3DDevice_SetStreamSource_3911;
 
