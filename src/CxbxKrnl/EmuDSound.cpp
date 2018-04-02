@@ -55,6 +55,34 @@ namespace xboxkrnl {
 #include <process.h>
 #include <clocale>
 
+// Temporary APU Timer Functions
+// TODO: Move these to LLE APUDevice once we have one!
+
+#define APU_TIMER_FREQUENCY	48000
+extern LARGE_INTEGER NativePerformanceFrequency;
+LARGE_INTEGER APUInitialPerformanceCounter;
+double NativeToXboxAPU_FactorForPerformanceFrequency = 0;
+
+void ResetApuTimer()
+{
+	// Measure current host performance counter and frequency
+	QueryPerformanceCounter(&APUInitialPerformanceCounter);
+	NativeToXboxAPU_FactorForPerformanceFrequency = (double)APU_TIMER_FREQUENCY / NativePerformanceFrequency.QuadPart;
+}
+
+uint32_t GetAPUTime()
+{
+	::LARGE_INTEGER PerformanceCounter;
+	QueryPerformanceCounter(&PerformanceCounter);
+
+	// Re-Base on the time DirectSoundCreate was called
+	PerformanceCounter.QuadPart -= APUInitialPerformanceCounter.QuadPart;
+	// Apply a delta to make it appear to tick at 48khz
+	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxAPU_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
+	return PerformanceCounter.QuadPart;
+}
+
+
 // TODO: Tasks need to do for DirectSound HLE
 // * Need create patches
 //   * Ac97CreateMediaObject (Need OOVPA)
@@ -188,11 +216,6 @@ void CxbxInitAudio()
 }
 #endif
 
-#define DSOUND_PERFORMANCE_FREQUENCY	48000	// GetSampleTime needs to tick at 48Khz
-extern LARGE_INTEGER NativePerformanceFrequency;
-LARGE_INTEGER DSoundInitialPerformanceCounter;
-double NativeToXboxDSound_FactorForPerformanceFrequency = 0;
-
 // ******************************************************************
 // * patch: DirectSoundCreate
 // ******************************************************************
@@ -220,9 +243,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     enterCriticalSection;
 
-	// Measure current host performance counter and frequency
-	QueryPerformanceCounter(&DSoundInitialPerformanceCounter);
-	NativeToXboxDSound_FactorForPerformanceFrequency = (double)DSOUND_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+	ResetApuTimer();
 
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;
@@ -3172,15 +3193,7 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 
 	LOG_FUNC();
 
-	DWORD dwRet;
-	::LARGE_INTEGER PerformanceCounter;
-	QueryPerformanceCounter(&PerformanceCounter);
-
-	// Re-Base on the time DirectSoundCreate was called
-	PerformanceCounter.QuadPart -= DSoundInitialPerformanceCounter.QuadPart;
-	// Apply a delta to make it appear to tick at 48khz
-	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxDSound_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
-	dwRet = PerformanceCounter.QuadPart;
+	DWORD dwRet = GetAPUTime();
 
     leaveCriticalSection;
 
