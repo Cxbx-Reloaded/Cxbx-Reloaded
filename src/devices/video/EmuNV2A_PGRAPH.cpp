@@ -467,8 +467,6 @@ DEVICE_WRITE32(PGRAPH)
 				% GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_MODULO_3D));
 			qemu_cond_broadcast(&d->pgraph.flip_3d);
-
-			NV2ADevice::SwapBuffers(d);
 		}
 		break;
 	case NV_PGRAPH_FIFO:

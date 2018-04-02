@@ -450,6 +450,8 @@ static void nv2a_vblank_thread(NV2AState *d)
 			d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
 			update_irq(d);
 			nextVBlankTime = GetNextVBlankTime();
+
+			NV2ADevice::SwapBuffers(d);
 		}
 	}
 }

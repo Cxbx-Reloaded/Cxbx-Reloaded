@@ -28,12 +28,12 @@ DEVICE_WRITE32(PVIDEO)
 	switch (addr) {
 	case NV_PVIDEO_BUFFER:
 		d->pvideo.regs[addr] = value;
-		// TODO : d->vga.enable_overlay = true;
+		d->enable_overlay = true;
 		pvideo_vga_invalidate(d);
 		break;
 	case NV_PVIDEO_STOP:
 		d->pvideo.regs[NV_PVIDEO_BUFFER] = 0;
-		// TODO : d->vga.enable_overlay = false;
+		d->enable_overlay = false;
 		pvideo_vga_invalidate(d);
 		break;
 	default:
