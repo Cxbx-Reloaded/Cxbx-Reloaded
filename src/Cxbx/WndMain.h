@@ -145,7 +145,7 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * drawing information
 		// ******************************************************************
-		HDC         m_BackDC;
+		HDC         m_SplashDC;
 		HDC         m_LogoDC;
 		HDC         m_GameLogoDC;
 		HDC         m_LedDC;
@@ -153,13 +153,14 @@ class WndMain : public Wnd
 		HBITMAP     m_OrigLogo;
 		HBITMAP     m_OrigGameLogo;
 		HBITMAP     m_OriLed;
-		HBITMAP     m_BackBmp;
+		HBITMAP     m_SplashBmp;
 		HBITMAP     m_LogoBmp;
 		HBITMAP		m_GameLogoBMP;
 		HBITMAP     m_LedBmp;
 		HBRUSH      m_Brushes[4];
 		HPEN        m_Pens[4];
 		int         m_xBmp, m_yBmp;
+        HBRUSH      m_BackgroundColor;
 
         // ******************************************************************
         // * Xbe objects
