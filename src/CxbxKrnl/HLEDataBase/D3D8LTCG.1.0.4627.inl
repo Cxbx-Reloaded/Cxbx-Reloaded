@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * Direct3D_CreateDevice
 // ******************************************************************
@@ -49,7 +48,6 @@ OOVPA_NO_XREF(Direct3D_CreateDevice_4, 2060, 7)
         { 0x0F, 0x05 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DTexture_GetLevelDesc
 // ******************************************************************
@@ -72,7 +70,6 @@ OOVPA_NO_XREF(Get2DSurfaceDesc_4, 2048, 10)
         { 0x36, 0x00 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZBias
 // ******************************************************************
@@ -94,7 +91,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZBias, 1060, 9)
         { 0x1F, 0x05 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_Dxt1NoiseEnable
 // ******************************************************************
@@ -113,7 +109,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 1024, 7)
         { 0x18, 0x91 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
@@ -133,7 +128,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 1060, 1+7,
         { 0x06, 0x35 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleMask
 // ******************************************************************
@@ -170,7 +164,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleMask, 1072, 1+6,
         { 0x13, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_SampleAlpha
 // ******************************************************************
@@ -187,7 +180,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_SampleAlpha, 1024, 1+4,
         { 0x06, 0x3D },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetRenderState_SampleAlpha
 // ******************************************************************
@@ -205,7 +197,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_SampleAlpha, 1036, 8)
         { 0x10, 0x3D },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
@@ -226,7 +217,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor, 1024, 11)
         { 0x28, 0x1B },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DDevice_SetTextureState_BumpEnv
 // ******************************************************************
@@ -243,7 +233,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BumpEnv, 1024, 7)
         { 0x1F, 0x03 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
@@ -269,7 +258,6 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 1958, 1+10,
         { 0x1F, 0x8B },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 //******************************************************************
 //* D3DDevice_SetRenderTarget
 //******************************************************************
@@ -295,7 +283,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1060, 15)
         { 0x16, 0x00 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetScissors
 // ******************************************************************
@@ -313,7 +300,6 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 1036, 8)
         { 0x8D, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
@@ -332,7 +318,6 @@ OOVPA_NO_XREF(D3DDevice_SetTexture, 1024, 9)
         { 0x2E, 0x89 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 //******************************************************************
 //* D3DDevice_CopyRects
 //******************************************************************
@@ -366,7 +351,6 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 1024, 8)
         { 0x22, 0xB9 },
 OOVPA_END;
 
-//[4627] Fila World Tour Tennis
 // ******************************************************************
 // * D3DDevice_CreateTexture2
 // ******************************************************************
@@ -387,7 +371,6 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 1048, 11)
         { 0x45, 0x74 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_DeleteStateBlock
 // ******************************************************************
@@ -408,7 +391,6 @@ OOVPA_NO_XREF(D3DDevice_DeleteStateBlock, 1024, 12)
         { 0x0B, 0xDB },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************
@@ -427,7 +409,6 @@ OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 1036, 9)
         { 0x3C, 0x83 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 //******************************************************************
 //* D3DDevice_DrawVerticesUP
 //******************************************************************
@@ -446,7 +427,6 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 1036, 9)
         { 0x3C, 0x8B },
 OOVPA_END;
 
-// For ATV Quad Power Racing 2
 //******************************************************************
 //* D3DDevice_EndVisibilityTest
 //******************************************************************
@@ -461,7 +441,6 @@ OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 1024, 7)
         { 0x15, 0x5E },
 OOVPA_END;
 
-//[4627] Sega GT 2002
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
 // ******************************************************************
@@ -486,7 +465,6 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 1036, 14)
         { 0x4D, 0x04 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
 // ******************************************************************
@@ -510,7 +488,6 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2_0, 2024, 13)
         { 0x48, 0xC3 },
 OOVPA_END;
 
-//[4627] Fila World Tour Tennis 
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
@@ -530,7 +507,6 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 1048, 10)
         { 0x13, 0xC3 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 //******************************************************************
 //* D3DDevice_GetDisplayMode
 //******************************************************************
@@ -550,7 +526,6 @@ OOVPA_NO_XREF(D3DDevice_GetDisplayMode, 1024, 9)
         { 0x13, 0x4A },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_GetTransform
 // ******************************************************************
@@ -572,7 +547,6 @@ OOVPA_NO_XREF(D3DDevice_GetTransform, 1024, 12)
         { 0x13, 0xB4 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_IsBusy
 // ******************************************************************
@@ -590,7 +564,6 @@ OOVPA_NO_XREF(D3DDevice_IsBusy, 1024, 9)
         { 0x0C, 0x90 },
 OOVPA_END;
 
-//[5849] Burnout 3
 // ******************************************************************
 // * D3DDevice_LightEnable
 // ******************************************************************
@@ -609,7 +582,6 @@ OOVPA_NO_XREF(D3DDevice_LightEnable, 1024, 11)
         { 0x0A, 0x35 },
 OOVPA_END;
 
-//[5849] Conker - Live & Reloaded 
 //******************************************************************
 //* D3DDevice_LoadVertexShaderProgram
 //******************************************************************
@@ -628,7 +600,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 1036, 10)
         { 0x09, 0x55 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_PersistDisplay
 // ******************************************************************
@@ -647,7 +618,6 @@ OOVPA_NO_XREF(D3DDevice_PersistDisplay_0, 2048, 9)
         { 0x13, 0x15 },
 OOVPA_END;
 
-//[4627] Fila World Tour Tennis
 // ******************************************************************
 // * D3DDevice_Reset
 // ******************************************************************
@@ -667,7 +637,6 @@ OOVPA_NO_XREF(D3DDevice_Reset, 1024, 10)
         { 0xA0, 0x6A },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_Reset
 // ******************************************************************
@@ -687,7 +656,6 @@ OOVPA_NO_XREF(D3DDevice_Reset_0, 2024, 10)
         { 0x99, 0x6A },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_RunVertexStateShader
 // ******************************************************************
@@ -706,7 +674,6 @@ OOVPA_NO_XREF(D3DDevice_RunVertexStateShader_4, 2048, 9)
         { 0x35, 0xD9 },
 OOVPA_END;
 
-// For ATV Quad Power Racing 2
 //******************************************************************
 //* D3DDevice_SetGammaRamp
 //******************************************************************
@@ -724,7 +691,6 @@ OOVPA_NO_XREF(D3DDevice_SetGammaRamp, 1024, 8)
         { 0x0E, 0x82 },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
@@ -746,7 +712,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 1036, 12)
         { 0x7F, 0x08 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_CreateVertexShader
 // ******************************************************************
@@ -768,7 +733,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2024, 12)
         { 0x7B, 0x08 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetTransform
 // ******************************************************************
@@ -788,7 +752,6 @@ OOVPA_NO_XREF(D3DDevice_SetTransform, 1024, 11)
         { 0x0A, 0x1D },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetVertexData2s
 // ******************************************************************
@@ -807,7 +770,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2s, 1036, 7)
         { 0x26, 0x00 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetVertexData4f
 // ******************************************************************
@@ -826,7 +788,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4f_16, 2036, 9)
         { 0x27, 0x09 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetVertexData4s
 // ******************************************************************
@@ -843,7 +804,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4s, 1036, 7)
         { 0x28, 0xBF },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetVertexData4ub
 // ******************************************************************
@@ -860,7 +820,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4ub, 1036, 7)
         { 0x27, 0x33 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_Swap
 // ******************************************************************
@@ -879,7 +838,6 @@ OOVPA_NO_XREF(D3DDevice_Swap, 1024, 9)
         { 0x2F, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 //******************************************************************
 //* D3DPalette_Lock2
 //******************************************************************
@@ -896,7 +854,6 @@ OOVPA_NO_XREF(D3DPalette_Lock2, 1024, 8)
         { 0x07, 0x74 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DTexture_LockRect
 // ******************************************************************
@@ -921,7 +878,6 @@ OOVPA_END;
 
 // Verteks 11/03/2009
 // blueshogun96 7/17/2010
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DVertexBuffer_Lock2
 // ******************************************************************
@@ -938,7 +894,6 @@ OOVPA_NO_XREF(D3DVertexBuffer_Lock2, 1024, 8)
         { 0x11, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3D_BlockOnResource
 // ******************************************************************
@@ -957,7 +912,6 @@ OOVPA_NO_XREF(D3D_BlockOnResource_0, 2048, 9)
         { 0x2A, 0x75 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3D_BlockOnTime
 // ******************************************************************
@@ -981,12 +935,23 @@ OOVPA_XREF(D3D_BlockOnTime, 1036, 11,
         { 0x118, 0x56 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3D_CommonSetRenderTarget
 // ******************************************************************
 //00750C8B87B42100
-OOVPA_NO_XREF(D3D_CommonSetRenderTarget, 1024, 10)
+#ifndef WIP_LessVertexPatching
+OOVPA_XREF(D3D_CommonSetRenderTarget, 1024, 10,
+
+    XREF_D3D_CommonSetRenderTarget,
+    XRefZero)
+#else
+OOVPA_XREF(D3D_CommonSetRenderTarget, 1024, 1+10,
+
+    XREF_D3D_CommonSetRenderTarget,
+    XRefOne)
+
+        XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived
+#endif
 
         { 0x00, 0x83 },
         { 0x01, 0xEC },
@@ -1001,7 +966,6 @@ OOVPA_NO_XREF(D3D_CommonSetRenderTarget, 1024, 10)
         { 0x1A, 0x00 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 // ******************************************************************
 // * D3D_KickOffAndWaitForIdle
 // ******************************************************************
@@ -1024,7 +988,6 @@ OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle2, 1024, 12)
         { 0x1E, 0x08 },
 OOVPA_END;
 
-//[4627] Aggressive Inline
 //******************************************************************
 //* D3DDevice_UpdateOverlay
 //******************************************************************
@@ -1043,7 +1006,6 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 1036, 9)
         { 0xD1, 0xEB },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetRenderStateNotInline
 // ******************************************************************
@@ -1066,7 +1028,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderStateNotInline_0, 2048, 13)
         { 0x24, 0x0D },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_SetRenderStateNotInline
 // ******************************************************************
@@ -1085,7 +1046,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderStateNotInline, 1024, 9)
         { 0x18, 0xE8 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetTextureStageStateNotInline
 // ******************************************************************
@@ -1106,7 +1066,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureStageStateNotInline, 1024, 11)
         { 0x4F, 0xC1 },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_SetTextureStageStateNotInline
 // ******************************************************************
@@ -1127,7 +1086,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureStageStateNotInline_0, 2024, 11)
         { 0x3F, 0x48 },
 OOVPA_END;
 
-//[4627] Kelly Slater Pro Surfer
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************

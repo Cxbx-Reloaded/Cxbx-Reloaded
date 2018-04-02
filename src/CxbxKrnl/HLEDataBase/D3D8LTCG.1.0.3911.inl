@@ -73,7 +73,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 1045, 2+8,
         { 0x21, 0x75 },
 OOVPA_END;
 
-//[4039] NBA 2K2
 // ******************************************************************
 // * D3DDevice_SetTextureState_BumpEnv
 // ******************************************************************
@@ -91,7 +90,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BumpEnv_8, 2024, 8)
         { 0x1A, 0x75 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZEnable
 // ******************************************************************
@@ -114,7 +112,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 1024, 13)
         { 0x39, 0x83 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_TextureFactor
 // ******************************************************************
@@ -140,7 +137,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_TextureFactor, 1036, 1+10,
         { 0x12, 0x06 },
 OOVPA_END;
 
-//[4039] NBA 2K2
 // ******************************************************************
 // * D3DDevice_SetRenderState_YuvEnable
 // ******************************************************************
@@ -160,7 +156,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_YuvEnable, 1024, 1+7,
         { 0x15, 0x72 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_OcclusionCullEnable
 // ******************************************************************
@@ -181,7 +176,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_OcclusionCullEnable, 1024, 1+2,
         //{ 0x29, 0xE8 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
@@ -206,7 +200,6 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex_0, 2039, 1+10,
         { 0x16, 0xFF },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
@@ -227,7 +220,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2024, 11)
         { 0x25, 0x89 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -247,7 +239,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_ColorKeyColor_0, 2024, 10)
         { 0x2E, 0x89 },
 OOVPA_END;
 
-//[4039] NBA 2K2
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZBias
 // ******************************************************************
@@ -269,7 +260,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZBias, 1048, 9)
         { 0x1E, 0x05 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_LineWidth
 // ******************************************************************
@@ -289,7 +279,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LineWidth, 1024, 7)
         { 0x16, 0x8E },
 OOVPA_END;
 
-//[4039] NBA 2K2
 // ******************************************************************
 // * D3DDevice_SetRenderState_Dxt1NoiseEnable
 // ******************************************************************
@@ -308,7 +297,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_Dxt1NoiseEnable, 1036, 7)
         { 0x17, 0x91 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilCullEnable
 // ******************************************************************
@@ -328,7 +316,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 1024, 1+7,
         { 0x15, 0x72 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
 // ******************************************************************
@@ -351,7 +338,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 1024, 1+8,
         { 0x10, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_RopZRead
 // ******************************************************************
@@ -374,7 +360,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZRead, 1024, 1+8,
         { 0x10, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_DoNotCullUncompressed
 // ******************************************************************
@@ -397,7 +382,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_DoNotCullUncompressed, 1024, 1+8,
         { 0x10, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 //******************************************************************
 //* D3DDevice_SetRenderState_BackFillMode
 //******************************************************************
@@ -416,7 +400,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_BackFillMode, 1024, 2+5,
         { 0x12, 0x04 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_EdgeAntiAlias
 // ******************************************************************
@@ -436,7 +419,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_EdgeAntiAlias, 1024, 10)
         { 0x21, 0x04 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_FillMode
 // ******************************************************************
@@ -455,7 +437,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FillMode, 1024, 9)
         { 0x28, 0x02 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_FogColor
 // ******************************************************************
@@ -472,7 +453,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FogColor, 1024, 7)
         { 0x21, 0x81 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
@@ -494,7 +474,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 1024, 1+7,
         { 0x3B, 0x0F },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleMask
 // ******************************************************************
@@ -517,7 +496,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleMask, 1024, 1+8,
         { 0x3B, 0x10 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_LogicOp
 // ******************************************************************
@@ -536,7 +514,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LogicOp, 1024, 7)
         { 0x21, 0x04 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_NormalizeNormals
 // ******************************************************************
@@ -554,7 +531,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_NormalizeNormals, 1024, 8)
         { 0x21, 0x04 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
@@ -571,7 +547,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 1024, 7)
         { 0x5D, 0x89 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 //******************************************************************
 //* D3DDevice_SetRenderState_TwoSidedLighting
 //******************************************************************
@@ -592,7 +567,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 1024, 1+6,
         { 0x09, 0x8B },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_FrontFace
 // ******************************************************************
@@ -610,7 +584,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FrontFace, 1024, 8)
         { 0x20, 0x48 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_ShadowFunc
 // ******************************************************************
@@ -628,7 +601,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ShadowFunc, 1024, 8)
         { 0x20, 0x91 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
@@ -648,7 +620,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 1024, 10)
         { 0x50, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_CreateVertexShader
 // ******************************************************************
@@ -665,7 +636,6 @@ OOVPA_NO_XREF(D3DDevice_CreateVertexShader, 1024, 8)
         { 0x1F, 0xED },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetShaderConstantMode
 // ******************************************************************
@@ -686,7 +656,6 @@ OOVPA_NO_XREF(D3DDevice_SetShaderConstantMode_0, 2048, 11)
         { 0x15, 0x06 },
 OOVPA_END;
 
-//[4039] NBA 2K2
 // ******************************************************************
 // * D3DDevice_Clear
 // ******************************************************************
@@ -704,7 +673,6 @@ OOVPA_NO_XREF(D3DDevice_Clear, 1036, 8)
         { 0x47, 0x44 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DResource_Release
 // ******************************************************************
@@ -728,7 +696,6 @@ OOVPA_NO_XREF(D3DResource_Release, 1036, 15)
         { 0x0E, 0x00 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 //******************************************************************
 //* D3DDevice_SetTile
 //******************************************************************
@@ -752,7 +719,6 @@ OOVPA_NO_XREF(D3DDevice_SetTile_0, 2024, 14)
         { 0x37, 0x1C },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_Present
 // ******************************************************************
@@ -778,7 +744,6 @@ OOVPA_NO_XREF(D3DDevice_Present, 1024, 17)
         { 0x1D, 0x00 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************
@@ -798,7 +763,6 @@ OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 1024, 10)
         { 0x36, 0x57 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetVertexShader
 // ******************************************************************
@@ -822,7 +786,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShader_0, 2024, 14)
         { 0x1B, 0x0E },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetScissors
 // ******************************************************************
@@ -851,7 +814,6 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 1024, 19)
         { 0x26, 0x00 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetTransform
 // ******************************************************************
@@ -876,7 +838,6 @@ OOVPA_NO_XREF(D3DDevice_SetTransform_0, 2024, 15)
         { 0x15, 0x00 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstant
 // ******************************************************************
@@ -896,7 +857,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant_0, 2024, 10)
         { 0x1A, 0x10 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
 // ******************************************************************
@@ -918,7 +878,6 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP_12, 2024, 12)
         { 0x34, 0x8B },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 //******************************************************************
 //* D3DDevice_LoadVertexShader
 //******************************************************************
@@ -937,7 +896,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShader_0, 2024, 9)
         { 0x45, 0x8B },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 //******************************************************************
 //* D3DDevice_SelectVertexShader
 //******************************************************************
@@ -957,7 +915,6 @@ OOVPA_NO_XREF(D3DDevice_SelectVertexShader_4, 2024, 10)
         { 0x4D, 0x83 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
@@ -981,7 +938,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1024, 14)
         { 0x2F, 0x00 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetViewport
 // ******************************************************************
@@ -1001,7 +957,6 @@ OOVPA_NO_XREF(D3DDevice_SetViewport, 1024, 10)
         { 0x2C, 0xF8 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3DDevice_SetTexture
 // ******************************************************************
@@ -1020,7 +975,6 @@ OOVPA_NO_XREF(D3DDevice_SetTexture_4, 2024, 9)
         { 0x2D, 0x89 },
 OOVPA_END;
 
-//[3925] Nascar Heat 2002
 // ******************************************************************
 // * D3D_BlockOnResource
 // ******************************************************************

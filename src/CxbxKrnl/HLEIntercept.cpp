@@ -409,9 +409,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					if (bLLE_GPU)
 						continue;
 
-					// Functions in this library were updated by June 2003 XDK (5558) with Integrated Hotfixes,
-					// However August 2003 XDK (5659) still uses the old function.
-					// Please use updated 5788 instead.
+					// NOTE: Read the above LTCG libraries notes
 					if (BuildVersion >= 5558 && BuildVersion <=5659 && QFEVersion > 1) {
 						EmuWarning("D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
 						BuildVersion = 5788;
@@ -626,7 +624,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 						xbaddr pFunc = (xbaddr)nullptr;
 
-                        // Lib_D3D8LTCG
                         {
 							pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1045, lower, upper);
 							pXRefOffset = 0x2D; // verified for 3925
@@ -675,7 +672,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									Increment = 83 * 4;
 									patchOffset = 143 * 4;
 								} else { // 4627-5933
-									// NOTE: LTCG 5849 (Burnout 3(pFunc + 0x34), Black(pFunc + 0x35))
+									// NOTE: Burnout 3 is (pFunc + 0x34), Black is (pFunc + 0x35)
 									DerivedAddr_D3DRS_CULLMODE = *(xbaddr*)(pFunc + pXRefOffset);
 									Decrement = 0x24C;
 									Increment = 92 * 4;
@@ -708,39 +705,39 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							patchOffset -= Increment;
 
 							// Derive address of a few other deferred render state slots (to help xref-based function location)
-                            // XRefDataBase[XREF_D3DRS_PSTEXTUREMODES]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 11*4; // 0220
-                            // XRefDataBase[XREF_D3DRS_VERTEXBLEND]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 10*4; // 0224
-                            // XRefDataBase[XREF_D3DRS_FOGCOLOR]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 9*4; // 0228
-                            XRefDataBase[XREF_D3DRS_FILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 8*4; // 022C
-                            XRefDataBase[XREF_D3DRS_BACKFILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 7*4; // 0230
-                            XRefDataBase[XREF_D3DRS_TWOSIDEDLIGHTING]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 6*4; // 0234
-                            // XRefDataBase[XREF_D3DRS_NORMALIZENORMALS]        = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 5*4; // 0238
-                            // XRefDataBase[XREF_D3DRS_ZENABLE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 4*4; // 023C
-                            // XRefDataBase[XREF_D3DRS_STENCILENABLE]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 3*4; // 0240
-                            // XRefDataBase[XREF_D3DRS_STENCILFAIL]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 2*4; // 0244
-                            // XRefDataBase[XREF_D3DRS_FRONTFACE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 1*4; // 0248
-                            // XRefDataBase[XREF_D3DRS_CULLMODE]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 0*4; // 024C
-                            // XRefDataBase[XREF_D3DRS_TEXTUREFACTOR]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 1*4; // 0250
-                            XRefDataBase[XREF_D3DRS_ZBIAS]                 = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 2*4; // 0254
-                            XRefDataBase[XREF_D3DRS_LOGICOP]               = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 3*4; // 0258
-                            // XRefDataBase[XREF_D3DRS_EDGEANTIALIAS]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 4*4; // 025C
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLEANTIALIAS]  = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 5*4; // 0260
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMASK]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 6*4; // 0264
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 7*4; // 0268
-                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 8*4; // 026C
-                            // XRefDataBase[XREF_D3DRS_SHADOWFUNC]            = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 9*4; // 0270
-                            // XRefDataBase[XREF_D3DRS_LINEWIDTH]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 10*4; // 0274
+                            // XRefDataBase[XREF_D3DRS_PSTEXTUREMODES]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 11*4;
+                            // XRefDataBase[XREF_D3DRS_VERTEXBLEND]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 10*4;
+                            // XRefDataBase[XREF_D3DRS_FOGCOLOR]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 9*4;
+                            XRefDataBase[XREF_D3DRS_FILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 8*4;
+                            XRefDataBase[XREF_D3DRS_BACKFILLMODE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 7*4;
+                            XRefDataBase[XREF_D3DRS_TWOSIDEDLIGHTING]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 6*4;
+                            // XRefDataBase[XREF_D3DRS_NORMALIZENORMALS]        = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 5*4;
+                            // XRefDataBase[XREF_D3DRS_ZENABLE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 4*4;
+                            // XRefDataBase[XREF_D3DRS_STENCILENABLE]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 3*4;
+                            // XRefDataBase[XREF_D3DRS_STENCILFAIL]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 2*4;
+                            // XRefDataBase[XREF_D3DRS_FRONTFACE]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 1*4;
+                            // XRefDataBase[XREF_D3DRS_CULLMODE]          = (xbaddr)DerivedAddr_D3DRS_CULLMODE - 0*4;
+                            // XRefDataBase[XREF_D3DRS_TEXTUREFACTOR]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 1*4;
+                            XRefDataBase[XREF_D3DRS_ZBIAS]                 = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 2*4;
+                            XRefDataBase[XREF_D3DRS_LOGICOP]               = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 3*4;
+                            // XRefDataBase[XREF_D3DRS_EDGEANTIALIAS]         = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 4*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEANTIALIAS]  = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 5*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMASK]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 6*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 7*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 8*4;
+                            // XRefDataBase[XREF_D3DRS_SHADOWFUNC]            = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 9*4;
+                            // XRefDataBase[XREF_D3DRS_LINEWIDTH]             = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 10*4;
 
                             if (BuildVersion >= 4627 && BuildVersion <= 5933) // Add XDK 4627
-                                XRefDataBase[XREF_D3DRS_SAMPLEALPHA]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 11*4; // 0278
+                                XRefDataBase[XREF_D3DRS_SAMPLEALPHA]           = (xbaddr)DerivedAddr_D3DRS_CULLMODE + 11*4;
                             
-                            XRefDataBase[XREF_D3DRS_DXT1NOISEENABLE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 3*4; // 027C
-                            XRefDataBase[XREF_D3DRS_YUVENABLE]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 2*4; // 0280
-                            XRefDataBase[XREF_D3DRS_OCCLUSIONCULLENABLE]   = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 1*4; // 0284
-                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4; // RenderState+648(RenderState+0288)
-                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4; // 028C
-                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4; // 0290
-                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4; // 0294
+                            XRefDataBase[XREF_D3DRS_DXT1NOISEENABLE]       = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 3*4;
+                            XRefDataBase[XREF_D3DRS_YUVENABLE]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 2*4;
+                            XRefDataBase[XREF_D3DRS_OCCLUSIONCULLENABLE]   = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 1*4;
+                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
+                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
+                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
+                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
 
                             for(int v=0;v<44;v++) {
                                 XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
@@ -790,12 +787,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 								// TODO : Remove this when XREF_D3D_TextureState_TexCoordIndex derivation is deemed stable
 								{
-									//if (BuildVersion >= 3911 && BuildVersion < 4034)
-									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x11);
-									//else if (BuildVersion >= 4034 && BuildVersion < 4242)
-									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x18);
-									//else
-									//	DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + 0x19);
 									DerivedAddr_D3DTSS_TEXCOORDINDEX = *(xbaddr*)(pFunc + pXRefOffset);
 
 									// Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
@@ -803,13 +794,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 										if (XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] != XREF_ADDR_DERIVE)
 											CxbxPopupMessage("Second derived XREF_D3DTSS_TEXCOORDINDEX differs from first!");
 
-									//	XRefDataBase[XREF_D3DTSS_BUMPENV] = DerivedAddr_D3DTSS_TEXCOORDINDEX - 28*4; // _D3D__TextureState+0000
-										XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = DerivedAddr_D3DTSS_TEXCOORDINDEX; // _D3D__TextureState+0070
-									//	XRefDataBase[XREF_D3DTSS_BORDERCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 1*4; // _D3D__TextureState+0074
-									//	XRefDataBase[XREF_D3DTSS_COLORKEYCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 2*4; // _D3D__TextureState+0078
-
-                                     // XRefDataBase[XREF_D3DTSS_BORDERCOLOR]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 133*4; //074
-                                     // XRefDataBase[XREF_D3DTSS_COLORKEYCOLOR]             = (xbaddr)XTL::EmuD3DDeferredRenderState + patchOffset - 132*4; //078
+									//	XRefDataBase[XREF_D3DTSS_BUMPENV] = DerivedAddr_D3DTSS_TEXCOORDINDEX - 28*4;
+										XRefDataBase[XREF_D3DTSS_TEXCOORDINDEX] = DerivedAddr_D3DTSS_TEXCOORDINDEX;
+									//	XRefDataBase[XREF_D3DTSS_BORDERCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 1*4;
+									//	XRefDataBase[XREF_D3DTSS_COLORKEYCOLOR] = DerivedAddr_D3DTSS_TEXCOORDINDEX + 2*4;
 									}
 								}
 
@@ -837,7 +825,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                             if (BuildVersion >= 4034) {
                                 OOVPA_version = 4034; // TODO Verify
-                                //pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4034, lower, upper);
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1024, lower, upper);
                             } else {
                                 OOVPA_version = 3911;

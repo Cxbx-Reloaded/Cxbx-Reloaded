@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3D_MakeRequestedSpace
 // ******************************************************************
@@ -52,7 +51,6 @@ OOVPA_NO_XREF(D3D_MakeRequestedSpace, 1048, 10)
         { 0x26, 0x89 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3D_SetFence
 // ******************************************************************
@@ -73,7 +71,6 @@ OOVPA_XREF(D3D_SetFence, 1036, 8,
         { 0x15, 0xA1 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * Direct3D_CreateDevice
 // ******************************************************************
@@ -90,7 +87,6 @@ OOVPA_NO_XREF(Direct3D_CreateDevice, 1024, 7)
         { 0x13, 0xA1 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetStreamSource
 // ******************************************************************
@@ -111,7 +107,6 @@ OOVPA_NO_XREF(D3DDevice_SetStreamSource, 1024, 11)
         { 0x0E, 0x74 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
@@ -136,7 +131,6 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex, 1944, 1+10,
         { 0x12, 0x3D },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
@@ -160,7 +154,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 1052, 2+8,
         { 0x28, 0x75 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetRenderState_NormalizeNormals
 // ******************************************************************
@@ -178,7 +171,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_NormalizeNormals, 1048, 8)
         { 0x28, 0x04 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZEnable
 // ******************************************************************
@@ -201,7 +193,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 1048, 13)
         { 0x40, 0x8B },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
@@ -221,7 +212,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 1048, 10)
         { 0x57, 0x00 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_FillMode
 // ******************************************************************
@@ -240,7 +230,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FillMode, 1048, 9)
         { 0x2F, 0x02 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_FogColor
 // ******************************************************************
@@ -257,7 +246,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FogColor, 1048, 7)
         { 0x28, 0x81 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_ShadowFunc
 // ******************************************************************
@@ -294,7 +282,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_EdgeAntiAlias, 1048, 10)
         { 0x28, 0x04 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -311,7 +298,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_ColorKeyColor, 1036, 7)
         { 0x27, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_VertexBlend
 // ******************************************************************
@@ -332,7 +318,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_VertexBlend, 1024, 11)
         { 0x0E, 0x35 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -351,7 +336,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 1048, 9)
         { 0x18, 0x15 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_LogicOp
 // ******************************************************************
@@ -370,7 +354,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LogicOp, 1048, 7)
         { 0x28, 0x04 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
@@ -392,7 +375,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleAntiAlias, 1048, 1+7,
         { 0x40, 0x0F },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_MultiSampleMask
 // ******************************************************************
@@ -415,7 +397,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_MultiSampleMask, 1048, 1+8,
         { 0x40, 0x10 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
@@ -432,7 +413,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 1048, 7)
         { 0x64, 0x89 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderState_FrontFace
 // ******************************************************************
@@ -450,7 +430,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FrontFace, 1048, 8)
         { 0x27, 0x48 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 //******************************************************************
 //* D3DDevice_SetRenderState_BackFillMode
 //******************************************************************
@@ -468,7 +447,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 1036, 8)
         { 0x16, 0x8B },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_CreateTexture
 // ******************************************************************
@@ -493,7 +471,6 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture, 1024, 14)
         { 0x2B, 0x1C },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
@@ -513,7 +490,6 @@ OOVPA_NO_XREF(D3DDevice_End, 1036, 10)
         { 0x45, 0xC3 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DTexture_GetLevelDesc
 // ******************************************************************
@@ -536,7 +512,6 @@ OOVPA_NO_XREF(Get2DSurfaceDesc_0, 2036, 10)
         { 0x30, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetShaderConstantMode
 // ******************************************************************
@@ -556,7 +531,6 @@ OOVPA_NO_XREF(D3DDevice_SetShaderConstantMode, 1024, 10)
         { 0x1F, 0xFF },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetVertexShader
 // ******************************************************************
@@ -578,7 +552,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShader, 1036, 13)
         { 0x0C, 0x35 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetVertexShaderConstant
 // ******************************************************************
@@ -598,7 +571,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant, 1024, 10)
         { 0x1B, 0x10 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_DrawVertices
 // ******************************************************************
@@ -615,7 +587,6 @@ OOVPA_NO_XREF(D3DDevice_DrawVertices, 1024, 7)
         { 0x0C, 0xE8 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_Clear
 // ******************************************************************
@@ -633,7 +604,6 @@ OOVPA_NO_XREF(D3DDevice_Clear, 1024, 8)
         { 0x45, 0x44 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface
 // ******************************************************************
@@ -653,7 +623,6 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface, 1024, 9)
         { 0x48, 0x00 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 //******************************************************************
 //* D3DDevice_SetTile
 //******************************************************************
@@ -675,7 +644,6 @@ OOVPA_NO_XREF(D3DDevice_SetTile_0, 2036, 12)
         { 0x25, 0xF3 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
@@ -695,7 +663,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1048, 10)
         { 0x15, 0x75 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 //******************************************************************
 //* D3DDevice_LoadVertexShader
 //******************************************************************
@@ -713,7 +680,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShader_0, 2036, 8)
         { 0x5F, 0x89 },
 OOVPA_END;
 
-//[4627] Battle Engine Aquila
 // ******************************************************************
 // * D3DDevice_SetVertexData2f
 // ******************************************************************
@@ -730,7 +696,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2f, 1036, 7)
         { 0x27, 0x8B },
 OOVPA_END;
 
-//[5344] Enter the Matrix
 // ******************************************************************
 // * D3DDevice_SetVertexData4f
 // ******************************************************************
@@ -749,7 +714,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4f, 1024, 9)
         { 0x2B, 0x09 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DCubeTexture_GetCubeMapSurface2
 // ******************************************************************
@@ -767,7 +731,6 @@ OOVPA_NO_XREF(D3DCubeTexture_GetCubeMapSurface2, 1024, 9)
         { 0x08, 0x8D },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DResource_GetType
 // ******************************************************************
@@ -785,7 +748,6 @@ OOVPA_NO_XREF(D3DResource_GetType, 1024, 8)
         { 0x15, 0xC0 },
 OOVPA_END;
 
-//[4432] Bruce Lee
 // ******************************************************************
 // * D3DDevice_Begin
 // ******************************************************************

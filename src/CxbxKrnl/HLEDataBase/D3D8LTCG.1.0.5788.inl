@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
@@ -57,7 +56,6 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 1024, 15)
         { 0x1F, 0xBC },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
@@ -81,7 +79,6 @@ OOVPA_NO_XREF(D3DDevice_SetPalette_4, 2024, 14)
         { 0x22, 0xBC },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
@@ -103,7 +100,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 1024, 12)
         { 0x80, 0x08 },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_CreateVertexShader
 // ******************************************************************
@@ -125,7 +121,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2036, 12)
         { 0x7C, 0x08 },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetPixelShaderConstant
 // ******************************************************************
@@ -142,7 +137,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant_4, 2024, 7)
         { 0x18, 0x49 },
 OOVPA_END;
 
-//[5659] Powerdrome
 // ******************************************************************
 // * D3DDevice_SetPixelShaderProgram
 // ******************************************************************
@@ -160,7 +154,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderProgram, 1024, 8)
         { 0x1E, 0x00 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_CullMode
 // ******************************************************************
@@ -184,7 +177,6 @@ OOVPA_XREF(D3DDevice_SetRenderState_CullMode, 1053, 2+8,
         { 0x29, 0x75 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_EdgeAntiAlias
 // ******************************************************************
@@ -204,7 +196,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_EdgeAntiAlias, 1060, 10)
         { 0x29, 0x04 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_FillMode
 // ******************************************************************
@@ -223,7 +214,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FillMode, 1060, 9)
         { 0x30, 0x02 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_FogColor
 // ******************************************************************
@@ -240,7 +230,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FogColor, 1060, 7)
         { 0x29, 0x81 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_FrontFace
 // ******************************************************************
@@ -258,7 +247,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_FrontFace, 1060, 8)
         { 0x28, 0x48 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_LogicOp
 // ******************************************************************
@@ -277,7 +265,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LogicOp, 1060, 7)
         { 0x29, 0x04 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_NormalizeNormals
 // ******************************************************************
@@ -295,7 +282,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_NormalizeNormals, 1060, 8)
         { 0x29, 0x04 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_ShadowFunc
 // ******************************************************************
@@ -313,7 +299,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ShadowFunc, 1060, 8)
         { 0x28, 0x91 },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
@@ -333,7 +318,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 1060, 10)
         { 0x58, 0x00 },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
@@ -350,7 +334,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 1060, 7)
         { 0x65, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZEnable
 // ******************************************************************
@@ -373,7 +356,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZEnable, 1060, 13)
         { 0x41, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
@@ -394,7 +376,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor, 1048, 11)
         { 0x29, 0x1B },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
@@ -411,7 +392,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2048, 7)
         { 0x32, 0x83 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -429,7 +409,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_ColorKeyColor, 1024, 8)
         { 0x28, 0x89 },
 OOVPA_END;
 
-//[5659] Ninja Gaiden
 // ******************************************************************
 // * D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -447,7 +426,6 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_ColorKeyColor_0, 2048, 8)
         { 0x29, 0x89 },
 OOVPA_END;
 
-//[5659] Powerdrome
 // ******************************************************************
 // * D3DDevice_SetRenderTargetFast
 // ******************************************************************
@@ -466,7 +444,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTargetFast, 1024, 9)
         { 0x0D, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3D_BlockOnTime
 // ******************************************************************
@@ -489,7 +466,6 @@ OOVPA_XREF(D3D_BlockOnTime, 1024, 10,
         { 0xBB, 0x89 },
 OOVPA_END;
 
-//[5849] Burnout 3 - Takedown
 // ******************************************************************
 // * D3D_BlockOnTime
 // ******************************************************************
@@ -511,7 +487,6 @@ OOVPA_XREF(D3D_BlockOnTime_4, 2048, 9,
         { 0xBF, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3D_MakeRequestedSpace
 // ******************************************************************
@@ -531,7 +506,6 @@ OOVPA_NO_XREF(D3D_MakeRequestedSpace, 2048, 10)
         { 0x61, 0xE9 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3D_SetFence
 // ******************************************************************
@@ -554,7 +528,6 @@ OOVPA_XREF(D3D_SetFence, 1048, 10,
         { 0x28, 0xCF },
 OOVPA_END;
 
-//[5849] Burnout 3 - Takedown
 // ******************************************************************
 // * D3D_SetFence
 // ******************************************************************
@@ -576,7 +549,6 @@ OOVPA_XREF(D3D_SetFence, 1060, 9,
         { 0x2B, 0x8B },
 OOVPA_END;
 
-//[5659] ESPN Major League Baseball
 // ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************

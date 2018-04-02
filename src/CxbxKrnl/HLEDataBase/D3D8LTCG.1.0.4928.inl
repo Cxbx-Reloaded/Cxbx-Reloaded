@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_CopyRects
 // ******************************************************************
@@ -51,7 +50,6 @@ OOVPA_NO_XREF(D3DDevice_CopyRects, 1048, 10)
         { 0x09, 0x8B },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_CreateTexture2
 // ******************************************************************
@@ -72,7 +70,6 @@ OOVPA_NO_XREF(D3DDevice_CreateTexture2, 1024, 11)
         { 0x4A, 0x74 },
 OOVPA_END;
 
-//[4928] Crimson Sea
 // ******************************************************************
 // * D3DDevice_EndPushBuffer
 // ******************************************************************
@@ -90,7 +87,6 @@ OOVPA_NO_XREF(D3DDevice_EndPushBuffer, 1024, 8)
         { 0x81, 0x59 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_GetBackBuffer2
 // ******************************************************************
@@ -115,7 +111,6 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer2, 1024, 14)
         { 0x4B, 0x04 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_GetDepthStencilSurface2
 // ******************************************************************
@@ -139,7 +134,6 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 1024, 14)
         { 0x14, 0xA9 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_GetRenderTarget2
 // ******************************************************************
@@ -165,7 +159,6 @@ OOVPA_XREF(D3DDevice_GetRenderTarget2, 1024, 1+7,
         { 0x35, 0xC3 },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_PersistDisplay
 // ******************************************************************
@@ -184,7 +177,6 @@ OOVPA_NO_XREF(D3DDevice_PersistDisplay_0, 2060, 9)
         { 0x14, 0x15 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetPixelShaderConstant
 // ******************************************************************
@@ -202,7 +194,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 1024, 8)
         { 0x1E, 0x85 },
 OOVPA_END;
 
-//[4928] Shin Megami Tensei - Nine
 // ******************************************************************
 // * D3DDevice_UpdateOverlay
 // ******************************************************************
@@ -221,7 +212,6 @@ OOVPA_NO_XREF(D3DDevice_UpdateOverlay, 1048, 9)
         { 0x104, 0xEB },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DTexture_GetSurfaceLevel2
 // ******************************************************************

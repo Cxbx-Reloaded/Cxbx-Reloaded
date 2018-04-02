@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[5849] Oddworld - Strangers Wrath
 // ******************************************************************
 // * D3DDevice_SetPixelShader
 // ******************************************************************
@@ -54,7 +53,6 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader, 1048, 12)
         { 0x1D, 0x09 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
@@ -73,7 +71,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 1072, 9)
         { 0x62, 0x04 },
 OOVPA_END;
 
-//[5849] Star Wars - Battlefront
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilEnable
 // ******************************************************************
@@ -92,7 +89,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilEnable, 1084, 9)
         { 0x61, 0x04 },
 OOVPA_END;
 
-//[5849] Ski Racing 2006
 // ******************************************************************
 // * D3DTexture_GetLevelDesc
 // ******************************************************************
@@ -115,7 +111,6 @@ OOVPA_NO_XREF(Get2DSurfaceDesc, 1024, 10)
         { 0x3F, 0x00 },
 OOVPA_END;
 
-//[5849] Panzer Elite Action
 // ******************************************************************
 // * D3DResource_Release
 // ******************************************************************
@@ -141,7 +136,6 @@ OOVPA_NO_XREF(D3DResource_Release, 1024, 15)
         { 0x17, 0x07 },
 OOVPA_END;
 
-//[5849] Panzer Elite Action
 // ******************************************************************
 // * D3D_BlockOnTime
 // ******************************************************************
@@ -164,7 +158,6 @@ OOVPA_XREF(D3D_BlockOnTime, 1048, 10,
         { 0xF7, 0x89 },
 OOVPA_END;
 
-//[5849] 187 Ride Or Die
 // ******************************************************************
 // * D3D_BlockOnTime
 // ******************************************************************
@@ -186,7 +179,6 @@ OOVPA_XREF(D3D_BlockOnTime_4, 2060, 9,
         { 0xFB, 0x89 },
 OOVPA_END;
 
-//[5849] Crash N Burn
 // ******************************************************************
 // * D3D_KickOffAndWaitForIdle
 // ******************************************************************
@@ -209,7 +201,6 @@ OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle2, 1036, 12)
         { 0x1D, 0x08 },
 OOVPA_END;
 
-//[5849] Panzer Elite Action
 // ******************************************************************
 // * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -227,7 +218,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 1084, 8)
         { 0x28, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_ZBias
 // ******************************************************************
@@ -248,7 +238,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_ZBias, 1024, 9)
         { 0x0F, 0x85 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
@@ -265,7 +254,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 1072, 7)
         { 0x6C, 0x89 },
 OOVPA_END;
 
-//[5849] Burnout 3 - Takedown
 // ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
@@ -282,7 +270,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_StencilFail, 1084, 7)
         { 0x6B, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_Release
 // ******************************************************************
@@ -299,7 +286,6 @@ OOVPA_NO_XREF(D3DDevice_Release, 1024, 8)
         { 0x0D, 0x83 },
 OOVPA_END;
 
-//[5849] Conker - Live & Reloaded
 // ******************************************************************
 // * D3DDevice_SetTile
 // ******************************************************************
@@ -318,7 +304,6 @@ OOVPA_NO_XREF(D3DDevice_SetTile_0, 2072, 10)
         { 0x09, 0x3D },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetFlickerFilter
 // ******************************************************************
@@ -337,7 +322,6 @@ OOVPA_NO_XREF(D3DDevice_SetFlickerFilter_0, 2048, 9)
         { 0x1F, 0x56 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_LoadVertexShaderProgram
 // ******************************************************************
@@ -354,7 +338,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 1024, 7)
         { 0x0B, 0x2D },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SelectVertexShader
 // ******************************************************************
@@ -372,7 +355,6 @@ OOVPA_NO_XREF(D3DDevice_SelectVertexShader, 1024, 8)
         { 0x19, 0x8D },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_LoadVertexShader
 // ******************************************************************
@@ -390,7 +372,6 @@ OOVPA_NO_XREF(D3DDevice_LoadVertexShader_4, 2048, 8)
         { 0x35, 0x89 },
 OOVPA_END;
 
-//[5849] Outlaw Tennis
 // ******************************************************************
 // * D3DDevice_BeginVisibilityTest
 // ******************************************************************
@@ -409,7 +390,6 @@ OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 1048, 9)
         { 0x23, 0xB9 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_GetViewportOffsetAndScale
 // ******************************************************************
@@ -427,7 +407,6 @@ OOVPA_NO_XREF(D3DDevice_GetViewportOffsetAndScale, 1024, 8)
         { 0x19, 0x05 },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetVertexData2f
 // ******************************************************************
@@ -444,7 +423,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2f, 1048, 7)
         { 0x28, 0x8B },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetVertexData2s
 // ******************************************************************
@@ -463,7 +441,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData2s, 1048, 7)
         { 0x27, 0x00 },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetVertexData4f
 // ******************************************************************
@@ -482,7 +459,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4f, 1036, 9)
         { 0x2C, 0x09 },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetVertexData4s
 // ******************************************************************
@@ -499,7 +475,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4s, 1048, 7)
         { 0x39, 0xBF },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_SetVertexData4ub
 // ******************************************************************
@@ -516,7 +491,6 @@ OOVPA_NO_XREF(D3DDevice_SetVertexData4ub, 1048, 7)
         { 0x28, 0x33 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
@@ -535,7 +509,6 @@ OOVPA_NO_XREF(D3DDevice_End, 1024, 9)
         { 0x43, 0x6A },
 OOVPA_END;
 
-//[5849] Dead to Rights II
 // ******************************************************************
 // * D3DDevice_BeginPushBuffer
 // ******************************************************************
@@ -555,7 +528,6 @@ OOVPA_NO_XREF(D3DDevice_BeginPushBuffer, 1024, 10)
         { 0x4C, 0x8B },
 OOVPA_END;
 
-//[5849] Advent Rising
 // ******************************************************************
 // * D3DDevice_Begin
 // ******************************************************************
@@ -577,7 +549,6 @@ OOVPA_NO_XREF(D3DDevice_Begin, 1036, 12)
         { 0x3D, 0x04 },
 OOVPA_END;
 
-//[5849] Dead to Rights II
 // ******************************************************************
 // * D3D_MakeRequestedSpace
 // ******************************************************************
@@ -597,7 +568,6 @@ OOVPA_NO_XREF(D3D_MakeRequestedSpace, 1024, 10)
         { 0x5E, 0xE9 },
 OOVPA_END;
 
-//[5849] Manhunt
 // ******************************************************************
 // * D3D_MakeRequestedSpace
 // ******************************************************************
@@ -617,7 +587,6 @@ OOVPA_NO_XREF(D3D_MakeRequestedSpace, 1036, 10)
         { 0x5F, 0xE9 },
 OOVPA_END;
 
-//[5849] Rugby League 2
 // ******************************************************************
 // * D3DDevice_CreatePixelShader
 // ******************************************************************

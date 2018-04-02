@@ -33,28 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * D3D_CreateDeviceX (Direct3D_CreateDevice from D3D8LTCG)
-// ******************************************************************
-OOVPA_NO_XREF(D3D_CreateDeviceX, 4627, 8)
-
-        // Direct3D_CreateDevice+0x07 : jnz +0x0A
-        { 0x07, 0x75 },
-        { 0x08, 0x0A },
-
-        // Direct3D_CreateDevice+0x7F : repe stosd
-        { 0x7F, 0xF3 },
-        { 0x80, 0xAB },
-
-        // Direct3D_CreateDevice+0x82 : mov eax, esi
-        { 0x82, 0x8B },
-        { 0x83, 0xC6 },
-
-        // Direct3D_CreateDevice+0xA0 : retn 0x18
-        { 0xA0, 0xC2 },
-        { 0xA1, 0x18 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_BeginVisibilityTest
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BeginVisibilityTest, 4627, 11)
@@ -128,37 +106,6 @@ OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle, 4627, 9)
 OOVPA_END;
 
 // ******************************************************************
-// * D3D_KickOffAndWaitForIdle2 (D3D_KickOffAndWaitForIdle from D3D8LTCG)
-// ******************************************************************
-OOVPA_NO_XREF(D3D_KickOffAndWaitForIdle2, 4627, 11)
-
-        // D3D_KickOffAndWaitForIdle2+0x00 : mov eax, [addr]
-        { 0x00, 0xA1 },
-
-        // D3D_KickOffAndWaitForIdle2+0x05 : mov ecx, [eax+0x30]
-        { 0x05, 0x8B },
-        { 0x06, 0x48 },
-        { 0x07, 0x30 },
-
-        // D3D_KickOffAndWaitForIdle2+0x08 : push 2
-        { 0x08, 0x6A },
-        { 0x09, 0x02 },
-
-        // D3D_KickOffAndWaitForIdle2+0x0A : push ecx
-        { 0x0A, 0x51 },
-
-        // D3D_KickOffAndWaitForIdle2+0x0B : call [addr]
-        { 0x0B, 0xE8 },
-
-        // D3D_KickOffAndWaitForIdle2+0x18 : call [addr]
-        { 0x18, 0xE8 },
-
-        // D3D_KickOffAndWaitForIdle2+0x1D : retn 0x08
-        { 0x1D, 0xC2 },
-        { 0x1E, 0x08 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BeginPush, 4627, 7)
@@ -207,42 +154,6 @@ OOVPA_XREF(D3D_CommonSetRenderTarget, 4627, 1+12,
         { 0xC6, 0x83 },
         { 0xC7, 0xE1 },
         { 0xC8, 0x0F },
-OOVPA_END;
-
-// ******************************************************************
-// * D3D_CommonSetRenderTargetB (D3D_CommonSetRenderTarget from D3D8LTCG)
-// ******************************************************************
-#ifndef WIP_LessVertexPatching
-OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 11,
-
-    XREF_D3D_CommonSetRenderTarget,
-    XRefZero)
-#else
-OOVPA_XREF(D3D_CommonSetRenderTargetB, 4627, 1+11,
-
-    XREF_D3D_CommonSetRenderTarget,
-    XRefOne)
-
-        XREF_ENTRY( 0x18, XREF_OFFSET_D3DDEVICE_M_RENDERTARGET ), // Derived TODO : Verify offset
-#endif
-        // D3D_CommonSetRenderTargetB+0x00 : sub esp, 0x24
-        { 0x00, 0x83 },
-        { 0x01, 0xEC },
-        { 0x02, 0x24 },
-
-        // D3D_CommonSetRenderTargetB+0x86 : jmp +0x06
-        { 0x8D, 0xEB },
-        { 0x8E, 0x04 },
-
-        // D3D_CommonSetRenderTargetB+0xE4 : and eax, 0x0FFF
-        { 0xE4, 0x25 },
-        { 0xE5, 0xFF },
-        { 0xE6, 0x0F },
-        { 0xE7, 0x00 },
-
-        // D3D_CommonSetRenderTargetB+0xF4 : jge +0x06
-        { 0xF4, 0x7D },
-        { 0xF5, 0x06 },
 OOVPA_END;
 
 // ******************************************************************

@@ -35,15 +35,15 @@
 // Titles which did compiled with full libary version
 //   [LibV] Title Name                       |  Verify   |   Comments
 //-----------------------------------------------------------------------
-// * [3925] Nascar Heat 2002                 |    20%    |
-// * [4039] NBA 2K2                          |    20%    |
-// * [4432] Bruce Lee                        |    20%    |
-// * [4627] Battle Engine Aquila             |    50%    |
-// * [4928] Shin Megami Tensei - Nine        |    50%    |
-// * [5233] Midtown Madness 3                |    50%    |
-// * [5455] Freaky Flyers                    |    50%    |
-// * [5659] Ninja Gaiden                     |    50%    |
-// * [5849] Grand Theft Auto - San Andreas   |    90%    |
+// * [3925] Nascar Heat 2002                 |    20%    | Only verified an actually used library.
+// * [4039] NBA 2K2                          |    20%    | Only verified an actually used library.
+// * [4432] Bruce Lee                        |    20%    | Only verified an actually used library.
+// * [4627] Battle Engine Aquila             |   100%    | Only has 50%-ish of the library compiled with xbe build.
+// * [4928] Shin Megami Tensei - Nine        |   100%    | Only has 80% of the library compiled with xbe build.
+// * [5233] Midtown Madness 3                |    50%    | Only has 50%-ish of the library compiled with xbe build.
+// * [5455] Freaky Flyers                    |    50%    | Only has 50%-ish of the library compiled with xbe build.
+// * [5659] Ninja Gaiden                     |    50%    | Only has a few library.
+// * [5849] Grand Theft Auto - San Andreas   |   100%    | Only has 50%-ish of the library compiled with xbe build.
 
 // * About the number of OOVPA
 //   * 1024 and 1xxx - Cmpatible with known functions probably.
@@ -229,8 +229,8 @@ OOVPATable D3D8LTCG_OOVPAV2[] = {
 	REGISTER_OOVPAS(Get2DSurfaceDesc_4, UNPATCHED, 2048),
 	REGISTER_OOVPAS(Lock3DSurface_16, UNPATCHED, 2048),
 	REGISTER_OOVPAS(D3DDevice_SetFlickerFilter_0, UNPATCHED, 2048),
-// *********************** Copy from D3D8.OOVPA.inl *****************
 
+// *********************** Copy from D3D8.OOVPA.inl *****************
 	REGISTER_OOVPAS(CMiniport_CreateCtxDmaObject, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(CMiniport_InitHardware, PATCH, 3911, 4034, 5455),
 	REGISTER_OOVPAS(CMiniport_IsFlipPending, UNPATCHED, 3911, 4242, 4627, 4928),
@@ -448,8 +448,6 @@ OOVPATable D3D8LTCG_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3D_CheckDeviceFormat, UNPATCHED, 3911),
 	REGISTER_OOVPAS(D3D_ClearStateBlockFlags, XREF, 3911),
 	REGISTER_OOVPAS(D3D_CommonSetRenderTarget, XREF, 4627, 5028), // Used between 4627 to 5233 (from 5344's comment)
-	REGISTER_OOVPAS(D3D_CommonSetRenderTargetB, XREF, 4627),
-	REGISTER_OOVPAS(D3D_CreateDeviceX, UNPATCHED, 4627),
 	REGISTER_OOVPAS(D3D_CreateStandAloneSurface, XREF, 4034),
 	REGISTER_OOVPAS(D3D_EnumAdapterModes, UNPATCHED, 3911),
 	REGISTER_OOVPAS(D3D_GetAdapterDisplayMode, UNPATCHED, 3911, 4627),
@@ -457,7 +455,6 @@ OOVPATable D3D8LTCG_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3D_GetAdapterModeCount, UNPATCHED, 3911),
 	REGISTER_OOVPAS(D3D_GetDeviceCaps, UNPATCHED, 3911),
 	REGISTER_OOVPAS(D3D_KickOffAndWaitForIdle, PATCH, 3911, 4034, 4627, 5028),
-	REGISTER_OOVPAS(D3D_KickOffAndWaitForIdle2, PATCH, 4627),
 	REGISTER_OOVPAS(D3D_LazySetPointParams, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(D3D_RecordStateBlock, XREF, 3911),
 	REGISTER_OOVPAS(D3D_SetCommonDebugRegisters, PATCH, 3911),

@@ -32,7 +32,6 @@
 // *
 // ******************************************************************
 
-//[5344] Enter the Matrix
 // ******************************************************************
 // * D3DDevice_DeleteVertexShader
 // ******************************************************************
@@ -51,7 +50,6 @@ OOVPA_NO_XREF(D3DDevice_DeleteVertexShader_0, 2036, 9)
         { 0x14, 0xC3 },
 OOVPA_END;
 
-//[5344] Enter the Matrix
 // ******************************************************************
 // * D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************
@@ -78,7 +76,6 @@ OOVPA_NO_XREF(D3DDevice_DrawIndexedVerticesUP, 1048, 17)
         { 0x35, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_DrawVerticesUP
 // ******************************************************************
@@ -98,7 +95,6 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 1024, 9)
         { 0x11, 0xEC },
 OOVPA_END;
 
-//[5344] Enter the Matrix
 // ******************************************************************
 // * D3DDevice_End
 // ******************************************************************
@@ -113,7 +109,6 @@ OOVPA_NO_XREF(D3DDevice_End, 1048, 7)
         { 0x49, 0xC3 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetLight
 // ******************************************************************
@@ -135,7 +130,6 @@ OOVPA_NO_XREF(D3DDevice_SetLight, 1024, 12)
         { 0x2B, 0xC0 },
 OOVPA_END;
 
-//[5344] Yager
 // ******************************************************************
 // * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -153,7 +147,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 1060, 8)
         { 0x26, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -171,7 +164,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 1072, 8)
         { 0x27, 0x89 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
@@ -190,7 +182,6 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1072, 9)
         { 0x15, 0x75 },
 OOVPA_END;
 
-//[5849] Grand Theft Auto - San Andreas
 // ******************************************************************
 // * D3DDevice_SetScissors
 // ******************************************************************
