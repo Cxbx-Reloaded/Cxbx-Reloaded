@@ -63,6 +63,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"
 #include "CxbxKrnl\HLEIntercept.h"
+#include "CxbxKrnl\EmuKrnlAvModes.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
@@ -310,170 +311,15 @@ const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
 	return nullptr;
 }
 
-//
-// OPENGL
-//
-
-// 
-#define X_D3DTS_STAGECOUNT 4
-
-HDC g_EmuWindowsDC = 0;
-GLuint VertexProgramIDs[4] = { 0, 0, 0, 0 };
-uint ActiveVertexProgramID = 0;
-GLuint TextureIDs[X_D3DTS_STAGECOUNT] = { 0, 0, 0, 0 };
-
-// Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
-// Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
-// for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
-// as much as possible. Only when there's no conventional attribute available, we use generic attributes.
-// So in the following header, we use conventional attributes first, and generic attributes for the
-// rest of the vertex attribute slots. This makes it possible to support immediate and deferred mode
-// rendering with the same shader, and the use of the OpenGL fixed-function pipeline without a shader.
-std::string DxbxVertexShaderHeader =
-"!!ARBvp1.0\n"
-"TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;\n"
-"ADDRESS A0;\n"
-#ifdef DXBX_OPENGL_CONVENTIONAL
-"ATTRIB v0 = vertex.position;\n" // Was: vertex.attrib[0] (See "conventional" note above)
-"ATTRIB v1 = vertex.%s;\n" // Note : We replace this with "weight" or "attrib[1]" depending GL_ARB_vertex_blend
-"ATTRIB v2 = vertex.normal;\n" // Was: vertex.attrib[2]
-"ATTRIB v3 = vertex.color.primary;\n" // Was: vertex.attrib[3]
-"ATTRIB v4 = vertex.color.secondary;\n" // Was: vertex.attrib[4]
-"ATTRIB v5 = vertex.fogcoord;\n" // Was: vertex.attrib[5]
-"ATTRIB v6 = vertex.attrib[6];\n"
-"ATTRIB v7 = vertex.attrib[7];\n"
-"ATTRIB v8 = vertex.texcoord[0];\n" // Was: vertex.attrib[8]
-"ATTRIB v9 = vertex.texcoord[1];\n" // Was: vertex.attrib[9]
-"ATTRIB v10 = vertex.texcoord[2];\n" // Was: vertex.attrib[10]
-"ATTRIB v11 = vertex.texcoord[3];\n" // Was: vertex.attrib[11]
-#else
-"ATTRIB v0 = vertex.attrib[0];\n"
-"ATTRIB v1 = vertex.attrib[1];\n"
-"ATTRIB v2 = vertex.attrib[2];\n"
-"ATTRIB v3 = vertex.attrib[3];\n"
-"ATTRIB v4 = vertex.attrib[4];\n"
-"ATTRIB v5 = vertex.attrib[5];\n"
-"ATTRIB v6 = vertex.attrib[6];\n"
-"ATTRIB v7 = vertex.attrib[7];\n"
-"ATTRIB v8 = vertex.attrib[8];\n"
-"ATTRIB v9 = vertex.attrib[9];\n"
-"ATTRIB v10 = vertex.attrib[10];\n"
-"ATTRIB v11 = vertex.attrib[11];\n"
-#endif
-"ATTRIB v12 = vertex.attrib[12];\n"
-"ATTRIB v13 = vertex.attrib[13];\n"
-"ATTRIB v14 = vertex.attrib[14];\n"
-"ATTRIB v15 = vertex.attrib[15];\n"
-"OUTPUT oPos = result.position;\n"
-"OUTPUT oD0 = result.color.front.primary;\n"
-"OUTPUT oD1 = result.color.front.secondary;\n"
-"OUTPUT oB0 = result.color.back.primary;\n"
-"OUTPUT oB1 = result.color.back.secondary;\n"
-"OUTPUT oPts = result.pointsize;\n"
-"OUTPUT oFog = result.fogcoord;\n"
-"OUTPUT oT0 = result.texcoord[0];\n"
-"OUTPUT oT1 = result.texcoord[1];\n"
-"OUTPUT oT2 = result.texcoord[2];\n"
-"OUTPUT oT3 = result.texcoord[3];\n"
-"PARAM c[] = { program.env[0..191] };\n" // All constants in 1 array declaration (requires NV_gpu_program4?)
-"PARAM mvp[4] = { state.matrix.mvp };\n";
-
-void SetupPixelFormat(HDC DC)
-{
-	const PIXELFORMATDESCRIPTOR pfd = {
-		/* .nSize = */ sizeof(PIXELFORMATDESCRIPTOR), // size
-		/* .nVersion = */ 1,   // version
-		/* .dwFlags = */ PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER, // support double-buffering
-		/* .iPixelType = */ PFD_TYPE_RGBA, // color type
-		/* .cColorBits = */ 32,   // preferred color depth
-		/* .cRedBits = */ 0,
-		/* .cRedShift = */ 0, // color bits (ignored)
-		/* .cGreenBits = */ 0,
-		/* .cGreenShift = */ 0,
-		/* .cBlueBits = */ 0,
-		/* .cBlueShift = */ 0,
-		/* .cAlphaBits = */ 0,
-		/* .cAlphaShift = */ 0,   // no alpha buffer
-		/* .cAccumBits = */ 0,
-		/* .cAccumRedBits = */ 0,    // no accumulation buffer,
-		/* .cAccumGreenBits = */ 0,      // accum bits (ignored)
-		/* .cAccumBlueBits = */ 0,
-		/* .cAccumAlphaBits = */ 0,
-		/* .cDepthBits = */ 16,   // depth buffer
-		/* .cStencilBits = */ 0,   // no stencil buffer
-		/* .cAuxBuffers = */ 0,   // no auxiliary buffers
-		/* .iLayerType= */ PFD_MAIN_PLANE,   // main layer
-		/* .bReserved = */ 0,
-		/* .dwLayerMask = */ 0,
-		/* .dwVisibleMask = */ 0,
-		/* .dwDamageMask = */ 0                    // no layer, visible, damage masks
-	};
-
-	int PixelFormat = ChoosePixelFormat(DC, &pfd);
-	if (PixelFormat == 0)
-		return;
-
-	if (SetPixelFormat(DC, PixelFormat, &pfd) != TRUE)
-		return;
-}
-
-// From https://github.com/inolen/redream/blob/master/src/video/gl_backend.c
-static int rb_compile_shader(const char *source, GLenum shader_type, GLuint *shader)
-{
-	size_t sourceLength = strlen(source);
-
-	*shader = glCreateShader(shader_type);
-	glShaderSource(*shader, 1, (const GLchar **)&source,
-		(const GLint *)&sourceLength);
-	glCompileShader(*shader);
-
-	GLint compiled;
-	glGetShaderiv(*shader, GL_COMPILE_STATUS, &compiled);
-
-	if (!compiled) {
-		//		rb_print_shader_log(*shader);
-		glDeleteShader(*shader);
-		return 0;
-	}
-
-	return 1;
-}
-
-void DxbxCompileShader(std::string Shader)
-{
-	int GLErrorPos;
-
-	//	if (MayLog(lfUnit))
-	//		DbgPrintf("  NV2A: New vertex program :\n" + Shader);
-
-	/*
-	glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Shader.size(), Shader.c_str());
-
-	// errors are catched
-	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &GLErrorPos);
-	*/
-	GLuint shader;
-
-	GLErrorPos = rb_compile_shader(Shader.c_str(), GL_VERTEX_SHADER, &shader); // TODO : GL_VERTEX_SHADER_ARB ??
-																			   /*
-																			   if (GLErrorPos > 0)
-																			   {
-																			   Shader.insert(GLErrorPos, "{ERROR}");
-																			   EmuWarning("Program error at position %d:", GLErrorPos);
-																			   EmuWarning((char*)glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-																			   EmuWarning(Shader.c_str());
-																			   }
-																			   */
-}
-
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
 std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
 
-extern ULONG g_AvDisplayModeFormat;
+extern ULONG AvpCurrentMode;		// Current AV Mode
+extern ULONG g_AvDisplayModeFormat;		// Current AV FrameBuffer Format
 
-void AvDisplayModeToGL(ULONG displayMode, GLenum* internalFormat, GLenum* format, GLenum* type)
+void AvDisplayModeFormatToGL(ULONG displayModeFormat, GLenum* internalFormat, GLenum* format, GLenum* type)
 {
 #define D3DFMT_LIN_A1R5G5B5   0x00000010
 #define D3DFMT_LIN_X1R5G5B5   0x0000001C
@@ -481,7 +327,7 @@ void AvDisplayModeToGL(ULONG displayMode, GLenum* internalFormat, GLenum* format
 #define D3DFMT_LIN_A8R8G8B8   0x00000012
 #define D3DFMT_LIN_X8R8G8B8   0x0000001E
 
-	switch (displayMode) {
+	switch (displayModeFormat) {
 	case D3DFMT_LIN_A1R5G5B5:
 		*internalFormat = GL_RGB5_A1;
 		*format = GL_BGRA;
@@ -514,6 +360,22 @@ void AvDisplayModeToGL(ULONG displayMode, GLenum* internalFormat, GLenum* format
 	}
 }
 
+void AvGetFormatSize(ULONG mode, int* width, int* height)
+{
+	// Iterate through the display mode table until we find a matching mode
+	for (unsigned int i = 0; i < g_DisplayModeCount; i++) {
+		if (g_DisplayModes[i].DisplayMode == mode) {
+			*width = g_DisplayModes[i].Width;
+			*height = g_DisplayModes[i].Height;
+			return;
+		}
+	}
+
+	// if we couldn't find a valid mode, fallback to 640x480
+	*width = 640;
+	*height = 480;
+}
+
 void NV2ADevice::SwapBuffers(NV2AState *d)
 {
 	// TODO: Use source framebuffer size from Display Mode, use destination size from Window size
@@ -526,27 +388,30 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	static GLenum internalFormat = GL_RGBA;
 	static GLenum format = GL_RGBA;
 	static GLenum type = GL_UNSIGNED_INT_8_8_8_8;
+	static int framebufferWidth = 640;
+	static int framebufferHeight = 480;
 
 	static GLuint texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
-	// This is requried for titles that use a non ARGB framebuffer, such was Beats of Rage
+	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
 	if (g_AvDisplayModeFormat != PreviousAvDisplayModeFormat) {
-		AvDisplayModeToGL(g_AvDisplayModeFormat, &internalFormat, &format, &type);
+		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &internalFormat, &format, &type);
+		AvGetFormatSize(AvpCurrentMode, &framebufferWidth, &framebufferHeight);
 		if (texture != -1) {
 			glDeleteTextures(1, &texture);
 			texture = -1;
 		}
 	}
-
+	
 	// If we need to create a new texture, do so, otherwise, update the existing
 	if (texture == -1) {
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 640, 480, 0, format, type, (void*)(0x80000000 | d->pcrtc.start));
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)(0x80000000 | d->pcrtc.start));
 	} else {
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 640, 480, format, type, (void*)(0x80000000 | d->pcrtc.start));
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)(0x80000000 | d->pcrtc.start));
 	}
 
 	PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;

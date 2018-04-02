@@ -512,8 +512,6 @@ DEVICE_WRITE32(PGRAPH)
 	DEVICE_WRITE32_END(PGRAPH);
 }
 
-extern HDC g_EmuWindowsDC;
-
 static void pgraph_method(NV2AState *d,
 							unsigned int subchannel,
 							unsigned int method,
