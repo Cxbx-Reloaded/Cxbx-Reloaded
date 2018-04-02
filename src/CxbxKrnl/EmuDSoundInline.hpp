@@ -286,7 +286,10 @@ inline void GeneratePCMFormat(
         GenerateXboxBufferCache(pDSBufferDesc, dwEmuFlags, X_BufferSizeRequest, X_BufferCache, X_BufferCacheSize);
     }
 
-    pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
+    // Handle DSound Buffer only
+    if (X_BufferCacheSize > 0) {
+        pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
+    }
 }
 
 inline void DSoundGenericUnlock(
@@ -1060,6 +1063,11 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
         hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);
     } else {
+        // DSound Stream only
+        if (X_BufferCacheSize == 0) {
+            // Allocate at least 5 second worth of bytes in PCM format.
+            pBufferDesc->dwBufferBytes = pBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
+        }
         DSoundBufferReplace(pDSBuffer, pBufferDesc, dwPlayFlags, pDS3DBuffer);
     }
 

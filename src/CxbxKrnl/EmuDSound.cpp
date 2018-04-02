@@ -3394,6 +3394,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
+    XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+
     return HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
