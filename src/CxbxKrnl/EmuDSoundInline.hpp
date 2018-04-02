@@ -936,6 +936,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
 
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
+        // TODO: (DSound) Should we do restrictive or passive to return actual result back to titles?
         // Test case: Turok Evolution, Jet Set Radio Future, ?
         if (x == 0.0f && y == 0.0f && z == 0.0f) {
             printf("WARNING: SetConeOrientation was called with x = 0, y = 0, and z = 0. Current action is ignore call to PC.\n");

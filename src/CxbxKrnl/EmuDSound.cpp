@@ -600,7 +600,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pDSoundPrimary3DListener8->SetOrientation(xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
+    HRESULT hRet = DS_OK;
+    // TODO: (DSound) Should we do restrictive or passive to return actual result back to titles?
+    // Test case: Jet Set Radio Future, ?
+    if (xFront == 0.0f && yFront == 0.0f && zFront == 0.0f) {
+        printf("WARNING: SetOrientation was called with xFront = 0, yFront = 0, and zFront = 0. Current action is ignore call to PC.\n");
+    }
+    if (xTop == 0.0f && yTop == 0.0f && zTop == 0.0f) {
+        printf("WARNING: SetOrientation was called with xTop = 0, yTop = 0, and zTop = 0. Current action is ignore call to PC.\n");
+    } else {
+        hRet = g_pDSoundPrimary3DListener8->SetOrientation(xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
+    }
 
     leaveCriticalSection;
 
