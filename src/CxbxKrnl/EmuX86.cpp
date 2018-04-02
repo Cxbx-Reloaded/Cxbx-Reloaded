@@ -54,6 +54,8 @@
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus
 
+extern uint32_t GetAPUTime();
+
 //
 // Read & write handlers handlers for I/O
 //
@@ -177,6 +179,9 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
 		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
+	} else if(addr == 0xFE80200C) {
+		// TODO: Remove this once we have an LLE APU Device
+		return GetAPUTime();
 	} else {
 		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
 		if (g_PCIBus->MMIORead(addr, &value, size)) {
