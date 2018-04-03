@@ -151,6 +151,7 @@ inline void GenerateXboxBufferCache(
                 X_BufferCacheSize = X_BufferSizeRequest;
             }
             memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, X_BufferCacheSize);
+            free(tempBuffer);
         } else {
             *X_BufferCache = malloc(X_BufferSizeRequest);
         }
