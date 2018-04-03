@@ -423,7 +423,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	// Draw to screen..
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 8);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
