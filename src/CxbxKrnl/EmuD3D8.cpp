@@ -109,8 +109,6 @@ static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback rou
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
-static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count
-static unsigned int					g_Frames = 0;				 // Used for benchmarking/fps count
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // D3D based variables
@@ -128,6 +126,8 @@ typedef uint64_t resource_key_t;
 
 // resource caching for _Register
 std::vector<resource_key_t> g_RegisteredResources;
+
+extern void UpdateFPSCounter();
 
 // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
@@ -4081,8 +4081,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 		LOG_FUNC_ONE_ARG(Flags);
 
-	static clock_t lastDrawFunctionCallTime = 0;
-
 	// TODO: Ensure this flag is always the same across library versions
 	if (Flags != 0)
 		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
@@ -4090,7 +4088,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	CxbxReleaseBackBufferLock();
 
-	clock_t currentDrawFunctionCallTime = clock();
 	g_pD3DDevice8->EndScene();
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
@@ -4110,15 +4107,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		frameStartTime = std::chrono::high_resolution_clock::now();
 	}
 
-	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
-	lastDrawFunctionCallTime = currentDrawFunctionCallTime;
-	g_Frames++;
-
-	if (g_DeltaTime >= CLOCKS_PER_SEC) {
-		UpdateCurrentMSpFAndFPS();
-		g_Frames = 0;
-		g_DeltaTime -= CLOCKS_PER_SEC;
-	}
+	UpdateFPSCounter();
 	
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
@@ -7842,18 +7831,3 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
     }
 }
 
-// ******************************************************************
-// * update the current milliseconds per frame
-// ******************************************************************
-
-static void UpdateCurrentMSpFAndFPS() {
-	if (g_EmuShared) {
-		static float currentFPSVal = 30;
-
-		float currentMSpFVal = (float)(1000.0 / (currentFPSVal == 0 ? 0.001 : currentFPSVal));
-		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
-
-		currentFPSVal = (float)(g_Frames*0.5 + currentFPSVal*0.5);
-		g_EmuShared->SetCurrentFPS(&currentFPSVal);
-	}
-}

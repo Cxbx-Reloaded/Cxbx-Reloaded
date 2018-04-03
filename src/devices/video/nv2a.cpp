@@ -376,6 +376,7 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 	*height = 480;
 }
 
+extern void UpdateFPSCounter();
 void NV2ADevice::SwapBuffers(NV2AState *d)
 {
 	if (!d->pgraph.opengl_enabled) {
@@ -440,6 +441,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	NV2A_GL_DGROUP_END();
 	unlockGL(&d->pgraph);
 
+	UpdateFPSCounter();
 }
 
 // TODO: Fix this properl
