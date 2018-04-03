@@ -495,6 +495,7 @@ typedef struct NV2AState {
     // PCIDevice dev;
     // qemu_irq irq;
     bool exiting;
+	bool enable_overlay = false;
 
     // VGACommonState vga;
     // GraphicHwOps hw_ops;

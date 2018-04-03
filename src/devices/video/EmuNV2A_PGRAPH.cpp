@@ -468,6 +468,7 @@ DEVICE_WRITE32(PGRAPH)
 					NV_PGRAPH_SURFACE_MODULO_3D));
 			qemu_cond_broadcast(&d->pgraph.flip_3d);
 
+			// TODO: Remove this when the AMD crash is solved in vblank_thread
 			NV2ADevice::SwapBuffers(d);
 		}
 		break;
@@ -511,8 +512,6 @@ DEVICE_WRITE32(PGRAPH)
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
-
-extern HDC g_EmuWindowsDC;
 
 static void pgraph_method(NV2AState *d,
 							unsigned int subchannel,
