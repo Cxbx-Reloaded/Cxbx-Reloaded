@@ -3910,17 +3910,12 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
 
 	assert(end < d->vram_size);
 
-	if (!glBufferSubData) {
-		printf("glSubBufferData not found");
-	}
-	else {
-		// if (f || memory_region_test_and_clear_dirty(d->vram,
-		//                                             addr,
-		//                                             end - addr,
-		//                                             DIRTY_MEMORY_NV2A)) {
-		glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
-		// }
-	}
+	// if (f || memory_region_test_and_clear_dirty(d->vram,
+	//                                             addr,
+	//                                             end - addr,
+	//                                             DIRTY_MEMORY_NV2A)) {
+	glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
+	// }
 }
 
 static void pgraph_bind_vertex_attributes(NV2AState *d,
