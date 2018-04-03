@@ -166,7 +166,7 @@ size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData
 
 int CountActiveD3DStreams()
 {
-	int lastStreamIndex;
+	int lastStreamIndex = -1;
 	for (int i = 0; i < 16; i++) {
 		if (g_D3DStreams[i] != nullptr) {
 			lastStreamIndex = i;
