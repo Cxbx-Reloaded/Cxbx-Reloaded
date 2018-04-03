@@ -467,9 +467,6 @@ DEVICE_WRITE32(PGRAPH)
 				% GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_MODULO_3D));
 			qemu_cond_broadcast(&d->pgraph.flip_3d);
-
-			// TODO: Remove this when the AMD crash is solved in vblank_thread
-			NV2ADevice::SwapBuffers(d);
 		}
 		break;
 	case NV_PGRAPH_FIFO:
@@ -752,7 +749,8 @@ static void pgraph_method(NV2AState *d,
 			pgraph_update_surface(d, false, true, true);
 			unlockGL(pg);
 
-			/* while (true) */ {
+
+			/*while (true) */ {
 				NV2A_DPRINTF("flip stall read: %d, write: %d, modulo: %d\n",
 					GET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_READ_3D),
 					GET_MASK(pg->regs[NV_PGRAPH_SURFACE], NV_PGRAPH_SURFACE_WRITE_3D),
@@ -766,6 +764,9 @@ static void pgraph_method(NV2AState *d,
 
 				qemu_cond_wait(&pg->flip_3d, &pg->lock);
 			}
+
+			// TODO: Remove this when the AMD crash is solved in vblank_thread
+			NV2ADevice::SwapBuffers(d);
 			NV2A_DPRINTF("flip stall done\n");
 			break;
 
