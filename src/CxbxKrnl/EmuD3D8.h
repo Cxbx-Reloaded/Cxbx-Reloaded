@@ -700,6 +700,8 @@ DWORD WINAPI EMUPATCH(D3DDevice_Swap)
     DWORD Flags
 );
 
+DWORD EMUPATCH(D3DDevice_Swap_0)();
+
 // ******************************************************************
 // * patch: IDirect3DResource8_Register
 // ******************************************************************

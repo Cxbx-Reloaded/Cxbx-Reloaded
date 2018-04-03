@@ -4052,6 +4052,23 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Present)
 
 std::chrono::time_point<std::chrono::high_resolution_clock> frameStartTime;
 
+// LTCG specific swap function...
+// Massive hack, but could coax some more LTCG titles into booting with HLE
+// This uses a custom calling convention where parameter is passed in EAX
+DWORD XTL::EMUPATCH(D3DDevice_Swap_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	uint32_t param;
+	__asm {
+		mov param, eax;
+	}
+
+	return EMUPATCH(D3DDevice_Swap)(param);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************

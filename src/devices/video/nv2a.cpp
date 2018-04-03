@@ -378,6 +378,10 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 
 void NV2ADevice::SwapBuffers(NV2AState *d)
 {
+	if (!d->pgraph.opengl_enabled) {
+		return;
+	}
+
 	lockGL(&d->pgraph);
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
