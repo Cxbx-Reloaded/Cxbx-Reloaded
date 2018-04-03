@@ -71,6 +71,7 @@ void CxbxInitAudio();
 #define X_DSBSTOPEX_IMMEDIATE         0x00000000
 #define X_DSBSTOPEX_ENVELOPE          0x00000001
 #define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
+#define X_DSBSTOPEX_ALL               (X_DSBSTOPEX_ENVELOPE | X_DSBSTOPEX_RELEASEWAVEFORM)
 
 
 // ******************************************************************
@@ -86,6 +87,8 @@ struct X_DSBUFFERDESC
     DWORD           dwInputMixBin;
 };
 
+typedef VOID(CALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
+
 // ******************************************************************
 // * X_DSSTREAMDESC
 // ******************************************************************
@@ -94,9 +97,9 @@ struct X_DSSTREAMDESC
     DWORD                       dwFlags;
     DWORD                       dwMaxAttachedPackets;
     LPWAVEFORMATEX              lpwfxFormat;
-    PVOID                       lpfnCallback;   // TODO: Correct Parameter
+    LPFNXMOCALLBACK             lpfnCallback;
     LPVOID                      lpvContext;
-    PVOID                       lpMixBins;      // TODO: Correct Parameter
+    PVOID                       lpMixBins;      // TODO: Implement
 };
 
 // ******************************************************************
@@ -120,6 +123,11 @@ typedef struct _XMEDIAPACKET
     PREFERENCE_TIME prtTimestamp;
 }
 XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
+
+#define XMP_STATUS_SUCCESS             S_OK
+#define XMP_STATUS_PENDING             E_PENDING
+#define XMP_STATUS_FLUSHED             E_ABORT
+#define XMP_STATUS_FAILURE             E_FAIL
 
 // ******************************************************************
 // * XMEDIAINFO
@@ -291,6 +299,15 @@ enum X_DSB_TOGGLE {
     X_DSB_TOGGLE_LOOP
 };
 
+typedef struct _DSoundBuffer_Lock {
+    PVOID   pLockPtr1;
+    DWORD   dwLockBytes1;
+    PVOID   pLockPtr2;
+    DWORD   dwLockBytes2;
+    DWORD   dwLockOffset;
+    DWORD   dwLockFlags;
+} DSoundBuffer_Lock;
+
 // ******************************************************************
 // * X_CDirectSoundBuffer
 // ******************************************************************
@@ -305,17 +322,17 @@ struct X_CDirectSoundBuffer
     };
 
     BYTE                    UnknownB[0x0C];     // Offset: 0x24
-    PVOID                   EmuBuffer;          // Offset: 0x28
+    LPVOID                  X_BufferCache;      // Offset: 0x28
     DSBUFFERDESC*           EmuBufferDesc;      // Offset: 0x2C
-    PVOID                   EmuLockPtr1;        // Offset: 0x30
+    /*LPVOID                  EmuLockPtr1;        // Offset: 0x30
     DWORD                   EmuLockBytes1;      // Offset: 0x34
-    PVOID                   EmuLockPtr2;        // Offset: 0x38
-    DWORD                   EmuLockBytes2;      // Offset: 0x3C
+    LPVOID                  EmuLockPtr2;        // Offset: 0x38
+    DWORD                   EmuLockBytes2;      // Offset: 0x3C*/
     DWORD                   EmuPlayFlags;       // Offset: 0x40
     DWORD                   EmuFlags;           // Offset: 0x44
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8;
-    DWORD                   EmuLockOffset;
-    DWORD                   EmuLockFlags;
+    //DWORD                   EmuLockOffset;
+    //DWORD                   EmuLockFlags;
     // Play/Loop Region Section
     X_DSB_TOGGLE            EmuBufferToggle;
     DWORD                   EmuRegionLoopStartOffset;
@@ -324,15 +341,19 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuRegionPlayLength;
     LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
     LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
+    DWORD                   X_BufferCacheSize;
+    DSoundBuffer_Lock       Host_lock;
+    DSoundBuffer_Lock       X_lock;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
-//Custom flags?
-#define DSB_FLAG_PCM                    0x00000001
-#define DSB_FLAG_XADPCM                 0x00000002
-#define DSB_FLAG_PCM_UNKNOWN            0x00000010
-#define DSB_FLAG_SYNCHPLAYBACK_CONTROL  0x00000100
-#define DSB_FLAG_RECIEVEDATA            0x00001000
+//Custom flags (4 bytes support up to 31 shifts,starting from 0)
+#define DSB_FLAG_PCM                    (1 << 0)
+#define DSB_FLAG_XADPCM                 (1 << 1)
+#define DSB_FLAG_PCM_UNKNOWN            (1 << 2)
+#define DSB_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
+#define DSB_FLAG_PAUSE                  (1 << 11)
+#define DSB_FLAG_RECIEVEDATA            (1 << 20)
 #define DSB_FLAG_AUDIO_CODECS           (DSB_FLAG_PCM | DSB_FLAG_XADPCM | DSB_FLAG_PCM_UNKNOWN)
 
 // ******************************************************************
@@ -372,6 +393,15 @@ class X_CMcpxStream
     public:
 
         class X_CDirectSoundStream *pParentStream;
+};
+
+// host_voice_packet is needed for DirectSoundStream packet handling internally.
+struct host_voice_packet {
+    XTL::XMEDIAPACKET xmp_data;
+    PVOID   pBuffer_data;
+    DWORD   rangeStart;
+    bool    isWritten;
+    bool    isPlayed;
 };
 
 // ******************************************************************
@@ -437,16 +467,24 @@ class X_CDirectSoundStream
 
     public:
         // cached data
-        LPDIRECTSOUNDBUFFER8        EmuDirectSoundBuffer8;
-        LPDIRECTSOUND3DBUFFER8      EmuDirectSound3DBuffer8;
-        PVOID                       EmuBuffer;
-        LPDSBUFFERDESC              EmuBufferDesc;
-        PVOID                       EmuLockPtr1;
-        DWORD                       EmuLockBytes1;
-        PVOID                       EmuLockPtr2;
-        DWORD                       EmuLockBytes2;
-        DWORD                       EmuPlayFlags;
-        DWORD                       EmuFlags;
+        LPDIRECTSOUNDBUFFER8                    EmuDirectSoundBuffer8;
+        LPDIRECTSOUND3DBUFFER8                  EmuDirectSound3DBuffer8;
+        PVOID                                   X_BufferCache; // Not really needed...
+        LPDSBUFFERDESC                          EmuBufferDesc;
+        PVOID                                   EmuLockPtr1;
+        DWORD                                   EmuLockBytes1;
+        PVOID                                   EmuLockPtr2;
+        DWORD                                   EmuLockBytes2;
+        DWORD                                   EmuPlayFlags;
+        DWORD                                   EmuFlags;
+        DWORD                                   X_BufferCacheSize; // Not really needed...
+        DWORD                                   X_MaxAttachedPackets;
+        std::vector<struct host_voice_packet>   Host_BufferPacketArray;
+        DWORD                                   Host_dwWriteOffsetNext;
+        DWORD                                   Host_dwTriggerRange;
+        bool                                    Host_isProcessing;
+        LPFNXMOCALLBACK                         Xb_lpfnCallback;
+        LPVOID                                  Xb_lpvContext;
 };
 
 // ******************************************************************
