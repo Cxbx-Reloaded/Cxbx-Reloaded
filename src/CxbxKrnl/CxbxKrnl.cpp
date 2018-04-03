@@ -578,6 +578,7 @@ void PrintCurrentConfigurationLog()
 		printf("--------------------------- HACKS CONFIG ---------------------------\n");
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
+		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -1036,6 +1037,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_DisablePixelShaders = !!HackEnabled;
 		g_EmuShared->GetUncapFramerate(&HackEnabled);
 		g_UncapFramerate = !!HackEnabled;
+		g_EmuShared->GetUseAllCores(&HackEnabled);
+		g_UseAllCores = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF

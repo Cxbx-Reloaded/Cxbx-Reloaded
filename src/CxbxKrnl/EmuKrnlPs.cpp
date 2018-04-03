@@ -104,8 +104,10 @@ void InitXboxThread(DWORD_PTR cores)
 	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 
-	// Run this thread solely on the indicated core(s) :
-	SetThreadAffinityMask(GetCurrentThread(), cores);
+	if (!g_UseAllCores) {
+		// Run this thread solely on the indicated core(s) :
+		SetThreadAffinityMask(GetCurrentThread(), cores);
+	}
 }
 
 // PsCreateSystemThread proxy procedure

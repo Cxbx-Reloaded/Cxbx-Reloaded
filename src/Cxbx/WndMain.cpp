@@ -96,7 +96,8 @@ void WndMain::InitializeSettings() {
 			RegDeleteValue(hKey, buffer);
 		}
 		RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
-		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "KrnlDebug");
+		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "HackUncapFrameRate");
+		RegDeleteValue(hKey, "HackUseAllCores");  RegDeleteValue(hKey, "KrnlDebug");
 		RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
 		RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
 
@@ -181,6 +182,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			result = RegQueryValueEx(hKey, "HackUncapFrameRate", NULL, &dwType, (PBYTE)&m_UncapFramerate, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_UncapFramerate = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "HackUseAllCores", NULL, &dwType, (PBYTE)&m_UseAllCores, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_UseAllCores = 0;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -335,6 +342,12 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackUncapFrameRate", 0, dwType, (PBYTE)&m_UncapFramerate, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -1293,6 +1306,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_HACKS_RUNXBOXTHREADSONALLCORES:
+				m_UseAllCores = !m_UseAllCores;
+				RefreshMenus();
+				break;
+
 
             case ID_HELP_ABOUT:
             {
@@ -1718,6 +1736,9 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_UNCAPFRAMERATE, chk_flag);
+
+			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
 		}
 
         // emulation menu
@@ -2090,6 +2111,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	// register Hacks with emulator process
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
 	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
+	g_EmuShared->SetUseAllCores(&m_UseAllCores);
 
 	// shell exe
     {
