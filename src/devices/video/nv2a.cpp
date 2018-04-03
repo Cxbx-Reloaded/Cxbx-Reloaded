@@ -451,7 +451,9 @@ static void nv2a_vblank_thread(NV2AState *d)
 			update_irq(d);
 			nextVBlankTime = GetNextVBlankTime();
 
-			NV2ADevice::SwapBuffers(d);
+			// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
+			// But it causes crashes on AMD hardware for reasons currently unknown...
+			//NV2ADevice::SwapBuffers(d);
 		}
 	}
 }
