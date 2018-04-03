@@ -197,14 +197,14 @@ void glo_set_current(GloContext *context) {
         wglMakeCurrent(NULL, NULL);
     } else {
         wglMakeCurrent(context->hDC, context->hContext);
-    }
 
-	// Re-init glew after every context change
-	// Annoyingly, extensions on Windows are context specific...
-	if (glewInit() != GLEW_OK) {
-		fprintf(stderr, "Glew init failed.\n");
-		abort();
-	}
+		// Re-init glew after every context change
+		// Annoyingly, extensions on Windows are context specific...
+		if (glewInit() != GLEW_OK) {
+			fprintf(stderr, "Glew init failed.\n");
+			abort();
+		}
+    }
 }
 
 /* Destroy a previously created OpenGL context */
