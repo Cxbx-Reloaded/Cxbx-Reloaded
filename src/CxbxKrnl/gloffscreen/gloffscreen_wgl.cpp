@@ -106,6 +106,7 @@ static void glo_init(void) {
     wglMakeCurrent(glo.hDC, glo.hContext);
 
     /* Initialize glew */
+	glewExperimental = TRUE;
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Glew init failed.\n");
         abort();
