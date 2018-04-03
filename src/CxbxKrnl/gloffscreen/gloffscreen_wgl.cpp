@@ -177,6 +177,14 @@ GloContext *glo_context_create(void) {
 
     glo_set_current(context);
 
+	// Init Glew a second time, with the new context
+	// This should't be needed...
+	glewExperimental = TRUE;
+	if (glewInit() != GLEW_OK) {
+		fprintf(stderr, "Glew init failed.\n");
+		abort();
+	}
+
 	printf("---Opengl---\n");
 	printf("%s\n", glGetString(GL_VERSION));
 	printf("%s\n", glGetString(GL_VENDOR));
