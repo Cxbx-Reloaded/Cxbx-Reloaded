@@ -88,7 +88,7 @@ uint32_t GetAPUTime()
 	PerformanceCounter.QuadPart -= APUInitialPerformanceCounter.QuadPart;
 	// Apply a delta to make it appear to tick at 48khz
 	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxAPU_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
-	return PerformanceCounter.QuadPart;
+	return (DWORD)PerformanceCounter.QuadPart;
 }
 
 
