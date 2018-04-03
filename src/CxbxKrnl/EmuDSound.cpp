@@ -178,11 +178,13 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
  */
 
 
+// TODO: Both buffer and stream cache size need to merge as one, there is no such thing as 4094 SGE
+
 // size of sound buffer cache (used for periodic sound buffer updates)
 #define SOUNDBUFFER_CACHE_SIZE 0x800 //Maximum is 2047 SGE overall
 
 // size of sound stream cache (used for periodic sound stream updates)
-#define SOUNDSTREAM_CACHE_SIZE 0x200
+#define SOUNDSTREAM_CACHE_SIZE 0x800
 
 //Currently disabled since below may not be needed since under -6,400 is just silence yet accepting up to -10,000
 // Xbox to PC volume ratio format (-10,000 / -6,400 )
