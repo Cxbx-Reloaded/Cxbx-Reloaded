@@ -60,9 +60,6 @@ void gl_debug_group_begin(const char *fmt, ...)
     assert(n <= sizeof(buffer));
     va_end(ap);
 
-    /* Check for errors before entering group */
-    assert(glGetError() == GL_NO_ERROR);
-
 #if 0
     if (glPushDebugGroup) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, n, buffer);
@@ -72,9 +69,6 @@ void gl_debug_group_begin(const char *fmt, ...)
 
 void gl_debug_group_end(void)
 {
-    /* Check for errors when leaving group */
-    assert(glGetError() == GL_NO_ERROR);
-
 #if 0
     if (glPopDebugGroup) {
         glPopDebugGroup();
