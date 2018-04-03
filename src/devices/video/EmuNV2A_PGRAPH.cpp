@@ -1810,7 +1810,7 @@ static void pgraph_method(NV2AState *d,
 											 pg->inline_buffer_length
 												* sizeof(float) * 4,
 											 attribute->inline_buffer,
-											 GL_DYNAMIC_DRAW);
+											 GL_STATIC_DRAW);
 
 								/* Clear buffer for next batch */
 								g_free(attribute->inline_buffer);
@@ -1860,7 +1860,7 @@ static void pgraph_method(NV2AState *d,
 						glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 									 pg->inline_elements_length*4,
 									 pg->inline_elements,
-									 GL_DYNAMIC_DRAW);
+									 GL_STATIC_DRAW);
 
 						glDrawRangeElements(pg->shader_binding->gl_primitive_mode,
 											min_element, max_element,
@@ -2791,12 +2791,10 @@ void pgraph_init(NV2AState *d)
     glBufferData(GL_ARRAY_BUFFER,
                  d->vram_size,
                  NULL,
-                 GL_DYNAMIC_DRAW);
+                 GL_STATIC_DRAW);
 
     glGenVertexArrays(1, &pg->gl_vertex_array);
     glBindVertexArray(pg->gl_vertex_array);
-
-    assert(glGetError() == GL_NO_ERROR);
 
 	unlockGL(&d->pgraph);
 }
@@ -3431,8 +3429,6 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
 						   bytes_per_pixel, surface->pitch,
 						   width, height,
 						   buf);
-
-			assert(glGetError() == GL_NO_ERROR);
 		}
 
         if (swizzle) {
@@ -3914,15 +3910,12 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
 
 	assert(end < d->vram_size);
 
-    // if (f || memory_region_test_and_clear_dirty(d->vram,
-    //                                             addr,
-    //                                             end - addr,
-    //                                             DIRTY_MEMORY_NV2A)) {
-		glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
-    // }
-
-		auto error = glGetError();
-		assert(error == GL_NO_ERROR);
+	// if (f || memory_region_test_and_clear_dirty(d->vram,
+	//                                             addr,
+	//                                             end - addr,
+	//                                             DIRTY_MEMORY_NV2A)) {
+	glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
+	// }
 }
 
 static void pgraph_bind_vertex_attributes(NV2AState *d,
@@ -4005,7 +3998,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                     glBufferData(GL_ARRAY_BUFFER,
                                  num_elements * out_stride,
                                  attribute->converted_buffer,
-                                 GL_DYNAMIC_DRAW);
+                                 GL_STATIC_DRAW);
                     attribute->converted_elements = num_elements;
                 }
 
@@ -4076,7 +4069,7 @@ static unsigned int pgraph_bind_inline_array(NV2AState *d)
 
     glBindBuffer(GL_ARRAY_BUFFER, pg->gl_inline_array_buffer);
     glBufferData(GL_ARRAY_BUFFER, pg->inline_array_length*4, pg->inline_array,
-                 GL_DYNAMIC_DRAW);
+                 GL_STATIC_DRAW);
 
     pgraph_bind_vertex_attributes(d, index_count, true, vertex_size);
 

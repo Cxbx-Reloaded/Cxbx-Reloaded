@@ -106,6 +106,7 @@ static void glo_init(void) {
     wglMakeCurrent(glo.hDC, glo.hContext);
 
     /* Initialize glew */
+	glewExperimental = TRUE;
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Glew init failed.\n");
         abort();
@@ -139,6 +140,19 @@ static void glo_kill(void) {
     UnregisterClass(GLO_WINDOW_CLASS, glo.hInstance);
 }
 
+void GlMessageCallback(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam)
+{
+	printf("GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+}
+
 GloContext *glo_context_create(void) {
     if (!glo_inited)
       glo_init();
@@ -167,6 +181,12 @@ GloContext *glo_context_create(void) {
 	printf("%s\n", glGetString(GL_VERSION));
 	printf("%s\n", glGetString(GL_VENDOR));
 	printf("%s\n", glGetString(GL_RENDERER));
+
+	// Enable Debug Output
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback((GLDEBUGPROC)GlMessageCallback, 0);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,	0, NULL, GL_TRUE);
     return context;
 }
 
@@ -177,6 +197,13 @@ void glo_set_current(GloContext *context) {
         wglMakeCurrent(NULL, NULL);
     } else {
         wglMakeCurrent(context->hDC, context->hContext);
+
+		// Re-init glew after every context change
+		// Annoyingly, extensions on Windows are context specific...
+		if (glewInit() != GLEW_OK) {
+			fprintf(stderr, "Glew init failed.\n");
+			abort();
+		}
     }
 }
 
