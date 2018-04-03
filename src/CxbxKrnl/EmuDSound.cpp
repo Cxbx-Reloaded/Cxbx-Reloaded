@@ -516,14 +516,17 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                 buffer->isWritten = true;
 
             } else {
-                DWORD writePos = 0, playPos = 0;
-                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&playPos, &writePos);
+                // NOTE: p1. Do not use play cursor, use write cursor to check ahead since by the time it gets there. The buffer is already played.
+                // p2. Plus play cursor is not reliable to check, write cursor is reliable as it is update more often.
+                // Test case proof: Gauntlet Dark Legacy give 256 bytes of data to a per packet during intro FMV.
+                DWORD writePos = 0;
+                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
                 if (hRet == DS_OK) {
 
-                    int bufPlayed = playPos - buffer->rangeStart;
+                    int bufPlayed = writePos - buffer->rangeStart;
 
                     // Correct it if buffer was playing and is at beginning.
-                    if (bufPlayed < 0 && (buffer->isPlayed || (playPos + pThis->EmuBufferDesc->dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
+                    if (bufPlayed < 0 && (buffer->isPlayed || (writePos + pThis->EmuBufferDesc->dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
                         bufPlayed = pThis->EmuBufferDesc->dwBufferBytes - (bufPlayed * -1);
                     }
 
