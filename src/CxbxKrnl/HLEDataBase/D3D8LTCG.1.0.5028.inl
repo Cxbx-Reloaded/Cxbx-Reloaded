@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8.OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8LTCG.1.0.5028.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,30 +26,51 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2017 jarupxx
-// *  (c) 2017 RadWolfie
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_OOVPA_H
-#define D3D8_OOVPA_H
 
-#include "../OOVPA.h"
+// ******************************************************************
+// * Direct3D_CreateDevice
+// ******************************************************************
+//85C9750AC705 ...C21000
+OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2048, 8)
 
-extern LOOVPA<1 + 11> D3DDevice_SetTextureState_TexCoordIndex_3911;
-extern LOOVPA<2 + 16> D3DDevice_SetRenderState_CullMode_3911;
+        { 0x00, 0x55 },
 
-extern LOOVPA<1 + 12> D3DDevice_SetStreamSource_3911;
+        { 0x0D, 0x85 },
+        { 0x0E, 0xC9 },
+        { 0x0F, 0x75 },
+        { 0x10, 0x0A },
+        { 0x11, 0xC7 },
+        { 0x12, 0x05 },
 
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4034;
-extern LOOVPA<2 + 14> D3DDevice_SetRenderState_CullMode_4034;
+        { 0x1B, 0x8B },
+OOVPA_END;
 
-extern LOOVPA<1 + 14> D3DDevice_SetStreamSource_4034;
+// ******************************************************************
+// * D3DDevice_SetTextureState_TexCoordIndex
+// ******************************************************************
+// ...C20400
+OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex_4, 2058, 1+10,
 
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4242;
+    XRefNoSaveIndex,
+    XRefOne)
 
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4627;
+        XREF_ENTRY( 0x14, XREF_D3DTSS_TEXCOORDINDEX ), // Derived
 
-#endif
+        { 0x01, 0x53 },
+        { 0x02, 0x8B },
+
+        { 0x08, 0x55 },
+        { 0x09, 0x8B },
+
+        { 0x0C, 0x10 },
+        { 0x0D, 0x8B },
+        { 0x0E, 0xC6 },
+        { 0x0F, 0xC1 },
+        { 0x10, 0xE0 },
+        { 0x11, 0x07 },
+OOVPA_END;

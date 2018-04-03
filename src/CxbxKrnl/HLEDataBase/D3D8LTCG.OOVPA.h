@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8.OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase->D3D8LTCG.OOVPA.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,28 +28,28 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2017 jarupxx
-// *  (c) 2017 RadWolfie
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_OOVPA_H
-#define D3D8_OOVPA_H
+#ifndef D3D8LTCG_OOVPA_H
+#define D3D8LTCG_OOVPA_H
 
 #include "../OOVPA.h"
 
-extern LOOVPA<1 + 11> D3DDevice_SetTextureState_TexCoordIndex_3911;
-extern LOOVPA<2 + 16> D3DDevice_SetRenderState_CullMode_3911;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_0_2039;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4_2040;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4_2045;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4_2058;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_1944;
+extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_1958;
 
-extern LOOVPA<1 + 12> D3DDevice_SetStreamSource_3911;
-
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4034;
-extern LOOVPA<2 + 14> D3DDevice_SetRenderState_CullMode_4034;
+extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1045;
+extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1049;
+extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1052;
+extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1053;
 
 extern LOOVPA<1 + 14> D3DDevice_SetStreamSource_4034;
-
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4242;
-
-extern LOOVPA<1 + 10> D3DDevice_SetTextureState_TexCoordIndex_4627;
+extern LOOVPA<11> D3DDevice_SetStreamSource_1024;
 
 #endif

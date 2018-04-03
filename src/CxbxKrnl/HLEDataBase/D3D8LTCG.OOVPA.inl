@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDatabase->D3D8.OOVPA.inl
+// *   Cxbx->Win32->CxbxKrnl->HLEDatabase->D3D8LTCG.OOVPA.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,166 +32,205 @@
 // *
 // ******************************************************************
 
-// Titles which did compiled with full library version
+// Titles which did compiled with full libary version
 //   [LibV] Title Name                       |  Verify   |   Comments
 //-----------------------------------------------------------------------
-// * [3925] Azurik                           |   100%    | Missing D3D_SetPushBufferSize due locate in BINK section, have 182/196 library.
-// * [3948] Shikigami no Shiro               |   100%    | have 178/196 library.
-// * [4034] Dark Summit                      |   100%    | have 113/195 library.
-// * [4039] New Legends                      |   100%    | have 117/195 library.
-// * [4134] Double-S.T.E.A.L                 |   100%    | have 195/202 library.
-// * [4242] NFL Blitz 2002                   |   100%    | have 180/202 library.
-// * [4361] Hunter The Reckoning             |   100%    | have 117/204 library.
-// * [4432] RedCard 2003                     |   100%    | have 184/206 library.
-// * [4531] NHL HITZ 2003                    |   100%    | have 196/206 library.
-// * [4627] MLB SlugFest 2003                |   100%    | have 216/227 library.
-// * [4721] Terminator - Dawn of Fate        |   100%    | have 202/227 library.
-// * [4831] Frogger Beyond                   |   100%    | have 200/227 library.
-// * [4928] Drihoo                           |   100%    | have 201/228 library.
-// * [5028] Shikigami no Shiro Evolution     |   100%    | have 201/229 library.
-// * [5120] N.U.D.E.@                        |   100%    | have 211/229 library.
-// * [5233] Evil Dead                        |   100%    | have 208/230 library.
-// * [5344] Gladius DEMO                     |   100%    | have 202/229 library.
-// * [5455] Dinosaur Hunting                 |   100%    | have 207/229 library.
-// * [5558] NHL HITZ Pro 2004                |   100%    | have 218/230 library.
-// * [5558] XIII                             |   100%    | With Intergrated Hotfixes. have 209/230 library.
-// * [5659] NFL Blitz Pro                    |   100%    | have 208/230 library.
-// * [5659] Midway Arcade Treasures Paperboy |   100%    | With Intergrated Hotfixes. have 212/230 library.
-// * [5788] Digimon Battle Chronicle         |   100%    | have 210/230 library.
-// * [5849] Nickelodeon Tak 2                |   100%    | have 210/229 library.
+// * [3925] Nascar Heat 2002                 |    20%    | Only verified an actually used library.
+// * [4039] NBA 2K2                          |    20%    | Only verified an actually used library.
+// * [4432] Bruce Lee                        |    20%    | Only verified an actually used library.
+// * [4627] Battle Engine Aquila             |   100%    | Only has 50%-ish of the library compiled with xbe build.
+// * [4928] Shin Megami Tensei - Nine        |   100%    | Only has 80% of the library compiled with xbe build.
+// * [5233] Midtown Madness 3                |    50%    | Only has 50%-ish of the library compiled with xbe build.
+// * [5455] Freaky Flyers                    |    50%    | Only has 50%-ish of the library compiled with xbe build.
+// * [5659] Ninja Gaiden                     |    50%    | Only has a few library.
+// * [5849] Grand Theft Auto - San Andreas   |   100%    | Only has 50%-ish of the library compiled with xbe build.
 
-// TODO: Known D3D8 OOVPA issue list
-//   * CMiniport_IsFlipPending is XREF in v1 database, any reason for this?
-// * Verification needed: Function Name ( Revision )
-//   * D3D_AllocContiguousMemory (4034, 4242)
-//   * D3D_ClearStateBlockFlags (4034, 4039, 4721, 5028, 5120)
-//   * D3D_GetAdapterIdentifier (4034)
-//   * D3D_RecordStateBlock (4034, 4039, 4721, 5028, 5120)
-//   * D3D_SetPushBufferSize (4034)
-//   * D3DBaseTexture_GetLevelCount (4034)
-//   * D3DCubeTexture_GetCubeMapSurface (5233)
-//   * D3DDevice_AddRef (4034)
-//   * D3DDevice_ApplyStateBlock (4034, 4039, 4721, 4831, 5028, 5120)
-//   * D3DDevice_Begin (4034)
-//   * D3DDevice_BeginPushBuffer (3950, 4034, 4039, 4242, 4831, 5028)
-//   * D3DDevice_BeginStateBlock (3950, 4034, 4039, 4721, 4831, 5028, 5120)
-//   * D3DDevice_BlockOnFence (4034)
-//   * D3DDevice_CaptureStateBlock (4034, 4039, 4432, 4721, 4831, 5028, 5120)
-//   * D3DDevice_CreateCubeTexture (4721, 5028, 5233)
-//   * D3DDevice_CreateImageSurface (4721, 5028, 5120)
-//   * D3DDevice_CreateIndexBuffer (4721, 4928)
-//   * D3DDevice_CreatePalette (4721, 4831, 4928, 5120, 5233, 5455)
-//   * D3DDevice_CreateStateBlock (4034, 4039, 4242, 4432, 4721, 4928, 5028, 5120)
-//   * D3DDevice_CreateVolumeTexture (5028, 5120, 5233, 5455)
-//   * D3DDevice_DeletePatch (3950, 4134, 4242, 4432, 4721, 4928, 5028, 5120, 5233, 5455)
-//   * D3DDevice_DeleteStateBlock (3950, 4034, 4039, 4721, 4831, 5028, 5120)
-//   * D3DDevice_DeleteVertexShader (4034)
-//   * D3DDevice_DrawIndexedVerticesUP (4034)
-//   * D3DDevice_DrawRectPatch (3950, 4242, 4432, 4721, 4928, 5028, 5120, 5233, 5455)
-//   * D3DDevice_DrawTriPatch (3950, 4034, 4039, 4242, 4432, 4721, 4831, 4928, 5028, 5120, 5233, 5455)
-//   * D3DDevice_DrawVerticesUP (4034)
-//   * D3DDevice_EnableOverlay (3950, 4034, 4039)
-//   * D3DDevice_End (4034)
-//   * D3DDevice_EndPushBuffer (3950, 4034, 4242, 4831, 5028)
-//   * D3DDevice_EndStateBlock (3950, 4034, 4039, 4721, 4831, 5028, 5120)
-//   * D3DDevice_FlushVertexCache (4034, 4039)
-//   * D3DDevice_GetBackBuffer (4721, 4831, 4928, 5028, 5120, 5233, 5455)
-//   * D3DDevice_GetBackMaterial (4034, 4039)
-//   * D3DDevice_GetDepthStencilSurface (4034)
-//   * D3DDevice_GetDisplayFieldStatus (4034)
-//   * D3DDevice_GetDisplayMode (4034)
-//   * D3DDevice_GetLightEnable (4034)
-//   * D3DDevice_GetMaterial (4034, 4039)
-//   * D3DDevice_GetModelView (4034, 4039)
-//   * D3DDevice_GetOverlayUpdateStatus (3950, 4034, 4039, 4134, 4242, 4432, 4531)
-//   * D3DDevice_GetPixelShader (4034)
-//   * D3DDevice_GetProjectionViewportMatrix (4034, 4039)
-//   * D3DDevice_GetPushBufferOffset (3950, 4034, 4242, 4831, 5028)
-//   * D3DDevice_GetRenderTarget (4034, 5028)
-//   * D3DDevice_GetScissors (4034)
-//   * D3DDevice_GetShaderConstantMode (4034, 4039)
-//   * D3DDevice_GetTexture2 (4034, 4039)
-//   * D3DDevice_GetTile (4034)
-//   * D3DDevice_GetVertexShader (4034)
-//   * D3DDevice_GetVertexShaderConstant (4034)
-//   * D3DDevice_GetVertexShaderDeclaration (4034)
-//   * D3DDevice_GetVertexShaderFunction (4034)
-//   * D3DDevice_GetVertexShaderInput (4034)
-//   * D3DDevice_GetVertexShaderSize (4034)
-//   * D3DDevice_GetVertexShaderType (4034)
-//   * D3DDevice_InsertCallback (4034, 4039)
-//   * D3DDevice_InsertFence (4034)
-//   * D3DDevice_IsFencePending (4034)
-//   * D3DDevice_KickPushBuffer (4034)
-//   * D3DDevice_LoadVertexShaderProgram (4034)
-//   * D3DDevice_PersistDisplay (4034)
-//   * D3DDevice_PrimeVertexCache (4034, 4039)
-//   * D3DDevice_RunPushBuffer (4034, 4831, 5028)
-//   * D3DDevice_RunVertexStateShader (4034)
-//   * D3DDevice_SetBackMaterial (4034, 4039)
-//   * D3DDevice_SetModelView (4034, 4039)
-//   * D3DDevice_SetPixelShaderConstant (4034)
-//   * D3DDevice_SetPixelShaderProgram (4034)
-//   * D3DDevice_SetRenderTarget (4034)
-//   * D3DDevice_SetVertexData2f (4034)
-//   * D3DDevice_SetVertexData2s (4034)
-//   * D3DDevice_SetVertexData4f (4034)
-//   * D3DDevice_SetVertexData4s (4034, 4039)
-//   * D3DDevice_SetVertexData4ub (4034, 4039)
-//   * D3DDevice_SetVertexDataColor (4034)
-//   * D3DDevice_SetVertexShaderInput (4034, 4039)
-//   * D3DDevice_SetVerticalBlankCallback (4034)
-//   * D3DDevice_SwitchTexture (4034)
-//   * D3DDevice_UpdateOverlay (3950, 4034, 4039)
-//   * D3DPalette_Lock (4721, 4831, 4928, 5120)
-//   * D3DResource_BlockUntilNotBusy (4034)
-//   * D3DResource_IsBusy (4034)
-//   * D3DResource_Register (4034)
-//   * D3DVertexBuffer_GetDesc (4034)
-//   * D3DVertexBuffer_Lock (4721, 4831, 4928, 5120, 5233, 5455)
-//   * Direct3D_CheckDeviceMultiSampleType (4034)
-//   * CMiniport_IsFlipPending (4034, 4039, 4134, 4928, 5028, 5120, 5233, 5455)
-//   * D3D_EnumAdapterModes (4034)
-//   * D3D_GetAdapterDisplayMode (4034)
-//   * D3D_GetAdapterModeCount (4034)
-//   * IDirect3DVertexBuffer8_Lock (4721, 5028, 5120, 5233)
-// * List of functions might be D3D8LTCG library: (Verifying with Sega GT 2002 title)
-//   * D3D_CreateDeviceX (4627)
-//   * D3D_KickOffAndWaitForIdle2 (4627)
-//   * D3D_CommonSetRenderTargetB (4627)
+// * About the number of OOVPA
+//   * 1024 and 1xxx - Cmpatible with known functions probably.
+//   * 2028 and 2xxx - Remade by Link-time Code Generation, will not work with known functions.
 
-#ifndef D3D8_OOVPA_INL
-#define D3D8_OOVPA_INL
+#ifndef D3D8LTCG_OOVPA_INL
+#define D3D8LTCG_OOVPA_INL
 
 #include "../OOVPA.h"
 
-#include "D3D8.1.0.3911.inl"
-#include "D3D8.1.0.3925.inl"
-#include "D3D8.1.0.3948.inl"
-#include "D3D8.1.0.4034.inl"
-#include "D3D8.1.0.4134.inl"
-#include "D3D8.1.0.4242.inl"
-#include "D3D8.1.0.4361.inl"
-#include "D3D8.1.0.4432.inl"
-#include "D3D8.1.0.4531.inl"
-#include "D3D8.1.0.4627.inl"
-#include "D3D8.1.0.4831.inl"
-#include "D3D8.1.0.4928.inl"
-#include "D3D8.1.0.5028.inl"
-#include "D3D8.1.0.5120.inl"
-#include "D3D8.1.0.5233.inl"
-#include "D3D8.1.0.5344.inl"
-#include "D3D8.1.0.5455.inl"
-#include "D3D8.1.0.5558.inl"
-#include "D3D8.1.0.5788.inl"
-#include "D3D8.1.0.5849.inl"
-
+#include "HLEDataBase/D3D8LTCG.1.0.3911.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4039.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4432.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4531.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4627.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4721.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.4928.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5028.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5120.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5233.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5344.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5455.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5788.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5849.inl"
 
 // ******************************************************************
-// * D3D8_OOVPA
+// * D3D8LTCG_OOVPA
 // ******************************************************************
-OOVPATable D3D8_OOVPAV2[] = {
+OOVPATable D3D8LTCG_OOVPAV2[] = {
 
+	REGISTER_OOVPAS(D3D_MakeRequestedSpace, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3D_MakeRequestedSpace, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3D_SetFence, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3D_BlockOnTime, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3D_BlockOnTime_4, UNPATCHED, 2048, 2060),
+	REGISTER_OOVPAS(D3DResource_AddRef, PATCH, 3911),
+
+	REGISTER_OOVPAS(CMiniport_InitHardware, PATCH, 1024),
+	REGISTER_OOVPAS(D3DCubeTexture_GetCubeMapSurface2, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_Begin, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_BeginPush, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_BeginPushBuffer, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_BeginVisibilityTest, PATCH, 1024, 1048),
+	REGISTER_OOVPAS(D3DDevice_Clear, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_CopyRects, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_CreatePixelShader, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_CreateTexture, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_CreateTexture2, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_CreateVertexShader, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_DeletePixelShader_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_DeleteStateBlock, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_DeleteVertexShader_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_DrawIndexedVertices, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_DrawIndexedVerticesUP, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_DrawVertices, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_DrawVerticesUP, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_DrawVerticesUP_12, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_End, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_EndPushBuffer, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_EndVisibilityTest, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_GetBackBuffer2, UNPATCHED, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_GetBackBuffer2_0, UNPATCHED, 2024, 2048),
+	REGISTER_OOVPAS(D3DDevice_GetBackBuffer_8, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_GetDepthStencilSurface, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_GetDepthStencilSurface2, PATCH, 1024, 1048),
+	REGISTER_OOVPAS(D3DDevice_GetDisplayMode, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_GetRenderTarget2, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_GetTransform, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_GetViewportOffsetAndScale, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_IsBusy, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_IsFencePending, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_LightEnable, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_LoadVertexShaderProgram, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_LoadVertexShader_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_LoadVertexShader_4, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_MultiplyTransform_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_PersistDisplay_0, UNPATCHED, 2048, 2060),
+	REGISTER_OOVPAS(D3DDevice_Present, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_Release, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_Reset, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_Reset_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_RunVertexStateShader_4, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_SelectVertexShader, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SelectVertexShader_0, UNPATCHED, 2060),
+	REGISTER_OOVPAS(D3DDevice_SelectVertexShader_4, UNPATCHED, 2024, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetFlickerFilter_0, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetGammaRamp, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetLight, PATCH, 1024, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetPalette, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetPalette_4, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_SetPixelShader, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetPixelShaderConstant, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetPixelShaderConstant_4, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_SetPixelShaderProgram, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetPixelShader_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderStateNotInline, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderStateNotInline_0, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_BackFillMode, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_CullMode, PATCH, 1045, 1049, 1052, 1053),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_DoNotCullUncompressed, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_Dxt1NoiseEnable, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_EdgeAntiAlias, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_FillMode, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_FogColor, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_FrontFace, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_LineWidth, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_LogicOp, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleAntiAlias, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMask, PATCH, 1024, 1036, 1048, 1060, 1072),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleMode, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_MultiSampleRenderTargetMode, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_NormalizeNormals, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_OcclusionCullEnable, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_RopZCmpAlwaysRead, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_RopZRead, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_SampleAlpha, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_ShadowFunc, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_StencilCullEnable, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_StencilEnable, PATCH, 1024, 1036, 1048, 1060, 1072, 1084),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_StencilFail, PATCH, 1024, 1036, 1048, 1060, 1072, 1084),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_TextureFactor, PATCH, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_TwoSidedLighting, PATCH, 1024, 1036, 1048, 1060, 1072, 1084),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_VertexBlend, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_YuvEnable, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_ZBias, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderState_ZEnable, PATCH, 1024, 1036, 1048, 1060),
+	REGISTER_OOVPAS(D3DDevice_SetRenderTarget, PATCH, 1024, 1036, 1048, 1060, 1072),
+	REGISTER_OOVPAS(D3DDevice_SetRenderTargetFast, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetScissors, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetScreenSpaceOffset, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetShaderConstantMode, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetShaderConstantMode_0, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetStreamSource, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetTexture, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetTextureStageStateNotInline, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetTextureStageStateNotInline_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor, PATCH, 1024, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor_0, UNPATCHED, 2024, 2036, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_BorderColor_4, UNPATCHED, 2048, 2060),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_BumpEnv, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_BumpEnv_8, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor_0, UNPATCHED, 2024, 2036, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_ColorKeyColor_4, UNPATCHED, 2048, 2060),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex, PATCH, 1944, 1958),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex_0, UNPATCHED, 2039),
+	REGISTER_OOVPAS(D3DDevice_SetTextureState_TexCoordIndex_4, UNPATCHED, 2040, 2045, 2058),
+	REGISTER_OOVPAS(D3DDevice_SetTexture_4, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_SetTile_0, UNPATCHED, 2024, 2036, 2048, 2060, 2072),
+	REGISTER_OOVPAS(D3DDevice_SetTransform, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetTransform_0, UNPATCHED, 2024, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData2f, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData2s, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData4f, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData4f_16, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData4s, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetVertexData4ub, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_SetVertexShader, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_SetVertexShaderConstant, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetVertexShaderConstantNotInline, PATCH, 1024),
+	REGISTER_OOVPAS(D3DDevice_SetVertexShaderConstant_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DDevice_SetVertexShader_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_SetViewport, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DDevice_Swap, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DDevice_Swap_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(D3DDevice_UpdateOverlay, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(D3DPalette_Lock2, PATCH, 1024),
+	REGISTER_OOVPAS(D3DResource_GetType, UNPATCHED, 1024),
+	REGISTER_OOVPAS(D3DResource_GetType_0, UNPATCHED, 2024),
+	REGISTER_OOVPAS(D3DResource_Release, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(D3DSurface_GetDesc, PATCH, 1024),
+	REGISTER_OOVPAS(D3DTexture_GetSurfaceLevel2, PATCH, 1024),
+	REGISTER_OOVPAS(D3DTexture_LockRect, PATCH, 1024),
+	REGISTER_OOVPAS(D3DVertexBuffer_Lock2, PATCH, 1024),
+	REGISTER_OOVPAS(D3D_BlockOnResource_0, UNPATCHED, 2024, 2036, 2048, 2060),
+	REGISTER_OOVPAS(D3D_CommonSetRenderTarget, UNPATCHED, 1024),
+	REGISTER_OOVPAS(D3D_KickOffAndWaitForIdle2, PATCH, 1024, 1036, 1048),
+	REGISTER_OOVPAS(Direct3D_CreateDevice, PATCH, 1024, 1036),
+	REGISTER_OOVPAS(Direct3D_CreateDevice_16, UNPATCHED, 2024, 2048),
+	REGISTER_OOVPAS(Direct3D_CreateDevice_4, UNPATCHED, 2060),
+	REGISTER_OOVPAS(Get2DSurfaceDesc, UNPATCHED, 1024),
+	REGISTER_OOVPAS(Get2DSurfaceDesc_0, UNPATCHED, 2024, 2036),
+	REGISTER_OOVPAS(Get2DSurfaceDesc_4, UNPATCHED, 2048),
+	REGISTER_OOVPAS(Lock3DSurface_16, UNPATCHED, 2048),
+	REGISTER_OOVPAS(D3DDevice_SetFlickerFilter_0, UNPATCHED, 2048),
+
+// *********************** Copy from D3D8.OOVPA.inl *****************
 	REGISTER_OOVPAS(CMiniport_CreateCtxDmaObject, PATCH, 3911, 4034),
 	REGISTER_OOVPAS(CMiniport_InitHardware, PATCH, 3911, 4034, 5455),
 	REGISTER_OOVPAS(CMiniport_IsFlipPending, UNPATCHED, 3911, 4242, 4627, 4928),
@@ -433,8 +472,8 @@ OOVPATable D3D8_OOVPAV2[] = {
 };
 
 // ******************************************************************
-// * D3D8_OOVPA_COUNT
+// * D3D8LTCG_OOVPA_COUNT
 // ******************************************************************
-const uint32 D3D8_OOVPA_COUNT = OOVPA_TABLE_COUNT(D3D8_OOVPAV2);
+uint32 D3D8LTCG_OOVPA_COUNT = OOVPA_TABLE_COUNT(D3D8LTCG_OOVPAV2);
 
 #endif

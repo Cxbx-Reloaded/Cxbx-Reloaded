@@ -68,6 +68,7 @@ const char *Sec_XNET = "XNET";
 #include "HLEDataBase.h"
 #include "HLEDataBase/Xapi.OOVPA.inl"
 #include "HLEDataBase/D3D8.OOVPA.inl"
+#include "HLEDataBase/D3D8LTCG.OOVPA.inl"
 #include "HLEDataBase/DSound.OOVPA.inl"
 #include "HLEDataBase/XG.OOVPA.inl"
 #include "HLEDataBase/XNET.OOVPA.inl"
@@ -84,7 +85,7 @@ const HLEData HLEDataBase[] = {
     { Lib_D3D8,{ Sec_text, Sec_D3D }, D3D8_OOVPAV2, D3D8_OOVPA_COUNT },
 
     // Cannot support LTCG in HLE
-    //{ Lib_D3D8LTCG,{ Sec_D3D }, _OOVPAV2, _OOVPA_COUNT },
+    { Lib_D3D8LTCG,{ Sec_D3D }, D3D8LTCG_OOVPAV2, D3D8LTCG_OOVPA_COUNT },
 
     // Jarupxx mention this is not a requirement?
     //{ Lib_D3DX8,{ Sec_D3DX }, _OOVPAV2, _OOVPA_COUNT },
