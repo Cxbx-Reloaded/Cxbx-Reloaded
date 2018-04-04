@@ -92,7 +92,12 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 // Static Variable(s)
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static bool                         g_bSupportsTextureFormat[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsFormatTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsFormatTextureDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsFormatSurface[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -1911,13 +1916,39 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					if (!XTL::EmuXBFormatRequiresConversionToARGB((XTL::X_D3DFORMAT)X_Format)) {
 						// Convert the Xbox format into host format (without warning, thanks to the above restriction)
 						XTL::D3DFORMAT PCFormat = XTL::EmuXB2PC_D3DFormat((XTL::X_D3DFORMAT)X_Format);
-						// Index g_bSupportsTextureFormat with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
-						g_bSupportsTextureFormat[X_Format] = (PCFormat != XTL::D3DFMT_UNKNOWN) &&
-							// Ask the Direct3D device if this format is supported (for textures, that is)
-							(D3D_OK == g_pD3D8->CheckDeviceFormat(
-								g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-								g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-								XTL::D3DRTYPE_TEXTURE, PCFormat));
+						if (PCFormat != XTL::D3DFMT_UNKNOWN) {
+							// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
+							g_bSupportsFormatTexture[X_Format] = 
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+									XTL::D3DRTYPE_TEXTURE, PCFormat));
+							g_bSupportsFormatTextureRenderTarget[X_Format] =
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+									XTL::D3DRTYPE_TEXTURE, PCFormat));
+							g_bSupportsFormatTextureDepthStencil[X_Format] =
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+									XTL::D3DRTYPE_TEXTURE, PCFormat));
+							g_bSupportsFormatSurface[X_Format] =
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+									XTL::D3DRTYPE_SURFACE, PCFormat));
+							g_bSupportsFormatSurfaceRenderTarget[X_Format] =
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+									XTL::D3DRTYPE_SURFACE, PCFormat));
+							g_bSupportsFormatSurfaceDepthStencil[X_Format] =
+								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+									XTL::D3DRTYPE_SURFACE, PCFormat));
+						}
 					}
 				}
 
@@ -1987,10 +2018,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						}
 
 						// Warn if CheckDeviceFormat didn't report this format
-						if (!g_bSupportsTextureFormat[X_Format]) {
+						if (!g_bSupportsFormatTexture[X_Format]) {
 							EmuWarning("EmuD3D8: FourCC format %.4s not previously detected via CheckDeviceFormat()! Enabling it.", (char *)&(lpCodes[v]));
 							// TODO : If this warning never shows, detecting FourCC's could be removed entirely. For now, enable the format :
-							g_bSupportsTextureFormat[X_Format] = true;
+							g_bSupportsFormatTexture[X_Format] = true;
 						}
                     }
 
@@ -4172,12 +4203,13 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 			X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
             X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-            D3DFORMAT   PCFormat = EmuXB2PC_D3DFormat(X_Format);
-            D3DFORMAT   CacheFormat = (XTL::D3DFORMAT)0;
+            XTL::D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
+			bool bConvertToARGB = false;
             // TODO: check for dimensions
 
-			D3DRESOURCETYPE RType = (dwCommonType == X_D3DCOMMON_TYPE_SURFACE) ? D3DRTYPE_SURFACE : D3DRTYPE_TEXTURE;
+			X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pResource);
 			DWORD Usage = 0;
+			bool *pbSupportedFormats = g_bSupportsFormatTexture;
 
 			if (pPixelContainer == g_pCachedDepthStencil) {
 				if (!EmuXBFormatIsDepthBuffer(X_Format))
@@ -4192,127 +4224,95 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 				Usage = D3DUSAGE_RENDERTARGET;
 			}
 
-			if (D3D_OK != g_pD3D8->CheckDeviceFormat(
-				g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-				g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 
-				Usage, RType, PCFormat)) {
+			switch (XboxResourceType) {
+			case X_D3DRTYPE_SURFACE:
+				if (Usage & D3DUSAGE_RENDERTARGET) {
+					pbSupportedFormats = g_bSupportsFormatSurfaceRenderTarget;
+				} else if (Usage & D3DUSAGE_DEPTHSTENCIL) {
+					pbSupportedFormats = g_bSupportsFormatSurfaceDepthStencil;
+				}
+				else {
+					pbSupportedFormats = g_bSupportsFormatSurface;
+				}
+				break;
+			case X_D3DRTYPE_VOLUME: break; // TODO : Complete
+			case X_D3DRTYPE_TEXTURE:
+				if (Usage & D3DUSAGE_RENDERTARGET) {
+					pbSupportedFormats = g_bSupportsFormatTextureRenderTarget;
+				}
+				else if (Usage & D3DUSAGE_DEPTHSTENCIL) {
+					pbSupportedFormats = g_bSupportsFormatTextureDepthStencil;
+				}
+				else {
+					pbSupportedFormats = g_bSupportsFormatTexture;
+				}
+				break;
+			case X_D3DRTYPE_CUBETEXTURE:
+				break; // TODO : Complete
+			case X_D3DRTYPE_VOLUMETEXTURE:
+				break; // TODO : Complete
+			}
+
+			if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
+				bConvertToARGB = true;
+				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+			}
+			else
+			if (!pbSupportedFormats[X_Format]) {
 				// TODO: HACK: Temporary?
-				if (X_Format == X_D3DFMT_LIN_D24S8)
+				switch (X_Format) {
+				case X_D3DFMT_LIN_D24S8:
 				{
 					/*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
 					X_Format = X_D3DFMT_LIN_A8R8G8B8;
 					PCFormat = D3DFMT_A8R8G8B8;
+					break;
 				}
 
-				if (X_Format == X_D3DFMT_LIN_D16)
+				case X_D3DFMT_LIN_D16:
 				{
+					// Test case : Turok (when entering menu)
 					/*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
 					X_Format = X_D3DFMT_LIN_R5G6B5;
 					PCFormat = D3DFMT_R5G6B5;
+					break;
 				}
 
 				// TODO: HACK: Since I have trouble with this texture format on modern hardware,
 				// Let's try using some 16-bit format instead...
-				if (X_Format == X_D3DFMT_X1R5G5B5)
+				case X_D3DFMT_X1R5G5B5:
 				{
 					// Test case : JSRF (after loading)
-					CacheFormat = PCFormat;       // Save this for later
+					bConvertToARGB = true;
 					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+					break;
 				}
-
-				// Detect formats that must be converted to ARGB
-				if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-					CacheFormat = PCFormat;       // Save this for later
-					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+				default:
+					// Detect formats that must be converted to ARGB
+					if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+						bConvertToARGB = true;
+						PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+					}
+					else {
+						/*CxbxKrnlCleanup*/EmuWarning("Encountered a completely incompatible format!");
+					}
 				}
 			}
 
-            DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
-            BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format), bCompressed = FALSE, dwCompressedSize = 0;
-            BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
+            UINT dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch, dwMipMapLevels, uiSize;
+			bool bSwizzled = EmuXBFormatIsSwizzled(X_Format);
+			bool bCompressed = EmuXBFormatIsCompressed(X_Format);
+            bool bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 			dwBPP = EmuXBFormatBytesPerPixel(X_Format);
 
-            // Interpret Width/Height/BPP
-            if(X_Format == X_D3DFMT_X8R8G8B8 || X_Format == X_D3DFMT_A8R8G8B8
-			|| X_Format == X_D3DFMT_A8B8G8R8)
-            {
-                // Swizzled 32 Bit
-                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+			// Interpret Width/Height/BPP
+			CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwPitch, &uiSize);
+            if (pPixelContainer->Size == 0) {
                 dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth * dwBPP;
             }
-            else if(X_Format == X_D3DFMT_R5G6B5 || X_Format == X_D3DFMT_A4R4G4B4
-                 || X_Format == X_D3DFMT_A1R5G5B5 || X_Format == X_D3DFMT_X1R5G5B5
-                 || X_Format == X_D3DFMT_G8B8 || X_Format == X_D3DFMT_A8L8)
-            {
-                // Swizzled 16 Bit
-                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth * dwBPP;
-            }
-            else if(X_Format == X_D3DFMT_L8 || X_Format == X_D3DFMT_P8
-                || X_Format == X_D3DFMT_AL8
-                || X_Format == X_D3DFMT_A8)
-            {
-                // Swizzled 8 Bit
-                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth * dwBPP;
-            }
-            else if(X_Format == X_D3DFMT_LIN_X8R8G8B8 || X_Format == X_D3DFMT_LIN_A8R8G8B8
-				 || X_Format == X_D3DFMT_LIN_D24S8 || X_Format == X_D3DFMT_LIN_A8B8G8R8)
-            {
-                // Linear 32 Bit
-                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-            }
-            else if(X_Format == X_D3DFMT_LIN_R5G6B5 || X_Format == X_D3DFMT_LIN_D16
-				 || X_Format == X_D3DFMT_LIN_A4R4G4B4 || X_Format == X_D3DFMT_LIN_A1R5G5B5
-				 || X_Format == X_D3DFMT_LIN_X1R5G5B5 )
-            {
-                // Linear 16 Bit
-                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-            }
-            else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT3 || X_Format == X_D3DFMT_DXT5)
-            {
-                bCompressed = TRUE;
-
-                // Compressed
-                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-
-                // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
-                dwCompressedSize = dwWidth*dwHeight;
-
-                if(X_Format == X_D3DFMT_DXT1) // D3DFMT_DXT1 : 64bits per block/per 16 texels
-                    dwCompressedSize /= 2;
-            }
-            else if(X_Format == X_D3DFMT_YUY2)
-            {
-                // Linear 32 Bit
-                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-            }
-            else
-            {
-				// Unhandled format: Guess reasonable values, show a warning and continue
-                EmuWarning("0x%.08X is not a supported format!\n", X_Format);
-				dwWidth = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-				dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-				dwPitch = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
-            }
+			else {
+				dwMipMapLevels = 1;
+			}
 
             if(bSwizzled || bCompressed)
             {
@@ -4443,7 +4443,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 						DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DFMT_A8R8G8B8)");
 						if (hRet == D3D_OK) {
 							// Okay, now this works, make sure the texture gets converted
-							CacheFormat = PCFormat;
+							bConvertToARGB = true;
 							PCFormat = D3DFMT_A8R8G8B8;
 						}
 					}
@@ -4514,7 +4514,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 							{
 								// TODO: Fix or handle this situation..?
 							}
-							else if (CacheFormat != 0) // Do we need to convert to ARGB?
+							else if (bConvertToARGB) // Do we need to convert to ARGB?
 							{
 								DbgPrintf("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
@@ -4551,9 +4551,9 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 								{
 									// NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
 
-									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level * 2));
+									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, uiSize >> (level * 2));
 
-									dwCompressedOffset += (dwCompressedSize >> (level * 2));
+									dwCompressedOffset += (uiSize >> (level * 2));
 								}
 								else
 								{
