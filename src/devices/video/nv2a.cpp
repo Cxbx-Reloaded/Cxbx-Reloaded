@@ -435,7 +435,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	
 	// We currently don't double buffer, so no need to call swap...
-	//glo_swap(d->pgraph.gl_context);
+	glo_swap(d->pgraph.gl_context);
 
 	// Restore previous framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
