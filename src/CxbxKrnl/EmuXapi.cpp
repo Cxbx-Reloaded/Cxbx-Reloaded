@@ -53,6 +53,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
+#include <vector>
 
 // XInputSetState status waiters
 extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0};
@@ -70,17 +71,6 @@ XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 XTL::POLLING_PARAMETERS_HANDLE g_pph;
 XTL::XINPUT_POLLING_PARAMETERS g_pp;
 
-// Fiber function list
-typedef struct _XFIBER
-{
-	LPFIBER_START_ROUTINE pfnRoutine;
-	LPVOID				  pParam;
-}XFIBER;
-
-XFIBER g_Fibers[256];
-
-// Number of fiber routines queued
-int	   g_FiberCount = 0;
 
 void SetupXboxDeviceTypes()
 {
@@ -850,7 +840,24 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     }
 }
 
-#if 0 // patch disabled
+typedef struct {
+	LPFIBER_START_ROUTINE	lpStartRoutine;
+	LPVOID					lpParameter;
+} fiber_context_t;
+
+void WINAPI EmuFiberStartup(fiber_context_t* context)
+{
+	__try
+	{
+		LPFIBER_START_ROUTINE pfStartRoutine = (LPFIBER_START_ROUTINE)context->lpStartRoutine;
+		pfStartRoutine(context->lpParameter);
+	}
+	__except (EmuException(GetExceptionInformation()))
+	{
+		EmuWarning("Problem with ExceptionFilter");
+	}
+}
+
 // ******************************************************************
 // * patch: CreateFiber
 // ******************************************************************
@@ -863,31 +870,22 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 {
 	FUNC_EXPORTS
 
-    DbgPrintf("EmuXapi: EmuCreateFiber\n"
-           "(\n"
-		   "   dwStackSize         : 0x%.08X\n"
-           "   lpStartRoutine      : 0x%.08X\n"
-           "   lpParameter         : 0x%.08X\n"
-           ");\n",
-            dwStackSize, lpStartRoutine, lpParameter);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwStackSize)
+		LOG_FUNC_ARG(lpStartRoutine)
+		LOG_FUNC_ARG(lpParameter)
+	LOG_FUNC_END;
 
-	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
-	if( !pFiber )
-		EmuWarning( "CreateFiber failed!" );
-	else
-		DbgPrintf("XAPI: CreateFiber returned 0x%X\n", pFiber);
-
-	// Add to list of queued fiber routines
-	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
-	if( lpParameter ) g_Fibers[g_FiberCount].pParam = lpParameter;
-
-	g_FiberCount++;
-
-	return pFiber;
+	// Create a Fiber Context: This has to be malloced because if it goes out of scope
+	// between CreateFiber and SwitchToFiber, it will cause a crash
+	// WARNING: Currently this leaks memory, can be fixed by tracking fibers and freeing them in DeleteFiber
+	fiber_context_t* context = (fiber_context_t*)malloc(sizeof(fiber_context_t));
+	context->lpStartRoutine = lpStartRoutine;
+	context->lpParameter = lpParameter;
+		
+	RETURN(CreateFiber(dwStackSize, (LPFIBER_START_ROUTINE)EmuFiberStartup, context));
 }
-#endif
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
@@ -897,19 +895,11 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 )
 {
 	FUNC_EXPORTS
+	LOG_FUNC_ONE_ARG(DeleteFiber);
 
-	DbgPrintf("XAPI: EmuDeleteFiber\n"
-			"(\n"
-			"	lpFiber            : 0x%.08X\n"
-			");\n",
-			lpFiber );
-
-	DeleteFiber( lpFiber );
-
+	DeleteFiber(lpFiber);
 }
-#endif
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
@@ -919,31 +909,11 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 )
 {
 	FUNC_EXPORTS
+	LOG_FUNC_ONE_ARG(lpFiber);
 
-	DbgPrintf("XAPI: EmuSwitchToFiber\n"
-			"(\n"
-			"	lpFiber            : 0x%.08X\n"
-			");\n",
-			lpFiber );
-
-//	SwitchToFiber( lpFiber );	// <- Hangs/crashes...
-
-	// Execute fiber routines
-	for( int i = 0; i < g_FiberCount; i++ )
-	{
-		if( g_Fibers[i].pfnRoutine )
-			g_Fibers[i].pfnRoutine(g_Fibers[i].pParam);
-	
-	}
-
-	g_FiberCount = 0;
-
-	DbgPrintf("XAPI: Finished executing fibers!\n" );
-
+	SwitchToFiber(lpFiber);
 }
-#endif
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: ConvertThreadToFiber
 // ******************************************************************
@@ -953,54 +923,12 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 )
 {
 	FUNC_EXPORTS
-
-	DbgPrintf("XAPI: EmuConvertThreadToFiber\n"
-			"(\n"
-			"	lpParameter        : 0x%.08X\n"
-			");\n",
-			lpParameter );
-
-	LPVOID pRet = ConvertThreadToFiber( lpParameter );
+	LOG_FUNC_ONE_ARG(lpParameter);
+		
+	LPVOID pRet = ConvertThreadToFiber(lpParameter);
 	
-	DbgPrintf("XAPI: EmuConvertThreadToFiber returned 0x%X\n", pRet );
-
-
-	return pRet;
+	RETURN(pRet);
 }
-#endif
-
-#if 0 // patch disabled
-// ******************************************************************
-// * patch: XapiFiberStartup
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
-{
-	FUNC_EXPORTS
-
-	DbgPrintf("XAPI: EmuXapiFiberStarup()\n"
-			"(\n"
-			"	dwDummy            : 0x%.08X\n"
-			");\n",
-			dwDummy);
-
-
-	typedef void (__stdcall *pfDummyFunc)(DWORD dwDummy);
-	pfDummyFunc func = (pfDummyFunc)dwDummy;
-
-	void* TlsIndex = (void*) CxbxKrnl_TLS->dwTLSIndexAddr;
-
-	__asm 
-	{
-		mov     eax, TlsIndex
-		mov     ecx, fs:4
-		mov     eax, [ecx+eax*4]
-		mov     eax, [eax+8]
-		push    dword ptr [eax]
-		call    func
-	}
-
-}
-#endif
 
 // ******************************************************************
 // * patch: QueryPerformanceCounter
