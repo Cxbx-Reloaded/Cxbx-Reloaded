@@ -4804,8 +4804,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 	// BUG FIX: The lower 16 bits were causing false Unknown TexCoordIndex errors.
 	// Check for 0x00040000 instead.
 
-    if(Value >= 0x00040000)
-        CxbxKrnlCleanup("EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+	if (Value >= 0x00040000) {
+		EmuWarning("EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		return;
+	}
 
     HRESULT hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTextureStageState");
