@@ -151,7 +151,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPreallocTypeCount)
-		LOG_FUNC_ARG(PreallocTypes)
+		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
 
     for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
@@ -872,7 +872,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwStackSize)
-		LOG_FUNC_ARG(lpStartRoutine)
+		LOG_FUNC_ARG((PVOID)lpStartRoutine)
 		LOG_FUNC_ARG(lpParameter)
 	LOG_FUNC_END;
 
@@ -895,7 +895,7 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(DeleteFiber);
+	LOG_FUNC_ONE_ARG((DWORD)DeleteFiber);
 
 	DeleteFiber(lpFiber);
 }
