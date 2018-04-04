@@ -87,7 +87,6 @@ static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize);
-static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 // Static Variable(s)
@@ -2180,40 +2179,6 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTe
 	CreateHostResource(pResource, iTextureStage, dwSize);
         
 	g_RegisteredResources.push_back(key);
-}
-
-// ensure a given width/height are powers of 2
-static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
-{
-    UINT NewWidth=0, NewHeight=0;
-
-    int v;
-
-    for(v=0;v<32;v++)
-    {
-        int mask = 1 << v;
-
-        if(*dwWidth & mask)
-            NewWidth = mask;
-
-        if(*dwHeight & mask)
-            NewHeight = mask;
-    }
-
-    if(*dwWidth != NewWidth)
-    {
-        NewWidth <<= 1;
-        EmuWarning("Needed to resize width (%d->%d)", *dwWidth, NewWidth);
-    }
-
-    if(*dwHeight != NewHeight)
-    {
-        NewHeight <<= 1;
-        EmuWarning("Needed to resize height (%d->%d)", *dwHeight, NewHeight);
-    }
-
-    *dwWidth = NewWidth;
-    *dwHeight = NewHeight;
 }
 
 typedef struct {

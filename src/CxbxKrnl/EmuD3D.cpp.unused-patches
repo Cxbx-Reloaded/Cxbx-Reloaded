@@ -1,4 +1,38 @@
-﻿XTL::X_D3DTexture *EmuNewD3DTexture()
+﻿// ensure a given width/height are powers of 2
+static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
+{
+    UINT NewWidth=0, NewHeight=0;
+
+    int v;
+
+    for(v=0;v<32;v++)
+    {
+        int mask = 1 << v;
+
+        if(*dwWidth & mask)
+            NewWidth = mask;
+
+        if(*dwHeight & mask)
+            NewHeight = mask;
+    }
+
+    if(*dwWidth != NewWidth)
+    {
+        NewWidth <<= 1;
+        EmuWarning("Needed to resize width (%d->%d)", *dwWidth, NewWidth);
+    }
+
+    if(*dwHeight != NewHeight)
+    {
+        NewHeight <<= 1;
+        EmuWarning("Needed to resize height (%d->%d)", *dwHeight, NewHeight);
+    }
+
+    *dwWidth = NewWidth;
+    *dwHeight = NewHeight;
+}
+
+XTL::X_D3DTexture *EmuNewD3DTexture()
 {
 	XTL::X_D3DTexture *result = (XTL::X_D3DTexture *)g_VMManager.AllocateZeroed(sizeof(XTL::X_D3DTexture));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_TEXTURE | 1; // Set refcount to 1
