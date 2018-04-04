@@ -4233,33 +4233,54 @@ VOID WINAPI CreateHostResource
             D3DFORMAT   CacheFormat = (XTL::D3DFORMAT)0;
             // TODO: check for dimensions
 
-            // TODO: HACK: Temporary?
-            if(X_Format == X_D3DFMT_LIN_D24S8)
-            {
-                /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
-                X_Format = X_D3DFMT_LIN_A8R8G8B8;
-                PCFormat = D3DFMT_A8R8G8B8;
-            }
+			D3DRESOURCETYPE RType = (dwCommonType == X_D3DCOMMON_TYPE_SURFACE) ? D3DRTYPE_SURFACE : D3DRTYPE_TEXTURE;
+			DWORD Usage = 0;
 
-			if(X_Format == X_D3DFMT_LIN_D16)
-            {
-                /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
-                X_Format = X_D3DFMT_LIN_R5G6B5;
-                PCFormat = D3DFMT_R5G6B5;
-            }
+			if (pPixelContainer == g_pCachedDepthStencil) {
+				if (!EmuXBFormatIsDepthBuffer(X_Format))
+					EmuWarning("Updating DepthStencil with an incompatible format!");
 
-			// TODO: HACK: Since I have trouble with this texture format on modern hardware,
-			// Let's try using some 16-bit format instead...
-			if(X_Format == X_D3DFMT_X1R5G5B5 )
-			{
-				CacheFormat = PCFormat;       // Save this for later
-				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+				Usage = D3DUSAGE_DEPTHSTENCIL;
+			}
+			else if (pPixelContainer == g_pCachedRenderTarget) {
+				if (!EmuXBFormatIsRenderTarget(X_Format))
+					EmuWarning("Updating RenderTarget with an incompatible format!");
+
+				Usage = D3DUSAGE_RENDERTARGET;
 			}
 
-			// Detect formats that must be converted to ARGB
-			if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
-				CacheFormat = PCFormat;       // Save this for later
-				PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+			if (D3D_OK != g_pD3D8->CheckDeviceFormat(
+				g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+				g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 
+				Usage, RType, PCFormat)) {
+				// TODO: HACK: Temporary?
+				if (X_Format == X_D3DFMT_LIN_D24S8)
+				{
+					/*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
+					X_Format = X_D3DFMT_LIN_A8R8G8B8;
+					PCFormat = D3DFMT_A8R8G8B8;
+				}
+
+				if (X_Format == X_D3DFMT_LIN_D16)
+				{
+					/*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
+					X_Format = X_D3DFMT_LIN_R5G6B5;
+					PCFormat = D3DFMT_R5G6B5;
+				}
+
+				// TODO: HACK: Since I have trouble with this texture format on modern hardware,
+				// Let's try using some 16-bit format instead...
+				if (X_Format == X_D3DFMT_X1R5G5B5)
+				{
+					CacheFormat = PCFormat;       // Save this for later
+					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+				}
+
+				// Detect formats that must be converted to ARGB
+				if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
+					CacheFormat = PCFormat;       // Save this for later
+					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
+				}
 			}
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
@@ -4373,14 +4394,25 @@ VOID WINAPI CreateHostResource
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
             {
 
-				hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
-
+				if (Usage == D3DUSAGE_DEPTHSTENCIL) {
+					hRet = g_pD3DDevice8->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat, 
+						g_EmuCDPD.HostPresentationParameters.MultiSampleType, &pNewHostSurface);
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateDepthStencilSurface");
+				}else {
+					hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
+				}
 				// First fail, retry with a fallback format
 				// If this succeeds, the texture may not render correctly, but it won't crash
                 if(FAILED(hRet)) {
-                    EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
+					if (Usage == D3DUSAGE_DEPTHSTENCIL) {
+						EmuWarning("CreateDepthStencilSurface Failed\n\nError: %s\nDesc: %s",
 							DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+					}
+					else {
+						EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
+							DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+					}
 
 					EmuWarning("Trying Fallback");
 					hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
