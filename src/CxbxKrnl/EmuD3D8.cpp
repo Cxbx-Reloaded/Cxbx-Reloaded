@@ -645,14 +645,6 @@ XTL::X_D3DRESOURCETYPE GetXboxD3DResourceType(const XTL::X_D3DResource *pXboxRes
 	return XTL::X_D3DRTYPE_NONE;
 }
 
-inline boolean IsSpecialXboxResource(const XTL::X_D3DResource *pXboxResource)
-{
-	// Don't pass in unassigned Xbox resources
-	assert(pXboxResource != NULL);
-
-	return ((pXboxResource->Data & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL);
-}
-
 // This can be used to determine if resource Data adddresses
 // need the PHYSICAL_MAP_BASE  bit set or cleared
 inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
@@ -683,7 +675,6 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 
 inline bool IsYuvSurfaceOrTexture(const XTL::X_D3DResource *pXboxResource)
 {
-	// Was : return (pXboxResource->Data == X_D3DRESOURCE_DATA_YUV_SURFACE);
 	if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
 		return true;
 
@@ -711,22 +702,6 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	xbaddr pData = pXboxResource->Data;
 	if (pData == NULL)
 		return nullptr;
-
-	if (IsSpecialXboxResource(pXboxResource))
-	{
-		switch (pData) {
-		case X_D3DRESOURCE_DATA_BACK_BUFFER:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_RENDER_TARGET:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_DEPTH_STENCIL:
-			return nullptr;
-		case X_D3DRESOURCE_DATA_SURFACE_LEVEL:
-			return nullptr;
-		default:
-			CxbxKrnlCleanup("Unhandled special resource type");
-		}
-	}
 
 	DWORD dwCommonType = GetXboxCommonResourceType(pXboxResource);
 	if (IsResourceTypeGPUReadable(dwCommonType))
@@ -792,9 +767,6 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	if (shouldRegister) {
 		EmuVerifyResourceIsRegistered(pXboxResource, dwSize);
 	}
-
-	if (IsSpecialXboxResource(pXboxResource)) // Was X_D3DRESOURCE_DATA_YUV_SURFACE
-		return nullptr;
 
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
@@ -2153,10 +2125,6 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD d
 	// Skip resources without data
 	if (pResource->Data == NULL)
 		return;
-
-    // Already "Registered" implicitly
-    if(IsSpecialXboxResource(pResource))
-        return;
 
 	auto key = GetHostResourceKey(pResource);
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
@@ -4561,22 +4529,6 @@ VOID WINAPI CreateHostResource
 
 						BYTE *pSrc = (BYTE*)GetDataFromXboxResource(pResource); // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
-                        if(( pResource->Data == X_D3DRESOURCE_DATA_BACK_BUFFER)
-                         ||( (DWORD)pThis->Data == X_D3DRESOURCE_DATA_BACK_BUFFER))
-                        {
-                            EmuWarning("Attempt to registered to another resource's data (eww!)");
-
-                            // TODO: handle this horrible situation
-                            BYTE *pDest = (BYTE*)LockedRect.pBits;
-                            for(DWORD v=0;v<dwMipHeight;v++)
-                            {
-                                memset(pDest, 0, dwMipWidth*dwBPP);
-
-                                pDest += LockedRect.Pitch;
-                                pSrc  += dwMipPitch;
-                            }
-                        }
-						else
 						{
 							if((DWORD)pSrc == 0x80000000)
 							{
