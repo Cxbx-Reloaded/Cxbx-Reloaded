@@ -142,9 +142,9 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(XapiBootDash, UNPATCHED, 3911), // obsolete (from 4721's comment)
 	REGISTER_OOVPAS(XapiInitProcess, UNPATCHED, 3911, 3950, 4242, 4831, 5028), // obsolete, Too High Level (from 4721's comment)
 	REGISTER_OOVPAS(XapiThreadStartup, UNPATCHED, 3911), // obsolete? (from 4627, 5028, 5558, 5788, 5849's comment) // obsolete (from 4721's comment)
-	REGISTER_OOVPAS(ConvertThreadToFiber, UNPATCHED, 3911),
-	REGISTER_OOVPAS(CreateFiber, UNPATCHED, 3911),
-	REGISTER_OOVPAS(DeleteFiber, UNPATCHED, 3911),
+	REGISTER_OOVPAS(ConvertThreadToFiber, PATCH, 3911),
+	REGISTER_OOVPAS(CreateFiber, PATCH, 3911),
+	REGISTER_OOVPAS(DeleteFiber, PATCH, 3911),
 	REGISTER_OOVPAS(GetExitCodeThread, PATCH, 3911),
 	REGISTER_OOVPAS(GetOverlappedResult, PATCH, 3911),
 	REGISTER_OOVPAS(GetThreadPriority, PATCH, 3911),
@@ -157,7 +157,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(SetThreadPriority, PATCH, 3911),
 	REGISTER_OOVPAS(SetThreadPriorityBoost, PATCH, 3911),
 	REGISTER_OOVPAS(SignalObjectAndWait, PATCH, 3911),
-	REGISTER_OOVPAS(SwitchToFiber, UNPATCHED, 3911),
+	REGISTER_OOVPAS(SwitchToFiber, PATCH, 3911),
 	REGISTER_OOVPAS(XAutoPowerDownResetTimer, UNPATCHED, 3911), // Just calls KeSetTimer (from 3911's comment)
 	REGISTER_OOVPAS(XFormatUtilityDrive, PATCH, 4242),
 	REGISTER_OOVPAS(XGetDeviceChanges, PATCH, 3911), // Was PATCH (from 5788's comment)
@@ -181,7 +181,7 @@ OOVPATable XAPILIB_OOVPAV2[] = {
 	REGISTER_OOVPAS(XRegisterThreadNotifyRoutine, PATCH, 3911),
 	REGISTER_OOVPAS(XSetProcessQuantumLength, PATCH, 4134),
 	REGISTER_OOVPAS(XUnmountAlternateTitleA, PATCH, 3911),
-	REGISTER_OOVPAS(XapiFiberStartup, UNPATCHED, 3911),
+	REGISTER_OOVPAS(XapiFiberStartup, PATCH, 3911),
 	REGISTER_OOVPAS(timeKillEvent, PATCH, 3911),
 	REGISTER_OOVPAS(timeSetEvent, PATCH, 3911),
 };
