@@ -4272,6 +4272,7 @@ VOID WINAPI CreateHostResource
 				// Let's try using some 16-bit format instead...
 				if (X_Format == X_D3DFMT_X1R5G5B5)
 				{
+					// Test case : JSRF (after loading)
 					CacheFormat = PCFormat;       // Save this for later
 					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
 				}
