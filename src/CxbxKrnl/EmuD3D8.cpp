@@ -4221,7 +4221,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 				}
 
 				// Detect formats that must be converted to ARGB
-				if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
+				if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 					CacheFormat = PCFormat;       // Save this for later
 					PCFormat = D3DFMT_A8R8G8B8;   // ARGB
 				}
