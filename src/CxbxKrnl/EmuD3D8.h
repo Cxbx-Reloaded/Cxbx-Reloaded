@@ -770,6 +770,7 @@ VOID WINAPI EMUPATCH(Lock3DSurface)
 	DWORD				Flags
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: Get2DSurfaceDesc
 // ******************************************************************
@@ -864,7 +865,6 @@ VOID WINAPI EMUPATCH(D3DCubeTexture_LockRect)
     DWORD               Flags
 );
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer
 // ******************************************************************

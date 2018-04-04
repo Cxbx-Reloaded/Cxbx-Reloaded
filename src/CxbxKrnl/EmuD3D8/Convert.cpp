@@ -1410,8 +1410,9 @@ void XTL::EmuUnswizzleRect
 		DWORD dwY = dwStartY;
 		for (uint y = 0; y < dwHeight; y++) {
 			DWORD dwX = dwStartX;
+			DWORD dwYZ = dwY | dwZ;
 			for (uint x = 0; x < dwWidth; x++) {
-				int delta = ((dwX | dwY | dwZ) * dwBPP);
+				uint delta = (dwX | dwYZ) * dwBPP;
 				memcpy(pDstBuff, (PBYTE)pSrcBuff + delta, dwBPP); // copy one pixel
 				pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
 				dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source

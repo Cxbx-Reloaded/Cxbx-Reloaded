@@ -2130,9 +2130,10 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-    *ppRecompiledDeclaration = (DWORD *)malloc(DeclarationSize);
-    DWORD *pRecompiled = *ppRecompiledDeclaration;
+    DWORD *pRecompiled = (DWORD *)malloc(DeclarationSize);
     memcpy(pRecompiled, pDeclaration, DeclarationSize);
+	uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + DeclarationSize;
+    *ppRecompiledDeclaration = pRecompiled;
     *pDeclarationSize = DeclarationSize;
 
     // TODO: Put these in one struct
@@ -2142,6 +2143,11 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     while (*pRecompiled != DEF_VSH_END)
     {
+		if ((uint8*)pRecompiled >= pRecompiledBufferOverflow) {
+			DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
+			break;
+		}
+
         DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
         pRecompiled += Step;
     }
