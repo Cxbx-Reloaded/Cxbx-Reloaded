@@ -730,9 +730,39 @@ typedef struct {
 
 std::unordered_map <resource_key_t, host_resource_info_t> g_HostResources;
 
+bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
+{
+	// assert(pXboxResource);
+	DWORD Type = GetXboxCommonResourceType(pXboxResource);
+	switch (Type)
+	{
+	case X_D3DCOMMON_TYPE_TEXTURE:
+	case X_D3DCOMMON_TYPE_SURFACE:
+		return true;
+	}
+
+	return false;
+}
+
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 {
-	return (resource_key_t)(((uint64_t)pXboxResource->Data << 32) | (DWORD)pXboxResource);
+	resource_key_t key = 0;
+	if (pXboxResource != xbnullptr) {
+		// Initially, don't base the key on the address of the resource, but on it's uniquely identifying values
+		key ^= pXboxResource->Data;
+		key ^= (pXboxResource->Common & X_D3DCOMMON_TYPE_MASK) >> X_D3DCOMMON_TYPE_SHIFT;
+		if (IsResourceAPixelContainer(pXboxResource)) {
+			// Pixel containers have more values they are be identified by:
+			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Format) << 24;
+			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Size) << 32;
+		}
+		else {
+			// For other resource types, do include their Xbox resource address (TODO : come up with something better)
+			key ^= ((uint64_t)pXboxResource) << 32;
+		}
+	}
+
+	return key;
 }
 
 void FreeHostResource(resource_key_t key)
