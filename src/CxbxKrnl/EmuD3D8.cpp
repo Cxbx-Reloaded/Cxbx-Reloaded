@@ -172,7 +172,7 @@ XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
 XTL::X_D3DBaseTexture *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
-
+XTL::X_D3DBaseTexture CxbxActiveTextureCopies[TEXTURE_STAGES] = {};
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -3515,11 +3515,17 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     else
     {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
-		// The closest thing we can do with HLE is update the data pointer ourselves and hope for the best
-		X_D3DBaseTexture* pActiveTexture = EmuD3DActiveTexture[Stage];
-		if (pActiveTexture != nullptr) {
-			pActiveTexture->Data = Data;
-		}
+		// assert(EmuD3DActiveTexture[Stage] != xbnullptr);
+
+		// Update data and format separately, instead of via GetDataFromXboxResource()
+		CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
+		CxbxActiveTextureCopies[Stage].Data = Data;
+		CxbxActiveTextureCopies[Stage].Format = Format;
+		CxbxActiveTextureCopies[Stage].Lock = 0;
+		CxbxActiveTextureCopies[Stage].Size = EmuD3DActiveTexture[Stage]->Size;
+
+		// Use the above modified copy, instead of altering the active Xbox texture
+		EmuD3DActiveTexture[Stage] = &CxbxActiveTextureCopies[Stage];
     }
 }
 
