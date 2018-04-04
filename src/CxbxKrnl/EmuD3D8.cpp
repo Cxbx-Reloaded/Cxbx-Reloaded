@@ -86,7 +86,7 @@ static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
-static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD dwSize);
+static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
@@ -759,14 +759,12 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 	}
 }
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool shouldRegister = true, DWORD dwSize = 0)
+XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
 
-	if (shouldRegister) {
-		EmuVerifyResourceIsRegistered(pXboxResource, dwSize);
-	}
+	EmuVerifyResourceIsRegistered(pXboxResource, iTextureStage, /*dwSize=*/0);
 
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
@@ -774,10 +772,7 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, bool
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_HostResources.find(key);
 	if (it == g_HostResources.end()) {
-		// Prevent logging a warning when we expect a null result (for example, D3DResource_Release)
-		if (shouldRegister) {
-			EmuWarning("EmuResource is not a valid pointer!");
-		}
+		EmuWarning("EmuResource is not a valid pointer!");
 		return nullptr;
 	}
 
@@ -909,7 +904,7 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	return (XTL::IDirect3DSurface8*) GetHostResource(pXboxResource);
 }
 
-XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
@@ -917,28 +912,14 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource);
+	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource, iTextureStage);
 }
 
-XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
-	return (XTL::IDirect3DTexture8 *)GetHostBaseTexture(pXboxResource);
+	return (XTL::IDirect3DTexture8 *)GetHostBaseTexture(pXboxResource, iTextureStage);
 
 	// TODO : Check for 1 face (and 2 dimensions)?
-}
-
-XTL::IDirect3DCubeTexture8 *GetHostCubeTexture(XTL::X_D3DResource *pXboxResource)
-{
-	return (XTL::IDirect3DCubeTexture8 *)GetHostBaseTexture(pXboxResource);
-
-	// TODO : Check for 6 faces (and 2 dimensions)?
-}
-
-XTL::IDirect3DVolumeTexture8 *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource)
-{
-	return (XTL::IDirect3DVolumeTexture8 *)GetHostBaseTexture(pXboxResource);
-
-	// TODO : Check for 3 dimensions?
 }
 
 XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
@@ -948,7 +929,7 @@ XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);;
+	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);
 }
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
@@ -2119,8 +2100,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 }
 
 // check if a resource has been registered yet (if not, register it)
-VOID WINAPI CreateHostResource(XTL::X_D3DResource *pThis, DWORD dwSize); // Forward declartion to prevent restructure of code
-static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD dwSize = 0)
+void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage = 0, DWORD dwSize = 0)
 {
 	// Skip resources without data
 	if (pResource->Data == NULL)
@@ -2135,7 +2116,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD d
 		FreeHostResource(key);
 	}
 
-	CreateHostResource(pResource, dwSize);
+	CreateHostResource(pResource, iTextureStage, dwSize);
         
 	g_RegisteredResources.push_back(key);
 }
@@ -2186,7 +2167,7 @@ static void EmuUnswizzleTextureStages()
 			continue;
 
 		HRESULT hRet;
-		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
+		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture, i);
 		if (pHostTexture != nullptr)
 		{
 			if (pHostTexture->GetType() == XTL::D3DRTYPE_CUBETEXTURE) continue; // Prevent exceptions - skip cubes for now
@@ -4129,11 +4110,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 // ******************************************************************
 // * patch: IDirect3DResource8_Register
 // ******************************************************************
-VOID WINAPI CreateHostResource
-(
-    XTL::X_D3DResource      *pThis,
-    DWORD               dwSize
-)
+void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSize)
 {
 	using namespace XTL;
 	//FUNC_EXPORTS
@@ -4144,8 +4121,6 @@ VOID WINAPI CreateHostResource
 		LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
-
-	const int TextureStage = 0;
 
     X_D3DResource *pResource = pThis;
 
@@ -4661,7 +4636,7 @@ VOID WINAPI CreateHostResource
 
                             sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-RegCubeTex%.03d-%d.dds", X_Format, dwDumpCube++, v);
 
-							GetHostCubeTexture(pResource)->GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, &pSurface);
+							((XTL::IDirect3DCubeTexture8 *)GetHostTexture(pResource, iTextureStage))->GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, &pSurface);
 
                             D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_DDS, pSurface, NULL, NULL);
                         }
@@ -5983,7 +5958,7 @@ void EmuUpdateActiveTextureStages()
 			continue;
 		}
 
-		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture);
+		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture, i);
 
 		if (pHostTexture != nullptr) {
 			HRESULT hRet = g_pD3DDevice8->SetTexture(i, pHostTexture);
