@@ -417,6 +417,10 @@ inline void DSoundBufferTransferSettings(
     LONG lVolume, lPan;
     DS3DBUFFER ds3dBuffer;
 
+	if (pDSBufferOld == nullptr) {
+		return;
+	}
+
     pDSBufferOld->GetVolume(&lVolume);
     pDSBufferOld->GetFrequency(&dwFrequency);
     pDSBufferOld->GetPan(&lPan);
