@@ -2216,104 +2216,6 @@ static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
     *dwHeight = NewHeight;
 }
 
-// Derived from EmuUnswizzleActiveTexture
-static void EmuUnswizzleTextureStages()
-{
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-	for( int i = 0; i < TEXTURE_STAGES; i++ )
-	{
-		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
-		if (pBaseTexture == NULL)
-			continue;
-
-		HRESULT hRet;
-		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture, i);
-		if (pHostTexture != nullptr)
-		{
-			if (pHostTexture->GetType() == XTL::D3DRTYPE_CUBETEXTURE) continue; // Prevent exceptions - skip cubes for now
-			hRet = pHostTexture->UnlockRect(0); // remove old lock
-			DEBUG_D3DRESULT(hRet, "pHostTexture->UnlockRect");
-		}
-
-		if(!IsXboxResourceLocked(pBaseTexture))
-			continue;
-
-		XTL::X_D3DFORMAT XBFormat = GetXboxPixelContainerFormat(pBaseTexture);
-		if(!XTL::EmuXBFormatIsSwizzled(XBFormat))
-			continue;
-
-		DWORD dwBPP = XTL::EmuXBFormatBytesPerPixel(XBFormat);
-		pBaseTexture->Common &= ~X_D3DCOMMON_ISLOCKED;
-
-		// TODO: potentially XXHash32::hash() to see if this surface was actually modified..
-
-		if (pHostTexture == nullptr)
-			continue;
-
-		//
-		// unswizzle texture
-		//
-
-		{
-
-			DWORD dwLevelCount = pHostTexture->GetLevelCount();
-
-			for(uint32 v=0;v<dwLevelCount;v++)
-			{
-				XTL::D3DSURFACE_DESC SurfaceDesc;
-
-				HRESULT hRet = pHostTexture->GetLevelDesc(v, &SurfaceDesc);
-				DEBUG_D3DRESULT(hRet, "pHostTexture->GetLevelDesc");
-
-				if(FAILED(hRet))
-					continue;
-
-				//
-				// perform unswizzle
-				//
-
-				{
-					XTL::D3DLOCKED_RECT LockedRect;
-
-					//if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
-					//    break;
-					//CxbxKrnlCleanup("Temporarily unsupported format for active texture unswizzle (0x%.08X)", SurfaceDesc.Format);
-
-					hRet = pHostTexture->LockRect(v, &LockedRect, NULL, 0);
-					DEBUG_D3DRESULT(hRet, "pHostTexture->LockRect");
-
-					if(FAILED(hRet))
-						continue;
-
-					DWORD dwWidth = SurfaceDesc.Width;
-					DWORD dwHeight = SurfaceDesc.Height;
-					DWORD dwDepth = 1;
-					DWORD dwPitch = LockedRect.Pitch;
-					RECT  iRect = {0,0,0,0};
-					POINT iPoint = {0,0};
-
-					void *pTemp = malloc(dwPitch*dwHeight);
-
-					XTL::EmuUnswizzleRect
-					(
-						LockedRect.pBits, dwWidth, dwHeight, dwDepth,
-						pTemp, dwPitch, iRect, iPoint, dwBPP
-					);
-
-					memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
-
-					pHostTexture->UnlockRect(0);
-
-					free(pTemp);
-				}
-			}
-
-			DbgPrintf("Texture Stage %d was unswizzled\n", i);
-		}
-	}
-}
-
 typedef struct {
 	DWORD Hash = 0;
 	DWORD IndexCount = 0;;
@@ -2527,8 +2429,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 		EmuWarning("D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
 	{
-		EmuUnswizzleTextureStages();
-
 		EmuExecutePushBufferRaw(g_pPrimaryPB);
 
 		delete[] g_pPrimaryPB;
@@ -3955,8 +3855,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunPushBuffer)
 		LOG_FUNC_ARG(pPushBuffer)
 		LOG_FUNC_ARG(pFixup)
 		LOG_FUNC_END;
-
-	EmuUnswizzleTextureStages();
 
 	EmuExecutePushBuffer(pPushBuffer, pFixup);    
 }
@@ -6005,7 +5903,6 @@ void EmuUpdateActiveTextureStages()
 
 void CxbxUpdateNativeD3DResources()
 {
-	EmuUnswizzleTextureStages(); 
 	EmuUpdateActiveTextureStages();
 
 	// If Pixel Shaders are not disabled, process them
