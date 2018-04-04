@@ -328,7 +328,8 @@ std::string PSTRING_to_string(xboxkrnl::PSTRING const & src)
 
 void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING & dest)
 {
-	memcpy(dest->Buffer, src.c_str(), dest->Length);
+	dest->Length = src.size();
+	memcpy(dest->Buffer, src.c_str(), src.size());
 }
 
 void replace_all(std::string& str, const std::string& from, const std::string& to) {

@@ -97,57 +97,27 @@ ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
 #  define NV2A_CONSTEXPR static
 #endif
 
-// Public Domain ffs Implementation
-// See: http://snipplr.com/view/22147/stringsh-implementation/
-NV2A_CONSTEXPR unsigned int ffs(const unsigned int v)
+// GCC implementation of FFS
+static int ffs(register int valu)
 {
-	unsigned int x = v;
-	unsigned int c = 1;
+	register int bit;
 
-	/*
-	* adapted from from
-	*      http://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightBinSearch
-	*
-	* a modified binary search algorithm to count 0 bits from
-	*  the right (lsb).  This algorithm should work regardless
-	*  of the size of ints on the platform.
-	*
-	*/
+	if (valu == 0)
+		return 0;
 
-	/* a couple special cases */
-	if (x == 0) return 0;
-	if (x & 1)  return 1;   /* probably pretty common */
+	for (bit = 1; !(valu & 1); bit++)
+		valu >>= 1;
 
-	c = 1;
-	while ((x & 0xffff) == 0) {
-		x >>= 16;
-		c += 16;
-	}
-	if ((x & 0xff) == 0) {
-		x >>= 8;
-		c += 8;
-	}
-	if ((x & 0x0f) == 0) {
-		x >>= 4;
-		c += 4;
-	}
-	if ((x & 0x03) == 0) {
-		x >>= 2;
-		c += 2;
-	}
-
-	c -= (x & 1);
-	c += 1;     /* ffs() requires indexing bits from 1 */
-				/*   ie., the lsb is bit 1, not bit 0  */
-	return c;
+	return bit;
 }
 
 #define GET_MASK(v, mask) (((v) & (mask)) >> (ffs(mask)-1))
-#define SET_MASK(v, mask, val)                                   \
-	do {														 \
-	(v) &= ~(mask);                                              \
-	(v) |= ((val) << (ffs(mask) - 1)) & (mask);                  \
-} while (0)
+
+#define SET_MASK(v, mask, val)                                       \
+    do {                                                             \
+        (v) &= ~(mask);                                              \
+        (v) |= ((val) << (ffs(mask)-1)) & (mask);                    \
+    } while (0)
 
 // Power-of-two CASE statements
 #define CASE_1(v, step) case (v)
