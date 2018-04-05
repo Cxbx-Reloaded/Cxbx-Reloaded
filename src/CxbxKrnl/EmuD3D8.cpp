@@ -4783,6 +4783,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
     g_pVBCallback = pCallback;    
 }
 
+// LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
+// This uses a custom calling convention where parameter is passed in EAX, Value
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+(
+    DWORD Stage
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Value;
+	__asm {
+		mov Value, eax;
+	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)(Stage, Value);
+
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_TexCoordIndex
 // ******************************************************************
@@ -4852,6 +4871,28 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_BackFillMode)
 	LOG_NOT_SUPPORTED();
 }
 
+// LTCG specific D3DDevice_SetTextureState_BorderColor function...
+// This uses a custom calling convention where parameter is passed in EAB, EBX
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Stage;
+	__asm {
+		mov Stage, eax;
+	}
+
+	DWORD Value;
+	__asm {
+		mov Value, ebx;
+	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_BorderColor)(Stage, Value);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
@@ -4870,6 +4911,28 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 
     HRESULT hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTextureStageState");
+}
+
+// LTCG specific D3DDevice_SetTextureState_ColorKeyColor function...
+// This uses a custom calling convention where parameter is passed in EAX, EBX
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Stage;
+	__asm {
+		mov Stage, eax;
+	}
+
+	DWORD Value;
+	__asm {
+		mov Value, ebx;
+	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)(Stage, Value);
 }
 
 // ******************************************************************
@@ -4891,6 +4954,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 	LOG_NOT_SUPPORTED();
 }
 
+// LTCG specific D3DDevice_SetTextureState_BumpEnv function...
+// This uses a custom calling convention where parameter is passed in Stage, Type, EAX
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+(
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Stage
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Value;
+	__asm {
+		mov Value, eax;
+	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_BumpEnv)(Stage, Type, Value);
+
+}
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
 // ******************************************************************

@@ -935,6 +935,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
     DWORD Value
 );
 
+VOID EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+(
+    DWORD Stage
+);
+
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -960,6 +965,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor)
     DWORD Value
 );
 
+VOID EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -968,6 +975,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
     DWORD Stage,
     DWORD Value
 );
+
+VOID EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
@@ -979,6 +988,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
     DWORD                      Value
 );
 
+VOID EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+(
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Stage
+);
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_FrontFace
 // ******************************************************************
