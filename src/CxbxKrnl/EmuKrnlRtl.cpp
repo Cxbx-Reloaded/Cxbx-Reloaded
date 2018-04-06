@@ -478,18 +478,18 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 		LOG_FUNC_ARG(Pattern)
 		LOG_FUNC_END;
 
-	SIZE_T result = Length;
+	PULONG ptr = (PULONG)Source;
+	ULONG_PTR len = Length / sizeof(ULONG);
+	ULONG_PTR i;
 
-	// Compare 32 bits at a time
-	// Any extra bytes are ignored
-	uint32_t numDwords = Length >> 2;
-	uint32_t *pDwords = (uint32_t *)Source;
-	for (uint32_t i = 0; i < numDwords; i++) {
-		if (pDwords[i] != Pattern) {
-			result = i;
+	for (i = 0; i < len; i++) {
+		if (*ptr != Pattern)
 			break;
-		}
+
+		ptr++;
 	}
+
+	SIZE_T result = (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
 
 	RETURN(result);
 }
