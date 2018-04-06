@@ -336,7 +336,7 @@ inline void DSoundGenericUnlock(
 #define DSound3DBufferSelectionT(pThis) \
     ((pThis->EmuDirectSoundBuffer8Region != nullptr) ? pThis->EmuDirectSound3DBuffer8Region : pThis->EmuDirectSound3DBuffer8)
 
-//Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
+// Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
 inline void DSoundBufferCreate(LPDSBUFFERDESC &pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
@@ -663,7 +663,7 @@ inline HRESULT HybridDirectSoundBuffer_GetInfo(
     return DS_OK;
 }*/
 
-//IDirectSoundStream
+// Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
@@ -1416,7 +1416,6 @@ inline HRESULT HybridDirectSoundBuffer_Stop(
     return DS_OK;
 }
 
-//TODO: RadWolfie - This is where I left off
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_StopEx(
@@ -1428,7 +1427,6 @@ inline HRESULT HybridDirectSoundBuffer_StopEx(
     return DS_OK;
 }
 
-// Xbox DSound does not seem to have Unlock function, has been confirmed with Cxbx developers.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Unlock(
     LPDIRECTSOUNDBUFFER8 pDSBuffer)
