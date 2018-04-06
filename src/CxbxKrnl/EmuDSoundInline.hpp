@@ -99,8 +99,8 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
     //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
 
     lpwfxFormat->wBitsPerSample = 16;
-    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nChannels * lpwfxFormat->nSamplesPerSec * (lpwfxFormat->wBitsPerSample / 8);
     lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
+    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
     lpwfxFormat->cbSize = 0;
     //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
     //This is just to verify format conversion is correct or not.
