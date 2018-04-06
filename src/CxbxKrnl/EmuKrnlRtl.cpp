@@ -144,8 +144,7 @@ static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_cri
 
 DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
 {
-	DWORD ret = mbstowcs(nullptr, str->Buffer, str->Length);
-	return ret + sizeof(WCHAR); // + for the terminating null character
+	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
 
 // ******************************************************************
