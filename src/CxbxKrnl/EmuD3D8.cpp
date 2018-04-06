@@ -3971,6 +3971,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
 	hRet = g_pD3DDevice8->BeginScene();
+
+	UpdateFPSCounter();
 	
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
@@ -3987,8 +3989,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 			frameStartTime = std::chrono::high_resolution_clock::now();
 		}
-
-		UpdateFPSCounter();
 
 		// Put primitives per frame in the title
 		/*{
