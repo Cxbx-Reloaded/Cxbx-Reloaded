@@ -669,7 +669,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Get KernelDebugFileName :
 	std::string DebugFileName = "";
 	if (argc > 4) {
-		DebugFileName = argv[5];
+		if (argv[5] != nullptr) {
+			DebugFileName = argv[5];
+		}
 	}
 
 	// debug console allocation (if configured)
