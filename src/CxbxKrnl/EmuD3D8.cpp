@@ -3972,24 +3972,24 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
 	hRet = g_pD3DDevice8->BeginScene();
 
-	if (!g_UncapFramerate) {
-		// If the last frame completed faster than the Xbox VBlank period, wait for it
-		// TODO: Read the frame rate target from the Xbox display mode
-		// See comments in GetNextVblankTime();
-		auto targetDuration = 16.6666666667ms;
-		while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
-			// We use an empty while loop because actually sleeping is too unstable
-			// Sleeping causes the frame duration to jitter...
-			;
-		}
-
-		frameStartTime = std::chrono::high_resolution_clock::now();
-	}
-
 	UpdateFPSCounter();
 	
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
+		if (!g_UncapFramerate) {
+			// If the last frame completed faster than the Xbox VBlank period, wait for it
+			// TODO: Read the frame rate target from the Xbox display mode
+			// See comments in GetNextVblankTime();
+			auto targetDuration = 16.6666666667ms;
+			while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
+				// We use an empty while loop because actually sleeping is too unstable
+				// Sleeping causes the frame duration to jitter...
+				;
+			}
+
+			frameStartTime = std::chrono::high_resolution_clock::now();
+		}
+
 		// Put primitives per frame in the title
 		/*{
 			char szString[64];
