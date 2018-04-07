@@ -239,16 +239,15 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveTy
     return EmuPrimitiveTypeLookup[PrimitiveType];
 }
 
-extern void EmuUnswizzleRect
+extern void EmuUnswizzleBox
 (
 	PVOID pSrcBuff,
 	DWORD dwWidth,
+	DWORD dwRowPitch,
 	DWORD dwHeight,
+	DWORD dwSlicePitch,
 	DWORD dwDepth,
 	PVOID pDstBuff,
-	DWORD dwPitch,
-	RECT rSrc, // Unused
-	POINT poDst, // Unused
 	DWORD dwBPP // expressed in Bytes Per Pixel
 ); // NOPATCH
 
