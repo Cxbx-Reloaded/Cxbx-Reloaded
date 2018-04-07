@@ -2194,12 +2194,9 @@ void CxbxRemoveIndexBuffer(PWORD pData)
 	// HACK: Never Free
 }
 
-DWORD g_CachedIndexBase = 0;
-
 void CxbxUpdateActiveIndexBuffer
 (
 	PWORD         pIndexData,
-	PDWORD		  pIndexBase,	
 	UINT          IndexCount
 )
 {
@@ -2250,38 +2247,20 @@ void CxbxUpdateActiveIndexBuffer
 		indexBuffer.pHostIndexBuffer->Unlock();
 	}
 
-	
-	*pIndexBase = g_CachedIndexBase;
+	// Determine active the vertex index
+	// This reads from g_pDevice->m_IndexBase in Xbox D3D
+	// TODO: Move this into a global symbol, similar to RenderState/Texture State
+	static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
+
+	DWORD indexBase = 0;
+	indexBase = *pdwXboxD3D_IndexBase;
 
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
+	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, indexBase);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetIndices");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetIndices
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
-(
-	X_D3DIndexBuffer   *pIndexData,
-	UINT                BaseVertexIndex
-)
-{
-	FUNC_EXPORTS
-
-		LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pIndexData)
-		LOG_FUNC_ARG(BaseVertexIndex)
-		LOG_FUNC_END;
-
-	// Cache the base vertex index then call the Xbox function
-	g_CachedIndexBase = BaseVertexIndex;
-
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
-	RETURN(XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex));
 }
 
 // ******************************************************************
@@ -4008,7 +3987,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	}
 
 	UpdateFPSCounter();
-
+	
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
 		// Put primitives per frame in the title
@@ -6087,8 +6066,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 	CxbxUpdateNativeD3DResources();
 	if (IsValidCurrentShader()) {
+		CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
+
+		// Determine active the vertex index
+		// This reads from g_pDevice->m_IndexBase in Xbox D3D
+		// TODO: Move this into a global symbol, similar to RenderState/Texture State
+		static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
 		DWORD indexBase = 0;
-		CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, VertexCount);
+		indexBase = *pdwXboxD3D_IndexBase;
 
 		VertexPatchDesc VPDesc;
 		VPDesc.XboxPrimitiveType = PrimitiveType;
