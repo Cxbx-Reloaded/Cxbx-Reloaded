@@ -78,10 +78,11 @@ namespace CxbxDebugger
             // Copy all arguments
             args = x_args;
 
-            // Keep quotes for any potential file paths
-            for(int i = 0; i < args.Length; ++i)
+            // Keep quotes for any strings that may contain spaces
+            int scratch;
+            for (int i = 0; i < args.Length; ++i)
             {
-                if( args[i].IndexOf(":\\") == 1)
+                if (int.TryParse(args[i], out scratch) == false)
                 {
                     args[i] = string.Format("\"{0}\"", args[i]);
                 }
