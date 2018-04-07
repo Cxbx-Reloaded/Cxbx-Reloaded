@@ -181,8 +181,16 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 			output_wchar(os, *v++);
 	}
 	else
+#if 0
 		os << v; // TODO : FIXME - VS2015 doesn''t render this string (instead, it shows a hexadecimal memory address)
-
+#else // For now, render unicode as ANSI (replacing non-printables with '?')
+	{
+		while (*v) {
+			output_char(os, *v <= 0xFF ? (char)*v : '?');
+			v++;
+		}
+	}
+#endif
 	return os << "\"";
 }
 
