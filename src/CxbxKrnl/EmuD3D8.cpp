@@ -2194,9 +2194,12 @@ void CxbxRemoveIndexBuffer(PWORD pData)
 	// HACK: Never Free
 }
 
+DWORD g_CachedIndexBase = 0;
+
 void CxbxUpdateActiveIndexBuffer
 (
 	PWORD         pIndexData,
+	PDWORD		  pIndexBase,	
 	UINT          IndexCount
 )
 {
@@ -2247,20 +2250,38 @@ void CxbxUpdateActiveIndexBuffer
 		indexBuffer.pHostIndexBuffer->Unlock();
 	}
 
-	// Determine active the vertex index
-	// This reads from g_pDevice->m_IndexBase in Xbox D3D
-	// TODO: Move this into a global symbol, similar to RenderState/Texture State
-	static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
-
-	DWORD indexBase = 0;
-	indexBase = *pdwXboxD3D_IndexBase;
+	
+	*pIndexBase = g_CachedIndexBase;
 
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, indexBase);
+	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetIndices");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetIndices
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
+(
+	X_D3DIndexBuffer   *pIndexData,
+	UINT                BaseVertexIndex
+)
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pIndexData)
+		LOG_FUNC_ARG(BaseVertexIndex)
+		LOG_FUNC_END;
+
+	// Cache the base vertex index then call the Xbox function
+	g_CachedIndexBase = BaseVertexIndex;
+
+	XB_trampoline(HRESULT, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
+	RETURN(XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex));
 }
 
 // ******************************************************************
@@ -3972,24 +3993,24 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
 	hRet = g_pD3DDevice8->BeginScene();
 
-	UpdateFPSCounter();
-	
-	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
-	{
-		if (!g_UncapFramerate) {
-			// If the last frame completed faster than the Xbox VBlank period, wait for it
-			// TODO: Read the frame rate target from the Xbox display mode
-			// See comments in GetNextVblankTime();
-			auto targetDuration = 16.6666666667ms;
-			while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
-				// We use an empty while loop because actually sleeping is too unstable
-				// Sleeping causes the frame duration to jitter...
-				;
-			}
-
-			frameStartTime = std::chrono::high_resolution_clock::now();
+	if (!g_UncapFramerate) {
+		// If the last frame completed faster than the Xbox VBlank period, wait for it
+		// TODO: Read the frame rate target from the Xbox display mode
+		// See comments in GetNextVblankTime();
+		auto targetDuration = 16.6666666667ms;
+		while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
+			// We use an empty while loop because actually sleeping is too unstable
+			// Sleeping causes the frame duration to jitter...
+			;
 		}
 
+		frameStartTime = std::chrono::high_resolution_clock::now();
+	}
+
+	UpdateFPSCounter();
+
+	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
+	{
 		// Put primitives per frame in the title
 		/*{
 			char szString[64];
@@ -6066,14 +6087,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 	CxbxUpdateNativeD3DResources();
 	if (IsValidCurrentShader()) {
-		CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
-
-		// Determine active the vertex index
-		// This reads from g_pDevice->m_IndexBase in Xbox D3D
-		// TODO: Move this into a global symbol, similar to RenderState/Texture State
-		static DWORD *pdwXboxD3D_IndexBase = &g_XboxD3DDevice[7];
 		DWORD indexBase = 0;
-		indexBase = *pdwXboxD3D_IndexBase;
+		CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, VertexCount);
 
 		VertexPatchDesc VPDesc;
 		VPDesc.XboxPrimitiveType = PrimitiveType;
