@@ -831,38 +831,38 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = TRUE;
-
+	BOOLEAN bRet = FALSE;
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
-	if (l1 != l2) {
-		return FALSE;
-	}
 
-	WCHAR *p1 = (WCHAR*)(String1->Buffer);
-	WCHAR *p2 = (WCHAR*)(String2->Buffer);
-	WCHAR *last = p1 + l1;
+	if (l1 == l2) {
+		WCHAR *p1 = (WCHAR*)(String1->Buffer);
+		WCHAR *p2 = (WCHAR*)(String2->Buffer);
+		WCHAR *last = p1 + (l1 / sizeof(WCHAR));
 
-	if (CaseInSensitive) {
-		while (p1 < last) {
-			WCHAR c1 = *p1++;
-			WCHAR c2 = *p2++;
-			if (c1 != c2) {
-				c1 = towupper(c1);
-				c2 = towupper(c2);
+		bRet = TRUE;
+
+		if (CaseInSensitive) {
+			while (p1 < last) {
+				WCHAR c1 = *p1++;
+				WCHAR c2 = *p2++;
 				if (c1 != c2) {
-					return FALSE;
+					c1 = towupper(c1);
+					c2 = towupper(c2);
+					if (c1 != c2) {
+						bRet = FALSE;
+						break;
+					}
 				}
 			}
 		}
-
-		return TRUE;
-	}
-
-	while (p1 < last) {
-		if (*p1++ != *p2++) {
-			bRet = FALSE;
-			break;
+		else {
+			while (p1 < last) {
+				if (*p1++ != *p2++) {
+					bRet = FALSE;
+					break;
+				}
+			}
 		}
 	}
 
