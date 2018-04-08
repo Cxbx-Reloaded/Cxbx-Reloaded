@@ -1338,14 +1338,14 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
 
 void XTL::EmuUnswizzleBox
 (
-	PVOID pSrcBuff,
-	DWORD dwWidth,
-	DWORD dwRowPitch,
-	DWORD dwHeight,
-	DWORD dwSlicePitch,
-	DWORD dwDepth,
-	PVOID pDstBuff,
-	DWORD dwBPP // expressed in Bytes Per Pixel
+	CONST PVOID pSrcBuff,
+	CONST DWORD dwWidth,
+	CONST DWORD dwRowPitch,
+	CONST DWORD dwHeight,
+	CONST DWORD dwSlicePitch,
+	CONST DWORD dwDepth,
+	CONST PVOID pDstBuff,
+	CONST DWORD dwBPP // expressed in Bytes Per Pixel
 ) // Source : Dxbx
 {
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
@@ -1366,9 +1366,6 @@ void XTL::EmuUnswizzleBox
 		}
 	}
 
-	DWORD dwRowPitchCorrection = dwWidth - (dwRowPitch / dwBPP);
-	DWORD dwSlicePitchCorrection = ((dwHeight * dwRowPitch) - dwSlicePitch) / dwBPP;
-
 	const DWORD dwStartX = 0;
 	const DWORD dwStartY = 0;
 	const DWORD dwStartZ = 0;
@@ -1376,73 +1373,76 @@ void XTL::EmuUnswizzleBox
 	DWORD dwZ = dwStartZ;
 	switch (dwBPP) {
 	case 1: {
-		uint8_t *pSrc = (uint8_t *)pSrcBuff;
-		uint8_t *pDest = (uint8_t *)pDstBuff;
+		const uint8_t *pSrc = (uint8_t *)pSrcBuff;
+		uint8_t *pDestSlice = (uint8_t *)pDstBuff;
 
 		for (uint z = 0; z < dwDepth; z++) {
+			uint8_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
 			for (uint y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
 				for (uint x = 0; x < dwWidth; x++) {
 					uint delta = dwX | dwYZ;
-					*(pDest++) = pSrc[delta]; // copy one pixel
+					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDest += dwRowPitchCorrection; // step to next line in destination
+				pDestRow += dwRowPitch; // / 1; // = / dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDest += dwSlicePitchCorrection; // step to next level in destination
+			pDestSlice += dwSlicePitch; // / 1; // = / dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;
 	}
 	case 2: {
-		uint16_t *pSrc = (uint16_t *)pSrcBuff;
-		uint16_t *pDest = (uint16_t *)pDstBuff;
+		const uint16_t *pSrc = (uint16_t *)pSrcBuff;
+		uint16_t *pDestSlice = (uint16_t *)pDstBuff;
 
 		for (uint z = 0; z < dwDepth; z++) {
+			uint16_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
 			for (uint y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
 				for (uint x = 0; x < dwWidth; x++) {
 					uint delta = dwX | dwYZ;
-					*(pDest++) = pSrc[delta]; // copy one pixel
+					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDest += dwRowPitchCorrection; // step to next line in destination
+				pDestRow += dwRowPitch / 2; // = dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDest += dwSlicePitchCorrection; // step to next level in destination
+			pDestSlice += dwSlicePitch / 2; // = dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;
 	}
 	case 4: {
-		uint32_t *pSrc = (uint32_t *)pSrcBuff;
-		uint32_t *pDest = (uint32_t *)pDstBuff;
+		const uint32_t *pSrc = (uint32_t *)pSrcBuff;
+		uint32_t *pDestSlice = (uint32_t *)pDstBuff;
 
 		for (uint z = 0; z < dwDepth; z++) {
+			uint32_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
 			for (uint y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
 				for (uint x = 0; x < dwWidth; x++) {
 					uint delta = dwX | dwYZ;
-					*(pDest++) = pSrc[delta]; // copy one pixel
+					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDest += dwRowPitchCorrection; // step to next line in destination
+				pDestRow += dwRowPitch / 4; // = dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDest += dwSlicePitchCorrection; // step to next level in destination
+			pDestSlice += dwSlicePitch / 4; // = dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;

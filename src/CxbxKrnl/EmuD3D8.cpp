@@ -4482,7 +4482,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 									const DWORD dwSlicePitch = 0; // only needed for volume textures (dwDepth > 1)
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleBox(
-										pSrc + dwMipOffs, dwMipWidth, LockedRect.Pitch, dwMipHeight, dwSlicePitch, dwDepth, 
+										pSrc + dwMipOffs, dwMipWidth, dwMipPitch, dwMipHeight, dwSlicePitch, dwDepth, 
 										LockedRect.pBits, dwBPP
 									);
 								}
