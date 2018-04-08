@@ -1349,19 +1349,19 @@ void XTL::EmuUnswizzleBox
 ) // Source : Dxbx
 {
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
-	for (uint i=1, j=1; (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth); i <<= 1) {
+	for (uint i=1, j=1; (i < dwWidth) || (i < dwHeight) || (i < dwDepth); i <<= 1) {
 		if (i < dwWidth) {
-			dwMaskX = dwMaskX | j;
+			dwMaskX |= j;
 			j <<= 1;
-		};
+		}
 
 		if (i < dwHeight) {
-			dwMaskY = dwMaskY | j;
+			dwMaskY |= j;
 			j <<= 1;
 		}
 
 		if (i < dwDepth) {
-			dwMaskZ = dwMaskZ | j;
+			dwMaskZ |= j;
 			j <<= 1;
 		}
 	}
