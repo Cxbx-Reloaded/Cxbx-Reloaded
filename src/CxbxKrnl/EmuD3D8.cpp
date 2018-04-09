@@ -4487,7 +4487,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 
 								uint8_t *pDst = (uint8_t *)LockedRect.pBits;
 								DWORD dwDstRowPitch = LockedRect.Pitch;
-								const DWORD dwDstSlicePitch = 0; // TODO : Set for volume texture support
+								const DWORD dwDstSlicePitch = dwSrcSlicePitch; // TODO : Set for volume texture support
 
 								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
