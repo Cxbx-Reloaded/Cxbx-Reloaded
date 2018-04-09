@@ -3366,6 +3366,28 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 
 BOOL g_bBadIndexData = FALSE;
 
+// LTCG specific D3DDevice_SetTexture function...
+// This function is still not working so should be investigated.
+// Test-case: Metal Wolf Chaos
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTexture_4)
+(
+)
+{
+	//FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+	__asm {
+		add esp, 4
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_SetTexture
+		mov eax, 0
+		push returnAddr
+		ret
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetTexture
 // ******************************************************************

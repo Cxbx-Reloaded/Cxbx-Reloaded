@@ -565,6 +565,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTexture)
 	X_D3DBaseTexture  *pTexture
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetTexture_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SwitchTexture
 // ******************************************************************
