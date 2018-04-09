@@ -239,7 +239,7 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveTy
     return EmuPrimitiveTypeLookup[PrimitiveType];
 }
 
-void XTL::EmuUnswizzleBox
+extern void EmuUnswizzleBox
 (
 	CONST PVOID pSrcBuff,
 	CONST DWORD dwWidth,
@@ -248,7 +248,7 @@ void XTL::EmuUnswizzleBox
 	CONST DWORD dwBytesPerPixel,
 	CONST PVOID pDstBuff,
 	CONST DWORD dwDstRowPitch,
-	CONST DWORD dwDstSlicePitch,
+	CONST DWORD dwDstSlicePitch
 ); // NOPATCH
 
 // From : https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Additions/x11/x11include/libdrm-2.4.13/nouveau_class.h
