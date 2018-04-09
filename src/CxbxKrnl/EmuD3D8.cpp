@@ -2930,6 +2930,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 
     
 }
+// LTCG specific D3DDevice_SetShaderConstantMode function...
+// This uses a custom calling convention where parameter is passed in EAX
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	XTL::X_VERTEXSHADERCONSTANTMODE param;
+	__asm {
+		mov param, eax;
+	}
+
+	return EMUPATCH(D3DDevice_SetShaderConstantMode)(param);
+}
 
 // ******************************************************************
 // * patch: D3DDevice_SetShaderConstantMode
@@ -5670,6 +5685,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
         
 		EMUPATCH(D3DDevice_EnableOverlay)(g_fYuvEnabled);
     }
+}
+
+// LTCG specific D3DDevice_SetTransform function...
+// This uses a custom calling convention where parameter is passed in EAX, EDX
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTransform_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	D3DTRANSFORMSTATETYPE param1;
+	__asm {
+		mov param1, eax;
+	}
+
+	CONST D3DMATRIX *param2;
+	__asm {
+		mov param2, edx;
+	}
+
+	return EMUPATCH(D3DDevice_SetTransform)(param1, param2);
 }
 
 // ******************************************************************

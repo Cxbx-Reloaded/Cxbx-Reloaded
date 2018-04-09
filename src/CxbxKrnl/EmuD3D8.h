@@ -317,6 +317,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
     XTL::X_VERTEXSHADERCONSTANTMODE Mode
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_Reset
 // ******************************************************************
@@ -1220,6 +1222,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTransform)
     D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SetTransform_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform
