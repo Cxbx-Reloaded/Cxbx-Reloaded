@@ -4784,22 +4784,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 }
 
 // LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
-// This uses a custom calling convention where parameter is passed in EAX, Value
+// TODO: This function works only on debug build, should be fix on release build.
 // Test-case: Metal Wolf Chaos
-VOID XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 (
-    DWORD Stage
 )
 {
 	FUNC_EXPORTS;
 
-	DWORD Value;
+	static uint32 returnAddr;
+
 	__asm {
-		mov Value, eax;
+		add esp, 4
+		pop returnAddr
+		push esi
+		call EmuPatch_D3DDevice_SetTextureState_TexCoordIndex
+		mov eax, 0
+		push returnAddr
+		ret
 	}
-
-	return EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)(Stage, Value);
-
 }
 
 // ******************************************************************
@@ -4955,24 +4958,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 }
 
 // LTCG specific D3DDevice_SetTextureState_BumpEnv function...
-// This uses a custom calling convention where parameter is passed in Stage, Type, EAX
+// TODO: This function works only on debug build, should be fix on release build.
 // Test-case: Metal Wolf Chaos
-VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 (
-    X_D3DTEXTURESTAGESTATETYPE Type,
-    DWORD                      Stage
 )
 {
 	FUNC_EXPORTS;
 
-	DWORD Value;
+	static uint32 returnAddr;
+
 	__asm {
-		mov Value, eax;
+		add esp, 4
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_SetTextureState_BumpEnv
+		mov eax, 0
+		push returnAddr
+		ret
 	}
-
-	return EMUPATCH(D3DDevice_SetTextureState_BumpEnv)(Stage, Type, Value);
-
 }
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
 // ******************************************************************
