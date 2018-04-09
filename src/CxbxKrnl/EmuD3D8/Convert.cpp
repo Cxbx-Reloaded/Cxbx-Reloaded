@@ -1345,7 +1345,7 @@ void XTL::EmuUnswizzleBox
 	CONST DWORD dwBytesPerPixel,
 	CONST PVOID pDstBuff,
 	CONST DWORD dwDstRowPitch,
-	CONST DWORD dwDstSlicePitch,
+	CONST DWORD dwDstSlicePitch
 ) // Source : Dxbx
 {
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
