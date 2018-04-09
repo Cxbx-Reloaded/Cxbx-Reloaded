@@ -2164,8 +2164,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (RemoveNops())
     Log("RemoveNops");
 
-  while (RemoveUselessWrites())
+  while (RemoveUselessWrites()) {
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Result))
     Log("ConvertConstantsToNative");
@@ -2173,8 +2176,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   ConvertXboxOpcodesToNative(pPSDef);
   Log("ConvertXboxOpcodesToNative");
 
-  while (RemoveUselessWrites()) // again
+  while (RemoveUselessWrites()) { // again
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   // Resolve all differences :
   if (FixupPixelShader())
