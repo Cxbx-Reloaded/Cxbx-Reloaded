@@ -1181,8 +1181,9 @@ bool ConvertD3DTextureToARGBBuffer(
 		unswizleBuffer = (uint8_t*)malloc(DstSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
 		XTL::EmuUnswizzleBox(
-			pSrc, SrcWidth, SrcHeight, uiDepth, EmuXBFormatBytesPerPixel(X_Format),
-			unswizleBuffer, DstRowPitch, DstSlicePitch			
+			pSrc, SrcWidth, SrcHeight, uiDepth, 
+			SrcRowPitch, SrcSlicePitch, EmuXBFormatBytesPerPixel(X_Format),
+			unswizleBuffer
 		);
 		// Convert colors from the unswizzled buffer
 		pSrc = unswizleBuffer;
@@ -4503,12 +4504,18 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 							{
 								if (bSwizzled)
 								{
-									const DWORD dwDestSlicePitch = 0; // only needed for volume textures (dwDepth > 1)
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleBox(
-										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, dwBPP,
-										LockedRect.pBits, LockedRect.Pitch, dwDestSlicePitch
+										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth,
+										dwRowPitch, dwSlicePitch, dwBPP,
+										LockedRect.pBits
 									);
+
+									if (LockedRect.Pitch != dwRowPitch) {
+										LOG_TEST_CASE("(Row)Pitch difference between Xbox and Host!");
+										// TODO : If dest row or slice pitch differs from Xbox source row/slice pitch,
+										// then we need to unswizzle to a temporary buffer and pitch-copy that to dest!
+									}
 								}
 								else if (bCompressed)
 								{
