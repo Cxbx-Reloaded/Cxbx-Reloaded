@@ -818,11 +818,12 @@ XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, int 
 VOID CxbxGetPixelContainerMeasures
 (
 	XTL::X_D3DPixelContainer *pPixelContainer,
-	DWORD dwLevel,
+	DWORD dwMipMapLevel,
 	UINT *pWidth,
 	UINT *pHeight,
-	UINT *pPitch,
-	UINT *pSize
+	UINT *pDepth,
+	UINT *pRowPitch,
+	UINT *pSlicePitch
 );
 
 size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
@@ -831,17 +832,19 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 	switch (GetXboxCommonResourceType(pXboxResource)) {
 	case X_D3DCOMMON_TYPE_SURFACE:
 	case X_D3DCOMMON_TYPE_TEXTURE:
-		uint SrcPitch, SrcSize, Width, Height;
+		uint Width, Height, Depth, RowPitch, SlicePitch;
+		// TODO : Accumulate all mipmap levels!!!
 		CxbxGetPixelContainerMeasures(
 			(XTL::X_D3DPixelContainer*)pXboxResource,
-			0, // dwLevel
+			0, // dwMipMapLevel
 			&Width,
 			&Height,
-			&SrcPitch,
-			&SrcSize
+			&Depth,
+			&RowPitch,
+			&SlicePitch
 		);
 
-		return SrcSize;
+		return SlicePitch * Depth;
 	default:
 		// Fallback to querying the allocation size, if no other calculation was present
 		return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
@@ -1093,14 +1096,41 @@ VOID XTL::CxbxSetPixelContainerHeader
 		;
 }
 
+uint CxbxGetPixelContainerDepth
+(
+	XTL::X_D3DPixelContainer *pPixelContainer
+)
+{
+	if (pPixelContainer->Size == 0) {
+		DWORD l2d = (pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT;
+		return  1 << l2d;
+	}
+
+	return 1;
+}
+
+uint CxbxGetPixelContainerMipMapLevels
+(
+	XTL::X_D3DPixelContainer *pPixelContainer
+)
+{
+	if (pPixelContainer->Size == 0) {
+		return (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+	}
+
+	return 1;
+}
+
 VOID CxbxGetPixelContainerMeasures
 (
 	XTL::X_D3DPixelContainer *pPixelContainer,
-	DWORD dwLevel,
+	// TODO : Add X_D3DCUBEMAP_FACES argument
+	DWORD dwMipMapLevel, // unused - TODO : Use
 	UINT *pWidth,
 	UINT *pHeight,
-	UINT *pPitch,
-	UINT *pSize
+	UINT *pDepth,
+	UINT *pRowPitch,
+	UINT *pSlicePitch
 )
 {
 	DWORD Size = pPixelContainer->Size;
@@ -1108,48 +1138,52 @@ VOID CxbxGetPixelContainerMeasures
 
 	if (Size != 0)
 	{
+		*pDepth = 1;
 		*pWidth = ((Size & X_D3DSIZE_WIDTH_MASK) /* >> X_D3DSIZE_WIDTH_SHIFT*/) + 1;
 		*pHeight = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-		*pPitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
+		*pRowPitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
 	}
 	else
 	{
 		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
 		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
+		DWORD l2d = (pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT;
 		DWORD dwBPP = EmuXBFormatBitsPerPixel(X_Format);
 
+		*pDepth = 1 << l2d;
 		*pHeight = 1 << l2h;
 		*pWidth = 1 << l2w;
-		*pPitch = *pWidth * dwBPP / 8;
+		*pRowPitch = (*pWidth) * dwBPP / 8;
 	}
 
-	*pSize = *pHeight * *pPitch;
+	*pSlicePitch = (*pRowPitch) * (*pHeight);
 
 	if (EmuXBFormatIsCompressed(X_Format)) {
-		*pPitch *= 4;
+		*pRowPitch *= 4;
 	}
 }
 
 bool ConvertD3DTextureToARGBBuffer(
 	XTL::X_D3DFORMAT X_Format,
-	uint8 *pSrc,
-	int SrcWidth, int SrcHeight,
-	uint SrcPitch,
-	uint8 *pDest, int DestPitch,
-	int TextureStage = 0
+	uint8_t *pSrc,
+	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+	uint8_t *pDst, int DstRowPitch, int DstSlicePitch,
+	uint uiDepth = 1,
+	int iTextureStage = 0
 )
 {
 	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
 	if (ConvertRowToARGB == nullptr)
 		return false; // Unhandled conversion
 
-	uint8 *unswizleBuffer = nullptr;
+	uint8_t *unswizleBuffer = nullptr;
 	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8*)malloc(SrcPitch * SrcHeight); // TODO : Reuse buffer when performance is important
+		unswizleBuffer = (uint8_t*)malloc(DstSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
-		XTL::EmuUnswizzleRect(
-			pSrc, SrcWidth, SrcHeight, 1, unswizleBuffer,
-			SrcPitch, {}, {}, EmuXBFormatBytesPerPixel(X_Format)
+		XTL::EmuUnswizzleBox(
+			pSrc, SrcWidth, SrcHeight, uiDepth, 
+			SrcRowPitch, SrcSlicePitch, EmuXBFormatBytesPerPixel(X_Format),
+			unswizleBuffer
 		);
 		// Convert colors from the unswizzled buffer
 		pSrc = unswizleBuffer;
@@ -1157,23 +1191,30 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	int AdditionalArgument;
 	if (X_Format == XTL::X_D3DFMT_P8)
-		AdditionalArgument = (int)g_pCurrentPalette[TextureStage];
+		AdditionalArgument = (int)g_pCurrentPalette[iTextureStage];
 	else
-		AdditionalArgument = DestPitch;
+		AdditionalArgument = DstRowPitch;
 
-	DWORD SrcRowOff = 0;
-	uint8 *pDestRow = pDest;
 	if (EmuXBFormatIsCompressed(X_Format)) {
 		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
 		SrcHeight = (SrcHeight + 3) / 4;
-		DestPitch *= 4;
+		DstRowPitch *= 4;
 	}
 
-	for (int y = 0; y < SrcHeight; y++) {
-		*(int*)pDestRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
-		ConvertRowToARGB(pSrc + SrcRowOff, pDestRow, SrcWidth);
-		SrcRowOff += SrcPitch;
-		pDestRow += DestPitch;
+	uint8_t *pSrcSlice = pSrc;
+	uint8_t *pDstSlice = pDst;
+	for (uint z = 0; z < uiDepth; z++) {
+		uint8_t *pSrcRow = pSrcSlice;
+		uint8_t *pDstRow = pDstSlice;
+		for (int y = 0; y < SrcHeight; y++) {
+			*(int*)pDstRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
+			ConvertRowToARGB(pSrcRow, pDstRow, SrcWidth);
+			pSrcRow += SrcRowPitch;
+			pDstRow += DstRowPitch;
+		}
+
+		pSrcSlice += SrcSlicePitch;
+		pDstSlice += DstSlicePitch;
 	}
 
 	if (unswizleBuffer)
@@ -1196,29 +1237,34 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 	if (ConvertRowToARGB == nullptr)
 		return nullptr; // Unhandled conversion
 
-	uint SrcPitch, SrcSize;
+	uint SrcDepth, SrcRowPitch, SrcSlicePitch;
 	CxbxGetPixelContainerMeasures(
 		pXboxPixelContainer,
-		0, // dwLevel
+		0, // dwMipMapLevel
 		(UINT*)pWidth,
 		(UINT*)pHeight,
-		&SrcPitch,
-		&SrcSize
+		&SrcDepth,
+		&SrcRowPitch,
+		&SrcSlicePitch
 	);
 
 	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
-	int DestPitch = *pWidth * sizeof(DWORD);
-	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
+	int DstDepth = 1; // for now TODO : Use SrcDepth when supporting volume textures
+	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
+	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
+	int DstSize = DstSlicePitch * DstDepth;
+	uint8 *pDst = (uint8 *)malloc(DstSize);
 
 	// And convert the source towards that buffer
 	/*ignore result*/ConvertD3DTextureToARGBBuffer(
 		X_Format,
-		pSrc, *pWidth, *pHeight, SrcPitch,
-		pDest, DestPitch,
+		pSrc, *pWidth, *pHeight, SrcRowPitch, SrcSlicePitch,
+		pDst, DstRowPitch, DstSlicePitch,
+		DstDepth,
 		TextureStage);
 
 	// NOTE : Caller must take ownership!
-	return pDest;
+	return pDst;
 }
 
 VOID CxbxReleaseBackBufferLock()
@@ -4058,9 +4104,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
     return result;
 }
 
-// ******************************************************************
-// * patch: IDirect3DResource8_Register
-// ******************************************************************
+// Was patch: IDirect3DResource8_Register
 void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSize)
 {
 	using namespace XTL;
@@ -4219,19 +4263,19 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 				}
 			}
 
-            UINT dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch, dwMipMapLevels, uiSize;
+            bool bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 			bool bSwizzled = EmuXBFormatIsSwizzled(X_Format);
 			bool bCompressed = EmuXBFormatIsCompressed(X_Format);
-            bool bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
-			dwBPP = EmuXBFormatBytesPerPixel(X_Format);
+			UINT dwBPP = EmuXBFormatBytesPerPixel(X_Format);
+			UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pPixelContainer);
+            UINT dwWidth, dwHeight, dwDepth, dwRowPitch, dwSlicePitch;
 
 			// Interpret Width/Height/BPP
-			CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwPitch, &uiSize);
-            if (pPixelContainer->Size == 0) {
-                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-            }
-			else {
-				dwMipMapLevels = 1;
+			CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
+
+			if (dwDepth != 1) {
+				EmuWarning("Unsupported depth (%d) - resetting to 1 for now", dwDepth);
+				dwDepth = 1;
 			}
 
             if(bSwizzled || bCompressed)
@@ -4400,7 +4444,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
                     DWORD dwMipOffs = 0;
                     DWORD dwMipWidth = dwWidth;
                     DWORD dwMipHeight = dwHeight;
-                    DWORD dwMipPitch = dwPitch;
+                    DWORD dwMipPitch = dwRowPitch;
 
                     // iterate through the number of mipmap levels
                     for(uint level=0;level<dwMipMapLevels;level++)
@@ -4438,17 +4482,20 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 							{
 								DbgPrintf("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
-								uint8 *pSrc = (BYTE*)GetDataFromXboxResource(pResource);
-								uint8 *pDest = (uint8 *)LockedRect.pBits;
+								uint8_t *pSrc = (uint8_t*)GetDataFromXboxResource(pResource);
+								DWORD dwSrcRowPitch = dwMipWidth * dwBPP;
+								DWORD dwSrcSlicePitch = dwSlicePitch;
 
-								DWORD dwSrcPitch = dwMipWidth * dwBPP;//sizeof(DWORD);
-								DWORD dwDestPitch = dwMipWidth * sizeof(DWORD);
+								uint8_t *pDst = (uint8_t *)LockedRect.pBits;
+								DWORD dwDstRowPitch = LockedRect.Pitch;
+								const DWORD dwDstSlicePitch = dwSrcSlicePitch; // TODO : Set for volume texture support
 
 								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
 									X_Format,
-									pSrc, dwMipWidth, dwMipHeight, dwSrcPitch,
-									pDest, dwDestPitch,
+									pSrc, dwMipWidth, dwMipHeight, dwSrcRowPitch, dwSrcSlicePitch,
+									pDst, dwDstRowPitch, dwDstSlicePitch,
+									dwDepth,
 									TextureStage)) {
 									CxbxKrnlCleanup("Unhandled conversion!");
 								}
@@ -4457,23 +4504,26 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 							{
 								if (bSwizzled)
 								{
-									RECT  iRect = { 0,0,0,0 };
-									POINT iPoint = { 0,0 };
-
 									// First we need to unswizzle the texture data
-									XTL::EmuUnswizzleRect
-									(
-										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
-										LockedRect.Pitch, iRect, iPoint, dwBPP
+									XTL::EmuUnswizzleBox(
+										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth,
+										dwRowPitch, dwSlicePitch, dwBPP,
+										LockedRect.pBits
 									);
+
+									if (LockedRect.Pitch != dwRowPitch) {
+										LOG_TEST_CASE("(Row)Pitch difference between Xbox and Host!");
+										// TODO : If dest row or slice pitch differs from Xbox source row/slice pitch,
+										// then we need to unswizzle to a temporary buffer and pitch-copy that to dest!
+									}
 								}
 								else if (bCompressed)
 								{
-									// NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
+									int CompressedSize = (dwMipPitch * dwMipHeight) / 4;
 
-									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, uiSize >> (level * 2));
+									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, CompressedSize);
 
-									dwCompressedOffset += (uiSize >> (level * 2));
+									dwCompressedOffset += CompressedSize;
 								}
 								else
 								{
