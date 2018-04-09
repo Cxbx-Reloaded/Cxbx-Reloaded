@@ -1140,8 +1140,7 @@ VOID CxbxGetPixelContainerMeasures
 bool ConvertD3DTextureToARGBBuffer(
 	XTL::X_D3DFORMAT X_Format,
 	uint8 *pSrc,
-	int SrcWidth, int SrcHeight,
-	uint SrcRowPitch,
+	int SrcWidth, int SrcHeight, int SrcRowPitch,
 	uint8 *pDest, int DestPitch,
 	uint uiDepth = 1,
 	int iTextureStage = 0
@@ -1151,17 +1150,16 @@ bool ConvertD3DTextureToARGBBuffer(
 	if (ConvertRowToARGB == nullptr)
 		return false; // Unhandled conversion
 
-	uint SrcSlicePitch = SrcRowPitch * SrcHeight;
-	SrcSlicePitch = ROUND_UP(SrcSlicePitch, X_D3DTEXTURE_PITCH_ALIGNMENT); // TODO : Is this correct?
+	uint DestSlicePitch = DestPitch * SrcHeight; // TODO : Is this correct?
 
 	uint8 *unswizleBuffer = nullptr;
 	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
+		unswizleBuffer = (uint8*)malloc(DestSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
 		XTL::EmuUnswizzleBox(
-			pSrc, SrcWidth, SrcRowPitch, SrcHeight, SrcSlicePitch, uiDepth,
-			unswizleBuffer,
-			EmuXBFormatBytesPerPixel(X_Format)
+			pSrc, SrcWidth, SrcHeight, uiDepth, EmuXBFormatBytesPerPixel(X_Format),
+			unswizleBuffer, DestPitch, DestSlicePitch
+			
 		);
 		// Convert colors from the unswizzled buffer
 		pSrc = unswizleBuffer;
@@ -1226,7 +1224,8 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 
 	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
 	int DestPitch = *pWidth * sizeof(DWORD);
-	uint8 *pDest = (uint8 *)malloc(DestPitch * *pHeight);
+	int DestSize = DestPitch * (*pHeight);
+	uint8 *pDest = (uint8 *)malloc(DestSize);
 
 	// And convert the source towards that buffer
 	/*ignore result*/ConvertD3DTextureToARGBBuffer(
@@ -4471,6 +4470,7 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 									X_Format,
 									pSrc, dwMipWidth, dwMipHeight, dwSrcPitch,
 									pDest, dwDestPitch,
+									dwDepth,
 									TextureStage)) {
 									CxbxKrnlCleanup("Unhandled conversion!");
 								}
@@ -4479,11 +4479,11 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 							{
 								if (bSwizzled)
 								{
-									const DWORD dwSlicePitch = 0; // only needed for volume textures (dwDepth > 1)
+									const DWORD dwDestSlicePitch = 0; // only needed for volume textures (dwDepth > 1)
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleBox(
-										pSrc + dwMipOffs, dwMipWidth, LockedRect.Pitch, dwMipHeight, dwSlicePitch, dwDepth,
-										LockedRect.pBits, dwBPP
+										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, dwBPP,
+										LockedRect.pBits, LockedRect.Pitch, dwDestSlicePitch
 									);
 								}
 								else if (bCompressed)
