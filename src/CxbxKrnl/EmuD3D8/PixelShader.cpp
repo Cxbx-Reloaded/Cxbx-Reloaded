@@ -2164,8 +2164,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (RemoveNops())
     Log("RemoveNops");
 
-  if (RemoveUselessWrites())
+  while (RemoveUselessWrites()) {
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Result))
     Log("ConvertConstantsToNative");
@@ -2173,8 +2176,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   ConvertXboxOpcodesToNative(pPSDef);
   Log("ConvertXboxOpcodesToNative");
 
-  if (RemoveUselessWrites()) // twice!
+  while (RemoveUselessWrites()) { // again
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   // Resolve all differences :
   if (FixupPixelShader())
@@ -2830,13 +2836,13 @@ bool PSH_XBOX_SHADER::ConvertXMMToNative_Except3RdOutput(int i)
   if (Cur->Output[0].Type == PARAM_DISCARD) 
   {
     Cur->Output[0].Type = PARAM_R;
-    Cur->Output[0].Address = FakeRegNr_Xmm1;
+    Cur->Output[0].Address = FakeRegNr_Xmm1; // 'r4'
   }
 
   if (Cur->Output[1].Type == PARAM_DISCARD) 
   {
     Cur->Output[1].Type = PARAM_R;
-    Cur->Output[1].Address = FakeRegNr_Xmm2;
+    Cur->Output[1].Address = FakeRegNr_Xmm2; // 'r5'
   }
 
   // Generate a MUL for the 1st output :
@@ -2972,7 +2978,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
       {
         // Change SUM into a fake register, which will be resolved later :
         CurArg->Type = PARAM_R;
-        CurArg->Address = FakeRegNr_Sum;
+        CurArg->Address = FakeRegNr_Sum; // 'r2'
         NeedsSum = true;
 		break;
       }
@@ -2981,7 +2987,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
       {
         // Change PROD into a fake register, which will be resolved later :
         CurArg->Type = PARAM_R;
-        CurArg->Address = FakeRegNr_Prod;
+        CurArg->Address = FakeRegNr_Prod; // 'r3'
         NeedsProd = true;
 		break;
 	  }
@@ -3000,7 +3006,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates r0*v1 :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA);
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA); // 'r2'
 
     Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGB);
     Ins.Parameters[1].SetRegister(PARAM_V, 1, MASK_RGB);
@@ -3022,7 +3028,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates E*F :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA);
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA); // 'r3'
     Ins.Parameters[0] = Cur.Parameters[4]; // E
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
@@ -3428,7 +3434,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
     }
 
     // Fix Crash bandicoot xfc leftover r3 :
-    if (Op0->Output[0].IsRegister(PARAM_R, FakeRegNr_Prod))
+    if (Op0->Output[0].IsRegister(PARAM_R, FakeRegNr_Prod)) // 'r3'
     {
       // The final combiner uses r3, try to use r1 instead :
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
