@@ -4512,9 +4512,13 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 									);
 
 									if (LockedRect.Pitch != dwRowPitch) {
-										LOG_TEST_CASE("(Row)Pitch difference between Xbox and Host!");
+										// "Tony Hawk's Pro Skater 4" and "SILENT HILL 2" hit this case
+										// LOG_TEST_CASE("(Row)Pitch difference between Xbox and Host!");
+
 										// TODO : If dest row or slice pitch differs from Xbox source row/slice pitch,
 										// then we need to unswizzle to a temporary buffer and pitch-copy that to dest!
+										// Alternatively, we could fall back to ARGB conversion, which already unswizzles
+										// to a temporary buffer (and copy-converts it further)
 									}
 								}
 								else if (bCompressed)
