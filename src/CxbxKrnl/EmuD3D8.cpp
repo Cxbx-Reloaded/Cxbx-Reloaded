@@ -3367,7 +3367,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 BOOL g_bBadIndexData = FALSE;
 
 // LTCG specific D3DDevice_SetTexture function...
-// This function is still not working so should be investigated.
+// This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Metal Wolf Chaos
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTexture_4)
 (
@@ -3377,8 +3377,11 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTexture_4)
 
 	static uint32 returnAddr;
 
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
 	__asm {
-		add esp, 4
 		pop returnAddr
 		push eax
 		call EmuPatch_D3DDevice_SetTexture
@@ -4821,7 +4824,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 }
 
 // LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
-// TODO: This function works only on debug build, should be fix on release build.
+// This uses a custom calling convention where parameter is passed in ESI
 // Test-case: Metal Wolf Chaos
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 (
@@ -4831,8 +4834,11 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 
 	static uint32 returnAddr;
 
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
 	__asm {
-		add esp, 4
 		pop returnAddr
 		push esi
 		call EmuPatch_D3DDevice_SetTextureState_TexCoordIndex
@@ -4912,7 +4918,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_BackFillMode)
 }
 
 // LTCG specific D3DDevice_SetTextureState_BorderColor function...
-// This uses a custom calling convention where parameter is passed in EAB, EBX
+// This uses a custom calling convention where parameter is passed in EAX, EBX
 // Test-case: Metal Wolf Chaos
 VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 (
@@ -4954,7 +4960,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 }
 
 // LTCG specific D3DDevice_SetTextureState_ColorKeyColor function...
-// This uses a custom calling convention where parameter is passed in EAX, EBX
+// This uses a custom calling convention where parameter is passed in ESI, EBX
 // Test-case: Metal Wolf Chaos
 VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
 (
@@ -4964,7 +4970,7 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
 
 	DWORD Stage;
 	__asm {
-		mov Stage, eax;
+		mov Stage, esi;
 	}
 
 	DWORD Value;
@@ -4995,7 +5001,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 }
 
 // LTCG specific D3DDevice_SetTextureState_BumpEnv function...
-// TODO: This function works only on debug build, should be fix on release build.
+// This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Metal Wolf Chaos
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 (
@@ -5005,8 +5011,11 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 
 	static uint32 returnAddr;
 
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
 	__asm {
-		add esp, 4
 		pop returnAddr
 		push eax
 		call EmuPatch_D3DDevice_SetTextureState_BumpEnv
