@@ -575,20 +575,28 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetRenderTarget
 // ******************************************************************
-//5556578B7C245033
-OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1036, 10)
+//0F85..0100008B0D
+OOVPA_XREF(D3DDevice_SetRenderTarget, 1036, 1+11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x4F, XREF_D3DRS_MULTISAMPLEMODE ),
 
         { 0x00, 0x83 },
         { 0x01, 0xEC },
+        { 0x02, 0x3C },
 
-        { 0x0A, 0x55 },
-        { 0x0B, 0x56 },
-        { 0x0C, 0x57 },
-        { 0x0D, 0x8B },
-        { 0x0E, 0x7C },
-        { 0x0F, 0x24 },
-        { 0x10, 0x50 },
-        { 0x11, 0x33 },
+        { 0x47, 0x0F },
+        { 0x48, 0x85 },
+        //{ 0x49, 0x65 },
+        { 0x4A, 0x01 },
+        { 0x4B, 0x00 },
+        { 0x4C, 0x00 },
+        { 0x4D, 0x8B },
+        { 0x4E, 0x0D },
+
+        { 0x53, 0x8B },
 OOVPA_END;
 
 // ******************************************************************

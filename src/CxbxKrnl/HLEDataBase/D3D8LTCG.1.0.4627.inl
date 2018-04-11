@@ -284,6 +284,33 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 1060, 15)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetRenderTargetFast
+// ******************************************************************
+//0F85..0100008B0D
+OOVPA_XREF(D3DDevice_SetRenderTargetFast, 1036, 1+11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x4F, XREF_D3DRS_MULTISAMPLEMODE ),
+
+        { 0x00, 0x83 },
+        { 0x01, 0xEC },
+        { 0x02, 0x20 },
+
+        { 0x47, 0x0F },
+        { 0x48, 0x85 },
+        //{ 0x49, 0x4B },
+        { 0x4A, 0x01 },
+        { 0x4B, 0x00 },
+        { 0x4C, 0x00 },
+        { 0x4D, 0x8B },
+        { 0x4E, 0x0D },
+
+        { 0x53, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
 // * D3DDevice_SetScissors
 // ******************************************************************
 //C700B402040089
