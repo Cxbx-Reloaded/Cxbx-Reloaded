@@ -1182,8 +1182,9 @@ bool ConvertD3DTextureToARGBBuffer(
 		// First we need to unswizzle the texture data
 		XTL::EmuUnswizzleBox(
 			pSrc, SrcWidth, SrcHeight, uiDepth, 
-			SrcRowPitch, SrcSlicePitch, EmuXBFormatBytesPerPixel(X_Format),
-			unswizleBuffer
+			EmuXBFormatBytesPerPixel(X_Format),
+			// Note : use src pitch on dest, because this is an intermediate step :
+			unswizleBuffer, SrcRowPitch, SrcSlicePitch
 		);
 		// Convert colors from the unswizzled buffer
 		pSrc = unswizleBuffer;
@@ -4466,6 +4467,10 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
                             }
                         }
 
+						uint8_t *pDst = (uint8_t *)LockedRect.pBits;
+						DWORD dwDstRowPitch = LockedRect.Pitch;
+						const DWORD dwDstSlicePitch = dwSlicePitch; // TODO : Set for volume texture support
+
 						BYTE *pSrc = (BYTE*)GetDataFromXboxResource(pResource); // TODO : Fix (look at Dxbx) this, as it gives cube textures identical sides
 
 						{
@@ -4486,10 +4491,6 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 								DWORD dwSrcRowPitch = dwMipWidth * dwBPP;
 								DWORD dwSrcSlicePitch = dwSlicePitch;
 
-								uint8_t *pDst = (uint8_t *)LockedRect.pBits;
-								DWORD dwDstRowPitch = LockedRect.Pitch;
-								const DWORD dwDstSlicePitch = dwSrcSlicePitch; // TODO : Set for volume texture support
-
 								// Convert a row at a time, using a libyuv-like callback approach :
 								if (!ConvertD3DTextureToARGBBuffer(
 									X_Format,
@@ -4507,19 +4508,9 @@ void CreateHostResource(XTL::X_D3DResource *pThis, int TextureStage, DWORD dwSiz
 									// First we need to unswizzle the texture data
 									XTL::EmuUnswizzleBox(
 										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth,
-										dwRowPitch, dwSlicePitch, dwBPP,
-										LockedRect.pBits
+										dwBPP, 
+										pDst, dwDstRowPitch, dwDstSlicePitch
 									);
-
-									if (LockedRect.Pitch != dwRowPitch) {
-										// "Tony Hawk's Pro Skater 4" and "SILENT HILL 2" hit this case
-										// LOG_TEST_CASE("(Row)Pitch difference between Xbox and Host!");
-
-										// TODO : If dest row or slice pitch differs from Xbox source row/slice pitch,
-										// then we need to unswizzle to a temporary buffer and pitch-copy that to dest!
-										// Alternatively, we could fall back to ARGB conversion, which already unswizzles
-										// to a temporary buffer (and copy-converts it further)
-									}
 								}
 								else if (bCompressed)
 								{

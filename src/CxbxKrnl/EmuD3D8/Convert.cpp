@@ -1342,10 +1342,10 @@ void XTL::EmuUnswizzleBox
 	CONST DWORD dwWidth,
 	CONST DWORD dwHeight,
 	CONST DWORD dwDepth,
-	CONST DWORD dwRowPitch,
-	CONST DWORD dwSlicePitch,
 	CONST DWORD dwBytesPerPixel,
-	CONST PVOID pDstBuff
+	CONST PVOID pDstBuff,
+	CONST DWORD dwDstRowPitch,
+	CONST DWORD dwDstSlicePitch
 ) // Source : Dxbx
 {
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
@@ -1388,11 +1388,11 @@ void XTL::EmuUnswizzleBox
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDestRow += dwRowPitch; // / 1; // = / dwBPP; // step to next line in destination
+				pDestRow += dwDstRowPitch; // / 1; // = / dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDestSlice += dwSlicePitch; // / 1; // = / dwBPP; // step to next level in destination
+			pDestSlice += dwDstSlicePitch; // / 1; // = / dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;
@@ -1413,11 +1413,11 @@ void XTL::EmuUnswizzleBox
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDestRow += dwRowPitch / 2; // = dwBPP; // step to next line in destination
+				pDestRow += dwDstRowPitch / 2; // = dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDestSlice += dwSlicePitch / 2; // = dwBPP; // step to next level in destination
+			pDestSlice += dwDstSlicePitch / 2; // = dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;
@@ -1438,11 +1438,11 @@ void XTL::EmuUnswizzleBox
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
 
-				pDestRow += dwRowPitch / 4; // = dwBPP; // step to next line in destination
+				pDestRow += dwDstRowPitch / 4; // = dwBPP; // step to next line in destination
 				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDestSlice += dwSlicePitch / 4; // = dwBPP; // step to next level in destination
+			pDestSlice += dwDstSlicePitch / 4; // = dwBPP; // step to next level in destination
 			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
 		break;

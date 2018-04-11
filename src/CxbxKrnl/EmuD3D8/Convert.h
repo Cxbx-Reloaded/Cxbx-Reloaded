@@ -245,10 +245,10 @@ extern void EmuUnswizzleBox
 	CONST DWORD dwWidth,
 	CONST DWORD dwHeight,
 	CONST DWORD dwDepth,
-	CONST DWORD dwRowPitch,
-	CONST DWORD dwSlicePitch,
 	CONST DWORD dwBytesPerPixel,
-	CONST PVOID pDstBuff
+	CONST PVOID pDstBuff,
+	CONST DWORD dwDstRowPitch,
+	CONST DWORD dwDstSlicePitch
 ); // NOPATCH
 
 // From : https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Additions/x11/x11include/libdrm-2.4.13/nouveau_class.h
