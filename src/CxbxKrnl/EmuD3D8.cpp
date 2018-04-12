@@ -1074,15 +1074,13 @@ VOID XTL::CxbxSetPixelContainerHeader
 	// Are Width and Height both a power of two?
 	DWORD l2w; _BitScanReverse(&l2w, Width); // MSVC intrinsic; GCC has __builtin_clz
 	DWORD l2h; _BitScanReverse(&l2h, Height);
+	DWORD l2d = 0; // TODO : Set this via input argument
 	if (((1 << l2w) == Width) && ((1 << l2h) == Height)) {
 		Width = Height = Pitch = 1; // When setting Format, clear Size field
 	}
 	else {
-		l2w = l2h = 0; // When setting Size, clear D3DFORMAT_USIZE and VSIZE
+		l2w = l2h = l2d = 0; // When setting Size, clear D3DFORMAT_USIZE, VSIZE and PSIZE
 	}
-
-	// TODO : Must this be set using Usage / Pool / something else?
-	const int Depth = 1;
 
 	// Set X_D3DPixelContainer field(s) :
 	pPixelContainer->Format = 0
@@ -1091,7 +1089,7 @@ VOID XTL::CxbxSetPixelContainerHeader
 		| ((Levels << X_D3DFORMAT_MIPMAP_SHIFT) & X_D3DFORMAT_MIPMAP_MASK)
 		| ((l2w << X_D3DFORMAT_USIZE_SHIFT) & X_D3DFORMAT_USIZE_MASK)
 		| ((l2h << X_D3DFORMAT_VSIZE_SHIFT) & X_D3DFORMAT_VSIZE_MASK)
-		| ((Depth << X_D3DFORMAT_PSIZE_SHIFT) & X_D3DFORMAT_PSIZE_MASK)
+		| ((l2d << X_D3DFORMAT_PSIZE_SHIFT) & X_D3DFORMAT_PSIZE_MASK)
 		;
 	pPixelContainer->Size = 0
 		| (((Width - 1) /*X_D3DSIZE_WIDTH_SHIFT*/) & X_D3DSIZE_WIDTH_MASK)
@@ -2221,7 +2219,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 }
 
 // check if a resource has been registered yet (if not, register it)
-void CreateHostResource(XTL::X_D3DResource *pResource, int TextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
+void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
 static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage = 0, DWORD dwSize = 0)
 {
 	// Skip resources without data
@@ -4161,6 +4159,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 	VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
 	if ((VirtualAddr & ~PHYSICAL_MAP_BASE) == 0) {
 		// TODO: Fix or handle this situation..?
+		LOG_TEST_CASE("CreateHostResource : VirtualAddr == 0");
 		// This is probably an unallocated resource, mapped into contiguous memory (0x80000000 OR 0xF0000000)
 		EmuWarning("CreateHostResource :-> %s carries no data - skipping conversion", ResourceTypeName);
 		return;
@@ -4301,6 +4300,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
 
 		if (dwDepth != 1) {
+			LOG_TEST_CASE("CreateHostResource : Depth != 1");
 			EmuWarning("Unsupported depth (%d) - resetting to 1 for now", dwDepth);
 			dwDepth = 1;
 		}
@@ -4309,11 +4309,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		// TODO: Figure out if this is necessary under other circumstances?
 		if (bCompressed) {
 			if (dwWidth < dwMinSize) {
+				LOG_TEST_CASE("CreateHostResource : dwWidth < dwMinSize");
 				EmuWarning("Expanding %s width (%d->%d)", ResourceTypeName, dwWidth, dwMinSize);
 				dwWidth = dwMinSize;
 			}
 
 			if (dwHeight < dwMinSize) {
+				LOG_TEST_CASE("CreateHostResource : dwHeight < dwMinSize");
 				EmuWarning("Expanding %s height (%d->%d)", ResourceTypeName, dwHeight, dwMinSize);
 				dwHeight = dwMinSize;
 			}
