@@ -175,6 +175,6 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 // ******************************************************************
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(355) xboxkrnl::DWORD xboxkrnl::XePublicKeyData = 0;
+// Read from RSAkey.bin if found, otherwise all-zeros
+XBSYSAPI EXPORTNUM(355) xboxkrnl::UCHAR xboxkrnl::XePublicKeyData[284] = { 0 };
 

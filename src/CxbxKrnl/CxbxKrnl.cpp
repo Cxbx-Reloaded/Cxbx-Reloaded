@@ -912,12 +912,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 void LoadXboxKeys(std::string path)
 {
 	std::string keys_path = path + "\\keys.bin";
+	std::string RSA_key_path = path + "\\RSAkey.bin";
 
 	// Attempt to open Keys.bin
 	FILE* fp = fopen(keys_path.c_str(), "rb");
 
 	if (fp != nullptr) {
-		// Determine size of Keys.bin
+		// Determine the size of Keys.bin
 		xboxkrnl::XBOX_KEY_DATA keys[2];
 		fseek(fp, 0, SEEK_END);
 		long size = ftell(fp);
@@ -934,11 +935,44 @@ void LoadXboxKeys(std::string path)
 		}
 
 		fclose(fp);
-		return;
+	}
+	else
+	{
+		// keys.bin could not be loaded
+		EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 	}
 
-	// If we didn't already exit the function, keys.bin could not be loaded
-	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
+	// Now load the RSA key data if available
+	fp = fopen(RSA_key_path.c_str(), "rb");
+
+	if (fp != nullptr) {
+		// Determine the size of RSAkey.bin
+		fseek(fp, 0, SEEK_END);
+		long size = ftell(fp);
+		rewind(fp);
+
+		// Ensure that RSAkey.bin is 284 bytes and has a valid magic signature
+		if (size == 284) {
+			UCHAR temp[284] = { 0 };
+			fread(temp, 284, 1, fp);
+			if (!memcmp(temp, "RSA1", 4)) {
+				memcpy(xboxkrnl::XePublicKeyData, temp, 284);
+			}
+			else {
+				EmuWarning("RSAkey.bin has an invalid magic signature. Should be \"RSA1\"");
+			}
+		}
+		else {
+			EmuWarning("RSAkey.bin has an incorrect filesize. Should be 284 bytes");
+		}
+
+		fclose(fp);
+	}
+	else
+	{
+		// RSAkey.bin could not be loaded
+		EmuWarning("Failed to load RSAkey.bin. Cxbx-Reloaded will be unable to verify the integrity of the loaded xbe");
+	}
 }
 
 __declspec(noreturn) void CxbxKrnlInit

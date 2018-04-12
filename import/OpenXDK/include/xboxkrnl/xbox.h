@@ -438,7 +438,7 @@ XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[ALTERNATE_SIGNA
 // ******************************************************************
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
-XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
+XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyData[284];
 
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
