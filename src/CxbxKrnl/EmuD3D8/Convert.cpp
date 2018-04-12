@@ -931,7 +931,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
 	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, XTL::D3DFMT_A8L8      , Texture, "X_D3DFMT_LIN_L16 -> D3DFMT_A8L8" },
-	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, XTL::D3DFMT_V16U16    },
+	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, XTL::D3DFMT_V16U16    }, // Note : Seems ununsed on Xbox
 	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, XTL::D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
 	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, XTL::D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
 	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, XTL::D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
@@ -1336,96 +1336,119 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
 };
 
-void XTL::EmuUnswizzleRect
+void XTL::EmuUnswizzleBox
 (
-	PVOID pSrcBuff,
-	DWORD dwWidth,
-	DWORD dwHeight,
-	DWORD dwDepth,
-	PVOID pDstBuff,
-	DWORD dwPitch,
-	RECT rSrc, // Unused
-	POINT poDst, // Unused
-	DWORD dwBPP // expressed in Bytes Per Pixel
+	CONST PVOID pSrcBuff,
+	CONST DWORD dwWidth,
+	CONST DWORD dwHeight,
+	CONST DWORD dwDepth,
+	CONST DWORD dwBytesPerPixel,
+	CONST PVOID pDstBuff,
+	CONST DWORD dwDstRowPitch,
+	CONST DWORD dwDstSlicePitch
 ) // Source : Dxbx
 {
-	// TODO : The following could be done using a lookup table :
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
-	for (uint i=1, j=1; (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth); i <<= 1) {
+	for (uint i=1, j=1; (i < dwWidth) || (i < dwHeight) || (i < dwDepth); i <<= 1) {
 		if (i < dwWidth) {
-			dwMaskX = dwMaskX | j;
+			dwMaskX |= j;
 			j <<= 1;
-		};
+		}
 
 		if (i < dwHeight) {
-			dwMaskY = dwMaskY | j;
+			dwMaskY |= j;
 			j <<= 1;
 		}
 
 		if (i < dwDepth) {
-			dwMaskZ = dwMaskZ | j;
+			dwMaskZ |= j;
 			j <<= 1;
 		}
 	}
 
-	// get the biggest mask
-	DWORD dwMaskMax;
-	if (dwMaskX > dwMaskY)
-		dwMaskMax = dwMaskX;
-	else
-		dwMaskMax = dwMaskY;
-
-	if (dwMaskZ > dwMaskMax)
-		dwMaskMax = dwMaskZ;
-
-	DWORD dwStartX = 0, dwOffsetX = 0;
-	DWORD dwStartY = 0, dwOffsetY = 0;
-	DWORD dwStartZ = 0, dwOffsetW = 0;
-	/* TODO : Use values from poDst and rSrc to initialize above values, after which the following makes more sense:
-	for (uint i=1; i <= dwMaskMax; i <<= 1) {
-		if (i <= dwMaskX) {
-			if (dwMaskX & i)
-				dwStartX |= (dwOffsetX & i);
-			else
-				dwOffsetX <<= 1;
-		}
-
-		if (i <= dwMaskY) {
-			if (dwMaskY & i)
-				dwStartY |= dwOffsetY & i;
-			else
-				dwOffsetY <<= 1;
-		}
-
-		if (i <= dwMaskZ) {
-			if (dwMaskZ & i)
-				dwStartZ |= dwOffsetZ & i;
-			else
-				dwOffsetZ <<= 1;
-		}
-	}*/
+	const DWORD dwStartX = 0;
+	const DWORD dwStartY = 0;
+	const DWORD dwStartZ = 0;
 
 	DWORD dwZ = dwStartZ;
-	for (uint z = 0; z < dwDepth; z++) {
-		DWORD dwY = dwStartY;
-		for (uint y = 0; y < dwHeight; y++) {
-			DWORD dwX = dwStartX;
-			DWORD dwYZ = dwY | dwZ;
-			for (uint x = 0; x < dwWidth; x++) {
-				uint delta = (dwX | dwYZ) * dwBPP;
-				memcpy(pDstBuff, (PBYTE)pSrcBuff + delta, dwBPP); // copy one pixel
-				pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
-				dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+	switch (dwBytesPerPixel) {
+	case 1: {
+		const uint8_t *pSrc = (uint8_t *)pSrcBuff;
+		uint8_t *pDestSlice = (uint8_t *)pDstBuff;
+
+		for (uint z = 0; z < dwDepth; z++) {
+			uint8_t *pDestRow = pDestSlice;
+			DWORD dwY = dwStartY;
+			for (uint y = 0; y < dwHeight; y++) {
+				DWORD dwYZ = dwY | dwZ;
+				DWORD dwX = dwStartX;
+				for (uint x = 0; x < dwWidth; x++) {
+					uint delta = dwX | dwYZ;
+					pDestRow[x] = pSrc[delta]; // copy one pixel
+					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+				}
+
+				pDestRow += dwDstRowPitch; // / 1; // = / dwBPP; // step to next line in destination
+				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
 			}
 
-			pDstBuff = (PBYTE)pDstBuff + dwPitch - (dwWidth * dwBPP); // step to next line in destination
-			dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
+			pDestSlice += dwDstSlicePitch; // / 1; // = / dwBPP; // step to next level in destination
+			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
 		}
-
-		// TODO : How to step to next level in destination? Should X and Y be recalculated per level?
-		dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
+		break;
 	}
-} // EmuUnswizzleRect NOPATCH
+	case 2: {
+		const uint16_t *pSrc = (uint16_t *)pSrcBuff;
+		uint16_t *pDestSlice = (uint16_t *)pDstBuff;
+
+		for (uint z = 0; z < dwDepth; z++) {
+			uint16_t *pDestRow = pDestSlice;
+			DWORD dwY = dwStartY;
+			for (uint y = 0; y < dwHeight; y++) {
+				DWORD dwYZ = dwY | dwZ;
+				DWORD dwX = dwStartX;
+				for (uint x = 0; x < dwWidth; x++) {
+					uint delta = dwX | dwYZ;
+					pDestRow[x] = pSrc[delta]; // copy one pixel
+					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+				}
+
+				pDestRow += dwDstRowPitch / 2; // = dwBPP; // step to next line in destination
+				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
+			}
+
+			pDestSlice += dwDstSlicePitch / 2; // = dwBPP; // step to next level in destination
+			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
+		}
+		break;
+	}
+	case 4: {
+		const uint32_t *pSrc = (uint32_t *)pSrcBuff;
+		uint32_t *pDestSlice = (uint32_t *)pDstBuff;
+
+		for (uint z = 0; z < dwDepth; z++) {
+			uint32_t *pDestRow = pDestSlice;
+			DWORD dwY = dwStartY;
+			for (uint y = 0; y < dwHeight; y++) {
+				DWORD dwYZ = dwY | dwZ;
+				DWORD dwX = dwStartX;
+				for (uint x = 0; x < dwWidth; x++) {
+					uint delta = dwX | dwYZ;
+					pDestRow[x] = pSrc[delta]; // copy one pixel
+					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+				}
+
+				pDestRow += dwDstRowPitch / 4; // = dwBPP; // step to next line in destination
+				dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
+			}
+
+			pDestSlice += dwDstSlicePitch / 4; // = dwBPP; // step to next level in destination
+			dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
+		}
+		break;
+	}
+	}
+} // EmuUnswizzleBox NOPATCH
 
 namespace XTL
 {
