@@ -4540,7 +4540,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					// Convert a row at a time, using a libyuv-like callback approach :
 					if (!ConvertD3DTextureToARGBBuffer(
 						X_Format,
-						pSrc, dwMipWidth, dwMipHeight, dwMipPitch, dwSrcSlicePitch
+						pSrc, dwMipWidth, dwMipHeight, dwMipPitch, dwSrcSlicePitch,
 						pDst, dwDstRowPitch, dwDstSlicePitch,
 						dwDepth,
 						iTextureStage)) {
@@ -4549,7 +4549,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 				else if (bSwizzled) {
 					// First we need to unswizzle the texture data
-					XTL::EmuUnswizzleRect(
+					XTL::EmuUnswizzleBox(
 						pSrc, dwMipWidth, dwMipHeight, dwMipDepth,
 						dwBPP, 
 						pDst, dwDstRowPitch, dwDstSlicePitch
@@ -4574,14 +4574,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 							);
 					} else {
 					*/
-					if ((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP) {
-						memcpy(pDest, pSrc, dwMipWidth*dwMipHeight*dwBPP);
+					if ((dwDstRowPitch == dwMipPitch) && (dwMipPitch == dwMipWidth * dwBPP)) {
+						memcpy(pDst, pSrc, dwMipWidth * dwMipHeight * dwBPP);
 					}
 					else {
 						for (DWORD v = 0; v < dwMipHeight; v++) {
-							memcpy(pDest, pSrc, dwMipWidth*dwBPP);
+							memcpy(pDst, pSrc, dwMipWidth*dwBPP);
 
-							pDest += LockedRect.Pitch;
+							pDst += dwDstRowPitch;
 							pSrc += dwMipPitch;
 						}
 					}
