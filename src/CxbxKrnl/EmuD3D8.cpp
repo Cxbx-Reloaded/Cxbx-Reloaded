@@ -3226,6 +3226,31 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     return hRet;
 }
 
+// LTCG specific D3DDevice_SetVertexShaderConstant function...
+// This uses a custom calling convention where parameter is passed in EDX
+// Test-case: Murakumo
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
+	__asm {
+		pop returnAddr
+		push edx
+		call EmuPatch_D3DDevice_SetVertexShaderConstant
+		mov eax, 0
+		push returnAddr
+		ret
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant
 // ******************************************************************
@@ -3367,7 +3392,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 BOOL g_bBadIndexData = FALSE;
 
 // LTCG specific D3DDevice_SetTexture function...
-// This uses a custom calling convention where parameter is passed in EAX
+// TODO: XB_trampoline is not working yet.
 // Test-case: Metal Wolf Chaos
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTexture_4)
 (
@@ -4927,16 +4952,39 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 	FUNC_EXPORTS;
 
 	DWORD Stage;
-	__asm {
-		mov Stage, eax;
-	}
-
 	DWORD Value;
+
 	__asm {
-		mov Value, ebx;
+		mov Stage, eax
+		mov Value, ebx
 	}
 
 	return EMUPATCH(D3DDevice_SetTextureState_BorderColor)(Stage, Value);
+}
+
+// LTCG specific D3DDevice_SetTextureState_BorderColor function...
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Murakumo
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
+	__asm {
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_SetTextureState_BorderColor
+		mov eax, 0
+		push returnAddr
+		ret
+	}
 }
 
 // ******************************************************************
@@ -4969,13 +5017,11 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
 	FUNC_EXPORTS;
 
 	DWORD Stage;
-	__asm {
-		mov Stage, esi;
-	}
-
 	DWORD Value;
+
 	__asm {
-		mov Value, ebx;
+		mov Stage, esi
+		mov Value, ebx
 	}
 
 	return EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)(Stage, Value);
@@ -5727,13 +5773,11 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTransform_0)
 	FUNC_EXPORTS;
 
 	D3DTRANSFORMSTATETYPE param1;
-	__asm {
-		mov param1, eax;
-	}
-
 	CONST D3DMATRIX *param2;
+
 	__asm {
-		mov param2, edx;
+		mov param1, eax
+		mov param2, edx
 	}
 
 	return EMUPATCH(D3DDevice_SetTransform)(param1, param2);
@@ -6025,6 +6069,23 @@ void CxbxUpdateNativeD3DResources()
 	DxbxUpdateActiveVertexBufferStreams();
 	DxbxUpdateActiveRenderTarget();
 */
+}
+
+// LTCG specific D3DDevice_SetPixelShader function...
+// TODO: XB_trampoline is not working yet.
+// Test-case: Metal Wolf Chaos
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
+(
+)
+{
+	//FUNC_EXPORTS;
+
+	uint32_t param;
+	__asm {
+		mov param, eax
+	}
+
+	return EMUPATCH(D3DDevice_SetPixelShader)(param);
 }
 
 // ******************************************************************

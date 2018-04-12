@@ -204,8 +204,9 @@ OOVPA_END;
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
 //C1..0681..241B040089 ...C3
-OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2024, 11)
+OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2024, 12)
 
+        { 0x00, 0x56 },
         { 0x01, 0x8B },
 
         { 0x1C, 0xC1 },
@@ -842,7 +843,7 @@ OOVPA_END;
 // * D3DDevice_SetVertexShaderConstant
 // ******************************************************************
 //83C160C1E202A810 ...C3
-OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant_0, 2024, 10)
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant_8, 2024, 10)
 
         { 0x00, 0x55 },
         { 0x01, 0x8B },

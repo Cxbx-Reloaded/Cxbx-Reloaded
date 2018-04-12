@@ -402,6 +402,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)
     DWORD       ConstantCount
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant1
 // ******************************************************************
@@ -473,6 +475,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetPixelShader)
 (
     DWORD           Handle
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SetPixelShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture2
@@ -967,6 +971,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 );
 
 VOID EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)();
+VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_ColorKeyColor
