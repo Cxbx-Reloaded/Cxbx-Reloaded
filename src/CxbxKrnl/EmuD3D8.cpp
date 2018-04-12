@@ -937,7 +937,7 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if(GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
+	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
 	return (XTL::IDirect3DSurface8*) GetHostResource(pXboxResource);
@@ -948,8 +948,10 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	if (pXboxResource == NULL)
 		return nullptr;
 
-	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
-		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
+		; // TODO : Log instead of assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+		// Burnout hits this case (retreiving a surface instead of a texture)
+	}
 
 	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource, iTextureStage);
 }
@@ -1180,7 +1182,7 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	uint8_t *unswizleBuffer = nullptr;
 	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8_t*)malloc(DstSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
+		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
 		XTL::EmuUnswizzleBox(
 			pSrc, SrcWidth, SrcHeight, uiDepth, 
@@ -4473,13 +4475,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			DWORD dwMipWidth = dwWidth;
 			DWORD dwMipHeight = dwHeight;
 			DWORD dwMipDepth = dwDepth;
-            DWORD dwMipPitch = dwRowPitch;
-			DWORD dwSrcSlicePitch = 0; // TODO
+            DWORD dwMipRowPitch = dwRowPitch;
+			DWORD dwSrcSlicePitch = dwMipRowPitch * dwMipHeight; // TODO
 
 			for (uint mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
 				// Calculate size of this mipmap level
-				DWORD dwMipSize = dwMipPitch * dwMipHeight;
+				DWORD dwMipSize = dwMipRowPitch * dwMipHeight;
 				if (bCompressed) {
 					dwMipSize /= 4;
 				}
@@ -4540,7 +4542,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					// Convert a row at a time, using a libyuv-like callback approach :
 					if (!ConvertD3DTextureToARGBBuffer(
 						X_Format,
-						pSrc, dwMipWidth, dwMipHeight, dwMipPitch, dwSrcSlicePitch,
+						pSrc, dwMipWidth, dwMipHeight, dwMipRowPitch, dwSrcSlicePitch,
 						pDst, dwDstRowPitch, dwDstSlicePitch,
 						dwDepth,
 						iTextureStage)) {
@@ -4574,15 +4576,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 							);
 					} else {
 					*/
-					if ((dwDstRowPitch == dwMipPitch) && (dwMipPitch == dwMipWidth * dwBPP)) {
-						memcpy(pDst, pSrc, dwMipWidth * dwMipHeight * dwBPP);
+					if ((dwDstRowPitch == dwMipRowPitch) && (dwMipRowPitch == dwMipWidth * dwBPP)) {
+						memcpy(pDst, pSrc, dwMipSize);
 					}
 					else {
 						for (DWORD v = 0; v < dwMipHeight; v++) {
-							memcpy(pDst, pSrc, dwMipWidth*dwBPP);
-
+							memcpy(pDst, pSrc, dwMipWidth * dwBPP);
 							pDst += dwDstRowPitch;
-							pSrc += dwMipPitch;
+							pSrc += dwMipRowPitch;
 						}
 					}
 				}
@@ -4620,13 +4621,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				dwMipOffset += dwMipSize;
 				if (dwMipWidth > dwMinSize) {
 					dwMipWidth /= 2;
-					dwMipPitch /= 2;
+					dwMipRowPitch /= 2;
 				}
 
 				if (dwMipHeight > dwMinSize) {
 					dwMipHeight /= 2;
 				}
-				
+
 				if (dwMipDepth > 1) {
 					dwMipDepth /= 2;
 				}
