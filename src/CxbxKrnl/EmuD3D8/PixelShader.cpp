@@ -892,6 +892,7 @@ struct PSH_XBOX_SHADER {
 	void ConvertXDMToNative(int i);
 	void ConvertXDDToNative(int i);
 	void ConvertXFCToNative(int i);
+	bool FixConstantModifiers();
 	bool CombineInstructions();
 	bool RemoveNops();
 	bool SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur);
@@ -3157,6 +3158,53 @@ void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
   }
 }
 
+bool PSH_XBOX_SHADER::FixConstantModifiers()
+{
+	int i;
+	PPSH_INTERMEDIATE_FORMAT Cur;
+
+	bool Result = false;
+
+	// Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
+	i = IntermediateCount;
+	while (i > 0)
+	{
+		--i;
+		Cur = &(Intermediate[i]);
+		if (!Cur->IsArithmetic())
+			continue;
+		
+		if (Cur->Opcode == PO_MOV)
+			continue;
+
+		// Detect modifiers on constant arguments
+		for (int p = 0; p < 7; p++) {
+			if ((Cur->Parameters[p].Type == PARAM_C)
+				&& (Cur->Parameters[p].Modifiers != 0)) {
+				// Insert a MOV to the destination register,
+				// so the modifier can be applied on that,
+				// instead of on this constant argument.
+				PSH_INTERMEDIATE_FORMAT Ins = {};
+
+				Ins.Initialize(PO_MOV);
+				// No need to check if output is a constant - those cannot be assigned to anyway
+				Ins.Output[0] = Cur->Output[0];
+				// Move constant into register
+				Ins.Parameters[0] = Cur->Parameters[p];
+				Cur->Parameters[p] = Ins.Output[0];
+				// Apply modifier to register instead of constant
+				Cur->Parameters[p].Modifiers = Ins.Parameters[0].Modifiers;
+				Ins.Parameters[0].Modifiers = 0;
+				Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
+				InsertIntermediate(&Ins, i);
+				DbgPrintf("; Used intermediate move to avoid constant modifier\n");
+				Result = true;
+			}
+		}
+	}
+	return Result;
+} // FixConstantModifiers
+
 //bool PSH_XBOX_SHADER::CombineInstructions()
 
   bool _CanLerp(PPSH_INTERMEDIATE_FORMAT Mul1, PPSH_INTERMEDIATE_FORMAT Mul2, PPSH_INTERMEDIATE_FORMAT AddOpcode, int Left, int Right)
@@ -3666,6 +3714,9 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
 
   if (MoveRemovableParametersRight())
     Result = true;
+
+  if (FixConstantModifiers())
+	  Result = true;
 
   if (CombineInstructions())
     Result = true;
