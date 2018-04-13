@@ -9,15 +9,22 @@ namespace CxbxDebugger
     {
         public struct State
         {
-            public uint Value;
+            public string Value;
             public bool Activated;
             public uint RealAddress;
         };
 
         public enum Variable
         {
-            Unknown,
+            Unsupported,
+            Binary,
+            Byte,
+            Bytes2,
             Bytes4,
+            Bytes8,
+            Float,
+            Double,
+            String,
         }
 
         public struct CheatEntry
@@ -43,11 +50,13 @@ namespace CxbxDebugger
 
         public class CheatTable
         {
+            public string Comments;
             public List<CheatEntry> CheatEntries;
             public List<CodeEntry> CodeEntires;
 
             public CheatTable()
             {
+                Comments = "";
                 CheatEntries = new List<CheatEntry>();
                 CodeEntires = new List<CodeEntry>();
             }

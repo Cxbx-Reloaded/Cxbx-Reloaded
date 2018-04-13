@@ -76,9 +76,15 @@ namespace CxbxDebugger
                 {
                     if (attr.Name == "CheatEngineTableVersion")
                     {
-                        if (attr.Value != "21")
+                        switch (attr.Value)
                         {
-                            return CTReaderResult.UnsupportedVersion;
+                            case "21": // 
+                            case "24": // 
+                            case "26": // 6.7
+                                break;
+
+                            default:
+                                return CTReaderResult.UnsupportedVersion;
                         }
                     }
                 }
@@ -100,6 +106,18 @@ namespace CxbxDebugger
                                     case "CheatCodes":
                                         {
                                             ParseCheatCodes(xnode);
+                                            break;
+                                        }
+
+                                    case "UserdefinedSymbols":
+                                        {
+                                            // stub
+                                            break;
+                                        }
+
+                                    case "Comments":
+                                        {
+                                            CTRef.Comments = xnode.InnerText;
                                             break;
                                         }
                                 }
@@ -168,6 +186,9 @@ namespace CxbxDebugger
             {
                 CheatEntry Entry = new CheatEntry();
 
+                // Disable by default
+                Entry.LastState.Activated = false;
+
                 foreach (XmlNode xnode in root.ChildNodes)
                 {
                     switch (xnode.NodeType)
@@ -181,7 +202,12 @@ namespace CxbxDebugger
                                         break;
 
                                     case "Description":
-                                        Entry.Description = xnode.InnerText;
+                                        Entry.Description = xnode.InnerText.Trim(new char[]{ '\"' });
+                                        break;
+
+                                    case "Options":
+                                        // stub
+                                        // attributes: moHideChildren (bool)
                                         break;
 
                                     case "LastState":
@@ -191,7 +217,7 @@ namespace CxbxDebugger
                                             switch (attr.Name)
                                             {
                                                 case "Value":
-                                                    Entry.LastState.Value = GetNumber(attr.Value);
+                                                    Entry.LastState.Value = attr.Value;
                                                     break;
 
                                                 case "Activated":
@@ -207,26 +233,58 @@ namespace CxbxDebugger
                                         break;
 
                                     case "Color":
-                                        Entry.Color = GetHexNumber(xnode.InnerText);
+                                        {
+                                            uint color = GetHexNumber(xnode.InnerText);
+                                            Entry.Color = (color & 0xFFFFFF);
+                                        break;
+                                        }
+
+                                    case "GroupHeader":
+                                        // stub
                                         break;
 
                                     case "VariableType":
 
                                         switch (xnode.InnerText)
                                         {
+                                            case "Byte":
+                                                Entry.VariableType = Variable.Byte;
+                                                break;
+
+                                            case "2 Bytes":
+                                                Entry.VariableType = Variable.Bytes2;
+                                                break;
+
                                             case "4 Bytes":
                                                 Entry.VariableType = Variable.Bytes4;
                                                 break;
 
+                                            case "Float":
+                                                Entry.VariableType = Variable.Float;
+                                                break;
+
+                                            case "Auto Assembler Script":
+                                                Entry.VariableType = Variable.Unsupported;
+                                                break;
+
                                             default:
-                                                Entry.VariableType = Variable.Unknown;
+                                                Entry.VariableType = Variable.Unsupported;
                                                 break;
                                         }
 
                                         break;
 
+                                    case "AssemblerScript":
+                                        // stub, unsupported
+                                        break;
+
                                     case "Address":
                                         Entry.Address = xnode.InnerText;
+                                        break;
+
+                                    case "Hotkeys":
+                                        // stub, unsupported
+                                        // Hotkey children, Action, Keys->Key children, Value, ID
                                         break;
                                 }
 
