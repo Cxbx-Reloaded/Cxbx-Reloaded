@@ -280,6 +280,14 @@ namespace CxbxDebugger
             return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
+        private void DebugBreakpoint(uint Address)
+        {
+            Invoke(new MethodInvoker(delegate ()
+            {
+                Suspend(string.Format("Breakpoint hit at 0x{0:x}", Address));
+            }));
+        }
+
         private void SetDebugProcessActive(bool Active)
         {
             if (InvokeRequired)
@@ -425,9 +433,23 @@ namespace CxbxDebugger
                 return frm.DebugAsk(ExceptionMessage);
             }
 
-            public void OnBreakpoint(DebuggerThread Thread, uint Address)
+            public void OnBreakpoint(DebuggerThread Thread, uint Address, uint Code, bool FirstChance)
             {
-                frm.DebugLog(string.Format("Breakpoing hit at 0x{0:X8}", Address));
+                frm.DebugLog(string.Format("Breakpoint hit at 0x{0:X8} with code {1:X8}", Address, Code));
+
+                var Module = frm.DebuggerInst.ResolveModule(Address);
+                if (Module != null)
+                {
+                    string fn = Path.GetFileName(Module.Path);
+                    frm.DebugLog("Occured in " + fn);
+
+                    // Ignore all submodule breakpoints
+                    // (effectively triggers from Cxbx.exe and default.xbe)
+                    if (Module.Core)
+                    {
+                        frm.DebugBreakpoint(Address);
+                    }
+                }
             }
 
             public void OnFileOpened(DebuggerMessages.FileOpened Info)
@@ -543,6 +565,16 @@ namespace CxbxDebugger
         static private bool ReadInt(TextBox Source, ref int Out)
         {
             if (int.TryParse(Source.Text, out Out))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        static private bool ReadHexInt(string HexSource, ref int Out)
+        {
+            if (int.TryParse(HexSource, System.Globalization.NumberStyles.HexNumber, null, out Out))
             {
                 return true;
             }
@@ -1031,6 +1063,72 @@ namespace CxbxDebugger
                     }
 
                     listView2.EndUpdate();
+                }
+            }
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(listView1.SelectedIndices.Count == 1 )
+            {
+                int selected = listView1.SelectedIndices[0];
+
+                CheatEntry entry = runtimeCheats.CheatEntries[selected];
+
+                int addr = 0;
+                if (!ReadHexInt(entry.Address, ref addr))
+                {
+                    return;
+                }
+
+                switch (entry.VariableType)
+                {
+                    case Variable.Byte:
+                        {
+                            var data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(addr), 1);
+
+                            if (data != null)
+                            {
+                                textBox1.Text = string.Format("{0}", data[0]);
+                            }
+                            else
+                            {
+                                textBox1.Text = "<failed to read>";
+                            }
+
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void button3_Click_1(object sender, EventArgs e)
+        {
+            if (listView1.SelectedIndices.Count == 1)
+            {
+                int selected = listView1.SelectedIndices[0];
+
+                CheatEntry entry = runtimeCheats.CheatEntries[selected];
+
+                int addr = 0;
+                if (!ReadHexInt(entry.Address, ref addr))
+                {
+                    return;
+                }
+
+                string src = textBox1.Text;
+
+                switch (entry.VariableType)
+                {
+                    case Variable.Byte:
+                        {
+                            uint byte_val = uint.Parse(src);
+                            byte val = (byte)(byte_val & 0xFF);
+
+                            DebugThreads[0].OwningProcess.WriteMemory(new IntPtr(addr), val);
+                            
+                            break;
+                        }
                 }
             }
         }

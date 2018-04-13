@@ -602,9 +602,13 @@ namespace CxbxDebugger
                         var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
                         if (Thread != null)
                         {
+                            uint BpAddr = (uint)DebugInfo.ExceptionRecord.ExceptionAddress;
+                            uint BpCode = DebugInfo.ExceptionRecord.ExceptionCode;
+                            bool FirstChance = (DebugInfo.dwFirstChance != 0);
+
                             foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
                             {
-                                Event.OnBreakpoint(Thread, (uint)DebugInfo.ExceptionRecord.ExceptionAddress);
+                                Event.OnBreakpoint(Thread, BpAddr, BpCode, FirstChance);
                             }
                         }
                     }

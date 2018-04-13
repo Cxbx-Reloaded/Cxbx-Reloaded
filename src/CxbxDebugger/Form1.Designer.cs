@@ -83,18 +83,25 @@
             this.txFilter = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.lbDebug = new System.Windows.Forms.ListBox();
-            this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
             this.tabTweaks = new System.Windows.Forms.TabPage();
-            this.button2 = new System.Windows.Forms.Button();
-            this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listView2 = new System.Windows.Forms.ListView();
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.button2 = new System.Windows.Forms.Button();
+            this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
+            this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabSubData = new System.Windows.Forms.TabPage();
+            this.tabSubAssembly = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.button3 = new System.Windows.Forms.Button();
             this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -128,6 +135,10 @@
             this.splitContainer5.Panel2.SuspendLayout();
             this.splitContainer5.SuspendLayout();
             this.tabTweaks.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabSubData.SuspendLayout();
+            this.tabSubAssembly.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // lbConsole
@@ -710,15 +721,10 @@
             this.lbDebug.Size = new System.Drawing.Size(742, 157);
             this.lbDebug.TabIndex = 3;
             // 
-            // diagSaveMemory
-            // 
-            this.diagSaveMemory.Filter = "Any Type|*.*";
-            // 
             // tabTweaks
             // 
-            this.tabTweaks.Controls.Add(this.listView2);
-            this.tabTweaks.Controls.Add(this.listView1);
-            this.tabTweaks.Controls.Add(this.button2);
+            this.tabTweaks.Controls.Add(this.groupBox3);
+            this.tabTweaks.Controls.Add(this.tabControl1);
             this.tabTweaks.Location = new System.Drawing.Point(4, 22);
             this.tabTweaks.Name = "tabTweaks";
             this.tabTweaks.Padding = new System.Windows.Forms.Padding(3);
@@ -727,55 +733,16 @@
             this.tabTweaks.Text = "Cheat Engine";
             this.tabTweaks.UseVisualStyleBackColor = true;
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(6, 6);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(132, 23);
-            this.button2.TabIndex = 0;
-            this.button2.Text = "Load .CT";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click_1);
-            // 
-            // diagBrowseCT
-            // 
-            this.diagBrowseCT.FileName = "openFileDialog1";
-            // 
-            // listView1
-            // 
-            this.listView1.CheckBoxes = true;
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader8,
-            this.columnHeader4,
-            this.columnHeader7,
-            this.columnHeader6});
-            this.listView1.FullRowSelect = true;
-            this.listView1.Location = new System.Drawing.Point(144, 9);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(349, 181);
-            this.listView1.TabIndex = 1;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "Description";
-            this.columnHeader4.Width = 150;
-            // 
-            // columnHeader6
-            // 
-            this.columnHeader6.Text = "Type";
-            this.columnHeader6.Width = 80;
-            // 
             // listView2
             // 
             this.listView2.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader10,
             this.columnHeader11});
+            this.listView2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView2.FullRowSelect = true;
-            this.listView2.Location = new System.Drawing.Point(499, 9);
+            this.listView2.Location = new System.Drawing.Point(3, 3);
             this.listView2.Name = "listView2";
-            this.listView2.Size = new System.Drawing.Size(243, 181);
+            this.listView2.Size = new System.Drawing.Size(584, 152);
             this.listView2.TabIndex = 4;
             this.listView2.UseCompatibleStateImageBehavior = false;
             this.listView2.View = System.Windows.Forms.View.Details;
@@ -790,15 +757,136 @@
             this.columnHeader11.Text = "Name";
             this.columnHeader11.Width = 200;
             // 
-            // columnHeader7
+            // listView1
             // 
-            this.columnHeader7.Text = "Address";
-            this.columnHeader7.Width = 150;
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader8,
+            this.columnHeader4,
+            this.columnHeader7,
+            this.columnHeader6});
+            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listView1.FullRowSelect = true;
+            this.listView1.Location = new System.Drawing.Point(3, 3);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(584, 152);
+            this.listView1.TabIndex = 1;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
             // columnHeader8
             // 
             this.columnHeader8.Text = "Active";
             this.columnHeader8.Width = 50;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "Description";
+            this.columnHeader4.Width = 150;
+            // 
+            // columnHeader7
+            // 
+            this.columnHeader7.Text = "Address";
+            this.columnHeader7.Width = 150;
+            // 
+            // columnHeader6
+            // 
+            this.columnHeader6.Text = "Type";
+            this.columnHeader6.Width = 80;
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(6, 19);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(123, 23);
+            this.button2.TabIndex = 0;
+            this.button2.Text = "Load .CT";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click_1);
+            // 
+            // diagSaveMemory
+            // 
+            this.diagSaveMemory.Filter = "Any Type|*.*";
+            // 
+            // diagBrowseCT
+            // 
+            this.diagBrowseCT.FileName = "openFileDialog1";
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(this.tabSubData);
+            this.tabControl1.Controls.Add(this.tabSubAssembly);
+            this.tabControl1.Location = new System.Drawing.Point(144, 6);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(598, 184);
+            this.tabControl1.TabIndex = 5;
+            // 
+            // tabSubData
+            // 
+            this.tabSubData.Controls.Add(this.listView1);
+            this.tabSubData.Location = new System.Drawing.Point(4, 22);
+            this.tabSubData.Name = "tabSubData";
+            this.tabSubData.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSubData.Size = new System.Drawing.Size(590, 158);
+            this.tabSubData.TabIndex = 0;
+            this.tabSubData.Text = "Memory";
+            this.tabSubData.UseVisualStyleBackColor = true;
+            // 
+            // tabSubAssembly
+            // 
+            this.tabSubAssembly.Controls.Add(this.listView2);
+            this.tabSubAssembly.Location = new System.Drawing.Point(4, 22);
+            this.tabSubAssembly.Name = "tabSubAssembly";
+            this.tabSubAssembly.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSubAssembly.Size = new System.Drawing.Size(590, 158);
+            this.tabSubAssembly.TabIndex = 1;
+            this.tabSubAssembly.Text = "Assembly";
+            this.tabSubAssembly.UseVisualStyleBackColor = true;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBox3.Controls.Add(this.button3);
+            this.groupBox3.Controls.Add(this.label7);
+            this.groupBox3.Controls.Add(this.textBox1);
+            this.groupBox3.Controls.Add(this.button2);
+            this.groupBox3.Location = new System.Drawing.Point(5, 6);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(135, 184);
+            this.groupBox3.TabIndex = 6;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Controls";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(6, 91);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(123, 20);
+            this.textBox1.TabIndex = 2;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(6, 75);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(37, 13);
+            this.label7.TabIndex = 3;
+            this.label7.Text = "Value:";
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(6, 117);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(123, 23);
+            this.button3.TabIndex = 4;
+            this.button3.Text = "Apply";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click_1);
             // 
             // txDisassembly
             // 
@@ -866,6 +954,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer5)).EndInit();
             this.splitContainer5.ResumeLayout(false);
             this.tabTweaks.ResumeLayout(false);
+            this.tabControl1.ResumeLayout(false);
+            this.tabSubData.ResumeLayout(false);
+            this.tabSubAssembly.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -939,6 +1032,13 @@
         private System.Windows.Forms.ColumnHeader columnHeader11;
         private System.Windows.Forms.ColumnHeader columnHeader7;
         private System.Windows.Forms.ColumnHeader columnHeader8;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabSubData;
+        private System.Windows.Forms.TabPage tabSubAssembly;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }
 
