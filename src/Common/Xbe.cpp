@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "CxbxKrnl/EmuShared.h" // Include this to avoid including EmuXapi.h and EmuD3D8.h
 #include "CxbxKrnl\EmuSha.h" // For the SHA functions
+#include "CxbxKrnl\EmuRsa.h" // For the RSA functions
 
 namespace fs = std::experimental::filesystem;
 
@@ -811,9 +812,19 @@ bool Xbe::CheckXbeSignature()
 	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
 	SHA_CTX Context;
 	UCHAR SHADigest[A_SHA_DIGEST_LEN];
+	unsigned char crypt_buffer[256];
+	RSA_PUBLIC_KEY key;
+	memcpy(key.Default, (void*)xboxkrnl::XePublicKeyData, 284);
 
 	A_SHAInit(&Context);
 	A_SHAUpdate(&Context, (PUCHAR)&HeaderDigestSize, sizeof(DWORD));
 	A_SHAUpdate(&Context, (PUCHAR)&m_Header.dwBaseAddr, HeaderDigestSize);
 	A_SHAFinal(&Context, SHADigest);
+
+	RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, key);
+	if (!Verifyhash(SHADigest, crypt_buffer, key)) {
+		return false; // signature check failed
+	}
+
+	return true; // success
 }

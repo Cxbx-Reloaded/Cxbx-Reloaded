@@ -84,6 +84,12 @@ typedef struct
 
 typedef giantstruct* giant;
 
+const unsigned char RSApkcs1paddingtable[3][16] = {
+	{ 0x0F, 0x14,0x04,0x00,0x05,0x1A,0x02,0x03,0x0E,0x2B,0x05,0x06,0x09,0x30,0x21,0x30 },
+	{ 0x0D, 0x14,0x04,0x1A,0x02,0x03,0x0E,0x2B,0x05,0x06,0x07,0x30,0x1F,0x30,0x00,0x00 },
+	{ 0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }
+};
+
 
 /* Global variables. */
 int			    current_max_size = 0, cur_run = 0;
@@ -161,15 +167,56 @@ void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_
 	int count;
 	gigimport(sig, c_number, 256);
 
-	gigimport(n, key.Modulus, 256);
+	gigimport(n, key.KeyData.Modulus, 256);
 
-	gigimport(e, key.Exponent, 4);
+	gigimport(e, key.KeyData.Exponent, 4);
 
 	/* x := x^n (mod z). */
 	powermodg(sig, e, n);
 
 	memset(cryptbuffer, 0x00, 256);
 	memcpy(cryptbuffer, sig->n, 256);
+}
+
+bool Verifyhash(unsigned char* hash, unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)
+{
+	unsigned char cmphash[20];
+	int a;
+	int zero_position = 20;
+
+	// Convert Hash to "Big-Endian Format"
+	for (a = 0;a<20;a++) cmphash[a] = hash[19 - a];
+
+	// Compare if the Hash Results (first 20 Bytes) are the same
+	if (memcmp(decryptBuffer, cmphash, 20) != 0)   return false;
+
+	unsigned char *pkcspad;
+	for (int tableIndex = 0; RSApkcs1paddingtable[tableIndex][0] != 0; tableIndex++) {
+
+		pkcspad = (unsigned char*)RSApkcs1paddingtable[tableIndex];
+		int difference = memcmp(pkcspad + 1, &decryptBuffer[20], *pkcspad);
+
+		if (!difference)
+		{
+			zero_position = *pkcspad + 20;
+			break;
+		}
+
+	}
+
+	// Padding checking , xbox does exactly the same 
+
+	if (decryptBuffer[zero_position] != 0x00) return false;
+
+	if (decryptBuffer[key.KeyData.ModulusSize] != 0x00) return false;
+
+	if (decryptBuffer[key.KeyData.ModulusSize - 1] != 0x01) return false;
+
+	for (unsigned int i = zero_position + 1; i < (key.KeyData.ModulusSize - 1); i++) {
+		if (decryptBuffer[i] != 0xff) return false;
+	}
+
+	return true;
 }
 
 giant newgiant(int numshorts)

@@ -37,16 +37,23 @@
 
 typedef struct _RSA_PUBLIC_KEY
 {
-	char Magic[4];  		     // "RSA1"
-	unsigned int Bloblen; 		 // 264 (Modulus + Exponent + Modulussize)
-	unsigned char Bitlen[4];  	 // 2048
-	unsigned int ModulusSize;	 // 255 (bytes in the Modulus)
-	unsigned char Exponent[4];
-	unsigned char Modulus[256];  // Bit endian style
-	unsigned char Padding[8];    // Padding? Only seen as zero
+	union
+	{
+		unsigned char Default[284];
+		struct {
+			char Magic[4];  		     // "RSA1"
+			unsigned int Bloblen; 		 // 264 (Modulus + Exponent + Modulussize)
+			unsigned char Bitlen[4];  	 // 2048
+			unsigned int ModulusSize;	 // 255 (bytes in the Modulus)
+			unsigned char Exponent[4];
+			unsigned char Modulus[256];  // Bit endian style
+			unsigned char Padding[8];    // Padding? Only seen as zero
+		}KeyData;
+	};
 }RSA_PUBLIC_KEY;
 
 
 void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key);
+bool Verifyhash(unsigned char* hash, unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);
 
 #endif
