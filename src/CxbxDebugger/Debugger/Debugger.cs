@@ -563,6 +563,11 @@ namespace CxbxDebugger
                             var Report = DebuggerMessages.GetDebuggerInitReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
 
                             InitParams = Report;
+
+                            foreach (IDebuggerGeneralEvents Event in GeneralEvents)
+                            {
+                                Event.OnDebugTitleLoaded(InitParams.Title);
+                            }
                         }
                     }
                     break;

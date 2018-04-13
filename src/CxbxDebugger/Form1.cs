@@ -17,6 +17,7 @@ namespace CxbxDebugger
         Thread DebuggerWorkerThread;
         Debugger DebuggerInst;
         string[] CachedArgs;
+        string CachedTitle = "";
 
         DebuggerFormEvents DebugEvents;
 
@@ -275,6 +276,18 @@ namespace CxbxDebugger
             }
         }
 
+        private void DebugTitle(string Title)
+        {
+            Invoke(new MethodInvoker(delegate ()
+            {
+                CachedTitle = Title;
+
+                Text = string.Format("{0} - Cxbx-Reloaded Debugger", CachedTitle);
+
+                LoadCheatTable(string.Format("{0}.ct", CachedTitle));
+            }));
+        }
+
         private bool DebugAsk(string Message)
         {
             return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
@@ -390,9 +403,10 @@ namespace CxbxDebugger
                 frm.DebugLog("Ended debugging session");
             }
 
-            public void OnDebugTitle(string Title)
+            public void OnDebugTitleLoaded(string Title)
             {
-                frm.Text = string.Format("{0} - Cxbx-Reloaded Debugger", Title);
+                frm.DebugLog(string.Format("Loaded title \"{0}\"", Title));
+                frm.DebugTitle(Title);
             }
 
             public void OnThreadCreate(DebuggerThread Thread)
@@ -1039,11 +1053,13 @@ namespace CxbxDebugger
             return System.Drawing.Color.FromArgb(r, g, b);
         }
 
-        private void button2_Click_1(object sender, EventArgs e)
+        private void LoadCheatTable(string filename)
         {
-            if( diagBrowseCT.ShowDialog() == DialogResult.OK)
+            string path = Directory.GetCurrentDirectory();
+
+            if (File.Exists(filename))
             {
-                string filename = diagBrowseCT.FileNames[0];
+                DebugLog(string.Format("Attempting to load \"{0}\"", filename));
 
                 CheatTable ct_data = CheatTableReader.FromFile(filename);
                 if (ct_data != null)
@@ -1080,6 +1096,15 @@ namespace CxbxDebugger
 
                     listView2.EndUpdate();
                 }
+            }
+        }
+
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+            if( diagBrowseCT.ShowDialog() == DialogResult.OK)
+            {
+                string filename = diagBrowseCT.FileNames[0];
+                LoadCheatTable(filename);
             }
         }
 

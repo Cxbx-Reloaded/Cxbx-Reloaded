@@ -184,6 +184,7 @@ namespace CxbxDebugger
 
         public class DebuggerInit
         {
+            public uint TitleID { get; set; }
             public string Title { get; set; }
         }
 
@@ -191,7 +192,7 @@ namespace CxbxDebugger
         {
             DebuggerInit Report = new DebuggerInit();
 
-            // Data[0] is free
+            Report.TitleID = Data[0];
 
             StringType Type = (StringType)Data[1];
 
