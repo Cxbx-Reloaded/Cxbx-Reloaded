@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuRsa.h
+// *   Cxbx->CxbxKrnl->EmuRsa.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -35,6 +35,8 @@
 #ifndef EMURSA_H
 #define EMURSA_H
 
+#pragma pack(4)
+
 typedef struct _RSA_PUBLIC_KEY
 {
 	union
@@ -52,6 +54,7 @@ typedef struct _RSA_PUBLIC_KEY
 	};
 }RSA_PUBLIC_KEY;
 
+#pragma pack()
 
 void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key);
 bool Verifyhash(unsigned char* hash, unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);

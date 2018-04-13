@@ -812,6 +812,19 @@ void CxbxKrnlMain(int argc, char* argv[])
 			return;
 		}
 
+		// Check the signature of the xbe if possible
+		if (CxbxKrnl_Xbe->LoadRSAkey()) {
+			if (CxbxKrnl_Xbe->CheckXbeSignature()) {
+				printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
+			}
+			else {
+				EmuWarning("Invalid xbe signature. Homebrew, tampered or pirated xbe?");
+			}
+		}
+		else {
+			EmuWarning("Missing RSA key. Unable to verify xbe signature");
+		}
+
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 

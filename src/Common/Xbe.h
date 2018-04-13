@@ -77,6 +77,9 @@ class Xbe : public Error
         // Convert game region field to string
         const char *GameRegionToString();
 
+		// load the rsa key used to validate the signature of the xbe
+		bool LoadRSAkey();
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
