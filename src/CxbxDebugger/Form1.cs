@@ -1046,12 +1046,15 @@ namespace CxbxDebugger
                         li.SubItems.Add(code.Description);
                         li.SubItems.Add(string.Format("{0:x8}", code.Address));
                         li.SubItems.Add(code.VariableType.ToString());
+                        li.SubItems.Add("??"); // todo: read live memory
 
                         li.Checked = code.LastState.Activated;
                         li.ForeColor = MakeColor(code.Color);
                     }
 
                     listView1.EndUpdate();
+
+                    // Code entries are not supported at the moment
 
                     listView2.BeginUpdate();
                     listView2.Items.Clear();
@@ -1069,6 +1072,9 @@ namespace CxbxDebugger
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (DebugThreads.Count == 0)
+                return;
+
             if(listView1.SelectedIndices.Count == 1 )
             {
                 int selected = listView1.SelectedIndices[0];
@@ -1081,6 +1087,8 @@ namespace CxbxDebugger
                     return;
                 }
 
+                string printed_value = "<failed to read>";
+
                 switch (entry.VariableType)
                 {
                     case Variable.Byte:
@@ -1089,16 +1097,21 @@ namespace CxbxDebugger
 
                             if (data != null)
                             {
-                                textBox1.Text = string.Format("{0}", data[0]);
+                                if( entry.ShowAsHex )
+                                {
+                                    printed_value = string.Format("0x{0:x}", data[0]);
+                                }
+                                else
+                                {
+                                    printed_value = string.Format("{0}", data[0]);
+                                }
+                                
                             }
-                            else
-                            {
-                                textBox1.Text = "<failed to read>";
-                            }
-
                             break;
                         }
                 }
+
+                textBox1.Text = printed_value;
             }
         }
 
@@ -1122,7 +1135,8 @@ namespace CxbxDebugger
                 {
                     case Variable.Byte:
                         {
-                            uint byte_val = uint.Parse(src);
+                            uint byte_val = 0;
+                            ReadAddress(src, ref byte_val);
                             byte val = (byte)(byte_val & 0xFF);
 
                             DebugThreads[0].OwningProcess.WriteMemory(new IntPtr(addr), val);

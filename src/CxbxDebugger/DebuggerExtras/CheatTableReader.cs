@@ -206,6 +206,10 @@ namespace CxbxDebugger
                                         Entry.Description = xnode.InnerText.Trim(new char[]{ '\"' });
                                         break;
 
+                                    case "ShowAsHex":
+                                        Entry.ShowAsHex = (GetNumber(xnode.InnerText) != 0);
+                                        break;
+
                                     case "Options":
                                         // stub
                                         // attributes: moHideChildren (bool)

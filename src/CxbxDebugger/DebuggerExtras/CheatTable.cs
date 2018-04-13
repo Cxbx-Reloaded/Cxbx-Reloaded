@@ -31,6 +31,7 @@ namespace CxbxDebugger
         {
             public string ID;
             public string Description;
+            public bool ShowAsHex;
             public State LastState;
             public uint Color;
             public Variable VariableType;
