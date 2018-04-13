@@ -280,11 +280,32 @@ namespace CxbxDebugger
             return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
         }
 
-        private void DebugBreakpoint(uint Address)
+        private void DebugBreakpoint(DebuggerModule Module, uint Address)
         {
             Invoke(new MethodInvoker(delegate ()
             {
-                Suspend(string.Format("Breakpoint hit at 0x{0:x}", Address));
+                bool should_suspend = false;
+                if( cbBreakpointAll.Checked )
+                {
+                    should_suspend = true;
+                }
+                else
+                {
+                    // Ignore all submodule breakpoints
+                    // (effectively triggers from Cxbx.exe and default.xbe)
+
+                    if (cbBreakpointCxbx.Checked)
+                    {
+                        should_suspend = Module.Core;
+                    }
+                }
+
+                if (should_suspend)
+                {
+                    string module_name = Path.GetFileName(Module.Path);
+
+                    Suspend(string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
+                }
             }));
         }
 
@@ -440,15 +461,7 @@ namespace CxbxDebugger
                 var Module = frm.DebuggerInst.ResolveModule(Address);
                 if (Module != null)
                 {
-                    string fn = Path.GetFileName(Module.Path);
-                    frm.DebugLog("Occured in " + fn);
-
-                    // Ignore all submodule breakpoints
-                    // (effectively triggers from Cxbx.exe and default.xbe)
-                    if (Module.Core)
-                    {
-                        frm.DebugBreakpoint(Address);
-                    }
+                    frm.DebugBreakpoint(Module, Address);
                 }
             }
 

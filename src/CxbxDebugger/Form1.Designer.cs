@@ -51,6 +51,7 @@
             this.btnGo = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.cbDisAddr = new System.Windows.Forms.ComboBox();
+            this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.tabBreakpoints = new System.Windows.Forms.TabPage();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -103,7 +104,8 @@
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
             this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
-            this.txDisassembly = new CxbxDebugger.RicherTextBox();
+            this.cbBreakpointCxbx = new System.Windows.Forms.CheckBox();
+            this.cbBreakpointAll = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.statusBar.SuspendLayout();
@@ -118,6 +120,7 @@
             this.splitContainer3.Panel1.SuspendLayout();
             this.splitContainer3.Panel2.SuspendLayout();
             this.splitContainer3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabWatch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -374,6 +377,21 @@
             this.cbDisAddr.SelectedIndexChanged += new System.EventHandler(this.cbDisAddr_SelectedIndexChanged);
             this.cbDisAddr.KeyDown += new System.Windows.Forms.KeyEventHandler(this.comboBox1_KeyDown);
             // 
+            // txDisassembly
+            // 
+            this.txDisassembly.BackColor = System.Drawing.SystemColors.Window;
+            this.txDisassembly.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txDisassembly.Cursor = System.Windows.Forms.Cursors.Default;
+            this.txDisassembly.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txDisassembly.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txDisassembly.Location = new System.Drawing.Point(0, 0);
+            this.txDisassembly.Name = "txDisassembly";
+            this.txDisassembly.ReadOnly = true;
+            this.txDisassembly.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.txDisassembly.Size = new System.Drawing.Size(742, 149);
+            this.txDisassembly.TabIndex = 1;
+            this.txDisassembly.Text = "";
+            // 
             // tabBreakpoints
             // 
             this.tabBreakpoints.Controls.Add(this.splitContainer3);
@@ -405,12 +423,14 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.cbBreakpointAll);
+            this.groupBox4.Controls.Add(this.cbBreakpointCxbx);
             this.groupBox4.Location = new System.Drawing.Point(2, 112);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(241, 59);
+            this.groupBox4.Size = new System.Drawing.Size(241, 72);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Memory";
+            this.groupBox4.Text = "Interrupts";
             // 
             // groupBox1
             // 
@@ -897,20 +917,27 @@
             this.diagBrowseCT.Filter = "Cheat Engine Tables (*.CT)|*.ct";
             this.diagBrowseCT.Title = "Load cheat table";
             // 
-            // txDisassembly
+            // cbBreakpointCxbx
             // 
-            this.txDisassembly.BackColor = System.Drawing.SystemColors.Window;
-            this.txDisassembly.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txDisassembly.Cursor = System.Windows.Forms.Cursors.Default;
-            this.txDisassembly.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txDisassembly.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txDisassembly.Location = new System.Drawing.Point(0, 0);
-            this.txDisassembly.Name = "txDisassembly";
-            this.txDisassembly.ReadOnly = true;
-            this.txDisassembly.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.txDisassembly.Size = new System.Drawing.Size(742, 149);
-            this.txDisassembly.TabIndex = 1;
-            this.txDisassembly.Text = "";
+            this.cbBreakpointCxbx.AutoSize = true;
+            this.cbBreakpointCxbx.Checked = true;
+            this.cbBreakpointCxbx.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBreakpointCxbx.Location = new System.Drawing.Point(7, 19);
+            this.cbBreakpointCxbx.Name = "cbBreakpointCxbx";
+            this.cbBreakpointCxbx.Size = new System.Drawing.Size(147, 17);
+            this.cbBreakpointCxbx.TabIndex = 1;
+            this.cbBreakpointCxbx.Text = "Enable Xbox breakpoints ";
+            this.cbBreakpointCxbx.UseVisualStyleBackColor = true;
+            // 
+            // cbBreakpointAll
+            // 
+            this.cbBreakpointAll.AutoSize = true;
+            this.cbBreakpointAll.Location = new System.Drawing.Point(7, 36);
+            this.cbBreakpointAll.Name = "cbBreakpointAll";
+            this.cbBreakpointAll.Size = new System.Drawing.Size(139, 17);
+            this.cbBreakpointAll.TabIndex = 2;
+            this.cbBreakpointAll.Text = "Enable ALL breakpoints";
+            this.cbBreakpointAll.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -941,6 +968,8 @@
             this.splitContainer3.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
             this.splitContainer3.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabWatch.ResumeLayout(false);
@@ -1049,6 +1078,8 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.CheckBox cbBreakpointAll;
+        private System.Windows.Forms.CheckBox cbBreakpointCxbx;
     }
 }
 
