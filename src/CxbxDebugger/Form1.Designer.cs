@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.lbConsole = new System.Windows.Forms.ListBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnStart = new System.Windows.Forms.ToolStripButton();
@@ -89,7 +90,6 @@
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.listView2 = new System.Windows.Forms.ListView();
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -717,7 +717,6 @@
             // tabTweaks
             // 
             this.tabTweaks.Controls.Add(this.listView2);
-            this.tabTweaks.Controls.Add(this.checkBox1);
             this.tabTweaks.Controls.Add(this.listView1);
             this.tabTweaks.Controls.Add(this.button2);
             this.tabTweaks.Location = new System.Drawing.Point(4, 22);
@@ -767,16 +766,6 @@
             // 
             this.columnHeader6.Text = "Type";
             this.columnHeader6.Width = 80;
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(6, 35);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(102, 17);
-            this.checkBox1.TabIndex = 3;
-            this.checkBox1.Text = "Apply on launch";
-            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // listView2
             // 
@@ -833,6 +822,7 @@
             this.ClientSize = new System.Drawing.Size(762, 327);
             this.Controls.Add(this.tableLayoutPanel3);
             this.Controls.Add(this.toolStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Cxbx-Reloaded Debugger";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
@@ -876,7 +866,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer5)).EndInit();
             this.splitContainer5.ResumeLayout(false);
             this.tabTweaks.ResumeLayout(false);
-            this.tabTweaks.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -945,7 +934,6 @@
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ColumnHeader columnHeader6;
-        private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.ListView listView2;
         private System.Windows.Forms.ColumnHeader columnHeader10;
         private System.Windows.Forms.ColumnHeader columnHeader11;
