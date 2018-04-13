@@ -4107,8 +4107,8 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
 
 #if 0 // Once PS.1.4 can be generated, enable this :
-	XTL::D3DCAPS8 g_D3DCaps = {};
-	if (g_pD3DDevice8->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
+	XTL::D3DCAPS g_D3DCaps = {};
+	if (g_pD3DDevice->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
 		PSVersion = g_D3DCaps.PixelShaderVersion;
 	}
 #endif
@@ -4187,7 +4187,7 @@ static const
     pFunction = (DWORD*)(pShader->GetBufferPointer());
     if (hRet == D3D_OK) {
       // redirect to windows d3d
-      hRet = g_pD3DDevice8->CreatePixelShader
+      hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
 #ifdef CXBX_USE_D3D9
@@ -4278,13 +4278,13 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 #ifdef CXBX_USE_D3D9
     g_pD3DDevice.GetPixelShader(/*out*/PIDirect3DPixelShader9(&CurrentPixelShader));
 #else
-    g_pD3DDevice8->GetPixelShader(/*out*/&CurrentPixelShader);
+    g_pD3DDevice->GetPixelShader(/*out*/&CurrentPixelShader);
 #endif
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
 #ifdef CXBX_USE_D3D9
-		g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
 #else
-		g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
 
     // Note : We set the constants /after/ setting the shader, so that any
@@ -4315,7 +4315,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
-			g_pD3DDevice8->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
+			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
@@ -4340,7 +4340,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 #ifdef CXBX_USE_D3D9
         g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(&fColor), 1);
 #else
-		g_pD3DDevice8->SetPixelShaderConstant(Register_, &fColor, 1);
+		g_pD3DDevice->SetPixelShaderConstant(Register_, &fColor, 1);
 #endif
       }
     }
@@ -4349,9 +4349,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   {
     ConvertedPixelShaderHandle = 0;
 #ifdef CXBX_USE_D3D9
-	g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
 #else
-	g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
   }
 }

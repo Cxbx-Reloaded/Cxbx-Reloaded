@@ -34,17 +34,80 @@
 #ifndef EMUD3D8TYPES_H
 #define EMUD3D8TYPES_H
 
+//#define CXBX_USE_D3D9
+
+#ifdef CXBX_USE_D3D9
+
+// include direct3d 9x headers
+#define DIRECT3D_VERSION 0x0900
+#include <d3d9.h>
+#include <D3dx9tex.h>
+
+// See "Converting to Direct3D 9" https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx
+
+// Alias all host Direct3D 9 symbols to generic symbols
+#define Direct3DCreate			Direct3DCreate9
+#define D3DXAssembleShader		D3DXCompileShader
+
+#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
+#define D3DCAPS                  D3DCAPS9
+#define D3DVIEWPORT              D3DVIEWPORT9
+
+#define IDirect3D                IDirect3D9
+#define IDirect3DDevice          IDirect3DDevice9
+#define IDirect3DResource        IDirect3DResource9
+#define IDirect3DBaseTexture     IDirect3DBaseTexture9
+#define IDirect3DTexture         IDirect3DTexture9
+#define IDirect3DVolumeTexture   IDirect3DVolumeTexture9
+#define IDirect3DCubeTexture     IDirect3DCubeTexture9
+#define IDirect3DVertexBuffer    IDirect3DVertexBuffer9
+#define IDirect3DIndexBuffer     IDirect3DIndexBuffer9
+#define IDirect3DSurface         IDirect3DSurface9
+#define IDirect3DVolume          IDirect3DVolume9
+#define IDirect3DSwapChain       IDirect3DSwapChain9
+
+// TODO : Declare as Xbox type
+typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
+
+#else
+
 // include direct3d 8x headers
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
 #include <d3dx8tex.h>
-#include <d3d8types.h>
+
+// Alias all host Direct3D 8 symbols to generic symbols
+#define Direct3DCreate			Direct3DCreate8
+
+#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
+#define D3DCAPS                  D3DCAPS8
+#define D3DVIEWPORT              D3DVIEWPORT8
+
+#define IDirect3D                IDirect3D8
+#define IDirect3DDevice          IDirect3DDevice8
+#define IDirect3DResource        IDirect3DResource8
+#define IDirect3DBaseTexture     IDirect3DBaseTexture8
+#define IDirect3DTexture         IDirect3DTexture8
+#define IDirect3DVolumeTexture   IDirect3DVolumeTexture8
+#define IDirect3DCubeTexture     IDirect3DCubeTexture8
+#define IDirect3DVertexBuffer    IDirect3DVertexBuffer8
+#define IDirect3DIndexBuffer     IDirect3DIndexBuffer8
+#define IDirect3DSurface         IDirect3DSurface8
+#define IDirect3DVolume          IDirect3DVolume8
+#define IDirect3DSwapChain       IDirect3DSwapChain8
+
+// TODO : Declare as Xbox type
+typedef D3DVIEWPORT8 X_D3DVIEWPORT8;
+
+#endif // Direct3d8
 
 // TODO: fill out these enumeration tables for convienance
+typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
+typedef DWORD X_D3DMULTISAMPLE_TYPE;
 typedef DWORD X_D3DSHADEMODE;
 typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
@@ -292,12 +355,13 @@ typedef struct _X_D3DSURFACE_DESC
     X_D3DRESOURCETYPE   Type;
     DWORD               Usage;
     UINT                Size;
-    D3DMULTISAMPLE_TYPE MultiSampleType;
+    X_D3DMULTISAMPLE_TYPE MultiSampleType;
     UINT                Width;
     UINT                Height;
 }
 X_D3DSURFACE_DESC;
 
+struct X_D3DSurface; // forward
 typedef struct _X_D3DPRESENT_PARAMETERS
 {
     UINT                BackBufferWidth;
@@ -305,9 +369,9 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     X_D3DFORMAT         BackBufferFormat;
     UINT                BackBufferCount;
 
-    D3DMULTISAMPLE_TYPE MultiSampleType;
+    X_D3DMULTISAMPLE_TYPE MultiSampleType;
 
-    D3DSWAPEFFECT       SwapEffect;
+    X_D3DSWAPEFFECT     SwapEffect;
     HWND                hDeviceWindow;
     BOOL                Windowed;
     BOOL                EnableAutoDepthStencil;
@@ -319,8 +383,8 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     // The Windows DirectX8 variant ends here
     // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
     // assert(offsetof(X_D3DPRESENT_PARAMETERS, BufferSurfaces) == sizeof(_D3DPRESENT_PARAMETERS_));
-    IDirect3DSurface8  *BufferSurfaces[3];
-    IDirect3DSurface8  *DepthStencilSurface;
+    X_D3DSurface       *BufferSurfaces[3];
+    X_D3DSurface       *DepthStencilSurface;
 }
 X_D3DPRESENT_PARAMETERS;
 

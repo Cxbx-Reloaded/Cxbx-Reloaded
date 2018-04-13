@@ -86,7 +86,7 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
     HWND                        hFocusWindow,
     DWORD                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    IDirect3DDevice8          **ppReturnedDeviceInterface
+    IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
 // ******************************************************************
@@ -123,7 +123,7 @@ HRESULT WINAPI EMUPATCH(D3D_CheckDeviceFormat)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetDeviceCaps)
 (
-    D3DCAPS8                   *pCaps
+    X_D3DCAPS                   *pCaps
 );
 #endif
 
@@ -289,7 +289,7 @@ VOID WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetViewport)
 (
-    CONST D3DVIEWPORT8 *pViewport
+    CONST X_D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************
@@ -297,7 +297,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetViewport)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetViewport)
 (
-    D3DVIEWPORT8 *pViewport
+    X_D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************
@@ -1615,7 +1615,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
 (
     UINT        Adapter,
     D3DDEVTYPE  DeviceType,
-    D3DCAPS8    *pCaps
+    X_D3DCAPS  *pCaps
 );
 #endif
 
@@ -1892,7 +1892,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
 (
 	UINT					Adapter,
 	DWORD					Flags,
-	D3DADAPTER_IDENTIFIER8* pIdentifier
+	X_D3DADAPTER_IDENTIFIER *pIdentifier
 );
 #endif
 

@@ -191,8 +191,8 @@ extern void XTL::EmuExecutePushBufferRaw
     }
     #endif
 
-    static LPDIRECT3DINDEXBUFFER8  pIndexBuffer=0;
-    static LPDIRECT3DVERTEXBUFFER8 pVertexBuffer=0;
+    static IDirect3DIndexBuffer *pIndexBuffer=0;
+    static IDirect3DVertexBuffer *pVertexBuffer=0;
 
     static uint maxIBSize = 0;
 
@@ -267,7 +267,7 @@ extern void XTL::EmuExecutePushBufferRaw
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer == 0)
             {
-                HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(2047*sizeof(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, &pVertexBuffer);
+                HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(2047*sizeof(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, &pVertexBuffer);
 
                 if(FAILED(hRet))
                     CxbxKrnlCleanup("Unable to create vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
@@ -321,7 +321,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                g_pD3DDevice8->DrawPrimitiveUP
+                g_pD3DDevice->DrawPrimitiveUP
                 (
                     PCPrimitiveType,
                     VPDesc.dwHostPrimitiveCount,
@@ -376,7 +376,7 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
 
                     maxIBSize = dwCount*2 + 2*2;
                 }
@@ -417,7 +417,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+                    g_pD3DDevice->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -428,7 +428,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     {
                         if(IsValidCurrentShader())
                         {
-                            g_pD3DDevice8->DrawIndexedPrimitive
+                            g_pD3DDevice->DrawIndexedPrimitive
                             (
                                 PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
 //                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
@@ -442,7 +442,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
-                    g_pD3DDevice8->SetIndices(0, 0);
+                    g_pD3DDevice->SetIndices(0, 0);
                 }
             }
 
@@ -477,7 +477,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 printf("\n");
 
-                XTL::IDirect3DVertexBuffer8 *pActiveVB = NULL;
+                XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
 
                 D3DVERTEXBUFFER_DESC VBDesc;
 
@@ -485,7 +485,7 @@ extern void XTL::EmuExecutePushBufferRaw
                 UINT  uiStride;
 
                 // retrieve stream data
-                g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
+                g_pD3DDevice->GetStreamSource(0, &pActiveVB, &uiStride);
 
                 // retrieve stream desc
                 pActiveVB->GetDesc(&VBDesc);
@@ -528,7 +528,7 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
 
                     maxIBSize = dwCount*2;
                 }
@@ -580,7 +580,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+                    g_pD3DDevice->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -589,7 +589,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     if(!g_bPBSkipPusher && IsValidCurrentShader())
                     {
-                        g_pD3DDevice8->DrawIndexedPrimitive
+                        g_pD3DDevice->DrawIndexedPrimitive
                         (
                             PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
                         );
@@ -601,7 +601,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
-                    g_pD3DDevice8->SetIndices(0, 0);
+                    g_pD3DDevice->SetIndices(0, 0);
                 }
             }
 
@@ -627,7 +627,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
     if(g_bStepPush)
     {
-        g_pD3DDevice8->Present(0,0,0,0);
+        g_pD3DDevice->Present(0,0,0,0);
 		Sleep(500);
     }
 }
@@ -638,7 +638,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     if(!XTL::IsValidCurrentShader() || (dwCount == 0))
         return;
 
-    XTL::IDirect3DVertexBuffer8 *pActiveVB = NULL;
+    XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
 
     XTL::D3DVERTEXBUFFER_DESC VBDesc;
 
@@ -646,7 +646,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     UINT  uiStride;
 
     // retrieve stream data
-    g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
+    g_pD3DDevice->GetStreamSource(0, &pActiveVB, &uiStride);
 
     char szFileName[128];
     sprintf(szFileName, "D:\\_cxbx\\mesh\\CxbxMesh-0x%.08X.x", pIndexData);
@@ -768,7 +768,7 @@ void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
 		return;
 
 	// Get a copy of the current vertex shader
-	g_pD3DDevice8->GetVertexShader( &dwVertexShader );
+	g_pD3DDevice->GetVertexShader( &dwVertexShader );
 
 	/*if( g_CurrentVertexShader != dwVertexShader )
 	{

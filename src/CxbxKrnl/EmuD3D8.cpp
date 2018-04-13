@@ -71,7 +71,7 @@ using namespace std::literals::chrono_literals;
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
-XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
+XTL::IDirect3DDevice               *g_pD3DDevice  = NULL; // Direct3D Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_CurrentXboxVertexShaderHandle = 0;
@@ -119,8 +119,8 @@ static BOOL                         g_bHasDepthStencil = FALSE;  // Does device 
 
 // D3D based variables
 static GUID                         g_ddguid;               // DirectDraw driver GUID
-static XTL::LPDIRECT3D8             g_pD3D8 = NULL;			// Direct3D8
-static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
+static XTL::IDirect3D              *g_pDirect3D = nullptr;
+static XTL::D3DCAPS                 g_D3DCaps;              // Direct3D Caps
 
 // wireframe toggle
 static int                          g_iWireframe    = 0;
@@ -140,7 +140,7 @@ static DWORD                        g_dwBaseVertexIndex = 0;// current active in
 
 // current active vertex stream
 static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active vertex buffer
-static XTL::IDirect3DVertexBuffer8 *g_pDummyBuffer = NULL;  // Dummy buffer, used to set unused stream sources with
+static XTL::IDirect3DVertexBuffer  *g_pDummyBuffer = NULL;  // Dummy buffer, used to set unused stream sources with
 static DWORD						g_dwLastSetStream = 0;	// The last stream set by D3DDevice::SetStreamSource
 
 // current vertical blank information
@@ -184,7 +184,7 @@ struct EmuD3D8CreateDeviceProxyData
     XTL::DWORD                       BehaviorFlags;
     XTL::X_D3DPRESENT_PARAMETERS    *pXboxPresentationParameters;
 	XTL::D3DPRESENT_PARAMETERS       HostPresentationParameters;
-    XTL::IDirect3DDevice8          **ppReturnedDeviceInterface;
+    XTL::IDirect3DDevice           **ppReturnedDeviceInterface;
     volatile bool                    bReady;
 
     union
@@ -717,7 +717,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 }
 
 typedef struct {
-	XTL::IDirect3DResource8* pHostResource = nullptr;
+	XTL::IDirect3DResource* pHostResource = nullptr;
 	XTL::X_D3DResource* pXboxResource = nullptr;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = nullptr;
@@ -795,7 +795,7 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 	}
 }
 
-XTL::IDirect3DResource8 *GetHostResource(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
@@ -908,7 +908,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 	return modified;
 }
 
-void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8* pHostResource, DWORD dwSize = 0)
+void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* pHostResource, DWORD dwSize = 0)
 {
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_HostResources.find(key);
@@ -932,7 +932,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource8*
 
 }
 
-XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
@@ -940,10 +940,10 @@ XTL::IDirect3DSurface8 *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	return (XTL::IDirect3DSurface8*) GetHostResource(pXboxResource);
+	return (XTL::IDirect3DSurface*) GetHostResource(pXboxResource);
 }
 
-XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
@@ -956,61 +956,61 @@ XTL::IDirect3DBaseTexture8 *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource
 	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource, iTextureStage);
 }
 
-XTL::IDirect3DTexture8 *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
-	return (XTL::IDirect3DTexture8 *)GetHostBaseTexture(pXboxResource, iTextureStage);
+	return (XTL::IDirect3DTexture *)GetHostBaseTexture(pXboxResource, iTextureStage);
 
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
 
-XTL::IDirect3DIndexBuffer8 *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	return (XTL::IDirect3DIndexBuffer8*)GetHostResource(pXboxResource);
+	return (XTL::IDirect3DIndexBuffer*)GetHostResource(pXboxResource);
 }
 
-void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface8 *pHostSurface)
+void SetHostSurface(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DSurface *pHostSurface)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostSurface);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostSurface);
 }
 
-void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture8 *pHostTexture)
+void SetHostTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DTexture *pHostTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostTexture);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostTexture);
 }
 
-void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture8 *pHostCubeTexture)
+void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DCubeTexture *pHostCubeTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostCubeTexture);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostCubeTexture);
 }
 
-void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture8 *pHostVolumeTexture)
+void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolumeTexture *pHostVolumeTexture)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostVolumeTexture);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostVolumeTexture);
 }
 
-void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer8 *pHostIndexBuffer)
+void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer *pHostIndexBuffer)
 {
 	assert(pXboxResource != NULL);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
-	SetHostResource(pXboxResource, (XTL::IDirect3DResource8*)pHostIndexBuffer);
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostIndexBuffer);
 }
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 {
@@ -1033,7 +1033,7 @@ inline XTL::X_D3DPALETTESIZE GetXboxPaletteSize(const XTL::X_D3DPalette *pPalett
 	return PaletteSize;
 }
 
-int GetD3DResourceRefCount(XTL::IDirect3DResource8 *EmuResource)
+int GetD3DResourceRefCount(XTL::IDirect3DResource *EmuResource)
 {
 	if (EmuResource != nullptr)
 	{
@@ -1272,9 +1272,9 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 
 VOID CxbxReleaseBackBufferLock()
 {
-	XTL::IDirect3DSurface8 *pBackBuffer = nullptr;
+	XTL::IDirect3DSurface *pBackBuffer = nullptr;
 
-	if (D3D_OK == g_pD3DDevice8->GetBackBuffer(0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
+	if (D3D_OK == g_pD3DDevice->GetBackBuffer(0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
 	{
 		assert(pBackBuffer != nullptr);
 
@@ -1302,14 +1302,14 @@ VOID XTL::EmuD3DInit()
         using namespace XTL;
 
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
-        g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
+        g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
 
-        if(g_pD3D8 == NULL)
+        if(g_pDirect3D == NULL)
             CxbxKrnlCleanup("Could not initialize Direct3D8!");
 
         D3DDEVTYPE DevType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
 
-        g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
+        g_pDirect3D->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
 
     // create default device
@@ -1331,7 +1331,7 @@ VOID XTL::EmuD3DInit()
 		g_EmuCDPD.DeviceType = XTL::D3DDEVTYPE_HAL;
 		g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 		g_EmuCDPD.pXboxPresentationParameters = &PresParam;
-		g_EmuCDPD.ppReturnedDeviceInterface = &g_pD3DDevice8;
+		g_EmuCDPD.ppReturnedDeviceInterface = &g_pD3DDevice;
 
 		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
 		while (g_EmuCDPD.bReady)
@@ -1840,19 +1840,19 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             {
                 // only one device should be created at once
                 // TODO: ensure all surfaces are somehow cleaned up?
-                if(g_pD3DDevice8 != nullptr)
+                if(g_pD3DDevice != nullptr)
                 {
                     DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
 
-                    g_pD3DDevice8->EndScene();
+                    g_pD3DDevice->EndScene();
 
                     // Address DirectX Debug Runtime reported error in _DEBUG builds
                     // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
                     #ifndef _DEBUG
-                        while(g_pD3DDevice8->Release() != 0);
+                        while(g_pD3DDevice->Release() != 0);
                     #endif
 
-                    g_pD3DDevice8 = nullptr;
+                    g_pD3DDevice = nullptr;
                 }
 
                 if(g_EmuCDPD.pXboxPresentationParameters->BufferSurfaces[0] != NULL)
@@ -1919,7 +1919,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                         XTL::D3DDISPLAYMODE D3DDisplayMode;
 
-                        g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
+                        g_pDirect3D->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
                         g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DDisplayMode.Format;
                         g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = 0;
@@ -1971,7 +1971,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 #endif
 
                 // redirect to windows Direct3D
-                g_EmuCDPD.hRet = g_pD3D8->CreateDevice
+                g_EmuCDPD.hRet = g_pDirect3D->CreateDevice
                 (
                     g_EmuCDPD.Adapter,
                     g_EmuCDPD.DeviceType,
@@ -1980,13 +1980,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     &g_EmuCDPD.HostPresentationParameters,
                     g_EmuCDPD.ppReturnedDeviceInterface
                 );
-				DEBUG_D3DRESULT(g_EmuCDPD.hRet, "IDirect3D8::CreateDevice");
+				DEBUG_D3DRESULT(g_EmuCDPD.hRet, "IDirect3D::CreateDevice");
 
                 if(FAILED(g_EmuCDPD.hRet))
-                    CxbxKrnlCleanup("IDirect3D8::CreateDevice failed");
+                    CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
 
 				// cache device pointer
-				g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
+				g_pD3DDevice = *g_EmuCDPD.ppReturnedDeviceInterface;
 
 				// Which texture formats does this device support?
 				for (int X_Format = XTL::X_D3DFMT_L8; X_Format <= XTL::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
@@ -1997,42 +1997,42 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						if (PCFormat != XTL::D3DFMT_UNKNOWN) {
 							// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 							g_bSupportsFormatSurface[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
 									XTL::D3DRTYPE_SURFACE, PCFormat));
 							g_bSupportsFormatSurfaceRenderTarget[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
 									XTL::D3DRTYPE_SURFACE, PCFormat));
 							g_bSupportsFormatSurfaceDepthStencil[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
 									XTL::D3DRTYPE_SURFACE, PCFormat));
 							g_bSupportsFormatTexture[X_Format] = 
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
 									XTL::D3DRTYPE_TEXTURE, PCFormat));
 							g_bSupportsFormatTextureRenderTarget[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
 									XTL::D3DRTYPE_TEXTURE, PCFormat));
 							g_bSupportsFormatTextureDepthStencil[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
 									XTL::D3DRTYPE_TEXTURE, PCFormat));
 							g_bSupportsFormatVolumeTexture[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
 									XTL::D3DRTYPE_VOLUMETEXTURE, PCFormat));
 							g_bSupportsFormatCubeTexture[X_Format] =
-								(D3D_OK == g_pD3D8->CheckDeviceFormat(
+								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
 									XTL::D3DRTYPE_CUBETEXTURE, PCFormat));
@@ -2117,28 +2117,28 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				}
 
                 // update render target cache
-				XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
-                hRet = g_pD3DDevice8->GetRenderTarget(&pNewHostSurface);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetRenderTarget");
+				XTL::IDirect3DSurface *pNewHostSurface = nullptr;
+                hRet = g_pD3DDevice->GetRenderTarget(&pNewHostSurface);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
 
 				// update z-stencil surface cache
 				pNewHostSurface = nullptr;
-				hRet = g_pD3DDevice8->GetDepthStencilSurface(&pNewHostSurface);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetDepthStencilSurface");
+				hRet = g_pD3DDevice->GetDepthStencilSurface(&pNewHostSurface);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetDepthStencilSurface");
 
 				g_bHasDepthStencil = SUCCEEDED(hRet);
 
-				hRet = g_pD3DDevice8->CreateVertexBuffer
+				hRet = g_pD3DDevice->CreateVertexBuffer
                 (
                     1, 0, 0, XTL::D3DPOOL_MANAGED,
                     &g_pDummyBuffer
                 );
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVertexBuffer");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexBuffer");
 
                 for(int Streams = 0; Streams < 16; Streams++)
                 {
-                    hRet = g_pD3DDevice8->SetStreamSource(Streams, g_pDummyBuffer, 1);
-					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetStreamSource");
+                    hRet = g_pD3DDevice->SetStreamSource(Streams, g_pDummyBuffer, 1);
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 				}
 
                 // initially, show a black screen
@@ -2147,27 +2147,27 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // Avoids following DirectX Debug Runtime error report
                 //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
                 //
-                hRet = g_pD3DDevice8->Clear(
+                hRet = g_pD3DDevice->Clear(
 					/*Count=*/0, 
 					/*pRects=*/nullptr, 
 					D3DCLEAR_TARGET | (g_bHasDepthStencil ? D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL : 0),
 					/*Color=*/0xFF000000, // TODO : Use constant for this
 					/*Z=*/g_bHasDepthStencil ? 1.0f : 0.0f,
 					/*Stencil=*/0);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Clear");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 
-				hRet = g_pD3DDevice8->BeginScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->BeginScene");
+				hRet = g_pD3DDevice->BeginScene();
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene");
 
-				hRet = g_pD3DDevice8->EndScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->EndScene");
+				hRet = g_pD3DDevice->EndScene();
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
 
-				hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
+				hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 
                 // begin scene
-                hRet = g_pD3DDevice8->BeginScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->BeginScene(2nd)");
+                hRet = g_pD3DDevice->BeginScene();
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
 
                 // signal completion
                 g_EmuCDPD.bReady = false;
@@ -2175,15 +2175,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             else
             {
                 // release direct3d
-                if(g_pD3DDevice8 != nullptr)
+                if(g_pD3DDevice != nullptr)
                 {
                     DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
 
-                    g_pD3DDevice8->EndScene();
+                    g_pD3DDevice->EndScene();
 
-                    g_EmuCDPD.hRet = g_pD3DDevice8->Release();
+                    g_EmuCDPD.hRet = g_pD3DDevice->Release();
                     if(g_EmuCDPD.hRet == 0)
-                        g_pD3DDevice8 = nullptr;
+                        g_pD3DDevice = nullptr;
                 }
 
 				// cleanup overlay clipper
@@ -2243,7 +2243,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTe
 typedef struct {
 	DWORD Hash = 0;
 	DWORD IndexCount = 0;;
-	XTL::IDirect3DIndexBuffer8* pHostIndexBuffer = nullptr;
+	XTL::IDirect3DIndexBuffer* pHostIndexBuffer = nullptr;
 } ConvertedIndexBuffer;
 
 std::unordered_map<PWORD, ConvertedIndexBuffer> g_ConvertedIndexBuffers;
@@ -2277,13 +2277,13 @@ void CxbxUpdateActiveIndexBuffer
 	// If we need to create an index buffer, do so.
 	if (indexBuffer.pHostIndexBuffer == nullptr) {
 		// Create a new native index buffer of the above determined size :
-		HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer(
+		HRESULT hRet = g_pD3DDevice->CreateIndexBuffer(
 			IndexCount * 2,
 			D3DUSAGE_WRITEONLY,
 			XTL::D3DFMT_INDEX16,
 			XTL::D3DPOOL_MANAGED,
 			&indexBuffer.pHostIndexBuffer);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
 			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
@@ -2313,8 +2313,8 @@ void CxbxUpdateActiveIndexBuffer
 	*pIndexBase = g_CachedIndexBase;
 
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice8->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetIndices");
+	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
@@ -2353,7 +2353,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
     HWND                        hFocusWindow,
     DWORD                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    IDirect3DDevice8          **ppReturnedDeviceInterface
+    IDirect3DDevice           **ppReturnedDeviceInterface
 )
 {
 	FUNC_EXPORTS
@@ -2368,7 +2368,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_END;
 
 	
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice, (UINT, D3DDEVTYPE, HWND, DWORD, X_D3DPRESENT_PARAMETERS*, IDirect3DDevice8**));
+	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice, (UINT, D3DDEVTYPE, HWND, DWORD, X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**));
 	HRESULT hRet = XB_Direct3D_CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
@@ -2616,13 +2616,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     if(VshHandleIsVertexShader(Handle))
     {
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
-        hRet = g_pD3DDevice8->SetVertexShader(pVertexShader->Handle);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShader(VshHandleIsVertexShader)");
+        hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
     }
     else if(Handle == NULL)
     {
-		hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0)");
+		hRet = g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0)");
 	}
     else if(Address < 136)
     {
@@ -2630,8 +2630,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
         if(pVertexShader != NULL)
         {
-			hRet = g_pD3DDevice8->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShader(pVertexShader)");
+			hRet = g_pD3DDevice->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(pVertexShader)");
 		}
         else
         {
@@ -2675,7 +2675,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.blue[v]  = pRamp->blue[v];
     }
 
-//    g_pD3DDevice8->SetGammaRamp(dwPCFlags, &PCRamp);
+//    g_pD3DDevice->SetGammaRamp(dwPCFlags, &PCRamp);
 }
 
 // ******************************************************************
@@ -2692,7 +2692,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
 
     D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
 
-    g_pD3DDevice8->GetGammaRamp(pGammaRamp);
+    g_pD3DDevice->GetGammaRamp(pGammaRamp);
 
     for(int v=0;v<256;v++)
     {
@@ -2728,20 +2728,20 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	if(BackBuffer == -1)
 	{
-	static IDirect3DSurface8 *pCachedPrimarySurface = nullptr;
+	static IDirect3DSurface *pCachedPrimarySurface = nullptr;
 
 	if(pCachedPrimarySurface == nullptr)
 	{
 	// create a buffer to return
 	// TODO: Verify the surface is always 640x480
-	hRet = g_pD3DDevice8->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
+	hRet = g_pD3DDevice->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
 	}
 
 	SetHostSurface(pBackBuffer, pCachedPrimarySurface);
 
-	hRet = g_pD3DDevice8->GetFrontBuffer(pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetFrontBuffer");
+	hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
 	if(FAILED(hRet))
 	{
@@ -2757,13 +2757,13 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	if(BackBuffer != -1) {
-	hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+	hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 	}
 	//*/
 
 	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
-	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
+	XTL::IDirect3DSurface *pNewHostSurface = nullptr;
 
 	 STATUS_SUCCESS;
 
@@ -2771,8 +2771,8 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		 BackBuffer = 0;
 	 }
 
-	HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+	HRESULT hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("Unable to retrieve back buffer");
@@ -2806,7 +2806,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	// Now we can fetch the host backbuffer
-	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
+	XTL::IDirect3DSurface *pNewHostSurface = nullptr;
 
 
 	HRESULT hRet = STATUS_SUCCESS;
@@ -2815,8 +2815,8 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		BackBuffer = 0;
 	}
 
-	hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer");
+	hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("Unable to retrieve back buffer");
@@ -2829,7 +2829,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	// Get the host surface for the destination Xbox surface
-	XTL::IDirect3DSurface8* pCopySrcSurface = GetHostSurface(pXboxBackBuffer);
+	XTL::IDirect3DSurface* pCopySrcSurface = GetHostSurface(pXboxBackBuffer);
 		
 	// Now we can copy the host back buffer to the Xbox
 	D3DLOCKED_RECT lockedRect;
@@ -2890,7 +2890,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 (
-    CONST D3DVIEWPORT8 *pViewport
+    CONST X_D3DVIEWPORT8 *pViewport
 )
 {
 	FUNC_EXPORTS
@@ -2905,28 +2905,28 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
         if(dwWidth > 640)
         {
             EmuWarning("Resizing Viewport->Width to 640");
-            ((D3DVIEWPORT8*)pViewport)->Width = 640;
+            ((D3DVIEWPORT*)pViewport)->Width = 640;
         }
 
         if(dwHeight > 480)
         {
             EmuWarning("Resizing Viewport->Height to 480");
-            ((D3DVIEWPORT8*)pViewport)->Height = 480;
+            ((D3DVIEWPORT*)pViewport)->Height = 480;
         }
     }*/
 
-    HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
+    HRESULT hRet = g_pD3DDevice->SetViewport(pViewport);
 
     // restore originals
     /*{
         if(dwWidth > 640)
-            ((D3DVIEWPORT8*)pViewport)->Width = dwWidth;
+            ((D3DVIEWPORT*)pViewport)->Width = dwWidth;
 
         if(dwHeight > 480)
-            ((D3DVIEWPORT8*)pViewport)->Height = dwHeight;
+            ((D3DVIEWPORT*)pViewport)->Height = dwHeight;
     }
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetViewport");
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
 
 	if(FAILED(hRet))
     {
@@ -2940,15 +2940,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 (
-    D3DVIEWPORT8 *pViewport
+    X_D3DVIEWPORT8 *pViewport
 )
 {
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
-    HRESULT hRet = g_pD3DDevice8->GetViewport(pViewport);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetViewport");
+    HRESULT hRet = g_pD3DDevice->GetViewport(pViewport);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
 
     if(FAILED(hRet))
     {
@@ -2979,7 +2979,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
     float fScaleZ = 1.0f;
     float fOffsetX = 0.5 + 1.0/32;
     float fOffsetY = 0.5 + 1.0/32;
-    D3DVIEWPORT8 Viewport;
+	X_D3DVIEWPORT8 Viewport;
 
     
 	EMUPATCH(D3DDevice_GetViewport)(&Viewport);
@@ -3181,14 +3181,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     if(SUCCEEDED(hRet))
     {
-        hRet = g_pD3DDevice8->CreateVertexShader
+        hRet = g_pD3DDevice->CreateVertexShader
         (
             pRecompiledDeclaration,
             pRecompiledFunction,
             &Handle,
             g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
         );
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVertexShader");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
 
         if(pRecompiledBuffer != nullptr)
         {
@@ -3215,14 +3215,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
                                       NULL);
 			DEBUG_D3DRESULT(hRet, "D3DXAssembleShader");
 
-			hRet = g_pD3DDevice8->CreateVertexShader
+			hRet = g_pD3DDevice->CreateVertexShader
             (
                 pRecompiledDeclaration,
                 (DWORD*)pRecompiledBuffer->GetBufferPointer(),
                 &Handle,
                 g_dwVertexShaderUsage
             );
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVertexShader(fallback)");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
 		}
         //*/
     }
@@ -3328,13 +3328,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 	if(g_BuildVersion <= 4361)
 		Register += 96;
 
-    HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
+    HRESULT hRet = g_pD3DDevice->SetVertexShaderConstant
     (
         Register,
         pConstantData,
         ConstantCount
     );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShaderConstant");
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShaderConstant");
 
     if(FAILED(hRet))
     {
@@ -3976,11 +3976,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 
 	HRESULT hRet;
 
-    hRet = g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+    hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 
-    hRet = g_pD3DDevice8->Clear(Count, pRects, Flags, Color, Z, Stencil);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Clear");
+    hRet = g_pD3DDevice->Clear(Count, pRects, Flags, Color, Z, Stencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
 #define CXBX_SWAP_PRESENT_FORWARD (256 + 4 + 1) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
@@ -4047,10 +4047,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	CxbxReleaseBackBufferLock();
 
-	g_pD3DDevice8->EndScene();
-	HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->Present");
-	hRet = g_pD3DDevice8->BeginScene();
+	g_pD3DDevice->EndScene();
+	HRESULT hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+	hRet = g_pD3DDevice->BeginScene();
 
 	if (!g_UncapFramerate) {
 		// If the last frame completed faster than the Xbox VBlank period, wait for it
@@ -4322,11 +4322,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		}
 
 		// One of these will be created :
-		XTL::IDirect3DSurface8 *pNewHostSurface = nullptr; // for X_D3DRTYPE_SURFACE
-		XTL::IDirect3DVolume8 *pNewHostVolume = nullptr; // for X_D3DRTYPE_VOLUME
-		XTL::IDirect3DTexture8 *pNewHostTexture = nullptr; // for X_D3DRTYPE_TEXTURE
-		XTL::IDirect3DVolumeTexture8 *pNewHostVolumeTexture = nullptr; // for X_D3DRTYPE_VOLUMETEXTURE
-		XTL::IDirect3DCubeTexture8 *pNewHostCubeTexture = nullptr; // for X_D3DRTYPE_CUBETEXTURE
+		XTL::IDirect3DSurface *pNewHostSurface = nullptr; // for X_D3DRTYPE_SURFACE
+		XTL::IDirect3DVolume *pNewHostVolume = nullptr; // for X_D3DRTYPE_VOLUME
+		XTL::IDirect3DTexture *pNewHostTexture = nullptr; // for X_D3DRTYPE_TEXTURE
+		XTL::IDirect3DVolumeTexture *pNewHostVolumeTexture = nullptr; // for X_D3DRTYPE_VOLUMETEXTURE
+		XTL::IDirect3DCubeTexture *pNewHostCubeTexture = nullptr; // for X_D3DRTYPE_CUBETEXTURE
 
 		D3DPOOL D3DPool = D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 		HRESULT hRet;
@@ -4335,13 +4335,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		switch (XboxResourceType) {
 		case X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-				hRet = g_pD3DDevice8->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
+				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType, &pNewHostSurface);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateDepthStencilSurface");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateDepthStencilSurface");
 			}
 			else {
-				hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
+				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
 			}
 
 			// First fail, retry with a fallback format
@@ -4357,7 +4357,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 
 				EmuWarning("Trying Fallback");
-				hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
+				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
 			}
 
 			// If the fallback failed, show an error and exit execution.
@@ -4389,15 +4389,15 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		}
 
 		case X_D3DRTYPE_TEXTURE: {
-			hRet = g_pD3DDevice8->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+			hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
 				D3DUsage, PCFormat, D3DPool, &pNewHostTexture);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
 
 			// If the above failed, we might be able to use an ARGB texture instead
 			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-				hRet = g_pD3DDevice8->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+				hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
 					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DFMT_A8R8G8B8)");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DFMT_A8R8G8B8)");
 
 				if (hRet == D3D_OK) {
 					// Okay, now this works, make sure the texture gets converted
@@ -4408,12 +4408,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 			/*if(FAILED(hRet))
 			{
-				hRet = g_pD3DDevice8->CreateTexture
+				hRet = g_pD3DDevice->CreateTexture
 				(
 					dwWidth, dwHeight, dwMipMapLevels, D3DUsage, PCFormat,
 					D3DPOOL_SYSTEMMEM, &pNewHostTexture
 				);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateTexture(D3DPOOL_SYSTEMMEM)");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DPOOL_SYSTEMMEM)");
 			}*/
 
 
@@ -4429,9 +4429,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		}
 
 		case X_D3DRTYPE_VOLUMETEXTURE: {
-			hRet = g_pD3DDevice8->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
+			hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
 				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, &pNewHostVolumeTexture);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateVolumeTexture");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVolumeTexture");
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
@@ -4448,9 +4448,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
 				dwMipMapLevels, PCFormat);
 
-			hRet = g_pD3DDevice8->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,
+			hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,
 				PCFormat, D3DPool, &pNewHostCubeTexture);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateCubeTexture");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateCubeTexture");
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
@@ -4850,9 +4850,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			GetClientRect(g_hEmuWindow, &EmuDestRect);
 		}
 
-		IDirect3DSurface8 *pBackBufferSurface = nullptr;
-		HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetBackBuffer - Unable to get backbuffer surface!");
+		IDirect3DSurface *pBackBufferSurface = nullptr;
+		HRESULT hRet = g_pD3DDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 
 		// if we obtained the backbuffer, load the YUY2 into the backbuffer
 		if (SUCCEEDED(hRet)) {
@@ -4898,9 +4898,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		// Update overlay if present was not called since the last call to
 		// EmuD3DDevice_UpdateOverlay.
 		if (g_bHackUpdateSoftwareOverlay) {
-			g_pD3DDevice8->EndScene();
-			g_pD3DDevice8->Present(0, 0, 0, 0);
-			g_pD3DDevice8->BeginScene();
+			g_pD3DDevice->EndScene();
+			g_pD3DDevice->Present(0, 0, 0, 0);
+			g_pD3DDevice->BeginScene();
 		}
 
 		g_bHackUpdateSoftwareOverlay = TRUE;
@@ -4976,8 +4976,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 		return;
 	}
 
-    HRESULT hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTextureStageState");
+    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // ******************************************************************
@@ -5035,8 +5035,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTextureStageState");
+    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // ******************************************************************
@@ -5081,23 +5081,23 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
     switch(Type)
     {
         case 22:    // X_D3DTSS_BUMPENVMAT00
-            hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
             break;
         case 23:    // X_D3DTSS_BUMPENVMAT01
-			hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
 			break;
         case 24:    // X_D3DTSS_BUMPENVMAT11
-			hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
             break;
         case 25:    // X_D3DTSS_BUMPENVMAT10
-			hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
             break;
         case 26:    // X_D3DTSS_BUMPENVLSCALE
-			hRet = g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
             break;
     }
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTextureStageState");
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // ******************************************************************
@@ -5142,8 +5142,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_NormalizeNormals)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-    HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+    HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5158,8 +5158,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TextureFactor)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_TEXTUREFACTOR, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5174,8 +5174,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_ZBIAS, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZBIAS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5191,8 +5191,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
 	LOG_FUNC_ONE_ARG(Value);
 
 //  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
-//  HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
-//	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+//  HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
+//	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 
     LOG_UNIMPLEMENTED();	
 }
@@ -5220,8 +5220,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FillMode)
     else
         dwFillMode = D3DFILL_POINT;
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5236,8 +5236,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FogColor)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_FOGCOLOR, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5415,8 +5415,8 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
         };
 
         // TODO: verify these params as you add support for them!
-        HRESULT hRet = g_pD3DDevice8->SetRenderState((D3DRENDERSTATETYPE)State, Value);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+        HRESULT hRet = g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)State, Value);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 	}
 }
 
@@ -5442,8 +5442,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     else
         CxbxKrnlCleanup("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5492,8 +5492,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_CullMode)
             CxbxKrnlCleanup("EmuD3DDevice_SetRenderState_CullMode: Unknown Cullmode (%d)", Value);
     }
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5509,7 +5509,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_LineWidth)
 	LOG_FUNC_ONE_ARG(Value);
 
     // TODO: Convert to PC format??
-//    g_pD3DDevice8->SetRenderState(D3DRS_LINEPATTERN, Value);
+//    g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value);
 	LOG_NOT_SUPPORTED();
 }
 
@@ -5525,8 +5525,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilFail)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_STENCILFAIL, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5616,8 +5616,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZEnable)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5632,8 +5632,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilEnable)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_STENCILENABLE, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5648,8 +5648,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5664,8 +5664,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleMask)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEMASK, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderState");
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -5790,8 +5790,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTransform)
 
     State = EmuXB2PC_D3DTS(State);
 
-    HRESULT hRet = g_pD3DDevice8->SetTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTransform");    
+    HRESULT hRet = g_pD3DDevice->SetTransform(State, pMatrix);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
 }
 
 // ******************************************************************
@@ -5812,8 +5812,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_MultiplyTransform)
 
 	State = EmuXB2PC_D3DTS(State);
 
-	HRESULT hRet = g_pD3DDevice8->MultiplyTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->MultiplyTransform");
+	HRESULT hRet = g_pD3DDevice->MultiplyTransform(State, pMatrix);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
 }
 
 
@@ -5835,8 +5835,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)
 
     State = EmuXB2PC_D3DTS(State);
 
-    HRESULT hRet = g_pD3DDevice8->GetTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetTransform");    
+    HRESULT hRet = g_pD3DDevice->GetTransform(State, pMatrix);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform");    
 }
 
 // ******************************************************************
@@ -5967,8 +5967,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
         static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
         static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
 
-        g_pD3DDevice8->SetVertexShaderConstant(58, vScale, 1);
-        g_pD3DDevice8->SetVertexShaderConstant(59, vOffset, 1);
+        g_pD3DDevice->SetVertexShaderConstant(58, vScale, 1);
+        g_pD3DDevice->SetVertexShaderConstant(59, vOffset, 1);
     }
 
     DWORD RealHandle;
@@ -5994,8 +5994,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		RealHandle = Handle;
     }
 
-	hRet = g_pD3DDevice8->SetVertexShader(RealHandle);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetVertexShader");    
+	hRet = g_pD3DDevice->SetVertexShader(RealHandle);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");    
 }
 
 void EmuUpdateActiveTextureStages()
@@ -6006,16 +6006,16 @@ void EmuUpdateActiveTextureStages()
 	{
 		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
 		if (pBaseTexture == nullptr) {
-			HRESULT hRet = g_pD3DDevice8->SetTexture(i, NULL);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
+			HRESULT hRet = g_pD3DDevice->SetTexture(i, NULL);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
 			continue;
 		}
 
-		XTL::IDirect3DTexture8 *pHostTexture = GetHostTexture(pBaseTexture, i);
+		XTL::IDirect3DTexture *pHostTexture = GetHostTexture(pBaseTexture, i);
 
 		if (pHostTexture != nullptr) {
-			HRESULT hRet = g_pD3DDevice8->SetTexture(i, pHostTexture);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetTexture");
+			HRESULT hRet = g_pD3DDevice->SetTexture(i, pHostTexture);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
 		}
 	}
 }
@@ -6106,13 +6106,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
         if(!g_bVBSkipStream) {
         #endif
 
-        HRESULT hRet = g_pD3DDevice8->DrawPrimitive
+        HRESULT hRet = g_pD3DDevice->DrawPrimitive
         (
             EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
             StartVertex,
             VPDesc.dwHostPrimitiveCount
         );
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitive");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitive");
 
 		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
@@ -6177,14 +6177,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
         if(!g_bVBSkipStream)
         #endif
         {
-			HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP
+			HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP
 			(
 				EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
 				VPDesc.dwHostPrimitiveCount,
 				VPDesc.pXboxVertexStreamZeroData,
 				VPDesc.uiXboxVertexStreamZeroStride
 			);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawPrimitiveUP");
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitiveUP");
 
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
         }
@@ -6266,7 +6266,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 				// Note : XDK samples reaching this case are : DisplacementMap, Ripple
 				while ((int)VertexCount >= VERTICES_PER_QUAD)
 				{
-					HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitive
+					HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive
 					(
 						D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
 						//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
@@ -6275,7 +6275,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 						uiStartIndex,
 						/* primCount = */TRIANGLES_PER_QUAD // Draw 2 triangles with that
 					);
-					DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
+					DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
 
 					uiStartIndex += VERTICES_PER_QUAD;
 					VertexCount -= VERTICES_PER_QUAD;
@@ -6285,14 +6285,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			{
 				HRESULT hRet;
 				// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
-				hRet = g_pD3DDevice8->DrawIndexedPrimitive(
+				hRet = g_pD3DDevice->DrawIndexedPrimitive(
 					EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
 					/* MinVertexIndex = */0,
 					/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 					// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 					uiStartIndex,
 					VPDesc.dwHostPrimitiveCount);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitive");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive");
 
 				if (VPDesc.XboxPrimitiveType == X_D3DPT_LINELOOP)
 				{
@@ -6305,7 +6305,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 		}
 
-		g_pD3DDevice8->SetIndices(NULL, 0);
+		g_pD3DDevice->SetIndices(NULL, 0);
 	}
 
 	// Execute callback procedure
@@ -6372,11 +6372,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		if(!g_bVBSkipStream) {
 		#endif
 
-        HRESULT hRet = g_pD3DDevice8->DrawIndexedPrimitiveUP
+        HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP
         (
             EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwHostPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pXboxVertexStreamZeroData, VPDesc.uiXboxVertexStreamZeroStride
         );
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawIndexedPrimitiveUP");
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP");
 
 		g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 
@@ -6410,8 +6410,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
 		LOG_FUNC_ARG(pLight)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice8->GetLight(Index, pLight);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetLight");    
+    HRESULT hRet = g_pD3DDevice->GetLight(Index, pLight);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetLight");    
 }
 
 // ******************************************************************
@@ -6430,8 +6430,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
 		LOG_FUNC_ARG(pLight)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice8->SetLight(Index, pLight);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetLight");    
+    HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
 
     return hRet;
 }
@@ -6448,8 +6448,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetMaterial)
 
 	LOG_FUNC_ONE_ARG(pMaterial);
 
-    HRESULT hRet = g_pD3DDevice8->SetMaterial(pMaterial);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetMaterial");
+    HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
 }
 
 // ******************************************************************
@@ -6468,8 +6468,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
 		LOG_FUNC_ARG(bEnable)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice8->LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->LightEnable");    
+    HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
 
     return hRet;
 }
@@ -6490,8 +6490,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-    IDirect3DSurface8 *pPCRenderTarget = nullptr;
-    IDirect3DSurface8 *pPCNewZStencil  = nullptr;
+    IDirect3DSurface *pPCRenderTarget = nullptr;
+    IDirect3DSurface *pPCNewZStencil  = nullptr;
 
     if(pRenderTarget != NULL)
     {
@@ -6521,8 +6521,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
     }
 
     // TODO: Follow that stencil!
-    HRESULT hRet = g_pD3DDevice8->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderTarget");
+    HRESULT hRet = g_pD3DDevice->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 }
 
 // ******************************************************************
@@ -6712,8 +6712,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
         g_VMManager.Deallocate((VAddr)pD3DVertexShader);
     }
 
-    HRESULT hRet = g_pD3DDevice8->DeleteVertexShader(RealHandle);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DeleteVertexShader");    
+    HRESULT hRet = g_pD3DDevice->DeleteVertexShader(RealHandle);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");    
 }
 
 // ******************************************************************
@@ -6789,14 +6789,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 		LOG_FUNC_ARG(ConstantCount)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice8->GetVertexShaderConstant
+    HRESULT hRet = g_pD3DDevice->GetVertexShaderConstant
     (
         Register + 96,
         pConstantData,
         ConstantCount
     );
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetVertexShaderConstant");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");    
 }
 
 // ******************************************************************
@@ -7305,8 +7305,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawRectPatch)
 
 	CxbxUpdateNativeD3DResources();
 
-	HRESULT hRet = g_pD3DDevice8->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawRectPatch");
+	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
 
 	return hRet;
 }
@@ -7331,8 +7331,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawTriPatch)
 
 	CxbxUpdateNativeD3DResources();
 
-	HRESULT hRet = g_pD3DDevice8->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->DrawTriPatch");
+	HRESULT hRet = g_pD3DDevice->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawTriPatch");
 
 	return hRet;
 }
@@ -7357,15 +7357,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 
 	HRESULT hRet;
 	D3DXMATRIX Out, mtxProjection, mtxViewport;
-	D3DVIEWPORT8 Viewport;
+	D3DVIEWPORT Viewport;
 
 	// Get current viewport
-	hRet = g_pD3DDevice8->GetViewport(&Viewport);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetViewport - Unable to get viewport!");
+	hRet = g_pD3DDevice->GetViewport(&Viewport);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport - Unable to get viewport!");
 
 	// Get current projection matrix
-	hRet = g_pD3DDevice8->GetTransform(D3DTS_PROJECTION, &mtxProjection);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetTransform - Unable to get projection matrix!");
+	hRet = g_pD3DDevice->GetTransform(D3DTS_PROJECTION, &mtxProjection);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform - Unable to get projection matrix!");
 
 	// Clear the destination matrix
 	::ZeroMemory(&Out, sizeof(D3DMATRIX));
@@ -7640,8 +7640,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 	D3DXMATRIX mtxWorld, mtxView;
 
 	// I hope this is right
-	g_pD3DDevice8->GetTransform( D3DTS_WORLD, &mtxWorld );
-	g_pD3DDevice8->GetTransform( D3DTS_VIEW, &mtxView );
+	g_pD3DDevice->GetTransform( D3DTS_WORLD, &mtxWorld );
+	g_pD3DDevice->GetTransform( D3DTS_VIEW, &mtxView );
 
 	*pModelView = mtxWorld * mtxView;
 
@@ -7756,10 +7756,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
 	// this function. For now, just return the values within the current
 	// viewport.
 
-	D3DVIEWPORT8 vp;
+	D3DVIEWPORT vp;
 
-	HRESULT hRet = g_pD3DDevice8->GetViewport( &vp );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetViewport");
+	HRESULT hRet = g_pD3DDevice->GetViewport( &vp );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
 
 	pRects->x1 = pRects->y1 = 0;
 	pRects->x2 = vp.Width;
@@ -7784,8 +7784,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)(D3DMATERIAL8* pMaterial)
 	// TODO: HACK: This is wrong, but better than nothing, right?
 	if (pMaterial)
 	{
-		HRESULT hRet = g_pD3DDevice8->GetMaterial(pMaterial);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetMaterial");
+		HRESULT hRet = g_pD3DDevice->GetMaterial(pMaterial);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
 	}
 
 	if (FAILED(hRet))
@@ -7826,8 +7826,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 
 	if (pMaterial)
 	{
-		HRESULT hRet = g_pD3DDevice8->GetMaterial(pMaterial);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->GetMaterial");
+		HRESULT hRet = g_pD3DDevice->GetMaterial(pMaterial);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
 	}
 
 	if(FAILED(hRet))
