@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "devices\LED.h" // For LED::Sequence
 #include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "CxbxKrnl/EmuShared.h" // Include this to avoid including EmuXapi.h and EmuD3D8.h
+#include "CxbxKrnl\EmuSha.h" // For the SHA functions
 
 namespace fs = std::experimental::filesystem;
 
@@ -803,4 +804,16 @@ const char *Xbe::GameRegionToString()
 const wchar_t *Xbe::GetUnicodeFilenameAddr()
 {
     return (const wchar_t *)GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
+}
+
+bool Xbe::CheckXbeSignature()
+{
+	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
+	SHA_CTX Context;
+	UCHAR SHADigest[A_SHA_DIGEST_LEN];
+
+	A_SHAInit(&Context);
+	A_SHAUpdate(&Context, (PUCHAR)&HeaderDigestSize, sizeof(DWORD));
+	A_SHAUpdate(&Context, (PUCHAR)&m_Header.dwBaseAddr, HeaderDigestSize);
+	A_SHAFinal(&Context, SHADigest);
 }

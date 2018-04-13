@@ -1167,6 +1167,9 @@ __declspec(noreturn) void CxbxKrnlInit
 				libVersionInfo++;
 			}
 		}
+
+		// Check if the xbe has a valid signature
+
 	}
 
 	CxbxKrnlRegisterThread(GetCurrentThread());
