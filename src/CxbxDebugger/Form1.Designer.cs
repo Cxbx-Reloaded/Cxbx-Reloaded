@@ -83,7 +83,15 @@
             this.label3 = new System.Windows.Forms.Label();
             this.lbDebug = new System.Windows.Forms.ListBox();
             this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
+            this.tabTweaks = new System.Windows.Forms.TabPage();
+            this.button2 = new System.Windows.Forms.Button();
+            this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.txDisassembly = new CxbxDebugger.RicherTextBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.statusBar.SuspendLayout();
@@ -115,6 +123,7 @@
             this.splitContainer5.Panel1.SuspendLayout();
             this.splitContainer5.Panel2.SuspendLayout();
             this.splitContainer5.SuspendLayout();
+            this.tabTweaks.SuspendLayout();
             this.SuspendLayout();
             // 
             // lbConsole
@@ -251,6 +260,7 @@
             this.tabContainer.Controls.Add(this.tabWatch);
             this.tabContainer.Controls.Add(this.tabMemory);
             this.tabContainer.Controls.Add(this.tabOutput);
+            this.tabContainer.Controls.Add(this.tabTweaks);
             this.tabContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabContainer.Location = new System.Drawing.Point(3, 3);
             this.tabContainer.Multiline = true;
@@ -700,6 +710,63 @@
             // 
             this.diagSaveMemory.Filter = "Any Type|*.*";
             // 
+            // tabTweaks
+            // 
+            this.tabTweaks.Controls.Add(this.checkBox1);
+            this.tabTweaks.Controls.Add(this.listView1);
+            this.tabTweaks.Controls.Add(this.button2);
+            this.tabTweaks.Location = new System.Drawing.Point(4, 22);
+            this.tabTweaks.Name = "tabTweaks";
+            this.tabTweaks.Padding = new System.Windows.Forms.Padding(3);
+            this.tabTweaks.Size = new System.Drawing.Size(748, 193);
+            this.tabTweaks.TabIndex = 5;
+            this.tabTweaks.Text = "Cheat Engine";
+            this.tabTweaks.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(6, 6);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(132, 23);
+            this.button2.TabIndex = 0;
+            this.button2.Text = "Load .CT";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click_1);
+            // 
+            // diagBrowseCT
+            // 
+            this.diagBrowseCT.FileName = "openFileDialog1";
+            // 
+            // listView1
+            // 
+            this.listView1.CheckBoxes = true;
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader5,
+            this.columnHeader4,
+            this.columnHeader6});
+            this.listView1.FullRowSelect = true;
+            this.listView1.Location = new System.Drawing.Point(144, 6);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(598, 181);
+            this.listView1.TabIndex = 1;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "Description";
+            this.columnHeader4.Width = 200;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Module";
+            this.columnHeader5.Width = 100;
+            // 
+            // columnHeader6
+            // 
+            this.columnHeader6.Text = "Offset";
+            this.columnHeader6.Width = 150;
+            // 
             // txDisassembly
             // 
             this.txDisassembly.BackColor = System.Drawing.SystemColors.Window;
@@ -714,6 +781,16 @@
             this.txDisassembly.Size = new System.Drawing.Size(742, 149);
             this.txDisassembly.TabIndex = 1;
             this.txDisassembly.Text = "";
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(6, 35);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(102, 17);
+            this.checkBox1.TabIndex = 3;
+            this.checkBox1.Text = "Apply on launch";
+            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -764,6 +841,8 @@
             this.splitContainer5.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer5)).EndInit();
             this.splitContainer5.ResumeLayout(false);
+            this.tabTweaks.ResumeLayout(false);
+            this.tabTweaks.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -826,6 +905,14 @@
         private System.Windows.Forms.ComboBox cbDisAddr;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnPrev;
+        private System.Windows.Forms.TabPage tabTweaks;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.OpenFileDialog diagBrowseCT;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader6;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
 

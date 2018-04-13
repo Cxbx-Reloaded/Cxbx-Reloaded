@@ -41,10 +41,16 @@ namespace CxbxDebugger
             public byte[] After;
         };
 
-        public struct CheatTable
+        public class CheatTable
         {
             public List<CheatEntry> CheatEntries;
-            public List<CodeEntry> CodeList;
+            public List<CodeEntry> CodeEntires;
+
+            public CheatTable()
+            {
+                CheatEntries = new List<CheatEntry>();
+                CodeEntires = new List<CodeEntry>();
+            }
         };
     }
 }

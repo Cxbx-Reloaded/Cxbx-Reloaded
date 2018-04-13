@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using cs_x86;
+using CxbxDebugger.CheatEngine;
 
 namespace CxbxDebugger
 {
@@ -24,6 +25,7 @@ namespace CxbxDebugger
 
         FileWatchManager fileWatchMan;
         DebugOutputManager debugStrMan;
+        CheatTable runtimeCheats;
 
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
@@ -64,6 +66,7 @@ namespace CxbxDebugger
 
             fileWatchMan = new FileWatchManager(clbBreakpoints);
             debugStrMan = new DebugOutputManager(lbDebug);
+            runtimeCheats = new CheatTable();
         }
 
         private void OnDisassemblyNavigation(object sender, InlineLinkClickedEventArgs e)
@@ -975,6 +978,32 @@ namespace CxbxDebugger
         private void cbDisAddr_SelectedIndexChanged(object sender, EventArgs e)
         {
             HandleDisasmGo();
+        }
+
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+            if( diagBrowseCT.ShowDialog() == DialogResult.OK)
+            {
+                string filename = diagBrowseCT.FileNames[0];
+
+                CheatTable ct_data = CheatTableReader.FromFile(filename);
+                if (ct_data != null)
+                {
+                    runtimeCheats = ct_data;
+
+                    listView1.BeginUpdate();
+                    listView1.Items.Clear();
+
+                    foreach (var code in ct_data.CodeEntires)
+                    {
+                        var li = listView1.Items.Add(code.ModuleName);
+                        li.SubItems.Add(code.Description);
+                        li.SubItems.Add(string.Format("{0:x8}", code.Address));
+                    }
+
+                    listView1.EndUpdate();
+                }
+            }
         }
     }
 }

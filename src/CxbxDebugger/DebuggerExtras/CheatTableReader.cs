@@ -18,9 +18,22 @@ namespace CxbxDebugger
 
         public class CheatTableReader
         {
+            public static CheatTable FromFile(string filename)
+            {
+                CheatTable ct = new CheatTable();
+
+                var reader = new CheatTableReader();
+                if( reader.Load(ct, filename) == CTReaderResult.Success )
+                {
+                    return ct;
+                }
+
+                return null;
+            }
+
             CheatTable CTRef;
 
-            public CTReaderResult Load(CheatTable ct, string filename)
+            private CTReaderResult Load(CheatTable ct, string filename)
             {
                 XmlDocument doc = new XmlDocument();
 
@@ -33,6 +46,7 @@ namespace CxbxDebugger
                     return CTReaderResult.LoadFailed;
                 }
 
+                CTRef = ct;
                 return ParseDocument(doc);
             }
 
@@ -270,7 +284,7 @@ namespace CxbxDebugger
                     }
                 }
 
-                CTRef.CodeList.Add(Entry);
+                CTRef.CodeEntires.Add(Entry);
             }
 
             private byte[] ParseBytes(XmlNode root)
