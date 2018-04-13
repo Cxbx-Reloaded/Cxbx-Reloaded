@@ -76,15 +76,16 @@ namespace CxbxDebugger
                 {
                     if (attr.Name == "CheatEngineTableVersion")
                     {
-                        switch (attr.Value)
-                        {
-                            case "21": // 
-                            case "24": // 
-                            case "26": // 6.7
-                                break;
+                        uint tableVersion = GetNumber(attr.Value);
 
-                            default:
-                                return CTReaderResult.UnsupportedVersion;
+                        if (tableVersion < 21)
+                        {
+                            return CTReaderResult.UnsupportedVersion;
+                        }
+
+                        if( tableVersion > 26 ) // 6.7
+                        {
+                            // warn?
                         }
                     }
                 }
