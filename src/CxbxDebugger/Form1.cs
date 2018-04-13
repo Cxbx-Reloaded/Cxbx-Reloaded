@@ -425,6 +425,11 @@ namespace CxbxDebugger
                 return frm.DebugAsk(ExceptionMessage);
             }
 
+            public void OnBreakpoint(DebuggerThread Thread, uint Address)
+            {
+                frm.DebugLog(string.Format("Breakpoing hit at 0x{0:X8}", Address));
+            }
+
             public void OnFileOpened(DebuggerMessages.FileOpened Info)
             {
                 if (Info.Succeeded)
@@ -980,6 +985,15 @@ namespace CxbxDebugger
             HandleDisasmGo();
         }
 
+        private static System.Drawing.Color MakeColor(uint RGB)
+        {
+            int r = (int)(RGB & 0xFF);
+            int g = (int)((RGB >> 8) & 0xFF);
+            int b = (int)((RGB >> 16) & 0xFF);
+
+            return System.Drawing.Color.FromArgb(r, g, b);
+        }
+
         private void button2_Click_1(object sender, EventArgs e)
         {
             if( diagBrowseCT.ShowDialog() == DialogResult.OK)
@@ -994,14 +1008,29 @@ namespace CxbxDebugger
                     listView1.BeginUpdate();
                     listView1.Items.Clear();
 
-                    foreach (var code in ct_data.CodeEntires)
+                    foreach (var code in ct_data.CheatEntries)
                     {
-                        var li = listView1.Items.Add(code.ModuleName);
+                        var li = listView1.Items.Add("");
                         li.SubItems.Add(code.Description);
                         li.SubItems.Add(string.Format("{0:x8}", code.Address));
+                        li.SubItems.Add(code.VariableType.ToString());
+
+                        li.Checked = code.LastState.Activated;
+                        li.ForeColor = MakeColor(code.Color);
                     }
 
                     listView1.EndUpdate();
+
+                    listView2.BeginUpdate();
+                    listView2.Items.Clear();
+
+                    foreach (var code in ct_data.CodeEntires)
+                    {
+                        var li = listView2.Items.Add(string.Format("{0} +{1:X}", code.ModuleName, code.ModuleNameOffset));
+                        li.SubItems.Add(code.Description);
+                    }
+
+                    listView2.EndUpdate();
                 }
             }
         }

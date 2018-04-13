@@ -88,10 +88,14 @@
             this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.listView2 = new System.Windows.Forms.ListView();
+            this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.statusBar.SuspendLayout();
@@ -712,6 +716,7 @@
             // 
             // tabTweaks
             // 
+            this.tabTweaks.Controls.Add(this.listView2);
             this.tabTweaks.Controls.Add(this.checkBox1);
             this.tabTweaks.Controls.Add(this.listView1);
             this.tabTweaks.Controls.Add(this.button2);
@@ -741,13 +746,14 @@
             // 
             this.listView1.CheckBoxes = true;
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader5,
+            this.columnHeader8,
             this.columnHeader4,
+            this.columnHeader7,
             this.columnHeader6});
             this.listView1.FullRowSelect = true;
-            this.listView1.Location = new System.Drawing.Point(144, 6);
+            this.listView1.Location = new System.Drawing.Point(144, 9);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(598, 181);
+            this.listView1.Size = new System.Drawing.Size(349, 181);
             this.listView1.TabIndex = 1;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -755,17 +761,55 @@
             // columnHeader4
             // 
             this.columnHeader4.Text = "Description";
-            this.columnHeader4.Width = 200;
-            // 
-            // columnHeader5
-            // 
-            this.columnHeader5.Text = "Module";
-            this.columnHeader5.Width = 100;
+            this.columnHeader4.Width = 150;
             // 
             // columnHeader6
             // 
-            this.columnHeader6.Text = "Offset";
-            this.columnHeader6.Width = 150;
+            this.columnHeader6.Text = "Type";
+            this.columnHeader6.Width = 80;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(6, 35);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(102, 17);
+            this.checkBox1.TabIndex = 3;
+            this.checkBox1.Text = "Apply on launch";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // listView2
+            // 
+            this.listView2.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader10,
+            this.columnHeader11});
+            this.listView2.FullRowSelect = true;
+            this.listView2.Location = new System.Drawing.Point(499, 9);
+            this.listView2.Name = "listView2";
+            this.listView2.Size = new System.Drawing.Size(243, 181);
+            this.listView2.TabIndex = 4;
+            this.listView2.UseCompatibleStateImageBehavior = false;
+            this.listView2.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader10
+            // 
+            this.columnHeader10.Text = "Address";
+            this.columnHeader10.Width = 200;
+            // 
+            // columnHeader11
+            // 
+            this.columnHeader11.Text = "Name";
+            this.columnHeader11.Width = 200;
+            // 
+            // columnHeader7
+            // 
+            this.columnHeader7.Text = "Address";
+            this.columnHeader7.Width = 150;
+            // 
+            // columnHeader8
+            // 
+            this.columnHeader8.Text = "Active";
+            this.columnHeader8.Width = 50;
             // 
             // txDisassembly
             // 
@@ -781,16 +825,6 @@
             this.txDisassembly.Size = new System.Drawing.Size(742, 149);
             this.txDisassembly.TabIndex = 1;
             this.txDisassembly.Text = "";
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(6, 35);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(102, 17);
-            this.checkBox1.TabIndex = 3;
-            this.checkBox1.Text = "Apply on launch";
-            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -909,10 +943,14 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.OpenFileDialog diagBrowseCT;
         private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ColumnHeader columnHeader6;
         private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.ListView listView2;
+        private System.Windows.Forms.ColumnHeader columnHeader10;
+        private System.Windows.Forms.ColumnHeader columnHeader11;
+        private System.Windows.Forms.ColumnHeader columnHeader7;
+        private System.Windows.Forms.ColumnHeader columnHeader8;
     }
 }
 

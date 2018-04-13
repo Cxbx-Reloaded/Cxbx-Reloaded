@@ -598,8 +598,16 @@ namespace CxbxDebugger
                     break;
 
                 case ExceptionCode.Breakpoint:
-                    // TODO Handle
-
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
+                            {
+                                Event.OnBreakpoint(Thread, (uint)DebugInfo.ExceptionRecord.ExceptionAddress);
+                            }
+                        }
+                    }
                     break;
 
                 case ExceptionCode.SingleStep:
