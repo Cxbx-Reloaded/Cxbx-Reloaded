@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheatEngineManager.cs" />
     <Compile Include="DebuggerExtras\CheatTable.cs" />
     <Compile Include="DebuggerExtras\CheatTableReader.cs" />
     <Compile Include="DebuggerSymbols\Kernel\KernelSymbolProvider.cs" />

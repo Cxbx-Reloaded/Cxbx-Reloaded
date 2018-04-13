@@ -25,7 +25,7 @@ namespace CxbxDebugger
 
         FileWatchManager fileWatchMan;
         DebugOutputManager debugStrMan;
-        CheatTable runtimeCheats;
+        CheatEngineManager cheatMan;
 
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
@@ -66,7 +66,7 @@ namespace CxbxDebugger
 
             fileWatchMan = new FileWatchManager(clbBreakpoints);
             debugStrMan = new DebugOutputManager(lbDebug);
-            runtimeCheats = new CheatTable();
+            cheatMan = new CheatEngineManager();
         }
 
         private void OnDisassemblyNavigation(object sender, InlineLinkClickedEventArgs e)
@@ -1048,7 +1048,7 @@ namespace CxbxDebugger
                 CheatTable ct_data = CheatTableReader.FromFile(filename);
                 if (ct_data != null)
                 {
-                    runtimeCheats = ct_data;
+                    cheatMan.Cheats = ct_data;
 
                     listView1.BeginUpdate();
                     listView1.Items.Clear();
@@ -1092,37 +1092,7 @@ namespace CxbxDebugger
             {
                 int selected = listView1.SelectedIndices[0];
 
-                CheatEntry entry = runtimeCheats.CheatEntries[selected];
-
-                int addr = 0;
-                if (!ReadHexInt(entry.Address, ref addr))
-                {
-                    return;
-                }
-
-                string printed_value = "<failed to read>";
-
-                switch (entry.VariableType)
-                {
-                    case Variable.Byte:
-                        {
-                            var data = DebugThreads[0].OwningProcess.ReadMemoryBlock(new IntPtr(addr), 1);
-
-                            if (data != null)
-                            {
-                                if( entry.ShowAsHex )
-                                {
-                                    printed_value = string.Format("0x{0:x}", data[0]);
-                                }
-                                else
-                                {
-                                    printed_value = string.Format("{0}", data[0]);
-                                }
-                                
-                            }
-                            break;
-                        }
-                }
+                string printed_value = cheatMan.Read(DebugThreads[0].OwningProcess, selected);
 
                 textBox1.Text = printed_value;
             }
@@ -1134,29 +1104,7 @@ namespace CxbxDebugger
             {
                 int selected = listView1.SelectedIndices[0];
 
-                CheatEntry entry = runtimeCheats.CheatEntries[selected];
 
-                int addr = 0;
-                if (!ReadHexInt(entry.Address, ref addr))
-                {
-                    return;
-                }
-
-                string src = textBox1.Text;
-
-                switch (entry.VariableType)
-                {
-                    case Variable.Byte:
-                        {
-                            uint byte_val = 0;
-                            ReadAddress(src, ref byte_val);
-                            byte val = (byte)(byte_val & 0xFF);
-
-                            DebugThreads[0].OwningProcess.WriteMemory(new IntPtr(addr), val);
-                            
-                            break;
-                        }
-                }
             }
         }
     }

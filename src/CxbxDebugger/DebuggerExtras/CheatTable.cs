@@ -21,7 +21,6 @@ namespace CxbxDebugger
             Byte,
             Bytes2,
             Bytes4,
-            Bytes8,
             Float,
             Double,
             String,
