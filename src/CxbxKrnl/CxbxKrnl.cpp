@@ -579,6 +579,7 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
+		printf("Patch CPU Frequency (rdtsc): %s\n", g_PatchCpuFrequency == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -646,6 +647,38 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	}
 
 	return 0;
+}
+
+void PatchPerformanceFrequency()
+{
+	DWORD xboxFrequency = 733333333; // 733mhz
+	LARGE_INTEGER hostFrequency;
+	QueryPerformanceFrequency(&hostFrequency);
+
+	DbgPrintf("INIT: Patching FS Register Accesses\n");
+	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
+
+	// Iterate through each CODE section
+	for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
+			continue;
+		}
+
+		printf("INIT: Searching for xbox performance frequency in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (xbaddr addr = startAddr; addr < endAddr; addr++)
+		{
+			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
+				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
+				*(uint32*)(addr + 1) = (uint32)hostFrequency.QuadPart;
+				addr += sizeof(DWORD);
+				break;
+			}
+		}
+	}
+
+	printf("INIT: Done patching xbox performance frequency\n");
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -1039,6 +1072,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
+		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
+		g_PatchCpuFrequency = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
@@ -1203,6 +1238,10 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
+
+	if (g_PatchCpuFrequency) {
+		PatchPerformanceFrequency();
+	}
 
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();

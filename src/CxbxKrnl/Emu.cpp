@@ -67,6 +67,7 @@ bool g_XInputEnabled = false;
 bool g_DisablePixelShaders = false;
 bool g_UncapFramerate = false;
 bool g_UseAllCores = false;
+bool g_PatchCpuFrequency = false;
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 LARGE_INTEGER	HostSystemTimeDelta = {};
