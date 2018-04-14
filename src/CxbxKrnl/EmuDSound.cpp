@@ -1608,30 +1608,40 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
             hRet = DSoundBufferSelectionT(pThis)->Stop();
             DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
         } else {
+            bool isLooping;
+            if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
+                isLooping = true;
+            } else {
+                isLooping = false;
+            }
             if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
                 // TODO: How to mock up "release phase"?
             }
             if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
                 // Release from loop region.
-                DWORD dwValue, dwStatus;
-                if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-                    pThis->EmuDirectSoundBuffer8Region->GetStatus(&dwStatus);
+                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
+            }
+            DWORD dwValue, dwStatus;
+            pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
 
-                    DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8,
-                                                    pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
+            if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
 
-                    hRet = pThis->EmuDirectSoundBuffer8Region->Stop();
-                    pThis->EmuDirectSoundBuffer8Region->GetCurrentPosition(&dwValue, nullptr);
-                    dwValue += DSoundBufferGetPCMBufferSize(pThis->EmuFlags, pThis->EmuRegionLoopStartOffset + pThis->EmuRegionPlayStartOffset);
-                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &dwValue);
+                hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-                    if (dwStatus & DSBSTATUS_PLAYING) {
-                        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-                    }
+                DSoundBufferResizeSet(pThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize, 0);
 
-                    // Finally, release region buffer.
-                    DSoundBufferRegionRelease(pThis);
+                dwValue += pThis->EmuRegionPlayStartOffset;
+                if (isLooping) {
+                    dwValue += pThis->EmuRegionLoopStartOffset;
                 }
+
+                pThis->EmuBufferToggle = X_DSB_TOGGLE_DEFAULT;
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+            }
+
+            if (dwStatus & DSBSTATUS_PLAYING) {
+                pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
             }
         }
     }
