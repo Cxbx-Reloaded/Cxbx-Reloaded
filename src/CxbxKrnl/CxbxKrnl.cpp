@@ -669,7 +669,7 @@ void PatchPerformanceFrequency()
 		{
 			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
 				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
-				*(uint32*)(addr + 1) = (uint32)hostFrequency.QuadPart;
+				*(uint32*)(addr) = (uint32)hostFrequency.QuadPart;
 				addr += sizeof(DWORD);
 				break;
 			}
