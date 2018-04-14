@@ -654,8 +654,6 @@ void PatchPerformanceFrequency()
 	DWORD xboxFrequency = 733333333; // 733mhz
 	LARGE_INTEGER hostFrequency;
 	QueryPerformanceFrequency(&hostFrequency);
-
-	DbgPrintf("INIT: Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 
 	// Iterate through each CODE section
