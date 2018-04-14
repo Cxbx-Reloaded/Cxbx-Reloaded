@@ -51,7 +51,7 @@ namespace xboxkrnl {
 
 
 #ifndef _DEBUG_TRACE
-//#define _DEBUG_TRACE
+#define _DEBUG_TRACE
 #include "Logging.h"
 #undef _DEBUG_TRACE
 #else
