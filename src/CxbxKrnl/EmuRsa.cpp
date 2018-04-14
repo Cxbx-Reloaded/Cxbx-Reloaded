@@ -33,11 +33,11 @@
 // ******************************************************************
 
 // Acknowledgment:
-// This barebones rsa implementation is directly borrowed from the xbedump tool of XQEMU (GPLv2 license)
+// This rsa implementation is directly borrowed from the xbedump tool of XQEMU (GPLv2 license)
 // https://github.com/xqemu/xbedump
 
-#include "CxbxKrnl\EmuRsa.h"
-#include "..\CxbxKrnl\Emu.h" // For EmuWarning
+#include "EmuRsa.h"
+#include "Emu.h" // For EmuWarning
 #include <cstring>
 
 
@@ -164,7 +164,6 @@ void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_
 	giant e = newgiant(GIANT_INFINITY);
 	giant sig = newgiant(GIANT_INFINITY);
 
-	int count;
 	gigimport(sig, c_number, 256);
 
 	gigimport(n, key.KeyData.Modulus, 256);

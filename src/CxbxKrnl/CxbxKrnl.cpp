@@ -66,6 +66,7 @@ namespace xboxkrnl
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
+#include "EmuSha.h" // For the SHA1 functions
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
@@ -825,6 +826,26 @@ void CxbxKrnlMain(int argc, char* argv[])
 			EmuWarning("Missing RSA key. Unable to verify xbe signature");
 		}
 
+		// Check the integrity of the xbe sections
+		for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+			uint32 RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+			if (RawSize == 0) {
+				continue;
+			}
+			UCHAR SHADigest[A_SHA_DIGEST_LEN];
+			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
+			// temp
+			uint08* temp = (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest;
+
+			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
+				EmuWarning("SHA hash of section %s doesn't match, possible section corruption",
+					(PCHAR)((CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].dwSectionNameAddr));
+			}
+			else {
+				printf("SHA hash check of section %s successful", (PCHAR)((CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].dwSectionNameAddr));
+			}
+		}
+
 		// Detect XBE type :
 		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
@@ -925,13 +946,12 @@ void CxbxKrnlMain(int argc, char* argv[])
 void LoadXboxKeys(std::string path)
 {
 	std::string keys_path = path + "\\keys.bin";
-	std::string RSA_key_path = path + "\\RSAkey.bin";
 
 	// Attempt to open Keys.bin
 	FILE* fp = fopen(keys_path.c_str(), "rb");
 
 	if (fp != nullptr) {
-		// Determine the size of Keys.bin
+		// Determine size of Keys.bin
 		xboxkrnl::XBOX_KEY_DATA keys[2];
 		fseek(fp, 0, SEEK_END);
 		long size = ftell(fp);
@@ -943,49 +963,17 @@ void LoadXboxKeys(std::string path)
 
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
-		} else {
+		}
+		else {
 			EmuWarning("Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
-	}
-	else
-	{
-		// keys.bin could not be loaded
-		EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
+		return;
 	}
 
-	// Now load the RSA key data if available
-	fp = fopen(RSA_key_path.c_str(), "rb");
-
-	if (fp != nullptr) {
-		// Determine the size of RSAkey.bin
-		fseek(fp, 0, SEEK_END);
-		long size = ftell(fp);
-		rewind(fp);
-
-		// Ensure that RSAkey.bin is 284 bytes and has a valid magic signature
-		if (size == 284) {
-			UCHAR temp[284] = { 0 };
-			fread(temp, 284, 1, fp);
-			if (!memcmp(temp, "RSA1", 4)) {
-				memcpy(xboxkrnl::XePublicKeyData, temp, 284);
-			}
-			else {
-				EmuWarning("RSAkey.bin has an invalid magic signature. Should be \"RSA1\"");
-			}
-		}
-		else {
-			EmuWarning("RSAkey.bin has an incorrect filesize. Should be 284 bytes");
-		}
-
-		fclose(fp);
-	}
-	else
-	{
-		// RSAkey.bin could not be loaded
-		EmuWarning("Failed to load RSAkey.bin. Cxbx-Reloaded will be unable to verify the integrity of the loaded xbe");
-	}
+	// If we didn't already exit the function, keys.bin could not be loaded
+	EmuWarning("Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
 __declspec(noreturn) void CxbxKrnlInit

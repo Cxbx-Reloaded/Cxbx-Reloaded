@@ -49,7 +49,6 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
-#include "EmuSha.h" // For the SHA1 functions
 
 // ******************************************************************
 // * 0x0146 - XeImageFileName
@@ -105,22 +104,6 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 			// Increment the head/tail page reference counters
 			(*Section->HeadReferenceCount)++;
 			(*Section->TailReferenceCount)++;
-		}
-
-		// Check the integrity of the loaded section
-		SHA_CTX Context;
-		UCHAR SHADigest[A_SHA_DIGEST_LEN];
-
-		A_SHAInit(&Context);
-		A_SHAUpdate(&Context, (PUCHAR)Section->FileSize, sizeof(ULONG));
-		A_SHAUpdate(&Context, (PUCHAR)Section->VirtualAddress, Section->FileSize);
-		A_SHAFinal(&Context, SHADigest);
-
-		if (memcmp(SHADigest, Section->ShaHash, A_SHA_DIGEST_LEN) != 0) {
-			EmuWarning("SHA hash of section %s doesn't match, possible section corruption", Section->SectionName);
-		}
-		else {
-			printf("SHA hash check of section %s successful", Section->SectionName);
 		}
 
 		// Increment the reference count

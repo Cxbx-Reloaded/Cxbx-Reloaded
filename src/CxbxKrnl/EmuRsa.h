@@ -49,10 +49,10 @@ typedef struct _RSA_PUBLIC_KEY
 			unsigned int ModulusSize;	 // 255 (bytes in the Modulus)
 			unsigned char Exponent[4];
 			unsigned char Modulus[256];  // Bit endian style
-			unsigned char Padding[8];    // Padding? Only seen as zero
+			unsigned char Unknown[8];    // ?
 		}KeyData;
 	};
-}RSA_PUBLIC_KEY;
+} RSA_PUBLIC_KEY;
 
 #pragma pack()
 

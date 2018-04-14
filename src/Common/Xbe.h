@@ -241,6 +241,9 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_TLS;
 
+		// Xbe signature header
+		uint08* m_SignatureHeader;
+
         // Xbe section names, stored null terminated
         char (*m_szSectionName)[10];
 

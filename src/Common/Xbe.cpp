@@ -377,6 +377,17 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
         printf("OK\n");
     }
 
+	// read the header to calculate the rsa/sha1 signature against
+	{
+		printf("Xbe::Xbe: Reading Signature Header...");
+
+		fseek(XbeFile, sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature), SEEK_SET);
+		m_SignatureHeader = new uint08[m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature))];
+		fread(m_SignatureHeader, m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature)), 1, XbeFile);
+
+		printf("OK\n");
+	}
+
 cleanup:
 
     if (HasError())
@@ -408,6 +419,7 @@ Xbe::~Xbe()
     delete[] m_szSectionName;
     delete[] m_SectionHeader;
     delete[] m_HeaderEx;
+	delete[] m_SignatureHeader;
 }
 
 // export to Xbe file
@@ -810,16 +822,12 @@ const wchar_t *Xbe::GetUnicodeFilenameAddr()
 bool Xbe::CheckXbeSignature()
 {
 	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
-	SHA_CTX Context;
 	UCHAR SHADigest[A_SHA_DIGEST_LEN];
 	unsigned char crypt_buffer[256];
 	RSA_PUBLIC_KEY key;
 	memcpy(key.Default, (void*)xboxkrnl::XePublicKeyData, 284);
 
-	A_SHAInit(&Context);
-	A_SHAUpdate(&Context, (PUCHAR)&HeaderDigestSize, sizeof(DWORD));
-	A_SHAUpdate(&Context, (PUCHAR)&m_Header.dwBaseAddr, HeaderDigestSize);
-	A_SHAFinal(&Context, SHADigest);
+	CalcSHA1Hash(SHADigest, m_SignatureHeader, HeaderDigestSize);
 
 	RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, key);
 	if (!Verifyhash(SHADigest, crypt_buffer, key)) {
