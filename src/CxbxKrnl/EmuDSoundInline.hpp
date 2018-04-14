@@ -478,6 +478,95 @@ inline void DSoundBufferRelease(
     }
 }
 
+inline void DSoundBufferResizeSet(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    DWORD                       dwPlayFlags,
+    HRESULT                    &hRet,
+    DWORD                       Xb_dwStartOffset,
+    DWORD                       Xb_dwByteLength,
+    DWORD                       Host_dwByteLength) {
+
+    if (Host_dwByteLength != 0) {
+        pThis->EmuBufferDesc.dwBufferBytes = Host_dwByteLength;
+    } else {
+        pThis->EmuBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_dwByteLength);
+    }
+
+    DWORD refCount;
+    LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
+    LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
+
+    DSoundBufferReCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuDirectSound3DBuffer8,
+                            pDSBufferNew, pDS3DBufferNew);
+
+    // release old buffer
+    DSoundBufferRelease(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8, refCount);
+
+    pThis->EmuDirectSoundBuffer8 = pDSBufferNew;
+    pThis->EmuDirectSound3DBuffer8 = pDS3DBufferNew;
+
+    if (refCount) {
+        while (pThis->EmuDirectSoundBuffer8->AddRef() < refCount);
+    }
+
+    hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
+                                                nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to lock region buffer!");
+    }
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->Host_lock,
+                        pThis->X_BufferCache,
+                        Xb_dwStartOffset,
+                        Xb_dwByteLength,
+                        0);
+}
+
+inline void DSoundBufferResizeCheckThenSet(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    DWORD                       dwPlayFlags,
+    HRESULT                    &hRet) {
+
+
+    // Process Play/Loop Region buffer (Region Buffer creation can be only place inside Play function
+    DWORD Xb_dwByteLength;
+    DWORD Xb_dwStartOffset;
+
+    if ((dwPlayFlags & X_DSBPLAY_LOOPING) > 0) {
+        Xb_dwStartOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
+
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionLoopLength == 0) {
+            if (pThis->EmuRegionPlayLength != 0) {
+                Xb_dwByteLength = pThis->EmuRegionPlayLength;
+            } else {
+                Xb_dwByteLength = pThis->X_BufferCacheSize - Xb_dwStartOffset;
+            }
+        } else {
+            Xb_dwByteLength = pThis->EmuRegionLoopLength;
+        }
+    } else {
+        Xb_dwStartOffset = pThis->EmuRegionPlayStartOffset;
+
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionPlayLength != 0) {
+            Xb_dwByteLength = pThis->EmuRegionPlayLength;
+        } else {
+            Xb_dwByteLength = pThis->X_BufferCacheSize - Xb_dwStartOffset;
+        }
+    }
+
+    DWORD pcmSizeNew = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_dwByteLength);
+
+    // NOTE: Test case JSRF, if we allow to re-alloc without checking allocated buffer size.
+    // Then it is somehow binded to IDirectSound_SetPosition control for any allocated audio afterward.
+    if (pcmSizeNew != pThis->EmuBufferDesc.dwBufferBytes) {
+        DSoundBufferResizeSet(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength, pcmSizeNew);
+    }
+}
+
 inline void DSoundBufferReplace(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
     DSBUFFERDESC               &DSBufferDesc,
