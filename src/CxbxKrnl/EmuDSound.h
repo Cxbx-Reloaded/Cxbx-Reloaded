@@ -322,7 +322,7 @@ struct X_CDirectSoundBuffer
 
     BYTE                    UnknownB[0x0C];     // Offset: 0x24
     LPVOID                  X_BufferCache;      // Offset: 0x28
-    DSBUFFERDESC*           EmuBufferDesc;      // Offset: 0x2C
+    DSBUFFERDESC            EmuBufferDesc;      // Offset: 0x2C
     /*LPVOID                  EmuLockPtr1;        // Offset: 0x30
     DWORD                   EmuLockBytes1;      // Offset: 0x34
     LPVOID                  EmuLockPtr2;        // Offset: 0x38
@@ -469,7 +469,7 @@ class X_CDirectSoundStream
         LPDIRECTSOUNDBUFFER8                    EmuDirectSoundBuffer8;
         LPDIRECTSOUND3DBUFFER8                  EmuDirectSound3DBuffer8;
         PVOID                                   X_BufferCache; // Not really needed...
-        LPDSBUFFERDESC                          EmuBufferDesc;
+        DSBUFFERDESC                            EmuBufferDesc;
         PVOID                                   EmuLockPtr1;
         DWORD                                   EmuLockBytes1;
         PVOID                                   EmuLockPtr2;

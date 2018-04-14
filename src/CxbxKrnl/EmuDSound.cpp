@@ -525,8 +525,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                     int bufPlayed = writePos - buffer->rangeStart;
 
                     // Correct it if buffer was playing and is at beginning.
-                    if (bufPlayed < 0 && (buffer->isPlayed || (writePos + pThis->EmuBufferDesc->dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
-                        bufPlayed = pThis->EmuBufferDesc->dwBufferBytes - (bufPlayed * -1);
+                    if (bufPlayed < 0 && (buffer->isPlayed || (writePos + pThis->EmuBufferDesc.dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
+                        bufPlayed = pThis->EmuBufferDesc.dwBufferBytes - (bufPlayed * -1);
                     }
 
                     if (bufPlayed >= 0) {
@@ -965,7 +965,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         hRet = DSERR_OUTOFMEMORY;
     } else {
 
-        DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+        DSBUFFERDESC DSBufferDesc = { 0 };
 
         //TODO: Find out the cause for DSBCAPS_MUTE3DATMAXDISTANCE to have invalid arg.
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
@@ -979,22 +979,23 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
             pdsbd->dwFlags &= ~DSBCAPS_MUTE3DATMAXDISTANCE;
         }
 
-        pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
-        pDSBufferDesc->lpwfxFormat = nullptr;
+        DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+        DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
+        DSBufferDesc.lpwfxFormat = nullptr;
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
 
-        DSoundBufferSetDefault((*ppBuffer), pDSBufferDesc, 0, 0);
+        DSoundBufferSetDefault((*ppBuffer), DSBufferDesc, 0, 0);
         (*ppBuffer)->Host_lock = { 0 };
 
-        GeneratePCMFormat(pDSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         DSoundBufferRegionSetDefault(*ppBuffer);
 
-        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, pDSBufferDesc->dwBufferBytes);
+        GeneratePCMFormat((*ppBuffer)->EmuBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
 
-        DSoundBufferCreate(pDSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+
+        DSoundBufferCreate(&(*ppBuffer)->EmuBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
         }
@@ -1075,9 +1076,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
                              pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8, pThis->EmuFlags, pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
-    DWORD pcmSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwBufferBytes);
-
-    pThis->EmuDirectSoundBuffer8->Lock(0, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1, &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, DSBLOCK_ENTIREBUFFER);
+    pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc.dwBufferBytes, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1, &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, DSBLOCK_ENTIREBUFFER);
 
     memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
 
@@ -1349,8 +1348,8 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
                 }
             }
 
-            if (pThis->EmuBufferDesc->lpwfxFormat != nullptr) {
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+                free(pThis->EmuBufferDesc.lpwfxFormat);
             }
             if (pThis->X_BufferCache != xbnullptr) {
                 free(pThis->X_BufferCache);
@@ -1362,7 +1361,6 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             if (pThis->EmuDirectSound3DBuffer8Region != nullptr) {
                 pThis->EmuDirectSound3DBuffer8Region->Release();
             }
-            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1509,61 +1507,70 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     HRESULT hRet = DS_OK;
 
     // Process Play/Loop Region buffer (Region Buffer creation can be only place inside Play function
-    if (pThis->EmuDirectSoundBuffer8Region == nullptr && pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
-        DWORD Xb_byteLength;
-        DWORD Xb_startOffset;
-        LPDSBUFFERDESC emuBufferDescRegion = (LPDSBUFFERDESC)malloc(sizeof(DSBUFFERDESC));
-        memcpy_s(emuBufferDescRegion, sizeof(DSBUFFERDESC), pThis->EmuBufferDesc, sizeof(DSBUFFERDESC));
+    DWORD Xb_byteLength;
+    DWORD Xb_startOffset;
 
-        switch (pThis->EmuBufferToggle) {
-            case X_DSB_TOGGLE_LOOP:
-                Xb_startOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
+    if ((dwFlags & X_DSBPLAY_LOOPING) > 0) {
+        Xb_startOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
 
-                // Must check for zero length, then apply true length.
-                if (pThis->EmuRegionLoopLength == 0) {
-                    if (pThis->EmuRegionPlayLength != 0) {
-                        Xb_byteLength = pThis->EmuRegionPlayLength;
-                    } else {
-                        Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
-                    }
-                } else {
-                    Xb_byteLength = pThis->EmuRegionLoopLength;
-                }
-                break;
-            case X_DSB_TOGGLE_PLAY:
-                Xb_startOffset = pThis->EmuRegionPlayStartOffset;
-
-                // Must check for zero length, then apply true length.
-                if (pThis->EmuRegionPlayLength != 0) {
-                    Xb_byteLength = pThis->EmuRegionPlayLength;
-                } else {
-                    Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
-                }
-                break;
-            default:
-                free(emuBufferDescRegion);
-                CxbxKrnlCleanup("Unknown TOGGLE region for DirectSoundBuffer class usage.");
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionLoopLength == 0) {
+            if (pThis->EmuRegionPlayLength != 0) {
+                Xb_byteLength = pThis->EmuRegionPlayLength;
+            } else {
+                Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
+            }
+        } else {
+            Xb_byteLength = pThis->EmuRegionLoopLength;
         }
-        emuBufferDescRegion->dwBufferBytes = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_byteLength);
+    } else {
+        Xb_startOffset = pThis->EmuRegionPlayStartOffset;
 
-        DSoundBufferCreate(emuBufferDescRegion, pThis->EmuDirectSoundBuffer8Region);
-        if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-            DSound3DBufferCreate(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSound3DBuffer8Region);
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionPlayLength != 0) {
+            Xb_byteLength = pThis->EmuRegionPlayLength;
+        } else {
+            Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
         }
-        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSoundBuffer8Region,
-                             pThis->EmuDirectSound3DBuffer8, pThis->EmuDirectSound3DBuffer8Region);
+    }
+    DWORD pcmSizeNew = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_byteLength);
 
-        hRet = pThis->EmuDirectSoundBuffer8Region->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
+    // NOTE: Test case JSRF, if we allow to re-alloc without checking allocated buffer size.
+    // Then it is somehow binded to IDirectSound_SetPosition control for any allocated audio afterward.
+    if (pcmSizeNew != pThis->EmuBufferDesc.dwBufferBytes) {
+
+        pThis->EmuBufferDesc.dwBufferBytes = pcmSizeNew;
+
+        DWORD refCount;
+        LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
+        LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
+
+        DSoundBufferReCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuDirectSound3DBuffer8,
+                             pDSBufferNew, pDS3DBufferNew);
+
+        // release old buffer
+        DSoundBufferRelease(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8, refCount);
+
+        pThis->EmuDirectSoundBuffer8 = pDSBufferNew;
+        pThis->EmuDirectSound3DBuffer8 = pDS3DBufferNew;
+
+        if (refCount) {
+            while (pThis->EmuDirectSoundBuffer8->AddRef() < refCount);
+        }
+
+        hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                                         nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("Unable to lock region buffer!");
         }
-        if (pThis->Host_lock.pLockPtr1 != nullptr) {
-            DSoundBufferOutputXBtoHost(pThis->EmuFlags, emuBufferDescRegion, (PVOID)((PBYTE)pThis->X_BufferCache + Xb_startOffset), Xb_byteLength, pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1);
-            pThis->EmuDirectSoundBuffer8Region->Unlock(pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1, nullptr, 0);
-            pThis->Host_lock.pLockPtr1 = nullptr;
-        }
-        free(emuBufferDescRegion);
+        DSoundGenericUnlock(pThis->EmuFlags,
+                            pThis->EmuDirectSoundBuffer8,
+                            pThis->EmuBufferDesc,
+                            pThis->Host_lock,
+                            pThis->X_BufferCache,
+                            Xb_startOffset,
+                            Xb_byteLength,
+                            0);
     }
 
     if (dwFlags & X_DSBPLAY_FROMSTART) {
@@ -1743,7 +1750,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC DSBufferDesc = { 0 };
 
 
     DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
@@ -1751,18 +1758,19 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (pdssd->dwFlags & (~dwAcceptableMask)) {
         EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
     }
-    pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-    //pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-    pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
-    pDSBufferDesc->lpwfxFormat = nullptr;
+    DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+    //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+    DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
+    DSBufferDesc.lpwfxFormat = nullptr;
 
-    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, 0, DSBPLAY_LOOPING);
-
-    GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+    GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
 
     // Allocate at least 5 second worth of bytes in PCM format.
-    pDSBufferDesc->dwBufferBytes = pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
-    (*ppStream)->Host_dwTriggerRange = (pDSBufferDesc->lpwfxFormat->nSamplesPerSec / pDSBufferDesc->lpwfxFormat->wBitsPerSample);
+    DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
+
+    DSoundBufferSetDefault((*ppStream), DSBufferDesc, 0, DSBPLAY_LOOPING);
+
+    (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
 
     (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
     (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
@@ -1774,8 +1782,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
-    DSoundBufferCreate(pDSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
-    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
+    DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+    if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
         DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
     }
         // cache this sound stream
@@ -1929,11 +1937,10 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
                 }
             }
 
-            if (pThis->EmuBufferDesc->lpwfxFormat != NULL) {
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+                free(pThis->EmuBufferDesc.lpwfxFormat);
             }
             // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
-            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -2033,8 +2040,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 }
                 packet_input.rangeStart = pThis->Host_dwWriteOffsetNext;
                 pThis->Host_dwWriteOffsetNext += packet_input.xmp_data.dwMaxSize;
-                if (pThis->EmuBufferDesc->dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
-                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc->dwBufferBytes;
+                if (pThis->EmuBufferDesc.dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
+                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc.dwBufferBytes;
                 }
                 packet_input.isWritten = false;
                 packet_input.isPlayed = false;

@@ -53,10 +53,10 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
 #define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
 
-void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
+void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
 
-        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes, (uint8_t*)pPCaudioPtr, pDSBufferDesc->lpwfxFormat->nChannels);
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes, (uint8_t*)pPCaudioPtr, DSBufferDesc.lpwfxFormat->nChannels);
 
     // PCM format, no changes requirement.
     } else {
@@ -132,7 +132,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 }
 
 inline void GenerateXboxBufferCache(
-    DSBUFFERDESC*   pDSBufferDesc,
+    DSBUFFERDESC   &DSBufferDesc,
     DWORD          &dwEmuFlags,
     DWORD           X_BufferSizeRequest,
     LPVOID*         X_BufferCache,
@@ -160,7 +160,7 @@ inline void GenerateXboxBufferCache(
 }
 
 inline void GeneratePCMFormat(
-    DSBUFFERDESC*   pDSBufferDesc,
+    DSBUFFERDESC   &DSBufferDesc,
     LPCWAVEFORMATEX lpwfxFormat,
     DWORD          &dwEmuFlags,
     DWORD           X_BufferSizeRequest,
@@ -172,7 +172,7 @@ inline void GeneratePCMFormat(
 
     // convert from Xbox to PC DSound
     {
-        pDSBufferDesc->dwReserved = 0;
+        DSBufferDesc.dwReserved = 0;
 
         if (lpwfxFormat != xbnullptr) {
 
@@ -183,14 +183,14 @@ inline void GeneratePCMFormat(
             // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
             // in the first place, FYI.
 
-            if (pDSBufferDesc->lpwfxFormat == nullptr) {
-                pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            if (DSBufferDesc.lpwfxFormat == nullptr) {
+                DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
-            memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
 
             dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
 
-            switch (pDSBufferDesc->lpwfxFormat->wFormatTag) {
+            switch (DSBufferDesc.lpwfxFormat->wFormatTag) {
                 case WAVE_FORMAT_PCM:
                     dwEmuFlags |= DSB_FLAG_PCM;
 
@@ -198,12 +198,12 @@ inline void GeneratePCMFormat(
                     //In other word, this is a workaround to fix title mistake...
                     checkAvgBps = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
                     if (lpwfxFormat->nAvgBytesPerSec < checkAvgBps) {
-                        pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = checkAvgBps;
+                        DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = checkAvgBps;
                     }
                     break;
                 case WAVE_FORMAT_XBOX_ADPCM:
                     dwEmuFlags |= DSB_FLAG_XADPCM;
-                    XADPCM2PCMFormat(pDSBufferDesc->lpwfxFormat);
+                    XADPCM2PCMFormat(DSBufferDesc.lpwfxFormat);
                     break;
                 default:
                     dwEmuFlags |= DSB_FLAG_PCM_UNKNOWN;
@@ -222,54 +222,54 @@ inline void GeneratePCMFormat(
 
             // TODO: A better response to this scenario if possible.
 
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
+            DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
 
             //memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
             //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
 
-            pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-            pDSBufferDesc->lpwfxFormat->nChannels = 2;
-            pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 22050;
-            pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
-            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
-            pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
-            pDSBufferDesc->lpwfxFormat->cbSize = sizeof(WAVEFORMATEX);
+            DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+            DSBufferDesc.lpwfxFormat->nChannels = 2;
+            DSBufferDesc.lpwfxFormat->nSamplesPerSec = 22050;
+            DSBufferDesc.lpwfxFormat->nBlockAlign = 4;
+            DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
+            DSBufferDesc.lpwfxFormat->wBitsPerSample = 16;
+            DSBufferDesc.lpwfxFormat->cbSize = sizeof(WAVEFORMATEX);
 
-            pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-            pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
-            pDSBufferDesc->dwBufferBytes = 3 * pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;
+            DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+            DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
+            DSBufferDesc.dwBufferBytes = 3 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
 
-            //        pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
+            //        DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
 
-            ////    pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
-            //        pDSBufferDesc->lpwfxFormat->nChannels = 1;
-            //        pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-            //        pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 22050;
-            //        pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
-            //        pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = 4 * 22050;
-            //        pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
+            ////    DSBufferDesc.lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
+            //        DSBufferDesc.lpwfxFormat->nChannels = 1;
+            //        DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+            //        DSBufferDesc.lpwfxFormat->nSamplesPerSec = 22050;
+            //        DSBufferDesc.lpwfxFormat->nBlockAlign = 4;
+            //        DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = 4 * 22050;
+            //        DSBufferDesc.lpwfxFormat->wBitsPerSample = 16;
 
             // Give this buffer 3 seconds of data if needed
             /*if(pdsbd->dwBufferBytes == 0) {
-                pDSBufferDesc->dwBufferBytes = 3 * pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;
+                DSBufferDesc.dwBufferBytes = 3 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
             }*/
         }
 
-        pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
+        DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     }
 
     // sanity check
     if (!bIsSpecial) {
-        if (pDSBufferDesc->lpwfxFormat->nBlockAlign != (pDSBufferDesc->lpwfxFormat->nChannels*pDSBufferDesc->lpwfxFormat->wBitsPerSample) / 8) {
-            pDSBufferDesc->lpwfxFormat->nBlockAlign = (2 * pDSBufferDesc->lpwfxFormat->wBitsPerSample) / 8;
-            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+        if (DSBufferDesc.lpwfxFormat->nBlockAlign != (DSBufferDesc.lpwfxFormat->nChannels*DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8) {
+            DSBufferDesc.lpwfxFormat->nBlockAlign = (2 * DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8;
+            DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
         }
     }
 
-    if (pDSBufferDesc->lpwfxFormat != nullptr) {
+    if (DSBufferDesc.lpwfxFormat != nullptr) {
         // we NOW support 2+ channels, this conversion is necessary in order to support PC audio.
-        if (pDSBufferDesc->lpwfxFormat->nChannels > 2 && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
-            PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)pDSBufferDesc->lpwfxFormat;
+        if (DSBufferDesc.lpwfxFormat->nChannels > 2 && DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)DSBufferDesc.lpwfxFormat;
             lpwfxFormatExtensible->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
             lpwfxFormatExtensible->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
             lpwfxFormatExtensible->Samples.wValidBitsPerSample = lpwfxFormatExtensible->Format.wBitsPerSample;
@@ -287,19 +287,19 @@ inline void GeneratePCMFormat(
         X_BufferSizeRequest = DSBSIZE_MAX;
     }
     if (X_BufferCache != nullptr) {
-        GenerateXboxBufferCache(pDSBufferDesc, dwEmuFlags, X_BufferSizeRequest, X_BufferCache, X_BufferCacheSize);
+        GenerateXboxBufferCache(DSBufferDesc, dwEmuFlags, X_BufferSizeRequest, X_BufferCache, X_BufferCacheSize);
     }
 
     // Handle DSound Buffer only
     if (X_BufferCacheSize > 0) {
-        pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
+        DSBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
     }
 }
 
 inline void DSoundGenericUnlock(
     DWORD                   dwEmuFlags,
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
-    LPDSBUFFERDESC          pDSBufferDesc,
+    DSBUFFERDESC           &DSBufferDesc,
     XTL::DSoundBuffer_Lock &Host_lock,
     LPVOID                  X_BufferCache,
     DWORD                   X_Offset,
@@ -311,15 +311,15 @@ inline void DSoundGenericUnlock(
 
         // TODO: I don't think we need this.
         /*if (Host_lock.dwLockFlags & DSBLOCK_ENTIREBUFFER) {
-            Host_lock.dwLockBytes1 = pDSBufferDesc->dwBufferBytes;
+            Host_lock.dwLockBytes1 = DSBufferDesc->dwBufferBytes;
         }*/
 
 
-        DSoundBufferOutputXBtoHost(dwEmuFlags, pDSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
+        DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
 
         if (Host_lock.pLockPtr2 != nullptr) {
 
-            DSoundBufferOutputXBtoHost(dwEmuFlags, pDSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+            DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
         }
 
         pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
@@ -337,13 +337,13 @@ inline void DSoundGenericUnlock(
     ((pThis->EmuDirectSoundBuffer8Region != nullptr) ? pThis->EmuDirectSound3DBuffer8Region : pThis->EmuDirectSound3DBuffer8)
 
 // Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
-inline void DSoundBufferCreate(LPDSBUFFERDESC &pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
+inline void DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
+
     if (hRetDS != DS_OK) {
         CxbxKrnlCleanup("CreateSoundBuffer error: 0x%08X", hRetDS);
-        pDSBufferDesc = xbnullptr;
     } else {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
@@ -439,9 +439,48 @@ inline void DSoundBufferTransferSettings(
     }
 }
 
+inline void DSoundBufferReCreate(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    DSBUFFERDESC               &DSBufferDesc,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew) {
+
+
+    DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
+
+    if (pDS3DBuffer != nullptr) {
+        DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
+    }
+
+    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
+}
+
+inline void DSoundBufferRelease(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    DWORD                      &refCount) {
+
+    // Release 3D buffer first
+    if (pDS3DBuffer != nullptr) {
+        refCount = pDS3DBuffer->Release();
+        if (refCount > 0) {
+            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+        }
+    }
+
+    refCount = pDSBuffer->Release();
+    if (refCount) {
+        // NOTE: This is base on AddRef call, so this is a requirement.
+        // The reason is to have ability "transfer" ref count is due to some titles doesn't care about ref count.
+        // If AddRef was called, then it will "internally" increment the ref count, not the return value check.
+        while (pDSBuffer->Release() > 0) {}
+    }
+}
+
 inline void DSoundBufferReplace(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
-    LPDSBUFFERDESC              pDSBufferDesc,
+    DSBUFFERDESC               &DSBufferDesc,
     DWORD                       PlayFlags,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
 {
@@ -449,21 +488,9 @@ inline void DSoundBufferReplace(
     LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
     LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
 
-    DSoundBufferCreate(pDSBufferDesc, pDSBufferNew);
+    DSoundBufferReCreate(pDSBuffer, DSBufferDesc, pDS3DBuffer,
+                         pDSBufferNew, pDS3DBufferNew);
 
-    if (pDS3DBuffer != nullptr) {
-        DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
-    }
-
-    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
-
-    // NOTE: pDS3DBuffer will be set from almost the end of the function with pDS3DBufferNew.
-    if (pDS3DBuffer != nullptr) {
-        refCount = pDS3DBuffer->Release();
-        if (refCount > 0) {
-            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
-        }
-    }
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (hRet != DS_OK) {
@@ -498,13 +525,7 @@ inline void DSoundBufferReplace(
     }
 
     // release old buffer
-    refCount = pDSBuffer->Release();
-    if (refCount) {
-        // NOTE: This is base on AddRef call, so this is a requirement.
-        // The reason is to have ability "transfer" ref count is due to some titles doesn't care about ref count.
-        // If AddRef was called, then it will "internally" increment the ref count, not the return value check.
-        while (pDSBuffer->Release() > 0) {}
-    }
+    DSoundBufferRelease(pDSBuffer, pDS3DBuffer, refCount);
 
     pDSBuffer = pDSBufferNew;
     pDS3DBuffer = pDS3DBufferNew;
@@ -517,7 +538,7 @@ inline void DSoundBufferReplace(
 // resize an emulated directsound buffer, if necessary
 inline void ResizeIDirectSoundBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
-    LPDSBUFFERDESC              pDSBufferDesc,
+    DSBUFFERDESC               &DSBufferDesc,
     DWORD                       PlayFlags,
     DWORD                       Xbox_dwBytes,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
@@ -529,11 +550,11 @@ inline void ResizeIDirectSoundBuffer(
         return;
     }
 
-    GenerateXboxBufferCache(pDSBufferDesc, EmuFlags, Xbox_dwBytes, &X_BufferCache, X_BufferCacheSize);
+    GenerateXboxBufferCache(DSBufferDesc, EmuFlags, Xbox_dwBytes, &X_BufferCache, X_BufferCacheSize);
 
-    pDSBufferDesc->dwBufferBytes = DSoundBufferGetPCMBufferSize(EmuFlags, X_BufferCacheSize);
+    DSBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(EmuFlags, X_BufferCacheSize);
 
-    DSoundBufferReplace(pDSBuffer, pDSBufferDesc, PlayFlags, pDS3DBuffer);
+    DSoundBufferReplace(pDSBuffer, DSBufferDesc, PlayFlags, pDS3DBuffer);
 }
 
 inline void DSoundStreamWriteToBuffer(
@@ -1051,7 +1072,7 @@ inline HRESULT HybridDirectSoundBuffer_SetFilter(
 inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPDIRECTSOUNDBUFFER8   &pDSBuffer,
     LPCWAVEFORMATEX         pwfxFormat,
-    LPDSBUFFERDESC          pBufferDesc,
+    DSBUFFERDESC           &BufferDesc,
     DWORD                  &dwEmuFlags,
     DWORD                  &dwPlayFlags,
     LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer,
@@ -1063,21 +1084,21 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     enterCriticalSection;
 
     if (X_BufferAllocate) {
-        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize);
+        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
-        GeneratePCMFormat(pBufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize);
+        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize);
     }
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
-        hRet = pDSBuffer->SetFormat(pBufferDesc->lpwfxFormat);
+        hRet = pDSBuffer->SetFormat(BufferDesc.lpwfxFormat);
     } else {
         // DSound Stream only
         if (X_BufferCacheSize == 0) {
             // Allocate at least 5 second worth of bytes in PCM format.
-            pBufferDesc->dwBufferBytes = pBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
+            BufferDesc.dwBufferBytes = BufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
         }
-        DSoundBufferReplace(pDSBuffer, pBufferDesc, dwPlayFlags, pDS3DBuffer);
+        DSoundBufferReplace(pDSBuffer, BufferDesc, dwPlayFlags, pDS3DBuffer);
     }
 
     leaveCriticalSection;
