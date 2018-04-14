@@ -39,7 +39,7 @@
 #include "DlgVideoConfig.h"
 #include "ResCxbx.h"
 
-#include <d3d8.h>
+#include "CxbxKrnl/EmuD3D8Types.h"
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -309,7 +309,12 @@ VOID RefreshDirect3DDevice()
 
         /*! enumerate display modes */
         {
-            uint32 dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+            uint32 dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
+				g_XBVideo.GetDisplayAdapter()
+#ifdef CXBX_USE_D3D9
+				, XTL::D3DFMT_X8R8G8B8
+#endif
+			);
 
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
 
@@ -320,7 +325,14 @@ VOID RefreshDirect3DDevice()
 
                 XTL::D3DDISPLAYMODE displayMode;
 
-                g_pDirect3D->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &displayMode);
+                g_pDirect3D->EnumAdapterModes(
+					g_XBVideo.GetDisplayAdapter(), 
+#ifdef CXBX_USE_D3D9
+					XTL::D3DFMT_X8R8G8B8,
+#endif
+					v,
+					&displayMode
+				);
 
                 switch(displayMode.Format)
                 {

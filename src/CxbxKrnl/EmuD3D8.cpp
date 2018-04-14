@@ -67,8 +67,6 @@ namespace xboxkrnl
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
 
-// This doesn't work : #include <dxerr8.h> // See DXGetErrorString8A below
-
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::IDirect3DDevice               *g_pD3DDevice  = NULL; // Direct3D Device
@@ -229,6 +227,8 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	// See : http://www.fairyengine.com/articles/dxmultiviews.htm
 	// and : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
 	// and : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
+	// But https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
+	// suggests to use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM for DirectX errors
 	switch (hResult)
 	{
 	case D3DERR_INVALIDCALL: return "Invalid Call";
@@ -449,10 +449,12 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 
 const char *D3DErrorString(HRESULT hResult)
 {
+	using namespace XTL;
+
 	static char buffer[1024];
 	buffer[0] = 0; // Reset static buffer!
 
-	const char* errorCodeString = XTL::DXGetErrorString8A(hResult);
+	const char* errorCodeString = DXGetErrorString(hResult);
 	if (errorCodeString)
 	{
 		strcat(buffer, errorCodeString);
@@ -2963,8 +2965,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 (
-    D3DXVECTOR4 *pOffset,
-    D3DXVECTOR4 *pScale
+    X_D3DXVECTOR4 *pOffset,
+	X_D3DXVECTOR4 *pScale
 )
 {
 	FUNC_EXPORTS
@@ -4349,11 +4351,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			if (hRet != D3D_OK) {
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 					EmuWarning("CreateDepthStencilSurface Failed\n\nError: %s\nDesc: %s",
-						DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+						DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 				}
 				else {
 					EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
-						DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+						DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 				}
 
 				EmuWarning("Trying Fallback");
@@ -4364,7 +4366,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
 				CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
-					DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
 			SetHostSurface(pResource, pNewHostSurface);
@@ -4435,7 +4437,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
-					DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
 			SetHostVolumeTexture(pResource, pNewHostVolumeTexture);
@@ -4454,7 +4456,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
-					DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
+					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
 			SetHostCubeTexture(pResource, pNewHostCubeTexture);
@@ -6400,7 +6402,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
 (
     DWORD            Index,
-    D3DLIGHT8       *pLight
+    X_D3DLIGHT8     *pLight
 )
 {
 	FUNC_EXPORTS
@@ -6420,7 +6422,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
 (
     DWORD            Index,
-    CONST D3DLIGHT8 *pLight
+    CONST X_D3DLIGHT8 *pLight
 )
 {
 	FUNC_EXPORTS
@@ -6441,7 +6443,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetMaterial)
 (
-    CONST D3DMATERIAL8 *pMaterial
+    CONST X_D3DMATERIAL8 *pMaterial
 )
 {
 	FUNC_EXPORTS
@@ -7651,7 +7653,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 // ******************************************************************
 // * patch: D3DDevice_SetBackMaterial
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+)
 {
 	FUNC_EXPORTS
 
@@ -7771,7 +7776,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
 // ******************************************************************
 // * patch: D3DDevice_GetBackMaterial
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)(D3DMATERIAL8* pMaterial)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+)
 {
 	FUNC_EXPORTS
 
@@ -7815,7 +7823,7 @@ void WINAPI XTL::EMUPATCH(D3D_LazySetPointParams)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 (
-	D3DMATERIAL8* pMaterial
+	X_D3DMATERIAL8* pMaterial
 )
 {
 	FUNC_EXPORTS

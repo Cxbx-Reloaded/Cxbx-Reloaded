@@ -41,13 +41,28 @@
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>
-#include <D3dx9tex.h>
+//implies #include <d3d9types.h> // for D3DFORMAT, D3DLIGHT9, etc
+//implies #include <d3d9caps.h>
+#include <d3dx9math.h> // for D3DXVECTOR4, etc
+#include <d3dx9tex.h>
+#include <dxerr.h>
+#pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
 
+// If the above doesn't compile, install the June 2010 DirectX SDK
+// from https://www.microsoft.com/en-us/download/details.aspx?id=6812
+// and select the Direct3D 9 include & library path (TODO : how?)
+
+// For transforming code that's written for Direct3D 8 into Direct3D 9,
 // See "Converting to Direct3D 9" https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx
 
+// See https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx#D3DENUM_NO_WHQL_LEVEL_Changes
+#define D3DENUM_NO_WHQL_LEVEL 0 // default in Direct3D 9
+
 // Alias all host Direct3D 9 symbols to generic symbols
-#define Direct3DCreate			Direct3DCreate9
-#define D3DXAssembleShader		D3DXCompileShader
+#define Direct3DCreate			 Direct3DCreate9
+#define D3DXAssembleShader		 D3DXCompileShader
+#define DXGetErrorString         DXGetErrorString9
+#define DXGetErrorDescription    DXGetErrorDescription9
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                  D3DCAPS9
@@ -55,6 +70,10 @@
 
 #define IDirect3D                IDirect3D9
 #define IDirect3DDevice          IDirect3DDevice9
+//#define IDirect3DStateBlock      IDirect3DStateBlock9
+//#define IDirect3DVertexDeclaration IDirect3DVertexDeclaration9
+//#define IDirect3DVertexShader    IDirect3DVertexShader9
+//#define IDirect3DPixelShader     IDirect3DPixelShader9
 #define IDirect3DResource        IDirect3DResource9
 #define IDirect3DBaseTexture     IDirect3DBaseTexture9
 #define IDirect3DTexture         IDirect3DTexture9
@@ -65,8 +84,11 @@
 #define IDirect3DSurface         IDirect3DSurface9
 #define IDirect3DVolume          IDirect3DVolume9
 #define IDirect3DSwapChain       IDirect3DSwapChain9
+//#define IDirect3DQuery           IDirect3DQuery9
 
-// TODO : Declare as Xbox type
+// TODO : Declare these aliasses as Xbox type
+typedef D3DLIGHT9 X_D3DLIGHT8;
+typedef D3DMATERIAL9 X_D3DMATERIAL8;
 typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 
 #else
@@ -74,10 +96,14 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 // include direct3d 8x headers
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
+#include <d3dx8math.h> // For D3DXVECTOR4, etc
 #include <d3dx8tex.h>
+#include <dxerr8.h> // For DXGetErrorString8A, DXGetErrorDescription8A
 
 // Alias all host Direct3D 8 symbols to generic symbols
-#define Direct3DCreate			Direct3DCreate8
+#define Direct3DCreate			 Direct3DCreate8
+#define DXGetErrorString         DXGetErrorString8A
+#define DXGetErrorDescription    DXGetErrorDescription8A
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
 #define D3DCAPS                  D3DCAPS8
@@ -96,13 +122,16 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 #define IDirect3DVolume          IDirect3DVolume8
 #define IDirect3DSwapChain       IDirect3DSwapChain8
 
-// TODO : Declare as Xbox type
+// TODO : Declare these aliasses as Xbox type
+typedef D3DLIGHT8 X_D3DLIGHT8;
+typedef D3DMATERIAL8 X_D3DMATERIAL8;
 typedef D3DVIEWPORT8 X_D3DVIEWPORT8;
 
 #endif // Direct3d8
 
 // TODO: fill out these enumeration tables for convienance
 typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;
+typedef D3DXVECTOR4 X_D3DXVECTOR4;
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
