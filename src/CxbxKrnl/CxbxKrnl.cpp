@@ -698,7 +698,7 @@ void PatchRdtscInstruction()
 				opAddr[0] = 0xEF; // OUT DX, EAX
 				opAddr[1] = 0x90; // NOP
 				g_RdtscPatches.push_back(addr);
-				addr += 3;
+				addr += 2;
 				break;
 			}
 		}
