@@ -2683,7 +2683,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMode)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFormat
 // ******************************************************************
-// TODO: When SetFormat is called, does Loop and Play region reset, including region buffer?
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 (
     X_CDirectSoundBuffer*   pThis,
@@ -3409,6 +3408,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
+    // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
+    // Test case: MultiPass sample
+    // Best to emulate this LLE instead of HLE.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
@@ -3433,6 +3435,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
+    // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
+    // Test case: Red Faction 2
+    // Best to emulate this LLE instead of HLE.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
