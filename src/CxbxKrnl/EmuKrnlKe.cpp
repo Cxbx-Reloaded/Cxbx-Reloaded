@@ -1096,9 +1096,9 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	ULONGLONG ret;
 	::LARGE_INTEGER PerformanceCounter;
 
-	if (g_PatchCpuFrequency) {
-		RETURN((ULONGLONG)__rdtsc());
-	}
+	//if (g_PatchCpuFrequency) {
+	//	RETURN((ULONGLONG)__rdtsc());
+	//}
 
 
 	// TODO : When Cxbx emulates the RDTSC opcode, use the same handling here.

@@ -223,6 +223,22 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     g_bEmuException = true;
 	if (e->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
 	{
+		if (g_PatchCpuFrequency){ 
+			//here we check whether the break point is introduced by the rdtsc patch or not.
+			printf(	"Received Exception Code 0x%.08X @ EIP := %s\n",e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
+		    if (is_rdtsc_break(e->ContextRecord->Eip)) {
+				printf("rdtsc patch break \n");
+				LARGE_INTEGER PerformanceCount;
+				PerformanceCount.QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+				e->ContextRecord->Eax = PerformanceCount.LowPart;
+				e->ContextRecord->Edx = PerformanceCount.HighPart;
+				e->ContextRecord->Eip += 2;
+				g_bEmuException = false;
+				return EXCEPTION_CONTINUE_EXECUTION;
+		    }
+		}
+		
+		
 		// notify user
 		if (EmuExceptionBreakpointAsk(e))
 		{

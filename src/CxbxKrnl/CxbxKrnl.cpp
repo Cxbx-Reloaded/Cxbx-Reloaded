@@ -649,11 +649,24 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
+DWORD rdtsc_addr[100]; //arrays for each rdtsc instruction found
+int            rdtsc_count = 0;//counts for total rdtsc instruction found
+
+bool is_rdtsc_break(DWORD addr)
+{
+	for (int i = 0; i < rdtsc_count; i++) {
+		if (rdtsc_addr[i] == addr)
+			return true;
+	}
+	return false;
+}
+
+
 void PatchPerformanceFrequency()
 {
-	DWORD xboxFrequency = 733333333; // 733mhz
-	LARGE_INTEGER hostFrequency;
-	QueryPerformanceFrequency(&hostFrequency);
+	uint32  inst_rdtsc[5] = { 0x89310f,0xc3310f,0x8b310f,0xb9310f,0x05c7310f }; //rdtsc opcode 0F 31, here we have 5 patterns for this opcode.
+	uint16 patched_int3=0x90cc; // this is new opcode after patching, replace 0F 31 with CC 90, which stands for int 3, NOP,
+	//QueryPerformanceFrequency(&hostFrequency);
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 
 	// Iterate through each CODE section
@@ -662,21 +675,25 @@ void PatchPerformanceFrequency()
 			continue;
 		}
 
-		printf("INIT: Searching for xbox performance frequency in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		printf("INIT: Searching for rdtsc instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++)
 		{
-			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
-				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
-				*(uint32*)(addr) = (uint32)hostFrequency.QuadPart;
-				addr += sizeof(DWORD);
-				break;
+			for (int i = 0; i < 5; i++) {
+				if (memcmp((void*)addr, &inst_rdtsc[i], 3) == 0) {
+					printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD) addr);
+					*(uint16*)(addr) = (uint16)patched_int3;
+					rdtsc_addr[rdtsc_count] = (DWORD)addr;
+					rdtsc_count++;
+					addr += 3;
+					break;
+				}
 			}
 		}
 	}
 
-	printf("INIT: Done patching xbox performance frequency\n");
+	printf("INIT: Done patching rdtsc instruction, total %d patches\n",rdtsc_count);
 }
 
 void CxbxKrnlMain(int argc, char* argv[])

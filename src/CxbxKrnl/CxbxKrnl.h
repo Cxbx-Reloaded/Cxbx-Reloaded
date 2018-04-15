@@ -317,6 +317,9 @@ extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
 extern char szFolder_CxbxReloadedData[MAX_PATH];
 extern char szFilePath_EEPROM_bin[MAX_PATH];
 
+/*! check whether addr is a patched rdtsc instruction or no*/
+bool is_rdtsc_break(DWORD addr);
+
 #ifdef __cplusplus
 }
 #endif
