@@ -55,6 +55,7 @@ namespace xboxkrnl
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
 #include "CxbxDebugger.h"
+#include "EmuX86.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -659,7 +660,23 @@ bool IsRdtscInstruction(xbaddr addr)
 	return false;
 }
 
+void PatchRdtsc(xbaddr addr)
+{
+	uint8_t* opAddr = (uint8_t*)addr;
+	// Patch away rdtsc with an opcode we can intercept
+	// We use a privilaged instruction rather than int 3 for debugging
+	// When using int 3, attached debuggers trap and rdtsc is used often enough
+	// that it makes Cxbx-Reloaded unusable
+	// A privilaged instruction (like OUT) does not suffer from this
+	printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
+	opAddr[0] = 0xEF; // OUT DX, EAX
+	opAddr[1] = 0x90; // NOP
+	g_RdtscPatches.push_back(addr);
+}
+
 #include "distorm.h"
+bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info);
+
 void PatchRdtscInstruction()
 {
 	uint8_t rdtsc[2] = { 0x0F, 0x31 };
@@ -684,18 +701,28 @@ void PatchRdtscInstruction()
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++) {
 			if (memcmp((void*)addr, rdtsc, 2) == 0) {
-				printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
-				uint8_t* opAddr = (uint8_t*)addr;
+				// Found potential rdtsc instruction, check for validity by disassembling the following instruction
+				_DInst info;
+				if (!EmuX86_DecodeOpcode((uint8_t*)(addr + 2), info)) {
+					return;
+				}
 
-				// Patch away rdtsc with an opcode we can intercept
-				// We use a privilaged instruction rather than int 3 for debugging
-				// When using int 3, attached debuggers trap and rdtsc is used often enough
-				// that it makes Cxbx-Reloaded unusable
-				// A privilaged instruction (like OUT) does not suffer from this
-				opAddr[0] = 0xEF; // OUT DX, EAX
-				opAddr[1] = 0x90; // NOP
-				g_RdtscPatches.push_back(addr);
-				addr += 2;
+				// If the following opcode is a single-byte opcode, check for it's validity
+				if (info.size == 1) {
+					uint8_t opcodeByteValue = *(uint8_t*)(addr + 2);
+					if (opcodeByteValue == 0xC3 || opcodeByteValue == 0x57) {
+						PatchRdtsc(addr);
+						addr += 1;
+						continue;
+					}
+
+					EmuWarning("Skipped potential rdtsc: Unknown opcode pattern @ 0x%.8X\n", (DWORD)addr);
+					continue;
+				}
+
+				// If the following opcode is multi-bye, we can assume it was valid
+				PatchRdtsc(addr);
+				addr += 1;
 			}
 		}
 	}
