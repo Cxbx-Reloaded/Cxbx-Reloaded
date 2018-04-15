@@ -582,7 +582,6 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
-		printf("Patch CPU Frequency (rdtsc): %s\n", g_PatchCpuFrequency == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -652,11 +651,21 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
-void PatchPerformanceFrequency()
+std::vector<xbaddr> g_RdtscPatches;
+
+bool IsRdtscInstruction(xbaddr addr)
 {
-	DWORD xboxFrequency = 733333333; // 733mhz
-	LARGE_INTEGER hostFrequency;
-	QueryPerformanceFrequency(&hostFrequency);
+	if (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end()) {
+		return true;
+	}
+
+	return false;
+}
+
+#include "distorm.h"
+void PatchRdtscInstruction()
+{
+	uint8_t rdtsc[2] = { 0x0F, 0x31 };
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 
 	// Iterate through each CODE section
@@ -664,22 +673,36 @@ void PatchPerformanceFrequency()
 		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}
+		
+		// Skip some segments known to never contain rdtsc (to avoid false positives)
+		if (std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "DSOUND" 
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XGRPH") {
+			continue;
+		}
 
-		printf("INIT: Searching for xbox performance frequency in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		printf("INIT: Searching for rdtsc in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-		for (xbaddr addr = startAddr; addr < endAddr; addr++)
-		{
-			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
-				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
-				*(uint32*)(addr) = (uint32)hostFrequency.QuadPart;
-				addr += sizeof(DWORD);
+		for (xbaddr addr = startAddr; addr < endAddr; addr++) {
+			if (memcmp((void*)addr, rdtsc, 2) == 0) {
+				printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
+				uint8_t* opAddr = (uint8_t*)addr;
+
+				// Patch away rdtsc with an opcode we can intercept
+				// We use a privilaged instruction rather than int 3 for debugging
+				// When using int 3, attached debuggers trap and rdtsc is used often enough
+				// that it makes Cxbx-Reloaded unusable
+				// A privilaged instruction (like OUT) does not suffer from this
+				opAddr[0] = 0xEF; // OUT DX, EAX
+				opAddr[1] = 0x90; // NOP
+				g_RdtscPatches.push_back(addr);
+				addr += 3;
 				break;
 			}
 		}
 	}
 
-	printf("INIT: Done patching xbox performance frequency\n");
+	printf("INIT: Done patching rdtsc\n");
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -1100,8 +1123,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
-		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
-		g_PatchCpuFrequency = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
@@ -1264,9 +1285,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
-	if (g_PatchCpuFrequency) {
-		PatchPerformanceFrequency();
-	}
+	PatchRdtscInstruction();
 
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
