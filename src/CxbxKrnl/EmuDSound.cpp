@@ -964,7 +964,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         hRet = DSERR_OUTOFMEMORY;
     } else {
-
         DSBUFFERDESC DSBufferDesc = { 0 };
 
         //TODO: Find out the cause for DSBCAPS_MUTE3DATMAXDISTANCE to have invalid arg.
@@ -1068,36 +1067,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         leaveCriticalSection;
         return DS_OK;
     }
-    if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
-        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
-        DSoundBufferRegionRelease(pThis);
-    }
+    HRESULT hRet;
 
-    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
-                             pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8, pThis->EmuFlags, pThis->X_BufferCache, pThis->X_BufferCacheSize);
-
-    pThis->EmuDirectSoundBuffer8->Lock(0, pThis->EmuBufferDesc.dwBufferBytes, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1, &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, DSBLOCK_ENTIREBUFFER);
+    GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
     memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
 
-    pThis->Host_lock.dwLockOffset = 0;
-    pThis->Host_lock.dwLockFlags = DSBLOCK_ENTIREBUFFER;
-
-    pThis->X_lock.dwLockOffset = 0;
-    pThis->X_lock.dwLockBytes1 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes1);
-    pThis->X_lock.dwLockBytes2 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes2);
-
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
-
-    pThis->X_lock.pLockPtr1 = nullptr;
-    pThis->X_lock.pLockPtr2 = nullptr;
+    DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
 
     leaveCriticalSection;
 
@@ -1380,12 +1356,6 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
                 free(pThis->X_BufferCache);
                 pThis->X_BufferCacheSize = 0;
             }
-            if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-                pThis->EmuDirectSoundBuffer8Region->Release();
-            }
-            if (pThis->EmuDirectSound3DBuffer8Region != nullptr) {
-                pThis->EmuDirectSound3DBuffer8Region->Release();
-            }
 
             delete pThis;
         }
@@ -1531,7 +1501,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
     HRESULT hRet = DS_OK;
 
-    DSoundBufferResizeCheckThenSet(pThis, dwFlags, hRet);
+    DSoundBufferUpdate(pThis, dwFlags, hRet);
 
     if (dwFlags & X_DSBPLAY_FROMSTART) {
         if (DSoundBufferSelectionT(pThis)->SetCurrentPosition(0) != DS_OK) {
@@ -1629,7 +1599,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
                 pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &dwValue);
                 hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-                DSoundBufferResizeSet(pThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize, 0);
+                DSoundBufferResizeUpdate(pThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize);
 
                 dwValue += pThis->EmuRegionPlayStartOffset;
                 if (isLooping) {
@@ -2696,8 +2666,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
-
-    DSoundBufferRegionRelease(pThis);
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, 

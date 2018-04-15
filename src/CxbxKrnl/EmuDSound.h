@@ -338,8 +338,6 @@ struct X_CDirectSoundBuffer
     DWORD                   EmuRegionLoopLength;
     DWORD                   EmuRegionPlayStartOffset;
     DWORD                   EmuRegionPlayLength;
-    LPDIRECTSOUNDBUFFER8    EmuDirectSoundBuffer8Region;
-    LPDIRECTSOUND3DBUFFER8  EmuDirectSound3DBuffer8Region;
     DWORD                   X_BufferCacheSize;
     DSoundBuffer_Lock       Host_lock;
     DSoundBuffer_Lock       X_lock;
