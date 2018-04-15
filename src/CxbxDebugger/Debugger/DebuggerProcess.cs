@@ -229,6 +229,10 @@ namespace CxbxDebugger
                     Data = BitConverter.GetBytes((uint)GenericValue);
                     break;
 
+                case TypeCode.Single:
+                    Data = BitConverter.GetBytes((float)GenericValue);
+                    break;
+
                 default:
                     throw new Exception(string.Format("Unhandled type code {0}", TType.ToString()));
             }

@@ -51,15 +51,16 @@
             this.btnGo = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.cbDisAddr = new System.Windows.Forms.ComboBox();
-            this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.tabBreakpoints = new System.Windows.Forms.TabPage();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.cbBreakpointAll = new System.Windows.Forms.CheckBox();
+            this.cbBreakpointCxbx = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.cbAction = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnAddFileBp = new System.Windows.Forms.Button();
             this.tbFilter = new System.Windows.Forms.TextBox();
             this.clbBreakpoints = new System.Windows.Forms.CheckedListBox();
             this.tabWatch = new System.Windows.Forms.TabPage();
@@ -86,26 +87,30 @@
             this.lbDebug = new System.Windows.Forms.ListBox();
             this.tabTweaks = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button2 = new System.Windows.Forms.Button();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabCEContainer = new System.Windows.Forms.TabControl();
             this.tabSubData = new System.Windows.Forms.TabPage();
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.lvCEMemory = new System.Windows.Forms.ListView();
             this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabSubAssembly = new System.Windows.Forms.TabPage();
-            this.listView2 = new System.Windows.Forms.ListView();
+            this.lvCEAssembly = new System.Windows.Forms.ListView();
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.diagSaveMemory = new System.Windows.Forms.SaveFileDialog();
             this.diagBrowseCT = new System.Windows.Forms.OpenFileDialog();
-            this.cbBreakpointCxbx = new System.Windows.Forms.CheckBox();
-            this.cbBreakpointAll = new System.Windows.Forms.CheckBox();
+            this.btnAddWatch = new System.Windows.Forms.Button();
+            this.cbDataFormat = new System.Windows.Forms.ComboBox();
+            this.btnToMemory = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.statusBar.SuspendLayout();
@@ -140,7 +145,7 @@
             this.splitContainer5.SuspendLayout();
             this.tabTweaks.SuspendLayout();
             this.groupBox3.SuspendLayout();
-            this.tabControl1.SuspendLayout();
+            this.tabCEContainer.SuspendLayout();
             this.tabSubData.SuspendLayout();
             this.tabSubAssembly.SuspendLayout();
             this.SuspendLayout();
@@ -310,6 +315,7 @@
             // 
             // splitContainer2.Panel1
             // 
+            this.splitContainer2.Panel1.Controls.Add(this.btnToMemory);
             this.splitContainer2.Panel1.Controls.Add(this.btnNext);
             this.splitContainer2.Panel1.Controls.Add(this.btnPrev);
             this.splitContainer2.Panel1.Controls.Add(this.btnGo);
@@ -348,7 +354,7 @@
             // btnGo
             // 
             this.btnGo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGo.Location = new System.Drawing.Point(539, 3);
+            this.btnGo.Location = new System.Drawing.Point(450, 3);
             this.btnGo.Name = "btnGo";
             this.btnGo.Size = new System.Drawing.Size(75, 23);
             this.btnGo.TabIndex = 1;
@@ -372,25 +378,10 @@
             this.cbDisAddr.FormattingEnabled = true;
             this.cbDisAddr.Location = new System.Drawing.Point(132, 5);
             this.cbDisAddr.Name = "cbDisAddr";
-            this.cbDisAddr.Size = new System.Drawing.Size(401, 21);
+            this.cbDisAddr.Size = new System.Drawing.Size(312, 21);
             this.cbDisAddr.TabIndex = 0;
             this.cbDisAddr.SelectedIndexChanged += new System.EventHandler(this.cbDisAddr_SelectedIndexChanged);
             this.cbDisAddr.KeyDown += new System.Windows.Forms.KeyEventHandler(this.comboBox1_KeyDown);
-            // 
-            // txDisassembly
-            // 
-            this.txDisassembly.BackColor = System.Drawing.SystemColors.Window;
-            this.txDisassembly.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txDisassembly.Cursor = System.Windows.Forms.Cursors.Default;
-            this.txDisassembly.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txDisassembly.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txDisassembly.Location = new System.Drawing.Point(0, 0);
-            this.txDisassembly.Name = "txDisassembly";
-            this.txDisassembly.ReadOnly = true;
-            this.txDisassembly.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.txDisassembly.Size = new System.Drawing.Size(742, 149);
-            this.txDisassembly.TabIndex = 1;
-            this.txDisassembly.Text = "";
             // 
             // tabBreakpoints
             // 
@@ -432,12 +423,34 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Interrupts";
             // 
+            // cbBreakpointAll
+            // 
+            this.cbBreakpointAll.AutoSize = true;
+            this.cbBreakpointAll.Location = new System.Drawing.Point(7, 36);
+            this.cbBreakpointAll.Name = "cbBreakpointAll";
+            this.cbBreakpointAll.Size = new System.Drawing.Size(139, 17);
+            this.cbBreakpointAll.TabIndex = 2;
+            this.cbBreakpointAll.Text = "Enable ALL breakpoints";
+            this.cbBreakpointAll.UseVisualStyleBackColor = true;
+            // 
+            // cbBreakpointCxbx
+            // 
+            this.cbBreakpointCxbx.AutoSize = true;
+            this.cbBreakpointCxbx.Checked = true;
+            this.cbBreakpointCxbx.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBreakpointCxbx.Location = new System.Drawing.Point(7, 19);
+            this.cbBreakpointCxbx.Name = "cbBreakpointCxbx";
+            this.cbBreakpointCxbx.Size = new System.Drawing.Size(147, 17);
+            this.cbBreakpointCxbx.TabIndex = 1;
+            this.cbBreakpointCxbx.Text = "Enable Xbox breakpoints ";
+            this.cbBreakpointCxbx.UseVisualStyleBackColor = true;
+            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.cbAction);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.button1);
+            this.groupBox1.Controls.Add(this.btnAddFileBp);
             this.groupBox1.Controls.Add(this.tbFilter);
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
@@ -473,15 +486,15 @@
             this.label4.TabIndex = 5;
             this.label4.Text = "Filter";
             // 
-            // button1
+            // btnAddFileBp
             // 
-            this.button1.Location = new System.Drawing.Point(95, 72);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(146, 23);
-            this.button1.TabIndex = 4;
-            this.button1.Text = "Add";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click_2);
+            this.btnAddFileBp.Location = new System.Drawing.Point(95, 72);
+            this.btnAddFileBp.Name = "btnAddFileBp";
+            this.btnAddFileBp.Size = new System.Drawing.Size(146, 23);
+            this.btnAddFileBp.TabIndex = 4;
+            this.btnAddFileBp.Text = "Add";
+            this.btnAddFileBp.UseVisualStyleBackColor = true;
+            this.btnAddFileBp.Click += new System.EventHandler(this.button1_Click_2);
             // 
             // tbFilter
             // 
@@ -613,6 +626,9 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.cbDataFormat);
+            this.groupBox2.Controls.Add(this.btnAddWatch);
             this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Controls.Add(this.btnDumpMemory);
             this.groupBox2.Controls.Add(this.txAddress);
@@ -745,7 +761,7 @@
             // tabTweaks
             // 
             this.tabTweaks.Controls.Add(this.groupBox3);
-            this.tabTweaks.Controls.Add(this.tabControl1);
+            this.tabTweaks.Controls.Add(this.tabCEContainer);
             this.tabTweaks.Location = new System.Drawing.Point(4, 22);
             this.tabTweaks.Name = "tabTweaks";
             this.tabTweaks.Padding = new System.Windows.Forms.Padding(3);
@@ -758,6 +774,7 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBox3.Controls.Add(this.button4);
             this.groupBox3.Controls.Add(this.button3);
             this.groupBox3.Controls.Add(this.label7);
             this.groupBox3.Controls.Add(this.textBox1);
@@ -768,6 +785,16 @@
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Controls";
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(6, 48);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(123, 23);
+            this.button4.TabIndex = 5;
+            this.button4.Text = "Refresh";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click_1);
             // 
             // button3
             // 
@@ -805,22 +832,22 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click_1);
             // 
-            // tabControl1
+            // tabCEContainer
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.tabCEContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl1.Controls.Add(this.tabSubData);
-            this.tabControl1.Controls.Add(this.tabSubAssembly);
-            this.tabControl1.Location = new System.Drawing.Point(144, 6);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(598, 184);
-            this.tabControl1.TabIndex = 5;
+            this.tabCEContainer.Controls.Add(this.tabSubData);
+            this.tabCEContainer.Controls.Add(this.tabSubAssembly);
+            this.tabCEContainer.Location = new System.Drawing.Point(144, 6);
+            this.tabCEContainer.Name = "tabCEContainer";
+            this.tabCEContainer.SelectedIndex = 0;
+            this.tabCEContainer.Size = new System.Drawing.Size(598, 184);
+            this.tabCEContainer.TabIndex = 5;
             // 
             // tabSubData
             // 
-            this.tabSubData.Controls.Add(this.listView1);
+            this.tabSubData.Controls.Add(this.lvCEMemory);
             this.tabSubData.Location = new System.Drawing.Point(4, 22);
             this.tabSubData.Name = "tabSubData";
             this.tabSubData.Padding = new System.Windows.Forms.Padding(3);
@@ -829,23 +856,23 @@
             this.tabSubData.Text = "Memory";
             this.tabSubData.UseVisualStyleBackColor = true;
             // 
-            // listView1
+            // lvCEMemory
             // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.lvCEMemory.CheckBoxes = true;
+            this.lvCEMemory.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader8,
             this.columnHeader4,
             this.columnHeader7,
             this.columnHeader6,
             this.columnHeader5});
-            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listView1.FullRowSelect = true;
-            this.listView1.Location = new System.Drawing.Point(3, 3);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(584, 152);
-            this.listView1.TabIndex = 1;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            this.lvCEMemory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvCEMemory.FullRowSelect = true;
+            this.lvCEMemory.Location = new System.Drawing.Point(3, 3);
+            this.lvCEMemory.Name = "lvCEMemory";
+            this.lvCEMemory.Size = new System.Drawing.Size(584, 152);
+            this.lvCEMemory.TabIndex = 1;
+            this.lvCEMemory.UseCompatibleStateImageBehavior = false;
+            this.lvCEMemory.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader8
             // 
@@ -874,7 +901,7 @@
             // 
             // tabSubAssembly
             // 
-            this.tabSubAssembly.Controls.Add(this.listView2);
+            this.tabSubAssembly.Controls.Add(this.lvCEAssembly);
             this.tabSubAssembly.Location = new System.Drawing.Point(4, 22);
             this.tabSubAssembly.Name = "tabSubAssembly";
             this.tabSubAssembly.Padding = new System.Windows.Forms.Padding(3);
@@ -883,19 +910,19 @@
             this.tabSubAssembly.Text = "Assembly";
             this.tabSubAssembly.UseVisualStyleBackColor = true;
             // 
-            // listView2
+            // lvCEAssembly
             // 
-            this.listView2.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.lvCEAssembly.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader10,
             this.columnHeader11});
-            this.listView2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listView2.FullRowSelect = true;
-            this.listView2.Location = new System.Drawing.Point(3, 3);
-            this.listView2.Name = "listView2";
-            this.listView2.Size = new System.Drawing.Size(584, 152);
-            this.listView2.TabIndex = 4;
-            this.listView2.UseCompatibleStateImageBehavior = false;
-            this.listView2.View = System.Windows.Forms.View.Details;
+            this.lvCEAssembly.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvCEAssembly.FullRowSelect = true;
+            this.lvCEAssembly.Location = new System.Drawing.Point(3, 3);
+            this.lvCEAssembly.Name = "lvCEAssembly";
+            this.lvCEAssembly.Size = new System.Drawing.Size(584, 152);
+            this.lvCEAssembly.TabIndex = 4;
+            this.lvCEAssembly.UseCompatibleStateImageBehavior = false;
+            this.lvCEAssembly.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader10
             // 
@@ -917,27 +944,59 @@
             this.diagBrowseCT.Filter = "Cheat Engine Tables (*.CT)|*.ct";
             this.diagBrowseCT.Title = "Load cheat table";
             // 
-            // cbBreakpointCxbx
+            // btnAddWatch
             // 
-            this.cbBreakpointCxbx.AutoSize = true;
-            this.cbBreakpointCxbx.Checked = true;
-            this.cbBreakpointCxbx.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbBreakpointCxbx.Location = new System.Drawing.Point(7, 19);
-            this.cbBreakpointCxbx.Name = "cbBreakpointCxbx";
-            this.cbBreakpointCxbx.Size = new System.Drawing.Size(147, 17);
-            this.cbBreakpointCxbx.TabIndex = 1;
-            this.cbBreakpointCxbx.Text = "Enable Xbox breakpoints ";
-            this.cbBreakpointCxbx.UseVisualStyleBackColor = true;
+            this.btnAddWatch.Location = new System.Drawing.Point(88, 158);
+            this.btnAddWatch.Name = "btnAddWatch";
+            this.btnAddWatch.Size = new System.Drawing.Size(204, 23);
+            this.btnAddWatch.TabIndex = 7;
+            this.btnAddWatch.Text = "Add Cheat Engine Watch";
+            this.btnAddWatch.UseVisualStyleBackColor = true;
+            this.btnAddWatch.Click += new System.EventHandler(this.button5_Click);
             // 
-            // cbBreakpointAll
+            // cbDataFormat
             // 
-            this.cbBreakpointAll.AutoSize = true;
-            this.cbBreakpointAll.Location = new System.Drawing.Point(7, 36);
-            this.cbBreakpointAll.Name = "cbBreakpointAll";
-            this.cbBreakpointAll.Size = new System.Drawing.Size(139, 17);
-            this.cbBreakpointAll.TabIndex = 2;
-            this.cbBreakpointAll.Text = "Enable ALL breakpoints";
-            this.cbBreakpointAll.UseVisualStyleBackColor = true;
+            this.cbDataFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbDataFormat.FormattingEnabled = true;
+            this.cbDataFormat.Location = new System.Drawing.Point(88, 131);
+            this.cbDataFormat.Name = "cbDataFormat";
+            this.cbDataFormat.Size = new System.Drawing.Size(204, 21);
+            this.cbDataFormat.TabIndex = 8;
+            // 
+            // btnToMemory
+            // 
+            this.btnToMemory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnToMemory.Location = new System.Drawing.Point(531, 3);
+            this.btnToMemory.Name = "btnToMemory";
+            this.btnToMemory.Size = new System.Drawing.Size(83, 23);
+            this.btnToMemory.TabIndex = 4;
+            this.btnToMemory.Text = "Memory View";
+            this.btnToMemory.UseVisualStyleBackColor = true;
+            this.btnToMemory.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 134);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(65, 13);
+            this.label8.TabIndex = 9;
+            this.label8.Text = "Data Format";
+            // 
+            // txDisassembly
+            // 
+            this.txDisassembly.BackColor = System.Drawing.SystemColors.Window;
+            this.txDisassembly.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txDisassembly.Cursor = System.Windows.Forms.Cursors.Default;
+            this.txDisassembly.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txDisassembly.Font = new System.Drawing.Font("Lucida Console", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txDisassembly.Location = new System.Drawing.Point(0, 0);
+            this.txDisassembly.Name = "txDisassembly";
+            this.txDisassembly.ReadOnly = true;
+            this.txDisassembly.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.txDisassembly.Size = new System.Drawing.Size(742, 149);
+            this.txDisassembly.TabIndex = 1;
+            this.txDisassembly.Text = "";
             // 
             // Form1
             // 
@@ -994,7 +1053,7 @@
             this.tabTweaks.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
-            this.tabControl1.ResumeLayout(false);
+            this.tabCEContainer.ResumeLayout(false);
             this.tabSubData.ResumeLayout(false);
             this.tabSubAssembly.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -1049,7 +1108,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ListBox lbDebug;
         private System.Windows.Forms.CheckedListBox clbBreakpoints;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnAddFileBp;
         private System.Windows.Forms.ComboBox cbAction;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
@@ -1062,15 +1121,15 @@
         private System.Windows.Forms.TabPage tabTweaks;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.OpenFileDialog diagBrowseCT;
-        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView lvCEMemory;
         private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ColumnHeader columnHeader6;
-        private System.Windows.Forms.ListView listView2;
+        private System.Windows.Forms.ListView lvCEAssembly;
         private System.Windows.Forms.ColumnHeader columnHeader10;
         private System.Windows.Forms.ColumnHeader columnHeader11;
         private System.Windows.Forms.ColumnHeader columnHeader7;
         private System.Windows.Forms.ColumnHeader columnHeader8;
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl tabCEContainer;
         private System.Windows.Forms.TabPage tabSubData;
         private System.Windows.Forms.TabPage tabSubAssembly;
         private System.Windows.Forms.GroupBox groupBox3;
@@ -1080,6 +1139,11 @@
         private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.CheckBox cbBreakpointAll;
         private System.Windows.Forms.CheckBox cbBreakpointCxbx;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.ComboBox cbDataFormat;
+        private System.Windows.Forms.Button btnAddWatch;
+        private System.Windows.Forms.Button btnToMemory;
+        private System.Windows.Forms.Label label8;
     }
 }
 

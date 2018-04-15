@@ -183,6 +183,11 @@ namespace CxbxDebugger
                 return swap;
             }
 
+            public static bool GetBoolean(string bool_string)
+            {
+                return GetNumber(bool_string) != 0;
+            }
+
             private void ParseCheatEntry(XmlNode root)
             {
                 CheatEntry Entry = new CheatEntry();
@@ -199,7 +204,7 @@ namespace CxbxDebugger
                                 switch (xnode.Name)
                                 {
                                     case "ID":
-                                        Entry.ID = xnode.InnerText;
+                                        Entry.ID = GetNumber(xnode.InnerText);
                                         break;
 
                                     case "Description":
@@ -207,7 +212,7 @@ namespace CxbxDebugger
                                         break;
 
                                     case "ShowAsHex":
-                                        Entry.ShowAsHex = (GetNumber(xnode.InnerText) != 0);
+                                        Entry.ShowAsHex = GetBoolean(xnode.InnerText);
                                         break;
 
                                     case "Options":

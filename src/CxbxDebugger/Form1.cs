@@ -65,6 +65,14 @@ namespace CxbxDebugger
 
             cbAction.SelectedIndex = 0;
 
+            foreach (string VariableEnum in Enum.GetNames(typeof(Variable)))
+            {
+                cbDataFormat.Items.Add(VariableEnum);
+            }
+            
+            // Default to byte
+            cbDataFormat.SelectedIndex = 2;
+
             fileWatchMan = new FileWatchManager(clbBreakpoints);
             debugStrMan = new DebugOutputManager(lbDebug);
             cheatMan = new CheatEngineManager();
@@ -1053,6 +1061,39 @@ namespace CxbxDebugger
             return System.Drawing.Color.FromArgb(r, g, b);
         }
 
+        private void RefreshCheatTableDisplay()
+        {
+            lvCEMemory.BeginUpdate();
+            lvCEMemory.Items.Clear();
+
+            foreach (var code in cheatMan.Cheats.CheatEntries)
+            {
+                var li = lvCEMemory.Items.Add("");
+                li.SubItems.Add(code.Description);
+                li.SubItems.Add(string.Format("{0:x8}", code.Address));
+                li.SubItems.Add(code.VariableType.ToString());
+                li.SubItems.Add(code.LastState.Value);
+
+                li.Checked = code.LastState.Activated;
+                li.ForeColor = MakeColor(code.Color);
+            }
+
+            lvCEMemory.EndUpdate();
+
+            // Code entries are not supported at the moment
+
+            lvCEAssembly.BeginUpdate();
+            lvCEAssembly.Items.Clear();
+
+            foreach (var code in cheatMan.Cheats.CodeEntires)
+            {
+                var li = lvCEAssembly.Items.Add(string.Format("{0} +{1:X}", code.ModuleName, code.ModuleNameOffset));
+                li.SubItems.Add(code.Description);
+            }
+
+            lvCEAssembly.EndUpdate();
+        }
+
         private void LoadCheatTable(string filename)
         {
             string path = Directory.GetCurrentDirectory();
@@ -1065,36 +1106,6 @@ namespace CxbxDebugger
                 if (ct_data != null)
                 {
                     cheatMan.Cheats = ct_data;
-
-                    listView1.BeginUpdate();
-                    listView1.Items.Clear();
-
-                    foreach (var code in ct_data.CheatEntries)
-                    {
-                        var li = listView1.Items.Add("");
-                        li.SubItems.Add(code.Description);
-                        li.SubItems.Add(string.Format("{0:x8}", code.Address));
-                        li.SubItems.Add(code.VariableType.ToString());
-                        li.SubItems.Add("??"); // todo: read live memory
-
-                        li.Checked = code.LastState.Activated;
-                        li.ForeColor = MakeColor(code.Color);
-                    }
-
-                    listView1.EndUpdate();
-
-                    // Code entries are not supported at the moment
-
-                    listView2.BeginUpdate();
-                    listView2.Items.Clear();
-
-                    foreach (var code in ct_data.CodeEntires)
-                    {
-                        var li = listView2.Items.Add(string.Format("{0} +{1:X}", code.ModuleName, code.ModuleNameOffset));
-                        li.SubItems.Add(code.Description);
-                    }
-
-                    listView2.EndUpdate();
                 }
             }
         }
@@ -1108,28 +1119,64 @@ namespace CxbxDebugger
             }
         }
 
-        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void RefreshCEMemory()
         {
             if (DebugThreads.Count == 0)
                 return;
 
-            if(listView1.SelectedIndices.Count == 1 )
+            if (cheatMan.RefreshAll(DebugThreads[0].OwningProcess))
             {
-                int selected = listView1.SelectedIndices[0];
-
-                string printed_value = cheatMan.Read(DebugThreads[0].OwningProcess, selected);
-
-                textBox1.Text = printed_value;
+                RefreshCheatTableDisplay();
             }
         }
 
         private void button3_Click_1(object sender, EventArgs e)
         {
-            if (listView1.SelectedIndices.Count == 1)
+            if (DebugThreads.Count == 0)
+                return;
+
+            if (lvCEMemory.SelectedIndices.Count == 1)
             {
-                int selected = listView1.SelectedIndices[0];
+                int selected = lvCEMemory.SelectedIndices[0];
 
+                cheatMan.Write(DebugThreads[0].OwningProcess, selected, textBox1.Text);
+            }
+        }
 
+        private void button4_Click_1(object sender, EventArgs e)
+        {
+            RefreshCEMemory();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            CheatEntry ce = new CheatEntry();
+
+            ce.ID = 0;
+            ce.Description = "Automatic";
+            ce.ShowAsHex = false;
+            ce.LastState.Activated = false;
+            ce.LastState.RealAddress = 0;
+            ce.LastState.Value = "";
+            ce.VariableType = (Variable)cbDataFormat.SelectedIndex;
+
+            if(txAddress.Text.StartsWith("0x"))
+            {
+                ce.Address = txAddress.Text.Substring(2);
+            }            
+
+            cheatMan.Cheats.CheatEntries.Add(ce);
+
+            RefreshCEMemory();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            uint addr = 0;
+            if (ReadAddress(cbDisAddr, ref addr))
+            {
+                txAddress.Text = cbDisAddr.Text;
+                tabContainer.SelectedTab = tabMemory;
             }
         }
     }

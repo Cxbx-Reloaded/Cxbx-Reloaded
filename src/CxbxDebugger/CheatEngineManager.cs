@@ -2,6 +2,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using CxbxDebugger.CheatEngine;
 
 namespace CxbxDebugger
@@ -10,9 +11,35 @@ namespace CxbxDebugger
     {
         public CheatTable Cheats;
 
+        public bool RefreshAll(DebuggerProcess Process)
+        {
+            bool Changed = false;
+
+            for (int i = 0; i < Cheats.CheatEntries.Count; ++i)
+            {
+                CheatEntry Entry = Cheats.CheatEntries[i];
+
+                //if (Entry.LastState.Activated)
+                {
+                    string last = Entry.LastState.Value;
+                    Entry.LastState.Value = Read(Process, i);
+
+                    if(Entry.LastState.Value != last )
+                    {
+                        Changed = true;
+                    }
+
+                    Cheats.CheatEntries[i] = Entry;
+                }
+            }
+           
+
+            return Changed;
+        }
+
         public string Read(DebuggerProcess Process, int CheatIndex)
         {
-            string printed_value = "<failed to read>";
+            string printed_value = "??";
             CheatEntry entry = Cheats.CheatEntries[CheatIndex];
 
             int addr = 0;
@@ -130,6 +157,16 @@ namespace CxbxDebugger
 
                         break;
                     }
+
+                case Variable.Float:
+                    {
+                        float flt_val = 0.0f;
+                        ReadFloat(Value, ref flt_val);
+
+                        Process.WriteMemory(new IntPtr(addr), flt_val);
+
+                        break;
+                    }
             }
         }
 
@@ -142,7 +179,6 @@ namespace CxbxDebugger
 
             return false;
         }
-
 
         static private bool ReadAddress(string Source, ref uint Out)
         {
@@ -164,6 +200,11 @@ namespace CxbxDebugger
             catch (Exception) { }
 
             return false;
+        }
+
+        static private bool ReadFloat(string Source, ref float Out)
+        {
+            return float.TryParse(Source, out Out);
         }
     }
 }

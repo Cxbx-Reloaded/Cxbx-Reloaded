@@ -28,7 +28,7 @@ namespace CxbxDebugger
 
         public struct CheatEntry
         {
-            public string ID;
+            public uint ID;
             public string Description;
             public bool ShowAsHex;
             public State LastState;
