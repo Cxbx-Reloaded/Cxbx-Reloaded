@@ -184,9 +184,15 @@ inline void GeneratePCMFormat(
             // in the first place, FYI.
 
             if (DSBufferDesc.lpwfxFormat == nullptr) {
-                DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+                    DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
             }
-            memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            if (lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) {
+                // Test case: Hulk crash due to cbSize is not a valid size.
+                memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
+                DSBufferDesc.lpwfxFormat->cbSize = 0; // Let's enforce this value to prevent any other exception later on.
+            } else {
+                memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            }
 
             dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
 
