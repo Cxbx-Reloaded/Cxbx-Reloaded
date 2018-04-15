@@ -887,6 +887,8 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 }
             }
             break;
+
+        // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
         case X_DSSPAUSE_PAUSENOACTIVATE:
             EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
             break;
