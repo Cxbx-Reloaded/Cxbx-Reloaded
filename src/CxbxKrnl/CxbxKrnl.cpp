@@ -699,7 +699,6 @@ void PatchRdtscInstruction()
 				opAddr[1] = 0x90; // NOP
 				g_RdtscPatches.push_back(addr);
 				addr += 2;
-				break;
 			}
 		}
 	}
