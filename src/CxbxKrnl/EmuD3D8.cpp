@@ -215,11 +215,6 @@ g_EmuCDPD = {0};
 
 #endif
 
-// Declares an unpatched Xbox function trampoline, callable by name (with a 'XB_' prefix attached)
-#define XB_trampoline(ret, conv, name, arguments) \
-	typedef ret(conv *XB_##name##_t)arguments; \
-	static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
-
 // TODO: This should be a D3DDevice structure
 DWORD* g_XboxD3DDevice;
 
