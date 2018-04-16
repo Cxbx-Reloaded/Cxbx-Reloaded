@@ -289,9 +289,6 @@
     <ClInclude Include="..\..\src\Cxbx\Wnd.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\import\stb\stb_image.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h">
       <Filter>EmuD3D8</Filter>
     </ClInclude>
@@ -448,9 +445,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.OOVPA.h">
-      <Filter>HLEDatabase\D3D8LTCG</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
@@ -572,9 +566,6 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.5455.inl">
       <Filter>HLEDatabase\XNet</Filter>
-    </None>
-    <None Include="..\..\resource\Cxbx.ico">
-      <Filter>Shared</Filter>
     </None>
     <None Include="..\..\resource\Logo.bmp">
       <Filter>Shared</Filter>
@@ -973,5 +964,9 @@
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
       <Filter>Shared</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\resource\Cxbx-R.ico" />
+    <Image Include="..\..\resource\Logo-License-CC4.bmp" />
   </ItemGroup>
 </Project>
