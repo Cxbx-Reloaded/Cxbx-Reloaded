@@ -366,14 +366,14 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     }
 }
 
-#define DSoundBufferSetDefault(pThis, pdsd, dwEmuFlags, dwEmuPlayFlags) \
+#define DSoundBufferSetDefault(pThis, dwEmuPlayFlags) \
     pThis->EmuDirectSoundBuffer8 = nullptr; \
     pThis->EmuDirectSound3DBuffer8 = nullptr; \
     pThis->X_BufferCache = xbnullptr; \
-    pThis->EmuBufferDesc = pdsd; \
-    pThis->EmuFlags = dwEmuFlags; \
+    pThis->EmuFlags = 0; \
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
     pThis->X_BufferCacheSize = 0;
+    //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
     pThis->EmuLockBytes1 = 0; \

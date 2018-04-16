@@ -981,16 +981,18 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
 
-        DSoundBufferSetDefault((*ppBuffer), DSBufferDesc, 0, 0);
+        DSoundBufferSetDefault((*ppBuffer), 0);
         (*ppBuffer)->Host_lock = { 0 };
 
         DSoundBufferRegionSetDefault(*ppBuffer);
 
-        GeneratePCMFormat((*ppBuffer)->EmuBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
+        // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
+        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
+        (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
         DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
-        DSoundBufferCreate(&(*ppBuffer)->EmuBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
         }
@@ -1698,12 +1700,13 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
     DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
 
-    GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+    DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
 
+    // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
+    GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
     // Allocate at least 5 second worth of bytes in PCM format.
     DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
-
-    DSoundBufferSetDefault((*ppStream), DSBufferDesc, 0, DSBPLAY_LOOPING);
+    (*ppStream)->EmuBufferDesc = DSBufferDesc;
 
     (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
 
