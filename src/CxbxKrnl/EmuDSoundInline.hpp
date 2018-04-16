@@ -96,7 +96,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
     //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
     //lpwfxFormat.nBlockAlign;        /* block size of data */
     //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
-    //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
+    //lpwfxFormat.cbSize;             /* the count in bytes of the size of extra information (after cbSize) */
 
     lpwfxFormat->wBitsPerSample = 16;
     lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
@@ -184,7 +184,8 @@ inline void GeneratePCMFormat(
             // in the first place, FYI.
 
             if (DSBufferDesc.lpwfxFormat == nullptr) {
-                    DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
+                // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
+                DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
             }
             if (lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) {
                 // Test case: Hulk crash due to cbSize is not a valid size.
@@ -239,9 +240,8 @@ inline void GeneratePCMFormat(
             DSBufferDesc.lpwfxFormat->nBlockAlign = 4;
             DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
             DSBufferDesc.lpwfxFormat->wBitsPerSample = 16;
-            DSBufferDesc.lpwfxFormat->cbSize = sizeof(WAVEFORMATEX);
+            DSBufferDesc.lpwfxFormat->cbSize = 0;
 
-            DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
             DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
             DSBufferDesc.dwBufferBytes = 3 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
 

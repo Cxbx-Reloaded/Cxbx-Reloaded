@@ -292,15 +292,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         }
 
         //Create Primary Buffer in order for Xbox's DirectSound to manage complete control of it.
-        DSBUFFERDESC bufferDesc;
+        DSBUFFERDESC bufferDesc = { 0 };
         bufferDesc.dwSize = sizeof(DSBUFFERDESC);
         bufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRL3D; //DSBCAPS_CTRLFX is not supported on primary buffer.
-        bufferDesc.dwBufferBytes = 0;
-        bufferDesc.dwReserved = 0;
-        bufferDesc.lpwfxFormat = NULL;
         bufferDesc.guid3DAlgorithm = GUID_NULL;
 
-        hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, NULL);
+        hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, nullptr);
 
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("Creating primary buffer for DirectSound Failed!");
@@ -980,7 +977,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
         DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
-        DSBufferDesc.lpwfxFormat = nullptr;
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
@@ -1701,7 +1697,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
     //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
     DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
-    DSBufferDesc.lpwfxFormat = nullptr;
 
     GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
 
@@ -2040,13 +2035,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     // default ret = DSERR_GENERIC
 
     // TODO: This part of code should be in CDirectSoundStream_Discontinuity
-    pThis->EmuDirectSoundBuffer8->Stop();
+    /*pThis->EmuDirectSoundBuffer8->Stop();
     pThis->Host_isProcessing = false;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
         buffer = pThis->Host_BufferPacketArray.erase(buffer);
-    }
+    }*/
 
     leaveCriticalSection;
 
@@ -2067,6 +2062,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 	LOG_FUNC_ONE_ARG(pThis);
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    pThis->EmuDirectSoundBuffer8->Stop();
+    pThis->Host_isProcessing = false;
+
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
+        buffer = pThis->Host_BufferPacketArray.erase(buffer);
+    }
 
     // TODO: How to emulate flush functionality?
 
