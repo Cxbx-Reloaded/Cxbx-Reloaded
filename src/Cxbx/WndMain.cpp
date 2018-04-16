@@ -191,12 +191,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackPatchCpuFrequency", NULL, &dwType, (PBYTE)&m_PatchCpuFrequency, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_PatchCpuFrequency = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_CxbxDebug = DebugMode::DM_NONE;
@@ -354,9 +348,6 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackPatchCpuFrequency", 0, dwType, (PBYTE)&m_PatchCpuFrequency, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -1320,11 +1311,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_HACKS_PATCHCPUFREQUENCY:
-				m_PatchCpuFrequency = !m_PatchCpuFrequency;
-				RefreshMenus();
-				break;
-
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1752,9 +1738,6 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
-
-			chk_flag = (m_PatchCpuFrequency) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_PATCHCPUFREQUENCY, chk_flag);	
 		}
 
         // emulation menu
@@ -2128,7 +2111,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
 	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
-	g_EmuShared->SetPatchCpuFrequency(&m_PatchCpuFrequency);
 
 	// shell exe
     {

@@ -67,7 +67,6 @@ bool g_XInputEnabled = false;
 bool g_DisablePixelShaders = false;
 bool g_UncapFramerate = false;
 bool g_UseAllCores = false;
-bool g_PatchCpuFrequency = false;
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 LARGE_INTEGER	HostSystemTimeDelta = {};
@@ -218,6 +217,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 }
 
 // exception handler
+bool IsRdtscInstruction(xbaddr addr);
 extern int EmuException(LPEXCEPTION_POINTERS e)
 {
     g_bEmuException = true;
@@ -233,6 +233,19 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
+		// Check if this exception came from rdtsc
+		if (e->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION) {
+			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
+				LARGE_INTEGER PerformanceCount;
+				PerformanceCount.QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+				e->ContextRecord->Eax = PerformanceCount.LowPart;
+				e->ContextRecord->Edx = PerformanceCount.HighPart;
+				e->ContextRecord->Eip += 2;
+				g_bEmuException = false;
+				return EXCEPTION_CONTINUE_EXECUTION;
+			}
+		}
+
         // Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
         if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode))
         {
