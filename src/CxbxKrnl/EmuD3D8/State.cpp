@@ -139,8 +139,10 @@ void XTL::EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[31] != X_D3DRS_UNK)
             g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, XTL::EmuD3DDeferredRenderState[31]);
 
+#ifndef CXBX_USE_D3D9 // D3DRS_PATCHSEGMENTS exists in Direct3D 8, but not in 9 !?
         if(XTL::EmuD3DDeferredRenderState[33] != X_D3DRS_UNK)
             g_pD3DDevice->SetRenderState(D3DRS_PATCHSEGMENTS, XTL::EmuD3DDeferredRenderState[33]);
+#endif
 
         /** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)

@@ -955,7 +955,7 @@ XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource,
 		// Burnout hits this case (retreiving a surface instead of a texture)
 	}
 
-	return (XTL::IDirect3DBaseTexture8*)GetHostResource(pXboxResource, iTextureStage);
+	return (XTL::IDirect3DBaseTexture*)GetHostResource(pXboxResource, iTextureStage);
 }
 
 XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
@@ -1276,7 +1276,11 @@ VOID CxbxReleaseBackBufferLock()
 {
 	XTL::IDirect3DSurface *pBackBuffer = nullptr;
 
-	if (D3D_OK == g_pD3DDevice->GetBackBuffer(0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
+	if (D3D_OK == g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
 	{
 		assert(pBackBuffer != nullptr);
 
@@ -2120,7 +2124,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 // update render target cache
 				XTL::IDirect3DSurface *pNewHostSurface = nullptr;
-                hRet = g_pD3DDevice->GetRenderTarget(&pNewHostSurface);
+                hRet = g_pD3DDevice->GetRenderTarget(
+#ifdef CXBX_USE_D3D9
+					0, // RenderTargetIndex
+#endif
+					&pNewHostSurface);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
 
 				// update z-stencil surface cache
@@ -2134,12 +2142,19 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 (
                     1, 0, 0, XTL::D3DPOOL_MANAGED,
                     &g_pDummyBuffer
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
                 );
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexBuffer");
 
                 for(int Streams = 0; Streams < 16; Streams++)
                 {
-                    hRet = g_pD3DDevice->SetStreamSource(Streams, g_pDummyBuffer, 1);
+                    hRet = g_pD3DDevice->SetStreamSource(Streams, g_pDummyBuffer, 
+#ifdef CXBX_USE_D3D9
+						0, // OffsetInBytes
+#endif
+						1);
 					DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 				}
 
@@ -2284,7 +2299,11 @@ void CxbxUpdateActiveIndexBuffer
 			D3DUSAGE_WRITEONLY,
 			XTL::D3DFMT_INDEX16,
 			XTL::D3DPOOL_MANAGED,
-			&indexBuffer.pHostIndexBuffer);
+			&indexBuffer.pHostIndexBuffer
+#ifdef CXBX_USE_D3D9
+			, nullptr
+#endif
+		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
@@ -2315,7 +2334,12 @@ void CxbxUpdateActiveIndexBuffer
 	*pIndexBase = g_CachedIndexBase;
 
 	// Activate the new native index buffer :
+#ifdef CXBX_USE_D3D9
+	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer);
+	// Note : *pIndexBase is moved to DrawIndexedPrimitive
+#else
 	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
@@ -2677,7 +2701,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.blue[v]  = pRamp->blue[v];
     }
 
-//    g_pD3DDevice->SetGammaRamp(dwPCFlags, &PCRamp);
+#if 0 // TODO : Why is this disabled?
+	g_pD3DDevice->SetGammaRamp(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		dwPCFlags, &PCRamp);
+#endif
 }
 
 // ******************************************************************
@@ -2694,7 +2724,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
 
     D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
 
-    g_pD3DDevice->GetGammaRamp(pGammaRamp);
+    g_pD3DDevice->GetGammaRamp(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		pGammaRamp);
 
     for(int v=0;v<256;v++)
     {
@@ -2736,8 +2770,13 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	{
 	// create a buffer to return
 	// TODO: Verify the surface is always 640x480
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, D3DFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
+#else
 	hRet = g_pD3DDevice->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
+#endif
 	}
 
 	SetHostSurface(pBackBuffer, pCachedPrimarySurface);
@@ -2759,7 +2798,11 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	if(BackBuffer != -1) {
-	hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
+	hRet = g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 	}
 	//*/
@@ -2773,7 +2816,11 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		 BackBuffer = 0;
 	 }
 
-	HRESULT hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
@@ -2817,7 +2864,11 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		BackBuffer = 0;
 	}
 
-	hRet = g_pD3DDevice->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+	hRet = g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet)) {
@@ -4338,12 +4389,26 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		case X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
-					g_EmuCDPD.HostPresentationParameters.MultiSampleType, &pNewHostSurface);
+					g_EmuCDPD.HostPresentationParameters.MultiSampleType, 
+#ifdef CXBX_USE_D3D9
+					0, // MultisampleQuality
+					false, // Discard
+#endif
+					&pNewHostSurface
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
+				);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateDepthStencilSurface");
 			}
 			else {
+#ifdef CXBX_USE_D3D9
+				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
+#else
 				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pNewHostSurface);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
+#endif
 			}
 
 			// First fail, retry with a fallback format
@@ -4359,7 +4424,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 
 				EmuWarning("Trying Fallback");
+#ifdef CXBX_USE_D3D9
+				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
+#else
 				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
+#endif
 			}
 
 			// If the fallback failed, show an error and exit execution.
@@ -4391,14 +4460,33 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		}
 
 		case X_D3DRTYPE_TEXTURE: {
+/* TODO : Enabled this if D3DPool is ever anything else but D3DPOOL_MANAGED :
+#ifdef CXBX_USE_D3D9
+			if (D3DPool == D3DPOOL_DEFAULT) {
+				if ((D3DUsage & D3DUSAGE_DYNAMIC) == 0) {
+					if ((D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+						D3DUsage |= D3DUSAGE_DYNAMIC;
+					}
+				}
+			}
+#endif
+*/
 			hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
-				D3DUsage, PCFormat, D3DPool, &pNewHostTexture);
+				D3DUsage, PCFormat, D3DPool, &pNewHostTexture
+#ifdef CXBX_USE_D3D9
+				, nullptr
+#endif
+			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
 
 			// If the above failed, we might be able to use an ARGB texture instead
 			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 				hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
-					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture);
+					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
+				);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DFMT_A8R8G8B8)");
 
 				if (hRet == D3D_OK) {
@@ -4414,7 +4502,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				(
 					dwWidth, dwHeight, dwMipMapLevels, D3DUsage, PCFormat,
 					D3DPOOL_SYSTEMMEM, &pNewHostTexture
-				);
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
+					);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DPOOL_SYSTEMMEM)");
 			}*/
 
@@ -4432,7 +4523,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 		case X_D3DRTYPE_VOLUMETEXTURE: {
 			hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
-				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, &pNewHostVolumeTexture);
+				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, &pNewHostVolumeTexture
+#ifdef CXBX_USE_D3D9
+				, nullptr
+#endif
+			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVolumeTexture");
 
 			if (hRet != D3D_OK) {
@@ -4451,7 +4546,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				dwMipMapLevels, PCFormat);
 
 			hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,
-				PCFormat, D3DPool, &pNewHostCubeTexture);
+				PCFormat, D3DPool, &pNewHostCubeTexture
+#ifdef CXBX_USE_D3D9
+				, nullptr
+#endif
+			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateCubeTexture");
 
 			if (hRet != D3D_OK) {
@@ -4853,7 +4952,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		}
 
 		IDirect3DSurface *pBackBufferSurface = nullptr;
-		HRESULT hRet = g_pD3DDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
+		HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+			0, // iSwapChain
+#endif
+			0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 
 		// if we obtained the backbuffer, load the YUY2 into the backbuffer
@@ -6271,7 +6374,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 					HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive
 					(
 						D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
-						//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
+#ifdef CXBX_USE_D3D9
+						/* BaseVertexIndex = */0, // TODO : Use g_CachedIndexBase here too? Or transformed somehow?
+#endif
 						/* MinVertexIndex = */0,
 						/* NumVertices = */VERTICES_PER_QUAD, // Use all 4 vertices of 1 quad
 						uiStartIndex,
@@ -6289,6 +6394,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 				// Other primitives than X_D3DPT_QUADLIST can be drawn normally :
 				hRet = g_pD3DDevice->DrawIndexedPrimitive(
 					EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
+#ifdef CXBX_USE_D3D9
+					g_CachedIndexBase,
+#endif
 					/* MinVertexIndex = */0,
 					/* NumVertices = */uiNumVertices, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 					// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
@@ -6307,7 +6415,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 			g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
 		}
 
+#ifdef CXBX_USE_D3D9
+		g_pD3DDevice->SetIndices(nullptr);
+#else
 		g_pD3DDevice->SetIndices(NULL, 0);
+#endif
 	}
 
 	// Execute callback procedure

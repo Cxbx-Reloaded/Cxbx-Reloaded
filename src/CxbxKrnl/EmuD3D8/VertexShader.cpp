@@ -2068,7 +2068,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
         break;
 	case X_D3DVSDT_NONE: // 0x02:
         DbgVshPrintf("D3DVSDT_NONE /* xbox ext. nsp */");
-#if DXBX_USE_D3D9
+#if CXBX_USE_D3D9
 		NewDataType = D3DVSDT_NONE;
 #endif
 	    // TODO -oDxbx: Use D3DVSD_NOP ?

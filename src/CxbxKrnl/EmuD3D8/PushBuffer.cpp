@@ -43,6 +43,9 @@
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
+#ifdef CXBX_USE_D3D9
+extern DWORD g_CachedIndexBase;
+#endif
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
@@ -267,7 +270,16 @@ extern void XTL::EmuExecutePushBufferRaw
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer == 0)
             {
-                HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(2047*sizeof(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, &pVertexBuffer);
+                HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
+					2047*sizeof(DWORD), 
+					D3DUSAGE_WRITEONLY, 
+					dwVertexShader, 
+					D3DPOOL_MANAGED, 
+					&pVertexBuffer
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
+				);
 
                 if(FAILED(hRet))
                     CxbxKrnlCleanup("Unable to create vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
@@ -376,7 +388,11 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer
+#ifdef CXBX_USE_D3D9
+						, nullptr
+#endif
+					);
 
                     maxIBSize = dwCount*2 + 2*2;
                 }
@@ -417,7 +433,11 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(pIndexBuffer);
+#else
+					g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#endif
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -430,8 +450,14 @@ extern void XTL::EmuExecutePushBufferRaw
                         {
                             g_pD3DDevice->DrawIndexedPrimitive
                             (
-                                PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
-//                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
+                                PCPrimitiveType, 
+#ifdef CXBX_USE_D3D9
+								g_CachedIndexBase,
+#endif
+								0,
+								8*1024*1024, // dwCount*2
+								0, 
+								PrimitiveCount
                             );
 
 							g_dwPrimPerFrame += PrimitiveCount;
@@ -442,7 +468,11 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
-                    g_pD3DDevice->SetIndices(0, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(nullptr);
+#else
+					g_pD3DDevice->SetIndices(0, 0);
+#endif
                 }
             }
 
@@ -485,7 +515,11 @@ extern void XTL::EmuExecutePushBufferRaw
                 UINT  uiStride;
 
                 // retrieve stream data
-                g_pD3DDevice->GetStreamSource(0, &pActiveVB, &uiStride);
+                g_pD3DDevice->GetStreamSource(0, &pActiveVB,
+#ifdef CXBX_USE_D3D9
+					nullptr, // pOffsetInBytes
+#endif
+					&uiStride);
 
                 // retrieve stream desc
                 pActiveVB->GetDesc(&VBDesc);
@@ -528,7 +562,11 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer
+#ifdef CXBX_USE_D3D9
+						, nullptr
+#endif
+					);
 
                     maxIBSize = dwCount*2;
                 }
@@ -580,7 +618,11 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(pIndexBuffer);
+#else
+					g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#endif
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -591,7 +633,14 @@ extern void XTL::EmuExecutePushBufferRaw
                     {
                         g_pD3DDevice->DrawIndexedPrimitive
                         (
-                            PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
+                            PCPrimitiveType, 
+#ifdef CXBX_USE_D3D9
+							g_CachedIndexBase,
+#endif
+							0, 
+							/*dwCount*2*/8*1024*1024, 
+							0, 
+							PrimitiveCount
                         );
 
 						g_dwPrimPerFrame += PrimitiveCount;
@@ -601,8 +650,12 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(nullptr);
+#else
                     g_pD3DDevice->SetIndices(0, 0);
-                }
+#endif
+				}
             }
 
             pdwPushData--;
@@ -646,7 +699,11 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     UINT  uiStride;
 
     // retrieve stream data
-    g_pD3DDevice->GetStreamSource(0, &pActiveVB, &uiStride);
+    g_pD3DDevice->GetStreamSource(0, &pActiveVB,
+#ifdef CXBX_USE_D3D9
+		nullptr, // pOffsetInBytes
+#endif
+		&uiStride);
 
     char szFileName[128];
     sprintf(szFileName, "D:\\_cxbx\\mesh\\CxbxMesh-0x%.08X.x", pIndexData);

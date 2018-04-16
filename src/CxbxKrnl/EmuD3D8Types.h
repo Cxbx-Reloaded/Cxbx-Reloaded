@@ -34,9 +34,11 @@
 #ifndef EMUD3D8TYPES_H
 #define EMUD3D8TYPES_H
 
-//#define CXBX_USE_D3D9
+//#define CXBX_USE_D3D9 // Declared in the Debug_Direct3D9 build configuration
 
 #ifdef CXBX_USE_D3D9
+
+#undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
@@ -45,12 +47,17 @@
 //implies #include <d3d9caps.h>
 #include <d3dx9math.h> // for D3DXVECTOR4, etc
 #include <d3dx9tex.h>
+
 #include <dxerr.h>
 #pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
 
 // If the above doesn't compile, install the June 2010 DirectX SDK
 // from https://www.microsoft.com/en-us/download/details.aspx?id=6812
 // and select the Direct3D 9 include & library path (TODO : how?)
+
+// We're going to use the approach detailed in :
+// https://blogs.msdn.microsoft.com/chuckw/2015/03/23/the-zombie-directx-sdk/
+
 
 // For transforming code that's written for Direct3D 8 into Direct3D 9,
 // See "Converting to Direct3D 9" https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx
@@ -61,8 +68,7 @@
 // Alias all host Direct3D 9 symbols to generic symbols
 #define Direct3DCreate			 Direct3DCreate9
 #define D3DXAssembleShader		 D3DXCompileShader
-#define DXGetErrorString         DXGetErrorString9
-#define DXGetErrorDescription    DXGetErrorDescription9
+#define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                  D3DCAPS9
@@ -424,8 +430,6 @@ typedef struct _X_D3DGAMMARAMP
     BYTE    blue[256];
 }
 X_D3DGAMMARAMP;
-
-#define X_PIXELSHADER_FAKE_HANDLE 0xDEADBEEF
 
 struct X_D3DVertexShader
 {
