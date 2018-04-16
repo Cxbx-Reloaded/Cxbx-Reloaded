@@ -832,17 +832,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 			if (RawSize == 0) {
 				continue;
 			}
-			UCHAR SHADigest[A_SHA_DIGEST_LEN];
+			unsigned char SHADigest[A_SHA_DIGEST_LEN];
 			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
-			// temp
-			uint08* temp = (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest;
 
 			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
-				EmuWarning("SHA hash of section %s doesn't match, possible section corruption",
-					(PCHAR)((CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].dwSectionNameAddr));
+				EmuWarning("SHA hash of section %s doesn't match, possible section corruption", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 			else {
-				printf("SHA hash check of section %s successful", (PCHAR)((CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].dwSectionNameAddr));
+				printf("[0x%X] INIT: SHA hash check of section %s successful\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 		}
 
