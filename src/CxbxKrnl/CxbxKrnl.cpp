@@ -707,7 +707,7 @@ void PatchRdtscInstruction()
 				// Found potential rdtsc instruction, check for validity by disassembling the following instruction
 				_DInst info;
 				if (!EmuX86_DecodeOpcode((uint8_t*)(addr + 2), info)) {
-					return;
+					continue;
 				}
 
 				// If the following opcode is a single-byte opcode, check for it's validity
@@ -717,7 +717,7 @@ void PatchRdtscInstruction()
 						PatchRdtsc(addr);
 						addr += 1;
 						continue;
-					}
+					}	
 
 					EmuWarning("Skipped potential rdtsc: Unknown opcode pattern @ 0x%.8X\n", (DWORD)addr);
 					continue;
