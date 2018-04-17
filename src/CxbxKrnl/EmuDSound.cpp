@@ -1067,6 +1067,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     }
     HRESULT hRet;
 
+    // Confirmed it perform a reset to default.
+    DSoundBufferRegionSetDefault(pThis);
+
     GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
     memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
@@ -1103,6 +1106,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
     pThis->EmuBufferToggle = X_DSB_TOGGLE_PLAY;
     pThis->EmuRegionPlayStartOffset = dwPlayStart;
     pThis->EmuRegionPlayLength = dwPlayLength;
+
+    // Confirmed play region do overwrite loop region value.
+    pThis->EmuRegionLoopStartOffset = 0;
+    pThis->EmuRegionLoopLength = 0;
 
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);

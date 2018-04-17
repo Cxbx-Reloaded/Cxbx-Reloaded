@@ -1189,6 +1189,8 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
 
     enterCriticalSection;
 
+    pDSBuffer->Stop();
+
     if (X_BufferAllocate) {
         GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize);
     // Don't allocate for DS Stream class, it is using straight from the source.
