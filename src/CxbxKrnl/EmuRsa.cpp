@@ -242,8 +242,9 @@ giant newgiant(int numshorts)
 	return(thegiant);
 }
 
-// ergo720: there's a bug in the original implementation of gigimport that prevents the rsa algorithm from working correctly (but for some
-// reason it works on Ubuntu). This replacement implementation is taken from http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
+// ergo720: there's a bug in the original implementation of gigimport that prevents the rsa algorithm from working correctly on Windows (but
+// for some reason it works on Ubuntu). This replacement implementation is taken from
+// http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
 void gigimport(giant g, unsigned char *buff, int len) {
 
 	// copy buffered 'number' into giant's number buffer
@@ -289,6 +290,7 @@ void gigimport(giant g, unsigned char *buff, int len)
 	if (g->sign == 0) g->sign = 1;
 }
 #endif
+
 void powermodg(giant x, giant n, giant g)
 /* x becomes x^n (mod g). */
 {

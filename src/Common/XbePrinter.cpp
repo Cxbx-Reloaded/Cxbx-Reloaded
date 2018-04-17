@@ -288,11 +288,11 @@ std::string XbePrinter::GenGeneralHeaderInfo2()
 
 std::string XbePrinter::ValidateXbeSignature()
 {
-	std::string text("\nMissing RSA key. Unable to verify xbe signature\n\n");
+	std::string text("\nMissing RSA key. Unable to verify xbe signature\n");
 	if (Xbe_to_print->LoadRSAkey()) {
-		text = "\nInvalid xbe signature. Homebrew, tampered or pirated xbe?\n\n";
+		text = "\nInvalid xbe signature. Homebrew, tampered or pirated xbe?\n";
 		if (Xbe_to_print->CheckXbeSignature()) {
-			text = "\nValid xbe signature. Xbe is legit\n\n";
+			text = "\nValid xbe signature. Xbe is legit\n";
 		}
 	}
 	return text;
