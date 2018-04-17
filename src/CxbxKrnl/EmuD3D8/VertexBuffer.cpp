@@ -72,7 +72,7 @@ extern UINT g_D3DStreamStrides[16];
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
 
 typedef struct {
-	XTL::IDirect3DVertexBuffer8* pHostVertexBuffer;
+	XTL::IDirect3DVertexBuffer* pHostVertexBuffer;
 	size_t uiSize;
 	std::chrono::time_point<std::chrono::high_resolution_clock> lastUsed;
 } cached_vertex_buffer_object;
@@ -83,7 +83,7 @@ std::unordered_map<DWORD, cached_vertex_buffer_object> g_HostVertexBuffers;
 // This prevents unnecessary allocation and releasing of Vertex Buffers when
 // we can use an existing just fine. This gives a (slight) performance boost
 // Returns true if the existing vertex buffer was trashed/made invalid
-bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DVertexBuffer8** pVertexBuffer)
+bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DVertexBuffer** pVertexBuffer)
 {
 	// TODO: If the vertex buffer object cache becomes too large, 
 	// free the least recently used vertex buffers
@@ -95,7 +95,16 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 		newBuffer.uiSize = size;
 		newBuffer.lastUsed = std::chrono::high_resolution_clock::now();
 
-		HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &newBuffer.pHostVertexBuffer);
+		HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
+			size,
+			D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
+			0,
+			XTL::D3DPOOL_DEFAULT,
+			&newBuffer.pHostVertexBuffer
+#ifdef CXBX_USE_D3D9
+			, nullptr
+#endif
+		);
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to create vertex buffer");
 		}
@@ -118,7 +127,16 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 	// If execution reached here, we need to release and re-create the vertex buffer..
 	buffer->pHostVertexBuffer->Release();
 	buffer->uiSize = size;
-	HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, XTL::D3DPOOL_DEFAULT, &buffer->pHostVertexBuffer);
+	HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
+		size,
+		D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
+		0,
+		XTL::D3DPOOL_DEFAULT,
+		&buffer->pHostVertexBuffer
+#ifdef CXBX_USE_D3D9
+		, nullptr
+#endif
+	);
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("Failed to create vertex buffer");
 	}
@@ -224,7 +242,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
     // Do some groovy patchin'
     
     XTL::X_D3DVertexBuffer    *pOrigVertexBuffer;
-    IDirect3DVertexBuffer8    *pNewVertexBuffer;
+    IDirect3DVertexBuffer     *pNewVertexBuffer;
     uint08                    *pOrigData;
     uint08                    *pNewData;
 	UINT                       uiVertexCount;
@@ -351,7 +369,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 1 * sizeof(SHORT);
 				break;
 			}
-#if !DXBX_USE_D3D9 // No need for patching in D3D9
+#if !CXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -368,7 +386,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 				pOrigVertex += 3 * sizeof(SHORT);
 				break;
 			}
-#if !DXBX_USE_D3D9 // No need for patching in D3D9
+#if !CXBX_USE_D3D9 // No need for patching in D3D9
 			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
 				// UNTESTED - Need test-case!
 				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
@@ -412,7 +430,14 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         //if(pNewVertexBuffer != nullptr) // Dxbx addition
 			pNewVertexBuffer->Unlock();
 
-        if(FAILED(g_pD3DDevice8->SetStreamSource(uiStream, pNewVertexBuffer, pStreamPatch->ConvertedStride)))
+        HRESULT hr = g_pD3DDevice->SetStreamSource(
+			uiStream, 
+			pNewVertexBuffer, 
+#ifdef CXBX_USE_D3D9
+			0, // OffsetInBytes
+#endif
+			pStreamPatch->ConvertedStride);
+		if (FAILED(hr))
         {
             CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
         }
@@ -462,7 +487,7 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
         return false;
 
     XTL::X_D3DVertexBuffer *pOrigVertexBuffer;
-    IDirect3DVertexBuffer8 *pNewVertexBuffer;
+    IDirect3DVertexBuffer *pNewVertexBuffer;
     PATCHEDSTREAM *pStream;
     uint08 *pData, *pUVData;
     uint uiStride, uiVertexCount;
@@ -575,7 +600,14 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
     {
         pNewVertexBuffer->Unlock();
 
-        if(FAILED(g_pD3DDevice8->SetStreamSource(uiStream, pNewVertexBuffer, uiStride)))
+        HRESULT hr = g_pD3DDevice->SetStreamSource(
+			uiStream, 
+			pNewVertexBuffer, 
+#ifdef CXBX_USE_D3D9
+			0, // OffsetInBytes
+#endif
+			uiStride);
+		if (FAILED(hr))
         {
             CxbxKrnlCleanup("Failed to set the texcoord patched FVF buffer as the new stream source.");
         }
@@ -769,7 +801,13 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     {
         pStream->pPatchedStream->Unlock();
 
-        g_pD3DDevice8->SetStreamSource(uiStream, pStream->pPatchedStream, pStream->uiOrigStride);
+        g_pD3DDevice->SetStreamSource(
+			uiStream, 
+			pStream->pPatchedStream, 
+#ifdef CXBX_USE_D3D9
+			0, // OffsetInBytes
+#endif
+			pStream->uiOrigStride);
     }
 
     m_bPatched = true;
@@ -807,7 +845,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 
 		if (!Patched && pPatchDesc->pXboxVertexStreamZeroData == nullptr) {
 			// Fetch or Create the host Vertex Buffer
-			XTL::IDirect3DVertexBuffer8* pHostVertexBuffer;
+			XTL::IDirect3DVertexBuffer* pHostVertexBuffer;
 			GetCachedVertexBufferObject(g_D3DStreams[uiStream]->Data, pPatchDesc->uiSize, &pHostVertexBuffer);
 
 			// Copy xbox data to the host vertex buffer
@@ -820,7 +858,13 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 			pHostVertexBuffer->Unlock();
 			
 			// Set the buffer as a stream source
-			g_pD3DDevice8->SetStreamSource(uiStream, pHostVertexBuffer, g_D3DStreamStrides[uiStream]);
+			g_pD3DDevice->SetStreamSource(
+				uiStream, 
+				pHostVertexBuffer, 
+#ifdef CXBX_USE_D3D9
+				0, // OffsetInBytes
+#endif
+				g_D3DStreamStrides[uiStream]);
 		}
 
 		// TODO: Cache Vertex Buffer Data
@@ -999,10 +1043,10 @@ VOID XTL::EmuFlushIVB()
 
     if(bFVF)
     {
-        g_pD3DDevice8->SetVertexShader(dwCurFVF);
+        g_pD3DDevice->SetVertexShader(dwCurFVF);
     }
 
-    g_pD3DDevice8->DrawPrimitiveUP(
+    g_pD3DDevice->DrawPrimitiveUP(
 		EmuXB2PC_D3DPrimitiveType(VPDesc.XboxPrimitiveType),
         VPDesc.dwHostPrimitiveCount,
         VPDesc.pXboxVertexStreamZeroData,
@@ -1012,7 +1056,7 @@ VOID XTL::EmuFlushIVB()
 
     if(bFVF)
     {
-        g_pD3DDevice8->SetVertexShader(g_CurrentXboxVertexShaderHandle);
+        g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
     }
 
     g_InlineVertexBuffer_TableOffset = 0;

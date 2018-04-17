@@ -60,7 +60,7 @@ VertexPatchDesc;
 typedef struct _PATCHEDSTREAM
 {
     XTL::X_D3DVertexBuffer *pOriginalStream;
-    XTL::IDirect3DVertexBuffer8 *pPatchedStream;
+    XTL::IDirect3DVertexBuffer *pPatchedStream;
     UINT                    uiOrigStride;
     UINT                    uiNewStride;
 } PATCHEDSTREAM;

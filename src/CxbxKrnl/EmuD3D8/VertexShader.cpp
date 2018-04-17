@@ -1643,11 +1643,15 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
     return (Pos + 1) * sizeof(DWORD);
 }
 
+#ifndef CXBX_USE_D3D9
+namespace XTL {
 typedef DWORD D3DDECLUSAGE;
+}
+#endif
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
-D3DDECLUSAGE Xb2PCRegisterType
+XTL::D3DDECLUSAGE Xb2PCRegisterType
 (
 	DWORD VertexRegister,
 	boolean IsFixedFunction
@@ -1656,6 +1660,9 @@ D3DDECLUSAGE Xb2PCRegisterType
 	using namespace XTL;
 
 	D3DDECLUSAGE PCRegisterType;
+#ifdef CXBX_USE_D3D9
+	DWORD PCUsageIndex = 0;
+#endif
 	// For fixed function vertex shaders, print D3DVSDE_*, for custom shaders print numbered registers.
 	if (IsFixedFunction) {
 		switch (VertexRegister)
@@ -1666,27 +1673,52 @@ D3DDECLUSAGE Xb2PCRegisterType
 			break;
 		case X_D3DVSDE_POSITION: // 0
 			DbgVshPrintf("D3DVSDE_POSITION");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_POSITION;
+#else
 			PCRegisterType = D3DVSDE_POSITION;
+#endif
 			break;
 		case X_D3DVSDE_BLENDWEIGHT: // 1
 			DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
+#else
 			PCRegisterType = D3DVSDE_BLENDWEIGHT;
+#endif
 			break;
 		case X_D3DVSDE_NORMAL: // 2
 			DbgVshPrintf("D3DVSDE_NORMAL");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_NORMAL;
+#else
 			PCRegisterType = D3DVSDE_NORMAL;
+#endif
 			break;
 		case X_D3DVSDE_DIFFUSE: // 3
 			DbgVshPrintf("D3DVSDE_DIFFUSE");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
+#else
 			PCRegisterType = D3DVSDE_DIFFUSE;
+#endif
 			break;
 		case X_D3DVSDE_SPECULAR: // 4
 			DbgVshPrintf("D3DVSDE_SPECULAR");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
+#else
 			PCRegisterType = D3DVSDE_SPECULAR;
+#endif
 			break;
 		case X_D3DVSDE_FOG: // 5
+#ifdef CXBX_USE_D3D9
+			DbgVshPrintf("D3DVSDE_FOG");
+			PCRegisterType = D3DDECLUSAGE_FOG;
+#else
 			DbgVshPrintf("D3DVSDE_FOG /* xbox ext. */");
 			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+#endif
 			break;
 		case X_D3DVSDE_BACKDIFFUSE: // 7
 			DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
@@ -1698,19 +1730,35 @@ D3DDECLUSAGE Xb2PCRegisterType
 			break;
 		case X_D3DVSDE_TEXCOORD0: // 9
 			DbgVshPrintf("D3DVSDE_TEXCOORD0");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
+#else
 			PCRegisterType = D3DVSDE_TEXCOORD0;
+#endif
 			break;
 		case X_D3DVSDE_TEXCOORD1: // 10
 			DbgVshPrintf("D3DVSDE_TEXCOORD1");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
+#else
 			PCRegisterType = D3DVSDE_TEXCOORD1;
+#endif
 			break;
 		case X_D3DVSDE_TEXCOORD2: // 11
 			DbgVshPrintf("D3DVSDE_TEXCOORD2");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
+#else
 			PCRegisterType = D3DVSDE_TEXCOORD2;
+#endif
 			break;
 		case X_D3DVSDE_TEXCOORD3: // 12
 			DbgVshPrintf("D3DVSDE_TEXCOORD3");
+#ifdef CXBX_USE_D3D9
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
+#else
 			PCRegisterType = D3DVSDE_TEXCOORD3;
+#endif
 			break;
 		default:
 			DbgVshPrintf("%d /* unknown register */", VertexRegister);
@@ -1723,6 +1771,9 @@ D3DDECLUSAGE Xb2PCRegisterType
 	}
 
     return PCRegisterType;
+#ifdef CXBX_USE_D3D9
+	// TODO : Also return (and use) PCUsageIndex
+#endif
 }
 
 static inline DWORD VshGetTokenType(DWORD Token)
@@ -2017,7 +2068,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
         break;
 	case X_D3DVSDT_NONE: // 0x02:
         DbgVshPrintf("D3DVSDT_NONE /* xbox ext. nsp */");
-#if DXBX_USE_D3D9
+#if CXBX_USE_D3D9
 		NewDataType = D3DVSDT_NONE;
 #endif
 	    // TODO -oDxbx: Use D3DVSD_NOP ?

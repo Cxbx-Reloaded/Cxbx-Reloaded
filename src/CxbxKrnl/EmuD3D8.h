@@ -86,7 +86,7 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
     HWND                        hFocusWindow,
     DWORD                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    IDirect3DDevice8          **ppReturnedDeviceInterface
+    IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
 // ******************************************************************
@@ -123,7 +123,7 @@ HRESULT WINAPI EMUPATCH(D3D_CheckDeviceFormat)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetDeviceCaps)
 (
-    D3DCAPS8                   *pCaps
+    X_D3DCAPS                   *pCaps
 );
 #endif
 
@@ -289,7 +289,7 @@ VOID WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetViewport)
 (
-    CONST D3DVIEWPORT8 *pViewport
+    CONST X_D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************
@@ -297,7 +297,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetViewport)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetViewport)
 (
-    D3DVIEWPORT8 *pViewport
+    X_D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************
@@ -305,8 +305,8 @@ VOID WINAPI EMUPATCH(D3DDevice_GetViewport)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 (
-    D3DXVECTOR4 *pOffset,
-    D3DXVECTOR4 *pScale
+	X_D3DXVECTOR4 *pOffset,
+	X_D3DXVECTOR4 *pScale
 );
 
 // ******************************************************************
@@ -1328,7 +1328,7 @@ VOID WINAPI EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 VOID WINAPI EMUPATCH(D3DDevice_GetLight)
 (
     DWORD            Index,
-    D3DLIGHT8       *pLight
+    X_D3DLIGHT8       *pLight
 );
 
 // ******************************************************************
@@ -1337,7 +1337,7 @@ VOID WINAPI EMUPATCH(D3DDevice_GetLight)
 HRESULT WINAPI EMUPATCH(D3DDevice_SetLight)
 (
     DWORD            Index,
-    CONST D3DLIGHT8 *pLight
+    CONST X_D3DLIGHT8 *pLight
 );
 
 // ******************************************************************
@@ -1345,7 +1345,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetLight)
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetMaterial)
 (
-    CONST D3DMATERIAL8 *pMaterial
+    CONST X_D3DMATERIAL8 *pMaterial
 );
 
 // ******************************************************************
@@ -1615,7 +1615,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
 (
     UINT        Adapter,
     D3DDEVTYPE  DeviceType,
-    D3DCAPS8    *pCaps
+    X_D3DCAPS  *pCaps
 );
 #endif
 
@@ -1882,7 +1882,10 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView);
 // ******************************************************************
 // * patch: D3DDevice_SetBackMaterial
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial);
+VOID WINAPI EMUPATCH(D3DDevice_SetBackMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+);
 
 #if 0 // patch disabled
 // ******************************************************************
@@ -1892,7 +1895,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
 (
 	UINT					Adapter,
 	DWORD					Flags,
-	D3DADAPTER_IDENTIFIER8* pIdentifier
+	X_D3DADAPTER_IDENTIFIER *pIdentifier
 );
 #endif
 
@@ -1985,7 +1988,10 @@ VOID WINAPI EMUPATCH(D3DDevice_GetScissors)
 // ******************************************************************
 // * patch: D3DDevice_GetBackMaterial
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_GetBackMaterial)(D3DMATERIAL8* pMaterial);
+VOID WINAPI EMUPATCH(D3DDevice_GetBackMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+);
 
 // ******************************************************************
 // * patch: D3D::LazySetPointParams
@@ -1995,6 +2001,9 @@ void WINAPI EMUPATCH(D3D_LazySetPointParams)( void* Device );
 // ******************************************************************
 // * patch: D3DDevice_GetMaterial
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_GetMaterial)(D3DMATERIAL8* pMaterial);
+VOID WINAPI EMUPATCH(D3DDevice_GetMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+);
 
 #endif
