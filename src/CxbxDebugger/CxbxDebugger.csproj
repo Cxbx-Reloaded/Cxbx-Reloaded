@@ -67,7 +67,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CheatEngineManager.cs" />
     <Compile Include="DebuggerExtras\CheatTable.cs" />
     <Compile Include="DebuggerExtras\CheatTableReader.cs" />
     <Compile Include="DebuggerSymbols\Kernel\KernelSymbolProvider.cs" />
@@ -93,6 +92,7 @@
     <Compile Include="DebuggerSymbols\HLECache\HLECacheFile.cs" />
     <Compile Include="DebuggerSymbols\HLECache\HLECacheProvider.cs" />
     <Compile Include="DebuggerSymbols\HLECache\Utils\INIReader.cs" />
+    <Compile Include="PatchManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RicherTextBox.cs">

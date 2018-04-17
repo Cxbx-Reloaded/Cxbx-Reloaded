@@ -17,13 +17,11 @@ namespace CxbxDebugger
         public enum Variable
         {
             Unsupported,
-            Binary,
             Byte,
             Bytes2,
             Bytes4,
             Float,
             Double,
-            String,
         }
 
         public struct CheatEntry
@@ -43,9 +41,9 @@ namespace CxbxDebugger
             public uint Address;
             public string ModuleName;
             public uint ModuleNameOffset;
-            public byte[] Before;
-            public byte[] Actual;
-            public byte[] After;
+            public byte[] Before; // 5 bytes before 'Actual'
+            public byte[] Actual; // with a length of the opcode
+            public byte[] After; // 5 bytes after 'Actual'
         };
 
         public class CheatTable
@@ -61,5 +59,29 @@ namespace CxbxDebugger
                 CodeEntires = new List<CodeEntry>();
             }
         };
+
+        class Helpers
+        {
+            public static int VariableSize(Variable Var)
+            {
+                switch (Var)
+                {
+                    case Variable.Unsupported:
+                        return 0;
+                    case Variable.Byte:
+                        return 1;
+                    case Variable.Bytes2:
+                        return 2;
+                    case Variable.Bytes4:
+                        return 4;
+                    case Variable.Float:
+                        return 4;
+                    case Variable.Double:
+                        return 8;
+                }
+
+                return 0;
+            }
+        }
     }
 }

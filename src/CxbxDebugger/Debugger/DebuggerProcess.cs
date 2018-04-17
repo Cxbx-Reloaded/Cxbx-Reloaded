@@ -225,6 +225,18 @@ namespace CxbxDebugger
                     Data = new byte[] { (byte)GenericValue };
                     break;
 
+                case TypeCode.Int16:
+                    Data = BitConverter.GetBytes((short)GenericValue);
+                    break;
+
+                case TypeCode.UInt16:
+                    Data = BitConverter.GetBytes((ushort)GenericValue);
+                    break;
+
+                case TypeCode.Int32:
+                    Data = BitConverter.GetBytes((int)GenericValue);
+                    break;
+
                 case TypeCode.UInt32:
                     Data = BitConverter.GetBytes((uint)GenericValue);
                     break;
@@ -241,6 +253,14 @@ namespace CxbxDebugger
             {
                 WriteMemoryInternal(Address, Data);
             }
+        }
+
+        public bool WriteMemoryBlock(IntPtr Address, byte[] Data)
+        {
+            if (Address == IntPtr.Zero)
+                return false;
+
+            return WriteMemoryInternal(Address, Data);
         }
     }
 }
