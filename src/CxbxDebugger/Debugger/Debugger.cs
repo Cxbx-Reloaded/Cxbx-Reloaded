@@ -8,6 +8,7 @@ using WinProcesses = VsChromium.Core.Win32.Processes;
 using WinDebug = VsChromium.Core.Win32.Debugging;
 using System.Runtime.InteropServices;
 using WinLowLevel = LowLevelDesign.Win32.Windows.NativeMethods;
+using System.Threading;
 
 namespace CxbxDebugger
 {
@@ -47,6 +48,8 @@ namespace CxbxDebugger
 
         DebuggerSymbolServer SymbolSrv;
         KernelProvider KernelSymbolProvider;
+
+        ManualResetEvent bpStall = new ManualResetEvent(false);
 
         bool bContinue = true;
         WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
@@ -611,10 +614,14 @@ namespace CxbxDebugger
                             uint BpCode = DebugInfo.ExceptionRecord.ExceptionCode;
                             bool FirstChance = (DebugInfo.dwFirstChance != 0);
 
+                            bpStall.Reset();
+
                             foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
                             {
                                 Event.OnBreakpoint(Thread, BpAddr, BpCode, FirstChance);
                             }
+
+                            bpStall.WaitOne();
                         }
                     }
                     break;
@@ -627,6 +634,11 @@ namespace CxbxDebugger
                     ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
                     break;
             }
+        }
+        
+        public void BreakpointContinue()
+        {
+            bpStall.Set();
         }
 
         public void RunThreaded()

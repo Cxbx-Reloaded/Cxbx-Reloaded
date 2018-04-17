@@ -17,6 +17,7 @@ namespace CxbxDebugger
         Debugger DebuggerInst;
         string[] CachedArgs;
         string CachedTitle = "";
+        bool SuspendedOnBp = false;
 
         DebuggerFormEvents DebugEvents;
 
@@ -307,28 +308,30 @@ namespace CxbxDebugger
         {
             Invoke(new MethodInvoker(delegate ()
             {
-                bool should_suspend = false;
-                if( cbBreakpointAll.Checked )
-                {
-                    should_suspend = true;
-                }
-                else
+                SuspendedOnBp = true;
+
+                bool auto_resume = true;
+                if (cbBreakpointAll.Checked == false)
                 {
                     // Ignore all submodule breakpoints
                     // (effectively triggers from Cxbx.exe and default.xbe)
 
                     if (cbBreakpointCxbx.Checked)
                     {
-                        should_suspend = Module.Core;
+                        auto_resume = (!Module.Core);
                     }
                 }
 
-                if (should_suspend)
+                if (auto_resume)
+                {
+                    Resume();
+                }
+                else
                 {
                     string module_name = Path.GetFileName(Module.Path);
-
                     Suspend(string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
                 }
+
             }));
         }
 
@@ -550,7 +553,10 @@ namespace CxbxDebugger
         {
             if (DebuggerInst != null)
             {
-                DebuggerInst.Break();
+                if (!SuspendedOnBp)
+                {
+                    DebuggerInst.Break();
+                }
 
                 NativeWrappers.FlashWindowTray(Handle);
                 PopulateThreadList(cbThreads, null);
@@ -560,14 +566,21 @@ namespace CxbxDebugger
 
             cbThreads.Enabled = true;
             cbFrames.Enabled = true;
-
         }
 
         private void Resume()
         {
             if (DebuggerInst != null)
             {
-                DebuggerInst.Resume();
+                if (SuspendedOnBp)
+                {
+                    DebuggerInst.BreakpointContinue();
+                    SuspendedOnBp = false;
+                }
+                else
+                {
+                    DebuggerInst.Resume();
+                }
             }
 
             lblStatus.Text = "Running";
