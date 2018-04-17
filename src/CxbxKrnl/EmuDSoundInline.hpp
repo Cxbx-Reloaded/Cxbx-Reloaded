@@ -183,6 +183,7 @@ inline void GeneratePCMFormat(
             // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
             // in the first place, FYI.
 
+            // Allocate only once, does not need to re-allocate.
             if (DSBufferDesc.lpwfxFormat == nullptr) {
                 // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
                 DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
@@ -264,6 +265,7 @@ inline void GeneratePCMFormat(
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
     }
 
+    // TODO: Still a requirement? Need to retest it again. Can't remember which title cause problem or had been resolved.
     // sanity check
     if (!bIsSpecial) {
         if (DSBufferDesc.lpwfxFormat->nBlockAlign != (DSBufferDesc.lpwfxFormat->nChannels*DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8) {
@@ -273,7 +275,10 @@ inline void GeneratePCMFormat(
     }
 
     if (DSBufferDesc.lpwfxFormat != nullptr) {
-        // we NOW support 2+ channels, this conversion is necessary in order to support PC audio.
+
+        // NOTE: This process check for 2+ channels whenever XADPCM or PCM format from xbox titles input in nChannels.
+        // Since the host do not support 2+ channels on PCM only format. We must convert/update allocated wfxFormat to EXTENSIBLE
+        // format which had been allocated enough to update.
         if (DSBufferDesc.lpwfxFormat->nChannels > 2 && DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
             PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)DSBufferDesc.lpwfxFormat;
             lpwfxFormatExtensible->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
