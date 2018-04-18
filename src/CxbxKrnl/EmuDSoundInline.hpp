@@ -718,6 +718,13 @@ inline void DSoundStreamClearPacket(
     DWORD                   EmuFlags) {
 
     free(buffer->pBuffer_data);
+
+    // Peform release only, don't trigger any events below.
+    if (status == XMP_STATUS_RELEASE_CXBXR) {
+        DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
+        return;
+    }
+
     if (buffer->xmp_data.pdwStatus != xbnullptr) {
         (*buffer->xmp_data.pdwStatus) = status;
     }

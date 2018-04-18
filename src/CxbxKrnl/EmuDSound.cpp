@@ -1898,7 +1898,11 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
                     g_pDSoundStreamCache[v] = 0;
                 }
             }
-            EMUPATCH(CDirectSoundStream_Discontinuity)(pThis);
+
+            for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+                DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis->EmuFlags);
+                buffer = pThis->Host_BufferPacketArray.erase(buffer);
+            }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
                 free(pThis->EmuBufferDesc.lpwfxFormat);
