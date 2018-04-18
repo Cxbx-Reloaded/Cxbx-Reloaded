@@ -3190,8 +3190,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 		LOG_FUNC_END;
 
     // Get PC's DirectSound capabilities
-    DSCAPS DSCapsPC;
-    ZeroMemory(&DSCapsPC, sizeof(DSCAPS));
+    DSCAPS DSCapsPC = { sizeof(DSCAPS), 0 };
 
     HRESULT hRet = g_pDSound8->GetCaps(&DSCapsPC);
     if (hRet != DS_OK) {
