@@ -1398,7 +1398,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 		LOG_FUNC_ARG(lPitch)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetPitch(DSoundBufferSelectionT(pThis), lPitch);
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
 }
 
 // ******************************************************************
@@ -1416,7 +1416,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetStatus(DSoundBufferSelectionT(pThis), pdwStatus);
+    return HybridDirectSoundBuffer_GetStatus(pThis->EmuDirectSoundBuffer8, pdwStatus);
 }
 
 // ******************************************************************
@@ -1439,7 +1439,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
     dwNewPosition = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwNewPosition);
 
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
-    HRESULT hRet = DSoundBufferSelectionT(pThis)->SetCurrentPosition(dwNewPosition);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
     if (hRet != DS_OK) {
         EmuWarning("SetCurrentPosition Failed!");
@@ -1467,7 +1467,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 		LOG_FUNC_ARG_OUT(pdwCurrentWriteCursor)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetCurrentPosition(DSoundBufferSelectionT(pThis), pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_GetCurrentPosition(pThis->EmuDirectSoundBuffer8, pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1521,12 +1521,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     DSoundBufferUpdate(pThis, dwFlags, hRet);
 
     if (dwFlags & X_DSBPLAY_FROMSTART) {
-        if (DSoundBufferSelectionT(pThis)->SetCurrentPosition(0) != DS_OK) {
+        if (pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0) != DS_OK) {
             EmuWarning("Rewinding buffer failed!");
         }
     }
     if ((pThis->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
-        hRet = DSoundBufferSelectionT(pThis)->Play(0, 0, pThis->EmuPlayFlags);
+        hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
     }
 
     leaveCriticalSection;
@@ -1551,8 +1551,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 
     if (pThis != nullptr) {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-        hRet = DSoundBufferSelectionT(pThis)->Stop();
-        DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
+        hRet = pThis->EmuDirectSoundBuffer8->Stop();
+        pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
     }
 
     leaveCriticalSection;
@@ -1592,8 +1592,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
     } else {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
         if (dwFlags == X_DSBSTOPEX_IMMEDIATE) {
-            hRet = DSoundBufferSelectionT(pThis)->Stop();
-            DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
+            hRet = pThis->EmuDirectSoundBuffer8->Stop();
+            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
         } else {
             bool isLooping;
             if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
@@ -1656,7 +1656,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    return HybridDirectSoundBuffer_SetVolume(DSoundBufferSelectionT(pThis), lVolume, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1674,7 +1674,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetFrequency(DSoundBufferSelectionT(pThis), dwFrequency);
+    return HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency);
 }
 
 // ******************************************************************
@@ -1893,6 +1893,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
                     g_pDSoundStreamCache[v] = 0;
                 }
             }
+            EMUPATCH(CDirectSoundStream_Discontinuity)(pThis);
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
                 free(pThis->EmuBufferDesc.lpwfxFormat);
@@ -2117,7 +2118,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
             // RadWolfie: I don't think SetCurrentPosition is necessary?
             //DSoundBufferSelectionT((*pDSBuffer))->SetCurrentPosition(0);
-            DSoundBufferSelectionT((*pDSBuffer))->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
             (*pDSBuffer)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
@@ -2416,7 +2417,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMaxDistance(DSound3DBufferSelectionT(pThis), flMaxDistance, dwApply);
+    return HybridDirectSound3DBuffer_SetMaxDistance(pThis->EmuDirectSound3DBuffer8, flMaxDistance, dwApply);
 }
 
 // ******************************************************************
@@ -2436,7 +2437,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMinDistance(DSound3DBufferSelectionT(pThis), flMinDistance, dwApply);
+    return HybridDirectSound3DBuffer_SetMinDistance(pThis->EmuDirectSound3DBuffer8, flMinDistance, dwApply);
 }
 
 // ******************************************************************
@@ -2508,7 +2509,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeAngles(DSound3DBufferSelectionT(pThis), dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    return HybridDirectSound3DBuffer_SetConeAngles(pThis->EmuDirectSound3DBuffer8, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
 }
 
 // ******************************************************************
@@ -2532,7 +2533,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeOrientation(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetConeOrientation(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2552,7 +2553,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeOutsideVolume(DSound3DBufferSelectionT(pThis), lConeOutsideVolume, dwApply);
+    return HybridDirectSound3DBuffer_SetConeOutsideVolume(pThis->EmuDirectSound3DBuffer8, lConeOutsideVolume, dwApply);
 }
 
 // ******************************************************************
@@ -2576,7 +2577,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPosition)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetPosition(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetPosition(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2600,7 +2601,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetVelocity(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetVelocity(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2667,7 +2668,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMode)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMode(DSound3DBufferSelectionT(pThis), dwMode, dwApply);
+    return HybridDirectSound3DBuffer_SetMode(pThis->EmuDirectSound3DBuffer8, dwMode, dwApply);
 }
 
 // +s
@@ -2937,7 +2938,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
                         pThis->X_lock.dwLockBytes1,
                         pThis->X_lock.dwLockBytes2);
 
-    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
 }
 
 // ******************************************************************
@@ -2962,7 +2963,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
     // This function wasn't part of the XDK until 4721.
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
 
     leaveCriticalSection;
 
@@ -3350,7 +3351,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetAllParameters(DSound3DBufferSelectionT(pThis), pc3DBufferParameters, dwApply);
+    return HybridDirectSound3DBuffer_SetAllParameters(pThis->EmuDirectSound3DBuffer8, pc3DBufferParameters, dwApply);
 }
 
 // ******************************************************************

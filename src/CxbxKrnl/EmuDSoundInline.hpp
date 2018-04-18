@@ -372,12 +372,6 @@ inline void DSoundGenericUnlock(
 
 }
 
-#define DSoundBufferSelectionT(pThis) \
-    (pThis->EmuDirectSoundBuffer8)
-
-#define DSound3DBufferSelectionT(pThis) \
-    (pThis->EmuDirectSound3DBuffer8)
-
 // Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
 inline void DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
