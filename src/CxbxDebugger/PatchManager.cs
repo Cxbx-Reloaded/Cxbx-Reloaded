@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace CxbxDebugger
 {
@@ -66,7 +65,7 @@ namespace CxbxDebugger
             {
                 case PatchType.Byte:
                     {
-                        Result = string.Format("{0}", Data[0]);
+                        Result = string.Format("{0:X2}", Data[0]);
                     }
                     break;
                 case PatchType.Short:
@@ -124,16 +123,90 @@ namespace CxbxDebugger
 
         public bool Write(DebuggerProcess OwningProcess, Patch PatchItem, string NewValue)
         {
+            IntPtr PatchAddr = new IntPtr(PatchItem.Offset);
+
             switch (PatchItem.DisplayAs)
             {
                 case PatchType.Byte:
                     {
-                        byte Value;
-                        if( byte.TryParse(NewValue, out Value) )
+                        byte Value = 0;
+                        if (Common.ReadByte(NewValue, ref Value))
                         {
-                            OwningProcess.WriteMemory(new IntPtr(PatchItem.Offset), Value);
+                            OwningProcess.WriteMemory(PatchAddr, Value);
                             return true;
                         }
+                        break;
+                    }
+
+                case PatchType.Short:
+                    {
+                        short Value;
+                        if (short.TryParse(NewValue, out Value))
+                        {
+                            OwningProcess.WriteMemory(PatchAddr, Value);
+                            return true;
+                        }
+                        break;
+                    }
+                case PatchType.UShort:
+                    {
+                        ushort Value;
+                        if (ushort.TryParse(NewValue, out Value))
+                        {
+                            OwningProcess.WriteMemory(PatchAddr, Value);
+                            return true;
+                        }
+                        break;
+                    }
+                case PatchType.Int:
+                    {
+                        int Value;
+                        if (int.TryParse(NewValue, out Value))
+                        {
+                            OwningProcess.WriteMemory(PatchAddr, Value);
+                            return true;
+                        }
+                        break;
+                    }
+                case PatchType.UInt:
+                    {
+                        uint Value;
+                        if (uint.TryParse(NewValue, out Value))
+                        {
+                            OwningProcess.WriteMemory(PatchAddr, Value);
+                            return true;
+                        }
+                        break;
+                    }
+                case PatchType.Float:
+                    {
+                        float Value;
+                        if (float.TryParse(NewValue, out Value))
+                        {
+                            OwningProcess.WriteMemory(PatchAddr, Value);
+                            return true;
+                        }
+                        break;
+                    }
+                case PatchType.Array:
+                    {
+                        List<byte> ParsedBytes = new List<byte>();
+
+                        string[] Items = NewValue.Split(new char[] { ' ' });
+                        foreach (string Item in Items)
+                        {
+                            byte Value = 0;
+                            if (Common.ReadByte(Item, ref Value))
+                            {
+                                ParsedBytes.Add(Value);
+                            }
+                        }
+                        if (ParsedBytes.Count == PatchItem.Patched.Length)
+                        {
+                            OwningProcess.WriteMemoryBlock(PatchAddr, ParsedBytes.ToArray());
+                            return true;
+                        }
+
                         break;
                     }
             }

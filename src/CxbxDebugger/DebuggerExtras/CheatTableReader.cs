@@ -168,18 +168,17 @@ namespace CxbxDebugger
                 }
             }
 
-
             private static uint GetHexNumber(string numeric_string)
             {
                 uint swap = 0;
-                uint.TryParse(numeric_string, System.Globalization.NumberStyles.HexNumber, null, out swap);
+                Common.ReadHex(numeric_string, ref swap);
                 return swap;
             }
 
             private static uint GetNumber(string numeric_string)
             {
                 uint swap = 0;
-                uint.TryParse(numeric_string, System.Globalization.NumberStyles.Integer, null, out swap);
+                Common.ReadNumeric(numeric_string, ref swap);
                 return swap;
             }
 

@@ -24,10 +24,10 @@ namespace CxbxDebugger
             AddressMap = new Dictionary<uint, string>(Pairs.Length);
 
             // Swap SYMBOL, ADDR to be ADDR -> SYMBOL
-            uint Addr;
+            uint Addr = 0;
             foreach (KeyValuePair<string, string> Symbol in Pairs)
             {
-                if (!uint.TryParse(Symbol.Value, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out Addr))
+                if (!Common.ReadHex(Symbol.Value, ref Addr))
                     continue;
 
                 // See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/832

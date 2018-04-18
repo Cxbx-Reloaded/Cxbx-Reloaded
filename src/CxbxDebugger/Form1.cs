@@ -388,7 +388,7 @@ namespace CxbxDebugger
                 frm.DebugModules.Add(Process);
                 frm.MainProcess = Process;
             }
-            
+
             public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
             {
                 int remainingThreads = Process.Threads.Count;
@@ -604,7 +604,7 @@ namespace CxbxDebugger
         {
             Resume();
         }
-        
+
         struct CallstackInfo
         {
             public uint InstructionPointer;
@@ -619,58 +619,11 @@ namespace CxbxDebugger
 
         List<CallstackInfo> CallstackDump = new List<CallstackInfo>();
 
-        static private bool ReadInt(TextBox Source, ref int Out)
-        {
-            if (int.TryParse(Source.Text, out Out))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        static private bool ReadHexInt(string HexSource, ref int Out)
-        {
-            if (HexSource.StartsWith("0x"))
-            {
-                HexSource = HexSource.Substring(2);
-            }
-
-            if (int.TryParse(HexSource, System.Globalization.NumberStyles.HexNumber, null, out Out))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        static private bool ReadAddress(string Source, ref uint Out)
-        {
-            try
-            {
-                if (Source.StartsWith("0x"))
-                {
-                    Out = Convert.ToUInt32(Source.Substring(2), 16);
-                    return true;
-                }
-                else
-                {
-                    if (uint.TryParse(Source, out Out))
-                    {
-                        return true;
-                    }
-                }
-            }
-            catch (Exception) { }
-
-            return false;
-        }
-
         static private bool ReadAddress(ComboBox Source, ref uint Out)
         {
             string SelString = Source.Text;
-            
-            if ( ReadAddress(SelString, ref Out) )
+
+            if (Common.ReadHex(SelString, ref Out))
             {
                 // Only add new addresses
                 if (Source.SelectedIndex == -1)
@@ -686,13 +639,13 @@ namespace CxbxDebugger
         private byte[] ReadMemory()
         {
             uint addr = 0;
-            if (!ReadAddress(txAddress.Text, ref addr))
+            if (!Common.ReadHex(txAddress.Text, ref addr))
             {
                 return null;
             }
 
             int size = 0;
-            ReadInt(txSize, ref size);
+            Common.ReadNumeric(txSize.Text, ref size);
 
             if (size < 0)
                 size = 256;
@@ -724,10 +677,10 @@ namespace CxbxDebugger
 
             txMemoryDump.Text = hexData;
         }
-        
+
         public delegate void DisResultOther(string Part);
         public delegate void DisResultAddress(uint Address);
-        
+
         public static void ExtractSymbols(string Text, DisResultOther ProcessOtherData, DisResultAddress ProcessAddrData, DisResultAddress ProcessIndirectAddr)
         {
             // This regex will match addresses in the format "0x123"
@@ -744,7 +697,7 @@ namespace CxbxDebugger
                 }
 
                 string MatchStr = Matches[i].ToString();
-                if( MatchStr.StartsWith("-"))
+                if (MatchStr.StartsWith("-"))
                 {
                     uint Address = Convert.ToUInt32(MatchStr.Substring(1), 16);
                     Address = ~Address;
@@ -795,7 +748,7 @@ namespace CxbxDebugger
                 }
             }
         }
-        
+
         private void DumpDisassembly(uint DisAddress)
         {
             // No threads
@@ -811,14 +764,14 @@ namespace CxbxDebugger
             // Dump requested after crashing - and read memory handles this silently
             if (data == null)
                 return;
-            
+
             txDisassembly.BeginUpdate();
             txDisassembly.Clear();
 
             // TODO: Needs refactoring
 
             var ModuleInfo = new SymbolInfoHelper(DebuggerInst, OffsetAddr);
-            
+
             // TODO: "call dword ptr [0x00XXXXXX]" instructions should be resolved
             using (Capstone cs = Capstone.CreateEngine())
             {
@@ -961,7 +914,7 @@ namespace CxbxDebugger
                 }
             }
 
-            if(cbFrames.Items.Count > 0 )
+            if (cbFrames.Items.Count > 0)
             {
                 // Auto-select the first item to dump
                 cbFrames.SelectedIndex = 0;
@@ -983,9 +936,9 @@ namespace CxbxDebugger
         private void ShowDisassemblyAt(string Address)
         {
             tabContainer.SelectedTab = tabDisassembly;
-            
+
             uint addr = 0;
-            if (ReadAddress(Address, ref addr))
+            if (Common.ReadHex(Address, ref addr))
             {
                 // Insert disassembly history
                 // TODO: Keep symbol name
@@ -1019,7 +972,7 @@ namespace CxbxDebugger
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if( keyData == Keys.F5 )
+            if (keyData == Keys.F5)
             {
                 StartDebugging();
                 return true;
@@ -1058,7 +1011,7 @@ namespace CxbxDebugger
 
         private void comboBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            if( e.KeyCode == Keys.Enter )
+            if (e.KeyCode == Keys.Enter)
             {
                 HandleDisasmGo();
             }
@@ -1148,21 +1101,21 @@ namespace CxbxDebugger
             if (File.Exists(filename))
             {
                 DebugLog(string.Format("Attempting to load \"{0}\"", filename));
-                
+
                 CheatEngine.CheatTable ct_data = CheatEngine.CheatTableReader.FromFile(filename);
                 if (ct_data != null)
                 {
-                    foreach(CheatEngine.CheatEntry Entry in ct_data.CheatEntries)
+                    foreach (CheatEngine.CheatEntry Entry in ct_data.CheatEntries)
                     {
-                        int addr = 0;
-                        if(ReadHexInt(Entry.Address, ref addr))
+                        uint addr = 0;
+                        if (Common.ReadHex(Entry.Address, ref addr))
                         {
                             Patch DataPatch = new Patch();
 
                             DataPatch.DisplayAs = PatchType.Array;
                             DataPatch.Name = Entry.Description;
                             DataPatch.Module = "";
-                            DataPatch.Offset = (uint)addr;
+                            DataPatch.Offset = addr;
                             DataPatch.Original = null;
                             DataPatch.Patched = Nops(CheatEngine.Helpers.VariableSize(Entry.VariableType));
 
@@ -1170,7 +1123,7 @@ namespace CxbxDebugger
                         }
                     }
 
-                    foreach(CheatEngine.CodeEntry Entry in ct_data.CodeEntires)
+                    foreach (CheatEngine.CodeEntry Entry in ct_data.CodeEntires)
                     {
                         Patch DataPatch = new Patch();
 
@@ -1183,7 +1136,7 @@ namespace CxbxDebugger
 
                         patchMan.Assembly.Add(DataPatch);
                     }
-                    
+
                     DebugLog(string.Format("Loaded {0} auto-assembler entries", ct_data.CodeEntires.Count));
                     DebugLog(string.Format("Loaded {0} cheat entries", ct_data.CheatEntries.Count));
 
@@ -1191,31 +1144,31 @@ namespace CxbxDebugger
                 }
             }
         }
-        
+
         private void button5_Click(object sender, EventArgs e)
         {
             PatchType PatchType = (PatchType)cbDataFormat.SelectedIndex;
 
             int PatchSize = PatchManager.PatchTypeLength(PatchType);
-            if(PatchSize == 0 )
+            if (PatchSize == 0)
             {
-                if (!ReadInt(textBox2, ref PatchSize))
+                if (!Common.ReadNumeric(textBox2.Text, ref PatchSize))
                     return;
 
                 if (PatchSize < 0)
                     return;
             }
 
-            int addr = 0;
-            if(ReadHexInt(txAddress.Text, ref addr))
+            uint addr = 0;
+            if (Common.ReadHex(txAddress.Text, ref addr))
             {
                 Patch DataPatch = new Patch();
 
                 DataPatch.DisplayAs = PatchType;
-                DataPatch.Name = string.Format("Patched {0}", cbDataFormat.SelectedText);
+                DataPatch.Name = string.Format("Patched {0}", PatchType);
                 DataPatch.Module = "";
-                DataPatch.Offset = (uint)addr;
-                
+                DataPatch.Offset = addr;
+
                 // TODO: Read original memory at this location
                 DataPatch.Original = Nops(PatchSize);
                 DataPatch.Patched = Nops(PatchSize);
@@ -1268,10 +1221,10 @@ namespace CxbxDebugger
                 return;
 
             string Value = txNewValue.Text;
-            if(Value.Length != 0 )
+            if (Value.Length != 0)
             {
                 Patch DataPatch = patchMan.Data[lvCEMemory.SelectedIndices[0]];
-                if( patchMan.Write(MainProcess, DataPatch, Value))
+                if (patchMan.Write(MainProcess, DataPatch, Value))
                 {
                     RefreshPatches();
                 }
