@@ -204,7 +204,7 @@ static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE]
 static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 // Managed memory xbox audio variables
-#define                             X_DS_SGE_COUNT_MAX 2048
+#define                             X_DS_SGE_COUNT_MAX 2047
 #define                             X_DS_SGE_PAGE_MAX (4 * ONE_KB)
 #define                             X_DS_SGE_SIZE_MAX (X_DS_SGE_COUNT_MAX * X_DS_SGE_PAGE_MAX)
 DWORD                               g_dwXbMemAllocated = 0;
@@ -964,7 +964,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
     }
     //If out of space, return out of memory.
-    if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck()) {
+    if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
     } else {
@@ -998,7 +998,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
-        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
         DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
@@ -1006,6 +1006,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
         *ppDSoundBufferCache = *ppBuffer;
     }
+
+    printf("DEBUG: ==DirectSoundCreateBuffer==\n");
+    printf("DEBUG: *ppBuffer = %8X | requestSize = %8X\n", *ppBuffer, pdsbd->dwBufferBytes);
+    printf("DEBUG: g_dwXbMemAllocated = %8X\n", g_dwXbMemAllocated);
+    printf("DEBUG: ===========================\n");
 
     leaveCriticalSection;
 
@@ -1075,7 +1080,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     }
     HRESULT hRet = DSERR_OUTOFMEMORY;
 
-    if (DSoundSGEMenAllocCheck()) {
+    if (DSoundSGEMenAllocCheck(dwBufferBytes)) {
 
         // Confirmed it perform a reset to default.
         DSoundBufferRegionSetDefault(pThis);

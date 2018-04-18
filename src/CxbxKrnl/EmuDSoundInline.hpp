@@ -71,8 +71,8 @@ inline void DSoundSGEMemAlloc(DWORD size) {
 inline void DSoundSGEMemDealloc(DWORD size) {
     g_dwXbMemAllocated -= size;
 }
-inline bool DSoundSGEMenAllocCheck() {
-    int leftOverSize = X_DS_SGE_SIZE_MAX - g_dwXbMemAllocated;
+inline bool DSoundSGEMenAllocCheck(DWORD sizeRequest) {
+    int leftOverSize = X_DS_SGE_SIZE_MAX - (g_dwXbMemAllocated + sizeRequest);
     // Don't let xbox title to alloc any more.
     if (leftOverSize < 0) {
         return false;
@@ -729,7 +729,11 @@ inline void DSoundStreamClearPacket(
     if (Xb_lpfnCallback != xbnullptr) {
         Xb_lpfnCallback(Xb_lpvContext, buffer->xmp_data.pContext, status);
     } else if (buffer->xmp_data.hCompletionEvent != 0) {
-        SetEvent(buffer->xmp_data.hCompletionEvent);
+        BOOL checkHandle = SetEvent(buffer->xmp_data.hCompletionEvent);
+        if (checkHandle == 0) {
+            DWORD error = GetLastError();
+            EmuWarning("DSOUND: Unable to set event on packet's hCompletionEvent. %8X | error = %8X", buffer->xmp_data.hCompletionEvent, error);
+        }
     }
 }
 
