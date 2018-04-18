@@ -53,6 +53,33 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
 #define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
 
+// Memory managed xbox audio function handler
+inline DWORD DSoundSGEFreeBuffer() {
+    int count =  (X_DS_SGE_SIZE_MAX - g_dwXbMemAllocated);
+    printf("DEBUG: size %8d\n", count);
+    count =  count / X_DS_SGE_PAGE_MAX;
+    printf("DEBUG: per page %8d\n", count);
+    // Check for negative value, we don't need warning as we are allowing overflow one time only.
+    if (count < 0) {
+        return 0;
+    }
+    return (DWORD)count;
+}
+inline void DSoundSGEMemAlloc(DWORD size) {
+    g_dwXbMemAllocated += size;
+}
+inline void DSoundSGEMemDealloc(DWORD size) {
+    g_dwXbMemAllocated -= size;
+}
+inline bool DSoundSGEMenAllocCheck() {
+    int leftOverSize = X_DS_SGE_SIZE_MAX - g_dwXbMemAllocated;
+    // Don't let xbox title to alloc any more.
+    if (leftOverSize < 0) {
+        return false;
+    }
+    return true;
+}
+
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
 
@@ -146,6 +173,9 @@ inline void GenerateXboxBufferCache(
             LPVOID tempBuffer = *X_BufferCache;
             *X_BufferCache = malloc(X_BufferSizeRequest);
 
+            // This will perform partial alloc/dealloc instead of call twice for alloc and dealloc functions.
+            DSoundSGEMemAlloc(X_BufferSizeRequest - X_BufferCacheSize);
+
             // Don't copy over the limit.
             if (X_BufferCacheSize > X_BufferSizeRequest) {
                 X_BufferCacheSize = X_BufferSizeRequest;
@@ -154,6 +184,7 @@ inline void GenerateXboxBufferCache(
             free(tempBuffer);
         } else {
             *X_BufferCache = malloc(X_BufferSizeRequest);
+            DSoundSGEMemAlloc(X_BufferSizeRequest);
         }
         X_BufferCacheSize = X_BufferSizeRequest;
     }
@@ -699,6 +730,7 @@ inline void DSoundStreamClearPacket(
     if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
         (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(EmuFlags, buffer->xmp_data.dwMaxSize);
     }
+    DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
     // If a callback is set, only do the callback instead of event handle.
     if (Xb_lpfnCallback != xbnullptr) {
         Xb_lpfnCallback(Xb_lpvContext, buffer->xmp_data.pContext, status);

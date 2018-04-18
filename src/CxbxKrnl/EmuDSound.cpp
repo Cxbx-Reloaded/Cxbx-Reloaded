@@ -203,6 +203,13 @@ static XTL::X_CDirectSoundBuffer*   g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE]
 static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
+// Managed memory xbox audio variables
+#define                             X_DS_SGE_COUNT_MAX 2048
+#define                             X_DS_SGE_PAGE_MAX (4 * ONE_KB)
+#define                             X_DS_SGE_SIZE_MAX (X_DS_SGE_COUNT_MAX * X_DS_SGE_PAGE_MAX)
+DWORD                               g_dwXbMemAllocated = 0;
+DWORD                               g_dwFree2DBuffers = 0;
+DWORD                               g_dwFree3DBuffers = 0;
 
 #define RETURN_RESULT_CHECK(hRet) { \
     static bool bPopupShown = false; if (!bPopupShown && hRet) { bPopupShown = true; \
@@ -957,10 +964,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
     }
     //If out of space, return out of memory.
-    if (ppDSoundBufferCache == nullptr) {
+    if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck()) {
 
         hRet = DSERR_OUTOFMEMORY;
     } else {
+
         DSBUFFERDESC DSBufferDesc = { 0 };
 
         //TODO: Find out the cause for DSBCAPS_MUTE3DATMAXDISTANCE to have invalid arg.
@@ -1065,20 +1073,24 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         leaveCriticalSection;
         return DS_OK;
     }
-    HRESULT hRet;
+    HRESULT hRet = DSERR_OUTOFMEMORY;
 
-    // Confirmed it perform a reset to default.
-    DSoundBufferRegionSetDefault(pThis);
+    if (DSoundSGEMenAllocCheck()) {
 
-    GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
+        // Confirmed it perform a reset to default.
+        DSoundBufferRegionSetDefault(pThis);
 
-    memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+        GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
-    DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
+        memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+
+        DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
+
+    }
 
     leaveCriticalSection;
 
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1359,7 +1371,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             }
             if (pThis->X_BufferCache != xbnullptr) {
                 free(pThis->X_BufferCache);
-                pThis->X_BufferCacheSize = 0;
+                DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
             }
 
             delete pThis;
@@ -1982,6 +1994,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                     packet_input.pBuffer_data = nullptr;
                 } else {
                     packet_input.pBuffer_data = malloc(packet_input.xmp_data.dwMaxSize);
+                    DSoundSGEMemAlloc(packet_input.xmp_data.dwMaxSize);
                 }
                 packet_input.rangeStart = pThis->Host_dwWriteOffsetNext;
                 pThis->Host_dwWriteOffsetNext += packet_input.xmp_data.dwMaxSize;
@@ -3182,21 +3195,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 		LOG_FUNC_ARG_OUT(pDSCaps)
 		LOG_FUNC_END;
 
-    // Get PC's DirectSound capabilities
-    DSCAPS DSCapsPC = { sizeof(DSCAPS), 0 };
-
-    HRESULT hRet = g_pDSound8->GetCaps(&DSCapsPC);
-    if (hRet != DS_OK) {
-        EmuWarning("Failed to get PC DirectSound caps!");
-    }
-
     // Convert PC -> Xbox
     if (pDSCaps) {
-        // WARNING: This may not be accurate under Windows Vista...
-        pDSCaps->dwFree2DBuffers = DSCapsPC.dwFreeHwMixingAllBuffers;
-        pDSCaps->dwFree3DBuffers = DSCapsPC.dwFreeHw3DAllBuffers;
-        pDSCaps->dwFreeBufferSGEs = 256;                            // TODO: Verify max on a real Xbox
-        pDSCaps->dwMemoryAllocated = DSCapsPC.dwFreeHwMemBytes;    // TODO: Bytes or MegaBytes?
+        pDSCaps->dwFreeBufferSGEs = DSoundSGEFreeBuffer();
+        // To prevent pass down overflow size.
+        pDSCaps->dwMemoryAllocated = (X_DS_SGE_SIZE_MAX < g_dwXbMemAllocated ? X_DS_SGE_SIZE_MAX : g_dwXbMemAllocated);
+
+        // TODO: What are the max values for 2D and 3D Buffers? Once discover, then perform real time update in global variable.
+        pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
+        pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
+
+        DbgPrintf("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
 
     leaveCriticalSection;
