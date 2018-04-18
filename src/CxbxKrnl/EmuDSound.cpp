@@ -2045,13 +2045,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     // default ret = DSERR_GENERIC
 
     // TODO: This part of code should be in CDirectSoundStream_Discontinuity
-    /*pThis->EmuDirectSoundBuffer8->Stop();
+    pThis->EmuDirectSoundBuffer8->Stop();
     pThis->Host_isProcessing = false;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
         buffer = pThis->Host_BufferPacketArray.erase(buffer);
-    }*/
+    }
 
     leaveCriticalSection;
 
@@ -2072,13 +2072,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 	LOG_FUNC_ONE_ARG(pThis);
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
-    pThis->EmuDirectSoundBuffer8->Stop();
-    pThis->Host_isProcessing = false;
-
-    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
-    }
 
     // TODO: How to emulate flush functionality?
 
