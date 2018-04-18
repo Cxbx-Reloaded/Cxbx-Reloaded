@@ -2,7 +2,9 @@
 
 CxbxDebugger is an experimental tool to aid debugging Xbox executables from within Cxbx.
 
-![Cxbx-Debugger screenshot](https://i.imgur.com/N7hgXwt.png)
+![Cxbx-Debugger screenshot at breakpoint](https://i.imgur.com/DaNEbBC.png)
+
+![Cxbx-Debugger screenshot at memory editor](https://i.imgur.com/zd076l7.png)
 
 The goal is to resolve XBE symbols using the function signatures identified by Cxbx-Reloaded.
 
@@ -20,13 +22,13 @@ It uses the debugger API provided by Windows, primarily **WaitForDebugEvent** an
 
 * ~~Create wrapper for the Cxbx-Reloaded child process~~
 * ~~Support new threads~~
-* Support displaying of interrupts and exceptions
+* ~~Support displaying of interrupts and exceptions~~
 * Support resolving relevant XBE symbols from a callstack
 
 ### Secondary
 
 * ~~Suspending threads and checking memory~~
-* Breakpoints - inserting and handling interrupts
+* ~~Breakpoints - inserting and handling interrupts~~
 
 ## Thanks
 
