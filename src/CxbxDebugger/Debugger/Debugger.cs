@@ -139,6 +139,14 @@ namespace CxbxDebugger
             }
         }
 
+        public void Trace()
+        {
+            if (DebugInstance != null)
+            {
+                DebugInstance.MainProcess.Trace();
+            }
+        }
+
         public bool CanLaunch()
         {
             switch (State)

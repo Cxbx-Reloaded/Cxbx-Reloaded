@@ -330,6 +330,9 @@ namespace CxbxDebugger
                 {
                     string module_name = Path.GetFileName(Module.Path);
                     Suspend(string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
+
+                    // Forces a refresh at the breakpoint address (not the callstack trace)
+                    DumpDisassembly(Address);
                 }
 
             }));
@@ -557,6 +560,9 @@ namespace CxbxDebugger
                 {
                     DebuggerInst.Break();
                 }
+
+                // Update thread context cache
+                DebuggerInst.Trace();
 
                 NativeWrappers.FlashWindowTray(Handle);
                 PopulateThreadList(cbThreads, null);

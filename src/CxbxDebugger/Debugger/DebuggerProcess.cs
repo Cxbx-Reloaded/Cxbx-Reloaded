@@ -40,6 +40,14 @@ namespace CxbxDebugger
             }
         }
 
+        public void Trace()
+        {
+            foreach (DebuggerThread Thread in Threads)
+            {
+                Thread.UpdateContext();
+            }
+        }
+
         public void Resume()
         {
             foreach (DebuggerThread Thread in Threads)
