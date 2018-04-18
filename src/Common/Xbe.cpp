@@ -836,29 +836,3 @@ bool Xbe::CheckXbeSignature()
 
 	return true; // success
 }
-
-bool Xbe::LoadRSAkey()
-{
-	bool bSuccess = false;
-	FILE* fp = fopen((std::string(szFolder_CxbxReloadedData) + std::string("\\RSAkey.bin")).c_str(), "rb");
-
-	if (fp != nullptr) {
-		// Determine the size of RSAkey.bin
-		fseek(fp, 0, SEEK_END);
-		long size = ftell(fp);
-		rewind(fp);
-
-		// Ensure that RSAkey.bin is 284 bytes and has a valid magic signature
-		if (size == 284) {
-			UCHAR temp[284] = { 0 };
-			fread(temp, 284, 1, fp);
-			if (!memcmp(temp, "RSA1", 4)) {
-				memcpy(xboxkrnl::XePublicKeyData, temp, 284);
-				bSuccess = true;
-			}
-		}
-		fclose(fp);
-	}
-
-	return bSuccess;
-}
