@@ -350,6 +350,8 @@ namespace CxbxDebugger
                     // Enable when active
                     btnSuspend.Enabled = Active;
                     btnResume.Enabled = Active;
+
+                    lblStatus.Text = (Active ? "Running" : "Inactive");
                 }));
             }
             else
@@ -360,6 +362,8 @@ namespace CxbxDebugger
                 // Enable when active
                 btnSuspend.Enabled = Active;
                 btnResume.Enabled = Active;
+
+                lblStatus.Text = (Active ? "Running" : "Inactive");
             }
         }
 
