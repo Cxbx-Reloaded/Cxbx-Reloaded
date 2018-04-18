@@ -100,10 +100,25 @@ namespace CxbxDebugger
 
         public void Dispose()
         {
-            // Destroy process
-            WinProcesses.NativeMethods.TerminateProcess(hProcess, 0);
+            bContinue = false;
+            bpStall.Set();
 
-            // close it
+            // Remove all events
+            GeneralEvents.Clear();
+            ProcessEvents.Clear();
+            ThreadEvents.Clear();
+            ModuleEvents.Clear();
+            OutputEvents.Clear();
+            ExceptionEvents.Clear();
+            FileEvents.Clear();
+
+            // Destroy process
+            if (!hProcess.IsClosed)
+            {
+                WinProcesses.NativeMethods.TerminateProcess(hProcess, 0);
+            }
+            
+            // Close handles
             hProcess.Close();
             hThread.Close();
         }
