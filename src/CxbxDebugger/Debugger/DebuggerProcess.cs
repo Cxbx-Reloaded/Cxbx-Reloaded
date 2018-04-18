@@ -107,8 +107,24 @@ namespace CxbxDebugger
                     Value = Data[0];
                     break;
 
+                case TypeCode.Int16:
+                    Value = BitConverter.ToInt16(Data, 0);
+                    break;
+
+                case TypeCode.UInt16:
+                    Value = BitConverter.ToUInt16(Data, 0);
+                    break;
+
+                case TypeCode.Int32:
+                    Value = BitConverter.ToInt32(Data, 0);
+                    break;
+
                 case TypeCode.UInt32:
                     Value = BitConverter.ToUInt32(Data, 0);
+                    break;
+
+                case TypeCode.Single:
+                    Value = BitConverter.ToSingle(Data, 0);
                     break;
 
                 default:
@@ -138,7 +154,7 @@ namespace CxbxDebugger
                 Address += sizeof(byte);
                 StringData.Add(chr);
             }
-            
+
             return Encoding.ASCII.GetString(StringData.ToArray());
         }
 
@@ -165,7 +181,7 @@ namespace CxbxDebugger
                 StringData.Add(chr1);
                 StringData.Add(chr2);
             }
-            
+
             return Encoding.Unicode.GetString(StringData.ToArray());
         }
 
@@ -178,7 +194,7 @@ namespace CxbxDebugger
 
             if (StringData == null)
                 return "";
-            
+
             return Encoding.ASCII.GetString(StringData);
         }
 
@@ -194,7 +210,7 @@ namespace CxbxDebugger
 
             return Encoding.Unicode.GetString(StringData);
         }
-        
+
         public byte[] ReadMemoryBlock(IntPtr Address, uint Size)
         {
             if (Address == IntPtr.Zero)
