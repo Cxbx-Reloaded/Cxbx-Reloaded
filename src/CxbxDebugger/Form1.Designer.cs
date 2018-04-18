@@ -593,6 +593,7 @@
             this.lvFileDetails.FullRowSelect = true;
             this.lvFileDetails.HideSelection = false;
             this.lvFileDetails.Location = new System.Drawing.Point(0, 0);
+            this.lvFileDetails.MultiSelect = false;
             this.lvFileDetails.Name = "lvFileDetails";
             this.lvFileDetails.Size = new System.Drawing.Size(501, 190);
             this.lvFileDetails.TabIndex = 2;
@@ -891,7 +892,9 @@
             this.columnHeader5});
             this.lvCEMemory.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvCEMemory.FullRowSelect = true;
+            this.lvCEMemory.HideSelection = false;
             this.lvCEMemory.Location = new System.Drawing.Point(0, 0);
+            this.lvCEMemory.MultiSelect = false;
             this.lvCEMemory.Name = "lvCEMemory";
             this.lvCEMemory.Size = new System.Drawing.Size(700, 120);
             this.lvCEMemory.TabIndex = 1;
@@ -938,7 +941,9 @@
             this.columnHeader9});
             this.lvCEAssembly.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvCEAssembly.FullRowSelect = true;
+            this.lvCEAssembly.HideSelection = false;
             this.lvCEAssembly.Location = new System.Drawing.Point(3, 3);
+            this.lvCEAssembly.MultiSelect = false;
             this.lvCEAssembly.Name = "lvCEAssembly";
             this.lvCEAssembly.Size = new System.Drawing.Size(700, 158);
             this.lvCEAssembly.TabIndex = 4;
