@@ -39,6 +39,7 @@
 #include "EmuRsa.h"
 #include "Emu.h" // For EmuWarning
 #include <cstring>
+#include <assert.h>
 
 
 /* 2^(16*MAX_SHORTS)-1 will fit into a giant, but take care:
@@ -245,51 +246,19 @@ giant newgiant(int numshorts)
 // ergo720: there's a bug in the original implementation of gigimport that prevents the rsa algorithm from working correctly on Windows (but
 // for some reason it works on Ubuntu). This replacement implementation is taken from
 // http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
+// and it has been improved based on JayFoxRox suggestions. See the link below for the details
+// https://github.com/xqemu/xbedump/pull/5
 void gigimport(giant g, unsigned char *buff, int len) {
 
 	// copy buffered 'number' into giant's number buffer
 	memcpy(g->n, buff, len);
 
-	// the giants number buffer stores large numbers as
-	// multiple 16bit numbers, so if the length of our buffer is odd
-	// our number wont fit properly.
-	// to fix this we add a trailing 0x00 byte
-	if (len & 1)
-	{
-		*((unsigned char*)(g->n) + len) = 0x00;
-		len++;
-	}
+	assert((len % 2) == 0);
+
 	g->sign = len / 2;
 
-	if (g->sign == 0)
-	{
-		g->sign = 1;
-		*((unsigned char*)(g->n)) = 0x00;
-	}
+	assert(g->sign != 0);
 }
-
-// Original gigimport implementation, for documentation purposes
-#if 0
-void gigimport(giant g, unsigned char *buff, int len)
-{
-
-	int count;
-	memcpy(g->n, buff, len);
-	g->sign = len / 2;
-
-	// Correcting to bits now
-	for (count = g->sign;count != 0;count--) {
-
-		if (g->n[count] != 0x00) {
-			count = count + 1;
-			break;
-		}
-	}
-
-	g->sign = count;
-	if (g->sign == 0) g->sign = 1;
-}
-#endif
 
 void powermodg(giant x, giant n, giant g)
 /* x becomes x^n (mod g). */
