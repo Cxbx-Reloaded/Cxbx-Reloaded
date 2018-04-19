@@ -62,7 +62,8 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-        std::string DumpInformation();
+		// verify the integrity of the loaded xbe
+		bool CheckXbeSignature();
 
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
@@ -236,6 +237,9 @@ class Xbe : public Error
         }
         #include "AlignPosfix1.h"
         *m_TLS;
+
+		// Xbe signature header
+		uint08* m_SignatureHeader;
 
         // Xbe section names, stored null terminated
         char (*m_szSectionName)[10];

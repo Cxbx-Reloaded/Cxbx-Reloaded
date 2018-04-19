@@ -314,6 +314,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
@@ -662,6 +663,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />

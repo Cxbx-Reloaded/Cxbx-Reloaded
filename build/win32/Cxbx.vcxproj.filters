@@ -275,6 +275,9 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
       <Filter>Hardware\X86</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -543,6 +546,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Hardware\X86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h">
+      <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
