@@ -5311,7 +5311,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZBIAS, Value);
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	FLOAT Biased = static_cast<FLOAT>(Value) * -0.000005f;
+	Value = *reinterpret_cast<const DWORD *>(&Biased);
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, Value);
+#else
+    hRet = g_pD3DDevice->SetRenderState(D3DRS_ZBIAS, Value);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
