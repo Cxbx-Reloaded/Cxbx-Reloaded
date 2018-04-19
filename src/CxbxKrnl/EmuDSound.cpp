@@ -1416,12 +1416,18 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 {
     FUNC_EXPORTS;
 
+    enterCriticalSection;
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetStatus(pThis->EmuDirectSoundBuffer8, pdwStatus);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(pdwStatus);
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -1960,12 +1966,42 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 {
     FUNC_EXPORTS;
 
+    enterCriticalSection;
+
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pdwStatus)
         LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetStatus(pThis->EmuDirectSoundBuffer8, pdwStatus);
+    DWORD dwStatusXbox = 0, dwStatusHost;
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
+
+    // Convert host to xbox status flag.
+    if (hRet == DS_OK) {
+        DWORD testSize = pThis->Host_BufferPacketArray.size();
+        if ((dwStatusHost & DSBSTATUS_PLAYING) > 0) {
+            dwStatusXbox |= X_DSSSTATUS_PLAYING;
+
+        } else {
+            // TODO: Might not be accurate. Doc state this flag is set when data is queued and paused.
+            if ((pThis->EmuFlags & DSB_FLAG_PAUSE) > 0) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+            }
+
+            if (pThis->Host_BufferPacketArray.size() == 0) {
+                dwStatusXbox |= X_DSSSTATUS_STARVED;
+            }
+        }
+        if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
+            dwStatusXbox |= X_DSSSTATUS_READY;
+        }
+    }
+
+    *pdwStatus = dwStatusXbox;
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************

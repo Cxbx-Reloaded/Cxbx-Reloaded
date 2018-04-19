@@ -868,6 +868,8 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     RETURN_RESULT_CHECK(hRet);
 }
 
+/*
+// NOTE: Flags are 100% not compatible, not use Hybrid version
 //IDirectSoundStream
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_GetStatus(
@@ -882,7 +884,7 @@ inline HRESULT HybridDirectSoundBuffer_GetStatus(
     leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
-}
+}*/
 
 /*
 inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
