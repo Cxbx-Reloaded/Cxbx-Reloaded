@@ -10,6 +10,7 @@
 #define IDD_CONTROLLER_CFG              111
 #define IDD_VIDEO_CFG                   113
 #define IDD_AUDIO_CFG                   114
+#define IDD_EEPROM_CFG                  115
 #define IDR_JPEG_ABOUT                  116
 #define IDR_JPEG_SPLASH                 118
 #define IDD_ABOUT                       119
@@ -87,6 +88,7 @@
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048
+#define ID_SETTINGS_CONFIG_EEPROM       40049
 #define ID_FILE_RXBE_0                  40050
 #define ID_FILE_RXBE_1                  40051
 #define ID_FILE_RXBE_2                  40052

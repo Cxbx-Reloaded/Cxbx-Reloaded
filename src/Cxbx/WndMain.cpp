@@ -38,6 +38,7 @@
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
+#include "DlgEepromConfig.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
@@ -1104,6 +1105,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             case ID_SETTINGS_CONFIG_AUDIO:
                 ShowAudioConfig(hwnd);
                 break;
+
+			case ID_SETTINGS_CONFIG_EEPROM:
+			{
+				if (m_bIsStarted) {
+					// We don't allow changing the contents of the eeprom while a game is running, mostly because we lack a "pause emulation"
+					// function necessary to modify the contents safely (the game itself can modify the eeprom)
+					MessageBox(hwnd, "Cannot modify eeprom file while a title is running", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+					break;
+				}
+				ShowEepromConfig(hwnd);
+			}
+			break;
 
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{

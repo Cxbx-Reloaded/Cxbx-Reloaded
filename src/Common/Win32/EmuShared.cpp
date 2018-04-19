@@ -138,6 +138,7 @@ EmuShared::EmuShared()
 	Load();
 	m_bDebugging = false;
 	m_bMultiXbeFlag = false;
+	m_bRefreshEeprom = false;
 }
 
 // ******************************************************************

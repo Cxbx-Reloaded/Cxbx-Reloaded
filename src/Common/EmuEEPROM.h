@@ -102,8 +102,6 @@ extern xboxkrnl::ULONG XboxFactoryGameRegion;
 
 void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
 
-extern UCHAR EepromKey[16];
-
 #if defined(__cplusplus)
 }
 #endif
