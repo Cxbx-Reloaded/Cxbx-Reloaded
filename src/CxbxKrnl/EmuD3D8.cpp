@@ -5144,7 +5144,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+    HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+#else
+    hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 

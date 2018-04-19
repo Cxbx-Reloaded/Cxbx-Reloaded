@@ -174,7 +174,11 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[0+Adjust2] == 5)
 					EmuWarning("ClampToEdge is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSU, pCur[0 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0+Adjust2]);
+#endif
             }
 
             if(pCur[1+Adjust2] != X_D3DTSS_UNK)
@@ -182,7 +186,11 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[1+Adjust2] == 5)
 					EmuWarning("ClampToEdge is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSV, pCur[1 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]);
+#endif
             }
 
             if(pCur[2+Adjust2] != X_D3DTSS_UNK)
@@ -190,7 +198,11 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[2+Adjust2] == 5)
 					EmuWarning("ClampToEdge is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSW, pCur[2 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]);
+#endif
             }
 
             if(pCur[3+Adjust2] != X_D3DTSS_UNK)
@@ -198,7 +210,11 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[3+Adjust2] == 4)
                     EmuWarning("QuinCunx is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MAGFILTER, pCur[3 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3+Adjust2]);
+#endif
             }
 
             if(pCur[4+Adjust2] != X_D3DTSS_UNK)
@@ -206,7 +222,11 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[4+Adjust2] == 4)
 					EmuWarning("QuinCunx is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MINFILTER, pCur[4 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4+Adjust2]);
+#endif
             }
 
             if(pCur[5+Adjust2] != X_D3DTSS_UNK)
@@ -214,17 +234,33 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[5+Adjust2] == 4)
 					EmuWarning("QuinCunx is unsupported (temporarily)");
 				else
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MIPFILTER, pCur[5 + Adjust2]);
+#else
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5+Adjust2]);
+#endif
             }
 
             if(pCur[6+Adjust2] != X_D3DTSS_UNK)
+#ifdef CXBX_USE_D3D9
+				g_pD3DDevice->SetSamplerState(v, D3DSAMP_MIPMAPLODBIAS, pCur[6 + Adjust2]);
+#else
                 g_pD3DDevice->SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, pCur[6+Adjust2]);
+#endif
 
             if(pCur[7+Adjust2] != X_D3DTSS_UNK)
+#ifdef CXBX_USE_D3D9
+				g_pD3DDevice->SetSamplerState(v, D3DSAMP_MAXMIPLEVEL, pCur[7 + Adjust2]);
+#else
                 g_pD3DDevice->SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, pCur[7+Adjust2]);
+#endif
 
             if(pCur[8+Adjust2] != X_D3DTSS_UNK)
+#ifdef CXBX_USE_D3D9
+				g_pD3DDevice->SetSamplerState(v, D3DSAMP_MAXANISOTROPY, pCur[8 + Adjust2]);
+#else
                 g_pD3DDevice->SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8+Adjust2]);
+#endif
 
             if(pCur[12-Adjust1] != X_D3DTSS_UNK)
             {
@@ -356,7 +392,12 @@ void XTL::EmuUpdateDeferredStates()
                 g_pD3DDevice->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21-Adjust1]);
 
             /*if(pCur[29] != X_D3DTSS_UNK)	// This is NOT a deferred texture state!
-                g_pD3DDevice->SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);*/
+#ifdef CXBX_USE_D3D9
+                g_pD3DDevice->SetSamplerState(v, D3DSAMP_BORDERCOLOR, pCur[29]);
+#else
+                g_pD3DDevice->SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
+#endif
+				*/
 
             /** To check for unhandled texture stage state changes
             for(int r=0;r<32;r++)
@@ -409,8 +450,18 @@ void XTL::EmuUpdateDeferredStates()
                 {
                     ::DWORD dwValue;
 
-                    g_pD3DDevice->GetTextureStageState(3, (D3DTEXTURESTAGESTATETYPE)v, &dwValue);
-                    g_pD3DDevice->SetTextureStageState(0, (D3DTEXTURESTAGESTATETYPE)v, dwValue);
+#ifdef CXBX_USE_D3D9
+					// For Direct3D9, everything below X_D3DSAMP_MAXANISOTROPY needs to call GetSamplerState / SetSamplerState  :
+					if (v <= X_D3DTSS_MAXANISOTROPY) {
+						g_pD3DDevice->GetSamplerState(3, (D3DSAMPLERSTATETYPE)v, &dwValue);
+						g_pD3DDevice->SetSamplerState(0, (D3DSAMPLERSTATETYPE)v, dwValue);
+					}
+					else
+#endif
+					{
+						g_pD3DDevice->GetTextureStageState(3, (D3DTEXTURESTAGESTATETYPE)v, &dwValue);
+						g_pD3DDevice->SetTextureStageState(0, (D3DTEXTURESTAGESTATETYPE)v, dwValue);
+					}
                 }
             }
         }
