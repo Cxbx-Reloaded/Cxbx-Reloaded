@@ -66,6 +66,12 @@ void CxbxInitAudio();
 #define X_DSSPAUSE_SYNCHPLAYBACK      0x00000002
 #define X_DSSPAUSE_PAUSENOACTIVATE    0x00000003
 
+// EmuIDirectSoundStream_FlushEx flags
+#define X_DSSFLUSHEX_IMMEDIATE        0x00000000
+#define X_DSSFLUSHEX_ASYNC            0x00000001
+#define X_DSSFLUSHEX_ENVELOPE         0x00000002
+#define X_DSSFLUSHEX_ENVELOPE2        0x00000004
+
 // EmuIDirectSoundBuffer_GetStatus flags
 #define X_DSSSTATUS_READY             0x00000001
 #define X_DSSSTATUS_PLAYING           0x00010000
@@ -78,7 +84,6 @@ void CxbxInitAudio();
 #define X_DSBSTOPEX_ENVELOPE          0x00000001
 #define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
 #define X_DSBSTOPEX_ALL               (X_DSBSTOPEX_ENVELOPE | X_DSBSTOPEX_RELEASEWAVEFORM)
-
 
 // ******************************************************************
 // * X_DSBUFFERDESC
@@ -490,6 +495,8 @@ class X_CDirectSoundStream
         bool                                    Host_isProcessing;
         LPFNXMOCALLBACK                         Xb_lpfnCallback;
         LPVOID                                  Xb_lpvContext;
+        REFERENCE_TIME                          Xb_rtFlushEx;
+        REFERENCE_TIME                          Xb_rtPauseEx;
 };
 
 // ******************************************************************

@@ -494,81 +494,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
         }
         XTL::X_CDirectSoundStream* pThis = *pDSStream;
 
-        // If title want to pause, then don't process the packets.
-        if ((pThis->EmuFlags & DSB_FLAG_PAUSE) > 0) {
-            continue;
-        }
-
-        DWORD dwAudioBytes;
-        HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
-        if (hRet == DS_OK) {
-            std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
-            if (buffer->isWritten == false) {
-
-            prepareNextBufferPacket:
-                DSoundStreamWriteToBuffer(pThis->EmuDirectSoundBuffer8, buffer->rangeStart, buffer->pBuffer_data, buffer->xmp_data.dwMaxSize);
-
-                // Debug area begin
-                //printf("DEBUG: next packet process | pThis = %08X | rangeStart = %08d | bufferSize - %08d | dwBufferBytes = %08d | dwWriteOffsetNext = %08d\n", pThis, buffer->rangeStart, buffer->xmp_data.dwMaxSize, pThis->EmuBufferDesc->dwBufferBytes, pThis->Host_dwWriteOffsetNext);
-                // Debug area end
-
-                if (pThis->Host_isProcessing == false) {
-                    pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-                    pThis->Host_isProcessing = true;
-                }
-                buffer->isWritten = true;
-
-            } else {
-                // NOTE: p1. Do not use play cursor, use write cursor to check ahead since by the time it gets there. The buffer is already played.
-                // p2. Plus play cursor is not reliable to check, write cursor is reliable as it is update more often.
-                // Test case proof: Gauntlet Dark Legacy give 256 bytes of data to a per packet during intro FMV.
-                DWORD writePos = 0;
-                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
-                if (hRet == DS_OK) {
-
-                    int bufPlayed = writePos - buffer->rangeStart;
-
-                    // Correct it if buffer was playing and is at beginning.
-                    if (bufPlayed < 0 && (buffer->isPlayed || (writePos + pThis->EmuBufferDesc.dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
-                        bufPlayed = pThis->EmuBufferDesc.dwBufferBytes - (bufPlayed * -1);
-                    }
-
-                    if (bufPlayed >= 0) {
-                        if (buffer->isPlayed == false) {
-                            buffer->isPlayed = true;
-                        }
-                        if (bufPlayed >= (int)buffer->xmp_data.dwMaxSize) {
-
-                            DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
-
-                            buffer = pThis->Host_BufferPacketArray.erase(buffer);
-                            if (pThis->Host_BufferPacketArray.size() == 0) {
-                                goto endOfPacket;
-                            }
-                            if (buffer->isWritten == false) {
-                                goto prepareNextBufferPacket;
-                            }
-                        }
-                        if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
-                            (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, bufPlayed);
-                        }
-                        if (pThis->Host_BufferPacketArray.size() > 1) {
-                            if ((buffer + 1)->isWritten == false) {
-                                buffer++;
-                                goto prepareNextBufferPacket;
-                            }
-                        }
-                    }
-                }
-                // Out of packets, let's stop it.
-                if (pThis->Host_BufferPacketArray.size() == 0) {
-
-                endOfPacket:
-                    pThis->Host_isProcessing = false;
-                    pThis->EmuDirectSoundBuffer8->Stop();
-                }
-            }
-        }
+        DSoundStreamProcess(pThis);
     }
 
     leaveCriticalSection;
@@ -2132,7 +2058,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
-    // TODO: How to emulate flush functionality?
+    while (DSoundStreamProcess(pThis));
 
     leaveCriticalSection;
 
@@ -3089,11 +3015,20 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    HRESULT hRet = DSERR_INVALIDPARAM;
+
+    pThis->Xb_rtFlushEx = rtTimeStamp;
+
+    if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
+        hRet = XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+
+    // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
+    } else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+    }
 
     leaveCriticalSection;
 
-    return XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+    return hRet;
 }
 
 // ******************************************************************
