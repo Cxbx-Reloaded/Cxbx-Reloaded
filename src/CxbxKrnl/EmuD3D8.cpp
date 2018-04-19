@@ -2288,12 +2288,20 @@ void CxbxUpdateActiveIndexBuffer
 
 	// If we need to create an index buffer, do so.
 	if (indexBuffer.pHostIndexBuffer == nullptr) {
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+		// "Managing Resources (Direct3D 9)"
+		// suggests "for resources which change with high frequency" [...]
+		// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+		const XTL::D3DPOOL D3DPool = XTL::D3DPOOL_DEFAULT; // Was XTL::D3DPOOL_MANAGED
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+		// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+		const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY; // Was D3DUSAGE_WRITEONLY
 		// Create a new native index buffer of the above determined size :
 		HRESULT hRet = g_pD3DDevice->CreateIndexBuffer(
 			IndexCount * 2,
-			D3DUSAGE_WRITEONLY,
+			D3DUsage,
 			XTL::D3DFMT_INDEX16,
-			XTL::D3DPOOL_MANAGED,
+			D3DPool,
 			&indexBuffer.pHostIndexBuffer
 #ifdef CXBX_USE_D3D9
 			, nullptr

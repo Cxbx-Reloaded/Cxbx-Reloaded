@@ -388,7 +388,15 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+					// "Managing Resources (Direct3D 9)"
+					// suggests "for resources which change with high frequency" [...]
+					// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+					const D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was D3DPOOL_MANAGED
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+					// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+					const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+					hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
 #ifdef CXBX_USE_D3D9
 						, nullptr
 #endif
@@ -562,7 +570,15 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+					// "Managing Resources (Direct3D 9)"
+					// suggests "for resources which change with high frequency" [...]
+					// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+					const D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was D3DPOOL_MANAGED
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+					// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+					const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+					hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
 #ifdef CXBX_USE_D3D9
 						, nullptr
 #endif
