@@ -1872,7 +1872,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.GetFullscreen();
 
                     if(g_XBVideo.GetVSync())
+#ifdef CXBX_USE_D3D9
+                        g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
+#else
                         g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
+#endif
 
                     g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 
@@ -2650,7 +2654,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     }
     else if(Handle == NULL)
     {
+#ifdef CXBX_USE_D3D9
+		hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		hRet = g_pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX0);
+#else
 		hRet = g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
+#endif
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0)");
 	}
     else if(Address < 136)
@@ -2914,7 +2923,12 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		goto skip_backbuffer_copy;
 	}
 	
-	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, copySurfaceDesc.Size);
+#ifdef CXBX_USE_D3D9
+	DWORD Size = lockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
+#else
+	DWORD Size = copySurfaceDesc.Size;
+#endif
+	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, Size);
 
 	pCopySrcSurface->UnlockRect();
 	
@@ -6108,7 +6122,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		RealHandle = Handle;
     }
 
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetVertexShader(nullptr);
+	hRet = g_pD3DDevice->SetFVF(RealHandle);
+#else
 	hRet = g_pD3DDevice->SetVertexShader(RealHandle);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");    
 }
 
