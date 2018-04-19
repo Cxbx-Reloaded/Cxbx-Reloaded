@@ -3398,12 +3398,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 	if(g_BuildVersion <= 4361)
 		Register += 96;
 
-    HRESULT hRet = g_pD3DDevice->SetVertexShaderConstant
+    HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetVertexShaderConstantF(
+		Register,
+		(float*)pConstantData,
+		ConstantCount
+	);
+#else
+    hRet = g_pD3DDevice->SetVertexShaderConstant
     (
         Register,
         pConstantData,
         ConstantCount
     );
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShaderConstant");
 
     if(FAILED(hRet))
@@ -6095,8 +6104,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
         static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
         static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
 
+#ifdef CXBX_USE_D3D9
+        g_pD3DDevice->SetVertexShaderConstantF(58, vScale, 1);
+        g_pD3DDevice->SetVertexShaderConstantF(59, vOffset, 1);
+#else
         g_pD3DDevice->SetVertexShaderConstant(58, vScale, 1);
         g_pD3DDevice->SetVertexShaderConstant(59, vOffset, 1);
+#endif
     }
 
     DWORD RealHandle;
