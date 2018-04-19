@@ -8,6 +8,7 @@ using WinProcesses = VsChromium.Core.Win32.Processes;
 using WinDebug = VsChromium.Core.Win32.Debugging;
 using System.Runtime.InteropServices;
 using WinLowLevel = LowLevelDesign.Win32.Windows.NativeMethods;
+using System.Threading;
 
 namespace CxbxDebugger
 {
@@ -47,6 +48,8 @@ namespace CxbxDebugger
 
         DebuggerSymbolServer SymbolSrv;
         KernelProvider KernelSymbolProvider;
+
+        ManualResetEvent bpStall = new ManualResetEvent(false);
 
         bool bContinue = true;
         WinDebug.CONTINUE_STATUS ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
@@ -97,10 +100,25 @@ namespace CxbxDebugger
 
         public void Dispose()
         {
-            // Destroy process
-            WinProcesses.NativeMethods.TerminateProcess(hProcess, 0);
+            bContinue = false;
+            bpStall.Set();
 
-            // close it
+            // Remove all events
+            GeneralEvents.Clear();
+            ProcessEvents.Clear();
+            ThreadEvents.Clear();
+            ModuleEvents.Clear();
+            OutputEvents.Clear();
+            ExceptionEvents.Clear();
+            FileEvents.Clear();
+
+            // Destroy process
+            if (!hProcess.IsClosed)
+            {
+                WinProcesses.NativeMethods.TerminateProcess(hProcess, 0);
+            }
+            
+            // Close handles
             hProcess.Close();
             hThread.Close();
         }
@@ -118,6 +136,14 @@ namespace CxbxDebugger
             if (DebugInstance != null)
             {
                 DebugInstance.MainProcess.Resume();
+            }
+        }
+
+        public void Trace()
+        {
+            if (DebugInstance != null)
+            {
+                DebugInstance.MainProcess.Trace();
             }
         }
 
@@ -563,6 +589,11 @@ namespace CxbxDebugger
                             var Report = DebuggerMessages.GetDebuggerInitReport(Thread, DebugInfo.ExceptionRecord.ExceptionInformation);
 
                             InitParams = Report;
+
+                            foreach (IDebuggerGeneralEvents Event in GeneralEvents)
+                            {
+                                Event.OnDebugTitleLoaded(InitParams.Title);
+                            }
                         }
                     }
                     break;
@@ -598,8 +629,24 @@ namespace CxbxDebugger
                     break;
 
                 case ExceptionCode.Breakpoint:
-                    // TODO Handle
+                    {
+                        var Thread = DebugInstance.MainProcess.FindThread((uint)DebugEvent.dwThreadId);
+                        if (Thread != null)
+                        {
+                            uint BpAddr = (uint)DebugInfo.ExceptionRecord.ExceptionAddress;
+                            uint BpCode = DebugInfo.ExceptionRecord.ExceptionCode;
+                            bool FirstChance = (DebugInfo.dwFirstChance != 0);
 
+                            bpStall.Reset();
+
+                            foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
+                            {
+                                Event.OnBreakpoint(Thread, BpAddr, BpCode, FirstChance);
+                            }
+
+                            bpStall.WaitOne();
+                        }
+                    }
                     break;
 
                 case ExceptionCode.SingleStep:
@@ -610,6 +657,11 @@ namespace CxbxDebugger
                     ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_EXCEPTION_NOT_HANDLED;
                     break;
             }
+        }
+        
+        public void BreakpointContinue()
+        {
+            bpStall.Set();
         }
 
         public void RunThreaded()
