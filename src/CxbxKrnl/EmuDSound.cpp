@@ -2945,6 +2945,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Pause
 // ******************************************************************
+// Introduced in XDK 4721 revision.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 (
     X_CDirectSoundBuffer*   pThis,
@@ -2956,8 +2957,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
-
-    // This function wasn't part of the XDK until 4721.
 
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
@@ -2975,6 +2974,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PauseEx
 // ******************************************************************
+// Introduced in XDK 4721 revision.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
 (
     X_CDirectSoundBuffer   *pThis,
@@ -2990,9 +2990,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
             LOG_FUNC_ARG(rtTimestamp)
             LOG_FUNC_ARG(dwPause)
             LOG_FUNC_END;
-
-    // This function wasn't part of the XDK until 4721.
-    // TODO: Implement time stamp feature (a thread maybe?)
 
     HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
                                                  1, rtTimestamp, pThis->Xb_rtPauseEx);
