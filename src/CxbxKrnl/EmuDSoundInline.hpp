@@ -1002,11 +1002,12 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     HRESULT hRet = DS_OK, hStatus;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
-            if (triggerPlayPermission && rtTimeStamp) {
+            if (triggerPlayPermission) {
                 pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             dwEmuFlags &= ~DSE_FLAG_PAUSE;
+            Xb_rtTimeStamp = 0;
             break;
         case X_DSSPAUSE_PAUSE:
             hStatus = pDSBuffer->GetStatus(&dwStatus);
