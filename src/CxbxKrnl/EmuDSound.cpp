@@ -965,7 +965,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         hRet = DSERR_OUTOFMEMORY;
     } else {
 
-        DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+        DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)calloc(1, sizeof(DSBUFFERDESC));
 
         //TODO: Find out the cause for DSBCAPS_MUTE3DATMAXDISTANCE to have invalid arg.
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
@@ -981,7 +981,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
         pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
-        pDSBufferDesc->lpwfxFormat = nullptr;
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
@@ -1512,8 +1511,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     if (pThis->EmuDirectSoundBuffer8Region == nullptr && pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
         DWORD Xb_byteLength;
         DWORD Xb_startOffset;
-        LPDSBUFFERDESC emuBufferDescRegion = (LPDSBUFFERDESC)malloc(sizeof(DSBUFFERDESC));
-        memcpy_s(emuBufferDescRegion, sizeof(DSBUFFERDESC), pThis->EmuBufferDesc, sizeof(DSBUFFERDESC));
+		int NeededSize = pThis->EmuBufferDesc->dwSize;
+		if (NeededSize < sizeof(DSBUFFERDESC)) {
+			NeededSize = sizeof(DSBUFFERDESC);
+			EmuWarning("pThis->EmuBufferDesc->dwSize = %d < sizeof(DSBUFFERDESC) - correcting to %d", pThis->EmuBufferDesc->dwSize, NeededSize);
+		}
+        LPDSBUFFERDESC emuBufferDescRegion = (LPDSBUFFERDESC)malloc(NeededSize);
+        memcpy_s(emuBufferDescRegion, sizeof(DSBUFFERDESC), pThis->EmuBufferDesc, NeededSize);
+		if (emuBufferDescRegion->dwSize < NeededSize) {
+			EmuWarning("After memcpy_s, emuBufferDescRegion->dwSize (%d) < NeededSize (%d) - correcting...", pThis->EmuBufferDesc->dwSize, NeededSize);
+			emuBufferDescRegion->dwSize = NeededSize;
+		}
 
         switch (pThis->EmuBufferToggle) {
             case X_DSB_TOGGLE_LOOP:
@@ -1743,8 +1751,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
-
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)calloc(1, sizeof(DSBUFFERDESC));
 
     DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
@@ -1754,7 +1761,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
     //pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
     pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
-    pDSBufferDesc->lpwfxFormat = nullptr;
 
     DSoundBufferSetDefault((*ppStream), pDSBufferDesc, 0, DSBPLAY_LOOPING);
 

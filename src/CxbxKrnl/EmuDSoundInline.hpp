@@ -64,6 +64,33 @@ void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC* pDSBufferDesc, LPV
     }
 }
 
+inline int WaveFormat_ActualSize(LPCWAVEFORMATEX lpwfxFormat)
+{
+	int ActualSize = 0;
+	if (lpwfxFormat != nullptr) {
+		ActualSize = sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize;
+	}
+
+	return ActualSize;
+}
+
+inline int WaveFormat_NeededSize(LPCWAVEFORMATEX lpwfxFormat)
+{
+	int NeededSize = sizeof(WAVEFORMATEX);
+	if (lpwfxFormat != nullptr) {
+		NeededSize += lpwfxFormat->cbSize;
+		// we NOW support 2+ channels, this conversion is necessary in order to support PC audio.
+		if (lpwfxFormat->nChannels > 2 && lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+			if (NeededSize < sizeof(WAVEFORMATEXTENSIBLE)) {
+				EmuWarning("Extending to WAVEFORMATEXTENSIBLE");
+				NeededSize = sizeof(WAVEFORMATEXTENSIBLE);
+			}
+		}
+	}
+
+	return NeededSize;
+}
+
 // Convert XADPCM to PCM format helper function
 inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 {
@@ -96,12 +123,12 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
     //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
     //lpwfxFormat.nBlockAlign;        /* block size of data */
     //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
-    //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
+    //lpwfxFormat.cbSize;             /* the count in bytes of the size of extra information (after cbSize) */
 
     lpwfxFormat->wBitsPerSample = 16;
     lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
     lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
-    lpwfxFormat->cbSize = 0;
+    lpwfxFormat->cbSize = 0; // WARNING! WAVE_FORMAT_PCM resets cbSize to zero!!! TODO : Explain why this is done.
     //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
     //This is just to verify format conversion is correct or not.
 #if 0
@@ -183,10 +210,14 @@ inline void GeneratePCMFormat(
             // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
             // in the first place, FYI.
 
-            if (pDSBufferDesc->lpwfxFormat == nullptr) {
-                pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+			int CurrentSize = WaveFormat_ActualSize(pDSBufferDesc->lpwfxFormat);
+			int NeededSize = WaveFormat_NeededSize(lpwfxFormat);
+			if (CurrentSize < NeededSize) {
+				if (pDSBufferDesc->lpwfxFormat != nullptr)
+					free(pDSBufferDesc->lpwfxFormat);
+                pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(NeededSize);
             }
-            memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, WaveFormat_ActualSize(lpwfxFormat));
 
             dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
 
@@ -222,10 +253,9 @@ inline void GeneratePCMFormat(
 
             // TODO: A better response to this scenario if possible.
 
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
 
-            //memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
-            //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
+            //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC));
 
             pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
             pDSBufferDesc->lpwfxFormat->nChannels = 2;
@@ -233,9 +263,12 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
             pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
             pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
-            pDSBufferDesc->lpwfxFormat->cbSize = sizeof(WAVEFORMATEX);
+			pDSBufferDesc->lpwfxFormat->cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
 
-            pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
+			if (pDSBufferDesc->dwSize < sizeof(DSBUFFERDESC)) {
+				EmuWarning("pDSBufferDesc->dwSize (%d) < sizeof(DSBUFFERDESC) (%d) > correcting....", pDSBufferDesc->dwSize, sizeof(DSBUFFERDESC));
+				pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
+			}
             pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
             pDSBufferDesc->dwBufferBytes = 3 * pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;
 
@@ -269,6 +302,18 @@ inline void GeneratePCMFormat(
     if (pDSBufferDesc->lpwfxFormat != nullptr) {
         // we NOW support 2+ channels, this conversion is necessary in order to support PC audio.
         if (pDSBufferDesc->lpwfxFormat->nChannels > 2 && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+			// Validate the wave format structure size
+			if (pDSBufferDesc->lpwfxFormat->cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)) {
+				// Did we get here through XADPCM2PCMFormat (which resets cbSize to zero for some unexplained reason) ?
+				if ((lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) && (dwEmuFlags & DSB_FLAG_XADPCM)) {
+					// then ignore the size-mismatch (XADPCM2PCMFormat is probably the cause anyway)
+				}
+				else {
+					EmuWarning("pDSBufferDesc->lpwfxFormat->cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX) > trying anyway");
+					// Note : This could cause memory corruption - are we sure we want to do it like this?!?
+					// TODO : Or should we reallocate pDSBufferDesc->lpwfxFormat into a WAVEFORMATEXTENSIBLE instead?
+				}
+			}
             PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)pDSBufferDesc->lpwfxFormat;
             lpwfxFormatExtensible->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
             lpwfxFormatExtensible->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
