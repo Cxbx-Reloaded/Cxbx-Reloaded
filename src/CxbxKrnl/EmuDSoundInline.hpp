@@ -413,7 +413,9 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->EmuFlags = 0; \
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
     pThis->X_BufferCacheSize = 0; \
-    pThis->Xb_rtPauseEx = 0LL;
+    pThis->Xb_rtPauseEx = 0LL; \
+    pThis->Xb_Volume = 0L; \
+    pThis->Xb_VolumeMixbin = 0L;
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
@@ -1452,7 +1454,7 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
     RETURN_RESULT_CHECK(hRet);
 }
 
-HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD);
+HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LPLONG, LONG);
 /*
 //TODO: PC DirectSound does not have SetMixBins method function.
 //IDirectSoundStream
@@ -1470,7 +1472,9 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     XTL::X_LPDSMIXBINS   pMixBins,
-    DWORD                EmuFlags)
+    DWORD                EmuFlags,
+    LONG                 Xb_volume,
+    LONG                &Xb_volumeMixBin)
 {
     enterCriticalSection;
 
@@ -1489,8 +1493,8 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
                 }
             }
             if (count > 0) {
-                volume = volume / counter;
-                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, volume, EmuFlags);
+                Xb_volumeMixBin = volume / counter;
+                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr, Xb_volumeMixBin);
             } else {
                 hRet = DS_OK;
             }
@@ -1664,12 +1668,21 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
 //IDirectSoundStream x2
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_SetVolume(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    LONG                lVolume,
-    DWORD               dwEmuFlags)
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    LONG                    lVolume,
+    DWORD                   dwEmuFlags,
+    LPLONG                  Xb_lpVolume,
+    LONG                    Xb_volumeMixbin)
 {
 
     enterCriticalSection;
+
+    // Preserve original volume
+    if (Xb_lpVolume != xbnullptr) {
+        *Xb_lpVolume = lVolume;
+    }
+
+    lVolume += Xb_volumeMixbin;
 
     if (dwEmuFlags & DSE_FLAG_PCM) {
         if (!g_XBAudio.GetPCM()) {

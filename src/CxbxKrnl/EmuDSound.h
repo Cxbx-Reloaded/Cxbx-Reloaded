@@ -381,6 +381,8 @@ struct X_CDirectSoundBuffer
     DSoundBuffer_Lock       Host_lock;
     DSoundBuffer_Lock       X_lock;
     REFERENCE_TIME          Xb_rtPauseEx;
+    LONG                    Xb_Volume;
+    LONG                    Xb_VolumeMixbin;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
@@ -527,6 +529,8 @@ class X_CDirectSoundStream
         LPVOID                                  Xb_lpvContext;
         REFERENCE_TIME                          Xb_rtFlushEx;
         REFERENCE_TIME                          Xb_rtPauseEx;
+        LONG                                    Xb_Volume;
+        LONG                                    Xb_VolumeMixbin;
 };
 
 // ******************************************************************

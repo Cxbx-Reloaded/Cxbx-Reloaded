@@ -785,7 +785,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
 }
 
 // ******************************************************************
@@ -974,7 +974,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
 
         // Pre-set volume to enforce silence if one of audio codec is disabled.
-        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0, (*ppBuffer)->EmuFlags);
+        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 0L);
 
         *ppDSoundBufferCache = *ppBuffer;
     }
@@ -1631,10 +1631,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    // TODO: Ensure that 4627 & 4361 are intercepting far enough back
-    // (otherwise pThis is manipulated!)
-
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
 }
 
 // ******************************************************************
@@ -1724,7 +1721,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     }
 
     // Pre-set volume to enforce silence if one of audio codec is disabled.
-    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0, (*ppStream)->EmuFlags);
+    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr, 0L);
 
     // cache this sound stream
     {
@@ -1806,7 +1803,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
 }
 
 // ******************************************************************
@@ -3349,7 +3346,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
 }
 
 // ******************************************************************
