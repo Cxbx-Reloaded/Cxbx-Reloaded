@@ -43,6 +43,7 @@ namespace xboxkrnl {
 };
 
 #include <dsound.h>
+#include <thread>
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"
@@ -210,6 +211,8 @@ unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 DWORD                               g_dwXbMemAllocated = 0;
 DWORD                               g_dwFree2DBuffers = 0;
 DWORD                               g_dwFree3DBuffers = 0;
+std::thread dsound_thread;
+static void dsound_thread_worker(LPVOID);
 
 #define RETURN_RESULT_CHECK(hRet) { \
     static bool bPopupShown = false; if (!bPopupShown && hRet) { bPopupShown = true; \
@@ -255,6 +258,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     if (!initialized) {
         InitializeCriticalSection(&g_DSoundCriticalSection);
+        dsound_thread = std::thread(dsound_thread_worker, nullptr);
     }
 
     enterCriticalSection;
@@ -470,6 +474,9 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
 	LOG_FUNC();
 
+    xboxkrnl::LARGE_INTEGER getTime;
+    xboxkrnl::KeQuerySystemTime(&getTime);
+
     XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
     for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
         if ((*pDSBuffer) == nullptr || (*pDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*pDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
@@ -484,6 +491,13 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             (*pDSBuffer)->X_lock.dwLockOffset,
                             (*pDSBuffer)->X_lock.dwLockBytes1,
                             (*pDSBuffer)->X_lock.dwLockBytes2);
+
+        // TODO: Do we need this in async thread loop?
+        if ((*pDSBuffer)->Xb_rtPauseEx != 0 && (*pDSBuffer)->Xb_rtPauseEx <= getTime.QuadPart) {
+            (*pDSBuffer)->Xb_rtPauseEx = 0LL;
+            (*pDSBuffer)->EmuFlags ^= DSE_FLAG_PAUSE;
+            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+        }
     }
 
     // Actually, DirectSoundStream need to process buffer packets here.
@@ -494,12 +508,48 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
         }
         XTL::X_CDirectSoundStream* pThis = *pDSStream;
 
-        DSoundStreamProcess(pThis);
+        // TODO: Do we need this in async thread loop?
+        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
+            pThis->Xb_rtPauseEx = 0LL;
+            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            // Don't call play here, let DSoundStreamProcess deal with it.
+        }
+        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
+            DSoundStreamProcess(pThis);
+        } else {
+            // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
+            if (pThis->Xb_rtFlushEx != 0 && pThis->Xb_rtFlushEx <= getTime.QuadPart) {
+                pThis->Xb_rtFlushEx = 0LL;
+                DSoundStreamProcess(pThis);
+            }
+        }
     }
 
     leaveCriticalSection;
 
     return;
+}
+// For Async process purpose only
+static void dsound_thread_worker(LPVOID nullPtr)
+{
+    while (true) {
+        SwitchToThread();
+
+        enterCriticalSection;
+
+        XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
+        for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
+            if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+                continue;
+            }
+            XTL::X_CDirectSoundStream* pThis = *pDSStream;
+            if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && pThis->Xb_rtFlushEx == 0) {
+                DSoundStreamProcess(pThis);
+            }
+        }
+
+        leaveCriticalSection;
+    }
 }
 
 // Kismet given name for RadWolfie's experiment major issue in the mutt.
@@ -1657,6 +1707,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
 
     DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
+    (*ppStream)->Xb_rtFlushEx = 0LL;
 
     // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
     GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
@@ -1916,6 +1967,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 
             if (pThis->Host_BufferPacketArray.size() == 0) {
                 dwStatusXbox |= X_DSSSTATUS_STARVED;
+
+                if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
+                    dwStatusXbox |= X_DSSSTATUS_ENVELOPECOMPLETE;
+                }
             }
         }
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
@@ -2058,6 +2113,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
+    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    pThis->EmuFlags ^= (DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+
     while (DSoundStreamProcess(pThis));
 
     leaveCriticalSection;
@@ -2126,7 +2184,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                        (pThis->Host_BufferPacketArray.size() > 0), 0LL, pThis->Xb_rtPauseEx);
 }
 
 // ******************************************************************
@@ -2909,7 +2968,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
                         pThis->X_lock.dwLockBytes1,
                         pThis->X_lock.dwLockBytes2);
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                         1, 0LL, pThis->Xb_rtPauseEx);
 }
 
 // ******************************************************************
@@ -2934,7 +2994,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
     // This function wasn't part of the XDK until 4721.
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                                 1, rtTimestamp, pThis->Xb_rtPauseEx);
 
     leaveCriticalSection;
 
@@ -3017,13 +3078,27 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 
     HRESULT hRet = DSERR_INVALIDPARAM;
 
-    pThis->Xb_rtFlushEx = rtTimeStamp;
-
+    // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
         hRet = XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
 
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
     } else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+
+        pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
+        pThis->Xb_rtFlushEx = rtTimeStamp;
+
+        // Set or remove flags (This is the only place it will set/remove other than Flush perform remove the flags.)
+        if ((dwFlags & X_DSSFLUSHEX_ENVELOPE) > 0) {
+            pThis->EmuFlags |= DSE_FLAG_ENVELOPE;
+        } else {
+            pThis->EmuFlags ^= DSE_FLAG_ENVELOPE;
+        }
+        if ((dwFlags & X_DSSFLUSHEX_ENVELOPE2) > 0) {
+            pThis->EmuFlags |= DSE_FLAG_ENVELOPE2;
+        } else {
+            pThis->EmuFlags ^= DSE_FLAG_ENVELOPE2;
+        }
     }
 
     leaveCriticalSection;
@@ -3975,7 +4050,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 
+                                                (pThis->Host_BufferPacketArray.size() > 0), rtTimestamp, pThis->Xb_rtPauseEx);
 
     leaveCriticalSection;
 

@@ -364,7 +364,7 @@ struct X_CDirectSoundBuffer
 #define DSE_FLAG_PCM_UNKNOWN            (1 << 2)
 #define DSE_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
 #define DSE_FLAG_PAUSE                  (1 << 11)
-#define DSE_FLAG_ASYNC                  (1 << 12)
+#define DSE_FLAG_FLUSH_ASYNC            (1 << 12)
 #define DSE_FLAG_ENVELOPE               (1 << 13)
 #define DSE_FLAG_ENVELOPE2              (1 << 14) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
 #define DSE_FLAG_RECIEVEDATA            (1 << 20)

@@ -414,7 +414,8 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->X_BufferCache = xbnullptr; \
     pThis->EmuFlags = 0; \
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
-    pThis->X_BufferCacheSize = 0;
+    pThis->X_BufferCacheSize = 0; \
+    pThis->Xb_rtPauseEx = 0LL;
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
@@ -990,7 +991,9 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     DWORD                   dwPause,
     DWORD                  &dwEmuFlags,
     DWORD                   dwEmuPlayFlags,
-    bool                    triggerPlayPermission)
+    bool                    triggerPlayPermission,
+    REFERENCE_TIME          rtTimeStamp,
+    REFERENCE_TIME         &Xb_rtTimeStamp)
 {
 
     enterCriticalSection;
@@ -999,19 +1002,22 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     HRESULT hRet = DS_OK, hStatus;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
-            if (triggerPlayPermission) {
+            if (triggerPlayPermission && rtTimeStamp) {
                 pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             dwEmuFlags &= ~DSE_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_PAUSE:
+        // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
+        case X_DSSPAUSE_PAUSENOACTIVATE:
             hStatus = pDSBuffer->GetStatus(&dwStatus);
             if (hStatus == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                 pDSBuffer->Stop();
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
             dwEmuFlags |= DSE_FLAG_PAUSE;
+            Xb_rtTimeStamp = rtTimeStamp;
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
@@ -1030,10 +1036,6 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 }
             }
             break;
-
-        // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
-        case X_DSSPAUSE_PAUSENOACTIVATE:
-            EmuWarning("X_DSSPAUSE_PAUSENOACTIVATE is unsupported!");
             break;
     }
 
