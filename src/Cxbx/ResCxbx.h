@@ -1,6 +1,6 @@
-//{{NO_DEPENDENCIES}}
+﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\Luke\Desktop\Projects\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\marge\Documents\GitHub\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -60,7 +60,6 @@
 #define IDC_AC_ACCEPT                   1058
 #define IDC_AC_CANCEL                   1059
 #define IDC_AC_AUDIO_ADAPTER            1060
-#define IDC_AC_LEGACY_AUDIO_HACK        1061
 #define IDC_AC_PCM                      1062
 #define IDC_AC_XADPCM                   1063
 #define IDC_AC_UNKNOWN_CODEC            1064
@@ -111,15 +110,15 @@
 #define ID_EMULATION_STARTDEBUGGER      40092
 #define ID_FPS                          40096
 #define ID_HACKS_UNCAPFRAMERATE         40097
-#define ID_HACKS_RUNXBOXTHREADSONALLCORES         40098
-#define ID_HACKS_PATCHCPUFREQUENCY         40099		
+#define ID_HACKS_RUNXBOXTHREADSONALLCORES 40098
+#define ID_HACKS_PATCHCPUFREQUENCY      40099
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         40097
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104
