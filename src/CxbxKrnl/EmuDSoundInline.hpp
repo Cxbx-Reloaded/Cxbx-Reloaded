@@ -1451,6 +1451,8 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     RETURN_RESULT_CHECK(hRet);
 }
+
+HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD);
 /*
 //TODO: PC DirectSound does not have SetMixBins method function.
 //IDirectSoundStream
@@ -1461,17 +1463,44 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 {
 
     return DS_OK;
-}
+}*/
 
-//TODO: PC DirectSound does not have SetMixBinVolumes method function.
 //IDirectSoundStream x2
 //IDirectSoundBuffer x2
-inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    XTL::X_LPDSMIXBINS   pMixBins,
+    DWORD                EmuFlags)
 {
+    enterCriticalSection;
 
-    return DS_OK;
-}*/
+    HRESULT hRet = DSERR_INVALIDPARAM;
+
+    if (pMixBins != xbnullptr && pMixBins->dwCount < XTL::XDSMIXBIN_COUNT_MAX) {
+        DWORD counter = pMixBins->dwCount, count = pMixBins->dwCount;
+        LONG volume = 0;
+        if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
+            // Let's normalize audio level except for low frequency (subwoofer)
+            for (DWORD i = 0; i < count; i++) {
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XTL::XDSMIXBIN_LOW_FREQUENCY) {
+                    volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
+                } else {
+                    counter--;
+                }
+            }
+            if (count > 0) {
+                volume = volume / counter;
+                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, volume, EmuFlags);
+            } else {
+                hRet = DS_OK;
+            }
+        }
+    }
+
+    leaveCriticalSection;
+
+    return hRet;
+}
 
 //IDirectSoundStream
 //IDirectSoundBuffer

@@ -161,6 +161,32 @@ XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 #define XMO_STREAMF_IN_PLACE                    0x00000010      // The object supports in-place modification of data
 #define XMO_STREAMF_MASK                        0x0000001F
 
+enum XDSMIXBIN {
+    XDSMIXBIN_FRONT_LEFT    = 0,
+    XDSMIXBIN_FRONT_RIGHT,  //1
+    XDSMIXBIN_FRONT_CENTER, //2
+    XDSMIXBIN_LOW_FREQUENCY,//3
+    XDSMIXBIN_BACK_LEFT,    //4
+    XDSMIXBIN_BACK_RIGHT,   //5
+    XDSMIXBIN_COUNT_MAX
+};
+
+// ******************************************************************
+// * X_DSMIXBINVOLUMEPAIR
+// ******************************************************************
+typedef struct _XDSMIXBINSVOLUMEPAIR {
+    XDSMIXBIN   dwMixBin;
+    LONG        lVolume;
+} X_DSMIXBINSVOLUMEPAIR, *X_LPDSMIXBINSVOLUMEPAIR;
+
+// ******************************************************************
+// * X_DSMB
+// ******************************************************************
+typedef struct _XDSMIXBINS {
+    DWORD                       dwCount;
+    X_LPDSMIXBINSVOLUMEPAIR     lpMixBinVolumePairs;
+} X_DSMIXBINS, *X_LPDSMIXBINS;
+
 // ******************************************************************
 // * X_DSFILTERDESC
 // ******************************************************************
@@ -717,7 +743,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
-    LPDIRECTSOUND8          pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwMixBinMask,
     const LONG*             alVolumes
 );
@@ -727,8 +753,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
-    LPDIRECTSOUND8          pThis,
-    PVOID                   pMixBins    // TODO: fill this out
+    X_CDirectSoundBuffer*   pThis,
+    X_LPDSMIXBINS           pMixBins
 );
 
 // ******************************************************************
@@ -1533,7 +1559,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*    pThis,
     DWORD                    dwMixBinMask,
-    const LONG*                alVolumes
+    const LONG*              alVolumes
 );
 
 // ******************************************************************
@@ -1542,7 +1568,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*    pThis,
-    LPVOID                    pMixBins
+    X_LPDSMIXBINS            pMixBins
 );
 
 // ******************************************************************

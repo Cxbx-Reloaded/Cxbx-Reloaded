@@ -745,7 +745,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 // This revision API was used in XDK 3911 until API had changed in XDK 4039.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
-    LPDIRECTSOUND8          pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwMixBinMask,
     const LONG*             alVolumes)
 {
@@ -775,25 +775,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 // This revision is only used in XDK 4039 and higher.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
-    LPDIRECTSOUND8          pThis,
-    PVOID                   pMixBins)
+    X_CDirectSoundBuffer*   pThis,
+    X_LPDSMIXBINS           pMixBins)
 {
     FUNC_EXPORTS;
-
-    enterCriticalSection;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    // NOTE: Read the above notes, and the rest is self explanitory...
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return DS_OK;
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -980,6 +972,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
         }
+
+        // Pre-set volume to enforce silence if one of audio codec is disabled.
+        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0, (*ppBuffer)->EmuFlags);
+
         *ppDSoundBufferCache = *ppBuffer;
     }
 
@@ -1726,7 +1722,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
         DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
     }
-        // cache this sound stream
+
+    // Pre-set volume to enforce silence if one of audio codec is disabled.
+    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0, (*ppStream)->EmuFlags);
+
+    // cache this sound stream
     {
         int v = 0;
         for (v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
@@ -3340,24 +3340,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pMixBins)
+    X_LPDSMIXBINS           pMixBins)
 {
     FUNC_EXPORTS;
-
-    enterCriticalSection;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    // NOTE: Read the above notes, and the rest is self explanitory...
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags);
 }
 
 // ******************************************************************
