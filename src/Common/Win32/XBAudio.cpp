@@ -40,7 +40,7 @@
 // ******************************************************************
 // * func: XBAudio::XBAudio
 // ******************************************************************
-XBAudio::XBAudio() : m_bLegacyAudioHack(false), m_bPCM(true), m_bXADPCM(true), m_bUnknownCodec(true)
+XBAudio::XBAudio() : m_bPCM(true), m_bXADPCM(true), m_bUnknownCodec(true)
 {
     m_binAudioAdapter = { 0 };
 }
@@ -69,9 +69,6 @@ void XBAudio::Load(const char *szRegistryKey)
 
             dwType = REG_DWORD; dwSize = sizeof(m_binAudioAdapter);
             RegQueryValueEx(hKey, "AudioAdapter", NULL, &dwType, (PBYTE)&m_binAudioAdapter, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(m_bLegacyAudioHack);
-            RegQueryValueEx(hKey, "LegacyAudioHack", NULL, &dwType, (PBYTE)&m_bLegacyAudioHack, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(m_bPCM);
             RegQueryValueEx(hKey, "PCM", NULL, &dwType, (PBYTE)&m_bPCM, &dwSize);
@@ -104,9 +101,6 @@ void XBAudio::Save(const char *szRegistryKey)
 
             dwType = REG_BINARY; dwSize = sizeof(m_binAudioAdapter);
             RegSetValueEx(hKey, "AudioAdapter", 0, dwType, (PBYTE)&m_binAudioAdapter, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(m_bLegacyAudioHack);
-            RegSetValueEx(hKey, "LegacyAudioHack", 0, dwType, (PBYTE)&m_bLegacyAudioHack, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(m_bPCM);
             RegSetValueEx(hKey, "PCM", 0, dwType, (PBYTE)&m_bPCM, dwSize);

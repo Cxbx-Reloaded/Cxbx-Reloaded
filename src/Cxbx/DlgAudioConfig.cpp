@@ -116,8 +116,6 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             /*! check appropriate options */
             {
-                SendMessage(GetDlgItem(hWndDlg, IDC_AC_LEGACY_AUDIO_HACK), BM_SETCHECK, (WPARAM)g_XBAudio.GetLegacyAudioHack(), 0);
-
                 SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_SETCHECK, (WPARAM)g_XBAudio.GetPCM(), 0);
 
                 SendMessage(GetDlgItem(hWndDlg, IDC_AC_XADPCM), BM_SETCHECK, (WPARAM)g_XBAudio.GetXADPCM(), 0);
@@ -163,13 +161,9 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 case IDC_AC_ACCEPT:
                 {
 
-                    /*! save LegacyAudioHack/PCM/XADPCM/UnknownCodec options */
+                    /*! save PCM/XADPCM/UnknownCodec options */
                     {
-                        LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_LEGACY_AUDIO_HACK), BM_GETCHECK, 0, 0);
-
-                        g_XBAudio.SetLegacyAudioHack(lRet == BST_CHECKED);
-
-                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_GETCHECK, 0, 0);
+						LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_GETCHECK, 0, 0);
 
                         g_XBAudio.SetPCM(lRet == BST_CHECKED);
 
