@@ -2084,9 +2084,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     // NOTE: Perform check if has pending data. if so, stop stream.
     // default ret = DSERR_GENERIC
 
-    // TODO: This part of code should be in CDirectSoundStream_Discontinuity
     pThis->EmuDirectSoundBuffer8->Stop();
     pThis->Host_isProcessing = false;
+
+    // NOTE: Must reset flags in discontinuity and rtTimeStamps.
+    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_SYNCHPLAYBACK_CONTROL | DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->Xb_rtFlushEx = 0LL;
+    pThis->Xb_rtPauseEx = 0LL;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
@@ -2114,7 +2118,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
     DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
 
     // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
-    pThis->EmuFlags ^= (DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->Xb_rtFlushEx = 0LL;
 
     while (DSoundStreamProcess(pThis));
 
@@ -3080,6 +3085,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 
     // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
+
         hRet = XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
 
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
