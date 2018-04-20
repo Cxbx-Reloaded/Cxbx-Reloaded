@@ -354,6 +354,7 @@ struct X_CDirectSoundBuffer
     DWORD                   X_BufferCacheSize;
     DSoundBuffer_Lock       Host_lock;
     DSoundBuffer_Lock       X_lock;
+    REFERENCE_TIME          Xb_rtPauseEx;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
