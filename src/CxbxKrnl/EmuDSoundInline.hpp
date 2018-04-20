@@ -1476,13 +1476,13 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
 
     HRESULT hRet = DSERR_INVALIDPARAM;
 
-    if (pMixBins != xbnullptr && pMixBins->dwCount < XTL::XDSMIXBIN_COUNT_MAX) {
+    if (pMixBins != xbnullptr) {
         DWORD counter = pMixBins->dwCount, count = pMixBins->dwCount;
         LONG volume = 0;
         if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
             // Let's normalize audio level except for low frequency (subwoofer)
             for (DWORD i = 0; i < count; i++) {
-                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XTL::XDSMIXBIN_LOW_FREQUENCY) {
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY) {
                     volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
                 } else {
                     counter--;

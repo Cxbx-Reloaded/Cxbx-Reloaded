@@ -161,21 +161,21 @@ XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 #define XMO_STREAMF_IN_PLACE                    0x00000010      // The object supports in-place modification of data
 #define XMO_STREAMF_MASK                        0x0000001F
 
-enum XDSMIXBIN {
-    XDSMIXBIN_FRONT_LEFT    = 0,
-    XDSMIXBIN_FRONT_RIGHT,  //1
-    XDSMIXBIN_FRONT_CENTER, //2
-    XDSMIXBIN_LOW_FREQUENCY,//3
-    XDSMIXBIN_BACK_LEFT,    //4
-    XDSMIXBIN_BACK_RIGHT,   //5
-    XDSMIXBIN_COUNT_MAX
-};
+// XDSMIXBIN Flags
+#define XDSMIXBIN_FRONT_LEFT        0
+#define XDSMIXBIN_FRONT_RIGHT       1
+#define XDSMIXBIN_FRONT_CENTER      2
+#define XDSMIXBIN_LOW_FREQUENCY     3
+#define XDSMIXBIN_BACK_LEFT         4
+#define XDSMIXBIN_BACK_RIGHT        5
+#define XDSMIXBIN_SPEAKERS_MAX      6 // Max count for speakers
+// Other flags are used 
 
 // ******************************************************************
 // * X_DSMIXBINVOLUMEPAIR
 // ******************************************************************
 typedef struct _XDSMIXBINSVOLUMEPAIR {
-    XDSMIXBIN   dwMixBin;
+    DWORD       dwMixBin;
     LONG        lVolume;
 } X_DSMIXBINSVOLUMEPAIR, *X_LPDSMIXBINSVOLUMEPAIR;
 
