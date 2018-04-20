@@ -56,9 +56,7 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 // Memory managed xbox audio function handler
 inline DWORD DSoundSGEFreeBuffer() {
     int count =  (X_DS_SGE_SIZE_MAX - g_dwXbMemAllocated);
-    printf("DEBUG: size %8d\n", count);
     count =  count / X_DS_SGE_PAGE_MAX;
-    printf("DEBUG: per page %8d\n", count);
     // Check for negative value, we don't need warning as we are allowing overflow one time only.
     if (count < 0) {
         return 0;

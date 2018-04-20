@@ -983,11 +983,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         *ppDSoundBufferCache = *ppBuffer;
     }
 
-    printf("DEBUG: ==DirectSoundCreateBuffer==\n");
-    printf("DEBUG: *ppBuffer = %8X | requestSize = %8X\n", *ppBuffer, pdsbd->dwBufferBytes);
-    printf("DEBUG: g_dwXbMemAllocated = %8X\n", g_dwXbMemAllocated);
-    printf("DEBUG: ===========================\n");
-
     leaveCriticalSection;
 
     return hRet;
