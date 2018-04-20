@@ -1486,7 +1486,9 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
         if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
             // Let's normalize audio level except for low frequency (subwoofer)
             for (DWORD i = 0; i < count; i++) {
-                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY) {
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
+                    // We only want to focus on speaker volumes, nothing else.
+                    && pMixBins->lpMixBinVolumePairs[i].dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
                     volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
                 } else {
                     counter--;
