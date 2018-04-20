@@ -1872,7 +1872,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.GetFullscreen();
 
                     if(g_XBVideo.GetVSync())
+#ifdef CXBX_USE_D3D9
+                        g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
+#else
                         g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
+#endif
 
                     g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 
@@ -2288,12 +2292,20 @@ void CxbxUpdateActiveIndexBuffer
 
 	// If we need to create an index buffer, do so.
 	if (indexBuffer.pHostIndexBuffer == nullptr) {
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+		// "Managing Resources (Direct3D 9)"
+		// suggests "for resources which change with high frequency" [...]
+		// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+		const XTL::D3DPOOL D3DPool = XTL::D3DPOOL_DEFAULT; // Was XTL::D3DPOOL_MANAGED
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+		// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+		const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY; // Was D3DUSAGE_WRITEONLY
 		// Create a new native index buffer of the above determined size :
 		HRESULT hRet = g_pD3DDevice->CreateIndexBuffer(
 			IndexCount * 2,
-			D3DUSAGE_WRITEONLY,
+			D3DUsage,
 			XTL::D3DFMT_INDEX16,
-			XTL::D3DPOOL_MANAGED,
+			D3DPool,
 			&indexBuffer.pHostIndexBuffer
 #ifdef CXBX_USE_D3D9
 			, nullptr
@@ -2642,7 +2654,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     }
     else if(Handle == NULL)
     {
+#ifdef CXBX_USE_D3D9
+		hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		hRet = g_pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX0);
+#else
 		hRet = g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
+#endif
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0)");
 	}
     else if(Address < 136)
@@ -2906,7 +2923,12 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		goto skip_backbuffer_copy;
 	}
 	
-	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, copySurfaceDesc.Size);
+#ifdef CXBX_USE_D3D9
+	DWORD Size = lockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
+#else
+	DWORD Size = copySurfaceDesc.Size;
+#endif
+	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, Size);
 
 	pCopySrcSurface->UnlockRect();
 	
@@ -3376,12 +3398,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 	if(g_BuildVersion <= 4361)
 		Register += 96;
 
-    HRESULT hRet = g_pD3DDevice->SetVertexShaderConstant
+    HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetVertexShaderConstantF(
+		Register,
+		(float*)pConstantData,
+		ConstantCount
+	);
+#else
+    hRet = g_pD3DDevice->SetVertexShaderConstant
     (
         Register,
         pConstantData,
         ConstantCount
     );
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShaderConstant");
 
     if(FAILED(hRet))
@@ -4398,6 +4429,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			}
 			else {
 #ifdef CXBX_USE_D3D9
+				D3DPool = D3DPOOL_SYSTEMMEM;
 				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 #else
@@ -5135,7 +5167,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+    HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+#else
+    hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
@@ -5274,7 +5311,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias)
 
 	LOG_FUNC_ONE_ARG(Value);
 
-	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZBIAS, Value);
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	FLOAT Biased = static_cast<FLOAT>(Value) * -0.000005f;
+	Value = *reinterpret_cast<const DWORD *>(&Biased);
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, Value);
+#else
+    hRet = g_pD3DDevice->SetRenderState(D3DRS_ZBIAS, Value);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
@@ -6067,8 +6111,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
         static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
         static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
 
+#ifdef CXBX_USE_D3D9
+        g_pD3DDevice->SetVertexShaderConstantF(58, vScale, 1);
+        g_pD3DDevice->SetVertexShaderConstantF(59, vOffset, 1);
+#else
         g_pD3DDevice->SetVertexShaderConstant(58, vScale, 1);
         g_pD3DDevice->SetVertexShaderConstant(59, vOffset, 1);
+#endif
     }
 
     DWORD RealHandle;
@@ -6094,7 +6143,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		RealHandle = Handle;
     }
 
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetVertexShader(nullptr);
+	hRet = g_pD3DDevice->SetFVF(RealHandle);
+#else
 	hRet = g_pD3DDevice->SetVertexShader(RealHandle);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");    
 }
 

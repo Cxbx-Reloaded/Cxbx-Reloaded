@@ -1043,7 +1043,12 @@ VOID XTL::EmuFlushIVB()
 
     if(bFVF)
     {
+#ifdef CXBX_USE_D3D9
+        g_pD3DDevice->SetVertexShader(nullptr);
+        g_pD3DDevice->SetFVF(dwCurFVF);
+#else
         g_pD3DDevice->SetVertexShader(dwCurFVF);
+#endif
     }
 
     g_pD3DDevice->DrawPrimitiveUP(
@@ -1056,7 +1061,12 @@ VOID XTL::EmuFlushIVB()
 
     if(bFVF)
     {
+#ifdef CXBX_USE_D3D9
+		g_pD3DDevice->SetVertexShader(nullptr);
+		g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
+#else
         g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
+#endif
     }
 
     g_InlineVertexBuffer_TableOffset = 0;
