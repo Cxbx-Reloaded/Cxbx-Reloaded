@@ -1119,6 +1119,40 @@ uint CxbxGetPixelContainerMipMapLevels
 	return 1;
 }
 
+uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer *pPixelContainer)
+{
+	DWORD Size = pPixelContainer->Size;
+	uint32_t Result;
+
+	if (Size != 0) {
+		Result = ((Size & X_D3DSIZE_WIDTH_MASK) /* >> X_D3DSIZE_WIDTH_SHIFT*/) + 1;
+	}
+	else {
+		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
+
+		Result = 1 << l2w;
+	}
+
+	return Result;
+}
+
+uint32_t GetPixelContainerHeigth(XTL::X_D3DPixelContainer *pPixelContainer)
+{
+	DWORD Size = pPixelContainer->Size;
+	uint32_t Result;
+
+	if (Size != 0) {
+		Result = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+	}
+	else {
+		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
+
+		Result = 1 << l2h;
+	}
+
+	return Result;
+}
+
 VOID CxbxGetPixelContainerMeasures
 (
 	XTL::X_D3DPixelContainer *pPixelContainer,
@@ -2947,6 +2981,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
     *ppBackBuffer = EMUPATCH(D3DDevice_GetBackBuffer2)(BackBuffer);
 }
 
+DWORD ScaleDWORD(DWORD XboxIn, DWORD XboxMax, DWORD HostMax)
+{
+	uint64_t tmp = XboxIn;
+	tmp *= HostMax;
+	tmp /= XboxMax;
+	return (DWORD)tmp;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetViewport
 // ******************************************************************
@@ -2959,42 +3001,34 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
-    DWORD dwWidth  = pViewport->Width;
-    DWORD dwHeight = pViewport->Height;
+	// Use a trampoline here, so GetViewport can be unpatched
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
+	XB_D3DDevice_SetViewport(pViewport);
 
-    // resize to fit screen (otherwise crashes occur)
-    /*{
-        if(dwWidth > 640)
-        {
-            EmuWarning("Resizing Viewport->Width to 640");
-            ((D3DVIEWPORT*)pViewport)->Width = 640;
-        }
+	// The following can only work if we have a host render target
+	IDirect3DSurface *pHostRenderTarget = GetHostSurface(g_pCachedRenderTarget);
+	if (pHostRenderTarget) {
+		// Get current host render target dimensions
+		D3DSURFACE_DESC HostRenderTarget;
+		pHostRenderTarget->GetDesc(&HostRenderTarget);
 
-        if(dwHeight > 480)
-        {
-            EmuWarning("Resizing Viewport->Height to 480");
-            ((D3DVIEWPORT*)pViewport)->Height = 480;
-        }
-    }*/
+		// Get current Xbox render target dimensions
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pCachedRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pCachedRenderTarget);
 
-    HRESULT hRet = g_pD3DDevice->SetViewport(pViewport);
+		// Scale to host backbuffer dimensions (avoiding hard-coding 640 x 480)
+		D3DVIEWPORT HostViewPort;
 
-    // restore originals
-    /*{
-        if(dwWidth > 640)
-            ((D3DVIEWPORT*)pViewport)->Width = dwWidth;
+		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget.Width);
+		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget.Height);
+		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget.Width);
+		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget.Height);
+		HostViewPort.MinZ = pViewport->MinZ; // TODO : Must we scale Z too?
+		HostViewPort.MaxZ = pViewport->MaxZ;
 
-        if(dwHeight > 480)
-            ((D3DVIEWPORT*)pViewport)->Height = dwHeight;
-    }
-
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
-
-	if(FAILED(hRet))
-    {
-        EmuWarning("Unable to set viewport! We're lying");
-        hRet = D3D_OK;
-    }*/
+		HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
+	}
 }
 
 // ******************************************************************
@@ -3005,7 +3039,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
     X_D3DVIEWPORT8 *pViewport
 )
 {
-	FUNC_EXPORTS
+	// FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
@@ -3029,7 +3063,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	X_D3DXVECTOR4 *pScale
 )
 {
-	FUNC_EXPORTS
+	// FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pOffset)
@@ -6099,8 +6133,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     // 59 (c-37) used for screen space transformation.
     if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
     {
-        // TODO: Proper solution.
-        static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
+		D3DVIEWPORT ViewPort;
+		g_pD3DDevice->GetViewport(&ViewPort);
+
+        float vScale[] = { (2.0f / ViewPort.Width), (-2.0f / ViewPort.Height), 0.0f, 0.0f };
         static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
 
 #ifdef CXBX_USE_D3D9
