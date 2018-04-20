@@ -358,13 +358,16 @@ struct X_CDirectSoundBuffer
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
-#define DSB_FLAG_PCM                    (1 << 0)
-#define DSB_FLAG_XADPCM                 (1 << 1)
-#define DSB_FLAG_PCM_UNKNOWN            (1 << 2)
-#define DSB_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
-#define DSB_FLAG_PAUSE                  (1 << 11)
-#define DSB_FLAG_RECIEVEDATA            (1 << 20)
-#define DSB_FLAG_AUDIO_CODECS           (DSB_FLAG_PCM | DSB_FLAG_XADPCM | DSB_FLAG_PCM_UNKNOWN)
+#define DSE_FLAG_PCM                    (1 << 0)
+#define DSE_FLAG_XADPCM                 (1 << 1)
+#define DSE_FLAG_PCM_UNKNOWN            (1 << 2)
+#define DSE_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
+#define DSE_FLAG_PAUSE                  (1 << 11)
+#define DSE_FLAG_ASYNC                  (1 << 12)
+#define DSE_FLAG_ENVELOPE               (1 << 13)
+#define DSE_FLAG_ENVELOPE2              (1 << 14) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
+#define DSE_FLAG_RECIEVEDATA            (1 << 20)
+#define DSE_FLAG_AUDIO_CODECS           (DSE_FLAG_PCM | DSE_FLAG_XADPCM | DSE_FLAG_PCM_UNKNOWN)
 
 // ******************************************************************
 // * X_CMcpxStream

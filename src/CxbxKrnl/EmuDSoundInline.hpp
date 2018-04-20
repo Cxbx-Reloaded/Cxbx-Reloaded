@@ -50,8 +50,8 @@ CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
 #define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
 
-#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
-#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSB_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
+#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
+#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
 
 // Memory managed xbox audio function handler
 inline DWORD DSoundSGEFreeBuffer() {
@@ -81,7 +81,7 @@ inline bool DSoundSGEMenAllocCheck(DWORD sizeRequest) {
 }
 
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
-    if ((emuFlags & DSB_FLAG_XADPCM) > 0) {
+    if ((emuFlags & DSE_FLAG_XADPCM) > 0) {
 
         TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes, (uint8_t*)pPCaudioPtr, DSBufferDesc.lpwfxFormat->nChannels);
 
@@ -227,11 +227,11 @@ inline void GeneratePCMFormat(
                 memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
 
-            dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
+            dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
 
             switch (DSBufferDesc.lpwfxFormat->wFormatTag) {
                 case WAVE_FORMAT_PCM:
-                    dwEmuFlags |= DSB_FLAG_PCM;
+                    dwEmuFlags |= DSE_FLAG_PCM;
 
                     //TODO: Phantasy Star Online Episode I & II made an attempt to use avg byte/second below sample/second requirement.
                     //In other word, this is a workaround to fix title mistake...
@@ -241,16 +241,16 @@ inline void GeneratePCMFormat(
                     }
                     break;
                 case WAVE_FORMAT_XBOX_ADPCM:
-                    dwEmuFlags |= DSB_FLAG_XADPCM;
+                    dwEmuFlags |= DSE_FLAG_XADPCM;
                     XADPCM2PCMFormat(DSBufferDesc.lpwfxFormat);
                     break;
                 default:
-                    dwEmuFlags |= DSB_FLAG_PCM_UNKNOWN;
+                    dwEmuFlags |= DSE_FLAG_PCM_UNKNOWN;
                     break;
             }
         } else {
             bIsSpecial = true;
-            dwEmuFlags |= DSB_FLAG_RECIEVEDATA;
+            dwEmuFlags |= DSE_FLAG_RECIEVEDATA;
 
             EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = xbnullptr)...");
 
@@ -766,17 +766,17 @@ inline void DSoundBufferRemoveSynchPlaybackFlag(
         return;
     }
 
-    if (dwEmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+    if (dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
         g_iDSoundSynchPlaybackCounter--;
-        dwEmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+        dwEmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
     }
 }
 
 inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
 
     // If title want to pause, then don't process the packets.
-    if ((pThis->EmuFlags & DSB_FLAG_PAUSE) > 0) {
-        return;
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+        return 0;
     }
 
     DWORD dwAudioBytes;
@@ -1003,7 +1003,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
-            dwEmuFlags &= ~DSB_FLAG_PAUSE;
+            dwEmuFlags &= ~DSE_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_PAUSE:
             hStatus = pDSBuffer->GetStatus(&dwStatus);
@@ -1011,7 +1011,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Stop();
             }
             DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
-            dwEmuFlags |= DSB_FLAG_PAUSE;
+            dwEmuFlags |= DSE_FLAG_PAUSE;
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
@@ -1022,7 +1022,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             } else {
 
                 g_iDSoundSynchPlaybackCounter++;
-                dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+                dwEmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
                 hRet = pDSBuffer->GetStatus(&dwStatus);
                 if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                     pDSBuffer->Stop();
@@ -1641,15 +1641,15 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     enterCriticalSection;
 
-    if (dwEmuFlags & DSB_FLAG_PCM) {
+    if (dwEmuFlags & DSE_FLAG_PCM) {
         if (!g_XBAudio.GetPCM()) {
             lVolume = -10000;
         }
-    } else if (dwEmuFlags & DSB_FLAG_XADPCM) {
+    } else if (dwEmuFlags & DSE_FLAG_XADPCM) {
         if (!g_XBAudio.GetXADPCM()) {
             lVolume = -10000;
         }
-    } else if (dwEmuFlags & DSB_FLAG_PCM_UNKNOWN) {
+    } else if (dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) {
         if (!g_XBAudio.GetUnknownCodec()) {
             lVolume = -10000;
         }

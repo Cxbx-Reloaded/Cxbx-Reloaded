@@ -1283,7 +1283,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
 
     ULONG uRet = 0;
 
-    //if (!(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA)) {
+    //if (!(pThis->EmuFlags & DSE_FLAG_RECIEVEDATA)) {
         uRet = pThis->EmuDirectSoundBuffer8->Release();
 
         if (uRet == 0) {
@@ -1450,7 +1450,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
     if (dwFlags & X_DSBPLAY_SYNCHPLAYBACK) {
         pThis->EmuPlayFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
-        pThis->EmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+        pThis->EmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
     }
 
     HRESULT hRet = DS_OK;
@@ -1462,7 +1462,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
             EmuWarning("Rewinding buffer failed!");
         }
     }
-    if ((pThis->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+    if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
         hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
     }
 
@@ -1910,7 +1910,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 
         } else {
             // TODO: Might not be accurate. Doc state this flag is set when data is queued and paused.
-            if ((pThis->EmuFlags & DSB_FLAG_PAUSE) > 0) {
+            if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
                 dwStatusXbox |= X_DSSSTATUS_PAUSED;
             }
 
@@ -2086,11 +2086,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
             continue;
         }
 
-        if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+        if ((*pDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
             // RadWolfie: I don't think SetCurrentPosition is necessary?
             //DSoundBufferSelectionT((*pDSBuffer))->SetCurrentPosition(0);
             (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
-            (*pDSBuffer)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+            (*pDSBuffer)->EmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
 
@@ -2099,10 +2099,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         if ((*pDSStream) == nullptr || (*pDSStream)->X_BufferCache == nullptr) {
             continue;
         }
-        if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
+        if ((*pDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
             (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
             (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
-            (*pDSStream)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+            (*pDSStream)->EmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
 
