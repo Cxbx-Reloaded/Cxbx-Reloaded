@@ -3344,16 +3344,29 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 {
     FUNC_EXPORTS;
 
+    enterCriticalSection;
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
-    XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+    pThis->Host_isProcessing = false;
+    pThis->EmuDirectSoundBuffer8->Stop();
 
-    return HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        // TODO: Also need to pass down callback and context as well?
+        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis->EmuFlags);
+        buffer = pThis->Host_BufferPacketArray.erase(buffer);
+    }
+
+    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************
