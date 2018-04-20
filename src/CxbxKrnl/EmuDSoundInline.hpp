@@ -317,8 +317,20 @@ inline void GeneratePCMFormat(
             lpwfxFormatExtensible->Samples.wValidBitsPerSample = lpwfxFormatExtensible->Format.wBitsPerSample;
             lpwfxFormatExtensible->Samples.wSamplesPerBlock = 0;
             lpwfxFormatExtensible->Samples.wReserved = 0;
-            // TODO: dwChannelMask might need a real time conversion depending on channels given to xbox.
-            lpwfxFormatExtensible->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY;
+            lpwfxFormatExtensible->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
+
+            // Add rear speakers
+            if (lpwfxFormat->nChannels >= 4) {
+                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT;
+            }
+            // Add center speaker
+            if (lpwfxFormat->nChannels >= 5) {
+                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_FRONT_CENTER;
+            }
+            // Add subwoofer mask (pretty sure 3 channels is 2.1, not 3.0 for xbox purpose)
+            if (lpwfxFormat->nChannels == 6 || lpwfxFormat->nChannels == 3) {
+                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_LOW_FREQUENCY;
+            }
             lpwfxFormatExtensible->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
         }
     }
