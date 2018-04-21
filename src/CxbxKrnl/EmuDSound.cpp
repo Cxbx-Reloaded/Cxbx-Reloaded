@@ -1875,8 +1875,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
             }
 
             for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis->EmuFlags);
-                buffer = pThis->Host_BufferPacketArray.erase(buffer);
+                DSoundStreamClearPacket(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
             }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
@@ -1931,7 +1930,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream*   pThis,
-    OUT DWORD*                  pdwStatus)
+    OUT DWORD*              pdwStatus)
 {
     FUNC_EXPORTS;
 
@@ -1968,9 +1967,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
+        *pdwStatus = dwStatusXbox;
+    } else if (pdwStatus != xbnullptr) {
+        *pdwStatus = 0;
     }
-
-    *pdwStatus = dwStatusXbox;
 
     leaveCriticalSection;
 
@@ -2032,7 +2032,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if (pInputBuffer->pdwCompletedSize != xbnullptr) {
                     (*pInputBuffer->pdwCompletedSize) = 0;
                 }
-
                 if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
                     pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.rangeStart);
                 }
@@ -2086,8 +2085,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     pThis->Xb_rtPauseEx = 0LL;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
+        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
     }
 
     leaveCriticalSection;
@@ -3419,8 +3417,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         // TODO: Also need to pass down callback and context as well?
-        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis->EmuFlags);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
+        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
     }
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,

@@ -723,18 +723,20 @@ inline void DSoundStreamWriteToBuffer(
     }
 }
 
+#define vector_hvp_iterator std::vector<XTL::host_voice_packet>::iterator
 inline void DSoundStreamClearPacket(
-    XTL::host_voice_packet* buffer,
-    DWORD                   status,
-    XTL::LPFNXMOCALLBACK    Xb_lpfnCallback,
-    LPVOID                  Xb_lpvContext,
-    DWORD                   EmuFlags) {
+    vector_hvp_iterator        &buffer,
+    DWORD                       status,
+    XTL::LPFNXMOCALLBACK        Xb_lpfnCallback,
+    LPVOID                      Xb_lpvContext,
+    XTL::X_CDirectSoundStream*  pThis) {
 
     free(buffer->pBuffer_data);
 
     // Peform release only, don't trigger any events below.
     if (status == XMP_STATUS_RELEASE_CXBXR) {
         DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
+        buffer = pThis->Host_BufferPacketArray.erase(buffer);
         return;
     }
 
@@ -742,17 +744,25 @@ inline void DSoundStreamClearPacket(
         (*buffer->xmp_data.pdwStatus) = status;
     }
     if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
-        (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(EmuFlags, buffer->xmp_data.dwMaxSize);
+        (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, buffer->xmp_data.dwMaxSize);
     }
     DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
+
+    auto unionEventContext = buffer->xmp_data.hCompletionEvent;
+    buffer = pThis->Host_BufferPacketArray.erase(buffer);
+    // NOTE: Packet must be erase before call the callback function below. See test case below.
+    // Test case: Pocketbike Racer
+    //  * (cause audio skipping due to callback function called process then another called to process outside callback (x2)
+    //    It only need to call process once.
+
     // If a callback is set, only do the callback instead of event handle.
     if (Xb_lpfnCallback != xbnullptr) {
-        Xb_lpfnCallback(Xb_lpvContext, buffer->xmp_data.pContext, status);
-    } else if (buffer->xmp_data.hCompletionEvent != 0) {
-        BOOL checkHandle = SetEvent(buffer->xmp_data.hCompletionEvent);
+        Xb_lpfnCallback(Xb_lpvContext, unionEventContext, status);
+    } else if (unionEventContext != 0) {
+        BOOL checkHandle = SetEvent(unionEventContext);
         if (checkHandle == 0) {
             DWORD error = GetLastError();
-            EmuWarning("DSOUND: Unable to set event on packet's hCompletionEvent. %8X | error = %8X", buffer->xmp_data.hCompletionEvent, error);
+            EmuWarning("DSOUND: Unable to set event on packet's hCompletionEvent. %8X | error = %8X", unionEventContext, error);
         }
     }
 }
@@ -820,9 +830,8 @@ inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
                     }
                     if (bufPlayed >= (int)buffer->xmp_data.dwMaxSize) {
 
-                        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
+                        DSoundStreamClearPacket(buffer, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
 
-                        buffer = pThis->Host_BufferPacketArray.erase(buffer);
                         if (pThis->Host_BufferPacketArray.size() == 0) {
                             goto endOfPacket;
                         }
