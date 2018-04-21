@@ -154,12 +154,6 @@ class EmuShared : public Mutex
 		void SetDebuggingFlag(bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
 
 		// ******************************************************************
-		// * Eeprom refresh flag Accessors
-		// ******************************************************************
-		void GetRefreshEepromFlag(bool *value) { Lock(); *value = m_bRefreshEeprom; Unlock(); }
-		void SetRefreshEepromFlag(bool *value) { Lock(); m_bRefreshEeprom = *value; Unlock(); }
-
-		// ******************************************************************
 		// * Xbox LED values Accessors
 		// ******************************************************************
 		void GetLedSequence(int *value)
@@ -207,7 +201,6 @@ class EmuShared : public Mutex
 		float        m_FPS;
 		bool		 m_bMultiXbeFlag;
 		bool		 m_bDebugging;
-		bool		 m_bRefreshEeprom;
 		int          m_LedSequence[4];
 };
 

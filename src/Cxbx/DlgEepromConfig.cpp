@@ -51,7 +51,7 @@ namespace xboxkrnl
 
 
 // Generic function called from the gui to display the eeprom menu
-VOID ShowEepromConfig(HWND hwnd);
+void ShowEepromConfig(HWND hwnd);
 // Windows dialog procedure for the eeprom menu
 static INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // Indicates that changes have been made in the eeprom menu
@@ -60,35 +60,25 @@ static bool g_bHasChanges = false;
 static uint8_t* pEEPROM_GUI = nullptr;
 
 
-// Load the eeprom file from disk and cache it in memory
-bool LoadEeprom()
+void* ReadEepromParameter(xboxkrnl::XC_VALUE_INDEX index)
 {
-	std::basic_ifstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
-	if (EepromFile.is_open()) {
-		pEEPROM_GUI = new uint8_t[EEPROM_SIZE];
-		EepromFile.read(pEEPROM_GUI, EEPROM_SIZE);
-		EepromFile.close();
-		return true;
-	}
-	return false;
+	return pEEPROM_GUI + EmuFindEEPROMInfo(index)->value_offset;
 }
 
-VOID ShowEepromConfig(HWND hwnd)
+void ShowEepromConfig(HWND hwnd)
 {
 	// Reset changes flag
 	g_bHasChanges = false;
 
-	// Check to see if an emulation session has been run. This is necessary because games are allowed to change the contents
-	// of the eeprom with ExSaveNonVolatileSetting and so we need to reload it from disk
-	bool bRefresh;
-	g_EmuShared->GetRefreshEepromFlag(&bRefresh);
-
-	if (bRefresh || pEEPROM_GUI == nullptr) {
-		if (pEEPROM_GUI) {
-			delete[] pEEPROM_GUI;
-			pEEPROM_GUI = nullptr;
+	// Load the eeprom file from disk and cache it in memory
+	if (pEEPROM_GUI == nullptr) {
+		std::basic_ifstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
+		if (EepromFile.is_open()) {
+			pEEPROM_GUI = new uint8_t[EEPROM_SIZE];
+			EepromFile.read(pEEPROM_GUI, EEPROM_SIZE);
+			EepromFile.close();
 		}
-		if (!LoadEeprom()) {
+		else {
 			MessageBox(hwnd, "Couldn't open eeprom file!", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 			return;
 		}
@@ -96,4 +86,98 @@ VOID ShowEepromConfig(HWND hwnd)
 
 	// Show dialog box
 	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_EEPROM_CFG), hwnd, DlgEepromConfigProc);
+}
+
+INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			// Set window icon
+			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+
+			// Initialize the values of the drop-down lists
+			for (auto i : { "North America" , "Japan" ,"Rest of the world" , "Manufacturing" }) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_XBOX_REGION), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			for (auto i : { "NTSC-M, 60Hz" , "NTSC-J, 60Hz", "PAL, 50Hz" }) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_AVREGION), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			for (auto i : { "English", "Japanese", "German", "French", "Spanish", "Italian", "Korean", "Chinese", "Portuguese" }) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_LANGUAGE), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			// The available AV settings depend on the current AV region so we must read those beforehand
+			for (auto i : { "Normal", "Widescreen", "Letterbox" }) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_AVSETTINGS), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+			if ((*static_cast<uint32_t*>(ReadEepromParameter(xboxkrnl::XC_FACTORY_AV_REGION))) == (AV_FLAGS_50Hz | AV_STANDARD_PAL_I)) {
+				// Enable PAL 60Hz since the console is set to the PAL region
+				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), TRUE);
+				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_480P), FALSE);
+				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_720P), FALSE);
+				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_1080I), FALSE);
+				if ((*static_cast<uint32_t*>(ReadEepromParameter(xboxkrnl::XC_VIDEO))) & AV_FLAGS_60Hz) {
+					SendMessage(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), BM_SETCHECK, BST_CHECKED, 0);
+				}	
+			}
+			else {
+				// Enable 480p, 720p and 1080i since the console is set to the NTSC region
+				uint32_t value = *static_cast<uint32_t*>(ReadEepromParameter(xboxkrnl::XC_VIDEO));
+				if (value & AV_FLAGS_HDTV_480p) {
+					SendMessage(GetDlgItem(hWndDlg, IDC_EE_480P), BM_SETCHECK, BST_CHECKED, 0);
+				}
+				else if (value & AV_FLAGS_HDTV_720p) {
+					SendMessage(GetDlgItem(hWndDlg, IDC_EE_720P), BM_SETCHECK, BST_CHECKED, 0);
+				}
+				else if (value & AV_FLAGS_HDTV_1080i) {
+					SendMessage(GetDlgItem(hWndDlg, IDC_EE_1080I), BM_SETCHECK, BST_CHECKED, 0);
+				}
+			}
+
+			for (auto i : {"Stereo", "Stereo, Dolby AC3", "Stereo, DTS", "Stereo, Dolby AC3, DTS", "Mono", "Mono, Dolby AC3", "Mono, DTS",
+				 "Mono, Dolby AC3, DTS", "Dolby Surround", "Dolby Surround, Dolby AC3", "Dolby Surround, DTS", "Dolby Surround, Dolby AC3, DTS"}) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_AUDIOSETTINGS), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+			
+			for (auto i : {"Rating pending", "Adults only", "Mature", "Teen", "Everyone", "Kids to adults", "Early childhood"}) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_GAME_PRTL_CRTL), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			for (auto i : {"Max", "NC-17", "A", "5", "PG-13", "PG", "2", "G"}) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_MOVIE_PRTL_CRTL), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			for (auto i : {"Free", "USA, Canada", "Japan, Europe, Middle East, ...", "Southeast Asia, S. Korea, ...", "Latin America, Oceania",
+				"Africa, Russia, N. Korea, ...", "China", "Reserved for future use", "International venues"}) {
+				SendMessage(GetDlgItem(hWndDlg, IDC_EE_DVDREGION), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+			}
+
+			// Select a default parameter in the drop down lists
+			for(auto i : { IDC_EE_XBOX_REGION , IDC_EE_AVREGION, IDC_EE_LANGUAGE, IDC_EE_AVSETTINGS, IDC_EE_AUDIOSETTINGS, IDC_EE_GAME_PRTL_CRTL,
+				IDC_EE_MOVIE_PRTL_CRTL, IDC_EE_DVDREGION })
+			SendMessage(GetDlgItem(hWndDlg, i), CB_SETCURSEL, 0, 0);
+		}
+		break;
+
+		case WM_CLOSE:
+		{
+			PostMessage(hWndDlg, WM_COMMAND, IDC_EE_CANCEL, 0);
+		}
+		break;
+
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDC_EE_CANCEL:
+					EndDialog(hWndDlg, wParam);
+					break;
+			}
+		}
+	}
+	return FALSE;
 }

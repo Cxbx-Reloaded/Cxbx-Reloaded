@@ -36,6 +36,7 @@
 #define AV_FLAGS_HDTV_480p                0x00080000
 #define AV_HDTV_MODE_MASK                 0x000E0000 // Exclude AV_FLAGS_WIDESCREEN !
 
+#define AV_FLAGS_NORMAL                   0x00000000
 #define AV_FLAGS_WIDESCREEN               0x00010000
 #define AV_FLAGS_LETTERBOX                0x00100000
 #define AV_ASPECT_RATIO_MASK              0x00110000 // = AV_FLAGS_WIDESCREEN | AV_FLAGS_LETTERBOX

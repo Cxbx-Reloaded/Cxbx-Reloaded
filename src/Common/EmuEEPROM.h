@@ -92,6 +92,55 @@ static const EEPROMInfo EEPROMInfos[] = {
 	{ XC_END_MARKER }
 };
 
+// ******************************************************************
+// * EEPROM specific constants
+// ******************************************************************
+
+// Game region codes
+#define XC_GAME_REGION_NA             0x00000001
+#define XC_GAME_REGION_JAPAN          0x00000002
+#define XC_GAME_REGION_RESTOFWORLD    0x00000004
+#define XC_GAME_REGION_MANUFACTURING  0x80000000
+
+// Language ID
+#define XC_LANGUAGE_NONE            0
+#define XC_LANGUAGE_ENGLISH         1
+#define XC_LANGUAGE_JAPANESE        2
+#define XC_LANGUAGE_GERMAN          3
+#define XC_LANGUAGE_FRENCH          4
+#define XC_LANGUAGE_SPANISH         5
+#define XC_LANGUAGE_ITALIAN         6
+#define XC_LANGUAGE_KOREAN          7
+#define XC_LANGUAGE_CHINESE         8
+#define XC_LANGUAGE_PORTUGUESE      9
+#define XC_LANGUAGE_MAX             XC_LANGUAGE_PORTUGUESE + 1
+
+// Audio settings
+#define XC_AUDIO_FLAGS_STEREO       0x00000000
+#define XC_AUDIO_FLAGS_MONO         0x00000001
+#define XC_AUDIO_FLAGS_SURROUND     0x00000002
+#define XC_AUDIO_FLAGS_ENABLE_AC3   0x00010000
+#define XC_AUDIO_FLAGS_ENABLE_DTS   0x00020000
+
+// Game rating
+#define XC_PC_ESRB_ALL              0
+#define XC_PC_ESRB_ADULT            1
+#define XC_PC_ESRB_MATURE           2
+#define XC_PC_ESRB_TEEN             3
+#define XC_PC_ESRB_EVERYONE         4
+#define XC_PC_ESRB_KIDS_TO_ADULTS   5
+#define XC_PC_ESRB_EARLY_CHILDHOOD  6
+
+// Movie rating
+#define XC_PRTL_CRTL_MAX            0
+#define XC_PRTL_CRTL_NC17           1
+#define XC_PRTL_CRTL_A              2
+#define XC_PRTL_CRTL_5              3
+#define XC_PRTL_CRTL_PG13           4
+#define XC_PRTL_CRTL_PG             5
+#define XC_PRTL_CRTL_2              6
+#define XC_PRTL_CRTL_G              7
+
 extern xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin);
 
 extern const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index);

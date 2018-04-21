@@ -191,11 +191,11 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		memset(pEEPROM, 0, EEPROM_SIZE);
 
 		// TODO: Make these configurable or autodetect of some sort :
-		pEEPROM->UserSettings.Language = 0x01;  // = English
-		pEEPROM->UserSettings.VideoFlags = 0;   // = Use XDK defaults
-		pEEPROM->UserSettings.AudioFlags = 0;   // = Stereo, no AC3, no DTS
-		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English
+		pEEPROM->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
+		pEEPROM->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
+		pEEPROM->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.ParentalControlMovies = XC_PRTL_CRTL_MAX; // = XC_PRTL_CRTL_MAX
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
