@@ -131,7 +131,7 @@ typedef struct _XMEDIAPACKET
         HANDLE  hCompletionEvent;
         PVOID  pContext;
     };
-    PREFERENCE_TIME prtTimestamp;
+    PREFERENCE_TIME prtTimestamp; // Not supported in xbox
 }
 XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 
