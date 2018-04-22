@@ -583,6 +583,7 @@ void Xbe::ConstructorInit()
     m_XAPILibraryVersion   = 0;
     m_TLS                  = 0;
     m_bzSection            = 0;
+	m_SignatureHeader      = 0;
 }
 
 // better time
