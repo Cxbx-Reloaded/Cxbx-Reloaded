@@ -1394,7 +1394,21 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(pdwStatus);
+    DWORD dwStatusXbox = 0, dwStatusHost;
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
+
+    // Conversion is a requirement to xbox.
+    if (hRet == DS_OK) {
+        if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+            dwStatusXbox = X_DSBSTATUS_PAUSED;
+        } else if ((dwStatusHost & DSBSTATUS_PLAYING) > 0) {
+            dwStatusXbox = X_DSBSTATUS_PLAYING;
+        }
+        if ((dwStatusHost & DSBSTATUS_LOOPING) > 0) {
+            dwStatusXbox |= X_DSBSTATUS_LOOPING;
+        }
+        *pdwStatus = dwStatusXbox;
+    }
 
     leaveCriticalSection;
 

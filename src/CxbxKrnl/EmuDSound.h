@@ -73,12 +73,17 @@ void CxbxInitAudio();
 #define X_DSSFLUSHEX_ENVELOPE         0x00000002
 #define X_DSSFLUSHEX_ENVELOPE2        0x00000004
 
-// EmuIDirectSoundBuffer_GetStatus flags
+// EmuIDirectSoundStream_GetStatus flags
 #define X_DSSSTATUS_READY             0x00000001
 #define X_DSSSTATUS_PLAYING           0x00010000
 #define X_DSSSTATUS_PAUSED            0x00020000
 #define X_DSSSTATUS_STARVED           0x00040000
 #define X_DSSSTATUS_ENVELOPECOMPLETE  0x00080000
+
+// EmuIDirectSoundBuffer_GetStatus flags
+#define X_DSBSTATUS_PLAYING           0x00000001
+#define X_DSBSTATUS_PAUSED            0x00000002
+#define X_DSBSTATUS_LOOPING           0x00000004
 
 // EmuIDirectSoundBuffer_StopEx flags
 #define X_DSBSTOPEX_IMMEDIATE         0x00000000
