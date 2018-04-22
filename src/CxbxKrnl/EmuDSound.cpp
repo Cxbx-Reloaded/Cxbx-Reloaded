@@ -2744,7 +2744,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2760,7 +2760,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2776,7 +2776,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2792,7 +2792,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
