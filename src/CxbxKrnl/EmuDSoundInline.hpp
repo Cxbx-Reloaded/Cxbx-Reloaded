@@ -677,28 +677,6 @@ inline void DSoundBufferReplace(
     }
 }
 
-// resize an emulated directsound buffer, if necessary
-inline void ResizeIDirectSoundBuffer(
-    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
-    DSBUFFERDESC               &DSBufferDesc,
-    DWORD                       PlayFlags,
-    DWORD                       Xbox_dwBytes,
-    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
-    DWORD                       EmuFlags,
-    LPVOID                     &X_BufferCache,
-    DWORD                      &X_BufferCacheSize)
-{
-    if (Xbox_dwBytes == 0 || X_BufferCacheSize == Xbox_dwBytes) {
-        return;
-    }
-
-    GenerateXboxBufferCache(DSBufferDesc, EmuFlags, Xbox_dwBytes, &X_BufferCache, X_BufferCacheSize);
-
-    DSBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(EmuFlags, X_BufferCacheSize);
-
-    DSoundBufferReplace(pDSBuffer, DSBufferDesc, PlayFlags, pDS3DBuffer);
-}
-
 inline void DSoundStreamWriteToBuffer(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
     DWORD                       dwOffset,
