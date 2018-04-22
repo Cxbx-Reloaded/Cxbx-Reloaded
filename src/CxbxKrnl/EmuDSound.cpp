@@ -973,6 +973,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
         }
 
+        DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
+
         // Pre-set volume to enforce silence if one of audio codec is disabled.
         HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 0L);
 
@@ -1055,6 +1057,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
         memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+
+        DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
 
         DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
 
@@ -1719,6 +1723,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
         DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
     }
+
+    DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
 
     // Pre-set volume to enforce silence if one of audio codec is disabled.
     HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr, 0L);

@@ -397,6 +397,7 @@ struct X_CDirectSoundBuffer
 #define DSE_FLAG_ENVELOPE               (1 << 13)
 #define DSE_FLAG_ENVELOPE2              (1 << 14) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
 #define DSE_FLAG_RECIEVEDATA            (1 << 20)
+#define DSE_FLAG_DEBUG_MUTE             (1 << 30) // Cxbx-R debugging usage only
 #define DSE_FLAG_AUDIO_CODECS           (DSE_FLAG_PCM | DSE_FLAG_XADPCM | DSE_FLAG_PCM_UNKNOWN)
 
 // ******************************************************************

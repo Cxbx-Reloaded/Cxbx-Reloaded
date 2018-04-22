@@ -78,6 +78,19 @@ inline bool DSoundSGEMenAllocCheck(DWORD sizeRequest) {
     return true;
 }
 
+#if 0
+// Debugging controlled audio section for audible only
+inline void DSoundDebugMuteFlag(DWORD Xb_bufferBytes, DWORD &EmuFlags) {
+    if (Xb_bufferBytes != 0xEA0) {
+        EmuFlags |= DSE_FLAG_DEBUG_MUTE;
+    } else {
+        EmuFlags ^= DSE_FLAG_DEBUG_MUTE;
+    }
+}
+#else
+#define DSoundDebugMuteFlag
+#endif
+
 void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
     if ((emuFlags & DSE_FLAG_XADPCM) > 0) {
 
@@ -1673,15 +1686,15 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     lVolume += Xb_volumeMixbin;
 
-    if (dwEmuFlags & DSE_FLAG_PCM) {
+    if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
         if (!g_XBAudio.GetPCM()) {
             lVolume = -10000;
         }
-    } else if (dwEmuFlags & DSE_FLAG_XADPCM) {
+    } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
         if (!g_XBAudio.GetXADPCM()) {
             lVolume = -10000;
         }
-    } else if (dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) {
+    } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
         if (!g_XBAudio.GetUnknownCodec()) {
             lVolume = -10000;
         }
@@ -1691,6 +1704,9 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     } else if (lVolume > 0) {
         EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %d", lVolume);
         lVolume = 0;
+    }
+    if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
+        lVolume = -10000;
     }
 
     HRESULT hRet = pDSBuffer->SetVolume(lVolume);
