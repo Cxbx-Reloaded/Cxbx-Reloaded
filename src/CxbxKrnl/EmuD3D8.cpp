@@ -3193,17 +3193,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	XB_D3DDevice_SetViewport(pViewport);
 
 	// The following can only work if we have a host render target
-	IDirect3DSurface *pHostRenderTarget = GetHostSurface(g_pCachedRenderTarget);
-	if (pHostRenderTarget) {
+	if (g_pHostRenderTarget) {
 		// Get current host render target dimensions
 		D3DSURFACE_DESC HostRenderTarget;
-		pHostRenderTarget->GetDesc(&HostRenderTarget);
+		g_pHostRenderTarget->GetDesc(&HostRenderTarget);
 
 		// Get current Xbox render target dimensions
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pCachedRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pCachedRenderTarget);
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-		// Scale to host backbuffer dimensions (avoiding hard-coding 640 x 480)
+		// Scale to host dimensions (avoiding hard-coding 640 x 480)
 		D3DVIEWPORT HostViewPort;
 
 		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget.Width);
@@ -4555,12 +4554,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)pResource;
 		XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 		DWORD D3DUsage = 0;
+		D3DPOOL D3DPool = D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
-		if (pPixelContainer == g_pXboxDepthStencil) {
-			if (EmuXBFormatIsDepthBuffer(X_Format))
-				D3DUsage = D3DUSAGE_DEPTHSTENCIL;
-			else
-				EmuWarning("Updating DepthStencil %s with an incompatible format!", ResourceTypeName);
+		if (EmuXBFormatIsDepthBuffer(X_Format)) {
+			D3DUsage = D3DUSAGE_DEPTHSTENCIL;
+			D3DPool = D3DPOOL_DEFAULT;
 		}
 		else if (pPixelContainer == g_pXboxRenderTarget) {
 			if (EmuXBFormatIsRenderTarget(X_Format))
@@ -4704,8 +4702,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::IDirect3DTexture *pNewHostTexture = nullptr; // for X_D3DRTYPE_TEXTURE
 		XTL::IDirect3DVolumeTexture *pNewHostVolumeTexture = nullptr; // for X_D3DRTYPE_VOLUMETEXTURE
 		XTL::IDirect3DCubeTexture *pNewHostCubeTexture = nullptr; // for X_D3DRTYPE_CUBETEXTURE
-
-        XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 		HRESULT hRet;
 
 		// Create the surface/volume/(volume/cube/)texture
