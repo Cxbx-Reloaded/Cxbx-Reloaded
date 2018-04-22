@@ -30,7 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2017 blueshogun96
-// *  (c) 2017 RadWolfie
+// *  (c) 2017-2018 RadWolfie
 // *
 // *  All rights reserved
 // *
