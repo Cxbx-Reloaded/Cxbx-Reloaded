@@ -1048,6 +1048,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         return DS_OK;
     }
     HRESULT hRet = DSERR_OUTOFMEMORY;
+    DWORD dwStatus;
+
+    // force wait until buffer is stop playing.
+    do {
+        pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    } while ((dwStatus & DSBSTATUS_PLAYING) > 0);
 
     if (DSoundSGEMenAllocCheck(dwBufferBytes)) {
 
@@ -1056,7 +1062,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
         GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
-        memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+        // Copy if given valid pointer.
+        if (pvBufferData != xbnullptr) {
+            memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+        }
 
         DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
 

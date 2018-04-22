@@ -194,7 +194,7 @@ inline void GenerateXboxBufferCache(
             memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, X_BufferCacheSize);
             free(tempBuffer);
         } else {
-            *X_BufferCache = malloc(X_BufferSizeRequest);
+            *X_BufferCache = calloc(1, X_BufferSizeRequest);
             DSoundSGEMemAlloc(X_BufferSizeRequest);
         }
         X_BufferCacheSize = X_BufferSizeRequest;
