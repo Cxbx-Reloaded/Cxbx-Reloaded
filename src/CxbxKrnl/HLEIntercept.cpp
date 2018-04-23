@@ -528,7 +528,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 							//DbgPrintf("HLE: 0x%.08X -> XREF_D3D_RenderState_RopZCmpAlwaysRead\n", XRefDataBase[XREF_D3D_RenderState_RopZCmpAlwaysRead] );
                         } else {
                             XTL::EmuD3DDeferredRenderState = nullptr;
-                            CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+                            EmuWarning("EmuD3DDeferredRenderState was not found!");
                         }
 
                         // locate D3DDeferredTextureState
@@ -579,7 +579,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								printf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
                             } else {
                                 XTL::EmuD3DDeferredTextureState = nullptr;
-                                CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+                                EmuWarning("EmuD3DDeferredTextureState was not found!");
                             }
                         }
 
