@@ -821,15 +821,26 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         {
                             xbaddr pFunc = NULL;
                             int OOVPA_version;
-                            int iCodeOffsetFor_g_Stream = 0x22; // verified for 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
+                            int iCodeOffsetFor_g_Stream = 0x22; // verified for 4432, 4627, 5344, 5558, 5849
 
-                            if (BuildVersion >= 4034) {
+                            if (BuildVersion > 4039) {
                                 OOVPA_version = 4034; // TODO Verify
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1024, lower, upper);
-                            } else {
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1044, lower, upper);
+                            }
+                            if (pFunc == NULL) { // LTCG specific
+                                OOVPA_version = 4034; // TODO Verify
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4_2058, lower, upper);
+                                iCodeOffsetFor_g_Stream = 0x1E;
+                            }
+                            if (pFunc == NULL) { // verified for 4039
+                                OOVPA_version = 4034;
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1040, lower, upper);
+                                iCodeOffsetFor_g_Stream = 0x23;
+                            }
+                            if (pFunc == NULL) { // verified for 3925
                                 OOVPA_version = 3911;
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_3911, lower, upper);
-                                iCodeOffsetFor_g_Stream = 0x23; // verified for 3911
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1039, lower, upper);
+                                iCodeOffsetFor_g_Stream = 0x47;
                             }
 
                             if (pFunc != NULL) {

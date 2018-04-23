@@ -50,6 +50,9 @@ extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1052;
 extern LOOVPA<2 + 8> D3DDevice_SetRenderState_CullMode_1053;
 
 extern LOOVPA<1 + 14> D3DDevice_SetStreamSource_4034;
-extern LOOVPA<11> D3DDevice_SetStreamSource_1024;
+extern LOOVPA<1 + 11> D3DDevice_SetStreamSource_1039;
+extern LOOVPA<1 + 10> D3DDevice_SetStreamSource_1040;
+extern LOOVPA<1 + 10> D3DDevice_SetStreamSource_1044;
+extern LOOVPA<1 + 12> D3DDevice_SetStreamSource_4_2058;
 
 #endif

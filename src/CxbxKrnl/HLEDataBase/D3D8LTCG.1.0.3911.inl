@@ -995,3 +995,28 @@ OOVPA_NO_XREF(D3D_BlockOnResource_0, 2024, 11)
         { 0x2F, 0x0C },
         { 0x30, 0x85 },
 OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetStreamSource
+// ******************************************************************
+//7406810300000800
+OOVPA_XREF(D3DDevice_SetStreamSource, 1039, 1+11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x47, XREF_G_STREAM ), // Derived
+
+        { 0x00, 0x53 },
+        { 0x01, 0x8B },
+        { 0x02, 0x1D },
+
+        { 0x38, 0x81 },
+        { 0x39, 0x45 },
+        { 0x3A, 0x00 },
+        { 0x3B, 0x00 },
+        { 0x3C, 0x00 },
+        { 0x3D, 0x08 },
+        { 0x3E, 0x00 },
+        { 0x3F, 0x8D },
+OOVPA_END;
