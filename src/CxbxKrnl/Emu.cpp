@@ -191,7 +191,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 		printf("[0x%.4X] MAIN: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
 
-		e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip instruction size bytes
+		e->ContextRecord->Eip += 1; // Breakpoints are always 1 byte
 
 		return true;
 	}
