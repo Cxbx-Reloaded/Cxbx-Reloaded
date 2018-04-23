@@ -515,9 +515,7 @@ inline void DSoundBufferRelease(
 
 inline void DSoundBufferResizeSetSize(
     XTL::X_CDirectSoundBuffer*  pThis,
-    DWORD                       dwPlayFlags,
     HRESULT                    &hRet,
-    DWORD                       Xb_dwStartOffset,
     DWORD                       Xb_dwByteLength) {
 
     DWORD Host_dwByteLength = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_dwByteLength);
@@ -557,7 +555,7 @@ inline void DSoundBufferResizeUpdate(
     DWORD                       Xb_dwStartOffset,
     DWORD                       Xb_dwByteLength) {
 
-    DSoundBufferResizeSetSize(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
+    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwByteLength);
 
     hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                               nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
@@ -630,7 +628,7 @@ inline void DSoundBufferResizeCheckThenSet(
 
     DSoundBufferRegionCurrentLocation(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
 
-    DSoundBufferResizeSetSize(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
+    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwStartOffset);
 }
 
 inline void DSoundBufferReplace(
@@ -930,19 +928,18 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
 
     enterCriticalSection;
 
-    HRESULT hRet = pDSBuffer->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+    DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 
     if (hRet != DS_OK) {
         EmuWarning("GetCurrentPosition Failed!");
     }
-    if (pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0) {
-        DbgPrintf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
-    }
+
     if (pdwCurrentPlayCursor != xbnullptr) {
-        *pdwCurrentPlayCursor = DSoundBufferGetXboxBufferSize(EmuFlags, *pdwCurrentPlayCursor);
+        *pdwCurrentPlayCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentPlayCursor);
     }
     if (pdwCurrentWriteCursor != xbnullptr) {
-        *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, *pdwCurrentWriteCursor);
+        *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentWriteCursor);
     }
 
     leaveCriticalSection;

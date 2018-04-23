@@ -1069,7 +1069,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
         DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
 
-        DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
+        // Only perform a resize, for lock emulation purpose.
+        DSoundBufferResizeSetSize(pThis, hRet, dwBufferBytes);
 
     }
 
