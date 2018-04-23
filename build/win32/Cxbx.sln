@@ -27,6 +27,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x86_64-softmmu", "..\..\import\unicorn\msvc\unicorn\x86_64-softmmu\x86_64-softmmu.vcxproj", "{17077E86-AE7C-41AF-86ED-2BAC03B019BC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unicorn_static", "..\..\import\unicorn\msvc\unicorn\unicorn_static\unicorn_static.vcxproj", "{B6EFD6D7-C2D4-4FBB-B363-2E08CE09CC96}"
+	ProjectSection(ProjectDependencies) = postProject
+		{17077E86-AE7C-41AF-86ED-2BAC03B019BC} = {17077E86-AE7C-41AF-86ED-2BAC03B019BC}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unicorn", "unicorn", "{C2940E37-10E0-4DDD-BD9B-7851C61C6C09}"
 EndProject
