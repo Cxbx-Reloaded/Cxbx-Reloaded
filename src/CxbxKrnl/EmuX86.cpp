@@ -313,6 +313,7 @@ uc_engine* EmuX86_Init()
 
 	// Set Unicorn to map 1:1 with our emulated Xbox memory (except HW registers)
 	// We should map this to 0x0 but unicorn doesn't like that (it can't take a nullptr as an argument)
+	// Mapping to the XBE base address is good enough
 	err = uc_mem_map_ptr(uc, XBE_IMAGE_BASE, 0xFD000000 - XBE_IMAGE_BASE, UC_PROT_ALL, (void*)XBE_IMAGE_BASE); // XBE Region (0x00000000)
 	if (err) {
 		CxbxKrnlCleanup("Failed on uc_mem_map_ptr(uc, 0, XBOX_MEMORY_SIZE, UC_PROT_ALL, 0) with error returned: %u\n", err);
