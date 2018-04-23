@@ -180,7 +180,7 @@ inline void GenerateXboxBufferCache(
     // If the size is the same, don't realloc
     if (X_BufferCacheSize != X_BufferSizeRequest) {
         // Check if buffer cache exist, then copy over old ones.
-        if (*X_BufferCache != xbnullptr) {
+        if (*X_BufferCache != xbnullptr && (dwEmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
             LPVOID tempBuffer = *X_BufferCache;
             *X_BufferCache = malloc(X_BufferSizeRequest);
 
@@ -379,12 +379,13 @@ inline void DSoundGenericUnlock(
             Host_lock.dwLockBytes1 = DSBufferDesc->dwBufferBytes;
         }*/
 
+        if (X_BufferCache != xbnullptr) {
+            DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
 
-        DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
+            if (Host_lock.pLockPtr2 != nullptr) {
 
-        if (Host_lock.pLockPtr2 != nullptr) {
-
-            DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+                DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+            }
         }
 
         pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);

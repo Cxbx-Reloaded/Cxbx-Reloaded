@@ -1035,7 +1035,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
                             pThis->EmuDirectSoundBuffer8,
                             pThis->EmuBufferDesc,
                             pThis->Host_lock,
-                            pThis->X_BufferCache,
+                            xbnullptr,
                             pThis->X_lock.dwLockOffset,
                             pThis->X_lock.dwLockBytes1,
                             pThis->X_lock.dwLockBytes2);
@@ -1055,7 +1055,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
     } while ((dwStatus & DSBSTATUS_PLAYING) > 0);
 
-    if (DSoundSGEMenAllocCheck(dwBufferBytes)) {
+    // Allocate memory whenever made request internally
+    if (pvBufferData == xbnullptr && DSoundSGEMenAllocCheck(dwBufferBytes)) {
 
         // Confirmed it perform a reset to default.
         DSoundBufferRegionSetDefault(pThis);
@@ -1063,9 +1064,25 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
         // Copy if given valid pointer.
-        if (pvBufferData != xbnullptr) {
-            memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+        memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+
+        pThis->EmuFlags  ^= DSE_FLAG_BUFFER_EXTERNAL;
+
+        DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
+
+        // Only perform a resize, for lock emulation purpose.
+        DSoundBufferResizeSetSize(pThis, hRet, dwBufferBytes);
+
+    } else if (pvBufferData != xbnullptr) {
+        // Free internal buffer cache if exist
+        if ((pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+            free(pThis->X_BufferCache);
+            pThis->X_BufferCache = xbnullptr;
+            DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
         }
+        pThis->X_BufferCache = pvBufferData;
+        pThis->X_BufferCacheSize = dwBufferBytes;
+        pThis->EmuFlags |= DSE_FLAG_BUFFER_EXTERNAL;
 
         DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
 
@@ -1355,7 +1372,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
                 free(pThis->EmuBufferDesc.lpwfxFormat);
             }
-            if (pThis->X_BufferCache != xbnullptr) {
+            if (pThis->X_BufferCache != xbnullptr && (pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
                 free(pThis->X_BufferCache);
                 DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
             }
