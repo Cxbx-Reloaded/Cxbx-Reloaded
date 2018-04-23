@@ -73,6 +73,7 @@
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                  D3DCAPS9
+#define D3DVERTEXELEMENT         D3DVERTEXELEMENT9
 #define D3DVIEWPORT              D3DVIEWPORT9
 
 #define IDirect3D                IDirect3D9
@@ -115,6 +116,7 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
 #define D3DCAPS                  D3DCAPS8
+#define D3DVERTEXELEMENT         DWORD
 #define D3DVIEWPORT              D3DVIEWPORT8
 
 #define IDirect3D                IDirect3D8
