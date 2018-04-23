@@ -1051,9 +1051,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     DWORD dwStatus;
 
     // force wait until buffer is stop playing.
-    do {
+    pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    while ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+        SwitchToThread();
         pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
-    } while ((dwStatus & DSBSTATUS_PLAYING) > 0);
+    }
 
     // Allocate memory whenever made request internally
     if (pvBufferData == xbnullptr && DSoundSGEMenAllocCheck(dwBufferBytes)) {
