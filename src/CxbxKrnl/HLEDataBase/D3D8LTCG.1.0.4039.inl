@@ -656,9 +656,10 @@ OOVPA_END;
 // * D3DDevice_SetTransform
 // ******************************************************************
 //568BC8C1E106578DBC ...C3
-OOVPA_NO_XREF(D3DDevice_SetTransform_0, 2048, 11)
+OOVPA_NO_XREF(D3DDevice_SetTransform_0, 2048, 12)
 
         { 0x00, 0x53 },
+        { 0x01, 0x8B },
 
         { 0x07, 0x56 },
         { 0x08, 0x8B },
