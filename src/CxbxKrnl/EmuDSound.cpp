@@ -195,11 +195,11 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 
 // Static Variable(s)
 XBAudio                             g_XBAudio = XBAudio();
-extern LPDIRECTSOUND8               g_pDSound8 = NULL; //This is necessary in order to allow share with EmuDSoundInline.hpp
-static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = NULL;
+extern LPDIRECTSOUND8               g_pDSound8 = nullptr; //This is necessary in order to allow share with EmuDSoundInline.hpp
+static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = nullptr;
 //TODO: RadWolfie - How to implement support if primary does not permit it for DSP usage?
-static LPDIRECTSOUNDBUFFER8         g_pDSoundPrimaryBuffer8 = NULL;
-static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = NULL;
+static LPDIRECTSOUNDBUFFER8         g_pDSoundPrimaryBuffer8 = nullptr;
+static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = nullptr;
 static XTL::X_CDirectSoundBuffer*   g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static int                          g_bDSoundCreateCalled = FALSE;
