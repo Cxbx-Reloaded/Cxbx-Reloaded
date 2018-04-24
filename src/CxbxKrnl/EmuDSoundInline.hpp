@@ -374,10 +374,6 @@ inline void DSoundGenericUnlock(
     // close any existing locks
     if (Host_lock.pLockPtr1 != nullptr) {
 
-        // TODO: I don't think we need this.
-        /*if (Host_lock.dwLockFlags & DSBLOCK_ENTIREBUFFER) {
-            Host_lock.dwLockBytes1 = DSBufferDesc->dwBufferBytes;
-        }*/
 
         if (X_BufferCache != xbnullptr) {
             DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
@@ -388,7 +384,11 @@ inline void DSoundGenericUnlock(
             }
         }
 
-        pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+        HRESULT hRet = pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+
+        if (hRet != DS_OK) {
+            CxbxKrnlCleanup("DirectSoundBuffer Unlock Failed!");
+        }
 
         Host_lock.pLockPtr1 = nullptr;
         Host_lock.pLockPtr2 = nullptr;
@@ -523,6 +523,7 @@ inline void DSoundBufferResizeSetSize(
 
     // Don't re-create buffer if size is the same.
     if (pThis->EmuBufferDesc.dwBufferBytes == Host_dwByteLength) {
+        hRet = DS_OK;
         return;
     }
 
@@ -629,7 +630,7 @@ inline void DSoundBufferResizeCheckThenSet(
 
     DSoundBufferRegionCurrentLocation(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
 
-    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwStartOffset);
+    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwByteLength);
 }
 
 inline void DSoundBufferReplace(
@@ -1492,7 +1493,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
                     counter--;
                 }
             }
-            if (count > 0) {
+            if (counter > 0) {
                 Xb_volumeMixBin = volume / counter;
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr, Xb_volumeMixBin);
             } else {

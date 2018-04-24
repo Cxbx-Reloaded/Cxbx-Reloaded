@@ -935,6 +935,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
+        *ppBuffer = xbnullptr;
     } else {
 
         DSBUFFERDESC DSBufferDesc = { 0 };
@@ -1079,7 +1080,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         // Free internal buffer cache if exist
         if ((pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
             free(pThis->X_BufferCache);
-            pThis->X_BufferCache = xbnullptr;
             DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
         }
         pThis->X_BufferCache = pvBufferData;
@@ -3190,7 +3190,7 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 		LOG_FUNC_ARG(ppImageDesc)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED_DSOUND();
+	LOG_IGNORED();
 
     leaveCriticalSection;
 
