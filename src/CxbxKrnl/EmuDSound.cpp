@@ -268,14 +268,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;
 
-    if (!initialized || !g_pDSound8) {
-        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), ppDirectSound, NULL);
+    if (!initialized || g_pDSound8 == nullptr) {
+        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), &g_pDSound8, NULL);
 
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
         }
-
-        g_pDSound8 = *ppDirectSound;
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
@@ -332,7 +330,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     // This way we can be sure that this function returns a valid
     // DirectSound8 pointer even if we initialized it elsewhere!
-    if (!(*ppDirectSound) && g_pDSound8) {
+    if (ppDirectSound != nullptr) {
         *ppDirectSound = g_pDSound8;
     }
 
