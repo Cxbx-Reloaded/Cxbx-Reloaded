@@ -150,9 +150,11 @@ static XTL::D3DSWAPDATA				g_SwapData = {0};
 static DWORD						g_SwapLast = 0;
 
 // cached Direct3D state variable(s)
-static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
-static XTL::X_D3DSurface           *g_pCachedDepthStencil = NULL;
-static XTL::X_D3DSurface           *g_pCachedYuvSurface = NULL;
+static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
+static XTL::IDirect3DSurface       *g_pHostRenderTarget = nullptr;
+static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
+static XTL::IDirect3DSurface       *g_pHostDepthStencil = nullptr;
+static XTL::X_D3DSurface           *g_pXboxYuvSurface = NULL;
 static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
@@ -3105,7 +3107,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
 
 	LOG_FUNC();
 
-	X_D3DSurface *result = g_pCachedRenderTarget;
+	X_D3DSurface *result = g_pXboxRenderTarget;
 
 	if (result)
 		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
@@ -3139,7 +3141,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
 	LOG_FUNC();
 
-	X_D3DSurface *result = g_pCachedDepthStencil;
+	X_D3DSurface *result = g_pXboxDepthStencil;
 
 	if (result)
 		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
@@ -4241,13 +4243,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 		DWORD D3DUsage = 0;
 
-		if (pPixelContainer == g_pCachedDepthStencil) {
+		if (pPixelContainer == g_pXboxDepthStencil) {
 			if (EmuXBFormatIsDepthBuffer(X_Format))
 				D3DUsage = D3DUSAGE_DEPTHSTENCIL;
 			else
 				EmuWarning("Updating DepthStencil %s with an incompatible format!", ResourceTypeName);
 		}
-		else if (pPixelContainer == g_pCachedRenderTarget) {
+		else if (pPixelContainer == g_pXboxRenderTarget) {
 			if (EmuXBFormatIsRenderTarget(X_Format))
 				D3DUsage = D3DUSAGE_RENDERTARGET;
 			else
@@ -4862,12 +4864,12 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	if (uRet == 0) {
 
 		// If this was a cached renter target or depth surface, clear the cache variable too!
-		if (pThis == g_pCachedRenderTarget) {
-			g_pCachedRenderTarget = nullptr;
+		if (pThis == g_pXboxRenderTarget) {
+			g_pXboxRenderTarget = nullptr;
 		}
 
-		if (pThis == g_pCachedDepthStencil) {
-			g_pCachedDepthStencil = nullptr;
+		if (pThis == g_pXboxDepthStencil) {
+			g_pXboxDepthStencil = nullptr;
 		}
 
 		// Also release the host copy (if it exists!)
@@ -6636,38 +6638,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-    IDirect3DSurface *pPCRenderTarget = nullptr;
-    IDirect3DSurface *pPCNewZStencil  = nullptr;
-
-    if(pRenderTarget != NULL)
-    {
-		g_pCachedRenderTarget = pRenderTarget;
-
-		if(GetHostSurface(pRenderTarget) != nullptr)
-		{
-			pPCRenderTarget = GetHostSurface(pRenderTarget);
-		}
-		else
-		{
-			pPCRenderTarget = GetHostSurface(g_pCachedRenderTarget);
-		}
+	// The current render target is only replaced if it's passed in here non-null
+    if (pRenderTarget != NULL) {
+		g_pXboxRenderTarget = pRenderTarget;
+		g_pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget);
     }
 
-    if(pNewZStencil != NULL)
-    {
-		g_pCachedDepthStencil = pNewZStencil;
-        if(GetHostSurface(pNewZStencil) != nullptr)
-        {
-            pPCNewZStencil = GetHostSurface(pNewZStencil);
-        }
-        else
-        {
-            pPCNewZStencil = GetHostSurface(g_pCachedDepthStencil);
-        }
-    }
+	// The currenct depth stencil is always replaced by whats passed in here (even a null)
+	g_pXboxDepthStencil = pNewZStencil;
+    g_pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil);
 
     // TODO: Follow that stencil!
-    HRESULT hRet = g_pD3DDevice->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
+    HRESULT hRet = g_pD3DDevice->SetRenderTarget(g_pHostRenderTarget, g_pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 }
 
