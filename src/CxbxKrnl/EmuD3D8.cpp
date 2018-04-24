@@ -1296,17 +1296,20 @@ VOID XTL::EmuD3DInit()
 		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
 	}
 
+	// Initialise CreateDevice Proxy Data struct
+	{
+		g_EmuCDPD = {0};
+		g_EmuCDPD.Adapter = g_XBVideo.GetDisplayAdapter();
+		g_EmuCDPD.DeviceType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+		g_EmuCDPD.hFocusWindow = g_hEmuWindow;
+	}
+
 	// create Direct3D8 and retrieve caps
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
-
         if(g_pDirect3D == NULL)
             CxbxKrnlCleanup("Could not initialize Direct3D8!");
-
-		g_EmuCDPD.Adapter = g_XBVideo.GetDisplayAdapter();
-		g_EmuCDPD.DeviceType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
-		g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
     }
