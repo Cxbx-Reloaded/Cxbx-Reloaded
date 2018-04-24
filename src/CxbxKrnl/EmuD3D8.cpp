@@ -69,7 +69,7 @@ using namespace std::literals::chrono_literals;
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
-XTL::IDirect3DDevice               *g_pD3DDevice  = NULL; // Direct3D Device
+XTL::IDirect3DDevice               *g_pD3DDevice   = nullptr; // Direct3D Device
 XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_CurrentXboxVertexShaderHandle = 0;
@@ -2377,15 +2377,16 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		// Cache parameters
 		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
 
-		// Signal proxy thread to create g_pD3DDevice
+		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
 		g_EmuCDPD.bCreate = true;
 		g_EmuCDPD.bReady = true;
 
-		// Wait until proxy is completed
+		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
 		while (g_EmuCDPD.bReady)
 			Sleep(10);
 	}
 
+	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice, (UINT, D3DDEVTYPE, HWND, DWORD, X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**));
 	HRESULT hRet = XB_Direct3D_CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
@@ -2759,48 +2760,45 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
 
-	if(BackBuffer == -1)
-	{
-	static IDirect3DSurface *pCachedPrimarySurface = nullptr;
+	if(BackBuffer == -1) {
+		static IDirect3DSurface *pCachedPrimarySurface = nullptr;
 
-	if(pCachedPrimarySurface == nullptr)
-	{
-	// create a buffer to return
-	// TODO: Verify the surface is always 640x480
+		if(pCachedPrimarySurface == nullptr) {
+			// create a buffer to return
+			// TODO: Verify the surface is always 640x480
 #ifdef CXBX_USE_D3D9
-	hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, D3DFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
+			hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, D3DFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 #else
-	hRet = g_pD3DDevice->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
+			hRet = g_pD3DDevice->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pCachedPrimarySurface);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateImageSurface");
 #endif
-	}
+		}
 
-	SetHostSurface(pBackBuffer, pCachedPrimarySurface);
+		SetHostSurface(pBackBuffer, pCachedPrimarySurface);
 
-	hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
+		hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
-	if(FAILED(hRet))
-	{
-	EmuWarning("Could not retrieve primary surface, using backbuffer");
-	SetHostSurface(pBackBuffer, nullptr);
-	pCachedPrimarySurface->Release();
-	pCachedPrimarySurface = nullptr;
-	BackBuffer = 0;
-	}
+		if (FAILED(hRet)) {
+			EmuWarning("Could not retrieve primary surface, using backbuffer");
+			SetHostSurface(pBackBuffer, nullptr);
+			pCachedPrimarySurface->Release();
+			pCachedPrimarySurface = nullptr;
+			BackBuffer = 0;
+		}
 
-	// Debug: Save this image temporarily
-	//D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pBackBuffer), NULL, NULL);
+		// Debug: Save this image temporarily
+		//D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pBackBuffer), NULL, NULL);
 	}
 
 	if(BackBuffer != -1) {
-	hRet = g_pD3DDevice->GetBackBuffer(
+		hRet = g_pD3DDevice->GetBackBuffer(
 #ifdef CXBX_USE_D3D9
-		0, // iSwapChain
+			0, // iSwapChain
 #endif
-		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
+			BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCachedPrimarySurface);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 	}
 	//*/
 
@@ -2829,7 +2827,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
 
 	return pBackBuffer;
-#else
+#else // COPY_BACKBUFFER_TO_XBOX_SURFACE
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
@@ -2920,7 +2918,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	
 skip_backbuffer_copy:
     return pXboxBackBuffer;
-#endif
+#endif // COPY_BACKBUFFER_TO_XBOX_SURFACE
 }
 
 // ******************************************************************
