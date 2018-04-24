@@ -450,7 +450,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
     // This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 
     leaveCriticalSection;
 
