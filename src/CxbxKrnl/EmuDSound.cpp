@@ -1534,22 +1534,25 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
         pThis->EmuPlayFlags &= ~X_DSBPLAY_FROMSTART;
     }
 
-    if (dwFlags & X_DSBPLAY_SYNCHPLAYBACK) {
-        pThis->EmuPlayFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
-        pThis->EmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
-    }
-
     HRESULT hRet = DS_OK;
+
+    if ((dwFlags & X_DSBPLAY_SYNCHPLAYBACK) > 0) {
+        //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
+        hRet = DSoundBufferSynchPlaybackFlagAdd(pThis->EmuFlags);
+        pThis->EmuPlayFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
+    }
 
     DSoundBufferUpdate(pThis, dwFlags, hRet);
 
-    if (dwFlags & X_DSBPLAY_FROMSTART) {
-        if (pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0) != DS_OK) {
-            EmuWarning("Rewinding buffer failed!");
+    if (hRet == DS_OK) {
+        if (dwFlags & X_DSBPLAY_FROMSTART) {
+            if (pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0) != DS_OK) {
+                EmuWarning("Rewinding buffer failed!");
+            }
         }
-    }
-    if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
-        hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+            hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
     }
 
     leaveCriticalSection;
@@ -1744,8 +1747,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
     GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
-    // Allocate at least 5 second worth of bytes in PCM format.
-    DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
+
+    // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
+    // Allocate at least 10 second worth of bytes in PCM format.
+    DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 10;
     (*ppStream)->EmuBufferDesc = DSBufferDesc;
 
     (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
@@ -2127,7 +2132,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     pThis->Host_isProcessing = false;
 
     // NOTE: Must reset flags in discontinuity and rtTimeStamps.
-    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_SYNCHPLAYBACK_CONTROL | DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
     pThis->Xb_rtFlushEx = 0LL;
     pThis->Xb_rtPauseEx = 0LL;
 
@@ -2153,7 +2159,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
 
     // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
@@ -2187,23 +2193,20 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
             continue;
         }
 
-        if ((*pDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
-            // RadWolfie: I don't think SetCurrentPosition is necessary?
-            //DSoundBufferSelectionT((*pDSBuffer))->SetCurrentPosition(0);
+        if (((*pDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*pDSBuffer)->EmuFlags);
             (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
-            (*pDSBuffer)->EmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
         }
     }
 
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->X_BufferCache == nullptr) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        if ((*pDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
-            (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-            (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
-            (*pDSStream)->EmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
+        if (((*pDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*pDSStream)->EmuFlags);
+            DSoundStreamProcess((*pDSStream));
         }
     }
 

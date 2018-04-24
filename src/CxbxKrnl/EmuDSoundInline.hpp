@@ -759,7 +759,7 @@ inline void DSoundStreamClearPacket(
 }
 
 // Generic force remove synch playback control flag.
-inline void DSoundBufferRemoveSynchPlaybackFlag(
+inline void DSoundBufferSynchPlaybackFlagRemove(
     DWORD                  &dwEmuFlags
 
     )
@@ -768,16 +768,36 @@ inline void DSoundBufferRemoveSynchPlaybackFlag(
         return;
     }
 
-    if (dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) {
+    if ((dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
         g_iDSoundSynchPlaybackCounter--;
         dwEmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
     }
+}
+inline HRESULT DSoundBufferSynchPlaybackFlagAdd(
+    DWORD                  &dwEmuFlags
+
+    )
+{
+    if (g_iDSoundSynchPlaybackCounter >= DSOUND_MAX_SYNCHPLAYBACK_AUDIO) {
+        return DSERR_GENERIC;
+    }
+
+    if ((dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+        g_iDSoundSynchPlaybackCounter++;
+        dwEmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
+    }
+    return DS_OK;
 }
 
 inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
 
     // If title want to pause, then don't process the packets.
     if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+        return 0;
+    }
+
+    // If media object is being used as playback synch, then don't process the packets.
+    if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
         return 0;
     }
 
@@ -1004,7 +1024,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             if (triggerPlayPermission) {
                 pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             }
-            DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
+            DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
             dwEmuFlags &= ~DSE_FLAG_PAUSE;
             Xb_rtTimeStamp = 0;
             break;
@@ -1013,20 +1033,16 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             if (hStatus == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                 pDSBuffer->Stop();
             }
-            DSoundBufferRemoveSynchPlaybackFlag(dwEmuFlags);
+            DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
             dwEmuFlags |= DSE_FLAG_PAUSE;
             Xb_rtTimeStamp = rtTimeStamp;
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
-            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and... ?
+            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, Star Wars: KotOR, and... ?
 
             //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
-            if (g_iDSoundSynchPlaybackCounter >= DSOUND_MAX_SYNCHPLAYBACK_AUDIO) {
-                hRet = DSERR_GENERIC;
-            } else {
-
-                g_iDSoundSynchPlaybackCounter++;
-                dwEmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
+            hRet = DSoundBufferSynchPlaybackFlagAdd(dwEmuFlags);
+            if (hRet == DS_OK) {
                 hRet = pDSBuffer->GetStatus(&dwStatus);
                 if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
                     pDSBuffer->Stop();
