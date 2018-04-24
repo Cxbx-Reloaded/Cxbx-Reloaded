@@ -2080,21 +2080,28 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     free(lpCodes);						
 				}
 
+/* Disabled for now, as this has no other side-effect (other then adding a reference count that's never Released)
                 // update render target cache
-				XTL::IDirect3DSurface *pNewHostSurface = nullptr;
+				XTL::IDirect3DSurface *pCurrentHostRenderTarget = nullptr;
                 hRet = g_pD3DDevice->GetRenderTarget(
 #ifdef CXBX_USE_D3D9
 					0, // RenderTargetIndex
 #endif
-					&pNewHostSurface);
+					&pCurrentHostRenderTarget);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
+				// TODO : SetHostResource(BackBuffer[0], pCurrentHostRenderTarget);
+*/
 
 				// update z-stencil surface cache
-				pNewHostSurface = nullptr;
-				hRet = g_pD3DDevice->GetDepthStencilSurface(&pNewHostSurface);
+				XTL::IDirect3DSurface *pCurrentHostDepthStencil = nullptr;
+				hRet = g_pD3DDevice->GetDepthStencilSurface(&pCurrentHostDepthStencil);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetDepthStencilSurface");
 
-				g_bHasDepthStencil = SUCCEEDED(hRet);
+				g_bHasDepthStencil = SUCCEEDED(hRet) && (pCurrentHostDepthStencil != nullptr);
+
+				if (pCurrentHostDepthStencil) {
+					pCurrentHostDepthStencil->Release();
+				}
 
 				hRet = g_pD3DDevice->CreateVertexBuffer
                 (
