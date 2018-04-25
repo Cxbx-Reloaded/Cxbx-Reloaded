@@ -4321,7 +4321,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
         LOG_FUNC_ARG(pLFODesc)
         LOG_FUNC_END;
 
-    return XTL::EMUPATCH(IDirectSoundStream_SetLFO)(pThis, pLFODesc);
+    return XTL::EMUPATCH(CDirectSoundStream_SetLFO)(pThis, pLFODesc);
 }
 
 // ******************************************************************
@@ -4339,7 +4339,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
         LOG_FUNC_ARG(pEnvelopeDesc)
         LOG_FUNC_END;
 
-    return XTL::EMUPATCH(IDirectSoundStream_SetEG)(pThis, pEnvelopeDesc);
+    return XTL::EMUPATCH(CDirectSoundStream_SetEG)(pThis, pEnvelopeDesc);
 }
 
 // ******************************************************************
@@ -4411,5 +4411,5 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
         LOG_FUNC_ARG(pMixBins)
         LOG_FUNC_END;
 
-    return XTL::EMUPATCH(IDirectSoundStream_SetMixBins)(pThis, pMixBins);
+    return XTL::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, pMixBins);
 }
