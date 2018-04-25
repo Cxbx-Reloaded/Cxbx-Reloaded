@@ -227,9 +227,6 @@ void WriteEepromInMemory(HWND hDlg)
 
 void ShowEepromConfig(HWND hwnd)
 {
-	// Reset changes flag
-	g_bHasChanges = false;
-
 	// Load the eeprom file from disk and cache it in memory
 	if (pEEPROM_GUI == nullptr) {
 		std::basic_ifstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
@@ -411,7 +408,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 				}
 			}
 
-			// Install the subclass procedures and display the current values of the parameters in the edit controls
+			// Install the subclass procedure and display the current values of the parameters in the edit controls
 			{
 				int ByteLimit[] = { 8, 16, 12, 6, 16, 4 };
 				uint8_t* Buffer[6];
@@ -443,6 +440,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 					j++;
 				}
 			}
+			// Reset changes flag
 			g_bHasChanges = false;
 		}
 		break;

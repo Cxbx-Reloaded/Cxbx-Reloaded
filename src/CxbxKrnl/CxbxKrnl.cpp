@@ -981,22 +981,17 @@ void LoadXboxKeys(std::string path)
 
 	if (fp != nullptr) {
 		// Determine size of Keys.bin
-		xboxkrnl::XBOX_KEY_DATA keys[3];
+		xboxkrnl::XBOX_KEY_DATA keys[2];
 		fseek(fp, 0, SEEK_END);
 		long size = ftell(fp);
 		rewind(fp);
 
-		// If the size of Keys.bin is correct (two or three keys), read it
-		if (size >= xboxkrnl::XBOX_KEY_LENGTH * 2) {
+		// If the size of Keys.bin is correct (two keys), read it
+		if (size == xboxkrnl::XBOX_KEY_LENGTH * 2) {
 			fread(keys, xboxkrnl::XBOX_KEY_LENGTH, 2, fp);
 
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
-
-			if (size == xboxkrnl::XBOX_KEY_LENGTH * 3) {
-				fread(&keys[2], xboxkrnl::XBOX_KEY_LENGTH, 1, fp);
-				memcpy(xboxkrnl::XboxHDKey, &keys[2], xboxkrnl::XBOX_KEY_LENGTH);
-			}
 		}
 		else {
 			EmuWarning("Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
