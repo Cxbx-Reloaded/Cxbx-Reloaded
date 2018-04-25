@@ -1722,6 +1722,8 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
         *Xb_lpVolume = lVolume;
     }
 
+    printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
+
     lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
@@ -1737,7 +1739,6 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
             lVolume = -10000;
         }
     }
-    printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
     if (lVolume <= -6400) {
         lVolume = DSBVOLUME_MIN;
     } else if (lVolume > 0) {
