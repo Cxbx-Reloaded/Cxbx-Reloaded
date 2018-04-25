@@ -310,7 +310,7 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(CDirectSoundStream_AddRef, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Discontinuity, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_Flush, PATCH, 3911, 4039, 4134, 5028),
-    REGISTER_OOVPAS(CDirectSoundStream_FlushEx, XREF, 4134, 5028),
+    REGISTER_OOVPAS(CDirectSoundStream_FlushEx, PATCH, 4134, 5028),
     REGISTER_OOVPAS(CDirectSoundStream_GetInfo, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_GetStatus, PATCH, 3911, 4039, 4134),
     REGISTER_OOVPAS(CDirectSoundStream_GetVoiceProperties, PATCH, 5028),
