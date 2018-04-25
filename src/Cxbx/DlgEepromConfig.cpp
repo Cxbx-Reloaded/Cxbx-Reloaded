@@ -42,12 +42,9 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
 };
 
-#include <sstream>
 #include <fstream>
-#include <iomanip>
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "CxbxKrnl\CxbxKrnl.h"
-#include "CxbxKrnl\EmuShared.h"
 #include "DlgEepromConfig.h"
 #include "ResCxbx.h"
 #include <Commctrl.h>

@@ -34,7 +34,6 @@
 #ifndef DLGEEPROMCONFIG_H
 #define DLGEEPROMCONFIG_H
 
-#include <windows.h>
 
 VOID ShowEepromConfig(HWND hwnd);
 
