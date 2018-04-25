@@ -151,10 +151,7 @@ static DWORD						g_SwapLast = 0;
 
 // cached Direct3D state variable(s)
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
-static XTL::IDirect3DSurface       *g_pHostRenderTarget = nullptr;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
-static XTL::IDirect3DSurface       *g_pHostDepthStencil = nullptr;
-static XTL::X_D3DSurface           *g_pXboxYuvSurface = NULL;
 static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
@@ -2805,7 +2802,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	//*/
 
 	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
-	XTL::IDirect3DSurface *pNewHostSurface = nullptr;
+	XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
 	 STATUS_SUCCESS;
 
@@ -2817,13 +2814,13 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 #ifdef CXBX_USE_D3D9
 		0, // iSwapChain
 #endif
-		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("Unable to retrieve back buffer");
 
-	SetHostSurface(pBackBuffer, pNewHostSurface);
+	SetHostSurface(pBackBuffer, pCurrentHostBackBuffer);
 
 	// Increment reference count
 	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
@@ -2852,20 +2849,17 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	// Now we can fetch the host backbuffer
-	XTL::IDirect3DSurface *pNewHostSurface = nullptr;
-
-
-	HRESULT hRet = STATUS_SUCCESS;
+	XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
 	if (BackBuffer == -1) {
 		BackBuffer = 0;
 	}
 
-	hRet = g_pD3DDevice->GetBackBuffer(
+	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
 #ifdef CXBX_USE_D3D9
 		0, // iSwapChain
 #endif
-		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pNewHostSurface);
+		BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet)) {
@@ -2873,7 +2867,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	D3DSURFACE_DESC hostSurfaceDesc;
-	if (pNewHostSurface->GetDesc(&hostSurfaceDesc) != D3D_OK) {
+	if (pCurrentHostBackBuffer->GetDesc(&hostSurfaceDesc) != D3D_OK) {
 		EmuWarning("Could not get Back Buffer Host Surface Desc");
 		goto skip_backbuffer_copy;
 	}
@@ -2883,7 +2877,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		
 	// Now we can copy the host back buffer to the Xbox
 	D3DLOCKED_RECT lockedRect;
-	hRet = pNewHostSurface->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
+	hRet = pCurrentHostBackBuffer->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
 	if (hRet != STATUS_SUCCESS) {
 		EmuWarning("Could not lock Host Back Buffer");
 		goto skip_backbuffer_copy;
@@ -2893,7 +2887,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// This handles format conversion back to Xbox format (assuming the host surface is the same format), and makes sure our HostResource is up to date
 	// That way if it gets used as a trex
 	D3DXLoadSurfaceFromMemory(pCopySrcSurface, NULL, NULL, lockedRect.pBits, hostSurfaceDesc.Format, lockedRect.Pitch, NULL, NULL, 0, 0);
-	pNewHostSurface->UnlockRect();
+	pCurrentHostBackBuffer->UnlockRect();
 
 	D3DSURFACE_DESC copySurfaceDesc;
 	if (pCopySrcSurface->GetDesc(&copySurfaceDesc) != D3D_OK) {
@@ -2905,20 +2899,20 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	hRet = pCopySrcSurface->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
 	if (hRet != STATUS_SUCCESS) {
 		EmuWarning("Could not lock Host Resource for Xbox Back Buffer");
-		goto skip_backbuffer_copy;
 	}
-	
+	else {
 #ifdef CXBX_USE_D3D9
-	DWORD Size = lockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
+		DWORD Size = lockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
 #else
-	DWORD Size = copySurfaceDesc.Size;
+		DWORD Size = copySurfaceDesc.Size;
 #endif
-	memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, Size);
+		memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), lockedRect.pBits, Size);
 
-	pCopySrcSurface->UnlockRect();
-	
-	
+		pCopySrcSurface->UnlockRect();
+	}
+
 skip_backbuffer_copy:
+	pCurrentHostBackBuffer->Release();
     return pXboxBackBuffer;
 #endif // COPY_BACKBUFFER_TO_XBOX_SURFACE
 }
@@ -4963,19 +4957,19 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			GetClientRect(g_hEmuWindow, &EmuDestRect);
 		}
 
-		IDirect3DSurface *pBackBufferSurface = nullptr;
+		IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 		HRESULT hRet = g_pD3DDevice->GetBackBuffer(
 #ifdef CXBX_USE_D3D9
 			0, // iSwapChain
 #endif
-			0, D3DBACKBUFFER_TYPE_MONO, &pBackBufferSurface);
+			0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 
 		// if we obtained the backbuffer, load the YUY2 into the backbuffer
 		if (SUCCEEDED(hRet)) {
 			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 			D3DSURFACE_DESC BackBufferDesc;
-			pBackBufferSurface->GetDesc(&BackBufferDesc);
+			pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
 			// Limit the width and height of the output to the backbuffer dimensions.
 			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
@@ -4997,7 +4991,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
 			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
 			hRet = D3DXLoadSurfaceFromMemory(
-				/* pDestSurface = */ pBackBufferSurface,
+				/* pDestSurface = */ pCurrentHostBackBuffer,
 				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
 				/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
 				/* pSrcMemory = */ pYUY2SourceBuffer, // Source buffer
@@ -5009,7 +5003,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				/* ColorKey = */ EnableColorKey ? ColorKey : 0);
 			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
 
-			pBackBufferSurface->Release();
+			pCurrentHostBackBuffer->Release();
 		}
 
 		// Update overlay if present was not called since the last call to
@@ -6638,18 +6632,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
+	IDirect3DSurface *pHostRenderTarget = nullptr;
+	IDirect3DSurface *pHostDepthStencil = nullptr;
+
 	// The current render target is only replaced if it's passed in here non-null
     if (pRenderTarget != NULL) {
 		g_pXboxRenderTarget = pRenderTarget;
-		g_pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget);
+		pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget);
     }
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXboxDepthStencil = pNewZStencil;
-    g_pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil);
+    pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil);
 
-    // TODO: Follow that stencil!
-    HRESULT hRet = g_pD3DDevice->SetRenderTarget(g_pHostRenderTarget, g_pHostDepthStencil);
+    HRESULT hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 }
 
