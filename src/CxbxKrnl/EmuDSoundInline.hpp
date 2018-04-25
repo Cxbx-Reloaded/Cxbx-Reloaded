@@ -1717,7 +1717,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     if (lVolume <= -6400) {
         lVolume = DSBVOLUME_MIN;
     } else if (lVolume > 0) {
-        EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %d", lVolume);
+        EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
         lVolume = 0;
     }
     if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
