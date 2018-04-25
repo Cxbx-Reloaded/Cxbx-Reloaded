@@ -783,7 +783,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -970,12 +970,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
+            (*ppBuffer)->Xb_dwHeadroom = 0; // Default for 3D
         }
 
         DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
 
         // Pre-set volume to enforce silence if one of audio codec is disabled.
-        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 0L);
+        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 
+                                          (*ppBuffer)->Xb_VolumeMixbin, (*ppBuffer)->Xb_dwHeadroom);
 
         *ppDSoundBufferCache = *ppBuffer;
     }
@@ -1281,19 +1283,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    // DirectSound does not provide SetHeadroom method.
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
+                                               pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1679,7 +1675,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -1768,12 +1765,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
     if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
         DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
+        (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
     }
 
     DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
 
     // Pre-set volume to enforce silence if one of audio codec is disabled.
-    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr, 0L);
+    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
+                                      (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
 
     // cache this sound stream
     {
@@ -1855,7 +1854,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -2020,6 +2020,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
         *pdwStatus = dwStatusXbox;
+        printf("DEBUG: sGetStatus | testSize = %8u | dwStatusHost = %8X | dwStatusXbox = %8X\n", testSize, dwStatusHost, dwStatusXbox);
     } else if (pdwStatus != xbnullptr) {
         *pdwStatus = 0;
     }
@@ -2244,19 +2245,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    // DirectSound does not provide SetHeadroom method.
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
+                                               pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -3395,7 +3390,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -4286,7 +4281,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
         LOG_FUNC_ARG(lVolume)
         LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************

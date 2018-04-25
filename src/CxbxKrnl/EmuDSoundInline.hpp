@@ -429,7 +429,8 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->X_BufferCacheSize = 0; \
     pThis->Xb_rtPauseEx = 0LL; \
     pThis->Xb_Volume = 0L; \
-    pThis->Xb_VolumeMixbin = 0L;
+    pThis->Xb_VolumeMixbin = 0L; \
+    pThis->Xb_dwHeadroom = 600; // default for 2D voice
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
@@ -1382,18 +1383,37 @@ inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     RETURN_RESULT_CHECK(hRet);
 }
 
-/*
-//TODO: PC DirectSound does not have SetHeadroom method function.
+HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LPLONG, LONG, DWORD);
+
 //IDirectSoundStream
 //IDirectSoundBuffer
+// NOTE: 0 to 10,000; For initialize value would be 3D default to 0 and 2D default to 600.
 inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    DWORD               dwHeadroom)
+    DWORD               dwHeadroom,
+    DWORD              &Xb_dwHeadroom,
+    LONG                Xb_volume,
+    LONG                Xb_volumeMixbin,
+    DWORD               dwEmuFlags)
 {
+
+    enterCriticalSection;
+
+    HRESULT hRet;
+    if (dwHeadroom > 10000) {
+        hRet = DSERR_INVALIDPARAM;
+    } else {
+        Xb_dwHeadroom = dwHeadroom;
+        hRet = DS_OK;
+        HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, dwEmuFlags, xbnullptr, Xb_volumeMixbin, dwHeadroom);
+    }
+
+    leaveCriticalSection;
 
     return DS_OK;
 }
 
+/*
 //TODO: PC DirectSound does not have SetI3DL2Source method function.
 //IDirectSoundStream
 //IDirectSoundBuffer
@@ -1468,8 +1488,6 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     RETURN_RESULT_CHECK(hRet);
 }
-
-HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LPLONG, LONG);
 /*
 //TODO: PC DirectSound does not have SetMixBins method function.
 //IDirectSoundStream
@@ -1489,7 +1507,8 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     XTL::X_LPDSMIXBINS   pMixBins,
     DWORD                EmuFlags,
     LONG                 Xb_volume,
-    LONG                &Xb_volumeMixBin)
+    LONG                &Xb_volumeMixBin,
+    DWORD                Xb_dwHeadroom)
 {
     enterCriticalSection;
 
@@ -1511,7 +1530,8 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             }
             if (counter > 0) {
                 Xb_volumeMixBin = volume / counter;
-                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr, Xb_volumeMixBin);
+                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr,
+                                                         Xb_volumeMixBin, Xb_dwHeadroom);
             } else {
                 hRet = DS_OK;
             }
@@ -1684,12 +1704,15 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
 
 //IDirectSoundStream x2
 //IDirectSoundBuffer
+// NOTE: real volume = mixbins volume + 3D volume + volume - headroom
+// 100 millibels (mB) = 1 dB
 inline HRESULT HybridDirectSoundBuffer_SetVolume(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     LONG                    lVolume,
     DWORD                   dwEmuFlags,
     LPLONG                  Xb_lpVolume,
-    LONG                    Xb_volumeMixbin)
+    LONG                    Xb_volumeMixbin,
+    DWORD                   Xb_dwHeadroom)
 {
 
     enterCriticalSection;
@@ -1699,7 +1722,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
         *Xb_lpVolume = lVolume;
     }
 
-    lVolume += Xb_volumeMixbin;
+    lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
         if (!g_XBAudio.GetPCM()) {
@@ -1714,6 +1737,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
             lVolume = -10000;
         }
     }
+    printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
     if (lVolume <= -6400) {
         lVolume = DSBVOLUME_MIN;
     } else if (lVolume > 0) {

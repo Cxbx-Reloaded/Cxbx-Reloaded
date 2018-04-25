@@ -389,6 +389,7 @@ struct X_CDirectSoundBuffer
     REFERENCE_TIME          Xb_rtPauseEx;
     LONG                    Xb_Volume;
     LONG                    Xb_VolumeMixbin;
+    DWORD                   Xb_dwHeadroom;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
@@ -539,6 +540,7 @@ class X_CDirectSoundStream
         REFERENCE_TIME                          Xb_rtPauseEx;
         LONG                                    Xb_Volume;
         LONG                                    Xb_VolumeMixbin;
+        DWORD                                   Xb_dwHeadroom;
 };
 
 // ******************************************************************
