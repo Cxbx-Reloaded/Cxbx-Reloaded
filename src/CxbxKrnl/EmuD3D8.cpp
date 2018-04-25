@@ -3392,28 +3392,30 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 BOOL g_bBadIndexData = FALSE;
 
 // LTCG specific D3DDevice_SetTexture function...
-// TODO: XB_trampoline is not working yet.
+// This uses a custom calling convention where parameter is passed in EAX
+// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
 // Test-case: Metal Wolf Chaos
-VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTexture_4)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 (
+	X_D3DBaseTexture  *pTexture
 )
 {
-	//FUNC_EXPORTS;
+	FUNC_EXPORTS;
 
-	static uint32 returnAddr;
+	DWORD           Stage;
+	__asm mov Stage, eax;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(pTexture)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);\n", Stage, pTexture);
 
-	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_SetTexture
-		mov eax, 0
-		push returnAddr
-		ret
-	}
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	//XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture_4, (X_D3DBaseTexture*));
+	//XB_D3DDevice_SetTexture_4(pTexture);
+
+	EmuD3DActiveTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -6072,20 +6074,28 @@ void CxbxUpdateNativeD3DResources()
 }
 
 // LTCG specific D3DDevice_SetPixelShader function...
-// TODO: XB_trampoline is not working yet.
+// This uses a custom calling convention where parameter is passed in EAX
+// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
 // Test-case: Metal Wolf Chaos
-VOID __stdcall XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 (
 )
 {
-	//FUNC_EXPORTS;
+	FUNC_EXPORTS;
 
-	uint32_t param;
-	__asm {
-		mov param, eax
-	}
+	DWORD           Handle;
+	__asm mov Handle, eax;
 
-	return EMUPATCH(D3DDevice_SetPixelShader)(param);
+	//LOG_FUNC_ONE_ARG(Handle);
+
+	DbgPrintf("D3DDevice_SetPixelShader_0(Handle : %d);\n", Handle);
+
+	// Call the Xbox function to make sure D3D structures get set
+	//XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
+	//XB_D3DDevice_SetPixelShader_0();
+
+	// Update the global pixel shader
+	g_D3DActivePixelShader = (X_PixelShader*)Handle;
 }
 
 // ******************************************************************

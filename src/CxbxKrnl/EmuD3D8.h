@@ -476,7 +476,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetPixelShader)
     DWORD           Handle
 );
 
-VOID __stdcall EMUPATCH(D3DDevice_SetPixelShader_0)();
+VOID WINAPI EMUPATCH(D3DDevice_SetPixelShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture2
@@ -569,8 +569,10 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTexture)
 	X_D3DBaseTexture  *pTexture
 );
 
-VOID __stdcall EMUPATCH(D3DDevice_SetTexture_4)();
-
+VOID WINAPI EMUPATCH(D3DDevice_SetTexture_4)
+(
+	X_D3DBaseTexture  *pTexture
+);
 // ******************************************************************
 // * patch: D3DDevice_SwitchTexture
 // ******************************************************************
