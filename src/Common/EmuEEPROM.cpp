@@ -195,7 +195,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		pEEPROM->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
 		pEEPROM->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
 		pEEPROM->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
-		pEEPROM->UserSettings.ParentalControlMovies = XC_PRTL_CRTL_MAX; // = XC_PRTL_CRTL_MAX
+		pEEPROM->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;

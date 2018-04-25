@@ -132,14 +132,25 @@ static const EEPROMInfo EEPROMInfos[] = {
 #define XC_PC_ESRB_EARLY_CHILDHOOD  6
 
 // Movie rating
-#define XC_PRTL_CRTL_MAX            0
-#define XC_PRTL_CRTL_NC17           1
-#define XC_PRTL_CRTL_A              2
-#define XC_PRTL_CRTL_5              3
-#define XC_PRTL_CRTL_PG13           4
-#define XC_PRTL_CRTL_PG             5
-#define XC_PRTL_CRTL_2              6
-#define XC_PRTL_CRTL_G              7
+#define XC_PC_MAX                   0
+#define XC_PC_NC17                  1
+#define XC_PC_A                     2
+#define XC_PC_5                     3
+#define XC_PC_PG13                  4
+#define XC_PC_PG                    5
+#define XC_PC_2                     6
+#define XC_PC_G                     7
+
+// DVD region code
+#define DVD_REGION_FREE             0
+#define DVD_REGION_US               1
+#define DVD_REGION_EU               2
+#define DVD_REGION_SE_ASIA          3
+#define DVD_REGION_OCEANIA          4
+#define DVD_REGION_AFRICA           5
+#define DVD_REGION_CHINA            6
+#define DVD_REGION_RESERVED         7
+#define DVD_REGION_INTERNATIONAL    8
 
 extern xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin);
 
