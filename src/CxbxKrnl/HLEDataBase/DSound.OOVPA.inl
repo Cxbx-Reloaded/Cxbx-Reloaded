@@ -434,26 +434,26 @@ OOVPATable DSound_OOVPAV2[] = {
     REGISTER_OOVPAS(IDirectSoundStream_SetConeOutsideVolume, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetDistanceFactor, UNPATCHED, 4134),
     REGISTER_OOVPAS(IDirectSoundStream_SetDopplerFactor, UNPATCHED, 4134),
-    REGISTER_OOVPAS(IDirectSoundStream_SetEG, UNPATCHED, 3911, 4039),
-    REGISTER_OOVPAS(IDirectSoundStream_SetLFO, UNPATCHED, 3911, 4039),
-    REGISTER_OOVPAS(IDirectSoundStream_SetFilter, UNPATCHED, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetEG, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
+    REGISTER_OOVPAS(IDirectSoundStream_SetLFO, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
+    REGISTER_OOVPAS(IDirectSoundStream_SetFilter, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
     REGISTER_OOVPAS(IDirectSoundStream_SetFormat, UNPATCHED, 4039),
-    REGISTER_OOVPAS(IDirectSoundStream_SetFrequency, UNPATCHED, 3911, 4039),
-    REGISTER_OOVPAS(IDirectSoundStream_SetHeadroom, UNPATCHED, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetFrequency, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
+    REGISTER_OOVPAS(IDirectSoundStream_SetHeadroom, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
     REGISTER_OOVPAS(IDirectSoundStream_SetI3DL2Source, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetMaxDistance, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetMinDistance, UNPATCHED, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, UNPATCHED, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetMixBins, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_12, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, see more note for CDirectSoundStream_SetMixBinVolumes_12
     REGISTER_OOVPAS(IDirectSoundStream_SetMixBinVolumes_8, UNPATCHED, 4039), //NOTE: 4039 and newer only perform a jmp.
     REGISTER_OOVPAS(IDirectSoundStream_SetMode, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
     REGISTER_OOVPAS(IDirectSoundStream_SetOutputBuffer, UNPATCHED, 3911), //NOTE: 3911 only perform a jmp, later XDK revision may need a patch?
-    REGISTER_OOVPAS(IDirectSoundStream_SetPitch, UNPATCHED, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetPitch, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
     REGISTER_OOVPAS(IDirectSoundStream_SetPosition, UNPATCHED, 3911),
     REGISTER_OOVPAS(IDirectSoundStream_SetRolloffCurve, UNPATCHED, 4361),
     REGISTER_OOVPAS(IDirectSoundStream_SetRolloffFactor, UNPATCHED, 4134),
     REGISTER_OOVPAS(IDirectSoundStream_SetVelocity, UNPATCHED, 3911),
-    REGISTER_OOVPAS(IDirectSoundStream_SetVolume, UNPATCHED, 3911, 4039),
+    REGISTER_OOVPAS(IDirectSoundStream_SetVolume, PATCH, 3911, 4039), //NOTE: Is require to be patch since its' calling to voice class.
     REGISTER_OOVPAS(IDirectSoundStream_Use3DVoiceData, UNPATCHED, 5558), // jmp only
     REGISTER_OOVPAS(IDirectSound_AddRef, PATCH, 3911),
     REGISTER_OOVPAS(IDirectSound_CommitDeferredSettings, PATCH, 3911),

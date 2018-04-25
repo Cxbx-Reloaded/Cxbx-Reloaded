@@ -2456,8 +2456,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
-    PVOID   pThis, // X_CDirectSoundStream *pThis
-    PVOID   pMixBins)
+    X_CDirectSoundStream*   pThis,
+    PVOID                   pMixBins)
 {
     FUNC_EXPORTS;
 
@@ -3081,8 +3081,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 (
-    LPVOID        pThis,
-    LPVOID        pEnvelopeDesc)
+    X_CDirectSoundStream*   pThis,
+    LPVOID                  pEnvelopeDesc)
 {
     FUNC_EXPORTS;
 
@@ -4269,4 +4269,147 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
     leaveCriticalSection;
 
     return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetVolume
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
+(
+    X_CDirectSoundStream*   pThis,
+    LONG                    lVolume)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(lVolume)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume, pThis->Xb_VolumeMixbin);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetPitch
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetPitch)
+(
+    X_CDirectSoundStream*   pThis,
+    LONG                    lPitch)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(lPitch)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetLFO
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
+(
+    X_CDirectSoundStream*   pThis,
+    LPCDSLFODESC            pLFODesc) {
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pLFODesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(IDirectSoundStream_SetLFO)(pThis, pLFODesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetEG
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
+(
+    X_CDirectSoundStream*   pThis,
+    LPVOID                  pEnvelopeDesc)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pEnvelopeDesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(IDirectSoundStream_SetEG)(pThis, pEnvelopeDesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetFilter
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFilter)
+(
+    X_CDirectSoundStream*   pThis,
+    X_DSFILTERDESC*         pFilterDesc)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pFilterDesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetFilter)(pThis, pFilterDesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwHeadroom)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(dwHeadroom)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)(pThis, dwHeadroom);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetFrequency
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFrequency)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwFrequency)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(dwFrequency)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetMixBins
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
+(
+    X_CDirectSoundStream*   pThis,
+    PVOID                   pMixBins)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pMixBins)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(IDirectSoundStream_SetMixBins)(pThis, pMixBins);
 }
