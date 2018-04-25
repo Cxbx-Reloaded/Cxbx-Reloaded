@@ -89,6 +89,19 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice8          **ppReturnedDeviceInterface
 );
 
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_16)
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    DWORD                       Unknown
+);
+
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_4)
+(
+    DWORD                        Unknown
+);
+
 // ******************************************************************
 // * patch: IDirect3DResource8_IsBusy
 // ******************************************************************
@@ -158,6 +171,8 @@ HRESULT WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
     DWORD                       Index
 );
 
+HRESULT __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_GetVisibilityTestResult
 // ******************************************************************
@@ -182,6 +197,8 @@ VOID WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     DWORD                       Address
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_LoadVertexShader_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShader
 // ******************************************************************
@@ -190,6 +207,9 @@ VOID WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     DWORD                       Handle,
     DWORD                       Address
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_0)();
+VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)();
 
 // ******************************************************************
 // * patch: D3D_KickOffAndWaitForIdle
@@ -308,6 +328,8 @@ VOID WINAPI EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
     D3DXVECTOR4 *pOffset,
     D3DXVECTOR4 *pScale
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetShaderConstantMode
@@ -573,6 +595,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTexture_4)
 (
 	X_D3DBaseTexture  *pTexture
 );
+
 // ******************************************************************
 // * patch: D3DDevice_SwitchTexture
 // ******************************************************************
@@ -1292,6 +1315,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource)
     UINT                Stride
 );
 
+VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource_4)
+(
+    UINT                Stride
+);
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShader
 // ******************************************************************
@@ -1418,6 +1446,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetPalette)
     X_D3DPalette *pPalette
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetPalette_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
 // ******************************************************************
@@ -1425,6 +1455,8 @@ void WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
 (
     DWORD         Filter
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SetFlickerFilter_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetSoftDisplayFilter
@@ -1469,6 +1501,8 @@ VOID WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
 (
     DWORD Handle
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_DeleteVertexShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShaderDirect

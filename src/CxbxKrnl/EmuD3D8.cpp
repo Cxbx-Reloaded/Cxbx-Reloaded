@@ -2263,6 +2263,62 @@ void CxbxUpdateActiveIndexBuffer
 		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 }
 
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passed unknown parameters
+// Test-case: Ninja Gaiden
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
+(
+    DWORD                        Unknown
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Unknown)
+		LOG_FUNC_END;
+
+	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (DWORD));
+	HRESULT hRet = XB_Direct3D_CreateDevice_4(Unknown);
+
+	// Set g_XboxD3DDevice to point to the Xbox D3D Device
+	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
+		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
+	}
+
+    return hRet;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passed unknown parameters
+// Test-case: Battle Engine Aquila
+HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    DWORD                       Unknown
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(Unknown)
+		LOG_FUNC_END;
+
+	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_16, (UINT, D3DDEVTYPE, HWND, DWORD));
+	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, Unknown);
+
+	// Set g_XboxD3DDevice to point to the Xbox D3D Device
+	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
+		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
+	}
+
+    return hRet;
+}
+
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
 // ******************************************************************
@@ -2413,6 +2469,24 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 	LOG_UNIMPLEMENTED();
 }
 
+// LTCG specific D3DDevice_EndVisibilityTest function...
+// This uses a custom calling convention where parameter is passed in EAX
+// UNTESTED - Need test-case!
+HRESULT __stdcall XTL::EMUPATCH(D3DDevice_EndVisibilityTest_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD                       Index;
+
+	__asm {
+		mov Index, eax
+	}
+
+	return EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_EndVisibilityTest
 // ******************************************************************
@@ -2476,6 +2550,31 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     return D3D_OK;
 }
 
+// LTCG specific D3DDevice_LoadVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Ninja Gaiden
+VOID __stdcall XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
+	__asm {
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_LoadVertexShader
+		mov eax, 0
+		push returnAddr
+		ret
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_LoadVertexShader
 // ******************************************************************
@@ -2505,6 +2604,51 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
             g_VertexShaderSlots[i] = Handle;
         }
     }
+}
+
+// LTCG specific D3DDevice_SelectVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX, EBX
+// Test-case: Star Wars - Battlefront
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+    DWORD                       Handle;
+    DWORD                       Address;
+
+	__asm {
+		mov Address, eax
+		mov Handle, ebx
+	}
+
+	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
+}
+
+// LTCG specific D3DDevice_SelectVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX
+// UNTESTED - Need test-case!
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_4)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
+	__asm {
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_SelectVertexShader
+		mov eax, 0
+		push returnAddr
+		ret
+	}
 }
 
 // ******************************************************************
@@ -2876,6 +3020,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 
         hRet = D3D_OK;
     }
+}
+
+// LTCG specific D3DDevice_GetViewportOffsetAndScale function...
+// This function is still not working so should be investigated...
+// This uses a custom calling convention where parameter is passed in EDX, ECX
+// Test-case: RalliSport Challenge 2
+VOID __stdcall XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)
+(
+)
+{
+	//FUNC_EXPORTS;
+
+    D3DXVECTOR4 *pOffset;
+    D3DXVECTOR4 *pScale;
+
+	__asm {
+		mov pScale, ecx
+		mov pOffset, edx
+	}
+
+	return EMUPATCH(D3DDevice_GetViewportOffsetAndScale)(pOffset, pScale);
 }
 
 // ******************************************************************
@@ -5939,6 +6104,44 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	ForceResourceRehash(pPixelContainer);
 }
 
+
+// LTCG specific D3DDevice_SetStreamSource function...
+// This uses a custom calling convention where parameter is passed in EBX, EAX
+// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
+// Test-case: Ninja Gaiden
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
+(
+    UINT                Stride
+)
+{
+	FUNC_EXPORTS
+
+    UINT                StreamNumber;
+    X_D3DVertexBuffer  *pStreamData;
+
+	__asm {
+		mov pStreamData, ebx
+		mov StreamNumber, eax
+	}
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(StreamNumber)
+	//	LOG_FUNC_ARG(pStreamData)
+	//	LOG_FUNC_ARG(Stride)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_SetStreamSource_4(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_4, (UINT, X_D3DVertexBuffer*, UINT));
+	//XB_D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
+
+	if (StreamNumber < 16) {
+		g_D3DStreams[StreamNumber] = pStreamData;
+		g_D3DStreamStrides[StreamNumber] = Stride;
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetStreamSource
 // ******************************************************************
@@ -6590,6 +6793,31 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->SetRenderTarget");
 }
 
+// LTCG specific D3DDevice_SetPalette function...
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Ninja Gaiden
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetPalette_4)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	static uint32 returnAddr;
+
+#ifdef _DEBUG_TRACE
+		__asm add esp, 4
+#endif
+
+	__asm {
+		pop returnAddr
+		push eax
+		call EmuPatch_D3DDevice_SetPalette
+		mov eax, 0
+		push returnAddr
+		ret
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetPalette
 // ******************************************************************
@@ -6679,6 +6907,24 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 	RETURN(pData);
 }
 
+// LTCG specific D3DDevice_SetFlickerFilter function...
+// This uses a custom calling convention where parameter is passed in ESI
+// Test-case: Metal Wolf Chaos
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetFlickerFilter_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD         Filter;
+
+	__asm {
+		mov Filter, esi
+	}
+
+	return EMUPATCH(D3DDevice_SetFlickerFilter)(Filter);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
 // ******************************************************************
@@ -6739,6 +6985,24 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
     }
 
     
+}
+
+// LTCG specific D3DDevice_DeleteVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX
+// UNTESTED - Need test-case!
+VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Handle;
+
+	__asm {
+		mov Handle, eax
+	}
+
+	return EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
 }
 
 // ******************************************************************
