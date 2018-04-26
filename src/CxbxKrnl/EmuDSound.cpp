@@ -475,36 +475,37 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     xboxkrnl::LARGE_INTEGER getTime;
     xboxkrnl::KeQuerySystemTime(&getTime);
 
-    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
-    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
-        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*pDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
+    XTL::X_CDirectSoundBuffer* *ppDSBuffer = g_pDSoundBufferCache;
+    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, ppDSBuffer++) {
+        if ((*ppDSBuffer) == nullptr || (*ppDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*ppDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
             continue;
         }
+        XTL::X_CDirectSoundBuffer* pThis = *ppDSBuffer;
         // However there's a chance of locked buffers has been set which needs to be unlock.
-        DSoundGenericUnlock((*pDSBuffer)->EmuFlags,
-                            (*pDSBuffer)->EmuDirectSoundBuffer8,
-                            (*pDSBuffer)->EmuBufferDesc,
-                            (*pDSBuffer)->Host_lock,
-                            (*pDSBuffer)->X_BufferCache,
-                            (*pDSBuffer)->X_lock.dwLockOffset,
-                            (*pDSBuffer)->X_lock.dwLockBytes1,
-                            (*pDSBuffer)->X_lock.dwLockBytes2);
+        DSoundGenericUnlock(pThis->EmuFlags,
+                            pThis->EmuDirectSoundBuffer8,
+                            pThis->EmuBufferDesc,
+                            pThis->Host_lock,
+                            pThis->X_BufferCache,
+                            pThis->X_lock.dwLockOffset,
+                            pThis->X_lock.dwLockBytes1,
+                            pThis->X_lock.dwLockBytes2);
 
         // TODO: Do we need this in async thread loop?
-        if ((*pDSBuffer)->Xb_rtPauseEx != 0 && (*pDSBuffer)->Xb_rtPauseEx <= getTime.QuadPart) {
-            (*pDSBuffer)->Xb_rtPauseEx = 0LL;
-            (*pDSBuffer)->EmuFlags ^= DSE_FLAG_PAUSE;
-            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
+            pThis->Xb_rtPauseEx = 0LL;
+            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         }
     }
 
     // Actually, DirectSoundStream need to process buffer packets here.
-    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+    XTL::X_CDirectSoundStream* *ppDSStream = g_pDSoundStreamCache;
+    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, ppDSStream++) {
+        if ((*ppDSStream) == nullptr || (*ppDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        XTL::X_CDirectSoundStream* pThis = *pDSStream;
+        XTL::X_CDirectSoundStream* pThis = *ppDSStream;
 
         // TODO: Do we need this in async thread loop?
         if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
