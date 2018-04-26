@@ -42,7 +42,7 @@
 // * [4928] Shin Megami Tensei - Nine        |   100%    | Only has 80% of the library compiled with xbe build.
 // * [5233] Midtown Madness 3                |    50%    | Only has 50%-ish of the library compiled with xbe build.
 // * [5455] Freaky Flyers                    |    50%    | Only has 50%-ish of the library compiled with xbe build.
-// * [5659] Ninja Gaiden                     |    50%    | Only has a few library.
+// * [5659] Ninja Gaiden                     |    50%    | With Intergrated Hotfixes. Only has a few library.
 // * [5849] Grand Theft Auto - San Andreas   |   100%    | Only has 50%-ish of the library compiled with xbe build.
 
 // * About the number of OOVPA
@@ -201,7 +201,7 @@ OOVPATable D3D8LTCG_OOVPAV2[] = {
 	REGISTER_OOVPAS(D3DDevice_SetTexture_4, PATCH, 2024, 2036),
 	REGISTER_OOVPAS(D3DDevice_SetTile_0, UNPATCHED, 2024, 2036, 2048, 2060, 2072),
 	REGISTER_OOVPAS(D3DDevice_SetTransform, PATCH, 1024, 1048),
-	REGISTER_OOVPAS(D3DDevice_SetTransform_0, PATCH, 2024, 2048, 2060),
+	REGISTER_OOVPAS(D3DDevice_SetTransform_0, PATCH, 2024, 2048, 2060, 2072),
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2f, PATCH, 1024, 1036, 1048),
 	REGISTER_OOVPAS(D3DDevice_SetVertexData2s, PATCH, 1024, 1036, 1048),
 	REGISTER_OOVPAS(D3DDevice_SetVertexData4f, PATCH, 1024, 1036),
