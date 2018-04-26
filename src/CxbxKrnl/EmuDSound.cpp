@@ -2015,8 +2015,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
             dwStatusXbox |= X_DSSSTATUS_PLAYING;
 
         } else {
-            // TODO: Might not be accurate. Doc state this flag is set when data is queued and paused.
+
             if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+
+            // Set to paused when has packet(s) queued and is not processing.
+            } else if (pThis->Host_BufferPacketArray.size() != 0 && pThis->Host_isProcessing == false) {
                 dwStatusXbox |= X_DSSSTATUS_PAUSED;
             }
 
