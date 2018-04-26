@@ -924,7 +924,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     int v = 0;
     X_CDirectSoundBuffer** ppDSoundBufferCache = nullptr;
     for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-        if (g_pDSoundBufferCache[v] == 0) {
+        if (g_pDSoundBufferCache[v] == nullptr) {
             ppDSoundBufferCache = &g_pDSoundBufferCache[v];
             break;
         }
@@ -1724,74 +1724,81 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 		LOG_FUNC_ARG_OUT(ppStream)
 		LOG_FUNC_END;
 
-    // TODO: Garbage Collection
-    *ppStream = new X_CDirectSoundStream();
-
-    DSBUFFERDESC DSBufferDesc = { 0 };
-
-
-    DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
-
-    if (pdssd->dwFlags & (~dwAcceptableMask)) {
-        EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+    HRESULT hRet = DS_OK;
+    int v = 0;
+    X_CDirectSoundStream** ppDSoundStreamCache = nullptr;
+    for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
+        if (ppDSoundStreamCache[v] == nullptr) {
+            ppDSoundStreamCache = &ppDSoundStreamCache[v];
+            break;
+        }
     }
-    DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
-    //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-    DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
+    //If out of space, return out of memory.
+    if (ppDSoundStreamCache == nullptr) {
 
-    DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
-    (*ppStream)->Xb_rtFlushEx = 0LL;
+        hRet = DSERR_OUTOFMEMORY;
+        *ppStream = xbnullptr;
+    } else {
+        // TODO: Garbage Collection
+        *ppStream = new X_CDirectSoundStream();
 
-    // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-    GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+        DSBUFFERDESC DSBufferDesc = { 0 };
 
-    // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
-    // Allocate at least 10 second worth of bytes in PCM format.
-    DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 10;
-    (*ppStream)->EmuBufferDesc = DSBufferDesc;
 
-    (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
+        DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
-    (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
-    (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
-    (*ppStream)->Host_dwWriteOffsetNext = 0;
-    (*ppStream)->Host_isProcessing = false;
-    (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
-    (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
-    //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
+        if (pdssd->dwFlags & (~dwAcceptableMask)) {
+            EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+        }
+        DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+        //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+        DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
 
-    DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
-
-    DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
-    if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
-        DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
-        (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
-    }
-
-    DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
-
-    // Pre-set volume to enforce silence if one of audio codec is disabled.
-    HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
-                                      (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
-
-    // cache this sound stream
-    {
-        int v = 0;
-        for (v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
-            if (g_pDSoundStreamCache[v] == 0) {
-                g_pDSoundStreamCache[v] = *ppStream;
-                break;
-            }
+        if ((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0) {
+            DSBufferDesc.dwFlags |= DSBCAPS_CTRL3D;
         }
 
-        if (v == SOUNDSTREAM_CACHE_SIZE) {
-            CxbxKrnlCleanup("SoundStream cache out of slots!");
+        DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
+        (*ppStream)->Xb_rtFlushEx = 0LL;
+
+        // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
+        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+
+        // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
+        // Allocate at least 10 second worth of bytes in PCM format.
+        DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 10;
+        (*ppStream)->EmuBufferDesc = DSBufferDesc;
+
+        (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
+
+        (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
+        (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
+        (*ppStream)->Host_dwWriteOffsetNext = 0;
+        (*ppStream)->Host_isProcessing = false;
+        (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
+        (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
+        //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
+
+        DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+
+        DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+        if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
+            DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
+            (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
         }
+
+        DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
+
+        // Pre-set volume to enforce silence if one of audio codec is disabled.
+        HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
+            (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
+
+        *ppDSoundStreamCache = *ppStream;
     }
 
     leaveCriticalSection;
 
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
