@@ -335,10 +335,10 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 				if (value & AV_FLAGS_HDTV_480p) {
 					SendMessage(GetDlgItem(hWndDlg, IDC_EE_480P), BM_SETCHECK, BST_CHECKED, 0);
 				}
-				else if (value & AV_FLAGS_HDTV_720p) {
+				if (value & AV_FLAGS_HDTV_720p) {
 					SendMessage(GetDlgItem(hWndDlg, IDC_EE_720P), BM_SETCHECK, BST_CHECKED, 0);
 				}
-				else if (value & AV_FLAGS_HDTV_1080i) {
+				if (value & AV_FLAGS_HDTV_1080i) {
 					SendMessage(GetDlgItem(hWndDlg, IDC_EE_1080I), BM_SETCHECK, BST_CHECKED, 0);
 				}
 			}
