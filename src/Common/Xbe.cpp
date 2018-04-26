@@ -48,6 +48,8 @@ namespace xboxkrnl
 #include "devices\LED.h" // For LED::Sequence
 #include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "CxbxKrnl/EmuShared.h" // Include this to avoid including EmuXapi.h and EmuD3D8.h
+#include "CxbxKrnl\EmuSha.h" // For the SHA functions
+#include "CxbxKrnl\EmuRsa.h" // For the RSA functions
 
 namespace fs = std::experimental::filesystem;
 
@@ -375,6 +377,17 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
         printf("OK\n");
     }
 
+	// read the header to calculate the rsa/sha1 signature against
+	{
+		printf("Xbe::Xbe: Reading Signature Header...");
+
+		fseek(XbeFile, sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature), SEEK_SET);
+		m_SignatureHeader = new uint08[m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature))];
+		fread(m_SignatureHeader, m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature)), 1, XbeFile);
+
+		printf("OK\n");
+	}
+
 cleanup:
 
     if (HasError())
@@ -406,6 +419,7 @@ Xbe::~Xbe()
     delete[] m_szSectionName;
     delete[] m_SectionHeader;
     delete[] m_HeaderEx;
+	delete[] m_SignatureHeader;
 }
 
 // export to Xbe file
@@ -569,6 +583,7 @@ void Xbe::ConstructorInit()
     m_XAPILibraryVersion   = 0;
     m_TLS                  = 0;
     m_bzSection            = 0;
+	m_SignatureHeader      = 0;
 }
 
 // better time
@@ -803,4 +818,31 @@ const char *Xbe::GameRegionToString()
 const wchar_t *Xbe::GetUnicodeFilenameAddr()
 {
     return (const wchar_t *)GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
+}
+
+bool Xbe::CheckXbeSignature()
+{
+	// Workaround for nxdk (and possibly oxdk?): xbe's built with nxdk have the digital signature set to all zeros, which will lead
+	// to a crash during its decryption in RSAdecrypt. Detect this condition and skip the check if true
+	{
+		UCHAR Dummy[256] = { 0 };
+		if (memcmp(m_Header.pbDigitalSignature, Dummy, 256) == 0) {
+			return false;
+		}
+	}
+
+	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
+	UCHAR SHADigest[A_SHA_DIGEST_LEN];
+	unsigned char crypt_buffer[256];
+	RSA_PUBLIC_KEY key;
+	memcpy(key.Default, (void*)xboxkrnl::XePublicKeyData, 284);
+
+	CalcSHA1Hash(SHADigest, m_SignatureHeader, HeaderDigestSize);
+
+	RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, key);
+	if (!Verifyhash(SHADigest, crypt_buffer, key)) {
+		return false; // signature check failed
+	}
+
+	return true; // success
 }

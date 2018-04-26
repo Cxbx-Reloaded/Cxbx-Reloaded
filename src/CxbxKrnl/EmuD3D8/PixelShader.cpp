@@ -892,6 +892,7 @@ struct PSH_XBOX_SHADER {
 	void ConvertXDMToNative(int i);
 	void ConvertXDDToNative(int i);
 	void ConvertXFCToNative(int i);
+	bool FixConstantModifiers();
 	bool CombineInstructions();
 	bool RemoveNops();
 	bool SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur);
@@ -2164,8 +2165,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (RemoveNops())
     Log("RemoveNops");
 
-  if (RemoveUselessWrites())
+  while (RemoveUselessWrites()) {
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Result))
     Log("ConvertConstantsToNative");
@@ -2173,8 +2177,11 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   ConvertXboxOpcodesToNative(pPSDef);
   Log("ConvertXboxOpcodesToNative");
 
-  if (RemoveUselessWrites()) // twice!
+  while (RemoveUselessWrites()) { // again
     Log("RemoveUselessWrites");
+    if (RemoveNops())
+      Log("RemoveNops");
+  }
 
   // Resolve all differences :
   if (FixupPixelShader())
@@ -2830,13 +2837,13 @@ bool PSH_XBOX_SHADER::ConvertXMMToNative_Except3RdOutput(int i)
   if (Cur->Output[0].Type == PARAM_DISCARD) 
   {
     Cur->Output[0].Type = PARAM_R;
-    Cur->Output[0].Address = FakeRegNr_Xmm1;
+    Cur->Output[0].Address = FakeRegNr_Xmm1; // 'r4'
   }
 
   if (Cur->Output[1].Type == PARAM_DISCARD) 
   {
     Cur->Output[1].Type = PARAM_R;
-    Cur->Output[1].Address = FakeRegNr_Xmm2;
+    Cur->Output[1].Address = FakeRegNr_Xmm2; // 'r5'
   }
 
   // Generate a MUL for the 1st output :
@@ -2972,7 +2979,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
       {
         // Change SUM into a fake register, which will be resolved later :
         CurArg->Type = PARAM_R;
-        CurArg->Address = FakeRegNr_Sum;
+        CurArg->Address = FakeRegNr_Sum; // 'r2'
         NeedsSum = true;
 		break;
       }
@@ -2981,7 +2988,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
       {
         // Change PROD into a fake register, which will be resolved later :
         CurArg->Type = PARAM_R;
-        CurArg->Address = FakeRegNr_Prod;
+        CurArg->Address = FakeRegNr_Prod; // 'r3'
         NeedsProd = true;
 		break;
 	  }
@@ -3000,7 +3007,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates r0*v1 :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA);
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA); // 'r2'
 
     Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGB);
     Ins.Parameters[1].SetRegister(PARAM_V, 1, MASK_RGB);
@@ -3022,7 +3029,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates E*F :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA);
+    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA); // 'r3'
     Ins.Parameters[0] = Cur.Parameters[4]; // E
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
@@ -3150,6 +3157,53 @@ void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
         Cur->Parameters[j].SetRegister(aDstRegType, aDstAddress, Cur->Parameters[j].Mask);
   }
 }
+
+bool PSH_XBOX_SHADER::FixConstantModifiers()
+{
+	int i;
+	PPSH_INTERMEDIATE_FORMAT Cur;
+
+	bool Result = false;
+
+	// Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
+	i = IntermediateCount;
+	while (i > 0)
+	{
+		--i;
+		Cur = &(Intermediate[i]);
+		if (!Cur->IsArithmetic())
+			continue;
+		
+		if (Cur->Opcode == PO_MOV)
+			continue;
+
+		// Detect modifiers on constant arguments
+		for (int p = 0; p < 7; p++) {
+			if ((Cur->Parameters[p].Type == PARAM_C)
+				&& (Cur->Parameters[p].Modifiers != 0)) {
+				// Insert a MOV to the destination register,
+				// so the modifier can be applied on that,
+				// instead of on this constant argument.
+				PSH_INTERMEDIATE_FORMAT Ins = {};
+
+				Ins.Initialize(PO_MOV);
+				// No need to check if output is a constant - those cannot be assigned to anyway
+				Ins.Output[0] = Cur->Output[0];
+				// Move constant into register
+				Ins.Parameters[0] = Cur->Parameters[p];
+				Cur->Parameters[p] = Ins.Output[0];
+				// Apply modifier to register instead of constant
+				Cur->Parameters[p].Modifiers = Ins.Parameters[0].Modifiers;
+				Ins.Parameters[0].Modifiers = 0;
+				Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
+				InsertIntermediate(&Ins, i);
+				DbgPrintf("; Used intermediate move to avoid constant modifier\n");
+				Result = true;
+			}
+		}
+	}
+	return Result;
+} // FixConstantModifiers
 
 //bool PSH_XBOX_SHADER::CombineInstructions()
 
@@ -3428,7 +3482,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
     }
 
     // Fix Crash bandicoot xfc leftover r3 :
-    if (Op0->Output[0].IsRegister(PARAM_R, FakeRegNr_Prod))
+    if (Op0->Output[0].IsRegister(PARAM_R, FakeRegNr_Prod)) // 'r3'
     {
       // The final combiner uses r3, try to use r1 instead :
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
@@ -3660,6 +3714,9 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
 
   if (MoveRemovableParametersRight())
     Result = true;
+
+  if (FixConstantModifiers())
+	  Result = true;
 
   if (CombineInstructions())
     Result = true;
@@ -4050,8 +4107,8 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
 
 #if 0 // Once PS.1.4 can be generated, enable this :
-	XTL::D3DCAPS8 g_D3DCaps = {};
-	if (g_pD3DDevice8->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
+	XTL::D3DCAPS g_D3DCaps = {};
+	if (g_pD3DDevice->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
 		PSVersion = g_D3DCaps.PixelShaderVersion;
 	}
 #endif
@@ -4130,11 +4187,11 @@ static const
     pFunction = (DWORD*)(pShader->GetBufferPointer());
     if (hRet == D3D_OK) {
       // redirect to windows d3d
-      hRet = g_pD3DDevice8->CreatePixelShader
+      hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
 #ifdef CXBX_USE_D3D9
-        PIDirect3DPixelShader9(&(Result.ConvertedHandle)) {$MESSAGE 'fixme'}
+        (XTL::IDirect3DPixelShader9**)(&(Result.ConvertedHandle)) //fixme
 #else
         /*out*/&(Result.ConvertedHandle)
 #endif
@@ -4219,15 +4276,15 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
 
 #ifdef CXBX_USE_D3D9
-    g_pD3DDevice.GetPixelShader(/*out*/PIDirect3DPixelShader9(&CurrentPixelShader));
+    g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader9**)(&CurrentPixelShader));
 #else
-    g_pD3DDevice8->GetPixelShader(/*out*/&CurrentPixelShader);
+    g_pD3DDevice->GetPixelShader(/*out*/&CurrentPixelShader);
 #endif
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
 #ifdef CXBX_USE_D3D9
-		g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
 #else
-		g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
 
     // Note : We set the constants /after/ setting the shader, so that any
@@ -4258,7 +4315,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
-			g_pD3DDevice8->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
+			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
@@ -4281,9 +4338,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
 #ifdef CXBX_USE_D3D9
-        g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(&fColor), 1);
+        g_pD3DDevice->SetPixelShaderConstantF(Register_, (float*)(&fColor), 1);
 #else
-		g_pD3DDevice8->SetPixelShaderConstant(Register_, &fColor, 1);
+		g_pD3DDevice->SetPixelShaderConstant(Register_, &fColor, 1);
 #endif
       }
     }
@@ -4292,9 +4349,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   {
     ConvertedPixelShaderHandle = 0;
 #ifdef CXBX_USE_D3D9
-	g_pD3DDevice8->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
 #else
-	g_pD3DDevice8->SetPixelShader(ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
   }
 }

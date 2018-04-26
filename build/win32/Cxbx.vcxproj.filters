@@ -275,6 +275,12 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
       <Filter>Hardware\X86</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgEepromConfig.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -287,9 +293,6 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\Wnd.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\import\stb\stb_image.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h">
@@ -448,9 +451,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.OOVPA.h">
       <Filter>HLEDatabase\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.OOVPA.h">
-      <Filter>HLEDatabase\D3D8LTCG</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
@@ -550,6 +550,12 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
       <Filter>Hardware\X86</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\DlgEepromConfig.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -572,9 +578,6 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.5455.inl">
       <Filter>HLEDatabase\XNet</Filter>
-    </None>
-    <None Include="..\..\resource\Cxbx.ico">
-      <Filter>Shared</Filter>
     </None>
     <None Include="..\..\resource\Logo.bmp">
       <Filter>Shared</Filter>
@@ -973,5 +976,9 @@
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
       <Filter>Shared</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\resource\Cxbx-R.ico" />
+    <Image Include="..\..\resource\Logo-License-CC4.bmp" />
   </ItemGroup>
 </Project>

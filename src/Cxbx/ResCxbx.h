@@ -1,6 +1,6 @@
-//{{NO_DEPENDENCIES}}
+﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\Luke\Desktop\Projects\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -10,6 +10,7 @@
 #define IDD_CONTROLLER_CFG              111
 #define IDD_VIDEO_CFG                   113
 #define IDD_AUDIO_CFG                   114
+#define IDD_EEPROM_CFG                  115
 #define IDR_JPEG_ABOUT                  116
 #define IDR_JPEG_SPLASH                 118
 #define IDD_ABOUT                       119
@@ -60,10 +61,30 @@
 #define IDC_AC_ACCEPT                   1058
 #define IDC_AC_CANCEL                   1059
 #define IDC_AC_AUDIO_ADAPTER            1060
-#define IDC_AC_LEGACY_AUDIO_HACK        1061
 #define IDC_AC_PCM                      1062
 #define IDC_AC_XADPCM                   1063
 #define IDC_AC_UNKNOWN_CODEC            1064
+#define IDC_EE_CONFOUNDER               1065
+#define IDC_EE_HDDKEY                   1066
+#define IDC_EE_XBOX_REGION              1067
+#define IDC_EE_SERIAL_NUMBER            1068
+#define IDC_EE_MAC_ADDRESS              1069
+#define IDC_EE_ONLINE_KEY               1070
+#define IDC_EE_AVREGION                 1071
+#define IDC_EE_LANGUAGE                 1072
+#define IDC_EE_AVSETTINGS               1073
+#define IDC_EE_AUDIOSETTINGS            1074
+#define IDC_EE_GAME_PRTL_CRTL           1075
+#define IDC_EE_PRTL_PASS                1076
+#define IDC_EE_MOVIE_PRTL_CRTL          1077
+#define IDC_EE_DVDREGION                1078
+#define IDC_EE_ACCEPT                   1079
+#define IDC_EE_CANCEL                   1080
+#define IDC_EE_RESET                    1081
+#define IDC_EE_PAL60HZ                  1082
+#define IDC_EE_480P                     1083
+#define IDC_EE_720P                     1084
+#define IDC_EE_1080I                    1085
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -87,6 +108,7 @@
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048
+#define ID_SETTINGS_CONFIG_EEPROM       40049
 #define ID_FILE_RXBE_0                  40050
 #define ID_FILE_RXBE_1                  40051
 #define ID_FILE_RXBE_2                  40052
@@ -111,14 +133,15 @@
 #define ID_EMULATION_STARTDEBUGGER      40092
 #define ID_FPS                          40096
 #define ID_HACKS_UNCAPFRAMERATE         40097
-#define ID_HACKS_RUNXBOXTHREADSONALLCORES         40098
+#define ID_HACKS_RUNXBOXTHREADSONALLCORES 40098
+#define ID_HACKS_PATCHCPUFREQUENCY      40099
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         40097
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           104

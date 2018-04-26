@@ -36,6 +36,7 @@
 #define AV_FLAGS_HDTV_480p                0x00080000
 #define AV_HDTV_MODE_MASK                 0x000E0000 // Exclude AV_FLAGS_WIDESCREEN !
 
+#define AV_FLAGS_NORMAL                   0x00000000
 #define AV_FLAGS_WIDESCREEN               0x00010000
 #define AV_FLAGS_LETTERBOX                0x00100000
 #define AV_ASPECT_RATIO_MASK              0x00110000 // = AV_FLAGS_WIDESCREEN | AV_FLAGS_LETTERBOX
@@ -438,7 +439,7 @@ XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[ALTERNATE_SIGNA
 // ******************************************************************
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
-XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
+XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyData[284];
 
 // ******************************************************************
 // * 0x0165 - IdexChannelObject

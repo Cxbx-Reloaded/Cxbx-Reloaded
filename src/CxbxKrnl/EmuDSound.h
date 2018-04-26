@@ -37,7 +37,6 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 
 #include <dsound.h>
-#include <d3dx8math.h>
 #include "CxbxKrnl.h"
 #include "Emu.h"
 

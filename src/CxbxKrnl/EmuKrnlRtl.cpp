@@ -144,8 +144,7 @@ static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_cri
 
 DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
 {
-	DWORD ret = mbstowcs(nullptr, str->Buffer, str->Length);
-	return ret + sizeof(WCHAR); // + for the terminating null character
+	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
 
 // ******************************************************************
@@ -478,18 +477,18 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 		LOG_FUNC_ARG(Pattern)
 		LOG_FUNC_END;
 
-	SIZE_T result = Length;
+	PULONG ptr = (PULONG)Source;
+	ULONG_PTR len = Length / sizeof(ULONG);
+	ULONG_PTR i;
 
-	// Compare 32 bits at a time
-	// Any extra bytes are ignored
-	uint32_t numDwords = Length >> 2;
-	uint32_t *pDwords = (uint32_t *)Source;
-	for (uint32_t i = 0; i < numDwords; i++) {
-		if (pDwords[i] != Pattern) {
-			result = i;
+	for (i = 0; i < len; i++) {
+		if (*ptr != Pattern)
 			break;
-		}
+
+		ptr++;
 	}
+
+	SIZE_T result = (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
 
 	RETURN(result);
 }
@@ -832,38 +831,38 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = TRUE;
-
+	BOOLEAN bRet = FALSE;
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
-	if (l1 != l2) {
-		return FALSE;
-	}
 
-	WCHAR *p1 = (WCHAR*)(String1->Buffer);
-	WCHAR *p2 = (WCHAR*)(String2->Buffer);
-	WCHAR *last = p1 + l1;
+	if (l1 == l2) {
+		WCHAR *p1 = (WCHAR*)(String1->Buffer);
+		WCHAR *p2 = (WCHAR*)(String2->Buffer);
+		WCHAR *last = p1 + (l1 / sizeof(WCHAR));
 
-	if (CaseInSensitive) {
-		while (p1 < last) {
-			WCHAR c1 = *p1++;
-			WCHAR c2 = *p2++;
-			if (c1 != c2) {
-				c1 = towupper(c1);
-				c2 = towupper(c2);
+		bRet = TRUE;
+
+		if (CaseInSensitive) {
+			while (p1 < last) {
+				WCHAR c1 = *p1++;
+				WCHAR c2 = *p2++;
 				if (c1 != c2) {
-					return FALSE;
+					c1 = towupper(c1);
+					c2 = towupper(c2);
+					if (c1 != c2) {
+						bRet = FALSE;
+						break;
+					}
 				}
 			}
 		}
-
-		return TRUE;
-	}
-
-	while (p1 < last) {
-		if (*p1++ != *p2++) {
-			bRet = FALSE;
-			break;
+		else {
+			while (p1 < last) {
+				if (*p1++ != *p2++) {
+					bRet = FALSE;
+					break;
+				}
+			}
 		}
 	}
 

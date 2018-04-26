@@ -66,6 +66,7 @@ namespace xboxkrnl
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
+#include "EmuSha.h" // For the SHA1 functions
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
@@ -246,6 +247,9 @@ void RestoreExeImageHeader()
 
 typedef const char* (CDECL *LPFN_WINEGETVERSION)(void);
 LPFN_WINEGETVERSION wine_get_version;
+
+// Forward declaration to avoid moving the definition of LoadXboxKeys
+void LoadXboxKeys(std::string path);
 
 // Returns the Win32 error in string format. Returns an empty string if there is no error.
 std::string CxbxGetErrorCodeAsString(DWORD errorCode)
@@ -567,7 +571,6 @@ void PrintCurrentConfigurationLog()
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
 		printf("Audio Adapter: %s\n", XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("Legacy Audio Hack is %s\n", XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
 		printf("PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
 		printf("XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
 		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
@@ -579,6 +582,7 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
+		printf("Patch CPU Frequency (rdtsc): %s\n", g_PatchCpuFrequency == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -646,6 +650,36 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	}
 
 	return 0;
+}
+
+void PatchPerformanceFrequency()
+{
+	DWORD xboxFrequency = 733333333; // 733mhz
+	LARGE_INTEGER hostFrequency;
+	QueryPerformanceFrequency(&hostFrequency);
+	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
+
+	// Iterate through each CODE section
+	for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
+			continue;
+		}
+
+		printf("INIT: Searching for xbox performance frequency in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (xbaddr addr = startAddr; addr < endAddr; addr++)
+		{
+			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
+				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
+				*(uint32*)(addr) = (uint32)hostFrequency.QuadPart;
+				addr += sizeof(DWORD);
+				break;
+			}
+		}
+	}
+
+	printf("INIT: Done patching xbox performance frequency\n");
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -790,6 +824,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
 	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
 
+	// Load Per-Xbe Keys from the Cxbx-Reloaded AppData directory
+	LoadXboxKeys(szFolder_CxbxReloadedData);
+
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
@@ -810,6 +847,31 @@ void CxbxKrnlMain(int argc, char* argv[])
 		if (CxbxKrnl_Xbe->HasFatalError()) {
 			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
 			return;
+		}
+
+		// Check the signature of the xbe
+		if (CxbxKrnl_Xbe->CheckXbeSignature()) {
+			printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
+		}
+		else {
+			EmuWarning("Invalid xbe signature. Homebrew, tampered or pirated xbe?");
+		}
+
+		// Check the integrity of the xbe sections
+		for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+			uint32 RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+			if (RawSize == 0) {
+				continue;
+			}
+			unsigned char SHADigest[A_SHA_DIGEST_LEN];
+			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
+
+			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
+				EmuWarning("SHA hash of section %s doesn't match, possible section corruption", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+			}
+			else {
+				printf("[0x%X] INIT: SHA hash check of section %s successful\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+			}
 		}
 
 		// Detect XBE type :
@@ -929,7 +991,8 @@ void LoadXboxKeys(std::string path)
 
 			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
-		} else {
+		}
+		else {
 			EmuWarning("Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
@@ -1039,6 +1102,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
+		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
+		g_PatchCpuFrequency = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
@@ -1051,9 +1116,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "EmuDisk\\";
-
-	// Load Per-Xbe Keys from the Cxbx-Reloaded AppData directory
-	LoadXboxKeys(szBuffer);
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
@@ -1204,6 +1266,10 @@ __declspec(noreturn) void CxbxKrnlInit
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
+	if (g_PatchCpuFrequency) {
+		PatchPerformanceFrequency();
+	}
+
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
 
@@ -1212,7 +1278,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
 
-	EmuX86_Init();
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);

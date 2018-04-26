@@ -40,6 +40,14 @@ namespace CxbxDebugger
             }
         }
 
+        public void Trace()
+        {
+            foreach (DebuggerThread Thread in Threads)
+            {
+                Thread.UpdateContext();
+            }
+        }
+
         public void Resume()
         {
             foreach (DebuggerThread Thread in Threads)
@@ -99,8 +107,24 @@ namespace CxbxDebugger
                     Value = Data[0];
                     break;
 
+                case TypeCode.Int16:
+                    Value = BitConverter.ToInt16(Data, 0);
+                    break;
+
+                case TypeCode.UInt16:
+                    Value = BitConverter.ToUInt16(Data, 0);
+                    break;
+
+                case TypeCode.Int32:
+                    Value = BitConverter.ToInt32(Data, 0);
+                    break;
+
                 case TypeCode.UInt32:
                     Value = BitConverter.ToUInt32(Data, 0);
+                    break;
+
+                case TypeCode.Single:
+                    Value = BitConverter.ToSingle(Data, 0);
                     break;
 
                 default:
@@ -130,7 +154,7 @@ namespace CxbxDebugger
                 Address += sizeof(byte);
                 StringData.Add(chr);
             }
-            
+
             return Encoding.ASCII.GetString(StringData.ToArray());
         }
 
@@ -157,7 +181,7 @@ namespace CxbxDebugger
                 StringData.Add(chr1);
                 StringData.Add(chr2);
             }
-            
+
             return Encoding.Unicode.GetString(StringData.ToArray());
         }
 
@@ -170,7 +194,7 @@ namespace CxbxDebugger
 
             if (StringData == null)
                 return "";
-            
+
             return Encoding.ASCII.GetString(StringData);
         }
 
@@ -186,7 +210,7 @@ namespace CxbxDebugger
 
             return Encoding.Unicode.GetString(StringData);
         }
-        
+
         public byte[] ReadMemoryBlock(IntPtr Address, uint Size)
         {
             if (Address == IntPtr.Zero)
@@ -225,8 +249,24 @@ namespace CxbxDebugger
                     Data = new byte[] { (byte)GenericValue };
                     break;
 
+                case TypeCode.Int16:
+                    Data = BitConverter.GetBytes((short)GenericValue);
+                    break;
+
+                case TypeCode.UInt16:
+                    Data = BitConverter.GetBytes((ushort)GenericValue);
+                    break;
+
+                case TypeCode.Int32:
+                    Data = BitConverter.GetBytes((int)GenericValue);
+                    break;
+
                 case TypeCode.UInt32:
                     Data = BitConverter.GetBytes((uint)GenericValue);
+                    break;
+
+                case TypeCode.Single:
+                    Data = BitConverter.GetBytes((float)GenericValue);
                     break;
 
                 default:
@@ -237,6 +277,14 @@ namespace CxbxDebugger
             {
                 WriteMemoryInternal(Address, Data);
             }
+        }
+
+        public bool WriteMemoryBlock(IntPtr Address, byte[] Data)
+        {
+            if (Address == IntPtr.Zero)
+                return false;
+
+            return WriteMemoryInternal(Address, Data);
         }
     }
 }

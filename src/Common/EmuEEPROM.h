@@ -92,6 +92,66 @@ static const EEPROMInfo EEPROMInfos[] = {
 	{ XC_END_MARKER }
 };
 
+// ******************************************************************
+// * EEPROM specific constants
+// ******************************************************************
+
+// Game region codes
+#define XC_GAME_REGION_NA             0x00000001
+#define XC_GAME_REGION_JAPAN          0x00000002
+#define XC_GAME_REGION_RESTOFWORLD    0x00000004
+#define XC_GAME_REGION_MANUFACTURING  0x80000000
+
+// Language ID
+#define XC_LANGUAGE_NONE            0
+#define XC_LANGUAGE_ENGLISH         1
+#define XC_LANGUAGE_JAPANESE        2
+#define XC_LANGUAGE_GERMAN          3
+#define XC_LANGUAGE_FRENCH          4
+#define XC_LANGUAGE_SPANISH         5
+#define XC_LANGUAGE_ITALIAN         6
+#define XC_LANGUAGE_KOREAN          7
+#define XC_LANGUAGE_CHINESE         8
+#define XC_LANGUAGE_PORTUGUESE      9
+#define XC_LANGUAGE_MAX             XC_LANGUAGE_PORTUGUESE + 1
+
+// Audio settings
+#define XC_AUDIO_FLAGS_STEREO       0x00000000
+#define XC_AUDIO_FLAGS_MONO         0x00000001
+#define XC_AUDIO_FLAGS_SURROUND     0x00000002
+#define XC_AUDIO_FLAGS_ENABLE_AC3   0x00010000
+#define XC_AUDIO_FLAGS_ENABLE_DTS   0x00020000
+
+// Game rating
+#define XC_PC_ESRB_ALL              0
+#define XC_PC_ESRB_ADULT            1
+#define XC_PC_ESRB_MATURE           2
+#define XC_PC_ESRB_TEEN             3
+#define XC_PC_ESRB_EVERYONE         4
+#define XC_PC_ESRB_KIDS_TO_ADULTS   5
+#define XC_PC_ESRB_EARLY_CHILDHOOD  6
+
+// Movie rating
+#define XC_PC_MAX                   0
+#define XC_PC_NC17                  1
+#define XC_PC_A                     2
+#define XC_PC_5                     3
+#define XC_PC_PG13                  4
+#define XC_PC_PG                    5
+#define XC_PC_2                     6
+#define XC_PC_G                     7
+
+// DVD region code
+#define DVD_REGION_FREE             0
+#define DVD_REGION_US               1
+#define DVD_REGION_EU               2
+#define DVD_REGION_SE_ASIA          3
+#define DVD_REGION_OCEANIA          4
+#define DVD_REGION_AFRICA           5
+#define DVD_REGION_CHINA            6
+#define DVD_REGION_RESERVED         7
+#define DVD_REGION_INTERNATIONAL    8
+
 extern xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin);
 
 extern const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index);
@@ -101,8 +161,6 @@ extern xboxkrnl::XBOX_EEPROM *EEPROM;
 extern xboxkrnl::ULONG XboxFactoryGameRegion;
 
 void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
-
-extern UCHAR EepromKey[16];
 
 #if defined(__cplusplus)
 }

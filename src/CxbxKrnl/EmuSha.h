@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuSha.h
+// *   Cxbx->CxbxKrnl->EmuSha.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,59 +27,29 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2018 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
+
 #ifndef EMUSHA_H
 #define EMUSHA_H
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
-
-#include <Windows.h>
+#include "stdint.h"
 
 #define A_SHA_DIGEST_LEN 20
 
-typedef struct {
-	ULONG Unknown[6];
-	ULONG State[5];
-	ULONG Count[2];
-	UCHAR Buffer[64];
-} SHA_CTX, *PSHA_CTX;
+typedef struct _SHA1_CTX
+{
+	uint32_t state[5];
+	uint32_t count[2];
+	unsigned char buffer[64];
+} SHA1_CTX;
 
-typedef VOID (WINAPI *FPTR_A_SHAInit)
-(
-	PSHA_CTX
-);
-
-typedef VOID(WINAPI *FPTR_A_SHAUpdate)
-(
-	PSHA_CTX,
-	const unsigned char *,
-	UINT
-);
-
-typedef VOID(WINAPI *FPTR_A_SHAFinal)
-(
-	PSHA_CTX,
-	PUCHAR
-);
-
-// ******************************************************************
-// * Exported API
-// ******************************************************************
-#define EXTERN(API) \
-extern FPTR_##API                          API
-
-EXTERN(A_SHAInit);
-EXTERN(A_SHAUpdate);
-EXTERN(A_SHAFinal);
-
-#if defined(__cplusplus)
-}
-#endif
+void SHA1Init(SHA1_CTX* context);
+void SHA1Update(SHA1_CTX* context, const unsigned char* data, uint32_t len);
+void SHA1Final(unsigned char digest[A_SHA_DIGEST_LEN], SHA1_CTX* context);
+void CalcSHA1Hash(unsigned char digest[A_SHA_DIGEST_LEN], const unsigned char* data, uint32_t len);
 
 #endif

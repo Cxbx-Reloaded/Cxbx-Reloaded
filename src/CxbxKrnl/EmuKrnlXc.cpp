@@ -41,7 +41,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For XcSHAInit, etc.
+	#include <xboxkrnl/xboxkrnl.h> // For XcSHAInit, etc.
 };
 
 #include "Logging.h" // For LOG_FUNC()
@@ -52,7 +52,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h"
+	#include "EmuNtDll.h"
 };
 
 // ******************************************************************
@@ -65,7 +65,10 @@ XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 {
 	LOG_FUNC_ONE_ARG_TYPE(PBYTE, pbSHAContext);
 
-	A_SHAInit((SHA_CTX*)pbSHAContext);
+	// The sha1 context supplied by this function has an extra 24 bytes at the beginning which are unsed by our implementation,
+	// so we skip them. The same is true for XcSHAUpdate and XcSHAFinal
+
+	SHA1Init((SHA1_CTX*)(pbSHAContext + 24));
 }
 
 // ******************************************************************
@@ -82,9 +85,9 @@ XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 		LOG_FUNC_ARG_OUT(pbSHAContext)
 		LOG_FUNC_ARG_OUT(pbInput)
 		LOG_FUNC_ARG(dwInputLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	A_SHAUpdate((SHA_CTX*)pbSHAContext, pbInput, dwInputLength);
+	SHA1Update((SHA1_CTX*)(pbSHAContext + 24), pbInput, dwInputLength);
 }
 
 // ******************************************************************
@@ -99,9 +102,9 @@ XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PBYTE, pbSHAContext)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
+	SHA1Final(pbDigest, (SHA1_CTX*)(pbSHAContext + 24));
 }
 
 // ******************************************************************
@@ -183,25 +186,25 @@ XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
 		((DWORD*)Pad2)[dwBlock] ^= ((DWORD)0x5C5C5C5C);
 	}
 
-	SHA_CTX ShaContext;
-	A_SHAInit(&ShaContext);
-	A_SHAUpdate(&ShaContext, Pad1, 64);
+	SHA1_CTX ShaContext;
+	SHA1Init(&ShaContext);
+	SHA1Update(&ShaContext, Pad1, 64);
 
 	if (cbData != 0) {
-		A_SHAUpdate(&ShaContext, pbData, cbData);
+		SHA1Update(&ShaContext, pbData, cbData);
 	}
 
 	if (cbData2 != 0) {
-		A_SHAUpdate(&ShaContext, pbData2, cbData2);
+		SHA1Update(&ShaContext, pbData2, cbData2);
 	}
 
 	BYTE Temp[64 + A_SHA_DIGEST_LEN];
-	A_SHAFinal(&ShaContext, Temp + 64);
+	SHA1Final(Temp + 64 , &ShaContext);
 	RtlCopyMemory(Temp, Pad2, 64);
 
-	A_SHAInit(&ShaContext);
-	A_SHAUpdate(&ShaContext, Temp, sizeof(Temp));
-	A_SHAFinal(&ShaContext, HmacData);
+	SHA1Init(&ShaContext);
+	SHA1Update(&ShaContext, Temp, sizeof(Temp));
+	SHA1Final(HmacData, &ShaContext);
 }
 
 // ******************************************************************

@@ -43,6 +43,9 @@
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
+#ifdef CXBX_USE_D3D9
+extern DWORD g_CachedIndexBase;
+#endif
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
 uint32 *XTL::g_pPrimaryPB = 0;
@@ -191,8 +194,8 @@ extern void XTL::EmuExecutePushBufferRaw
     }
     #endif
 
-    static LPDIRECT3DINDEXBUFFER8  pIndexBuffer=0;
-    static LPDIRECT3DVERTEXBUFFER8 pVertexBuffer=0;
+    static IDirect3DIndexBuffer *pIndexBuffer=0;
+    static IDirect3DVertexBuffer *pVertexBuffer=0;
 
     static uint maxIBSize = 0;
 
@@ -267,7 +270,16 @@ extern void XTL::EmuExecutePushBufferRaw
             // create cached vertex buffer only once, with maxed out size
             if(pVertexBuffer == 0)
             {
-                HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(2047*sizeof(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, &pVertexBuffer);
+                HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
+					2047*sizeof(DWORD), 
+					D3DUSAGE_WRITEONLY, 
+					dwVertexShader, 
+					D3DPOOL_MANAGED, 
+					&pVertexBuffer
+#ifdef CXBX_USE_D3D9
+					, nullptr
+#endif
+				);
 
                 if(FAILED(hRet))
                     CxbxKrnlCleanup("Unable to create vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
@@ -321,7 +333,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                g_pD3DDevice8->DrawPrimitiveUP
+                g_pD3DDevice->DrawPrimitiveUP
                 (
                     PCPrimitiveType,
                     VPDesc.dwHostPrimitiveCount,
@@ -376,7 +388,19 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*2 + 2*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+					// "Managing Resources (Direct3D 9)"
+					// suggests "for resources which change with high frequency" [...]
+					// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+					const D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was D3DPOOL_MANAGED
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+					// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+					const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+					hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2 + 2*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
+#ifdef CXBX_USE_D3D9
+						, nullptr
+#endif
+					);
 
                     maxIBSize = dwCount*2 + 2*2;
                 }
@@ -417,7 +441,11 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(pIndexBuffer);
+#else
+					g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#endif
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -428,10 +456,16 @@ extern void XTL::EmuExecutePushBufferRaw
                     {
                         if(IsValidCurrentShader())
                         {
-                            g_pD3DDevice8->DrawIndexedPrimitive
+                            g_pD3DDevice->DrawIndexedPrimitive
                             (
-                                PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
-//                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
+                                PCPrimitiveType, 
+#ifdef CXBX_USE_D3D9
+								g_CachedIndexBase,
+#endif
+								0,
+								8*1024*1024, // dwCount*2
+								0, 
+								PrimitiveCount
                             );
 
 							g_dwPrimPerFrame += PrimitiveCount;
@@ -442,7 +476,11 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
-                    g_pD3DDevice8->SetIndices(0, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(nullptr);
+#else
+					g_pD3DDevice->SetIndices(0, 0);
+#endif
                 }
             }
 
@@ -477,7 +515,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 printf("\n");
 
-                XTL::IDirect3DVertexBuffer8 *pActiveVB = NULL;
+                XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
 
                 D3DVERTEXBUFFER_DESC VBDesc;
 
@@ -485,7 +523,11 @@ extern void XTL::EmuExecutePushBufferRaw
                 UINT  uiStride;
 
                 // retrieve stream data
-                g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
+                g_pD3DDevice->GetStreamSource(0, &pActiveVB,
+#ifdef CXBX_USE_D3D9
+					nullptr, // pOffsetInBytes
+#endif
+					&uiStride);
 
                 // retrieve stream desc
                 pActiveVB->GetDesc(&VBDesc);
@@ -528,7 +570,19 @@ extern void XTL::EmuExecutePushBufferRaw
                         pIndexBuffer->Release();
                     }
 
-                    hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*2, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+					// "Managing Resources (Direct3D 9)"
+					// suggests "for resources which change with high frequency" [...]
+					// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+					const D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was D3DPOOL_MANAGED
+					// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+					// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+					const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+					hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
+#ifdef CXBX_USE_D3D9
+						, nullptr
+#endif
+					);
 
                     maxIBSize = dwCount*2;
                 }
@@ -580,7 +634,11 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
-                    g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(pIndexBuffer);
+#else
+					g_pD3DDevice->SetIndices(pIndexBuffer, 0);
+#endif
 
                     #ifdef _DEBUG_TRACK_PB
                     if(!g_PBTrackDisable.exists(pdwOrigPushData))
@@ -589,9 +647,16 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     if(!g_bPBSkipPusher && IsValidCurrentShader())
                     {
-                        g_pD3DDevice8->DrawIndexedPrimitive
+                        g_pD3DDevice->DrawIndexedPrimitive
                         (
-                            PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
+                            PCPrimitiveType, 
+#ifdef CXBX_USE_D3D9
+							g_CachedIndexBase,
+#endif
+							0, 
+							/*dwCount*2*/8*1024*1024, 
+							0, 
+							PrimitiveCount
                         );
 
 						g_dwPrimPerFrame += PrimitiveCount;
@@ -601,8 +666,12 @@ extern void XTL::EmuExecutePushBufferRaw
                     }
                     #endif
 
-                    g_pD3DDevice8->SetIndices(0, 0);
-                }
+#ifdef CXBX_USE_D3D9
+					g_pD3DDevice->SetIndices(nullptr);
+#else
+                    g_pD3DDevice->SetIndices(0, 0);
+#endif
+				}
             }
 
             pdwPushData--;
@@ -627,7 +696,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
     if(g_bStepPush)
     {
-        g_pD3DDevice8->Present(0,0,0,0);
+        g_pD3DDevice->Present(0,0,0,0);
 		Sleep(500);
     }
 }
@@ -638,7 +707,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     if(!XTL::IsValidCurrentShader() || (dwCount == 0))
         return;
 
-    XTL::IDirect3DVertexBuffer8 *pActiveVB = NULL;
+    XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
 
     XTL::D3DVERTEXBUFFER_DESC VBDesc;
 
@@ -646,7 +715,11 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     UINT  uiStride;
 
     // retrieve stream data
-    g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
+    g_pD3DDevice->GetStreamSource(0, &pActiveVB,
+#ifdef CXBX_USE_D3D9
+		nullptr, // pOffsetInBytes
+#endif
+		&uiStride);
 
     char szFileName[128];
     sprintf(szFileName, "D:\\_cxbx\\mesh\\CxbxMesh-0x%.08X.x", pIndexData);
@@ -768,7 +841,7 @@ void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
 		return;
 
 	// Get a copy of the current vertex shader
-	g_pD3DDevice8->GetVertexShader( &dwVertexShader );
+	g_pD3DDevice->GetVertexShader( &dwVertexShader );
 
 	/*if( g_CurrentVertexShader != dwVertexShader )
 	{

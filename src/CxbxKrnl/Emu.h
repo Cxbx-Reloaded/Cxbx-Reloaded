@@ -110,4 +110,5 @@ typedef struct DUMMY_KERNEL
 extern bool g_DisablePixelShaders;
 extern bool g_UncapFramerate;
 extern bool g_UseAllCores;
+extern bool g_PatchCpuFrequency;
 #endif

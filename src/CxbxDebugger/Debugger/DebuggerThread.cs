@@ -68,8 +68,6 @@ namespace CxbxDebugger
                 throw new Exception("SuspendThread failed");
 
             CachedSuspendCount = PrevSuspendCount +1;
-
-            UpdateContext();
         }
 
         public void Resume(bool ForceStart = false)

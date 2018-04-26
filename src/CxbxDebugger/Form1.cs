@@ -16,14 +16,18 @@ namespace CxbxDebugger
         Thread DebuggerWorkerThread;
         Debugger DebuggerInst;
         string[] CachedArgs;
+        string CachedTitle = "";
+        bool SuspendedOnBp = false;
 
         DebuggerFormEvents DebugEvents;
 
         List<DebuggerThread> DebugThreads = new List<DebuggerThread>();
         List<DebuggerModule> DebugModules = new List<DebuggerModule>();
+        DebuggerProcess MainProcess = null;
 
         FileWatchManager fileWatchMan;
         DebugOutputManager debugStrMan;
+        PatchManager patchMan;
 
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
@@ -62,8 +66,17 @@ namespace CxbxDebugger
 
             cbAction.SelectedIndex = 0;
 
+            foreach (string VariableEnum in Enum.GetNames(typeof(PatchType)))
+            {
+                cbDataFormat.Items.Add(VariableEnum);
+            }
+
+            cbDataFormat.SelectedIndex = 0;
+            InvokePatchTypeChange();
+
             fileWatchMan = new FileWatchManager(clbBreakpoints);
             debugStrMan = new DebugOutputManager(lbDebug);
+            patchMan = new PatchManager();
         }
 
         private void OnDisassemblyNavigation(object sender, InlineLinkClickedEventArgs e)
@@ -93,6 +106,7 @@ namespace CxbxDebugger
                 // Create debugger instance
                 DebuggerInst = new Debugger(CachedArgs);
                 DebuggerInst.RegisterEventInterfaces(DebugEvents);
+                DebuggerInst.RegisterEventInterfaces(patchMan);
 
                 // Setup new debugger thread
                 DebuggerWorkerThread = new Thread(x =>
@@ -112,7 +126,7 @@ namespace CxbxDebugger
         {
             cbItems.Items.Clear();
 
-            uint AutoThreadId= DebugThreads[0].OwningProcess.MainThread.ThreadID;
+            uint AutoThreadId = DebugThreads[0].OwningProcess.MainThread.ThreadID;
             if (FocusThread != null)
                 AutoThreadId = FocusThread.ThreadID;
 
@@ -272,9 +286,56 @@ namespace CxbxDebugger
             }
         }
 
+        private void DebugTitle(string Title)
+        {
+            Invoke(new MethodInvoker(delegate ()
+            {
+                CachedTitle = Title;
+
+                Text = string.Format("{0} - Cxbx-Reloaded Debugger", CachedTitle);
+
+                // This is done too late - modules are already loaded
+                //LoadCheatTable(string.Format("{0}.ct", CachedTitle));
+            }));
+        }
+
         private bool DebugAsk(string Message)
         {
             return MessageBox.Show(Message, "Cxbx Debugger", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        }
+
+        private void DebugBreakpoint(DebuggerModule Module, uint Address)
+        {
+            Invoke(new MethodInvoker(delegate ()
+            {
+                SuspendedOnBp = true;
+
+                bool auto_resume = true;
+                if (cbBreakpointAll.Checked == false)
+                {
+                    // Ignore all submodule breakpoints
+                    // (effectively triggers from Cxbx.exe and default.xbe)
+
+                    if (cbBreakpointCxbx.Checked)
+                    {
+                        auto_resume = (!Module.Core);
+                    }
+                }
+
+                if (auto_resume)
+                {
+                    Resume();
+                }
+                else
+                {
+                    string module_name = Path.GetFileName(Module.Path);
+                    Suspend(string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
+
+                    // Forces a refresh at the breakpoint address (not the callstack trace)
+                    DumpDisassembly(Address);
+                }
+
+            }));
         }
 
         private void SetDebugProcessActive(bool Active)
@@ -289,6 +350,8 @@ namespace CxbxDebugger
                     // Enable when active
                     btnSuspend.Enabled = Active;
                     btnResume.Enabled = Active;
+
+                    lblStatus.Text = (Active ? "Running" : "Inactive");
                 }));
             }
             else
@@ -299,6 +362,8 @@ namespace CxbxDebugger
                 // Enable when active
                 btnSuspend.Enabled = Active;
                 btnResume.Enabled = Active;
+
+                lblStatus.Text = (Active ? "Running" : "Inactive");
             }
         }
 
@@ -325,8 +390,9 @@ namespace CxbxDebugger
             public void OnProcessCreate(DebuggerProcess Process)
             {
                 frm.DebugModules.Add(Process);
+                frm.MainProcess = Process;
             }
-            
+
             public void OnProcessExit(DebuggerProcess Process, uint ExitCode)
             {
                 int remainingThreads = Process.Threads.Count;
@@ -358,9 +424,10 @@ namespace CxbxDebugger
                 frm.DebugLog("Ended debugging session");
             }
 
-            public void OnDebugTitle(string Title)
+            public void OnDebugTitleLoaded(string Title)
             {
-                frm.Text = string.Format("{0} - Cxbx-Reloaded Debugger", Title);
+                frm.DebugLog(string.Format("Loaded title \"{0}\"", Title));
+                frm.DebugTitle(Title);
             }
 
             public void OnThreadCreate(DebuggerThread Thread)
@@ -420,6 +487,17 @@ namespace CxbxDebugger
                 ExceptionMessage += "\n\nAttempt to ignore this and risk crashing the app?";
 
                 return frm.DebugAsk(ExceptionMessage);
+            }
+
+            public void OnBreakpoint(DebuggerThread Thread, uint Address, uint Code, bool FirstChance)
+            {
+                frm.DebugLog(string.Format("Breakpoint hit at 0x{0:X8} with code {1:X8}", Address, Code));
+
+                var Module = frm.DebuggerInst.ResolveModule(Address);
+                if (Module != null)
+                {
+                    frm.DebugBreakpoint(Module, Address);
+                }
             }
 
             public void OnFileOpened(DebuggerMessages.FileOpened Info)
@@ -482,7 +560,13 @@ namespace CxbxDebugger
         {
             if (DebuggerInst != null)
             {
-                DebuggerInst.Break();
+                if (!SuspendedOnBp)
+                {
+                    DebuggerInst.Break();
+                }
+
+                // Update thread context cache
+                DebuggerInst.Trace();
 
                 NativeWrappers.FlashWindowTray(Handle);
                 PopulateThreadList(cbThreads, null);
@@ -492,14 +576,21 @@ namespace CxbxDebugger
 
             cbThreads.Enabled = true;
             cbFrames.Enabled = true;
-
         }
 
         private void Resume()
         {
             if (DebuggerInst != null)
             {
-                DebuggerInst.Resume();
+                if (SuspendedOnBp)
+                {
+                    DebuggerInst.BreakpointContinue();
+                    SuspendedOnBp = false;
+                }
+                else
+                {
+                    DebuggerInst.Resume();
+                }
             }
 
             lblStatus.Text = "Running";
@@ -517,7 +608,7 @@ namespace CxbxDebugger
         {
             Resume();
         }
-        
+
         struct CallstackInfo
         {
             public uint InstructionPointer;
@@ -532,43 +623,11 @@ namespace CxbxDebugger
 
         List<CallstackInfo> CallstackDump = new List<CallstackInfo>();
 
-        static private bool ReadInt(TextBox Source, ref int Out)
-        {
-            if (int.TryParse(Source.Text, out Out))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        static private bool ReadAddress(string Source, ref uint Out)
-        {
-            try
-            {
-                if (Source.StartsWith("0x"))
-                {
-                    Out = Convert.ToUInt32(Source.Substring(2), 16);
-                    return true;
-                }
-                else
-                {
-                    if (uint.TryParse(Source, out Out))
-                    {
-                        return true;
-                    }
-                }
-            }
-            catch (Exception) { }
-
-            return false;
-        }
-
         static private bool ReadAddress(ComboBox Source, ref uint Out)
         {
             string SelString = Source.Text;
-            
-            if ( ReadAddress(SelString, ref Out) )
+
+            if (Common.ReadHex(SelString, ref Out))
             {
                 // Only add new addresses
                 if (Source.SelectedIndex == -1)
@@ -584,13 +643,13 @@ namespace CxbxDebugger
         private byte[] ReadMemory()
         {
             uint addr = 0;
-            if (!ReadAddress(txAddress.Text, ref addr))
+            if (!Common.ReadHex(txAddress.Text, ref addr))
             {
                 return null;
             }
 
             int size = 0;
-            ReadInt(txSize, ref size);
+            Common.ReadNumeric(txSize.Text, ref size);
 
             if (size < 0)
                 size = 256;
@@ -622,10 +681,10 @@ namespace CxbxDebugger
 
             txMemoryDump.Text = hexData;
         }
-        
+
         public delegate void DisResultOther(string Part);
         public delegate void DisResultAddress(uint Address);
-        
+
         public static void ExtractSymbols(string Text, DisResultOther ProcessOtherData, DisResultAddress ProcessAddrData, DisResultAddress ProcessIndirectAddr)
         {
             // This regex will match addresses in the format "0x123"
@@ -642,7 +701,7 @@ namespace CxbxDebugger
                 }
 
                 string MatchStr = Matches[i].ToString();
-                if( MatchStr.StartsWith("-"))
+                if (MatchStr.StartsWith("-"))
                 {
                     uint Address = Convert.ToUInt32(MatchStr.Substring(1), 16);
                     Address = ~Address;
@@ -693,7 +752,7 @@ namespace CxbxDebugger
                 }
             }
         }
-        
+
         private void DumpDisassembly(uint DisAddress)
         {
             // No threads
@@ -709,14 +768,14 @@ namespace CxbxDebugger
             // Dump requested after crashing - and read memory handles this silently
             if (data == null)
                 return;
-            
+
             txDisassembly.BeginUpdate();
             txDisassembly.Clear();
 
             // TODO: Needs refactoring
 
             var ModuleInfo = new SymbolInfoHelper(DebuggerInst, OffsetAddr);
-            
+
             // TODO: "call dword ptr [0x00XXXXXX]" instructions should be resolved
             using (Capstone cs = Capstone.CreateEngine())
             {
@@ -859,7 +918,7 @@ namespace CxbxDebugger
                 }
             }
 
-            if(cbFrames.Items.Count > 0 )
+            if (cbFrames.Items.Count > 0)
             {
                 // Auto-select the first item to dump
                 cbFrames.SelectedIndex = 0;
@@ -881,9 +940,9 @@ namespace CxbxDebugger
         private void ShowDisassemblyAt(string Address)
         {
             tabContainer.SelectedTab = tabDisassembly;
-            
+
             uint addr = 0;
-            if (ReadAddress(Address, ref addr))
+            if (Common.ReadHex(Address, ref addr))
             {
                 // Insert disassembly history
                 // TODO: Keep symbol name
@@ -917,7 +976,7 @@ namespace CxbxDebugger
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if( keyData == Keys.F5 )
+            if (keyData == Keys.F5)
             {
                 StartDebugging();
                 return true;
@@ -956,7 +1015,7 @@ namespace CxbxDebugger
 
         private void comboBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            if( e.KeyCode == Keys.Enter )
+            if (e.KeyCode == Keys.Enter)
             {
                 HandleDisasmGo();
             }
@@ -975,6 +1034,205 @@ namespace CxbxDebugger
         private void cbDisAddr_SelectedIndexChanged(object sender, EventArgs e)
         {
             HandleDisasmGo();
+        }
+
+        private void RefreshPatches()
+        {
+            lvCEMemory.BeginUpdate();
+            lvCEMemory.Items.Clear();
+
+            foreach (Patch DataPatch in patchMan.Data)
+            {
+                var li = lvCEMemory.Items.Add(string.Format("{0} 0x{1:x}", DataPatch.Module, DataPatch.Offset));
+                li.SubItems.Add(DataPatch.Name);
+                li.SubItems.Add(string.Format("{0} byte(s)", DataPatch.Patched.Length));
+                if (MainProcess != null)
+                {
+                    li.SubItems.Add(patchMan.Read(MainProcess, DataPatch));
+                }
+                else
+                {
+                    li.SubItems.Add("??");
+                }
+            }
+
+            lvCEMemory.EndUpdate();
+
+            lvCEAssembly.BeginUpdate();
+            lvCEAssembly.Items.Clear();
+
+            foreach (Patch patch in patchMan.Assembly)
+            {
+                var li = lvCEAssembly.Items.Add(string.Format("{0} 0x{1:x}", patch.Module, patch.Offset));
+                li.SubItems.Add(patch.Name);
+                li.SubItems.Add(PrettyPrint(patch.Original));
+                li.SubItems.Add(PrettyPrint(patch.Patched));
+            }
+
+            lvCEAssembly.EndUpdate();
+        }
+
+        static private byte[] Fill(int Count, byte Val)
+        {
+            List<byte> ByteList = new List<byte>(Count);
+            for (int i = 0; i < Count; ++i) ByteList.Add(Val);
+            return ByteList.ToArray();
+        }
+
+        static private byte[] Nops(int Count)
+        {
+            return Fill(Count, 0x90);
+        }
+
+        static private string PrettyPrint(byte[] Bytes)
+        {
+            if (Bytes == null)
+                return "??";
+
+            string Str = "";
+            int Max = Math.Min(5, Bytes.Length);
+            for (int i = 0; i < Max; ++i)
+            {
+                Str += string.Format("{0:X2} ", Bytes[i]);
+            }
+            return Str;
+        }
+
+        private void LoadCheatTable(string filename)
+        {
+            string path = Directory.GetCurrentDirectory();
+
+            if (File.Exists(filename))
+            {
+                DebugLog(string.Format("Attempting to load \"{0}\"", filename));
+
+                CheatEngine.CheatTable ct_data = CheatEngine.CheatTableReader.FromFile(filename);
+                if (ct_data != null)
+                {
+                    foreach (CheatEngine.CheatEntry Entry in ct_data.CheatEntries)
+                    {
+                        uint addr = 0;
+                        if (Common.ReadHex(Entry.Address, ref addr))
+                        {
+                            Patch DataPatch = new Patch();
+
+                            DataPatch.DisplayAs = PatchType.Array;
+                            DataPatch.Name = Entry.Description;
+                            DataPatch.Module = "";
+                            DataPatch.Offset = addr;
+                            DataPatch.Original = null;
+                            DataPatch.Patched = Nops(CheatEngine.Helpers.VariableSize(Entry.VariableType));
+
+                            patchMan.Data.Add(DataPatch);
+                        }
+                    }
+
+                    foreach (CheatEngine.CodeEntry Entry in ct_data.CodeEntires)
+                    {
+                        Patch DataPatch = new Patch();
+
+                        DataPatch.DisplayAs = PatchType.Array;
+                        DataPatch.Name = Entry.Description;
+                        DataPatch.Module = Entry.ModuleName;
+                        DataPatch.Offset = Entry.ModuleNameOffset;
+                        DataPatch.Original = Entry.Actual;
+                        DataPatch.Patched = Nops(Entry.Actual.Length);
+
+                        patchMan.Assembly.Add(DataPatch);
+                    }
+
+                    DebugLog(string.Format("Loaded {0} auto-assembler entries", ct_data.CodeEntires.Count));
+                    DebugLog(string.Format("Loaded {0} cheat entries", ct_data.CheatEntries.Count));
+
+                    RefreshPatches();
+                }
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            PatchType PatchType = (PatchType)cbDataFormat.SelectedIndex;
+
+            int PatchSize = PatchManager.PatchTypeLength(PatchType);
+            if (PatchSize == 0)
+            {
+                if (!Common.ReadNumeric(textBox2.Text, ref PatchSize))
+                    return;
+
+                if (PatchSize < 0)
+                    return;
+            }
+
+            uint addr = 0;
+            if (Common.ReadHex(txAddress.Text, ref addr))
+            {
+                Patch DataPatch = new Patch();
+
+                DataPatch.DisplayAs = PatchType;
+                DataPatch.Name = string.Format("Patched {0}", PatchType);
+                DataPatch.Module = "";
+                DataPatch.Offset = addr;
+
+                // TODO: Read original memory at this location
+                DataPatch.Original = Nops(PatchSize);
+                DataPatch.Patched = Nops(PatchSize);
+                patchMan.Data.Add(DataPatch);
+
+                RefreshPatches();
+            }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            uint addr = 0;
+            if (ReadAddress(cbDisAddr, ref addr))
+            {
+                txAddress.Text = cbDisAddr.Text;
+                tabContainer.SelectedTab = tabMemory;
+            }
+        }
+
+        private void button2_Click_2(object sender, EventArgs e)
+        {
+            if (diagBrowseCT.ShowDialog() == DialogResult.OK)
+            {
+                string filename = diagBrowseCT.FileNames[0];
+                LoadCheatTable(filename);
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            RefreshPatches();
+        }
+
+        private void InvokePatchTypeChange()
+        {
+            PatchType Type = (PatchType)cbDataFormat.SelectedIndex;
+
+            textBox2.Text = PatchManager.PatchTypeLength(Type).ToString();
+            textBox2.Enabled = (Type == PatchType.Array);
+        }
+
+        private void cbDataFormat_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            InvokePatchTypeChange();
+        }
+
+        private void button3_Click_1(object sender, EventArgs e)
+        {
+            if (lvCEMemory.SelectedIndices.Count != 1)
+                return;
+
+            string Value = txNewValue.Text;
+            if (Value.Length != 0)
+            {
+                Patch DataPatch = patchMan.Data[lvCEMemory.SelectedIndices[0]];
+                if (patchMan.Write(MainProcess, DataPatch, Value))
+                {
+                    RefreshPatches();
+                }
+            }
         }
     }
 }

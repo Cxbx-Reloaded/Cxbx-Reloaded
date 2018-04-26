@@ -63,12 +63,6 @@ class XBAudio : public Error
         GUID GetAudioAdapter() const { return m_binAudioAdapter; }
 
         // ******************************************************************
-        // * Audio Hack Toggling
-        // ******************************************************************
-        void SetLegacyAudioHack(BOOL bAudioHack) { m_bLegacyAudioHack = bAudioHack; }
-        BOOL GetLegacyAudioHack() const { return m_bLegacyAudioHack; }
-
-        // ******************************************************************
         // * PCM Toggling
         // ******************************************************************
         void SetPCM(BOOL bPCM) { m_bPCM = bPCM; }
@@ -91,7 +85,6 @@ class XBAudio : public Error
         // * Configuration
         // ******************************************************************
         GUID  m_binAudioAdapter;
-        BOOL  m_bLegacyAudioHack;
         BOOL  m_bPCM;
         BOOL  m_bXADPCM;
         BOOL  m_bUnknownCodec;

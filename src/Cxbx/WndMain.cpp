@@ -38,6 +38,7 @@
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
+#include "DlgEepromConfig.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
@@ -188,6 +189,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			result = RegQueryValueEx(hKey, "HackUseAllCores", NULL, &dwType, (PBYTE)&m_UseAllCores, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_UseAllCores = 0;
+			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "HackPatchCpuFrequency", NULL, &dwType, (PBYTE)&m_PatchCpuFrequency, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_PatchCpuFrequency = 0;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -348,6 +355,9 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackPatchCpuFrequency", 0, dwType, (PBYTE)&m_PatchCpuFrequency, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -1096,6 +1106,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 ShowAudioConfig(hwnd);
                 break;
 
+			case ID_SETTINGS_CONFIG_EEPROM:
+			{
+				if (m_bIsStarted) {
+					// We don't allow changing the contents of the eeprom while a game is running, mostly because we lack a "pause emulation"
+					// function necessary to modify the contents safely (the game itself can modify the eeprom)
+					MessageBox(hwnd, "Cannot modify eeprom file while a title is running", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+					break;
+				}
+				ShowEepromConfig(hwnd);
+			}
+			break;
+
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
 				ClearHLECache();
@@ -1311,6 +1333,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_HACKS_PATCHCPUFREQUENCY:
+				m_PatchCpuFrequency = !m_PatchCpuFrequency;
+				RefreshMenus();
+				break;
 
             case ID_HELP_ABOUT:
             {
@@ -1739,6 +1765,9 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
+
+			chk_flag = (m_PatchCpuFrequency) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_PATCHCPUFREQUENCY, chk_flag);	
 		}
 
         // emulation menu
@@ -2112,6 +2141,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
 	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
+	g_EmuShared->SetPatchCpuFrequency(&m_PatchCpuFrequency);
 
 	// shell exe
     {

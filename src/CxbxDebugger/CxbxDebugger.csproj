@@ -49,6 +49,9 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>..\..\resource\Cxbx-R.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -64,6 +67,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
+    <Compile Include="DebuggerExtras\CheatTable.cs" />
+    <Compile Include="DebuggerExtras\CheatTableReader.cs" />
     <Compile Include="DebuggerSymbols\Kernel\KernelSymbolProvider.cs" />
     <Compile Include="Debugger\Debugger.cs" />
     <Compile Include="Debugger\DebuggerEventInterfaces.cs" />
@@ -87,6 +93,7 @@
     <Compile Include="DebuggerSymbols\HLECache\HLECacheFile.cs" />
     <Compile Include="DebuggerSymbols\HLECache\HLECacheProvider.cs" />
     <Compile Include="DebuggerSymbols\HLECache\Utils\INIReader.cs" />
+    <Compile Include="PatchManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RicherTextBox.cs">
@@ -185,6 +192,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\BreakpointDisable_16x_24.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\resource\Cxbx-R.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -9,6 +9,7 @@ namespace CxbxDebugger
     {
         void OnDebugStart();
         void OnDebugEnd();
+        void OnDebugTitleLoaded(string Title);
     }
 
     public interface IDebuggerProcessEvents
@@ -38,6 +39,7 @@ namespace CxbxDebugger
     public interface IDebuggerExceptionEvents
     {
         bool OnAccessViolation(DebuggerThread Thread, uint Code, uint Address);
+        void OnBreakpoint(DebuggerThread Thread, uint Address, uint Code, bool FirstChance);
     }
 
     public interface IDebuggerFileEvents

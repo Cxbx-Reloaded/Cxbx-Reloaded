@@ -940,6 +940,11 @@ BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
 {
 	FUNC_EXPORTS;
 
+	if (g_PatchCpuFrequency) {
+		lpPerformanceCount->QuadPart = (LONGLONG)__rdtsc();
+		return TRUE;
+	}
+
 	lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
 	return TRUE;
 }
@@ -954,7 +959,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	DWORD		dwData
 )
 {
-	FUNC_EXPORTS
+	//FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PVOID, pfnAPC)

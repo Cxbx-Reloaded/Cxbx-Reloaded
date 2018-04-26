@@ -54,7 +54,7 @@ namespace XTL
 	#include "EmuXInput.h"
 }
 
-extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
+extern XTL::IDirect3DDevice    *g_pD3DDevice;
 extern DWORD                    g_CurrentXboxVertexShaderHandle;
 extern XTL::X_PixelShader*		g_D3DActivePixelShader;
 extern BOOL                     g_bIsFauxFullscreen;

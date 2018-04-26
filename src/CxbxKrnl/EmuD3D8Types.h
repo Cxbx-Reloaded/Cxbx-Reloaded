@@ -34,17 +34,115 @@
 #ifndef EMUD3D8TYPES_H
 #define EMUD3D8TYPES_H
 
+//#define CXBX_USE_D3D9 // Declared in the Debug_Direct3D9 build configuration
+
+#ifdef CXBX_USE_D3D9
+
+#undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
+
+// include direct3d 9x headers
+#define DIRECT3D_VERSION 0x0900
+#include <d3d9.h>
+//implies #include <d3d9types.h> // for D3DFORMAT, D3DLIGHT9, etc
+//implies #include <d3d9caps.h>
+#include <d3dx9math.h> // for D3DXVECTOR4, etc
+#include <d3dx9tex.h>
+
+#include <dxerr.h>
+#pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
+
+// If the above doesn't compile, install the June 2010 DirectX SDK
+// from https://www.microsoft.com/en-us/download/details.aspx?id=6812
+// and select the Direct3D 9 include & library path (TODO : how?)
+
+// We're going to use the approach detailed in :
+// https://blogs.msdn.microsoft.com/chuckw/2015/03/23/the-zombie-directx-sdk/
+
+
+// For transforming code that's written for Direct3D 8 into Direct3D 9,
+// See "Converting to Direct3D 9" https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx
+
+// See https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx#D3DENUM_NO_WHQL_LEVEL_Changes
+#define D3DENUM_NO_WHQL_LEVEL 0 // default in Direct3D 9
+
+// Alias all host Direct3D 9 symbols to generic symbols
+#define Direct3DCreate			 Direct3DCreate9
+#define D3DXAssembleShader		 D3DXCompileShader
+#define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
+
+#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
+#define D3DCAPS                  D3DCAPS9
+#define D3DVIEWPORT              D3DVIEWPORT9
+
+#define IDirect3D                IDirect3D9
+#define IDirect3DDevice          IDirect3DDevice9
+//#define IDirect3DStateBlock      IDirect3DStateBlock9
+//#define IDirect3DVertexDeclaration IDirect3DVertexDeclaration9
+//#define IDirect3DVertexShader    IDirect3DVertexShader9
+//#define IDirect3DPixelShader     IDirect3DPixelShader9
+#define IDirect3DResource        IDirect3DResource9
+#define IDirect3DBaseTexture     IDirect3DBaseTexture9
+#define IDirect3DTexture         IDirect3DTexture9
+#define IDirect3DVolumeTexture   IDirect3DVolumeTexture9
+#define IDirect3DCubeTexture     IDirect3DCubeTexture9
+#define IDirect3DVertexBuffer    IDirect3DVertexBuffer9
+#define IDirect3DIndexBuffer     IDirect3DIndexBuffer9
+#define IDirect3DSurface         IDirect3DSurface9
+#define IDirect3DVolume          IDirect3DVolume9
+#define IDirect3DSwapChain       IDirect3DSwapChain9
+//#define IDirect3DQuery           IDirect3DQuery9
+
+// TODO : Declare these aliasses as Xbox type
+typedef D3DLIGHT9 X_D3DLIGHT8;
+typedef D3DMATERIAL9 X_D3DMATERIAL8;
+typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
+
+#else
+
 // include direct3d 8x headers
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
+#include <d3dx8math.h> // For D3DXVECTOR4, etc
 #include <d3dx8tex.h>
-#include <d3d8types.h>
+#include <dxerr8.h> // For DXGetErrorString8A, DXGetErrorDescription8A
+
+// Alias all host Direct3D 8 symbols to generic symbols
+#define Direct3DCreate			 Direct3DCreate8
+#define DXGetErrorString         DXGetErrorString8A
+#define DXGetErrorDescription    DXGetErrorDescription8A
+
+#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
+#define D3DCAPS                  D3DCAPS8
+#define D3DVIEWPORT              D3DVIEWPORT8
+
+#define IDirect3D                IDirect3D8
+#define IDirect3DDevice          IDirect3DDevice8
+#define IDirect3DResource        IDirect3DResource8
+#define IDirect3DBaseTexture     IDirect3DBaseTexture8
+#define IDirect3DTexture         IDirect3DTexture8
+#define IDirect3DVolumeTexture   IDirect3DVolumeTexture8
+#define IDirect3DCubeTexture     IDirect3DCubeTexture8
+#define IDirect3DVertexBuffer    IDirect3DVertexBuffer8
+#define IDirect3DIndexBuffer     IDirect3DIndexBuffer8
+#define IDirect3DSurface         IDirect3DSurface8
+#define IDirect3DVolume          IDirect3DVolume8
+#define IDirect3DSwapChain       IDirect3DSwapChain8
+
+// TODO : Declare these aliasses as Xbox type
+typedef D3DLIGHT8 X_D3DLIGHT8;
+typedef D3DMATERIAL8 X_D3DMATERIAL8;
+typedef D3DVIEWPORT8 X_D3DVIEWPORT8;
+
+#endif // Direct3d8
 
 // TODO: fill out these enumeration tables for convienance
+typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;
+typedef D3DXVECTOR4 X_D3DXVECTOR4;
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
+typedef DWORD X_D3DMULTISAMPLE_TYPE;
 typedef DWORD X_D3DSHADEMODE;
 typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
@@ -292,12 +390,13 @@ typedef struct _X_D3DSURFACE_DESC
     X_D3DRESOURCETYPE   Type;
     DWORD               Usage;
     UINT                Size;
-    D3DMULTISAMPLE_TYPE MultiSampleType;
+    X_D3DMULTISAMPLE_TYPE MultiSampleType;
     UINT                Width;
     UINT                Height;
 }
 X_D3DSURFACE_DESC;
 
+struct X_D3DSurface; // forward
 typedef struct _X_D3DPRESENT_PARAMETERS
 {
     UINT                BackBufferWidth;
@@ -305,9 +404,9 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     X_D3DFORMAT         BackBufferFormat;
     UINT                BackBufferCount;
 
-    D3DMULTISAMPLE_TYPE MultiSampleType;
+    X_D3DMULTISAMPLE_TYPE MultiSampleType;
 
-    D3DSWAPEFFECT       SwapEffect;
+    X_D3DSWAPEFFECT     SwapEffect;
     HWND                hDeviceWindow;
     BOOL                Windowed;
     BOOL                EnableAutoDepthStencil;
@@ -319,8 +418,8 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     // The Windows DirectX8 variant ends here
     // This check guarantees identical layout, compared to Direct3D8._D3DPRESENT_PARAMETERS_:
     // assert(offsetof(X_D3DPRESENT_PARAMETERS, BufferSurfaces) == sizeof(_D3DPRESENT_PARAMETERS_));
-    IDirect3DSurface8  *BufferSurfaces[3];
-    IDirect3DSurface8  *DepthStencilSurface;
+    X_D3DSurface       *BufferSurfaces[3];
+    X_D3DSurface       *DepthStencilSurface;
 }
 X_D3DPRESENT_PARAMETERS;
 
@@ -331,8 +430,6 @@ typedef struct _X_D3DGAMMARAMP
     BYTE    blue[256];
 }
 X_D3DGAMMARAMP;
-
-#define X_PIXELSHADER_FAKE_HANDLE 0xDEADBEEF
 
 struct X_D3DVertexShader
 {

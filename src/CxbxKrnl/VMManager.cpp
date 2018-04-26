@@ -136,6 +136,11 @@ dashboard from non-retail xbe?");
 
 	// Set up the pfn database
 	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0) {
+
+		// Quote from LukeUsher "Yeah, known issue. Contiguous memory persists more than it should so the framebuffer doesn't get cleared.
+		// The memory manager needs updating to only persist areas of memory marked with MmPersistContiguousMemory and discard the rest.
+		// But right now it persists the whole block". So we also clear the entire mapped memory.bin since we are not quick rebooting
+		xboxkrnl::RtlFillMemoryUlong((void*)CONTIGUOUS_MEMORY_BASE, g_SystemMaxMemory, 0);
 		xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
 		InitializePfnDatabase();
 	}
@@ -685,6 +690,9 @@ void VMManager::RestorePersistentMemory()
 			RemoveFree(1, &pfn, 0, PointerPte->Hardware.PFN, PointerPte->Hardware.PFN);
 		}
 		else {
+			// Clear also the page. We could use RtlFillMemoryULong, but that will fill up the kernel log quite quickly, so we just
+			// use memset instead
+			memset((void*)(GetVAddrMappedByPte(PointerPte)), 0, PAGE_SIZE);
 			WRITE_ZERO_PTE(PointerPte);
 		}
 		PointerPte++;

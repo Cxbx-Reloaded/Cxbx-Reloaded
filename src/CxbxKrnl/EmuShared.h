@@ -126,6 +126,8 @@ class EmuShared : public Mutex
 		void SetUncapFramerate(int* value) { Lock(); m_UncapFramerate = *value; Unlock(); }
 		void GetUseAllCores(int* value) { Lock(); *value = m_UseAllCores; Unlock(); }
 		void SetUseAllCores(int* value) { Lock(); m_UseAllCores = *value; Unlock(); }
+		void GetPatchCpuFrequency(int* value) { Lock(); *value = m_PatchCpuFrequeny; Unlock(); }
+		void SetPatchCpuFrequency(int* value) { Lock(); m_PatchCpuFrequeny = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
@@ -194,6 +196,7 @@ class EmuShared : public Mutex
 		int			 m_DisablePixelShaders;
 		int			 m_UncapFramerate;
 		int			 m_UseAllCores;
+		int			 m_PatchCpuFrequeny;
 		float		 m_MSpF;
 		float        m_FPS;
 		bool		 m_bMultiXbeFlag;

@@ -55,9 +55,6 @@ xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 // Default value (NA), overwritten with the actual content in the eeprom by CxbxRestoreEEPROM
 xboxkrnl::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
 
-// Default eeprom key (all zeros). Used to calculate the checksum of the eeprom header and to encrypt it if desired
-UCHAR EepromKey[16] = { 0 };
-
 const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 {
 	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)
@@ -178,30 +175,21 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
     // so that users do not need to delete their EEPROM.bin from older versions
     gen_section_CRCs(pEEPROM);
 
-	// Check for (and fix) invalid fields that were set by previous versions of Cxbx-Reloaded
-	// Without this, all users would have to delete their EEPROM.bin
-	// The issue was that the AV_FLAG_XXhz was set in the wrong field, we fix it by
-	// resetting FactorySettings.AVRegion and setting user video flags to the default
-	// The user can then set their desired settings using the Xbox Dashboard
-	if (pEEPROM->FactorySettings.AVRegion == AV_STANDARD_NTSC_M) {
-		DbgPrintf("INIT: Repairing bad EEPROM (from previous Cxbx-Reloaded builds)\n");
-		pEEPROM->UserSettings.VideoFlags = 0;
-		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
-	}
-
 	if (NeedsInitialization)
 	{
 		memset(pEEPROM, 0, EEPROM_SIZE);
 
 		// TODO: Make these configurable or autodetect of some sort :
-		pEEPROM->UserSettings.Language = 0x01;  // = English
-		pEEPROM->UserSettings.VideoFlags = 0;   // = Use XDK defaults
-		pEEPROM->UserSettings.AudioFlags = 0;   // = Stereo, no AC3, no DTS
-		pEEPROM->UserSettings.ParentalControlGames = 0; // = XC_PC_ESRB_ALL
-		pEEPROM->UserSettings.ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English
+		pEEPROM->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
+		pEEPROM->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
+		pEEPROM->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
+		pEEPROM->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
 		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
 		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
+		xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20,
+			pEEPROM->EncryptedSettings.Checksum);
 
 		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
 
@@ -216,23 +204,17 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		DbgPrintf("INIT: Loaded EEPROM.bin\n");
 	}
 
-	// Update the existing Checksum if it is all zeros. Without this, all users would have to delete their EEPROM.bin
+	// Read the HDD (and eventually also the online) keys stored in the eeprom file. Users can input them in the eeprom menu
+	memcpy(xboxkrnl::XboxHDKey, pEEPROM->EncryptedSettings.HDKey, xboxkrnl::XBOX_KEY_LENGTH);
+
+	// Verify the checksum of the eeprom header
 	UCHAR Checksum[20] = { 0 };
-	if (!memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
+	xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20, Checksum);
+	if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
 	{
-		xboxkrnl::XcHMAC(EepromKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20,
-			pEEPROM->EncryptedSettings.Checksum);
-	}
-	else
-	{
-		// Verify the checksum of the eeprom header
-		xboxkrnl::XcHMAC(EepromKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20, Checksum);
-		if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
-		{
-			// The checksums do not match. Log this error and flash the LED (red, off, red, off)
-			EmuWarning("Stored and calculated checksums don't match. Possible eeprom corruption");
-			SetLEDSequence(0xA0);
-		}
+		// The checksums do not match. Log this error and flash the LED (red, off, red, off)
+		EmuWarning("Stored and calculated checksums don't match. Possible eeprom corruption");
+		SetLEDSequence(0xA0);
 	}
 
 	return pEEPROM;

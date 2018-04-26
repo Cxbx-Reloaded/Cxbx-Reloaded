@@ -99,8 +99,8 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
     //lpwfxFormat.cbSize;             /* the count in bytes of the size of */
 
     lpwfxFormat->wBitsPerSample = 16;
-    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nChannels * lpwfxFormat->nSamplesPerSec * (lpwfxFormat->wBitsPerSample / 8);
     lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
+    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
     lpwfxFormat->cbSize = 0;
     //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
     //This is just to verify format conversion is correct or not.
@@ -183,13 +183,10 @@ inline void GeneratePCMFormat(
             // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
             // in the first place, FYI.
 
-            if (lpwfxFormat->cbSize > 22) {
-                EmuWarning("WAVEFORMATEXTENSIBLE is detected!");
-            }
             if (pDSBufferDesc->lpwfxFormat == nullptr) {
                 pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
-            memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
+            memcpy(pDSBufferDesc->lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
 
             dwEmuFlags = dwEmuFlags & ~DSB_FLAG_AUDIO_CODECS;
 
@@ -225,7 +222,7 @@ inline void GeneratePCMFormat(
 
             // TODO: A better response to this scenario if possible.
 
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
 
             //memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
             //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
@@ -236,6 +233,7 @@ inline void GeneratePCMFormat(
             pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
             pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
             pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
+            pDSBufferDesc->lpwfxFormat->cbSize = sizeof(WAVEFORMATEX);
 
             pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
             pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
@@ -268,13 +266,18 @@ inline void GeneratePCMFormat(
         }
     }
 
-    //TODO: is this needed?
     if (pDSBufferDesc->lpwfxFormat != nullptr) {
-        // we only support 2 channels right now
-        if (pDSBufferDesc->lpwfxFormat->nChannels > 2) {
-            pDSBufferDesc->lpwfxFormat->nChannels = 2;
-            pDSBufferDesc->lpwfxFormat->nBlockAlign = (2 * pDSBufferDesc->lpwfxFormat->wBitsPerSample) / 8;
-            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+        // we NOW support 2+ channels, this conversion is necessary in order to support PC audio.
+        if (pDSBufferDesc->lpwfxFormat->nChannels > 2 && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)pDSBufferDesc->lpwfxFormat;
+            lpwfxFormatExtensible->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+            lpwfxFormatExtensible->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
+            lpwfxFormatExtensible->Samples.wValidBitsPerSample = lpwfxFormatExtensible->Format.wBitsPerSample;
+            lpwfxFormatExtensible->Samples.wSamplesPerBlock = 0;
+            lpwfxFormatExtensible->Samples.wReserved = 0;
+            // TODO: dwChannelMask might need a real time conversion depending on channels given to xbox.
+            lpwfxFormatExtensible->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT | SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY;
+            lpwfxFormatExtensible->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
         }
     }
 
@@ -333,7 +336,7 @@ inline void DSoundGenericUnlock(
 #define DSound3DBufferSelectionT(pThis) \
     ((pThis->EmuDirectSoundBuffer8Region != nullptr) ? pThis->EmuDirectSound3DBuffer8Region : pThis->EmuDirectSound3DBuffer8)
 
-//Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
+// Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
 inline void DSoundBufferCreate(LPDSBUFFERDESC &pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
@@ -660,7 +663,7 @@ inline HRESULT HybridDirectSoundBuffer_GetInfo(
     return DS_OK;
 }*/
 
-//IDirectSoundStream
+// Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
@@ -1413,7 +1416,6 @@ inline HRESULT HybridDirectSoundBuffer_Stop(
     return DS_OK;
 }
 
-//TODO: RadWolfie - This is where I left off
 //Only has one function, this is not a requirement.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_StopEx(
@@ -1425,7 +1427,6 @@ inline HRESULT HybridDirectSoundBuffer_StopEx(
     return DS_OK;
 }
 
-// Xbox DSound does not seem to have Unlock function, has been confirmed with Cxbx developers.
 //IDirectSoundBuffer
 inline HRESULT HybridDirectSoundBuffer_Unlock(
     LPDIRECTSOUNDBUFFER8 pDSBuffer)
