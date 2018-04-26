@@ -463,9 +463,7 @@ inline void DSoundBufferTransferSettings(
 
     pDSBufferOld->GetVolume(&lVolume);
     pDSBufferOld->GetFrequency(&dwFrequency);
-    pDSBufferOld->GetPan(&lPan);
 
-    pDSBufferNew->SetPan(lPan);
     pDSBufferNew->SetFrequency(dwFrequency);
     pDSBufferNew->SetVolume(lVolume);
 
@@ -473,6 +471,9 @@ inline void DSoundBufferTransferSettings(
         pDS3DBufferOld->GetAllParameters(&ds3dBuffer);
 
         pDS3DBufferNew->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
+    } else {
+        pDSBufferOld->GetPan(&lPan);
+        pDSBufferNew->SetPan(lPan);
     }
 }
 

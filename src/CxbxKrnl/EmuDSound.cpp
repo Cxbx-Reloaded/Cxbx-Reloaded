@@ -1758,10 +1758,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         }
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
         //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-        DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
+        DSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
 
         if ((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0) {
             DSBufferDesc.dwFlags |= DSBCAPS_CTRL3D;
+        } else {
+            DSBufferDesc.dwFlags |= DSBCAPS_CTRLPAN;
         }
 
         DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
