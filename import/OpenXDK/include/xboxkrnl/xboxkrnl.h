@@ -2111,14 +2111,6 @@ typedef enum _XC_VALUE_INDEX
 XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 
 // ******************************************************************
-// * EEPROM game region codes
-// ******************************************************************
-#define XC_GAME_REGION_NA             0x00000001
-#define XC_GAME_REGION_JAPAN          0x00000002
-#define XC_GAME_REGION_RESTOFWORLD    0x00000004
-#define XC_GAME_REGION_MANUFACTURING  0x80000000
-
-// ******************************************************************
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
 typedef struct _XBOX_HARDWARE_INFO
