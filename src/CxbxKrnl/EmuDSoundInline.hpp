@@ -803,6 +803,11 @@ inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
         return 0;
     }
 
+    // Do not allow to process if there is no packets.
+    if (pThis->Host_BufferPacketArray.size() == 0) {
+        return 0;
+    }
+
     DWORD dwAudioBytes;
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
     if (hRet == DS_OK) {
