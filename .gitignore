@@ -46,6 +46,7 @@ obj/
 [Bb]in
 build/win32/[Dd]ebug*/
 build/win32/[Rr]elease*/
+build/win32/Win32/
 build/win32/Cxbx.ChildProcessDbgSettings
 Build/win32/ipch/
 Ankh.NoLoad
