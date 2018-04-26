@@ -1722,25 +1722,25 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
         if (!g_XBAudio.GetPCM()) {
-            lVolume = -10000;
+            lVolume = DSBVOLUME_MIN;
         }
     } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
         if (!g_XBAudio.GetXADPCM()) {
-            lVolume = -10000;
+            lVolume = DSBVOLUME_MIN;
         }
     } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
         if (!g_XBAudio.GetUnknownCodec()) {
-            lVolume = -10000;
+            lVolume = DSBVOLUME_MIN;
         }
     }
-    if (lVolume <= -6400) {
+    if (lVolume <= -6400 && lVolume != DSBVOLUME_MIN) {
         lVolume = DSBVOLUME_MIN;
     } else if (lVolume > 0) {
         EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
         lVolume = 0;
     }
     if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
-        lVolume = -10000;
+        lVolume = DSBVOLUME_MIN;
     }
 
     HRESULT hRet = pDSBuffer->SetVolume(lVolume);
