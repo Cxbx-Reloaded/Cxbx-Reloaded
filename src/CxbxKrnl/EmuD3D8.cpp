@@ -2484,6 +2484,7 @@ HRESULT __stdcall XTL::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 		mov Index, eax
 	}
 
+	LOG_TEST_CASE("Validate this function!");
 	return EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 }
 
@@ -2647,8 +2648,10 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_4)
 		call EmuPatch_D3DDevice_SelectVertexShader
 		mov eax, 0
 		push returnAddr
-		ret
 	}
+
+	LOG_TEST_CASE("Validate this function!");
+	return;
 }
 
 // ******************************************************************
@@ -7002,6 +7005,7 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 		mov Handle, eax
 	}
 
+	LOG_TEST_CASE("Validate this function!");
 	return EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
 }
 
