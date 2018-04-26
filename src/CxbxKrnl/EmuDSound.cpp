@@ -1728,8 +1728,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     int v = 0;
     X_CDirectSoundStream** ppDSoundStreamCache = nullptr;
     for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-        if (ppDSoundStreamCache[v] == nullptr) {
-            ppDSoundStreamCache = &ppDSoundStreamCache[v];
+        if (g_pDSoundStreamCache[v] == nullptr) {
+            ppDSoundStreamCache = &g_pDSoundStreamCache[v];
             break;
         }
     }
