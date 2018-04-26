@@ -176,7 +176,7 @@ OOVPA_END;
 // * D3DDevice_SetFlickerFilter
 // ******************************************************************
 //6A00566A0B50FF15 ...C3
-OOVPA_NO_XREF(D3DDevice_SetFlickerFilter_0, 2024, 12)
+OOVPA_NO_XREF(D3DDevice_SetFlickerFilter_0, 2024, 10)
 
         { 0x00, 0x8B },
         { 0x01, 0x0D },
@@ -189,4 +189,27 @@ OOVPA_NO_XREF(D3DDevice_SetFlickerFilter_0, 2024, 12)
         { 0x22, 0x50 },
         { 0x23, 0xFF },
         { 0x24, 0x15 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetPixelShader
+// ******************************************************************
+//C740040000210083C008 ...C3
+OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2024, 13)
+
+        { 0x00, 0x85 },
+        { 0x01, 0xC0 },
+
+        { 0x6D, 0xC7 },
+        { 0x6E, 0x40 },
+        { 0x6F, 0x04 },
+        { 0x70, 0x00 },
+        { 0x71, 0x00 },
+        { 0x72, 0x21 },
+        { 0x73, 0x00 },
+        { 0x74, 0x83 },
+        { 0x75, 0xC0 },
+        { 0x76, 0x08 },
+
+        { 0x7B, 0xC3 },
 OOVPA_END;

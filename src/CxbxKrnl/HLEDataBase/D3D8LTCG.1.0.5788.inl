@@ -104,7 +104,7 @@ OOVPA_END;
 // * D3DDevice_CreateVertexShader
 // ******************************************************************
 //C740040000210083C008 ...C3
-OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2036, 12)
+OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2048, 13)
 
         { 0x00, 0x51 },
         { 0x01, 0x85 },
@@ -119,6 +119,8 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShader_0, 2036, 12)
         { 0x7A, 0x83 },
         { 0x7B, 0xC0 },
         { 0x7C, 0x08 },
+
+        { 0x81, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************

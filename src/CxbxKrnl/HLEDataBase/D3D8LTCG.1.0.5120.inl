@@ -72,7 +72,7 @@ OOVPA_END;
 // * D3DDevice_SetVertexShaderInput
 // ******************************************************************
 //8B0F81C10000F8FF8BC1A9
-OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 1024, 19)
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 1036, 19)
 
         { 0x00, 0x53 },
         { 0x01, 0x8B },

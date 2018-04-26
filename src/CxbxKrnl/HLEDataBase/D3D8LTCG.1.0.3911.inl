@@ -36,7 +36,7 @@
 // * Direct3D_CreateDevice
 // ******************************************************************
 //85C9750AC705 ...C21000
-OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 9)
 
         { 0x00, 0x8B },
 
@@ -47,7 +47,8 @@ OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 8)
         { 0x0A, 0xC7 },
         { 0x0B, 0x05 },
 
-        { 0x14, 0x8B },
+        { 0x28, 0x56 },
+        { 0x29, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
