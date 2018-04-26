@@ -819,6 +819,7 @@ inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
                 pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
                 pThis->Host_isProcessing = true;
             }
+
             buffer->isWritten = true;
 
         } else {
@@ -1030,10 +1031,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             Xb_rtTimeStamp = 0;
             break;
         case X_DSSPAUSE_PAUSE:
-            hStatus = pDSBuffer->GetStatus(&dwStatus);
-            if (hStatus == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
-                pDSBuffer->Stop();
-            }
+            pDSBuffer->Stop();
             DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
             dwEmuFlags |= DSE_FLAG_PAUSE;
             Xb_rtTimeStamp = rtTimeStamp;
@@ -1044,11 +1042,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
             //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
             hRet = DSoundBufferSynchPlaybackFlagAdd(dwEmuFlags);
             if (hRet == DS_OK) {
-                hRet = pDSBuffer->GetStatus(&dwStatus);
-                if (hRet == DS_OK && dwStatus & DSBSTATUS_PLAYING) {
-                    pDSBuffer->Stop();
-                    pDSBuffer->SetCurrentPosition(0);
-                }
+                pDSBuffer->Stop();
             }
             break;
         // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.

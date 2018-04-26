@@ -1406,7 +1406,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     X_CDirectSoundBuffer*   pThis,
-    OUT LPDWORD                 pdwStatus)
+    OUT LPDWORD             pdwStatus)
 {
     FUNC_EXPORTS;
 
@@ -1430,7 +1430,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
         if ((dwStatusHost & DSBSTATUS_LOOPING) > 0) {
             dwStatusXbox |= X_DSBSTATUS_LOOPING;
         }
+    }
+
+    if (pdwStatus != xbnullptr) {
         *pdwStatus = dwStatusXbox;
+    } else {
+        hRet = DSERR_INVALIDPARAM;
     }
 
     leaveCriticalSection;
@@ -2239,7 +2244,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_END;
 
     return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
-                                        (pThis->Host_BufferPacketArray.size() > 0), 0LL, pThis->Xb_rtPauseEx);
+                                        pThis->Host_isProcessing, 0LL, pThis->Xb_rtPauseEx);
 }
 
 // ******************************************************************
@@ -4088,7 +4093,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
     // TODO: Implement time stamp feature (a thread maybe?)
 
     HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 
-                                                (pThis->Host_BufferPacketArray.size() > 0), rtTimestamp, pThis->Xb_rtPauseEx);
+                                                pThis->Host_isProcessing, rtTimestamp, pThis->Xb_rtPauseEx);
 
     leaveCriticalSection;
 
