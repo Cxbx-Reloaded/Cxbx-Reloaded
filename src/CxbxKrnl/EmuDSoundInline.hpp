@@ -521,11 +521,13 @@ inline void DSoundBufferResizeSetSize(
     HRESULT                    &hRet,
     DWORD                       Xb_dwByteLength) {
 
+    // General return OK, nothing needs to set as invalid for now.
+    hRet = DS_OK;
+
     DWORD Host_dwByteLength = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_dwByteLength);
 
     // Don't re-create buffer if size is the same.
     if (pThis->EmuBufferDesc.dwBufferBytes == Host_dwByteLength) {
-        hRet = DS_OK;
         return;
     }
 
@@ -619,20 +621,6 @@ inline void DSoundBufferUpdate(
     DSoundBufferRegionCurrentLocation(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
 
     DSoundBufferResizeUpdate(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
-}
-
-inline void DSoundBufferResizeCheckThenSet(
-    XTL::X_CDirectSoundBuffer*  pThis,
-    DWORD                       dwPlayFlags,
-    HRESULT                    &hRet) {
-
-    // Process Play/Loop Region buffer
-    DWORD Xb_dwByteLength;
-    DWORD Xb_dwStartOffset;
-
-    DSoundBufferRegionCurrentLocation(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
-
-    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwByteLength);
 }
 
 inline void DSoundBufferReplace(

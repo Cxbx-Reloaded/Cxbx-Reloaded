@@ -1136,7 +1136,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
     if ((dwStatus & DSBSTATUS_PLAYING) > 0) {
         if ((dwStatus & DSBSTATUS_LOOPING) == 0) {
             pThis->EmuDirectSoundBuffer8->Stop();
-            DSoundBufferResizeCheckThenSet(pThis, pThis->EmuPlayFlags, hRet);
+            DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
             pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         }
@@ -1326,7 +1326,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
     if ((dwStatus & DSBSTATUS_PLAYING) > 0) {
         if ((dwStatus & DSBSTATUS_LOOPING) > 0) {
             pThis->EmuDirectSoundBuffer8->Stop();
-            DSoundBufferResizeCheckThenSet(pThis, pThis->EmuPlayFlags, hRet);
+            DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
             pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         }
