@@ -3192,11 +3192,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
 	XB_D3DDevice_SetViewport(pViewport);
 
-	// The following can only work if we have a host render target
-	if (g_pHostRenderTarget) {
+	IDirect3DSurface* pHostRenderTarget = nullptr;
+
+	g_pD3DDevice->GetRenderTarget(
+#ifdef CXBX_USE_D3D9
+		0, // RenderTargetIndex
+#endif
+		&pHostRenderTarget);
+
+	// The following can only work if we could retrieve a host render target
+	if (pHostRenderTarget) {
 		// Get current host render target dimensions
-		D3DSURFACE_DESC HostRenderTarget;
-		g_pHostRenderTarget->GetDesc(&HostRenderTarget);
+		D3DSURFACE_DESC HostRenderTarget_Desc;
+		pHostRenderTarget->GetDesc(&HostRenderTarget_Desc);
+		pHostRenderTarget->Release();
 
 		// Get current Xbox render target dimensions
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
@@ -3205,10 +3214,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		// Scale to host dimensions (avoiding hard-coding 640 x 480)
 		D3DVIEWPORT HostViewPort;
 
-		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget.Width);
-		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget.Height);
-		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget.Width);
-		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget.Height);
+		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
+		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
+		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
+		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
 		HostViewPort.MinZ = pViewport->MinZ; // TODO : Must we scale Z too?
 		HostViewPort.MaxZ = pViewport->MaxZ;
 
