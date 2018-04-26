@@ -1019,8 +1019,7 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
 
     enterCriticalSection;
 
-    DWORD dwStatus;
-    HRESULT hRet = DS_OK, hStatus;
+    HRESULT hRet = DS_OK;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
             if (triggerPlayPermission) {
