@@ -571,7 +571,6 @@ void PrintCurrentConfigurationLog()
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
 		printf("Audio Adapter: %s\n", XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("Legacy Audio Hack is %s\n", XBAudioConf.GetLegacyAudioHack() ? "enabled" : "disabled");
 		printf("PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
 		printf("XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
 		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
@@ -1279,7 +1278,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
 
-	EmuX86_Init();
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);

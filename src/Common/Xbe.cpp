@@ -583,6 +583,7 @@ void Xbe::ConstructorInit()
     m_XAPILibraryVersion   = 0;
     m_TLS                  = 0;
     m_bzSection            = 0;
+	m_SignatureHeader      = 0;
 }
 
 // better time
@@ -821,6 +822,15 @@ const wchar_t *Xbe::GetUnicodeFilenameAddr()
 
 bool Xbe::CheckXbeSignature()
 {
+	// Workaround for nxdk (and possibly oxdk?): xbe's built with nxdk have the digital signature set to all zeros, which will lead
+	// to a crash during its decryption in RSAdecrypt. Detect this condition and skip the check if true
+	{
+		UCHAR Dummy[256] = { 0 };
+		if (memcmp(m_Header.pbDigitalSignature, Dummy, 256) == 0) {
+			return false;
+		}
+	}
+
 	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
 	UCHAR SHADigest[A_SHA_DIGEST_LEN];
 	unsigned char crypt_buffer[256];

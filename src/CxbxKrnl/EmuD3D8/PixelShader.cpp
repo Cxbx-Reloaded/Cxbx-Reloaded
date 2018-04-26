@@ -4191,7 +4191,7 @@ static const
       (
         pFunction,
 #ifdef CXBX_USE_D3D9
-        PIDirect3DPixelShader9(&(Result.ConvertedHandle)) {$MESSAGE 'fixme'}
+        (XTL::IDirect3DPixelShader9**)(&(Result.ConvertedHandle)) //fixme
 #else
         /*out*/&(Result.ConvertedHandle)
 #endif
@@ -4276,13 +4276,13 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
 
 #ifdef CXBX_USE_D3D9
-    g_pD3DDevice.GetPixelShader(/*out*/PIDirect3DPixelShader9(&CurrentPixelShader));
+    g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader9**)(&CurrentPixelShader));
 #else
     g_pD3DDevice->GetPixelShader(/*out*/&CurrentPixelShader);
 #endif
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
 #ifdef CXBX_USE_D3D9
-		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
 #else
 		g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif
@@ -4338,7 +4338,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
 #ifdef CXBX_USE_D3D9
-        g_pD3DDevice.SetPixelShaderConstantF(Register_, PSingle(&fColor), 1);
+        g_pD3DDevice->SetPixelShaderConstantF(Register_, (float*)(&fColor), 1);
 #else
 		g_pD3DDevice->SetPixelShaderConstant(Register_, &fColor, 1);
 #endif
@@ -4349,7 +4349,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   {
     ConvertedPixelShaderHandle = 0;
 #ifdef CXBX_USE_D3D9
-	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9)ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
 #else
 	g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
 #endif

@@ -1,4 +1,4 @@
-//{{NO_DEPENDENCIES}}
+﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
 //
@@ -61,7 +61,6 @@
 #define IDC_AC_ACCEPT                   1058
 #define IDC_AC_CANCEL                   1059
 #define IDC_AC_AUDIO_ADAPTER            1060
-#define IDC_AC_LEGACY_AUDIO_HACK        1061
 #define IDC_AC_PCM                      1062
 #define IDC_AC_XADPCM                   1063
 #define IDC_AC_UNKNOWN_CODEC            1064
