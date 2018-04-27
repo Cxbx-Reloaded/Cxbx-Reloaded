@@ -2325,24 +2325,44 @@ void CxbxUpdateActiveIndexBuffer
 // Test-case: Ninja Gaiden
 HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 (
-    DWORD                        Unknown
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Unknown)
+		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (DWORD));
-	HRESULT hRet = XB_Direct3D_CreateDevice_4(Unknown);
+	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
+	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
+	{
+		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+
+		// Cache parameters
+		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
+
+		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
+		g_EmuCDPD.bCreate = true;
+		g_EmuCDPD.bReady = true;
+
+		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+	}
+
+	// Only then call Xbox CreateDevice function
+	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (X_D3DPRESENT_PARAMETERS*));
+	HRESULT hRet = XB_Direct3D_CreateDevice_4(pPresentationParameters);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
 	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
 		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
 	}
 
-    return hRet;
+	return hRet;
 }
 
 // LTCG specific Direct3D_CreateDevice function...
@@ -2353,7 +2373,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
     HWND                        hFocusWindow,
-    DWORD                       Unknown
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
 	FUNC_EXPORTS
@@ -2362,18 +2382,38 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(hFocusWindow)
-		LOG_FUNC_ARG(Unknown)
+		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_16, (UINT, D3DDEVTYPE, HWND, DWORD));
-	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, Unknown);
+	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
+	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
+	{
+		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+
+		// Cache parameters
+		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
+
+		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
+		g_EmuCDPD.bCreate = true;
+		g_EmuCDPD.bReady = true;
+
+		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+	}
+
+	// Only then call Xbox CreateDevice function
+	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_16, (UINT, D3DDEVTYPE, HWND, X_D3DPRESENT_PARAMETERS*));
+	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
 	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
 		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
 	}
 
-    return hRet;
+	return hRet;
 }
 
 // ******************************************************************
@@ -2425,7 +2465,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 
 	
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
-	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice 
+	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
 		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
 		while (g_EmuCDPD.bReady)

@@ -94,12 +94,12 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_16)
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
     HWND                        hFocusWindow,
-    DWORD                       Unknown
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
 
 HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_4)
 (
-    DWORD                        Unknown
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
 
 // ******************************************************************
