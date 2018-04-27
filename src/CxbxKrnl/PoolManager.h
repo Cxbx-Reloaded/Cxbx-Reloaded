@@ -102,11 +102,11 @@ class PoolManager
 		// initializes the pool manager to the default configuration
 		void InitializePool();
 		// allocates pool memory
-		void* AllocatePool(size_t Size, uint32_t Tag);
+		VAddr AllocatePool(size_t Size, uint32_t Tag);
 		// deallocates pool memory
-		void DeallocatePool(void* addr);
+		void DeallocatePool(VAddr addr);
 		// queries the pool block size
-		size_t QueryPoolSize(void* addr);
+		size_t QueryPoolSize(VAddr addr);
 
 
 	private:

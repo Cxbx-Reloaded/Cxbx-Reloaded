@@ -214,7 +214,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 	LOG_FUNC_END;
 
-	PVOID pRet = g_PoolManager.AllocatePool(NumberOfBytes, Tag);
+	PVOID pRet = reinterpret_cast<PVOID>(g_PoolManager.AllocatePool(NumberOfBytes, Tag));
 
 	RETURN(pRet);
 }
@@ -243,7 +243,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 {
 	LOG_FUNC_ONE_ARG(P);
 
-	g_PoolManager.DeallocatePool(P);
+	g_PoolManager.DeallocatePool(reinterpret_cast<VAddr>(P));
 }
 
 // ******************************************************************
@@ -369,7 +369,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 {
 	LOG_FUNC_ONE_ARG(PoolBlock);
 
-	ULONG ret = g_PoolManager.QueryPoolSize(PoolBlock);
+	ULONG ret = g_PoolManager.QueryPoolSize(reinterpret_cast<VAddr>(PoolBlock));
 
 	RETURN(ret);
 }

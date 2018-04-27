@@ -72,7 +72,7 @@ void PoolManager::InitializePool()
 	printf(LOG_PREFIX " Pool manager initialized!\n");
 }
 
-void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
+VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 {
 	PVOID Block;
 	PPOOL_HEADER Entry;
@@ -105,7 +105,7 @@ void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Unlock();
 		}
 
-		return Entry;
+		return reinterpret_cast<VAddr>(Entry);
 	}
 
 	ListNumber = ((Size + POOL_OVERHEAD + (POOL_SMALLEST_BLOCK - 1)) >> POOL_BLOCK_SHIFT);
@@ -127,7 +127,7 @@ void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Entry->PoolTag = Tag;
 			(reinterpret_cast<PULONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-			return reinterpret_cast<PUCHAR>(Entry) + POOL_OVERHEAD;
+			return reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD;
 		}
 	}
 
@@ -184,7 +184,7 @@ void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 				Entry->PoolTag = Tag;
 				(reinterpret_cast<PULONGLONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-				return reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD;
+				return reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD;
 			}
 			ListHead += 1;
 
@@ -196,7 +196,7 @@ void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			EmuWarning(LOG_PREFIX " AllocatePool returns nullptr");
 			Unlock();
 
-			return Entry;
+			return reinterpret_cast<VAddr>(Entry);
 		}
 		PoolDesc->TotalPages += 1;
 		Entry->PoolType = 0;
@@ -217,7 +217,7 @@ void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 	} while (true);
 }
 
-void PoolManager::DeallocatePool(void* addr)
+void PoolManager::DeallocatePool(VAddr addr)
 {
 	PPOOL_HEADER Entry;
 	ULONG Index;
@@ -242,7 +242,7 @@ void PoolManager::DeallocatePool(void* addr)
 		return;
 	}
 
-	Entry = reinterpret_cast<PPOOL_HEADER>(static_cast<PCHAR>(addr) - POOL_OVERHEAD);
+	Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PCHAR>(addr) - POOL_OVERHEAD);
 
 	assert((Entry->PoolType & POOL_TYPE_MASK) != 0);
 
@@ -317,6 +317,21 @@ void PoolManager::DeallocatePool(void* addr)
 	}
 
 	Unlock();
+}
+
+size_t PoolManager::QueryPoolSize(VAddr addr)
+{
+	PPOOL_HEADER Entry;
+	size_t size;
+
+	if (CHECK_ALIGNMENT(addr, PAGE_SIZE)) {
+		return g_VMManager.QuerySize(addr);
+	}
+
+	Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PCHAR>(addr) - POOL_OVERHEAD);
+	size = static_cast<size_t>((Entry->BlockSize << POOL_BLOCK_SHIFT) - POOL_OVERHEAD);
+
+	return size;
 }
 
 void PoolManager::Lock()
