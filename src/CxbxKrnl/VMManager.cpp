@@ -43,6 +43,7 @@
 #define LOG_PREFIX "VMEM"
 
 #include "VMManager.h"
+#include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
 #include <assert.h>
@@ -62,7 +63,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 {
-	// Set up the critical section to synchronize access
+	// Set up the critical section to synchronize accesses
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
 
 	SYSTEM_INFO si;
@@ -149,6 +150,9 @@ dashboard from non-retail xbe?");
 		RestorePersistentMemory();
 		ReinitializePfnDatabase();
 	}
+
+	// Initialize the pool manager
+	g_PoolManager.InitializePool();
 
 	// Construct the page directory
 	InitializePageDirectory();

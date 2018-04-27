@@ -356,7 +356,7 @@ LIST_ENTRY, *PLIST_ENTRY;
 // https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
 
-#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
+#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
 
 #define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
@@ -394,9 +394,21 @@ ExBlink->Flink = ExFlink;\
 (ListHead)->Flink;\
 LIST_ENTRY_REMOVE((ListHead)->Flink)
 
+// ******************************************************************
+// * SLIST_ENTRY
+// ******************************************************************
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY  *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
+
+typedef union _SLIST_HEADER {
+	ULONGLONG Alignment;
+	struct {
+		SINGLE_LIST_ENTRY Next;
+		USHORT Depth;
+		USHORT Sequence;
+	};
+} SLIST_HEADER, *PSLIST_HEADER;
 
 /*
  * Disabled as Cxbx-Reloaded does not support Win64 compilation
