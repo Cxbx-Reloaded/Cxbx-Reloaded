@@ -42,7 +42,6 @@
 
 #define LOG_PREFIX "VMEM"
 
-#include "VMManager.h"
 #include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"

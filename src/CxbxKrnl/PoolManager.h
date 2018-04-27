@@ -53,6 +53,7 @@ typedef struct _POOL_DESCRIPTOR {
 	xboxkrnl::LIST_ENTRY ListHeads[POOL_LIST_HEADS];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
+
 typedef struct _POOL_LOOKASIDE_LIST {
 	xboxkrnl::SLIST_HEADER ListHead;
 	USHORT Depth;
@@ -62,6 +63,32 @@ typedef struct _POOL_LOOKASIDE_LIST {
 } POOL_LOOKASIDE_LIST, *PPOOL_LOOKASIDE_LIST;
 
 
+typedef struct _POOL_HEADER {
+	union {
+		struct {
+			UCHAR PreviousSize;
+			UCHAR PoolIndex;
+			UCHAR PoolType;
+			UCHAR BlockSize;
+		};
+		ULONG Ulong1;
+	};
+	ULONG PoolTag;
+} POOL_HEADER, *PPOOL_HEADER;
+
+
+typedef struct _POOL_BLOCK {
+	UCHAR Fill[1 << POOL_BLOCK_SHIFT];
+} POOL_BLOCK, *PPOOL_BLOCK;
+
+
+#define POOL_OVERHEAD ((LONG)sizeof(POOL_HEADER))
+#define POOL_SMALLEST_BLOCK (sizeof(POOL_BLOCK))
+#define POOL_BUDDY_MAX  \
+   (PAGE_SIZE - (POOL_OVERHEAD + POOL_SMALLEST_BLOCK ))
+
+
+/* PoolManager class */
 class PoolManager
 {
 	public:
@@ -71,6 +98,13 @@ class PoolManager
 		~PoolManager() { DeleteCriticalSection(&m_CriticalSection); }
 		// initializes the pool manager to the default configuration
 		void InitializePool();
+		// allocates pool memory
+		void* AllocatePool(size_t Size, uint32_t Tag);
+		// deallocates pool memory
+		void DeallocatePool(void* addr);
+		// queries the pool block size
+		size_t QueryPoolSize(void* addr);
+
 
 	private:
 		// main (and only) pool type available on the Xbox

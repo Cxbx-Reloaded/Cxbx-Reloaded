@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "PoolManager.h"
+#include <assert.h>
 
 #define LOG_PREFIX "PMEM"
 
@@ -74,6 +75,151 @@ void PoolManager::InitializePool()
 	}
 
 	printf(LOG_PREFIX " Pool manager initialized!\n");
+}
+
+void* PoolManager::AllocatePool(size_t Size, uint32_t Tag)
+{
+	PVOID Block;
+	PPOOL_HEADER Entry;
+	PPOOL_LOOKASIDE_LIST LookasideList;
+	PPOOL_HEADER NextEntry;
+	PPOOL_HEADER SplitEntry;
+	PPOOL_DESCRIPTOR PoolDesc = &m_NonPagedPoolDescriptor;
+	ULONG Index;
+	ULONG ListNumber;
+	ULONG NeededSize;
+	xboxkrnl::PLIST_ENTRY ListHead;
+	ULONG NumberOfPages;
+
+	assert(Size);
+
+
+	if (Size > POOL_BUDDY_MAX) {
+		Lock();
+
+		PoolDesc->RunningAllocs += 1;
+		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, Size, false));
+
+		if (Entry != nullptr) {
+			NumberOfPages = ROUND_UP_4K(Size) >> PAGE_SHIFT;
+			PoolDesc->TotalBigPages += NumberOfPages;
+			Unlock();
+		}
+		else {
+			EmuWarning("AllocatePool returns nullptr");
+			Unlock();
+		}
+
+		return Entry;
+	}
+
+	ListNumber = ((Size + POOL_OVERHEAD + (POOL_SMALLEST_BLOCK - 1)) >> POOL_BLOCK_SHIFT);
+	NeededSize = ListNumber;
+
+	if (NeededSize <= POOL_SMALL_LISTS) {
+		LookasideList = &m_ExpSmallNPagedPoolLookasideLists[NeededSize - 1];
+		LookasideList->TotalAllocates += 1;
+
+		Entry = reinterpret_cast<PPOOL_HEADER>(xboxkrnl::KRNL(InterlockedPopEntrySList(&LookasideList->ListHead)));
+
+		if (Entry != nullptr) {
+			Entry -= 1;
+			LookasideList->AllocateHits += 1;
+
+			Entry->PoolType = static_cast<UCHAR>(1);
+			MARK_POOL_HEADER_ALLOCATED(Entry);
+
+			Entry->PoolTag = Tag;
+			(reinterpret_cast<PULONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
+
+			return reinterpret_cast<PUCHAR>(Entry) + POOL_OVERHEAD;
+		}
+	}
+
+	Lock();
+
+	PoolDesc->RunningAllocs += 1;
+	ListHead = &PoolDesc->ListHeads[ListNumber];
+
+	do {
+		do {
+			if (IS_LIST_EMPTY(ListHead) == false) {
+				Block = REMOVE_HEAD_LIST(ListHead);
+				Entry = reinterpret_cast<PPOOL_HEADER>((static_cast<PCHAR>(Block) - POOL_OVERHEAD));
+
+				assert(Entry->BlockSize >= NeededSize);
+				assert(Entry->PoolType == 0);
+
+				if (Entry->BlockSize != NeededSize) {
+					if (Entry->PreviousSize == 0) {
+						SplitEntry = reinterpret_cast<PPOOL_HEADER>((reinterpret_cast<PPOOL_BLOCK>(Entry) + NeededSize));
+						SplitEntry->BlockSize = Entry->BlockSize - static_cast<UCHAR>(NeededSize);
+						SplitEntry->PreviousSize = static_cast<UCHAR>(NeededSize);
+
+						NextEntry = reinterpret_cast<PPOOL_HEADER>((reinterpret_cast<PPOOL_BLOCK>(SplitEntry) + SplitEntry->BlockSize));
+						if (PAGE_END(NextEntry) == false) {
+							NextEntry->PreviousSize = SplitEntry->BlockSize;
+						}
+					}
+					else {
+						SplitEntry = Entry;
+						Entry->BlockSize -= static_cast<UCHAR>(NeededSize);
+						Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PPOOL_BLOCK>(Entry) + Entry->BlockSize);
+						Entry->PreviousSize = SplitEntry->BlockSize;
+
+						NextEntry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PPOOL_BLOCK>(Entry) + NeededSize);
+						if (PAGE_END(NextEntry) == false) {
+							NextEntry->PreviousSize = static_cast<UCHAR>(NeededSize);
+						}
+					}
+					Entry->BlockSize = static_cast<UCHAR>(NeededSize);
+					SplitEntry->PoolType = 0;
+					Index = SplitEntry->BlockSize;
+
+					LIST_ENTRY_INSERT_TAIL(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(SplitEntry)
+						+ POOL_OVERHEAD))));
+				}
+
+				Entry->PoolType = static_cast<UCHAR>(1);
+
+				MARK_POOL_HEADER_ALLOCATED(Entry);
+
+				Unlock();
+
+				Entry->PoolTag = Tag;
+				(reinterpret_cast<PULONGLONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
+
+				return reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD;
+			}
+			ListHead += 1;
+
+		} while (ListHead != &PoolDesc->ListHeads[POOL_LIST_HEADS]);
+
+		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, PAGE_SIZE, false));
+
+		if (Entry == nullptr) {
+			EmuWarning("AllocatePool returns nullptr");
+			Unlock();
+
+			return Entry;
+		}
+		PoolDesc->TotalPages += 1;
+		Entry->PoolType = 0;
+
+		if ((PAGE_SIZE / POOL_SMALLEST_BLOCK) > 255) {
+			Entry->BlockSize = 255;
+
+		}
+		else {
+			Entry->BlockSize = static_cast<UCHAR>((PAGE_SIZE / POOL_SMALLEST_BLOCK));
+		}
+
+		Entry->PreviousSize = 0;
+		ListHead = &PoolDesc->ListHeads[POOL_LIST_HEADS - 1];
+
+		LIST_ENTRY_INSERT_HEAD(ListHead, (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<UCHAR>(Entry) + POOL_OVERHEAD))));
+
+	} while (true);
 }
 
 void PoolManager::Lock()

@@ -47,12 +47,12 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
-#include "VMManager.h"
+#include "PoolManager.h"
 
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h" // For NtDelayExecution(), etc.
+	#include "EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
@@ -212,11 +212,9 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Tag)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	PVOID pRet = (xboxkrnl::PVOID)g_VMManager.AllocateZeroed(NumberOfBytes); // Clear, to prevent side-effects on random contents
-
-	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
+	PVOID pRet = g_PoolManager.AllocatePool(NumberOfBytes, Tag);
 
 	RETURN(pRet);
 }
@@ -245,7 +243,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 {
 	LOG_FUNC_ONE_ARG(P);
 
-	g_VMManager.Deallocate((VAddr)P);
+	g_PoolManager.DeallocatePool(P);
 }
 
 // ******************************************************************
@@ -371,8 +369,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 {
 	LOG_FUNC_ONE_ARG(PoolBlock);
 
-	// Not strictly correct, but it will do for now
-	ULONG ret = g_VMManager.QuerySize((VAddr)PoolBlock);
+	ULONG ret = g_PoolManager.QueryPoolSize(PoolBlock);
 
 	RETURN(ret);
 }
