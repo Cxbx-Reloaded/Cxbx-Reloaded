@@ -416,6 +416,8 @@ typedef union _SLIST_HEADER {
 	};
 } SLIST_HEADER, *PSLIST_HEADER;
 
+#define QUERY_DEPTH_SLIST(_listhead_) (USHORT)(_listhead_)->Depth
+
 /*
  * Disabled as Cxbx-Reloaded does not support Win64 compilation
  * Win64 is not possible while using direct code execution, unless we add
