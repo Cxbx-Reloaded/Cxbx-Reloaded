@@ -99,9 +99,6 @@ static bool                         g_bSupportsFormatVolumeTexture[XTL::X_D3DFMT
 static bool                         g_bSupportsFormatCubeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
-static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
-static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
-static DWORD                        g_dwOverlayP    = 640;  // Cached Overlay Pitch
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
@@ -5259,11 +5256,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	if (pSurface == NULL) {
 		EmuWarning("pSurface == NULL!");
 	} else {
-		uint08 *pYUY2SourceBuffer = (uint08*)GetDataFromXboxResource(pSurface);
-
-		g_dwOverlayW = (pSurface->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-		g_dwOverlayH = ((pSurface->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-		g_dwOverlayP = (((pSurface->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * 64;
+		uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(pSurface);
+		UINT OverlayWidth, OverlayHeight, OverlayDepth, OverlayRowPitch, OverlaySlicePitch;
+		CxbxGetPixelContainerMeasures(
+			(XTL::X_D3DPixelContainer *)pSurface,
+			0, // dwMipMapLevel
+			&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
 		RECT EmuSourRect;
 		RECT EmuDestRect;
@@ -5271,7 +5269,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		if (SrcRect != NULL) {
 			EmuSourRect = *SrcRect;
 		} else {
-			SetRect(&EmuSourRect, 0, 0, g_dwOverlayW, g_dwOverlayH);
+			SetRect(&EmuSourRect, 0, 0, OverlayWidth, OverlayHeight);
 		}
 
 		if (DstRect != NULL) {
@@ -5318,9 +5316,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 				/* pDestSurface = */ pCurrentHostBackBuffer,
 				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
 				/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
-				/* pSrcMemory = */ pYUY2SourceBuffer, // Source buffer
+				/* pSrcMemory = */ pOverlayData, // Source buffer
 				/* SrcFormat = */ D3DFMT_YUY2,
-				/* SrcPitch = */ g_dwOverlayP,
+				/* SrcPitch = */ OverlayRowPitch,
 				/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
 				/* SrcRect = */ &EmuSourRect,
 				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
