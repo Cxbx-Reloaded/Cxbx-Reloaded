@@ -968,7 +968,10 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
     DWORD Value
 );
 
-VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)();
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+(
+    DWORD Value
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_TwoSidedLighting
@@ -1019,7 +1022,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
     DWORD                      Value
 );
 
-VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)();
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+(
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_FrontFace

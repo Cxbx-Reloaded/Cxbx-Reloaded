@@ -5352,26 +5352,33 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 // LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
 // This uses a custom calling convention where parameter is passed in ESI
 // Test-case: Metal Wolf Chaos
-VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 (
+    DWORD Value
 )
 {
-	FUNC_EXPORTS;
+	FUNC_EXPORTS
 
-	static uint32 returnAddr;
+	DWORD           Stage;
+	__asm mov Stage, esi;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
 
-	__asm {
-		pop returnAddr
-		push esi
-		call EmuPatch_D3DDevice_SetTextureState_TexCoordIndex
-		mov eax, 0
-		push returnAddr
-		ret
+	// TODO: Xbox Direct3D supports sphere mapping OpenGL style.
+
+	// BUG FIX: The lower 16 bits were causing false Unknown TexCoordIndex errors.
+	// Check for 0x00040000 instead.
+
+	if (Value >= 0x00040000) {
+		EmuWarning("EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		return;
 	}
+
+    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // ******************************************************************
@@ -5554,28 +5561,50 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 
 // LTCG specific D3DDevice_SetTextureState_BumpEnv function...
 // This uses a custom calling convention where parameter is passed in EAX
+// TODO: Log function is not working due lost parameter in EAX.
 // Test-case: Metal Wolf Chaos
-VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 (
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
 )
 {
 	FUNC_EXPORTS;
 
-	static uint32 returnAddr;
+	DWORD           Stage;
+	__asm mov Stage, eax;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(Type)
+	//	LOG_FUNC_ARG(Value)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_SetTextureState_BumpEnv_8(Stage : %d Type : %d Value : %d);\n", Stage, Type, Value);
 
-	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_SetTextureState_BumpEnv
-		mov eax, 0
-		push returnAddr
-		ret
-	}
+	HRESULT hRet = D3D_OK;
+
+    switch(Type)
+    {
+        case 22:    // X_D3DTSS_BUMPENVMAT00
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
+            break;
+        case 23:    // X_D3DTSS_BUMPENVMAT01
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
+			break;
+        case 24:    // X_D3DTSS_BUMPENVMAT11
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
+            break;
+        case 25:    // X_D3DTSS_BUMPENVMAT10
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
+            break;
+        case 26:    // X_D3DTSS_BUMPENVLSCALE
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+            break;
+    }
+
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
