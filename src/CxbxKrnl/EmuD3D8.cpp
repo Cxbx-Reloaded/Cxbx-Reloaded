@@ -2998,9 +2998,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
+#if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
 	// Use a trampoline here, so GetViewport can be unpatched
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
 	XB_D3DDevice_SetViewport(pViewport);
+#endif
 
 	IDirect3DSurface* pHostRenderTarget = nullptr;
 
@@ -3028,7 +3030,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
 		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
 		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
-		HostViewPort.MinZ = pViewport->MinZ; // TODO : Must we scale Z too?
+		HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
 		HostViewPort.MaxZ = pViewport->MaxZ;
 
 		HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
@@ -3044,19 +3046,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
     X_D3DVIEWPORT8 *pViewport
 )
 {
-	// FUNC_EXPORTS
+	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
     HRESULT hRet = g_pD3DDevice->GetViewport(pViewport);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
-
-    if(FAILED(hRet))
-    {
-        EmuWarning("Unable to get viewport! - We're lying");
-
-        hRet = D3D_OK;
-    }
 }
 
 // ******************************************************************
@@ -3068,12 +3063,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	X_D3DXVECTOR4 *pScale
 )
 {
-	// FUNC_EXPORTS
+	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pOffset)
 		LOG_FUNC_ARG(pScale)
 		LOG_FUNC_END;
+
+	LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
 
     float fScaleX = 1.0f;
     float fScaleY = 1.0f;
@@ -3082,10 +3079,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
     float fOffsetY = 0.5 + 1.0/32;
 	X_D3DVIEWPORT8 Viewport;
 
-    
 	EMUPATCH(D3DDevice_GetViewport)(&Viewport);
-    
-
 
     pScale->x = 1.0f;
     pScale->y = 1.0f;
@@ -3108,8 +3102,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
     pOffset->z = Viewport.MinZ * fScaleZ;
     pOffset->w = 0;
 */
-
-    
 }
 
 // ******************************************************************
