@@ -4191,7 +4191,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize)
 {
-	using namespace XTL;
 
 	// DO NOT FUNC_EXPORTS!
 
@@ -4200,20 +4199,20 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 	// Determine the resource type name
 	const char *ResourceTypeName;
-	X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pResource);
+	XTL::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pResource);
 
 	switch (XboxResourceType) {
-	case X_D3DRTYPE_NONE: ResourceTypeName = "None"; break;
-	case X_D3DRTYPE_SURFACE: ResourceTypeName = "Surface"; break;
-	case X_D3DRTYPE_VOLUME: ResourceTypeName = "Volume"; break;
-	case X_D3DRTYPE_TEXTURE: ResourceTypeName = "Texture"; break;
-	case X_D3DRTYPE_VOLUMETEXTURE: ResourceTypeName = "VolumeTexture"; break;
-	case X_D3DRTYPE_CUBETEXTURE: ResourceTypeName = "CubeTexture"; break;
-	case X_D3DRTYPE_VERTEXBUFFER: ResourceTypeName = "VertexBuffer"; break;
-	case X_D3DRTYPE_INDEXBUFFER: ResourceTypeName = "IndexBuffer"; break;
-	case X_D3DRTYPE_PUSHBUFFER: ResourceTypeName = "PushBuffer"; break;
-	case X_D3DRTYPE_PALETTE: ResourceTypeName = "Palette"; break;
-	case X_D3DRTYPE_FIXUP: ResourceTypeName = "Fixup"; break;
+	case XTL::X_D3DRTYPE_NONE: ResourceTypeName = "None"; break;
+	case XTL::X_D3DRTYPE_SURFACE: ResourceTypeName = "Surface"; break;
+	case XTL::X_D3DRTYPE_VOLUME: ResourceTypeName = "Volume"; break;
+	case XTL::X_D3DRTYPE_TEXTURE: ResourceTypeName = "Texture"; break;
+	case XTL::X_D3DRTYPE_VOLUMETEXTURE: ResourceTypeName = "VolumeTexture"; break;
+	case XTL::X_D3DRTYPE_CUBETEXTURE: ResourceTypeName = "CubeTexture"; break;
+	case XTL::X_D3DRTYPE_VERTEXBUFFER: ResourceTypeName = "VertexBuffer"; break;
+	case XTL::X_D3DRTYPE_INDEXBUFFER: ResourceTypeName = "IndexBuffer"; break;
+	case XTL::X_D3DRTYPE_PUSHBUFFER: ResourceTypeName = "PushBuffer"; break;
+	case XTL::X_D3DRTYPE_PALETTE: ResourceTypeName = "Palette"; break;
+	case XTL::X_D3DRTYPE_FIXUP: ResourceTypeName = "Fixup"; break;
 	default:
 		EmuWarning("CreateHostResource :-> Unrecognized Xbox Resource Type 0x%.08X", XboxResourceType);
 		return;
@@ -4237,17 +4236,17 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 	}
 
     switch (XboxResourceType) {
-	case X_D3DRTYPE_NONE: {
+	case XTL::X_D3DRTYPE_NONE: {
 		break;
 	}
 
-	case X_D3DRTYPE_SURFACE:
-	case X_D3DRTYPE_VOLUME:
-	case X_D3DRTYPE_TEXTURE:
-	case X_D3DRTYPE_VOLUMETEXTURE:
-	case X_D3DRTYPE_CUBETEXTURE: {
-		X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
-		X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
+	case XTL::X_D3DRTYPE_SURFACE:
+	case XTL::X_D3DRTYPE_VOLUME:
+	case XTL::X_D3DRTYPE_TEXTURE:
+	case XTL::X_D3DRTYPE_VOLUMETEXTURE:
+	case XTL::X_D3DRTYPE_CUBETEXTURE: {
+		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)pResource;
+		XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 		DWORD D3DUsage = 0;
 
 		if (pPixelContainer == g_pXboxDepthStencil) {
@@ -4269,14 +4268,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
-			PCFormat = D3DFMT_A8R8G8B8;
+			PCFormat = XTL::D3DFMT_A8R8G8B8;
 		}
 		else {
 			// Otherwise, lookup resource type and accompanying 'SupportedFormat' array
 			bool *pbSupportedFormats = g_bSupportsFormatTexture;
 
 			switch (XboxResourceType) {
-			case X_D3DRTYPE_SURFACE: {
+			case XTL::X_D3DRTYPE_SURFACE: {
 				if (D3DUsage & D3DUSAGE_RENDERTARGET) {
 					pbSupportedFormats = g_bSupportsFormatSurfaceRenderTarget;
 				}
@@ -4288,11 +4287,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 				break;
 			}
-			case X_D3DRTYPE_VOLUME: {
+			case XTL::X_D3DRTYPE_VOLUME: {
 				pbSupportedFormats = g_bSupportsFormatTexture; // TODO : Complete
 				break;
 			}
-			case X_D3DRTYPE_TEXTURE: {
+			case XTL::X_D3DRTYPE_TEXTURE: {
 				if (D3DUsage & D3DUSAGE_RENDERTARGET) {
 					pbSupportedFormats = g_bSupportsFormatTextureRenderTarget;
 				}
@@ -4304,11 +4303,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 				break;
 			}
-			case X_D3DRTYPE_VOLUMETEXTURE: {
+			case XTL::X_D3DRTYPE_VOLUMETEXTURE: {
 				pbSupportedFormats = g_bSupportsFormatVolumeTexture; // TODO : Complete
 				break;
 			}
-			case X_D3DRTYPE_CUBETEXTURE: {
+			case XTL::X_D3DRTYPE_CUBETEXTURE: {
 				pbSupportedFormats = g_bSupportsFormatCubeTexture; // TODO : Complete
 				break;
 			}
@@ -4322,24 +4321,24 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			else {
 				// Otherwise, choose a fallback for the format not supported on host
 				switch (X_Format) {
-				case X_D3DFMT_LIN_D24S8: { // Note : This case could be removed, as the default below can handle it too
+				case XTL::X_D3DFMT_LIN_D24S8: { // Note : This case could be removed, as the default below can handle it too
 					EmuWarning("D3DFMT_LIN_D24S8 %s not supported - using D3DFMT_A8R8G8B8!", ResourceTypeName);
 					// Note : This cannot set bConvertToARGB - we just copy it as-is
-					PCFormat = D3DFMT_A8R8G8B8;
+					PCFormat = XTL::D3DFMT_A8R8G8B8;
 					break;
 				}
-				case X_D3DFMT_LIN_D16: {
+				case XTL::X_D3DFMT_LIN_D16: {
 					// Test case : Turok (when entering menu)
 					EmuWarning("D3DFMT_LIN_D16 %s not supported - USING D3DFMT_R5G6B5!", ResourceTypeName);
 					// Note : This cannot set bConvertToARGB - we just copy it as-is
-					PCFormat = D3DFMT_R5G6B5; // TODO : Do something smarter
+					PCFormat = XTL::D3DFMT_R5G6B5; // TODO : Do something smarter
 					break;
 				}
-				case X_D3DFMT_X1R5G5B5: { // Note : This case could be removed, as the default below can handle it too
+				case XTL::X_D3DFMT_X1R5G5B5: { // Note : This case could be removed, as the default below can handle it too
 					// Test case : JSRF (after loading)
 					EmuWarning("D3DFMT_X1R5G5B5 %s will be converted to ARGB", ResourceTypeName);
 					bConvertToARGB = true;
-					PCFormat = D3DFMT_A8R8G8B8;
+					PCFormat = XTL::D3DFMT_A8R8G8B8;
 					break;
 				}
 				default:
@@ -4347,7 +4346,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 						EmuWarning("Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
 						bConvertToARGB = true;
-						PCFormat = D3DFMT_A8R8G8B8;
+						PCFormat = XTL::D3DFMT_A8R8G8B8;
 					}
 					else {
 						// Otherwise, use a best matching format
@@ -4399,12 +4398,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::IDirect3DVolumeTexture *pNewHostVolumeTexture = nullptr; // for X_D3DRTYPE_VOLUMETEXTURE
 		XTL::IDirect3DCubeTexture *pNewHostCubeTexture = nullptr; // for X_D3DRTYPE_CUBETEXTURE
 
-		D3DPOOL D3DPool = D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
+        XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 		HRESULT hRet;
 
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
-		case X_D3DRTYPE_SURFACE: {
+		case XTL::X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType, 
@@ -4435,18 +4434,18 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			if (hRet != D3D_OK) {
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 					EmuWarning("CreateDepthStencilSurface Failed\n\nError: %s\nDesc: %s",
-						DXGetErrorString(hRet), DXGetErrorDescription(hRet));
+						XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 				}
 				else {
 					EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
-						DXGetErrorString(hRet), DXGetErrorDescription(hRet));
+						XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 				}
 
 				EmuWarning("Trying Fallback");
 #ifdef CXBX_USE_D3D9
 				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
 #else
-				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, D3DFMT_A8R8G8B8, &pNewHostSurface);
+				hRet = g_pD3DDevice->CreateImageSurface(dwWidth, dwHeight, XTL::D3DFMT_A8R8G8B8, &pNewHostSurface);
 #endif
 			}
 
@@ -4454,7 +4453,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
 				CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
-					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
+					XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 			}
 
 			SetHostSurface(pResource, pNewHostSurface);
@@ -4465,7 +4464,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			break;
 		}
 
-		case X_D3DRTYPE_VOLUME: {
+		case XTL::X_D3DRTYPE_VOLUME: {
 			LOG_UNIMPLEMENTED();
 			// Note : Host D3D can only(?) retrieve a volue like this : 
 			// hRet = pNewHostVolumeTexture->GetVolumeLevel(level, &pNewHostVolume);
@@ -4478,7 +4477,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			break;
 		}
 
-		case X_D3DRTYPE_TEXTURE: {
+		case XTL::X_D3DRTYPE_TEXTURE: {
 /* TODO : Enabled this if D3DPool is ever anything else but D3DPOOL_MANAGED :
 #ifdef CXBX_USE_D3D9
 			if (D3DPool == D3DPOOL_DEFAULT) {
@@ -4499,9 +4498,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
 
 			// If the above failed, we might be able to use an ARGB texture instead
-			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+			if ((hRet != D3D_OK) && (PCFormat != XTL::D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 				hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
-					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture
+					D3DUsage, XTL::D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture
 #ifdef CXBX_USE_D3D9
 					, nullptr
 #endif
@@ -4511,7 +4510,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				if (hRet == D3D_OK) {
 					// Okay, now this works, make sure the texture gets converted
 					bConvertToARGB = true;
-					PCFormat = D3DFMT_A8R8G8B8;
+					PCFormat = XTL::D3DFMT_A8R8G8B8;
 				}
 			}
 
@@ -4540,7 +4539,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			break;
 		}
 
-		case X_D3DRTYPE_VOLUMETEXTURE: {
+		case XTL::X_D3DRTYPE_VOLUMETEXTURE: {
 			hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
 				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, &pNewHostVolumeTexture
 #ifdef CXBX_USE_D3D9
@@ -4551,7 +4550,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
-					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
+					XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 			}
 
 			SetHostVolumeTexture(pResource, pNewHostVolumeTexture);
@@ -4560,7 +4559,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			break;
 		}
 
-		case X_D3DRTYPE_CUBETEXTURE: {
+		case XTL::X_D3DRTYPE_CUBETEXTURE: {
 			DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
 				dwMipMapLevels, PCFormat);
 
@@ -4590,8 +4589,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK; // Note : D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
 		DWORD dwCubeFaceOffset = 0;
 		DWORD dwCubeFaceSize = 0;
-		D3DCUBEMAP_FACES last_face = (bCubemap) ? D3DCUBEMAP_FACE_NEGATIVE_Z : D3DCUBEMAP_FACE_POSITIVE_X;
-		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
+		XTL::D3DCUBEMAP_FACES last_face = (bCubemap) ? XTL::D3DCUBEMAP_FACE_NEGATIVE_Z : XTL::D3DCUBEMAP_FACE_POSITIVE_X;
+		for (int face = XTL::D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
 			DWORD dwMipWidth = dwWidth;
@@ -4609,24 +4608,24 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 
 				// Lock the host resource
-				D3DLOCKED_RECT LockedRect = {};
-				D3DLOCKED_BOX LockedBox = {};
+				XTL::D3DLOCKED_RECT LockedRect = {};
+				XTL::D3DLOCKED_BOX LockedBox = {};
 
 				switch (XboxResourceType) {
-				case X_D3DRTYPE_SURFACE:
+				case XTL::X_D3DRTYPE_SURFACE:
 					hRet = pNewHostSurface->LockRect(&LockedRect, nullptr, D3DLockFlags);
 					break;
-				case X_D3DRTYPE_VOLUME:
+				case XTL::X_D3DRTYPE_VOLUME:
 					hRet = pNewHostVolume->LockBox(&LockedBox, nullptr, D3DLockFlags);
 					break;
-				case X_D3DRTYPE_TEXTURE:
+				case XTL::X_D3DRTYPE_TEXTURE:
 					hRet = pNewHostTexture->LockRect(mipmap_level, &LockedRect, nullptr, D3DLockFlags);
 					break;
-				case X_D3DRTYPE_VOLUMETEXTURE:
+				case XTL::X_D3DRTYPE_VOLUMETEXTURE:
 					hRet = pNewHostVolumeTexture->LockBox(mipmap_level, &LockedBox, nullptr, D3DLockFlags);
 					break;
-				case X_D3DRTYPE_CUBETEXTURE:
-					hRet = pNewHostCubeTexture->LockRect((D3DCUBEMAP_FACES)face, mipmap_level, &LockedRect, nullptr, D3DLockFlags);
+				case XTL::X_D3DRTYPE_CUBETEXTURE:
+					hRet = pNewHostCubeTexture->LockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level, &LockedRect, nullptr, D3DLockFlags);
 					break;
 				default:
 					assert(false);
@@ -4643,8 +4642,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				DWORD dwDstSlicePitch;
 
 				switch (XboxResourceType) {
-				case X_D3DRTYPE_VOLUME:
-				case X_D3DRTYPE_VOLUMETEXTURE:
+				case XTL::X_D3DRTYPE_VOLUME:
+				case XTL::X_D3DRTYPE_VOLUMETEXTURE:
 					pDst = (uint8_t *)LockedBox.pBits;
 					dwDstRowPitch = LockedBox.RowPitch;
 					dwDstSlicePitch = LockedBox.SlicePitch;
@@ -4712,20 +4711,20 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 				// Unlock the host resource
 				switch (XboxResourceType) {
-				case X_D3DRTYPE_SURFACE:
+				case XTL::X_D3DRTYPE_SURFACE:
 					hRet = pNewHostSurface->UnlockRect();
 					break;
-				case X_D3DRTYPE_VOLUME:
+				case XTL::X_D3DRTYPE_VOLUME:
 					hRet = pNewHostVolume->UnlockBox();
 					break;
-				case X_D3DRTYPE_TEXTURE:
+				case XTL::X_D3DRTYPE_TEXTURE:
 					hRet = pNewHostTexture->UnlockRect(mipmap_level);
 					break;
-				case X_D3DRTYPE_VOLUMETEXTURE:
+				case XTL::X_D3DRTYPE_VOLUMETEXTURE:
 					hRet = pNewHostVolumeTexture->UnlockBox(mipmap_level);
 					break;
-				case X_D3DRTYPE_CUBETEXTURE:
-					hRet = pNewHostCubeTexture->UnlockRect((D3DCUBEMAP_FACES)face, mipmap_level);
+				case XTL::X_D3DRTYPE_CUBETEXTURE:
+					hRet = pNewHostCubeTexture->UnlockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level);
 					break;
 				default:
 					assert(false);
@@ -4735,7 +4734,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					EmuWarning("Unlocking host %s failed!", ResourceTypeName);
 				}
 
-				if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
+				if (face == XTL::D3DCUBEMAP_FACE_POSITIVE_X) {
 					dwCubeFaceSize += dwDepth * dwMipSize;
 				}
 
@@ -4755,7 +4754,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 			} // for mipmap levels
 
-			if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
+			if (face == XTL::D3DCUBEMAP_FACE_POSITIVE_X) {
 				dwCubeFaceSize = ROUND_UP(dwCubeFaceSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
 			}
 
@@ -4770,33 +4769,33 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			char szFilePath[MAX_PATH];
 
 			switch (XboxResourceType) {
-			case X_D3DRTYPE_SURFACE: {
+			case XTL::X_D3DRTYPE_SURFACE: {
 				static int dwDumpSurface = 0;
 				sprintf(szFilePath, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-Surface%.03d.dds", X_Format, dwDumpSurface++);
-				D3DXSaveSurfaceToFileA(szFilePath, D3DXIFF_DDS, pNewHostSurface, NULL, NULL);
+				D3DXSaveSurfaceToFileA(szFilePath, XTL::D3DXIFF_DDS, pNewHostSurface, NULL, NULL);
 				break;
 			}
-			case X_D3DRTYPE_VOLUME: {
+			case XTL::X_D3DRTYPE_VOLUME: {
 				// TODO
 				break;
 			}
-			case X_D3DRTYPE_TEXTURE: {
+			case XTL::X_D3DRTYPE_TEXTURE: {
 				static int dwDumpTexure = 0;
 				sprintf(szFilePath, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-Texture%.03d.dds", X_Format, dwDumpTexure++);
-				D3DXSaveTextureToFileA(szFilePath, D3DXIFF_DDS, pNewHostTexture, NULL);
+				D3DXSaveTextureToFileA(szFilePath, XTL::D3DXIFF_DDS, pNewHostTexture, NULL);
 				break;
 			}
-			case X_D3DRTYPE_VOLUMETEXTURE: {
+			case XTL::X_D3DRTYPE_VOLUMETEXTURE: {
 				// TODO
 				break;
 			}
-			case X_D3DRTYPE_CUBETEXTURE: {
+			case XTL::X_D3DRTYPE_CUBETEXTURE: {
 				static int dwDumpCubeTexture = 0;
-				for (uint face = D3DCUBEMAP_FACE_POSITIVE_X; face <= D3DCUBEMAP_FACE_NEGATIVE_Z; face++) {
-					IDirect3DSurface8 *pSurface;
-					if (D3D_OK == pNewHostCubeTexture->GetCubeMapSurface((D3DCUBEMAP_FACES)face, 0, &pSurface)) {
+				for (uint face = XTL::D3DCUBEMAP_FACE_POSITIVE_X; face <= XTL::D3DCUBEMAP_FACE_NEGATIVE_Z; face++) {
+					XTL::IDirect3DSurface8 *pSurface;
+					if (D3D_OK == pNewHostCubeTexture->GetCubeMapSurface((XTL::D3DCUBEMAP_FACES)face, 0, &pSurface)) {
 						sprintf(szFilePath, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-CubeTexure%.03d-%d.dds", X_Format, dwDumpCubeTexture, face);
-						D3DXSaveSurfaceToFileA(szFilePath, D3DXIFF_DDS, pSurface, NULL, NULL);
+						D3DXSaveSurfaceToFileA(szFilePath, XTL::D3DXIFF_DDS, pSurface, NULL, NULL);
 						pSurface->Release();
 					}
 				}
@@ -4814,8 +4813,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 	// case X_D3DRTYPE_INDEXBUFFER: { break; } // TODO
 
-	case X_D3DRTYPE_PUSHBUFFER: {
-		X_D3DPushBuffer *pPushBuffer = (X_D3DPushBuffer*)pResource;
+	case XTL::X_D3DRTYPE_PUSHBUFFER: {
+		XTL::X_D3DPushBuffer *pPushBuffer = (XTL::X_D3DPushBuffer*)pResource;
 
 		// create push buffer
 		DWORD dwSize = g_VMManager.QuerySize(VirtualAddr);
@@ -4832,8 +4831,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 	//case X_D3DRTYPE_PALETTE: { break;	}
 
-	case X_D3DRTYPE_FIXUP: {
-		X_D3DFixup *pFixup = (X_D3DFixup*)pResource;
+	case XTL::X_D3DRTYPE_FIXUP: {
+		XTL::X_D3DFixup *pFixup = (XTL::X_D3DFixup*)pResource;
 
 		EmuWarning("X_D3DRTYPE_FIXUP is not yet supported\n"
 			"0x%.08X (pFixup->Common) \n"
