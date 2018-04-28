@@ -3246,6 +3246,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
 		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
+		// Emulate field-rendering not by halving the host backbuffer, but by faking
+		// the host backbuffer to half-height, which results in a correct viewport scale :
+		if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
+			HostRenderTarget_Desc.Height /= 2;
+		}
+
 		// Scale to host dimensions (avoiding hard-coding 640 x 480)
 		D3DVIEWPORT HostViewPort;
 
