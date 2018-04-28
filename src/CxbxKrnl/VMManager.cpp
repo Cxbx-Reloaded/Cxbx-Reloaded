@@ -222,18 +222,6 @@ void VMManager::InitializePfnDatabase()
 	VAddr addr;
 
 
-	// Zero all the entries of the PFN database
-	if (g_bIsRetail) {
-		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
-	}
-	else if (g_bIsChihiro) {
-		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
-	}
-	else {
-		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
-	}
-
-
 	// Construct the pfn of the page used by D3D
 	AllocateContiguous(PAGE_SIZE, D3D_PHYSICAL_PAGE, D3D_PHYSICAL_PAGE + PAGE_SIZE - 1, 0, XBOX_PAGE_READWRITE);
 	PersistMemory(CONTIGUOUS_MEMORY_BASE, PAGE_SIZE, true);
@@ -1764,7 +1752,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	// With VirtualAlloc we grab one page at a time to avoid fragmentation issues
 
-	BusyType = HasPageExecutionFlag(Protect) ? ImageType : VirtualMemoryType;
+	BusyType = (Protect & (XBOX_PAGE_EXECUTE | XBOX_PAGE_EXECUTE_READ | XBOX_PAGE_EXECUTE_READWRITE
+		| XBOX_PAGE_EXECUTE_WRITECOPY)) ? ImageType : VirtualMemoryType;
 	PointerPte = StartingPte;
 	while (PointerPte <= EndingPte)
 	{
@@ -2691,10 +2680,4 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 
 		return;
 	}
-}
-
-inline bool VMManager::HasPageExecutionFlag(DWORD protect)
-{
-	return protect & (XBOX_PAGE_EXECUTE | XBOX_PAGE_EXECUTE_READ | XBOX_PAGE_EXECUTE_READWRITE
-		| XBOX_PAGE_EXECUTE_WRITECOPY);
 }
