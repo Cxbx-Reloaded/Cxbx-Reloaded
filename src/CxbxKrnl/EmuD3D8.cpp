@@ -4590,11 +4590,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)pResource;
 		XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 		DWORD D3DUsage = 0;
-		D3DPOOL D3DPool = D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
+		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
 			D3DUsage = D3DUSAGE_DEPTHSTENCIL;
-			D3DPool = D3DPOOL_DEFAULT;
+			D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
 		else if (pPixelContainer == g_pXboxRenderTarget) {
 			if (EmuXBFormatIsRenderTarget(X_Format))
