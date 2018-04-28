@@ -9,7 +9,7 @@ The project began its life as a fork of Cxbx, with added 64-bit support.
 
 Work is currently underway to backport some of the improvements made from Dxbx.
 
-Cxbx-Reloaded is early in development, however it is progressing almost daily:
+Cxbx-Reloaded is early in development, however it is progressing almost daily;
 
 We now boot more titles than ever before, with more and more reaching gameplay.
 
