@@ -162,8 +162,8 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_PersistDisplay
 // ******************************************************************
-//85C0740F50FF15 ...C3
-OOVPA_NO_XREF(D3DDevice_PersistDisplay_0, 2060, 9)
+//85C0740F50FF15
+OOVPA_NO_XREF(D3DDevice_PersistDisplay, 1060, 9)
 
         { 0x00, 0x51 },
         { 0x01, 0x55 },
@@ -181,7 +181,7 @@ OOVPA_END;
 // * D3DDevice_SetPixelShaderConstant
 // ******************************************************************
 //450C8B451085
-OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 1024, 8)
+OOVPA_NO_XREF(D3DDevice_SetPixelShaderConstant, 1036, 8)
 
         { 0x00, 0x55 },
         { 0x07, 0x15 },

@@ -89,6 +89,19 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_16)
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
+);
+
+HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_4)
+(
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
+);
+
 // ******************************************************************
 // * patch: IDirect3DResource8_IsBusy
 // ******************************************************************
@@ -158,6 +171,8 @@ HRESULT WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
     DWORD                       Index
 );
 
+HRESULT __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_GetVisibilityTestResult
 // ******************************************************************
@@ -182,6 +197,8 @@ VOID WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     DWORD                       Address
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_LoadVertexShader_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShader
 // ******************************************************************
@@ -190,6 +207,9 @@ VOID WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     DWORD                       Handle,
     DWORD                       Address
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_0)();
+VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)();
 
 // ******************************************************************
 // * patch: D3D_KickOffAndWaitForIdle
@@ -309,6 +329,8 @@ VOID WINAPI EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	X_D3DXVECTOR4 *pScale
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetShaderConstantMode
 // ******************************************************************
@@ -316,6 +338,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
     XTL::X_VERTEXSHADERCONSTANTMODE Mode
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_Reset
@@ -400,6 +424,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)
     DWORD       ConstantCount
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant1
 // ******************************************************************
@@ -471,6 +497,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetPixelShader)
 (
     DWORD           Handle
 );
+
+VOID WINAPI EMUPATCH(D3DDevice_SetPixelShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture2
@@ -560,6 +588,11 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetIndices)
 VOID WINAPI EMUPATCH(D3DDevice_SetTexture)
 (
     DWORD           Stage,
+	X_D3DBaseTexture  *pTexture
+);
+
+VOID WINAPI EMUPATCH(D3DDevice_SetTexture_4)
+(
 	X_D3DBaseTexture  *pTexture
 );
 
@@ -935,6 +968,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
     DWORD Value
 );
 
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+(
+    DWORD Value
+);
+
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
@@ -960,6 +998,9 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor)
     DWORD Value
 );
 
+VOID EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)();
+VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_ColorKeyColor
 // ******************************************************************
@@ -969,12 +1010,20 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
     DWORD Value
 );
 
+VOID EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
 (
     DWORD                      Stage,
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
+);
+
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+(
     X_D3DTEXTURESTAGESTATETYPE Type,
     DWORD                      Value
 );
@@ -1213,6 +1262,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetTransform_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform
 // ******************************************************************
@@ -1268,6 +1319,11 @@ VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource)
 (
     UINT                StreamNumber,
     X_D3DVertexBuffer  *pStreamData,
+    UINT                Stride
+);
+
+VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource_4)
+(
     UINT                Stride
 );
 
@@ -1397,6 +1453,8 @@ VOID WINAPI EMUPATCH(D3DDevice_SetPalette)
     X_D3DPalette *pPalette
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetPalette_4)();
+
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
 // ******************************************************************
@@ -1404,6 +1462,8 @@ void WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
 (
     DWORD         Filter
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_SetFlickerFilter_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetSoftDisplayFilter
@@ -1448,6 +1508,8 @@ VOID WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
 (
     DWORD Handle
 );
+
+VOID __stdcall EMUPATCH(D3DDevice_DeleteVertexShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShaderDirect

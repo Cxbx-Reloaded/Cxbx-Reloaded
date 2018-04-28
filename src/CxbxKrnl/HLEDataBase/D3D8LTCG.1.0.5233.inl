@@ -115,7 +115,9 @@ OOVPA_END;
 // * D3DDevice_SetVertexShader
 // ******************************************************************
 //F6C30155568B35 ...C3
-OOVPA_NO_XREF(D3DDevice_SetVertexShader_0, 2036, 14)
+OOVPA_NO_XREF(D3DDevice_SetVertexShader_0, 2036, 15)
+
+        { 0x00, 0x51 },
 
         { 0x01, 0xF6 },
         { 0x02, 0xC3 },
@@ -190,4 +192,23 @@ OOVPA_NO_XREF(D3DDevice_SetPalette, 1036, 15)
         { 0x22, 0x08 },
         { 0x23, 0x8B },
         { 0x24, 0xBC },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SelectVertexShader
+// ******************************************************************
+//578D78FF89......0000 ...C3
+OOVPA_NO_XREF(D3DDevice_SelectVertexShader_0, 2048, 9)
+
+        { 0x00, 0x85 },
+        { 0x01, 0xC0 },
+
+        { 0x14, 0x57 },
+        { 0x15, 0x8D },
+        { 0x16, 0x78 },
+        { 0x17, 0xFF },
+        { 0x18, 0x89 },
+
+        { 0x1C, 0x00 },
+        { 0x1D, 0x00 },
 OOVPA_END;

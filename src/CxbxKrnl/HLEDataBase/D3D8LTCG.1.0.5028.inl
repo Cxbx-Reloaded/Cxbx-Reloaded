@@ -74,3 +74,21 @@ OOVPA_XREF(D3DDevice_SetTextureState_TexCoordIndex_4, 2058, 1+10,
         { 0x10, 0xE0 },
         { 0x11, 0x07 },
 OOVPA_END;
+
+//******************************************************************
+//* D3DDevice_LoadVertexShader
+//******************************************************************
+//C7009C1E040089 ...C20400
+OOVPA_NO_XREF(D3DDevice_LoadVertexShader_4, 2024, 9)
+
+        { 0x00, 0x53 },
+        { 0x01, 0x55 },
+
+        { 0x5E, 0xC7 },
+        { 0x5F, 0x00 },
+        { 0x60, 0x9C },
+        { 0x61, 0x1E },
+        { 0x62, 0x04 },
+        { 0x63, 0x00 },
+        { 0x64, 0x89 },
+OOVPA_END;

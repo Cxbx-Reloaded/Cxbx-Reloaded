@@ -131,7 +131,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetTransform
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTransform, 4034, 11)
+OOVPA_NO_XREF(D3DDevice_SetTransform, 4034, 13)
 
         // D3DDevice_SetTransform+0x00 : mov eax, [esp+arg_0]
         { 0x00, 0x8B },
@@ -153,6 +153,10 @@ OOVPA_NO_XREF(D3DDevice_SetTransform, 4034, 11)
         // D3DDevice_SetTransform+0x84 : fdivp st(1), st
         { 0x84, 0xDE },
         { 0x85, 0xF9 },
+
+        // D3DDevice_SetTransform+0x10B : retn 8
+        { 0x10B, 0xC2 },
+        { 0x10C, 0x08 },
 OOVPA_END;
 
 // ******************************************************************

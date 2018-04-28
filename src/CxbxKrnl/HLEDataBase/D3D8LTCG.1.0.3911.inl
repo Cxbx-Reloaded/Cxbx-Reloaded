@@ -36,7 +36,7 @@
 // * Direct3D_CreateDevice
 // ******************************************************************
 //85C9750AC705 ...C21000
-OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 8)
+OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 9)
 
         { 0x00, 0x8B },
 
@@ -47,7 +47,8 @@ OOVPA_NO_XREF(Direct3D_CreateDevice_16, 2024, 8)
         { 0x0A, 0xC7 },
         { 0x0B, 0x05 },
 
-        { 0x14, 0x8B },
+        { 0x28, 0x56 },
+        { 0x29, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
@@ -204,8 +205,9 @@ OOVPA_END;
 // * D3DDevice_SetTextureState_BorderColor
 // ******************************************************************
 //C1..0681..241B040089 ...C3
-OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2024, 11)
+OOVPA_NO_XREF(D3DDevice_SetTextureState_BorderColor_0, 2024, 12)
 
+        { 0x00, 0x56 },
         { 0x01, 0x8B },
 
         { 0x1C, 0xC1 },
@@ -842,7 +844,7 @@ OOVPA_END;
 // * D3DDevice_SetVertexShaderConstant
 // ******************************************************************
 //83C160C1E202A810 ...C3
-OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant_0, 2024, 10)
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant_8, 2024, 10)
 
         { 0x00, 0x55 },
         { 0x01, 0x8B },
@@ -993,4 +995,29 @@ OOVPA_NO_XREF(D3D_BlockOnResource_0, 2024, 11)
         { 0x2E, 0x75 },
         { 0x2F, 0x0C },
         { 0x30, 0x85 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetStreamSource
+// ******************************************************************
+//7406810300000800
+OOVPA_XREF(D3DDevice_SetStreamSource, 1039, 1+11,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        XREF_ENTRY( 0x47, XREF_G_STREAM ), // Derived
+
+        { 0x00, 0x53 },
+        { 0x01, 0x8B },
+        { 0x02, 0x1D },
+
+        { 0x38, 0x81 },
+        { 0x39, 0x45 },
+        { 0x3A, 0x00 },
+        { 0x3B, 0x00 },
+        { 0x3C, 0x00 },
+        { 0x3D, 0x08 },
+        { 0x3E, 0x00 },
+        { 0x3F, 0x8D },
 OOVPA_END;
