@@ -1437,12 +1437,21 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
 			// See void WndMain::CenterToDesktop()
 			{
-				RECT rect;
+				RECT desktop;
 
-				GetWindowRect(hwndParent/*=GetDesktopWindow()*/, &rect);
+				// TODO : Acknowledge DPI scaling here
+				GetWindowRect(hwndParent/*=GetDesktopWindow()*/, &desktop);
 
-				windowRect.left = rect.left + ((rect.right - rect.left - nWidth) / 2);
-				windowRect.top = rect.top + ((rect.bottom - rect.top - nHeight) / 2);
+				// Limit width/height to desktop resolution
+				int dWidth = desktop.right - desktop.left;
+				int dHeight = desktop.bottom - desktop.top;
+				if (nWidth > dWidth)
+					nWidth = dWidth;
+				if (nHeight > dHeight)
+					nHeight = dHeight;
+
+				windowRect.left = desktop.left + ((dWidth - nWidth) / 2);
+				windowRect.top = desktop.top + ((dHeight - nHeight) / 2);
 			}
 
  			// Resize the parent window so it can contain the requested window resolution
