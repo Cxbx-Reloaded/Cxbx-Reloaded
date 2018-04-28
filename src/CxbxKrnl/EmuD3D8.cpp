@@ -920,7 +920,6 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	hostResourceInfo.forceRehash = false;
 
 	g_HostResources[key] = hostResourceInfo;
-
 }
 
 XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource)
@@ -1418,36 +1417,58 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // create the window
     {
-        DWORD dwStyle = (g_XBVideo.GetFullscreen() || (CxbxKrnl_hEmuParent == 0))? WS_OVERLAPPEDWINDOW : WS_CHILD;
-
-        int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
-        int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
-        int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
-
-        int x = 100, y = 100, nWidth = 640, nHeight = 480;
-
-        nWidth  += nBorderWidth*2;
-        nHeight += nBorderHeight*2 + nTitleHeight;
-
-        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &nWidth, &nHeight);
-
-        if(g_XBVideo.GetFullscreen())
-        {
-            x = y = nWidth = nHeight = 0;
-            dwStyle = WS_POPUP;
-        }
-
         HWND hwndParent = GetDesktopWindow();
+        DWORD dwStyle = WS_POPUP;
+		RECT windowRect = { 0 };
 
-        if(!g_XBVideo.GetFullscreen())
-        {
-            hwndParent = CxbxKrnl_hEmuParent;
+        if (!g_XBVideo.GetFullscreen()) {
+
+			int nWidth = 640, nHeight = 480;
+			const char* resolution = g_XBVideo.GetVideoResolution();
+			if (2 != sscanf(resolution, "%d x %d", &nWidth, &nHeight)) {
+				DbgPrintf("EmuD3D8: Couldn't parse resolution : %s.\n", resolution);
+			}
+			else {
+				if (nWidth == 640)
+					DbgPrintf("EmuD3D8: Default width wasn't updated.\n");
+				if (nWidth == 480)
+					DbgPrintf("EmuD3D8: Default height wasn't updated.\n");
+			}
+
+			// See void WndMain::CenterToDesktop()
+			{
+				RECT rect;
+
+				GetWindowRect(hwndParent/*=GetDesktopWindow()*/, &rect);
+
+				windowRect.left = rect.left + ((rect.right - rect.left - nWidth) / 2);
+				windowRect.top = rect.top + ((rect.bottom - rect.top - nHeight) / 2);
+			}
+
+ 			// Resize the parent window so it can contain the requested window resolution
+			windowRect.right = windowRect.left + nWidth;
+			windowRect.bottom = windowRect.top + nHeight;
+			hwndParent = CxbxKrnl_hEmuParent;
+			dwStyle = (CxbxKrnl_hEmuParent == 0) ? WS_OVERLAPPEDWINDOW : WS_CHILD;
+			AdjustWindowRectEx(&windowRect, dwStyle, GetMenu(hwndParent) != NULL, GetWindowLong(hwndParent, GWL_EXSTYLE));
+			// TODO : For DPI screens, replace AdjustWindowRectEx by DwmGetWindowAttribute using DWMWA_EXTENDED_FRAME_BOUNDS
+
+			SetWindowPos(hwndParent, 0, 
+				windowRect.left,
+				windowRect.top,
+				windowRect.right - windowRect.left,
+				windowRect.bottom - windowRect.top,
+				SWP_ASYNCWINDOWPOS | SWP_NOOWNERZORDER | SWP_NOZORDER);
         }
 
         g_hEmuWindow = CreateWindow
         (
             "CxbxRender", "Cxbx-Reloaded",
-            dwStyle, x, y, nWidth, nHeight,
+            dwStyle, 
+			windowRect.left,
+			windowRect.top,
+			windowRect.right - windowRect.left,
+			windowRect.bottom - windowRect.top,
             hwndParent, NULL, GetModuleHandle(NULL), NULL
         );
     }
@@ -1836,25 +1857,51 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
         {
             DbgPrintf("EmuD3D8: CreateDevice proxy thread received request.\n");
 
-            if(g_EmuCDPD.bCreate)
-            {
-                // only one device should be created at once
-                // TODO: ensure all surfaces are somehow cleaned up?
-                if(g_pD3DDevice != nullptr)
-                {
-                    DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
+            // only one device should be created at once
+            if (g_pD3DDevice != nullptr) {
+                DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
 
-                    g_pD3DDevice->EndScene();
+                g_pD3DDevice->EndScene();
 
-                    // Address DirectX Debug Runtime reported error in _DEBUG builds
-                    // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
-                    #ifndef _DEBUG
-                        while(g_pD3DDevice->Release() != 0);
-                    #endif
+				for (auto &hostResourceIterator : g_HostResources) {
+					if (hostResourceIterator.second.pHostResource) {
+						(hostResourceIterator.second.pHostResource)->Release();
+					}
+				}
+				g_HostResources.clear();
 
-                    g_pD3DDevice = nullptr;
-                }
+				// TODO: ensure all other resources are cleaned up too
 
+				g_EmuCDPD.hRet = g_pD3DDevice->Release();
+
+				// Address DirectX Debug Runtime reported error in _DEBUG builds
+                // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
+                #ifndef _DEBUG
+                    while(g_pD3DDevice->Release() != 0);
+                #endif
+
+                g_pD3DDevice = nullptr;
+
+				// cleanup overlay clipper
+				if (g_pDDClipper != nullptr) {
+					g_pDDClipper->Release();
+					g_pDDClipper = nullptr;
+				}
+
+				// cleanup directdraw surface
+				if (g_pDDSPrimary != nullptr) {
+					g_pDDSPrimary->Release();
+					g_pDDSPrimary = nullptr;
+				}
+
+				// cleanup directdraw
+				if (g_pDD7 != nullptr) {
+					g_pDD7->Release();
+					g_pDD7 = nullptr;
+				}
+			}
+
+            if (g_EmuCDPD.bCreate) {
                 if(g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0] != NULL)
                     EmuWarning("BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
 
@@ -1915,7 +1962,16 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     // retrieve resolution from configuration
                     if(g_EmuCDPD.HostPresentationParameters.Windowed)
                     {
-                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight);
+						const char* resolution = g_XBVideo.GetVideoResolution();
+						if (2 != sscanf(resolution, "%d x %d", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
+							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
+						}
+						else {
+							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
+								DbgPrintf("EmuCreateDeviceProxy: Default width wasn't updated.\n");
+							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
+								DbgPrintf("EmuCreateDeviceProxy: Default height wasn't updated.\n");
+						}
 
                         XTL::D3DDISPLAYMODE D3DDisplayMode;
 
@@ -1928,11 +1984,20 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     {
                         char szBackBufferFormat[16];
 
-                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d %*dbit %s (%d hz)",
-                            &g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
-                            &g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
-                            szBackBufferFormat,
-                            &g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz);
+						const char* resolution = g_XBVideo.GetVideoResolution();
+						if (4 != sscanf(resolution, "%d x %d %*dbit %s (%d hz)",
+							&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
+							&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
+							szBackBufferFormat,
+							&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
+							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
+						}
+						else {
+							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
+								DbgPrintf("EmuCreateDeviceProxy: Default width wasn't updated.\n");
+							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
+								DbgPrintf("EmuCreateDeviceProxy: Default height wasn't updated.\n");
+						}
 
                         if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
 							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
@@ -2182,48 +2247,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // begin scene
                 hRet = g_pD3DDevice->BeginScene();
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
-
-                // signal completion
-                g_EmuCDPD.bReady = false;
             }
-            else
-            {
-                // release direct3d
-                if(g_pD3DDevice != nullptr)
-                {
-                    DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
 
-                    g_pD3DDevice->EndScene();
-
-                    g_EmuCDPD.hRet = g_pD3DDevice->Release();
-                    if(g_EmuCDPD.hRet == 0)
-                        g_pD3DDevice = nullptr;
-                }
-
-				// cleanup overlay clipper
-				if (g_pDDClipper != nullptr)
-				{
-					g_pDDClipper->Release();
-					g_pDDClipper = nullptr;
-				}
-
-				// cleanup directdraw surface
-                if(g_pDDSPrimary != nullptr)
-                {
-                    g_pDDSPrimary->Release();
-                    g_pDDSPrimary = nullptr;
-                }
-
-                // cleanup directdraw
-                if(g_pDD7 != nullptr)
-                {
-                    g_pDD7->Release();
-                    g_pDD7 = nullptr;
-                }
-
-                // signal completion
-                g_EmuCDPD.bReady = false;
-            }
+            // signal completion
+            g_EmuCDPD.bReady = false;
         }
 
 		Sleep(1);
@@ -3217,6 +3244,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
 		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
 		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
+		// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
 		HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
 		HostViewPort.MaxZ = pViewport->MaxZ;
 
@@ -3279,6 +3307,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 		LOG_FUNC_END;
 
 	LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// Test case : Spongebob - Battle for Bikini Bottom
 
     float fScaleX = 1.0f;
     float fScaleY = 1.0f;

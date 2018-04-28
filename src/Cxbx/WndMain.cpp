@@ -113,6 +113,42 @@ void WndMain::InitializeSettings() {
 #define TIMERID_FPS 0
 #define TIMERID_LED 1
 
+void WndMain::CenterToDesktop()
+{
+	RECT rect;
+
+	GetWindowRect(GetDesktopWindow(), &rect);
+
+	m_x = rect.left + ((rect.right - rect.left - m_w) / 2);
+	m_y = rect.top + ((rect.bottom - rect.top - m_h) / 2);
+}
+
+void WndMain::ResizeWindowForFullClientArea(HWND hwnd)
+{
+#if 0
+	RECT cRect;
+	RECT wRect;
+
+	GetClientRect(hwnd, &cRect);
+	GetWindowRect(hwnd, &wRect);
+
+	uint32 difW = (wRect.right - wRect.left) - (cRect.right);
+	uint32 difH = (wRect.bottom - wRect.top) - (cRect.bottom);
+
+	MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
+#else
+	RECT windowRect = { m_x, m_y, m_x + m_w, m_y + m_h };
+
+	AdjustWindowRectEx(&windowRect, GetWindowLong(hwnd, GWL_STYLE), GetMenu(hwnd) != NULL, GetWindowLong(hwnd, GWL_EXSTYLE));
+	SetWindowPos(hwnd, 0,
+		windowRect.left,
+		windowRect.top,
+		windowRect.right - windowRect.left,
+		windowRect.bottom - windowRect.top,
+		SWP_NOOWNERZORDER | SWP_NOZORDER);
+#endif
+}
+
 WndMain::WndMain(HINSTANCE x_hInstance) :
 	Wnd(x_hInstance),
 	m_bCreated(false),
@@ -142,15 +178,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
             m_szRecentXbe[v] = 0;
     }
 
-    // center to desktop
-    {
-        RECT rect;
-
-        GetWindowRect(GetDesktopWindow(), &rect);
-
-        m_x = rect.left + (rect.right - rect.left)/2 - m_w/2;
-        m_y = rect.top + (rect.bottom - rect.top)/2 - m_h/2;
-    }
+	CenterToDesktop();
 
     // load configuration from registry
     {
@@ -402,20 +430,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
 
             // resize window so that client area := 640x480
-            {
-                RECT cRect;
-                RECT wRect;
+			ResizeWindowForFullClientArea(hwnd);
 
-                GetClientRect(hwnd, &cRect);
-                GetWindowRect(hwnd, &wRect);
-
-                uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
-                uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
-
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
-            }
-
-            // initialize back buffer
+			// initialize back buffer
             {
                 HDC hDC = GetDC(hwnd);
 
@@ -2211,6 +2228,12 @@ void WndMain::StopEmulation()
 
 	UpdateCaption();
     RefreshMenus();
+	// Set the window size back to it's GUI dimensions
+	m_w = 640;
+	m_h = 480;
+	CenterToDesktop();
+	ResizeWindowForFullClientArea(m_hwnd);
+	// TODO : Combine the above into one operation
 }
 
 
