@@ -75,7 +75,7 @@ XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Cli
 DWORD                               g_CurrentXboxVertexShaderHandle = 0;
 XTL::X_PixelShader*					g_D3DActivePixelShader = nullptr;
 BOOL                                g_bIsFauxFullscreen = FALSE;
-BOOL								g_bHackUpdateSoftwareOverlay = FALSE;
+DWORD								g_OverlaySwap = 0;
 DWORD								g_CurrentFillMode = XTL::D3DFILL_SOLID;	// Used to backup/restore the fill mode when WireFrame is enabled
 
 // Static Function(s)
@@ -4452,8 +4452,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		}
 	}
 
-	g_bHackUpdateSoftwareOverlay = FALSE;
-
 	DWORD result;
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 		result = D3D_OK; // Present always returns success
@@ -5295,13 +5293,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 
 		// Update overlay if present was not called since the last call to
 		// EmuD3DDevice_UpdateOverlay.
-		if (g_bHackUpdateSoftwareOverlay) {
-			g_pD3DDevice->EndScene();
-			g_pD3DDevice->Present(0, 0, 0, 0);
-			g_pD3DDevice->BeginScene();
+		if (g_OverlaySwap != g_SwapData.Swap - 1) {
+			EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD);
 		}
 
-		g_bHackUpdateSoftwareOverlay = TRUE;
+		g_OverlaySwap = g_SwapData.Swap;
 	}   
 }
 
