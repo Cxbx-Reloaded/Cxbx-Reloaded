@@ -169,7 +169,7 @@ dashboard from non-retail xbe?");
 	}
 
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
-	ConstructVMA(XBE_IMAGE_BASE, CxbxKrnl_Xbe->m_Header.dwSizeofImage, UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
+	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
 
 
 	if (g_bIsChihiro) {

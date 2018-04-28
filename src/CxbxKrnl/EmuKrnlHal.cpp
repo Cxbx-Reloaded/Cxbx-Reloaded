@@ -69,7 +69,7 @@ uint8_t ResetOrShutdownCommandCode = 0;
 uint32_t ResetOrShutdownDataValue = 0;
 
 // global list of routines executed during a reboot
-LIST_ENTRY_INITIALIZE_HEAD(ShutdownRoutineList);
+LIST_ENTRY_DEFINE_HEAD(ShutdownRoutineList);
 
 
 // ******************************************************************

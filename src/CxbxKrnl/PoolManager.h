@@ -83,7 +83,7 @@ typedef struct _POOL_BLOCK {
 } POOL_BLOCK, *PPOOL_BLOCK;
 
 
-#define POOL_OVERHEAD ((LONG)sizeof(POOL_HEADER))
+#define POOL_OVERHEAD (static_cast<LONG>(sizeof(POOL_HEADER)))
 #define POOL_SMALLEST_BLOCK (sizeof(POOL_BLOCK))
 #define POOL_BUDDY_MAX (PAGE_SIZE - (POOL_OVERHEAD + POOL_SMALLEST_BLOCK ))
 #define MARK_POOL_HEADER_ALLOCATED(POOLHEADER)      {(POOLHEADER)->PoolIndex = 0x80;}
@@ -112,6 +112,7 @@ class PoolManager
 	private:
 		// main (and only) pool type available on the Xbox
 		POOL_DESCRIPTOR m_NonPagedPoolDescriptor;
+		// lookaside lists
 		POOL_LOOKASIDE_LIST m_ExpSmallNPagedPoolLookasideLists[POOL_SMALL_LISTS];
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;

@@ -34,10 +34,11 @@
 // *
 // ******************************************************************
 
-#include "PoolManager.h"
-#include <assert.h>
-
 #define LOG_PREFIX "POOLMEM"
+
+#include "PoolManager.h"
+#include "Logging.h"
+#include <assert.h>
 
 
 PoolManager g_PoolManager;
@@ -58,7 +59,7 @@ void PoolManager::InitializePool()
 	m_NonPagedPoolDescriptor.TotalBigPages = 0;
 
 	for (Index = 0; Index < POOL_LIST_HEADS; Index++) {
-		LIST_ENTRY_INITIALIZE_HEAD(m_NonPagedPoolDescriptor.ListHeads[Index]);
+		LIST_ENTRY_INITIALIZE_HEAD(&m_NonPagedPoolDescriptor.ListHeads[Index]);
 	}
 
 	for (Index = 0; Index < POOL_SMALL_LISTS; Index++) {
@@ -74,6 +75,11 @@ void PoolManager::InitializePool()
 
 VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 {
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Size)
+		LOG_FUNC_ARG(Tag)
+	LOG_FUNC_END;
+
 	PVOID Block;
 	PPOOL_HEADER Entry;
 	PPOOL_LOOKASIDE_LIST LookasideList;
@@ -90,6 +96,10 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 
 	if (Size > POOL_BUDDY_MAX) {
+
+		// The size requested is larger than 4056 bytes (maximum size mantained by a pool descriptor), so ask the VMManager to allocate
+		// the allocation and return it to the title
+
 		Lock();
 
 		PoolDesc->RunningAllocs += 1;
@@ -105,13 +115,18 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Unlock();
 		}
 
-		return reinterpret_cast<VAddr>(Entry);
+		RETURN(reinterpret_cast<VAddr>(Entry));
 	}
 
 	ListNumber = ((Size + POOL_OVERHEAD + (POOL_SMALLEST_BLOCK - 1)) >> POOL_BLOCK_SHIFT);
 	NeededSize = ListNumber;
 
 	if (NeededSize <= POOL_SMALL_LISTS) {
+
+		// Small size requested, try to use a lookaside list to satisfy the allocation. ergo720: however, on Windows NT lookaside lists
+		// are first created with ExXxxLookasideListEx and ExXxxLookasideList, which are not exported by the Xbox kernel and are likely
+		// not present. If so, then lookaside lists are never created and the following is likely dead code...
+
 		LookasideList = &m_ExpSmallNPagedPoolLookasideLists[NeededSize - 1];
 		LookasideList->TotalAllocates += 1;
 
@@ -127,7 +142,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Entry->PoolTag = Tag;
 			(reinterpret_cast<PULONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-			return reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD;
+			RETURN(reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
 		}
 	}
 
@@ -135,6 +150,9 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 	PoolDesc->RunningAllocs += 1;
 	ListHead = &PoolDesc->ListHeads[ListNumber];
+
+	// We failed to satisfy the request with a lookaside list, but the size is smaller then 4056 bytes. Try to use a pool descriptor for
+	// the allocation
 
 	do {
 		do {
@@ -184,11 +202,13 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 				Entry->PoolTag = Tag;
 				(reinterpret_cast<PULONGLONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-				return reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD;
+				RETURN(reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
 			}
 			ListHead += 1;
 
 		} while (ListHead != &PoolDesc->ListHeads[POOL_LIST_HEADS]);
+
+		// The current pool descriptor is exhausted, so we ask the VMManager to allocate a page to create a new one
 
 		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, PAGE_SIZE, false));
 
@@ -196,14 +216,13 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			EmuWarning(LOG_PREFIX " AllocatePool returns nullptr");
 			Unlock();
 
-			return reinterpret_cast<VAddr>(Entry);
+			RETURN(reinterpret_cast<VAddr>(Entry));
 		}
 		PoolDesc->TotalPages += 1;
 		Entry->PoolType = 0;
 
 		if ((PAGE_SIZE / POOL_SMALLEST_BLOCK) > 255) {
 			Entry->BlockSize = 255;
-
 		}
 		else {
 			Entry->BlockSize = static_cast<UCHAR>((PAGE_SIZE / POOL_SMALLEST_BLOCK));
@@ -219,6 +238,8 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 void PoolManager::DeallocatePool(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	PPOOL_HEADER Entry;
 	ULONG Index;
 	PPOOL_LOOKASIDE_LIST LookasideList;
@@ -226,7 +247,6 @@ void PoolManager::DeallocatePool(VAddr addr)
 	PPOOL_DESCRIPTOR PoolDesc = &m_NonPagedPoolDescriptor;
 	bool Combined;
 	ULONG BigPages;
-	ULONG Tag;
 
 	if (CHECK_ALIGNMENT(addr, PAGE_SIZE)) {
 		Lock();
@@ -321,17 +341,19 @@ void PoolManager::DeallocatePool(VAddr addr)
 
 size_t PoolManager::QueryPoolSize(VAddr addr)
 {
+	LOG_FUNC_ONE_ARG(addr);
+
 	PPOOL_HEADER Entry;
 	size_t size;
 
 	if (CHECK_ALIGNMENT(addr, PAGE_SIZE)) {
-		return g_VMManager.QuerySize(addr);
+		RETURN(g_VMManager.QuerySize(addr));
 	}
 
 	Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PCHAR>(addr) - POOL_OVERHEAD);
 	size = static_cast<size_t>((Entry->BlockSize << POOL_BLOCK_SHIFT) - POOL_OVERHEAD);
 
-	return size;
+	RETURN(size);
 }
 
 void PoolManager::Lock()
