@@ -212,7 +212,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 		Entry->PreviousSize = 0;
 		ListHead = &PoolDesc->ListHeads[POOL_LIST_HEADS - 1];
 
-		LIST_ENTRY_INSERT_HEAD(ListHead, (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<UCHAR>(Entry) + POOL_OVERHEAD))));
+		LIST_ENTRY_INSERT_HEAD(ListHead, (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD))));
 
 	} while (true);
 }
@@ -228,12 +228,12 @@ void PoolManager::DeallocatePool(VAddr addr)
 	ULONG BigPages;
 	ULONG Tag;
 
-	if (CHECK_ALIGNMENT(reinterpret_cast<VAddr>(addr), PAGE_SIZE)) {
+	if (CHECK_ALIGNMENT(addr, PAGE_SIZE)) {
 		Lock();
 
 		PoolDesc->RunningDeAllocs += 1;
 		
-		BigPages = g_VMManager.DeallocateSystemMemory(PoolType, reinterpret_cast<VAddr>(addr), 0);
+		BigPages = g_VMManager.DeallocateSystemMemory(PoolType, addr, 0);
 
 		PoolDesc->TotalBigPages -= BigPages;
 

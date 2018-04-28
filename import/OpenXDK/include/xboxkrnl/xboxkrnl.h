@@ -451,17 +451,6 @@ typedef _SLIST_ENTRY {
 #endif // _WIN64
 
 */
-// ******************************************************************
-// * SLIST_HEADER
-// ******************************************************************
-typedef union _SLIST_HEADER {
-	ULONGLONG Alignment;
-	struct {
-		SLIST_ENTRY Next;
-		WORD   Depth;
-		WORD   CpuId;
-	} DUMMYSTRUCTNAME;
-} SLIST_HEADER, *PSLIST_HEADER;
 
 // ******************************************************************
 // * FILE_FS_SIZE_INFORMATION

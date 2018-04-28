@@ -37,7 +37,7 @@
 #ifndef POOL_MANAGER_H
 #define POOL_MANAGER_H
 
-#include <windows.h>
+
 #include "VMManager.h"
 
 #define POOL_BLOCK_SHIFT 5
