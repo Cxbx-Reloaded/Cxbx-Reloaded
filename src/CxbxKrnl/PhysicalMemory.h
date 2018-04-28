@@ -199,6 +199,7 @@ typedef enum _PageType
 #define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)) + (Size) + (PAGE_SIZE_LARGE - 1)) >> PAGE_SHIFT_LARGE))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
 #define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)))
+#define PAGE_END(Va) (((ULONG_PTR)(Va) & (PAGE_SIZE - 1)) == 0)
 
 
 /* These macros check if the supplied address is inside a known range */

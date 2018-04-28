@@ -356,29 +356,33 @@ LIST_ENTRY, *PLIST_ENTRY;
 // https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
 
-#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) xboxkrnl::LIST_ENTRY ListHead = { &ListHead, &ListHead }
+#define LIST_ENTRY_DEFINE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
+
+#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) ((ListHead)->Flink = (ListHead)->Blink = (ListHead))
 
 #define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
 #define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
 ((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
 
+#define IS_LIST_EMPTY(ListHead) ((ListHead)->Flink == (ListHead))
+
 #define LIST_ENTRY_INSERT_HEAD(ListHead, Entry) {\
 xboxkrnl::PLIST_ENTRY Flink;\
-Flink = ListHead->Flink;\
+Flink = (ListHead)->Flink;\
 (Entry)->Flink = Flink;\
-(Entry)->Blink = ListHead;\
-Flink->Blink = Entry;\
-ListHead->Flink = Entry;\
+(Entry)->Blink = (ListHead);\
+(Flink)->Blink = Entry;\
+(ListHead)->Flink = Entry;\
 }
 
 #define LIST_ENTRY_INSERT_TAIL(ListHead, Entry) {\
 xboxkrnl::PLIST_ENTRY Blink;\
-Blink = ListHead->Blink;\
+Blink = (ListHead)->Blink;\
 (Entry)->Flink = ListHead;\
 (Entry)->Blink = Blink;\
-Blink->Flink = Entry;\
-ListHead->Blink = Entry;\
+(Blink)->Flink = Entry;\
+(ListHead)->Blink = Entry;\
 }
 
 #define LIST_ENTRY_REMOVE(Entry) {\
@@ -386,17 +390,35 @@ xboxkrnl::PLIST_ENTRY ExFlink;\
 xboxkrnl::PLIST_ENTRY ExBlink;\
 ExFlink = (Entry)->Flink;\
 ExBlink = (Entry)->Blink;\
-ExFlink->Blink = ExBlink;\
-ExBlink->Flink = ExFlink;\
+(ExFlink)->Blink = ExBlink;\
+(ExBlink)->Flink = ExFlink;\
 }
 
 #define LIST_ENTRY_REMOVE_AT_HEAD(ListHead) \
 (ListHead)->Flink;\
 LIST_ENTRY_REMOVE((ListHead)->Flink)
 
+#define REMOVE_HEAD_LIST(ListHead) \
+(ListHead)->Flink;\
+{LIST_ENTRY_REMOVE((ListHead)->Flink)}
+
+// ******************************************************************
+// * SLIST_ENTRY
+// ******************************************************************
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY  *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
+
+typedef union _SLIST_HEADER {
+	ULONGLONG Alignment;
+	struct {
+		SINGLE_LIST_ENTRY Next;
+		USHORT Depth;
+		USHORT Sequence;
+	};
+} SLIST_HEADER, *PSLIST_HEADER;
+
+#define QUERY_DEPTH_SLIST(_listhead_) (USHORT)(_listhead_)->Depth
 
 /*
  * Disabled as Cxbx-Reloaded does not support Win64 compilation
@@ -431,17 +453,6 @@ typedef _SLIST_ENTRY {
 #endif // _WIN64
 
 */
-// ******************************************************************
-// * SLIST_HEADER
-// ******************************************************************
-typedef union _SLIST_HEADER {
-	ULONGLONG Alignment;
-	struct {
-		SLIST_ENTRY Next;
-		WORD   Depth;
-		WORD   CpuId;
-	} DUMMYSTRUCTNAME;
-} SLIST_HEADER, *PSLIST_HEADER;
 
 // ******************************************************************
 // * FILE_FS_SIZE_INFORMATION

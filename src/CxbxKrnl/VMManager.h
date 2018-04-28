@@ -228,8 +228,6 @@ class VMManager : public PhysicalMemory
 		void RestorePersistentMemory();
 		// restores a persistent allocation
 		void RestorePersistentAllocation(VAddr addr, PFN StartingPfn, PFN EndingPfn, PageType Type);
-		// checks if any of the execute flags are set
-		bool HasPageExecutionFlag(DWORD protect);
 		// acquires the critical section
 		void Lock();
 		// releases the critical section

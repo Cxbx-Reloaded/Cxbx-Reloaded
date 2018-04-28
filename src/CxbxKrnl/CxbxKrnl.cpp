@@ -886,11 +886,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Initialize the virtual manager
 		g_VMManager.Initialize(hMemoryBin, hPageTables);
 
-		// Reserve the memory region used by the xbe image and commit the xbe header
-		size_t ImageSize = CxbxKrnl_Xbe->m_Header.dwSizeofImage;
+		// Commit the memory used by the xbe header
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
 		VAddr XbeBase = XBE_IMAGE_BASE;
-		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &ImageSize, XBOX_MEM_RESERVE, XBOX_PAGE_READWRITE);
 		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
 
 

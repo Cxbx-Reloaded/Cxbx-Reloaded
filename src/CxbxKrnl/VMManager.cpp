@@ -42,7 +42,7 @@
 
 #define LOG_PREFIX "VMEM"
 
-#include "VMManager.h"
+#include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
 #include <assert.h>
@@ -62,7 +62,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 {
-	// Set up the critical section to synchronize access
+	// Set up the critical section to synchronize accesses
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
 
 	SYSTEM_INFO si;
@@ -150,6 +150,9 @@ dashboard from non-retail xbe?");
 		ReinitializePfnDatabase();
 	}
 
+	// Initialize the pool manager
+	g_PoolManager.InitializePool();
+
 	// Construct the page directory
 	InitializePageDirectory();
 
@@ -164,6 +167,9 @@ dashboard from non-retail xbe?");
 			ROUND_DOWN_4K(XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE), UserRegion, ReservedVma,
 			false);
 	}
+
+	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
+	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
 
 
 	if (g_bIsChihiro) {
@@ -214,18 +220,6 @@ void VMManager::InitializePfnDatabase()
 	PMMPTE EndingPte;
 	MMPTE TempPte;
 	VAddr addr;
-
-
-	// Zero all the entries of the PFN database
-	if (g_bIsRetail) {
-		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
-	}
-	else if (g_bIsChihiro) {
-		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
-	}
-	else {
-		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB * 2, 0); // Debug: 128 KiB
-	}
 
 
 	// Construct the pfn of the page used by D3D
@@ -1668,15 +1662,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
 
-			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
+			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE,
+				ConvertXboxToWinProtection(PatchXboxPermissions(Protect)) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)) != AlignedCapturedBase)
 			{
-				// VirtualAlloc failed, check to see if we are reserving the memory for the xbe sections
+				// Something else is already mapped there, report an error
 
-				if (AlignedCapturedBase + AlignedCapturedSize > XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
-				{
-					status = STATUS_CONFLICTING_ADDRESSES;
-					goto Exit;
-				}
+				status = STATUS_CONFLICTING_ADDRESSES;
+				goto Exit;
 			}
 		}
 
@@ -1760,7 +1752,8 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	// With VirtualAlloc we grab one page at a time to avoid fragmentation issues
 
-	BusyType = HasPageExecutionFlag(Protect) ? ImageType : VirtualMemoryType;
+	BusyType = (Protect & (XBOX_PAGE_EXECUTE | XBOX_PAGE_EXECUTE_READ | XBOX_PAGE_EXECUTE_READWRITE
+		| XBOX_PAGE_EXECUTE_WRITECOPY)) ? ImageType : VirtualMemoryType;
 	PointerPte = StartingPte;
 	while (PointerPte <= EndingPte)
 	{
@@ -2687,10 +2680,4 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 
 		return;
 	}
-}
-
-inline bool VMManager::HasPageExecutionFlag(DWORD protect)
-{
-	return protect & (XBOX_PAGE_EXECUTE | XBOX_PAGE_EXECUTE_READ | XBOX_PAGE_EXECUTE_READWRITE
-		| XBOX_PAGE_EXECUTE_WRITECOPY);
 }

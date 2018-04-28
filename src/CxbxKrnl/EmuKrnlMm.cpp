@@ -42,7 +42,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For MmGlobalData, etc.
+	#include <xboxkrnl/xboxkrnl.h> // For MmGlobalData, etc.
 };
 
 #include "Logging.h" // For LOG_FUNC()
@@ -57,7 +57,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
+	#include "EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
 };
 
 // ******************************************************************
