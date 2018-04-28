@@ -67,6 +67,9 @@ void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 	//
 	// Now convert those values to Xbox XInput
 	//
+	//Packet# shall be updated, too.
+	Controller->dwPacketNumber = g_Controller.dwPacketNumber;
+
 	// Analog Sticks
 	Controller->Gamepad.sThumbLX = g_Controller.Gamepad.sThumbLX;
 	Controller->Gamepad.sThumbLY = g_Controller.Gamepad.sThumbLY;

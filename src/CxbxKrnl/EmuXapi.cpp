@@ -68,8 +68,8 @@ XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 #include "EmuXTL.h"
 
 
-XTL::POLLING_PARAMETERS_HANDLE g_pph;
-XTL::XINPUT_POLLING_PARAMETERS g_pp;
+XTL::POLLING_PARAMETERS_HANDLE g_pph[4];
+XTL::XINPUT_POLLING_PARAMETERS g_pp[4];
 
 
 void SetupXboxDeviceTypes()
@@ -279,19 +279,41 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	LOG_FUNC_END;
 
 	BOOL ret = FALSE;
-
-	// If this is a gamepad, and no gamepad was previously detected, connect one
-	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
-		DeviceType->CurrentConnected = 1;
-		DeviceType->ChangeConnected = 1;		
+	*pdwInsertions = 0;
+	*pdwRemovals = 0;
+	// we only process gamepad
+	if (DeviceType != gDeviceType_Gamepad)
+	{
+		DeviceType->ChangeConnected = 0;
+		RETURN(FALSE);
 	}
 
+	//if no gamepad was previously detected, connect one; this also means this is the first time being called.
+	if(DeviceType->CurrentConnected == 0) {
+		DeviceType->CurrentConnected = 1;
+		DeviceType->ChangeConnected = 1;
+		DeviceType->PreviousConnected = 0;
+		 *pdwInsertions = 1;
+		 *pdwRemovals = 0;
+		 RETURN(TRUE);
+	}
+
+	//Here is the code for any change polling after first call, since we connected the gamepad already, no need to report any change here.
+	DeviceType->CurrentConnected = 1;
+	DeviceType->ChangeConnected = 0;
+	DeviceType->PreviousConnected = 1;
+	*pdwInsertions = 0;
+	*pdwRemovals = 0;
+	RETURN(FALSE);
 	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
-	// TODO: Why is this still needed? 
+	// TODO: Why is this still needed?  maybe the code didn't check the devicetype, tried to remove this hack
+	/*
 	if (TitleIsJSRF()) {
 		DeviceType->ChangeConnected = 0;
 	}
+	*/
 
+	/*
     if(!DeviceType->ChangeConnected)
     {
         *pdwInsertions = 0;
@@ -316,6 +338,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
 
 	RETURN(ret);
+	*/
 }
 
 // ******************************************************************
@@ -339,56 +362,56 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_END;
 
     POLLING_PARAMETERS_HANDLE *pph = 0;
-
-    if(dwPort >= 0 && (dwPort <= 3))
+	
+    if(dwPort >= 0 && (dwPort <= 3) && DeviceType== gDeviceType_Gamepad)//opening gamepad device within port 0~3
     {
-        if(g_hInputHandle[dwPort] == 0)
+		//for any operation outside port 0, we skip it.
+		if (dwPort > 0)
+		{
+			RETURN((HANDLE)NULL);
+		}
+
+		if(g_hInputHandle[dwPort] == 0)
         {
-            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph;	// new POLLING_PARAMETERS_HANDLE();
+			//the handle of this port is not opened yet.
+
+            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new POLLING_PARAMETERS_HANDLE();
+			pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*)&g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
 
             if(pPollingParameters != NULL)
             {
-                pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
+               //if input PollingParameters is not NULL, copy the input PolllingParameters to global array.
 
                 memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
             }
             else
             {
-                pph->pPollingParameters = NULL;
+                //the pPollingParameters == NULL, a default Polling Parameters shall be used. but what is the default value?
+				pph->pPollingParameters->fAutoPoll = 1;
+				pph->pPollingParameters->fInterruptOut = 1;
+				pph->pPollingParameters->ReservedMBZ1 = 6;
+				pph->pPollingParameters->bInputInterval = 8; //8 for gamepad, 16 for debug keyboard
+				pph->pPollingParameters->bOutputInterval = 0;
+				pph->pPollingParameters->ReservedMBZ2 = 0;
             }
 
             g_hInputHandle[dwPort] = pph;
+			pph->dwPort = dwPort;
+			g_bXInputOpenCalled = true;
+
+			RETURN((HANDLE)pph);
         }
         else
         {
-            pph = (POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
-
-            if(pPollingParameters != 0)
-            {
-                if(pph->pPollingParameters == 0)
-                {
-                    pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
-                }
-
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
-            }
-            else
-            {
-                if(pph->pPollingParameters != 0)
-                {
-                    //delete pph->pPollingParameters;
-
-                    pph->pPollingParameters = 0;
-                }
-            }
+			//previous device of this port is not closed, can't be opened again.
+			RETURN((HANDLE)NULL);
         }
+	}
+	else {
+		RETURN((HANDLE)NULL);
+	}
 
-        pph->dwPort = dwPort;
-    }
-
-	g_bXInputOpenCalled = true;
-
-	RETURN((HANDLE)pph);
+	
 }
 
 // ******************************************************************
@@ -404,6 +427,10 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 	LOG_FUNC_ONE_ARG(hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+
+	if (g_hInputHandle[pph->dwPort] != 0) {
+		g_hInputHandle[pph->dwPort] = 0;//clear the InputHandle corresponding to the port.
+	}
 
     /* no longer necessary
     if(pph != NULL)
@@ -560,7 +587,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
         {
 			DbgPrintf("XAPI: EmuXInputGetState(): dwPort = %d\n", dwPort );
 
-            if(dwPort == 0)
+            if(true)//dwPort == 0)
             {
 				if (g_XInputEnabled) {
 					EmuXInputPCPoll(pState);
