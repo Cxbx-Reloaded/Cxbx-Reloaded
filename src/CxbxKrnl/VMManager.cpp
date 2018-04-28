@@ -168,6 +168,9 @@ dashboard from non-retail xbe?");
 			false);
 	}
 
+	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
+	ConstructVMA(XBE_IMAGE_BASE, CxbxKrnl_Xbe->m_Header.dwSizeofImage, UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
+
 
 	if (g_bIsChihiro) {
 		printf(LOG_PREFIX " Page table for Chihiro arcade initialized!\n");
@@ -1671,15 +1674,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
 
-			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE, PAGE_NOACCESS) != AlignedCapturedBase)
+			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE,
+				ConvertXboxToWinProtection(PatchXboxPermissions(Protect)) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)) != AlignedCapturedBase)
 			{
-				// VirtualAlloc failed, check to see if we are reserving the memory for the xbe sections
+				// Something else is already mapped there, report an error
 
-				if (AlignedCapturedBase + AlignedCapturedSize > XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
-				{
-					status = STATUS_CONFLICTING_ADDRESSES;
-					goto Exit;
-				}
+				status = STATUS_CONFLICTING_ADDRESSES;
+				goto Exit;
 			}
 		}
 
