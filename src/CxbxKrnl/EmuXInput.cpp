@@ -64,6 +64,9 @@ void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 	if( XInputGetState( 0, &g_Controller ) != ERROR_SUCCESS )
 		return;
 
+	//Packet# must be updated to trigger the xbe processing the input state.
+	Controller->dwPacketNumber = g_Controller.dwPacketNumber;
+
 	//
 	// Now convert those values to Xbox XInput
 	//

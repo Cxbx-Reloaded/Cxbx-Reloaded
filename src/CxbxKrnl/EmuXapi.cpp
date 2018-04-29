@@ -339,8 +339,8 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_END;
 
     POLLING_PARAMETERS_HANDLE *pph = 0;
-
-    if(dwPort >= 0 && (dwPort <= 3))
+	//return pph handle only for port 0, this prevents some title from polling input state with port other than 0 thus fix the no input issue such as RalliSport 
+    if(dwPort >= 0 && (dwPort <= 0))
     {
         if(g_hInputHandle[dwPort] == 0)
         {
