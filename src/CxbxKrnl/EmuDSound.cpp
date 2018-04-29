@@ -52,7 +52,7 @@ namespace xboxkrnl {
 
 
 #ifndef _DEBUG_TRACE
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 #include "Logging.h"
 #undef _DEBUG_TRACE
 #else
@@ -2039,7 +2039,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
         *pdwStatus = dwStatusXbox;
-        printf("DEBUG: sGetStatus | testSize = %8u | dwStatusHost = %8X | dwStatusXbox = %8X\n", testSize, dwStatusHost, dwStatusXbox);
+
     } else if (pdwStatus != xbnullptr) {
         *pdwStatus = 0;
     }

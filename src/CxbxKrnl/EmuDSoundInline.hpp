@@ -1709,6 +1709,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
         *Xb_lpVolume = lVolume;
     }
 
+    // For time being, this log is kept in case of something changed somewhere making a wrong input into the API.
     printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
 
     lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
