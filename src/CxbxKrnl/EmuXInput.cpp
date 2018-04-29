@@ -51,17 +51,38 @@
 static XINPUT_STATE		g_Controller;
 static BOOL				g_bXInputInitialized = FALSE;
 
+//
+//
+//
+DWORD XTL::XInputGamepad_Connected(void)
+{
+	DWORD dwResult;
+	DWORD gamepad_connected = 0;
+	for (DWORD i = 0; i< 4; i++)
+	{
+		ZeroMemory(&g_Controller, sizeof(XINPUT_STATE));
 
+		// query each port for gamepad state
+		dwResult = XInputGetState(i, &g_Controller);
+		
+		//success means gamepad is connected
+		if (dwResult == ERROR_SUCCESS)
+		{
+			gamepad_connected++;
+		}
+	}
+	return gamepad_connected;
+}
 // ******************************************************************
 // * patch: XInputPCPoll
 // ******************************************************************
-void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
+void XTL::EmuXInputPCPoll( DWORD dwPort,XTL::PXINPUT_STATE Controller )
 {
 	//
 	// Get the PC's XInput values
 	// 
 
-	if( XInputGetState( 0, &g_Controller ) != ERROR_SUCCESS )
+	if( XInputGetState( dwPort, &g_Controller ) != ERROR_SUCCESS )
 		return;
 
 	//Packet# must be updated to trigger the xbe processing the input state.
@@ -140,7 +161,7 @@ void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 // ******************************************************************
 // * Native implementation of XInputSetState
 // ******************************************************************
-void XTL::EmuXInputSetState(XTL::PXINPUT_FEEDBACK Feedback)
+void XTL::EmuXInputSetState(DWORD dwPort, XTL::PXINPUT_FEEDBACK Feedback)
 {
 	XINPUT_VIBRATION FrameVibration =
 	{
@@ -151,5 +172,5 @@ void XTL::EmuXInputSetState(XTL::PXINPUT_FEEDBACK Feedback)
 	//
 	// Set the PC XInput state
 
-	XInputSetState(0, &FrameVibration);
+	XInputSetState(dwPort, &FrameVibration);
 }

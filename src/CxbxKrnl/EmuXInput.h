@@ -34,14 +34,17 @@
 #ifndef EMUXINPUT_H
 #define EMUXINPUT_H
 
+//query the total connected xinput gamepad
+DWORD XInputGamepad_Connected(void);
+
 // ******************************************************************
 // * patch: XInputPCPoll
 // ******************************************************************
-void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
+void EmuXInputPCPoll( DWORD dwPort, XTL::PXINPUT_STATE Controller );
 
 // ******************************************************************
 // * Native implementation of XInputSetState
 // ******************************************************************
-void EmuXInputSetState(XTL::PXINPUT_FEEDBACK Feedback);
+void EmuXInputSetState(DWORD dwPort, XTL::PXINPUT_FEEDBACK Feedback);
 
 #endif
