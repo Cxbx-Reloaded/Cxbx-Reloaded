@@ -55,7 +55,7 @@ namespace xboxkrnl
 #endif
 
 #include <string> // For std::string
-#include <cstdint> // For uint32_t
+#include <distorm.h> // For uint32_t
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "CxbxKrnl\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
