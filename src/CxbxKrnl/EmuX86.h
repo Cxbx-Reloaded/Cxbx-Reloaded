@@ -57,6 +57,7 @@
 #define EMUX86_EFLAG_VIP 20
 #define EMUX86_EFLAG_ID 21
 
+void EmuX86_Init();
 int EmuX86_OpcodeSize(uint8_t *Eip);
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
 uint32_t EmuX86_IORead(xbaddr addr, int size);

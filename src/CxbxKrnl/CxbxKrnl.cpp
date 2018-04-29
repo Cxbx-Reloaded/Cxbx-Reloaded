@@ -1276,6 +1276,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
 
+	EmuX86_Init();
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
