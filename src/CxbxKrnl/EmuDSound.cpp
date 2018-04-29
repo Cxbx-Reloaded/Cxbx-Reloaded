@@ -30,7 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2017 blueshogun96
-// *  (c) 2017 RadWolfie
+// *  (c) 2017-2018 RadWolfie
 // *
 // *  All rights reserved
 // *
@@ -43,6 +43,7 @@ namespace xboxkrnl {
 };
 
 #include <dsound.h>
+#include <thread>
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"
@@ -194,15 +195,24 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 
 // Static Variable(s)
 XBAudio                             g_XBAudio = XBAudio();
-extern LPDIRECTSOUND8               g_pDSound8 = NULL; //This is necessary in order to allow share with EmuDSoundInline.hpp
-static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = NULL;
+extern LPDIRECTSOUND8               g_pDSound8 = nullptr; //This is necessary in order to allow share with EmuDSoundInline.hpp
+static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = nullptr;
 //TODO: RadWolfie - How to implement support if primary does not permit it for DSP usage?
-static LPDIRECTSOUNDBUFFER8         g_pDSoundPrimaryBuffer8 = NULL;
-static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = NULL;
+static LPDIRECTSOUNDBUFFER8         g_pDSoundPrimaryBuffer8 = nullptr;
+static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = nullptr;
 static XTL::X_CDirectSoundBuffer*   g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
 static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
+// Managed memory xbox audio variables
+#define                             X_DS_SGE_COUNT_MAX 2047
+#define                             X_DS_SGE_PAGE_MAX (4 * ONE_KB)
+#define                             X_DS_SGE_SIZE_MAX (X_DS_SGE_COUNT_MAX * X_DS_SGE_PAGE_MAX)
+DWORD                               g_dwXbMemAllocated = 0;
+DWORD                               g_dwFree2DBuffers = 0;
+DWORD                               g_dwFree3DBuffers = 0;
+std::thread dsound_thread;
+static void dsound_thread_worker(LPVOID);
 
 #define RETURN_RESULT_CHECK(hRet) { \
     static bool bPopupShown = false; if (!bPopupShown && hRet) { bPopupShown = true; \
@@ -248,6 +258,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     if (!initialized) {
         InitializeCriticalSection(&g_DSoundCriticalSection);
+        dsound_thread = std::thread(dsound_thread_worker, nullptr);
     }
 
     enterCriticalSection;
@@ -257,14 +268,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;
 
-    if (!initialized || !g_pDSound8) {
-        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), ppDirectSound, NULL);
+    if (!initialized || g_pDSound8 == nullptr) {
+        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), &g_pDSound8, NULL);
 
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
         }
-
-        g_pDSound8 = *ppDirectSound;
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
@@ -292,15 +301,12 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         }
 
         //Create Primary Buffer in order for Xbox's DirectSound to manage complete control of it.
-        DSBUFFERDESC bufferDesc;
+        DSBUFFERDESC bufferDesc = { 0 };
         bufferDesc.dwSize = sizeof(DSBUFFERDESC);
         bufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRL3D; //DSBCAPS_CTRLFX is not supported on primary buffer.
-        bufferDesc.dwBufferBytes = 0;
-        bufferDesc.dwReserved = 0;
-        bufferDesc.lpwfxFormat = NULL;
         bufferDesc.guid3DAlgorithm = GUID_NULL;
 
-        hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, NULL);
+        hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, nullptr);
 
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("Creating primary buffer for DirectSound Failed!");
@@ -324,7 +330,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 
     // This way we can be sure that this function returns a valid
     // DirectSound8 pointer even if we initialized it elsewhere!
-    if (!(*ppDirectSound) && g_pDSound8) {
+    if (ppDirectSound != nullptr) {
         *ppDirectSound = g_pDSound8;
     }
 
@@ -444,7 +450,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
     // This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 
     leaveCriticalSection;
 
@@ -466,103 +472,54 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
 	LOG_FUNC();
 
-    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
-    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
-        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*pDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
+    xboxkrnl::LARGE_INTEGER getTime;
+    xboxkrnl::KeQuerySystemTime(&getTime);
+
+    XTL::X_CDirectSoundBuffer* *ppDSBuffer = g_pDSoundBufferCache;
+    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, ppDSBuffer++) {
+        if ((*ppDSBuffer) == nullptr || (*ppDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*ppDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
             continue;
         }
+        XTL::X_CDirectSoundBuffer* pThis = *ppDSBuffer;
         // However there's a chance of locked buffers has been set which needs to be unlock.
-        DSoundGenericUnlock((*pDSBuffer)->EmuFlags,
-                            (*pDSBuffer)->EmuDirectSoundBuffer8,
-                            (*pDSBuffer)->EmuBufferDesc,
-                            (*pDSBuffer)->Host_lock,
-                            (*pDSBuffer)->X_BufferCache,
-                            (*pDSBuffer)->X_lock.dwLockOffset,
-                            (*pDSBuffer)->X_lock.dwLockBytes1,
-                            (*pDSBuffer)->X_lock.dwLockBytes2);
+        DSoundGenericUnlock(pThis->EmuFlags,
+                            pThis->EmuDirectSoundBuffer8,
+                            pThis->EmuBufferDesc,
+                            pThis->Host_lock,
+                            pThis->X_BufferCache,
+                            pThis->X_lock.dwLockOffset,
+                            pThis->X_lock.dwLockBytes1,
+                            pThis->X_lock.dwLockBytes2);
+
+        // TODO: Do we need this in async thread loop?
+        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
+            pThis->Xb_rtPauseEx = 0LL;
+            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
     }
 
     // Actually, DirectSoundStream need to process buffer packets here.
-    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+    XTL::X_CDirectSoundStream* *ppDSStream = g_pDSoundStreamCache;
+    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, ppDSStream++) {
+        if ((*ppDSStream) == nullptr || (*ppDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        XTL::X_CDirectSoundStream* pThis = *pDSStream;
+        XTL::X_CDirectSoundStream* pThis = *ppDSStream;
 
-        // If title want to pause, then don't process the packets.
-        if ((pThis->EmuFlags & DSB_FLAG_PAUSE) > 0) {
-            continue;
+        // TODO: Do we need this in async thread loop?
+        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
+            pThis->Xb_rtPauseEx = 0LL;
+            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            // Don't call play here, let DSoundStreamProcess deal with it.
         }
-
-        DWORD dwAudioBytes;
-        HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
-        if (hRet == DS_OK) {
-            std::vector<host_voice_packet>::iterator buffer = pThis->Host_BufferPacketArray.begin();
-            if (buffer->isWritten == false) {
-
-            prepareNextBufferPacket:
-                DSoundStreamWriteToBuffer(pThis->EmuDirectSoundBuffer8, buffer->rangeStart, buffer->pBuffer_data, buffer->xmp_data.dwMaxSize);
-
-                // Debug area begin
-                //printf("DEBUG: next packet process | pThis = %08X | rangeStart = %08d | bufferSize - %08d | dwBufferBytes = %08d | dwWriteOffsetNext = %08d\n", pThis, buffer->rangeStart, buffer->xmp_data.dwMaxSize, pThis->EmuBufferDesc->dwBufferBytes, pThis->Host_dwWriteOffsetNext);
-                // Debug area end
-
-                if (pThis->Host_isProcessing == false) {
-                    pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-                    pThis->Host_isProcessing = true;
-                }
-                buffer->isWritten = true;
-
-            } else {
-                // NOTE: p1. Do not use play cursor, use write cursor to check ahead since by the time it gets there. The buffer is already played.
-                // p2. Plus play cursor is not reliable to check, write cursor is reliable as it is update more often.
-                // Test case proof: Gauntlet Dark Legacy give 256 bytes of data to a per packet during intro FMV.
-                DWORD writePos = 0;
-                hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
-                if (hRet == DS_OK) {
-
-                    int bufPlayed = writePos - buffer->rangeStart;
-
-                    // Correct it if buffer was playing and is at beginning.
-                    if (bufPlayed < 0 && (buffer->isPlayed || (writePos + pThis->EmuBufferDesc->dwBufferBytes - buffer->rangeStart) < buffer->xmp_data.dwMaxSize)) {
-                        bufPlayed = pThis->EmuBufferDesc->dwBufferBytes - (bufPlayed * -1);
-                    }
-
-                    if (bufPlayed >= 0) {
-                        if (buffer->isPlayed == false) {
-                            buffer->isPlayed = true;
-                        }
-                        if (bufPlayed >= (int)buffer->xmp_data.dwMaxSize) {
-
-                            DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
-
-                            buffer = pThis->Host_BufferPacketArray.erase(buffer);
-                            if (pThis->Host_BufferPacketArray.size() == 0) {
-                                goto endOfPacket;
-                            }
-                            if (buffer->isWritten == false) {
-                                goto prepareNextBufferPacket;
-                            }
-                        }
-                        if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
-                            (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, bufPlayed);
-                        }
-                        if (pThis->Host_BufferPacketArray.size() > 1) {
-                            if ((buffer + 1)->isWritten == false) {
-                                buffer++;
-                                goto prepareNextBufferPacket;
-                            }
-                        }
-                    }
-                }
-                // Out of packets, let's stop it.
-                if (pThis->Host_BufferPacketArray.size() == 0) {
-
-                endOfPacket:
-                    pThis->Host_isProcessing = false;
-                    pThis->EmuDirectSoundBuffer8->Stop();
-                }
+        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
+            DSoundStreamProcess(pThis);
+        } else {
+            // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
+            if (pThis->Xb_rtFlushEx != 0 && pThis->Xb_rtFlushEx <= getTime.QuadPart) {
+                pThis->Xb_rtFlushEx = 0LL;
+                DSoundStreamProcess(pThis);
             }
         }
     }
@@ -570,6 +527,28 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     leaveCriticalSection;
 
     return;
+}
+// For Async process purpose only
+static void dsound_thread_worker(LPVOID nullPtr)
+{
+    while (true) {
+        SwitchToThread();
+
+        enterCriticalSection;
+
+        XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
+        for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
+            if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+                continue;
+            }
+            XTL::X_CDirectSoundStream* pThis = *pDSStream;
+            if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && pThis->Xb_rtFlushEx == 0) {
+                DSoundStreamProcess(pThis);
+            }
+        }
+
+        leaveCriticalSection;
+    }
 }
 
 // Kismet given name for RadWolfie's experiment major issue in the mutt.
@@ -765,7 +744,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 // This revision API was used in XDK 3911 until API had changed in XDK 4039.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
-    LPDIRECTSOUND8          pThis,
+    X_CDirectSoundBuffer*   pThis,
     DWORD                   dwMixBinMask,
     const LONG*             alVolumes)
 {
@@ -795,25 +774,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 // This revision is only used in XDK 4039 and higher.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
-    LPDIRECTSOUND8          pThis,
-    PVOID                   pMixBins)
+    X_CDirectSoundBuffer*   pThis,
+    X_LPDSMIXBINS           pMixBins)
 {
     FUNC_EXPORTS;
-
-    enterCriticalSection;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    // NOTE: Read the above notes, and the rest is self explanitory...
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return DS_OK;
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -954,18 +925,19 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     int v = 0;
     X_CDirectSoundBuffer** ppDSoundBufferCache = nullptr;
     for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-        if (g_pDSoundBufferCache[v] == 0) {
+        if (g_pDSoundBufferCache[v] == nullptr) {
             ppDSoundBufferCache = &g_pDSoundBufferCache[v];
             break;
         }
     }
     //If out of space, return out of memory.
-    if (ppDSoundBufferCache == nullptr) {
+    if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
+        *ppBuffer = xbnullptr;
     } else {
 
-        DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+        DSBUFFERDESC DSBufferDesc = { 0 };
 
         //TODO: Find out the cause for DSBCAPS_MUTE3DATMAXDISTANCE to have invalid arg.
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
@@ -979,25 +951,35 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
             pdsbd->dwFlags &= ~DSBCAPS_MUTE3DATMAXDISTANCE;
         }
 
-        pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
-        pDSBufferDesc->lpwfxFormat = nullptr;
+        DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+        DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
 
-        DSoundBufferSetDefault((*ppBuffer), pDSBufferDesc, 0, 0);
+        DSoundBufferSetDefault((*ppBuffer), 0);
         (*ppBuffer)->Host_lock = { 0 };
 
-        GeneratePCMFormat(pDSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         DSoundBufferRegionSetDefault(*ppBuffer);
 
-        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", *ppBuffer, pDSBufferDesc->dwBufferBytes);
+        // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
+        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
+        (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
-        DSoundBufferCreate(pDSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+
+        DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
+            (*ppBuffer)->Xb_dwHeadroom = 0; // Default for 3D
         }
+
+        DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
+
+        // Pre-set volume to enforce silence if one of audio codec is disabled.
+        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 
+                                          (*ppBuffer)->Xb_VolumeMixbin, (*ppBuffer)->Xb_dwHeadroom);
+
         *ppDSoundBufferCache = *ppBuffer;
     }
 
@@ -1055,7 +1037,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
                             pThis->EmuDirectSoundBuffer8,
                             pThis->EmuBufferDesc,
                             pThis->Host_lock,
-                            pThis->X_BufferCache,
+                            xbnullptr,
                             pThis->X_lock.dwLockOffset,
                             pThis->X_lock.dwLockBytes1,
                             pThis->X_lock.dwLockBytes2);
@@ -1067,42 +1049,54 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         leaveCriticalSection;
         return DS_OK;
     }
-    if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
-        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
-        DSoundBufferRegionRelease(pThis);
+    HRESULT hRet = DSERR_OUTOFMEMORY;
+    DWORD dwStatus;
+
+    // force wait until buffer is stop playing.
+    pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    while ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+        SwitchToThread();
+        pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
     }
 
-    ResizeIDirectSoundBuffer(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc,
-                             pThis->EmuPlayFlags, dwBufferBytes, pThis->EmuDirectSound3DBuffer8, pThis->EmuFlags, pThis->X_BufferCache, pThis->X_BufferCacheSize);
+    // Allocate memory whenever made request internally
+    if (pvBufferData == xbnullptr && DSoundSGEMenAllocCheck(dwBufferBytes)) {
 
-    DWORD pcmSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwBufferBytes);
+        // Confirmed it perform a reset to default.
+        DSoundBufferRegionSetDefault(pThis);
 
-    pThis->EmuDirectSoundBuffer8->Lock(0, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1, &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, DSBLOCK_ENTIREBUFFER);
+        GenerateXboxBufferCache(pThis->EmuBufferDesc, pThis->EmuFlags, dwBufferBytes, &pThis->X_BufferCache, pThis->X_BufferCacheSize);
 
-    memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
+        // Copy if given valid pointer.
+        memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pvBufferData, dwBufferBytes);
 
-    pThis->Host_lock.dwLockOffset = 0;
-    pThis->Host_lock.dwLockFlags = DSBLOCK_ENTIREBUFFER;
+        pThis->EmuFlags  ^= DSE_FLAG_BUFFER_EXTERNAL;
 
-    pThis->X_lock.dwLockOffset = 0;
-    pThis->X_lock.dwLockBytes1 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes1);
-    pThis->X_lock.dwLockBytes2 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes2);
+        DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
 
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
+        // Only perform a resize, for lock emulation purpose.
+        DSoundBufferResizeSetSize(pThis, hRet, dwBufferBytes);
 
-    pThis->X_lock.pLockPtr1 = nullptr;
-    pThis->X_lock.pLockPtr2 = nullptr;
+    } else if (pvBufferData != xbnullptr) {
+        // Free internal buffer cache if exist
+        if ((pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+            free(pThis->X_BufferCache);
+            DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
+        }
+        pThis->X_BufferCache = pvBufferData;
+        pThis->X_BufferCacheSize = dwBufferBytes;
+        pThis->EmuFlags |= DSE_FLAG_BUFFER_EXTERNAL;
+
+        DSoundDebugMuteFlag(pThis->X_BufferCacheSize, pThis->EmuFlags);
+
+        // Only perform a resize, for lock emulation purpose.
+        DSoundBufferResizeSetSize(pThis, hRet, dwBufferBytes);
+
+    }
 
     leaveCriticalSection;
 
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1130,6 +1124,23 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
     pThis->EmuBufferToggle = X_DSB_TOGGLE_PLAY;
     pThis->EmuRegionPlayStartOffset = dwPlayStart;
     pThis->EmuRegionPlayLength = dwPlayLength;
+
+    // Confirmed play region do overwrite loop region value.
+    pThis->EmuRegionLoopStartOffset = 0;
+    pThis->EmuRegionLoopLength = 0;
+
+    DWORD dwStatus;
+    pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    HRESULT hRet;
+
+    if ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+        if ((dwStatus & DSBSTATUS_LOOPING) == 0) {
+            pThis->EmuDirectSoundBuffer8->Stop();
+            DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
+            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
+    }
 
     leaveCriticalSection;
 
@@ -1273,19 +1284,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    // DirectSound does not provide SetHeadroom method.
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
+                                               pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1310,10 +1315,22 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    pThis->EmuRegionLoopStartOffset = pThis->EmuRegionPlayStartOffset + dwLoopStart;
     pThis->EmuRegionLoopStartOffset = dwLoopStart;
     pThis->EmuRegionLoopLength = dwLoopLength;
     pThis->EmuBufferToggle = X_DSB_TOGGLE_LOOP;
+
+    DWORD dwStatus;
+    pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    HRESULT hRet;
+
+    if ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+        if ((dwStatus & DSBSTATUS_LOOPING) > 0) {
+            pThis->EmuDirectSoundBuffer8->Stop();
+            DSoundBufferUpdate(pThis, pThis->EmuPlayFlags, hRet);
+            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+            pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
+    }
 
     leaveCriticalSection;
 
@@ -1335,7 +1352,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
 
     ULONG uRet = 0;
 
-    //if (!(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA)) {
+    //if (!(pThis->EmuFlags & DSE_FLAG_RECIEVEDATA)) {
         uRet = pThis->EmuDirectSoundBuffer8->Release();
 
         if (uRet == 0) {
@@ -1349,20 +1366,13 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
                 }
             }
 
-            if (pThis->EmuBufferDesc->lpwfxFormat != nullptr) {
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+                free(pThis->EmuBufferDesc.lpwfxFormat);
             }
-            if (pThis->X_BufferCache != xbnullptr) {
+            if (pThis->X_BufferCache != xbnullptr && (pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
                 free(pThis->X_BufferCache);
-                pThis->X_BufferCacheSize = 0;
+                DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
             }
-            if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-                pThis->EmuDirectSoundBuffer8Region->Release();
-            }
-            if (pThis->EmuDirectSound3DBuffer8Region != nullptr) {
-                pThis->EmuDirectSound3DBuffer8Region->Release();
-            }
-            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1388,7 +1398,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 		LOG_FUNC_ARG(lPitch)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetPitch(DSoundBufferSelectionT(pThis), lPitch);
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
 }
 
 // ******************************************************************
@@ -1397,16 +1407,41 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     X_CDirectSoundBuffer*   pThis,
-    OUT LPDWORD                 pdwStatus)
+    OUT LPDWORD             pdwStatus)
 {
     FUNC_EXPORTS;
+
+    enterCriticalSection;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetStatus(DSoundBufferSelectionT(pThis), pdwStatus);
+    DWORD dwStatusXbox = 0, dwStatusHost;
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
+
+    // Conversion is a requirement to xbox.
+    if (hRet == DS_OK) {
+        if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+            dwStatusXbox = X_DSBSTATUS_PAUSED;
+        } else if ((dwStatusHost & DSBSTATUS_PLAYING) > 0) {
+            dwStatusXbox = X_DSBSTATUS_PLAYING;
+        }
+        if ((dwStatusHost & DSBSTATUS_LOOPING) > 0) {
+            dwStatusXbox |= X_DSBSTATUS_LOOPING;
+        }
+    }
+
+    if (pdwStatus != xbnullptr) {
+        *pdwStatus = dwStatusXbox;
+    } else {
+        hRet = DSERR_INVALIDPARAM;
+    }
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -1429,7 +1464,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
     dwNewPosition = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwNewPosition);
 
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
-    HRESULT hRet = DSoundBufferSelectionT(pThis)->SetCurrentPosition(dwNewPosition);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
     if (hRet != DS_OK) {
         EmuWarning("SetCurrentPosition Failed!");
@@ -1457,7 +1492,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 		LOG_FUNC_ARG_OUT(pdwCurrentWriteCursor)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetCurrentPosition(DSoundBufferSelectionT(pThis), pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_GetCurrentPosition(pThis->EmuDirectSoundBuffer8, pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -1501,78 +1536,25 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
         pThis->EmuPlayFlags &= ~X_DSBPLAY_FROMSTART;
     }
 
-    if (dwFlags & X_DSBPLAY_SYNCHPLAYBACK) {
-        pThis->EmuPlayFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
-        pThis->EmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
-    }
-
     HRESULT hRet = DS_OK;
 
-    // Process Play/Loop Region buffer (Region Buffer creation can be only place inside Play function
-    if (pThis->EmuDirectSoundBuffer8Region == nullptr && pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
-        DWORD Xb_byteLength;
-        DWORD Xb_startOffset;
-        LPDSBUFFERDESC emuBufferDescRegion = (LPDSBUFFERDESC)malloc(sizeof(DSBUFFERDESC));
-        memcpy_s(emuBufferDescRegion, sizeof(DSBUFFERDESC), pThis->EmuBufferDesc, sizeof(DSBUFFERDESC));
-
-        switch (pThis->EmuBufferToggle) {
-            case X_DSB_TOGGLE_LOOP:
-                Xb_startOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
-
-                // Must check for zero length, then apply true length.
-                if (pThis->EmuRegionLoopLength == 0) {
-                    if (pThis->EmuRegionPlayLength != 0) {
-                        Xb_byteLength = pThis->EmuRegionPlayLength;
-                    } else {
-                        Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
-                    }
-                } else {
-                    Xb_byteLength = pThis->EmuRegionLoopLength;
-                }
-                break;
-            case X_DSB_TOGGLE_PLAY:
-                Xb_startOffset = pThis->EmuRegionPlayStartOffset;
-
-                // Must check for zero length, then apply true length.
-                if (pThis->EmuRegionPlayLength != 0) {
-                    Xb_byteLength = pThis->EmuRegionPlayLength;
-                } else {
-                    Xb_byteLength = pThis->X_BufferCacheSize - Xb_startOffset;
-                }
-                break;
-            default:
-                free(emuBufferDescRegion);
-                CxbxKrnlCleanup("Unknown TOGGLE region for DirectSoundBuffer class usage.");
-        }
-        emuBufferDescRegion->dwBufferBytes = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_byteLength);
-
-        DSoundBufferCreate(emuBufferDescRegion, pThis->EmuDirectSoundBuffer8Region);
-        if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-            DSound3DBufferCreate(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSound3DBuffer8Region);
-        }
-        DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSoundBuffer8Region,
-                             pThis->EmuDirectSound3DBuffer8, pThis->EmuDirectSound3DBuffer8Region);
-
-        hRet = pThis->EmuDirectSoundBuffer8Region->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
-                                                        nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
-        if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Unable to lock region buffer!");
-        }
-        if (pThis->Host_lock.pLockPtr1 != nullptr) {
-            DSoundBufferOutputXBtoHost(pThis->EmuFlags, emuBufferDescRegion, (PVOID)((PBYTE)pThis->X_BufferCache + Xb_startOffset), Xb_byteLength, pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1);
-            pThis->EmuDirectSoundBuffer8Region->Unlock(pThis->Host_lock.pLockPtr1, pThis->Host_lock.dwLockBytes1, nullptr, 0);
-            pThis->Host_lock.pLockPtr1 = nullptr;
-        }
-        free(emuBufferDescRegion);
+    if ((dwFlags & X_DSBPLAY_SYNCHPLAYBACK) > 0) {
+        //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
+        hRet = DSoundBufferSynchPlaybackFlagAdd(pThis->EmuFlags);
+        pThis->EmuPlayFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
     }
 
-    if (dwFlags & X_DSBPLAY_FROMSTART) {
-        if (DSoundBufferSelectionT(pThis)->SetCurrentPosition(0) != DS_OK) {
-            EmuWarning("Rewinding buffer failed!");
+    DSoundBufferUpdate(pThis, dwFlags, hRet);
+
+    if (hRet == DS_OK) {
+        if (dwFlags & X_DSBPLAY_FROMSTART) {
+            if (pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0) != DS_OK) {
+                EmuWarning("Rewinding buffer failed!");
+            }
         }
-    }
-    if ((pThis->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
-        hRet = DSoundBufferSelectionT(pThis)->Play(0, 0, pThis->EmuPlayFlags);
+        if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+            hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
     }
 
     leaveCriticalSection;
@@ -1597,8 +1579,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 
     if (pThis != nullptr) {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
-        hRet = DSoundBufferSelectionT(pThis)->Stop();
-        DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
+        hRet = pThis->EmuDirectSoundBuffer8->Stop();
+        pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
     }
 
     leaveCriticalSection;
@@ -1638,33 +1620,43 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
     } else {
         // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
         if (dwFlags == X_DSBSTOPEX_IMMEDIATE) {
-            hRet = DSoundBufferSelectionT(pThis)->Stop();
-            DSoundBufferSelectionT(pThis)->SetCurrentPosition(0);
+            hRet = pThis->EmuDirectSoundBuffer8->Stop();
+            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
         } else {
+            bool isLooping;
+            if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
+                isLooping = true;
+            } else {
+                isLooping = false;
+            }
             if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
                 // TODO: How to mock up "release phase"?
             }
             if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
                 // Release from loop region.
-                DWORD dwValue, dwStatus;
-                if (pThis->EmuDirectSoundBuffer8Region != nullptr) {
-                    pThis->EmuDirectSoundBuffer8Region->GetStatus(&dwStatus);
+                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
+            }
+            DWORD dwValue, dwStatus;
+            pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
 
-                    DSoundBufferTransferSettings(pThis->EmuDirectSoundBuffer8Region, pThis->EmuDirectSoundBuffer8,
-                                                    pThis->EmuDirectSound3DBuffer8Region, pThis->EmuDirectSound3DBuffer8);
+            if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
 
-                    hRet = pThis->EmuDirectSoundBuffer8Region->Stop();
-                    pThis->EmuDirectSoundBuffer8Region->GetCurrentPosition(&dwValue, nullptr);
-                    dwValue += DSoundBufferGetPCMBufferSize(pThis->EmuFlags, pThis->EmuRegionLoopStartOffset + pThis->EmuRegionPlayStartOffset);
-                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &dwValue);
+                hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-                    if (dwStatus & DSBSTATUS_PLAYING) {
-                        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-                    }
+                DSoundBufferResizeUpdate(pThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize);
 
-                    // Finally, release region buffer.
-                    DSoundBufferRegionRelease(pThis);
+                dwValue += pThis->EmuRegionPlayStartOffset;
+                if (isLooping) {
+                    dwValue += pThis->EmuRegionLoopStartOffset;
                 }
+
+                pThis->EmuBufferToggle = X_DSB_TOGGLE_DEFAULT;
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+            }
+
+            if (dwStatus & DSBSTATUS_PLAYING) {
+                pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
             }
         }
     }
@@ -1689,10 +1681,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    // TODO: Ensure that 4627 & 4361 are intercepting far enough back
-    // (otherwise pThis is manipulated!)
-
-    return HybridDirectSoundBuffer_SetVolume(DSoundBufferSelectionT(pThis), lVolume, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -1710,7 +1700,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetFrequency(DSoundBufferSelectionT(pThis), dwFrequency);
+    return HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency);
 }
 
 // ******************************************************************
@@ -1740,62 +1730,83 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 		LOG_FUNC_ARG_OUT(ppStream)
 		LOG_FUNC_END;
 
-    // TODO: Garbage Collection
-    *ppStream = new X_CDirectSoundStream();
-
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
-
-
-    DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
-
-    if (pdssd->dwFlags & (~dwAcceptableMask)) {
-        EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+    HRESULT hRet = DS_OK;
+    int v = 0;
+    X_CDirectSoundStream** ppDSoundStreamCache = nullptr;
+    for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
+        if (g_pDSoundStreamCache[v] == nullptr) {
+            ppDSoundStreamCache = &g_pDSoundStreamCache[v];
+            break;
+        }
     }
-    pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-    //pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-    pDSBufferDesc->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
-    pDSBufferDesc->lpwfxFormat = nullptr;
+    //If out of space, return out of memory.
+    if (ppDSoundStreamCache == nullptr) {
 
-    DSoundBufferSetDefault((*ppStream), pDSBufferDesc, 0, DSBPLAY_LOOPING);
+        hRet = DSERR_OUTOFMEMORY;
+        *ppStream = xbnullptr;
+    } else {
+        // TODO: Garbage Collection
+        *ppStream = new X_CDirectSoundStream();
 
-    GeneratePCMFormat(pDSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+        DSBUFFERDESC DSBufferDesc = { 0 };
 
-    // Allocate at least 5 second worth of bytes in PCM format.
-    pDSBufferDesc->dwBufferBytes = pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec * 5;
-    (*ppStream)->Host_dwTriggerRange = (pDSBufferDesc->lpwfxFormat->nSamplesPerSec / pDSBufferDesc->lpwfxFormat->wBitsPerSample);
 
-    (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
-    (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
-    (*ppStream)->Host_dwWriteOffsetNext = 0;
-    (*ppStream)->Host_isProcessing = false;
-    (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
-    (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
-    //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
+        DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
-    DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+        if (pdssd->dwFlags & (~dwAcceptableMask)) {
+            EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+        }
+        DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
+        //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+        DSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
 
-    DSoundBufferCreate(pDSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
-    if (pDSBufferDesc->dwFlags & DSBCAPS_CTRL3D) {
-        DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
-    }
-        // cache this sound stream
-    {
-        int v = 0;
-        for (v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
-            if (g_pDSoundStreamCache[v] == 0) {
-                g_pDSoundStreamCache[v] = *ppStream;
-                break;
-            }
+        if ((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0) {
+            DSBufferDesc.dwFlags |= DSBCAPS_CTRL3D;
+        } else {
+            DSBufferDesc.dwFlags |= DSBCAPS_CTRLPAN;
         }
 
-        if (v == SOUNDSTREAM_CACHE_SIZE) {
-            CxbxKrnlCleanup("SoundStream cache out of slots!");
+        DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
+        (*ppStream)->Xb_rtFlushEx = 0LL;
+
+        // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
+        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+
+        // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
+        // Allocate at least 10 second worth of bytes in PCM format.
+        DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 10;
+        (*ppStream)->EmuBufferDesc = DSBufferDesc;
+
+        (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
+
+        (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
+        (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
+        (*ppStream)->Host_dwWriteOffsetNext = 0;
+        (*ppStream)->Host_isProcessing = false;
+        (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
+        (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
+        //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
+
+        DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+
+        DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+        if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
+            DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
+            (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
         }
+
+        DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
+
+        // Pre-set volume to enforce silence if one of audio codec is disabled.
+        HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
+            (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
+
+        *ppDSoundStreamCache = *ppStream;
     }
 
     leaveCriticalSection;
 
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -1858,7 +1869,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags);
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -1929,11 +1941,14 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
                 }
             }
 
-            if (pThis->EmuBufferDesc->lpwfxFormat != NULL) {
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+            for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+                DSoundStreamClearPacket(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
+            }
+
+            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+                free(pThis->EmuBufferDesc.lpwfxFormat);
             }
             // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
-            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1982,16 +1997,56 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream*   pThis,
-    OUT DWORD*                  pdwStatus)
+    OUT DWORD*              pdwStatus)
 {
     FUNC_EXPORTS;
+
+    enterCriticalSection;
 
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pdwStatus)
         LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_GetStatus(pThis->EmuDirectSoundBuffer8, pdwStatus);
+    DWORD dwStatusXbox = 0, dwStatusHost;
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
+
+    // Convert host to xbox status flag.
+    if (hRet == DS_OK) {
+        DWORD testSize = pThis->Host_BufferPacketArray.size();
+        if ((dwStatusHost & DSBSTATUS_PLAYING) > 0) {
+            dwStatusXbox |= X_DSSSTATUS_PLAYING;
+
+        } else {
+
+            if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+
+            // Set to paused when has packet(s) queued and is not processing.
+            } else if (pThis->Host_BufferPacketArray.size() != 0 && pThis->Host_isProcessing == false) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+            }
+
+            if (pThis->Host_BufferPacketArray.size() == 0) {
+                dwStatusXbox |= X_DSSSTATUS_STARVED;
+
+                if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
+                    dwStatusXbox |= X_DSSSTATUS_ENVELOPECOMPLETE;
+                }
+            }
+        }
+        if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
+            dwStatusXbox |= X_DSSSTATUS_READY;
+        }
+        *pdwStatus = dwStatusXbox;
+
+    } else if (pdwStatus != xbnullptr) {
+        *pdwStatus = 0;
+    }
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -2030,11 +2085,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                     packet_input.pBuffer_data = nullptr;
                 } else {
                     packet_input.pBuffer_data = malloc(packet_input.xmp_data.dwMaxSize);
+                    DSoundSGEMemAlloc(packet_input.xmp_data.dwMaxSize);
                 }
                 packet_input.rangeStart = pThis->Host_dwWriteOffsetNext;
                 pThis->Host_dwWriteOffsetNext += packet_input.xmp_data.dwMaxSize;
-                if (pThis->EmuBufferDesc->dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
-                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc->dwBufferBytes;
+                if (pThis->EmuBufferDesc.dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
+                    pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc.dwBufferBytes;
                 }
                 packet_input.isWritten = false;
                 packet_input.isPlayed = false;
@@ -2048,7 +2104,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if (pInputBuffer->pdwCompletedSize != xbnullptr) {
                     (*pInputBuffer->pdwCompletedSize) = 0;
                 }
-
                 if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
                     pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.rangeStart);
                 }
@@ -2061,8 +2116,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         }
 
         //TODO: What to do with output buffer audio variable? Need test case or functional source code.
+        // NOTE: pOutputBuffer is reserved, must be set to NULL from titles.
         if (pOutputBuffer != xbnullptr) {
-
+            LOG_TEST_CASE("pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
         }
 
     } else {
@@ -2089,7 +2145,21 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: Perform check if has pending data. if so, stop stream.
+    // default ret = DSERR_GENERIC
+
+    pThis->EmuDirectSoundBuffer8->Stop();
+    pThis->Host_isProcessing = false;
+
+    // NOTE: Must reset flags in discontinuity and rtTimeStamps.
+    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
+    pThis->Xb_rtFlushEx = 0LL;
+    pThis->Xb_rtPauseEx = 0LL;
+
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+    }
 
     leaveCriticalSection;
 
@@ -2109,16 +2179,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    DSoundBufferRemoveSynchPlaybackFlag(pThis->EmuFlags);
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
 
+    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->Xb_rtFlushEx = 0LL;
 
-    pThis->EmuDirectSoundBuffer8->Stop();
-    pThis->Host_isProcessing = false;
-
-    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSoundStreamClearPacket(buffer._Ptr, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis->EmuFlags);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
-    }
+    while (DSoundStreamProcess(pThis));
 
     leaveCriticalSection;
 
@@ -2146,23 +2213,20 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
             continue;
         }
 
-        if ((*pDSBuffer)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
-            // RadWolfie: I don't think SetCurrentPosition is necessary?
-            //DSoundBufferSelectionT((*pDSBuffer))->SetCurrentPosition(0);
-            DSoundBufferSelectionT((*pDSBuffer))->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
-            (*pDSBuffer)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+        if (((*pDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*pDSBuffer)->EmuFlags);
+            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
         }
     }
 
     XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
     for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->X_BufferCache == nullptr) {
+        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        if ((*pDSStream)->EmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) {
-            (*pDSStream)->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-            (*pDSStream)->EmuDirectSoundBuffer8->Play(0, 0, DSBPLAY_LOOPING);
-            (*pDSStream)->EmuFlags ^= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+        if (((*pDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*pDSStream)->EmuFlags);
+            DSoundStreamProcess((*pDSStream));
         }
     }
 
@@ -2186,7 +2250,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                        pThis->Host_isProcessing, 0LL, pThis->Xb_rtPauseEx);
 }
 
 // ******************************************************************
@@ -2199,19 +2264,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    // DirectSound does not provide SetHeadroom method.
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
+                                               pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags);
 }
 
 // ******************************************************************
@@ -2411,8 +2470,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
-    PVOID   pThis, // X_CDirectSoundStream *pThis
-    PVOID   pMixBins)
+    X_CDirectSoundStream*   pThis,
+    PVOID                   pMixBins)
 {
     FUNC_EXPORTS;
 
@@ -2448,7 +2507,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMaxDistance(DSound3DBufferSelectionT(pThis), flMaxDistance, dwApply);
+    return HybridDirectSound3DBuffer_SetMaxDistance(pThis->EmuDirectSound3DBuffer8, flMaxDistance, dwApply);
 }
 
 // ******************************************************************
@@ -2468,7 +2527,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMinDistance(DSound3DBufferSelectionT(pThis), flMinDistance, dwApply);
+    return HybridDirectSound3DBuffer_SetMinDistance(pThis->EmuDirectSound3DBuffer8, flMinDistance, dwApply);
 }
 
 // ******************************************************************
@@ -2540,7 +2599,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeAngles(DSound3DBufferSelectionT(pThis), dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    return HybridDirectSound3DBuffer_SetConeAngles(pThis->EmuDirectSound3DBuffer8, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
 }
 
 // ******************************************************************
@@ -2564,7 +2623,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeOrientation(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetConeOrientation(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2584,7 +2643,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetConeOutsideVolume(DSound3DBufferSelectionT(pThis), lConeOutsideVolume, dwApply);
+    return HybridDirectSound3DBuffer_SetConeOutsideVolume(pThis->EmuDirectSound3DBuffer8, lConeOutsideVolume, dwApply);
 }
 
 // ******************************************************************
@@ -2608,7 +2667,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPosition)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetPosition(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetPosition(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2632,7 +2691,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetVelocity(DSound3DBufferSelectionT(pThis), x, y, z, dwApply);
+    return HybridDirectSound3DBuffer_SetVelocity(pThis->EmuDirectSound3DBuffer8, x, y, z, dwApply);
 }
 
 // ******************************************************************
@@ -2699,14 +2758,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMode)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetMode(DSound3DBufferSelectionT(pThis), dwMode, dwApply);
+    return HybridDirectSound3DBuffer_SetMode(pThis->EmuDirectSound3DBuffer8, dwMode, dwApply);
 }
 
 // +s
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFormat
 // ******************************************************************
-// TODO: When SetFormat is called, does Loop and Play region reset, including region buffer?
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 (
     X_CDirectSoundBuffer*   pThis,
@@ -2720,8 +2778,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
-
-    DSoundBufferRegionRelease(pThis);
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, 
@@ -2746,7 +2802,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2762,7 +2818,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2778,7 +2834,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2794,7 +2850,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 
 	LOG_FUNC();
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2949,6 +3005,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Pause
 // ******************************************************************
+// Introduced in XDK 4721 revision.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 (
     X_CDirectSoundBuffer*   pThis,
@@ -2961,8 +3018,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
-    // This function wasn't part of the XDK until 4721.
-
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
                         pThis->EmuBufferDesc,
@@ -2972,12 +3027,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
                         pThis->X_lock.dwLockBytes1,
                         pThis->X_lock.dwLockBytes2);
 
-    return HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                         1, 0LL, pThis->Xb_rtPauseEx);
 }
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PauseEx
 // ******************************************************************
+// Introduced in XDK 4721 revision.
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
 (
     X_CDirectSoundBuffer   *pThis,
@@ -2994,10 +3051,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
             LOG_FUNC_ARG(dwPause)
             LOG_FUNC_END;
 
-    // This function wasn't part of the XDK until 4721.
-    // TODO: Implement time stamp feature (a thread maybe?)
-
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(DSoundBufferSelectionT(pThis), dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 1);
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                                 1, rtTimestamp, pThis->Xb_rtPauseEx);
 
     leaveCriticalSection;
 
@@ -3040,8 +3095,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 (
-    LPVOID        pThis,
-    LPVOID        pEnvelopeDesc)
+    X_CDirectSoundStream*   pThis,
+    LPVOID                  pEnvelopeDesc)
 {
     FUNC_EXPORTS;
 
@@ -3078,11 +3133,35 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    HRESULT hRet = DSERR_INVALIDPARAM;
+
+    // Cannot use rtTimeStamp here, it must be flush.
+    if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
+
+        hRet = XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+
+    // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
+    } else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+
+        pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
+        pThis->Xb_rtFlushEx = rtTimeStamp;
+
+        // Set or remove flags (This is the only place it will set/remove other than Flush perform remove the flags.)
+        if ((dwFlags & X_DSSFLUSHEX_ENVELOPE) > 0) {
+            pThis->EmuFlags |= DSE_FLAG_ENVELOPE;
+        } else {
+            pThis->EmuFlags ^= DSE_FLAG_ENVELOPE;
+        }
+        if ((dwFlags & X_DSSFLUSHEX_ENVELOPE2) > 0) {
+            pThis->EmuFlags |= DSE_FLAG_ENVELOPE2;
+        } else {
+            pThis->EmuFlags ^= DSE_FLAG_ENVELOPE2;
+        }
+    }
 
     leaveCriticalSection;
 
-    return XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+    return hRet;
 }
 
 // ******************************************************************
@@ -3126,7 +3205,7 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 		LOG_FUNC_ARG(ppImageDesc)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED_DSOUND();
+	LOG_IGNORED();
 
     leaveCriticalSection;
 
@@ -3230,22 +3309,17 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 		LOG_FUNC_ARG_OUT(pDSCaps)
 		LOG_FUNC_END;
 
-    // Get PC's DirectSound capabilities
-    DSCAPS DSCapsPC;
-    ZeroMemory(&DSCapsPC, sizeof(DSCAPS));
-
-    HRESULT hRet = g_pDSound8->GetCaps(&DSCapsPC);
-    if (hRet != DS_OK) {
-        EmuWarning("Failed to get PC DirectSound caps!");
-    }
-
     // Convert PC -> Xbox
     if (pDSCaps) {
-        // WARNING: This may not be accurate under Windows Vista...
-        pDSCaps->dwFree2DBuffers = DSCapsPC.dwFreeHwMixingAllBuffers;
-        pDSCaps->dwFree3DBuffers = DSCapsPC.dwFreeHw3DAllBuffers;
-        pDSCaps->dwFreeBufferSGEs = 256;                            // TODO: Verify max on a real Xbox
-        pDSCaps->dwMemoryAllocated = DSCapsPC.dwFreeHwMemBytes;    // TODO: Bytes or MegaBytes?
+        pDSCaps->dwFreeBufferSGEs = DSoundSGEFreeBuffer();
+        // To prevent pass down overflow size.
+        pDSCaps->dwMemoryAllocated = (X_DS_SGE_SIZE_MAX < g_dwXbMemAllocated ? X_DS_SGE_SIZE_MAX : g_dwXbMemAllocated);
+
+        // TODO: What are the max values for 2D and 3D Buffers? Once discover, then perform real time update in global variable.
+        pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
+        pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
+
+        DbgPrintf("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
 
     leaveCriticalSection;
@@ -3291,8 +3365,8 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMixBinVolumes_12
+// This revision API was used in XDK 3911 until API had changed in XDK 4039.
 // ******************************************************************
-// This revision API is only used in XDK 4039 and higher.
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*   pThis,
@@ -3322,28 +3396,20 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-// This revision API was used in XDK 3911 until API had changed in XDK 4039.
+// This revision API is only used in XDK 4039 and higher.
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pMixBins)
+    X_LPDSMIXBINS           pMixBins)
 {
     FUNC_EXPORTS;
-
-    enterCriticalSection;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    // NOTE: Read the above notes, and the rest is self explanitory...
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
-
-    return S_OK;
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -3390,7 +3456,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    return HybridDirectSound3DBuffer_SetAllParameters(DSound3DBufferSelectionT(pThis), pc3DBufferParameters, dwApply);
+    return HybridDirectSound3DBuffer_SetAllParameters(pThis->EmuDirectSound3DBuffer8, pc3DBufferParameters, dwApply);
 }
 
 // ******************************************************************
@@ -3403,16 +3469,28 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 {
     FUNC_EXPORTS;
 
+    enterCriticalSection;
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
-    XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+    pThis->Host_isProcessing = false;
+    pThis->EmuDirectSoundBuffer8->Stop();
 
-    return HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        // TODO: Also need to pass down callback and context as well?
+        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
+    }
+
+    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
+
+    leaveCriticalSection;
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -3432,6 +3510,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
+    // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
+    // Test case: MultiPass sample
+    // Best to emulate this LLE instead of HLE.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
@@ -3456,6 +3537,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
+    // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
+    // Test case: Red Faction 2
+    // Best to emulate this LLE instead of HLE.
     LOG_UNIMPLEMENTED_DSOUND();
 
     leaveCriticalSection;
@@ -4015,7 +4099,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
     // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, (pThis->Host_BufferPacketArray.size() > 0));
+    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 
+                                                pThis->Host_isProcessing, rtTimestamp, pThis->Xb_rtPauseEx);
 
     leaveCriticalSection;
 
@@ -4198,4 +4283,148 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
     leaveCriticalSection;
 
     return DS_OK;
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetVolume
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
+(
+    X_CDirectSoundStream*   pThis,
+    LONG                    lVolume)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(lVolume)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
+                                             pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetPitch
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetPitch)
+(
+    X_CDirectSoundStream*   pThis,
+    LONG                    lPitch)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(lPitch)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetLFO
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
+(
+    X_CDirectSoundStream*   pThis,
+    LPCDSLFODESC            pLFODesc) {
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pLFODesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetLFO)(pThis, pLFODesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetEG
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
+(
+    X_CDirectSoundStream*   pThis,
+    LPVOID                  pEnvelopeDesc)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pEnvelopeDesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetEG)(pThis, pEnvelopeDesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetFilter
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFilter)
+(
+    X_CDirectSoundStream*   pThis,
+    X_DSFILTERDESC*         pFilterDesc)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pFilterDesc)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetFilter)(pThis, pFilterDesc);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwHeadroom)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(dwHeadroom)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)(pThis, dwHeadroom);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetFrequency
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFrequency)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD                   dwFrequency)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(dwFrequency)
+        LOG_FUNC_END;
+
+    return HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency);
+}
+
+// ******************************************************************
+// * patch: IDirectSoundStream_SetMixBins
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
+(
+    X_CDirectSoundStream*   pThis,
+    PVOID                   pMixBins)
+{
+    FUNC_EXPORTS;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pMixBins)
+        LOG_FUNC_END;
+
+    return XTL::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, pMixBins);
 }
