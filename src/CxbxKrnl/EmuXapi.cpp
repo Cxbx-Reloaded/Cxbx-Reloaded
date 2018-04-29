@@ -68,9 +68,9 @@ XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 #include "EmuXTL.h"
 
 
-XTL::POLLING_PARAMETERS_HANDLE g_pph;
-XTL::XINPUT_POLLING_PARAMETERS g_pp;
-
+XTL::POLLING_PARAMETERS_HANDLE g_pph[4];
+XTL::XINPUT_POLLING_PARAMETERS g_pp[4];
+DWORD total_xinput_gamepad = 0;
 
 void SetupXboxDeviceTypes()
 {
@@ -165,6 +165,18 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
     {
         g_hInputHandle[v] = 0;
     }
+	
+	if (g_XInputEnabled)
+	{
+		//query the total connected xinput gamepad.
+		total_xinput_gamepad = XInputGamepad_Connected();
+	}
+	else 
+	{
+		//using keyboard, we set the gamd pad count to 1
+		total_xinput_gamepad = 1;
+	}
+	
 }
 
 bool TitleIsJSRF()
@@ -239,10 +251,14 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
 
-	// If this is a gamepad, and no gamepad was previously detected, connect one
+	// If this is for getting  gamepad devices, and no gamepad was previously detected, connect one
 	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
-		ret = DeviceType->CurrentConnected = 1;
-		DeviceType->ChangeConnected = 1;
+		for (int i = 0; i < total_xinput_gamepad; i++)
+		{
+			DeviceType->CurrentConnected |= 1<<i;
+		}
+		DeviceType->ChangeConnected = DeviceType->CurrentConnected ;
+		ret = DeviceType->CurrentConnected;
 	}
 
 	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
@@ -339,16 +355,16 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_END;
 
     POLLING_PARAMETERS_HANDLE *pph = 0;
-	//return pph handle only for port 0, this prevents some title from polling input state with port other than 0 thus fix the no input issue such as RalliSport 
-    if(dwPort >= 0 && (dwPort <= 0))
+	//rever back to return handle  for port 0~3, this is for multi controller support.
+    if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
     {
         if(g_hInputHandle[dwPort] == 0)
         {
-            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph;	// new POLLING_PARAMETERS_HANDLE();
+            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new POLLING_PARAMETERS_HANDLE();
 
             if(pPollingParameters != NULL)
             {
-                pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
+                pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
 
                 memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
             }
@@ -367,7 +383,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
             {
                 if(pph->pPollingParameters == 0)
                 {
-                    pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
+                    pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
                 }
 
                 memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
@@ -404,8 +420,10 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 	LOG_FUNC_ONE_ARG(hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+	DWORD dwPort = pph->dwPort;
+	//NULL out the input handle corresponds to port.
+	g_hInputHandle[dwPort] = 0;
 
-    /* no longer necessary
     if(pph != NULL)
     {
         int v;
@@ -420,15 +438,16 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
                 g_pXInputSetStateStatus[v].dwLatency = 0;
             }
         }
-
+		/*
         if(pph->pPollingParameters != NULL)
         {
             delete pph->pPollingParameters;
         }
-
+		
         delete pph;
+		*/
     }
-    //*/
+    
 }
 
 // ******************************************************************
@@ -506,8 +525,8 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     if(pph != NULL)
     {
         DWORD dwPort = pph->dwPort;
-
-        if(dwPort == 0)
+		//return gamepad capabilities for port 0~3.
+        if(dwPort >= 0 && dwPort<=total_xinput_gamepad)
         {
             pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 			pCapabilities->In.Gamepad = {};
@@ -556,20 +575,18 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
         DWORD dwPort = pph->dwPort;
 
-        if((dwPort >= 0) && (dwPort <= 3))
+        if((dwPort >= 0) && (dwPort <= total_xinput_gamepad))
         {
 			DbgPrintf("XAPI: EmuXInputGetState(): dwPort = %d\n", dwPort );
 
-            if(dwPort == 0)
-            {
+            //for xinput, we query the state corresponds to port.
 				if (g_XInputEnabled) {
-					EmuXInputPCPoll(pState);
+					EmuXInputPCPoll(dwPort,pState);
 				} else {
 					EmuDInputPoll(pState);
 				}
 				
                 ret = ERROR_SUCCESS;
-            }
         }
     }
 	else
@@ -607,7 +624,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
         //
 
         bool found = false;
-
+		
         for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
         {
             if(g_pXInputSetStateStatus[v].hDevice == hDevice)
@@ -652,12 +669,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
             }
         }
 
-		if (pph->dwPort == 0)
+		if (g_XInputEnabled)
 		{
-			if (g_XInputEnabled)
-			{
-				XTL::EmuXInputSetState(pFeedback);
-			}
+			XTL::EmuXInputSetState(pph->dwPort, pFeedback);
 		}
     }
 
