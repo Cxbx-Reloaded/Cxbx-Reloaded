@@ -113,40 +113,50 @@ void WndMain::InitializeSettings() {
 #define TIMERID_FPS 0
 #define TIMERID_LED 1
 
-void WndMain::CenterToDesktop()
+void WndMain::ResizeWindow(bool bForGUI)
 {
-	RECT rect;
+	RECT desktopRect;
+	RECT windowRect;
 
-	GetWindowRect(GetDesktopWindow(), &rect);
+	// Set the window size back to it's GUI dimensions
+	m_w = 640;
+	m_h = 480;
+	if (!bForGUI) {
+		// For emulation, get the configured window dimensions
+		XBVideo XBVideoConf;
+		g_EmuShared->GetXBVideo(&XBVideoConf);
 
-	m_x = rect.left + ((rect.right - rect.left - m_w) / 2);
-	m_y = rect.top + ((rect.bottom - rect.top - m_h) / 2);
-}
+		const char* resolution = XBVideoConf.GetVideoResolution();
+		if (2 != sscanf(resolution, "%d x %d", &m_w, &m_h)) {
+			DbgPrintf("Couldn't parse resolution : %s.\n", resolution);
+		}
+	}
 
-void WndMain::ResizeWindowForFullClientArea(HWND hwnd)
-{
-#if 0
-	RECT cRect;
-	RECT wRect;
+	// TODO : Acknowledge DPI scaling here
+	GetWindowRect(GetDesktopWindow(), &desktopRect);
 
-	GetClientRect(hwnd, &cRect);
-	GetWindowRect(hwnd, &wRect);
+	// Limit width/height to desktop resolution
+	int dWidth = desktopRect.right - desktopRect.left;
+	int dHeight = desktopRect.bottom - desktopRect.top;
+	if (m_w > dWidth)
+		m_w = dWidth;
+	if (m_h > dHeight)
+		m_h = dHeight;
 
-	uint32 difW = (wRect.right - wRect.left) - (cRect.right);
-	uint32 difH = (wRect.bottom - wRect.top) - (cRect.bottom);
+	// Center to desktop
+	m_x = desktopRect.left + ((desktopRect.right - desktopRect.left - m_w) / 2);
+	m_y = desktopRect.top + ((desktopRect.bottom - desktopRect.top - m_h) / 2);
 
-	MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
-#else
-	RECT windowRect = { m_x, m_y, m_x + m_w, m_y + m_h };
-
-	AdjustWindowRectEx(&windowRect, GetWindowLong(hwnd, GWL_STYLE), GetMenu(hwnd) != NULL, GetWindowLong(hwnd, GWL_EXSTYLE));
-	SetWindowPos(hwnd, 0,
+	// Resize the window so it's client area can contain the requested resolution
+	windowRect = { m_x, m_y, m_x + m_w, m_y + m_h };
+	AdjustWindowRectEx(&windowRect, GetWindowLong(m_hwnd, GWL_STYLE), GetMenu(m_hwnd) != NULL, GetWindowLong(m_hwnd, GWL_EXSTYLE));
+	// TODO : For DPI screens, replace AdjustWindowRectEx by DwmGetWindowAttribute using DWMWA_EXTENDED_FRAME_BOUNDS
+	SetWindowPos(m_hwnd, 0,
 		windowRect.left,
 		windowRect.top,
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		SWP_NOOWNERZORDER | SWP_NOZORDER);
-#endif
 }
 
 WndMain::WndMain(HINSTANCE x_hInstance) :
@@ -166,9 +176,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
         m_classname = "WndMain";
         m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
 
-        m_w         = 640;
-        m_h         = 480;
-
         m_XbeFilename = (char*)calloc(1, MAX_PATH);
 
         m_CxbxDebugFilename = (char*)calloc(1, MAX_PATH);
@@ -177,8 +184,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
         for(int v=0;v<RECENT_XBE_SIZE;v++)
             m_szRecentXbe[v] = 0;
     }
-
-	CenterToDesktop();
 
     // load configuration from registry
     {
@@ -429,8 +434,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 SetMenu(hwnd, hMenu);
             }
 
-            // resize window so that client area := 640x480
-			ResizeWindowForFullClientArea(hwnd);
+			// Set window size to GUI dimensions
+			m_hwnd = hwnd; // Needed inside ResizeWindow (will be set to the same value later wayway)
+			ResizeWindow(/*bForGUI=*/true);
 
 			// initialize back buffer
             {
@@ -494,8 +500,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
 					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
-						float fps = 0;
-						float mspf = 0;
+						float fps = 0.0f;
+						float mspf = 0.0f;
 						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
 						g_EmuShared->SetCurrentMSpF(&mspf);
 						g_EmuShared->SetCurrentFPS(&fps);
@@ -671,13 +677,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case VK_F9:
 				{
 					// Try to open the most recent Xbe if none is opened yet :
-					if (m_Xbe == nullptr)
-						OpenMRU(0);
+					if (!m_bIsStarted) {
+						if (m_Xbe == nullptr)
+							OpenMRU(0);
 
-					if (m_Xbe != nullptr)
-						if (!m_bIsStarted)
+						if (m_Xbe != nullptr)
 							StartEmulation(hwnd, debuggerOn);
+					}
 				}
+				break;
 
                 default:
                 {
@@ -2160,6 +2168,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
 	g_EmuShared->SetPatchCpuFrequency(&m_PatchCpuFrequency);
 
+	// Set the window size to emulation dimensions
+	ResizeWindow(/*bForGUI*/false);
+
 	// shell exe
     {
         GetModuleFileName(NULL, szBuffer, MAX_PATH);
@@ -2229,11 +2240,7 @@ void WndMain::StopEmulation()
 	UpdateCaption();
     RefreshMenus();
 	// Set the window size back to it's GUI dimensions
-	m_w = 640;
-	m_h = 480;
-	CenterToDesktop();
-	ResizeWindowForFullClientArea(m_hwnd);
-	// TODO : Combine the above into one operation
+	ResizeWindow(/*bForGUI=*/true);
 }
 
 

@@ -45,8 +45,8 @@ Wnd::Wnd(HINSTANCE x_hInstance) : m_hInstance(x_hInstance)
     m_wndname     = "Cxbx-Reloaded Generic Window";
     m_x           = 150;
     m_y           = 150;
-    m_w           = 320;
-    m_h           = 240;
+    m_w           = 640;
+    m_h           = 480;
     m_parent      = NULL;
     m_clsstyle    = CS_HREDRAW | CS_VREDRAW;
     m_wndstyle    = WS_CLIPCHILDREN | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;

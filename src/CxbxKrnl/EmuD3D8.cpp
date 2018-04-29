@@ -1422,52 +1422,9 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 		RECT windowRect = { 0 };
 
         if (!g_XBVideo.GetFullscreen()) {
-
-			int nWidth = 640, nHeight = 480;
-			const char* resolution = g_XBVideo.GetVideoResolution();
-			if (2 != sscanf(resolution, "%d x %d", &nWidth, &nHeight)) {
-				DbgPrintf("EmuD3D8: Couldn't parse resolution : %s.\n", resolution);
-			}
-			else {
-				if (nWidth == 640)
-					DbgPrintf("EmuD3D8: Default width wasn't updated.\n");
-				if (nWidth == 480)
-					DbgPrintf("EmuD3D8: Default height wasn't updated.\n");
-			}
-
-			// See void WndMain::CenterToDesktop()
-			{
-				RECT desktop;
-
-				// TODO : Acknowledge DPI scaling here
-				GetWindowRect(hwndParent/*=GetDesktopWindow()*/, &desktop);
-
-				// Limit width/height to desktop resolution
-				int dWidth = desktop.right - desktop.left;
-				int dHeight = desktop.bottom - desktop.top;
-				if (nWidth > dWidth)
-					nWidth = dWidth;
-				if (nHeight > dHeight)
-					nHeight = dHeight;
-
-				windowRect.left = desktop.left + ((dWidth - nWidth) / 2);
-				windowRect.top = desktop.top + ((dHeight - nHeight) / 2);
-			}
-
- 			// Resize the parent window so it can contain the requested window resolution
-			windowRect.right = windowRect.left + nWidth;
-			windowRect.bottom = windowRect.top + nHeight;
 			hwndParent = CxbxKrnl_hEmuParent;
+			GetWindowRect(hwndParent, &windowRect);
 			dwStyle = (CxbxKrnl_hEmuParent == 0) ? WS_OVERLAPPEDWINDOW : WS_CHILD;
-			AdjustWindowRectEx(&windowRect, dwStyle, GetMenu(hwndParent) != NULL, GetWindowLong(hwndParent, GWL_EXSTYLE));
-			// TODO : For DPI screens, replace AdjustWindowRectEx by DwmGetWindowAttribute using DWMWA_EXTENDED_FRAME_BOUNDS
-
-			SetWindowPos(hwndParent, 0, 
-				windowRect.left,
-				windowRect.top,
-				windowRect.right - windowRect.left,
-				windowRect.bottom - windowRect.top,
-				SWP_ASYNCWINDOWPOS | SWP_NOOWNERZORDER | SWP_NOZORDER);
         }
 
         g_hEmuWindow = CreateWindow

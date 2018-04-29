@@ -87,8 +87,10 @@ class WndMain : public Wnd
         static void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
 
     private:
-		void CenterToDesktop();
-		void ResizeWindowForFullClientArea(HWND hwnd);
+		// ******************************************************************
+		// * resize the main window for either GUI or emulation
+		// ******************************************************************
+		void ResizeWindow(bool bForGUI);
 
         // ******************************************************************
         // * after an xbe is loaded, some things must be updated
