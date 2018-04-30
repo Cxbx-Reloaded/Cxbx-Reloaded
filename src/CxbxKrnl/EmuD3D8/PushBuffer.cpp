@@ -128,49 +128,47 @@ UINT XTL::DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 	return Result;
 }
 
-//Apply fixup data to pushbuffer. Code comes from Dxbx
-void EmuFixupPushBuffer
-(
-	UINT8       *pPushBuffer,
-	UINT8            *pFixup
-)
-{
-	UINT32 SizeInBytes = 0;
-	UINT32 OffsetInBytes = 0;
-
-	while ((SizeInBytes = *(UINT32*)pFixup) != 0xFFFFFFFF) {
-
-		pFixup += 4;
-		OffsetInBytes = *(UINT32*)pFixup;
-		pFixup += 4;
-
-		memcpy(pPushBuffer + OffsetInBytes, pFixup, SizeInBytes);
-		pFixup += SizeInBytes;
-	}
-
-	/*
-	When IDirect3DDevice8::RunPushBuffer is called with a fix - up object specified,
-	it will parse the fix - up data pointed to by pFixup and with a byte offset of Run.
-	The fix - up data is encoded as follows.The first DWORD is the size, in bytes,
-	of the push - buffer fix - up to be modified.The second DWORD is the offset, in bytes,
-	from the start of the push - buffer where the fix - up is to be modified.
-	The subsequent DWORDS are the data to be copied.This encoding repeats for every fix - up to be done,
-	until it terminates with a size value of 0xffffffff.
-	The offsets must be in an increasing order.
-	*/
-	return;
-}
-
 void XTL::EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
 )
 {
+	//Check whether Fixup exists or not. 
 	if (pFixup != NULL)
 	{
 		EmuWarning("PushBuffer has fixups\n");
-		EmuFixupPushBuffer((UINT8*)pPushBuffer, (UINT8*)pFixup);
+		//Interpret address of PushBuffer Data and Fixup Data
+		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;
+		UINT8* pFixupData = (UINT8*)(pFixup->Data + pFixup->Run);
+		UINT32 SizeInBytes = 0;
+		UINT32 OffsetInBytes = 0;
+
+		while (TRUE) {
+			SizeInBytes = *(UINT32*)pFixupData;
+			//If SizeInBytes==0xFFFFFFFF, end of Fixup Data.
+			if (SizeInBytes == 0xFFFFFFFF)
+				break;
+			pFixupData += 4;
+			OffsetInBytes = *(UINT32*)pFixupData;
+			pFixupData += 4;
+			//fixup must not exceed the pushbuffer data range.
+			if ((OffsetInBytes + SizeInBytes) <= pPushBuffer->Size)
+			{
+				memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
+			}
+			pFixupData += SizeInBytes;
+			/*
+			When IDirect3DDevice8::RunPushBuffer is called with a fix - up object specified,
+			it will parse the fix - up data pointed to by pFixup and with a byte offset of Run.
+			The fix - up data is encoded as follows.The first DWORD is the size, in bytes,
+			of the push - buffer fix - up to be modified.The second DWORD is the offset, in bytes,
+			from the start of the push - buffer where the fix - up is to be modified.
+			The subsequent DWORDS are the data to be copied.This encoding repeats for every fix - up to be done,
+			until it terminates with a size value of 0xffffffff.
+			The offsets must be in an increasing order.
+			*/
+		}
 	}
 #ifdef _DEBUG_TRACK_PB
 	DbgDumpPushBuffer((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
