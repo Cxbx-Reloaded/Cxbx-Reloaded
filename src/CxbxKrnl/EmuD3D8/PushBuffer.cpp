@@ -239,16 +239,19 @@ extern void XTL::EmuExecutePushBufferRaw
 		//check if loop reaches end of pushbuffer.
 		if ((UINT8 *)pdwPushData >= pPushDataEnd)
 		{
+			EmuWarning("Last pushbuffer instruction exceeds END of Data.\n");
 			break;
 		}
 		DWORD dwCount = (*pdwPushData >> 18);
         DWORD dwMethod = (*pdwPushData & 0x3FFFF);
 		DWORD bInc = *pdwPushData & 0x40000000;
-
+		
 		if (bInc != 0)
 		{
 			dwCount &= ~(bInc>>18);
+			bInc = 1;
 		}
+		
 		//always increase pdwPushData after we retrive the pushbuffer Data, so it always points to the next unhandled DWORD.
 		pdwPushData++;
 
@@ -535,16 +538,18 @@ extern void XTL::EmuExecutePushBufferRaw
         }
         else if(dwMethod == 0x1800) // NVPB_InlineIndexArray,   NV097_ARRAY_ELEMENT16
         {
-            /* // this section of code is performed in the beginning of while loop before entering this if-else-if section.
-			BOOL bInc = *pdwPushData & 0x40000000;
+			//points pIndexData to the first parameter.
+            pIndexData = pdwPushData;
+			pdwPushData += dwCount;
+			//multiply dwCount from DWORD count to WORD count
+			dwCount *= 2;
+			//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
+			//this definition is purely my guess, need confirmation.
+			if (bInc ==0 )
+			{
+				dwCount -= 1;
+			}
 
-            if(bInc)
-            {
-                dwCount = ((*pdwPushData - (0x40000000 | 0x00001818)) >> 18)*2 + 2;
-            }
-
-            pIndexData = ++pdwPushData;
-			*/
 
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB)
@@ -604,8 +609,6 @@ extern void XTL::EmuExecutePushBufferRaw
                 DbgDumpMesh((WORD*)pIndexData, dwCount);
             }
             #endif
-			// this needs to be checked. don't know the dwCount is for DWORD count or WORD count, and whether the increment flag will affect it or not.
-            pdwPushData += (dwCount/2) + (bInc ? 0 : 1);
 
             // perform rendering
             {
@@ -745,7 +748,7 @@ extern void XTL::EmuExecutePushBufferRaw
 		}
 		else // default case, handling any other unknown methods.
 		{
-			//EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+			EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
 			pdwPushData += dwCount;
 			//shall we break here?
 		}
