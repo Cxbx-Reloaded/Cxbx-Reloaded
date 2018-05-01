@@ -177,14 +177,10 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
     there is chance of failure which contain value greater than 0.
  */
 
+// size of DirectSound cache max size
+#define X_DIRECTSOUND_CACHE_MAX 0x800
 
-// TODO: Both buffer and stream cache size need to merge as one, there is no such thing as 4094 SGE
-
-// size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x800 //Maximum is 2047 SGE overall
-
-// size of sound stream cache (used for periodic sound stream updates)
-#define SOUNDSTREAM_CACHE_SIZE 0x800
+#define X_DIRECTSOUND_CACHE_COUNT (g_pDSoundBufferCache.size() + g_pDSoundStreamCache.size())
 
 //Currently disabled since below may not be needed since under -6,400 is just silence yet accepting up to -10,000
 // Xbox to PC volume ratio format (-10,000 / -6,400 )
@@ -193,6 +189,9 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 // Xbox maximum synch playback audio
 #define DSOUND_MAX_SYNCHPLAYBACK_AUDIO 29
 
+#define vector_ds_buffer std::vector<XTL::X_CDirectSoundBuffer*>
+#define vector_ds_stream std::vector<XTL::X_CDirectSoundStream*>
+
 // Static Variable(s)
 XBAudio                             g_XBAudio = XBAudio();
 extern LPDIRECTSOUND8               g_pDSound8 = nullptr; //This is necessary in order to allow share with EmuDSoundInline.hpp
@@ -200,8 +199,8 @@ static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = nullptr;
 //TODO: RadWolfie - How to implement support if primary does not permit it for DSP usage?
 static LPDIRECTSOUNDBUFFER8         g_pDSoundPrimaryBuffer8 = nullptr;
 static LPDIRECTSOUND3DLISTENER8     g_pDSoundPrimary3DListener8 = nullptr;
-static XTL::X_CDirectSoundBuffer*   g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
-static XTL::X_CDirectSoundStream*   g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE] = { 0 }; //Default initialize to all zero'd
+vector_ds_buffer                    g_pDSoundBufferCache;
+vector_ds_stream                    g_pDSoundStreamCache;
 static int                          g_bDSoundCreateCalled = FALSE;
 unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 // Managed memory xbox audio variables
@@ -281,24 +280,21 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
             CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
         }
 
-        int v = 0;
         // clear sound buffer cache
-        XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
-        for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-            if ((*pDSBuffer) == nullptr)
-                continue;
-            while (XTL::EMUPATCH(IDirectSoundBuffer_Release)((*pDSBuffer))) {};
-            g_pDSoundBufferCache[v] = 0;
+        vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
+        for (; ppDSBuffer != g_pDSoundBufferCache.end();) {
+            while (XTL::EMUPATCH(IDirectSoundBuffer_Release)((*ppDSBuffer))) {};
+            ppDSBuffer = g_pDSoundBufferCache.erase(ppDSBuffer);
         }
+        g_pDSoundBufferCache.reserve(X_DIRECTSOUND_CACHE_MAX);
 
         // clear sound stream cache
-        XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-        for (v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
-            if ((*pDSStream) == nullptr)
-                continue;
-            while (XTL::EMUPATCH(CDirectSoundStream_Release)((*pDSStream))) {};
-            g_pDSoundStreamCache[v] = 0;
+        vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
+        for (; ppDSStream != g_pDSoundStreamCache.end();) {
+            while (XTL::EMUPATCH(CDirectSoundStream_Release)((*ppDSStream)));
+            ppDSStream = g_pDSoundStreamCache.erase(ppDSStream);
         }
+        g_pDSoundStreamCache.reserve(X_DIRECTSOUND_CACHE_MAX);
 
         //Create Primary Buffer in order for Xbox's DirectSound to manage complete control of it.
         DSBUFFERDESC bufferDesc = { 0 };
@@ -475,9 +471,9 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     xboxkrnl::LARGE_INTEGER getTime;
     xboxkrnl::KeQuerySystemTime(&getTime);
 
-    XTL::X_CDirectSoundBuffer* *ppDSBuffer = g_pDSoundBufferCache;
-    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, ppDSBuffer++) {
-        if ((*ppDSBuffer) == nullptr || (*ppDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*ppDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
+    vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
+    for (; ppDSBuffer != g_pDSoundBufferCache.end(); ppDSBuffer++) {
+        if ((*ppDSBuffer)->Host_lock.pLockPtr1 == nullptr || (*ppDSBuffer)->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
             continue;
         }
         XTL::X_CDirectSoundBuffer* pThis = *ppDSBuffer;
@@ -500,13 +496,12 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
     }
 
     // Actually, DirectSoundStream need to process buffer packets here.
-    XTL::X_CDirectSoundStream* *ppDSStream = g_pDSoundStreamCache;
-    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, ppDSStream++) {
-        if ((*ppDSStream) == nullptr || (*ppDSStream)->Host_BufferPacketArray.size() == 0) {
+    vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
+    for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
+        if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        XTL::X_CDirectSoundStream* pThis = *ppDSStream;
-
+        X_CDirectSoundStream* pThis = (*ppDSStream);
         // TODO: Do we need this in async thread loop?
         if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
@@ -536,14 +531,13 @@ static void dsound_thread_worker(LPVOID nullPtr)
 
         enterCriticalSection;
 
-        XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-        for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-            if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+        vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
+        for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
+            if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
                 continue;
             }
-            XTL::X_CDirectSoundStream* pThis = *pDSStream;
-            if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && pThis->Xb_rtFlushEx == 0) {
-                DSoundStreamProcess(pThis);
+            if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0) {
+                DSoundStreamProcess((*ppDSStream));
             }
         }
 
@@ -922,16 +916,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 		LOG_FUNC_END;
 
     HRESULT hRet = DS_OK;
-    int v = 0;
-    X_CDirectSoundBuffer** ppDSoundBufferCache = nullptr;
-    for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-        if (g_pDSoundBufferCache[v] == nullptr) {
-            ppDSoundBufferCache = &g_pDSoundBufferCache[v];
-            break;
-        }
-    }
+
     //If out of space, return out of memory.
-    if (ppDSoundBufferCache == nullptr || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
+    if (X_DIRECTSOUND_CACHE_COUNT == X_DIRECTSOUND_CACHE_MAX || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
         *ppBuffer = xbnullptr;
@@ -980,7 +967,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 
                                           (*ppBuffer)->Xb_VolumeMixbin, (*ppBuffer)->Xb_dwHeadroom);
 
-        *ppDSoundBufferCache = *ppBuffer;
+        g_pDSoundBufferCache.push_back(*ppBuffer);
     }
 
     leaveCriticalSection;
@@ -1359,11 +1346,11 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
                 pThis->EmuDirectSound3DBuffer8->Release();
             }
+
             // remove cache entry
-            for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-                if (g_pDSoundBufferCache[v] == pThis) {
-                    g_pDSoundBufferCache[v] = 0;
-                }
+            vector_ds_buffer::iterator ppDSBuffer = std::find(g_pDSoundBufferCache.begin(), g_pDSoundBufferCache.end(), pThis);
+            if (ppDSBuffer != g_pDSoundBufferCache.end()) {
+                g_pDSoundBufferCache.erase(ppDSBuffer);
             }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
@@ -1731,16 +1718,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 		LOG_FUNC_END;
 
     HRESULT hRet = DS_OK;
-    int v = 0;
-    X_CDirectSoundStream** ppDSoundStreamCache = nullptr;
-    for (v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++) {
-        if (g_pDSoundStreamCache[v] == nullptr) {
-            ppDSoundStreamCache = &g_pDSoundStreamCache[v];
-            break;
-        }
-    }
+
     //If out of space, return out of memory.
-    if (ppDSoundStreamCache == nullptr) {
+    if (X_DIRECTSOUND_CACHE_COUNT == X_DIRECTSOUND_CACHE_MAX) {
 
         hRet = DSERR_OUTOFMEMORY;
         *ppStream = xbnullptr;
@@ -1801,7 +1781,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
             (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
 
-        *ppDSoundStreamCache = *ppStream;
+        g_pDSoundStreamCache.push_back(*ppStream);
     }
 
     leaveCriticalSection;
@@ -1934,11 +1914,11 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
             if (pThis->EmuDirectSound3DBuffer8 != NULL) {
                 pThis->EmuDirectSound3DBuffer8->Release();
             }
+
             // remove cache entry
-            for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++) {
-                if (g_pDSoundStreamCache[v] == pThis) {
-                    g_pDSoundStreamCache[v] = 0;
-                }
+            vector_ds_stream::iterator ppDSStream = std::find(g_pDSoundStreamCache.begin(), g_pDSoundStreamCache.end(), pThis);
+            if (ppDSStream != g_pDSoundStreamCache.end()) {
+                g_pDSoundStreamCache.erase(ppDSStream);
             }
 
             for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
@@ -2207,26 +2187,26 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
     //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and ...?
 
-    XTL::X_CDirectSoundBuffer* *pDSBuffer = g_pDSoundBufferCache;
-    for (int v = 0; v < SOUNDBUFFER_CACHE_SIZE; v++, pDSBuffer++) {
-        if ((*pDSBuffer) == nullptr || (*pDSBuffer)->X_BufferCache == nullptr) {
+    vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
+    for (; ppDSBuffer != g_pDSoundBufferCache.end(); ppDSBuffer++) {
+        if ((*ppDSBuffer)->X_BufferCache == nullptr) {
             continue;
         }
 
-        if (((*pDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
-            DSoundBufferSynchPlaybackFlagRemove((*pDSBuffer)->EmuFlags);
-            (*pDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*pDSBuffer)->EmuPlayFlags);
+        if (((*ppDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*ppDSBuffer)->EmuFlags);
+            (*ppDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*ppDSBuffer)->EmuPlayFlags);
         }
     }
 
-    XTL::X_CDirectSoundStream* *pDSStream = g_pDSoundStreamCache;
-    for (int v = 0; v < SOUNDSTREAM_CACHE_SIZE; v++, pDSStream++) {
-        if ((*pDSStream) == nullptr || (*pDSStream)->Host_BufferPacketArray.size() == 0) {
+    vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
+    for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
+        if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
             continue;
         }
-        if (((*pDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
-            DSoundBufferSynchPlaybackFlagRemove((*pDSStream)->EmuFlags);
-            DSoundStreamProcess((*pDSStream));
+        if (((*ppDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove((*ppDSStream)->EmuFlags);
+            DSoundStreamProcess((*ppDSStream));
         }
     }
 
