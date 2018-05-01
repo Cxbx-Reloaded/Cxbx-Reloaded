@@ -174,14 +174,15 @@ void XTL::EmuExecutePushBuffer
 	DbgDumpPushBuffer((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
 #endif
 
-    EmuExecutePushBufferRaw((DWORD*)pPushBuffer->Data);
+    EmuExecutePushBufferRaw((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
 
     return;
 }
 
 extern void XTL::EmuExecutePushBufferRaw
 (
-    DWORD                 *pdwPushData
+    DWORD                 *pdwPushData,
+	ULONG					dwSize
 )
 {
     if(g_bSkipPush)
@@ -231,16 +232,30 @@ extern void XTL::EmuExecutePushBufferRaw
     static IDirect3DVertexBuffer *pVertexBuffer=0;
 
     static uint maxIBSize = 0;
+	UINT8 * pPushDataEnd= (UINT8 *)pdwPushData + dwSize;
 
     while(true)
     {
-        DWORD dwCount = (*pdwPushData >> 18);
+		//check if loop reaches end of pushbuffer.
+		if ((UINT8 *)pdwPushData >= pPushDataEnd)
+		{
+			break;
+		}
+		DWORD dwCount = (*pdwPushData >> 18);
         DWORD dwMethod = (*pdwPushData & 0x3FFFF);
+		DWORD bInc = *pdwPushData & 0x40000000;
+
+		if (bInc != 0)
+		{
+			dwCount &= ~(bInc>>18);
+		}
+		//always increase pdwPushData after we retrive the pushbuffer Data, so it always points to the next unhandled DWORD.
+		pdwPushData++;
 
         // Interpret GPU Instruction
-        if(dwMethod == 0x000017FC) // NVPB_SetBeginEnd
+        if(dwMethod == 0x000017FC) // NVPB_SetBeginEnd, 1 DWORD parameter, D3DPUSH_SET_BEGIN_END, NV097_NO_OPERATION
         {
-            pdwPushData++;
+			//pdwPushData++;
 
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB)
@@ -248,7 +263,7 @@ extern void XTL::EmuExecutePushBufferRaw
                 printf("  NVPB_SetBeginEnd(");
             }
             #endif
-
+			//parameter==0 means SetEnd, EndPush()
             if(*pdwPushData == 0)
             {
                 #ifdef _DEBUG_TRACK_PB
@@ -257,32 +272,30 @@ extern void XTL::EmuExecutePushBufferRaw
                     printf("DONE)\n");
                 }
                 #endif
-                break;  // done?
+				pdwPushData++;
+                break;  // EndPush(), done with BeginPush()
             }
             else
             {
-                #ifdef _DEBUG_TRACK_PB
+                //BeginPush(), To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
+				#ifdef _DEBUG_TRACK_PB
                 if(bShowPB)
                 {
                     printf("PrimitiveType := %d)\n", *pdwPushData);
                 }
                 #endif
-
+				//retrieve the D3DPRIMITIVETYPE info in parameter
                 XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
-                PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
+				PCPrimitiveType = EmuXB2PC_D3DPrimitiveType(XBPrimitiveType);
+				pdwPushData++;
             }
         }
-        else if(dwMethod == 0x1818) // NVPB_InlineVertexArray
+        else if(dwMethod == 0x1818) // NVPB_InlineVertexArray, parameter size= dwCount*DWORD, represent D3DFVF data. NV097_INLINE_ARRAY
         {
-            BOOL bInc = *pdwPushData & 0x40000000;
-
-            if(bInc)
-            {
-                dwCount = (*pdwPushData - (0x40000000 | 0x00001818)) >> 18;
-            }
-
-            pVertexData = ++pdwPushData;
-
+			//DWORD vertex data array, 
+			//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
+            pVertexData = pdwPushData;
+			//move pushpuffer to the end of vertex data.
             pdwPushData += dwCount;
 
             // retrieve vertex shader
@@ -376,10 +389,10 @@ extern void XTL::EmuExecutePushBufferRaw
 
 				g_dwPrimPerFrame += VPDesc.dwHostPrimitiveCount;
             }
-
-            pdwPushData--;
+			// don't know why there is a decrement instruction here?
+            //pdwPushData--; 
         }
-        else if(dwMethod == 0x1808) // NVPB_FixLoop
+        else if(dwMethod == 0x1808) // NVPB_FixLoop, Index Array Data, . NV097_ARRAY_ELEMENT32
         {
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB)
@@ -401,8 +414,9 @@ extern void XTL::EmuExecutePushBufferRaw
                 printf("\n");
             }
             #endif
-
-            WORD *pwVal = (WORD*)(pdwPushData + 1);
+			//the pdwPushData is increased pointing to the first unhandled DWORD already, no need to add offset
+			WORD *pwVal = (WORD*)pdwPushData; //(pdwPushData + 1);
+			//!!!!!!don't understand this loop, the pIBMem[] is only 4 WORD, how can we copy the data with known size into it?******************************
             for(uint mi=0;mi<dwCount;mi++)
             {
                 pIBMem[mi+2] = pwVal[mi];
@@ -516,12 +530,13 @@ extern void XTL::EmuExecutePushBufferRaw
 #endif
                 }
             }
-
+			// this needs to be checked. don't know the dwCount is for DWORD count or WORD count, and whether the increment flag will affect it or not.
             pdwPushData += dwCount;
         }
-        else if(dwMethod == 0x1800) // NVPB_InlineIndexArray
+        else if(dwMethod == 0x1800) // NVPB_InlineIndexArray,   NV097_ARRAY_ELEMENT16
         {
-            BOOL bInc = *pdwPushData & 0x40000000;
+            /* // this section of code is performed in the beginning of while loop before entering this if-else-if section.
+			BOOL bInc = *pdwPushData & 0x40000000;
 
             if(bInc)
             {
@@ -529,6 +544,7 @@ extern void XTL::EmuExecutePushBufferRaw
             }
 
             pIndexData = ++pdwPushData;
+			*/
 
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB)
@@ -588,8 +604,8 @@ extern void XTL::EmuExecutePushBufferRaw
                 DbgDumpMesh((WORD*)pIndexData, dwCount);
             }
             #endif
-
-            pdwPushData += (dwCount/2) - (bInc ? 0 : 2);
+			// this needs to be checked. don't know the dwCount is for DWORD count or WORD count, and whether the increment flag will affect it or not.
+            pdwPushData += (dwCount/2) + (bInc ? 0 : 1);
 
             // perform rendering
             {
@@ -632,7 +648,7 @@ extern void XTL::EmuExecutePushBufferRaw
                     WORD *pData=0;
 
                     pIndexBuffer->Lock(0, dwCount*2, (UCHAR**)&pData, NULL);
-
+					// something wrong, the pIndexData was never initialized. perhaps it shall be point to the first unhandled pdwPushData DWORD?
                     memcpy(pData, pIndexData, dwCount*2);
 
                     // remember last 2 indices
@@ -707,15 +723,33 @@ extern void XTL::EmuExecutePushBufferRaw
 				}
             }
 
-            pdwPushData--;
+            //pdwPushData--;
         } 
-        else
+        else if (dwMethod == 0x00000100) //No Operation, followed parameters are no use. this operation triggers DPC which is not implemented in HLE
         {
-            //EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
-			pdwPushData++;
+            //EmuWarning("NOP PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+			pdwPushData+=dwCount;
         }
-
-        pdwPushData++;
+		else if (dwMethod == 0x00001ea4) //D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD  // Add 96 to constant index parameter, one parameter=CONSTANT + 96
+		{
+			//retrive transform constant index and add 96 to it.
+			//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+			//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation  Constant = %d)", *pdwPushData);
+			pdwPushData++;
+		}
+		else if (dwMethod == 0x00000b80) //D3DPUSH_SET_TRANSFORM_CONSTANT      // Can't use NOINCREMENT_FLAG, parameters is constant matrix, 4X4 matrix hasa 16 DWRDS, maximum of 32 DWORD writes
+		{
+			//load constant matrix to empty slot, then break;
+			pdwPushData += dwCount;
+			break;
+		}
+		else // default case, handling any other unknown methods.
+		{
+			//EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+			pdwPushData += dwCount;
+			//shall we break here?
+		}
+        //pdwPushData++;
     }
 
     #ifdef _DEBUG_TRACK_PB

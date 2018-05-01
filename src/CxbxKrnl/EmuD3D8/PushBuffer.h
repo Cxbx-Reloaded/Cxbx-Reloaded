@@ -46,7 +46,8 @@ extern void EmuExecutePushBuffer
 
 extern void EmuExecutePushBufferRaw
 (
-    DWORD                 *pdwPushData
+    DWORD                 *pdwPushData,
+	ULONG					dwSize
 );
 
 extern void DbgDumpPushBuffer
