@@ -3158,11 +3158,42 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
     *ppBackBuffer = EMUPATCH(D3DDevice_GetBackBuffer2)(BackBuffer);
 }
 
-DWORD ScaleDWORD(DWORD XboxIn, DWORD XboxMax, DWORD HostMax)
+bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight)
 {
-	uint64_t tmp = XboxIn;
-	tmp *= HostMax;
-	tmp /= XboxMax;
+	XTL::IDirect3DSurface* pHostRenderTarget = nullptr;
+
+	g_pD3DDevice->GetRenderTarget(
+#ifdef CXBX_USE_D3D9
+		0, // RenderTargetIndex
+#endif
+		&pHostRenderTarget);
+
+	// The following can only work if we could retrieve a host render target
+	if (!pHostRenderTarget)
+		return false;
+
+	// Get current host render target dimensions
+	XTL::D3DSURFACE_DESC HostRenderTarget_Desc;
+	pHostRenderTarget->GetDesc(&HostRenderTarget_Desc);
+	pHostRenderTarget->Release();
+
+	// Emulate field-rendering not by halving the host backbuffer, but by faking
+	// the host backbuffer to half-height, which results in a correct viewport scale :
+	if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
+		HostRenderTarget_Desc.Height /= 2;
+	}
+
+	*pHostWidth = HostRenderTarget_Desc.Width;
+	*pHostHeight = HostRenderTarget_Desc.Height;
+
+	return true;
+}
+
+DWORD ScaleDWORD(DWORD Value, DWORD FromMax, DWORD ToMax)
+{
+	uint64_t tmp = Value;
+	tmp *= ToMax;
+	tmp /= FromMax;
 	return (DWORD)tmp;
 }
 
@@ -3184,45 +3215,34 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	XB_D3DDevice_SetViewport(pViewport);
 #endif
 
-	IDirect3DSurface* pHostRenderTarget = nullptr;
+	// Get current Xbox render target dimensions
+	DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+	DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-	g_pD3DDevice->GetRenderTarget(
-#ifdef CXBX_USE_D3D9
-		0, // RenderTargetIndex
-#endif
-		&pHostRenderTarget);
+	// Get current host render target dimensions
+	DWORD HostRenderTarget_Width;
+	DWORD HostRenderTarget_Height;
 
-	// The following can only work if we could retrieve a host render target
-	if (pHostRenderTarget) {
-		// Get current host render target dimensions
-		D3DSURFACE_DESC HostRenderTarget_Desc;
-		pHostRenderTarget->GetDesc(&HostRenderTarget_Desc);
-		pHostRenderTarget->Release();
+	D3DVIEWPORT HostViewPort;
 
-		// Get current Xbox render target dimensions
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+	if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 
-		// Emulate field-rendering not by halving the host backbuffer, but by faking
-		// the host backbuffer to half-height, which results in a correct viewport scale :
-		if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
-			HostRenderTarget_Desc.Height /= 2;
-		}
-
-		// Scale to host dimensions (avoiding hard-coding 640 x 480)
-		D3DVIEWPORT HostViewPort;
-
-		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
-		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
-		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Desc.Width);
-		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Desc.Height);
+		// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
+		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
+		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
 		// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
 		HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
 		HostViewPort.MaxZ = pViewport->MaxZ;
-
-		HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
 	}
+	else {
+		HostViewPort = *pViewport;
+		EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+	}
+
+	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
 }
 
 // ******************************************************************
@@ -3237,8 +3257,39 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
-    HRESULT hRet = g_pD3DDevice->GetViewport(pViewport);
+	// Note : We cannot return the Xbox viewport as set in EMUPATCH(D3DDevice_SetViewport)
+	// because various Xbox D3D functions reset the Xbox viewport. Since we call comparable
+	// functions on host D3D, the host viewport is better suited as a return value;
+	// We just need to scale the host viewport back to Xbox dimensions - the exact opposite
+	// operation from the up-scaling that happens in EMUPATCH(D3DDevice_SetViewport).
+
+	D3DVIEWPORT HostViewPort;
+
+	HRESULT hRet = g_pD3DDevice->GetViewport(&HostViewPort);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
+
+	// Get current host render target dimensions
+	DWORD HostRenderTarget_Width;
+	DWORD HostRenderTarget_Height;
+
+	if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+
+		// Get current Xbox render target dimensions
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+
+		// Scale host back to Xbox dimensions (avoiding hard-coding 640 x 480)
+		pViewport->X = ScaleDWORD(HostViewPort.X, HostRenderTarget_Width, XboxRenderTarget_Width);
+		pViewport->Y = ScaleDWORD(HostViewPort.Y, HostRenderTarget_Height, XboxRenderTarget_Height);
+		pViewport->Width = ScaleDWORD(HostViewPort.Width, HostRenderTarget_Width, XboxRenderTarget_Width);
+		pViewport->Height = ScaleDWORD(HostViewPort.Height, HostRenderTarget_Height, XboxRenderTarget_Height);
+		pViewport->MinZ = HostViewPort.MinZ; // No need scale Z for now
+		pViewport->MaxZ = HostViewPort.MaxZ;
+	}
+	else {
+		*pViewport = HostViewPort;
+		EmuWarning("GetHostRenderTargetDimensions failed - GetViewport returns host viewport instead!");
+	}
 }
 
 // LTCG specific D3DDevice_GetViewportOffsetAndScale function...
@@ -3281,6 +3332,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
 	// Test case : Spongebob - Battle for Bikini Bottom
 
+#if 0
     float fScaleX = 1.0f;
     float fScaleY = 1.0f;
     float fScaleZ = 1.0f;
@@ -3290,17 +3342,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 
 	EMUPATCH(D3DDevice_GetViewport)(&Viewport);
 
-    pScale->x = 1.0f;
-    pScale->y = 1.0f;
-    pScale->z = 1.0f;
-    pScale->w = 1.0f;
-
-    pOffset->x = 0.0f;
-    pOffset->y = 0.0f;
-    pOffset->z = 0.0f;
-    pOffset->w = 0.0f;
-
-/*
     pScale->x = (float)Viewport.Width * 0.5f * fScaleX;
     pScale->y = (float)Viewport.Height * -0.5f * fScaleY;
     pScale->z = (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
@@ -3310,7 +3351,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
     pOffset->y = (float)Viewport.Height * fScaleY * 0.5f + (float)Viewport.Y * fScaleY + fOffsetY;
     pOffset->z = Viewport.MinZ * fScaleZ;
     pOffset->w = 0;
-*/
+#else
+    pScale->x = 1.0f;
+    pScale->y = 1.0f;
+    pScale->z = 1.0f;
+    pScale->w = 1.0f;
+
+    pOffset->x = 0.0f;
+    pOffset->y = 0.0f;
+    pOffset->z = 0.0f;
+    pOffset->w = 0.0f;
+#endif
 }
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
