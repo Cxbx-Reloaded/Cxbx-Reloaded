@@ -361,6 +361,7 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
+    <ClInclude Include="..\..\src\devices\USBController\OHCI.h" />
     <ClInclude Include="..\..\src\devices\USBController\USBDevice.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
@@ -730,6 +731,7 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\USBController\OHCI.cpp" />
     <ClCompile Include="..\..\src\devices\USBController\USBDevice.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp" />

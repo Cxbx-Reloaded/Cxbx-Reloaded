@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->devices->USBController->USBDevice.h
+// *   Cxbx->devices->USBController->OHCI.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,27 +33,69 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef USBDEVICE_H_
-#define USBDEVICE_H_
 
-#include "..\PCIDevice.h"
-#include "OHCI.h"
+#ifndef OHCI_H_
+#define OHCI_H_
 
-class USBDevice : public PCIDevice {
+#include <stdint.h>
+#include "Cxbx.h"
+
+// All these registers are well documented in the OHCI standard
+typedef struct _OHCI_Registers
+{
+	// Control and Status partition
+	uint32_t HcRevision;
+	uint32_t HcControl;
+	uint32_t HcCommandStatus;
+	uint32_t HcInterruptStatus;
+	uint32_t HcInterruptEnable;
+	uint32_t HcInterruptDisable;
+
+	// Memory Pointer partition
+	uint32_t HcHCCA;
+	uint32_t HcPeriodCurrentED;
+	uint32_t HcControlHeadED;
+	uint32_t HcControlCurrentED;
+	uint32_t HcBulkHeadED;
+	uint32_t HcBulkCurrentED;
+	uint32_t HcDoneHead;
+
+	// Frame Counter partition
+	uint32_t HcFmInterval;
+	uint32_t HcFmRemaining;
+	uint32_t HcFmNumber;
+	uint32_t HcPeriodicStart;
+	uint32_t HcLSThreshold;
+
+	// Root Hub partition
+	uint32_t HcRhDescriptorA;
+	uint32_t HcRhDescriptorB;
+	uint32_t HcRhStatus;
+	uint32_t HcRhPortStatus1; // 2 ports per HC, for a total of 4 USB ports
+	uint32_t HcRhPortStatus2;
+}
+OHCI_Registers;
+
+
+/* OHCI class representing the state of the HC */
+class OHCI_State
+{
 	public:
 		// constructor
-		USBDevice() {}
+		OHCI_State() {}
 		// destructor
-		~USBDevice() {}
-	
-		// PCI Device functions
-		void Init(unsigned int address);
-		void Reset() {}
-	
-		uint32_t IORead(int barIndex, uint32_t port, unsigned size) {}
-		void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) {}
-		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
+		~OHCI_State() {}
+		// read a register
+		uint32_t ReadRegister(xbaddr addr);
+		// write a register
+		void WriteRegister(xbaddr addr, uint32_t value);
+
+	private:
+		// all the registers available on the OHCI standard
+		OHCI_Registers Registers;
 };
+
+extern OHCI_State* g_pHostController1;
+extern OHCI_State* g_pHostController2;
 
 #endif

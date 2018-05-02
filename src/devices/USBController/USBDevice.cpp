@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "USBDevice.h"
+#include <assert.h>
 
 
 void USBDevice::Init(unsigned int address)
@@ -49,4 +50,37 @@ void USBDevice::Init(unsigned int address)
 	// Taken from https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
 	m_DeviceId = 0x01C2;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
+
+	// TODO: construct the OHCI object
+}
+
+uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
+{
+	// barIndex must be zero since we created the USB devices with a zero index in Init()
+	assert(barIndex == 0);
+
+	// Figure out the correct OHCI object and read the register
+	if (addr >= USB1_BASE) {
+		// USB1 queried
+		return g_pHostController2->ReadRegister(addr);
+	}
+
+	// USB0 queried
+	return g_pHostController1->ReadRegister(addr);
+}
+
+void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
+{
+	// barIndex must be zero since we created the USB devices with a zero index in Init()
+	assert(barIndex == 0);
+
+	// Figure out the correct OHCI object and write the value to the register
+	if (addr >= USB1_BASE) {
+		// USB1 queried
+		g_pHostController2->WriteRegister(addr, value);
+		return;
+	}
+
+	// USB0 queried
+	g_pHostController1->WriteRegister(addr, value);
 }

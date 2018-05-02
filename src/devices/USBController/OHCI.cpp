@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->devices->USBController->USBDevice.h
+// *   Cxbx->devices->USBController->OHCI.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,27 +33,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef USBDEVICE_H_
-#define USBDEVICE_H_
 
-#include "..\PCIDevice.h"
 #include "OHCI.h"
 
-class USBDevice : public PCIDevice {
-	public:
-		// constructor
-		USBDevice() {}
-		// destructor
-		~USBDevice() {}
-	
-		// PCI Device functions
-		void Init(unsigned int address);
-		void Reset() {}
-	
-		uint32_t IORead(int barIndex, uint32_t port, unsigned size) {}
-		void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) {}
-		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
-};
-
-#endif
+// global pointers to the two USB host controllers available on the Xbox
+OHCI_State* g_pHostController1 = nullptr;
+OHCI_State* g_pHostController2 = nullptr;
