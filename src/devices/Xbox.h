@@ -43,6 +43,7 @@
 #include "EmuNVNet.h" // For NVNetDevice
 #include "ADM1032Device.h" // For ADM1032
 #include "devices\video\nv2a.h" // For NV2ADevice
+#include "USBController\USBDevice.h" // For USBDevice
 
 #define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
 #define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
@@ -78,5 +79,7 @@ extern SMCDevice* g_SMC;
 extern EEPROMDevice* g_EEPROM;
 extern NVNetDevice* g_NVNet;
 extern NV2ADevice* g_NV2A;
+extern USBDevice* g_USB0;
+extern USBDevice* g_USB1;
 
 extern void InitXboxHardware(HardwareModel hardwareModel);

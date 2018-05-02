@@ -51,7 +51,7 @@ class SMBus : public PCIDevice {
 		using PCIDevice::PCIDevice;
 
 		// PCI Functions
-		void Init();
+		void Init(unsigned int address);
 		void Reset();
 
 		uint32_t IORead(int barIndex, uint32_t addr, unsigned size = sizeof(uint8_t));

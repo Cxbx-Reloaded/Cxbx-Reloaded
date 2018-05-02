@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -7,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->video->MCPXDevice.h
+// *   Cxbx->devices->USBController->USBDevice.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,38 +28,25 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
-// *
+// *  (c) 2018 ergo720
+// *  
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
 
-#include "devices\PCIDevice.h" // For PCIDevice
+#include "USBDevice.h"
 
-typedef enum {
-	MCPX_1_0,
-	MCPX_1_1,
-} MCPXROMVersion;
 
-typedef enum {
-	MCPX_X2,
-	MCPX_X3,
-} MCPXRevision;
+void USBDevice::Init(unsigned int address)
+{
+	PCIBarRegister r;
 
-class MCPXDevice : public PCIDevice {
-public:
-	// constructor
-	MCPXDevice(MCPXRevision revision);
+	// Register Memory bar :
+	r.Raw.type = PCI_BAR_TYPE_MEMORY;
+	r.Memory.address = address >> 4;
+	RegisterBAR(0, USB_SIZE, r.value);
 
-	// PCI Device functions
-	void Init(unsigned int address);
-	void Reset();
-
-	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
-	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
-	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
-private:
-	MCPXRevision m_revision;
-};
+	// Taken from https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
+	m_DeviceId = 0x01C2;
+	m_VendorId = PCI_VENDOR_ID_NVIDIA;
+}

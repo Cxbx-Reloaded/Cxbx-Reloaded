@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -7,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->video->MCPXDevice.h
+// *   Cxbx->devices->USBController->USBDevice.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,38 +28,33 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#pragma once
+#ifndef USBDEVICE_H_
+#define USBDEVICE_H_
 
-#include "devices\PCIDevice.h" // For PCIDevice
+#include "..\PCIDevice.h"
 
-typedef enum {
-	MCPX_1_0,
-	MCPX_1_1,
-} MCPXROMVersion;
+class USBDevice : public PCIDevice {
+	public:
+		// constructor
+		USBDevice() {}
+		// destructor
+		~USBDevice() {}
+	
+		// PCI Device functions
+		void Init(unsigned int address);
+		void Reset() {}
+	
+		uint32_t IORead(int barIndex, uint32_t port, unsigned size);
+		void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
+		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
+		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
-typedef enum {
-	MCPX_X2,
-	MCPX_X3,
-} MCPXRevision;
 
-class MCPXDevice : public PCIDevice {
-public:
-	// constructor
-	MCPXDevice(MCPXRevision revision);
-
-	// PCI Device functions
-	void Init(unsigned int address);
-	void Reset();
-
-	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
-	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
-	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
-	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
-private:
-	MCPXRevision m_revision;
 };
+
+#endif

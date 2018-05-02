@@ -30,7 +30,7 @@ typedef struct {
 
 class PCIBus {
 public:
-	void ConnectDevice(uint32_t deviceId, PCIDevice *pDevice);
+	void ConnectDevice(uint32_t deviceId, PCIDevice *pDevice, unsigned int address);
 
 	bool IORead(uint32_t addr, uint32_t* value, unsigned size);
 	bool IOWrite(uint32_t addr, uint32_t value, unsigned size);

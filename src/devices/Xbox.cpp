@@ -33,6 +33,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
 #include "Xbox.h" // For HardwareModel
 
 PCIBus* g_PCIBus;
@@ -43,6 +44,8 @@ EEPROMDevice* g_EEPROM;
 NVNetDevice* g_NVNet;
 NV2ADevice* g_NV2A;
 ADM1032Device* g_ADM1032;
+USBDevice* g_USB0;
+USBDevice* g_USB1;
 
 MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
@@ -127,6 +130,8 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
 	g_ADM1032 = new ADM1032Device();
+	g_USB0 = new USBDevice();
+	g_USB1 = new USBDevice();
 
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
@@ -149,12 +154,14 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	}
 
 	// Connect devices to PCI bus
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus, 0xC000);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet, NVNet_BASE);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 1)), g_MCPX); // MCPX device ID = 0x0808 ?
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
-	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
+	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A, NV2A_ADDR);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0, USB0_BASE);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(3, 0)), g_USB1, USB1_BASE);
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp

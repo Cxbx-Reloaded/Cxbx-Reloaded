@@ -18,6 +18,28 @@
 
 #define PCI_VENDOR_ID_NVIDIA			0x10DE
 
+// MMIO addresses and sizes for the various xbox devices
+#define NV2A_ADDR                               0xFD000000
+#define NV2A_SIZE                               0x01000000
+#define NV2A_PRAMIN_ADDR                        0xFD700000
+#define NV2A_PRAMIN_SIZE                        0x100000
+#define NV2A_USER_ADDR                          0xFD800000
+#define NV2A_USER_SIZE                          0x800000
+#define APU_BASE                                0xFE800000
+#define APU_SIZE                                0x80000
+#define AC97_BASE                               0xFEC00000
+#define AC97_SIZE                               0x1000
+#define USB0_BASE                               0xFED00000
+#define USB1_BASE                               0xFED08000
+#define USB_SIZE                                0x1000
+#define NVNet_BASE                              0xFEF00000
+#define NVNet_SIZE                              0x400
+#define BIOS_BASE                               0xFF000000 // this takes into account that the bios covers the top 16 MiB of memory
+#define BIOS_XBOX_SIZE                          0xFFFE00
+#define BIOS_CHIHIRO_SIZE                       0x1000000
+#define MCPX_BASE                               0xFFFFFE00
+#define MCPX_SIZE                               0x200
+
 class PCIDevice;
 
 typedef struct
@@ -65,7 +87,7 @@ typedef struct {
 class PCIDevice {
 	// PCI Device Interface
 public:
-	virtual void Init() = 0;
+	virtual void Init(unsigned int address) = 0;
 	virtual void Reset() = 0;
 	virtual uint32_t IORead(int barIndex, uint32_t port, unsigned size) = 0;
 	virtual void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) = 0;

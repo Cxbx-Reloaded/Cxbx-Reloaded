@@ -35,13 +35,11 @@
 
 #include "PCIDevice.h" // For PCIDevice
 
-#define NVNET_ADDR  0xFEF00000 
-#define NVNET_SIZE  0x00000400
 
 class NVNetDevice : public PCIDevice {
 public:
 	// PCI Device functions
-	void Init();
+	void Init(unsigned int address);
 	void Reset();
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
