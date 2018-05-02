@@ -3209,36 +3209,37 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
+	D3DVIEWPORT HostViewPort = *pViewport;
+
+	if (g_ScaleViewport) {
 #if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
-	// Use a trampoline here, so GetViewport can be unpatched
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
-	XB_D3DDevice_SetViewport(pViewport);
+		// Use a trampoline here, so GetViewport can be unpatched
+		XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
+		XB_D3DDevice_SetViewport(pViewport);
 #endif
 
-	// Get current Xbox render target dimensions
-	DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-	DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+		// Get current Xbox render target dimensions
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-	// Get current host render target dimensions
-	DWORD HostRenderTarget_Width;
-	DWORD HostRenderTarget_Height;
+		// Get current host render target dimensions
+		DWORD HostRenderTarget_Width;
+		DWORD HostRenderTarget_Height;
 
-	D3DVIEWPORT HostViewPort;
+		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 
-	if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-
-		// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
-		HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
-		HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
-		HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
-		HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
-		// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
-		HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
-		HostViewPort.MaxZ = pViewport->MaxZ;
-	}
-	else {
-		HostViewPort = *pViewport;
-		EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+			// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
+			HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
+			HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+			HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+			HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
+			// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
+			HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
+			HostViewPort.MaxZ = pViewport->MaxZ;
+		}
+		else {
+			EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+		}
 	}
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
@@ -3257,38 +3258,43 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 
 	LOG_FUNC_ONE_ARG(pViewport);
 
-	// Note : We cannot return the Xbox viewport as set in EMUPATCH(D3DDevice_SetViewport)
-	// because various Xbox D3D functions reset the Xbox viewport. Since we call comparable
-	// functions on host D3D, the host viewport is better suited as a return value;
-	// We just need to scale the host viewport back to Xbox dimensions - the exact opposite
-	// operation from the up-scaling that happens in EMUPATCH(D3DDevice_SetViewport).
-
 	D3DVIEWPORT HostViewPort;
 
 	HRESULT hRet = g_pD3DDevice->GetViewport(&HostViewPort);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
 
-	// Get current host render target dimensions
-	DWORD HostRenderTarget_Width;
-	DWORD HostRenderTarget_Height;
-
-	if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-
-		// Get current Xbox render target dimensions
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
-
-		// Scale host back to Xbox dimensions (avoiding hard-coding 640 x 480)
-		pViewport->X = ScaleDWORD(HostViewPort.X, HostRenderTarget_Width, XboxRenderTarget_Width);
-		pViewport->Y = ScaleDWORD(HostViewPort.Y, HostRenderTarget_Height, XboxRenderTarget_Height);
-		pViewport->Width = ScaleDWORD(HostViewPort.Width, HostRenderTarget_Width, XboxRenderTarget_Width);
-		pViewport->Height = ScaleDWORD(HostViewPort.Height, HostRenderTarget_Height, XboxRenderTarget_Height);
-		pViewport->MinZ = HostViewPort.MinZ; // No need scale Z for now
-		pViewport->MaxZ = HostViewPort.MaxZ;
+	if (!g_ScaleViewport) {
+		*pViewport = HostViewPort;
 	}
 	else {
-		*pViewport = HostViewPort;
-		EmuWarning("GetHostRenderTargetDimensions failed - GetViewport returns host viewport instead!");
+		// Note : We cannot return the Xbox viewport as set in EMUPATCH(D3DDevice_SetViewport)
+		// because various Xbox D3D functions reset the Xbox viewport. Since we call comparable
+		// functions on host D3D, the host viewport is better suited as a return value;
+		// We just need to scale the host viewport back to Xbox dimensions - the exact opposite
+		// operation from the up-scaling that happens in EMUPATCH(D3DDevice_SetViewport).
+
+		// Get current host render target dimensions
+		DWORD HostRenderTarget_Width;
+		DWORD HostRenderTarget_Height;
+
+		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+
+			// Get current Xbox render target dimensions
+			DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+			DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+
+			// Scale host back to Xbox dimensions (avoiding hard-coding 640 x 480)
+			pViewport->X = ScaleDWORD(HostViewPort.X, HostRenderTarget_Width, XboxRenderTarget_Width);
+			pViewport->Y = ScaleDWORD(HostViewPort.Y, HostRenderTarget_Height, XboxRenderTarget_Height);
+			pViewport->Width = ScaleDWORD(HostViewPort.Width, HostRenderTarget_Width, XboxRenderTarget_Width);
+			pViewport->Height = ScaleDWORD(HostViewPort.Height, HostRenderTarget_Height, XboxRenderTarget_Height);
+			pViewport->MinZ = HostViewPort.MinZ; // No need scale Z for now
+			pViewport->MaxZ = HostViewPort.MaxZ;
+		}
+		else {
+			*pViewport = HostViewPort;
+			EmuWarning("GetHostRenderTargetDimensions failed - GetViewport returns host viewport instead!");
+		}
 	}
 }
 

@@ -90,7 +90,7 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * resize the main window for either GUI or emulation
 		// ******************************************************************
-		void ResizeWindow(bool bForGUI);
+		void ResizeWindow(HWND hwnd, bool bForGUI);
 
         // ******************************************************************
         // * after an xbe is loaded, some things must be updated
@@ -222,6 +222,7 @@ class WndMain : public Wnd
 		int		m_UncapFramerate;
 		int		m_UseAllCores;
 		int		m_PatchCpuFrequency;
+		int     m_ScaleViewport;
 
         // ******************************************************************
         // * debug output filenames
