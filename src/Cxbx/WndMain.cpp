@@ -1805,8 +1805,8 @@ void WndMain::RefreshMenus()
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
 
 			chk_flag = (m_PatchCpuFrequency) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_PATCHCPUFREQUENCY, chk_flag);	
-
+			CheckMenuItem(settings_menu, ID_HACKS_PATCHCPUFREQUENCY, chk_flag);
+      
 			chk_flag = (m_ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
 		}

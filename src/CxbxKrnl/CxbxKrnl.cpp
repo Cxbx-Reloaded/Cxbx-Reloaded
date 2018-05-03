@@ -55,6 +55,7 @@ namespace xboxkrnl
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
 #include "CxbxDebugger.h"
+#include "EmuX86.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -587,6 +588,7 @@ void PrintCurrentConfigurationLog()
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
+	
 }
 
 #if 0
@@ -653,11 +655,62 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
-void PatchPerformanceFrequency()
+std::vector<xbaddr> g_RdtscPatches;
+
+bool IsRdtscInstruction(xbaddr addr)
 {
-	DWORD xboxFrequency = 733333333; // 733mhz
-	LARGE_INTEGER hostFrequency;
-	QueryPerformanceFrequency(&hostFrequency);
+	if (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end()) {
+		return true;
+	}
+
+	return false;
+}
+
+void PatchRdtsc(xbaddr addr)
+{
+	uint8_t* opAddr = (uint8_t*)addr;
+	// Patch away rdtsc with an opcode we can intercept
+	// We use a privilaged instruction rather than int 3 for debugging
+	// When using int 3, attached debuggers trap and rdtsc is used often enough
+	// that it makes Cxbx-Reloaded unusable
+	// A privilaged instruction (like OUT) does not suffer from this
+	printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
+	opAddr[0] = 0xEF; // OUT DX, EAX
+	opAddr[1] = 0x90; // NOP
+	g_RdtscPatches.push_back(addr);
+}
+
+const uint8_t rdtsc_pattern[] = {
+	0x89,//{0x0F,0x31,0x89 },
+	0xC3,//{ 0x0F,0x31,0xC3 },
+	0x8B,//{ 0x0F,0x31,0x8B },   //one false positive in Sonic Rider .text 88 5C 0F 31
+	0xB9,//{ 0x0F,0x31,0xB9 },
+	0xC7,//{ 0x0F,0x31,0xC7 },
+	0x8D,//{ 0x0F,0x31,0x8D },
+	0x68,//{ 0x0F,0x31,0x68 },
+	0x5A,//{ 0x0F,0x31,0x5A },
+	0x29,//{ 0x0F,0x31,0x29},
+	0xF3,//{ 0x0F,0x31,0xF3 },
+	0xE9,//{ 0x0F,0x31,0xE9 },
+	0x2B,//{ 0x0F,0x31,0x2B },
+	0x50,//{ 0x0F,0x31,0x50 },	// 0x50 only used in ExaSkeleton .text , but encounter false positive in RalliSport .text 83 E2 0F 31
+	0x0F,//{ 0x0F,0x31,0x0F },
+	0x3B,//{ 0x0F,0x31,0x3B },
+	0xD9,//{ 0x0F,0x31,0xD9 },
+	0x57,//{ 0x0F,0x31,0x57 },
+	0xB9,//{ 0x0F,0x31,0xB9 },
+	0x85,//{ 0x0F,0x31,0x85 },
+	0x83,//{ 0x0F,0x31,0x83 },
+	0x33,//{ 0x0F,0x31,0x33 },
+	0xF7,//{ 0x0F,0x31,0xF7 },
+	0x8A,//{ 0x0F,0x31,0xF7 }, // 8A and 56 only apears in RalliSport 2 .text , need to watch whether any future false positive.
+	0x56//{ 0x0F,0x31,0xF7 }	//
+};
+const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
+
+void PatchRdtscInstruction()
+{
+	uint8_t rdtsc[2] = { 0x0F, 0x31 };
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 
 	// Iterate through each CODE section
@@ -666,21 +719,67 @@ void PatchPerformanceFrequency()
 			continue;
 		}
 
-		printf("INIT: Searching for xbox performance frequency in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		// Skip some segments known to never contain rdtsc (to avoid false positives)
+		if (std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "DSOUND"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XGRPH"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".data"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".rdata"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XMV"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XONLINE"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "MDLPL") {
+			continue;
+		}
+
+		printf("INIT: Searching for rdtsc in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-		for (xbaddr addr = startAddr; addr < endAddr; addr++)
+		//rdtsc is two bytes instruction, it needs at least one opcode byte after it to finish a function, so the endAddr need to substract 3 bytes.
+		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
+		for (xbaddr addr = startAddr; addr <= endAddr; addr++) 
 		{
-			if (memcmp((void*)addr, &xboxFrequency, sizeof(DWORD)) == 0) {
-				printf("INIT: Patching Frequency at 0x%.8X\n", addr);
-				*(uint32*)(addr) = (uint32)hostFrequency.QuadPart;
-				addr += sizeof(DWORD);
-				break;
+			if (memcmp((void*)addr, rdtsc, 2) == 0) 
+			{
+				uint8_t next_byte = *(uint8_t*)(addr + 2);
+				// If the following byte matches the known pattern.
+				int i = 0;
+				for (i = 0; i<sizeof_rdtsc_pattern; i++) 
+				{
+					if (next_byte == rdtsc_pattern[i]) 
+					{
+						if (next_byte == 0x8B)
+						{
+							if (*(uint8_t*)(addr - 2) == 0x88 && *(uint8_t*)(addr - 1) == 0x5C)
+							{
+								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								continue;
+							}
+
+						}
+						if (next_byte == 0x50)
+						{
+							if (*(uint8_t*)(addr - 2) == 0x83 && *(uint8_t*)(addr - 1) == 0xE2)
+							{
+								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								continue;
+							}
+
+						}
+						PatchRdtsc(addr);
+						//the first for loop already increment addr per loop. we only increment one more time so the addr will point to the byte next to the found rdtsc instruction. this is important since there is at least one case that two rdtsc instructions are next to each other.
+						addr += 1;
+						//if a match found, break the pattern matching loop and keep looping addr for next rdtsc.
+						break;
+					}
+				}
+				if (i>= sizeof_rdtsc_pattern)
+				{
+					//no pattern matched, keep record for detections we treat as non-rdtsc for future debugging.
+					printf("Skipped potential rdtsc: Unknown opcode pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+				}
 			}
 		}
 	}
 
-	printf("INIT: Done patching xbox performance frequency\n");
+	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -1267,8 +1366,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
-	if (g_PatchCpuFrequency) {
-		PatchPerformanceFrequency();
+	if(g_PatchCpuFrequency)
+	{ 
+		PatchRdtscInstruction();
 	}
 
 	// Setup per-title encryption keys

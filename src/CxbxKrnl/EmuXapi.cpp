@@ -949,17 +949,20 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
 (
-	LARGE_INTEGER *lpPerformanceCount
+	LARGE_INTEGER * lpPerformanceCount
 )
 {
 	FUNC_EXPORTS;
-
-	if (g_PatchCpuFrequency) {
-		lpPerformanceCount->QuadPart = (LONGLONG)__rdtsc();
-		return TRUE;
-	}
-
-	lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+	
+		//if the rdtsc is patched, we shall keep using scaled PerformanceCounter.
+		/*if (g_PatchCpuFrequency) 
+		{
+			lpPerformanceCount->QuadPart = (LONGLONG)__rdtsc();
+			return TRUE;
+		
+		}*/
+	
+		lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
 	return TRUE;
 }
 
