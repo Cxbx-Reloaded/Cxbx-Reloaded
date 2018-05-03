@@ -586,6 +586,7 @@ void PrintCurrentConfigurationLog()
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
+	
 }
 
 #if 0
@@ -1197,6 +1198,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
+		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
+		g_PatchCpuFrequency = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
@@ -1359,7 +1362,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
-	PatchRdtscInstruction();
+	if(g_PatchCpuFrequency)
+		PatchRdtscInstruction();
 
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
