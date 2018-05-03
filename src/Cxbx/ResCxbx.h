@@ -135,6 +135,7 @@
 #define ID_HACKS_UNCAPFRAMERATE         40097
 #define ID_HACKS_RUNXBOXTHREADSONALLCORES 40098
 #define ID_HACKS_PATCHCPUFREQUENCY      40099
+#define ID_HACKS_SCALEVIEWPORT          40100
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

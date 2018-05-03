@@ -583,6 +583,8 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
+		printf("Patch CPU Frequency (rdtsc): %s\n", g_PatchCpuFrequency == 1 ? "On" : "Off");
+		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -1200,6 +1202,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UseAllCores = !!HackEnabled;
 		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
 		g_PatchCpuFrequency = !!HackEnabled;
+		g_EmuShared->GetScaleViewport(&HackEnabled);
+		g_ScaleViewport = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
